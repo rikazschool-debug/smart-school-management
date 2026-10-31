@@ -34,9 +34,11 @@ const subj = await ins("subjects", { name: "رياضيات", department_id: dept
 check("academic setup", !!(year && sec && subj));
 
 // 2. teacher + assignment approval
-await owner.c.rpc("invite_member", { _email: teacherU.email, _school: S, _role: "teacher" });
 const teacher = await ins("teachers", { full_name: "أ. خالد", email: teacherU.email });
-await owner.c.rpc("invite_member", { _email: teacherU.email, _school: S, _role: "teacher" }); // links user_id
+await owner.c.rpc("invite_member", { _email: teacherU.email, _school: S, _role: "teacher" });
+const tm0 = await teacherU.c.from("memberships").select("id").eq("school_id", S);
+check("invite alone grants no membership", tm0.data?.length === 0, tm0);
+await teacherU.c.rpc("accept_my_invitations"); // links user_id
 const course = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec.id });
 const asg = await ins("teacher_assignments", { course_id: course.id, teacher_id: teacher.id });
 const d1 = await owner.c.rpc("decide_assignment", { _id: asg.id, _approve: true });
@@ -52,6 +54,8 @@ const stu2 = await ins("students", { full_name: "ريم" });
 const g = await ins("guardians", { full_name: "أبو سارة", email: guardU.email });
 await owner.c.rpc("invite_member", { _email: guardU.email, _school: S, _role: "guardian" });
 await owner.c.rpc("invite_member", { _email: studU.email, _school: S, _role: "student" });
+await guardU.c.rpc("accept_my_invitations");
+await studU.c.rpc("accept_my_invitations");
 const link = await ins("student_guardians", { student_id: stu.id, guardian_id: g.id, relationship: "father" });
 const gBefore = await guardU.c.from("students").select("id").eq("id", stu.id);
 check("guardian cannot see before verification", gBefore.data?.length === 0, gBefore);
@@ -98,6 +102,46 @@ const m4 = await outsider.c.from("platform_admins").insert({ user_id: outsider.i
 check("cannot become platform admin", !!m4.error);
 const m5 = await teacherU.c.from("memberships").update({ role: "principal" }).eq("user_id", teacherU.id).select();
 check("teacher cannot change own role", !m5.data?.length, m5);
+
+// 8. invitations: token, wrong email, unverified, revoked, expired, reuse
+const tokOf = async (id: string) => (await owner.c.from("invitations").select("token").eq("id", id).single()).data!.token;
+const i1 = await owner.c.rpc("invite_member", { _email: `inv-a-${run}@rikaz.test`, _school: S, _role: "teacher" });
+const t1 = await tokOf(i1.data);
+const a1 = await outsider.c.rpc("accept_invitation", { _token: t1 });
+check("reject invite for another email", !!a1.error && a1.error.message.includes("بريد آخر"), a1.error);
+const i2 = await owner.c.rpc("invite_member", { _email: outsider.email, _school: S, _role: "counselor" });
+const t2 = await tokOf(i2.data);
+await owner.c.rpc("revoke_invitation", { _id: i2.data });
+const a2 = await outsider.c.rpc("accept_invitation", { _token: t2 });
+check("reject revoked invite", !!a2.error && a2.error.message.includes("ملغاة"), a2.error);
+const r2 = await owner.c.rpc("resend_invitation", { _id: i2.data });
+const a2old = await outsider.c.rpc("accept_invitation", { _token: t2 });
+check("old token dead after resend", !!a2old.error, a2old.error);
+await admin.from("invitations").update({ expires_at: new Date(Date.now() - 1000).toISOString() }).eq("id", i2.data);
+const a3 = await outsider.c.rpc("accept_invitation", { _token: r2.data });
+check("reject expired invite", !!a3.error && a3.error.message.includes("انتهت"), a3.error);
+const auto = await outsider.c.rpc("accept_my_invitations");
+check("expired not auto-accepted", auto.data === 0, auto);
+await owner.c.rpc("resend_invitation", { _id: i2.data });
+const t4 = await tokOf(i2.data);
+const a4 = await outsider.c.rpc("accept_invitation", { _token: t4 });
+check("accept valid invite", !a4.error, a4.error);
+const om2 = await outsider.c.from("memberships").select("role").eq("school_id", S);
+check("membership role comes from invite", om2.data?.length === 1 && om2.data[0].role === "counselor", om2);
+const a5 = await outsider.c.rpc("accept_invitation", { _token: t4 });
+check("invite cannot be reused", !!a5.error, a5.error);
+const ue = `e2e-unconf-${run}@rikaz.test`;
+const cu = await admin.auth.admin.createUser({ email: ue, password: pw, email_confirm: false });
+const i6 = await owner.c.rpc("invite_member", { _email: ue, _school: S, _role: "teacher" });
+const pre = await owner.c.rpc("invitation_preview", { _token: await tokOf(i6.data) });
+check("preview hides full email", !!pre.data?.[0]?.email_hint && !pre.data[0].email_hint.includes(ue), pre);
+const mu = await admin.from("memberships").select("id").eq("user_id", cu.data.user!.id);
+check("unconfirmed email gets no membership on invite", mu.data?.length === 0, mu);
+const rv = await teacherU.c.rpc("revoke_invitation", { _id: i6.data });
+check("teacher cannot revoke invites", !!rv.error);
+await admin.auth.admin.deleteUser(cu.data.user!.id);
+const ce = await outsider.c.rpc("check_enrollment" as any);
+check("trigger fn not callable", !!ce.error);
 
 console.log(`\n${ok} passed, ${bad} failed`);
 // cleanup test users' data

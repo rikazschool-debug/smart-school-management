@@ -12,7 +12,7 @@
 ## Architecture rules (Rikaz)
 - Scope reference: docs/rikaz-scope-v8.md. Build per shared function across all affected role dashboards.
 - Authorization lives in Postgres RLS + SECURITY DEFINER helpers (can_manage_school, can_view_student, ...); UI nav (src/lib/roles.ts) only mirrors it — never rely on hidden buttons.
-- Memberships/invitations are written only through RPCs (create_organization, invite_member, accept_my_invitations); authenticated has no insert on memberships and may only update is_active — prevents self-escalation.
+- Memberships/invitations are written only through RPCs (create_organization, invite_member, accept_invitation, accept_my_invitations, revoke/resend_invitation); acceptance requires matching confirmed email and a live (not revoked/expired) token; authenticated has no insert on memberships and may only update is_active — prevents self-escalation.
 - Platform admins are added only via SQL (insert into platform_admins) — no in-app path or hardcoded credentials.
 - One classroom per course, created only by decide_assignment via ensure_classroom (idempotent).
 - Browser pages query Supabase directly with the RLS-bound client; the generic CrudTable in src/components/crud-page.tsx is the shared list/form/search component.
