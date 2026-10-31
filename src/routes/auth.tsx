@@ -10,10 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Mode = "signin" | "signup" | "forgot";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>): { mode?: Mode } =>
-    s["mode"] === "signup" || s["mode"] === "forgot" ? { mode: s["mode"] } : {},
+  validateSearch: (s: Record<string, unknown>): { mode?: Mode; invite?: string } => {
+    const out: { mode?: Mode; invite?: string } = {};
+    if (s["mode"] === "signup" || s["mode"] === "forgot") out.mode = s["mode"];
+    if (typeof s["invite"] === "string" && UUID_RE.test(s["invite"])) out.invite = s["invite"];
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "تسجيل الدخول — ركاز" },
@@ -36,10 +41,12 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
   const navigate = useNavigate();
+  const go = () => (search.invite ? navigate({ to: "/invite/$token", params: { token: search.invite } }) : navigate({ to: "/app" }));
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => data.user && navigate({ to: "/app" }));
-  }, [navigate]);
+    supabase.auth.getUser().then(({ data }) => data.user && go());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function demoLogin(email: string) {
     setBusy(true);
@@ -60,16 +67,16 @@ function AuthPage() {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/app" });
+        go();
       } else if (mode === "signup") {
         if (!name.trim()) throw new Error("الاسم الكامل مطلوب");
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/app`, data: { full_name: name.trim() } },
+          options: { emailRedirectTo: search.invite ? `${window.location.origin}/invite/${search.invite}` : `${window.location.origin}/app`, data: { full_name: name.trim() } },
         });
         if (error) throw error;
-        if (data.session) navigate({ to: "/app" });
+        if (data.session) go();
         else setSent("أرسلنا رابط تأكيد إلى بريدك. افتحه ثم سجّل الدخول.");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
