@@ -57,7 +57,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           if (!role) return void toast.error("اختر الدور");
           const { error } = await supabase.rpc("invite_member", { _email: email, _school: ctx.schoolId, _role: role as Exclude<Role, "platform_admin">, ...(dept ? { _department: dept } : {}) });
           if (error) return void toast.error(arabicError(error));
-          toast.success("تمت الدعوة. إن كان للمستخدم حساب فقد أُضيف فورًا.");
+          toast.success("أُنشئت الدعوة. انسخ رابطها من القائمة أدناه وأرسله للمدعو.");
           setEmail(""); setRole(""); setDept("");
           qc.invalidateQueries();
         }}
@@ -108,14 +108,33 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           </Table>
         </div>
       )}
-      <h2 className="mb-3 text-lg font-bold">دعوات بانتظار إنشاء الحساب</h2>
+      <h2 className="mb-1 text-lg font-bold">الدعوات المعلقة</h2>
+      <p className="mb-3 text-sm text-muted-foreground">لا يرسل النظام رسائل بريد للدعوات حاليًا. انسخ الرابط وأرسله للمدعو بنفسك. لا تُفعّل العضوية إلا بعد دخوله بالبريد نفسه وتأكيده.</p>
       {inv.data?.length ? (
         <ul className="space-y-2">
-          {inv.data.map((i) => (
-            <li key={i["id"]} className="flex items-center justify-between rounded-lg border bg-card px-4 py-2 text-sm">
-              <span dir="ltr">{i["email"]}</span><span>{ROLE_LABELS[i["role"] as Role]}</span>
-            </li>
-          ))}
+          {inv.data.map((i) => {
+            const st = i["revoked_at"] ? "ملغاة" : new Date(i["expires_at"]) <= new Date() ? "منتهية" : "صالحة حتى " + new Date(i["expires_at"]).toLocaleDateString("ar");
+            const active = !i["revoked_at"] && new Date(i["expires_at"]) > new Date();
+            const link = `${window.location.origin}/invite/${i["token"]}`;
+            return (
+              <li key={i["id"]} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card px-4 py-2 text-sm">
+                <span dir="ltr">{i["email"]}</span>
+                <span>{ROLE_LABELS[i["role"] as Role]}</span>
+                <span className={active ? "text-muted-foreground" : "text-destructive"}>{st}</span>
+                <span className="flex gap-1">
+                  {active && <Button size="sm" variant="outline" onClick={async () => { await navigator.clipboard.writeText(link); toast.success("تم نسخ رابط الدعوة"); }}>نسخ الرابط</Button>}
+                  <Button size="sm" variant="ghost" onClick={async () => {
+                    const { error } = await supabase.rpc("resend_invitation", { _id: i["id"] });
+                    if (error) toast.error(arabicError(error)); else { toast.success("تم تجديد الدعوة برابط جديد، والرابط القديم لم يعد يعمل"); qc.invalidateQueries(); }
+                  }}>إعادة إرسال</Button>
+                  {active && <Button size="sm" variant="ghost" onClick={async () => {
+                    const { error } = await supabase.rpc("revoke_invitation", { _id: i["id"] });
+                    if (error) toast.error(arabicError(error)); else { toast.success("أُلغيت الدعوة"); qc.invalidateQueries(); }
+                  }}>إلغاء</Button>}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       ) : <EmptyState title="لا توجد دعوات معلقة" />}
     </>
