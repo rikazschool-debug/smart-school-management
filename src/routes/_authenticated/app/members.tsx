@@ -1,0 +1,123 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+import { db, useOptions, type Row } from "@/components/crud-page";
+import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
+import { RequireSchool } from "@/components/require-school";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { supabase } from "@/integrations/supabase/client";
+import { ROLE_LABELS, invitableRoles, type Role } from "@/lib/roles";
+import { arabicError, type AppContext } from "@/lib/session";
+
+export const Route = createFileRoute("/_authenticated/app/members")({ component: Page });
+
+function Page() {
+  return <RequireSchool nav="members">{(ctx) => <Members ctx={ctx} />}</RequireSchool>;
+}
+
+function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
+  const qc = useQueryClient();
+  const roles = invitableRoles(ctx.role);
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<Role | "">("");
+  const [dept, setDept] = useState("");
+  const depts = useOptions("departments", "name", ctx.schoolId);
+  const mem = useQuery({
+    queryKey: ["members", ctx.schoolId],
+    queryFn: async () => {
+      const { data, error } = await db.from("memberships").select("id, role, is_active, user_id, departments(name)").eq("school_id", ctx.schoolId).order("role");
+      if (error) throw error;
+      const ids = (data as Row[]).map((m) => m["user_id"]);
+      const { data: profs } = await db.from("profiles").select("id, full_name, email").in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+      const pm = new Map((profs as Row[] | null ?? []).map((p) => [p["id"], p]));
+      return (data as Row[]).map((m) => ({ ...m, profile: pm.get(m["user_id"]) }));
+    },
+  });
+  const inv = useQuery({
+    queryKey: ["invitations", ctx.schoolId],
+    queryFn: async () => {
+      const { data, error } = await db.from("invitations").select("*").eq("school_id", ctx.schoolId).is("accepted_at", null).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Row[];
+    },
+  });
+
+  return (
+    <>
+      <PageHeader title="المستخدمون والأدوار" desc="ادعُ المستخدمين بالبريد وحدد دورهم في هذه المدرسة. لا يمكن لأحد منح نفسه دورًا." />
+      <form
+        className="mb-8 grid gap-3 rounded-2xl border bg-card p-5 sm:grid-cols-4"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (!/^\S+@\S+\.\S+$/.test(email)) return toast.error("بريد غير صحيح");
+          if (!role) return toast.error("اختر الدور");
+          const { error } = await supabase.rpc("invite_member", { _email: email, _school: ctx.schoolId, _role: role, ...(dept ? { _department: dept } : {}) });
+          if (error) return toast.error(arabicError(error));
+          toast.success("تمت الدعوة. إن كان للمستخدم حساب فقد أُضيف فورًا.");
+          setEmail(""); setRole(""); setDept("");
+          qc.invalidateQueries();
+        }}
+      >
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="em">البريد الإلكتروني</Label>
+          <Input id="em" dir="ltr" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="rl">الدور</Label>
+          <select id="rl" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+            <option value="">— اختر —</option>
+            {roles.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+          </select>
+        </div>
+        {role === "dept_head" ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="dp">القسم</Label>
+            <select id="dp" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={dept} onChange={(e) => setDept(e.target.value)}>
+              <option value="">— اختر —</option>
+              {depts.data?.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+            </select>
+          </div>
+        ) : <div />}
+        <Button className="sm:col-span-4 sm:w-fit" disabled={roles.length === 0}>إرسال الدعوة</Button>
+      </form>
+
+      <h2 className="mb-3 text-lg font-bold">الأعضاء</h2>
+      {mem.isLoading ? <LoadingState /> : mem.error ? <ErrorState message={arabicError(mem.error)} /> : !mem.data?.length ? <EmptyState title="لا يوجد أعضاء بعد" /> : (
+        <div className="mb-8 overflow-x-auto rounded-xl border bg-card">
+          <Table>
+            <TableHeader><TableRow><TableHead className="text-start">الاسم</TableHead><TableHead className="text-start">البريد</TableHead><TableHead className="text-start">الدور</TableHead><TableHead className="text-start">الحالة</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {mem.data.map((m) => (
+                <TableRow key={m["id"]}>
+                  <TableCell>{m.profile?.full_name || "—"}</TableCell>
+                  <TableCell dir="ltr" className="text-end">{m.profile?.email ?? "—"}</TableCell>
+                  <TableCell>{ROLE_LABELS[m["role"] as Role]}{m["departments"]?.name ? ` — ${m["departments"].name}` : ""}</TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" onClick={async () => {
+                      const { error } = await db.from("memberships").update({ is_active: !m["is_active"] }).eq("id", m["id"]);
+                      if (error) toast.error(arabicError(error)); else qc.invalidateQueries();
+                    }}>{m["is_active"] ? "نشط — إيقاف" : "موقوف — تفعيل"}</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+      <h2 className="mb-3 text-lg font-bold">دعوات بانتظار إنشاء الحساب</h2>
+      {inv.data?.length ? (
+        <ul className="space-y-2">
+          {inv.data.map((i) => (
+            <li key={i["id"]} className="flex items-center justify-between rounded-lg border bg-card px-4 py-2 text-sm">
+              <span dir="ltr">{i["email"]}</span><span>{ROLE_LABELS[i["role"] as Role]}</span>
+            </li>
+          ))}
+        </ul>
+      ) : <EmptyState title="لا توجد دعوات معلقة" />}
+    </>
+  );
+}
