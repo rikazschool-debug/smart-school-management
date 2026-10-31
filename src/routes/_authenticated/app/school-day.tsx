@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { db, useOptions, type Row } from "@/components/crud-page";
@@ -117,11 +117,56 @@ function Setup({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           <Button>إضافة</Button>
         </form>
       </section>
+      <Supervisors S={S} teachers={teachers.data ?? []} />
     </>
   );
 }
 
-import { useQuery } from "@tanstack/react-query";
+function Supervisors({ S, teachers }: { S: string; teachers: { value: string; label: string }[] }) {
+  const qc = useQueryClient();
+  const [f, setF] = useState({ sup: "", teacher: "" });
+  const q = useQuery({
+    queryKey: ["supervisors", S],
+    queryFn: async () => {
+      const [m, l] = await Promise.all([
+        db.from("memberships").select("user_id").eq("school_id", S).eq("role", "supervisor").eq("is_active", true),
+        db.from("supervisor_teachers").select("id, supervisor_user_id, teachers(full_name)").eq("school_id", S),
+      ]);
+      const ids = ((m.data ?? []) as Row[]).map((x) => x["user_id"]);
+      const { data: profs } = await db.from("profiles").select("id, full_name, email").in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+      return { sups: (profs ?? []) as Row[], links: (l.data ?? []) as Row[] };
+    },
+  });
+  const name = (id: string) => { const p = q.data?.sups.find((x) => x["id"] === id); return p?.full_name || p?.email || "مشرف"; };
+  return (
+    <section className="mt-6 rounded-2xl border bg-card p-5">
+      <h2 className="mb-1 font-bold">إسناد المعلمين للمشرفين</h2>
+      <p className="mb-3 text-sm text-muted-foreground">يرى المشرف في الجدول حصص المعلمين المسندين إليه فقط.</p>
+      <ul className="mb-3 space-y-1 text-sm">
+        {q.data?.links.map((l) => (
+          <li key={l["id"]} className="flex items-center justify-between rounded-lg border px-3 py-1.5">
+            <span>{name(l["supervisor_user_id"])} ← {l["teachers"]?.full_name}</span>
+            <Button size="sm" variant="ghost" onClick={async () => { await db.from("supervisor_teachers").delete().eq("id", l["id"]); qc.invalidateQueries({ queryKey: ["supervisors", S] }); }}>حذف</Button>
+          </li>
+        ))}
+      </ul>
+      {q.data && !q.data.sups.length ? <p className="text-sm text-muted-foreground">لا يوجد مشرفون في المدرسة. ادعُهم من صفحة المستخدمين.</p> : (
+        <form className="grid gap-2 sm:grid-cols-3" onSubmit={async (e) => {
+          e.preventDefault();
+          if (!f.sup || !f.teacher) return void toast.error("اختر المشرف والمعلم");
+          const { error } = await db.from("supervisor_teachers").insert({ school_id: S, supervisor_user_id: f.sup, teacher_id: f.teacher });
+          if (error) return void toast.error(arabicError(error));
+          toast.success("تم الإسناد"); qc.invalidateQueries({ queryKey: ["supervisors", S] });
+        }}>
+          <select className={sel} aria-label="المشرف" value={f.sup} onChange={(e) => setF({ ...f, sup: e.target.value })}><option value="">— المشرف —</option>{q.data?.sups.map((p) => <option key={p["id"]} value={p["id"]}>{p["full_name"] || p["email"]}</option>)}</select>
+          <select className={sel} aria-label="المعلم" value={f.teacher} onChange={(e) => setF({ ...f, teacher: e.target.value })}><option value="">— المعلم —</option>{teachers.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
+          <Button>إسناد</Button>
+        </form>
+      )}
+    </section>
+  );
+}
+
 function useUnav(S: string) {
   return useQuery({
     queryKey: ["unav", S],

@@ -22,9 +22,11 @@ import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authenticated/app/members'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app/notifications'
 import { Route as AuthenticatedAppPlatformRouteImport } from './routes/_authenticated/app/platform'
+import { Route as AuthenticatedAppScheduleRouteImport } from './routes/_authenticated/app/schedule'
 import { Route as AuthenticatedAppSchoolDayRouteImport } from './routes/_authenticated/app/school-day'
 import { Route as AuthenticatedAppSchoolsRouteImport } from './routes/_authenticated/app/schools'
 import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenticated/app/students'
+import { Route as AuthenticatedAppSubstitutionsRouteImport } from './routes/_authenticated/app/substitutions'
 import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
 import { Route as AuthenticatedAppClassroomsIndexRouteImport } from './routes/_authenticated/app/classrooms.index'
 import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_authenticated/app/classrooms.$id'
@@ -97,6 +99,12 @@ const AuthenticatedAppPlatformRoute =
     path: '/platform',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppScheduleRoute =
+  AuthenticatedAppScheduleRouteImport.update({
+    id: '/schedule',
+    path: '/schedule',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppSchoolDayRoute =
   AuthenticatedAppSchoolDayRouteImport.update({
     id: '/school-day',
@@ -112,6 +120,12 @@ const AuthenticatedAppStudentsRoute =
   AuthenticatedAppStudentsRouteImport.update({
     id: '/students',
     path: '/students',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSubstitutionsRoute =
+  AuthenticatedAppSubstitutionsRouteImport.update({
+    id: '/substitutions',
+    path: '/substitutions',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppTeachersRoute =
@@ -145,9 +159,11 @@ export interface FileRoutesByFullPath {
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/app/school-day': typeof AuthenticatedAppSchoolDayRoute
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
+  '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
@@ -164,9 +180,11 @@ export interface FileRoutesByTo {
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/app/school-day': typeof AuthenticatedAppSchoolDayRoute
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
+  '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
@@ -186,9 +204,11 @@ export interface FileRoutesById {
   '/_authenticated/app/members': typeof AuthenticatedAppMembersRoute
   '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/_authenticated/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/_authenticated/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/_authenticated/app/school-day': typeof AuthenticatedAppSchoolDayRoute
   '/_authenticated/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/_authenticated/app/students': typeof AuthenticatedAppStudentsRoute
+  '/_authenticated/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
@@ -208,9 +228,11 @@ export interface FileRouteTypes {
     | '/app/members'
     | '/app/notifications'
     | '/app/platform'
+    | '/app/schedule'
     | '/app/school-day'
     | '/app/schools'
     | '/app/students'
+    | '/app/substitutions'
     | '/app/teachers'
     | '/app/'
     | '/app/classrooms/$id'
@@ -227,9 +249,11 @@ export interface FileRouteTypes {
     | '/app/members'
     | '/app/notifications'
     | '/app/platform'
+    | '/app/schedule'
     | '/app/school-day'
     | '/app/schools'
     | '/app/students'
+    | '/app/substitutions'
     | '/app/teachers'
     | '/app'
     | '/app/classrooms/$id'
@@ -248,9 +272,11 @@ export interface FileRouteTypes {
     | '/_authenticated/app/members'
     | '/_authenticated/app/notifications'
     | '/_authenticated/app/platform'
+    | '/_authenticated/app/schedule'
     | '/_authenticated/app/school-day'
     | '/_authenticated/app/schools'
     | '/_authenticated/app/students'
+    | '/_authenticated/app/substitutions'
     | '/_authenticated/app/teachers'
     | '/_authenticated/app/'
     | '/_authenticated/app/classrooms/$id'
@@ -358,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPlatformRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/schedule': {
+      id: '/_authenticated/app/schedule'
+      path: '/schedule'
+      fullPath: '/app/schedule'
+      preLoaderRoute: typeof AuthenticatedAppScheduleRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/school-day': {
       id: '/_authenticated/app/school-day'
       path: '/school-day'
@@ -377,6 +410,13 @@ declare module '@tanstack/react-router' {
       path: '/students'
       fullPath: '/app/students'
       preLoaderRoute: typeof AuthenticatedAppStudentsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/substitutions': {
+      id: '/_authenticated/app/substitutions'
+      path: '/substitutions'
+      fullPath: '/app/substitutions'
+      preLoaderRoute: typeof AuthenticatedAppSubstitutionsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/teachers': {
@@ -410,9 +450,11 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppMembersRoute: typeof AuthenticatedAppMembersRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
   AuthenticatedAppPlatformRoute: typeof AuthenticatedAppPlatformRoute
+  AuthenticatedAppScheduleRoute: typeof AuthenticatedAppScheduleRoute
   AuthenticatedAppSchoolDayRoute: typeof AuthenticatedAppSchoolDayRoute
   AuthenticatedAppSchoolsRoute: typeof AuthenticatedAppSchoolsRoute
   AuthenticatedAppStudentsRoute: typeof AuthenticatedAppStudentsRoute
+  AuthenticatedAppSubstitutionsRoute: typeof AuthenticatedAppSubstitutionsRoute
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppClassroomsIdRoute: typeof AuthenticatedAppClassroomsIdRoute
@@ -426,9 +468,11 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppMembersRoute: AuthenticatedAppMembersRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
   AuthenticatedAppPlatformRoute: AuthenticatedAppPlatformRoute,
+  AuthenticatedAppScheduleRoute: AuthenticatedAppScheduleRoute,
   AuthenticatedAppSchoolDayRoute: AuthenticatedAppSchoolDayRoute,
   AuthenticatedAppSchoolsRoute: AuthenticatedAppSchoolsRoute,
   AuthenticatedAppStudentsRoute: AuthenticatedAppStudentsRoute,
+  AuthenticatedAppSubstitutionsRoute: AuthenticatedAppSubstitutionsRoute,
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppClassroomsIdRoute: AuthenticatedAppClassroomsIdRoute,

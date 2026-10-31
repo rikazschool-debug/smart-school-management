@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { arabicError, type AppContext } from "@/lib/session";
-import { DAY_NAMES, slotLabel, todayISO, useCurrentTimetable, useSlots } from "@/lib/schedule";
+import { DAY_NAMES, todayISO, useCurrentTimetable, useSlots } from "@/lib/schedule";
 
 export const Route = createFileRoute("/_authenticated/app/substitutions")({ component: Page });
 
@@ -158,4 +158,3 @@ function AffectedSlot({ s, a, date, history, onDone }: { s: Row; a: Row; date: s
   );
 }
 
-export { slotLabel };
