@@ -101,10 +101,10 @@ function Shell() {
           <Button variant="ghost" size="icon" className="md:hidden" aria-label="القائمة" onClick={() => setOpen(true)}>
             <Menu className="size-5" />
           </Button>
-          <label className="text-xs text-muted-foreground" htmlFor="ctx">السياق</label>
+          <label className="hidden text-xs text-muted-foreground sm:inline" htmlFor="ctx">السياق</label>
           <select
             id="ctx"
-            className="h-9 max-w-[70vw] rounded-md border border-input bg-card px-2 text-sm"
+            className="h-9 min-w-0 max-w-[60vw] flex-1 rounded-md sm:flex-none border border-input bg-card px-2 text-sm"
             value={active.key}
             onChange={(e) => { setActive(e.target.value); qc.invalidateQueries(); navigate({ to: "/app" }); }}
           >

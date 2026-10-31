@@ -15,7 +15,7 @@ export function NotificationBell() {
   });
   const n = q.data ?? 0;
   return (
-    <Link to="/app/notifications" className="relative ms-auto rounded-full p-2 hover:bg-muted" aria-label={`الإشعارات${n ? ` (${n} غير مقروء)` : ""}`}>
+    <Link to="/app/notifications" className="relative ms-auto shrink-0 rounded-full p-2 hover:bg-muted" aria-label={`الإشعارات${n ? ` (${n} غير مقروء)` : ""}`}>
       <Bell className="size-5" />
       {n > 0 && <span className="absolute -top-0.5 -end-0.5 min-w-5 rounded-full bg-destructive px-1 text-center text-[10px] font-bold leading-5 text-destructive-foreground">{n > 99 ? "99+" : n}</span>}
     </Link>
