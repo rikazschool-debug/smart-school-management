@@ -78,7 +78,7 @@ function InvitePage() {
         {state === "ready" && p && (
           p.status !== "pending" ? <p className="text-destructive">{STATUS_MSG[p.status]}</p> : (
             <>
-              <p>مدرسة <b>{p.school_name}</b> تدعوك بدور <b>{p.role ? ROLE_LABELS[p.role] : ""}</b>.</p>
+              <p>تدعوك <b>{p.school_name}</b> للانضمام بدور <b>{p.role ? ROLE_LABELS[p.role] : ""}</b>.</p>
               <p className="text-sm text-muted-foreground">الدعوة موجهة إلى <span dir="ltr">{p.email_hint}</span></p>
               {!p.email_matches ? (
                 <p className="text-destructive">أنت مسجل بالبريد <span dir="ltr">{email}</span>، والدعوة لبريد آخر. سجّل الخروج وادخل بالبريد الصحيح.</p>

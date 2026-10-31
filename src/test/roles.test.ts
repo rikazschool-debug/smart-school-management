@@ -14,9 +14,16 @@ describe("role rules", () => {
   it("teachers cannot invite anyone", () => {
     expect(invitableRoles("teacher")).toEqual([]);
   });
-  it("counselor, nurse and security dashboards expose no data pages yet", () => {
-    expect(NAV_BY_ROLE.counselor).toEqual(["home"]);
-    expect(NAV_BY_ROLE.nurse).toEqual(["home"]);
-    expect(NAV_BY_ROLE.security).toEqual(["home"]);
+  it("counselor, nurse and security dashboards expose only notifications", () => {
+    expect(NAV_BY_ROLE.counselor).toEqual(["home", "notifications"]);
+    expect(NAV_BY_ROLE.nurse).toEqual(["home", "notifications"]);
+    expect(NAV_BY_ROLE.security).toEqual(["home", "notifications"]);
+  });
+  it("only managers get school-day setup and substitutions", () => {
+    for (const r of ["teacher", "student", "guardian", "dept_head", "supervisor", "student_affairs"] as const) {
+      expect(NAV_BY_ROLE[r]).not.toContain("substitutions");
+      expect(NAV_BY_ROLE[r]).not.toContain("schoolday");
+    }
+    expect(NAV_BY_ROLE.vice_principal).toContain("substitutions");
   });
 });

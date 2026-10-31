@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-  BookOpen, Building2, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
+  Bell, BookOpen, Building2, CalendarClock, CalendarDays, Repeat, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingState, ErrorState } from "@/components/states";
+import { NotificationBell } from "@/components/notification-bell";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "لوحة ركاز" }, { name: "robots", content: "noindex" }] }),
@@ -29,6 +30,10 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   students: { to: "/app/students", label: "الطلاب والتسكين", icon: GraduationCap },
   guardians: { to: "/app/guardians", label: "أولياء الأمور", icon: Users },
   classrooms: { to: "/app/classrooms", label: "الفصول الرقمية", icon: School },
+  schoolday: { to: "/app/school-day", label: "إعداد اليوم الدراسي", icon: CalendarClock },
+  schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
+  substitutions: { to: "/app/substitutions", label: "التبديل والبدلاء", icon: Repeat },
+  notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
 };
 
 function AppLayout() {
@@ -96,10 +101,10 @@ function Shell() {
           <Button variant="ghost" size="icon" className="md:hidden" aria-label="القائمة" onClick={() => setOpen(true)}>
             <Menu className="size-5" />
           </Button>
-          <label className="text-xs text-muted-foreground" htmlFor="ctx">السياق</label>
+          <label className="hidden text-xs text-muted-foreground sm:inline" htmlFor="ctx">السياق</label>
           <select
             id="ctx"
-            className="h-9 max-w-[70vw] rounded-md border border-input bg-card px-2 text-sm"
+            className="h-9 min-w-0 max-w-[60vw] flex-1 rounded-md sm:flex-none border border-input bg-card px-2 text-sm"
             value={active.key}
             onChange={(e) => { setActive(e.target.value); qc.invalidateQueries(); navigate({ to: "/app" }); }}
           >
@@ -109,6 +114,7 @@ function Shell() {
               </option>
             ))}
           </select>
+          <NotificationBell />
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">
           <Outlet />

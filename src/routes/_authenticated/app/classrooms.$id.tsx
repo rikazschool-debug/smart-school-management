@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { arabicError } from "@/lib/session";
+import { ClassroomPosts } from "@/components/classroom-posts";
 
 export const Route = createFileRoute("/_authenticated/app/classrooms/$id")({ component: Page });
 
@@ -35,11 +36,8 @@ function Page() {
       <Link to="/app/classrooms" className="text-sm text-primary">→ كل الفصول</Link>
       <PageHeader title={room.data["title"]} />
       <div className="grid gap-6 md:grid-cols-3">
-        <div className="space-y-4 md:col-span-2">
-          <div className="rounded-2xl border border-dashed p-8 text-center text-muted-foreground">
-            <p className="font-medium text-foreground">المنشورات والملفات والواجبات</p>
-            <p className="mt-1 text-sm">لم تُفعّل بعد — ستُضاف في الحزمة القادمة.</p>
-          </div>
+        <div className="md:col-span-2">
+          <ClassroomPosts classroom={id} courseId={room.data["course_id"]} />
         </div>
         <aside className="space-y-4 rounded-2xl border bg-card p-5">
           {members.isLoading ? <LoadingState /> : members.error ? <ErrorState message={arabicError(members.error)} /> : (
