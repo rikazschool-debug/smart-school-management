@@ -39,7 +39,11 @@ export type NavKey =
   | "courses"
   | "students"
   | "guardians"
-  | "classrooms";
+  | "classrooms"
+  | "schedule"
+  | "schoolday"
+  | "substitutions"
+  | "notifications";
 
 const MANAGE: NavKey[] = [
   "home",
@@ -50,6 +54,10 @@ const MANAGE: NavKey[] = [
   "students",
   "guardians",
   "classrooms",
+  "schoolday",
+  "schedule",
+  "substitutions",
+  "notifications",
 ];
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
@@ -57,15 +65,15 @@ export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   org_owner: ["home", "schools", ...MANAGE.slice(1)],
   principal: MANAGE,
   vice_principal: MANAGE,
-  student_affairs: ["home", "students", "guardians", "members"],
-  dept_head: ["home", "teachers", "courses", "classrooms"],
-  supervisor: ["home", "teachers", "courses", "classrooms"],
-  teacher: ["home", "classrooms"],
-  guardian: ["home", "classrooms"],
-  student: ["home", "classrooms"],
-  counselor: ["home"],
-  nurse: ["home"],
-  security: ["home"],
+  student_affairs: ["home", "students", "guardians", "members", "schedule", "notifications"],
+  dept_head: ["home", "teachers", "courses", "classrooms", "schedule", "notifications"],
+  supervisor: ["home", "teachers", "courses", "classrooms", "schedule", "notifications"],
+  teacher: ["home", "classrooms", "schedule", "notifications"],
+  guardian: ["home", "classrooms", "schedule", "notifications"],
+  student: ["home", "classrooms", "schedule", "notifications"],
+  counselor: ["home", "notifications"],
+  nurse: ["home", "notifications"],
+  security: ["home", "notifications"],
 };
 
 /** Roles a caller may invite (mirrors the invite_member database rule). */
@@ -103,4 +111,9 @@ export function canManage(role: Role) {
 }
 export function canManageStudents(role: Role) {
   return canManage(role) || role === "student_affairs";
+}
+
+/** Only principal-level managers edit timetables and assign substitutes (mirrors can_manage_school). */
+export function canEditSchedule(role: Role) {
+  return canManage(role);
 }
