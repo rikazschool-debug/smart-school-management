@@ -137,7 +137,7 @@ function Supervisors({ S, teachers }: { S: string; teachers: { value: string; la
       return { sups: (profs ?? []) as Row[], links: (l.data ?? []) as Row[] };
     },
   });
-  const name = (id: string) => { const p = q.data?.sups.find((x) => x["id"] === id); return p?.full_name || p?.email || "مشرف"; };
+  const name = (id: string) => { const p = q.data?.sups.find((x) => x["id"] === id); return p?.["full_name"] || p?.["email"] || "مشرف"; };
   return (
     <section className="mt-6 rounded-2xl border bg-card p-5">
       <h2 className="mb-1 font-bold">إسناد المعلمين للمشرفين</h2>

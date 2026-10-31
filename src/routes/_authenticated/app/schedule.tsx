@@ -23,7 +23,7 @@ function Page() {
   return <RequireSchool nav="schedule">{(ctx) => (canEditSchedule(ctx.role) ? <Manager ctx={ctx} /> : <Viewer ctx={ctx} />)}</RequireSchool>;
 }
 
-function SlotCard({ s, show, sub }: { s: Row; show: ("teacher" | "section")[]; sub?: Row }) {
+function SlotCard({ s, show, sub }: { s: Row; show: ("teacher" | "section")[]; sub?: Row | undefined }) {
   const l = slotLabel(s);
   return (
     <div className="rounded-md bg-primary/10 p-1.5 text-xs leading-5">
@@ -78,10 +78,10 @@ function Manager({ ctx }: { ctx: Ctx }) {
   if (setup.isLoading || tts.isLoading) return <LoadingState />;
   if (setup.error || tts.error) return <ErrorState message={arabicError(setup.error ?? tts.error)} />;
   const d = setup.data!;
-  if (!d.periods.some((p) => p["kind"] === "lesson")) return <EmptyState title="أضف الحصص أولًا" desc="من صفحة «إعداد اليوم الدراسي» حدّد أيام الدراسة والحصص." />;
+  if (!d.periods.some((p) => p["kind"] === "lesson")) return <EmptyState title="أضف الحصص أولًا" hint="من صفحة «إعداد اليوم الدراسي» حدّد أيام الدراسة والحصص." />;
   const isDraft = tt?.["status"] === "draft";
   const shown = applyFilter(slots.data ?? [], filter);
-  const latestPublished = tts.data?.filter((t) => t["status"] === "published").sort((a, b) => b["version"] - a["version"])[0];
+  const latestPublished = tts.data?.filter((t) => t["status"] === "published").sort((a, b) => (b["version"] ?? 0) - (a["version"] ?? 0))[0];
 
   return (
     <>
@@ -97,7 +97,7 @@ function Manager({ ctx }: { ctx: Ctx }) {
                     <span className="font-medium">{t["name"]}</span>
                     <span className="text-muted-foreground">
                       {t["status"] === "draft" ? (t["based_on"] ? "مسودة تعديل" : "مسودة") : `منشور — إصدار ${t["version"]} — يسري من ${t["effective_from"]}`}
-                      {latestPublished?.id === t["id"] && " (الأحدث)"}
+                      {latestPublished?.["id"] === t["id"] && " (الأحدث)"}
                     </span>
                   </button>
                 </li>
@@ -277,7 +277,7 @@ function Viewer({ ctx }: { ctx: Ctx }) {
         <div className="space-y-1"><Label htmlFor="dt">الأسبوع الذي يتضمن</Label><Input id="dt" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
         {needsFilter && base.length > 0 && <div className="space-y-1"><Label>{ctx.role === "guardian" ? "الابن / الشعبة" : "عرض"}</Label><Filter slots={base} value={filter} onChange={setFilter} /></div>}
       </div>
-      {(ctx.role === "supervisor" && scope.data?.length === 0) ? <EmptyState title="لم يُسند إليك معلمون بعد" desc="تُسند إدارة المدرسة المعلمين للمشرف من صفحة إعداد اليوم الدراسي." /> :
+      {(ctx.role === "supervisor" && scope.data?.length === 0) ? <EmptyState title="لم يُسند إليك معلمون بعد" hint="تُسند إدارة المدرسة المعلمين للمشرف من صفحة إعداد اليوم الدراسي." /> :
         !cur.data ? <EmptyState title="لا يوجد جدول منشور ساري لهذا التاريخ" /> :
         slots.isLoading ? <LoadingState /> : !base.length ? <EmptyState title="لا توجد حصص ضمن صلاحيتك في هذا الجدول" /> : (
           <WeekGrid
