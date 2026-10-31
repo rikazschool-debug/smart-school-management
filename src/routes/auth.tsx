@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicError } from "@/lib/session";
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts";
+import { ROLE_LABELS } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +40,16 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => data.user && navigate({ to: "/app" }));
   }, [navigate]);
+
+  async function demoLogin(email: string) {
+    setBusy(true);
+    await supabase.auth.signOut();
+    localStorage.removeItem("rikaz.activeContext");
+    const { error } = await supabase.auth.signInWithPassword({ email, password: DEMO_PASSWORD });
+    setBusy(false);
+    if (error) return void toast.error(arabicError(error));
+    navigate({ to: "/app" });
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -118,6 +130,19 @@ function AuthPage() {
               <button type="button" className="text-muted-foreground" onClick={() => setMode("forgot")}>نسيت كلمة المرور؟</button>
             )}
           </div>
+          {import.meta.env.DEV && (
+            <div className="space-y-2 rounded-xl border bg-card p-3">
+              <p className="text-sm font-semibold">دخول سريع بالحسابات التجريبية</p>
+              <div className="grid grid-cols-2 gap-2">
+                {DEMO_ACCOUNTS.map((d) => (
+                  <Button key={d.email} type="button" size="sm" variant="secondary" disabled={busy} onClick={() => demoLogin(d.email)}>
+                    {ROLE_LABELS[d.role]}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">تظهر في المعاينة فقط، وتُخفى في النسخة المنشورة.</p>
+            </div>
+          )}
           <p className="text-xs text-muted-foreground">إن دُعيت من مدرستك، أنشئ حسابًا بنفس البريد الذي دُعيت به وستظهر لك عضويتك تلقائيًا.</p>
         </form>
       </div>
