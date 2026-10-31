@@ -48,9 +48,13 @@ export function useSlots(timetableId: string | null | undefined) {
     queryKey: ["slots", timetableId],
     enabled: !!timetableId,
     queryFn: async () => {
-      const { data, error } = await db.from("timetable_slots").select(SLOT_SELECT).eq("timetable_id", timetableId);
+      const [{ data, error }, names] = await Promise.all([
+        db.from("timetable_slots").select(SLOT_SELECT).eq("timetable_id", timetableId),
+        db.rpc("schedule_teacher_names", { _timetable: timetableId }),
+      ]);
       if (error) throw error;
-      return data as Row[];
+      const nm = new Map(((names.data ?? []) as Row[]).map((n) => [n["teacher_id"], n["full_name"]]));
+      return (data as Row[]).map((s) => ({ ...s, teachers: { ...(s["teachers"] ?? {}), full_name: s["teachers"]?.full_name ?? nm.get(s["teacher_id"]) ?? "" }, _names: nm }));
     },
   });
 }

@@ -30,20 +30,20 @@ function SlotCard({ s, show, sub }: { s: Row; show: ("teacher" | "section")[]; s
       <p className="font-semibold text-foreground">{l.subject}</p>
       {show.includes("section") && <p>{l.section}</p>}
       {show.includes("teacher") && <p className={sub ? "line-through opacity-60" : ""}>{l.teacher}</p>}
-      {sub && <p className="font-semibold text-primary">بديل: {sub["teachers"]?.full_name ?? "معلم بديل"}</p>}
+      {sub && <p className="font-semibold text-primary">بديل: {sub["teachers"]?.full_name ?? s["_names"]?.get(sub["substitute_teacher_id"]) ?? "معلم بديل"}</p>}
       {l.room && <p className="text-muted-foreground">{l.room}</p>}
     </div>
   );
 }
 
-function Filter({ slots, value, onChange }: { slots: Row[]; value: string; onChange: (v: string) => void }) {
+function Filter({ slots, value, onChange, sectionsOnly }: { slots: Row[]; value: string; onChange: (v: string) => void; sectionsOnly?: boolean }) {
   const secs = useMemo(() => [...new Map(slots.map((s) => [s["section_id"], slotLabel(s).section])).entries()], [slots]);
   const tchs = useMemo(() => [...new Map(slots.map((s) => [s["teacher_id"], slotLabel(s).teacher])).entries()], [slots]);
   return (
     <select className={sel + " sm:w-72"} aria-label="عرض حسب" value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">كل الحصص</option>
       <optgroup label="الشعب">{secs.map(([id, n]) => <option key={id} value={"s:" + id}>شعبة {n}</option>)}</optgroup>
-      <optgroup label="المعلمون">{tchs.map(([id, n]) => <option key={id} value={"t:" + id}>{n || "معلم"}</option>)}</optgroup>
+      {!sectionsOnly && <optgroup label="المعلمون">{tchs.map(([id, n]) => <option key={id} value={"t:" + id}>{n || "معلم"}</option>)}</optgroup>}
     </select>
   );
 }
@@ -275,7 +275,7 @@ function Viewer({ ctx }: { ctx: Ctx }) {
       <PageHeader title={title} desc="الجدول المنشور الساري في الأسبوع المحدد، مع التبديلات اليومية." />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="space-y-1"><Label htmlFor="dt">الأسبوع الذي يتضمن</Label><Input id="dt" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
-        {needsFilter && base.length > 0 && <div className="space-y-1"><Label>{ctx.role === "guardian" ? "الابن / الشعبة" : "عرض"}</Label><Filter slots={base} value={filter} onChange={setFilter} /></div>}
+        {needsFilter && base.length > 0 && <div className="space-y-1"><Label>{ctx.role === "guardian" ? "الابن / الشعبة" : "عرض"}</Label><Filter slots={base} value={filter} onChange={setFilter} sectionsOnly={ctx.role === "guardian"} /></div>}
       </div>
       {(ctx.role === "supervisor" && scope.data?.length === 0) ? <EmptyState title="لم يُسند إليك معلمون بعد" hint="تُسند إدارة المدرسة المعلمين للمشرف من صفحة إعداد اليوم الدراسي." /> :
         !cur.data ? <EmptyState title="لا يوجد جدول منشور ساري لهذا التاريخ" /> :

@@ -25,7 +25,7 @@ export function WeekGrid({ days, periods, cell, initialDay }: Props) {
       </div>
       {periods.map((p) => (
         <div key={p["id"]} className={`flex gap-3 rounded-lg border p-3 ${p["kind"] === "break" ? "bg-muted/50" : "bg-card"}`}>
-          <div className="w-24 shrink-0 text-xs text-muted-foreground"><p className="font-medium text-foreground">{p["name"]}</p>{time(p)}</div>
+          <div className="w-24 shrink-0 text-xs text-muted-foreground"><p className="font-medium text-foreground">{p["name"]}</p><span dir="ltr" className="block text-end">{time(p)}</span></div>
           <div className="min-w-0 flex-1">{p["kind"] === "break" ? <span className="text-sm text-muted-foreground">استراحة</span> : cell(day, p)}</div>
         </div>
       ))}
@@ -52,7 +52,7 @@ export function WeekGrid({ days, periods, cell, initialDay }: Props) {
               <tbody>
                 {periods.map((p) => (
                   <tr key={p["id"]} className={p["kind"] === "break" ? "bg-muted/40" : ""}>
-                    <td className="border-b p-2 align-top text-xs text-muted-foreground"><p className="font-medium text-foreground">{p["name"]}</p>{time(p)}</td>
+                    <td className="border-b p-2 align-top text-xs text-muted-foreground"><p className="font-medium text-foreground">{p["name"]}</p><span dir="ltr">{time(p)}</span></td>
                     {days.map((d) => (
                       <td key={d} className="border-b border-s p-1.5 align-top">
                         {p["kind"] === "break" ? <span className="text-xs text-muted-foreground">استراحة</span> : cell(d, p)}
