@@ -10,33 +10,220 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/app/route'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
+import { Route as AuthenticatedAppAcademicRouteImport } from './routes/_authenticated/app/academic'
+import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
+import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
+import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authenticated/app/members'
+import { Route as AuthenticatedAppPlatformRouteImport } from './routes/_authenticated/app/platform'
+import { Route as AuthenticatedAppSchoolsRouteImport } from './routes/_authenticated/app/schools'
+import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenticated/app/students'
+import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
+import { Route as AuthenticatedAppClassroomsIndexRouteImport } from './routes/_authenticated/app/classrooms.index'
+import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_authenticated/app/classrooms.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppRouteRoute = AuthenticatedAppRouteRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppAcademicRoute =
+  AuthenticatedAppAcademicRouteImport.update({
+    id: '/academic',
+    path: '/academic',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppCoursesRoute = AuthenticatedAppCoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppGuardiansRoute =
+  AuthenticatedAppGuardiansRouteImport.update({
+    id: '/guardians',
+    path: '/guardians',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppMembersRoute = AuthenticatedAppMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppPlatformRoute =
+  AuthenticatedAppPlatformRouteImport.update({
+    id: '/platform',
+    path: '/platform',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSchoolsRoute = AuthenticatedAppSchoolsRouteImport.update({
+  id: '/schools',
+  path: '/schools',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppStudentsRoute =
+  AuthenticatedAppStudentsRouteImport.update({
+    id: '/students',
+    path: '/students',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppTeachersRoute =
+  AuthenticatedAppTeachersRouteImport.update({
+    id: '/teachers',
+    path: '/teachers',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppClassroomsIndexRoute =
+  AuthenticatedAppClassroomsIndexRouteImport.update({
+    id: '/classrooms/',
+    path: '/classrooms/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppClassroomsIdRoute =
+  AuthenticatedAppClassroomsIdRouteImport.update({
+    id: '/classrooms/$id',
+    path: '/classrooms/$id',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/app': typeof AuthenticatedAppRouteRouteWithChildren
+  '/app/academic': typeof AuthenticatedAppAcademicRoute
+  '/app/courses': typeof AuthenticatedAppCoursesRoute
+  '/app/guardians': typeof AuthenticatedAppGuardiansRoute
+  '/app/members': typeof AuthenticatedAppMembersRoute
+  '/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/app/schools': typeof AuthenticatedAppSchoolsRoute
+  '/app/students': typeof AuthenticatedAppStudentsRoute
+  '/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
+  '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/app/academic': typeof AuthenticatedAppAcademicRoute
+  '/app/courses': typeof AuthenticatedAppCoursesRoute
+  '/app/guardians': typeof AuthenticatedAppGuardiansRoute
+  '/app/members': typeof AuthenticatedAppMembersRoute
+  '/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/app/schools': typeof AuthenticatedAppSchoolsRoute
+  '/app/students': typeof AuthenticatedAppStudentsRoute
+  '/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/app': typeof AuthenticatedAppIndexRoute
+  '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
+  '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/app': typeof AuthenticatedAppRouteRouteWithChildren
+  '/_authenticated/app/academic': typeof AuthenticatedAppAcademicRoute
+  '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
+  '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
+  '/_authenticated/app/members': typeof AuthenticatedAppMembersRoute
+  '/_authenticated/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/_authenticated/app/schools': typeof AuthenticatedAppSchoolsRoute
+  '/_authenticated/app/students': typeof AuthenticatedAppStudentsRoute
+  '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
+  '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/app'
+    | '/app/academic'
+    | '/app/courses'
+    | '/app/guardians'
+    | '/app/members'
+    | '/app/platform'
+    | '/app/schools'
+    | '/app/students'
+    | '/app/teachers'
+    | '/app/'
+    | '/app/classrooms/$id'
+    | '/app/classrooms/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/app/academic'
+    | '/app/courses'
+    | '/app/guardians'
+    | '/app/members'
+    | '/app/platform'
+    | '/app/schools'
+    | '/app/students'
+    | '/app/teachers'
+    | '/app'
+    | '/app/classrooms/$id'
+    | '/app/classrooms'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
+    | '/_authenticated/app'
+    | '/_authenticated/app/academic'
+    | '/_authenticated/app/courses'
+    | '/_authenticated/app/guardians'
+    | '/_authenticated/app/members'
+    | '/_authenticated/app/platform'
+    | '/_authenticated/app/schools'
+    | '/_authenticated/app/students'
+    | '/_authenticated/app/teachers'
+    | '/_authenticated/app/'
+    | '/_authenticated/app/classrooms/$id'
+    | '/_authenticated/app/classrooms/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +235,163 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/academic': {
+      id: '/_authenticated/app/academic'
+      path: '/academic'
+      fullPath: '/app/academic'
+      preLoaderRoute: typeof AuthenticatedAppAcademicRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/courses': {
+      id: '/_authenticated/app/courses'
+      path: '/courses'
+      fullPath: '/app/courses'
+      preLoaderRoute: typeof AuthenticatedAppCoursesRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/guardians': {
+      id: '/_authenticated/app/guardians'
+      path: '/guardians'
+      fullPath: '/app/guardians'
+      preLoaderRoute: typeof AuthenticatedAppGuardiansRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/members': {
+      id: '/_authenticated/app/members'
+      path: '/members'
+      fullPath: '/app/members'
+      preLoaderRoute: typeof AuthenticatedAppMembersRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/platform': {
+      id: '/_authenticated/app/platform'
+      path: '/platform'
+      fullPath: '/app/platform'
+      preLoaderRoute: typeof AuthenticatedAppPlatformRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/schools': {
+      id: '/_authenticated/app/schools'
+      path: '/schools'
+      fullPath: '/app/schools'
+      preLoaderRoute: typeof AuthenticatedAppSchoolsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/students': {
+      id: '/_authenticated/app/students'
+      path: '/students'
+      fullPath: '/app/students'
+      preLoaderRoute: typeof AuthenticatedAppStudentsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/teachers': {
+      id: '/_authenticated/app/teachers'
+      path: '/teachers'
+      fullPath: '/app/teachers'
+      preLoaderRoute: typeof AuthenticatedAppTeachersRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/classrooms/': {
+      id: '/_authenticated/app/classrooms/'
+      path: '/classrooms'
+      fullPath: '/app/classrooms/'
+      preLoaderRoute: typeof AuthenticatedAppClassroomsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/classrooms/$id': {
+      id: '/_authenticated/app/classrooms/$id'
+      path: '/classrooms/$id'
+      fullPath: '/app/classrooms/$id'
+      preLoaderRoute: typeof AuthenticatedAppClassroomsIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
   }
 }
 
+interface AuthenticatedAppRouteRouteChildren {
+  AuthenticatedAppAcademicRoute: typeof AuthenticatedAppAcademicRoute
+  AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
+  AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
+  AuthenticatedAppMembersRoute: typeof AuthenticatedAppMembersRoute
+  AuthenticatedAppPlatformRoute: typeof AuthenticatedAppPlatformRoute
+  AuthenticatedAppSchoolsRoute: typeof AuthenticatedAppSchoolsRoute
+  AuthenticatedAppStudentsRoute: typeof AuthenticatedAppStudentsRoute
+  AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppClassroomsIdRoute: typeof AuthenticatedAppClassroomsIdRoute
+  AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
+}
+
+const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
+  AuthenticatedAppAcademicRoute: AuthenticatedAppAcademicRoute,
+  AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
+  AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,
+  AuthenticatedAppMembersRoute: AuthenticatedAppMembersRoute,
+  AuthenticatedAppPlatformRoute: AuthenticatedAppPlatformRoute,
+  AuthenticatedAppSchoolsRoute: AuthenticatedAppSchoolsRoute,
+  AuthenticatedAppStudentsRoute: AuthenticatedAppStudentsRoute,
+  AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppClassroomsIdRoute: AuthenticatedAppClassroomsIdRoute,
+  AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
+}
+
+const AuthenticatedAppRouteRouteWithChildren =
+  AuthenticatedAppRouteRoute._addFileChildren(
+    AuthenticatedAppRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAppRouteRoute: typeof AuthenticatedAppRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAppRouteRoute: AuthenticatedAppRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
