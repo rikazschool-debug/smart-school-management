@@ -1022,6 +1022,7 @@ export type Database = {
       accept_my_invitations: { Args: never; Returns: number }
       can_manage_school: { Args: { _school: string }; Returns: boolean }
       can_manage_students: { Args: { _school: string }; Returns: boolean }
+      can_see_profile: { Args: { _uid: string }; Returns: boolean }
       can_view_course: {
         Args: { _course: string; _school: string }
         Returns: boolean
