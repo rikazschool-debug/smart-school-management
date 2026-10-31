@@ -292,7 +292,7 @@ check("upload without record rejected", !!sneaky.error);
 // transfer: move student out -> loses access
 await admin.from("enrollments").update({ status: "ended", end_date: "2026-11-02" }).eq("student_id", stu.id);
 const sp2 = await studU.c.from("classroom_posts").select("id");
-const sdl2 = await studU.c.storage.from("rikaz-files").download(fpath);
+const sdl2 = await studU.c.storage.from("rikaz-files").createSignedUrl(fpath, 60); // the app opens files only via signed URLs
 const vS2 = await studU.c.from("timetable_slots").select("id");
 check("transferred student loses posts/files/schedule", sp2.data?.length === 0 && !!sdl2.error && vS2.data?.length === 0, [sp2, sdl2.error, vS2]);
 await admin.from("enrollments").update({ status: "active" }).eq("student_id", stu.id);
