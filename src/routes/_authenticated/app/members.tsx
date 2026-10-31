@@ -34,7 +34,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       const ids = (data as Row[]).map((m) => m["user_id"]);
       const { data: profs } = await db.from("profiles").select("id, full_name, email").in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
       const pm = new Map((profs as Row[] | null ?? []).map((p) => [p["id"], p]));
-      return (data as Row[]).map((m) => ({ ...m, profile: pm.get(m["user_id"]) }));
+      return (data as Row[]).map((m) => ({ ...m, profile: pm.get(m["user_id"]) })) as Row[];
     },
   });
   const inv = useQuery({
@@ -53,10 +53,10 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         className="mb-8 grid gap-3 rounded-2xl border bg-card p-5 sm:grid-cols-4"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (!/^\S+@\S+\.\S+$/.test(email)) return toast.error("بريد غير صحيح");
-          if (!role) return toast.error("اختر الدور");
-          const { error } = await supabase.rpc("invite_member", { _email: email, _school: ctx.schoolId, _role: role, ...(dept ? { _department: dept } : {}) });
-          if (error) return toast.error(arabicError(error));
+          if (!/^\S+@\S+\.\S+$/.test(email)) return void toast.error("بريد غير صحيح");
+          if (!role) return void toast.error("اختر الدور");
+          const { error } = await supabase.rpc("invite_member", { _email: email, _school: ctx.schoolId, _role: role as Exclude<Role, "platform_admin">, ...(dept ? { _department: dept } : {}) });
+          if (error) return void toast.error(arabicError(error));
           toast.success("تمت الدعوة. إن كان للمستخدم حساب فقد أُضيف فورًا.");
           setEmail(""); setRole(""); setDept("");
           qc.invalidateQueries();
@@ -93,8 +93,8 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             <TableBody>
               {mem.data.map((m) => (
                 <TableRow key={m["id"]}>
-                  <TableCell>{m.profile?.full_name || "—"}</TableCell>
-                  <TableCell dir="ltr" className="text-end">{m.profile?.email ?? "—"}</TableCell>
+                  <TableCell>{m["profile"]?.full_name || "—"}</TableCell>
+                  <TableCell dir="ltr" className="text-end">{m["profile"]?.email ?? "—"}</TableCell>
                   <TableCell>{ROLE_LABELS[m["role"] as Role]}{m["departments"]?.name ? ` — ${m["departments"].name}` : ""}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" onClick={async () => {

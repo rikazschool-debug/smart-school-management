@@ -52,13 +52,13 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   });
   async function decide(id: string, approve: boolean) {
     const { error } = await supabase.rpc("decide_assignment", { _id: id, _approve: approve });
-    if (error) return toast.error(arabicError(error));
+    if (error) return void toast.error(arabicError(error));
     toast.success(approve ? "اعتُمد التكليف وأُنشئ الفصل الرقمي" : "رُفض التكليف");
     qc.invalidateQueries();
   }
   async function end(id: string) {
     const { error } = await supabase.rpc("end_assignment", { _id: id });
-    if (error) return toast.error(arabicError(error));
+    if (error) return void toast.error(arabicError(error));
     toast.success("أُنهي التكليف");
     qc.invalidateQueries();
   }

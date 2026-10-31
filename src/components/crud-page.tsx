@@ -80,11 +80,11 @@ export function RecordForm({
   return (
     <form
       className="space-y-4"
-      onSubmit={(e) => {
+      onSubmit={(e): void => {
         e.preventDefault();
         for (const f of fields)
           if (f.required && !f.hideInForm && (v[f.key] === undefined || v[f.key] === "" || v[f.key] === null))
-            return toast.error(`حقل «${f.label}» مطلوب`);
+            return void toast.error(`حقل «${f.label}» مطلوب`);
         const out: Row = {};
         for (const f of fields) {
           if (f.hideInForm) continue;

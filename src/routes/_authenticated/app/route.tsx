@@ -141,7 +141,7 @@ function Onboarding({ onSignOut }: { onSignOut: () => void }) {
             setErr(null);
             const { error } = await supabase.rpc("create_organization", { _org_name: org, _school_name: school });
             setBusy(false);
-            if (error) return setErr(arabicError(error));
+            if (error) return void setErr(arabicError(error));
             toast.success("تم إنشاء المؤسسة والمدرسة");
             refresh();
           }}

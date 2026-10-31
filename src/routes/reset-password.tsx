@@ -30,9 +30,9 @@ function Reset() {
         className="w-full max-w-sm space-y-4"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (pw.length < 8) return toast.error("كلمة المرور 8 أحرف على الأقل");
+          if (pw.length < 8) return void toast.error("كلمة المرور 8 أحرف على الأقل");
           const { error } = await supabase.auth.updateUser({ password: pw });
-          if (error) return toast.error(arabicError(error));
+          if (error) return void toast.error(arabicError(error));
           toast.success("تم تغيير كلمة المرور");
           navigate({ to: "/app" });
         }}
