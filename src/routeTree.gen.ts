@@ -20,6 +20,7 @@ import { Route as AuthenticatedAppAcademicRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
 import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authenticated/app/members'
+import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app/notifications'
 import { Route as AuthenticatedAppPlatformRouteImport } from './routes/_authenticated/app/platform'
 import { Route as AuthenticatedAppSchoolsRouteImport } from './routes/_authenticated/app/schools'
 import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenticated/app/students'
@@ -83,6 +84,12 @@ const AuthenticatedAppMembersRoute = AuthenticatedAppMembersRouteImport.update({
   path: '/members',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
+const AuthenticatedAppNotificationsRoute =
+  AuthenticatedAppNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppPlatformRoute =
   AuthenticatedAppPlatformRouteImport.update({
     id: '/platform',
@@ -129,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
+  '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
@@ -146,6 +154,7 @@ export interface FileRoutesByTo {
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
+  '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
@@ -166,6 +175,7 @@ export interface FileRoutesById {
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/_authenticated/app/members': typeof AuthenticatedAppMembersRoute
+  '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/_authenticated/app/platform': typeof AuthenticatedAppPlatformRoute
   '/_authenticated/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/_authenticated/app/students': typeof AuthenticatedAppStudentsRoute
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/app/courses'
     | '/app/guardians'
     | '/app/members'
+    | '/app/notifications'
     | '/app/platform'
     | '/app/schools'
     | '/app/students'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/app/courses'
     | '/app/guardians'
     | '/app/members'
+    | '/app/notifications'
     | '/app/platform'
     | '/app/schools'
     | '/app/students'
@@ -222,6 +234,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/courses'
     | '/_authenticated/app/guardians'
     | '/_authenticated/app/members'
+    | '/_authenticated/app/notifications'
     | '/_authenticated/app/platform'
     | '/_authenticated/app/schools'
     | '/_authenticated/app/students'
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppMembersRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/notifications': {
+      id: '/_authenticated/app/notifications'
+      path: '/notifications'
+      fullPath: '/app/notifications'
+      preLoaderRoute: typeof AuthenticatedAppNotificationsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/platform': {
       id: '/_authenticated/app/platform'
       path: '/platform'
@@ -368,6 +388,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
   AuthenticatedAppMembersRoute: typeof AuthenticatedAppMembersRoute
+  AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
   AuthenticatedAppPlatformRoute: typeof AuthenticatedAppPlatformRoute
   AuthenticatedAppSchoolsRoute: typeof AuthenticatedAppSchoolsRoute
   AuthenticatedAppStudentsRoute: typeof AuthenticatedAppStudentsRoute
@@ -382,6 +403,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,
   AuthenticatedAppMembersRoute: AuthenticatedAppMembersRoute,
+  AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
   AuthenticatedAppPlatformRoute: AuthenticatedAppPlatformRoute,
   AuthenticatedAppSchoolsRoute: AuthenticatedAppSchoolsRoute,
   AuthenticatedAppStudentsRoute: AuthenticatedAppStudentsRoute,
