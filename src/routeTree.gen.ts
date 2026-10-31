@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/app/route'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
 import { Route as AuthenticatedAppAcademicRouteImport } from './routes/_authenticated/app/academic'
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
@@ -48,6 +49,11 @@ const AuthenticatedAppRouteRoute = AuthenticatedAppRouteRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
 const AuthenticatedAppAcademicRoute =
   AuthenticatedAppAcademicRouteImport.update({
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
 }
@@ -127,7 +134,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/app': typeof AuthenticatedAppRouteRouteWithChildren
   '/app/academic': typeof AuthenticatedAppAcademicRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -136,6 +142,7 @@ export interface FileRoutesByTo {
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/app': typeof AuthenticatedAppIndexRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
 }
@@ -154,6 +161,7 @@ export interface FileRoutesById {
   '/_authenticated/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/_authenticated/app/students': typeof AuthenticatedAppStudentsRoute
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
 }
@@ -172,6 +180,7 @@ export interface FileRouteTypes {
     | '/app/schools'
     | '/app/students'
     | '/app/teachers'
+    | '/app/'
     | '/app/classrooms/$id'
     | '/app/classrooms/'
   fileRoutesByTo: FileRoutesByTo
@@ -179,7 +188,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
-    | '/app'
     | '/app/academic'
     | '/app/courses'
     | '/app/guardians'
@@ -188,6 +196,7 @@ export interface FileRouteTypes {
     | '/app/schools'
     | '/app/students'
     | '/app/teachers'
+    | '/app'
     | '/app/classrooms/$id'
     | '/app/classrooms'
   id:
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/schools'
     | '/_authenticated/app/students'
     | '/_authenticated/app/teachers'
+    | '/_authenticated/app/'
     | '/_authenticated/app/classrooms/$id'
     | '/_authenticated/app/classrooms/'
   fileRoutesById: FileRoutesById
@@ -252,6 +262,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app'
       preLoaderRoute: typeof AuthenticatedAppRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/academic': {
       id: '/_authenticated/app/academic'
@@ -335,6 +352,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppSchoolsRoute: typeof AuthenticatedAppSchoolsRoute
   AuthenticatedAppStudentsRoute: typeof AuthenticatedAppStudentsRoute
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppClassroomsIdRoute: typeof AuthenticatedAppClassroomsIdRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
 }
@@ -348,6 +366,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppSchoolsRoute: AuthenticatedAppSchoolsRoute,
   AuthenticatedAppStudentsRoute: AuthenticatedAppStudentsRoute,
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppClassroomsIdRoute: AuthenticatedAppClassroomsIdRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
 }
