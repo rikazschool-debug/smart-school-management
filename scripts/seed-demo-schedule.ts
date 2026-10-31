@@ -17,11 +17,11 @@ await a.from("school_day_settings").upsert({ school_id: S, study_days: [0, 1, 2,
 const { count } = await a.from("periods").select("id", { count: "exact", head: true }).eq("school_id", S);
 if (!count) {
   must(await a.from("periods").insert([
-    { school_id: S, sort_order: 1, name: "الحصة الأولى", start_time: "07:00", end_time: "07:45" },
-    { school_id: S, sort_order: 2, name: "الحصة الثانية", start_time: "07:50", end_time: "08:35" },
+    { school_id: S, sort_order: 1, name: "الحصة الأولى", start_time: "07:00", end_time: "07:45", kind: "lesson" },
+    { school_id: S, sort_order: 2, name: "الحصة الثانية", start_time: "07:50", end_time: "08:35", kind: "lesson" },
     { school_id: S, sort_order: 3, name: "الفسحة", start_time: "08:35", end_time: "09:00", kind: "break" },
-    { school_id: S, sort_order: 4, name: "الحصة الثالثة", start_time: "09:00", end_time: "09:45" },
-    { school_id: S, sort_order: 5, name: "الحصة الرابعة", start_time: "09:50", end_time: "10:35" },
+    { school_id: S, sort_order: 4, name: "الحصة الثالثة", start_time: "09:00", end_time: "09:45", kind: "lesson" },
+    { school_id: S, sort_order: 5, name: "الحصة الرابعة", start_time: "09:50", end_time: "10:35", kind: "lesson" },
   ]));
   must(await a.from("rooms").insert([{ school_id: S, name: "قاعة 101" }, { school_id: S, name: "معمل العلوم" }]));
 }
