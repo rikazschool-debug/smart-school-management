@@ -172,5 +172,5 @@
   --sidebar-accent-foreground: oklch(0.98 0.01 85);
   --sidebar-border: oklch(0.38 0.05 195);
 }
-body { font-family: "IBM Plex Sans Arabic", system-ui, sans-serif; }
-.font-display { font-family: "Reem Kufi", "IBM Plex Sans Arabic", sans-serif; }
+body { font-family: "Cairo", system-ui, sans-serif; }
+.font-display { font-family: "Cairo", sans-serif; font-weight: 800; }
