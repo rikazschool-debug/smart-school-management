@@ -159,7 +159,6 @@ const sec2 = await ins("sections", { name: "ب", grade_id: grade.id, year_id: ye
 const course3 = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec2.id });
 const asg3 = await ins("teacher_assignments", { course_id: course3.id, teacher_id: teacher.id });
 await owner.c.rpc("decide_assignment", { _id: asg3.id, _approve: true });
-const { count: rooms2 } = await admin.from("classrooms").select("id", { count: "exact", head: true }).eq("school_id", S);
 const tt = await ins("timetables", { year_id: year.id, name: "الجدول الأساسي" });
 const slot = (v: any) => owner.c.from("timetable_slots").insert({ timetable_id: tt.id, school_id: S, ...v }).select().single();
 const sA = await slot({ day: 0, period_id: p1.id, course_id: course.id, teacher_id: teacher.id, room_id: room1.id });
@@ -175,6 +174,7 @@ const sec3 = await ins("sections", { name: "ج", grade_id: grade.id, year_id: ye
 const course4 = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec3.id });
 const asg4 = await ins("teacher_assignments", { course_id: course4.id, teacher_id: t3.id });
 await owner.c.rpc("decide_assignment", { _id: asg4.id, _approve: true });
+const { count: rooms2 } = await admin.from("classrooms").select("id", { count: "exact", head: true }).eq("school_id", S);
 const cR2 = await slot({ day: 0, period_id: p1.id, course_id: course4.id, teacher_id: t3.id, room_id: room1.id });
 check("room conflict rejected", !!cR2.error && cR2.error.message.includes("القاعة"), cR2.error);
 const cB = await slot({ day: 0, period_id: brk.id, course_id: course.id, teacher_id: teacher.id });
