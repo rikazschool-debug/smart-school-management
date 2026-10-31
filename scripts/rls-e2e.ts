@@ -171,9 +171,11 @@ check("section conflict rejected", !!cS.error && cS.error.message.includes("ال
 const cR = await slot({ day: 0, period_id: p1.id, course_id: course3.id, teacher_id: tch2.id, room_id: room1.id });
 check("teacher not assigned rejected", !!cR.error && cR.error.message.includes("غير مكلف"), cR.error);
 const t3 = await ins("teachers", { full_name: "أ. ماجد" });
-const asg4 = await ins("teacher_assignments", { course_id: course3.id, teacher_id: t3.id });
+const sec3 = await ins("sections", { name: "ج", grade_id: grade.id, year_id: year.id, capacity: 30 });
+const course4 = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec3.id });
+const asg4 = await ins("teacher_assignments", { course_id: course4.id, teacher_id: t3.id });
 await owner.c.rpc("decide_assignment", { _id: asg4.id, _approve: true });
-const cR2 = await slot({ day: 0, period_id: p1.id, course_id: course3.id, teacher_id: t3.id, room_id: room1.id });
+const cR2 = await slot({ day: 0, period_id: p1.id, course_id: course4.id, teacher_id: t3.id, room_id: room1.id });
 check("room conflict rejected", !!cR2.error && cR2.error.message.includes("القاعة"), cR2.error);
 const cB = await slot({ day: 0, period_id: brk.id, course_id: course.id, teacher_id: teacher.id });
 check("break period rejected", !!cB.error);
