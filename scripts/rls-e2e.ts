@@ -290,7 +290,7 @@ check("outsider cannot sign url", !!osu.error);
 const sneaky = await studU.c.storage.from("rikaz-files").upload(`${S}/sneaky`, new Blob(["x"]));
 check("upload without record rejected", !!sneaky.error);
 // transfer: move student out -> loses access
-await admin.from("enrollments").update({ status: "transferred" }).eq("student_id", stu.id);
+await admin.from("enrollments").update({ status: "ended", end_date: "2026-11-02" }).eq("student_id", stu.id);
 const sp2 = await studU.c.from("classroom_posts").select("id");
 const sdl2 = await studU.c.storage.from("rikaz-files").download(fpath);
 const vS2 = await studU.c.from("timetable_slots").select("id");
