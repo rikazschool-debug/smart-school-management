@@ -1926,6 +1926,13 @@ export type Database = {
       }
       resend_invitation: { Args: { _id: string }; Returns: string }
       revoke_invitation: { Args: { _id: string }; Returns: undefined }
+      schedule_teacher_names: {
+        Args: { _timetable: string }
+        Returns: {
+          full_name: string
+          teacher_id: string
+        }[]
+      }
       school_org: { Args: { _school: string }; Returns: string }
       staff_view: { Args: { _school: string }; Returns: boolean }
       start_timetable_revision: { Args: { _id: string }; Returns: string }
