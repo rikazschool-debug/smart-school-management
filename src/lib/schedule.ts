@@ -54,7 +54,7 @@ export function useSlots(timetableId: string | null | undefined) {
       ]);
       if (error) throw error;
       const nm = new Map(((names.data ?? []) as Row[]).map((n) => [n["teacher_id"], n["full_name"]]));
-      return (data as Row[]).map((s) => ({ ...s, teachers: { ...(s["teachers"] ?? {}), full_name: s["teachers"]?.full_name ?? nm.get(s["teacher_id"]) ?? "" }, _names: nm }));
+      return (data as Row[]).map((s): Row => ({ ...s, teachers: { ...(s["teachers"] ?? {}), full_name: s["teachers"]?.full_name ?? nm.get(s["teacher_id"]) ?? "" }, _names: nm }));
     },
   });
 }
