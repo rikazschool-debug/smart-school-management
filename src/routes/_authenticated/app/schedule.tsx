@@ -70,7 +70,7 @@ function Manager({ ctx }: { ctx: Ctx }) {
   const [filter, setFilter] = useState("");
   const [eff, setEff] = useState(todayISO());
   const [adding, setAdding] = useState<{ day: number; period: Row } | null>(null);
-  useEffect(() => { if (!sel_ && tts.data?.length) setSel(tts.data[0]["id"]); }, [tts.data, sel_]);
+  useEffect(() => { if (!sel_ && tts.data?.length) setSel(tts.data[0]!["id"]); }, [tts.data, sel_]);
   const tt = tts.data?.find((t) => t["id"] === sel_);
   const slots = useSlots(tt?.["id"]);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["timetables", S] }); qc.invalidateQueries({ queryKey: ["slots"] }); qc.invalidateQueries({ queryKey: ["current-tt"] }); };

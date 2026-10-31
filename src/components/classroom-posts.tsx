@@ -66,7 +66,7 @@ function Post({ p, files, canEdit, showComments, onChange }: { p: Row; files: Ro
     setBusy(true);
     const { data, error } = await db.rpc("create_post_file", { _post: p["id"], _name: f.name, _mime: f.type || "application/octet-stream", _size: f.size });
     if (error) { setBusy(false); return void toast.error(arabicError(error)); }
-    const rec = (data as Row[])[0];
+    const rec = (data as Row[])[0]!;
     const up = await db.storage.from(BUCKET).upload(rec["storage_path"], f, { contentType: f.type });
     if (up.error) {
       await db.from("files").delete().eq("id", rec["id"]);
