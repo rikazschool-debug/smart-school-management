@@ -367,33 +367,45 @@ export type Database = {
           created_at: string
           department_id: string | null
           email: string
+          expires_at: string
           id: string
           invited_by: string
           org_id: string
+          resent_count: number
+          revoked_at: string | null
           role: Database["public"]["Enums"]["app_role"]
           school_id: string | null
+          token: string
         }
         Insert: {
           accepted_at?: string | null
           created_at?: string
           department_id?: string | null
           email: string
+          expires_at?: string
           id?: string
           invited_by: string
           org_id: string
+          resent_count?: number
+          revoked_at?: string | null
           role: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
+          token?: string
         }
         Update: {
           accepted_at?: string | null
           created_at?: string
           department_id?: string | null
           email?: string
+          expires_at?: string
           id?: string
           invited_by?: string
           org_id?: string
+          resent_count?: number
+          revoked_at?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
+          token?: string
         }
         Relationships: [
           {
@@ -1019,7 +1031,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _apply_invitation: {
+        Args: {
+          _em: string
+          _uid: string
+          r: Database["public"]["Tables"]["invitations"]["Row"]
+        }
+        Returns: undefined
+      }
+      accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
+      can_invite: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _school: string
+        }
+        Returns: boolean
+      }
       can_manage_school: { Args: { _school: string }; Returns: boolean }
       can_manage_students: { Args: { _school: string }; Returns: boolean }
       can_see_profile: { Args: { _uid: string }; Returns: boolean }
@@ -1056,6 +1084,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      invitation_preview: {
+        Args: { _token: string }
+        Returns: {
+          email_confirmed: boolean
+          email_hint: string
+          email_matches: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          school_name: string
+          status: string
+        }[]
+      }
       invite_member: {
         Args: {
           _department?: string
@@ -1072,6 +1111,8 @@ export type Database = {
       is_student_self: { Args: { _student: string }; Returns: boolean }
       is_teacher_of_student: { Args: { _student: string }; Returns: boolean }
       my_teacher_ids: { Args: never; Returns: string[] }
+      resend_invitation: { Args: { _id: string }; Returns: string }
+      revoke_invitation: { Args: { _id: string }; Returns: undefined }
       school_org: { Args: { _school: string }; Returns: string }
       staff_view: { Args: { _school: string }; Returns: boolean }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
