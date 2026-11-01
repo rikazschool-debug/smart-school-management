@@ -58,6 +58,7 @@ export function ClassroomPosts({ classroom, courseId }: { classroom: string; cou
 
 function Post({ p, files, canEdit, showComments, onChange }: { p: Row; files: Row[]; canEdit: boolean; showComments: boolean; onChange: () => void }) {
   const [busy, setBusy] = useState(false);
+  const ctrl = useRef<AbortController | null>(null);
   const upd = async (v: Row, ok: string) => {
     const { error } = await db.from("classroom_posts").update(v).eq("id", p["id"]);
     if (error) toast.error(arabicError(error)); else { toast.success(ok); onChange(); }
@@ -67,11 +68,15 @@ function Post({ p, files, canEdit, showComments, onChange }: { p: Row; files: Ro
     const { data, error } = await db.rpc("create_post_file", { _post: p["id"], _name: f.name, _mime: f.type || "application/octet-stream", _size: f.size });
     if (error) { setBusy(false); return void toast.error(arabicError(error)); }
     const rec = (data as Row[])[0]!;
-    const up = await db.storage.from(BUCKET).upload(rec["storage_path"], f, { contentType: f.type });
-    if (up.error) {
+    const ac = new AbortController(); ctrl.current = ac;
+    const res = await uploadObject(rec["storage_path"], f, ac.signal);
+    ctrl.current = null;
+    if (res !== "ok") {
+      // never leave a half-saved attachment: remove the record (and any partial object)
+      await db.storage.from(BUCKET).remove([rec["storage_path"]]).catch(() => undefined);
       await db.from("files").delete().eq("id", rec["id"]);
       setBusy(false);
-      return void toast.error("تعذر رفع الملف، لم يُحفظ. حاول مجددًا.");
+      return void (res === "aborted" ? toast.info("أُلغي الرفع ولم يُحفظ الملف.") : toast.error("تعذر رفع الملف، لم يُحفظ. حاول مجددًا."));
     }
     setBusy(false); toast.success("رُفع الملف"); onChange();
   }
@@ -105,6 +110,7 @@ function Post({ p, files, canEdit, showComments, onChange }: { p: Row; files: Ro
             <Paperclip className="size-4" /> {busy ? "جارٍ الرفع…" : "إرفاق ملف"}
             <input type="file" className="hidden" disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) upload(f); }} />
           </label>
+          {busy && <Button size="sm" variant="outline" onClick={() => ctrl.current?.abort()}>إلغاء الرفع</Button>}
         </div>
       )}
       {showComments && p["status"] === "published" && <Comments post={p} />}
