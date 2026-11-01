@@ -141,6 +141,7 @@ function StudentReview({ h, r, editable, prev, next, refresh }: { h: Row; r: Row
           <FileList files={r["files"].filter((f: Row) => f["attempt_no"] === a["attempt_no"]).map((f: Row) => f["files"])} />
         </div>
       ))}
+      {g && <FeedbackFiles grade={g} editable={editable} />}
       {g && <p className="text-xs text-muted-foreground">آخر تصحيح على المحاولة {g["attempt_no"]} · إصدار المعايير {g["rubric_version"]} · {GRADE_STATUS[g["status"]]}</p>}
       {editable && sub && sub["attempt_count"] > 0 && sub["status"] !== "returned" && (
         <div className="space-y-2">
@@ -187,6 +188,27 @@ function StudentReview({ h, r, editable, prev, next, refresh }: { h: Row; r: Row
             </div>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+/** Teacher feedback attachments: stored on the grade; hidden from student/family until the result is published (can_read_file). */
+export function FeedbackFiles({ grade, editable }: { grade: Row; editable: boolean }) {
+  const qc = useQueryClient();
+  const key = ["fb-files", grade["id"]];
+  const q = useQuery({ queryKey: key, queryFn: async () => (await db.from("files").select("*").eq("source_type", "feedback").eq("source_id", grade["id"]).order("created_at")).data as Row[] });
+  const refresh = () => qc.invalidateQueries({ queryKey: key });
+  if (!editable && !q.data?.length) return null;
+  return (
+    <div className="space-y-1 rounded-lg border border-dashed p-3">
+      <p className="text-xs font-semibold">مرفقات الملاحظات {editable && <span className="font-normal text-muted-foreground">({grade["published_at"] ? "منشورة؛ أي تعديل يُسجل في سجل الواجب" : "لا تظهر للطالب أو الأسرة قبل نشر النتيجة"})</span>}</p>
+      <FileList files={q.data ?? []} onRemove={editable ? async (f) => { const { error } = await db.rpc("remove_feedback_file", { _file: f["id"] }); if (error) toast.error(arabicError(error)); else { toast.success("حُذف مرفق الملاحظات"); refresh(); } } : undefined} />
+      {editable && (
+        <Uploader label="إرفاق ملف ملاحظات"
+          create={async (f) => { const { data, error } = await db.rpc("create_feedback_file", { _grade: grade["id"], _name: f.name, _mime: f.type, _size: f.size }); if (error) throw error; return data[0]; }}
+          release={(fid) => db.rpc("remove_feedback_file", { _file: fid })}
+          onDone={refresh} />
       )}
     </div>
   );
