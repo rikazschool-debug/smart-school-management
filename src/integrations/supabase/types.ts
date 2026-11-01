@@ -3917,6 +3917,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _att_announce_section: { Args: { _student: string }; Returns: string }
       _att_default_policy: {
         Args: { _school: string }
         Returns: {
