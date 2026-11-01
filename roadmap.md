@@ -22,7 +22,7 @@
 - [x] A Closure log docs/closure-log.md (per item: scope, server test, browser test, evidence, status)
 - [ ] B Package-2 browser journeys (files open/download/denied/expired; substitution cancel across dashboards; pin/comments reopen; upload fail/retry/cancel; 2 children in 2 sections; supervisor assign/unassign/direct-id)
 - [x] C Org-wide circulars across branches — server test circ-org-e2e 19/19; browser: owner org-scope draft + preview (publish/ack/report not yet run in browser)
-- [ ] D Attachments in cross-branch groups — built, test missing
+- [x] D Attachments in cross-branch groups — xbranch-files-e2e 11/11 (browser pending)
 - [x] E Server-side scheduled cleanup of unlinked files
 - [ ] F Communication browser tests (internal, messages, groups, notifications)
 - [x] G Report reviewer permission scoped (not every admin)
@@ -33,7 +33,7 @@
 ## Package 3c — Close remaining items (prompt: تابع تنفيذ جميع البنود المتبقية)
 - [x] 1 Scoped test cleanup (scripts/lib/test-run.ts) + cleanup-scope-e2e 3/3; notification loss documented
 - [x] 2 Org-wide circulars (server + list/filters/editor/reports UI)
-- [ ] 3 Cross-branch group attachments — browser test
+- [~] 3 Cross-branch group attachments — fixed creation bug; server test xbranch-files-e2e 11/11; browser run pending
 - [ ] 4 Package-2 remaining browser journeys
 - [ ] 5 Extended communication browser tests
 - [ ] 6 Cleanup scheduler health detection (stale last-run alert) + timing doc

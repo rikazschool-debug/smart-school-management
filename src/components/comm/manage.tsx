@@ -133,7 +133,7 @@ function GroupWizard({ ctx, onDone }: { ctx: AppContext & { schoolId: string }; 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1"><Label htmlFor="wp">من ينشر</Label><select id="wp" className={sel} value={v.post_policy} onChange={(e) => set({ post_policy: e.target.value })}><option value="all">كل الأعضاء</option><option value="moderators">المشرفون فقط</option></select></div>
           <div className="space-y-1"><Label htmlFor="wh">ماذا يرى العضو الجديد</Label><select id="wh" className={sel} value={v.history_policy} onChange={(e) => set({ history_policy: e.target.value })}><option value="from_join">الرسائل من تاريخ انضمامه (الافتراضي)</option><option value="full">التاريخ السابق كاملًا</option></select></div>
-          <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={v.allow_attachments} disabled={v.scope === "org"} onChange={(e) => set({ allow_attachments: e.target.checked })} /> السماح بالمرفقات (النوع والحجم حسب سياسة ملفات المدرسة){v.scope === "org" && " — غير متاح للمجموعات العابرة للفروع حاليًا"}</label>
+          <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={v.allow_attachments} onChange={(e) => set({ allow_attachments: e.target.checked })} /> السماح بالمرفقات (النوع والحجم حسب سياسة ملفات المدرسة){v.scope === "org" && " — يُحفظ كل مرفق ضمن فرع رافعه ويتبع سياسته"}</label>
         </div>
       )}
       {step === 5 && (
@@ -142,7 +142,7 @@ function GroupWizard({ ctx, onDone }: { ctx: AppContext & { schoolId: string }; 
           {v.description && <p className="text-muted-foreground">{v.description}</p>}
           <p>المالك: {owner[0] ? nameOf(owner[0]) : "أنت"} • المشرفون: {mods.map(nameOf).join("، ") || "—"}</p>
           <p>الأعضاء: {v.membership_mode === "derived" ? `مشتقة من القسم (${derivedPreview.data?.length ?? 0} حاليًا)` : `${members.length}: ${members.map(nameOf).join("، ") || "—"}`}</p>
-          <p>النشر: {v.post_policy === "all" ? "الجميع" : "المشرفون"} • العضو الجديد يرى: {v.history_policy === "full" ? "التاريخ كاملًا" : "من الانضمام"} • المرفقات: {v.allow_attachments && v.scope === "school" ? "مسموحة" : "لا"}{v.expires_at ? ` • تنتهي ${v.expires_at}` : ""}</p>
+          <p>النشر: {v.post_policy === "all" ? "الجميع" : "المشرفون"} • العضو الجديد يرى: {v.history_policy === "full" ? "التاريخ كاملًا" : "من الانضمام"} • المرفقات: {v.allow_attachments ? "مسموحة" : "لا"}{v.expires_at ? ` • تنتهي ${v.expires_at}` : ""}</p>
         </div>
       )}
       <div className="flex gap-2">
