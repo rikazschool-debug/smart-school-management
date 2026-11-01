@@ -29,6 +29,11 @@
 - Teacher↔student private chats are kind='student' (dedupe 'student:<student>:<teacher>'), started only by the teacher via start_student_conversation and gated by _student_ok; guardians are never added — student privacy and no student↔student chats.
 - Report review rights come from comm_settings.report_reviewer_roles via _report_reviewer (org owner only for cross-branch groups); never widen to all managers or platform admins.
 - Unlinked files are removed only by run_file_cleanup (pg_cron hourly → pg_net → Storage API, credentials in Vault). Never delete storage.objects rows directly.
+- Users, roles, invitations and memberships are managed only by the org owner via RPCs (invite_member, set_membership_active, change_member_role, decide_account_request); other managers only file request_account; every change goes to access_audit — keeps one accountable authority.
+- Manual groups: created/filled only by org owner (any branch/cross-branch) or principal (own school) via _can_create_group; derived class groups are untouched.
+- Course rows are readable only through can_view_course (+ day substitute); dept heads see only their department's courses and no student records.
+- Cleanup health: file_cleanup_runs records status; a separate hourly cron job runs check_cleanup_health (dedup alerts in cleanup_alerts, channel-isolated so tests never touch live alerts).
+- docs/permissions-matrix.md is the role capability table; update it with any permission change.
 - docs/closure-log.md: per-item status log; update with new evidence.
 
 - scripts/ has its own AGENTS.md (test suites and cleanup rules) — read it before changing files there.
