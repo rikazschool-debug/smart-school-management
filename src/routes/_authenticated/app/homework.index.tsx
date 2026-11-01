@@ -141,6 +141,7 @@ function GuardianList({ schoolId }: { schoolId: string }) {
   return (
     <>
       <PageHeader title="واجبات الأبناء" />
+      <ExportBar course={null} kinds={["family"]} note="يشمل أبناءك الموثّقين فقط، والدرجات المنشورة فقط." />
       <div className="mb-4 flex flex-wrap gap-2">
         {kids.data.map((k) => (
           <Button key={k["id"]} variant={kid === k["id"] ? "default" : "outline"} size="sm" onClick={() => setKid(k["id"])}>{k["full_name"]}</Button>
