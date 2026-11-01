@@ -66,7 +66,8 @@ export function readSheet(buf: ArrayBuffer): { rows: Row[]; formulas: string[] }
     if (cell?.f) formulas.push(`السطر ${r + 1}، عمود «${head[c] || XLSX.utils.encode_col(c)}»`);
   }
   // w = displayed text: keeps leading zeros of text cells; numbers come as typed
-  const rows = XLSX.utils.sheet_to_json<Row>(ws, { defval: "", raw: false, dateNF: "yyyy-mm-dd" });
+  const rows = XLSX.utils.sheet_to_json<Row>(ws, { defval: "", raw: false, dateNF: "yyyy-mm-dd" })
+    .filter((r) => Object.values(r).some((v) => String(v ?? "").trim() !== "")); // template's pre-formatted empty rows
   return { rows, formulas };
 }
 
