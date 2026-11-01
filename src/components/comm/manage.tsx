@@ -225,6 +225,7 @@ function Reports({ ctx }: { ctx: AppContext & { schoolId: string } }) {
 function ReportItem({ r, onDone }: { r: Row; onDone: () => void }) {
   const [detail, setDetail] = useState<Row | null>(null);
   const [decision, setDecision] = useState("");
+  const [busy, setBusy] = useState(false);
   return (
     <li className="rounded-xl border bg-card p-3 text-sm">
       <div className="flex flex-wrap items-center gap-2">
@@ -244,13 +245,17 @@ function ReportItem({ r, onDone }: { r: Row; onDone: () => void }) {
           <p className="whitespace-pre-wrap">{detail["body"]}</p>
           {r["status"] === "open" && (
             <>
-              <Input placeholder="القرار والملاحظة" aria-label="القرار" value={decision} onChange={(e) => setDecision(e.target.value)} />
+              <Input placeholder="سبب القرار (إلزامي، يُسجل في التدقيق)" aria-label="القرار" value={decision} onChange={(e) => setDecision(e.target.value)} />
+              {decision.trim().length < 3 && <p className="text-xs text-muted-foreground" role="status">اكتب سبب القرار قبل اختيار الإجراء.</p>}
               <div className="flex flex-wrap gap-2">
                 {[["resolved", true, "إخفاء الرسالة وإغلاق"], ["resolved", false, "إغلاق دون إخفاء"], ["dismissed", false, "رفض البلاغ"]].map(([s, h, l]) => (
-                  <Button key={String(l)} size="sm" variant={h ? "destructive" : "outline"} onClick={async () => {
-                    const { error } = await db.rpc("decide_report", { _id: r["id"], _status: s, _decision: decision || String(l), _hide: h });
-                    if (error) toast.error(arabicError(error)); else { toast.success("حُفظ القرار"); onDone(); }
-                  }}>{String(l)}</Button>
+                  <Button key={String(l)} size="sm" className="min-h-10" variant={h ? "destructive" : "outline"} disabled={busy || decision.trim().length < 3} onClick={async () => {
+                    if (!window.confirm(`تأكيد: ${String(l)}؟ لا يمكن تكرار القرار بعد حفظه.`)) return;
+                    setBusy(true);
+                    const { error } = await db.rpc("decide_report", { _id: r["id"], _status: s, _decision: decision.trim(), _hide: h });
+                    setBusy(false);
+                    if (error) toast.error(arabicError(error)); else { toast.success("حُفظ القرار وأُبلغ مقدم البلاغ بالنتيجة"); onDone(); }
+                  }}>{busy ? "جارٍ الحفظ…" : String(l)}</Button>
                 ))}
               </div>
             </>
