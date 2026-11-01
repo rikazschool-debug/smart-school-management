@@ -218,3 +218,14 @@ function StudentHomework({ studentId, guardian }: { studentId: string; guardian?
     </>
   );
 }
+
+function Progress({ done, total, late }: { done: unknown; total: unknown; late: unknown }) {
+  const d = Number(done ?? 0), t = Number(total ?? 0), l = Number(late ?? 0);
+  const pct = t ? Math.round((d / t) * 100) : 0;
+  return (
+    <div className="min-w-32" title={`سلّم ${d} من ${t}${l ? ` · متأخر ${l}` : ""}`}>
+      <div className="flex justify-between text-xs"><span className="font-semibold">{d}/{t}</span>{l > 0 && <span className="text-warning-foreground">متأخر {l}</span>}</div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="نسبة التسليم"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
+    </div>
+  );
+}
