@@ -146,23 +146,23 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   <TableCell>{m["profile"]?.full_name || "—"}</TableCell>
                   <TableCell dir="ltr" className="text-end">{m["profile"]?.email ?? "—"}</TableCell>
                   <TableCell>
-                    {editing?.id === m["id"] ? (
+                    {editing && editing.id === m["id"] ? (() => { const ed = editing; return (
                       <div className="flex flex-wrap items-center gap-1">
-                        <select aria-label="الدور الجديد" className={sel + " h-8 w-auto"} value={editing.role} onChange={(e) => setEditing({ ...editing, role: e.target.value as Role })}>
+                        <select aria-label="الدور الجديد" className={sel + " h-8 w-auto"} value={ed.role} onChange={(e) => setEditing({ ...ed, role: e.target.value as Role })}>
                           {roles.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
                         </select>
-                        {editing.role === "dept_head" && (
-                          <select aria-label="قسم الدور" className={sel + " h-8 w-auto"} value={editing.dept} onChange={(e) => setEditing({ ...editing, dept: e.target.value })}>
+                        {ed.role === "dept_head" && (
+                          <select aria-label="قسم الدور" className={sel + " h-8 w-auto"} value={ed.dept} onChange={(e) => setEditing({ ...ed, dept: e.target.value })}>
                             <option value="">— القسم —</option>{depts.data?.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                           </select>
                         )}
                         <Button size="sm" onClick={async () => {
                           const reason = window.prompt("سبب التغيير") ?? "";
-                          if (await rpc("change_member_role", { _id: m["id"], _role: editing.role, _department: editing.dept || null, _reason: reason || null }, "تم تغيير الدور")) setEditing(null);
+                          if (await rpc("change_member_role", { _id: m["id"], _role: ed.role, _department: ed.dept || null, _reason: reason || null }, "تم تغيير الدور")) setEditing(null);
                         }}>حفظ</Button>
                         <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>إلغاء</Button>
                       </div>
-                    ) : (
+                    ); })() : (
                       <span className="flex items-center gap-2">{ROLE_LABELS[m["role"] as Role]}{m["departments"]?.name ? ` — ${m["departments"].name}` : ""}
                         {m["role"] !== "org_owner" && <Button size="sm" variant="ghost" onClick={() => setEditing({ id: m["id"], role: m["role"], dept: m["department_id"] ?? "" })}>تغيير</Button>}</span>
                     )}
