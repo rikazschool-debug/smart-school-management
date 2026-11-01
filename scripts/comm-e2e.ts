@@ -53,7 +53,7 @@ for (const u of uids) await admin.auth.admin.deleteUser(u);
 }
 
 const owner = await user("owner"), t1 = await user("t1"), t2 = await user("t2"), t3 = await user("t3"), g1 = await user("g1"), g2 = await user("g2"),
-  stud = await user("stud"), other = await user("other");
+  stud = await user("stud"), other = await user("other"), prin = await user("prin");
 const { data: orgId } = await owner.c.rpc("create_organization", { _org_name: "مؤسسة تواصل", _school_name: "مدرسة ت" });
 const { data: orgB } = await other.c.rpc("create_organization", { _org_name: "مؤسسة أخرى", _school_name: "مدرسة خ" });
 const S = (await owner.c.from("schools").select("id").eq("org_id", orgId).single()).data!.id;
@@ -74,7 +74,7 @@ const T3 = await ins("teachers", { full_name: "أ. نايف", email: t3.email, d
 const G1 = await ins("guardians", { full_name: "أبو سارة", email: g1.email });
 const G2 = await ins("guardians", { full_name: "أم سارة", email: g2.email });
 for (const u of [t1, t2, t3]) await join(u, "teacher");
-await join(g1, "guardian"); await join(g2, "guardian"); await join(stud, "student");
+await join(prin, "principal"); await join(g1, "guardian"); await join(g2, "guardian"); await join(stud, "student");
 const cA = await ins("courses", { year_id: year.id, subject_id: subM.id, section_id: secA.id });
 const cB = await ins("courses", { year_id: year.id, subject_id: subS.id, section_id: secB.id });
 const aA = await ins("teacher_assignments", { course_id: cA.id, teacher_id: T1.id });
@@ -271,12 +271,14 @@ const msgDir = await t3.c.from("messages").select("id").eq("conversation_id", di
 const rep = await t3.c.rpc("report_message", { _message: msgDir.data!.id, _reason: "محتوى غير لائق" });
 check("member reports message", !rep.error, rep.error);
 const rv2 = await t2.c.from("message_reports").select("id");
-const rv1 = await owner.c.from("message_reports").select("id");
+const rv1 = await prin.c.from("message_reports").select("id");
+const rvOwn = await owner.c.from("message_reports").select("id");
 check("19 report hidden from reported user, visible to principal", rv2.data?.length === 0 && rv1.data?.length === 1, [rv2, rv1]);
+check("org owner is not an automatic report reviewer", rvOwn.data?.length === 0 && !!(await owner.c.rpc("report_detail", { _id: rep.data })).error, rvOwn);
 const rdT = await t1.c.rpc("report_detail", { _id: rep.data });
-const rdO = await owner.c.rpc("report_detail", { _id: rep.data });
+const rdO = await prin.c.rpc("report_detail", { _id: rep.data });
 check("only reviewer reads reported message; access is audited", !!rdT.error && rdO.data?.[0]?.body === "صباح الخير", [rdT.error, rdO]);
-const dec = await owner.c.rpc("decide_report", { _id: rep.data, _status: "resolved", _decision: "أُخفيت الرسالة", _hide: true });
+const dec = await prin.c.rpc("decide_report", { _id: rep.data, _status: "resolved", _decision: "أُخفيت الرسالة", _hide: true });
 const hid = await t3.c.from("messages").select("body, deleted_at").eq("id", msgDir.data!.id).single();
 check("moderation hides content, revision kept", !dec.error && hid.data?.body === "" && !!hid.data?.deleted_at, [dec.error, hid]);
 
