@@ -11,7 +11,7 @@ export const safeCell = (v: unknown): string | number => {
   return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
 };
 
-const stamp = () => new Date().toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh" });
+const stamp = () => new Date().toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh" });
 const fileName = (t: string, ext: string) => `${t.replace(/[\\/:*?"<>|]/g, "-")}-${new Date().toISOString().slice(0, 10)}.${ext}`;
 
 export function exportXlsx(meta: ExportMeta, headers: string[], rows: (string | number)[][]) {
