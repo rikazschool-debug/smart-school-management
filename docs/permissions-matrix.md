@@ -16,3 +16,15 @@ Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 | Cleanup health & alerts | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ | ✔ read |
 
 Protections: the last active owner cannot be deactivated or demoted; ownership changes are not possible through role change; roles never carry across organizations; invitations issued by a role that is no longer authorized are flagged `needs_review` and grant nothing until the owner re-issues them; each change is written to `access_audit` (before/after/reason). Open screens re-check the user's roles every 30 s and on focus; when they change, cached data and live subscriptions are dropped.
+
+## Homework (package 5)
+| Action | Course teacher | Principal / VP / Owner | Dept head (own dept) | Supervisor (assigned) | Student (target) | Guardian (verified) | Platform admin |
+|---|---|---|---|---|---|---|---|
+| Create / edit draft / publish / revise / extend / close / archive / cancel | yes | no | no | no | no | no | no |
+| See drafts | yes | no | no | no | no | no | no |
+| See published homework, submissions, grades | yes | read | read | read | own only | own child only | no automatic access |
+| Student draft text/files | no | no | no | no | own | no | no |
+| Submit / resubmit | no | no | no | no | yes (server checks time, attempts) | no | no |
+| Record paper hand-in | yes | no | no | no | – | – | no |
+| Grade / return / publish / correct result | yes (correction needs reason, logged) | no | no | no | – | – | no |
+| See grade | yes | yes | yes | yes | after publish | after publish | no |

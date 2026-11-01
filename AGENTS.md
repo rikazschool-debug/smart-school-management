@@ -27,3 +27,4 @@
 - docs/permissions-matrix.md is the role capability table; update it with any permission change.
 - docs/closure-log.md: per-item status log; update with new evidence.
 - scripts/ and src/components/comm/ have their own AGENTS.md (tests/cleanup; communication + circular rules) — read before changing files there.
+- Homework: homework → homework_targets (resolved at publish) → homework_submissions/attempts (immutable) → homework_grades (visible to family only after publish); all writes via RPCs (save/publish/revise/extend_homework, submit_homework, grade_submission, publish_results, correct_result). Test: scripts/homework-e2e.ts.
