@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { School } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
+import { ListTools, applyListTools, useListTools } from "@/components/list-tools";
 import { NAV_BY_ROLE } from "@/lib/roles";
 import { arabicError, useSession } from "@/lib/session";
 
@@ -23,13 +24,17 @@ export function useClassrooms(schoolId: string | null) {
 function Page() {
   const { active } = useSession();
   const q = useClassrooms(active?.schoolId ?? null);
+  const t = useListTools();
   if (!active || !NAV_BY_ROLE[active.role].includes("classrooms")) return <ForbiddenState />;
   return (
     <>
       <PageHeader title="الفصول الرقمية" desc="فصل واحد لكل مقرر معتمد (مادة + شعبة + سنة). تظهر لك الفصول التي تخصك فقط." />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? (
         <EmptyState title="لا توجد فصول رقمية" hint="يُنشأ الفصل تلقائيًا عند اعتماد تكليف معلم بمقرر." />
-      ) : <ClassroomGrid rows={q.data} />}
+      ) : (() => { const rows = applyListTools(t, q.data, (c) => c["title"] ?? ""); return <>
+        <ListTools s={t} placeholder="ابحث باسم المادة أو الشعبة" count={rows.length} exp={{ title: "الفصول الرقمية", school: active.schoolName, headers: ["الفصل", "الحالة"], rows: () => rows.map((c) => [c["title"], c["status"] === "active" ? "نشط" : c["status"] ?? ""]) }} />
+        {rows.length ? <ClassroomGrid rows={rows} /> : <EmptyState title="لا نتائج مطابقة" hint="غيّر كلمة البحث." />}
+      </>; })()}
     </>
   );
 }

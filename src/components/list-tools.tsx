@@ -65,3 +65,21 @@ export function ListTools({ s, placeholder, count, exp }: {
     </div>
   );
 }
+
+/** Standalone export buttons for screens that already have their own filters (e.g. the schedule). */
+export function ExportButtons({ title, school, headers, rows, filters = [] }: { title: string; school?: string; headers: string[]; rows: () => Cell[][]; filters?: string[] }) {
+  const [busy, setBusy] = useState(false);
+  const run = async (kind: "xlsx" | "pdf") => {
+    const r = rows();
+    if (!r.length) return void toast.error("لا توجد سجلات للتصدير");
+    setBusy(true);
+    try { const meta = { title, school, filters }; if (kind === "xlsx") exportXlsx(meta, headers, r); else await exportPdf(meta, headers, r); }
+    catch { toast.error("تعذر التصدير، حاول مرة أخرى"); } finally { setBusy(false); }
+  };
+  return (
+    <span className="flex gap-1">
+      <Button size="sm" variant="outline" disabled={busy} onClick={() => run("xlsx")}><Download className="size-4" />Excel</Button>
+      <Button size="sm" variant="outline" disabled={busy} onClick={() => run("pdf")}><FileText className="size-4" />تنزيل PDF</Button>
+    </span>
+  );
+}

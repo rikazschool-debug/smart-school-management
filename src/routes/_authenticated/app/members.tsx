@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ListTools, applyListTools, useListTools } from "@/components/list-tools";
 import { supabase } from "@/integrations/supabase/client";
 import { ROLE_LABELS, invitableRoles, type Role } from "@/lib/roles";
 import { arabicError, type AppContext } from "@/lib/session";
@@ -76,6 +77,13 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       return data as Row[];
     },
   });
+  const mt = useListTools([
+    { key: "role", label: "الدور", options: [...new Set((mem.data ?? []).map((m) => m["role"] as Role))].map((r) => ({ value: r, label: ROLE_LABELS[r] })) },
+    { key: "status", label: "الحالة", options: [{ value: "on", label: "نشط" }, { value: "off", label: "موقوف" }] },
+  ]);
+  const memRows = applyListTools(mt, mem.data ?? [], (m) => `${m["profile"]?.full_name ?? ""} ${m["profile"]?.email ?? ""}`, (m, k) => k === "role" ? m["role"] : m["is_active"] ? "on" : "off");
+  const it = useListTools([{ key: "role", label: "الدور", options: [...new Set((inv.data ?? []).map((i) => i["role"] as Role))].map((r) => ({ value: r, label: ROLE_LABELS[r] })) }]);
+  const invRows = applyListTools(it, inv.data ?? [], (i) => i["email"] ?? "", (i) => i["role"]);
   const rpc = async (fn: string, args: Record<string, unknown>, ok: string) => {
     const { error } = await (supabase.rpc as unknown as (f: string, a: Record<string, unknown>) => Promise<{ error: unknown }>)(fn, args);
     if (error) { toast.error(arabicError(error)); return false; }
@@ -138,12 +146,13 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       )}
 
       <h2 className="mb-3 text-lg font-bold">الأعضاء</h2>
-      {mem.isLoading ? <LoadingState /> : mem.error ? <ErrorState message={arabicError(mem.error)} onRetry={() => mem.refetch()} /> : !mem.data?.length ? <EmptyState title="لا يوجد أعضاء بعد" /> : (
-        <div className="mb-8 overflow-x-auto rounded-xl border bg-card">
+      {mem.isLoading ? <LoadingState /> : mem.error ? <ErrorState message={arabicError(mem.error)} onRetry={() => mem.refetch()} /> : !mem.data?.length ? <EmptyState title="لا يوجد أعضاء بعد" /> : (<>
+        <ListTools s={mt} placeholder="ابحث بالاسم أو البريد" count={memRows.length} exp={{ title: "المستخدمون والأدوار", school: ctx.schoolName, headers: ["الاسم", "البريد", "الدور", "القسم", "الحالة"], rows: () => memRows.map((m) => [m["profile"]?.full_name ?? "", m["profile"]?.email ?? "", ROLE_LABELS[m["role"] as Role], m["departments"]?.name ?? "", m["is_active"] ? "نشط" : "موقوف"]) }} />
+        {!memRows.length ? <EmptyState title="لا نتائج مطابقة" hint="غيّر البحث أو امسح الفلاتر." /> : <div className="mb-8 overflow-x-auto rounded-xl border bg-card">
           <Table>
             <TableHeader><TableRow><TableHead className="text-start">الاسم</TableHead><TableHead className="text-start">البريد</TableHead><TableHead className="text-start">الدور</TableHead><TableHead className="text-start">الحالة</TableHead></TableRow></TableHeader>
             <TableBody>
-              {mem.data.map((m) => (
+              {memRows.map((m) => (
                 <TableRow key={m["id"]}>
                   <TableCell>{m["profile"]?.full_name || "—"}</TableCell>
                   <TableCell dir="ltr" className="text-end">{m["profile"]?.email ?? "—"}</TableCell>
@@ -181,13 +190,14 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
               ))}
             </TableBody>
           </Table>
-        </div>
-      )}
+        </div>}
+      </>)}
       <h2 className="mb-1 text-lg font-bold">الدعوات المعلقة</h2>
       <p className="mb-3 text-sm text-muted-foreground">لا يرسل النظام رسائل بريد للدعوات حاليًا. انسخ الرابط وأرسله للمدعو بنفسك. لا تُفعّل العضوية إلا بعد دخوله بالبريد نفسه وتأكيده.</p>
-      {inv.data?.length ? (
-        <ul className="mb-8 space-y-2">
-          {inv.data.map((i) => {
+      {inv.data?.length ? (<>
+        <ListTools s={it} placeholder="ابحث بالبريد" count={invRows.length} exp={{ title: "الدعوات المعلقة", school: ctx.schoolName, headers: ["البريد", "الدور", "الحالة", "تنتهي في"], rows: () => invRows.map((i) => [i["email"], ROLE_LABELS[i["role"] as Role], i["needs_review"] ? "بانتظار المراجعة" : i["revoked_at"] ? "ملغاة" : new Date(i["expires_at"]) <= new Date() ? "منتهية" : "صالحة", String(i["expires_at"]).slice(0, 10)]) }} />
+        {!invRows.length ? <EmptyState title="لا نتائج مطابقة" /> : <ul className="mb-8 space-y-2">
+          {invRows.map((i) => {
             const review = !!i["needs_review"];
             const st = review ? "بانتظار مراجعتك — صدرت من دور لم يعد مخولًا" : i["revoked_at"] ? "ملغاة" : new Date(i["expires_at"]) <= new Date() ? "منتهية" : "صالحة حتى " + new Date(i["expires_at"]).toLocaleDateString("ar");
             const active = !review && !i["revoked_at"] && new Date(i["expires_at"]) > new Date();
@@ -205,8 +215,8 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
               </li>
             );
           })}
-        </ul>
-      ) : <EmptyState title="لا توجد دعوات معلقة" />}
+        </ul>}
+      </>) : <EmptyState title="لا توجد دعوات معلقة" />}
 
       <h2 className="mb-3 mt-8 text-lg font-bold">سجل تغييرات الصلاحيات</h2>
       {audit.data?.length ? (
