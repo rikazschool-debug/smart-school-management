@@ -242,7 +242,6 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
   const isOwner = ctx.role === "org_owner";
   const [scope, setScope] = useState<string>(initial["scope"] ?? "school");
   const [targets, setTargets] = useState<string[]>(initial["scope"] === "branches" ? initial["target_schools"] ?? [] : []);
-  const [step, setStep] = useState(1);
   const schools = useSchools(ctx.orgId ?? undefined);
   const deptOpts = useOptions("departments", "name", ctx.schoolId);
   const groupOpts = useQuery({ queryKey: ["circ-groups", ctx.schoolId], queryFn: async () => ((await db.from("conversations").select("id, title").eq("kind", "group").eq("school_id", ctx.schoolId).eq("status", "active")).data ?? []) as Row[] });
@@ -265,7 +264,6 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
         <label className="flex items-center gap-2"><input type="checkbox" checked={v.requires_ack} onChange={(e) => setV({ ...v, requires_ack: e.target.checked })} /> يتطلب إقرار اطلاع</label>
         {v.requires_ack && <div className="space-y-1"><Label htmlFor="cd">موعد الإقرار</Label><Input id="cd" type="date" value={v.ack_due} onChange={(e) => setV({ ...v, ack_due: e.target.value })} /></div>}
       </div>
-      <ol className="flex flex-wrap gap-2 text-xs">{["المحتوى", "الفروع", "الجمهور", "الإقرار", "المعاينة"].map((l, k) => <li key={l}><button type="button" onClick={() => setStep(k + 1)} className={`rounded-full border px-3 py-1 ${step === k + 1 ? "bg-primary text-primary-foreground" : ""}`}>{k + 1}. {l}</button></li>)}</ol>
       <fieldset className="space-y-2 rounded-lg border p-3">
         <legend className="px-1 font-semibold">النطاق والفروع</legend>
         {isOwner ? (
