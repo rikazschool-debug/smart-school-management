@@ -24,7 +24,7 @@
 - [x] C Org-wide circulars across branches — server 19/19 + browser (preview, publish to 2 branches, ack on phone, report by branch)
 - [x] D Attachments in cross-branch groups — server + browser
 - [x] E Server-side scheduled cleanup of unlinked files
-- [ ] F Communication browser tests (internal, messages, groups, notifications)
+- [x] F Communication browser tests — done (see P5)
 - [x] G Report reviewer permission scoped (not every admin)
 - [x] H Document signed-link policy after membership removal
 - [x] I Class (section) group auto-created + auto membership (students, assigned teachers)
@@ -35,7 +35,7 @@
 - [x] 2 Org-wide circulars (server + list/filters/editor/reports UI)
 - [x] 3 Cross-branch group attachments — server 11/11 + browser (upload, view, download, outsider denied)
 - [x] 4 Package-2 remaining browser journeys — all done in browser; supervisor scope bug fixed
-- [ ] 5 Extended communication browser tests
+- [x] 5 Extended communication browser tests (see P5)
 - [ ] 6 Cleanup scheduler health detection (stale last-run alert) + timing doc
 - [ ] 7 Department-head scope: currently reads the whole school; narrow to own department (needs decision)
 - [ ] 8 Remove 19 leftover test schools from older test runs (needs owner-safe cleanup)
@@ -45,7 +45,7 @@
 - [x] P2 Users/roles/invitations: org owner only (invite, revoke, resend, activate/deactivate, role); pending invites from non-owners need owner review; last-owner protection; change audit
 - [x] P3 Dept head scope: assigned department(s) only; empty state without department; revoke clears cache
 - [x] P4 Circular publisher identity: org → org name/«إدارة المؤسسة», school → school name; snapshot per version
-- [ ] P5 Extended communication browser tests (section 7 list) — server-covered; browser runs pending
+- [x] P5 Extended communication browser tests — 5/5 passed in browser + server 2026-11-01 (docs/closure-log.md)
 - [x] P6 Cleanup monitoring: independent health check, alert + recovery, dedupe
 - [x] P7 Inventory 19 old test schools + cleanup plan (no deletion of unknown-origin data)
 - [x] P8 Acceptance tests 1–15, permission matrix, closure log

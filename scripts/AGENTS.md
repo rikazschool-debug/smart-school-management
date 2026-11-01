@@ -8,3 +8,4 @@
 - scripts/xbranch-files-e2e.ts tests attachments in cross-branch groups.
 - Every test that creates orgs ends with TestRun.purgeOrg(org) (refuses orgs with schools not registered by the run).
 - scripts/perm4-e2e.ts: owner-only users/roles, group creation, dept-head scope, publisher label. scripts/cleanup-monitor-e2e.ts: monitor alerts/recovery on an isolated channel.
+- scripts/comm-browser-fixture.ts setup|teardown: isolated org/users (cbx-) for communication browser journeys; always run teardown after.
