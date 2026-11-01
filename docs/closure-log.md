@@ -31,7 +31,7 @@ Updated: 2026-11-01.
 | Manual edits of class-group membership blocked | yes | — | done |
 | Year archive stops sending | trigger on academic_years.is_current | — | partial (not tested) |
 | Report reviewers scoped (school-chosen roles, default principal + vice; org owner/platform admin not automatic; only the reported message is shown; view/decision audited) | updated tests 19 | — | partial (browser not run) |
-| Attachments in cross-branch groups (file owned by uploader's branch, read via group membership) | — | — | partial — built, no test yet |
+| Attachments in cross-branch groups (file owned by uploader's branch, read via group membership) | xbranch-files-e2e X1–X11 | — | partial — server done; bug fixed (create_group forced attachments off for cross-branch groups); browser not run |
 | Org-wide circulars across branches | — | — | **open** |
 | Internal chats / messages / groups / notifications browser suite (section 6 of the brief) | comm-e2e | — | open (browser) |
 
@@ -78,3 +78,9 @@ Updated: 2026-11-01.
 
 ### Still open
 - Cross-branch attachment browser test, remaining package-2 browser journeys, extended communication browser suite, scheduler-failure detection. External: auth redirect URLs, leaked-password protection.
+
+## 2026-11-01 — Package 3d run
+- Bug found + fixed: create_group always saved cross-branch groups with attachments off; group form also locked the option. Both fixed.
+- scripts/xbranch-files-e2e.ts 11/11: upload under uploader's branch, branch policy enforced, non-member denied, other-branch member lists + downloads, same-branch non-member denied, removed member gets no new link.
+- Regression: rls 89/89, comm 94/94, circ-org 19/19, cleanup 11/11, cleanup-scope 3/3, build OK.
+- Not run this session: browser runs for cross-branch attachments, package-2 remaining journeys, extended communication suite, circular publish/ack in browser, scheduler health alert.
