@@ -114,14 +114,14 @@ function Page() {
       ) : (
         <div className="grid gap-4 rounded-2xl border bg-card p-6 md:grid-cols-2">
           <div className="space-y-1">
-            <Label>المقرر والشعبة</Label>
-            <select className={`${field} w-full`} value={f.course_id} disabled={!!edit} onChange={(e) => { set("course_id", e.target.value); set("students", []); }}>
+            <Label htmlFor="hw-course">المقرر والشعبة</Label>
+            <select id="hw-course" className={`${field} w-full`} value={f.course_id} disabled={!!edit} onChange={(e) => { set("course_id", e.target.value); set("students", []); }}>
               <option value="">اختر</option>
               {courses.data.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]}</option>)}
             </select>
           </div>
-          <div className="space-y-1"><Label>العنوان</Label><Input value={f.title} maxLength={200} onChange={(e) => set("title", e.target.value)} /></div>
-          <div className="space-y-1 md:col-span-2"><Label>التعليمات</Label><Textarea rows={5} value={f.instructions} onChange={(e) => set("instructions", e.target.value)} /></div>
+          <div className="space-y-1"><Label htmlFor="hw-title">العنوان</Label><Input id="hw-title" value={f.title} maxLength={200} onChange={(e) => set("title", e.target.value)} /></div>
+          <div className="space-y-1 md:col-span-2"><Label htmlFor="hw-instr">التعليمات</Label><Textarea id="hw-instr" rows={5} value={f.instructions} onChange={(e) => set("instructions", e.target.value)} /></div>
           <div className="space-y-1">
             <Label>نوع التسليم</Label>
             <div className="flex flex-wrap gap-3 text-sm">
@@ -147,8 +147,8 @@ function Page() {
               {!roster.data?.length && <span className="text-muted-foreground">لا يوجد طلاب نشطون في الشعبة</span>}
             </div>
           )}
-          <div className="space-y-1"><Label>وقت الإتاحة (فارغ = عند النشر)</Label><Input type="datetime-local" value={f.available_from} onChange={(e) => set("available_from", e.target.value)} /></div>
-          <div className="space-y-1"><Label>موعد التسليم</Label><Input type="datetime-local" value={f.due_at} onChange={(e) => set("due_at", e.target.value)} /></div>
+          <div className="space-y-1"><Label htmlFor="hw-avail">وقت الإتاحة (فارغ = عند النشر)</Label><Input id="hw-avail" type="datetime-local" value={f.available_from} onChange={(e) => set("available_from", e.target.value)} /></div>
+          <div className="space-y-1"><Label htmlFor="hw-due">موعد التسليم</Label><Input id="hw-due" type="datetime-local" value={f.due_at} onChange={(e) => set("due_at", e.target.value)} /></div>
           <div className="space-y-1">
             <Label>سياسة التأخر</Label>
             <select className={`${field} w-full`} value={f.late_policy} onChange={(e) => set("late_policy", e.target.value)}>
