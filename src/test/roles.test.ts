@@ -1,6 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { NAV_BY_ROLE, canCreateGroup, canManageUsers, commTabs, invitableRoles, type Role } from "@/lib/roles";
+import { NAV_BY_ROLE, attTabs, canCreateGroup, canManageUsers, commTabs, invitableRoles, type Role } from "@/lib/roles";
 const ALL = Object.keys(NAV_BY_ROLE) as Role[];
+
+describe("attendance roles", () => {
+  it("only the owner and principal see attendance settings", () => {
+    expect(ALL.filter((r) => attTabs(r).includes("settings")).sort()).toEqual(["org_owner", "principal"]);
+  });
+  it("security runs the gate but never settings or cards; counselor only reads", () => {
+    expect(attTabs("security")).toContain("gate");
+    expect(attTabs("security")).not.toContain("settings");
+    expect(attTabs("security")).not.toContain("cards");
+    expect(attTabs("counselor")).toEqual(["today", "records", "followup"]);
+  });
+  it("teachers only see preparation requests; families use the exit page, never the gate", () => {
+    expect(attTabs("teacher")).toEqual(["pickups"]);
+    expect(NAV_BY_ROLE.guardian).toContain("pickup");
+    expect(NAV_BY_ROLE.guardian).not.toContain("attendance");
+    expect(NAV_BY_ROLE.student).not.toContain("attendance");
+  });
+});
 
 describe("role rules", () => {
   it("nobody can invite an org owner", () => {
@@ -21,9 +39,9 @@ describe("role rules", () => {
     expect(invitableRoles("teacher")).toEqual([]);
   });
   it("counselor, nurse and security dashboards expose only communication and notifications", () => {
-    expect(NAV_BY_ROLE.counselor).toEqual(["home", "communication", "notifications"]);
+    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "communication", "notifications"]);
     expect(NAV_BY_ROLE.nurse).toEqual(["home", "communication", "notifications"]);
-    expect(NAV_BY_ROLE.security).toEqual(["home", "communication", "notifications"]);
+    expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "communication", "notifications"]);
   });
   it("students get subject groups and teacher chats only — no circulars, groups or management", () => {
     expect(commTabs("student")).toEqual(["classes", "inbox", "archive"]);
