@@ -44,6 +44,7 @@ export type NavKey =
   | "schoolday"
   | "substitutions"
   | "communication"
+  | "homework"
   | "notifications";
 
 const MANAGE: NavKey[] = [
@@ -54,6 +55,7 @@ const MANAGE: NavKey[] = [
   "students",
   "guardians",
   "classrooms",
+  "homework",
   "schoolday",
   "schedule",
   "substitutions",
@@ -62,16 +64,16 @@ const MANAGE: NavKey[] = [
 ];
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
-  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1)],
+  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework")],
   org_owner: ["home", "schools", "members", ...MANAGE.slice(1)],
   principal: MANAGE,
   vice_principal: MANAGE,
   student_affairs: ["home", "students", "guardians", "schedule", "communication", "notifications"],
-  dept_head: ["home", "teachers", "courses", "classrooms", "schedule", "communication", "notifications"],
-  supervisor: ["home", "teachers", "courses", "classrooms", "schedule", "communication", "notifications"],
-  teacher: ["home", "classrooms", "schedule", "communication", "notifications"],
-  guardian: ["home", "classrooms", "schedule", "communication", "notifications"],
-  student: ["home", "classrooms", "schedule", "communication", "notifications"],
+  dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
+  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
+  teacher: ["home", "classrooms", "homework", "schedule", "communication", "notifications"],
+  guardian: ["home", "classrooms", "homework", "schedule", "communication", "notifications"],
+  student: ["home", "classrooms", "homework", "schedule", "communication", "notifications"],
   counselor: ["home", "communication", "notifications"],
   nurse: ["home", "communication", "notifications"],
   security: ["home", "communication", "notifications"],
@@ -117,4 +119,9 @@ export function commTabs(role: Role): CommTab[] {
 /** Roles that start family conversations from the teacher side. */
 export function canStartFamilyChat(role: Role) {
   return role === "teacher" || ["principal", "vice_principal", "student_affairs"].includes(role);
+}
+
+/** Homework: only the course's current teacher creates/grades (mirrors is_course_teacher in SQL); listed roles only view. */
+export function canAuthorHomework(role: Role) {
+  return role === "teacher";
 }
