@@ -48,7 +48,6 @@ export type NavKey =
 
 const MANAGE: NavKey[] = [
   "home",
-  "members",
   "academic",
   "teachers",
   "courses",
@@ -64,10 +63,10 @@ const MANAGE: NavKey[] = [
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1)],
-  org_owner: ["home", "schools", ...MANAGE.slice(1)],
+  org_owner: ["home", "schools", "members", ...MANAGE.slice(1)],
   principal: MANAGE,
   vice_principal: MANAGE,
-  student_affairs: ["home", "students", "guardians", "members", "schedule", "communication", "notifications"],
+  student_affairs: ["home", "students", "guardians", "schedule", "communication", "notifications"],
   dept_head: ["home", "teachers", "courses", "classrooms", "schedule", "communication", "notifications"],
   supervisor: ["home", "teachers", "courses", "classrooms", "schedule", "communication", "notifications"],
   teacher: ["home", "classrooms", "schedule", "communication", "notifications"],
@@ -78,34 +77,20 @@ export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   security: ["home", "communication", "notifications"],
 };
 
-/** Roles a caller may invite (mirrors the invite_member database rule). */
+/** Roles a caller may invite (mirrors can_invite: organization owner only, never another owner). */
 export function invitableRoles(role: Role): Role[] {
-  const school: Role[] = [
-    "principal",
-    "vice_principal",
-    "dept_head",
-    "supervisor",
-    "student_affairs",
-    "teacher",
-    "guardian",
-    "student",
-    "counselor",
-    "nurse",
-    "security",
-  ];
-  switch (role) {
-    case "platform_admin":
-    case "org_owner":
-      return school;
-    case "principal":
-      return school.filter((r) => r !== "principal");
-    case "vice_principal":
-      return school.filter((r) => r !== "principal" && r !== "vice_principal");
-    case "student_affairs":
-      return ["guardian", "student"];
-    default:
-      return [];
-  }
+  if (role !== "org_owner") return [];
+  return ["principal", "vice_principal", "dept_head", "supervisor", "student_affairs", "teacher", "guardian", "student", "counselor", "nurse", "security"];
+}
+
+/** Users, roles, invitations and memberships are managed only by the organization owner (mirrors is_org_owner checks). */
+export function canManageUsers(role: Role) {
+  return role === "org_owner";
+}
+
+/** Manual groups: owner (whole organization or one branch) or principal (own school only); mirrors _can_create_group. */
+export function canCreateGroup(role: Role) {
+  return role === "org_owner" || role === "principal";
 }
 
 export function canManage(role: Role) {
