@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { canManageStudents, type Role } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
+import { ImportButton } from "@/components/import-dialog";
 import { arabicError, type AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/students")({ component: Page });
@@ -63,7 +64,12 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <CrudTable title="الطلاب" table="students" schoolId={ctx.schoolId} canWrite={w} order="full_name"
         select="*, enrollments(status, sections(name, grades(name))), student_guardians(id)"
         searchKeys={["full_name", "national_id"]}
-        filters={[{ key: "status", label: "الحالة", options: STATUS }]}
+        filters={[
+          { key: "status", label: "الحالة", options: STATUS },
+          { key: "gender", label: "الجنس", options: [{ value: "male", label: "ذكر" }, { value: "female", label: "أنثى" }] },
+          { key: "section", label: "الشعبة", remote: { table: "sections", label: "name" }, path: "enrollments.section_id", inner: "enrollments", extra: { "enrollments.status": "active" } },
+        ]}
+        toolbar={w ? <ImportButton kind="students" schoolId={ctx.schoolId} /> : undefined}
         fields={[
           { key: "full_name", label: "الاسم الكامل", required: true },
           { key: "national_id", label: "رقم الهوية" },
@@ -74,9 +80,9 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         ]}
         defaults={{ status: "active" }}
         columns={[
-          { label: "الاسم", render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["full_name"]}</button> },
+          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["full_name"]}</button> },
           { label: "الهوية", render: (r) => r["national_id"] ?? "—" },
-          { label: "الشعبة", render: (r) => {
+          { label: "الشعبة", text: (r) => { const e = (r["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active"); return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : "غير مسكّن"; }, render: (r) => {
             const e = (r["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active");
             return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : <span className="text-muted-foreground">غير مسكّن</span>;
           } },
