@@ -52,6 +52,7 @@ try {
   await mem(pr.id, "principal"); await mem(t1.id, "teacher"); await mem(t2.id, "teacher"); await mem(s1.id, "student"); await mem(s2.id, "student"); await mem(g1.id, "guardian"); await mem(dhO.id, "dept_head", dB.id); await mem(sup.id, "supervisor");
 
   const base = { course_id: course.id, title: "واجب الحركة", instructions: "حل التمارين", submission_types: ["text", "file", "link", "paper"], due_at: iso(60), max_score: 10,
+    criteria: [{ label: "الفهم", max: 6 }, { label: "العرض", max: 4 }], allow_resubmit: true, max_attempts: 2, audience: "all", late_policy: "none" };
   const hw = (await t1.c.rpc("save_homework", { _id: null, _d: { ...base, join_policy: undefined } })).data as string;
   const hf = (await t1.c.rpc("create_homework_file", { _hw: hw, _name: "ورقة.pdf", _mime: "application/pdf", _size: 20 })).data[0];
   await t1.c.storage.from("rikaz-files").upload(hf.storage_path, new Blob(["%PDF-1"], { type: "application/pdf" }), { contentType: "application/pdf" });
