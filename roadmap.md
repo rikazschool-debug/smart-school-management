@@ -119,4 +119,14 @@
 - [x] P12.3 Excel template import students/teachers (browser-tested). Manual-add form unchanged (existing)
 - [x] P12.4 XLSX/PDF export on all CrudTable screens + schedule, substitutions day report, members, invitations, classrooms, circulars list + recipient report (browser-checked)
 - [x] P12 direct PDF download + import formula rejection + typed XLSX cells (browser + unit tested)
-- [ ] NEXT: toolbar (search/filters/XLSX/PDF) on custom screens in order: schedule → substitutions → members (owner only) → classrooms → circulars + reports
+- [x] toolbar on custom screens (schedule, substitutions, members, classrooms, circulars)
+
+## Attendance package (docs/attendance-package-brief.md)
+- [x] A1 policies (central/school, versions, principal-editable keys), server-clock classification
+- [x] A2 cards (random token, print, revoke/replace), gate scan, duplicate/revoked/other-school, manual entry, absence review
+- [x] A3 guardian exit page (quick/permission/mine/record), authorized pickup persons
+- [x] A4 approvals → arrived → preparing/ready (teacher) → handover → exit movement; return; present-now
+- [x] A5 speaker screen (queue, beep + Arabic TTS, repeat/skip, failure shown with manual fallback)
+- [x] A6 records/timeline/corrections/counselor alerts + XLSX/PDF
+- [ ] A7 field test with a real barcode reader and speakers (needs school devices)
+- [ ] A8 student photo on card/gate, attachment on permission request, owner cross-branch comparison board

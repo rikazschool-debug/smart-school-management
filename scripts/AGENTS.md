@@ -14,3 +14,4 @@
 - scripts/homework2-e2e.ts: feedback files, template copy, late joiners, report export scope.
 - scripts/hw-browser-fixture.ts setup|teardown: isolated homework data (hbx-) for browser journeys; always run teardown after.
 - scripts/assignment-validity-e2e.ts: assignment start/end boundaries (future, ended-but-approved, ends today, end<start, open session, independent dept-head role) on isolated data.
+- scripts/attendance-e2e.ts: attendance/gate/pickup/call permissions and lifecycle (66 checks). scripts/att-browser-fixture.ts setup|teardown: isolated data (abx-) for attendance browser journeys; always run teardown after.

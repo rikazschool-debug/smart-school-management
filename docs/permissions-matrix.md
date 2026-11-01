@@ -31,3 +31,21 @@ Protections: the last active owner cannot be deactivated or demoted; ownership c
 | Record paper hand-in | yes | no | no | no | – | – | no |
 | Grade / return / publish / correct result | yes (correction needs reason, logged) | no | no | no | – | – | no |
 | See grade | yes | yes | yes | yes | after publish | after publish | no |
+
+
+## Attendance, exit and permission (package: attendance)
+| Action | Owner | Principal | Vice principal / Student affairs | Security | Teacher | Counselor | Guardian | Student |
+|---|---|---|---|---|---|---|---|---|
+| Central policy (all branches) | yes | no | no | no | no | no | no | no |
+| School policy | yes | only keys the owner allows | no | no | no | no | no | no |
+| Issue / revoke / replace card | yes | yes | yes | no | no | no | no | no |
+| Scan attendance | yes | yes | yes | yes | no | no | no | no |
+| Manual attendance / resolve review | yes | yes | yes (approver roles in policy) | no | no | no | no | no |
+| Request correction | yes | yes | yes | yes | no | no | no | no |
+| Approve correction / permission | yes | yes | approver roles in policy | no | no | no | no | no |
+| Add authorized pickup person | yes | yes | yes | no | no | no | request via school | no |
+| Create pickup / permission request | no | no | no | no | no | no | own verified children (can_pickup) | no |
+| Recipient arrived / handover / return | yes | yes | yes | yes | no | no | no | no |
+| Mark preparing / ready | yes | yes | yes | yes | own section students | no | no | no |
+| See permission reason | yes | yes | yes | no | no | yes (read) | own | no |
+| Records / follow-up alerts | yes | yes | yes | today board only | no | read only | own children | self |
