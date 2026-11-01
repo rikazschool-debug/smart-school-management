@@ -19,7 +19,7 @@ const ACTION: Record<string, string> = {
 
 export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRole: string | null; onChanged: () => void }) {
   const qc = useQueryClient();
-  const { user } = useSession();
+  const { user, active } = useSession();
   const conv = useQuery({
     queryKey: ["conv", convId],
     queryFn: async () => {
