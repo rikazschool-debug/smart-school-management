@@ -9,7 +9,8 @@ import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { canManageStudents } from "@/lib/roles";
+import { canManageStudents, type Role } from "@/lib/roles";
+import { AccountButton } from "@/components/account-button";
 import { arabicError, type AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/students")({ component: Page });
@@ -119,7 +120,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
         <DialogContent dir="rtl" className="max-w-xl">
           <DialogHeader><DialogTitle>{viewing?.["full_name"]}</DialogTitle></DialogHeader>
-          {viewing && <StudentLinks studentId={viewing["id"]} schoolId={ctx.schoolId} canWrite={w} email={viewing["email"]} hasAccount={!!viewing["user_id"]} />}
+          {viewing && <StudentLinks studentId={viewing["id"]} schoolId={ctx.schoolId} canWrite={w} email={viewing["email"]} hasAccount={!!viewing["user_id"]} role={ctx.role} />}
         </DialogContent>
       </Dialog>
     </>
@@ -128,7 +129,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
 
 const REL: Record<string, string> = { father: "الأب", mother: "الأم", brother: "الأخ", other: "أخرى" };
 
-function StudentLinks({ studentId, schoolId, canWrite, email, hasAccount }: { studentId: string; schoolId: string; canWrite: boolean; email: string | null; hasAccount: boolean }) {
+function StudentLinks({ studentId, schoolId, canWrite, email, hasAccount, role }: { studentId: string; schoolId: string; canWrite: boolean; email: string | null; hasAccount: boolean; role: Role }) {
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["sg", studentId],
@@ -159,10 +160,7 @@ function StudentLinks({ studentId, schoolId, canWrite, email, hasAccount }: { st
         </div>
       ))}
       {canWrite && email && !hasAccount && (
-        <Button variant="outline" size="sm" onClick={async () => {
-          const { error } = await supabase.rpc("invite_member", { _email: email, _school: schoolId, _role: "student" });
-          if (error) toast.error(arabicError(error)); else toast.success("أُرسلت دعوة حساب الطالب");
-        }}><Send className="size-4" /> دعوة الطالب لحساب دخول</Button>
+        <AccountButton role={role} kind="student" recordId={studentId} email={email} schoolId={schoolId} label="دعوة الطالب لحساب دخول" />
       )}
     </div>
   );
