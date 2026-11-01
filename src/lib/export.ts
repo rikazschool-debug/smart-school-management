@@ -2,7 +2,7 @@
 // Callers pass only already-permitted rows (fetched with the RLS-bound client) — never secrets or private file URLs.
 import * as XLSX from "xlsx";
 
-export type ExportMeta = { title: string; school?: string; filters: string[] };
+export type ExportMeta = { title: string; school?: string | undefined; filters: string[] };
 
 /** Excel injection guard: cells starting with = + - @ are prefixed so they are never evaluated as formulas. */
 export const safeCell = (v: unknown): string | number => {
