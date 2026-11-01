@@ -21,6 +21,7 @@ async function user(tag: string) {
 import { TestRun } from "./lib/test-run";
 const tr = new TestRun(admin, "rls-e2e");
 const owner = await user("owner"), teacherU = await user("teacher"), guardU = await user("guardian"), studU = await user("student"), outsider = await user("outsider");
+for (const u of [owner, teacherU, guardU, studU, outsider]) tr.addUser(u.id);
 
 // 1. org/school/year/section/subject
 const { data: orgId, error: oe } = await owner.c.rpc("create_organization", { _org_name: "مجموعة اختبار", _school_name: "مدرسة أ" });
