@@ -19,13 +19,13 @@
 - [ ] Cross-branch (org-wide) circulars and attachments in cross-branch groups — not built
 
 ## Package 3b — Closure (prompt: close packages 2+3) + mandatory class groups
-- [ ] A Closure log docs/closure-log.md (per item: scope, server test, browser test, evidence, status)
+- [x] A Closure log docs/closure-log.md (per item: scope, server test, browser test, evidence, status)
 - [ ] B Package-2 browser journeys (files open/download/denied/expired; substitution cancel across dashboards; pin/comments reopen; upload fail/retry/cancel; 2 children in 2 sections; supervisor assign/unassign/direct-id)
 - [ ] C Org-wide circulars across branches (targeting, preview, versions, reports by branch/role)
-- [ ] D Attachments in cross-branch groups
-- [ ] E Server-side scheduled cleanup of unlinked files
+- [ ] D Attachments in cross-branch groups — built, test missing
+- [x] E Server-side scheduled cleanup of unlinked files
 - [ ] F Communication browser tests (internal, messages, groups, notifications)
-- [ ] G Report reviewer permission scoped (not every admin)
-- [ ] H Document signed-link policy after membership removal
-- [ ] I Class (section) group auto-created + auto membership (students, assigned teachers)
-- [ ] J Teacher roster panel + private teacher↔student chat, draft per conversation, student posting settings
+- [x] G Report reviewer permission scoped (not every admin)
+- [x] H Document signed-link policy after membership removal
+- [x] I Class (section) group auto-created + auto membership (students, assigned teachers)
+- [x] J Teacher roster panel + private teacher↔student chat, draft per conversation, student posting settings
