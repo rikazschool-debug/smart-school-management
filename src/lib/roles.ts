@@ -43,6 +43,7 @@ export type NavKey =
   | "schedule"
   | "schoolday"
   | "substitutions"
+  | "communication"
   | "notifications";
 
 const MANAGE: NavKey[] = [
@@ -57,6 +58,7 @@ const MANAGE: NavKey[] = [
   "schoolday",
   "schedule",
   "substitutions",
+  "communication",
   "notifications",
 ];
 
@@ -65,15 +67,15 @@ export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   org_owner: ["home", "schools", ...MANAGE.slice(1)],
   principal: MANAGE,
   vice_principal: MANAGE,
-  student_affairs: ["home", "students", "guardians", "members", "schedule", "notifications"],
-  dept_head: ["home", "teachers", "courses", "classrooms", "schedule", "notifications"],
-  supervisor: ["home", "teachers", "courses", "classrooms", "schedule", "notifications"],
-  teacher: ["home", "classrooms", "schedule", "notifications"],
-  guardian: ["home", "classrooms", "schedule", "notifications"],
-  student: ["home", "classrooms", "schedule", "notifications"],
-  counselor: ["home", "notifications"],
-  nurse: ["home", "notifications"],
-  security: ["home", "notifications"],
+  student_affairs: ["home", "students", "guardians", "members", "schedule", "communication", "notifications"],
+  dept_head: ["home", "teachers", "courses", "classrooms", "schedule", "communication", "notifications"],
+  supervisor: ["home", "teachers", "courses", "classrooms", "schedule", "communication", "notifications"],
+  teacher: ["home", "classrooms", "schedule", "communication", "notifications"],
+  guardian: ["home", "classrooms", "schedule", "communication", "notifications"],
+  student: ["home", "classrooms", "schedule", "communication", "notifications"],
+  counselor: ["home", "communication", "notifications"],
+  nurse: ["home", "communication", "notifications"],
+  security: ["home", "communication", "notifications"],
 };
 
 /** Roles a caller may invite (mirrors the invite_member database rule). */
@@ -116,4 +118,16 @@ export function canManageStudents(role: Role) {
 /** Only principal-level managers edit timetables and assign substitutes (mirrors can_manage_school). */
 export function canEditSchedule(role: Role) {
   return canManage(role);
+}
+
+export type CommTab = "inbox" | "mine" | "groups" | "circulars" | "archive" | "manage";
+/** Communication tabs per role. Students get no private chats (only circulars); manage = group/circular/report admin (mirrors can_manage_school). */
+export function commTabs(role: Role): CommTab[] {
+  if (role === "student") return ["circulars"];
+  const base: CommTab[] = ["inbox", "mine", "groups", "circulars", "archive"];
+  return canManage(role) ? [...base, "manage"] : base;
+}
+/** Roles that start family conversations from the teacher side. */
+export function canStartFamilyChat(role: Role) {
+  return role === "teacher" || ["principal", "vice_principal", "student_affairs"].includes(role);
 }
