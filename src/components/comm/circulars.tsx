@@ -15,6 +15,14 @@ import { MemberPicker } from "@/components/comm/member-picker";
 
 const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
 const STATUS: Record<string, string> = { draft: "مسودة", published: "منشور", archived: "مؤرشف" };
+const SCOPE: Record<string, string> = { school: "مدرسة", branches: "فروع محددة", org: "المؤسسة" };
+function useSchools(orgId: string | undefined) {
+  return useQuery({ queryKey: ["org-schools", orgId], enabled: !!orgId, queryFn: async () => ((await db.from("schools").select("id, name").eq("org_id", orgId!).eq("is_active", true).order("name")).data ?? []) as Row[] });
+}
+function scopeText(c: Row, schools: Row[] | undefined) {
+  const names = ((c["target_schools"] as string[]) ?? []).map((id) => schools?.find((s) => s["id"] === id)?.["name"]).filter(Boolean);
+  return c["scope"] === "school" ? `مدرسة${names[0] ? `: ${names[0]}` : ""}` : `${SCOPE[c["scope"]]} (${names.length} فرع)`;
+}
 
 export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { schoolId: string }; focus: string | undefined; onFocus: (id: string | undefined) => void }) {
   const manager = canManage(ctx.role);
@@ -22,22 +30,34 @@ export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { scho
   const q = useQuery({
     queryKey: ["circulars", ctx.schoolId],
     queryFn: async () => {
-      const { data, error } = await db.from("circulars").select("*, circular_recipients(user_id, opened_at, ack_required_version), circular_acks(user_id, version)").eq("school_id", ctx.schoolId).order("created_at", { ascending: false });
+      const { data, error } = await db.from("circulars").select("*, circular_recipients(user_id, opened_at, ack_required_version, first_version), circular_acks(user_id, version)").or(`school_id.eq.${ctx.schoolId},target_schools.cs.{${ctx.schoolId}}`).order("created_at", { ascending: false });
       if (error) throw error;
       return data as Row[];
     },
   });
   const { data: auth } = useQuery({ queryKey: ["me"], queryFn: async () => (await db.auth.getUser()).data.user });
   const me = auth?.id;
+  const schools = useSchools(ctx.orgId);
+  const [f, setF] = useState({ q: "", status: "", scope: "", branch: "", from: "", to: "" });
+  const list = (q.data ?? []).filter((c) => (!f.q || `${c["title"]} ${c["publisher_label"]}`.includes(f.q)) && (!f.status || c["status"] === f.status) && (!f.scope || c["scope"] === f.scope)
+    && (!f.branch || (c["target_schools"] as string[] ?? []).includes(f.branch)) && (!f.from || (c["published_at"] ?? c["created_at"]) >= f.from) && (!f.to || (c["published_at"] ?? c["created_at"]).slice(0, 10) <= f.to));
   if (editing) return <CircularEditor ctx={ctx} initial={editing} onDone={() => { setEditing(null); q.refetch(); }} />;
   const current = focus ? q.data?.find((c) => c["id"] === focus) : undefined;
   if (current) return <CircularView c={current} me={me} manager={manager} onBack={() => onFocus(undefined)} onChanged={() => q.refetch()} onEdit={() => setEditing(current)} />;
   return (
     <div className="space-y-3">
       {manager && <Button size="sm" onClick={() => setEditing({})}>تعميم جديد</Button>}
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد تعاميم" /> : (
+      <div className="grid gap-2 text-sm sm:grid-cols-3 lg:grid-cols-6">
+        <Input aria-label="بحث في التعاميم" placeholder="بحث بالعنوان أو الجهة" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} />
+        <select aria-label="الحالة" className={sel} value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })}><option value="">كل الحالات</option>{Object.entries(STATUS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        <select aria-label="نوع الاستهداف" className={sel} value={f.scope} onChange={(e) => setF({ ...f, scope: e.target.value })}><option value="">كل النطاقات</option>{Object.entries(SCOPE).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        <select aria-label="الفرع" className={sel} value={f.branch} onChange={(e) => setF({ ...f, branch: e.target.value })}><option value="">كل الفروع</option>{(schools.data ?? []).map((s) => <option key={s["id"]} value={s["id"]}>{s["name"]}</option>)}</select>
+        <Input aria-label="من تاريخ" type="date" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} />
+        <Input aria-label="إلى تاريخ" type="date" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} />
+      </div>
+      {q.isLoading ? <LoadingState /> : q.error ? <div className="space-y-2"><ErrorState message={arabicError(q.error)} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div> : !list.length ? <EmptyState title={q.data?.length ? "لا توجد تعاميم مطابقة للتصفية" : "لا توجد تعاميم"} /> : (
         <ul className="space-y-2">
-          {q.data.map((c) => {
+          {list.map((c) => {
             const mine = (c["circular_recipients"] as Row[]).find((r) => r["user_id"] === me);
             const needAck = mine?.["ack_required_version"] && !(c["circular_acks"] as Row[]).some((a) => a["user_id"] === me && a["version"] >= mine?.["ack_required_version"]);
             return (
@@ -49,7 +69,7 @@ export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { scho
                     {needAck && <span className="rounded-full bg-primary/10 px-2 text-xs text-primary">إقرار مطلوب</span>}
                     {mine && !mine?.["opened_at"] && <span className="size-2 rounded-full bg-primary" aria-label="غير مفتوح" />}
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{c["publisher_label"]} • {STATUS[c["status"]]}{c["version"] > 1 ? ` • الإصدار ${c["version"]}` : ""}{c["published_at"] ? ` • ${new Date(c["published_at"]).toLocaleDateString("ar")}` : ""}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{c["publisher_label"]} • {scopeText(c, schools.data)} • {STATUS[c["status"]]}{c["requires_ack"] ? ` • إقرار${c["ack_due"] ? ` حتى ${c["ack_due"]}` : ""}` : ""}{c["version"] > 1 ? ` • الإصدار ${c["version"]}` : ""}{c["published_at"] ? ` • ${new Date(c["published_at"]).toLocaleDateString("ar")}` : ""}</p>
                 </button>
               </li>
             );
@@ -67,8 +87,11 @@ function useFiles(id: string) {
   });
 }
 
-function CircularView({ c, me, manager, onBack, onChanged, onEdit }: { c: Row; me: string | undefined; manager: boolean; onBack: () => void; onChanged: () => void; onEdit: () => void }) {
+function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit }: { c: Row; me: string | undefined; manager: boolean; onBack: () => void; onChanged: () => void; onEdit: () => void }) {
   const qc = useQueryClient();
+  const perm = useQuery({ queryKey: ["circ-can", c["id"]], queryFn: async () => !!(await db.rpc("can_manage_circular", { _c: c["id"] })).data });
+  const manager = !!perm.data;
+  const [busy, setBusy] = useState(false);
   const files = useFiles(c["id"]);
   const mine = (c["circular_recipients"] as Row[]).find((r) => r["user_id"] === me);
   const acked = mine?.["ack_required_version"] ? (c["circular_acks"] as Row[]).find((a) => a["user_id"] === me && a["version"] >= mine?.["ack_required_version"]) : null;
@@ -81,6 +104,7 @@ function CircularView({ c, me, manager, onBack, onChanged, onEdit }: { c: Row; m
       <Button size="sm" variant="ghost" onClick={onBack}>→ كل التعاميم</Button>
       <h2 className="text-xl font-bold">{c["title"]}</h2>
       <p className="text-xs text-muted-foreground">{c["publisher_label"]} • {PRIORITY_LABEL[c["priority"]]} • {STATUS[c["status"]]} • الإصدار {c["version"] || "—"}{c["ack_due"] ? ` • موعد الإقرار ${c["ack_due"]}` : ""}</p>
+      {mine && c["version"] > (mine["first_version"] ?? 1) && <p className="rounded-md bg-muted p-2 text-xs">تغيّر محتوى هذا التعميم منذ استلامك له (الإصدار الحالي {c["version"]}).{acked ? "" : mine["ack_required_version"] === c["version"] ? " هذا الإصدار يتطلب إقرارًا جديدًا." : ""}</p>}
       <div className="text-sm"><SafeText text={c["body"]} /></div>
       {files.data && files.data.length > 0 && (
         <ul className="flex flex-wrap gap-2">{files.data.map((f) => <li key={f["id"]}><button onClick={() => openFile(f)} className="flex items-center gap-1 rounded-full border px-3 py-1 text-xs hover:bg-muted"><Paperclip className="size-3" />{f["name"]}</button></li>)}</ul>
@@ -102,16 +126,19 @@ function CircularView({ c, me, manager, onBack, onChanged, onEdit }: { c: Row; m
           <div className="flex flex-wrap gap-2">
             {c["status"] === "draft" && <Button size="sm" variant="outline" onClick={onEdit}>تعديل المسودة</Button>}
             {c["status"] === "draft" && <Button size="sm" onClick={async () => {
-              if (!window.confirm("نشر التعميم للجمهور المحدد؟ يُحفظ الجمهور عند النشر.")) return;
+              if (busy || !window.confirm("نشر التعميم للجمهور المحدد؟ يُحفظ الجمهور عند النشر.")) return;
+              setBusy(true);
               const { data, error } = await db.rpc("publish_circular", { _id: c["id"] });
+              setBusy(false);
               if (error) toast.error(arabicError(error)); else { toast.success(`نُشر إلى ${data} مستلم`); onChanged(); }
-            }}>نشر</Button>}
+            }} disabled={busy}>{busy ? "جارٍ النشر…" : "نشر"}</Button>}
             {c["status"] === "published" && <Button size="sm" variant="outline" onClick={() => setRev({ title: c["title"], body: c["body"], ack: c["requires_ack"] })}>إصدار معدّل</Button>}
             {c["status"] === "published" && c["requires_ack"] && <Button size="sm" variant="outline" onClick={async () => {
               const { data, error } = await db.rpc("remind_circular_ack", { _id: c["id"] });
               if (error) toast.error(arabicError(error)); else toast.success(`أُرسل تذكير إلى ${data} (مرة واحدة يوميًا)`);
             }}>تذكير غير المقرّين</Button>}
-            {c["status"] === "published" && <Button size="sm" variant="ghost" onClick={async () => { const { error } = await db.rpc("archive_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else onChanged(); }}>أرشفة</Button>}
+            {c["status"] === "archived" && <Button size="sm" variant="outline" onClick={async () => { const { error } = await db.rpc("reopen_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else { toast.success("أُعيد فتح التعميم؛ الموعد والإقرارات كما هي ولم تُرسل تنبيهات"); onChanged(); } }}>إعادة الفتح</Button>}
+            {c["status"] === "published" && <Button size="sm" variant="ghost" onClick={async () => { if (!window.confirm("الأرشفة توقف الإقرار والتذكير وتحفظ السجل. متابعة؟")) return; const { error } = await db.rpc("archive_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else onChanged(); }}>أرشفة</Button>}
           </div>
           {rev && (
             <form className="space-y-2 rounded-lg border p-3" onSubmit={async (e) => {
@@ -127,10 +154,10 @@ function CircularView({ c, me, manager, onBack, onChanged, onEdit }: { c: Row; m
               <div className="flex gap-2"><Button size="sm">نشر الإصدار</Button><Button size="sm" type="button" variant="ghost" onClick={() => setRev(null)}>إلغاء</Button></div>
             </form>
           )}
-          {c["status"] !== "draft" && <Stats id={c["id"]} />}
           {c["status"] !== "draft" && <Versions id={c["id"]} />}
         </div>
       )}
+      {(manager || schoolManager) && c["status"] !== "draft" && <Stats id={c["id"]} title={c["title"]} />}
     </article>
   );
 }
