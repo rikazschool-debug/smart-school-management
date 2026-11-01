@@ -28,3 +28,4 @@
 - docs/closure-log.md: per-item status log; update with new evidence.
 - scripts/ and src/components/comm/ have their own AGENTS.md (tests/cleanup; communication + circular rules) — read before changing files there.
 - Homework: homework → homework_targets (resolved at publish) → homework_submissions/attempts (immutable) → homework_grades (visible to family only after publish); all writes via RPCs (save/publish/revise/extend_homework, submit_homework, grade_submission, publish_results, correct_result). Feedback files (source_type='feedback' on the grade) are readable by family only after publish; late joiners follow homework.join_policy via _hw_join_trg; exports only through homework_report (server-scoped). Tests: scripts/homework-e2e.ts, homework2-e2e.ts.
+- UI primitives: native selects use selectCls (src/components/ui/native-select.ts); confirmations/reasons use ask/askText (src/components/confirm.tsx), never window.confirm/prompt — one consistent RTL look.
