@@ -4076,6 +4076,10 @@ export type Database = {
         Args: { _conv: string; _status: string }
         Returns: undefined
       }
+      set_homework_join_policy: {
+        Args: { _days: number; _hw: string; _policy: string }
+        Returns: undefined
+      }
       set_homework_status: {
         Args: { _id: string; _reason: string; _status: string }
         Returns: undefined
