@@ -1,18 +1,19 @@
 # Rikaz roadmap
 
-## Package 2 (open externals)
-- [ ] Auth redirect URLs — external: user adds preview/published URLs in Supabase → Auth → URL Configuration
-- [ ] Leaked password protection — external: user enables it in Supabase → Auth settings
-- [ ] Email delivery — not built (no mail provider connected)
+## Open — external / waiting
+- [ ] Auth redirect URLs — user adds preview/published URLs in Supabase → Auth → URL Configuration
+- [ ] Leaked password protection — user enables it in Supabase → Auth settings
+- [ ] Email/SMS delivery — out of scope (in-app notifications only)
 
-## Package 3 — Communication (waiting for "ابدأ")
-- [ ] 1 Finish package-2 browser tests (file open/deny, cancel substitution, pin, closed comments bypass, upload failure retry, guardian with 2 children, supervisor scope) + document signed-URL expiry policy
-- [ ] 2-3 Communication hub: inbox, my chats, groups, circulars, archive, admin settings; search/filters/pagination/mobile
-- [ ] 4 Teacher↔guardian chats tied to a student, relationship-change handling
-- [ ] 5 Internal staff chats
-- [ ] 6-7 Admin work groups + department groups, membership management
-- [ ] 8-9 Message lifecycle + files in chats (reuse file service)
-- [ ] 10 Official circulars with targeting + read tracking
-- [ ] 11 Notifications + unread counts
-- [ ] 12 Privacy, moderation, reports
-- [ ] 13-15 Role dashboards in parallel, RLS/RPCs, acceptance tests in rls-e2e
+## Package 3 — Communication
+- [ ] 1 Package-2 browser re-tests (cancel substitution UI, pin/unpin, closed-comments bypass, upload-failure retry in classroom posts, guardian with 2 children in UI, supervisor scope) — not yet run in the browser
+- [x] 2-3 Communication hub (inbox, mine, groups, circulars, archive, manage), search, filters, paging, mobile list↔thread
+- [x] 4 Teacher↔guardian chats tied to a student; relation end → read-only; revoked guardian → no access
+- [x] 5 Internal staff chats (school directory, admin can disable)
+- [x] 6-7 Group wizard, manual vs derived membership, moderators, owner transfer, leave, archive, audit, optimistic settings lock
+- [x] 8-9 Messages: idempotent send, reply, edit/delete window, receipts, attachments via files service
+- [x] 10 Circulars: audience preview, draft/publish/revise/archive, ack separate from open, stats, reminders
+- [x] 11 Notifications + unread + mute
+- [x] 12 Reports with audited reviewer access
+- [x] 15 scripts/comm-e2e.ts (76 checks) + browser: teacher→guardian chat with file, guardian reply on phone, principal group wizard + circular, teacher ack on phone
+- [ ] Cross-branch (org-wide) circulars and attachments in cross-branch groups — not built
