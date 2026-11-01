@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,7 +14,7 @@ import { DAY_NAMES, todayISO, useCurrentTimetable, useSlots } from "@/lib/schedu
 
 export const Route = createFileRoute("/_authenticated/app/substitutions")({ component: Page });
 
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 
 function Page() {
   return <RequireSchool nav="substitutions">{(ctx) => <Subs ctx={ctx} />}</RequireSchool>;

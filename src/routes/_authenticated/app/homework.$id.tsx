@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -175,7 +176,7 @@ function CopyTemplate({ h, courses, onDone }: { h: Row; courses: Row[]; onDone: 
       <p className="text-xs text-muted-foreground">يُنسخ: التعليمات، نوع التسليم، المعايير والدرجة، والمرفقات المختارة كنسخ مستقلة. لا يُنسخ: الطلاب المستهدفون، التسليمات، الدرجات، الملاحظات، الإشعارات، أو السجل. المواعيد تُحدد من جديد.</p>
       <Label htmlFor="cp-title">عنوان النسخة</Label><Input id="cp-title" value={title} onChange={(e) => setTitle(e.target.value)} />
       <Label htmlFor="cp-course">المقرر الوجهة (مقرراتك السارية)</Label>
-      <select id="cp-course" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={target} onChange={(e) => setTarget(e.target.value)}>
+      <select id="cp-course" className={selectCls("w-full", true)} value={target} onChange={(e) => setTarget(e.target.value)}>
         <option value="">اختر</option>
         {courses.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]} ({c["academic_years"]?.["name"]})</option>)}
       </select>
@@ -221,7 +222,7 @@ function LateJoiners({ h }: { h: Row }) {
     <div className="space-y-2 rounded-lg border p-3">
       <h4 className="text-sm font-semibold">الطلاب المنضمون بعد النشر</h4>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <select aria-label="سياسة المنضمين" className="h-9 rounded-md border bg-background px-2" value={policy} onChange={(e) => setPolicy(e.target.value)}>
+        <select aria-label="سياسة المنضمين" className={selectCls(undefined, true)} value={policy} onChange={(e) => setPolicy(e.target.value)}>
           <option value="review">مراجعة المعلم قبل الإلحاق</option><option value="auto">إلحاق تلقائي بمهلة</option><option value="none">عدم الإلحاق</option>
         </select>
         {policy === "auto" && <label className="flex items-center gap-1">مهلة <Input className="w-16" type="number" min={1} max={30} value={days} onChange={(e) => setDays(Number(e.target.value))} /> أيام من الانضمام</label>}

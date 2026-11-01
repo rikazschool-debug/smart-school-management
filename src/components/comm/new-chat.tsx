@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { arabicError, type AppContext } from "@/lib/session";
 import { MemberPicker } from "@/components/comm/member-picker";
 
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 
 export function NewChatDialog({ ctx, open, onOpenChange, onCreated }: { ctx: AppContext & { schoolId: string }; open: boolean; onOpenChange: (v: boolean) => void; onCreated: (id: string) => void }) {
   const isGuardian = ctx.role === "guardian";

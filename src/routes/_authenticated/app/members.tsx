@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/app/members")({
   component: Page,
 });
 
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 const KIND: Record<string, string> = { teacher: "معلم", guardian: "ولي أمر", student: "طالب" };
 const ACTION: Record<string, string> = {
   invite_create: "إنشاء دعوة", invite_resend: "تجديد دعوة", invite_revoke: "إلغاء دعوة", invite_review_reissue: "مراجعة وإعادة إصدار دعوة", invite_flag_review: "تعليق دعوة للمراجعة",

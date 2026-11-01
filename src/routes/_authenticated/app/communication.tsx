@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { BellOff, Archive, Plus, Search } from "lucide-react";
@@ -126,11 +127,11 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
             {canStart && <Button size="icon" aria-label="محادثة جديدة" title="محادثة جديدة" onClick={() => setNewOpen(true)}><Plus className="size-4" /></Button>}
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <select aria-label="النوع" className="h-8 rounded-md border bg-background px-2" value={kind} onChange={(e) => setKind(e.target.value)}>
+            <select aria-label="النوع" className={selectCls(undefined, true)} value={kind} onChange={(e) => setKind(e.target.value)}>
               <option value="">كل الأنواع</option>{Object.entries(KIND_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
             </select>
             {children.length > 1 && (
-              <select aria-label="الابن" className="h-8 rounded-md border bg-background px-2" value={child} onChange={(e) => setChild(e.target.value)}>
+              <select aria-label="الابن" className={selectCls(undefined, true)} value={child} onChange={(e) => setChild(e.target.value)}>
                 <option value="">كل الأبناء</option>{children.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             )}

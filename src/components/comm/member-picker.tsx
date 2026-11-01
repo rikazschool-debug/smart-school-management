@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { selectCls } from "@/components/ui/native-select";
 import { useMemo, useState } from "react";
 import { db, type Row } from "@/components/crud-page";
 import { LoadingState } from "@/components/states";
@@ -31,10 +32,10 @@ export function MemberPicker({ schoolId, orgId, exclude = [], value, onChange, s
     <div className="space-y-2">
       <div className="grid gap-2 sm:grid-cols-3">
         <Input placeholder="بحث بالاسم" aria-label="بحث بالاسم" value={q} onChange={(e) => setQ(e.target.value)} />
-        <select aria-label="تصفية بالدور" className="h-10 rounded-md border border-input bg-background px-2 text-sm" value={role} onChange={(e) => setRole(e.target.value)}>
+        <select aria-label="تصفية بالدور" className={selectCls(undefined)} value={role} onChange={(e) => setRole(e.target.value)}>
           <option value="">كل الأدوار</option>{roles.map((r) => <option key={r} value={r}>{ROLE_AR[r] ?? r}</option>)}
         </select>
-        <select aria-label="تصفية بالقسم" className="h-10 rounded-md border border-input bg-background px-2 text-sm" value={dept} onChange={(e) => setDept(e.target.value)}>
+        <select aria-label="تصفية بالقسم" className={selectCls(undefined)} value={dept} onChange={(e) => setDept(e.target.value)}>
           <option value="">كل الأقسام</option>{depts.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
       </div>

@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -106,7 +107,7 @@ function Shell() {
           <label className="hidden text-xs text-muted-foreground sm:inline" htmlFor="ctx">السياق</label>
           <select
             id="ctx"
-            className="h-9 min-w-0 max-w-[60vw] flex-1 rounded-md sm:flex-none border border-input bg-card px-2 text-sm"
+            className={selectCls("min-w-0 max-w-[60vw] flex-1 sm:flex-none", true)}
             value={active.key}
             onChange={(e) => { setActive(e.target.value); qc.invalidateQueries(); navigate({ to: "/app" }); }}
           >

@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MessageSquare, Search, Users, X } from "lucide-react";
@@ -68,7 +69,7 @@ export function ClassesTab({ ctx }: { ctx: AppContext & { schoolId: string } }) 
       <div className="flex flex-wrap items-center gap-2">
         {student ? <Button size="sm" variant="outline" onClick={() => setCourse("")}>كل موادي</Button> : <>
           <label className="text-sm font-semibold" htmlFor="class-pick">مجموعة المادة</label>
-          <select id="class-pick" className="h-9 min-w-0 max-w-full rounded-md border bg-background px-2 text-sm" value={course} onChange={(e) => setCourse(e.target.value)}>
+          <select id="class-pick" className={selectCls("min-w-0 max-w-full", true)} value={course} onChange={(e) => setCourse(e.target.value)}>
             {groups.data.map((x) => <option key={x["course_id"]} value={x["course_id"]}>{x["subject"]} — {x["section_label"]}{x["unread"] > 0 ? ` (${x["unread"]})` : ""}</option>)}
           </select></>}
         <span className="text-xs text-muted-foreground">{g?.["subject"]} • {g?.["section_label"]} • {g?.["students"] ?? 0} طالب • المعلم: {g?.["teachers"] ?? "—"}</span>

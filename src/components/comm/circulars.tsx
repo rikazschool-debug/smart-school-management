@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, Paperclip } from "lucide-react";
@@ -13,7 +14,7 @@ import { canManage } from "@/lib/roles";
 import { BUCKET, PRIORITY_LABEL, ROLE_AR, SafeText, openFile } from "@/lib/comm";
 import { MemberPicker } from "@/components/comm/member-picker";
 
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 const STATUS: Record<string, string> = { draft: "مسودة", published: "منشور", archived: "مؤرشف" };
 const SCOPE: Record<string, string> = { school: "مدرسة", branches: "فروع محددة", org: "المؤسسة" };
 function useSchools(orgId: string | undefined) {

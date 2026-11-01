@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { selectCls } from "@/components/ui/native-select";
 import { useState } from "react";
 import { toast } from "sonner";
 import { db, useOptions, type Row } from "@/components/crud-page";
@@ -12,7 +13,7 @@ import { MemberPicker, useStaffDirectory } from "@/components/comm/member-picker
 import { GroupPanel } from "@/components/comm/group-panel";
 import { canCreateGroup } from "@/lib/roles";
 
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 
 export function ManageTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const [view, setView] = useState<"groups" | "new" | "settings" | "reports">("groups");

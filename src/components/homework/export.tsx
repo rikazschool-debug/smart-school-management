@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { selectCls } from "@/components/ui/native-select";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
@@ -54,7 +55,7 @@ export function ExportBar({ course, kinds, note }: { course: string | null; kind
     <div className="mb-4 space-y-2 rounded-xl border bg-card p-3">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="font-semibold">تصدير تقرير</span>
-        <select aria-label="نوع التقرير" className="h-9 rounded-md border bg-background px-2" value={kind} onChange={(e) => { setKind(e.target.value); setPreview(null); }}>
+        <select aria-label="نوع التقرير" className={selectCls(undefined, true)} value={kind} onChange={(e) => { setKind(e.target.value); setPreview(null); }}>
           {kinds.map((k) => <option key={k} value={k}>{REPORT_LABEL[k]}</option>)}
         </select>
         <Button size="sm" variant="outline" disabled={busy} onClick={load}>معاينة النطاق</Button>

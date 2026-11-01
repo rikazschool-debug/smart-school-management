@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -17,7 +18,7 @@ import { DAY_NAMES, slotLabel, todayISO, useCurrentTimetable, useDaySetup, useSl
 export const Route = createFileRoute("/_authenticated/app/schedule")({ component: Page });
 
 type Ctx = AppContext & { schoolId: string };
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 
 function Page() {
   return <RequireSchool nav="schedule">{(ctx) => (canEditSchedule(ctx.role) ? <Manager ctx={ctx} /> : <Viewer ctx={ctx} />)}</RequireSchool>;

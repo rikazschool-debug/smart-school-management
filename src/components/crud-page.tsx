@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { selectCls } from "@/components/ui/native-select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
@@ -48,7 +49,7 @@ function SelectField({ f, schoolId, value, onChange }: { f: Field; schoolId: str
   const opts = Array.isArray(o) ? o : (q.data ?? []);
   return (
     <select
-      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+      className={selectCls("w-full")}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       required={f.required}
@@ -232,7 +233,7 @@ export function CrudTable({
             <select
               key={f.key}
               aria-label={f.label}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              className={selectCls(undefined)}
               value={fv[f.key] ?? ""}
               onChange={(e) => setFv({ ...fv, [f.key]: e.target.value })}
             >
