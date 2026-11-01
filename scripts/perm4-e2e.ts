@@ -65,7 +65,7 @@ try {
   const addP = await pA.c.rpc("add_group_members", { _conv: gp.data, _users: [tSci.id] });
   check("3b only owner/principal add members manually", !!addVp.error && addP.data === 1, [addVp.data, addP]);
   // 4 class groups + allowed private chats still work
-  const cls = (await admin.from("conversations").select("id").eq("school_id", A).eq("group_type", "class")).data ?? [];
+  const cls = (await admin.from("conversations").select("id").eq("school_id", A).eq("group_type", "section")).data ?? [];
   const dm = await pA.c.rpc("start_direct_conversation", { _school: A, _other: tSci.id });
   check("4 automatic class groups exist and staff direct chat still works", cls.length >= 1 && !dm.error, [cls.length, dm.error]);
 
