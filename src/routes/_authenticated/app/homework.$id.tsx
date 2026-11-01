@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileList, Uploader } from "@/components/homework/files";
-import { SubmissionsPanel } from "@/components/homework/submissions";
+import { FeedbackFiles, SubmissionsPanel } from "@/components/homework/submissions";
 import { arabicError, useSchool } from "@/lib/session";
 import { HW_STATUS, LATE_LABEL, SUB_STATUS, TYPE_LABEL, fromLocalInput, safeHref, schoolTime, statusTone, toLocalInput } from "@/lib/homework";
 
@@ -156,17 +156,93 @@ function TeacherActions({ h }: { h: Row }) {
           <Button size="sm" variant="destructive" onClick={async () => { if (await act("set_homework_status", { _id: h["id"], _status: "cancelled", _reason: reason }, "أُلغي الواجب")) setMode(null); }}>تأكيد الإلغاء</Button>
         </div>
       )}
-      {mode === "copy" && (
-        <div className="space-y-2 rounded-lg border p-3">
-          <Label>المقرر الهدف (يُنسخ القالب دون طلاب أو تسليمات أو درجات أو مرفقات)</Label>
-          <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={target} onChange={(e) => setTarget(e.target.value)}>
-            <option value="">اختر</option>
-            {courses.data?.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]} ({c["academic_years"]?.["name"]})</option>)}
-          </select>
-          <Button size="sm" disabled={!target} onClick={async () => { const nid = await act("copy_homework", { _id: h["id"], _course: target }, "أُنشئت مسودة جديدة"); if (typeof nid === "string") nav({ to: "/app/homework/new", search: { edit: nid } }); }}>نسخ</Button>
-        </div>
-      )}
+      {mode === "copy" && <CopyTemplate h={h} courses={courses.data ?? []} onDone={(nid) => nav({ to: "/app/homework/new", search: { edit: nid } })} />}
+      {["published", "scheduled"].includes(s) && <LateJoiners h={h} />}
     </section>
+  );
+}
+
+function CopyTemplate({ h, courses, onDone }: { h: Row; courses: Row[]; onDone: (id: string) => void }) {
+  const [target, setTarget] = useState("");
+  const [title, setTitle] = useState(`${h["title"]} (نسخة)`);
+  const [from, setFrom] = useState("");
+  const [due, setDue] = useState("");
+  const [pick, setPick] = useState<string[]>(((h["files"] ?? []) as Row[]).map((f) => f["id"]));
+  const [busy, setBusy] = useState(false);
+  const files = (h["files"] ?? []) as Row[];
+  return (
+    <div className="space-y-2 rounded-lg border p-3">
+      <p className="text-xs text-muted-foreground">يُنسخ: التعليمات، نوع التسليم، المعايير والدرجة، والمرفقات المختارة كنسخ مستقلة. لا يُنسخ: الطلاب المستهدفون، التسليمات، الدرجات، الملاحظات، الإشعارات، أو السجل. المواعيد تُحدد من جديد.</p>
+      <Label htmlFor="cp-title">عنوان النسخة</Label><Input id="cp-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Label htmlFor="cp-course">المقرر الوجهة (مقرراتك السارية)</Label>
+      <select id="cp-course" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={target} onChange={(e) => setTarget(e.target.value)}>
+        <option value="">اختر</option>
+        {courses.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]} ({c["academic_years"]?.["name"]})</option>)}
+      </select>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div><Label htmlFor="cp-from">وقت الإتاحة الجديد</Label><Input id="cp-from" type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
+        <div><Label htmlFor="cp-due">موعد التسليم الجديد</Label><Input id="cp-due" type="datetime-local" value={due} onChange={(e) => setDue(e.target.value)} /></div>
+      </div>
+      {files.length > 0 && (
+        <fieldset className="space-y-1 text-sm"><legend className="font-medium">المرفقات المنسوخة</legend>
+          {files.map((f) => <label key={f["id"]} className="flex items-center gap-2"><input type="checkbox" checked={pick.includes(f["id"])} onChange={() => setPick((x) => x.includes(f["id"]) ? x.filter((y) => y !== f["id"]) : [...x, f["id"]])} />{f["name"]}</label>)}
+        </fieldset>
+      )}
+      <Button size="sm" disabled={!target || !from || !due || busy} onClick={async () => {
+        setBusy(true);
+        const { data: nid, error } = await db.rpc("copy_homework_template", { _id: h["id"], _course: target, _title: title, _available_from: fromLocalInput(from), _due_at: fromLocalInput(due) });
+        if (error) { setBusy(false); return void toast.error(arabicError(error)); }
+        let failed = 0;
+        if (pick.length) {
+          const { data: rows, error: e2 } = await db.rpc("prepare_template_files", { _new: nid, _files: pick });
+          if (e2) failed = pick.length;
+          for (const r of (rows ?? []) as Row[]) {
+            const c = await db.storage.from("rikaz-files").copy(r["src_path"], r["dst_path"]);
+            if (c.error) { failed++; await db.rpc("remove_homework_file", { _file: r["file_id"] }); }
+          }
+        }
+        setBusy(false);
+        if (failed) toast.warning(`أُنشئت المسودة لكن تعذر نسخ ${failed} مرفق؛ أرفقها يدويًا`); else toast.success("أُنشئت مسودة من القالب");
+        onDone(nid as string);
+      }}>{busy ? "جارٍ النسخ…" : "إنشاء مسودة من القالب"}</Button>
+    </div>
+  );
+}
+
+function LateJoiners({ h }: { h: Row }) {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["hw-joiners", h["id"]], queryFn: async () => { const { data, error } = await db.rpc("late_joiners", { _hw: h["id"] }); if (error) throw error; return data as Row[]; } });
+  const [policy, setPolicy] = useState<string>(h["join_policy"] ?? "review");
+  const [days, setDays] = useState<number>(h["join_days"] ?? 3);
+  const [due, setDue] = useState<Record<string, string>>({});
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["hw-joiners", h["id"]] }); qc.invalidateQueries({ queryKey: hwKey(h["id"]) }); qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] }); };
+  const JS: Record<string, string> = { pending: "بانتظار قرارك", added: "أُلحق", declined: "لم يُلحق" };
+  return (
+    <div className="space-y-2 rounded-lg border p-3">
+      <h4 className="text-sm font-semibold">الطلاب المنضمون بعد النشر</h4>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <select aria-label="سياسة المنضمين" className="h-9 rounded-md border bg-background px-2" value={policy} onChange={(e) => setPolicy(e.target.value)}>
+          <option value="review">مراجعة المعلم قبل الإلحاق</option><option value="auto">إلحاق تلقائي بمهلة</option><option value="none">عدم الإلحاق</option>
+        </select>
+        {policy === "auto" && <label className="flex items-center gap-1">مهلة <Input className="w-16" type="number" min={1} max={30} value={days} onChange={(e) => setDays(Number(e.target.value))} /> أيام من الانضمام</label>}
+        <Button size="sm" variant="outline" onClick={async () => { const { error } = await db.rpc("set_homework_join_policy", { _hw: h["id"], _policy: policy, _days: days }); if (error) toast.error(arabicError(error)); else { toast.success("حُفظت السياسة"); refresh(); } }}>حفظ السياسة</Button>
+      </div>
+      <p className="text-xs text-muted-foreground">لا يُحسب على المنضم تأخر عن موعد سبق انضمامه؛ يُطبق له موعد خاص موثق.</p>
+      {!q.data?.length ? <p className="text-xs text-muted-foreground">لا يوجد منضمون جدد.</p> : (
+        <ul className="divide-y text-sm">
+          {q.data.map((r) => (
+            <li key={r["student_id"]} className="flex flex-wrap items-center gap-2 py-2">
+              <span className="min-w-0 flex-1">{r["full_name"]} <span className="text-xs text-muted-foreground">· انضم {schoolTime(r["joined_at"])} · {JS[r["join_status"]]}{r["join_status"] === "added" ? ` · موعده ${schoolTime(r["due"])}` : ""}</span></span>
+              {r["join_status"] === "pending" && (<>
+                <Input type="datetime-local" className="w-56" aria-label={`موعد ${r["full_name"]}`} value={due[r["student_id"]] ?? ""} onChange={(e) => setDue({ ...due, [r["student_id"]]: e.target.value })} />
+                <Button size="sm" disabled={!due[r["student_id"]]} onClick={async () => { const { error } = await db.rpc("decide_late_joiner", { _hw: h["id"], _student: r["student_id"], _approve: true, _due: fromLocalInput(due[r["student_id"]]!) }); if (error) toast.error(arabicError(error)); else { toast.success("أُلحق الطالب وأُبلغ"); refresh(); } }}>إلحاق</Button>
+                <Button size="sm" variant="ghost" onClick={async () => { const { error } = await db.rpc("decide_late_joiner", { _hw: h["id"], _student: r["student_id"], _approve: false, _due: null }); if (error) toast.error(arabicError(error)); else refresh(); }}>عدم الإلحاق</Button>
+              </>)}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -176,7 +252,7 @@ function Activity({ id }: { id: string }) {
     queryFn: async () => (await db.from("homework_events").select("*").eq("homework_id", id).order("created_at", { ascending: false }).limit(30)).data as Row[],
   });
   const LBL: Record<string, string> = { created: "إنشاء", published: "نشر", scheduled: "جدولة", revised: "تعديل بعد النشر", extended_all: "تمديد للجميع", extended_student: "تمديد لطالب",
-    submitted: "تسليم", returned: "إعادة للاستكمال", paper_recorded: "تسجيل تسليم ورقي", result_published: "نشر نتيجة", result_corrected: "تعديل نتيجة منشورة", copied: "نسخ",
+    submitted: "تسليم", returned: "إعادة للاستكمال", paper_recorded: "تسجيل تسليم ورقي", result_published: "نشر نتيجة", result_corrected: "تعديل نتيجة منشورة", copied: "نسخ", late_join_added: "إلحاق طالب منضم", late_join_pending: "طالب منضم بانتظار القرار", late_join_declined: "عدم إلحاق منضم", join_policy: "تغيير سياسة المنضمين", feedback_file_added_after_publish: "إضافة مرفق ملاحظات بعد النشر", feedback_file_removed_after_publish: "حذف مرفق ملاحظات بعد النشر", feedback_file_removed: "حذف مرفق ملاحظات",
     "status:closed": "إغلاق", "status:archived": "أرشفة", "status:cancelled": "إلغاء" };
   if (!ev.data?.length) return null;
   return (
