@@ -38,10 +38,10 @@ try {
   const grade = await ins("grades", { name: "أول", stage_id: stage.id });
   const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });
   const sci = await ins("departments", { name: "العلوم" }), math = await ins("departments", { name: "الرياضيات" });
-  const sSci = await ins("subjects", { name: "علوم", department_id: sci.id }), sMath = await ins("subjects", { name: "رياضيات", department_id: math.id });
+  const sSci = await ins("subjects", { name: "علوم", department_id: sci.id }), sMath = await ins("subjects", { name: "رياضيات", department_id: math.id }), sMath2 = await ins("subjects", { name: "إحصاء", department_id: math.id });
   const cSci = await ins("courses", { year_id: year.id, subject_id: sSci.id, section_id: sec.id });
   const cMath = await ins("courses", { year_id: year.id, subject_id: sMath.id, section_id: sec.id });
-  const cMath2 = await ins("courses", { year_id: year.id, subject_id: sMath.id, section_id: sec.id, weekly_periods: 2 });
+  const cMath2 = await ins("courses", { year_id: year.id, subject_id: sMath2.id, section_id: sec.id });
   const teSci = await ins("teachers", { full_name: "معلم علوم", email: tSci.email, department_id: sci.id });
   const teMath = await ins("teachers", { full_name: "معلم رياضيات", email: tMath.email, department_id: math.id });
   const stu = await ins("students", { full_name: "طالب", email: `stu-${run}@rikaz.test` });
@@ -137,7 +137,7 @@ try {
   const lab = Object.fromEntries(((await admin.from("circulars").select("id, publisher_label").in("id", [cs.data, co.data])).data ?? []).map((r) => [r.id, r.publisher_label]));
   const ver = (await admin.from("circular_versions").select("publisher_label, published_by").eq("circular_id", cs.data).single()).data;
   check("13 publisher label derived from scope, free text ignored, stored on the version", lab[cs.data] === "إدارة المدرسة — فرع أ" && lab[co.data] === "إدارة المؤسسة — مؤسسة الصلاحيات" && ver?.publisher_label === lab[cs.data] && ver?.published_by === pA.id, [lab, ver]);
-} finally {
+} catch (e) { bad++; console.log("ERROR", e); } finally {
   console.log(`\n${ok} passed, ${bad} failed`);
   for (const o of orgs) {
     const { data: ss } = await admin.from("schools").select("id").eq("org_id", o);
