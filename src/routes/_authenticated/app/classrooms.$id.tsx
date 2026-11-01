@@ -35,6 +35,7 @@ function Page() {
     <>
       <Link to="/app/classrooms" className="text-sm text-primary">→ كل الفصول</Link>
       <PageHeader title={room.data["title"]} />
+      <Link to="/app/homework" search={{ course: room.data["course_id"] }} className="mb-4 inline-block rounded-md border px-3 py-1.5 text-sm text-primary">واجبات هذا المقرر ←</Link>
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2">
           <ClassroomPosts classroom={id} courseId={room.data["course_id"]} />

@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FileList, Uploader } from "@/components/homework/files";
 import { SubmissionsPanel } from "@/components/homework/submissions";
 import { arabicError, useSchool } from "@/lib/session";
-import { GRADE_STATUS, HW_STATUS, LATE_LABEL, SUB_STATUS, TYPE_LABEL, fromLocalInput, safeHref, schoolTime, statusTone, toLocalInput } from "@/lib/homework";
+import { HW_STATUS, LATE_LABEL, SUB_STATUS, TYPE_LABEL, fromLocalInput, safeHref, schoolTime, statusTone, toLocalInput } from "@/lib/homework";
 
 export const Route = createFileRoute("/_authenticated/app/homework/$id")({
   head: () => ({ meta: [{ title: "تفاصيل الواجب — ركاز" }, { name: "description", content: "تعليمات الواجب والتسليم والتصحيح والنتائج." }] }),
@@ -310,7 +310,7 @@ function StudentPanel({ h }: { h: Row }) {
         </div>
       ) : <p className="rounded-lg bg-muted p-3 text-sm">{x.state["reason"]}</p>}
       <Attempts d={x} h={h} />
-      {!x.grade && h["max_score"] != null && x.attempts.length > 0 && <p className="text-xs text-muted-foreground">النتيجة: {GRADE_STATUS.none === "" ? "" : "لم تُنشر بعد"}</p>}
+      {!x.grade && h["max_score"] != null && x.attempts.length > 0 && <p className="text-xs text-muted-foreground">النتيجة لم تُنشر بعد.</p>}
     </section>
   );
 }
