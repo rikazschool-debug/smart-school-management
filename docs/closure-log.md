@@ -31,7 +31,7 @@ Updated: 2026-11-01.
 | Manual edits of class-group membership blocked | yes | — | done |
 | Year archive stops sending | trigger on academic_years.is_current | — | partial (not tested) |
 | Report reviewers scoped (school-chosen roles, default principal + vice; org owner/platform admin not automatic; only the reported message is shown; view/decision audited) | updated tests 19 | — | partial (browser not run) |
-| Attachments in cross-branch groups (file owned by uploader's branch, read via group membership) | xbranch-files-e2e X1–X11 | — | partial — server done; bug fixed (create_group forced attachments off for cross-branch groups); browser not run |
+| Attachments in cross-branch groups (file owned by uploader's branch, read via group membership) | xbranch-files-e2e X1–X11 | branch-B teacher uploads + sends; branch-A teacher sees + downloads (signed link 200, PDF bytes); non-member sees "المحادثة غير متاحة" | done |
 | Org-wide circulars across branches | — | — | **open** |
 | Internal chats / messages / groups / notifications browser suite (section 6 of the brief) | comm-e2e | — | open (browser) |
 
