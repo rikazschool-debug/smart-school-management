@@ -78,7 +78,7 @@ function CircularView({ c, me, manager, onBack, onChanged, onEdit }: { c: Row; m
   const [rev, setRev] = useState<{ title: string; body: string; ack: boolean } | null>(null);
   return (
     <article className="space-y-3 rounded-2xl border bg-card p-4">
-      <Button size="sm" variant="ghost" onClick={onBack}>← كل التعاميم</Button>
+      <Button size="sm" variant="ghost" onClick={onBack}>→ كل التعاميم</Button>
       <h2 className="text-xl font-bold">{c["title"]}</h2>
       <p className="text-xs text-muted-foreground">{c["publisher_label"]} • {PRIORITY_LABEL[c["priority"]]} • {STATUS[c["status"]]} • الإصدار {c["version"] || "—"}{c["ack_due"] ? ` • موعد الإقرار ${c["ack_due"]}` : ""}</p>
       <div className="text-sm"><SafeText text={c["body"]} /></div>
