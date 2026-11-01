@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { arabicError, type AppContext } from "@/lib/session";
 import { Thread } from "@/components/comm/thread";
+import { timeLabel } from "@/lib/comm";
 
-/** Teacher "My classes": one automatic class group per section + roster beside it; private chats open from the roster. */
+/** Subject groups: one automatic group per course (subject + section + year), membership from enrollment and live assignment.
+ *  Teachers see a roster beside the group (private chats start from it); students see only their subjects; managers monitor. */
 export function ClassesTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const qc = useQueryClient();
   const teacher = ctx.role === "teacher";
+  const student = ctx.role === "student";
   const groups = useQuery({
     queryKey: ["class-groups", ctx.schoolId],
     queryFn: async () => {
@@ -29,57 +32,76 @@ export function ClassesTab({ ctx }: { ctx: AppContext & { schoolId: string } }) 
       return data as Row[];
     },
   });
-  const [section, setSection] = useState<string>("");
-  const [open, setOpen] = useState<string | null>(null); // conversation shown (class group or private chat)
-  const [roster, setRoster] = useState(false); // mobile roster drawer
+  const [course, setCourse] = useState<string>("");
+  const [open, setOpen] = useState<string | null>(null);
+  const [roster, setRoster] = useState(false);
   useEffect(() => {
-    if (!section && groups.data?.length) setSection(groups.data[0]!["section_id"]);
-  }, [groups.data, section]);
-  const g = groups.data?.find((x) => x["section_id"] === section);
+    if (!course && groups.data?.length && !student) setCourse(groups.data[0]!["course_id"]);
+  }, [groups.data, course, student]);
+  const g = groups.data?.find((x) => x["course_id"] === course);
   useEffect(() => { setOpen(g?.["conversation_id"] ?? null); }, [g?.["conversation_id"]]); // eslint-disable-line react-hooks/exhaustive-deps
   const current = (convs.data ?? []).find((c) => c["id"] === open);
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["convs"] }); qc.invalidateQueries({ queryKey: ["roster"] }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["convs"] }); qc.invalidateQueries({ queryKey: ["roster"] }); qc.invalidateQueries({ queryKey: ["class-groups"] }); };
 
   if (groups.isLoading) return <LoadingState />;
   if (groups.error) return <ErrorState message={arabicError(groups.error)} />;
-  if (!groups.data?.length) return <EmptyState title="لا توجد فصول مسندة إليك في العام الحالي" hint="تظهر مجموعة الفصل تلقائيًا عند اعتماد تكليفك بمقرر في شعبة." />;
+  if (!groups.data?.length) return <EmptyState title={student ? "لا توجد مجموعات مواد لك في العام الحالي" : "لا توجد مجموعات مواد في العام الحالي"} hint="تظهر مجموعة المادة تلقائيًا من المقرر المعتمد والتسكين وتكليف المعلم." />;
+
+  if (student && !g) return (
+    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {groups.data.map((x) => (
+        <li key={x["course_id"]}>
+          <button onClick={() => setCourse(x["course_id"])} className="w-full rounded-2xl border bg-card p-4 text-start hover:border-primary">
+            <span className="flex items-center gap-2"><span className="flex-1 font-bold">{x["subject"]}</span>
+              {x["unread"] > 0 && <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold leading-4 text-primary-foreground">{x["unread"]}</span>}</span>
+            <span className="block text-sm text-muted-foreground">{x["section_label"]}</span>
+            <span className="block text-xs text-muted-foreground">المعلم: {x["teachers"] ?? "لم يُكلَّف بعد"}</span>
+            <span className="block text-[11px] text-muted-foreground">آخر نشاط: {timeLabel(x["last_at"])}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <label className="text-sm font-semibold" htmlFor="class-pick">الفصل</label>
-        <select id="class-pick" className="h-9 min-w-0 max-w-full rounded-md border bg-background px-2 text-sm" value={section} onChange={(e) => setSection(e.target.value)}>
-          {groups.data.map((x) => <option key={x["section_id"]} value={x["section_id"]}>{x["title"] ?? "فصل"}{x["subjects"] ? ` — ${x["subjects"]}` : ""}</option>)}
-        </select>
-        <span className="text-xs text-muted-foreground">{g?.["students"] ?? 0} طالب</span>
-        {g && current?.["group_type"] === "section" && current["my_role"] !== "member" && <ClassSettings conv={current} onDone={refresh} />}
-        <Button size="sm" variant="outline" className="ms-auto md:hidden" onClick={() => setRoster(true)}><Users className="size-4" /> الطلاب</Button>
+        {student ? <Button size="sm" variant="outline" onClick={() => setCourse("")}>كل موادي</Button> : <>
+          <label className="text-sm font-semibold" htmlFor="class-pick">مجموعة المادة</label>
+          <select id="class-pick" className="h-9 min-w-0 max-w-full rounded-md border bg-background px-2 text-sm" value={course} onChange={(e) => setCourse(e.target.value)}>
+            {groups.data.map((x) => <option key={x["course_id"]} value={x["course_id"]}>{x["subject"]} — {x["section_label"]}{x["unread"] > 0 ? ` (${x["unread"]})` : ""}</option>)}
+          </select></>}
+        <span className="text-xs text-muted-foreground">{g?.["subject"]} • {g?.["section_label"]} • {g?.["students"] ?? 0} طالب • المعلم: {g?.["teachers"] ?? "—"}</span>
+        {g && current?.["group_type"] === "course" && current["my_role"] !== "member" && <ClassSettings conv={current} onDone={refresh} />}
+        {!student && <Button size="sm" variant="outline" className="ms-auto md:hidden" onClick={() => setRoster(true)}><Users className="size-4" /> الطلاب</Button>}
       </div>
-      <div className="grid h-[calc(100vh-18rem)] min-h-[28rem] overflow-hidden rounded-2xl border bg-card md:grid-cols-[1fr_17rem]">
+      <div className={`grid h-[calc(100vh-18rem)] min-h-[28rem] overflow-hidden rounded-2xl border bg-card ${student ? "" : "md:grid-cols-[1fr_17rem]"}`}>
         <section className="flex min-h-0 min-w-0 flex-col">
           {open && open !== g?.["conversation_id"] && (
-            <button className="border-b bg-muted/50 px-3 py-1.5 text-start text-xs text-primary underline" onClick={() => setOpen(g?.["conversation_id"] ?? null)}>العودة إلى مجموعة الفصل</button>
+            <button className="border-b bg-muted/50 px-3 py-1.5 text-start text-xs text-primary underline" onClick={() => setOpen(g?.["conversation_id"] ?? null)}>العودة إلى مجموعة المادة</button>
           )}
           {current ? <Thread key={current["id"]} conv={current} onBack={() => setOpen(g?.["conversation_id"] ?? null)} onChanged={refresh} />
             : convs.isLoading ? <LoadingState />
-            : <div className="p-6"><EmptyState title={teacher ? "مجموعة الفصل غير متاحة لك" : "متابعة إدارية"} hint={teacher ? "تأكد من اعتماد تكليفك في هذا الفصل." : "المجموعة منشأة تلقائيًا؛ الإدارة تتابع عضويتها وإعداداتها دون الاطلاع على الرسائل الخاصة."} /></div>}
+            : <div className="p-6"><EmptyState title={teacher ? "مجموعة المادة غير متاحة لك" : "متابعة إدارية"} hint={teacher ? "تأكد من اعتماد تكليفك في هذا المقرر." : "المجموعة منشأة تلقائيًا؛ الإدارة تتابع عضويتها وإعداداتها دون الاطلاع على الرسائل الخاصة."} /></div>}
         </section>
-        <aside className={`${roster ? "fixed inset-0 z-50 flex bg-background" : "hidden"} min-h-0 flex-col border-s md:static md:z-auto md:flex`}>
-          <Roster section={section} teacher={teacher} active={open} onOpen={(id) => { setOpen(id); setRoster(false); refresh(); }} onClose={() => setRoster(false)} />
-        </aside>
+        {!student && (
+          <aside className={`${roster ? "fixed inset-0 z-50 flex bg-background" : "hidden"} min-h-0 flex-col border-s md:static md:z-auto md:flex`}>
+            <Roster course={course} teacher={teacher} active={open} onOpen={(id) => { setOpen(id); setRoster(false); refresh(); }} onClose={() => setRoster(false)} />
+          </aside>
+        )}
       </div>
     </div>
   );
 }
 
-function Roster({ section, teacher, active, onOpen, onClose }: { section: string; teacher: boolean; active: string | null; onOpen: (id: string) => void; onClose: () => void }) {
+function Roster({ course, teacher, active, onOpen, onClose }: { course: string; teacher: boolean; active: string | null; onOpen: (id: string) => void; onClose: () => void }) {
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const r = useQuery({
-    queryKey: ["roster", section],
-    enabled: !!section,
+    queryKey: ["roster", course],
+    enabled: !!course,
     queryFn: async () => {
-      const { data, error } = await db.rpc("class_roster", { _section: section });
+      const { data, error } = await db.rpc("course_roster", { _course: course });
       if (error) throw error;
       return data as Row[];
     },
@@ -89,7 +111,7 @@ function Roster({ section, teacher, active, onOpen, onClose }: { section: string
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="space-y-2 border-b p-3">
         <div className="flex items-center gap-2">
-          <h3 className="flex-1 font-bold">طلاب الفصل <span className="text-xs font-normal text-muted-foreground">({r.data?.length ?? 0})</span></h3>
+          <h3 className="flex-1 font-bold">طلاب المادة <span className="text-xs font-normal text-muted-foreground">({r.data?.length ?? 0})</span></h3>
           <Button size="icon" variant="ghost" className="md:hidden" aria-label="إغلاق قائمة الطلاب" onClick={onClose}><X className="size-4" /></Button>
         </div>
         <div className="relative">

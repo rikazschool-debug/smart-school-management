@@ -111,10 +111,23 @@ export type CommTab = "inbox" | "mine" | "groups" | "classes" | "circulars" | "a
 /** Communication tabs per role. Students see their class groups and private chats with their teachers (they never start chats);
  *  classes = teacher class groups + roster (managers monitor); manage = group/circular/report admin (mirrors can_manage_school). */
 export function commTabs(role: Role): CommTab[] {
-  if (role === "student") return ["inbox", "groups", "circulars", "archive"];
+  // student: subject groups + private chats started by teachers; never family/admin forms, staff directory or administrative circulars
+  if (role === "student") return ["classes", "inbox", "archive"];
+  // guardian: children's teachers + permitted school administration, targeted circulars; never student group discussions
+  if (role === "guardian") return ["inbox", "circulars", "archive"];
+  if (role === "teacher") return ["classes", "inbox", "mine", "groups", "circulars", "archive"];
   const base: CommTab[] = ["inbox", "mine", "groups", "circulars", "archive"];
-  if (role === "teacher") return ["inbox", "classes", "mine", "groups", "circulars", "archive"];
   return canManage(role) ? [...base, "classes", "manage"] : base;
+}
+export function commTabLabel(role: Role, t: CommTab): string {
+  if (role === "student") return ({ classes: "مجموعات موادي", inbox: "رسائل معلميّ", archive: "الأرشيف" } as Record<string, string>)[t] ?? t;
+  const L: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي الخاصة", groups: role === "teacher" ? "مجموعاتي الإدارية" : "مجموعاتي", classes: role === "teacher" ? "مجموعات موادي" : "مجموعات المواد", circulars: "التعاميم", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
+  return L[t];
+}
+export function commTitle(role: Role): { title: string; desc: string } {
+  if (role === "student") return { title: "فصولي ورسائل معلميّ", desc: "مجموعات موادك ورسائل معلميك فقط." };
+  if (role === "guardian") return { title: "التواصل مع المدرسة", desc: "معلمو أبنائك وإدارة المدرسة والتعاميم الموجهة إليك." };
+  return { title: "التواصل", desc: "لا يطّلع أحد على محادثة لست طرفًا فيها." };
 }
 /** Roles that start family conversations from the teacher side. */
 export function canStartFamilyChat(role: Role) {

@@ -63,3 +63,10 @@
 - [x] H10 Acceptance tests (server + browser), docs updates
 
 - Open (homework): feedback attachments from the teacher; copying attachments with a template; auto-adding students who join a section after publish.
+
+## Package 6 — Role-scoped communication
+- [x] R1 Subject groups per course+section replace general section groups (archived, history kept)
+- [x] R2 Student: subject groups + teacher chats only; no circulars/family/admin/directory (server + UI)
+- [x] R3 Guardian: teachers of child / school administration split; no student groups
+- [x] R4 Group creation/management: owner + principal only; moderators cannot add/remove
+- [x] R5 Server tests comm-roles-e2e 36/36, comm-e2e 95/95; browser per-role tabs

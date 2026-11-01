@@ -111,6 +111,7 @@ function StaffFamilyStart({ ctx, teacher, onCreated }: { ctx: AppContext & { sch
 }
 
 function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: string }; onCreated: (id: string) => void }) {
+  const [who, setWho] = useState<"teacher" | "admin">("teacher");
   const [student, setStudent] = useState("");
   const [to, setTo] = useState("");
   const [body, setBody] = useState("");
@@ -135,21 +136,26 @@ function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: strin
     },
   });
   const link = kids.data?.find((k) => k["student_id"] === student);
+  const shown = (contacts.data ?? []).filter((c) => c["kind"] === who);
   return (
     <div className="space-y-3">
+      <div className="flex gap-2" role="radiogroup" aria-label="جهة التواصل">
+        <Button size="sm" variant={who === "teacher" ? "default" : "outline"} onClick={() => { setWho("teacher"); setTo(""); }}>معلمو أبنائي</Button>
+        <Button size="sm" variant={who === "admin" ? "default" : "outline"} onClick={() => { setWho("admin"); setTo(""); }}>إدارة المدرسة</Button>
+      </div>
       <div className="space-y-1">
         <label className="text-sm font-medium" htmlFor="gk">الابن/الابنة</label>
         {kids.isLoading ? <LoadingState /> : !kids.data?.length ? <EmptyState title="لا يوجد أبناء موثّقون في هذه المدرسة" /> : (
-          <select id="gk" className={sel} value={student} onChange={(e) => { setStudent(e.target.value); setTo(""); }}>
+          <select id="gk" className={sel} value={student} onChange={(e) => { setStudent(e.target.value); setTo(""); setBody(""); }}>
             <option value="">— اختر —</option>{kids.data.map((k) => <option key={k["student_id"]} value={k["student_id"]}>{k["students"]?.full_name}</option>)}
           </select>
         )}
       </div>
-      {student && (contacts.isLoading ? <LoadingState /> : !contacts.data?.length ? <p className="text-sm text-muted-foreground">لا توجد جهات متاحة للتواصل بشأن هذا الابن حاليًا.</p> : (
+      {student && (contacts.isLoading ? <LoadingState /> : !shown.length ? <p className="text-sm text-muted-foreground">{who === "teacher" ? "لا يوجد معلمون حاليون متاحون لهذا الابن." : "لا توجد جهة إدارية مسموحة للأسرة حاليًا."}</p> : (
         <div className="space-y-1">
-          <label className="text-sm font-medium" htmlFor="gt">الجهة (معلمو الابن الحاليون والجهات الإدارية المسموحة)</label>
+          <label className="text-sm font-medium" htmlFor="gt">{who === "teacher" ? "معلم الابن الحالي" : "الجهة الإدارية المسموحة"}</label>
           <select id="gt" className={sel} value={to} onChange={(e) => setTo(e.target.value)}>
-            <option value="">— اختر —</option>{contacts.data.map((c) => <option key={c["user_id"]} value={c["user_id"]}>{c["full_name"]} — {c["label"]}</option>)}
+            <option value="">— اختر —</option>{shown.map((c) => <option key={c["user_id"]} value={c["user_id"]}>{c["full_name"]} — {c["label"]}</option>)}
           </select>
         </div>
       ))}

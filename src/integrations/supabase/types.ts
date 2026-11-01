@@ -691,6 +691,7 @@ export type Database = {
         Row: {
           allow_attachments: boolean
           allow_replies: boolean
+          course_id: string | null
           created_at: string
           created_by: string
           dedupe_key: string | null
@@ -720,6 +721,7 @@ export type Database = {
         Insert: {
           allow_attachments?: boolean
           allow_replies?: boolean
+          course_id?: string | null
           created_at?: string
           created_by?: string
           dedupe_key?: string | null
@@ -749,6 +751,7 @@ export type Database = {
         Update: {
           allow_attachments?: boolean
           allow_replies?: boolean
+          course_id?: string | null
           created_at?: string
           created_by?: string
           dedupe_key?: string | null
@@ -776,6 +779,13 @@ export type Database = {
           year_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "conversations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversations_department_id_fkey"
             columns: ["department_id"]
@@ -3341,6 +3351,14 @@ export type Database = {
         Returns: string[]
       }
       _conv_link: { Args: { _conv: string }; Returns: string }
+      _course_members: {
+        Args: { _course: string }
+        Returns: {
+          r: string
+          uid: string
+        }[]
+      }
+      _course_title: { Args: { _course: string }; Returns: string }
       _eligible_staff: {
         Args: { _org: string; _school: string; _user: string }
         Returns: boolean
@@ -3574,6 +3592,17 @@ export type Database = {
         }
         Returns: number
       }
+      course_roster: {
+        Args: { _course: string }
+        Returns: {
+          can_message: boolean
+          conversation_id: string
+          full_name: string
+          has_account: boolean
+          student_id: string
+          unread: number
+        }[]
+      }
       create_circular_file: {
         Args: { _circular: string; _mime: string; _name: string; _size: number }
         Returns: {
@@ -3788,10 +3817,15 @@ export type Database = {
         Args: { _school: string }
         Returns: {
           conversation_id: string
+          course_id: string
+          last_at: string
           section_id: string
+          section_label: string
           students: number
-          subjects: string
+          subject: string
+          teachers: string
           title: string
+          unread: number
         }[]
       }
       my_conversations: {
@@ -4049,6 +4083,7 @@ export type Database = {
         Returns: string
       }
       supervised_teacher_ids: { Args: never; Returns: string[] }
+      sync_course_group: { Args: { _course: string }; Returns: string }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
       sync_section_group: { Args: { _section: string }; Returns: string }
       teacher_students: {
