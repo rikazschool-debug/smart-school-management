@@ -380,8 +380,8 @@ check("teacher pins announcement; student cannot", !pinS.error && !!pinX.error, 
 await owner.c.from("enrollments").update({ status: "transferred", end_date: "2026-11-01" }).eq("student_id", s1.id);
 const memA3 = await admin.from("conversation_members").select("left_at").eq("conversation_id", GA).eq("user_id", stud.id).order("joined_at", { ascending: false }).limit(1);
 const blk = await stud.c.rpc("send_message", { _conv: pc.data, _body: "بعد النقل", _client_id: uuid() });
-const hist = await admin.from("messages").select("id").eq("conversation_id", pc.data);
-check("C11 transfer removes student from class group, private chat read-only, history kept", !!memA3.data?.[0]?.left_at && !!blk.error && hist.data?.length === 2, [memA3, blk.error, hist]);
+const histP = await admin.from("messages").select("id").eq("conversation_id", pc.data);
+check("C11 transfer removes student from class group, private chat read-only, history kept", !!memA3.data?.[0]?.left_at && !!blk.error && histP.data?.length === 2, [memA3, blk.error, histP]);
 
 console.log(`\n${ok} passed, ${bad} failed`);
 await admin.storage.from("rikaz-files").remove([fpath]);
