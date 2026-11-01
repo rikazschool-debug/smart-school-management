@@ -15,15 +15,20 @@ async function user(tag: string) {
   const c = createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
   const s = await c.auth.signInWithPassword({ email, password: pw });
   if (s.error) throw s.error;
+  tr?.addUser(s.data.user!.id);
   return { c, email, id: s.data.user!.id };
 }
+import { TestRun } from "./lib/test-run";
+const tr = new TestRun(admin, "rls-e2e");
 const owner = await user("owner"), teacherU = await user("teacher"), guardU = await user("guardian"), studU = await user("student"), outsider = await user("outsider");
+for (const u of [owner, teacherU, guardU, studU, outsider]) tr.addUser(u.id);
 
 // 1. org/school/year/section/subject
 const { data: orgId, error: oe } = await owner.c.rpc("create_organization", { _org_name: "مجموعة اختبار", _school_name: "مدرسة أ" });
 check("create org", !oe, oe);
 const { data: sch } = await owner.c.from("schools").select("id").eq("org_id", orgId).single();
 const S = sch!.id;
+tr.addSchool(S);
 const ins = async (t: string, v: any) => { const r = await owner.c.from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data; };
 const year = await ins("academic_years", { name: "1447", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
 const stage = await ins("stages", { name: "متوسط" });
@@ -306,7 +311,7 @@ await admin.storage.from("rikaz-files").remove([fpath]);
 
 console.log(`\n${ok} passed, ${bad} failed`);
 // cleanup test users' data
-await admin.from("notifications").delete().eq("school_id", S);
+await tr.deleteNotifications();
 for (const t of ["files", "post_comments", "classroom_posts", "substitutions", "teacher_absences", "timetable_slots", "timetables", "teacher_unavailability", "supervisor_teachers", "rooms", "periods", "school_day_settings", "file_policies"]) await admin.from(t).delete().eq("school_id", S);
 await admin.from("classrooms").delete().eq("school_id", S);
 for (const t of ["enrollments", "student_guardians", "teacher_assignments", "courses", "students", "guardians", "teachers", "subjects", "departments", "sections", "grades", "stages", "terms", "academic_years"]) await admin.from(t).delete().eq("school_id", S);

@@ -22,6 +22,7 @@ async function user(tag: string) {
   users.push(s.data.user!.id);
   return { c, email, id: s.data.user!.id };
 }
+import { TestRun } from "./lib/test-run";
 const uuid = () => crypto.randomUUID();
 async function cleanup(orgs: string[], uids: string[]) {
 for (const o of orgs) {
@@ -32,7 +33,6 @@ for (const o of orgs) {
     await admin.from("message_reports").delete().eq("org_id", o);
     await admin.from("conversations").delete().eq("org_id", o);
     await admin.from("comm_settings").delete().eq("school_id", sid);
-    await admin.from("notifications").delete().eq("school_id", sid);
     await admin.from("files").delete().eq("school_id", sid);
     await admin.from("classrooms").delete().eq("school_id", sid);
     for (const t of ["enrollments", "student_guardians", "teacher_assignments", "courses", "students", "guardians", "teachers", "subjects", "departments", "sections", "grades", "stages", "academic_years"]) await admin.from(t).delete().eq("school_id", sid);
@@ -42,7 +42,7 @@ for (const o of orgs) {
   await admin.from("schools").delete().eq("org_id", o);
   await admin.from("organizations").delete().eq("id", o);
 }
-if (uids.length) await admin.from("notifications").delete().in("user_id", uids);
+{ const tr = new TestRun(admin, "comm-e2e"); uids.forEach((u) => tr.addUser(u)); for (const o of orgs) { const { data: ss } = await admin.from("schools").select("id").eq("org_id", o); (ss ?? []).forEach((x) => tr.addSchool(x.id)); } await tr.deleteNotifications(); }
 for (const u of uids) await admin.auth.admin.deleteUser(u);
 }
 
