@@ -2,7 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { MessageSquare, Search, Users, X } from "lucide-react";
+import { MessageSquare, Search, Settings2, Users, X } from "lucide-react";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/button";
@@ -66,15 +67,24 @@ export function ClassesTab({ ctx }: { ctx: AppContext & { schoolId: string } }) 
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        {student ? <Button size="sm" variant="outline" onClick={() => setCourse("")}>كل موادي</Button> : <>
-          <label className="text-sm font-semibold" htmlFor="class-pick">مجموعة المادة</label>
-          <select id="class-pick" className={selectCls("min-w-0 max-w-full", true)} value={course} onChange={(e) => setCourse(e.target.value)}>
-            {groups.data.map((x) => <option key={x["course_id"]} value={x["course_id"]}>{x["subject"]} — {x["section_label"]}{x["unread"] > 0 ? ` (${x["unread"]})` : ""}</option>)}
-          </select></>}
-        <span className="text-xs text-muted-foreground">{g?.["subject"]} • {g?.["section_label"]} • {g?.["students"] ?? 0} طالب • المعلم: {g?.["teachers"] ?? "—"}</span>
-        {g && current?.["group_type"] === "course" && current["my_role"] !== "member" && <ClassSettings conv={current} onDone={refresh} />}
-        {!student && <Button size="sm" variant="outline" className="ms-auto md:hidden" onClick={() => setRoster(true)}><Users className="size-4" /> الطلاب</Button>}
+      <div className="flex flex-col gap-3 rounded-xl border bg-card p-3 sm:flex-row sm:items-center">
+        {student ? <Button size="sm" variant="outline" className="self-start" onClick={() => setCourse("")}>← كل موادي</Button> : (
+          <div className="min-w-0 sm:w-72">
+            <label className="sr-only" htmlFor="class-pick">مجموعة المادة</label>
+            <select id="class-pick" className={selectCls("w-full font-semibold")} value={course} onChange={(e) => setCourse(e.target.value)}>
+              {groups.data.map((x) => <option key={x["course_id"]} value={x["course_id"]}>{x["subject"]} — {x["section_label"]}{x["unread"] > 0 ? ` (${x["unread"]} جديدة)` : ""}</option>)}
+            </select>
+          </div>)}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-xs">
+          <span className="rounded-full bg-secondary px-2.5 py-1 font-medium text-secondary-foreground">{g?.["section_label"]}</span>
+          <span className="rounded-full bg-muted px-2.5 py-1">{g?.["students"] ?? 0} طالب</span>
+          <span className="min-w-0 truncate rounded-full bg-muted px-2.5 py-1">المعلم: {g?.["teachers"] ?? "لم يُكلَّف بعد"}</span>
+          {current && <span className="rounded-full bg-muted px-2.5 py-1">{current["post_policy"] === "all" ? "النشر للجميع" : "إعلانات المعلم فقط"}</span>}
+        </div>
+        <div className="flex shrink-0 gap-2">
+          {g && current?.["group_type"] === "course" && current["my_role"] !== "member" && <ClassSettings conv={current} onDone={refresh} />}
+          {!student && <Button size="sm" variant="outline" className="md:hidden" onClick={() => setRoster(true)}><Users className="size-4" /> الطلاب</Button>}
+        </div>
       </div>
       <div className={`grid h-[calc(100vh-18rem)] min-h-[28rem] overflow-hidden rounded-2xl border bg-card ${student ? "" : "md:grid-cols-[1fr_17rem]"}`}>
         <section className="flex min-h-0 min-w-0 flex-col">
@@ -157,11 +167,19 @@ function ClassSettings({ conv, onDone }: { conv: Row; onDone: () => void }) {
     });
     if (error) toast.error(arabicError(error)); else { toast.success("حُفظ إعداد المجموعة"); onDone(); }
   };
+  const [busy, setBusy] = useState(false);
+  const run = async (patch: Partial<{ post: string; replies: boolean; files: boolean }>) => { setBusy(true); await set(patch); setBusy(false); };
   return (
-    <div className="flex flex-wrap gap-1 text-xs">
-      <Button size="sm" variant="ghost" onClick={() => set({ post: conv["post_policy"] === "all" ? "moderators" : "all" })}>{conv["post_policy"] === "all" ? "جعلها لإعلانات المعلمين فقط" : "السماح للطلاب بالنشر"}</Button>
-      <Button size="sm" variant="ghost" onClick={() => set({ replies: !conv["allow_replies"] })}>{conv["allow_replies"] ? "إغلاق الردود" : "فتح الردود"}</Button>
-      <Button size="sm" variant="ghost" onClick={() => set({ files: !conv["allow_attachments"] })}>{conv["allow_attachments"] ? "منع المرفقات" : "السماح بالمرفقات"}</Button>
-    </div>
+    <DropdownMenu dir="rtl">
+      <DropdownMenuTrigger asChild><Button size="sm" variant="outline" disabled={busy}><Settings2 className="size-4" /> إعدادات المجموعة</Button></DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="text-xs text-muted-foreground">إعدادات النشر داخل مادتك</DropdownMenuLabel>
+        <DropdownMenuCheckboxItem checked={conv["post_policy"] === "all"} onCheckedChange={(v) => run({ post: v ? "all" : "moderators" })}>السماح للطلاب بالنشر</DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem checked={!!conv["allow_replies"]} onCheckedChange={(v) => run({ replies: v })}>السماح بالردود</DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem checked={!!conv["allow_attachments"]} onCheckedChange={(v) => run({ files: v })}>السماح بالمرفقات</DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        <p className="px-2 py-1.5 text-[11px] text-muted-foreground">العضوية تُدار تلقائيًا من التسكين والتكليف.</p>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
