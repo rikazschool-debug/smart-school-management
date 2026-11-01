@@ -56,7 +56,7 @@ export function downloadTemplate(kind: ImportKind) {
 /** Reads the first sheet without evaluating anything. Formula cells inside the data range are reported (row/column)
  *  and must be replaced by fixed values — a cached formula result is never trusted silently. */
 export function readSheet(buf: ArrayBuffer): { rows: Row[]; formulas: string[] } {
-  const wb = XLSX.read(buf, { type: "array", cellFormula: true, cellHTML: false, cellDates: false, bookVBA: false });
+  const wb = XLSX.read(buf, { type: "array", cellFormula: true, sheetStubs: true, cellHTML: false, cellDates: false, bookVBA: false });
   const ws = wb.Sheets[wb.SheetNames[0]!]!;
   const formulas: string[] = [];
   const range = XLSX.utils.decode_range(ws["!ref"] ?? "A1");
