@@ -15,6 +15,7 @@ import { Thread } from "@/components/comm/thread";
 import { NewChatDialog } from "@/components/comm/new-chat";
 import { CircularsTab } from "@/components/comm/circulars";
 import { ManageTab } from "@/components/comm/manage";
+import { ClassesTab } from "@/components/comm/classes";
 
 type Search = { tab?: CommTab; c?: string; circular?: string };
 
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/app/communication")({
   component: Page,
 });
 
-const TAB_LABEL: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي", groups: "مجموعاتي", circulars: "التعاميم", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
+const TAB_LABEL: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي", groups: "مجموعاتي", classes: "فصولي", circulars: "التعاميم", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
 
 function Page() {
   return <RequireSchool nav="communication">{(ctx) => <Comm ctx={ctx} />}</RequireSchool>;
@@ -53,6 +54,7 @@ function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       </div>
       {tab === "circulars" ? <CircularsTab ctx={ctx} focus={search.circular} onFocus={(id) => go(id ? { tab: "circulars", circular: id } : { tab: "circulars" })} />
         : tab === "manage" ? <ManageTab ctx={ctx} />
+        : tab === "classes" ? <ClassesTab ctx={ctx} />
         : <Conversations ctx={ctx} tab={tab} selected={search.c} onSelect={(c) => go(c ? { tab, c } : { tab })} />}
     </>
   );

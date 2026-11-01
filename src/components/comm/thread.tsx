@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, BellOff, Bell, Archive, ArchiveRestore, Flag, Paperclip, Pencil, Reply, Trash2, Users, X, RotateCcw, Loader2 } from "lucide-react";
+import { ArrowRight, BellOff, Bell, Archive, ArchiveRestore, Flag, Paperclip, Pencil, Reply, Trash2, Users, X, RotateCcw, Loader2, Pin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -12,6 +12,8 @@ import { KIND_LABEL, SafeText, cleanupStalePending, discardPendingFile, openFile
 import { GroupPanel } from "@/components/comm/group-panel";
 
 const PAGE = 30;
+/** Drafts stay with their own conversation (in memory, never moved to another recipient). */
+const DRAFTS = new Map<string, { body: string; pending: PendingFile[] }>();
 
 type Local = { clientId: string; body: string; replyTo: Row | null; fileIds: string[]; status: "sending" | "failed"; error?: string };
 
@@ -26,7 +28,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
     queryKey: ["msgs", id],
     initialPageParam: null as number | null,
     queryFn: async ({ pageParam }) => {
-      let q = db.from("messages").select("id, seq, sender_id, body, reply_to, created_at, edited_at, deleted_at").eq("conversation_id", id).order("seq", { ascending: false }).limit(PAGE);
+      let q = db.from("messages").select("id, seq, sender_id, body, reply_to, created_at, edited_at, deleted_at, pinned_at").eq("conversation_id", id).order("seq", { ascending: false }).limit(PAGE);
       if (pageParam != null) q = q.lt("seq", pageParam);
       const { data, error } = await q;
       if (error) throw error;
@@ -85,6 +87,9 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   const [reply, setReply] = useState<Row | null>(null);
   const block = conv["send_block"] as string | null;
   const isGroup = conv["kind"] === "group";
+  const isMod = isGroup && conv["my_role"] !== "member";
+  const canReply = conv["allow_replies"] !== false || isMod;
+  const pinned = list.filter((m) => m["pinned_at"] && !m["deleted_at"]);
   const others = (people.data ?? []).filter((p) => p["user_id"] !== user.id);
 
   async function send(l: Local) {
@@ -114,7 +119,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-bold">{conv["title"]}</h2>
           <p className="truncate text-xs text-muted-foreground">
-            {KIND_LABEL[conv["kind"]]}{conv["student_name"] ? ` • بشأن الطالب: ${conv["student_name"]}` : ""}{conv["counterpart"] ? ` • ${conv["counterpart"]}` : ""}{conv["school_name"] ? ` • ${conv["school_name"]}` : " • عابرة للفروع"}
+            {conv["group_type"] === "section" ? "مجموعة الفصل" : KIND_LABEL[conv["kind"]]}{conv["section_label"] && conv["kind"] === "student" ? ` • ${conv["section_label"]}` : ""}{conv["kind"] === "student" ? "" : ""}{conv["student_name"] && conv["kind"] !== "student" ? ` • بشأن الطالب: ${conv["student_name"]}` : ""}{conv["counterpart"] ? ` • ${conv["counterpart"]}` : ""}{conv["school_name"] ? ` • ${conv["school_name"]}` : " • عابرة للفروع"}
           </p>
         </div>
         <Button variant="ghost" size="icon" aria-label={conv["muted"] ? "إلغاء الكتم" : "كتم الإشعارات"} title={conv["muted"] ? "إلغاء الكتم" : "كتم الإشعارات"} onClick={async () => { await db.rpc("set_member_prefs", { _conv: id, _muted: !conv["muted"], _archived: null }); onChanged(); }}>
@@ -125,6 +130,11 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
         </Button>
         {isGroup && <Button variant={panel ? "secondary" : "ghost"} size="icon" aria-label="الأعضاء والإعدادات" onClick={() => setPanel(!panel)}><Users className="size-4" /></Button>}
       </header>
+      {pinned.length > 0 && !panel && (
+        <div className="border-b bg-accent/40 px-3 py-2 text-xs">
+          {pinned.map((m) => <p key={m["id"]} className="truncate">📌 {m["body"] || "مرفق"}</p>)}
+        </div>
+      )}
       {panel && isGroup ? (
         <div className="min-h-0 flex-1 overflow-y-auto p-3"><GroupPanel convId={id} myRole={conv["my_role"]} onChanged={() => { onChanged(); qc.invalidateQueries({ queryKey: ["people", id] }); }} /></div>
       ) : (
@@ -142,7 +152,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
             <ul className="space-y-2">
               {list.map((m) => (
                 <Message key={m["id"]} m={m} mine={m["sender_id"] === user.id} name={names[m["sender_id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
-                  files={(files.data ?? []).filter((f) => f["source_id"] === m["id"])} receipt={receipt(m)} canAct={!block} isGroup={isGroup}
+                  files={(files.data ?? []).filter((f) => f["source_id"] === m["id"])} receipt={receipt(m)} canAct={!block} isGroup={isGroup} canReply={canReply} isMod={isMod}
                   onReply={() => setReply(m)} onChanged={() => qc.invalidateQueries({ queryKey: ["msgs", id] })} />
               ))}
               {locals.map((l) => (
@@ -177,8 +187,8 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   );
 }
 
-function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, onReply, onChanged }: {
-  m: Row; mine: boolean; name: string; parent: Row | undefined; files: Row[]; receipt: string | null; canAct: boolean; isGroup: boolean; onReply: () => void; onChanged: () => void;
+function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, canReply, isMod, onReply, onChanged }: {
+  m: Row; mine: boolean; name: string; parent: Row | undefined; files: Row[]; receipt: string | null; canAct: boolean; isGroup: boolean; canReply: boolean; isMod: boolean; onReply: () => void; onChanged: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(m["body"]);
@@ -210,7 +220,11 @@ function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, onRep
         {receipt && <span>• {receipt}</span>}
         {!deleted && canAct && (
           <span className="flex gap-1 opacity-70 group-hover:opacity-100">
-            <button aria-label="رد" title="رد" onClick={onReply}><Reply className="size-3.5" /></button>
+            {canReply && <button aria-label="رد" title="رد" onClick={onReply}><Reply className="size-3.5" /></button>}
+            {isMod && <button aria-label={m["pinned_at"] ? "إلغاء التثبيت" : "تثبيت"} title={m["pinned_at"] ? "إلغاء التثبيت" : "تثبيت"} onClick={async () => {
+              const { error } = await db.rpc("pin_message", { _id: m["id"], _pin: !m["pinned_at"] });
+              if (error) toast.error(arabicError(error)); else onChanged();
+            }}><Pin className="size-3.5" /></button>}
             {mine && <button aria-label="تعديل" title="تعديل" onClick={() => setEditing(true)}><Pencil className="size-3.5" /></button>}
             {(mine || isGroup) && <button aria-label="حذف" title="حذف" onClick={async () => {
               if (!window.confirm("حذف الرسالة؟ يبقى أثرها «حُذفت هذه الرسالة».")) return;
@@ -231,9 +245,12 @@ function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, onRep
 }
 
 function Composer({ conv, reply, names, onCancelReply, onSend }: { conv: Row; reply: Row | null; names: Record<string, string>; onCancelReply: () => void; onSend: (body: string, fileIds: string[]) => Promise<void> }) {
-  const [body, setBody] = useState("");
-  const [pending, setPending] = useState<PendingFile[]>([]);
-  const allowFiles = conv["kind"] !== "group" || conv["school_id"];
+  const cid = conv["id"] as string;
+  const [body, setBody] = useState(() => DRAFTS.get(cid)?.body ?? "");
+  const [pending, setPending] = useState<PendingFile[]>(() => DRAFTS.get(cid)?.pending ?? []);
+  useEffect(() => { DRAFTS.set(cid, { body, pending }); }, [cid, body, pending]);
+  const allowFiles = conv["allow_attachments"] !== false;
+  const dest = conv["group_type"] === "section" ? "مجموعة الفصل" : conv["kind"] === "student" ? `محادثة خاصة مع ${conv["counterpart"] === "الطالب" ? "الطالب " : "المعلم "}${conv["title"]}` : null;
   const uploading = pending.some((p) => p.status === "uploading");
 
   async function start(p: PendingFile) {
@@ -257,6 +274,7 @@ function Composer({ conv, reply, names, onCancelReply, onSend }: { conv: Row; re
       setBody(""); setPending([]);
       await onSend(b, ready);
     }}>
+      {dest && <p className="text-xs font-semibold text-primary" aria-live="polite">الإرسال إلى: {dest}</p>}
       {reply && (
         <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1 text-xs">
           <Reply className="size-3" /> <span className="min-w-0 flex-1 truncate">رد على {names[reply["sender_id"]] ?? ""}: {reply["body"]}</span>
