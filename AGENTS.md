@@ -12,7 +12,7 @@
 ## Architecture rules (Rikaz)
 - Scope reference: docs/rikaz-scope-v8.md. Build per shared function across all affected role dashboards.
 - Authorization lives in Postgres RLS + SECURITY DEFINER helpers (can_manage_school, can_view_student, ...); UI nav (src/lib/roles.ts) only mirrors it — never rely on hidden buttons.
-- Memberships/invitations are written only through RPCs (create_organization, invite_member, accept_invitation, accept_my_invitations, revoke/resend_invitation); acceptance requires matching confirmed email and a live (not revoked/expired) token; authenticated has no insert on memberships and may only update is_active — prevents self-escalation.
+- Users/roles/invitations/memberships: org owner only, via RPCs (invite_member, revoke/resend_invitation, set_membership_active, change_member_role, decide_account_request); others only file request_account; acceptance needs matching confirmed email + live token; authenticated has no direct write on memberships; every change goes to access_audit — one accountable authority, no self-escalation.
 - Platform admins are added only via SQL (insert into platform_admins) — no in-app path or hardcoded credentials.
 - One classroom per course, created only by decide_assignment via ensure_classroom (idempotent).
 - Browser pages query Supabase directly with the RLS-bound client; the generic CrudTable in src/components/crud-page.tsx is the shared list/form/search component.
@@ -21,19 +21,9 @@
 - Substitutions are per date+slot rows written only via record_absence/assign_substitute/cancel_substitution; they never modify slots, assignments or course ownership.
 - Notifications are inserted only by SECURITY DEFINER code through _notify with a unique (user_id, dedupe_key) so retries never duplicate.
 - Files: private bucket rikaz-files; a public.files row (created by create_post_file, which validates type/size against file_policies) must exist before upload, and storage read access is derived from the file's source (can_read_file). The UI opens files only through short-lived signed URLs.
-- Communication: one service for every role — conversations (kind family|direct|group) + conversation_members (membership periods via left_at, visible_from for history policy) + messages (per-conversation seq, unique sender+client_id for idempotent retries). All writes go through RPCs (send_message, start_family_conversation, start_direct_conversation, create_group, add/remove_group_member, …); authenticated has SELECT only. Read access = active member row + conv_access_ok (current school/org membership; for family chats a still-verified guardian link). Sending additionally needs conv_send_block() = null (relation still valid via _family_ok, group active/not expired, post policy). Managers see group metadata but never private message content; the only exceptional read is report_detail on a reported message, which is audited in comm_audit.
-- Derived groups (membership_mode=derived) are synced by triggers on teachers/memberships via sync_derived_group; manual groups never change automatically.
-- Circulars: scope school|branches|org (wider than school = org owner only, never platform admin); audience resolved at publish into circular_recipients with the recipient's branch (later joiners never recipients; read lost when that membership ends); revise_circular snapshots versions; ack_circular is separate from open_circular.
-- Message/circular attachments reuse the files service: create_message_file makes a 'message_pending' row, the client uploads, and send_message verifies the storage object exists before linking it (source_type='message'). Stale pending files are removed by the uploader's client (cleanupStalePending).
-- scripts/comm-e2e.ts is the communication permission test: `NODE_PATH=node_modules bun scripts/comm-e2e.ts`; run it with rls-e2e after any change to communication SQL.
-- Teacher↔student private chats are kind='student' (dedupe 'student:<student>:<teacher>'), started only by the teacher via start_student_conversation and gated by _student_ok; guardians are never added — student privacy and no student↔student chats.
-- Report review rights come from comm_settings.report_reviewer_roles via _report_reviewer (org owner only for cross-branch groups); never widen to all managers or platform admins.
 - Unlinked files are removed only by run_file_cleanup (pg_cron hourly → pg_net → Storage API, credentials in Vault). Never delete storage.objects rows directly.
-- Users, roles, invitations and memberships are managed only by the org owner via RPCs (invite_member, set_membership_active, change_member_role, decide_account_request); other managers only file request_account; every change goes to access_audit — keeps one accountable authority.
-- Manual groups: created/filled only by org owner (any branch/cross-branch) or principal (own school) via _can_create_group; derived class groups are untouched.
 - Course rows are readable only through can_view_course (+ day substitute); dept heads see only their department's courses and no student records.
 - Cleanup health: file_cleanup_runs records status; a separate hourly cron job runs check_cleanup_health (dedup alerts in cleanup_alerts, channel-isolated so tests never touch live alerts).
 - docs/permissions-matrix.md is the role capability table; update it with any permission change.
 - docs/closure-log.md: per-item status log; update with new evidence.
-
-- scripts/ has its own AGENTS.md (test suites and cleanup rules) — read it before changing files there.
+- scripts/ and src/components/comm/ have their own AGENTS.md (tests/cleanup; communication + circular rules) — read before changing files there.
