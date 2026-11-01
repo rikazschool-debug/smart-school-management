@@ -135,7 +135,8 @@ export function SettingsTab({ ctx }: { ctx: Ctx }) {
     if (error) return void toast.error(arabicError(error));
     toast.success("حُفظ إصدار جديد من الإعدادات"); q.refetch();
   };
-  const field = (k: string, label: string, el: React.ReactNode) => <div className="space-y-1"><Label className={can(k) ? "" : "text-muted-foreground"}>{label}{!can(k) && " (تحدده المؤسسة)"}</Label>{el}</div>;
+  const field = (k: string, label: string, el: React.ReactNode) => <label className="block space-y-1"><span className={`text-sm font-medium ${can(k) ? "" : "text-muted-foreground"}`}>{label}{!can(k) && " (تحدده المؤسسة)"}</span>{el}</label>;
+  const fieldset = (k: string, label: string, el: React.ReactNode) => <fieldset className="space-y-1"><legend className={`text-sm font-medium ${can(k) ? "" : "text-muted-foreground"}`}>{label}{!can(k) && " (تحدده المؤسسة)"}</legend>{el}</fieldset>;
   return (
     <div className="space-y-6">
       <section className="space-y-4 rounded-2xl border bg-card p-5">
@@ -156,12 +157,12 @@ export function SettingsTab({ ctx }: { ctx: Ctx }) {
           {field("notify_arrival", "إشعار الأسرة بالوصول", <select className={selectCls("w-full")} disabled={!can("notify_arrival")} value={String(f["notify_arrival"])} onChange={(e) => setF({ ...f, notify_arrival: e.target.value === "true" })}><option value="true">نعم</option><option value="false">لا</option></select>)}
         </div>
         <p className="text-sm">مثال بالإعداد الحالي: من يصل حتى {f["day_start"]} + {f["grace_minutes"]} دقيقة «حاضر»، وبعدها «متأخر» وتُحسب الدقائق من {f["late_from"] === "grace_end" ? "نهاية السماح" : "بداية الدوام"}.</p>
-        {field("study_days", "أيام الدراسة", <div className="flex flex-wrap gap-2">{DAYS.map((d, i) => <label key={d} className="flex items-center gap-1 text-sm"><input type="checkbox" disabled={!can("study_days")} checked={f["study_days"].includes(i)} onChange={(e) => setF({ ...f, study_days: e.target.checked ? [...f["study_days"], i].sort() : f["study_days"].filter((x: number) => x !== i) })} />{d}</label>)}</div>)}
+        {fieldset("study_days", "أيام الدراسة", <div className="flex flex-wrap gap-2">{DAYS.map((d, i) => <label key={d} className="flex items-center gap-1 text-sm"><input type="checkbox" disabled={!can("study_days")} checked={f["study_days"].includes(i)} onChange={(e) => setF({ ...f, study_days: e.target.checked ? [...f["study_days"], i].sort() : f["study_days"].filter((x: number) => x !== i) })} />{d}</label>)}</div>)}
         <div className="grid gap-3 sm:grid-cols-2">
           {field("holidays", "العطلات (تواريخ مفصولة بفاصلة، مثل 2026-11-20)", <Input dir="ltr" disabled={!can("holidays")} value={f["holidays"]} onChange={(e) => setF({ ...f, holidays: e.target.value })} />)}
           {field("extra_days", "أيام دراسة استثنائية", <Input dir="ltr" disabled={!can("extra_days")} value={f["extra_days"]} onChange={(e) => setF({ ...f, extra_days: e.target.value })} />)}
         </div>
-        {field("approver_roles", "المسؤولون عن اعتماد الاستئذان والتصحيحات (إضافة إلى المدير)", <div className="flex flex-wrap gap-3">{APPROVERS.map((r) => <label key={r} className="flex items-center gap-1 text-sm"><input type="checkbox" disabled={!can("approver_roles")} checked={f["approver_roles"].includes(r)} onChange={(e) => setF({ ...f, approver_roles: e.target.checked ? [...f["approver_roles"], r] : f["approver_roles"].filter((x: string) => x !== r) })} />{ROLE_LABELS[r]}</label>)}</div>)}
+        {fieldset("approver_roles", "المسؤولون عن اعتماد الاستئذان والتصحيحات (إضافة إلى المدير)", <div className="flex flex-wrap gap-3">{APPROVERS.map((r) => <label key={r} className="flex items-center gap-1 text-sm"><input type="checkbox" disabled={!can("approver_roles")} checked={f["approver_roles"].includes(r)} onChange={(e) => setF({ ...f, approver_roles: e.target.checked ? [...f["approver_roles"], r] : f["approver_roles"].filter((x: string) => x !== r) })} />{ROLE_LABELS[r]}</label>)}</div>)}
         {owner && scope === "org" && <div className="space-y-1"><Label>ما يستطيع مدير كل مدرسة تعديله</Label><div className="flex flex-wrap gap-3">{KEYS.map(([k, l]) => <label key={k} className="flex items-center gap-1 text-sm"><input type="checkbox" checked={f["principal_editable"].includes(k)} onChange={(e) => setF({ ...f, principal_editable: e.target.checked ? [...f["principal_editable"], k] : f["principal_editable"].filter((x: string) => x !== k) })} />{l}</label>)}</div></div>}
         <Button onClick={save}>حفظ إصدار جديد</Button>
       </section>
