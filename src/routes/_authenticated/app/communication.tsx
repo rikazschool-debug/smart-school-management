@@ -46,10 +46,10 @@ function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   return (
     <>
       <PageHeader {...commTitle(ctx.role)} />
-      <div className="mb-4 flex gap-1 overflow-x-auto border-b pb-px" role="tablist">
+      <div className="mb-5 flex w-full gap-1 overflow-x-auto rounded-xl bg-muted p-1 sm:w-fit" role="tablist">
         {tabs.map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => go({ tab: t })}
-            className={`shrink-0 rounded-t-lg px-3 py-2 text-sm ${tab === t ? "border-b-2 border-primary font-semibold text-primary" : "text-muted-foreground hover:text-foreground"}`}>{commTabLabel(ctx.role, t)}</button>
+            className={`min-h-9 shrink-0 rounded-lg px-4 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${tab === t ? "bg-card font-semibold text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{commTabLabel(ctx.role, t)}</button>
         ))}
       </div>
       {tab === "circulars" ? <CircularsTab ctx={ctx} focus={search.circular} onFocus={(id) => go(id ? { tab: "circulars", circular: id } : { tab: "circulars" })} />

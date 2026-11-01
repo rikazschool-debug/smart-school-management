@@ -40,6 +40,15 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
 };
 
+const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
+  { label: "", keys: ["home", "notifications"] },
+  { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members"] },
+  { label: "الإعداد الأكاديمي", keys: ["academic", "teachers", "courses", "students", "guardians"] },
+  { label: "التعليم", keys: ["classrooms", "homework"] },
+  { label: "الجدول واليوم الدراسي", keys: ["schoolday", "schedule", "substitutions"] },
+  { label: "التواصل", keys: ["communication"] },
+];
+
 function AppLayout() {
   const { user } = Route.useRouteContext();
   return (
@@ -66,61 +75,89 @@ function Shell() {
   if (!active) return <Onboarding onSignOut={signOut} />;
 
   const nav = NAV_BY_ROLE[active.role];
+  const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
+  const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (
-    <nav className="flex h-full flex-col gap-1 p-4">
-      <span className="mb-6 px-3 font-display text-2xl text-sidebar-primary">ركاز</span>
-      {nav.map((k) => {
-        const n = NAV[k];
-        return (
-          <Link
-            key={k}
-            to={n.to}
-            activeOptions={{ exact: k === "home" }}
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/85 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
-          >
-            <n.icon className="size-4" /> {n.label}
-          </Link>
-        );
-      })}
-      <div className="mt-auto border-t border-sidebar-border pt-4 text-xs text-sidebar-foreground/70">
-        <p className="truncate px-3" dir="ltr">{user.email}</p>
-        <button onClick={signOut} className="mt-2 flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-sidebar-accent">
-          <LogOut className="size-4" /> تسجيل الخروج
-        </button>
+    <nav aria-label="القائمة الرئيسية" className="flex h-full flex-col">
+      <div className="flex items-center gap-3 px-5 py-5">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">ر</span>
+        <div className="min-w-0">
+          <p className="font-display text-xl leading-none text-foreground">ركاز</p>
+          <p className="mt-1 truncate text-xs text-muted-foreground">{active.schoolName}</p>
+        </div>
+      </div>
+      <div className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+        {groups.map((g) => (
+          <div key={g.label}>
+            {g.label && <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">{g.label}</p>}
+            <div className="space-y-0.5">
+              {g.keys.map((k) => {
+                const n = NAV[k];
+                return (
+                  <Link
+                    key={k}
+                    to={n.to}
+                    activeOptions={{ exact: k === "home" }}
+                    onClick={() => setOpen(false)}
+                    className="group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
+                  >
+                    <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
+                    <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{n.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-sidebar-border p-3">
+        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">{initial}</span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{ROLE_LABELS[active.role]}</p>
+            <p className="truncate text-xs text-muted-foreground" dir="ltr">{user.email}</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={signOut} aria-label="تسجيل الخروج" title="تسجيل الخروج"><LogOut className="size-4" /></Button>
+        </div>
       </div>
     </nav>
   );
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 bg-sidebar md:block">{sidebar}</aside>
+    <div className="flex min-h-screen bg-background">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-l border-sidebar-border bg-sidebar lg:block">{sidebar}</aside>
       {open && (
-        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setOpen(false)}>
-          <aside className="h-full w-64 bg-sidebar" onClick={(e) => e.stopPropagation()}>{sidebar}</aside>
+        <div className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)}>
+          <aside className="h-full w-72 max-w-[85vw] bg-sidebar shadow-xl" onClick={(e) => e.stopPropagation()}>{sidebar}</aside>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b bg-background/90 px-4 py-3 backdrop-blur">
-          <Button variant="ghost" size="icon" className="md:hidden" aria-label="القائمة" onClick={() => setOpen(true)}>
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur sm:px-6">
+          <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" aria-label="القائمة" onClick={() => setOpen(true)}>
             <Menu className="size-5" />
           </Button>
-          <label className="hidden text-xs text-muted-foreground sm:inline" htmlFor="ctx">السياق</label>
-          <select
-            id="ctx"
-            className={selectCls("min-w-0 max-w-[60vw] flex-1 sm:flex-none", true)}
-            value={active.key}
-            onChange={(e) => { setActive(e.target.value); qc.invalidateQueries(); navigate({ to: "/app" }); }}
-          >
-            {contexts.map((c) => (
-              <option key={c.key} value={c.key}>
-                {ROLE_LABELS[c.role]} — {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
-              </option>
-            ))}
-          </select>
-          <NotificationBell />
+          <div className="relative flex min-w-0 flex-1 items-center sm:flex-none">
+            <Building2 aria-hidden className="pointer-events-none absolute right-3 size-4 text-primary" />
+            <label className="sr-only" htmlFor="ctx">تبديل الدور أو المدرسة</label>
+            <select
+              id="ctx"
+              title="تبديل الدور أو المدرسة"
+              className={selectCls("w-full min-w-0 rounded-full bg-card pr-9 font-medium shadow-sm sm:w-auto sm:max-w-md", true)}
+              value={active.key}
+              onChange={(e) => { setActive(e.target.value); qc.invalidateQueries(); navigate({ to: "/app" }); }}
+            >
+              {contexts.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {ROLE_LABELS[c.role]} · {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="ms-auto flex shrink-0 items-center gap-1">
+            <NotificationBell />
+          </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 md:py-8">
           <Outlet />
           <ConfirmHost />
         </main>

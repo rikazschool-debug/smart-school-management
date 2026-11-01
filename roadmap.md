@@ -91,3 +91,19 @@
 - [x] P4 Report review on phone (single decision, audit, outcome to reporter)
 - [x] P5 Design applied in shared components (tokens, selects, confirm dialog, error retry, page action)
 - [ ] P6 Decide: is_course_teacher should honour end_date (needs owner decision; touches all teacher modules)
+
+## Redesign (docs/redesign-brief.md) — priority 1
+- [x] R1 Before screenshots (principal home, teacher comm, student comm phone, homework list)
+- [x] R2 Shell: light grouped sidebar with active marker, user block; slim header with context switcher pill
+- [x] R3 Shared PageHeader (eyebrow/desc/action, divider), Section, skeleton loading, EmptyState with action
+- [x] R4 Principal home: compact stats with icons, "needs attention" from real data, quick links; teacher home actions + course cards
+- [x] R5 Homework list: action in header, filter card, progress column, phone cards
+- [~] R6 Communication: segmented tabs done; group toolbar row and thread layout not yet redesigned
+- [ ] R7 Roll out to remaining screens (CrudTable pages, academic, schedule, substitutions, members, classrooms, homework detail, circulars)
+- [ ] R8 Behavior tests (keyboard focus, contrast, long Arabic text, full/empty tables) across 13 dashboards
+
+## Package 9 (docs/package9-brief.md) — not started
+- [ ] P9.1 Assignment validity: approved + start_date reached + end_date (inclusive, school TZ) enforced in every teacher helper
+- [ ] P9.2 Manual add + template import of students (profile only; account request to owner)
+- [ ] P9.3 Manual add + template import of teacher profiles
+- [ ] P9.4 Unified XLSX/PDF export for data sections
