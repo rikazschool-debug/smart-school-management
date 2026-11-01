@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { arabicError, useSession } from "@/lib/session";
-import { GROUP_TYPE_LABEL, ROLE_AR } from "@/lib/comm";
+import { GROUP_TYPE_LABEL } from "@/lib/comm";
 import { MemberPicker } from "@/components/comm/member-picker";
 
 const sel = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
@@ -144,4 +144,3 @@ function Settings({ c, onSaved }: { c: Row; onSaved: () => void }) {
   );
 }
 
-export { ROLE_AR };
