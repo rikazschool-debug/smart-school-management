@@ -2850,6 +2850,8 @@ export type Database = {
       is_platform_admin: { Args: never; Returns: boolean }
       is_school_member: { Args: { _school: string }; Returns: boolean }
       is_student_self: { Args: { _student: string }; Returns: boolean }
+      is_supervised_course: { Args: { _course: string }; Returns: boolean }
+      is_supervised_student: { Args: { _student: string }; Returns: boolean }
       is_teacher_of_student: { Args: { _student: string }; Returns: boolean }
       leave_group: { Args: { _conv: string }; Returns: undefined }
       mark_conversation_read: {
@@ -3054,6 +3056,7 @@ export type Database = {
         Returns: string
       }
       start_timetable_revision: { Args: { _id: string }; Returns: string }
+      supervised_teacher_ids: { Args: never; Returns: string[] }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
       sync_section_group: { Args: { _section: string }; Returns: string }
       teacher_students: {
