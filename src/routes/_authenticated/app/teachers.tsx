@@ -1,14 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { Send } from "lucide-react";
 import { CrudTable } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { canManage } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
-import { arabicError } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/teachers")({ component: Page });
 
