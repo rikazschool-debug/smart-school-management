@@ -3,9 +3,9 @@ import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { FileDown, FileSpreadsheet, Filter, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { FileDown, FileSpreadsheet, Filter, Printer, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { exportPdf, exportXlsx } from "@/lib/export";
+import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicError } from "@/lib/session";
 import { Button } from "@/components/ui/button";
@@ -217,7 +217,7 @@ export function CrudTable({
   const labelOf = useFilterLabels(filters ?? [], schoolId);
   const filterText = () => [...(search ? [`بحث: ${search}`] : []), ...active.map((f) => `${f.label}: ${labelOf(f.key, fv[f.key]!)}`)];
   const plain = (c: Column, r: Row) => { const t = c.text?.(r); if (t !== undefined) return t ?? ""; const v = c.render(r); return typeof v === "string" || typeof v === "number" ? v : ""; };
-  async function doExport(kind: "xlsx" | "pdf") {
+  async function doExport(kind: "xlsx" | "pdf" | "print") {
     setExporting(true);
     try {
       const all: Row[] = [];
@@ -230,7 +230,7 @@ export function CrudTable({
       const headers = columns.map((c) => c.label);
       const rows = all.map((r) => columns.map((c) => plain(c, r)));
       const meta = { title, school: document.querySelector("[data-school-name]")?.textContent ?? undefined, filters: filterText() };
-      if (kind === "xlsx") exportXlsx(meta, headers, rows); else exportPdf(meta, headers, rows);
+      if (kind === "xlsx") exportXlsx(meta, headers, rows); else if (kind === "pdf") await exportPdf(meta, headers, rows); else printReport(meta, headers, rows);
       toast.success(`صُدّر ${all.length} سجل`);
     } catch (e) { toast.error(arabicError(e)); } finally { setExporting(false); }
   }
@@ -249,8 +249,9 @@ export function CrudTable({
         <div className="ms-auto flex flex-wrap gap-2">
           {toolbar}
           {exportable && (<>
-            <Button variant="outline" size="sm" disabled={exporting || !count} onClick={() => doExport("xlsx")}><FileSpreadsheet className="size-4" /> Excel</Button>
-            <Button variant="outline" size="sm" disabled={exporting || !count} onClick={() => doExport("pdf")}><FileDown className="size-4" /> PDF</Button>
+            <Button variant="outline" size="sm" disabled={exporting || !count} onClick={() => doExport("xlsx")}><FileSpreadsheet className="size-4" /> تنزيل Excel</Button>
+            <Button variant="outline" size="sm" disabled={exporting || !count} onClick={() => doExport("pdf")}><FileDown className="size-4" /> {exporting ? "جارٍ التجهيز…" : "تنزيل PDF"}</Button>
+            <Button variant="ghost" size="sm" disabled={exporting || !count} onClick={() => doExport("print")} title="يفتح نافذة الطباعة في المتصفح"><Printer className="size-4" /> طباعة</Button>
           </>)}
           {canWrite && <Button size="sm" onClick={() => setEditing({})}><Plus className="size-4" /> إضافة</Button>}
         </div>
