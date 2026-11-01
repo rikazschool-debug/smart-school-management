@@ -125,3 +125,9 @@ No defects found, so no fixes or re-runs were needed. The mobile-screen file was
 - Browser: teacher export preview + CSV download ran (demo teacher has 0 homework rows, so content not inspected); homework detail (copy dialog, joiners, feedback upload) not yet exercised in browser — demo teacher has no homework.
 - Security linter: 9 new 'signed-in can execute SECURITY DEFINER' warnings are intentional RPCs (create/remove_feedback_file, copy_homework_template, prepare_template_files, decide_late_joiner, late_joiners, set_homework_join_policy, homework_report, my_class_groups/course_roster); each checks is_course_teacher/hw_staff/hw_family inside and is covered by homework2-e2e/comm-roles-e2e denials. Older 140 warnings not reviewed.
 - Open: unified design system (D1/D2), communication usage fixes + browser journeys (C1/C2), homework browser journeys (H15).
+
+## 2026-11-01 — Package 7 browser round
+- H15 (browser, isolated hbx- fixture): feedback file visible to teacher, to student (phone) and guardian only after publish; other student sees nothing; late joiner pending → approved with own due date; template copy creates draft with independent attachment (copy object intact after source attachment removed); 5 reports downloaded non-empty, opened: BOM, Arabic headers/values, scoped rows. Fixed: pending joiner listed as "transferred" in submissions; CSV English statuses, random column order, formula-injection guard (src/test/export-csv.test.ts 4/4).
+- C1/C2 (browser, cbx- fixture): teacher desktop → guardian phone message + file + signed URL, realtime reply, draft badge/isolation, student denied staff/family chats and has no new-chat/circulars; principal wizard validation + create + archive; member sees archived read-only banner on phone. 17/17.
+- Not yet in browser: guardian with two children, report review on phone. Known: student homework page shows "المعلم: —".
+- Both fixtures torn down (only their users/orgs/files).

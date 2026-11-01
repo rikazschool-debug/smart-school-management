@@ -85,7 +85,13 @@ function GroupWizard({ ctx, onDone }: { ctx: AppContext & { schoolId: string }; 
   });
   const set = (p: Partial<typeof v>) => setV({ ...v, ...p });
   const steps = ["البيانات", "النطاق والنوع", "الأعضاء", "السياسات", "المعاينة"];
-  const canNext = step !== 1 || v.title.trim().length >= 2;
+  const needsDept = v.scope === "school" && (v.membership_mode === "derived" || v.group_type === "department");
+  const blockReason =
+    step === 1 && v.title.trim().length < 2 ? "اكتب اسمًا للمجموعة (حرفان على الأقل)."
+    : step === 2 && needsDept && !v.department ? "اختر القسم للعضوية المشتقة."
+    : step === 3 && v.membership_mode === "manual" && members.length + mods.length === 0 ? "اختر عضوًا أو مشرفًا واحدًا على الأقل."
+    : null;
+  const canNext = !blockReason;
   return (
     <div className="space-y-4 rounded-2xl border bg-card p-4">
       <ol className="flex flex-wrap gap-2 text-xs">{steps.map((s, i) => <li key={s} className={`rounded-full px-3 py-1 ${step === i + 1 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>{i + 1}. {s}</li>)}</ol>
@@ -146,6 +152,7 @@ function GroupWizard({ ctx, onDone }: { ctx: AppContext & { schoolId: string }; 
           <p>النشر: {v.post_policy === "all" ? "الجميع" : "المشرفون"} • العضو الجديد يرى: {v.history_policy === "full" ? "التاريخ كاملًا" : "من الانضمام"} • المرفقات: {v.allow_attachments ? "مسموحة" : "لا"}{v.expires_at ? ` • تنتهي ${v.expires_at}` : ""}</p>
         </div>
       )}
+      {blockReason && <p className="text-xs text-muted-foreground" role="status">{blockReason}</p>}
       <div className="flex gap-2">
         {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}>السابق</Button>}
         {step < 5 ? <Button disabled={!canNext} onClick={() => setStep(step + 1)}>التالي</Button> : (

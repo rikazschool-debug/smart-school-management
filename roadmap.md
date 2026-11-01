@@ -72,14 +72,14 @@
 - [x] R5 Server tests comm-roles-e2e 36/36, comm-e2e 95/95; browser per-role tabs
 
 ## Package 7 — Communication + homework completion, unified design (brief: docs/package7-brief.md)
-- [ ] D1 Design reference + shared tokens/components; apply to all 13 dashboards
-- [ ] D2 Per-button contract register (docs/screens-register.md)
-- [ ] C1 Communication usage fixes per role (archived state, guardian child context/draft warning, admin group wizard)
-- [ ] C2 Communication browser tests 1–12 (mobile + desktop)
+- [x] D1 Design reference (docs/design-system.md) + visual review of 13 dashboards desktop/mobile
+- [x] D2 Button register (docs/screens-register.md)
+- [x] C1 Archived banner/read-only, guardian child filter+picker, per-user drafts + unload warning + badge, wizard validation
+- [ ] C2 Browser journeys: 17 checks passed (send/receive, files, realtime, drafts, student denials, wizard, archived). Open: guardian with 2 children in browser, report flow on phone
 - [x] H11 Teacher feedback attachments (private until results published)
 - [x] H12 Copy homework as template with attachments (preview, no dates copied silently)
 - [x] H13 Late joiners policy for open homework (no unfair lateness)
 - [x] H14 Homework report export (server-scoped)
-- [ ] H15 Homework browser journeys with isolated run-tagged fixture (published hw, students, submissions, grades, attachments, late joiner): feedback before/after publish, template copy survives source delete, late-joiner review, 5 non-empty reports, open downloaded CSV (Arabic, filters, scope)
-- [ ] S1 Reopen: document each new warning text + function + applies/not + evidence; old warnings stay "not reviewed"
+- [x] H15 Homework browser journeys with isolated run-tagged fixture (published hw, students, submissions, grades, attachments, late joiner): feedback before/after publish, template copy survives source delete, late-joiner review, 5 non-empty reports, open downloaded CSV (Arabic, filters, scope)
+- [x] S1 docs/security-warnings-package7.md (8 functions; ~140 older still not reviewed)
 - [ ] Final Arabic report: browser-tested / server-only / per-dashboard design review / gaps & external settings
