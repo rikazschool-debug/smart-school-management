@@ -66,6 +66,8 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [q, setQ] = useState("");
   const [newOpen, setNewOpen] = useState(false);
+  const [child, setChild] = useState("");
+  const { user } = useSession();
   const school = allSchools ? null : ctx.schoolId;
   const convs = useQuery({
     queryKey: ["convs", school],
@@ -102,10 +104,13 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
     if (tab !== "archive" && c["kind"] === "group" && (c["group_type"] === "course" || c["group_type"] === "section")) return false;
     if (ctx.role === "student" && c["kind"] !== "student" && c["kind"] !== "group") return false;
     if (kind && c["kind"] !== kind) return false;
+    if (child && c["student_name"] !== child) return false;
     if (unreadOnly && !c["unread"]) return false;
     if (q.trim() && !`${c["title"]} ${c["student_name"] ?? ""}`.includes(q.trim()) && !hits.data?.some((h) => h["conversation_id"] === c["id"])) return false;
     return true;
-  }), [convs.data, tab, kind, unreadOnly, q, hits.data]);
+  }), [convs.data, tab, kind, unreadOnly, q, hits.data, child]);
+  // guardian with several children: filter the inbox per child (names come from the family conversations themselves)
+  const children = ctx.role === "guardian" ? [...new Set((convs.data ?? []).filter((c) => c["kind"] === "family" && c["student_name"]).map((c) => c["student_name"] as string))] : [];
   const current = (convs.data ?? []).find((c) => c["id"] === selected);
   const canStart = ctx.role !== "student" && tab !== "groups";
 
@@ -124,6 +129,11 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
             <select aria-label="النوع" className="h-8 rounded-md border bg-background px-2" value={kind} onChange={(e) => setKind(e.target.value)}>
               <option value="">كل الأنواع</option>{Object.entries(KIND_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
             </select>
+            {children.length > 1 && (
+              <select aria-label="الابن" className="h-8 rounded-md border bg-background px-2" value={child} onChange={(e) => setChild(e.target.value)}>
+                <option value="">كل الأبناء</option>{children.map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            )}
             <label className="flex items-center gap-1"><input type="checkbox" checked={unreadOnly} onChange={(e) => setUnreadOnly(e.target.checked)} /> غير المقروء</label>
             <label className="flex items-center gap-1"><input type="checkbox" checked={allSchools} onChange={(e) => setAllSchools(e.target.checked)} /> كل مدارسي</label>
           </div>
@@ -147,6 +157,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
                     </span>
                     <span className="flex w-full min-w-0 items-center gap-2 text-xs">
                       <span className="min-w-0 flex-1 truncate text-muted-foreground">{c["last_body"] ?? "لا رسائل بعد"}</span>
+                      {hasDraft(user.id, c["id"]) && selected !== c["id"] && <span className="shrink-0 rounded bg-accent px-1 text-[10px] text-accent-foreground">مسودة</span>}
                       {c["muted"] && <BellOff className="size-3 shrink-0 text-muted-foreground" aria-label="مكتومة" />}
                       {(c["archived"] || c["status"] === "archived") && <Archive className="size-3 shrink-0 text-muted-foreground" aria-label="مؤرشفة" />}
                       {c["unread"] > 0 && <span className="shrink-0 rounded-full bg-primary px-1.5 text-[10px] font-bold leading-4 text-primary-foreground">{c["unread"]}</span>}

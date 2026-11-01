@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, LoadingState } from "@/components/states";
@@ -136,6 +136,8 @@ function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: strin
     },
   });
   const link = kids.data?.find((k) => k["student_id"] === student);
+  // one child → preselected; several → the guardian must choose explicitly
+  useEffect(() => { if (kids.data?.length === 1 && !student) setStudent(kids.data[0]!["student_id"]); }, [kids.data, student]);
   const shown = (contacts.data ?? []).filter((c) => c["kind"] === who);
   return (
     <div className="space-y-3">
@@ -146,7 +148,9 @@ function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: strin
       <div className="space-y-1">
         <label className="text-sm font-medium" htmlFor="gk">الابن/الابنة</label>
         {kids.isLoading ? <LoadingState /> : !kids.data?.length ? <EmptyState title="لا يوجد أبناء موثّقون في هذه المدرسة" /> : (
-          <select id="gk" className={sel} value={student} onChange={(e) => { setStudent(e.target.value); setTo(""); setBody(""); }}>
+          <select id="gk" className={sel} value={student} onChange={(e) => {
+            if (body.trim() && !window.confirm("تغيير الابن يحذف نص الرسالة المكتوب حتى لا يصل لجهة تخص ابنًا آخر. متابعة؟")) return;
+            setStudent(e.target.value); setTo(""); setBody(""); }}>
             <option value="">— اختر —</option>{kids.data.map((k) => <option key={k["student_id"]} value={k["student_id"]}>{k["students"]?.full_name}</option>)}
           </select>
         )}
@@ -159,6 +163,7 @@ function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: strin
           </select>
         </div>
       ))}
+      {link && <p className="text-xs font-semibold text-primary" aria-live="polite">بخصوص: {link["students"]?.full_name}</p>}
       <Textarea aria-label="الرسالة الأولى" placeholder="الرسالة الأولى (اختياري)" value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} />
       <Button disabled={!to || !link || busy} onClick={async () => {
         setBusy(true);

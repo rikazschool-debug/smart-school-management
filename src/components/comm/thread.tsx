@@ -12,8 +12,14 @@ import { KIND_LABEL, SafeText, cleanupStalePending, discardPendingFile, openFile
 import { GroupPanel } from "@/components/comm/group-panel";
 
 const PAGE = 30;
-/** Drafts stay with their own conversation (in memory, never moved to another recipient). */
+/** Drafts stay with their own conversation AND signed-in user (memory only, never stored on the device,
+ *  never moved to another recipient or another account on the same browser). */
 const DRAFTS = new Map<string, { body: string; pending: PendingFile[] }>();
+const draftKey = (user: string, conv: string) => `${user}:${conv}`;
+export function hasDraft(user: string, conv: string) {
+  const d = DRAFTS.get(draftKey(user, conv));
+  return !!d && (d.body.trim().length > 0 || d.pending.length > 0);
+}
 
 type Local = { clientId: string; body: string; replyTo: Row | null; fileIds: string[]; status: "sending" | "failed"; error?: string };
 
@@ -130,6 +136,12 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
         </Button>
         {isGroup && <Button variant={panel ? "secondary" : "ghost"} size="icon" aria-label="الأعضاء والإعدادات" onClick={() => setPanel(!panel)}><Users className="size-4" /></Button>}
       </header>
+      {conv["status"] === "archived" && (
+        <p role="status" className="border-b bg-muted px-3 py-2 text-xs text-muted-foreground">هذه المجموعة مؤرشفة: الرسائل السابقة للقراءة فقط، ولا يمكن الإرسال أو الرد أو إضافة مرفقات.</p>
+      )}
+      {conv["archived"] && conv["status"] !== "archived" && (
+        <p className="border-b bg-muted/60 px-3 py-2 text-xs text-muted-foreground">هذه المحادثة في أرشيفك أنت فقط؛ ما زالت نشطة للآخرين ويمكنك الإرسال فيها.</p>
+      )}
       {pinned.length > 0 && !panel && (
         <div className="border-b bg-accent/40 px-3 py-2 text-xs">
           {pinned.map((m) => <p key={m["id"]} className="truncate">📌 {m["body"] || "مرفق"}</p>)}
@@ -177,7 +189,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
       {!panel && (block ? (
         <p className="border-t bg-muted/50 p-3 text-center text-sm text-muted-foreground">{block}</p>
       ) : (
-        <Composer conv={conv} reply={reply} names={names} onCancelReply={() => setReply(null)} onSend={(body, fileIds) => {
+        <Composer userId={user.id} conv={conv} reply={reply} names={names} onCancelReply={() => setReply(null)} onSend={(body, fileIds) => {
           const l: Local = { clientId: crypto.randomUUID(), body, replyTo: reply, fileIds, status: "sending" };
           setReply(null);
           return send(l);
@@ -244,11 +256,19 @@ function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, canRe
   );
 }
 
-function Composer({ conv, reply, names, onCancelReply, onSend }: { conv: Row; reply: Row | null; names: Record<string, string>; onCancelReply: () => void; onSend: (body: string, fileIds: string[]) => Promise<void> }) {
-  const cid = conv["id"] as string;
+function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userId: string; conv: Row; reply: Row | null; names: Record<string, string>; onCancelReply: () => void; onSend: (body: string, fileIds: string[]) => Promise<void> }) {
+  const cid = draftKey(userId, conv["id"] as string);
+  const [restored] = useState(() => hasDraft(userId, conv["id"]));
   const [body, setBody] = useState(() => DRAFTS.get(cid)?.body ?? "");
   const [pending, setPending] = useState<PendingFile[]>(() => DRAFTS.get(cid)?.pending ?? []);
-  useEffect(() => { DRAFTS.set(cid, { body, pending }); }, [cid, body, pending]);
+  useEffect(() => { if (body.trim() || pending.length) DRAFTS.set(cid, { body, pending }); else DRAFTS.delete(cid); }, [cid, body, pending]);
+  // closing/reloading the tab with unsent text asks first (drafts are memory-only by design)
+  useEffect(() => {
+    if (!body.trim() && !pending.length) return;
+    const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
+  }, [body, pending.length]);
   const allowFiles = conv["allow_attachments"] !== false;
   const dest = conv["group_type"] === "section" ? "مجموعة الفصل" : conv["kind"] === "student" ? `محادثة خاصة مع ${conv["counterpart"] === "الطالب" ? "الطالب " : "المعلم "}${conv["title"]}` : null;
   const uploading = pending.some((p) => p.status === "uploading");
@@ -275,6 +295,7 @@ function Composer({ conv, reply, names, onCancelReply, onSend }: { conv: Row; re
       await onSend(b, ready);
     }}>
       {dest && <p className="text-xs font-semibold text-primary" aria-live="polite">الإرسال إلى: {dest}</p>}
+      {restored && body && <p className="text-xs text-muted-foreground">مسودة غير مرسلة لهذه المحادثة فقط — لا تُنقل لمحادثة أخرى.</p>}
       {reply && (
         <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1 text-xs">
           <Reply className="size-3" /> <span className="min-w-0 flex-1 truncate">رد على {names[reply["sender_id"]] ?? ""}: {reply["body"]}</span>
