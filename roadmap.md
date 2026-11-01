@@ -21,7 +21,7 @@
 ## Package 3b — Closure (prompt: close packages 2+3) + mandatory class groups
 - [x] A Closure log docs/closure-log.md (per item: scope, server test, browser test, evidence, status)
 - [ ] B Package-2 browser journeys (files open/download/denied/expired; substitution cancel across dashboards; pin/comments reopen; upload fail/retry/cancel; 2 children in 2 sections; supervisor assign/unassign/direct-id)
-- [ ] C Org-wide circulars across branches (targeting, preview, versions, reports by branch/role)
+- [x] C Org-wide circulars across branches — server test circ-org-e2e 19/19; browser: owner org-scope draft + preview (publish/ack/report not yet run in browser)
 - [ ] D Attachments in cross-branch groups — built, test missing
 - [x] E Server-side scheduled cleanup of unlinked files
 - [ ] F Communication browser tests (internal, messages, groups, notifications)
@@ -29,3 +29,11 @@
 - [x] H Document signed-link policy after membership removal
 - [x] I Class (section) group auto-created + auto membership (students, assigned teachers)
 - [x] J Teacher roster panel + private teacher↔student chat, draft per conversation, student posting settings
+
+## Package 3c — Close remaining items (prompt: تابع تنفيذ جميع البنود المتبقية)
+- [x] 1 Scoped test cleanup (scripts/lib/test-run.ts) + cleanup-scope-e2e 3/3; notification loss documented
+- [x] 2 Org-wide circulars (server + list/filters/editor/reports UI)
+- [ ] 3 Cross-branch group attachments — browser test
+- [ ] 4 Package-2 remaining browser journeys
+- [ ] 5 Extended communication browser tests
+- [ ] 6 Cleanup scheduler health detection (stale last-run alert) + timing doc
