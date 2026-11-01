@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { BellOff, Archive, Plus, Search } from "lucide-react";
+import { MessagesSquare, BellOff, Archive, Plus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
@@ -116,7 +116,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
   const canStart = ctx.role !== "student" && tab !== "groups";
 
   return (
-    <div className="grid h-[calc(100vh-15rem)] min-h-[28rem] overflow-hidden rounded-2xl border bg-card md:grid-cols-[20rem_1fr]">
+    <div className="grid h-[calc(100dvh-14rem)] min-h-[26rem] overflow-hidden rounded-2xl border bg-card shadow-sm md:grid-cols-[21rem_1fr]">
       <aside className={`flex min-h-0 min-w-0 flex-col border-e ${selected ? "hidden md:flex" : "flex"}`}>
         <div className="space-y-2 border-b p-3">
           <div className="flex gap-2">
@@ -135,8 +135,9 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
                 <option value="">كل الأبناء</option>{children.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             )}
-            <label className="flex items-center gap-1"><input type="checkbox" checked={unreadOnly} onChange={(e) => setUnreadOnly(e.target.checked)} /> غير المقروء</label>
-            <label className="flex items-center gap-1"><input type="checkbox" checked={allSchools} onChange={(e) => setAllSchools(e.target.checked)} /> كل مدارسي</label>
+            <button type="button" aria-pressed={unreadOnly} onClick={() => setUnreadOnly(!unreadOnly)} className={`min-h-8 rounded-full border px-3 font-medium ${unreadOnly ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-muted"}`}>غير المقروء</button>
+            <button type="button" aria-pressed={allSchools} onClick={() => setAllSchools(!allSchools)} className={`min-h-8 rounded-full border px-3 font-medium ${allSchools ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-muted"}`}>كل مدارسي</button>
+            {(kind || child || unreadOnly || allSchools || q) && <button type="button" className="min-h-8 px-2 text-primary underline-offset-2 hover:underline" onClick={() => { setKind(""); setChild(""); setUnreadOnly(false); setAllSchools(false); setQ(""); }}>مسح</button>}
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
@@ -148,7 +149,9 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
             <ul className="divide-y">
               {list.map((c) => (
                 <li key={c["id"]}>
-                  <button onClick={() => onSelect(c["id"])} className={`flex w-full min-w-0 flex-col gap-0.5 p-3 text-start hover:bg-muted ${selected === c["id"] ? "bg-muted" : ""}`}>
+                  <button onClick={() => onSelect(c["id"])} aria-current={selected === c["id"] ? "true" : undefined} className={`relative flex w-full min-w-0 items-start gap-3 p-3 text-start transition-colors hover:bg-muted/60 focus-visible:bg-muted focus-visible:outline-none ${selected === c["id"] ? "bg-sidebar-accent before:absolute before:inset-y-2 before:right-0 before:w-1 before:rounded-l-full before:bg-primary" : ""}`}>
+                    <span aria-hidden className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-bold ${c["kind"] === "group" ? "bg-secondary text-secondary-foreground" : "bg-primary/10 text-primary"}`}>{String(c["title"] ?? "؟").trim().charAt(0)}</span>
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="flex w-full min-w-0 items-center gap-2">
                       <span className={`min-w-0 flex-1 truncate ${c["unread"] ? "font-bold" : "font-medium"}`}>{c["title"]}</span>
                       <span className="shrink-0 text-[11px] text-muted-foreground">{timeLabel(c["last_at"])}</span>
@@ -161,7 +164,8 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
                       {hasDraft(user.id, c["id"]) && selected !== c["id"] && <span className="shrink-0 rounded bg-accent px-1 text-[10px] text-accent-foreground">مسودة</span>}
                       {c["muted"] && <BellOff className="size-3 shrink-0 text-muted-foreground" aria-label="مكتومة" />}
                       {(c["archived"] || c["status"] === "archived") && <Archive className="size-3 shrink-0 text-muted-foreground" aria-label="مؤرشفة" />}
-                      {c["unread"] > 0 && <span className="shrink-0 rounded-full bg-primary px-1.5 text-[10px] font-bold leading-4 text-primary-foreground">{c["unread"]}</span>}
+                      {c["unread"] > 0 && <span className="shrink-0 rounded-full bg-primary px-1.5 text-[10px] font-bold leading-4 text-primary-foreground" aria-label={`${c["unread"]} غير مقروءة`}>{c["unread"]}</span>}
+                    </span>
                     </span>
                   </button>
                 </li>
@@ -180,7 +184,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
         {current ? <Thread key={current["id"]} conv={current} onBack={() => onSelect(undefined)} onChanged={refresh} />
           : selected && convs.isLoading ? <LoadingState />
           : selected ? <div className="p-6"><EmptyState title="المحادثة غير متاحة" hint="ربما أُزلت منها أو لم تعد العلاقة سارية." /><Button className="mt-2 md:hidden" size="sm" onClick={() => onSelect(undefined)}>رجوع</Button></div>
-          : <div className="flex flex-1 items-center justify-center p-6 text-sm text-muted-foreground">اختر محادثة من القائمة</div>}
+          : <div className="flex flex-1 flex-col items-center justify-center gap-2 bg-muted/30 p-6 text-center text-sm text-muted-foreground"><MessagesSquare className="size-10 opacity-40" />اختر محادثة من القائمة لعرض الرسائل</div>}
       </section>
       <NewChatDialog ctx={ctx} open={newOpen} onOpenChange={setNewOpen} onCreated={(id) => { setNewOpen(false); refresh(); onSelect(id); }} />
     </div>
