@@ -49,3 +49,15 @@
 - [x] P6 Cleanup monitoring: independent health check, alert + recovery, dedupe
 - [x] P7 Inventory 19 old test schools + cleanup plan (no deletion of unknown-origin data)
 - [x] P8 Acceptance tests 1–15, permission matrix, closure log
+
+## Package 5 — Homework (brief: docs/homework-package-brief.md)
+- [ ] H1 Review links (courses, assignments, enrollments, guardians, classrooms, files, notifications, archive)
+- [ ] H2 Homework / submission / grading state machines (server-enforced transitions)
+- [ ] H3 Lists: teacher, student, guardian (per child), management
+- [ ] H4 Create form + preview, draft/publish/schedule (server-side scheduling, idempotent notifications)
+- [ ] H5 Post-publish edits, extensions, late policy, attempts
+- [ ] H6 Paper submissions / students without accounts
+- [ ] H7 Submissions + grading screen, result publish/correction
+- [ ] H8 Permissions, transfers, teacher change, archive
+- [ ] H9 Files, notifications, reports
+- [ ] H10 Acceptance tests (server + browser), docs updates
