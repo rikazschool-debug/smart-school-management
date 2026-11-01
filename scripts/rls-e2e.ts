@@ -294,6 +294,23 @@ const osu = await outsider.c.storage.from("rikaz-files").createSignedUrl(fpath, 
 check("outsider cannot sign url", !!osu.error);
 const sneaky = await studU.c.storage.from("rikaz-files").upload(`${S}/sneaky`, new Blob(["x"]));
 check("upload without record rejected", !!sneaky.error);
+// supervisor scope: only assigned teachers and their classes
+const supU = await user("supervisor");
+await owner.c.rpc("invite_member", { _email: supU.email, _school: S, _role: "supervisor" });
+await supU.c.rpc("accept_my_invitations");
+const supSee = async () => ({ st: (await supU.c.from("students").select("id")).data?.length, po: (await supU.c.from("classroom_posts").select("id")).data?.length, sl: (await supU.c.from("timetable_slots").select("id")).data?.length, f: !(await supU.c.storage.from("rikaz-files").createSignedUrl(fpath, 60)).error });
+const sup0 = await supSee();
+check("unassigned supervisor sees no students/posts/slots/files", sup0.st === 0 && sup0.po === 0 && sup0.sl === 0 && !sup0.f, sup0);
+const supSelf = await supU.c.from("supervisor_teachers").insert({ school_id: S, supervisor_user_id: supU.id, teacher_id: teacher.id });
+check("supervisor cannot self-assign", !!supSelf.error);
+const supLink = await ins("supervisor_teachers", { supervisor_user_id: supU.id, teacher_id: teacher.id });
+const sup1 = await supSee();
+check("assigned supervisor sees that teacher's class, students, slots, files", sup1.st === 1 && sup1.po === 1 && (sup1.sl ?? 0) > 0 && sup1.f, sup1);
+const supC = await supU.c.from("post_comments").insert({ post_id: post.data!.id, body: "x", school_id: S });
+check("supervisor cannot comment on class posts", !!supC.error);
+await admin.from("supervisor_teachers").delete().eq("id", supLink.id);
+const sup2 = await supSee();
+check("unassigned again -> access gone", sup2.st === 0 && sup2.po === 0 && sup2.sl === 0 && !sup2.f, sup2);
 // transfer: move student out -> loses access
 await admin.from("enrollments").update({ status: "ended", end_date: "2026-11-02" }).eq("student_id", stu.id);
 const sp2 = await studU.c.from("classroom_posts").select("id");
@@ -319,4 +336,4 @@ await admin.from("invitations").delete().eq("org_id", orgId);
 await admin.from("memberships").delete().eq("org_id", orgId);
 await admin.from("schools").delete().eq("org_id", orgId);
 await admin.from("organizations").delete().eq("id", orgId);
-for (const u of [owner, teacherU, guardU, studU, outsider]) await admin.auth.admin.deleteUser(u.id);
+for (const u of [owner, teacherU, guardU, studU, outsider, supU]) await admin.auth.admin.deleteUser(u.id);
