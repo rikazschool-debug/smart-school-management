@@ -39,3 +39,13 @@
 - [ ] 6 Cleanup scheduler health detection (stale last-run alert) + timing doc
 - [ ] 7 Department-head scope: currently reads the whole school; narrow to own department (needs decision)
 - [ ] 8 Remove 19 leftover test schools from older test runs (needs owner-safe cleanup)
+
+## Package 4 — Permission corrections + closure (prompt: نفّذ حزمة تصحيح الصلاحيات)
+- [ ] P1 Manual groups: create only by org owner (org/branches) or principal (own school); server-enforced; legacy groups handed to authorized admin with audit
+- [ ] P2 Users/roles/invitations: org owner only (invite, revoke, resend, activate/deactivate, role); pending invites from non-owners need owner review; last-owner protection; change audit
+- [ ] P3 Dept head scope: assigned department(s) only; empty state without department; revoke clears cache
+- [ ] P4 Circular publisher identity: org → org name/«إدارة المؤسسة», school → school name; snapshot per version
+- [ ] P5 Extended communication browser tests (section 7 list)
+- [ ] P6 Cleanup monitoring: independent health check, alert + recovery, dedupe
+- [ ] P7 Inventory 19 old test schools + cleanup plan (no deletion of unknown-origin data)
+- [ ] P8 Acceptance tests 1–15, permission matrix, closure log
