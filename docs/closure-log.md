@@ -119,3 +119,9 @@ No defects found, so no fixes or re-runs were needed. The mobile-screen file was
 - Server: scripts/comm-roles-e2e.ts 36/36; comm-e2e 95/95 (updated to subject groups and owner-only member removal); rls-e2e 94/94.
 - Browser: student sees «فصولي ورسائل معلميّ» with tabs مجموعات موادي/رسائل معلميّ/الأرشيف, no new-chat button, ?tab=circulars falls back; guardian sees الوارد/التعاميم/الأرشيف; teacher sees مجموعات موادي/الوارد/محادثاتي الخاصة/مجموعاتي الإدارية/التعاميم/الأرشيف.
 - Legacy: all general section groups archived (comm_audit section_group_archived); past student circular recipients lose read access (comm_audit circular_student_access_revoked); no content deleted.
+
+## 2026-11-01 — Package 7 (part 1: homework completion)
+- Server: homework2-e2e 25/25 (feedback files H11, template copy H12, late joiners H13, export H14); homework-e2e 32/32; cleanup-e2e 11/11; rls-e2e 94/94 re-run after the role-scoped communication change; comm-e2e 95/95; comm-roles-e2e 36/36.
+- Browser: teacher export preview + CSV download ran (demo teacher has 0 homework rows, so content not inspected); homework detail (copy dialog, joiners, feedback upload) not yet exercised in browser — demo teacher has no homework.
+- Security linter: 9 new 'signed-in can execute SECURITY DEFINER' warnings are intentional RPCs (create/remove_feedback_file, copy_homework_template, prepare_template_files, decide_late_joiner, late_joiners, set_homework_join_policy, homework_report, my_class_groups/course_roster); each checks is_course_teacher/hw_staff/hw_family inside and is covered by homework2-e2e/comm-roles-e2e denials. Older 140 warnings not reviewed.
+- Open: unified design system (D1/D2), communication usage fixes + browser journeys (C1/C2), homework browser journeys (H15).

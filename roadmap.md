@@ -76,9 +76,9 @@
 - [ ] D2 Per-button contract register (docs/screens-register.md)
 - [ ] C1 Communication usage fixes per role (archived state, guardian child context/draft warning, admin group wizard)
 - [ ] C2 Communication browser tests 1–12 (mobile + desktop)
-- [ ] H11 Teacher feedback attachments (private until results published)
-- [ ] H12 Copy homework as template with attachments (preview, no dates copied silently)
-- [ ] H13 Late joiners policy for open homework (no unfair lateness)
-- [ ] H14 Homework report export (server-scoped)
+- [x] H11 Teacher feedback attachments (private until results published)
+- [x] H12 Copy homework as template with attachments (preview, no dates copied silently)
+- [x] H13 Late joiners policy for open homework (no unfair lateness)
+- [x] H14 Homework report export (server-scoped)
 - [ ] H15 Homework browser journeys not yet covered
-- [ ] S1 Classify security warnings for changed functions; re-run rls-e2e
+- [x] S1 rls-e2e re-run 94/94; new warnings = signed-in RPCs with internal permission checks (documented)
