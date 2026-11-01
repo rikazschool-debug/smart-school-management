@@ -278,7 +278,6 @@ const ackG = await g1.c.rpc("ack_circular", { _id: circ.data });
 check("non-recipient cannot ack", !!ackG.error);
 // 16 new teacher joins later → not a recipient
 const t4 = await user("t4");
-await owner.from?.("x");
 await ins("teachers", { full_name: "أ. جديد", email: t4.email });
 await join(t4, "teacher");
 const late = await owner.c.rpc("circular_stats", { _id: circ.data });
