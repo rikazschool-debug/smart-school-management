@@ -6,3 +6,5 @@
 - scripts/circ-org-e2e.ts tests org-wide circulars; scripts/cleanup-scope-e2e.ts tests that cleanup stays inside its run.
 - scripts/cleanup-e2e.ts tests run_file_cleanup.
 - scripts/xbranch-files-e2e.ts tests attachments in cross-branch groups.
+- Every test that creates orgs ends with TestRun.purgeOrg(org) (refuses orgs with schools not registered by the run).
+- scripts/perm4-e2e.ts: owner-only users/roles, group creation, dept-head scope, publisher label. scripts/cleanup-monitor-e2e.ts: monitor alerts/recovery on an isolated channel.

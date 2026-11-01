@@ -1,13 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { Send } from "lucide-react";
 import { CrudTable } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { canManageStudents } from "@/lib/roles";
-import { arabicError } from "@/lib/session";
+import { AccountButton } from "@/components/account-button";
 
 export const Route = createFileRoute("/_authenticated/app/guardians")({ component: Page });
 
@@ -33,12 +30,7 @@ function Page() {
             ]}
             extraActions={(r) =>
               canManageStudents(ctx.role) && !r["user_id"] && r["email"] ? (
-                <Button variant="ghost" size="sm" onClick={async () => {
-                  const { error } = await supabase.rpc("invite_member", { _email: r["email"], _school: ctx.schoolId, _role: "guardian" });
-                  if (error) toast.error(arabicError(error)); else toast.success("أُرسلت الدعوة");
-                }}>
-                  <Send className="size-4" /> دعوة
-                </Button>
+                <AccountButton role={ctx.role} kind="guardian" recordId={r["id"]} email={r["email"]} schoolId={ctx.schoolId} />
               ) : null
             } />
         </>

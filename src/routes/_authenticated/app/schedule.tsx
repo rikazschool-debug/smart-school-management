@@ -245,14 +245,10 @@ function Viewer({ ctx }: { ctx: Ctx }) {
   });
   const scope = useQuery({
     queryKey: ["schedule-scope", S, ctx.role, ctx.departmentId, user.id],
-    enabled: ctx.role === "supervisor" || ctx.role === "dept_head",
+    enabled: ctx.role === "supervisor",
     queryFn: async () => {
-      if (ctx.role === "supervisor") {
-        const { data } = await db.from("supervisor_teachers").select("teacher_id").eq("supervisor_user_id", user.id);
-        return ((data ?? []) as Row[]).map((r) => r["teacher_id"] as string);
-      }
-      const { data } = await db.from("teachers").select("id").eq("school_id", S).eq("department_id", ctx.departmentId);
-      return ((data ?? []) as Row[]).map((r) => r["id"] as string);
+      const { data } = await db.from("supervisor_teachers").select("teacher_id").eq("supervisor_user_id", user.id);
+      return ((data ?? []) as Row[]).map((r) => r["teacher_id"] as string);
     },
   });
   const [filter, setFilter] = useState("");
@@ -262,7 +258,8 @@ function Viewer({ ctx }: { ctx: Ctx }) {
   const d = setup.data!;
   let base = slots.data ?? [];
   if (ctx.role === "teacher") base = base.filter((s) => mine.data?.includes(s["teacher_id"]));
-  if (ctx.role === "supervisor" || ctx.role === "dept_head") base = base.filter((s) => scope.data?.includes(s["teacher_id"]));
+  // dept heads: the database already returns only their department's courses (is_dept_course), even when a teacher also teaches elsewhere
+  if (ctx.role === "supervisor") base = base.filter((s) => scope.data?.includes(s["teacher_id"]));
   const subBySlot = new Map((subs.data ?? []).map((x) => [`${x["slot_id"]}|${x["date"]}`, x]));
   const myCover = ctx.role === "teacher" ? (subs.data ?? []).filter((x) => mine.data?.includes(x["substitute_teacher_id"])) : [];
   const allSlots = new Map((slots.data ?? []).map((s) => [s["id"], s]));
@@ -278,6 +275,7 @@ function Viewer({ ctx }: { ctx: Ctx }) {
         {needsFilter && base.length > 0 && <div className="space-y-1"><Label>{ctx.role === "guardian" ? "الابن / الشعبة" : "عرض"}</Label><Filter slots={base} value={filter} onChange={setFilter} sectionsOnly={ctx.role === "guardian"} /></div>}
       </div>
       {(ctx.role === "supervisor" && scope.data?.length === 0) ? <EmptyState title="لم يُسند إليك معلمون بعد" hint="تُسند إدارة المدرسة المعلمين للمشرف من صفحة إعداد اليوم الدراسي." /> :
+        (ctx.role === "dept_head" && !ctx.departmentId) ? <EmptyState title="لم يُسند إليك قسم بعد" hint="يحدد مالك المؤسسة قسمك من المستخدمين والأدوار." /> :
         !cur.data ? <EmptyState title="لا يوجد جدول منشور ساري لهذا التاريخ" /> :
         slots.isLoading ? <LoadingState /> : !base.length ? <EmptyState title="لا توجد حصص ضمن صلاحيتك في هذا الجدول" /> : (
           <WeekGrid

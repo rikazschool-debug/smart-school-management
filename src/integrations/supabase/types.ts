@@ -55,6 +55,139 @@ export type Database = {
           },
         ]
       }
+      access_audit: {
+        Row: {
+          action: string
+          actor: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          id: string
+          org_id: string
+          reason: string | null
+          school_id: string | null
+          target_invitation: string | null
+          target_membership: string | null
+          target_user: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+          org_id: string
+          reason?: string | null
+          school_id?: string | null
+          target_invitation?: string | null
+          target_membership?: string | null
+          target_user?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+          org_id?: string
+          reason?: string | null
+          school_id?: string | null
+          target_invitation?: string | null
+          target_membership?: string | null
+          target_user?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_audit_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_audit_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          email: string
+          full_name: string | null
+          id: string
+          invitation_id: string | null
+          kind: string
+          note: string | null
+          org_id: string
+          record_id: string
+          requested_by: string
+          school_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          invitation_id?: string | null
+          kind: string
+          note?: string | null
+          org_id: string
+          record_id: string
+          requested_by: string
+          school_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          invitation_id?: string | null
+          kind?: string
+          note?: string | null
+          org_id?: string
+          record_id?: string
+          requested_by?: string
+          school_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_requests_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       circular_acks: {
         Row: {
           acked_at: string
@@ -150,6 +283,7 @@ export type Database = {
           id: string
           published_at: string
           published_by: string
+          publisher_label: string | null
           requires_ack: boolean
           scope: string | null
           target_schools: string[] | null
@@ -164,6 +298,7 @@ export type Database = {
           id?: string
           published_at?: string
           published_by: string
+          publisher_label?: string | null
           requires_ack: boolean
           scope?: string | null
           target_schools?: string[] | null
@@ -178,6 +313,7 @@ export type Database = {
           id?: string
           published_at?: string
           published_by?: string
+          publisher_label?: string | null
           requires_ack?: boolean
           scope?: string | null
           target_schools?: string[] | null
@@ -379,6 +515,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cleanup_alerts: {
+        Row: {
+          channel: string
+          details: Json
+          id: string
+          kind: string
+          last_checked_at: string
+          opened_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          channel?: string
+          details?: Json
+          id?: string
+          kind: string
+          last_checked_at?: string
+          opened_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          channel?: string
+          details?: Json
+          id?: string
+          kind?: string
+          last_checked_at?: string
+          opened_at?: string
+          resolved_at?: string | null
+        }
+        Relationships: []
       }
       comm_audit: {
         Row: {
@@ -856,34 +1022,43 @@ export type Database = {
       }
       file_cleanup_runs: {
         Row: {
+          channel: string
           delete_requests: number
           failed: number
+          finished_at: string | null
           id: string
           marked: number
           note: string | null
           rows_removed: number
           skipped_linked: number
           started_at: string
+          status: string
         }
         Insert: {
+          channel?: string
           delete_requests?: number
           failed?: number
+          finished_at?: string | null
           id?: string
           marked?: number
           note?: string | null
           rows_removed?: number
           skipped_linked?: number
           started_at?: string
+          status?: string
         }
         Update: {
+          channel?: string
           delete_requests?: number
           failed?: number
+          finished_at?: string | null
           id?: string
           marked?: number
           note?: string | null
           rows_removed?: number
           skipped_linked?: number
           started_at?: string
+          status?: string
         }
         Relationships: []
       }
@@ -1076,8 +1251,11 @@ export type Database = {
           expires_at: string
           id: string
           invited_by: string
+          needs_review: boolean
           org_id: string
           resent_count: number
+          reviewed_at: string | null
+          reviewed_by: string | null
           revoked_at: string | null
           role: Database["public"]["Enums"]["app_role"]
           school_id: string | null
@@ -1091,8 +1269,11 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by: string
+          needs_review?: boolean
           org_id: string
           resent_count?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           revoked_at?: string | null
           role: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
@@ -1106,8 +1287,11 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by?: string
+          needs_review?: boolean
           org_id?: string
           resent_count?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           revoked_at?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
@@ -2487,6 +2671,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _access_audit: {
+        Args: {
+          _action: string
+          _after: Json
+          _before: Json
+          _inv: string
+          _mem: string
+          _org: string
+          _reason: string
+          _school: string
+          _user: string
+        }
+        Returns: undefined
+      }
       _add_member: {
         Args: {
           _conv: string
@@ -2520,6 +2718,10 @@ export type Database = {
         Args: { _home: string; _org: string; _scope: string }
         Returns: boolean
       }
+      _can_create_group: {
+        Args: { _org: string; _school: string }
+        Returns: boolean
+      }
       _circ_audience_multi: {
         Args: { _aud: Json; _targets: string[] }
         Returns: {
@@ -2530,6 +2732,10 @@ export type Database = {
       _circ_branch_viewer: {
         Args: { _c: string; _school: string }
         Returns: boolean
+      }
+      _circ_label: {
+        Args: { _org: string; _school: string; _scope: string }
+        Returns: string
       }
       _circ_targets: {
         Args: {
@@ -2566,6 +2772,10 @@ export type Database = {
         }[]
       }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
+      _invite_valid: {
+        Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
+        Returns: boolean
+      }
       _notify: {
         Args: {
           _body: string
@@ -2673,6 +2883,19 @@ export type Database = {
         Args: { _id: string; _reason: string }
         Returns: undefined
       }
+      change_member_role: {
+        Args: {
+          _department?: string
+          _id: string
+          _reason?: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
+      check_cleanup_health: {
+        Args: { _channel?: string; _notify_to?: string[]; _now?: string }
+        Returns: Json
+      }
       circular_stats: {
         Args: { _id: string }
         Returns: {
@@ -2708,6 +2931,7 @@ export type Database = {
           ref_id: string
         }[]
       }
+      cleanup_health: { Args: never; Returns: Json }
       conv_access_ok: { Args: { _conv: string }; Returns: boolean }
       conv_send_block: { Args: { _conv: string }; Returns: string }
       conversation_people: {
@@ -2778,6 +3002,10 @@ export type Database = {
         Args: { _date: string; _school: string }
         Returns: string
       }
+      decide_account_request: {
+        Args: { _approve: boolean; _id: string; _note?: string }
+        Returns: string
+      }
       decide_assignment: {
         Args: { _approve: boolean; _id: string; _note?: string }
         Returns: undefined
@@ -2792,6 +3020,7 @@ export type Database = {
         Returns: undefined
       }
       delete_message: { Args: { _id: string }; Returns: undefined }
+      dept_teacher_ids: { Args: never; Returns: string[] }
       edit_message: { Args: { _body: string; _id: string }; Returns: undefined }
       end_assignment: { Args: { _id: string }; Returns: undefined }
       ensure_classroom: { Args: { _course: string }; Returns: string }
@@ -2845,6 +3074,7 @@ export type Database = {
       }
       is_conv_member: { Args: { _conv: string }; Returns: boolean }
       is_course_teacher: { Args: { _course: string }; Returns: boolean }
+      is_dept_course: { Args: { _course: string }; Returns: boolean }
       is_guardian_of: { Args: { _student: string }; Returns: boolean }
       is_org_owner: { Args: { _org: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
@@ -2896,6 +3126,7 @@ export type Database = {
           unread: number
         }[]
       }
+      my_dept_ids: { Args: never; Returns: string[] }
       my_teacher_ids: { Args: never; Returns: string[] }
       open_circular: { Args: { _id: string }; Returns: undefined }
       pin_message: { Args: { _id: string; _pin: boolean }; Returns: undefined }
@@ -2943,6 +3174,10 @@ export type Database = {
       }
       report_message: {
         Args: { _file?: string; _message: string; _reason: string }
+        Returns: string
+      }
+      request_account: {
+        Args: { _kind: string; _record: string }
         Returns: string
       }
       resend_invitation: { Args: { _id: string }; Returns: string }
@@ -3029,6 +3264,10 @@ export type Database = {
       }
       set_member_prefs: {
         Args: { _archived: boolean; _conv: string; _muted: boolean }
+        Returns: undefined
+      }
+      set_membership_active: {
+        Args: { _active: boolean; _id: string; _reason?: string }
         Returns: undefined
       }
       staff_directory: {

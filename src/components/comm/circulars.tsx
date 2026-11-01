@@ -91,6 +91,16 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
   const qc = useQueryClient();
   const perm = useQuery({ queryKey: ["circ-can", c["id"]], queryFn: async () => !!(await db.rpc("can_manage_circular", { _c: c["id"] })).data });
   const manager = !!perm.data;
+  // the actual person behind the publishing body is shown only to those allowed to manage this circular
+  const actual = useQuery({
+    queryKey: ["circ-publisher", c["id"], c["version"]], enabled: manager && c["status"] !== "draft",
+    queryFn: async () => {
+      const { data: v } = await db.from("circular_versions").select("published_by").eq("circular_id", c["id"]).eq("version", c["version"]).maybeSingle();
+      if (!v) return null;
+      const { data: p } = await db.from("profiles").select("full_name, email").eq("id", (v as Row)["published_by"]).maybeSingle();
+      return ((p as Row | null)?.["full_name"] || (p as Row | null)?.["email"]) ?? null;
+    },
+  });
   const [busy, setBusy] = useState(false);
   const files = useFiles(c["id"]);
   const mine = (c["circular_recipients"] as Row[]).find((r) => r["user_id"] === me);
@@ -103,7 +113,7 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
     <article className="space-y-3 rounded-2xl border bg-card p-4">
       <Button size="sm" variant="ghost" onClick={onBack}>→ كل التعاميم</Button>
       <h2 className="text-xl font-bold">{c["title"]}</h2>
-      <p className="text-xs text-muted-foreground">{c["publisher_label"]} • {PRIORITY_LABEL[c["priority"]]} • {STATUS[c["status"]]} • الإصدار {c["version"] || "—"}{c["ack_due"] ? ` • موعد الإقرار ${c["ack_due"]}` : ""}</p>
+      <p className="text-xs text-muted-foreground">{c["publisher_label"]}{actual.data ? ` (نشره: ${actual.data})` : ""} • {PRIORITY_LABEL[c["priority"]]} • {STATUS[c["status"]]} • الإصدار {c["version"] || "—"}{c["ack_due"] ? ` • موعد الإقرار ${c["ack_due"]}` : ""}</p>
       {mine && c["version"] > (mine["first_version"] ?? 1) && <p className="rounded-md bg-muted p-2 text-xs">تغيّر محتوى هذا التعميم منذ استلامك له (الإصدار الحالي {c["version"]}).{acked ? "" : mine["ack_required_version"] === c["version"] ? " هذا الإصدار يتطلب إقرارًا جديدًا." : ""}</p>}
       <div className="text-sm"><SafeText text={c["body"]} /></div>
       {files.data && files.data.length > 0 && (
@@ -221,18 +231,18 @@ function Stats({ id, title }: { id: string; title: string }) {
 }
 
 function Versions({ id }: { id: string }) {
-  const q = useQuery({ queryKey: ["circ-versions", id], queryFn: async () => ((await db.from("circular_versions").select("version, title, body, published_at, requires_ack").eq("circular_id", id).order("version", { ascending: false })).data ?? []) as Row[] });
+  const q = useQuery({ queryKey: ["circ-versions", id], queryFn: async () => ((await db.from("circular_versions").select("version, title, body, published_at, requires_ack, publisher_label").eq("circular_id", id).order("version", { ascending: false })).data ?? []) as Row[] });
   if (!q.data || q.data.length < 2) return null;
   return (
     <details className="text-sm"><summary className="cursor-pointer font-semibold">الإصدارات السابقة ({q.data.length})</summary>
-      <ul className="mt-2 space-y-2">{q.data.map((v) => <li key={v["version"]} className="rounded border p-2"><b>الإصدار {v["version"]}</b> — {new Date(v["published_at"]).toLocaleString("ar")}<p className="font-semibold">{v["title"]}</p><p className="whitespace-pre-wrap text-muted-foreground">{v["body"]}</p></li>)}</ul>
+      <ul className="mt-2 space-y-2">{q.data.map((v) => <li key={v["version"]} className="rounded border p-2"><b>الإصدار {v["version"]}</b> — {new Date(v["published_at"]).toLocaleString("ar")}{v["publisher_label"] ? ` — ${v["publisher_label"]}` : ""}<p className="font-semibold">{v["title"]}</p><p className="whitespace-pre-wrap text-muted-foreground">{v["body"]}</p></li>)}</ul>
     </details>
   );
 }
 
 function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId: string }; initial: Row; onDone: () => void }) {
   const a = (initial["audience"] ?? {}) as Row;
-  const [v, setV] = useState({ title: initial["title"] ?? "", body: initial["body"] ?? "", publisher: initial["publisher_label"] ?? "إدارة المدرسة", priority: initial["priority"] ?? "normal", requires_ack: !!initial["requires_ack"], ack_due: initial["ack_due"] ?? "" });
+  const [v, setV] = useState({ title: initial["title"] ?? "", body: initial["body"] ?? "", priority: initial["priority"] ?? "normal", requires_ack: !!initial["requires_ack"], ack_due: initial["ack_due"] ?? "" });
   const [roles, setRoles] = useState<string[]>(a["roles"] ?? []);
   const [depts, setDepts] = useState<string[]>(a["departments"] ?? []);
   const [groups, setGroups] = useState<string[]>(a["groups"] ?? []);
@@ -249,7 +259,7 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
   const audience = { roles, departments: depts, groups, users };
   const toggle = (arr: string[], set: (x: string[]) => void, x: string) => set(arr.includes(x) ? arr.filter((y) => y !== x) : [...arr, x]);
   async function save() {
-    const { data, error } = await db.rpc("save_circular", { _id: id, _school: ctx.schoolId, _title: v.title, _body: v.body, _publisher: v.publisher, _priority: v.priority, _requires_ack: v.requires_ack, _ack_due: v.ack_due || null, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
+    const { data, error } = await db.rpc("save_circular", { _id: id, _school: ctx.schoolId, _title: v.title, _body: v.body, _publisher: null, _priority: v.priority, _requires_ack: v.requires_ack, _ack_due: v.ack_due || null, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
     if (error) { toast.error(arabicError(error)); return null; }
     setId(data); return data as string;
   }
@@ -259,7 +269,7 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="space-y-1 sm:col-span-2"><Label htmlFor="ct">العنوان</Label><Input id="ct" value={v.title} onChange={(e) => setV({ ...v, title: e.target.value })} /></div>
         <div className="space-y-1 sm:col-span-2"><Label htmlFor="cb">المحتوى</Label><Textarea id="cb" rows={6} value={v.body} onChange={(e) => setV({ ...v, body: e.target.value })} /></div>
-        <div className="space-y-1"><Label htmlFor="cp">الجهة الناشرة</Label><Input id="cp" value={v.publisher} onChange={(e) => setV({ ...v, publisher: e.target.value })} /></div>
+        <div className="space-y-1"><Label htmlFor="cp">الجهة الناشرة</Label><Input id="cp" readOnly value={scope === "school" ? `إدارة المدرسة — ${ctx.schoolName}` : `إدارة المؤسسة — ${ctx.orgName}`} /><p className="text-xs text-muted-foreground">تُحدَّد تلقائيًا من النطاق، ولا يمكن النشر باسم جهة أخرى.</p></div>
         <div className="space-y-1"><Label htmlFor="cpr">الأولوية</Label><select id="cpr" className={sel} value={v.priority} onChange={(e) => setV({ ...v, priority: e.target.value })}>{Object.entries(PRIORITY_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
         <label className="flex items-center gap-2"><input type="checkbox" checked={v.requires_ack} onChange={(e) => setV({ ...v, requires_ack: e.target.checked })} /> يتطلب إقرار اطلاع</label>
         {v.requires_ack && <div className="space-y-1"><Label htmlFor="cd">موعد الإقرار</Label><Input id="cd" type="date" value={v.ack_due} onChange={(e) => setV({ ...v, ack_due: e.target.value })} /></div>}

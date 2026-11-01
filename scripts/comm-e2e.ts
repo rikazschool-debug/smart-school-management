@@ -42,7 +42,7 @@ for (const o of orgs) {
   await admin.from("schools").delete().eq("org_id", o);
   await admin.from("organizations").delete().eq("id", o);
 }
-{ const tr = new TestRun(admin, "comm-e2e"); uids.forEach((u) => tr.addUser(u)); for (const o of orgs) { const { data: ss } = await admin.from("schools").select("id").eq("org_id", o); (ss ?? []).forEach((x) => tr.addSchool(x.id)); } await tr.deleteNotifications(); }
+{ const tr = new TestRun(admin, "comm-e2e"); uids.forEach((u) => tr.addUser(u)); for (const o of orgs) { const { data: ss } = await admin.from("schools").select("id").eq("org_id", o); (ss ?? []).forEach((x) => tr.addSchool(x.id)); } await tr.deleteNotifications(); for (const o of orgs) await tr.purgeOrg(o); }
 for (const u of uids) await admin.auth.admin.deleteUser(u);
 }
 
@@ -197,8 +197,11 @@ const oobG = await t2.c.rpc("add_group_members", { _conv: G, _users: [g1.id] });
 check("2 moderator cannot add outside scope / guardians", !!oob.error && !!oobG.error, [oob, oobG]);
 const sendG = await t1.c.rpc("send_message", { _conv: G, _body: "رسالة قديمة قبل انضمام نايف", _client_id: uuid() });
 await new Promise((r) => setTimeout(r, 1100));
-const addT3 = await t2.c.rpc("add_group_members", { _conv: G, _users: [t3.id] });
-check("moderator adds in-scope member", addT3.data === 1, addT3);
+// adding members is administrative: a group moderator is refused, the organization owner adds
+const modAdd = await t2.c.rpc("add_group_members", { _conv: G, _users: [t3.id] });
+check("group moderator cannot add members (owner/principal only)", !!modAdd.error, modAdd);
+const addT3 = await owner.c.rpc("add_group_members", { _conv: G, _users: [t3.id] });
+check("owner adds in-scope member", addT3.data === 1, addT3);
 await t1.c.rpc("send_message", { _conv: G, _body: "بعد الانضمام", _client_id: uuid() });
 const h3 = await t3.c.from("messages").select("body").eq("conversation_id", G);
 check("5 new member sees only messages since joining", h3.data?.length === 1 && h3.data[0].body === "بعد الانضمام", h3);

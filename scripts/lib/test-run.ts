@@ -41,4 +41,27 @@ export class TestRun {
     }
     return ids.length;
   }
+
+  /** Remove an organization created by this run, with all school data. Refuses unless every school
+   *  of the org was registered by this run. Repeats passes because triggers can re-create derived rows. */
+  async purgeOrg(orgId: string) {
+    const { data: ss } = await this.admin.from("schools").select("id").eq("org_id", orgId);
+    const ids = (ss ?? []).map((x) => x.id as string);
+    const foreign = ids.filter((id) => !this.schools.has(id));
+    if (foreign.length) throw new Error(`[${this.label} ${this.id}] refusing purge of org ${orgId}: schools not created by this run: ${foreign.join(",")}`);
+    const bySchool = ["files", "post_comments", "classroom_posts", "substitutions", "teacher_absences", "timetable_slots", "timetables", "teacher_unavailability", "supervisor_teachers", "rooms", "periods", "school_day_settings", "file_policies",
+      "circulars", "comm_settings", "classrooms", "enrollments", "student_guardians", "teacher_assignments", "courses", "students", "guardians", "teachers", "subjects", "departments", "sections", "grades", "stages", "terms", "academic_years"];
+    let last = "";
+    for (let pass = 0; pass < 3; pass++) {
+      for (const t of ["comm_audit", "message_reports", "conversations", "account_requests", "access_audit", "invitations"]) await this.admin.from(t).delete().eq("org_id", orgId);
+      for (const id of ids) for (const t of bySchool) await this.admin.from(t).delete().eq("school_id", id);
+      await this.admin.from("memberships").delete().eq("org_id", orgId);
+      const r = await this.admin.from("schools").delete().eq("org_id", orgId);
+      const o = r.error ? r : await this.admin.from("organizations").delete().eq("id", orgId);
+      if (!o.error) { last = ""; break; }
+      last = o.error.details ?? o.error.message;
+    }
+    if (last) console.log(`[cleanup ${this.label} ${this.id}] org ${orgId} not fully removed: ${last}`);
+    return !last;
+  }
 }

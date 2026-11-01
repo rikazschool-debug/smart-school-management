@@ -10,6 +10,7 @@ import { arabicError, type AppContext } from "@/lib/session";
 import { GROUP_TYPE_LABEL, ROLE_AR } from "@/lib/comm";
 import { MemberPicker, useStaffDirectory } from "@/components/comm/member-picker";
 import { GroupPanel } from "@/components/comm/group-panel";
+import { canCreateGroup } from "@/lib/roles";
 
 const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
 
@@ -18,12 +19,12 @@ export function ManageTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        {([["groups", "المجموعات"], ["new", "إنشاء مجموعة"], ["reports", "البلاغات"], ["settings", "إعدادات التواصل"]] as const).map(([k, l]) => (
+        {([["groups", "المجموعات"], ...(canCreateGroup(ctx.role) ? [["new", "إنشاء مجموعة"]] as const : []), ["reports", "البلاغات"], ["settings", "إعدادات التواصل"]] as const).map(([k, l]) => (
           <Button key={k} size="sm" variant={view === k ? "default" : "outline"} onClick={() => setView(k)}>{l}</Button>
         ))}
       </div>
       {view === "groups" && <GroupsList ctx={ctx} />}
-      {view === "new" && <GroupWizard ctx={ctx} onDone={() => setView("groups")} />}
+      {view === "new" && canCreateGroup(ctx.role) && <GroupWizard ctx={ctx} onDone={() => setView("groups")} />}
       {view === "settings" && <CommSettings schoolId={ctx.schoolId} />}
       {view === "reports" && <Reports ctx={ctx} />}
     </div>
@@ -42,7 +43,7 @@ function GroupsList({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   });
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} />;
-  if (!q.data?.length) return <EmptyState title="لا توجد مجموعات بعد" hint="أنشئ لجنة أو فريق عمل من «إنشاء مجموعة»." />;
+  if (!q.data?.length) return <EmptyState title="لا توجد مجموعات بعد" hint={canCreateGroup(ctx.role) ? "أنشئ لجنة أو فريق عمل من «إنشاء مجموعة»." : "إنشاء المجموعات لمالك المؤسسة أو مدير المدرسة."} />;
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">تظهر لك هنا بيانات المجموعات وأعضاؤها للإدارة. محتوى الرسائل لا يظهر إلا إذا كنت عضوًا فيها.</p>
@@ -61,7 +62,7 @@ function GroupsList({ ctx }: { ctx: AppContext & { schoolId: string } }) {
 
 function GroupWizard({ ctx, onDone }: { ctx: AppContext & { schoolId: string }; onDone: () => void }) {
   const qc = useQueryClient();
-  const canCross = ctx.role === "org_owner" || ctx.role === "platform_admin";
+  const canCross = ctx.role === "org_owner"; // principals stay inside their own school (server: _can_create_group)
   const [step, setStep] = useState(1);
   const [key] = useState(() => crypto.randomUUID());
   const [v, setV] = useState({ title: "", description: "", scope: "school" as "school" | "org", group_type: "committee", membership_mode: "manual", department: "", post_policy: "all", allow_attachments: true, history_policy: "from_join", expires_at: "", year: "" });
@@ -187,7 +188,6 @@ function CommSettings({ schoolId }: { schoolId: string }) {
       toast.success("حُفظت إعدادات التواصل"); q.refetch(); setV(null);
     }}>
       <label className="flex items-center gap-2"><input type="checkbox" checked={cur["staff_direct_enabled"]} onChange={(e) => setV({ ...cur, staff_direct_enabled: e.target.checked })} /> السماح بالرسائل الخاصة بين الموظفين (مجموعات العمل تبقى متاحة دائمًا)</label>
-      <label className="flex items-center gap-2"><input type="checkbox" checked={cur["dept_head_groups"]} onChange={(e) => setV({ ...cur, dept_head_groups: e.target.checked })} /> تفويض رؤساء الأقسام بإنشاء مجموعة قسمهم</label>
       <div className="flex items-center gap-2"><Label htmlFor="ew">مهلة تعديل/حذف الرسالة لصاحبها (دقائق)</Label><Input id="ew" type="number" min={0} max={1440} className="w-24" value={cur["edit_window_minutes"]} onChange={(e) => setV({ ...cur, edit_window_minutes: e.target.value })} /></div>
       <fieldset><legend className="font-medium">الجهات الإدارية التي يستطيع ولي الأمر مراسلتها</legend>
         <div className="mt-1 flex flex-wrap gap-3">{roles.map((r) => (
