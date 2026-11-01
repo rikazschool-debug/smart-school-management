@@ -23,6 +23,34 @@ async function user(tag: string) {
   return { c, email, id: s.data.user!.id };
 }
 const uuid = () => crypto.randomUUID();
+async function cleanup(orgs: string[], uids: string[]) {
+for (const o of orgs) {
+  const { data: ss } = await admin.from("schools").select("id").eq("org_id", o);
+  for (const { id: sid } of ss ?? []) {
+    await admin.from("circulars").delete().eq("school_id", sid);
+    await admin.from("comm_audit").delete().eq("org_id", o);
+    await admin.from("message_reports").delete().eq("org_id", o);
+    await admin.from("conversations").delete().eq("org_id", o);
+    await admin.from("comm_settings").delete().eq("school_id", sid);
+    await admin.from("notifications").delete().eq("school_id", sid);
+    await admin.from("files").delete().eq("school_id", sid);
+    await admin.from("classrooms").delete().eq("school_id", sid);
+    for (const t of ["enrollments", "student_guardians", "teacher_assignments", "courses", "students", "guardians", "teachers", "subjects", "departments", "sections", "grades", "stages", "academic_years"]) await admin.from(t).delete().eq("school_id", sid);
+  }
+  await admin.from("invitations").delete().eq("org_id", o);
+  await admin.from("memberships").delete().eq("org_id", o);
+  await admin.from("schools").delete().eq("org_id", o);
+  await admin.from("organizations").delete().eq("id", o);
+}
+if (uids.length) await admin.from("notifications").delete().in("user_id", uids);
+for (const u of uids) await admin.auth.admin.deleteUser(u);
+}
+
+{ // remove leftovers of an interrupted earlier run
+  const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const old = (list?.users ?? []).filter((u) => u.email?.startsWith("c2e-")).map((u) => u.id);
+  if (old.length) { const { data: os } = await admin.from("organizations").select("id").in("created_by", old); await cleanup((os ?? []).map((o) => o.id), old); }
+}
 
 const owner = await user("owner"), t1 = await user("t1"), t2 = await user("t2"), t3 = await user("t3"), g1 = await user("g1"), g2 = await user("g2"),
   stud = await user("stud"), other = await user("other");
@@ -43,6 +71,8 @@ const subS = await ins("subjects", { name: "علوم", department_id: sci.id });
 const T1 = await ins("teachers", { full_name: "أ. خالد", email: t1.email, department_id: math.id });
 const T2 = await ins("teachers", { full_name: "أ. سالم", email: t2.email, department_id: sci.id });
 const T3 = await ins("teachers", { full_name: "أ. نايف", email: t3.email, department_id: sci.id });
+const G1 = await ins("guardians", { full_name: "أبو سارة", email: g1.email });
+const G2 = await ins("guardians", { full_name: "أم سارة", email: g2.email });
 for (const u of [t1, t2, t3]) await join(u, "teacher");
 await join(g1, "guardian"); await join(g2, "guardian"); await join(stud, "student");
 const cA = await ins("courses", { year_id: year.id, subject_id: subM.id, section_id: secA.id });
@@ -53,9 +83,6 @@ await owner.c.rpc("decide_assignment", { _id: aA.id, _approve: true });
 await owner.c.rpc("decide_assignment", { _id: aB.id, _approve: true });
 const s1 = await ins("students", { full_name: "سارة", email: stud.email });
 const s2 = await ins("students", { full_name: "ريم" });
-const G1 = await ins("guardians", { full_name: "أبو سارة", email: g1.email });
-const G2 = await ins("guardians", { full_name: "أم سارة", email: g2.email });
-await g1.c.rpc("accept_my_invitations"); await g2.c.rpc("accept_my_invitations");
 for (const [st, gg] of [[s1, G1], [s2, G1], [s1, G2]] as const) {
   const l = await ins("student_guardians", { student_id: st.id, guardian_id: gg.id, relationship: "parent" });
   await owner.c.rpc("verify_guardian_link", { _id: l.id });
@@ -300,26 +327,6 @@ const ocs = await other.c.rpc("circular_stats", { _id: circ.data });
 check("20 other org cannot read stats", !!ocs.error);
 
 console.log(`\n${ok} passed, ${bad} failed`);
-// cleanup
 await admin.storage.from("rikaz-files").remove([fpath]);
-for (const o of [orgId, orgB]) {
-  const { data: ss } = await admin.from("schools").select("id").eq("org_id", o);
-  for (const { id: sid } of ss ?? []) {
-    await admin.from("circulars").delete().eq("school_id", sid);
-    await admin.from("comm_audit").delete().eq("org_id", o);
-    await admin.from("message_reports").delete().eq("org_id", o);
-    await admin.from("conversations").delete().eq("org_id", o);
-    await admin.from("comm_settings").delete().eq("school_id", sid);
-    await admin.from("notifications").delete().eq("school_id", sid);
-    await admin.from("files").delete().eq("school_id", sid);
-    await admin.from("classrooms").delete().eq("school_id", sid);
-    for (const t of ["enrollments", "student_guardians", "teacher_assignments", "courses", "students", "guardians", "teachers", "subjects", "departments", "sections", "grades", "stages", "academic_years"]) await admin.from(t).delete().eq("school_id", sid);
-  }
-  await admin.from("invitations").delete().eq("org_id", o);
-  await admin.from("memberships").delete().eq("org_id", o);
-  await admin.from("schools").delete().eq("org_id", o);
-  await admin.from("organizations").delete().eq("id", o);
-}
-await admin.from("notifications").delete().in("user_id", users);
-for (const u of users) await admin.auth.admin.deleteUser(u);
+await cleanup([orgId, orgB], users);
 process.exit(bad ? 1 : 0);
