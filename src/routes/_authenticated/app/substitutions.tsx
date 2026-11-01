@@ -10,8 +10,9 @@ import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ExportButtons } from "@/components/list-tools";
 import { arabicError, type AppContext } from "@/lib/session";
-import { DAY_NAMES, todayISO, useCurrentTimetable, useSlots } from "@/lib/schedule";
+import { DAY_NAMES, slotLabel, todayISO, useCurrentTimetable, useSlots } from "@/lib/schedule";
 
 export const Route = createFileRoute("/_authenticated/app/substitutions")({ component: Page });
 
@@ -59,6 +60,13 @@ function Subs({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="space-y-1"><Label htmlFor="d">التاريخ</Label><Input id="d" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
         <span className="pb-2 text-sm text-muted-foreground">{DAY_NAMES[dow]} — {todays.length} حصة في الجدول الساري — {uncovered.length} بلا تغطية</span>
+        {(subs.data?.length ?? 0) + (absences.data?.length ?? 0) > 0 && <ExportButtons title={`تقرير التبديل — ${date}`} school={ctx.schoolName} filters={[`التاريخ: ${date}`]}
+          headers={["المعلم الغائب", "الحصة", "المادة", "الشعبة", "البديل", "الحالة", "السبب"]}
+          rows={() => todays.filter((sl) => absentIds.has(sl["teacher_id"])).flatMap((sl) => {
+            const l = slotLabel(sl); const hist = (subs.data ?? []).filter((x) => x["slot_id"] === sl["id"]);
+            const base = [l.teacher, sl["periods"]?.name ?? "", l.subject, l.section];
+            return hist.length ? hist.map((x) => [...base, x["teachers"]?.full_name ?? "", x["status"] === "active" ? "فعّال" : "ملغى", x["status"] === "active" ? x["reason"] ?? "" : x["cancel_reason"] ?? ""]) : [[...base, "", "بلا تغطية", ""]];
+          })} />}
       </div>
       {cur.isLoading ? <LoadingState /> : !cur.data ? <EmptyState title="لا يوجد جدول منشور ساري لهذا التاريخ" /> : (
         <>

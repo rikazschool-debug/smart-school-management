@@ -10,6 +10,7 @@ import { WeekGrid } from "@/components/week-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ExportButtons } from "@/components/list-tools";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { canEditSchedule } from "@/lib/roles";
@@ -47,6 +48,11 @@ function Filter({ slots, value, onChange, sectionsOnly }: { slots: Row[]; value:
       {!sectionsOnly && <optgroup label="المعلمون">{tchs.map(([id, n]) => <option key={id} value={"t:" + id}>{n || "معلم"}</option>)}</optgroup>}
     </select>
   );
+}
+function ScheduleExport({ rows, school, title, week, subBySlot }: { rows: Row[]; school: string; title: string; week?: string[]; subBySlot?: Map<string, Row> }) {
+  const sorted = [...rows].sort((a, b) => a["day"] - b["day"] || String(a["periods"]?.start_time ?? "").localeCompare(String(b["periods"]?.start_time ?? "")));
+  return <ExportButtons title={title} school={school} headers={["اليوم", "الحصة", "المادة", "الشعبة", "المعلم", "البديل", "القاعة"]}
+    rows={() => sorted.map((s) => { const l = slotLabel(s); const sub = week && subBySlot?.get(`${s["id"]}|${week[s["day"]]}`); return [DAY_NAMES[s["day"]], s["periods"]?.name ?? "", l.subject, l.section, l.teacher, sub ? (sub["teachers"]?.full_name ?? "بديل") : "", l.room ?? ""]; })} />;
 }
 const applyFilter = (slots: Row[], f: string) =>
   !f ? slots : f.startsWith("s:") ? slots.filter((s) => s["section_id"] === f.slice(2)) : slots.filter((s) => s["teacher_id"] === f.slice(2));
@@ -147,6 +153,7 @@ function Manager({ ctx }: { ctx: Ctx }) {
               }}>نسخة تعديل</Button>
             )}
             <span className="text-sm text-muted-foreground">{slots.data?.length ?? 0} حصة{isDraft ? " — انقر خانة فارغة لإضافة حصة" : ""}</span>
+            <ScheduleExport rows={shown} school={ctx.schoolName} title={`الجدول المدرسي — ${tt["status"] === "draft" ? "مسودة" : "إصدار " + (tt["version"] ?? "")}`} />
           </div>
           {slots.isLoading ? <LoadingState /> : (
             <WeekGrid
@@ -274,6 +281,7 @@ function Viewer({ ctx }: { ctx: Ctx }) {
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="space-y-1"><Label htmlFor="dt">الأسبوع الذي يتضمن</Label><Input id="dt" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
         {needsFilter && base.length > 0 && <div className="space-y-1"><Label>{ctx.role === "guardian" ? "الابن / الشعبة" : "عرض"}</Label><Filter slots={base} value={filter} onChange={setFilter} sectionsOnly={ctx.role === "guardian"} /></div>}
+        {cur.data && shown.length > 0 && <ScheduleExport rows={shown} school={ctx.schoolName} title={`${title} — أسبوع ${week[0]}`} week={week} subBySlot={subBySlot} />}
       </div>
       {(ctx.role === "supervisor" && scope.data?.length === 0) ? <EmptyState title="لم يُسند إليك معلمون بعد" hint="تُسند إدارة المدرسة المعلمين للمشرف من صفحة إعداد اليوم الدراسي." /> :
         (ctx.role === "dept_head" && !ctx.departmentId) ? <EmptyState title="لم يُسند إليك قسم بعد" hint="يحدد مالك المؤسسة قسمك من المستخدمين والأدوار." /> :

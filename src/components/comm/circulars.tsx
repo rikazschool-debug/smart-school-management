@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, Paperclip } from "lucide-react";
 import { db, useOptions, type Row } from "@/components/crud-page";
+import { ExportButtons } from "@/components/list-tools";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,11 @@ export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { scho
         <Input aria-label="من تاريخ" type="date" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} />
         <Input aria-label="إلى تاريخ" type="date" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} />
       </div>
+      {list.length > 0 && <div className="flex flex-wrap items-center gap-2"><span className="text-xs text-muted-foreground">{list.length} تعميم</span>
+        <ExportButtons title="التعاميم" school={ctx.schoolName} filters={[f.q && `بحث: ${f.q}`, f.status && `الحالة: ${STATUS[f.status]}`, f.scope && `النطاق: ${SCOPE[f.scope]}`, f.from && `من ${f.from}`, f.to && `إلى ${f.to}`].filter(Boolean) as string[]}
+          headers={["العنوان", "الجهة", "الحالة", "النطاق", "تاريخ النشر", "المستهدفون", "فتحوا"]}
+          rows={() => list.map((c) => { const r = (c["circular_recipients"] ?? []) as Row[]; return [c["title"], c["publisher_label"] ?? "", STATUS[c["status"]] ?? c["status"], SCOPE[c["scope"]] ?? c["scope"], String(c["published_at"] ?? "").slice(0, 10), r.length, r.filter((x) => x["opened_at"]).length]; })} />
+      </div>}
       {q.isLoading ? <LoadingState /> : q.error ? <div className="space-y-2"><ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div> : !list.length ? <EmptyState title={q.data?.length ? "لا توجد تعاميم مطابقة للتصفية" : "لا توجد تعاميم"} /> : (
         <ul className="space-y-2">
           {list.map((c) => {
@@ -211,6 +217,9 @@ function Stats({ id, title }: { id: string; title: string }) {
         <select aria-label="تصفية حسب الدور" className={sel + " w-auto"} value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}><option value="">كل الأدوار</option>{rolesSet.map((r) => <option key={r} value={r}>{ROLE_AR[r] ?? r}</option>)}</select>
         <select aria-label="تصفية حسب الإصدار المُقر به" className={sel + " w-auto"} value={f.version} onChange={(e) => setF({ ...f, version: e.target.value })}><option value="">كل الإصدارات</option>{[...new Set(all.map((r) => r["acked_version"]).filter((x) => x != null))].map((v) => <option key={v} value={String(v)}>الإصدار {v}</option>)}</select>
         <Button size="sm" variant="outline" onClick={exportCsv}>تصدير CSV</Button>
+        <ExportButtons title={`تقرير التعميم — ${title}`} headers={["الاسم", "الفرع", "الدور", "مؤهل حاليًا", "الفتح", "الإقرار"]}
+          filters={[f.branch && `الفرع: ${branches.find(([k]) => k === f.branch)?.[1] ?? ""}`, f.role && `الدور: ${ROLE_AR[f.role] ?? f.role}`, f.version && `الإصدار: ${f.version}`].filter(Boolean) as string[]}
+          rows={() => filtered.map((r) => [r["full_name"], r["school_name"], String(r["role"] ?? "").split(",").map((x) => ROLE_AR[x] ?? x).join("، "), r["eligible"] ? "نعم" : "لا", r["opened_at"] ? new Date(r["opened_at"]).toLocaleString("ar") : "", ackText(r)])} />
       </div>
       <div className="max-h-72 overflow-auto rounded-lg border">
         <table className="w-full text-xs">
