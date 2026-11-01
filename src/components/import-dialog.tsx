@@ -9,7 +9,6 @@ import { db, type Row } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { arabicError } from "@/lib/session";
-import { safeCell } from "@/lib/export";
 
 export type ImportKind = "students" | "teachers";
 type Col = { h: string; key: string; required?: boolean; hint: string };
@@ -42,6 +41,9 @@ const SPEC: Record<ImportKind, { title: string; cols: Col[]; sample: string[] }>
 export function downloadTemplate(kind: ImportKind) {
   const s = SPEC[kind];
   const ws = XLSX.utils.aoa_to_sheet([s.cols.map((c) => c.h), s.sample]);
+  // text format on the data area (rows 2–1001) so IDs/phones keep leading zeros when typed in Excel
+  for (let r = 1; r <= 1000; r++) s.cols.forEach((_, c) => { const a = XLSX.utils.encode_cell({ r, c }); ws[a] = ws[a] ?? { t: "s", v: "" }; ws[a].z = "@"; });
+  ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: 1000, c: s.cols.length - 1 } });
   ws["!cols"] = s.cols.map(() => ({ wch: 24 }));
   const help = XLSX.utils.aoa_to_sheet([["العمود", "الوصف"], ...s.cols.map((c) => [c.h, c.hint])]);
   const wb = XLSX.utils.book_new();
@@ -49,6 +51,23 @@ export function downloadTemplate(kind: ImportKind) {
   XLSX.utils.book_append_sheet(wb, ws, "البيانات");
   XLSX.utils.book_append_sheet(wb, help, "تعليمات");
   XLSX.writeFile(wb, `قالب-${s.title}.xlsx`);
+}
+
+/** Reads the first sheet without evaluating anything. Formula cells inside the data range are reported (row/column)
+ *  and must be replaced by fixed values — a cached formula result is never trusted silently. */
+export function readSheet(buf: ArrayBuffer): { rows: Row[]; formulas: string[] } {
+  const wb = XLSX.read(buf, { type: "array", cellFormula: true, cellHTML: false, cellDates: false, bookVBA: false });
+  const ws = wb.Sheets[wb.SheetNames[0]!]!;
+  const formulas: string[] = [];
+  const range = XLSX.utils.decode_range(ws["!ref"] ?? "A1");
+  const head = Array.from({ length: range.e.c + 1 }, (_, c) => String(ws[XLSX.utils.encode_cell({ r: 0, c })]?.v ?? ""));
+  for (let r = 1; r <= range.e.r; r++) for (let c = 0; c <= range.e.c; c++) {
+    const cell = ws[XLSX.utils.encode_cell({ r, c })];
+    if (cell?.f) formulas.push(`السطر ${r + 1}، عمود «${head[c] || XLSX.utils.encode_col(c)}»`);
+  }
+  // w = displayed text: keeps leading zeros of text cells; numbers come as typed
+  const rows = XLSX.utils.sheet_to_json<Row>(ws, { defval: "", raw: false, dateNF: "yyyy-mm-dd" });
+  return { rows, formulas };
 }
 
 export type Checked = { line: number; data: Row; errors: string[]; section_id?: string | null; department_id?: string | null };
@@ -99,9 +118,8 @@ export function ImportButton({ kind, schoolId }: { kind: ImportKind; schoolId: s
     reset(); setBusy(true);
     try {
       if (f.size > 2 * 1024 * 1024) throw new Error("الملف أكبر من 2 ميجابايت");
-      const wb = XLSX.read(await f.arrayBuffer(), { type: "array", cellDates: false, raw: false });
-      const ws = wb.Sheets[wb.SheetNames[0]!]!;
-      const raw = XLSX.utils.sheet_to_json<Row>(ws, { defval: "", raw: false, dateNF: "yyyy-mm-dd" });
+      const { rows: raw, formulas } = readSheet(await f.arrayBuffer());
+      if (formulas.length) throw new Error(`الملف يحتوي صيغًا؛ استبدلها بقيم ثابتة ثم أعد الرفع: ${formulas.slice(0, 5).join(" · ")}${formulas.length > 5 ? ` (+${formulas.length - 5})` : ""}`);
       const missing = s.cols.filter((c) => c.required && !(raw[0] && c.h in raw[0])).map((c) => c.h);
       if (!raw.length) throw new Error("الملف لا يحتوي صفوف بيانات");
       if (missing.length) throw new Error(`أعمدة مطلوبة مفقودة: ${missing.join("، ")} — استخدم القالب`);
@@ -145,7 +163,7 @@ export function ImportButton({ kind, schoolId }: { kind: ImportKind; schoolId: s
 
   function downloadReport() {
     if (!results) return;
-    const ws = XLSX.utils.aoa_to_sheet([["السطر", "الاسم", "النتيجة", "التفاصيل"], ...results.map((r) => [r.line, safeCell(r.name), r.ok ? "ناجح" : "مرفوض", safeCell(r.msg)])]);
+    const ws = XLSX.utils.aoa_to_sheet([["السطر", "الاسم", "النتيجة", "التفاصيل"], ...results.map((r) => [r.line, r.name, r.ok ? "ناجح" : "مرفوض", r.msg])]);
     const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] };
     XLSX.utils.book_append_sheet(wb, ws, "النتائج");
     XLSX.writeFile(wb, `نتائج-استيراد-${s.title}.xlsx`);
