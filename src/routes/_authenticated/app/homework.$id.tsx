@@ -233,9 +233,9 @@ function LateJoiners({ h }: { h: Row }) {
         <ul className="divide-y text-sm">
           {q.data.map((r) => (
             <li key={r["student_id"]} className="flex flex-wrap items-center gap-2 py-2">
-              <span className="min-w-0 flex-1">{r["full_name"]} <span className="text-xs text-muted-foreground">· انضم {schoolTime(r["joined_at"])} · {JS[r["join_status"]]}{r["join_status"] === "added" ? ` · موعده ${schoolTime(r["due"])}` : ""}</span></span>
+              <span className="w-full min-w-0">{r["full_name"]} <span className="text-xs text-muted-foreground">· انضم {schoolTime(r["joined_at"])} · {JS[r["join_status"]]}{r["join_status"] === "added" ? ` · موعده ${schoolTime(r["due"])}` : ""}</span></span>
               {r["join_status"] === "pending" && (<>
-                <Input type="datetime-local" className="w-56" aria-label={`موعد ${r["full_name"]}`} value={due[r["student_id"]] ?? ""} onChange={(e) => setDue({ ...due, [r["student_id"]]: e.target.value })} />
+                <Input type="datetime-local" className="w-full sm:w-56" aria-label={`موعد ${r["full_name"]}`} value={due[r["student_id"]] ?? ""} onChange={(e) => setDue({ ...due, [r["student_id"]]: e.target.value })} />
                 <Button size="sm" disabled={!due[r["student_id"]]} onClick={async () => { const { error } = await db.rpc("decide_late_joiner", { _hw: h["id"], _student: r["student_id"], _approve: true, _due: fromLocalInput(due[r["student_id"]]!) }); if (error) toast.error(arabicError(error)); else { toast.success("أُلحق الطالب وأُبلغ"); refresh(); } }}>إلحاق</Button>
                 <Button size="sm" variant="ghost" onClick={async () => { const { error } = await db.rpc("decide_late_joiner", { _hw: h["id"], _student: r["student_id"], _approve: false, _due: null }); if (error) toast.error(arabicError(error)); else refresh(); }}>عدم الإلحاق</Button>
               </>)}
