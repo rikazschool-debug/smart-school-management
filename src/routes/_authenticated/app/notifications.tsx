@@ -36,7 +36,7 @@ function Page() {
                 className={`w-full rounded-xl border p-4 text-start transition hover:bg-muted ${n["read_at"] ? "bg-card" : "border-primary/40 bg-primary/5"}`}
                 onClick={async () => {
                   if (!n["read_at"]) await markRead([n["id"]]);
-                  if (n["link"]) navigate({ to: n["link"] });
+                  if (n["link"]) navigate({ href: n["link"] });
                 }}
               >
                 <div className="flex items-center justify-between gap-2">
