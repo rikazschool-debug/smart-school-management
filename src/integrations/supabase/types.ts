@@ -1270,6 +1270,8 @@ export type Database = {
           grading_notes: string | null
           id: string
           instructions: string
+          join_days: number
+          join_policy: string
           late_policy: string
           late_until: string | null
           max_attempts: number
@@ -1304,6 +1306,8 @@ export type Database = {
           grading_notes?: string | null
           id?: string
           instructions?: string
+          join_days?: number
+          join_policy?: string
           late_policy?: string
           late_until?: string | null
           max_attempts?: number
@@ -1338,6 +1342,8 @@ export type Database = {
           grading_notes?: string | null
           id?: string
           instructions?: string
+          join_days?: number
+          join_policy?: string
           late_policy?: string
           late_until?: string | null
           max_attempts?: number
@@ -1752,6 +1758,8 @@ export type Database = {
           extend_reason: string | null
           extended_due: string | null
           homework_id: string
+          join_status: string | null
+          joined_at: string | null
           removed_at: string | null
           removed_reason: string | null
           reopened: boolean
@@ -1763,6 +1771,8 @@ export type Database = {
           extend_reason?: string | null
           extended_due?: string | null
           homework_id: string
+          join_status?: string | null
+          joined_at?: string | null
           removed_at?: string | null
           removed_reason?: string | null
           reopened?: boolean
@@ -1774,6 +1784,8 @@ export type Database = {
           extend_reason?: string | null
           extended_due?: string | null
           homework_id?: string
+          join_status?: string | null
+          joined_at?: string | null
           removed_at?: string | null
           removed_reason?: string | null
           reopened?: boolean
@@ -3581,6 +3593,16 @@ export type Database = {
         }[]
       }
       copy_homework: { Args: { _course: string; _id: string }; Returns: string }
+      copy_homework_template: {
+        Args: {
+          _available_from: string
+          _course: string
+          _due_at: string
+          _id: string
+          _title: string
+        }
+        Returns: string
+      }
       correct_result: {
         Args: {
           _criteria: Json
@@ -3605,6 +3627,13 @@ export type Database = {
       }
       create_circular_file: {
         Args: { _circular: string; _mime: string; _name: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
+      create_feedback_file: {
+        Args: { _grade: string; _mime: string; _name: string; _size: number }
         Returns: {
           id: string
           storage_path: string
@@ -3680,6 +3709,10 @@ export type Database = {
       }
       decide_assignment: {
         Args: { _approve: boolean; _id: string; _note?: string }
+        Returns: undefined
+      }
+      decide_late_joiner: {
+        Args: { _approve: boolean; _due: string; _hw: string; _student: string }
         Returns: undefined
       }
       decide_report: {
@@ -3767,6 +3800,10 @@ export type Database = {
           unpublished: number
         }[]
       }
+      homework_report: {
+        Args: { _course: string; _kind: string }
+        Returns: Json
+      }
       hw_family: { Args: { _hw: string; _student: string }; Returns: boolean }
       hw_staff: { Args: { _hw: string }; Returns: boolean }
       hw_state: { Args: { _hw: string; _student: string }; Returns: Json }
@@ -3807,6 +3844,16 @@ export type Database = {
       is_supervised_course: { Args: { _course: string }; Returns: boolean }
       is_supervised_student: { Args: { _student: string }; Returns: boolean }
       is_teacher_of_student: { Args: { _student: string }; Returns: boolean }
+      late_joiners: {
+        Args: { _hw: string }
+        Returns: {
+          due: string
+          full_name: string
+          join_status: string
+          joined_at: string
+          student_id: string
+        }[]
+      }
       leave_group: { Args: { _conv: string }; Returns: undefined }
       mark_conversation_read: {
         Args: { _conv: string; _seq: number }
@@ -3859,6 +3906,14 @@ export type Database = {
       my_teacher_ids: { Args: never; Returns: string[] }
       open_circular: { Args: { _id: string }; Returns: undefined }
       pin_message: { Args: { _id: string; _pin: boolean }; Returns: undefined }
+      prepare_template_files: {
+        Args: { _files: string[]; _new: string }
+        Returns: {
+          dst_path: string
+          file_id: string
+          src_path: string
+        }[]
+      }
       preview_circular_audience: {
         Args: {
           _aud: Json
@@ -3900,6 +3955,7 @@ export type Database = {
         Returns: string
       }
       remind_circular_ack: { Args: { _id: string }; Returns: number }
+      remove_feedback_file: { Args: { _file: string }; Returns: undefined }
       remove_group_member: {
         Args: { _conv: string; _user: string }
         Returns: undefined
