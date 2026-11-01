@@ -66,7 +66,15 @@ try {
 } catch (e) { bad++; console.error(e); }
 finally {
   if (paths.length) await admin.storage.from("rikaz-files").remove(paths);
-  await tr.cleanup?.(orgs);
+  for (const o of orgs) {
+    const { data: ss } = await admin.from("schools").select("id").eq("org_id", o);
+    for (const { id } of ss ?? []) { await admin.from("files").delete().eq("school_id", id); await admin.from("comm_settings").delete().eq("school_id", id); }
+    await admin.from("comm_audit").delete().eq("org_id", o);
+    await admin.from("conversations").delete().eq("org_id", o);
+  }
+  await tr.deleteNotifications();
+  for (const o of orgs) { await admin.from("invitations").delete().eq("org_id", o); await admin.from("memberships").delete().eq("org_id", o); await admin.from("schools").delete().eq("org_id", o); await admin.from("organizations").delete().eq("id", o); }
+  for (const u of tr.users) await admin.auth.admin.deleteUser(u);
 }
 console.log(`\n${ok} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);
