@@ -66,6 +66,7 @@ async function setup() {
   const st = await ins("students", { full_name: "طالبة التجربة", email: stud.email });
   const link = await ins("student_guardians", { student_id: st.id, guardian_id: G.id, relationship: "parent" });
   await owner.c.rpc("verify_guardian_link", { _id: link.id });
+  await admin.from("students").update({ user_id: stud.id }).eq("id", st.id);
   await owner.c.from("enrollments").insert({ student_id: st.id, section_id: sec.id, year_id: year.id, school_id: S });
   const fam = await t1.c.rpc("start_family_conversation", { _student: st.id, _guardian: G.id, _staff_user: t1.id });
   if (fam.error) throw fam.error;
