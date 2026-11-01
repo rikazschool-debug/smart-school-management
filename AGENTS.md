@@ -27,7 +27,7 @@
 - scripts/comm-e2e.ts is the communication permission test: `NODE_PATH=node_modules bun scripts/comm-e2e.ts`; run it with rls-e2e after any change to communication SQL.
 - Teacher↔student private chats are kind='student' (dedupe 'student:<student>:<teacher>'), started only by the teacher via start_student_conversation and gated by _student_ok; guardians are never added — student privacy and no student↔student chats.
 - Report review rights come from comm_settings.report_reviewer_roles via _report_reviewer (org owner only for cross-branch groups); never widen to all managers or platform admins.
-- Unlinked files are removed only by run_file_cleanup (pg_cron hourly → pg_net → Storage API, credentials in Vault); scripts/cleanup-e2e.ts is its test. Never delete storage.objects rows directly (leaves orphaned blobs).
+- Unlinked files are removed only by run_file_cleanup (pg_cron hourly → pg_net → Storage API, credentials in Vault). Never delete storage.objects rows directly.
 - docs/closure-log.md: per-item status log; update with new evidence.
 
 - scripts/ has its own AGENTS.md (test suites and cleanup rules) — read it before changing files there.
