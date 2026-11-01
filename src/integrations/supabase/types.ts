@@ -516,6 +516,36 @@ export type Database = {
           },
         ]
       }
+      cleanup_alerts: {
+        Row: {
+          channel: string
+          details: Json
+          id: string
+          kind: string
+          last_checked_at: string
+          opened_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          channel?: string
+          details?: Json
+          id?: string
+          kind: string
+          last_checked_at?: string
+          opened_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          channel?: string
+          details?: Json
+          id?: string
+          kind?: string
+          last_checked_at?: string
+          opened_at?: string
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
       comm_audit: {
         Row: {
           action: string
@@ -992,34 +1022,43 @@ export type Database = {
       }
       file_cleanup_runs: {
         Row: {
+          channel: string
           delete_requests: number
           failed: number
+          finished_at: string | null
           id: string
           marked: number
           note: string | null
           rows_removed: number
           skipped_linked: number
           started_at: string
+          status: string
         }
         Insert: {
+          channel?: string
           delete_requests?: number
           failed?: number
+          finished_at?: string | null
           id?: string
           marked?: number
           note?: string | null
           rows_removed?: number
           skipped_linked?: number
           started_at?: string
+          status?: string
         }
         Update: {
+          channel?: string
           delete_requests?: number
           failed?: number
+          finished_at?: string | null
           id?: string
           marked?: number
           note?: string | null
           rows_removed?: number
           skipped_linked?: number
           started_at?: string
+          status?: string
         }
         Relationships: []
       }
@@ -2853,6 +2892,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_cleanup_health: {
+        Args: { _channel?: string; _notify_to?: string[]; _now?: string }
+        Returns: Json
+      }
       circular_stats: {
         Args: { _id: string }
         Returns: {
@@ -2888,6 +2931,7 @@ export type Database = {
           ref_id: string
         }[]
       }
+      cleanup_health: { Args: never; Returns: Json }
       conv_access_ok: { Args: { _conv: string }; Returns: boolean }
       conv_send_block: { Args: { _conv: string }; Returns: string }
       conversation_people: {
