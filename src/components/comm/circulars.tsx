@@ -37,7 +37,7 @@ export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { scho
   });
   const { data: auth } = useQuery({ queryKey: ["me"], queryFn: async () => (await db.auth.getUser()).data.user });
   const me = auth?.id;
-  const schools = useSchools(ctx.orgId);
+  const schools = useSchools(ctx.orgId ?? undefined);
   const [f, setF] = useState({ q: "", status: "", scope: "", branch: "", from: "", to: "" });
   const list = (q.data ?? []).filter((c) => (!f.q || `${c["title"]} ${c["publisher_label"]}`.includes(f.q)) && (!f.status || c["status"] === f.status) && (!f.scope || c["scope"] === f.scope)
     && (!f.branch || (c["target_schools"] as string[] ?? []).includes(f.branch)) && (!f.from || (c["published_at"] ?? c["created_at"]) >= f.from) && (!f.to || (c["published_at"] ?? c["created_at"]).slice(0, 10) <= f.to));
@@ -243,7 +243,7 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
   const [scope, setScope] = useState<string>(initial["scope"] ?? "school");
   const [targets, setTargets] = useState<string[]>(initial["scope"] === "branches" ? initial["target_schools"] ?? [] : []);
   const [step, setStep] = useState(1);
-  const schools = useSchools(ctx.orgId);
+  const schools = useSchools(ctx.orgId ?? undefined);
   const deptOpts = useOptions("departments", "name", ctx.schoolId);
   const groupOpts = useQuery({ queryKey: ["circ-groups", ctx.schoolId], queryFn: async () => ((await db.from("conversations").select("id, title").eq("kind", "group").eq("school_id", ctx.schoolId).eq("status", "active")).data ?? []) as Row[] });
   const files = useFiles(id ?? "none");
