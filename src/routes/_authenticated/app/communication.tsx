@@ -9,7 +9,7 @@ import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { arabicError, type AppContext } from "@/lib/session";
-import { commTabs, type CommTab } from "@/lib/roles";
+import { commTabs, commTabLabel, commTitle, type CommTab } from "@/lib/roles";
 import { KIND_LABEL, timeLabel } from "@/lib/comm";
 import { Thread } from "@/components/comm/thread";
 import { NewChatDialog } from "@/components/comm/new-chat";
@@ -31,7 +31,6 @@ export const Route = createFileRoute("/_authenticated/app/communication")({
   component: Page,
 });
 
-const TAB_LABEL: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي", groups: "مجموعاتي", classes: "فصولي", circulars: "التعاميم", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
 
 function Page() {
   return <RequireSchool nav="communication">{(ctx) => <Comm ctx={ctx} />}</RequireSchool>;
@@ -45,11 +44,11 @@ function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const go = (s: Search) => navigate({ search: s, replace: false });
   return (
     <>
-      <PageHeader title="التواصل" desc="محادثات الأسر والزملاء والمجموعات والتعاميم. لا يطّلع أحد على محادثة لست طرفًا فيها." />
+      <PageHeader {...commTitle(ctx.role)} />
       <div className="mb-4 flex gap-1 overflow-x-auto border-b pb-px" role="tablist">
         {tabs.map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => go({ tab: t })}
-            className={`shrink-0 rounded-t-lg px-3 py-2 text-sm ${tab === t ? "border-b-2 border-primary font-semibold text-primary" : "text-muted-foreground hover:text-foreground"}`}>{TAB_LABEL[t]}</button>
+            className={`shrink-0 rounded-t-lg px-3 py-2 text-sm ${tab === t ? "border-b-2 border-primary font-semibold text-primary" : "text-muted-foreground hover:text-foreground"}`}>{commTabLabel(ctx.role, t)}</button>
         ))}
       </div>
       {tab === "circulars" ? <CircularsTab ctx={ctx} focus={search.circular} onFocus={(id) => go(id ? { tab: "circulars", circular: id } : { tab: "circulars" })} />
@@ -99,13 +98,16 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
     if (tab === "archive" ? !archived : archived) return false;
     if (tab === "mine" && c["kind"] === "group") return false;
     if (tab === "groups" && c["kind"] !== "group") return false;
+    // subject/section groups live in their own tab; students' inbox holds only chats with their teachers
+    if (tab !== "archive" && c["kind"] === "group" && (c["group_type"] === "course" || c["group_type"] === "section")) return false;
+    if (ctx.role === "student" && c["kind"] !== "student" && c["kind"] !== "group") return false;
     if (kind && c["kind"] !== kind) return false;
     if (unreadOnly && !c["unread"]) return false;
     if (q.trim() && !`${c["title"]} ${c["student_name"] ?? ""}`.includes(q.trim()) && !hits.data?.some((h) => h["conversation_id"] === c["id"])) return false;
     return true;
   }), [convs.data, tab, kind, unreadOnly, q, hits.data]);
   const current = (convs.data ?? []).find((c) => c["id"] === selected);
-  const canStart = ctx.role !== "student";
+  const canStart = ctx.role !== "student" && tab !== "groups";
 
   return (
     <div className="grid h-[calc(100vh-15rem)] min-h-[28rem] overflow-hidden rounded-2xl border bg-card md:grid-cols-[20rem_1fr]">
