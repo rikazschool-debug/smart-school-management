@@ -206,6 +206,7 @@ const na = await t3.c.from("notifications").select("id").like("dedupe_key", "grp
 check("added member notified", na.data?.length === 1, na);
 // 4 removed member
 const fileRec = await t1.c.rpc("create_message_file", { _conv: G, _name: "جدول.pdf", _mime: "application/pdf", _size: 9 });
+if (fileRec.error) console.log("create_message_file", fileRec.error);
 const fpath = fileRec.data?.[0]?.storage_path;
 const fid = fileRec.data?.[0]?.id;
 // 12 failure first: sending with a file whose upload never completed
