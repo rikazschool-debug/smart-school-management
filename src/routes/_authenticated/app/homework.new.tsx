@@ -13,7 +13,7 @@ import { LATE_LABEL, TYPE_LABEL, fromLocalInput, schoolTime, toLocalInput } from
 
 export const Route = createFileRoute("/_authenticated/app/homework/new")({
   head: () => ({ meta: [{ title: "إعداد واجب — ركاز" }, { name: "description", content: "إنشاء واجب أو تعديل مسودته." }] }),
-  validateSearch: (s: Record<string, unknown>) => ({ edit: (s["edit"] as string) || undefined }),
+  validateSearch: (s: Record<string, unknown>): { edit?: string } => (s["edit"] ? { edit: String(s["edit"]) } : {}),
   component: Page,
 });
 

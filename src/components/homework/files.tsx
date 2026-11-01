@@ -11,11 +11,11 @@ const BUCKET = "rikaz-files";
 /** Opens a private file through a 60-second signed URL (storage RLS checks can_read_file). */
 export async function openFile(f: Row) {
   const { data, error } = await db.storage.from(BUCKET).createSignedUrl(f["storage_path"], 60, { download: f["name"] });
-  if (error) return toast.error("تعذر فتح الملف أو ليست لديك صلاحية");
+  if (error) { toast.error("تعذر فتح الملف أو ليست لديك صلاحية"); return; }
   window.open(data.signedUrl, "_blank", "noopener");
 }
 
-export function FileList({ files, onRemove }: { files: Row[]; onRemove?: (f: Row) => void }) {
+export function FileList({ files, onRemove }: { files: Row[]; onRemove?: ((f: Row) => void) | undefined }) {
   if (!files.length) return null;
   return (
     <ul className="space-y-1 text-sm">
@@ -42,7 +42,7 @@ export function Uploader({ create, onDone, release, label = "إرفاق ملف" 
   const ac = useRef<AbortController | null>(null);
   async function go(f: File) {
     let rec: { id: string; storage_path: string };
-    try { rec = await create(f); } catch (e) { return toast.error(arabicError(e)); }
+    try { rec = await create(f); } catch (e) { toast.error(arabicError(e)); return; }
     setBusy(f.name);
     ac.current = new AbortController();
     const r = await uploadObject(rec.storage_path, f, ac.current.signal);

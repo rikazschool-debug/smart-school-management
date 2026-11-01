@@ -12,7 +12,7 @@ import { HW_STATUS, SUB_STATUS, schoolTime, statusTone } from "@/lib/homework";
 
 export const Route = createFileRoute("/_authenticated/app/homework/")({
   head: () => ({ meta: [{ title: "الواجبات — ركاز" }, { name: "description", content: "قائمة الواجبات والتسليمات والنتائج." }] }),
-  validateSearch: (s: Record<string, unknown>) => ({ course: (s["course"] as string) || undefined }),
+  validateSearch: (s: Record<string, unknown>): { course?: string } => (s["course"] ? { course: String(s["course"]) } : {}),
   component: Page,
 });
 

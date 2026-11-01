@@ -15,7 +15,7 @@ import { HW_STATUS, LATE_LABEL, SUB_STATUS, TYPE_LABEL, fromLocalInput, safeHref
 
 export const Route = createFileRoute("/_authenticated/app/homework/$id")({
   head: () => ({ meta: [{ title: "تفاصيل الواجب — ركاز" }, { name: "description", content: "تعليمات الواجب والتسليم والتصحيح والنتائج." }] }),
-  validateSearch: (s: Record<string, unknown>) => ({ student: (s["student"] as string) || undefined }),
+  validateSearch: (s: Record<string, unknown>): { student?: string } => (s["student"] ? { student: String(s["student"]) } : {}),
   component: Page,
 });
 
@@ -273,7 +273,7 @@ function StudentPanel({ h }: { h: Row }) {
     try {
       if (!(await saveDraft(true))) return;
       const { error } = await db.rpc("submit_homework", { _hw: h["id"], _client: clientId });
-      if (error) return toast.error(arabicError(error));
+      if (error) { toast.error(arabicError(error)); return; }
       toast.success("تم استلام التسليم من الخادم");
       setBody(null); setLink(null); refresh();
     } finally { setBusy(false); }

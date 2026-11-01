@@ -104,7 +104,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
   );
 }
 
-function StudentReview({ h, r, editable, prev, next, refresh }: { h: Row; r: Row; editable: boolean; prev?: () => void; next?: () => void; refresh: () => void }) {
+function StudentReview({ h, r, editable, prev, next, refresh }: { h: Row; r: Row; editable: boolean; prev?: (() => void) | undefined; next?: (() => void) | undefined; refresh: () => void }) {
   const crit = (h["criteria"] ?? []) as Row[];
   const g = r["grade"];
   const [score, setScore] = useState<string>(g?.["score"]?.toString() ?? "");
