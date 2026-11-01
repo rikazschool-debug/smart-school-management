@@ -91,6 +91,16 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
   const qc = useQueryClient();
   const perm = useQuery({ queryKey: ["circ-can", c["id"]], queryFn: async () => !!(await db.rpc("can_manage_circular", { _c: c["id"] })).data });
   const manager = !!perm.data;
+  // the actual person behind the publishing body is shown only to those allowed to manage this circular
+  const actual = useQuery({
+    queryKey: ["circ-publisher", c["id"], c["version"]], enabled: manager && c["status"] !== "draft",
+    queryFn: async () => {
+      const { data: v } = await db.from("circular_versions").select("published_by").eq("circular_id", c["id"]).eq("version", c["version"]).maybeSingle();
+      if (!v) return null;
+      const { data: p } = await db.from("profiles").select("full_name, email").eq("id", (v as Row)["published_by"]).maybeSingle();
+      return ((p as Row | null)?.["full_name"] || (p as Row | null)?.["email"]) ?? null;
+    },
+  });
   const [busy, setBusy] = useState(false);
   const files = useFiles(c["id"]);
   const mine = (c["circular_recipients"] as Row[]).find((r) => r["user_id"] === me);
@@ -103,7 +113,7 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
     <article className="space-y-3 rounded-2xl border bg-card p-4">
       <Button size="sm" variant="ghost" onClick={onBack}>→ كل التعاميم</Button>
       <h2 className="text-xl font-bold">{c["title"]}</h2>
-      <p className="text-xs text-muted-foreground">{c["publisher_label"]} • {PRIORITY_LABEL[c["priority"]]} • {STATUS[c["status"]]} • الإصدار {c["version"] || "—"}{c["ack_due"] ? ` • موعد الإقرار ${c["ack_due"]}` : ""}</p>
+      <p className="text-xs text-muted-foreground">{c["publisher_label"]}{actual.data ? ` (نشره: ${actual.data})` : ""} • {PRIORITY_LABEL[c["priority"]]} • {STATUS[c["status"]]} • الإصدار {c["version"] || "—"}{c["ack_due"] ? ` • موعد الإقرار ${c["ack_due"]}` : ""}</p>
       {mine && c["version"] > (mine["first_version"] ?? 1) && <p className="rounded-md bg-muted p-2 text-xs">تغيّر محتوى هذا التعميم منذ استلامك له (الإصدار الحالي {c["version"]}).{acked ? "" : mine["ack_required_version"] === c["version"] ? " هذا الإصدار يتطلب إقرارًا جديدًا." : ""}</p>}
       <div className="text-sm"><SafeText text={c["body"]} /></div>
       {files.data && files.data.length > 0 && (
