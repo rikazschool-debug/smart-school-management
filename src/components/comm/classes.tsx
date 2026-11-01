@@ -86,7 +86,7 @@ export function ClassesTab({ ctx }: { ctx: AppContext & { schoolId: string } }) 
           {!student && <Button size="sm" variant="outline" className="md:hidden" onClick={() => setRoster(true)}><Users className="size-4" /> الطلاب</Button>}
         </div>
       </div>
-      <div className={`grid h-[calc(100dvh-18rem)] min-h-[26rem] overflow-hidden rounded-2xl border bg-card shadow-sm ${student ? "" : "md:grid-cols-[1fr_17rem]"}`}>
+      <div className={`grid h-[calc(100dvh-21rem)] min-h-[26rem] overflow-hidden rounded-2xl border bg-card shadow-sm ${student ? "" : "md:grid-cols-[1fr_17rem]"}`}>
         <section className="flex min-h-0 min-w-0 flex-col">
           {open && open !== g?.["conversation_id"] && (
             <button className="border-b bg-muted/50 px-3 py-1.5 text-start text-xs text-primary underline" onClick={() => setOpen(g?.["conversation_id"] ?? null)}>العودة إلى مجموعة المادة</button>
