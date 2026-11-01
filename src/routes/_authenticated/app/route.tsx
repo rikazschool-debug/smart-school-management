@@ -83,7 +83,7 @@ function Shell() {
         <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">ر</span>
         <div className="min-w-0">
           <p className="font-display text-xl leading-none text-foreground">ركاز</p>
-          <p className="mt-1 truncate text-xs text-muted-foreground">{active.schoolName}</p>
+          <p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{active.schoolName}</p>
         </div>
       </div>
       <div className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
