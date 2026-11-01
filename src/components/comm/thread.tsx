@@ -119,7 +119,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-bold">{conv["title"]}</h2>
           <p className="truncate text-xs text-muted-foreground">
-            {conv["group_type"] === "section" ? "مجموعة الفصل" : KIND_LABEL[conv["kind"]]}{conv["section_label"] && conv["kind"] === "student" ? ` • ${conv["section_label"]}` : ""}{conv["kind"] === "student" ? "" : ""}{conv["student_name"] && conv["kind"] !== "student" ? ` • بشأن الطالب: ${conv["student_name"]}` : ""}{conv["counterpart"] ? ` • ${conv["counterpart"]}` : ""}{conv["school_name"] ? ` • ${conv["school_name"]}` : " • عابرة للفروع"}
+            {conv["group_type"] === "section" ? "مجموعة الفصل" : KIND_LABEL[conv["kind"]]}{conv["section_label"] && conv["kind"] === "student" ? ` • ${conv["section_label"]}` : ""}{conv["student_name"] && conv["kind"] !== "student" ? ` • بشأن الطالب: ${conv["student_name"]}` : ""}{conv["counterpart"] ? ` • ${conv["counterpart"]}` : ""}{conv["school_name"] ? ` • ${conv["school_name"]}` : " • عابرة للفروع"}
           </p>
         </div>
         <Button variant="ghost" size="icon" aria-label={conv["muted"] ? "إلغاء الكتم" : "كتم الإشعارات"} title={conv["muted"] ? "إلغاء الكتم" : "كتم الإشعارات"} onClick={async () => { await db.rpc("set_member_prefs", { _conv: id, _muted: !conv["muted"], _archived: null }); onChanged(); }}>
