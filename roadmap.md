@@ -20,7 +20,7 @@
 
 ## Package 3b — Closure (prompt: close packages 2+3) + mandatory class groups
 - [x] A Closure log docs/closure-log.md (per item: scope, server test, browser test, evidence, status)
-- [ ] B Package-2 browser journeys (files open/download/denied/expired; substitution cancel across dashboards; pin/comments reopen; upload fail/retry/cancel; 2 children in 2 sections; supervisor assign/unassign/direct-id)
+- [x] B Package-2 browser journeys — done (see 3c-4)
 - [x] C Org-wide circulars across branches — server 19/19 + browser (preview, publish to 2 branches, ack on phone, report by branch)
 - [x] D Attachments in cross-branch groups — server + browser
 - [x] E Server-side scheduled cleanup of unlinked files
@@ -34,6 +34,8 @@
 - [x] 1 Scoped test cleanup (scripts/lib/test-run.ts) + cleanup-scope-e2e 3/3; notification loss documented
 - [x] 2 Org-wide circulars (server + list/filters/editor/reports UI)
 - [x] 3 Cross-branch group attachments — server 11/11 + browser (upload, view, download, outsider denied)
-- [ ] 4 Package-2 remaining browser journeys
+- [x] 4 Package-2 remaining browser journeys — all done in browser; supervisor scope bug fixed
 - [ ] 5 Extended communication browser tests
 - [ ] 6 Cleanup scheduler health detection (stale last-run alert) + timing doc
+- [ ] 7 Department-head scope: currently reads the whole school; narrow to own department (needs decision)
+- [ ] 8 Remove 19 leftover test schools from older test runs (needs owner-safe cleanup)

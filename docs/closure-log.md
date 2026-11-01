@@ -8,12 +8,12 @@ Updated: 2026-11-01.
 | Item | Roles | Server test | Browser test | Status |
 |---|---|---|---|---|
 | Pin / unpin order | teacher, student | rls-e2e | pinned post first after reload, unpin removes icon | done |
-| Close comments, server rejects | teacher, student | rls-e2e | student sees "closed", direct insert rejected by RLS | partial — reopen + "old comments kept" not run in browser |
-| Upload failure | teacher | rls-e2e | forced storage 500 → clear error, no half-saved file, retry = 1 file | partial — mid-upload cancel not tested |
-| Cancel substitution | principal | rls-e2e | cancel with reason → history + "choose substitute" returns | partial — not verified on substitute/student/guardian/vice dashboards; demo slot now uncovered |
-| Guardian with 2 children | guardian | rls-e2e | 2 children shown on home | partial — both children were in the same section; per-child schedule/posts/family chats not verified |
-| Supervisor | supervisor | rls-e2e | no assignees → honest empty schedule | partial — assign/unassign + direct-id denial not run in browser |
-| Class files open/download, expired link | student, guardian, outsider | rls-e2e | — | open (browser) |
+| Close comments, server rejects | teacher, student | rls-e2e | student sees "closed", direct insert rejected by RLS; teacher reopens → earlier comment kept, student comments again | done |
+| Upload failure / cancel | teacher | rls-e2e | forced storage 500 → clear error, retry = 1 file; new "إلغاء الرفع" button mid-upload → "أُلغي الرفع ولم يُحفظ الملف", no file row, retry = 1 file | done |
+| Cancel substitution | principal | rls-e2e | before: student + guardian see "بديل:", substitute sees "حصص التغطية", vice sees it on التبديل والبدلاء, other-section student unaffected; principal cancels with reason → gone from all five, cancel notification with reason for student/guardian/substitute/teacher | done |
+| Guardian with 2 children | guardian | rls-e2e | two children in sections أ and ب: both on home, both classrooms listed, schedule filter per child halves the lessons, each classroom shows only its own post | done (family chats per child: covered in comm-e2e) |
+| Supervisor | supervisor | rls-e2e (5 new checks) | unassigned → empty schedule; principal assigns in إعداد اليوم الدراسي → teacher's lessons + classes visible; removes → empty again; direct classroom URL / API / file path denied while unassigned | done — **bug fixed**: supervisors previously read the whole school (students, posts, files, slots); now limited to assigned teachers, read-only (no comments) |
+| Class files open/download, expired link | student, guardian, outsider | rls-e2e | student signs + downloads (PDF bytes); 1-second link fetched after 3.5 s → 400 expired; other-section file path denied; guardian opens both children's files; other-section student: classroom URL "غير موجود أو ليس ضمن صلاحياتك", sign + download denied | done |
 
 ## Communication / class groups
 
