@@ -15,8 +15,8 @@ const STATUS: Record<string, string> = { draft: "مسودة", published: "منش
 /** Upload to Storage with a cancel signal (the SDK upload has none). Same storage RLS applies via the user's token. */
 async function uploadObject(path: string, f: File, signal: AbortSignal): Promise<"ok" | "aborted" | "failed"> {
   const { data: s } = await db.auth.getSession();
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-  const base = (import.meta.env.VITE_SUPABASE_URL as string).replace(/\/+$/, "");
+  const key = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string;
+  const base = (import.meta.env["VITE_SUPABASE_URL"] as string).replace(/\/+$/, "");
   try {
     const r = await fetch(`${base}/storage/v1/object/${BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`, {
       method: "POST", body: f, signal,
