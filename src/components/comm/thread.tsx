@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ask, askText } from "@/components/confirm";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, BellOff, Bell, Archive, ArchiveRestore, Flag, Paperclip, Pencil, Reply, Trash2, Users, X, RotateCcw, Loader2, Pin } from "lucide-react";
@@ -239,12 +240,12 @@ function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, canRe
             }}><Pin className="size-3.5" /></button>}
             {mine && <button aria-label="تعديل" title="تعديل" onClick={() => setEditing(true)}><Pencil className="size-3.5" /></button>}
             {(mine || isGroup) && <button aria-label="حذف" title="حذف" onClick={async () => {
-              if (!window.confirm("حذف الرسالة؟ يبقى أثرها «حُذفت هذه الرسالة».")) return;
+              if (!(await ask("حذف الرسالة؟ يبقى أثرها «حُذفت هذه الرسالة».", { destructive: true, ok: "حذف" }))) return;
               const { error } = await db.rpc("delete_message", { _id: m["id"] });
               if (error) toast.error(arabicError(error)); else onChanged();
             }}><Trash2 className="size-3.5" /></button>}
             {!mine && <button aria-label="إبلاغ" title="إبلاغ" onClick={async () => {
-              const reason = window.prompt("سبب الإبلاغ (يراه المسؤول المخول فقط)");
+              const reason = await askText("سبب الإبلاغ (يراه المسؤول المخول فقط)", { required: true, ok: "إرسال البلاغ" });
               if (!reason) return;
               const { error } = await db.rpc("report_message", { _message: m["id"], _reason: reason, _file: null });
               if (error) toast.error(arabicError(error)); else toast.success("أُرسل البلاغ للجهة المخولة بالمراجعة");

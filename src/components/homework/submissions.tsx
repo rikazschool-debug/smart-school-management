@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ask, askText } from "@/components/confirm";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
@@ -66,7 +67,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
         <h3 className="font-semibold">التسليمات {editable ? "والتصحيح" : "(اطلاع فقط)"}</h3>
         {editable && h["max_score"] !== undefined && (
           <Button size="sm" disabled={!readyCount} onClick={async () => {
-            if (!confirm(`نشر ${readyCount} نتيجة مصححة للطلاب وأولياء أمورهم؟`)) return;
+            if (!(await ask(`نشر ${readyCount} نتيجة مصححة للطلاب وأولياء أمورهم؟`, { ok: "نشر النتائج" }))) return;
             const { data: n, error } = await db.rpc("publish_results", { _hw: h["id"], _subs: null });
             if (error) toast.error(arabicError(error)); else { toast.success(`نُشرت ${n} نتيجة`); qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] }); }
           }}>نشر كل المصحح ({readyCount})</Button>

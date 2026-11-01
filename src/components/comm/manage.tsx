@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -251,7 +252,7 @@ function ReportItem({ r, onDone }: { r: Row; onDone: () => void }) {
               <div className="flex flex-wrap gap-2">
                 {[["resolved", true, "إخفاء الرسالة وإغلاق"], ["resolved", false, "إغلاق دون إخفاء"], ["dismissed", false, "رفض البلاغ"]].map(([s, h, l]) => (
                   <Button key={String(l)} size="sm" className="min-h-10" variant={h ? "destructive" : "outline"} disabled={busy || decision.trim().length < 3} onClick={async () => {
-                    if (!window.confirm(`تأكيد: ${String(l)}؟ لا يمكن تكرار القرار بعد حفظه.`)) return;
+                    if (!(await ask(`تأكيد: ${String(l)}؟ لا يمكن تكرار القرار بعد حفظه.`, { destructive: !!h, ok: String(l) }))) return;
                     setBusy(true);
                     const { error } = await db.rpc("decide_report", { _id: r["id"], _status: s, _decision: decision.trim(), _hide: h });
                     setBusy(false);

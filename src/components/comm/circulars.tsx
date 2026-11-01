@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -137,7 +138,7 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
           <div className="flex flex-wrap gap-2">
             {c["status"] === "draft" && <Button size="sm" variant="outline" onClick={onEdit}>تعديل المسودة</Button>}
             {c["status"] === "draft" && <Button size="sm" onClick={async () => {
-              if (busy || !window.confirm("نشر التعميم للجمهور المحدد؟ يُحفظ الجمهور عند النشر.")) return;
+              if (busy || !(await ask("نشر التعميم للجمهور المحدد؟ يُحفظ الجمهور عند النشر.", { ok: "نشر" }))) return;
               setBusy(true);
               const { data, error } = await db.rpc("publish_circular", { _id: c["id"] });
               setBusy(false);
@@ -149,7 +150,7 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
               if (error) toast.error(arabicError(error)); else toast.success(`أُرسل تذكير إلى ${data} (مرة واحدة يوميًا)`);
             }}>تذكير غير المقرّين</Button>}
             {c["status"] === "archived" && <Button size="sm" variant="outline" onClick={async () => { const { error } = await db.rpc("reopen_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else { toast.success("أُعيد فتح التعميم؛ الموعد والإقرارات كما هي ولم تُرسل تنبيهات"); onChanged(); } }}>إعادة الفتح</Button>}
-            {c["status"] === "published" && <Button size="sm" variant="ghost" onClick={async () => { if (!window.confirm("الأرشفة توقف الإقرار والتذكير وتحفظ السجل. متابعة؟")) return; const { error } = await db.rpc("archive_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else onChanged(); }}>أرشفة</Button>}
+            {c["status"] === "published" && <Button size="sm" variant="ghost" onClick={async () => { if (!(await ask("الأرشفة توقف الإقرار والتذكير وتحفظ السجل. متابعة؟", { ok: "أرشفة" }))) return; const { error } = await db.rpc("archive_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else onChanged(); }}>أرشفة</Button>}
           </div>
           {rev && (
             <form className="space-y-2 rounded-lg border p-3" onSubmit={async (e) => {

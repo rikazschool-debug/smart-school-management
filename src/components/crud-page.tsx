@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -290,7 +291,7 @@ export function CrudTable({
                           variant="ghost"
                           size="icon"
                           aria-label="حذف"
-                          onClick={() => confirm("تأكيد الحذف؟ لن يُحذف السجل إن كان مرتبطًا بسجلات أخرى.") && del.mutate(r["id"])}
+                          onClick={async () => { if (await ask("تأكيد الحذف؟ لن يُحذف السجل إن كان مرتبطًا بسجلات أخرى.", { destructive: true, ok: "حذف" })) del.mutate(r["id"]); }}
                         >
                           <Trash2 className="size-4 text-destructive" />
                         </Button>

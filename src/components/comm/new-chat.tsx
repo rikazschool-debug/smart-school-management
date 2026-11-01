@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -149,9 +150,10 @@ function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: strin
       <div className="space-y-1">
         <label className="text-sm font-medium" htmlFor="gk">الابن/الابنة</label>
         {kids.isLoading ? <LoadingState /> : !kids.data?.length ? <EmptyState title="لا يوجد أبناء موثّقون في هذه المدرسة" /> : (
-          <select id="gk" className={sel} value={student} onChange={(e) => {
-            if (body.trim() && !window.confirm("تغيير الابن يحذف نص الرسالة المكتوب حتى لا يصل لجهة تخص ابنًا آخر. متابعة؟")) return;
-            setStudent(e.target.value); setTo(""); setBody(""); }}>
+          <select id="gk" className={sel} value={student} onChange={async (e) => {
+            const next = e.target.value;
+            if (body.trim() && !(await ask("تغيير الابن يحذف نص الرسالة المكتوب حتى لا يصل لجهة تخص ابنًا آخر. متابعة؟", { ok: "تبديل الابن" }))) return;
+            setStudent(next); setTo(""); setBody(""); }}>
             <option value="">— اختر —</option>{kids.data.map((k) => <option key={k["student_id"]} value={k["student_id"]}>{k["students"]?.full_name}</option>)}
           </select>
         )}

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -128,7 +129,7 @@ function AffectedSlot({ s, a, date, history, onDone }: { s: Row; a: Row; date: s
           <span className="flex items-center gap-2">
             <span className="font-semibold text-primary">البديل: {s["substitute_name"]}</span>
             <Button size="sm" variant="ghost" onClick={async () => {
-              const r = window.prompt("سبب إلغاء التبديل");
+              const r = await askText("سبب إلغاء التبديل", { required: true });
               if (!r) return;
               const { error } = await db.rpc("cancel_substitution", { _id: active["id"], _reason: r });
               if (error) toast.error(arabicError(error)); else { toast.success("أُلغي التبديل"); onDone(); }

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -128,7 +129,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                 <span dir="ltr">{r["email"]}</span>
                 <span className="flex gap-1">
                   <Button size="sm" onClick={() => rpc("decide_account_request", { _id: r["id"], _approve: true }, "اعتُمد الطلب وأُنشئت الدعوة")}>اعتماد</Button>
-                  <Button size="sm" variant="ghost" onClick={() => { const n = window.prompt("سبب الرفض (اختياري)") ?? undefined; void rpc("decide_account_request", { _id: r["id"], _approve: false, _note: n || null }, "رُفض الطلب"); }}>رفض</Button>
+                  <Button size="sm" variant="ghost" onClick={async () => { const n = await askText("سبب الرفض (اختياري)"); if (n === null) return; void rpc("decide_account_request", { _id: r["id"], _approve: false, _note: n || null }, "رُفض الطلب"); }}>رفض</Button>
                 </span>
               </li>
             ))}
@@ -158,7 +159,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                           </select>
                         )}
                         <Button size="sm" onClick={async () => {
-                          const reason = window.prompt("سبب التغيير") ?? "";
+                          const reason = (await askText("سبب التغيير", { required: true })) ?? "";
                           if (await rpc("change_member_role", { _id: m["id"], _role: ed.role, _department: ed.dept || null, _reason: reason || null }, "تم تغيير الدور")) setEditing(null);
                         }}>حفظ</Button>
                         <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>إلغاء</Button>
@@ -170,7 +171,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" onClick={() => {
-                      const reason = window.prompt(m["is_active"] ? "سبب الإيقاف" : "سبب التفعيل") ?? "";
+                      const reason = (await askText(m["is_active"] ? "سبب الإيقاف" : "سبب التفعيل", { required: true })) ?? "";
                       void rpc("set_membership_active", { _id: m["id"], _active: !m["is_active"], _reason: reason || null }, m["is_active"] ? "أُوقفت العضوية" : "فُعّلت العضوية");
                     }}>{m["is_active"] ? "نشط — إيقاف" : "موقوف — تفعيل"}</Button>
                   </TableCell>

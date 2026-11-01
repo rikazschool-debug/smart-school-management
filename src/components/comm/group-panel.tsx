@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -73,7 +74,7 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
           <li>الحالة: {c["status"] === "archived" ? "مؤرشفة" : "نشطة"}{c["expires_at"] ? ` • تنتهي ${c["expires_at"]}` : ""}</li>
         </ul>
         <div className="mt-3 flex flex-wrap gap-2">
-          {myRole && myRole !== "owner" && c["membership_mode"] === "manual" && <Button size="sm" variant="outline" onClick={() => window.confirm("مغادرة المجموعة؟") && call("leave_group", { _conv: convId }, "غادرت المجموعة")}>مغادرة</Button>}
+          {myRole && myRole !== "owner" && c["membership_mode"] === "manual" && <Button size="sm" variant="outline" onClick={async () => (await ask("مغادرة المجموعة؟", { ok: "مغادرة" })) && call("leave_group", { _conv: convId }, "غادرت المجموعة")}>مغادرة</Button>}
           {isOwner && <Button size="sm" variant="outline" onClick={() => call("set_group_status", { _conv: convId, _status: c["status"] === "archived" ? "active" : "archived" }, c["status"] === "archived" ? "أُعيد فتح المجموعة" : "أُرشفت المجموعة")}>{c["status"] === "archived" ? "إعادة فتح" : "أرشفة المجموعة"}</Button>}
         </div>
       </section>
@@ -90,11 +91,11 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
               {isOwner && p["role"] !== "owner" && (
                 <>
                   <Button size="sm" variant="ghost" onClick={() => call("set_group_role", { _conv: convId, _user: p["user_id"], _role: p["role"] === "moderator" ? "member" : "moderator" }, "تم تحديث الدور")}>{p["role"] === "moderator" ? "إلغاء الإشراف" : "تعيين مشرفًا"}</Button>
-                  <Button size="sm" variant="ghost" onClick={() => window.confirm(`نقل ملكية المجموعة إلى ${p["full_name"]}؟`) && call("transfer_group_owner", { _conv: convId, _user: p["user_id"] }, "نُقلت الملكية")}>نقل الملكية</Button>
+                  <Button size="sm" variant="ghost" onClick={async () => (await ask(`نقل ملكية المجموعة إلى ${p["full_name"]}؟`, { ok: "نقل" })) && call("transfer_group_owner", { _conv: convId, _user: p["user_id"] }, "نُقلت الملكية")}>نقل الملكية</Button>
                 </>
               )}
               {isAdmin && p["role"] !== "owner" && p["source"] !== "derived" && p["user_id"] !== user.id && (
-                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => window.confirm(`إزالة ${p["full_name"]}؟ يتوقف وصوله فورًا للرسائل والبحث وطلبات التنزيل الجديدة.`) && call("remove_group_member", { _conv: convId, _user: p["user_id"] }, "أُزيل العضو")}>إزالة</Button>
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={async () => (await ask(`إزالة ${p["full_name"]}؟ يتوقف وصوله فورًا للرسائل والبحث وطلبات التنزيل الجديدة.`, { destructive: true, ok: "إزالة" })) && call("remove_group_member", { _conv: convId, _user: p["user_id"] }, "أُزيل العضو")}>إزالة</Button>
               )}
             </li>
           ))}
