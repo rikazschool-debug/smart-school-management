@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ask, askText } from "@/components/confirm";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/app/members")({
   component: Page,
 });
 
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 const KIND: Record<string, string> = { teacher: "معلم", guardian: "ولي أمر", student: "طالب" };
 const ACTION: Record<string, string> = {
   invite_create: "إنشاء دعوة", invite_resend: "تجديد دعوة", invite_revoke: "إلغاء دعوة", invite_review_reissue: "مراجعة وإعادة إصدار دعوة", invite_flag_review: "تعليق دعوة للمراجعة",
@@ -127,7 +129,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                 <span dir="ltr">{r["email"]}</span>
                 <span className="flex gap-1">
                   <Button size="sm" onClick={() => rpc("decide_account_request", { _id: r["id"], _approve: true }, "اعتُمد الطلب وأُنشئت الدعوة")}>اعتماد</Button>
-                  <Button size="sm" variant="ghost" onClick={() => { const n = window.prompt("سبب الرفض (اختياري)") ?? undefined; void rpc("decide_account_request", { _id: r["id"], _approve: false, _note: n || null }, "رُفض الطلب"); }}>رفض</Button>
+                  <Button size="sm" variant="ghost" onClick={async () => { const n = await askText("سبب الرفض (اختياري)"); if (n === null) return; void rpc("decide_account_request", { _id: r["id"], _approve: false, _note: n || null }, "رُفض الطلب"); }}>رفض</Button>
                 </span>
               </li>
             ))}
@@ -136,7 +138,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       )}
 
       <h2 className="mb-3 text-lg font-bold">الأعضاء</h2>
-      {mem.isLoading ? <LoadingState /> : mem.error ? <ErrorState message={arabicError(mem.error)} /> : !mem.data?.length ? <EmptyState title="لا يوجد أعضاء بعد" /> : (
+      {mem.isLoading ? <LoadingState /> : mem.error ? <ErrorState message={arabicError(mem.error)} onRetry={() => mem.refetch()} /> : !mem.data?.length ? <EmptyState title="لا يوجد أعضاء بعد" /> : (
         <div className="mb-8 overflow-x-auto rounded-xl border bg-card">
           <Table>
             <TableHeader><TableRow><TableHead className="text-start">الاسم</TableHead><TableHead className="text-start">البريد</TableHead><TableHead className="text-start">الدور</TableHead><TableHead className="text-start">الحالة</TableHead></TableRow></TableHeader>
@@ -157,7 +159,8 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                           </select>
                         )}
                         <Button size="sm" onClick={async () => {
-                          const reason = window.prompt("سبب التغيير") ?? "";
+                          const reason = await askText("سبب التغيير", { required: true });
+                          if (reason === null) return;
                           if (await rpc("change_member_role", { _id: m["id"], _role: ed.role, _department: ed.dept || null, _reason: reason || null }, "تم تغيير الدور")) setEditing(null);
                         }}>حفظ</Button>
                         <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>إلغاء</Button>
@@ -168,8 +171,9 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => {
-                      const reason = window.prompt(m["is_active"] ? "سبب الإيقاف" : "سبب التفعيل") ?? "";
+                    <Button variant="ghost" size="sm" onClick={async () => {
+                      const reason = await askText(m["is_active"] ? "سبب الإيقاف" : "سبب التفعيل", { required: true });
+                      if (reason === null) return;
                       void rpc("set_membership_active", { _id: m["id"], _active: !m["is_active"], _reason: reason || null }, m["is_active"] ? "أُوقفت العضوية" : "فُعّلت العضوية");
                     }}>{m["is_active"] ? "نشط — إيقاف" : "موقوف — تفعيل"}</Button>
                   </TableCell>

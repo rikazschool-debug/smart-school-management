@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ask, askText } from "@/components/confirm";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,7 +15,7 @@ import { DAY_NAMES, todayISO, useCurrentTimetable, useSlots } from "@/lib/schedu
 
 export const Route = createFileRoute("/_authenticated/app/substitutions")({ component: Page });
 
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 
 function Page() {
   return <RequireSchool nav="substitutions">{(ctx) => <Subs ctx={ctx} />}</RequireSchool>;
@@ -72,7 +74,7 @@ function Subs({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             <Input className="sm:col-span-2" placeholder="ملاحظة (اختياري)" aria-label="ملاحظة" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button>تسجيل</Button>
           </form>
-          {absences.isLoading ? <LoadingState /> : absences.error ? <ErrorState message={arabicError(absences.error)} /> : !absences.data?.length ? <EmptyState title="لا يوجد غياب مسجل لهذا التاريخ" /> : (
+          {absences.isLoading ? <LoadingState /> : absences.error ? <ErrorState message={arabicError(absences.error)} onRetry={() => absences.refetch()} /> : !absences.data?.length ? <EmptyState title="لا يوجد غياب مسجل لهذا التاريخ" /> : (
             <div className="space-y-4">
               {absences.data.map((a) => <Absence key={a["id"]} a={a} date={date} subs={subs.data ?? []} onDone={refresh} />)}
             </div>
@@ -95,7 +97,7 @@ function Absence({ a, date, subs, onDone }: { a: Row; date: string; subs: Row[];
   return (
     <section className="rounded-2xl border bg-card p-4">
       <h3 className="font-bold">{a["teachers"]?.full_name} {a["note"] && <span className="text-sm font-normal text-muted-foreground">— {a["note"]}</span>}</h3>
-      {aff.isLoading ? <LoadingState /> : aff.error ? <ErrorState message={arabicError(aff.error)} /> : !aff.data?.length ? <p className="mt-2 text-sm text-muted-foreground">لا حصص له في هذا اليوم.</p> : (
+      {aff.isLoading ? <LoadingState /> : aff.error ? <ErrorState message={arabicError(aff.error)} onRetry={() => aff.refetch()} /> : !aff.data?.length ? <p className="mt-2 text-sm text-muted-foreground">لا حصص له في هذا اليوم.</p> : (
         <ul className="mt-3 space-y-2">
           {aff.data.map((s) => <AffectedSlot key={s["slot_id"]} s={s} a={a} date={date} history={subs.filter((x) => x["slot_id"] === s["slot_id"])} onDone={onDone} />)}
         </ul>
@@ -127,7 +129,7 @@ function AffectedSlot({ s, a, date, history, onDone }: { s: Row; a: Row; date: s
           <span className="flex items-center gap-2">
             <span className="font-semibold text-primary">البديل: {s["substitute_name"]}</span>
             <Button size="sm" variant="ghost" onClick={async () => {
-              const r = window.prompt("سبب إلغاء التبديل");
+              const r = await askText("سبب إلغاء التبديل", { required: true });
               if (!r) return;
               const { error } = await db.rpc("cancel_substitution", { _id: active["id"], _reason: r });
               if (error) toast.error(arabicError(error)); else { toast.success("أُلغي التبديل"); onDone(); }

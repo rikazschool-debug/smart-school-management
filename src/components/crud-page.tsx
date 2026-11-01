@@ -1,4 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { ask, askText } from "@/components/confirm";
+import { selectCls } from "@/components/ui/native-select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
@@ -48,7 +50,7 @@ function SelectField({ f, schoolId, value, onChange }: { f: Field; schoolId: str
   const opts = Array.isArray(o) ? o : (q.data ?? []);
   return (
     <select
-      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+      className={selectCls("w-full")}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       required={f.required}
@@ -232,7 +234,7 @@ export function CrudTable({
             <select
               key={f.key}
               aria-label={f.label}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              className={selectCls(undefined)}
               value={fv[f.key] ?? ""}
               onChange={(e) => setFv({ ...fv, [f.key]: e.target.value })}
             >
@@ -254,7 +256,7 @@ export function CrudTable({
       {q.isLoading ? (
         <LoadingState />
       ) : q.error ? (
-        <ErrorState message={arabicError(q.error)} />
+        <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState title="لا توجد سجلات" hint={canWrite ? "ابدأ بإضافة أول سجل." : undefined} />
       ) : (
@@ -289,7 +291,7 @@ export function CrudTable({
                           variant="ghost"
                           size="icon"
                           aria-label="حذف"
-                          onClick={() => confirm("تأكيد الحذف؟ لن يُحذف السجل إن كان مرتبطًا بسجلات أخرى.") && del.mutate(r["id"])}
+                          onClick={async () => { if (await ask("تأكيد الحذف؟ لن يُحذف السجل إن كان مرتبطًا بسجلات أخرى.", { destructive: true, ok: "حذف" })) del.mutate(r["id"]); }}
                         >
                           <Trash2 className="size-4 text-destructive" />
                         </Button>

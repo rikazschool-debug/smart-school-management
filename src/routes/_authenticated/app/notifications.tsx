@@ -28,7 +28,7 @@ function Page() {
     <>
       <PageHeader title="الإشعارات" desc="إشعارات داخل التطبيق فقط؛ لا تُرسل رسائل بريد أو جوال." />
       {unread > 0 && <Button variant="outline" size="sm" className="mb-4" onClick={() => markRead(null)}>تعليم الكل كمقروء ({unread})</Button>}
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد إشعارات" /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد إشعارات" /> : (
         <ul className="space-y-2">
           {q.data.map((n) => (
             <li key={n["id"]}>

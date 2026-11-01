@@ -1,4 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ask, askText } from "@/components/confirm";
+import { selectCls } from "@/components/ui/native-select";
 import { useState } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
@@ -10,7 +12,7 @@ import { arabicError, useSession } from "@/lib/session";
 import { GROUP_TYPE_LABEL } from "@/lib/comm";
 import { MemberPicker } from "@/components/comm/member-picker";
 
-const sel = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
+const sel = selectCls("w-full", true);
 const ACTION: Record<string, string> = {
   group_create: "إنشاء المجموعة", member_add: "إضافة عضو", member_remove: "إزالة عضو", member_leave: "مغادرة عضو", role_change: "تغيير دور",
   owner_transfer: "نقل الملكية", group_archive: "أرشفة", group_reopen: "إعادة فتح", settings_update: "تعديل الإعدادات", derived_add: "إضافة تلقائية من القسم",
@@ -50,7 +52,7 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
     if (error) toast.error(arabicError(error)); else { toast.success(ok); refresh(); }
   };
   if (conv.isLoading || people.isLoading) return <LoadingState />;
-  if (conv.error) return <ErrorState message={arabicError(conv.error)} />;
+  if (conv.error) return <ErrorState message={arabicError(conv.error)} onRetry={() => conv.refetch()} />;
   const c = conv.data!;
   const isAdmin = myRole === "owner" || myRole === "moderator" || myRole === null;
   const isOwner = myRole === "owner" || myRole === null;
@@ -72,7 +74,7 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
           <li>الحالة: {c["status"] === "archived" ? "مؤرشفة" : "نشطة"}{c["expires_at"] ? ` • تنتهي ${c["expires_at"]}` : ""}</li>
         </ul>
         <div className="mt-3 flex flex-wrap gap-2">
-          {myRole && myRole !== "owner" && c["membership_mode"] === "manual" && <Button size="sm" variant="outline" onClick={() => window.confirm("مغادرة المجموعة؟") && call("leave_group", { _conv: convId }, "غادرت المجموعة")}>مغادرة</Button>}
+          {myRole && myRole !== "owner" && c["membership_mode"] === "manual" && <Button size="sm" variant="outline" onClick={async () => (await ask("مغادرة المجموعة؟", { ok: "مغادرة" })) && call("leave_group", { _conv: convId }, "غادرت المجموعة")}>مغادرة</Button>}
           {isOwner && <Button size="sm" variant="outline" onClick={() => call("set_group_status", { _conv: convId, _status: c["status"] === "archived" ? "active" : "archived" }, c["status"] === "archived" ? "أُعيد فتح المجموعة" : "أُرشفت المجموعة")}>{c["status"] === "archived" ? "إعادة فتح" : "أرشفة المجموعة"}</Button>}
         </div>
       </section>
@@ -89,11 +91,11 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
               {isOwner && p["role"] !== "owner" && (
                 <>
                   <Button size="sm" variant="ghost" onClick={() => call("set_group_role", { _conv: convId, _user: p["user_id"], _role: p["role"] === "moderator" ? "member" : "moderator" }, "تم تحديث الدور")}>{p["role"] === "moderator" ? "إلغاء الإشراف" : "تعيين مشرفًا"}</Button>
-                  <Button size="sm" variant="ghost" onClick={() => window.confirm(`نقل ملكية المجموعة إلى ${p["full_name"]}؟`) && call("transfer_group_owner", { _conv: convId, _user: p["user_id"] }, "نُقلت الملكية")}>نقل الملكية</Button>
+                  <Button size="sm" variant="ghost" onClick={async () => (await ask(`نقل ملكية المجموعة إلى ${p["full_name"]}؟`, { ok: "نقل" })) && call("transfer_group_owner", { _conv: convId, _user: p["user_id"] }, "نُقلت الملكية")}>نقل الملكية</Button>
                 </>
               )}
               {isAdmin && p["role"] !== "owner" && p["source"] !== "derived" && p["user_id"] !== user.id && (
-                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => window.confirm(`إزالة ${p["full_name"]}؟ يتوقف وصوله فورًا للرسائل والبحث وطلبات التنزيل الجديدة.`) && call("remove_group_member", { _conv: convId, _user: p["user_id"] }, "أُزيل العضو")}>إزالة</Button>
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={async () => (await ask(`إزالة ${p["full_name"]}؟ يتوقف وصوله فورًا للرسائل والبحث وطلبات التنزيل الجديدة.`, { destructive: true, ok: "إزالة" })) && call("remove_group_member", { _conv: convId, _user: p["user_id"] }, "أُزيل العضو")}>إزالة</Button>
               )}
             </li>
           ))}

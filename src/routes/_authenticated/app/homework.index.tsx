@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
@@ -58,18 +59,18 @@ function StaffList({ schoolId, author }: { schoolId: string; author: boolean }) 
       <PageHeader title="الواجبات" desc={author ? "واجبات مقرراتك: الإعداد والنشر والتصحيح." : "متابعة الواجبات ضمن نطاق صلاحيتك (اطلاع فقط)."} />
       {course ? <ExportBar course={course} kinds={["homework", "submissions", "pending", "results"]} /> : <p className="mb-2 text-xs text-muted-foreground">اختر مقررًا لتصدير تقاريره.</p>}
       <div className="mb-4 flex flex-wrap items-end gap-2">
-        <select className="h-9 rounded-md border bg-background px-2 text-sm" value={course} onChange={(e) => setCourse(e.target.value)} aria-label="المقرر">
+        <select className={selectCls(undefined, true)} value={course} onChange={(e) => setCourse(e.target.value)} aria-label="المقرر">
           <option value="">كل المقررات</option>
           {courses.data?.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]}</option>)}
         </select>
-        <select className="h-9 rounded-md border bg-background px-2 text-sm" value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
+        <select className={selectCls(undefined, true)} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
           <option value="">كل الحالات</option>
           {Object.entries(HW_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         <Input className="h-9 w-56" placeholder="بحث بالعنوان" value={q} onChange={(e) => setQ(e.target.value)} />
         {author && <Button asChild className="ms-auto"><Link to="/app/homework/new"><Plus className="h-4 w-4" /> واجب جديد</Link></Button>}
       </div>
-      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} /> : !list.data?.length ? (
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? (
         <EmptyState title="لا توجد واجبات" hint={author ? "أنشئ أول واجب لمقرراتك." : undefined} />
       ) : (
         <div className="overflow-x-auto rounded-2xl border bg-card">
@@ -163,7 +164,7 @@ function StudentHomework({ studentId, guardian }: { studentId: string; guardian?
     },
   });
   if (list.isLoading) return <LoadingState />;
-  if (list.error) return <ErrorState message={arabicError(list.error)} />;
+  if (list.error) return <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} />;
   const now = Date.now();
   const rows = list.data ?? [];
   const pending = (r: Row) => ["none", "draft"].includes(r["sub_status"]) && !r["removed"] && r["status"] !== "archived";

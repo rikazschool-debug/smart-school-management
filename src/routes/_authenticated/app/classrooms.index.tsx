@@ -27,7 +27,7 @@ function Page() {
   return (
     <>
       <PageHeader title="الفصول الرقمية" desc="فصل واحد لكل مقرر معتمد (مادة + شعبة + سنة). تظهر لك الفصول التي تخصك فقط." />
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? (
         <EmptyState title="لا توجد فصول رقمية" hint="يُنشأ الفصل تلقائيًا عند اعتماد تكليف معلم بمقرر." />
       ) : <ClassroomGrid rows={q.data} />}
     </>

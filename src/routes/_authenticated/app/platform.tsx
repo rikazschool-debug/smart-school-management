@@ -27,7 +27,7 @@ function Page() {
     <>
       <PageHeader title="المؤسسات المشتركة" desc="عرض كل المؤسسات على المنصة وعدد مدارسها." />
       <CleanupHealth />
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد مؤسسات بعد" /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد مؤسسات بعد" /> : (
         <div className="rounded-xl border bg-card">
           <Table>
             <TableHeader><TableRow><TableHead className="text-start">المؤسسة</TableHead><TableHead className="text-start">المدارس</TableHead><TableHead className="text-start">التسجيل</TableHead><TableHead className="text-start">الحالة</TableHead></TableRow></TableHeader>
@@ -55,7 +55,7 @@ const t = (v: unknown) => (v ? new Date(String(v)).toLocaleString("ar") : "—")
 function CleanupHealth() {
   const q = useQuery({ queryKey: ["cleanup-health"], queryFn: async () => { const { data, error } = await db.rpc("cleanup_health"); if (error) throw error; return data as Row; } });
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState message={arabicError(q.error)} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const h = q.data!; const last = h["last_run"] as Row | null; const alerts = (h["open_alerts"] ?? []) as Row[];
   return (
     <section className="mb-6 rounded-xl border bg-card p-4 text-sm">

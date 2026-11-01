@@ -131,3 +131,11 @@ No defects found, so no fixes or re-runs were needed. The mobile-screen file was
 - C1/C2 (browser, cbx- fixture): teacher desktop → guardian phone message + file + signed URL, realtime reply, draft badge/isolation, student denied staff/family chats and has no new-chat/circulars; principal wizard validation + create + archive; member sees archived read-only banner on phone. 17/17.
 - Not yet in browser: guardian with two children, report review on phone. Known: student homework page shows "المعلم: —".
 - Both fixtures torn down (only their users/orgs/files).
+
+## 2026-11-01 — Package 8 (closure + design applied)
+- Teacher name: homework_people RPC (author vs current subject teacher, labelled «أعدّه» / «معلم المادة»). Browser: normal, copied template, teacher change (ended→new): new teacher named, author kept, ex-teacher loses access.
+- Feedback before publish (browser, student owner phone + guardian + other student): hidden on page and notifications, signed URL refused (400); after publish visible + signed URL 200; other student never. 16/16.
+- Guardian with two children (phone + desktop): child filter, search isolation, per-conversation drafts restored, teacher/admin lists separate and correct after teacher change, stay/switch on child change, per-child homework tabs, family CSV both children only. 22/22. Not covered: attachment mid-upload while switching (new-chat form has no attachments; thread files stay with their conversation).
+- Reports on phone: submit, reviewer sees only reported message, reason required, 40px buttons, double-click → one decision, server refuses second, view+decide audited, reporter gets outcome without internal reason, teacher denied. 12/12.
+- Design applied: single theme source, selectCls on all selects, ConfirmHost replacing native confirm/prompt, ErrorState retry, PageHeader action, late-joiner row layout fixed on narrow cards.
+- Tests: vitest 14/14, comm-e2e 95/95, rls-e2e 94/94. Fixture torn down.

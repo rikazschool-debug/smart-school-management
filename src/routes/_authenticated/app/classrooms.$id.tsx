@@ -27,7 +27,7 @@ function Page() {
     },
   });
   if (room.isLoading) return <LoadingState />;
-  if (room.error) return <ErrorState message={arabicError(room.error)} />;
+  if (room.error) return <ErrorState message={arabicError(room.error)} onRetry={() => room.refetch()} />;
   if (!room.data) return <EmptyState title="الفصل غير موجود أو ليس ضمن صلاحياتك" />;
   const teachers = members.data?.filter((m) => m["member_type"] === "teacher") ?? [];
   const students = members.data?.filter((m) => m["member_type"] === "student") ?? [];
@@ -41,7 +41,7 @@ function Page() {
           <ClassroomPosts classroom={id} courseId={room.data["course_id"]} />
         </div>
         <aside className="space-y-4 rounded-2xl border bg-card p-5">
-          {members.isLoading ? <LoadingState /> : members.error ? <ErrorState message={arabicError(members.error)} /> : (
+          {members.isLoading ? <LoadingState /> : members.error ? <ErrorState message={arabicError(members.error)} onRetry={() => members.refetch()} /> : (
             <>
               <div>
                 <h3 className="mb-2 font-semibold">المعلم</h3>

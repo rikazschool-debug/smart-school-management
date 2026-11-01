@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,7 +18,7 @@ function Page() {
   return <RequireSchool nav="schoolday">{(ctx) => <Setup ctx={ctx} />}</RequireSchool>;
 }
 
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 
 function Setup({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const S = ctx.schoolId;
@@ -32,7 +33,7 @@ function Setup({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const run = async (pr: Promise<{ error: unknown }>, ok: string) => { const { error } = await pr; if (error) toast.error(arabicError(error)); else { toast.success(ok); refresh(); } };
 
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState message={arabicError(q.error)} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const d = q.data!;
   const lessons = d.periods.filter((x) => x["kind"] === "lesson");
 

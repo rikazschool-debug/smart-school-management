@@ -83,3 +83,11 @@
 - [x] H15 Homework browser journeys with isolated run-tagged fixture (published hw, students, submissions, grades, attachments, late joiner): feedback before/after publish, template copy survives source delete, late-joiner review, 5 non-empty reports, open downloaded CSV (Arabic, filters, scope)
 - [x] S1 docs/security-warnings-package7.md (8 functions; ~140 older still not reviewed)
 - [ ] Final Arabic report: browser-tested / server-only / per-dashboard design review / gaps & external settings
+
+## Package 8 — closure + design applied (docs/package8-brief.md)
+- [x] P1 Teacher name from correct source (author vs subject teacher)
+- [x] P2 Feedback-before-publish browser test (student owner, guardian, other student)
+- [x] P3 Guardian with two children (phone + desktop)
+- [x] P4 Report review on phone (single decision, audit, outcome to reporter)
+- [x] P5 Design applied in shared components (tokens, selects, confirm dialog, error retry, page action)
+- [ ] P6 Decide: is_course_teacher should honour end_date (needs owner decision; touches all teacher modules)

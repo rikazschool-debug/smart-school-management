@@ -49,9 +49,10 @@ export function fromLocalInput(v: string) {
   return v ? new Date(`${v}:00+03:00`).toISOString() : null;
 }
 export function statusTone(s: string) {
-  if (["published", "submitted", "resubmitted", "paper"].includes(s)) return "bg-primary/10 text-primary";
+  if (["submitted", "resubmitted", "paper"].includes(s)) return "bg-success/15 text-success";
+  if (s === "published") return "bg-primary/10 text-primary";
   if (["returned", "cancelled"].includes(s)) return "bg-destructive/10 text-destructive";
-  if (s === "scheduled") return "bg-accent text-accent-foreground";
+  if (s === "scheduled" || s === "late") return "bg-warning/25 text-warning-foreground";
   return "bg-muted text-muted-foreground";
 }
 export function safeHref(u: string | null | undefined) {

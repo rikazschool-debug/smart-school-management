@@ -1,3 +1,4 @@
+import type React from "react";
 import { AlertTriangle, Inbox, Loader2, Lock } from "lucide-react";
 
 export function LoadingState({ label = "جارٍ التحميل…" }: { label?: string }) {
@@ -16,10 +17,11 @@ export function EmptyState({ title, hint }: { title: string; hint?: string | und
     </div>
   );
 }
-export function ErrorState({ message }: { message: string }) {
+export function ErrorState({ message, onRetry }: { message: string; onRetry?: (() => void) | undefined }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-destructive">
-      <AlertTriangle className="size-5" /> {message}
+    <div role="alert" className="flex flex-wrap items-center gap-2 rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-destructive">
+      <AlertTriangle className="size-5 shrink-0" /> <span className="min-w-0 flex-1">{message}</span>
+      {onRetry && <button type="button" onClick={onRetry} className="min-h-9 rounded-md border border-destructive/40 px-3 text-sm font-medium hover:bg-destructive/10">إعادة المحاولة</button>}
     </div>
   );
 }
@@ -32,11 +34,15 @@ export function ForbiddenState() {
     </div>
   );
 }
-export function PageHeader({ title, desc }: { title: string; desc?: string }) {
+/** Page title + optional primary action (one per page, on the leading edge on desktop, full width under the title on phones). */
+export function PageHeader({ title, desc, action }: { title: string; desc?: string; action?: React.ReactNode }) {
   return (
-    <div className="mb-6">
-      <h1 className="font-display text-2xl font-bold">{title}</h1>
-      {desc && <p className="mt-1 text-sm text-muted-foreground">{desc}</p>}
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="font-display text-2xl font-bold">{title}</h1>
+        {desc && <p className="mt-1 text-sm text-muted-foreground">{desc}</p>}
+      </div>
+      {action && <div className="flex shrink-0 flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">{action}</div>}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ask, askText } from "@/components/confirm";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
@@ -42,7 +43,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
   });
   if (h["status"] === "draft") return <EmptyState title="المسودة غير منشورة" hint="تظهر قائمة التسليمات بعد النشر." />;
   if (data.isLoading) return <LoadingState />;
-  if (data.error) return <ErrorState message={arabicError(data.error)} />;
+  if (data.error) return <ErrorState message={arabicError(data.error)} onRetry={() => data.refetch()} />;
   // late joiners awaiting a decision (or declined) are not targets yet — they live in the late-joiners panel
   const rows = (data.data ?? []).filter((r) => !["pending", "declined"].includes(r["join_status"]));
   const submitted = (r: Row) => (r["sub"]?.["attempt_count"] ?? 0) > 0;
@@ -66,7 +67,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
         <h3 className="font-semibold">التسليمات {editable ? "والتصحيح" : "(اطلاع فقط)"}</h3>
         {editable && h["max_score"] !== undefined && (
           <Button size="sm" disabled={!readyCount} onClick={async () => {
-            if (!confirm(`نشر ${readyCount} نتيجة مصححة للطلاب وأولياء أمورهم؟`)) return;
+            if (!(await ask(`نشر ${readyCount} نتيجة مصححة للطلاب وأولياء أمورهم؟`, { ok: "نشر النتائج" }))) return;
             const { data: n, error } = await db.rpc("publish_results", { _hw: h["id"], _subs: null });
             if (error) toast.error(arabicError(error)); else { toast.success(`نُشرت ${n} نتيجة`); qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] }); }
           }}>نشر كل المصحح ({readyCount})</Button>

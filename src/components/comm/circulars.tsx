@@ -1,4 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ask, askText } from "@/components/confirm";
+import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, Paperclip } from "lucide-react";
@@ -13,7 +15,7 @@ import { canManage } from "@/lib/roles";
 import { BUCKET, PRIORITY_LABEL, ROLE_AR, SafeText, openFile } from "@/lib/comm";
 import { MemberPicker } from "@/components/comm/member-picker";
 
-const sel = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+const sel = selectCls("w-full");
 const STATUS: Record<string, string> = { draft: "مسودة", published: "منشور", archived: "مؤرشف" };
 const SCOPE: Record<string, string> = { school: "مدرسة", branches: "فروع محددة", org: "المؤسسة" };
 function useSchools(orgId: string | undefined) {
@@ -55,7 +57,7 @@ export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { scho
         <Input aria-label="من تاريخ" type="date" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} />
         <Input aria-label="إلى تاريخ" type="date" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} />
       </div>
-      {q.isLoading ? <LoadingState /> : q.error ? <div className="space-y-2"><ErrorState message={arabicError(q.error)} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div> : !list.length ? <EmptyState title={q.data?.length ? "لا توجد تعاميم مطابقة للتصفية" : "لا توجد تعاميم"} /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <div className="space-y-2"><ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div> : !list.length ? <EmptyState title={q.data?.length ? "لا توجد تعاميم مطابقة للتصفية" : "لا توجد تعاميم"} /> : (
         <ul className="space-y-2">
           {list.map((c) => {
             const mine = (c["circular_recipients"] as Row[]).find((r) => r["user_id"] === me);
@@ -136,7 +138,7 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
           <div className="flex flex-wrap gap-2">
             {c["status"] === "draft" && <Button size="sm" variant="outline" onClick={onEdit}>تعديل المسودة</Button>}
             {c["status"] === "draft" && <Button size="sm" onClick={async () => {
-              if (busy || !window.confirm("نشر التعميم للجمهور المحدد؟ يُحفظ الجمهور عند النشر.")) return;
+              if (busy || !(await ask("نشر التعميم للجمهور المحدد؟ يُحفظ الجمهور عند النشر.", { ok: "نشر" }))) return;
               setBusy(true);
               const { data, error } = await db.rpc("publish_circular", { _id: c["id"] });
               setBusy(false);
@@ -148,7 +150,7 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
               if (error) toast.error(arabicError(error)); else toast.success(`أُرسل تذكير إلى ${data} (مرة واحدة يوميًا)`);
             }}>تذكير غير المقرّين</Button>}
             {c["status"] === "archived" && <Button size="sm" variant="outline" onClick={async () => { const { error } = await db.rpc("reopen_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else { toast.success("أُعيد فتح التعميم؛ الموعد والإقرارات كما هي ولم تُرسل تنبيهات"); onChanged(); } }}>إعادة الفتح</Button>}
-            {c["status"] === "published" && <Button size="sm" variant="ghost" onClick={async () => { if (!window.confirm("الأرشفة توقف الإقرار والتذكير وتحفظ السجل. متابعة؟")) return; const { error } = await db.rpc("archive_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else onChanged(); }}>أرشفة</Button>}
+            {c["status"] === "published" && <Button size="sm" variant="ghost" onClick={async () => { if (!(await ask("الأرشفة توقف الإقرار والتذكير وتحفظ السجل. متابعة؟", { ok: "أرشفة" }))) return; const { error } = await db.rpc("archive_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else onChanged(); }}>أرشفة</Button>}
           </div>
           {rev && (
             <form className="space-y-2 rounded-lg border p-3" onSubmit={async (e) => {
@@ -183,7 +185,7 @@ function Stats({ id, title }: { id: string; title: string }) {
   });
   const [f, setF] = useState({ branch: "", role: "", version: "" });
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <div className="space-y-2"><ErrorState message={arabicError(q.error)} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div>;
+  if (q.error) return <div className="space-y-2"><ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div>;
   const all = q.data ?? [];
   const branches = [...new Map(all.map((r) => [r["school_id"], r["school_name"]])).entries()];
   const rolesSet = [...new Set(all.flatMap((r) => String(r["role"] ?? "").split(",").filter(Boolean)))];

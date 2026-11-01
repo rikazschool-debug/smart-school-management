@@ -3800,6 +3800,14 @@ export type Database = {
           unpublished: number
         }[]
       }
+      homework_people: {
+        Args: { _hw: string }
+        Returns: {
+          author_is_current: boolean
+          author_name: string
+          current_teachers: string[]
+        }[]
+      }
       homework_report: {
         Args: { _course: string; _kind: string }
         Returns: Json

@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -33,20 +34,21 @@ function Page() {
       const [isT, files, teacher] = await Promise.all([
         db.rpc("is_course_teacher", { _course: data.course_id }),
         db.from("files").select("id, name, storage_path, size_bytes").eq("source_type", "homework").eq("source_id", id),
-        db.from("teacher_assignments").select("teachers(full_name)").eq("course_id", data.course_id).eq("status", "approved").limit(1),
+        db.rpc("homework_people", { _hw: id }),
       ]);
-      return { ...data, isTeacher: !!isT.data, files: files.data ?? [], teacherName: teacher.data?.[0]?.teachers?.full_name ?? "—" } as Row;
+      const ppl = (teacher.data as Row[] | null)?.[0];
+      return { ...data, isTeacher: !!isT.data, files: files.data ?? [], people: ppl ?? null } as Row;
     },
   });
   if (hw.isLoading) return <LoadingState />;
-  if (hw.error) return <ErrorState message={arabicError(hw.error)} />;
+  if (hw.error) return <ErrorState message={arabicError(hw.error)} onRetry={() => hw.refetch()} />;
   if (!hw.data) return <EmptyState title="الواجب غير موجود أو ليس ضمن صلاحياتك" />;
   const h = hw.data;
   const role = ctx?.role;
   return (
     <>
       <Link to="/app/homework" className="text-sm text-primary">→ الواجبات</Link>
-      <PageHeader title={h["title"]} desc={`${h["courses"]?.["subjects"]?.["name"] ?? ""} — ${h["sections"]?.["name"] ?? ""} · المعلم: ${h["teacherName"]}`} />
+      <PageHeader title={h["title"]} desc={`${h["courses"]?.["subjects"]?.["name"] ?? ""} — ${h["sections"]?.["name"] ?? ""} ${peopleLine(h["people"])}`} />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Details h={h} />
@@ -174,7 +176,7 @@ function CopyTemplate({ h, courses, onDone }: { h: Row; courses: Row[]; onDone: 
       <p className="text-xs text-muted-foreground">يُنسخ: التعليمات، نوع التسليم، المعايير والدرجة، والمرفقات المختارة كنسخ مستقلة. لا يُنسخ: الطلاب المستهدفون، التسليمات، الدرجات، الملاحظات، الإشعارات، أو السجل. المواعيد تُحدد من جديد.</p>
       <Label htmlFor="cp-title">عنوان النسخة</Label><Input id="cp-title" value={title} onChange={(e) => setTitle(e.target.value)} />
       <Label htmlFor="cp-course">المقرر الوجهة (مقرراتك السارية)</Label>
-      <select id="cp-course" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={target} onChange={(e) => setTarget(e.target.value)}>
+      <select id="cp-course" className={selectCls("w-full", true)} value={target} onChange={(e) => setTarget(e.target.value)}>
         <option value="">اختر</option>
         {courses.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]} ({c["academic_years"]?.["name"]})</option>)}
       </select>
@@ -220,7 +222,7 @@ function LateJoiners({ h }: { h: Row }) {
     <div className="space-y-2 rounded-lg border p-3">
       <h4 className="text-sm font-semibold">الطلاب المنضمون بعد النشر</h4>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <select aria-label="سياسة المنضمين" className="h-9 rounded-md border bg-background px-2" value={policy} onChange={(e) => setPolicy(e.target.value)}>
+        <select aria-label="سياسة المنضمين" className={selectCls(undefined, true)} value={policy} onChange={(e) => setPolicy(e.target.value)}>
           <option value="review">مراجعة المعلم قبل الإلحاق</option><option value="auto">إلحاق تلقائي بمهلة</option><option value="none">عدم الإلحاق</option>
         </select>
         {policy === "auto" && <label className="flex items-center gap-1">مهلة <Input className="w-16" type="number" min={1} max={30} value={days} onChange={(e) => setDays(Number(e.target.value))} /> أيام من الانضمام</label>}
@@ -231,9 +233,9 @@ function LateJoiners({ h }: { h: Row }) {
         <ul className="divide-y text-sm">
           {q.data.map((r) => (
             <li key={r["student_id"]} className="flex flex-wrap items-center gap-2 py-2">
-              <span className="min-w-0 flex-1">{r["full_name"]} <span className="text-xs text-muted-foreground">· انضم {schoolTime(r["joined_at"])} · {JS[r["join_status"]]}{r["join_status"] === "added" ? ` · موعده ${schoolTime(r["due"])}` : ""}</span></span>
+              <span className="w-full min-w-0">{r["full_name"]} <span className="text-xs text-muted-foreground">· انضم {schoolTime(r["joined_at"])} · {JS[r["join_status"]]}{r["join_status"] === "added" ? ` · موعده ${schoolTime(r["due"])}` : ""}</span></span>
               {r["join_status"] === "pending" && (<>
-                <Input type="datetime-local" className="w-56" aria-label={`موعد ${r["full_name"]}`} value={due[r["student_id"]] ?? ""} onChange={(e) => setDue({ ...due, [r["student_id"]]: e.target.value })} />
+                <Input type="datetime-local" className="w-full sm:w-56" aria-label={`موعد ${r["full_name"]}`} value={due[r["student_id"]] ?? ""} onChange={(e) => setDue({ ...due, [r["student_id"]]: e.target.value })} />
                 <Button size="sm" disabled={!due[r["student_id"]]} onClick={async () => { const { error } = await db.rpc("decide_late_joiner", { _hw: h["id"], _student: r["student_id"], _approve: true, _due: fromLocalInput(due[r["student_id"]]!) }); if (error) toast.error(arabicError(error)); else { toast.success("أُلحق الطالب وأُبلغ"); refresh(); } }}>إلحاق</Button>
                 <Button size="sm" variant="ghost" onClick={async () => { const { error } = await db.rpc("decide_late_joiner", { _hw: h["id"], _student: r["student_id"], _approve: false, _due: null }); if (error) toast.error(arabicError(error)); else refresh(); }}>عدم الإلحاق</Button>
               </>)}
@@ -331,7 +333,7 @@ function StudentPanel({ h }: { h: Row }) {
   const [busy, setBusy] = useState(false);
   const clientId = useMemo(() => crypto.randomUUID(), [d.data?.sub?.["attempt_count"]]);
   if (me.isLoading || d.isLoading) return <LoadingState />;
-  if (d.error) return <ErrorState message={arabicError(d.error)} />;
+  if (d.error) return <ErrorState message={arabicError(d.error)} onRetry={() => d.refetch()} />;
   if (!d.data) return <EmptyState title="لست ضمن المستهدفين بهذا الواجب" />;
   const x = d.data;
   const types = h["submission_types"] as string[];
@@ -410,4 +412,17 @@ function FamilyPanel({ h }: { h: Row }) {
       <Attempts d={d.data} h={h} />
     </section>
   );
+}
+
+/** "أعدّه" = author (kept even after teacher change); "معلم المادة" = current approved assignment. Never swapped silently. */
+function peopleLine(p: Row | null) {
+  if (!p) return " · تعذر تحميل اسم المعلم";
+  const cur = (p["current_teachers"] ?? []) as string[];
+  const author = p["author_name"] as string | null;
+  const parts: string[] = [];
+  if (cur.length) parts.push(`معلم المادة: ${cur.join("، ")}`);
+  else parts.push("معلم المادة: لا يوجد تكليف ساري حاليًا");
+  if (author && !(p["author_is_current"] && cur.length === 1 && cur[0] === author)) parts.push(`أعدّه: ${author}`);
+  else if (!author) parts.push("أعدّه: غير مسجل في هذا السجل القديم");
+  return " · " + parts.join(" · ");
 }

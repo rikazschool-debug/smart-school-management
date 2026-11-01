@@ -66,7 +66,7 @@ function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       return { students, teachers, sections, courses, pending, classrooms, unplaced: Math.max(0, students - enrolled) };
     },
   });
-  if (q.error) return <ErrorState message={arabicError(q.error)} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const d = q.data;
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -97,7 +97,7 @@ function TeacherHome({ schoolId }: { schoolId: string }) {
     },
   });
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState message={arabicError(q.error)} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   if (!q.data?.length) return <EmptyState title="لا توجد مقررات مكلف بها" hint="تظهر هنا المواد والشعب بعد اعتماد تكليفك." />;
   return (
     <div className="space-y-3">
@@ -136,7 +136,7 @@ function GuardianHome({ schoolId }: { schoolId: string }) {
   });
   const rooms = useClassrooms(schoolId);
   if (kids.isLoading) return <LoadingState />;
-  if (kids.error) return <ErrorState message={arabicError(kids.error)} />;
+  if (kids.error) return <ErrorState message={arabicError(kids.error)} onRetry={() => kids.refetch()} />;
   return (
     <div className="space-y-8">
       <section>
