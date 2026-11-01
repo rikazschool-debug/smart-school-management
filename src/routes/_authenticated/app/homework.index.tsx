@@ -56,46 +56,61 @@ function StaffList({ schoolId, author }: { schoolId: string; author: boolean }) 
   const total = Number(list.data?.[0]?.["total"] ?? 0);
   return (
     <>
-      <PageHeader title="الواجبات" desc={author ? "واجبات مقرراتك: الإعداد والنشر والتصحيح." : "متابعة الواجبات ضمن نطاق صلاحيتك (اطلاع فقط)."} />
-      {course ? <ExportBar course={course} kinds={["homework", "submissions", "pending", "results"]} /> : <p className="mb-2 text-xs text-muted-foreground">اختر مقررًا لتصدير تقاريره.</p>}
-      <div className="mb-4 flex flex-wrap items-end gap-2">
-        <select className={selectCls(undefined, true)} value={course} onChange={(e) => setCourse(e.target.value)} aria-label="المقرر">
-          <option value="">كل المقررات</option>
-          {courses.data?.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]}</option>)}
-        </select>
-        <select className={selectCls(undefined, true)} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
-          <option value="">كل الحالات</option>
-          {Object.entries(HW_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        <Input className="h-9 w-56" placeholder="بحث بالعنوان" value={q} onChange={(e) => setQ(e.target.value)} />
-        {author && <Button asChild className="ms-auto"><Link to="/app/homework/new"><Plus className="h-4 w-4" /> واجب جديد</Link></Button>}
+      <PageHeader title="الواجبات" desc={author ? "واجبات مقرراتك: الإعداد والنشر والتصحيح." : "متابعة الواجبات ضمن نطاق صلاحيتك (اطلاع فقط)."}
+        action={author ? <Button asChild><Link to="/app/homework/new"><Plus className="h-4 w-4" /> واجب جديد</Link></Button> : undefined} />
+      <div className="mb-4 rounded-xl border bg-card p-3">
+        <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <Input className="h-9 sm:w-64" placeholder="بحث بالعنوان" aria-label="بحث بالعنوان" value={q} onChange={(e) => setQ(e.target.value)} />
+          <select className={selectCls("w-full sm:w-auto", true)} value={course} onChange={(e) => setCourse(e.target.value)} aria-label="المقرر">
+            <option value="">كل المقررات</option>
+            {courses.data?.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]}</option>)}
+          </select>
+          <select className={selectCls("w-full sm:w-auto", true)} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
+            <option value="">كل الحالات</option>
+            {Object.entries(HW_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+          {(q || course || status) && <Button variant="ghost" size="sm" onClick={() => { setQ(""); setCourse(""); setStatus(""); }}>مسح الفلاتر</Button>}
+        </div>
+        <div className="mt-3 border-t pt-3">
+          {course ? <ExportBar course={course} kinds={["homework", "submissions", "pending", "results"]} /> : <p className="text-xs text-muted-foreground">اختر مقررًا لتصدير تقاريره.</p>}
+        </div>
       </div>
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? (
-        <EmptyState title="لا توجد واجبات" hint={author ? "أنشئ أول واجب لمقرراتك." : undefined} />
+        <EmptyState title="لا توجد واجبات" hint={author ? "أنشئ أول واجب لمقرراتك." : undefined}
+          action={author ? <Button asChild variant="outline"><Link to="/app/homework/new"><Plus className="h-4 w-4" /> واجب جديد</Link></Button> : undefined} />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border bg-card">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-muted-foreground">
-              <tr>{["الواجب", "المادة / الشعبة", "الحالة", "موعد التسليم", "المستهدفون", "سلّم", "لم يسلّم", "متأخر", "يحتاج تصحيحًا", "النتائج"].map((h) => <th key={h} className="p-3 text-start font-medium">{h}</th>)}</tr>
-            </thead>
-            <tbody>
-              {list.data.map((r) => (
-                <tr key={r["id"]} className="border-t">
-                  <td className="p-3"><Link to="/app/homework/$id" params={{ id: r["id"] }} className="font-medium text-primary">{r["title"]}</Link></td>
-                  <td className="p-3">{r["subject"]} — {r["section"]}</td>
-                  <td className="p-3"><Badge s={r["status"]} map={HW_STATUS} /></td>
-                  <td className="p-3 whitespace-nowrap">{schoolTime(r["due_at"])}</td>
-                  <td className="p-3">{r["targets"]}</td>
-                  <td className="p-3">{r["submitted"]}</td>
-                  <td className="p-3">{r["not_submitted"]}</td>
-                  <td className="p-3">{r["late"]}</td>
-                  <td className="p-3">{r["to_grade"]}</td>
-                  <td className="p-3 text-xs">{r["max_score"] == null ? "غير مقيّم" : `${r["published_results"]} منشورة · ${r["unpublished"]} بانتظار النشر`}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="hidden overflow-x-auto rounded-xl border bg-card md:block">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-muted/40 text-xs text-muted-foreground">
+                <tr>{["الواجب", "الحالة", "موعد التسليم", "التسليم", "يحتاج تصحيحًا", "النتائج"].map((h) => <th key={h} className="px-4 py-3 text-start font-semibold">{h}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y">
+                {list.data.map((r) => (
+                  <tr key={r["id"]} className="hover:bg-muted/30">
+                    <td className="px-4 py-3"><Link to="/app/homework/$id" params={{ id: r["id"] }} className="font-semibold text-foreground hover:text-primary">{r["title"]}</Link><p className="text-xs text-muted-foreground">{r["subject"]} — {r["section"]}</p></td>
+                    <td className="px-4 py-3"><Badge s={r["status"]} map={HW_STATUS} /></td>
+                    <td className="whitespace-nowrap px-4 py-3">{schoolTime(r["due_at"])}</td>
+                    <td className="px-4 py-3"><Progress done={r["submitted"]} total={r["targets"]} late={r["late"]} /></td>
+                    <td className="px-4 py-3">{Number(r["to_grade"]) > 0 ? <span className="rounded-full bg-warning/20 px-2.5 py-0.5 text-xs font-semibold text-warning-foreground">{r["to_grade"]}</span> : <span className="text-muted-foreground">—</span>}</td>
+                    <td className="px-4 py-3 text-xs">{r["max_score"] == null ? "غير مقيّم" : `${r["published_results"]} منشورة · ${r["unpublished"]} بانتظار النشر`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <ul className="space-y-2 md:hidden">
+            {list.data.map((r) => (
+              <li key={r["id"]}>
+                <Link to="/app/homework/$id" params={{ id: r["id"] }} className="block rounded-xl border bg-card p-4">
+                  <div className="flex items-start justify-between gap-2"><p className="min-w-0 font-semibold">{r["title"]}</p><Badge s={r["status"]} map={HW_STATUS} /></div>
+                  <p className="text-xs text-muted-foreground">{r["subject"]} — {r["section"]} · {schoolTime(r["due_at"])}</p>
+                  <div className="mt-3 flex items-center justify-between gap-3"><Progress done={r["submitted"]} total={r["targets"]} late={r["late"]} />{Number(r["to_grade"]) > 0 && <span className="text-xs font-semibold text-warning-foreground">يحتاج تصحيحًا: {r["to_grade"]}</span>}</div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
       {total > 20 && (
         <div className="mt-3 flex items-center gap-2 text-sm">
