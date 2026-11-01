@@ -80,5 +80,6 @@
 - [x] H12 Copy homework as template with attachments (preview, no dates copied silently)
 - [x] H13 Late joiners policy for open homework (no unfair lateness)
 - [x] H14 Homework report export (server-scoped)
-- [ ] H15 Homework browser journeys not yet covered
-- [x] S1 rls-e2e re-run 94/94; new warnings = signed-in RPCs with internal permission checks (documented)
+- [ ] H15 Homework browser journeys with isolated run-tagged fixture (published hw, students, submissions, grades, attachments, late joiner): feedback before/after publish, template copy survives source delete, late-joiner review, 5 non-empty reports, open downloaded CSV (Arabic, filters, scope)
+- [ ] S1 Reopen: document each new warning text + function + applies/not + evidence; old warnings stay "not reviewed"
+- [ ] Final Arabic report: browser-tested / server-only / per-dashboard design review / gaps & external settings
