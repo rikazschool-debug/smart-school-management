@@ -43,7 +43,8 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
   if (h["status"] === "draft") return <EmptyState title="المسودة غير منشورة" hint="تظهر قائمة التسليمات بعد النشر." />;
   if (data.isLoading) return <LoadingState />;
   if (data.error) return <ErrorState message={arabicError(data.error)} />;
-  const rows = data.data ?? [];
+  // late joiners awaiting a decision (or declined) are not targets yet — they live in the late-joiners panel
+  const rows = (data.data ?? []).filter((r) => !["pending", "declined"].includes(r["join_status"]));
   const submitted = (r: Row) => (r["sub"]?.["attempt_count"] ?? 0) > 0;
   const needsGrade = (r: Row) => submitted(r) && r["sub"]["status"] !== "returned" && (!r["grade"] || r["grade"]["status"] === "in_progress" || r["grade"]["needs_review"]);
   const fns: Record<Filter, (r: Row) => boolean> = {
@@ -83,7 +84,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
               const gs = r["grade"]?.["status"] ?? "none";
               return (
                 <tr key={r["student_id"]} className={`cursor-pointer border-t hover:bg-muted/40 ${sel === r["student_id"] ? "bg-muted/60" : ""}`} onClick={() => setSel(r["student_id"])}>
-                  <td className="p-2">{r["students"]?.["full_name"]}{!r["students"]?.["user_id"] && <span className="ms-1 text-xs text-muted-foreground">(بلا حساب — لا يصله إشعار)</span>}{r["removed_at"] && <span className="ms-1 text-xs text-muted-foreground">(انتقل)</span>}</td>
+                  <td className="p-2">{r["students"]?.["full_name"]}{!r["students"]?.["user_id"] && <span className="ms-1 text-xs text-muted-foreground">(بلا حساب — لا يصله إشعار)</span>}{r["removed_at"] && <span className="ms-1 text-xs text-muted-foreground">(انتقل)</span>}{r["join_status"] === "added" && <span className="ms-1 text-xs text-muted-foreground">(منضم بعد النشر)</span>}</td>
                   <td className="p-2"><span className={`rounded-full px-2 py-0.5 text-xs ${statusTone(r["sub"]?.["status"] ?? "none")}`}>{SUB_STATUS[r["sub"]?.["status"] ?? "none"]}</span></td>
                   <td className="p-2 text-xs">{last ? <>#{last["attempt_no"]} · {schoolTime(last["submitted_at"])}{last["is_late"] && <span className="text-destructive"> · متأخر</span>}</> : "—"}{r["extended_due"] && <span className="block text-muted-foreground">ممدد حتى {schoolTime(r["extended_due"])}</span>}</td>
                   <td className="p-2 text-xs">{GRADE_STATUS[gs]}{r["grade"]?.["score"] != null && ` · ${r["grade"]["score"]}`}{r["grade"]?.["needs_review"] && <span className="block text-destructive">محاولة جديدة تحتاج مراجعة</span>}</td>
