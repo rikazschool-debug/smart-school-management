@@ -42,7 +42,7 @@ for (const o of orgs) {
   await admin.from("schools").delete().eq("org_id", o);
   await admin.from("organizations").delete().eq("id", o);
 }
-{ const tr = new TestRun(admin, "comm-e2e"); uids.forEach((u) => tr.addUser(u)); for (const o of orgs) { const { data: ss } = await admin.from("schools").select("id").eq("org_id", o); (ss ?? []).forEach((x) => tr.addSchool(x.id)); } await tr.deleteNotifications(); }
+{ const tr = new TestRun(admin, "comm-e2e"); uids.forEach((u) => tr.addUser(u)); for (const o of orgs) { const { data: ss } = await admin.from("schools").select("id").eq("org_id", o); (ss ?? []).forEach((x) => tr.addSchool(x.id)); } await tr.deleteNotifications(); for (const o of orgs) await tr.purgeOrg(o); }
 for (const u of uids) await admin.auth.admin.deleteUser(u);
 }
 
