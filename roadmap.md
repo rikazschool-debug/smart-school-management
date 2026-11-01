@@ -112,3 +112,9 @@
 - [~] R9 Homework detail redesigned (hero facts, instructions, student submit panel, blocked reason, family panel); grading screen (§3) not yet
 - [x] P9.1b Isolated validity test scripts/assignment-validity-e2e.ts 9/9
 - Resume point: grading screen layout (src/components/homework/submissions.tsx StudentReview: student list + attempt + criteria, phone sections, unsaved-change guard) → R7 rollout → P9.2 import → P9.4 export
+
+## Package 12 (docs/package12-brief.md) — binding order
+- [ ] P12.1 Grading screen + remaining homework-detail states (browser-tested)
+- [ ] P12.2 Generalize design + server-side search/filters/pagination on existing screens
+- [ ] P12.3 Manual add + Excel template import (students, teachers)
+- [ ] P12.4 XLSX/PDF export for permitted sections
