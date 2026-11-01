@@ -5,6 +5,7 @@ import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
 import { canManage } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
+import { ImportButton } from "@/components/import-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/teachers")({ component: Page });
 
@@ -16,6 +17,11 @@ function Page() {
           <PageHeader title="المعلمون" desc="حسابات المعلمين وتخصصاتهم وأقسامهم (إدارة تعليمية فقط)." />
           <CrudTable title="المعلمون" table="teachers" schoolId={ctx.schoolId} canWrite={canManage(ctx.role)} order="full_name"
             select="*, departments(name)" searchKeys={["full_name", "email", "specialization"]}
+            filters={[
+              { key: "department_id", label: "القسم", remote: { table: "departments", label: "name" } },
+              { key: "status", label: "الحالة", options: [{ value: "active", label: "نشط" }, { value: "inactive", label: "موقوف" }] },
+            ]}
+            toolbar={canManage(ctx.role) ? <ImportButton kind="teachers" schoolId={ctx.schoolId} /> : undefined}
             fields={[
               { key: "full_name", label: "الاسم الكامل", required: true },
               { key: "email", label: "البريد (لدعوته للدخول)", type: "email" },
