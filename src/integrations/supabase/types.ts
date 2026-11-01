@@ -1242,6 +1242,596 @@ export type Database = {
           },
         ]
       }
+      homework: {
+        Row: {
+          allow_resubmit: boolean
+          audience: string
+          available_from: string
+          cancel_reason: string | null
+          closed_at: string | null
+          copied_from: string | null
+          course_id: string
+          created_at: string
+          created_by: string
+          criteria: Json
+          due_at: string
+          file_max_bytes: number | null
+          file_types: string[] | null
+          grading_notes: string | null
+          id: string
+          instructions: string
+          late_policy: string
+          late_until: string | null
+          max_attempts: number
+          max_score: number | null
+          published_at: string | null
+          remind_hours: number | null
+          school_id: string
+          section_id: string
+          selected_students: string[]
+          status: string
+          submission_types: string[]
+          term_id: string | null
+          title: string
+          updated_at: string
+          version: number
+          year_id: string
+        }
+        Insert: {
+          allow_resubmit?: boolean
+          audience?: string
+          available_from?: string
+          cancel_reason?: string | null
+          closed_at?: string | null
+          copied_from?: string | null
+          course_id: string
+          created_at?: string
+          created_by: string
+          criteria?: Json
+          due_at: string
+          file_max_bytes?: number | null
+          file_types?: string[] | null
+          grading_notes?: string | null
+          id?: string
+          instructions?: string
+          late_policy?: string
+          late_until?: string | null
+          max_attempts?: number
+          max_score?: number | null
+          published_at?: string | null
+          remind_hours?: number | null
+          school_id: string
+          section_id: string
+          selected_students?: string[]
+          status?: string
+          submission_types?: string[]
+          term_id?: string | null
+          title: string
+          updated_at?: string
+          version?: number
+          year_id: string
+        }
+        Update: {
+          allow_resubmit?: boolean
+          audience?: string
+          available_from?: string
+          cancel_reason?: string | null
+          closed_at?: string | null
+          copied_from?: string | null
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          criteria?: Json
+          due_at?: string
+          file_max_bytes?: number | null
+          file_types?: string[] | null
+          grading_notes?: string | null
+          id?: string
+          instructions?: string
+          late_policy?: string
+          late_until?: string | null
+          max_attempts?: number
+          max_score?: number | null
+          published_at?: string | null
+          remind_hours?: number | null
+          school_id?: string
+          section_id?: string
+          selected_students?: string[]
+          status?: string
+          submission_types?: string[]
+          term_id?: string | null
+          title?: string
+          updated_at?: string
+          version?: number
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_copied_from_fkey"
+            columns: ["copied_from"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_attempts: {
+        Row: {
+          attempt_no: number
+          body: string
+          client_id: string | null
+          due_applied: string
+          homework_id: string
+          homework_version: number
+          id: string
+          is_late: boolean
+          kind: string
+          link_url: string | null
+          note: string | null
+          recorded_by: string | null
+          student_id: string
+          submission_id: string
+          submitted_at: string
+        }
+        Insert: {
+          attempt_no: number
+          body?: string
+          client_id?: string | null
+          due_applied: string
+          homework_id: string
+          homework_version: number
+          id?: string
+          is_late: boolean
+          kind?: string
+          link_url?: string | null
+          note?: string | null
+          recorded_by?: string | null
+          student_id: string
+          submission_id: string
+          submitted_at?: string
+        }
+        Update: {
+          attempt_no?: number
+          body?: string
+          client_id?: string | null
+          due_applied?: string
+          homework_id?: string
+          homework_version?: number
+          id?: string
+          is_late?: boolean
+          kind?: string
+          link_url?: string | null
+          note?: string | null
+          recorded_by?: string | null
+          student_id?: string
+          submission_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_attempts_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_attempts_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "homework_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_drafts: {
+        Row: {
+          body: string
+          link_url: string | null
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          link_url?: string | null
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          link_url?: string | null
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_drafts_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: true
+            referencedRelation: "homework_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_events: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          details: Json
+          homework_id: string
+          id: string
+          student_id: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          homework_id: string
+          id?: string
+          student_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          homework_id?: string
+          id?: string
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_events_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_grade_history: {
+        Row: {
+          actor: string
+          created_at: string
+          grade_id: string
+          id: string
+          new_feedback: string | null
+          new_score: number | null
+          old_feedback: string | null
+          old_score: number | null
+          reason: string
+        }
+        Insert: {
+          actor: string
+          created_at?: string
+          grade_id: string
+          id?: string
+          new_feedback?: string | null
+          new_score?: number | null
+          old_feedback?: string | null
+          old_score?: number | null
+          reason: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          grade_id?: string
+          id?: string
+          new_feedback?: string | null
+          new_score?: number | null
+          old_feedback?: string | null
+          old_score?: number | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_grade_history_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "homework_grades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_grades: {
+        Row: {
+          attempt_no: number
+          criteria_scores: Json
+          feedback: string | null
+          graded_at: string
+          graded_by: string
+          homework_id: string
+          id: string
+          needs_review: boolean
+          published_at: string | null
+          rev: number
+          rubric_version: number
+          score: number | null
+          status: string
+          student_id: string
+          submission_id: string
+        }
+        Insert: {
+          attempt_no: number
+          criteria_scores?: Json
+          feedback?: string | null
+          graded_at?: string
+          graded_by: string
+          homework_id: string
+          id?: string
+          needs_review?: boolean
+          published_at?: string | null
+          rev?: number
+          rubric_version: number
+          score?: number | null
+          status?: string
+          student_id: string
+          submission_id: string
+        }
+        Update: {
+          attempt_no?: number
+          criteria_scores?: Json
+          feedback?: string | null
+          graded_at?: string
+          graded_by?: string
+          homework_id?: string
+          id?: string
+          needs_review?: boolean
+          published_at?: string | null
+          rev?: number
+          rubric_version?: number
+          score?: number | null
+          status?: string
+          student_id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_grades_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_grades_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: true
+            referencedRelation: "homework_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_submission_files: {
+        Row: {
+          attempt_no: number | null
+          file_id: string
+          submission_id: string
+        }
+        Insert: {
+          attempt_no?: number | null
+          file_id: string
+          submission_id: string
+        }
+        Update: {
+          attempt_no?: number | null
+          file_id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_submission_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_submission_files_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "homework_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_submissions: {
+        Row: {
+          attempt_count: number
+          homework_id: string
+          id: string
+          last_submitted_at: string | null
+          returned_at: string | null
+          returned_by: string | null
+          returned_reason: string | null
+          school_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          homework_id: string
+          id?: string
+          last_submitted_at?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+          returned_reason?: string | null
+          school_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          homework_id?: string
+          id?: string
+          last_submitted_at?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+          returned_reason?: string | null
+          school_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_submissions_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_submissions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_targets: {
+        Row: {
+          added_at: string
+          extend_reason: string | null
+          extended_due: string | null
+          homework_id: string
+          removed_at: string | null
+          removed_reason: string | null
+          reopened: boolean
+          school_id: string
+          student_id: string
+        }
+        Insert: {
+          added_at?: string
+          extend_reason?: string | null
+          extended_due?: string | null
+          homework_id: string
+          removed_at?: string | null
+          removed_reason?: string | null
+          reopened?: boolean
+          school_id: string
+          student_id: string
+        }
+        Update: {
+          added_at?: string
+          extend_reason?: string | null
+          extended_due?: string | null
+          homework_id?: string
+          removed_at?: string | null
+          removed_reason?: string | null
+          reopened?: boolean
+          school_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_targets_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_targets_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_targets_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_versions: {
+        Row: {
+          change_note: string | null
+          changed_by: string
+          created_at: string
+          homework_id: string
+          id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          change_note?: string | null
+          changed_by: string
+          created_at?: string
+          homework_id: string
+          id?: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          change_note?: string | null
+          changed_by?: string
+          created_at?: string
+          homework_id?: string
+          id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_versions_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -2772,6 +3362,32 @@ export type Database = {
         }[]
       }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
+      _hw_check_score: {
+        Args: { _criteria: Json; _score: number; h: Record<string, unknown> }
+        Returns: number
+      }
+      _hw_ensure_submission: {
+        Args: { _hw: string; _student: string }
+        Returns: string
+      }
+      _hw_event: {
+        Args: { _action: string; _details: Json; _hw: string; _student: string }
+        Returns: undefined
+      }
+      _hw_my_student: { Args: { _hw: string }; Returns: string }
+      _hw_notify: {
+        Args: {
+          _body: string
+          _hw: string
+          _key: string
+          _kind: string
+          _student: string
+          _title: string
+        }
+        Returns: undefined
+      }
+      _hw_snapshot: { Args: { _hw: string; _note: string }; Returns: undefined }
+      _hw_year_archived: { Args: { _year: string }; Returns: boolean }
       _invite_valid: {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
         Returns: boolean
@@ -2868,6 +3484,7 @@ export type Database = {
         Returns: boolean
       }
       can_read_file: { Args: { _file: string }; Returns: boolean }
+      can_read_homework: { Args: { _hw: string }; Returns: boolean }
       can_read_post: { Args: { _post: string }; Returns: boolean }
       can_see_profile: { Args: { _uid: string }; Returns: boolean }
       can_view_course: {
@@ -2945,6 +3562,18 @@ export type Database = {
           user_id: string
         }[]
       }
+      copy_homework: { Args: { _course: string; _id: string }; Returns: string }
+      correct_result: {
+        Args: {
+          _criteria: Json
+          _feedback: string
+          _reason: string
+          _rev: number
+          _score: number
+          _sub: string
+        }
+        Returns: number
+      }
       create_circular_file: {
         Args: { _circular: string; _mime: string; _name: string; _size: number }
         Returns: {
@@ -2973,6 +3602,13 @@ export type Database = {
         }
         Returns: string
       }
+      create_homework_file: {
+        Args: { _hw: string; _mime: string; _name: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
       create_message_file: {
         Args: { _conv: string; _mime: string; _name: string; _size: number }
         Returns: {
@@ -2993,6 +3629,13 @@ export type Database = {
           _post: string
           _size: number
         }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
+      create_submission_file: {
+        Args: { _hw: string; _mime: string; _name: string; _size: number }
         Returns: {
           id: string
           storage_path: string
@@ -3024,6 +3667,10 @@ export type Database = {
       edit_message: { Args: { _body: string; _id: string }; Returns: undefined }
       end_assignment: { Args: { _id: string }; Returns: undefined }
       ensure_classroom: { Args: { _course: string }; Returns: string }
+      extend_homework: {
+        Args: { _due: string; _id: string; _reason: string; _student: string }
+        Returns: undefined
+      }
       family_contacts: {
         Args: { _student: string }
         Returns: {
@@ -3031,6 +3678,17 @@ export type Database = {
           guardian_id: string
           relationship: string
         }[]
+      }
+      grade_submission: {
+        Args: {
+          _criteria: Json
+          _feedback: string
+          _final: boolean
+          _rev: number
+          _score: number
+          _sub: string
+        }
+        Returns: number
       }
       guardian_contacts: {
         Args: { _student: string }
@@ -3048,6 +3706,43 @@ export type Database = {
         }
         Returns: boolean
       }
+      homework_list: {
+        Args: {
+          _course: string
+          _limit: number
+          _offset: number
+          _q: string
+          _school: string
+          _status: string
+        }
+        Returns: {
+          available_from: string
+          avg_pct: number
+          course_id: string
+          due_at: string
+          id: string
+          is_teacher: boolean
+          late: number
+          max_score: number
+          not_submitted: number
+          published_at: string
+          published_results: number
+          section: string
+          status: string
+          subject: string
+          submitted: number
+          targets: number
+          title: string
+          to_grade: number
+          total: number
+          unpublished: number
+        }[]
+      }
+      hw_family: { Args: { _hw: string; _student: string }; Returns: boolean }
+      hw_staff: { Args: { _hw: string }; Returns: boolean }
+      hw_state: { Args: { _hw: string; _student: string }; Returns: Json }
+      hw_teacher: { Args: { _hw: string }; Returns: boolean }
+      hw_tick: { Args: never; Returns: Json }
       in_section: {
         Args: { _section: string; _year: string }
         Returns: boolean
@@ -3148,6 +3843,11 @@ export type Database = {
         }[]
       }
       publish_circular: { Args: { _id: string }; Returns: number }
+      publish_homework: { Args: { _id: string }; Returns: string }
+      publish_results: {
+        Args: { _hw: string; _subs: string[] }
+        Returns: number
+      }
       publish_timetable: {
         Args: { _effective_from: string; _id: string }
         Returns: number
@@ -3156,11 +3856,22 @@ export type Database = {
         Args: { _date: string; _note?: string; _teacher: string }
         Returns: string
       }
+      record_paper_submission: {
+        Args: {
+          _hw: string
+          _note: string
+          _received: string
+          _student: string
+        }
+        Returns: string
+      }
       remind_circular_ack: { Args: { _id: string }; Returns: number }
       remove_group_member: {
         Args: { _conv: string; _user: string }
         Returns: undefined
       }
+      remove_homework_file: { Args: { _file: string }; Returns: undefined }
+      remove_submission_file: { Args: { _file: string }; Returns: undefined }
       reopen_circular: { Args: { _id: string }; Returns: undefined }
       report_detail: {
         Args: { _id: string }
@@ -3181,6 +3892,10 @@ export type Database = {
         Returns: string
       }
       resend_invitation: { Args: { _id: string }; Returns: string }
+      return_submission: {
+        Args: { _reason: string; _sub: string }
+        Returns: undefined
+      }
       revise_circular: {
         Args: {
           _body: string
@@ -3188,6 +3903,10 @@ export type Database = {
           _requires_new_ack: boolean
           _title: string
         }
+        Returns: number
+      }
+      revise_homework: {
+        Args: { _d: Json; _id: string; _note: string }
         Returns: number
       }
       revoke_invitation: { Args: { _id: string }; Returns: undefined }
@@ -3206,6 +3925,11 @@ export type Database = {
           _scope?: string
           _title: string
         }
+        Returns: string
+      }
+      save_homework: { Args: { _d: Json; _id: string }; Returns: string }
+      save_submission_draft: {
+        Args: { _body: string; _hw: string; _link: string }
         Returns: string
       }
       schedule_teacher_names: {
@@ -3262,6 +3986,10 @@ export type Database = {
         Args: { _conv: string; _status: string }
         Returns: undefined
       }
+      set_homework_status: {
+        Args: { _id: string; _reason: string; _status: string }
+        Returns: undefined
+      }
       set_member_prefs: {
         Args: { _archived: boolean; _conv: string; _muted: boolean }
         Returns: undefined
@@ -3295,6 +4023,31 @@ export type Database = {
         Returns: string
       }
       start_timetable_revision: { Args: { _id: string }; Returns: string }
+      student_homework: {
+        Args: { _student: string }
+        Returns: {
+          attempts: number
+          available_from: string
+          due_at: string
+          effective_due: string
+          id: string
+          last_late: boolean
+          last_submitted_at: string
+          late_policy: string
+          max_score: number
+          removed: boolean
+          result_published: boolean
+          score: number
+          status: string
+          sub_status: string
+          subject: string
+          title: string
+        }[]
+      }
+      submit_homework: {
+        Args: { _client: string; _hw: string }
+        Returns: string
+      }
       supervised_teacher_ids: { Args: never; Returns: string[] }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
       sync_section_group: { Args: { _section: string }; Returns: string }

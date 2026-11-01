@@ -13,7 +13,7 @@ const BUCKET = "rikaz-files";
 const STATUS: Record<string, string> = { draft: "مسودة", published: "منشور", archived: "مؤرشف" };
 
 /** Upload to Storage with a cancel signal (the SDK upload has none). Same storage RLS applies via the user's token. */
-async function uploadObject(path: string, f: File, signal: AbortSignal): Promise<"ok" | "aborted" | "failed"> {
+export async function uploadObject(path: string, f: File, signal: AbortSignal): Promise<"ok" | "aborted" | "failed"> {
   const { data: s } = await db.auth.getSession();
   const key = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string;
   const base = (import.meta.env["VITE_SUPABASE_URL"] as string).replace(/\/+$/, "");

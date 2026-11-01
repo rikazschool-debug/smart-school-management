@@ -51,13 +51,15 @@
 - [x] P8 Acceptance tests 1–15, permission matrix, closure log
 
 ## Package 5 — Homework (brief: docs/homework-package-brief.md)
-- [ ] H1 Review links (courses, assignments, enrollments, guardians, classrooms, files, notifications, archive)
-- [ ] H2 Homework / submission / grading state machines (server-enforced transitions)
-- [ ] H3 Lists: teacher, student, guardian (per child), management
-- [ ] H4 Create form + preview, draft/publish/schedule (server-side scheduling, idempotent notifications)
-- [ ] H5 Post-publish edits, extensions, late policy, attempts
-- [ ] H6 Paper submissions / students without accounts
-- [ ] H7 Submissions + grading screen, result publish/correction
-- [ ] H8 Permissions, transfers, teacher change, archive
-- [ ] H9 Files, notifications, reports
-- [ ] H10 Acceptance tests (server + browser), docs updates
+- [x] H1 Review links (courses, assignments, enrollments, guardians, classrooms, files, notifications, archive)
+- [x] H2 Homework / submission / grading state machines (server-enforced transitions)
+- [x] H3 Lists: teacher, student, guardian (per child), management
+- [x] H4 Create form + preview, draft/publish/schedule (server-side scheduling, idempotent notifications)
+- [x] H5 Post-publish edits, extensions, late policy, attempts
+- [x] H6 Paper submissions / students without accounts
+- [x] H7 Submissions + grading screen, result publish/correction
+- [x] H8 Permissions, transfers, teacher change, archive
+- [x] H9 Files, notifications, reports
+- [x] H10 Acceptance tests (server + browser), docs updates
+
+- Open (homework): feedback attachments from the teacher; copying attachments with a template; auto-adding students who join a section after publish.

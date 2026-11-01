@@ -31,6 +31,9 @@ import { Route as AuthenticatedAppSubstitutionsRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
 import { Route as AuthenticatedAppClassroomsIndexRouteImport } from './routes/_authenticated/app/classrooms.index'
 import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_authenticated/app/classrooms.$id'
+import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_authenticated/app/homework.index'
+import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
+import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -153,6 +156,24 @@ const AuthenticatedAppClassroomsIdRoute =
     path: '/classrooms/$id',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHomeworkIndexRoute =
+  AuthenticatedAppHomeworkIndexRouteImport.update({
+    id: '/homework/',
+    path: '/homework/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppHomeworkIdRoute =
+  AuthenticatedAppHomeworkIdRouteImport.update({
+    id: '/homework/$id',
+    path: '/homework/$id',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppHomeworkNewRoute =
+  AuthenticatedAppHomeworkNewRouteImport.update({
+    id: '/homework/new',
+    path: '/homework/new',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -175,7 +196,10 @@ export interface FileRoutesByFullPath {
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
+  '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
+  '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
+  '/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -197,7 +221,10 @@ export interface FileRoutesByTo {
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
+  '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
+  '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
+  '/app/homework': typeof AuthenticatedAppHomeworkIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -222,7 +249,10 @@ export interface FileRoutesById {
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
+  '/_authenticated/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
+  '/_authenticated/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
+  '/_authenticated/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -247,7 +277,10 @@ export interface FileRouteTypes {
     | '/app/teachers'
     | '/app/'
     | '/app/classrooms/$id'
+    | '/app/homework/$id'
+    | '/app/homework/new'
     | '/app/classrooms/'
+    | '/app/homework/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -269,7 +302,10 @@ export interface FileRouteTypes {
     | '/app/teachers'
     | '/app'
     | '/app/classrooms/$id'
+    | '/app/homework/$id'
+    | '/app/homework/new'
     | '/app/classrooms'
+    | '/app/homework'
   id:
     | '__root__'
     | '/'
@@ -293,7 +329,10 @@ export interface FileRouteTypes {
     | '/_authenticated/app/teachers'
     | '/_authenticated/app/'
     | '/_authenticated/app/classrooms/$id'
+    | '/_authenticated/app/homework/$id'
+    | '/_authenticated/app/homework/new'
     | '/_authenticated/app/classrooms/'
+    | '/_authenticated/app/homework/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -460,6 +499,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppClassroomsIdRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/homework/': {
+      id: '/_authenticated/app/homework/'
+      path: '/homework'
+      fullPath: '/app/homework/'
+      preLoaderRoute: typeof AuthenticatedAppHomeworkIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/homework/$id': {
+      id: '/_authenticated/app/homework/$id'
+      path: '/homework/$id'
+      fullPath: '/app/homework/$id'
+      preLoaderRoute: typeof AuthenticatedAppHomeworkIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/homework/new': {
+      id: '/_authenticated/app/homework/new'
+      path: '/homework/new'
+      fullPath: '/app/homework/new'
+      preLoaderRoute: typeof AuthenticatedAppHomeworkNewRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
   }
 }
 
@@ -479,7 +539,10 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppClassroomsIdRoute: typeof AuthenticatedAppClassroomsIdRoute
+  AuthenticatedAppHomeworkIdRoute: typeof AuthenticatedAppHomeworkIdRoute
+  AuthenticatedAppHomeworkNewRoute: typeof AuthenticatedAppHomeworkNewRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
+  AuthenticatedAppHomeworkIndexRoute: typeof AuthenticatedAppHomeworkIndexRoute
 }
 
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
@@ -498,7 +561,10 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppClassroomsIdRoute: AuthenticatedAppClassroomsIdRoute,
+  AuthenticatedAppHomeworkIdRoute: AuthenticatedAppHomeworkIdRoute,
+  AuthenticatedAppHomeworkNewRoute: AuthenticatedAppHomeworkNewRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
+  AuthenticatedAppHomeworkIndexRoute: AuthenticatedAppHomeworkIndexRoute,
 }
 
 const AuthenticatedAppRouteRouteWithChildren =

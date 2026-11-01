@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-  Bell, BookOpen, MessagesSquare, Building2, CalendarClock, CalendarDays, Repeat, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
+  Bell, BookOpen, ClipboardList, MessagesSquare, Building2, CalendarClock, CalendarDays, Repeat, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
@@ -30,6 +30,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   students: { to: "/app/students", label: "الطلاب والتسكين", icon: GraduationCap },
   guardians: { to: "/app/guardians", label: "أولياء الأمور", icon: Users },
   classrooms: { to: "/app/classrooms", label: "الفصول الرقمية", icon: School },
+  homework: { to: "/app/homework", label: "الواجبات", icon: ClipboardList },
   schoolday: { to: "/app/school-day", label: "إعداد اليوم الدراسي", icon: CalendarClock },
   schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
   substitutions: { to: "/app/substitutions", label: "التبديل والبدلاء", icon: Repeat },
