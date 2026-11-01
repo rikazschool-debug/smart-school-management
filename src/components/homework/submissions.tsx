@@ -150,7 +150,7 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
   async function call(fn: string, args: Row, ok: string) {
     const { error } = await db.rpc(fn, args);
     if (error) {
-      const stale = /rev|stale|تعارض|حديث|جلسة أخرى/i.test(error.message ?? "");
+      const stale = /rev|stale|تعارض|حديث|جلسة/i.test(error.message ?? "");
       toast.error(stale ? "عدّل مستخدم آخر هذا التصحيح من نافذة أخرى. حدّث البيانات ثم أعد المحاولة." : arabicError(error), { action: { label: stale ? "تحديث" : "إعادة المحاولة", onClick: () => (stale ? refresh() : void call(fn, args, ok)) } });
       return false;
     }
