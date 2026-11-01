@@ -1,3 +1,5 @@
+import type React from "react";
+import { Lock } from "lucide-react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -47,8 +49,7 @@ function Page() {
   const role = ctx?.role;
   return (
     <>
-      <Link to="/app/homework" className="text-sm text-primary">→ الواجبات</Link>
-      <PageHeader title={h["title"]} desc={`${h["courses"]?.["subjects"]?.["name"] ?? ""} — ${h["sections"]?.["name"] ?? ""} ${peopleLine(h["people"])}`} />
+      <Hero h={h} />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Details h={h} />
@@ -67,19 +68,9 @@ function Details({ h }: { h: Row }) {
   const qc = useQueryClient();
   const crit = (h["criteria"] ?? []) as Row[];
   return (
-    <section className="space-y-3 rounded-2xl border bg-card p-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={`rounded-full px-2 py-0.5 text-xs ${statusTone(h["status"])}`}>{HW_STATUS[h["status"]]}</span>
-        <span className="text-xs text-muted-foreground">الإصدار {h["version"] || "—"}</span>
-      </div>
-      <p className="whitespace-pre-wrap">{h["instructions"] || <span className="text-muted-foreground">لا توجد تعليمات مكتوبة</span>}</p>
-      <dl className="grid gap-2 text-sm sm:grid-cols-2">
-        <div><dt className="text-muted-foreground">وقت الإتاحة</dt><dd>{schoolTime(h["available_from"])}</dd></div>
-        <div><dt className="text-muted-foreground">موعد التسليم (توقيت المدرسة)</dt><dd>{schoolTime(h["due_at"])}</dd></div>
-        <div><dt className="text-muted-foreground">سياسة التأخر</dt><dd>{LATE_LABEL[h["late_policy"]]}{h["late_until"] && ` — حتى ${schoolTime(h["late_until"])}`}</dd></div>
-        <div><dt className="text-muted-foreground">التسليم</dt><dd>{(h["submission_types"] as string[]).map((t) => TYPE_LABEL[t]).join("، ")} · المحاولات {h["max_attempts"]}</dd></div>
-        <div><dt className="text-muted-foreground">التقييم</dt><dd>{h["max_score"] == null ? "دون درجة" : `من ${h["max_score"]}`}</dd></div>
-      </dl>
+    <section className="space-y-4 rounded-2xl border bg-card p-5">
+      <h2 className="text-base font-bold">التعليمات والمرفقات</h2>
+      <p className="whitespace-pre-wrap break-words leading-relaxed">{h["instructions"] || <span className="text-muted-foreground">لا توجد تعليمات مكتوبة</span>}</p>
       {crit.length > 0 && (<div className="text-sm"><p className="text-muted-foreground">معايير التصحيح</p><ul>{crit.map((c, i) => <li key={i}>• {c["label"]}: {c["max"]}</li>)}</ul></div>)}
       {h["isTeacher"] && h["grading_notes"] && <p className="rounded-lg bg-muted p-3 text-sm">ملاحظات التصحيح: {h["grading_notes"]}</p>}
       {h["status"] === "cancelled" && <p className="text-sm text-destructive">أُلغي: {h["cancel_reason"]}</p>}
@@ -359,12 +350,15 @@ function StudentPanel({ h }: { h: Row }) {
   const draftFiles = x.files.filter((f) => f["attempt_no"] == null).map((f) => f["files"]);
   const st = x.sub?.["status"] ?? "none";
   return (
-    <section className="space-y-4 rounded-2xl border bg-card p-5">
+    <section className="space-y-4 rounded-2xl border-2 border-primary/20 bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-semibold">تسليمي</h3>
+        <h2 className="text-base font-bold">تسليمي</h2>
         <span className={`rounded-full px-2 py-0.5 text-xs ${statusTone(st)}`}>{SUB_STATUS[st]}</span>
       </div>
-      <p className="text-sm">موعدك: {schoolTime(x.state["effective_due"])}{x.state["effective_due"] !== h["due_at"] && " (ممدد لك)"} · المحاولات {x.state["attempts"]} من {x.state["max_attempts"]}</p>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="rounded-lg bg-muted/60 p-3"><p className="text-xs text-muted-foreground">موعدك</p><p className="font-semibold">{schoolTime(x.state["effective_due"])}</p>{x.state["effective_due"] !== h["due_at"] && <p className="text-xs text-primary">ممدد لك</p>}</div>
+        <div className="rounded-lg bg-muted/60 p-3"><p className="text-xs text-muted-foreground">المحاولات</p><p className="font-semibold">{x.state["attempts"]} من {x.state["max_attempts"]}</p></div>
+      </div>
       {st === "returned" && <p className="rounded-lg bg-destructive/10 p-3 text-sm">أعاده المعلم للاستكمال: {x.sub?.["returned_reason"]}</p>}
       {x.state["can_submit"] ? (
         <div className="space-y-3">
@@ -381,12 +375,12 @@ function StudentPanel({ h }: { h: Row }) {
             </>
           )}
           <p className="text-xs text-muted-foreground">الوقت المعتمد هو وقت استلام الخادم لزر «تسليم»، وليس بدء الرفع.</p>
-          <div className="flex gap-2">
-            <Button variant="outline" disabled={busy} onClick={() => saveDraft()}>حفظ مسودة</Button>
-            <Button disabled={busy} onClick={submit}>{x.state["attempts"] > 0 ? "إعادة التسليم" : "تسليم الواجب"}</Button>
+          <div className="flex flex-col-reverse gap-2 border-t pt-3 sm:flex-row sm:justify-end">
+            <Button variant="outline" disabled={busy} onClick={() => saveDraft()}>حفظ مسودة <span className="text-xs text-muted-foreground">(لا تُعد تسليمًا)</span></Button>
+            <Button disabled={busy} onClick={submit}>{busy ? "جارٍ التسليم…" : x.state["attempts"] > 0 ? "إعادة التسليم" : "تسليم الواجب"}</Button>
           </div>
         </div>
-      ) : <p className="rounded-lg bg-muted p-3 text-sm">{x.state["reason"]}</p>}
+      ) : <div role="status" className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm"><Lock className="mt-0.5 size-4 shrink-0" /><span><span className="font-semibold">التسليم غير متاح: </span>{x.state["reason"]}</span></div>}
       <Attempts d={x} h={h} />
       {!x.grade && h["max_score"] != null && x.attempts.length > 0 && <p className="text-xs text-muted-foreground">النتيجة لم تُنشر بعد.</p>}
     </section>
@@ -406,8 +400,11 @@ function FamilyPanel({ h }: { h: Row }) {
   const st = d.data.sub?.["status"] ?? "none";
   return (
     <section className="space-y-3 rounded-2xl border bg-card p-5">
-      <h3 className="font-semibold">متابعة: {kids.data?.find((k) => k["student_id"] === sid)?.["students"]?.["full_name"]}</h3>
-      <p className="text-sm">الحالة: {SUB_STATUS[st]} · الموعد: {schoolTime(d.data.state["effective_due"])}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-bold">متابعة: {kids.data?.find((k) => k["student_id"] === sid)?.["students"]?.["full_name"]}</h2>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs ${statusTone(st)}`}>{SUB_STATUS[st]}</span>
+      </div>
+      <p className="text-sm">الموعد: {schoolTime(d.data.state["effective_due"])} · المحاولات {d.data.state["attempts"]} من {d.data.state["max_attempts"]}</p>
       <p className="text-xs text-muted-foreground">ولي الأمر يتابع فقط ولا يسلّم نيابة عن الطالب.</p>
       <Attempts d={d.data} h={h} />
     </section>
@@ -425,4 +422,32 @@ function peopleLine(p: Row | null) {
   if (author && !(p["author_is_current"] && cur.length === 1 && cur[0] === author)) parts.push(`أعدّه: ${author}`);
   else if (!author) parts.push("أعدّه: غير مسجل في هذا السجل القديم");
   return " · " + parts.join(" · ");
+}
+
+function Hero({ h }: { h: Row }) {
+  const p = h["people"] as Row | null;
+  const cur = ((p?.["current_teachers"] ?? []) as string[]);
+  const author = p?.["author_name"] as string | null | undefined;
+  const facts: [string, React.ReactNode][] = [
+    ["معلم المادة", !p ? "تعذر التحميل" : cur.length ? cur.join("، ") : "لا يوجد تكليف ساري"],
+    ["أعدّه", author ?? "غير مسجل"],
+    ["موعد التسليم", schoolTime(h["due_at"])],
+    ["سياسة التأخر", <>{LATE_LABEL[h["late_policy"]]}{h["late_until"] && ` — حتى ${schoolTime(h["late_until"])}`}</>],
+    ["التسليم", `${(h["submission_types"] as string[]).map((t) => TYPE_LABEL[t]).join("، ")} · ${h["max_attempts"]} محاولة`],
+    ["التقييم", h["max_score"] == null ? "دون درجة" : `من ${h["max_score"]}`],
+  ];
+  return (
+    <header className="mb-6 rounded-2xl border bg-card p-5">
+      <Link to="/app/homework" className="inline-flex min-h-8 items-center text-sm text-primary hover:underline">→ الواجبات</Link>
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+        <span className="rounded-full bg-secondary px-2.5 py-1 font-semibold text-secondary-foreground">{h["courses"]?.["subjects"]?.["name"]} — شعبة {h["sections"]?.["name"]}</span>
+        <span className={`rounded-full px-2.5 py-1 font-medium ${statusTone(h["status"])}`}>{HW_STATUS[h["status"]]}</span>
+        <span className="text-muted-foreground">الإصدار {h["version"] || "—"} · متاح من {schoolTime(h["available_from"])}</span>
+      </div>
+      <h1 className="mt-2 break-words font-display text-2xl leading-tight sm:text-[1.75rem]">{h["title"]}</h1>
+      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 text-sm md:grid-cols-3">
+        {facts.map(([k, v]) => <div key={k} className="min-w-0"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="break-words font-medium">{v}</dd></div>)}
+      </dl>
+    </header>
+  );
 }
