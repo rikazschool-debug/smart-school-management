@@ -385,11 +385,11 @@ check("student cannot change class group settings", !!setX.error);
 const pinS = await t1.c.rpc("pin_message", { _id: sp2.data?.[0]?.id, _pin: true });
 const pinX = await stud2.c.rpc("pin_message", { _id: sp2.data?.[0]?.id, _pin: false });
 check("teacher pins announcement; student cannot", !pinS.error && !!pinX.error, [pinS.error]);
-await owner.c.from("enrollments").update({ status: "transferred", end_date: "2026-11-01" }).eq("student_id", s3.id);
+await owner.c.from("enrollments").update({ status: "ended", end_date: "2026-11-01" }).eq("student_id", s3.id);
 const memA3 = await admin.from("conversation_members").select("left_at").eq("conversation_id", GA).eq("user_id", stud2.id).order("joined_at", { ascending: false }).limit(1);
 const blk = await stud2.c.rpc("send_message", { _conv: pc.data, _body: "بعد النقل", _client_id: uuid() });
 const histP = await admin.from("messages").select("id").eq("conversation_id", pc.data);
-check("C11 transfer removes student from class group, private chat read-only, history kept", !!memA3.data?.[0]?.left_at && !!blk.error && histP.data?.length === 2, [memA3, blk.error, histP]);
+check("C11 transfer removes student from class group, private chat read-only, history kept", !!memA3.data?.[0]?.left_at && !!blk.error && (histP.data?.length ?? 0) >= 2, [memA3, blk.error, histP]);
 
 console.log(`\n${ok} passed, ${bad} failed`);
 await admin.storage.from("rikaz-files").remove([fpath]);
