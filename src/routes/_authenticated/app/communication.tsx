@@ -8,10 +8,10 @@ import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/s
 import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { arabicError, type AppContext } from "@/lib/session";
+import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { commTabs, commTabLabel, commTitle, type CommTab } from "@/lib/roles";
 import { KIND_LABEL, timeLabel } from "@/lib/comm";
-import { Thread } from "@/components/comm/thread";
+import { Thread, hasDraft } from "@/components/comm/thread";
 import { NewChatDialog } from "@/components/comm/new-chat";
 import { CircularsTab } from "@/components/comm/circulars";
 import { ManageTab } from "@/components/comm/manage";
