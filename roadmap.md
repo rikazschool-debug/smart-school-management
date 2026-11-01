@@ -115,6 +115,6 @@
 
 ## Package 12 (docs/package12-brief.md) — binding order
 - [x] P12.1 Grading screen closed (browser journeys A–E). Gap: extend-all via UI untested.
-- [ ] P12.2 Generalize design + server-side search/filters/pagination on existing screens
-- [ ] P12.3 Manual add + Excel template import (students, teachers)
-- [ ] P12.4 XLSX/PDF export for permitted sections
+- [~] P12.2 Server-side search/filters/pagination/mobile in shared CrudTable (students, teachers, guardians, academic, courses) DONE+browser-tested. OPEN: schedule, substitutions, members, classrooms, circulars
+- [x] P12.3 Excel template import students/teachers (browser-tested). Manual-add form unchanged (existing)
+- [~] P12.4 XLSX/PDF export on all CrudTable screens DONE+tested. OPEN: custom screens (circular reports, schedule, members)
