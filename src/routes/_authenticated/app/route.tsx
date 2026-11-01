@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -121,6 +122,7 @@ function Shell() {
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">
           <Outlet />
+          <ConfirmHost />
         </main>
       </div>
     </div>

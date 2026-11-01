@@ -159,7 +159,8 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                           </select>
                         )}
                         <Button size="sm" onClick={async () => {
-                          const reason = (await askText("سبب التغيير", { required: true })) ?? "";
+                          const reason = await askText("سبب التغيير", { required: true });
+                          if (reason === null) return;
                           if (await rpc("change_member_role", { _id: m["id"], _role: ed.role, _department: ed.dept || null, _reason: reason || null }, "تم تغيير الدور")) setEditing(null);
                         }}>حفظ</Button>
                         <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>إلغاء</Button>
@@ -170,8 +171,9 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => {
-                      const reason = (await askText(m["is_active"] ? "سبب الإيقاف" : "سبب التفعيل", { required: true })) ?? "";
+                    <Button variant="ghost" size="sm" onClick={async () => {
+                      const reason = await askText(m["is_active"] ? "سبب الإيقاف" : "سبب التفعيل", { required: true });
+                      if (reason === null) return;
                       void rpc("set_membership_active", { _id: m["id"], _active: !m["is_active"], _reason: reason || null }, m["is_active"] ? "أُوقفت العضوية" : "فُعّلت العضوية");
                     }}>{m["is_active"] ? "نشط — إيقاف" : "موقوف — تفعيل"}</Button>
                   </TableCell>
