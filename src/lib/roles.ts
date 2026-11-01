@@ -45,6 +45,8 @@ export type NavKey =
   | "substitutions"
   | "communication"
   | "homework"
+  | "attendance"
+  | "pickup"
   | "notifications";
 
 const MANAGE: NavKey[] = [
@@ -59,24 +61,25 @@ const MANAGE: NavKey[] = [
   "schoolday",
   "schedule",
   "substitutions",
+  "attendance",
   "communication",
   "notifications",
 ];
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
-  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework")],
+  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "attendance")],
   org_owner: ["home", "schools", "members", ...MANAGE.slice(1)],
   principal: MANAGE,
   vice_principal: MANAGE,
-  student_affairs: ["home", "students", "guardians", "schedule", "communication", "notifications"],
+  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "communication", "notifications"],
   dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
   supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
-  teacher: ["home", "classrooms", "homework", "schedule", "communication", "notifications"],
-  guardian: ["home", "classrooms", "homework", "schedule", "communication", "notifications"],
-  student: ["home", "classrooms", "homework", "schedule", "communication", "notifications"],
-  counselor: ["home", "communication", "notifications"],
+  teacher: ["home", "classrooms", "homework", "schedule", "attendance", "communication", "notifications"],
+  guardian: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
+  student: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
+  counselor: ["home", "attendance", "communication", "notifications"],
   nurse: ["home", "communication", "notifications"],
-  security: ["home", "communication", "notifications"],
+  security: ["home", "attendance", "communication", "notifications"],
 };
 
 /** Roles a caller may invite (mirrors can_invite: organization owner only, never another owner). */
@@ -137,4 +140,17 @@ export function canStartFamilyChat(role: Role) {
 /** Homework: only the course's current teacher creates/grades (mirrors is_course_teacher in SQL); listed roles only view. */
 export function canAuthorHomework(role: Role) {
   return role === "teacher";
+}
+
+export type AttTab = "today" | "gate" | "pickups" | "calls" | "cards" | "records" | "followup" | "settings";
+/** Attendance tabs per role (mirrors att_gate / att_approver / att_counselor in SQL). Security runs the gate, never approvals or settings;
+ *  teachers only see preparation requests of their own students; the counselor reads records and follow-ups only. */
+export function attTabs(role: Role): AttTab[] {
+  if (role === "security") return ["gate", "pickups", "calls", "today"];
+  if (role === "teacher") return ["pickups"];
+  if (role === "counselor") return ["today", "records", "followup"];
+  if (role === "student_affairs") return ["today", "gate", "pickups", "calls", "cards", "records", "followup"];
+  if (role === "org_owner" || role === "principal") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls"];
+  if (role === "vice_principal") return ["today", "pickups", "records", "followup", "cards", "gate", "calls"];
+  return [];
 }

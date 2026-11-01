@@ -188,6 +188,384 @@ export type Database = {
           },
         ]
       }
+      attendance_corrections: {
+        Row: {
+          day_id: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          id: string
+          new_late: number | null
+          new_status: string
+          old_late: number | null
+          old_status: string
+          reason: string
+          requested_at: string
+          requested_by: string
+          school_id: string
+          status: string
+        }
+        Insert: {
+          day_id: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          new_late?: number | null
+          new_status: string
+          old_late?: number | null
+          old_status: string
+          reason: string
+          requested_at?: string
+          requested_by: string
+          school_id: string
+          status?: string
+        }
+        Update: {
+          day_id?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          new_late?: number | null
+          new_status?: string
+          old_late?: number | null
+          old_status?: string
+          reason?: string
+          requested_at?: string
+          requested_by?: string
+          school_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_corrections_day_id_fkey"
+            columns: ["day_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_corrections_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_days: {
+        Row: {
+          created_at: string
+          date: string
+          first_in_at: string | null
+          id: string
+          late_minutes: number
+          note: string | null
+          policy_id: string | null
+          recorded_by: string | null
+          school_id: string
+          source: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          first_in_at?: string | null
+          id?: string
+          late_minutes?: number
+          note?: string | null
+          policy_id?: string | null
+          recorded_by?: string | null
+          school_id: string
+          source: string
+          status: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          first_in_at?: string | null
+          id?: string
+          late_minutes?: number
+          note?: string | null
+          policy_id?: string | null
+          recorded_by?: string | null
+          school_id?: string
+          source?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_days_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_days_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_days_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_events: {
+        Row: {
+          action: string
+          actor: string | null
+          after: Json | null
+          at: string
+          before: Json | null
+          entity: string
+          entity_id: string | null
+          id: string
+          reason: string | null
+          school_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          entity: string
+          entity_id?: string | null
+          id?: string
+          reason?: string | null
+          school_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          reason?: string | null
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_events_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_policies: {
+        Row: {
+          absence_review_at: string
+          approver_roles: Database["public"]["Enums"]["app_role"][]
+          arrival_open: string
+          call_point: string
+          created_at: string
+          created_by: string | null
+          day_end: string
+          day_start: string
+          effective_from: string
+          extra_days: string[]
+          grace_minutes: number
+          guardian_cancel_until: string
+          holidays: string[]
+          id: string
+          late_from: string
+          notify_arrival: boolean
+          org_id: string
+          principal_editable: string[]
+          school_id: string | null
+          study_days: number[]
+          version: number
+        }
+        Insert: {
+          absence_review_at?: string
+          approver_roles?: Database["public"]["Enums"]["app_role"][]
+          arrival_open?: string
+          call_point?: string
+          created_at?: string
+          created_by?: string | null
+          day_end?: string
+          day_start?: string
+          effective_from: string
+          extra_days?: string[]
+          grace_minutes?: number
+          guardian_cancel_until?: string
+          holidays?: string[]
+          id?: string
+          late_from?: string
+          notify_arrival?: boolean
+          org_id: string
+          principal_editable?: string[]
+          school_id?: string | null
+          study_days?: number[]
+          version?: number
+        }
+        Update: {
+          absence_review_at?: string
+          approver_roles?: Database["public"]["Enums"]["app_role"][]
+          arrival_open?: string
+          call_point?: string
+          created_at?: string
+          created_by?: string | null
+          day_end?: string
+          day_start?: string
+          effective_from?: string
+          extra_days?: string[]
+          grace_minutes?: number
+          guardian_cancel_until?: string
+          holidays?: string[]
+          id?: string
+          late_from?: string
+          notify_arrival?: boolean
+          org_id?: string
+          principal_editable?: string[]
+          school_id?: string | null
+          study_days?: number[]
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_policies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_policies_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      authorized_pickups: {
+        Row: {
+          active: boolean
+          added_by: string | null
+          created_at: string
+          full_name: string
+          id: string
+          national_id: string | null
+          phone: string | null
+          relationship: string | null
+          school_id: string
+          student_id: string
+        }
+        Insert: {
+          active?: boolean
+          added_by?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          national_id?: string | null
+          phone?: string | null
+          relationship?: string | null
+          school_id: string
+          student_id: string
+        }
+        Update: {
+          active?: boolean
+          added_by?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          national_id?: string | null
+          phone?: string | null
+          relationship?: string | null
+          school_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authorized_pickups_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "authorized_pickups_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_queue: {
+        Row: {
+          announce: string
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          pickup_id: string
+          played_at: string | null
+          played_by: string | null
+          school_id: string
+          status: string
+        }
+        Insert: {
+          announce: string
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          pickup_id: string
+          played_at?: string | null
+          played_by?: string | null
+          school_id: string
+          status?: string
+        }
+        Update: {
+          announce?: string
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          pickup_id?: string
+          played_at?: string | null
+          played_by?: string | null
+          school_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_queue_pickup_id_fkey"
+            columns: ["pickup_id"]
+            isOneToOne: true
+            referencedRelation: "pickup_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_queue_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       circular_acks: {
         Row: {
           acked_at: string
@@ -1159,6 +1537,57 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gate_movements: {
+        Row: {
+          at: string
+          by_user: string | null
+          date: string
+          id: string
+          kind: string
+          note: string | null
+          pickup_id: string | null
+          school_id: string
+          student_id: string
+        }
+        Insert: {
+          at?: string
+          by_user?: string | null
+          date: string
+          id?: string
+          kind: string
+          note?: string | null
+          pickup_id?: string | null
+          school_id: string
+          student_id: string
+        }
+        Update: {
+          at?: string
+          by_user?: string | null
+          date?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          pickup_id?: string | null
+          school_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_movements_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_movements_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -2277,6 +2706,125 @@ export type Database = {
           },
         ]
       }
+      pickup_requests: {
+        Row: {
+          arrived_at: string | null
+          arrived_by: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          guardian_id: string
+          handed_at: string | null
+          handed_by: string | null
+          id: string
+          kind: string
+          pickup_name: string
+          pickup_person_id: string | null
+          planned_at: string | null
+          preparing_at: string | null
+          ready_at: string | null
+          ready_by: string | null
+          reason: string | null
+          req_date: string
+          requested_by: string
+          school_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          arrived_at?: string | null
+          arrived_by?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          guardian_id: string
+          handed_at?: string | null
+          handed_by?: string | null
+          id?: string
+          kind: string
+          pickup_name: string
+          pickup_person_id?: string | null
+          planned_at?: string | null
+          preparing_at?: string | null
+          ready_at?: string | null
+          ready_by?: string | null
+          reason?: string | null
+          req_date: string
+          requested_by: string
+          school_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          arrived_at?: string | null
+          arrived_by?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          guardian_id?: string
+          handed_at?: string | null
+          handed_by?: string | null
+          id?: string
+          kind?: string
+          pickup_name?: string
+          pickup_person_id?: string | null
+          planned_at?: string | null
+          preparing_at?: string | null
+          ready_at?: string | null
+          ready_by?: string | null
+          reason?: string | null
+          req_date?: string
+          requested_by?: string
+          school_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_requests_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_requests_pickup_person_id_fkey"
+            columns: ["pickup_person_id"]
+            isOneToOne: false
+            referencedRelation: "authorized_pickups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_admins: {
         Row: {
           created_at: string
@@ -2558,6 +3106,60 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_cards: {
+        Row: {
+          id: string
+          issued_at: string
+          issued_by: string | null
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          school_id: string
+          status: string
+          student_id: string
+          token: string
+        }
+        Insert: {
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          school_id: string
+          status?: string
+          student_id: string
+          token?: string
+        }
+        Update: {
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          school_id?: string
+          status?: string
+          student_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_cards_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_cards_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -3315,6 +3917,62 @@ export type Database = {
         }
         Returns: undefined
       }
+      _att_announce_section: { Args: { _student: string }; Returns: string }
+      _att_default_policy: {
+        Args: { _school: string }
+        Returns: {
+          absence_review_at: string
+          approver_roles: Database["public"]["Enums"]["app_role"][]
+          arrival_open: string
+          call_point: string
+          created_at: string
+          created_by: string | null
+          day_end: string
+          day_start: string
+          effective_from: string
+          extra_days: string[]
+          grace_minutes: number
+          guardian_cancel_until: string
+          holidays: string[]
+          id: string
+          late_from: string
+          notify_arrival: boolean
+          org_id: string
+          principal_editable: string[]
+          school_id: string | null
+          study_days: number[]
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "attendance_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _att_event: {
+        Args: {
+          _action: string
+          _after: Json
+          _before: Json
+          _entity: string
+          _id: string
+          _reason: string
+          _school: string
+        }
+        Returns: undefined
+      }
+      _att_notify_guardians: {
+        Args: {
+          _body: string
+          _key: string
+          _school: string
+          _student: string
+          _title: string
+        }
+        Returns: undefined
+      }
+      _att_section: { Args: { _student: string }; Returns: string }
       _audit: {
         Args: {
           _action: string
@@ -3458,6 +4116,16 @@ export type Database = {
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
       ack_circular: { Args: { _id: string }; Returns: number }
+      add_authorized_pickup: {
+        Args: {
+          _name: string
+          _national_id: string
+          _phone: string
+          _relationship: string
+          _student: string
+        }
+        Returns: string
+      }
       add_circular_recipients: {
         Args: { _id: string; _require_ack?: boolean; _users: string[] }
         Returns: number
@@ -3493,6 +4161,77 @@ export type Database = {
         Args: { _end: string; _start: string }
         Returns: boolean
       }
+      att_approver: { Args: { _school: string }; Returns: boolean }
+      att_classify: {
+        Args: {
+          _local: string
+          _p: Database["public"]["Tables"]["attendance_policies"]["Row"]
+        }
+        Returns: {
+          late_minutes: number
+          status: string
+        }[]
+      }
+      att_classify_preview: {
+        Args: { _at: string; _school: string }
+        Returns: Json
+      }
+      att_counselor: { Args: { _school: string }; Returns: boolean }
+      att_gate: { Args: { _school: string }; Returns: boolean }
+      att_is_school_day: {
+        Args: {
+          _d: string
+          _p: Database["public"]["Tables"]["attendance_policies"]["Row"]
+        }
+        Returns: boolean
+      }
+      attendance_alerts: {
+        Args: { _from: string; _min: number; _school: string; _to: string }
+        Returns: {
+          absent: number
+          early_out: number
+          late: number
+          section: string
+          student_id: string
+          student_name: string
+        }[]
+      }
+      attendance_board: {
+        Args: { _date: string; _school: string }
+        Returns: Json
+      }
+      attendance_policy: {
+        Args: { _date: string; _school: string }
+        Returns: {
+          absence_review_at: string
+          approver_roles: Database["public"]["Enums"]["app_role"][]
+          arrival_open: string
+          call_point: string
+          created_at: string
+          created_by: string | null
+          day_end: string
+          day_start: string
+          effective_from: string
+          extra_days: string[]
+          grace_minutes: number
+          guardian_cancel_until: string
+          holidays: string[]
+          id: string
+          late_from: string
+          notify_arrival: boolean
+          org_id: string
+          principal_editable: string[]
+          school_id: string | null
+          study_days: number[]
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "attendance_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       available_substitutes: {
         Args: { _date: string; _slot: string }
         Returns: {
@@ -3500,6 +4239,35 @@ export type Database = {
           same_department: boolean
           teacher_id: string
         }[]
+      }
+      build_absence_review: {
+        Args: { _date: string; _school: string }
+        Returns: number
+      }
+      call_next: {
+        Args: { _school: string }
+        Returns: {
+          announce: string
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          pickup_id: string
+          played_at: string | null
+          played_by: string | null
+          school_id: string
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "call_queue"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      call_result: {
+        Args: { _action: string; _error: string; _id: string }
+        Returns: undefined
       }
       can_discuss_post: { Args: { _post: string }; Returns: boolean }
       can_invite: {
@@ -3529,6 +4297,10 @@ export type Database = {
       can_view_student: {
         Args: { _school: string; _student: string }
         Returns: boolean
+      }
+      cancel_pickup: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
       }
       cancel_substitution: {
         Args: { _id: string; _reason: string }
@@ -3682,6 +4454,16 @@ export type Database = {
         Args: { _org_name: string; _school_name: string }
         Returns: string
       }
+      create_pickup_request: {
+        Args: {
+          _kind: string
+          _person: string
+          _planned_at: string
+          _reason: string
+          _student: string
+        }
+        Returns: string
+      }
       create_post_file: {
         Args: {
           _category?: string
@@ -3715,8 +4497,16 @@ export type Database = {
         Args: { _approve: boolean; _id: string; _note?: string }
         Returns: undefined
       }
+      decide_attendance_correction: {
+        Args: { _approve: boolean; _id: string; _note: string }
+        Returns: undefined
+      }
       decide_late_joiner: {
         Args: { _approve: boolean; _due: string; _hw: string; _student: string }
+        Returns: undefined
+      }
+      decide_pickup: {
+        Args: { _approve: boolean; _id: string; _note: string }
         Returns: undefined
       }
       decide_report: {
@@ -3765,6 +4555,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      handover_pickup: { Args: { _id: string }; Returns: undefined }
       has_school_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
@@ -3856,6 +4647,10 @@ export type Database = {
       is_supervised_course: { Args: { _course: string }; Returns: boolean }
       is_supervised_student: { Args: { _student: string }; Returns: boolean }
       is_teacher_of_student: { Args: { _student: string }; Returns: boolean }
+      issue_student_card: {
+        Args: { _reason?: string; _student: string }
+        Returns: string
+      }
       late_joiners: {
         Args: { _hw: string }
         Returns: {
@@ -3867,6 +4662,10 @@ export type Database = {
         }[]
       }
       leave_group: { Args: { _conv: string }; Returns: undefined }
+      manual_attendance: {
+        Args: { _reason: string; _status: string; _student: string }
+        Returns: string
+      }
       mark_conversation_read: {
         Args: { _conv: string; _seq: number }
         Returns: undefined
@@ -3917,6 +4716,26 @@ export type Database = {
       my_dept_ids: { Args: never; Returns: string[] }
       my_teacher_ids: { Args: never; Returns: string[] }
       open_circular: { Args: { _id: string }; Returns: undefined }
+      pickup_arrived: { Args: { _id: string }; Returns: undefined }
+      pickup_progress: {
+        Args: { _id: string; _to: string }
+        Returns: undefined
+      }
+      pickup_queue: {
+        Args: { _school: string }
+        Returns: {
+          created_at: string
+          id: string
+          kind: string
+          pickup_name: string
+          pickup_national_id: string
+          planned_at: string
+          section: string
+          status: string
+          student_id: string
+          student_name: string
+        }[]
+      }
       pin_message: { Args: { _id: string; _pin: boolean }; Returns: undefined }
       prepare_template_files: {
         Args: { _files: string[]; _new: string }
@@ -3924,6 +4743,16 @@ export type Database = {
           dst_path: string
           file_id: string
           src_path: string
+        }[]
+      }
+      present_now: {
+        Args: { _school: string }
+        Returns: {
+          last_at: string
+          last_kind: string
+          section: string
+          student_id: string
+          student_name: string
         }[]
       }
       preview_circular_audience: {
@@ -3966,6 +4795,10 @@ export type Database = {
         }
         Returns: string
       }
+      record_return: {
+        Args: { _note: string; _student: string }
+        Returns: undefined
+      }
       remind_circular_ack: { Args: { _id: string }; Returns: number }
       remove_feedback_file: { Args: { _file: string }; Returns: undefined }
       remove_group_member: {
@@ -3993,7 +4826,20 @@ export type Database = {
         Args: { _kind: string; _record: string }
         Returns: string
       }
+      request_attendance_correction: {
+        Args: {
+          _day: string
+          _new_late: number
+          _new_status: string
+          _reason: string
+        }
+        Returns: string
+      }
       resend_invitation: { Args: { _id: string }; Returns: string }
+      resolve_absence: {
+        Args: { _day: string; _reason: string; _status: string }
+        Returns: undefined
+      }
       return_submission: {
         Args: { _reason: string; _sub: string }
         Returns: undefined
@@ -4012,7 +4858,20 @@ export type Database = {
         Returns: number
       }
       revoke_invitation: { Args: { _id: string }; Returns: undefined }
+      revoke_student_card: {
+        Args: { _card: string; _reason: string }
+        Returns: undefined
+      }
       run_file_cleanup: { Args: never; Returns: Json }
+      save_attendance_policy: {
+        Args: {
+          _effective_from: string
+          _org: string
+          _school: string
+          _v: Json
+        }
+        Returns: string
+      }
       save_circular: {
         Args: {
           _ack_due: string
@@ -4033,6 +4892,10 @@ export type Database = {
       save_submission_draft: {
         Args: { _body: string; _hw: string; _link: string }
         Returns: string
+      }
+      scan_attendance: {
+        Args: { _school: string; _token: string }
+        Returns: Json
       }
       schedule_teacher_names: {
         Args: { _timetable: string }
@@ -4067,6 +4930,10 @@ export type Database = {
           id: string
           seq: number
         }[]
+      }
+      set_authorized_pickup_active: {
+        Args: { _active: boolean; _id: string }
+        Returns: undefined
       }
       set_class_group_settings: {
         Args: {
