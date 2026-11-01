@@ -19,7 +19,7 @@ async function count(table: string, schoolId: string, extra?: (q: ReturnType<typ
 
 const today = () => new Intl.DateTimeFormat("ar-SA", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Riyadh" }).format(new Date());
 
-function Stat({ label, value, icon: Icon, to }: { label: string; value: number | undefined; icon: LucideIcon; to?: string }) {
+function Stat({ label, value, icon: Icon, to }: { label: string; value: number | undefined; icon: LucideIcon; to?: string | undefined }) {
   const body = (
     <div className="flex h-full items-center gap-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/40">
       <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground"><Icon className="size-5" /></span>
