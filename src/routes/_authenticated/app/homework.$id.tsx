@@ -219,6 +219,7 @@ function Attempts({ d, h }: { d: NonNullable<ReturnType<typeof useStudentData>["
         <div className="rounded-lg bg-primary/5 p-3 text-sm">
           <p className="font-semibold">{d.grade["score"] != null ? `الدرجة: ${d.grade["score"]} من ${h["max_score"]}` : "ملاحظات المعلم"} <span className="text-xs text-muted-foreground">(المحاولة {d.grade["attempt_no"]})</span></p>
           {d.grade["feedback"] && <p className="whitespace-pre-wrap">{d.grade["feedback"]}</p>}
+          <FeedbackFiles grade={d.grade} editable={false} />
           {d.history.map((x) => <p key={x["id"]} className="text-xs text-muted-foreground">عُدّلت من {x["old_score"] ?? "—"} إلى {x["new_score"] ?? "—"}: {x["reason"]} ({schoolTime(x["created_at"])})</p>)}
         </div>
       )}

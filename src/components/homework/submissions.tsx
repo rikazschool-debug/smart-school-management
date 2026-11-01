@@ -6,7 +6,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileList } from "@/components/homework/files";
+import { FileList, Uploader } from "@/components/homework/files";
 import { arabicError } from "@/lib/session";
 import { GRADE_STATUS, SUB_STATUS, fromLocalInput, safeHref, schoolTime, statusTone } from "@/lib/homework";
 
