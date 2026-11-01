@@ -53,11 +53,11 @@ export function PageHeader({ title, desc, action, eyebrow }: { title: string; de
   );
 }
 /** Section block used inside pages: title row + optional trailing link/action. */
-export function Section({ title, action, children, className = "" }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
+export function Section({ title, desc, action, children, className = "" }: { title: string; desc?: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
     <section className={className}>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-base font-bold">{title}</h2>
+        <div><h2 className="text-base font-bold">{title}</h2>{desc && <p className="text-xs text-muted-foreground">{desc}</p>}</div>
         {action}
       </div>
       {children}
