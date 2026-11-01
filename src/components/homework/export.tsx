@@ -13,12 +13,26 @@ export const REPORT_LABEL: Record<string, string> = {
   family: "ملخص واجبات أبنائي",
 };
 
+const ORDER = ["الطالب", "الواجب", "الحالة", "الإتاحة", "الموعد", "الموعد المطبق", "النوع", "المحاولة", "وقت التسليم", "متأخر", "الدرجة", "من", "النسبة %", "تاريخ النشر", "المستهدفون", "سلّموا", "نتائج منشورة"];
+const VALUE_AR: Record<string, string> = {
+  draft: "مسودة", scheduled: "مجدول", published: "منشور", closed: "مغلق", archived: "مؤرشف", cancelled: "ملغى",
+  none: "لم يسلّم", submitted: "مسلّم", resubmitted: "أعيد التسليم", returned: "معاد للاستكمال", paper: "تسليم ورقي", late: "متأخر",
+};
+const cell = (v: unknown) => {
+  let s = v == null ? "" : String(v);
+  if (VALUE_AR[s]) s = VALUE_AR[s]!;
+  if (/^-?\d+\.00$/.test(s)) s = s.slice(0, -3);
+  if (/^[=+\-@\t\r]/.test(s) && !/^-?\d/.test(s)) s = "'" + s; // spreadsheet formula injection guard
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
 /** CSV (UTF-8 with BOM so Excel shows Arabic). Rows come from homework_report, which enforces scope on the server. */
 export function toCsv(rows: Row[]): string {
   if (!rows.length) return "\uFEFF";
-  const cols = Object.keys(rows[0]!);
-  const esc = (v: unknown) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-  return "\uFEFF" + [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\r\n");
+  const keys = Object.keys(rows[0]!);
+  const rank = (k: string) => { const i = ORDER.indexOf(k); return i < 0 ? 99 : i; };
+  const cols = [...keys].sort((a, b) => rank(a) - rank(b));
+  return "\uFEFF" + [cols.join(","), ...rows.map((r) => cols.map((c) => cell(r[c])).join(","))].join("\r\n");
 }
 
 export function ExportBar({ course, kinds, note }: { course: string | null; kinds: string[]; note?: string }) {
