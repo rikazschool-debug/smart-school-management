@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { selectCls } from "@/components/ui/native-select";
 import { useState } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
@@ -10,7 +11,7 @@ import { arabicError, useSession } from "@/lib/session";
 import { GROUP_TYPE_LABEL } from "@/lib/comm";
 import { MemberPicker } from "@/components/comm/member-picker";
 
-const sel = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
+const sel = selectCls("w-full", true);
 const ACTION: Record<string, string> = {
   group_create: "إنشاء المجموعة", member_add: "إضافة عضو", member_remove: "إزالة عضو", member_leave: "مغادرة عضو", role_change: "تغيير دور",
   owner_transfer: "نقل الملكية", group_archive: "أرشفة", group_reopen: "إعادة فتح", settings_update: "تعديل الإعدادات", derived_add: "إضافة تلقائية من القسم",
