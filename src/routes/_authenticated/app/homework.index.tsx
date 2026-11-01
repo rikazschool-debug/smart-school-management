@@ -70,7 +70,7 @@ function StaffList({ schoolId, author }: { schoolId: string; author: boolean }) 
         <Input className="h-9 w-56" placeholder="بحث بالعنوان" value={q} onChange={(e) => setQ(e.target.value)} />
         {author && <Button asChild className="ms-auto"><Link to="/app/homework/new"><Plus className="h-4 w-4" /> واجب جديد</Link></Button>}
       </div>
-      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} /> : !list.data?.length ? (
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? (
         <EmptyState title="لا توجد واجبات" hint={author ? "أنشئ أول واجب لمقرراتك." : undefined} />
       ) : (
         <div className="overflow-x-auto rounded-2xl border bg-card">
@@ -164,7 +164,7 @@ function StudentHomework({ studentId, guardian }: { studentId: string; guardian?
     },
   });
   if (list.isLoading) return <LoadingState />;
-  if (list.error) return <ErrorState message={arabicError(list.error)} />;
+  if (list.error) return <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} />;
   const now = Date.now();
   const rows = list.data ?? [];
   const pending = (r: Row) => ["none", "draft"].includes(r["sub_status"]) && !r["removed"] && r["status"] !== "archived";

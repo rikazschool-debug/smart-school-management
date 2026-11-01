@@ -157,7 +157,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
             </div>
           )}
           {msgs.isLoading ? <LoadingState /> : msgs.error ? (
-            <div className="space-y-2"><ErrorState message={arabicError(msgs.error)} /><Button size="sm" onClick={() => msgs.refetch()}>إعادة المحاولة</Button></div>
+            <div className="space-y-2"><ErrorState message={arabicError(msgs.error)} onRetry={() => msgs.refetch()} /></div>
           ) : !list.length && !locals.length ? (
             <p className="p-8 text-center text-sm text-muted-foreground">لا توجد رسائل بعد. ابدأ المحادثة.</p>
           ) : (

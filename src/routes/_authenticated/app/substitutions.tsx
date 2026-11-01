@@ -73,7 +73,7 @@ function Subs({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             <Input className="sm:col-span-2" placeholder="ملاحظة (اختياري)" aria-label="ملاحظة" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button>تسجيل</Button>
           </form>
-          {absences.isLoading ? <LoadingState /> : absences.error ? <ErrorState message={arabicError(absences.error)} /> : !absences.data?.length ? <EmptyState title="لا يوجد غياب مسجل لهذا التاريخ" /> : (
+          {absences.isLoading ? <LoadingState /> : absences.error ? <ErrorState message={arabicError(absences.error)} onRetry={() => absences.refetch()} /> : !absences.data?.length ? <EmptyState title="لا يوجد غياب مسجل لهذا التاريخ" /> : (
             <div className="space-y-4">
               {absences.data.map((a) => <Absence key={a["id"]} a={a} date={date} subs={subs.data ?? []} onDone={refresh} />)}
             </div>
@@ -96,7 +96,7 @@ function Absence({ a, date, subs, onDone }: { a: Row; date: string; subs: Row[];
   return (
     <section className="rounded-2xl border bg-card p-4">
       <h3 className="font-bold">{a["teachers"]?.full_name} {a["note"] && <span className="text-sm font-normal text-muted-foreground">— {a["note"]}</span>}</h3>
-      {aff.isLoading ? <LoadingState /> : aff.error ? <ErrorState message={arabicError(aff.error)} /> : !aff.data?.length ? <p className="mt-2 text-sm text-muted-foreground">لا حصص له في هذا اليوم.</p> : (
+      {aff.isLoading ? <LoadingState /> : aff.error ? <ErrorState message={arabicError(aff.error)} onRetry={() => aff.refetch()} /> : !aff.data?.length ? <p className="mt-2 text-sm text-muted-foreground">لا حصص له في هذا اليوم.</p> : (
         <ul className="mt-3 space-y-2">
           {aff.data.map((s) => <AffectedSlot key={s["slot_id"]} s={s} a={a} date={date} history={subs.filter((x) => x["slot_id"] === s["slot_id"])} onDone={onDone} />)}
         </ul>

@@ -41,7 +41,7 @@ function Page() {
     },
   });
   if (hw.isLoading) return <LoadingState />;
-  if (hw.error) return <ErrorState message={arabicError(hw.error)} />;
+  if (hw.error) return <ErrorState message={arabicError(hw.error)} onRetry={() => hw.refetch()} />;
   if (!hw.data) return <EmptyState title="الواجب غير موجود أو ليس ضمن صلاحياتك" />;
   const h = hw.data;
   const role = ctx?.role;
@@ -333,7 +333,7 @@ function StudentPanel({ h }: { h: Row }) {
   const [busy, setBusy] = useState(false);
   const clientId = useMemo(() => crypto.randomUUID(), [d.data?.sub?.["attempt_count"]]);
   if (me.isLoading || d.isLoading) return <LoadingState />;
-  if (d.error) return <ErrorState message={arabicError(d.error)} />;
+  if (d.error) return <ErrorState message={arabicError(d.error)} onRetry={() => d.refetch()} />;
   if (!d.data) return <EmptyState title="لست ضمن المستهدفين بهذا الواجب" />;
   const x = d.data;
   const types = h["submission_types"] as string[];

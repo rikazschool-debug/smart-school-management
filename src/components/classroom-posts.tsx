@@ -66,7 +66,7 @@ export function ClassroomPosts({ classroom, courseId }: { classroom: string; cou
           <Button size="sm">حفظ كمسودة</Button>
         </form>
       )}
-      {posts.isLoading ? <LoadingState /> : posts.error ? <ErrorState message={arabicError(posts.error)} /> : !visible.length ? <EmptyState title="لا توجد منشورات بعد" /> :
+      {posts.isLoading ? <LoadingState /> : posts.error ? <ErrorState message={arabicError(posts.error)} onRetry={() => posts.refetch()} /> : !visible.length ? <EmptyState title="لا توجد منشورات بعد" /> :
         visible.map((p) => <Post key={p["id"]} p={p} files={posts.data!.files.filter((f) => f["source_id"] === p["id"])} canEdit={teacher && p["author_user_id"] === user.id} showComments={active?.role !== "guardian"} onChange={refresh} />)}
     </div>
   );

@@ -51,7 +51,7 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
     if (error) toast.error(arabicError(error)); else { toast.success(ok); refresh(); }
   };
   if (conv.isLoading || people.isLoading) return <LoadingState />;
-  if (conv.error) return <ErrorState message={arabicError(conv.error)} />;
+  if (conv.error) return <ErrorState message={arabicError(conv.error)} onRetry={() => conv.refetch()} />;
   const c = conv.data!;
   const isAdmin = myRole === "owner" || myRole === "moderator" || myRole === null;
   const isOwner = myRole === "owner" || myRole === null;

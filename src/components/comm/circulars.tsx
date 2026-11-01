@@ -56,7 +56,7 @@ export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { scho
         <Input aria-label="من تاريخ" type="date" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} />
         <Input aria-label="إلى تاريخ" type="date" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} />
       </div>
-      {q.isLoading ? <LoadingState /> : q.error ? <div className="space-y-2"><ErrorState message={arabicError(q.error)} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div> : !list.length ? <EmptyState title={q.data?.length ? "لا توجد تعاميم مطابقة للتصفية" : "لا توجد تعاميم"} /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <div className="space-y-2"><ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div> : !list.length ? <EmptyState title={q.data?.length ? "لا توجد تعاميم مطابقة للتصفية" : "لا توجد تعاميم"} /> : (
         <ul className="space-y-2">
           {list.map((c) => {
             const mine = (c["circular_recipients"] as Row[]).find((r) => r["user_id"] === me);
@@ -184,7 +184,7 @@ function Stats({ id, title }: { id: string; title: string }) {
   });
   const [f, setF] = useState({ branch: "", role: "", version: "" });
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <div className="space-y-2"><ErrorState message={arabicError(q.error)} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div>;
+  if (q.error) return <div className="space-y-2"><ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div>;
   const all = q.data ?? [];
   const branches = [...new Map(all.map((r) => [r["school_id"], r["school_name"]])).entries()];
   const rolesSet = [...new Set(all.flatMap((r) => String(r["role"] ?? "").split(",").filter(Boolean)))];

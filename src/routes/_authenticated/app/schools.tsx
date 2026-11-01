@@ -43,7 +43,7 @@ function Page() {
       <div className="mb-4 flex justify-end">
         {orgId && <Button onClick={() => setEditing({ is_active: true })}><Plus className="size-4" /> مدرسة جديدة</Button>}
       </div>
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد مدارس" /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد مدارس" /> : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {q.data.map((s) => (
             <button key={s["id"]} onClick={() => setEditing(s)} className="rounded-2xl border bg-card p-5 text-start shadow-sm hover:border-primary">

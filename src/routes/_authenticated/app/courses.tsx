@@ -71,7 +71,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <PageHeader title="المقررات والتكليفات" desc="المقرر = مادة + شعبة + سنة. يُكلَّف به معلم ثم يعتمده رئيس القسم أو الإدارة." />
       <section className="mb-10 space-y-3">
         <h2 className="text-lg font-bold">التكليفات</h2>
-        {pending.isLoading ? <LoadingState /> : pending.error ? <ErrorState message={arabicError(pending.error)} /> : visible.length === 0 ? (
+        {pending.isLoading ? <LoadingState /> : pending.error ? <ErrorState message={arabicError(pending.error)} onRetry={() => pending.refetch()} /> : visible.length === 0 ? (
           <EmptyState title="لا توجد تكليفات" hint={ctx.role === "dept_head" ? "تظهر هنا تكليفات مواد قسمك فقط." : undefined} />
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">

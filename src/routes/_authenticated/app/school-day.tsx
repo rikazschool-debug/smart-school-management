@@ -33,7 +33,7 @@ function Setup({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const run = async (pr: Promise<{ error: unknown }>, ok: string) => { const { error } = await pr; if (error) toast.error(arabicError(error)); else { toast.success(ok); refresh(); } };
 
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState message={arabicError(q.error)} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const d = q.data!;
   const lessons = d.periods.filter((x) => x["kind"] === "lesson");
 

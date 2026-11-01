@@ -255,7 +255,7 @@ export function CrudTable({
       {q.isLoading ? (
         <LoadingState />
       ) : q.error ? (
-        <ErrorState message={arabicError(q.error)} />
+        <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState title="لا توجد سجلات" hint={canWrite ? "ابدأ بإضافة أول سجل." : undefined} />
       ) : (

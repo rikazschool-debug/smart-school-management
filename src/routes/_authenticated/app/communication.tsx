@@ -141,7 +141,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
           {convs.isLoading ? <div className="p-3"><LoadingState /></div> : convs.error ? (
-            <div className="space-y-2 p-3"><ErrorState message={arabicError(convs.error)} /><Button size="sm" onClick={() => convs.refetch()}>إعادة المحاولة</Button></div>
+            <div className="space-y-2 p-3"><ErrorState message={arabicError(convs.error)} onRetry={() => convs.refetch()} /></div>
           ) : !list.length ? (
             <div className="p-3"><EmptyState title={tab === "archive" ? "الأرشيف فارغ" : "لا توجد محادثات"} hint={canStart && tab !== "archive" ? "ابدأ محادثة جديدة من زر +" : undefined} /></div>
           ) : (

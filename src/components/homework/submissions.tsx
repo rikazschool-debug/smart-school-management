@@ -42,7 +42,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
   });
   if (h["status"] === "draft") return <EmptyState title="المسودة غير منشورة" hint="تظهر قائمة التسليمات بعد النشر." />;
   if (data.isLoading) return <LoadingState />;
-  if (data.error) return <ErrorState message={arabicError(data.error)} />;
+  if (data.error) return <ErrorState message={arabicError(data.error)} onRetry={() => data.refetch()} />;
   // late joiners awaiting a decision (or declined) are not targets yet — they live in the late-joiners panel
   const rows = (data.data ?? []).filter((r) => !["pending", "declined"].includes(r["join_status"]));
   const submitted = (r: Row) => (r["sub"]?.["attempt_count"] ?? 0) > 0;

@@ -43,7 +43,7 @@ function GroupsList({ ctx }: { ctx: AppContext & { schoolId: string } }) {
     },
   });
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState message={arabicError(q.error)} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   if (!q.data?.length) return <EmptyState title="لا توجد مجموعات بعد" hint={canCreateGroup(ctx.role) ? "أنشئ لجنة أو فريق عمل من «إنشاء مجموعة»." : "إنشاء المجموعات لمالك المؤسسة أو مدير المدرسة."} />;
   return (
     <div className="space-y-2">
@@ -218,7 +218,7 @@ function Reports({ ctx }: { ctx: AppContext & { schoolId: string } }) {
     },
   });
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState message={arabicError(q.error)} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   if (!q.data?.length) return <EmptyState title="لا توجد بلاغات" />;
   return <ul className="space-y-2">{q.data.map((r) => <ReportItem key={r["id"]} r={r} onDone={() => q.refetch()} />)}</ul>;
 }

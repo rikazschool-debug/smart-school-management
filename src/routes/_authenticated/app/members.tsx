@@ -137,7 +137,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       )}
 
       <h2 className="mb-3 text-lg font-bold">الأعضاء</h2>
-      {mem.isLoading ? <LoadingState /> : mem.error ? <ErrorState message={arabicError(mem.error)} /> : !mem.data?.length ? <EmptyState title="لا يوجد أعضاء بعد" /> : (
+      {mem.isLoading ? <LoadingState /> : mem.error ? <ErrorState message={arabicError(mem.error)} onRetry={() => mem.refetch()} /> : !mem.data?.length ? <EmptyState title="لا يوجد أعضاء بعد" /> : (
         <div className="mb-8 overflow-x-auto rounded-xl border bg-card">
           <Table>
             <TableHeader><TableRow><TableHead className="text-start">الاسم</TableHead><TableHead className="text-start">البريد</TableHead><TableHead className="text-start">الدور</TableHead><TableHead className="text-start">الحالة</TableHead></TableRow></TableHeader>
