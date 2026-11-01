@@ -92,8 +92,8 @@ function AuthPage() {
 
   return (
     <div className="grid min-h-screen md:grid-cols-2">
-      <div className="hidden flex-col justify-between bg-sidebar p-10 text-sidebar-foreground md:flex">
-        <span className="font-display text-3xl text-sidebar-primary">ركاز</span>
+      <div className="hidden flex-col justify-between bg-primary p-10 text-primary-foreground md:flex">
+        <span className="font-display text-3xl text-accent">ركاز</span>
         <p className="font-display text-3xl leading-relaxed">مدرسة واحدة أو مجموعة كاملة —<br />كل دور يرى ما يخصه فقط.</p>
         <p className="text-sm opacity-70">منصة إدارة المدارس</p>
       </div>
