@@ -55,6 +55,189 @@ export type Database = {
           },
         ]
       }
+      circular_acks: {
+        Row: {
+          acked_at: string
+          circular_id: string
+          id: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          acked_at?: string
+          circular_id: string
+          id?: string
+          user_id: string
+          version: number
+        }
+        Update: {
+          acked_at?: string
+          circular_id?: string
+          id?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circular_acks_circular_id_fkey"
+            columns: ["circular_id"]
+            isOneToOne: false
+            referencedRelation: "circulars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      circular_recipients: {
+        Row: {
+          ack_required_version: number | null
+          circular_id: string
+          first_version: number
+          opened_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ack_required_version?: number | null
+          circular_id: string
+          first_version: number
+          opened_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ack_required_version?: number | null
+          circular_id?: string
+          first_version?: number
+          opened_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circular_recipients_circular_id_fkey"
+            columns: ["circular_id"]
+            isOneToOne: false
+            referencedRelation: "circulars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      circular_versions: {
+        Row: {
+          ack_due: string | null
+          audience: Json
+          body: string
+          circular_id: string
+          id: string
+          published_at: string
+          published_by: string
+          requires_ack: boolean
+          title: string
+          version: number
+        }
+        Insert: {
+          ack_due?: string | null
+          audience: Json
+          body: string
+          circular_id: string
+          id?: string
+          published_at?: string
+          published_by: string
+          requires_ack: boolean
+          title: string
+          version: number
+        }
+        Update: {
+          ack_due?: string | null
+          audience?: Json
+          body?: string
+          circular_id?: string
+          id?: string
+          published_at?: string
+          published_by?: string
+          requires_ack?: boolean
+          title?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circular_versions_circular_id_fkey"
+            columns: ["circular_id"]
+            isOneToOne: false
+            referencedRelation: "circulars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      circulars: {
+        Row: {
+          ack_due: string | null
+          audience: Json
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          org_id: string
+          priority: string
+          published_at: string | null
+          publisher_label: string
+          requires_ack: boolean
+          school_id: string
+          status: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          ack_due?: string | null
+          audience?: Json
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          org_id: string
+          priority?: string
+          published_at?: string | null
+          publisher_label?: string
+          requires_ack?: boolean
+          school_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          ack_due?: string | null
+          audience?: Json
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          org_id?: string
+          priority?: string
+          published_at?: string | null
+          publisher_label?: string
+          requires_ack?: boolean
+          school_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circulars_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "circulars_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classroom_posts: {
         Row: {
           audience: string
@@ -159,6 +342,271 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comm_audit: {
+        Row: {
+          action: string
+          actor: string | null
+          circular_id: string | null
+          conversation_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          org_id: string
+          school_id: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          circular_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          org_id: string
+          school_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          circular_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          org_id?: string
+          school_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comm_audit_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comm_settings: {
+        Row: {
+          dept_head_groups: boolean
+          edit_window_minutes: number
+          family_admin_roles: Database["public"]["Enums"]["app_role"][]
+          school_id: string
+          staff_direct_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          dept_head_groups?: boolean
+          edit_window_minutes?: number
+          family_admin_roles?: Database["public"]["Enums"]["app_role"][]
+          school_id: string
+          staff_direct_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          dept_head_groups?: boolean
+          edit_window_minutes?: number
+          family_admin_roles?: Database["public"]["Enums"]["app_role"][]
+          school_id?: string
+          staff_direct_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comm_settings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_members: {
+        Row: {
+          added_by: string | null
+          archived: boolean
+          conversation_id: string
+          id: string
+          joined_at: string
+          last_read_seq: number
+          left_at: string | null
+          left_reason: string | null
+          muted: boolean
+          role: string
+          source: string
+          updated_at: string
+          user_id: string
+          visible_from: string
+        }
+        Insert: {
+          added_by?: string | null
+          archived?: boolean
+          conversation_id: string
+          id?: string
+          joined_at?: string
+          last_read_seq?: number
+          left_at?: string | null
+          left_reason?: string | null
+          muted?: boolean
+          role?: string
+          source?: string
+          updated_at?: string
+          user_id: string
+          visible_from?: string
+        }
+        Update: {
+          added_by?: string | null
+          archived?: boolean
+          conversation_id?: string
+          id?: string
+          joined_at?: string
+          last_read_seq?: number
+          left_at?: string | null
+          left_reason?: string | null
+          muted?: boolean
+          role?: string
+          source?: string
+          updated_at?: string
+          user_id?: string
+          visible_from?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_members_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          allow_attachments: boolean
+          created_at: string
+          created_by: string
+          dedupe_key: string | null
+          department_id: string | null
+          description: string | null
+          expires_at: string | null
+          group_type: string | null
+          guardian_id: string | null
+          history_policy: string
+          id: string
+          kind: string
+          last_message_at: string | null
+          last_seq: number
+          membership_mode: string
+          org_id: string
+          post_policy: string
+          school_id: string | null
+          staff_kind: string | null
+          staff_user_id: string | null
+          status: string
+          student_id: string | null
+          title: string
+          updated_at: string
+          year_id: string | null
+        }
+        Insert: {
+          allow_attachments?: boolean
+          created_at?: string
+          created_by?: string
+          dedupe_key?: string | null
+          department_id?: string | null
+          description?: string | null
+          expires_at?: string | null
+          group_type?: string | null
+          guardian_id?: string | null
+          history_policy?: string
+          id?: string
+          kind: string
+          last_message_at?: string | null
+          last_seq?: number
+          membership_mode?: string
+          org_id: string
+          post_policy?: string
+          school_id?: string | null
+          staff_kind?: string | null
+          staff_user_id?: string | null
+          status?: string
+          student_id?: string | null
+          title?: string
+          updated_at?: string
+          year_id?: string | null
+        }
+        Update: {
+          allow_attachments?: boolean
+          created_at?: string
+          created_by?: string
+          dedupe_key?: string | null
+          department_id?: string | null
+          description?: string | null
+          expires_at?: string | null
+          group_type?: string | null
+          guardian_id?: string | null
+          history_policy?: string
+          id?: string
+          kind?: string
+          last_message_at?: string | null
+          last_seq?: number
+          membership_mode?: string
+          org_id?: string
+          post_policy?: string
+          school_id?: string | null
+          staff_kind?: string | null
+          staff_user_id?: string | null
+          status?: string
+          student_id?: string | null
+          title?: string
+          updated_at?: string
+          year_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
             referencedColumns: ["id"]
           },
         ]
@@ -627,6 +1075,168 @@ export type Database = {
           },
           {
             foreignKeyName: "memberships_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reports: {
+        Row: {
+          created_at: string
+          decision: string | null
+          file_id: string | null
+          id: string
+          message_id: string
+          org_id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decision?: string | null
+          file_id?: string | null
+          id?: string
+          message_id: string
+          org_id: string
+          reason: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string | null
+          file_id?: string | null
+          id?: string
+          message_id?: string
+          org_id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reports_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_revisions: {
+        Row: {
+          action: string
+          actor: string
+          body: string
+          created_at: string
+          id: string
+          message_id: string
+        }
+        Insert: {
+          action: string
+          actor: string
+          body: string
+          created_at?: string
+          id?: string
+          message_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          body?: string
+          created_at?: string
+          id?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_revisions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          client_id: string
+          conversation_id: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          edited_at: string | null
+          id: string
+          reply_to: string | null
+          school_id: string | null
+          sender_id: string
+          seq: number
+        }
+        Insert: {
+          body?: string
+          client_id: string
+          conversation_id: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          edited_at?: string | null
+          id?: string
+          reply_to?: string | null
+          school_id?: string | null
+          sender_id: string
+          seq: number
+        }
+        Update: {
+          body?: string
+          client_id?: string
+          conversation_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          edited_at?: string | null
+          id?: string
+          reply_to?: string | null
+          school_id?: string | null
+          sender_id?: string
+          seq?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
@@ -1758,6 +2368,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _add_member: {
+        Args: {
+          _conv: string
+          _role: string
+          _source: string
+          _user: string
+          _visible: string
+        }
+        Returns: boolean
+      }
       _apply_invitation: {
         Args: {
           _em: string
@@ -1766,6 +2386,43 @@ export type Database = {
         }
         Returns: undefined
       }
+      _audit: {
+        Args: {
+          _action: string
+          _circ: string
+          _conv: string
+          _details: Json
+          _org: string
+          _school: string
+        }
+        Returns: undefined
+      }
+      _circular_audience: {
+        Args: { _aud: Json; _school: string }
+        Returns: string[]
+      }
+      _conv_link: { Args: { _conv: string }; Returns: string }
+      _eligible_staff: {
+        Args: { _org: string; _school: string; _user: string }
+        Returns: boolean
+      }
+      _family_ok: {
+        Args: {
+          _guardian: string
+          _kind: string
+          _staff: string
+          _student: string
+        }
+        Returns: boolean
+      }
+      _file_policy: {
+        Args: { _school: string }
+        Returns: {
+          allowed_types: string[]
+          max_bytes: number
+        }[]
+      }
+      _group_admin: { Args: { _conv: string }; Returns: boolean }
       _notify: {
         Args: {
           _body: string
@@ -1778,12 +2435,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      _scope_manager: {
+        Args: { _org: string; _school: string }
+        Returns: boolean
+      }
       _section_users: {
         Args: { _guardians: boolean; _section: string; _year: string }
         Returns: string[]
       }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
+      ack_circular: { Args: { _id: string }; Returns: number }
+      add_group_members: {
+        Args: { _conv: string; _users: string[] }
+        Returns: number
+      }
       affected_slots: {
         Args: { _absence: string }
         Returns: {
@@ -1797,6 +2463,7 @@ export type Database = {
           substitution_id: string
         }[]
       }
+      archive_circular: { Args: { _id: string }; Returns: undefined }
       assign_substitute: {
         Args: {
           _absence: string
@@ -1824,6 +2491,11 @@ export type Database = {
       }
       can_manage_school: { Args: { _school: string }; Returns: boolean }
       can_manage_students: { Args: { _school: string }; Returns: boolean }
+      can_read_circular: { Args: { _c: string }; Returns: boolean }
+      can_read_conv_at: {
+        Args: { _at: string; _conv: string }
+        Returns: boolean
+      }
       can_read_file: { Args: { _file: string }; Returns: boolean }
       can_read_post: { Args: { _post: string }; Returns: boolean }
       can_see_profile: { Args: { _uid: string }; Returns: boolean }
@@ -1840,12 +2512,72 @@ export type Database = {
         Args: { _id: string; _reason: string }
         Returns: undefined
       }
+      circular_stats: {
+        Args: { _id: string }
+        Returns: {
+          ack_required_version: number
+          acked_at: string
+          acked_version: number
+          full_name: string
+          opened_at: string
+          role: string
+          user_id: string
+        }[]
+      }
       classroom_members: {
         Args: { _classroom: string }
         Returns: {
           full_name: string
           member_type: string
           ref_id: string
+        }[]
+      }
+      conv_access_ok: { Args: { _conv: string }; Returns: boolean }
+      conv_send_block: { Args: { _conv: string }; Returns: string }
+      conversation_people: {
+        Args: { _conv: string }
+        Returns: {
+          full_name: string
+          joined_at: string
+          last_read_seq: number
+          role: string
+          source: string
+          user_id: string
+        }[]
+      }
+      create_circular_file: {
+        Args: { _circular: string; _mime: string; _name: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
+      create_group: {
+        Args: {
+          _allow_attachments: boolean
+          _department: string
+          _description: string
+          _expires_at: string
+          _group_type: string
+          _history_policy: string
+          _members: string[]
+          _membership_mode: string
+          _moderators: string[]
+          _org: string
+          _owner?: string
+          _post_policy: string
+          _request_key?: string
+          _school: string
+          _title: string
+          _year: string
+        }
+        Returns: string
+      }
+      create_message_file: {
+        Args: { _conv: string; _mime: string; _name: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
         }[]
       }
       create_organization: {
@@ -1874,8 +2606,36 @@ export type Database = {
         Args: { _approve: boolean; _id: string; _note?: string }
         Returns: undefined
       }
+      decide_report: {
+        Args: {
+          _decision: string
+          _hide?: boolean
+          _id: string
+          _status: string
+        }
+        Returns: undefined
+      }
+      delete_message: { Args: { _id: string }; Returns: undefined }
+      edit_message: { Args: { _body: string; _id: string }; Returns: undefined }
       end_assignment: { Args: { _id: string }; Returns: undefined }
       ensure_classroom: { Args: { _course: string }; Returns: string }
+      family_contacts: {
+        Args: { _student: string }
+        Returns: {
+          full_name: string
+          guardian_id: string
+          relationship: string
+        }[]
+      }
+      guardian_contacts: {
+        Args: { _student: string }
+        Returns: {
+          full_name: string
+          kind: string
+          label: string
+          user_id: string
+        }[]
+      }
       has_school_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
@@ -1907,6 +2667,7 @@ export type Database = {
         }
         Returns: string
       }
+      is_conv_member: { Args: { _conv: string }; Returns: boolean }
       is_course_teacher: { Args: { _course: string }; Returns: boolean }
       is_guardian_of: { Args: { _student: string }; Returns: boolean }
       is_org_owner: { Args: { _org: string }; Returns: boolean }
@@ -1914,8 +2675,45 @@ export type Database = {
       is_school_member: { Args: { _school: string }; Returns: boolean }
       is_student_self: { Args: { _student: string }; Returns: boolean }
       is_teacher_of_student: { Args: { _student: string }; Returns: boolean }
+      leave_group: { Args: { _conv: string }; Returns: undefined }
+      mark_conversation_read: {
+        Args: { _conv: string; _seq: number }
+        Returns: undefined
+      }
       mark_notifications_read: { Args: { _ids?: string[] }; Returns: number }
+      my_conversations: {
+        Args: { _school?: string }
+        Returns: {
+          archived: boolean
+          counterpart: string
+          group_type: string
+          id: string
+          kind: string
+          last_at: string
+          last_body: string
+          last_seq: number
+          muted: boolean
+          my_role: string
+          school_id: string
+          school_name: string
+          send_block: string
+          status: string
+          student_name: string
+          title: string
+          unread: number
+        }[]
+      }
       my_teacher_ids: { Args: never; Returns: string[] }
+      open_circular: { Args: { _id: string }; Returns: undefined }
+      preview_circular_audience: {
+        Args: { _aud: Json; _school: string }
+        Returns: {
+          full_name: string
+          role: string
+          user_id: string
+        }[]
+      }
+      publish_circular: { Args: { _id: string }; Returns: number }
       publish_timetable: {
         Args: { _effective_from: string; _id: string }
         Returns: number
@@ -1924,8 +2722,50 @@ export type Database = {
         Args: { _date: string; _note?: string; _teacher: string }
         Returns: string
       }
+      remind_circular_ack: { Args: { _id: string }; Returns: number }
+      remove_group_member: {
+        Args: { _conv: string; _user: string }
+        Returns: undefined
+      }
+      report_detail: {
+        Args: { _id: string }
+        Returns: {
+          body: string
+          conversation_title: string
+          deleted: boolean
+          sender: string
+          sent_at: string
+        }[]
+      }
+      report_message: {
+        Args: { _file?: string; _message: string; _reason: string }
+        Returns: string
+      }
       resend_invitation: { Args: { _id: string }; Returns: string }
+      revise_circular: {
+        Args: {
+          _body: string
+          _id: string
+          _requires_new_ack: boolean
+          _title: string
+        }
+        Returns: number
+      }
       revoke_invitation: { Args: { _id: string }; Returns: undefined }
+      save_circular: {
+        Args: {
+          _ack_due: string
+          _aud: Json
+          _body: string
+          _id: string
+          _priority: string
+          _publisher: string
+          _requires_ack: boolean
+          _school: string
+          _title: string
+        }
+        Returns: string
+      }
       schedule_teacher_names: {
         Args: { _timetable: string }
         Returns: {
@@ -1934,8 +2774,91 @@ export type Database = {
         }[]
       }
       school_org: { Args: { _school: string }; Returns: string }
+      search_messages: {
+        Args: { _q: string; _school?: string }
+        Returns: {
+          body: string
+          conv_title: string
+          conversation_id: string
+          created_at: string
+          message_id: string
+          seq: number
+        }[]
+      }
+      send_message: {
+        Args: {
+          _body: string
+          _client_id: string
+          _conv: string
+          _files?: string[]
+          _reply_to?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          seq: number
+        }[]
+      }
+      set_group_role: {
+        Args: { _conv: string; _role: string; _user: string }
+        Returns: undefined
+      }
+      set_group_status: {
+        Args: { _conv: string; _status: string }
+        Returns: undefined
+      }
+      set_member_prefs: {
+        Args: { _archived: boolean; _conv: string; _muted: boolean }
+        Returns: undefined
+      }
+      staff_directory: {
+        Args: { _org?: string; _school: string }
+        Returns: {
+          department: string
+          department_id: string
+          full_name: string
+          role: Database["public"]["Enums"]["app_role"]
+          school_name: string
+          user_id: string
+        }[]
+      }
       staff_view: { Args: { _school: string }; Returns: boolean }
+      start_direct_conversation: {
+        Args: { _other: string; _school: string }
+        Returns: string
+      }
+      start_family_conversation: {
+        Args: { _guardian: string; _staff_user: string; _student: string }
+        Returns: string
+      }
       start_timetable_revision: { Args: { _id: string }; Returns: string }
+      sync_derived_group: { Args: { _conv: string }; Returns: number }
+      teacher_students: {
+        Args: { _school: string }
+        Returns: {
+          full_name: string
+          section: string
+          student_id: string
+          subject: string
+        }[]
+      }
+      transfer_group_owner: {
+        Args: { _conv: string; _user: string }
+        Returns: undefined
+      }
+      update_group_settings: {
+        Args: {
+          _allow_attachments: boolean
+          _conv: string
+          _description: string
+          _expected: string
+          _expires_at: string
+          _history_policy: string
+          _post_policy: string
+          _title: string
+        }
+        Returns: string
+      }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
     }
     Enums: {
