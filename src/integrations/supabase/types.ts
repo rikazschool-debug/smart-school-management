@@ -90,23 +90,38 @@ export type Database = {
       circular_recipients: {
         Row: {
           ack_required_version: number | null
+          added_at: string
+          added_by: string | null
+          added_reason: string
           circular_id: string
           first_version: number
           opened_at: string | null
+          roles: string | null
+          school_id: string | null
           user_id: string
         }
         Insert: {
           ack_required_version?: number | null
+          added_at?: string
+          added_by?: string | null
+          added_reason?: string
           circular_id: string
           first_version: number
           opened_at?: string | null
+          roles?: string | null
+          school_id?: string | null
           user_id: string
         }
         Update: {
           ack_required_version?: number | null
+          added_at?: string
+          added_by?: string | null
+          added_reason?: string
           circular_id?: string
           first_version?: number
           opened_at?: string | null
+          roles?: string | null
+          school_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -115,6 +130,13 @@ export type Database = {
             columns: ["circular_id"]
             isOneToOne: false
             referencedRelation: "circulars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "circular_recipients_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -129,6 +151,8 @@ export type Database = {
           published_at: string
           published_by: string
           requires_ack: boolean
+          scope: string | null
+          target_schools: string[] | null
           title: string
           version: number
         }
@@ -141,6 +165,8 @@ export type Database = {
           published_at?: string
           published_by: string
           requires_ack: boolean
+          scope?: string | null
+          target_schools?: string[] | null
           title: string
           version: number
         }
@@ -153,6 +179,8 @@ export type Database = {
           published_at?: string
           published_by?: string
           requires_ack?: boolean
+          scope?: string | null
+          target_schools?: string[] | null
           title?: string
           version?: number
         }
@@ -180,7 +208,9 @@ export type Database = {
           publisher_label: string
           requires_ack: boolean
           school_id: string
+          scope: string
           status: string
+          target_schools: string[]
           title: string
           updated_at: string
           version: number
@@ -198,7 +228,9 @@ export type Database = {
           publisher_label?: string
           requires_ack?: boolean
           school_id: string
+          scope?: string
           status?: string
+          target_schools?: string[]
           title: string
           updated_at?: string
           version?: number
@@ -216,7 +248,9 @@ export type Database = {
           publisher_label?: string
           requires_ack?: boolean
           school_id?: string
+          scope?: string
           status?: string
+          target_schools?: string[]
           title?: string
           updated_at?: string
           version?: number
@@ -2482,6 +2516,30 @@ export type Database = {
         }
         Returns: undefined
       }
+      _can_circ_scope: {
+        Args: { _home: string; _org: string; _scope: string }
+        Returns: boolean
+      }
+      _circ_audience_multi: {
+        Args: { _aud: Json; _targets: string[] }
+        Returns: {
+          school_id: string
+          user_id: string
+        }[]
+      }
+      _circ_branch_viewer: {
+        Args: { _c: string; _school: string }
+        Returns: boolean
+      }
+      _circ_targets: {
+        Args: {
+          _home: string
+          _org: string
+          _schools: string[]
+          _scope: string
+        }
+        Returns: string[]
+      }
       _circular_audience: {
         Args: { _aud: Json; _school: string }
         Returns: string[]
@@ -2544,6 +2602,10 @@ export type Database = {
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
       ack_circular: { Args: { _id: string }; Returns: number }
+      add_circular_recipients: {
+        Args: { _id: string; _require_ack?: boolean; _users: string[] }
+        Returns: number
+      }
       add_group_members: {
         Args: { _conv: string; _users: string[] }
         Returns: number
@@ -2587,6 +2649,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_manage_circular: { Args: { _c: string }; Returns: boolean }
       can_manage_school: { Args: { _school: string }; Returns: boolean }
       can_manage_students: { Args: { _school: string }; Returns: boolean }
       can_read_circular: { Args: { _c: string }; Returns: boolean }
@@ -2616,9 +2679,13 @@ export type Database = {
           ack_required_version: number
           acked_at: string
           acked_version: number
+          added_reason: string
+          eligible: boolean
           full_name: string
           opened_at: string
           role: string
+          school_id: string
+          school_name: string
           user_id: string
         }[]
       }
@@ -2831,10 +2898,19 @@ export type Database = {
       open_circular: { Args: { _id: string }; Returns: undefined }
       pin_message: { Args: { _id: string; _pin: boolean }; Returns: undefined }
       preview_circular_audience: {
-        Args: { _aud: Json; _school: string }
+        Args: {
+          _aud: Json
+          _school: string
+          _schools?: string[]
+          _scope?: string
+        }
         Returns: {
           full_name: string
+          included: boolean
+          reason: string
           role: string
+          school_id: string
+          school_name: string
           user_id: string
         }[]
       }
@@ -2852,6 +2928,7 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: undefined
       }
+      reopen_circular: { Args: { _id: string }; Returns: undefined }
       report_detail: {
         Args: { _id: string }
         Returns: {
@@ -2888,6 +2965,8 @@ export type Database = {
           _publisher: string
           _requires_ack: boolean
           _school: string
+          _schools?: string[]
+          _scope?: string
           _title: string
         }
         Returns: string

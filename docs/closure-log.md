@@ -57,3 +57,24 @@ Updated: 2026-11-01.
 - Leaked password protection (Supabase Auth settings) — not enabled; separate from the reviewed SECURITY DEFINER warnings, which are intentional RPCs.
 - Auth redirect URLs for preview/published domains — user action.
 - pg_net is installed in the `public` schema (linter warning); it does not support moving schemas.
+
+
+## 2026-11-01 — Package 3c run
+
+### Notification deletion incident
+- Cause: browser-test cleanup removed notifications by school id in the demo school (مدرسة ركاز النموذجية). Test scripts also deleted by `school_id` (rls-e2e) — only inside their own test schools, but the pattern was unsafe.
+- Scope check now: every account in the database is a demo (`@rikaz.demo`) or test (`@rikaz.test`) account — no real user was affected. The demo school has 1 message left (soft-deleted); its notification is not recreated (deleted messages do not notify).
+- Not recoverable: message notifications of earlier demo browser tests (their source messages were removed too, so there is no original event to rebuild from). Read state/time is unknown and was not invented.
+- Fix: `scripts/lib/test-run.ts` — run id, registered users + schools, deletes only notifications of run users in run schools, logs count + ids first, refuses if run schools contain rows of outsiders. Used by rls-e2e, comm-e2e, circ-org-e2e. Test: `scripts/cleanup-scope-e2e.ts` 3/3.
+
+### Org-wide circulars — done (server), partial (browser)
+- circulars.scope (school|branches|org) + target_schools; recipients store branch, roles, added_reason.
+- Permissions: school scope = owner/principal/vice of that school; wider = org owner only; platform admin has no implicit right.
+- Tests `scripts/circ-org-e2e.ts` 19/19 (O1–O19).
+- Browser: org owner selected "كل فروع المؤسسة", previewed recipients, saved draft (draft deleted afterwards). Publish/ack/report flow not yet run in the browser.
+
+### Regression run (this session, fresh)
+- rls-e2e 89/89, comm-e2e 94/94 (one check updated: report now shows the earlier acknowledged version instead of hiding it), cleanup-e2e 11/11, cleanup-scope-e2e 3/3, circ-org-e2e 19/19, TypeScript clean.
+
+### Still open
+- Cross-branch attachment browser test, remaining package-2 browser journeys, extended communication browser suite, scheduler-failure detection. External: auth redirect URLs, leaked-password protection.
