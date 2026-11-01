@@ -318,7 +318,9 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
 function PreviewList({ rows }: { rows: Row[] }) {
   const inc = rows.filter((r) => r["included"]);
   const exc = rows.filter((r) => !r["included"]);
-  const byBranch = [...inc.reduce((m, r) => m.set(r["school_name"], (m.get(r["school_name"]) ?? 0) + 1), new Map<string, number>())];
+  const counts = new Map<string, number>();
+  for (const r of inc) counts.set(r["school_name"], (counts.get(r["school_name"]) ?? 0) + 1);
+  const byBranch = [...counts];
   return (
     <div className="space-y-1 text-xs">
       <p className="font-semibold">سيصل إلى {inc.length} مستلم{byBranch.length > 1 ? ` — ${byBranch.map(([n, c]) => `${n}: ${c}`).join("، ")}` : ""}</p>
