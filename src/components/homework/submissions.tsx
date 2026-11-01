@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ask, askText } from "@/components/confirm";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
@@ -17,7 +17,14 @@ type Filter = "all" | "missing" | "late" | "returned" | "to_grade" | "to_publish
 export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean }) {
   const qc = useQueryClient();
   const [filter, setFilter] = useState<Filter>("all");
-  const [sel, setSel] = useState<string | null>(null);
+  const [sel, setSelRaw] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const dirty = useRef(false);
+  const setSel = async (id: string) => {
+    if (id === sel) return;
+    if (dirty.current && !(await ask("لديك تعديلات تصحيح غير محفوظة لهذا الطالب. الانتقال سيتجاهلها؟", { ok: "تجاهل والانتقال" }))) return;
+    dirty.current = false; setSelRaw(id);
+  };
   const data = useQuery({
     queryKey: ["hw-subs", h["id"]],
     enabled: h["status"] !== "draft",
@@ -57,7 +64,8 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
     to_publish: (r) => r["grade"]?.["status"] === "graded" && !r["grade"]["needs_review"],
   };
   const labels: Record<Filter, string> = { all: "الكل", missing: "لم يسلّم", late: "متأخر", returned: "معاد", to_grade: "يحتاج تصحيحًا", to_publish: "جاهز للنشر" };
-  const shown = rows.filter(fns[filter]);
+  const term = search.trim();
+  const shown = rows.filter(fns[filter]).filter((r) => !term || (r["students"]?.["full_name"] ?? "").includes(term));
   const current = rows.find((r) => r["student_id"] === sel) ?? null;
   const idx = shown.findIndex((r) => r["student_id"] === sel);
   const readyCount = rows.filter(fns.to_publish).length;
@@ -67,16 +75,30 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
         <h3 className="font-semibold">التسليمات {editable ? "والتصحيح" : "(اطلاع فقط)"}</h3>
         {editable && h["max_score"] !== undefined && (
           <Button size="sm" disabled={!readyCount} onClick={async () => {
-            if (!(await ask(`نشر ${readyCount} نتيجة مصححة للطلاب وأولياء أمورهم؟`, { ok: "نشر النتائج" }))) return;
+            const names = rows.filter(fns.to_publish).map((r) => `• ${r["students"]?.["full_name"]}${r["grade"]?.["score"] != null ? ` — ${r["grade"]["score"]}/${h["max_score"]}` : ""}`).join("\n");
+            if (!(await ask(`معاينة قبل النشر — ستظهر هذه النتائج (${readyCount}) للطلاب وأولياء أمورهم:\n${names}`, { ok: "نشر النتائج" }))) return;
             const { data: n, error } = await db.rpc("publish_results", { _hw: h["id"], _subs: null });
             if (error) toast.error(arabicError(error)); else { toast.success(`نُشرت ${n} نتيجة`); qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] }); }
           }}>نشر كل المصحح ({readyCount})</Button>
         )}
       </div>
+      <Input placeholder="ابحث باسم الطالب" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
       <div className="flex flex-wrap gap-2">
         {(Object.keys(labels) as Filter[]).map((k) => <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k)}>{labels[k]} ({rows.filter(fns[k]).length})</Button>)}
       </div>
-      <div className="overflow-x-auto">
+      <p className="text-xs text-muted-foreground">{shown.length} من {rows.length} طالب{(filter !== "all" || term) && <button className="ms-2 text-primary underline" onClick={() => { setFilter("all"); setSearch(""); }}>مسح الفلاتر</button>}</p>
+      <ul className="space-y-2 md:hidden">
+        {shown.map((r) => {
+          const last = r["atts"][r["atts"].length - 1];
+          return (
+            <li key={r["student_id"]}><button className={`w-full rounded-xl border p-3 text-start text-sm ${sel === r["student_id"] ? "border-primary bg-muted/60" : ""}`} onClick={() => setSel(r["student_id"])}>
+              <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{r["students"]?.["full_name"]}</span><span className={`rounded-full px-2 py-0.5 text-xs ${statusTone(r["sub"]?.["status"] ?? "none")}`}>{SUB_STATUS[r["sub"]?.["status"] ?? "none"]}</span></div>
+              <p className="mt-1 text-xs text-muted-foreground">{last ? `#${last["attempt_no"]} · ${schoolTime(last["submitted_at"])}${last["is_late"] ? " · متأخر" : ""}` : "لا محاولات"} · {GRADE_STATUS[r["grade"]?.["status"] ?? "none"]}{r["grade"]?.["score"] != null ? ` · ${r["grade"]["score"]}` : ""}</p>
+            </button></li>
+          );
+        })}
+      </ul>
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
           <thead className="text-muted-foreground"><tr>{["الطالب", "التسليم", "المحاولة / الوقت", "التصحيح"].map((x) => <th key={x} className="p-2 text-start font-medium">{x}</th>)}</tr></thead>
           <tbody>
@@ -94,10 +116,10 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
             })}
           </tbody>
         </table>
-        {!shown.length && <p className="p-3 text-sm text-muted-foreground">لا يوجد طلاب في هذا التصنيف.</p>}
       </div>
+      {!shown.length && <p className="p-3 text-sm text-muted-foreground">{rows.length ? "لا نتائج مطابقة للبحث أو التصنيف." : "لا يوجد طلاب مستهدفون."}</p>}
       {current && (
-        <StudentReview key={`${current["student_id"]}-${current["grade"]?.["rev"] ?? 0}-${current["sub"]?.["attempt_count"] ?? 0}`} h={h} r={current} editable={editable}
+        <StudentReview key={`${current["student_id"]}-${current["grade"]?.["rev"] ?? 0}-${current["sub"]?.["attempt_count"] ?? 0}`} h={h} r={current} editable={editable} onDirty={(d) => { dirty.current = d; }}
           prev={idx > 0 ? () => setSel(shown[idx - 1]!["student_id"]) : undefined}
           next={idx >= 0 && idx < shown.length - 1 ? () => setSel(shown[idx + 1]!["student_id"]) : undefined}
           refresh={() => qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] })} />
@@ -106,24 +128,33 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
   );
 }
 
-function StudentReview({ h, r, editable, prev, next, refresh }: { h: Row; r: Row; editable: boolean; prev?: (() => void) | undefined; next?: (() => void) | undefined; refresh: () => void }) {
+function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Row; r: Row; editable: boolean; onDirty: (d: boolean) => void; prev?: (() => void) | undefined; next?: (() => void) | undefined; refresh: () => void }) {
   const crit = (h["criteria"] ?? []) as Row[];
   const g = r["grade"];
   const [score, setScore] = useState<string>(g?.["score"]?.toString() ?? "");
   const [cs, setCs] = useState<string[]>(crit.map((_, i) => g?.["criteria_scores"]?.[i]?.toString() ?? ""));
   const [fb, setFb] = useState<string>(g?.["feedback"] ?? "");
   const [reason, setReason] = useState("");
+  const [retReason, setRetReason] = useState("");
+  const [extReason, setExtReason] = useState("");
   const [ext, setExt] = useState("");
   const [paperNote, setPaperNote] = useState("");
   const [paperAt, setPaperAt] = useState("");
   useEffect(() => { setReason(""); }, [r["student_id"]]);
+  const isDirty = score !== (g?.["score"]?.toString() ?? "") || fb !== (g?.["feedback"] ?? "") || cs.some((x, i) => x !== (g?.["criteria_scores"]?.[i]?.toString() ?? ""));
+  useEffect(() => { onDirty(isDirty); }, [isDirty, onDirty]);
+  useEffect(() => () => onDirty(false), [onDirty]);
   const sub = r["sub"];
   const graded = h["max_score"] != null;
   const published = !!g?.["published_at"];
   async function call(fn: string, args: Row, ok: string) {
     const { error } = await db.rpc(fn, args);
-    if (error) { toast.error(arabicError(error)); return false; }
-    toast.success(ok); refresh(); return true;
+    if (error) {
+      const stale = /rev|stale|تعارض|حديث/i.test(error.message ?? "");
+      toast.error(stale ? "عدّل مستخدم آخر هذا التصحيح من نافذة أخرى. حدّث البيانات ثم أعد المحاولة." : arabicError(error), { action: { label: stale ? "تحديث" : "إعادة المحاولة", onClick: () => (stale ? refresh() : void call(fn, args, ok)) } });
+      return false;
+    }
+    onDirty(false); toast.success(ok); refresh(); return true;
   }
   const gradeArgs = () => ({ _sub: sub["id"], _score: graded && !crit.length ? Number(score) : null, _criteria: crit.length ? cs.map(Number) : [], _feedback: fb, _rev: g?.["rev"] ?? null });
   const total = cs.reduce((s, x) => s + (Number(x) || 0), 0);
@@ -170,8 +201,8 @@ function StudentReview({ h, r, editable, prev, next, refresh }: { h: Row; r: Row
             </div>
           )}
           <div className="flex flex-wrap gap-2 border-t pt-2">
-            <Input className="flex-1" placeholder="سبب الإعادة للاستكمال" value={reason} onChange={(e) => setReason(e.target.value)} />
-            <Button size="sm" variant="outline" onClick={() => call("return_submission", { _sub: sub["id"], _reason: reason }, "أُعيد للطالب للاستكمال")}>إعادة للاستكمال</Button>
+            <Input className="flex-1" placeholder="سبب الإعادة للاستكمال (مطلوب)" value={retReason} onChange={(e) => setRetReason(e.target.value)} />
+            <Button size="sm" variant="outline" disabled={!retReason.trim()} onClick={() => call("return_submission", { _sub: sub["id"], _reason: retReason }, "أُعيد للطالب للاستكمال")}>إعادة للاستكمال</Button>
           </div>
         </div>
       )}
@@ -179,8 +210,8 @@ function StudentReview({ h, r, editable, prev, next, refresh }: { h: Row; r: Row
         <div className="space-y-2 border-t pt-2">
           <div className="flex flex-wrap items-center gap-2">
             <Input type="datetime-local" className="w-56" value={ext} onChange={(e) => setExt(e.target.value)} aria-label="موعد خاص" />
-            <Input className="flex-1" placeholder="سبب التمديد / إعادة الفتح" value={reason} onChange={(e) => setReason(e.target.value)} />
-            <Button size="sm" variant="outline" onClick={() => call("extend_homework", { _id: h["id"], _student: r["student_id"], _due: fromLocalInput(ext), _reason: reason }, "مُدد موعد الطالب")}>تمديد لهذا الطالب</Button>
+            <Input className="flex-1" placeholder="سبب التمديد / إعادة الفتح" value={extReason} onChange={(e) => setExtReason(e.target.value)} />
+            <Button size="sm" variant="outline" disabled={!ext || !extReason.trim()} onClick={() => call("extend_homework", { _id: h["id"], _student: r["student_id"], _due: fromLocalInput(ext), _reason: extReason }, "مُدد موعد الطالب")}>تمديد لهذا الطالب</Button>
           </div>
           {(h["submission_types"] as string[]).includes("paper") && (
             <div className="flex flex-wrap items-center gap-2">
