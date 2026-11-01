@@ -21,7 +21,7 @@
 ## Package 3b — Closure (prompt: close packages 2+3) + mandatory class groups
 - [x] A Closure log docs/closure-log.md (per item: scope, server test, browser test, evidence, status)
 - [ ] B Package-2 browser journeys (files open/download/denied/expired; substitution cancel across dashboards; pin/comments reopen; upload fail/retry/cancel; 2 children in 2 sections; supervisor assign/unassign/direct-id)
-- [x] C Org-wide circulars across branches — server test circ-org-e2e 19/19; browser: owner org-scope draft + preview (publish/ack/report not yet run in browser)
+- [x] C Org-wide circulars across branches — server 19/19 + browser (preview, publish to 2 branches, ack on phone, report by branch)
 - [x] D Attachments in cross-branch groups — server + browser
 - [x] E Server-side scheduled cleanup of unlinked files
 - [ ] F Communication browser tests (internal, messages, groups, notifications)
