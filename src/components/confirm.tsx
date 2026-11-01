@@ -5,7 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 
 /** Shared Rikaz confirmation / reason dialog (replaces browser confirm/prompt: RTL, Cairo, large touch targets).
  *  ask() resolves true/false; askText() resolves the typed text or null when cancelled. */
-type Req = { message: string; input?: { label: string; required?: boolean } ; destructive?: boolean; ok?: string; resolve: (v: string | boolean | null) => void };
+type Req = { message: string; input?: { label: string; required?: boolean } | undefined; destructive?: boolean | undefined; ok?: string | undefined; resolve: (v: string | boolean | null) => void };
 let push: ((r: Req) => void) | null = null;
 
 export function ask(message: string, opts: { destructive?: boolean; ok?: string } = {}): Promise<boolean> {
