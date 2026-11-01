@@ -17,6 +17,7 @@ import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticat
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
 import { Route as AuthenticatedAppAcademicRouteImport } from './routes/_authenticated/app/academic'
+import { Route as AuthenticatedAppCommunicationRouteImport } from './routes/_authenticated/app/communication'
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
 import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authenticated/app/members'
@@ -69,6 +70,12 @@ const AuthenticatedAppAcademicRoute =
   AuthenticatedAppAcademicRouteImport.update({
     id: '/academic',
     path: '/academic',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppCommunicationRoute =
+  AuthenticatedAppCommunicationRouteImport.update({
+    id: '/communication',
+    path: '/communication',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppCoursesRoute = AuthenticatedAppCoursesRouteImport.update({
@@ -154,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteRouteWithChildren
   '/invite/$token': typeof InviteTokenRoute
   '/app/academic': typeof AuthenticatedAppAcademicRoute
+  '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
@@ -175,6 +183,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/invite/$token': typeof InviteTokenRoute
   '/app/academic': typeof AuthenticatedAppAcademicRoute
+  '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
@@ -199,6 +208,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteRouteWithChildren
   '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/app/academic': typeof AuthenticatedAppAcademicRoute
+  '/_authenticated/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/_authenticated/app/members': typeof AuthenticatedAppMembersRoute
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/invite/$token'
     | '/app/academic'
+    | '/app/communication'
     | '/app/courses'
     | '/app/guardians'
     | '/app/members'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/invite/$token'
     | '/app/academic'
+    | '/app/communication'
     | '/app/courses'
     | '/app/guardians'
     | '/app/members'
@@ -267,6 +279,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/invite/$token'
     | '/_authenticated/app/academic'
+    | '/_authenticated/app/communication'
     | '/_authenticated/app/courses'
     | '/_authenticated/app/guardians'
     | '/_authenticated/app/members'
@@ -347,6 +360,13 @@ declare module '@tanstack/react-router' {
       path: '/academic'
       fullPath: '/app/academic'
       preLoaderRoute: typeof AuthenticatedAppAcademicRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/communication': {
+      id: '/_authenticated/app/communication'
+      path: '/communication'
+      fullPath: '/app/communication'
+      preLoaderRoute: typeof AuthenticatedAppCommunicationRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/courses': {
@@ -445,6 +465,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppAcademicRoute: typeof AuthenticatedAppAcademicRoute
+  AuthenticatedAppCommunicationRoute: typeof AuthenticatedAppCommunicationRoute
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
   AuthenticatedAppMembersRoute: typeof AuthenticatedAppMembersRoute
@@ -463,6 +484,7 @@ interface AuthenticatedAppRouteRouteChildren {
 
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppAcademicRoute: AuthenticatedAppAcademicRoute,
+  AuthenticatedAppCommunicationRoute: AuthenticatedAppCommunicationRoute,
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,
   AuthenticatedAppMembersRoute: AuthenticatedAppMembersRoute,
