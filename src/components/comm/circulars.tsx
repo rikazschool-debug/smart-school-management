@@ -39,7 +39,7 @@ export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { scho
         <ul className="space-y-2">
           {q.data.map((c) => {
             const mine = (c["circular_recipients"] as Row[]).find((r) => r["user_id"] === me);
-            const needAck = mine?.ack_required_version && !(c["circular_acks"] as Row[]).some((a) => a["user_id"] === me && a["version"] >= mine.ack_required_version);
+            const needAck = mine?.["ack_required_version"] && !(c["circular_acks"] as Row[]).some((a) => a["user_id"] === me && a["version"] >= mine?.["ack_required_version"]);
             return (
               <li key={c["id"]}>
                 <button className="w-full rounded-xl border bg-card p-3 text-start hover:bg-muted" onClick={() => onFocus(c["id"])}>
@@ -47,7 +47,7 @@ export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { scho
                     <span className="flex-1 font-semibold">{c["title"]}</span>
                     {c["priority"] !== "normal" && <span className="rounded-full bg-destructive/10 px-2 text-xs text-destructive">{PRIORITY_LABEL[c["priority"]]}</span>}
                     {needAck && <span className="rounded-full bg-primary/10 px-2 text-xs text-primary">إقرار مطلوب</span>}
-                    {mine && !mine.opened_at && <span className="size-2 rounded-full bg-primary" aria-label="غير مفتوح" />}
+                    {mine && !mine?.["opened_at"] && <span className="size-2 rounded-full bg-primary" aria-label="غير مفتوح" />}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">{c["publisher_label"]} • {STATUS[c["status"]]}{c["version"] > 1 ? ` • الإصدار ${c["version"]}` : ""}{c["published_at"] ? ` • ${new Date(c["published_at"]).toLocaleDateString("ar")}` : ""}</p>
                 </button>
@@ -71,9 +71,9 @@ function CircularView({ c, me, manager, onBack, onChanged, onEdit }: { c: Row; m
   const qc = useQueryClient();
   const files = useFiles(c["id"]);
   const mine = (c["circular_recipients"] as Row[]).find((r) => r["user_id"] === me);
-  const acked = mine?.ack_required_version ? (c["circular_acks"] as Row[]).find((a) => a["user_id"] === me && a["version"] >= mine.ack_required_version) : null;
+  const acked = mine?.["ack_required_version"] ? (c["circular_acks"] as Row[]).find((a) => a["user_id"] === me && a["version"] >= mine?.["ack_required_version"]) : null;
   useEffect(() => {
-    if (mine && !mine.opened_at && c["status"] !== "draft") db.rpc("open_circular", { _id: c["id"] }).then(onChanged);
+    if (mine && !mine?.["opened_at"] && c["status"] !== "draft") db.rpc("open_circular", { _id: c["id"] }).then(onChanged);
   }, [c["id"]]); // eslint-disable-line react-hooks/exhaustive-deps
   const [rev, setRev] = useState<{ title: string; body: string; ack: boolean } | null>(null);
   return (
@@ -85,7 +85,7 @@ function CircularView({ c, me, manager, onBack, onChanged, onEdit }: { c: Row; m
       {files.data && files.data.length > 0 && (
         <ul className="flex flex-wrap gap-2">{files.data.map((f) => <li key={f["id"]}><button onClick={() => openFile(f)} className="flex items-center gap-1 rounded-full border px-3 py-1 text-xs hover:bg-muted"><Paperclip className="size-3" />{f["name"]}</button></li>)}</ul>
       )}
-      {mine?.ack_required_version && c["status"] === "published" && (acked ? (
+      {mine?.["ack_required_version"] && c["status"] === "published" && (acked ? (
         <p className="flex items-center gap-2 text-sm text-primary"><CheckCircle2 className="size-4" /> أقررت بالاطلاع على الإصدار {acked["version"]}</p>
       ) : (
         <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
