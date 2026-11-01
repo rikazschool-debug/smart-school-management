@@ -3489,6 +3489,10 @@ export type Database = {
         }
         Returns: string
       }
+      assignment_live: {
+        Args: { _end: string; _start: string }
+        Returns: boolean
+      }
       available_substitutes: {
         Args: { _date: string; _slot: string }
         Returns: {
@@ -4038,6 +4042,7 @@ export type Database = {
         }[]
       }
       school_org: { Args: { _school: string }; Returns: string }
+      school_today: { Args: never; Returns: string }
       search_messages: {
         Args: { _q: string; _school?: string }
         Returns: {

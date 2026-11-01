@@ -139,3 +139,8 @@ No defects found, so no fixes or re-runs were needed. The mobile-screen file was
 - Reports on phone: submit, reviewer sees only reported message, reason required, 40px buttons, double-click → one decision, server refuses second, view+decide audited, reporter gets outcome without internal reason, teacher denied. 12/12.
 - Design applied: single theme source, selectCls on all selects, ConfirmHost replacing native confirm/prompt, ErrorState retry, PageHeader action, late-joiner row layout fixed on narrow cards.
 - Tests: vitest 14/14, comm-e2e 95/95, rls-e2e 94/94. Fixture torn down.
+
+## 2026-11-01 — Assignment validity (package 9 §1)
+- assignment_live(start,end) on school_today() (Asia/Riyadh, end day inclusive) added to 15 helpers (is_course_teacher, can_view_course, classroom_members, teacher_students, _student_ok, _family_ok, _teaches_section, _course_members, guardian_contacts, my_class_groups, sync_section_group, is_teacher_of_student, is_supervised_course, dept_teacher_ids, homework_people). check_slot/publish_timetable keep their effective-date checks. Trigger blocks end < start.
+- Rolled-back SQL probe: live=t, ended yesterday=f, starts tomorrow=f, ends today=t, end<start rejected.
+- rls-e2e 94/94, comm-e2e 95/95, homework-e2e 32/32.
