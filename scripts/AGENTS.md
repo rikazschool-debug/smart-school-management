@@ -13,3 +13,4 @@
 - scripts/comm-roles-e2e.ts: per-role communication (subject groups, transfer/teacher change, group-creation matrix, student limits, circulars).
 - scripts/homework2-e2e.ts: feedback files, template copy, late joiners, report export scope.
 - scripts/hw-browser-fixture.ts setup|teardown: isolated homework data (hbx-) for browser journeys; always run teardown after.
+- scripts/assignment-validity-e2e.ts: assignment start/end boundaries (future, ended-but-approved, ends today, end<start, open session, independent dept-head role) on isolated data.

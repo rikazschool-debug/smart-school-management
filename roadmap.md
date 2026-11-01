@@ -99,7 +99,7 @@
 - [x] R4 Principal home: compact stats with icons, "needs attention" from real data, quick links; teacher home actions + course cards
 - [x] R5 Homework list: action in header, filter card, progress column, phone cards
 - [x] R6 Communication: segmented tabs, group settings moved to a menu (only for moderators), conversation list with avatars/filter chips/clear, thread header avatar, bubbles, 32px message actions, composer with safe-area + keyboard scroll, archived warning
-- [ ] R6b Comm browser re-test: send message + file after redesign; phone keyboard
+- [x] R6b Comm browser re-test 13/13 (teacher desktop + student phone, isolated cbx- fixture)
 - [ ] R7 Roll out to remaining screens (CrudTable pages, academic, schedule, substitutions, members, classrooms, homework detail, circulars)
 - [ ] R8 Behavior tests (keyboard focus, contrast, long Arabic text, full/empty tables) across 13 dashboards
 
@@ -109,5 +109,6 @@
 - [ ] P9.3 Manual add + template import of teacher profiles
 - [ ] P9.4 Unified XLSX/PDF export for data sections
 
-- [ ] R9 Homework detail + grading layout (package10 §2–3)
-- Resume point: R6b → R9 → R7 → P9.2 import → P9.4 export
+- [~] R9 Homework detail redesigned (hero facts, instructions, student submit panel, blocked reason, family panel); grading screen (§3) not yet
+- [x] P9.1b Isolated validity test scripts/assignment-validity-e2e.ts 9/9
+- Resume point: grading screen layout (src/components/homework/submissions.tsx StudentReview: student list + attempt + criteria, phone sections, unsaved-change guard) → R7 rollout → P9.2 import → P9.4 export
