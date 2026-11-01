@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Role } from "./roles";
@@ -62,7 +62,20 @@ async function loadContexts(): Promise<AppContext[]> {
 }
 
 export function SessionProvider({ user, children }: { user: User; children: ReactNode }) {
-  const q = useQuery({ queryKey: ["contexts", user.id], queryFn: loadContexts });
+  const qc = useQueryClient();
+  // Re-check roles regularly: a removed role/department/school must stop showing data without a manual sign-out.
+  const q = useQuery({ queryKey: ["contexts", user.id], queryFn: loadContexts, refetchInterval: 30_000, refetchOnWindowFocus: true });
+  const sig = (q.data ?? []).map((c) => `${c.key}|${c.role}|${c.schoolId}|${c.departmentId}`).sort().join(";");
+  const prevSig = useRef<string | null>(null);
+  useEffect(() => {
+    if (!q.data) return;
+    if (prevSig.current !== null && prevSig.current !== sig) {
+      // access changed: drop every cached page result and live subscription, then refetch under the new scope
+      qc.removeQueries({ predicate: (x) => x.queryKey[0] !== "contexts" });
+      void supabase.removeAllChannels();
+    }
+    prevSig.current = sig;
+  }, [sig, q.data, qc]);
   const [activeKey, setActiveKey] = useState<string | null>(null);
   useEffect(() => setActiveKey(localStorage.getItem(STORAGE)), []);
   const contexts = q.data ?? [];
