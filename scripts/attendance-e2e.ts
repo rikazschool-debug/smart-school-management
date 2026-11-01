@@ -49,6 +49,7 @@ try {
   const sub = await ins(owner.c, A, "subjects", { name: "لغتي", department_id: dep.id });
   const course = await ins(owner.c, A, "courses", { year_id: year.id, subject_id: sub.id, section_id: secA.id });
   const tRow = await ins(owner.c, A, "teachers", { full_name: "معلم الشعبة", email: te.email, department_id: dep.id });
+  await admin.from("teachers").update({ user_id: te.id }).eq("id", tRow.id);
   const asg = await ins(owner.c, A, "teacher_assignments", { course_id: course.id, teacher_id: tRow.id });
   await owner.c.rpc("decide_assignment", { _id: asg.id, _approve: true });
 
