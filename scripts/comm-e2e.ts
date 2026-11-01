@@ -316,7 +316,7 @@ check("16 later member not counted as overdue", !late.data?.some((x: any) => x.u
 const rev = await owner.c.rpc("revise_circular", { _id: circ.data, _title: "تعميم الاختبارات (معدّل)", _body: "تبدأ الاختبارات الاثنين", _requires_new_ack: true });
 const s2st = await owner.c.rpc("circular_stats", { _id: circ.data });
 const vers = await owner.c.from("circular_versions").select("version, body").eq("circular_id", circ.data).order("version");
-check("revision keeps original text and requires new ack", rev.data === 2 && !s2st.data?.find((x: any) => x.user_id === t1.id)?.acked_at && vers.data?.[0]?.body === "تبدأ الاختبارات الأحد", [rev, vers]);
+check("revision keeps original text and requires new ack", rev.data === 2 && (() => { const r = s2st.data?.find((x: any) => x.user_id === t1.id); return r && r.ack_required_version === 2 && (r.acked_version ?? 0) < 2; })() && vers.data?.[0]?.body === "تبدأ الاختبارات الأحد", [rev, vers]);
 const rem = await owner.c.rpc("remind_circular_ack", { _id: circ.data });
 const rem2 = await owner.c.rpc("remind_circular_ack", { _id: circ.data });
 const rn = await t1.c.from("notifications").select("id").like("dedupe_key", "circ-remind:%");
