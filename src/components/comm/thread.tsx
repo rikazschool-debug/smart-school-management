@@ -121,10 +121,11 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex items-center gap-2 border-b p-3">
+      <header className="flex items-center gap-2 border-b bg-card px-3 py-2.5">
         <Button variant="ghost" size="icon" className="md:hidden" aria-label="رجوع للقائمة" onClick={onBack}><ArrowRight className="size-5" /></Button>
+        <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary font-bold text-secondary-foreground">{String(conv["title"] ?? "؟").trim().charAt(0)}</span>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-bold">{conv["title"]}</h2>
+          <h2 className="truncate font-bold leading-tight">{conv["title"]}</h2>
           <p className="truncate text-xs text-muted-foreground">
             {conv["group_type"] === "section" ? "مجموعة الفصل" : KIND_LABEL[conv["kind"]]}{conv["section_label"] && conv["kind"] === "student" ? ` • ${conv["section_label"]}` : ""}{conv["student_name"] && conv["kind"] !== "student" ? ` • بشأن الطالب: ${conv["student_name"]}` : ""}{conv["counterpart"] ? ` • ${conv["counterpart"]}` : ""}{conv["school_name"] ? ` • ${conv["school_name"]}` : " • عابرة للفروع"}
           </p>
@@ -138,7 +139,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
         {isGroup && <Button variant={panel ? "secondary" : "ghost"} size="icon" aria-label="الأعضاء والإعدادات" onClick={() => setPanel(!panel)}><Users className="size-4" /></Button>}
       </header>
       {conv["status"] === "archived" && (
-        <p role="status" className="border-b bg-muted px-3 py-2 text-xs text-muted-foreground">هذه المجموعة مؤرشفة: الرسائل السابقة للقراءة فقط، ولا يمكن الإرسال أو الرد أو إضافة مرفقات.</p>
+        <p role="status" className="border-b border-warning/40 bg-warning/15 px-3 py-2 text-xs font-medium text-warning-foreground">🔒 هذه المجموعة مؤرشفة: الرسائل السابقة للقراءة فقط، ولا يمكن الإرسال أو الرد أو إضافة مرفقات.</p>
       )}
       {conv["archived"] && conv["status"] !== "archived" && (
         <p className="border-b bg-muted/60 px-3 py-2 text-xs text-muted-foreground">هذه المحادثة في أرشيفك أنت فقط؛ ما زالت نشطة للآخرين ويمكنك الإرسال فيها.</p>
@@ -151,7 +152,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
       {panel && isGroup ? (
         <div className="min-h-0 flex-1 overflow-y-auto p-3"><GroupPanel convId={id} myRole={conv["my_role"]} onChanged={() => { onChanged(); qc.invalidateQueries({ queryKey: ["people", id] }); }} /></div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-muted/30 p-3 sm:p-4">
           {msgs.hasNextPage && (
             <div className="mb-3 text-center">
               <Button size="sm" variant="outline" disabled={msgs.isFetchingNextPage} onClick={() => msgs.fetchNextPage()}>{msgs.isFetchingNextPage ? "جارٍ التحميل…" : "تحميل رسائل أقدم"}</Button>
@@ -162,14 +163,14 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
           ) : !list.length && !locals.length ? (
             <p className="p-8 text-center text-sm text-muted-foreground">لا توجد رسائل بعد. ابدأ المحادثة.</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {list.map((m) => (
                 <Message key={m["id"]} m={m} mine={m["sender_id"] === user.id} name={names[m["sender_id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
                   files={(files.data ?? []).filter((f) => f["source_id"] === m["id"])} receipt={receipt(m)} canAct={!block} isGroup={isGroup} canReply={canReply} isMod={isMod}
                   onReply={() => setReply(m)} onChanged={() => qc.invalidateQueries({ queryKey: ["msgs", id] })} />
               ))}
               {locals.map((l) => (
-                <li key={l.clientId} className="ms-auto max-w-[85%] rounded-2xl bg-primary/10 p-3 text-sm">
+                <li key={l.clientId} className="ms-auto max-w-[85%] break-words rounded-2xl rounded-se-sm bg-primary/10 p-3 text-sm">
                   {l.body && <SafeText text={l.body} />}
                   {l.fileIds.length > 0 && <p className="text-xs text-muted-foreground">📎 {l.fileIds.length} مرفق</p>}
                   <p className="mt-1 flex items-center gap-2 text-xs">
@@ -207,7 +208,7 @@ function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, canRe
   const [text, setText] = useState(m["body"]);
   const deleted = !!m["deleted_at"];
   return (
-    <li className={`group max-w-[85%] rounded-2xl p-3 text-sm ${mine ? "ms-auto bg-primary/10" : "me-auto border bg-card"}`}>
+    <li className={`group max-w-[85%] break-words rounded-2xl p-3 text-sm shadow-sm sm:max-w-[70%] ${mine ? "ms-auto rounded-se-sm bg-primary/10" : "me-auto rounded-ss-sm border bg-card"}`}>
       {!mine && <p className="mb-1 text-xs font-semibold text-primary">{name}</p>}
       {parent && <p className="mb-1 truncate border-s-2 border-primary/50 ps-2 text-xs text-muted-foreground">رد على: {parent["deleted_at"] ? "رسالة محذوفة" : parent["body"] || "مرفق"}</p>}
       {m["reply_to"] && !parent && <p className="mb-1 border-s-2 ps-2 text-xs text-muted-foreground">رد على رسالة أقدم</p>}
@@ -232,7 +233,7 @@ function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, canRe
         {m["edited_at"] && !deleted && <span>• معدّلة</span>}
         {receipt && <span>• {receipt}</span>}
         {!deleted && canAct && (
-          <span className="flex gap-1 opacity-70 group-hover:opacity-100">
+          <span className="ms-auto flex gap-0.5 opacity-80 group-hover:opacity-100 [&>button]:grid [&>button]:size-8 [&>button]:place-items-center [&>button]:rounded-md [&>button:hover]:bg-muted [&>button:focus-visible]:outline-none [&>button:focus-visible]:ring-2 [&>button:focus-visible]:ring-ring">
             {canReply && <button aria-label="رد" title="رد" onClick={onReply}><Reply className="size-3.5" /></button>}
             {isMod && <button aria-label={m["pinned_at"] ? "إلغاء التثبيت" : "تثبيت"} title={m["pinned_at"] ? "إلغاء التثبيت" : "تثبيت"} onClick={async () => {
               const { error } = await db.rpc("pin_message", { _id: m["id"], _pin: !m["pinned_at"] });
@@ -285,7 +286,7 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
   }
 
   return (
-    <form className="space-y-2 border-t p-3" onSubmit={async (e) => {
+    <form className="space-y-2 border-t bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" onSubmit={async (e) => {
       e.preventDefault();
       if (uploading) return void toast.error("انتظر اكتمال رفع المرفقات");
       if (pending.some((p) => p.status === "failed")) return void toast.error("أزل المرفق الفاشل أو أعد رفعه قبل الإرسال");
@@ -295,7 +296,7 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
       setBody(""); setPending([]);
       await onSend(b, ready);
     }}>
-      {dest && <p className="text-xs font-semibold text-primary" aria-live="polite">الإرسال إلى: {dest}</p>}
+      {dest && <p className="inline-flex rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground" aria-live="polite">الإرسال إلى: {dest}</p>}
       {restored && body && <p className="text-xs text-muted-foreground">مسودة غير مرسلة لهذه المحادثة فقط — لا تُنقل لمحادثة أخرى.</p>}
       {reply && (
         <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1 text-xs">
@@ -316,11 +317,11 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
           ))}
         </ul>
       )}
-      <div className="flex items-end gap-2">
-        <Textarea aria-label="نص الرسالة" placeholder="اكتب رسالتك…" rows={2} maxLength={4000} className="min-h-0 flex-1 resize-none" value={body} onChange={(e) => setBody(e.target.value)}
+      <div className="flex items-end gap-2 rounded-xl border bg-background p-1.5 focus-within:ring-2 focus-within:ring-ring">
+        <Textarea aria-label="نص الرسالة" placeholder="اكتب رسالتك…" rows={2} maxLength={4000} className="min-h-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0" onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.scrollIntoView({ block: "nearest" }), 300); }} value={body} onChange={(e) => setBody(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} />
         {allowFiles && conv["kind"] && (
-          <label className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-md border hover:bg-muted" aria-label="إرفاق ملف" title="إرفاق ملف">
+          <label className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="إرفاق ملف" title="إرفاق ملف">
             <Paperclip className="size-4" />
             <input type="file" className="hidden" onChange={(e) => {
               const f = e.target.files?.[0]; e.target.value = "";
