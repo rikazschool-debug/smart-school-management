@@ -115,7 +115,6 @@ function TeacherActions({ h }: { h: Row }) {
   const [due, setDue] = useState(toLocalInput(h["due_at"]));
   const [instr, setInstr] = useState(h["instructions"]);
   const [reason, setReason] = useState("");
-  const [target, setTarget] = useState("");
   const courses = useQuery({
     queryKey: ["copy-courses", h["school_id"]], enabled: mode === "copy",
     queryFn: async () => (await db.from("courses").select("id, subjects(name), sections(name), academic_years(name)").eq("school_id", h["school_id"])).data as Row[],
