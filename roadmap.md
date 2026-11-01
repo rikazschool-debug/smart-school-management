@@ -6,7 +6,7 @@
 - [ ] Email/SMS delivery — out of scope (in-app notifications only)
 
 ## Package 3 — Communication
-- [ ] 1 Package-2 browser re-tests (cancel substitution UI, pin/unpin, closed-comments bypass, upload-failure retry in classroom posts, guardian with 2 children in UI, supervisor scope) — not yet run in the browser
+- [x] 1 Package-2 browser re-tests (cancel substitution, pin/unpin, closed-comments bypass blocked by RLS, upload-failure retry, guardian with 2 children, supervisor scope) — passed 2026-11-01
 - [x] 2-3 Communication hub (inbox, mine, groups, circulars, archive, manage), search, filters, paging, mobile list↔thread
 - [x] 4 Teacher↔guardian chats tied to a student; relation end → read-only; revoked guardian → no access
 - [x] 5 Internal staff chats (school directory, admin can disable)
