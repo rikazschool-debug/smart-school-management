@@ -353,7 +353,7 @@ const memA2 = await admin.from("conversation_members").select("id").eq("conversa
 check("C2 re-save / repeated enrollment event does not duplicate group or member", grpA2.data?.length === 1 && memA2.data?.length === 1, [grpA2, memA2]);
 const ros = await t1.c.rpc("course_roster", { _course: cC.id });
 check("C3 roster shows only this section", ros.data?.length === 1 && ros.data[0].student_id === s3.id, ros);
-const rosX = await t1.c.rpc("class_roster", { _section: secB.id });
+const rosX = await t1.c.rpc("course_roster", { _course: cB.id });
 check("C3 teacher cannot read roster of a section not assigned", !!rosX.error);
 const gm = await t1.c.rpc("send_message", { _conv: GA, _body: "مرحبًا بالفصل", _client_id: uuid() });
 const gmS = await stud2.c.from("messages").select("id").eq("conversation_id", GA);
@@ -374,7 +374,7 @@ check("C7 unassigned teacher cannot message student by id", !!pc3.error, pc3);
 const pcS = await stud2.c.rpc("start_student_conversation", { _student: s2.id });
 check("students cannot start private chats", !!pcS.error);
 const noAcc = await t2.c.rpc("start_student_conversation", { _student: s2.id });
-const rosB = await t2.c.rpc("class_roster", { _section: secB.id });
+const rosB = await t2.c.rpc("course_roster", { _course: cB.id });
 check("C10 student without account: messaging unavailable", !!noAcc.error && rosB.data?.[0]?.has_account === false, [noAcc.error, rosB]);
 const man = await admin.rpc("add_group_members", { _conv: GA, _users: [t3.id] });
 const manT = await t1.c.rpc("add_group_members", { _conv: GA, _users: [t3.id] });
