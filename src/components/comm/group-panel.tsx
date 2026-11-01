@@ -54,6 +54,8 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
   const c = conv.data!;
   const isAdmin = myRole === "owner" || myRole === "moderator" || myRole === null;
   const isOwner = myRole === "owner" || myRole === null;
+  // Adding members by hand is administrative (owner of the organization, or the principal of this school) — mirrors add_group_members.
+  const canAddMembers = !!active && (active.role === "org_owner" ? active.orgId === c["org_id"] : active.role === "principal" && !!c["school_id"] && active.schoolId === c["school_id"]);
   const names = Object.fromEntries((people.data ?? []).map((p) => [p["user_id"], p["full_name"]]));
 
   return (
@@ -98,7 +100,7 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
         </ul>
       </section>
 
-      {isAdmin && c["membership_mode"] === "manual" && c["status"] === "active" && (
+      {canAddMembers && c["membership_mode"] === "manual" && c["status"] === "active" && (
         <section className="space-y-2 rounded-xl border bg-card p-3">
           <h3 className="font-bold">إضافة أعضاء</h3>
           <p className="text-xs text-muted-foreground">تظهر فقط الحسابات السارية ضمن نطاق المجموعة. {c["history_policy"] === "full" ? "سيرى المضافون التاريخ كاملًا." : "سيرى المضافون الرسائل من لحظة إضافتهم فقط."}</p>
