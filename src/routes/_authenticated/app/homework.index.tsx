@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { arabicError, useSchool } from "@/lib/session";
 import { canAuthorHomework } from "@/lib/roles";
+import { ExportBar } from "@/components/homework/export";
 import { HW_STATUS, SUB_STATUS, schoolTime, statusTone } from "@/lib/homework";
 
 export const Route = createFileRoute("/_authenticated/app/homework/")({
@@ -55,6 +56,7 @@ function StaffList({ schoolId, author }: { schoolId: string; author: boolean }) 
   return (
     <>
       <PageHeader title="الواجبات" desc={author ? "واجبات مقرراتك: الإعداد والنشر والتصحيح." : "متابعة الواجبات ضمن نطاق صلاحيتك (اطلاع فقط)."} />
+      {course ? <ExportBar course={course} kinds={["homework", "submissions", "pending", "results"]} /> : <p className="mb-2 text-xs text-muted-foreground">اختر مقررًا لتصدير تقاريره.</p>}
       <div className="mb-4 flex flex-wrap items-end gap-2">
         <select className="h-9 rounded-md border bg-background px-2 text-sm" value={course} onChange={(e) => setCourse(e.target.value)} aria-label="المقرر">
           <option value="">كل المقررات</option>
