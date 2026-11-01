@@ -114,8 +114,9 @@ try {
   const shown = (await s1.c.from("homework_grades").select("score")).data!;
   const gShown = (await g1.c.from("homework_grades").select("score")).data!;
   check("5d grade hidden until published, then visible to student and guardian", hidden === 0 && pubR.data === 1 && shown.length === 1 && gShown.length === 1, [hidden, pubR, shown]);
-  const noReason = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "", _rev: 2 });
-  const corr = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "خطأ جمع", _rev: 2 });
+  const rv = (await admin.from("homework_grades").select("rev").eq("submission_id", sub1).single()).data!.rev;
+  const noReason = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "", _rev: rv });
+  const corr = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "خطأ جمع", _rev: rv });
   const hist = (await s1.c.from("homework_grade_history").select("old_score,new_score")).data!;
   check("5e published grade correction needs reason; history old 8 -> new 9 visible to student", !!noReason.error && !corr.error && hist.length === 1 && hist[0].old_score == 8 && hist[0].new_score == 9, [corr.error, hist]);
   const dupRes = (await admin.from("homework_grades").select("id").eq("submission_id", sub1)).data!.length;
@@ -158,7 +159,7 @@ try {
   check("8 paper hand-in recorded by teacher (marked paper), not by principal", !paper.error && pa.kind === "paper" && pa.recorded_by === t1.id && !!prPaper.error, [paper.error, pa]);
 
   // 9 transfer and teacher change
-  await admin.from("enrollments").update({ status: "transferred", end_date: "2026-11-01" }).eq("student_id", st2.id).eq("section_id", sec.id);
+  await admin.from("enrollments").update({ status: "ended", end_date: "2026-11-01" }).eq("student_id", st2.id).eq("section_id", sec.id);
   const st2State = (await s2.c.rpc("hw_state", { _hw: hw, _student: st2.id })).data as any;
   const st2Hist = (await s2.c.from("homework_attempts").select("id").eq("homework_id", hw2)).data!.length;
   check("9a transferred student keeps history but cannot submit", st2State.can_submit === false && st2Hist === 1, [st2State, st2Hist]);
