@@ -162,7 +162,7 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
   );
 }
 
-function Stats({ id }: { id: string }) {
+function Stats({ id, title }: { id: string; title: string }) {
   const q = useQuery({
     queryKey: ["circ-stats", id],
     queryFn: async () => {
@@ -171,28 +171,51 @@ function Stats({ id }: { id: string }) {
       return data as Row[];
     },
   });
+  const [f, setF] = useState({ branch: "", role: "", version: "" });
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState message={arabicError(q.error)} />;
-  const rows = q.data ?? [];
+  if (q.error) return <div className="space-y-2"><ErrorState message={arabicError(q.error)} /><Button size="sm" variant="outline" onClick={() => q.refetch()}>إعادة المحاولة</Button></div>;
+  const all = q.data ?? [];
+  const branches = [...new Map(all.map((r) => [r["school_id"], r["school_name"]])).entries()];
+  const rolesSet = [...new Set(all.flatMap((r) => String(r["role"] ?? "").split(",").filter(Boolean)))];
+  const filtered = all.filter((r) => (!f.branch || r["school_id"] === f.branch) && (!f.role || String(r["role"] ?? "").split(",").includes(f.role)) && (!f.version || String(r["acked_version"] ?? "") === f.version));
+  const rows = filtered.filter((r) => r["eligible"]);
+  const gone = filtered.filter((r) => !r["eligible"]);
   const opened = rows.filter((r) => r["opened_at"]).length;
   const need = rows.filter((r) => r["ack_required_version"]);
-  const acked = need.filter((r) => r["acked_at"]).length;
+  const acked = need.filter((r) => r["acked_version"] != null && r["acked_version"] >= r["ack_required_version"]).length;
+  const ackText = (r: Row) => !r["ack_required_version"] ? "غير مطلوب" : r["acked_at"] ? `${new Date(r["acked_at"]).toLocaleString("ar")} (إ${r["acked_version"]})${r["acked_version"] < r["ack_required_version"] ? " — إصدار أقدم" : ""}` : "لم يقر";
+  function exportCsv() {
+    const esc = (x: unknown) => `"${String(x ?? "").replace(/"/g, '""')}"`;
+    const lines = [["الاسم", "الفرع", "الدور", "مؤهل حاليًا", "طريقة الإضافة", "الفتح", "الإقرار"].map(esc).join(",")]
+      .concat(filtered.map((r) => [r["full_name"], r["school_name"], r["role"], r["eligible"] ? "نعم" : "لا", r["added_reason"] === "manual" ? "إضافة لاحقة" : "عند النشر", r["opened_at"] ?? "", ackText(r)].map(esc).join(",")));
+    const url = URL.createObjectURL(new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = `تقرير-${title}.csv`; a.click(); URL.revokeObjectURL(url);
+  }
   return (
-    <section className="text-sm">
-      <h3 className="font-bold">المستلمون: {rows.length} • فتحوا: {opened}{need.length ? ` • أقروا: ${acked} • لم يقروا: ${need.length - acked}` : ""}</h3>
-      <div className="mt-2 max-h-72 overflow-auto rounded-lg border">
+    <section className="space-y-2 border-t pt-3 text-sm">
+      <h3 className="font-bold">المستهدفون المؤهلون: {rows.length} • شاهدوا: {opened}{need.length ? ` • أقروا: ${acked} • لم يقروا: ${need.length - acked}` : ""}{gone.length ? ` • زالت أهليتهم: ${gone.length}` : ""}</h3>
+      <div className="flex flex-wrap gap-2">
+        {branches.length > 1 && <select aria-label="تصفية حسب الفرع" className={sel + " w-auto"} value={f.branch} onChange={(e) => setF({ ...f, branch: e.target.value })}><option value="">كل الفروع</option>{branches.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>}
+        <select aria-label="تصفية حسب الدور" className={sel + " w-auto"} value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}><option value="">كل الأدوار</option>{rolesSet.map((r) => <option key={r} value={r}>{ROLE_AR[r] ?? r}</option>)}</select>
+        <select aria-label="تصفية حسب الإصدار المُقر به" className={sel + " w-auto"} value={f.version} onChange={(e) => setF({ ...f, version: e.target.value })}><option value="">كل الإصدارات</option>{[...new Set(all.map((r) => r["acked_version"]).filter((x) => x != null))].map((v) => <option key={v} value={String(v)}>الإصدار {v}</option>)}</select>
+        <Button size="sm" variant="outline" onClick={exportCsv}>تصدير CSV</Button>
+      </div>
+      <div className="max-h-72 overflow-auto rounded-lg border">
         <table className="w-full text-xs">
-          <thead className="bg-muted"><tr><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">الدور</th><th className="p-2 text-start">الفتح</th><th className="p-2 text-start">الإقرار</th></tr></thead>
+          <thead className="bg-muted"><tr><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">الفرع</th><th className="p-2 text-start">الدور</th><th className="p-2 text-start">الفتح</th><th className="p-2 text-start">الإقرار</th></tr></thead>
           <tbody>{rows.map((r) => (
             <tr key={r["user_id"]} className="border-t">
-              <td className="p-2">{r["full_name"]}</td>
+              <td className="p-2">{r["full_name"]}{r["added_reason"] === "manual" ? " (أضيف لاحقًا)" : ""}</td>
+              <td className="p-2">{r["school_name"]}</td>
               <td className="p-2">{String(r["role"] ?? "").split(",").map((x) => ROLE_AR[x] ?? x).join("، ")}</td>
               <td className="p-2">{r["opened_at"] ? new Date(r["opened_at"]).toLocaleString("ar") : "—"}</td>
-              <td className="p-2">{!r["ack_required_version"] ? "غير مطلوب" : r["acked_at"] ? `${new Date(r["acked_at"]).toLocaleString("ar")} (إ${r["acked_version"]})` : "لم يقر"}</td>
+              <td className="p-2">{ackText(r)}</td>
             </tr>
           ))}</tbody>
         </table>
       </div>
+      {gone.length > 0 && <details><summary className="cursor-pointer text-muted-foreground">زالت أهليتهم ({gone.length}) — خارج نسبة المتابعة ولا يُذكَّرون</summary>
+        <ul className="mt-1 list-disc ps-5 text-xs">{gone.map((r) => <li key={r["user_id"]}>{r["full_name"]} — {r["school_name"]} — {ackText(r)}</li>)}</ul></details>}
     </section>
   );
 }
@@ -216,13 +239,18 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
   const [users, setUsers] = useState<string[]>(a["users"] ?? []);
   const [id, setId] = useState<string | null>(initial["id"] ?? null);
   const [preview, setPreview] = useState<Row[] | null>(null);
+  const isOwner = ctx.role === "org_owner";
+  const [scope, setScope] = useState<string>(initial["scope"] ?? "school");
+  const [targets, setTargets] = useState<string[]>(initial["scope"] === "branches" ? initial["target_schools"] ?? [] : []);
+  const [step, setStep] = useState(1);
+  const schools = useSchools(ctx.orgId);
   const deptOpts = useOptions("departments", "name", ctx.schoolId);
   const groupOpts = useQuery({ queryKey: ["circ-groups", ctx.schoolId], queryFn: async () => ((await db.from("conversations").select("id, title").eq("kind", "group").eq("school_id", ctx.schoolId).eq("status", "active")).data ?? []) as Row[] });
   const files = useFiles(id ?? "none");
   const audience = { roles, departments: depts, groups, users };
   const toggle = (arr: string[], set: (x: string[]) => void, x: string) => set(arr.includes(x) ? arr.filter((y) => y !== x) : [...arr, x]);
   async function save() {
-    const { data, error } = await db.rpc("save_circular", { _id: id, _school: ctx.schoolId, _title: v.title, _body: v.body, _publisher: v.publisher, _priority: v.priority, _requires_ack: v.requires_ack, _ack_due: v.ack_due || null, _aud: audience });
+    const { data, error } = await db.rpc("save_circular", { _id: id, _school: ctx.schoolId, _title: v.title, _body: v.body, _publisher: v.publisher, _priority: v.priority, _requires_ack: v.requires_ack, _ack_due: v.ack_due || null, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
     if (error) { toast.error(arabicError(error)); return null; }
     setId(data); return data as string;
   }
@@ -237,8 +265,17 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
         <label className="flex items-center gap-2"><input type="checkbox" checked={v.requires_ack} onChange={(e) => setV({ ...v, requires_ack: e.target.checked })} /> يتطلب إقرار اطلاع</label>
         {v.requires_ack && <div className="space-y-1"><Label htmlFor="cd">موعد الإقرار</Label><Input id="cd" type="date" value={v.ack_due} onChange={(e) => setV({ ...v, ack_due: e.target.value })} /></div>}
       </div>
+      <ol className="flex flex-wrap gap-2 text-xs">{["المحتوى", "الفروع", "الجمهور", "الإقرار", "المعاينة"].map((l, k) => <li key={l}><button type="button" onClick={() => setStep(k + 1)} className={`rounded-full border px-3 py-1 ${step === k + 1 ? "bg-primary text-primary-foreground" : ""}`}>{k + 1}. {l}</button></li>)}</ol>
+      <fieldset className="space-y-2 rounded-lg border p-3">
+        <legend className="px-1 font-semibold">النطاق والفروع</legend>
+        {isOwner ? (
+          <div className="flex flex-wrap gap-3">{Object.entries(SCOPE).map(([k, l]) => <label key={k} className="flex items-center gap-1"><input type="radio" name="scope" checked={scope === k} onChange={() => setScope(k)} />{k === "school" ? "هذه المدرسة فقط" : k === "org" ? "كل فروع المؤسسة" : l}</label>)}</div>
+        ) : <p className="text-muted-foreground">النشر داخل مدرستك فقط. النشر على عدة فروع لمالك المؤسسة.</p>}
+        {scope === "branches" && <div className="flex flex-wrap gap-3">{(schools.data ?? []).map((s) => <label key={s["id"]} className="flex items-center gap-1"><input type="checkbox" checked={targets.includes(s["id"])} onChange={() => toggle(targets, setTargets, s["id"])} />{s["name"]}</label>)}</div>}
+      </fieldset>
       <fieldset className="space-y-2 rounded-lg border p-3">
         <legend className="px-1 font-semibold">الجمهور (يُتحقق منه في الخادم ويُحفظ عند النشر)</legend>
+        <p className="text-xs text-muted-foreground">كيف يُجمع الجمهور: يُختار الفرع أولًا، ثم داخل كل فرع يُضم كل من يطابق أيًّا من الاختيارات (دور أو قسم أو مجموعة أو فرد). من يملك أكثر من عضوية يُحسب مرة واحدة، والعضويات غير المفعّلة تُستبعد.{scope !== "school" ? " الأقسام والمجموعات والأفراد المعروضون هنا من مدرستك الحالية؛ الأدوار تُطبق على كل الفروع المختارة." : ""}</p>
         <div className="flex flex-wrap gap-3">{["teacher", "dept_head", "supervisor", "vice_principal", "student_affairs", "counselor", "nurse", "security", "guardian", "student"].map((r) => (
           <label key={r} className="flex items-center gap-1"><input type="checkbox" checked={roles.includes(r)} onChange={() => toggle(roles, setRoles, r)} />{ROLE_AR[r]}</label>
         ))}</div>
@@ -246,11 +283,11 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
         {!!groupOpts.data?.length && <div className="flex flex-wrap gap-3"><span className="text-muted-foreground">مجموعات:</span>{groupOpts.data.map((g) => <label key={g["id"]} className="flex items-center gap-1"><input type="checkbox" checked={groups.includes(g["id"])} onChange={() => toggle(groups, setGroups, g["id"])} />{g["title"]}</label>)}</div>}
         <details><summary className="cursor-pointer text-muted-foreground">أفراد محددون ({users.length})</summary><MemberPicker schoolId={ctx.schoolId} orgId={ctx.orgId} value={users} onChange={setUsers} /></details>
         <Button size="sm" variant="outline" type="button" onClick={async () => {
-          const { data, error } = await db.rpc("preview_circular_audience", { _school: ctx.schoolId, _aud: audience });
+          const { data, error } = await db.rpc("preview_circular_audience", { _school: ctx.schoolId, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
           if (error) return void toast.error(arabicError(error));
           setPreview(data as Row[]);
         }}>معاينة المستلمين</Button>
-        {preview && <p className="text-xs">{preview.length} مستلم: {preview.slice(0, 30).map((p) => p["full_name"]).join("، ")}{preview.length > 30 ? "…" : ""}</p>}
+        {preview && <PreviewList rows={preview} />}
       </fieldset>
       {id && (
         <div className="space-y-1">
@@ -274,6 +311,19 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
         <Button size="sm" variant="ghost" onClick={onDone}>إغلاق</Button>
       </div>
       <p className="text-xs text-muted-foreground">بعد الحفظ يمكنك إرفاق الملفات، ثم فتح المسودة من القائمة لنشرها.</p>
+    </div>
+  );
+}
+
+function PreviewList({ rows }: { rows: Row[] }) {
+  const inc = rows.filter((r) => r["included"]);
+  const exc = rows.filter((r) => !r["included"]);
+  const byBranch = [...inc.reduce((m, r) => m.set(r["school_name"], (m.get(r["school_name"]) ?? 0) + 1), new Map<string, number>())];
+  return (
+    <div className="space-y-1 text-xs">
+      <p className="font-semibold">سيصل إلى {inc.length} مستلم{byBranch.length > 1 ? ` — ${byBranch.map(([n, c]) => `${n}: ${c}`).join("، ")}` : ""}</p>
+      <ul className="max-h-48 overflow-auto rounded border p-2">{inc.map((r) => <li key={r["user_id"]}>{r["full_name"]} — {r["school_name"]} — {String(r["role"] ?? "").split(",").map((x) => ROLE_AR[x] ?? x).join("، ")}{r["reason"] ? ` (${r["reason"]})` : ""}</li>)}</ul>
+      {exc.length > 0 && <details><summary className="cursor-pointer text-muted-foreground">مستبعدون ({exc.length})</summary><ul className="ps-4">{exc.map((r) => <li key={r["user_id"]}>{r["full_name"]} — {r["school_name"]}: {r["reason"]}</li>)}</ul></details>}
     </div>
   );
 }
