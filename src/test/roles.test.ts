@@ -19,8 +19,10 @@ describe("role rules", () => {
     expect(NAV_BY_ROLE.nurse).toEqual(["home", "communication", "notifications"]);
     expect(NAV_BY_ROLE.security).toEqual(["home", "communication", "notifications"]);
   });
-  it("students get circulars only — no private chats", () => {
-    expect(commTabs("student")).toEqual(["circulars"]);
+  it("students see class groups and teacher chats but never manage classes", () => {
+    expect(commTabs("student")).toEqual(["inbox", "groups", "circulars", "archive"]);
+    expect(commTabs("student")).not.toContain("classes");
+    expect(commTabs("teacher")).toContain("classes");
   });
   it("only managers get the communication admin tab", () => {
     expect(commTabs("principal")).toContain("manage");

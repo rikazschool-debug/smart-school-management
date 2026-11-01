@@ -395,6 +395,7 @@ export type Database = {
           dept_head_groups: boolean
           edit_window_minutes: number
           family_admin_roles: Database["public"]["Enums"]["app_role"][]
+          report_reviewer_roles: Database["public"]["Enums"]["app_role"][]
           school_id: string
           staff_direct_enabled: boolean
           updated_at: string
@@ -403,6 +404,7 @@ export type Database = {
           dept_head_groups?: boolean
           edit_window_minutes?: number
           family_admin_roles?: Database["public"]["Enums"]["app_role"][]
+          report_reviewer_roles?: Database["public"]["Enums"]["app_role"][]
           school_id: string
           staff_direct_enabled?: boolean
           updated_at?: string
@@ -411,6 +413,7 @@ export type Database = {
           dept_head_groups?: boolean
           edit_window_minutes?: number
           family_admin_roles?: Database["public"]["Enums"]["app_role"][]
+          report_reviewer_roles?: Database["public"]["Enums"]["app_role"][]
           school_id?: string
           staff_direct_enabled?: boolean
           updated_at?: string
@@ -487,6 +490,7 @@ export type Database = {
       conversations: {
         Row: {
           allow_attachments: boolean
+          allow_replies: boolean
           created_at: string
           created_by: string
           dedupe_key: string | null
@@ -504,6 +508,7 @@ export type Database = {
           org_id: string
           post_policy: string
           school_id: string | null
+          section_id: string | null
           staff_kind: string | null
           staff_user_id: string | null
           status: string
@@ -514,6 +519,7 @@ export type Database = {
         }
         Insert: {
           allow_attachments?: boolean
+          allow_replies?: boolean
           created_at?: string
           created_by?: string
           dedupe_key?: string | null
@@ -531,6 +537,7 @@ export type Database = {
           org_id: string
           post_policy?: string
           school_id?: string | null
+          section_id?: string | null
           staff_kind?: string | null
           staff_user_id?: string | null
           status?: string
@@ -541,6 +548,7 @@ export type Database = {
         }
         Update: {
           allow_attachments?: boolean
+          allow_replies?: boolean
           created_at?: string
           created_by?: string
           dedupe_key?: string | null
@@ -558,6 +566,7 @@ export type Database = {
           org_id?: string
           post_policy?: string
           school_id?: string | null
+          section_id?: string | null
           staff_kind?: string | null
           staff_user_id?: string | null
           status?: string
@@ -593,6 +602,13 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
             referencedColumns: ["id"]
           },
           {
@@ -783,6 +799,60 @@ export type Database = {
           },
         ]
       }
+      file_cleanup_config: {
+        Row: {
+          id: boolean
+          max_attempts: number
+          retention_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          max_attempts?: number
+          retention_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          max_attempts?: number
+          retention_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      file_cleanup_runs: {
+        Row: {
+          delete_requests: number
+          failed: number
+          id: string
+          marked: number
+          note: string | null
+          rows_removed: number
+          skipped_linked: number
+          started_at: string
+        }
+        Insert: {
+          delete_requests?: number
+          failed?: number
+          id?: string
+          marked?: number
+          note?: string | null
+          rows_removed?: number
+          skipped_linked?: number
+          started_at?: string
+        }
+        Update: {
+          delete_requests?: number
+          failed?: number
+          id?: string
+          marked?: number
+          note?: string | null
+          rows_removed?: number
+          skipped_linked?: number
+          started_at?: string
+        }
+        Relationships: []
+      }
       file_policies: {
         Row: {
           allowed_types: string[]
@@ -815,6 +885,9 @@ export type Database = {
       files: {
         Row: {
           category: string | null
+          cleanup_attempts: number
+          cleanup_error: string | null
+          cleanup_last_at: string | null
           created_at: string
           description: string | null
           id: string
@@ -829,6 +902,9 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          cleanup_attempts?: number
+          cleanup_error?: string | null
+          cleanup_last_at?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -843,6 +919,9 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          cleanup_attempts?: number
+          cleanup_error?: string | null
+          cleanup_last_at?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1187,6 +1266,8 @@ export type Database = {
           deleted_by: string | null
           edited_at: string | null
           id: string
+          pinned_at: string | null
+          pinned_by: string | null
           reply_to: string | null
           school_id: string | null
           sender_id: string
@@ -1201,6 +1282,8 @@ export type Database = {
           deleted_by?: string | null
           edited_at?: string | null
           id?: string
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to?: string | null
           school_id?: string | null
           sender_id: string
@@ -1215,6 +1298,8 @@ export type Database = {
           deleted_by?: string | null
           edited_at?: string | null
           id?: string
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to?: string | null
           school_id?: string | null
           sender_id?: string
@@ -2435,13 +2520,26 @@ export type Database = {
         }
         Returns: undefined
       }
+      _report_reviewer: {
+        Args: { _org: string; _school: string }
+        Returns: boolean
+      }
       _scope_manager: {
         Args: { _org: string; _school: string }
         Returns: boolean
       }
+      _section_title: { Args: { _section: string }; Returns: string }
       _section_users: {
         Args: { _guardians: boolean; _section: string; _year: string }
         Returns: string[]
+      }
+      _student_ok: {
+        Args: { _student: string; _teacher: string }
+        Returns: boolean
+      }
+      _teaches_section: {
+        Args: { _section: string; _user: string }
+        Returns: boolean
       }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
@@ -2522,6 +2620,17 @@ export type Database = {
           opened_at: string
           role: string
           user_id: string
+        }[]
+      }
+      class_roster: {
+        Args: { _section: string }
+        Returns: {
+          can_message: boolean
+          conversation_id: string
+          full_name: string
+          has_account: boolean
+          student_id: string
+          unread: number
         }[]
       }
       classroom_members: {
@@ -2681,9 +2790,21 @@ export type Database = {
         Returns: undefined
       }
       mark_notifications_read: { Args: { _ids?: string[] }; Returns: number }
+      my_class_groups: {
+        Args: { _school: string }
+        Returns: {
+          conversation_id: string
+          section_id: string
+          students: number
+          subjects: string
+          title: string
+        }[]
+      }
       my_conversations: {
         Args: { _school?: string }
         Returns: {
+          allow_attachments: boolean
+          allow_replies: boolean
           archived: boolean
           counterpart: string
           group_type: string
@@ -2694,8 +2815,11 @@ export type Database = {
           last_seq: number
           muted: boolean
           my_role: string
+          post_policy: string
           school_id: string
           school_name: string
+          section_id: string
+          section_label: string
           send_block: string
           status: string
           student_name: string
@@ -2705,6 +2829,7 @@ export type Database = {
       }
       my_teacher_ids: { Args: never; Returns: string[] }
       open_circular: { Args: { _id: string }; Returns: undefined }
+      pin_message: { Args: { _id: string; _pin: boolean }; Returns: undefined }
       preview_circular_audience: {
         Args: { _aud: Json; _school: string }
         Returns: {
@@ -2752,6 +2877,7 @@ export type Database = {
         Returns: number
       }
       revoke_invitation: { Args: { _id: string }; Returns: undefined }
+      run_file_cleanup: { Args: never; Returns: Json }
       save_circular: {
         Args: {
           _ack_due: string
@@ -2799,6 +2925,19 @@ export type Database = {
           seq: number
         }[]
       }
+      set_class_group_settings: {
+        Args: {
+          _allow_attachments: boolean
+          _allow_replies: boolean
+          _conv: string
+          _post_policy: string
+        }
+        Returns: undefined
+      }
+      set_cleanup_credentials: {
+        Args: { _key: string; _url: string }
+        Returns: undefined
+      }
       set_group_role: {
         Args: { _conv: string; _role: string; _user: string }
         Returns: undefined
@@ -2831,8 +2970,13 @@ export type Database = {
         Args: { _guardian: string; _staff_user: string; _student: string }
         Returns: string
       }
+      start_student_conversation: {
+        Args: { _student: string }
+        Returns: string
+      }
       start_timetable_revision: { Args: { _id: string }; Returns: string }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
+      sync_section_group: { Args: { _section: string }; Returns: string }
       teacher_students: {
         Args: { _school: string }
         Returns: {

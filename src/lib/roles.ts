@@ -120,12 +120,14 @@ export function canEditSchedule(role: Role) {
   return canManage(role);
 }
 
-export type CommTab = "inbox" | "mine" | "groups" | "circulars" | "archive" | "manage";
-/** Communication tabs per role. Students get no private chats (only circulars); manage = group/circular/report admin (mirrors can_manage_school). */
+export type CommTab = "inbox" | "mine" | "groups" | "classes" | "circulars" | "archive" | "manage";
+/** Communication tabs per role. Students see their class groups and private chats with their teachers (they never start chats);
+ *  classes = teacher class groups + roster (managers monitor); manage = group/circular/report admin (mirrors can_manage_school). */
 export function commTabs(role: Role): CommTab[] {
-  if (role === "student") return ["circulars"];
+  if (role === "student") return ["inbox", "groups", "circulars", "archive"];
   const base: CommTab[] = ["inbox", "mine", "groups", "circulars", "archive"];
-  return canManage(role) ? [...base, "manage"] : base;
+  if (role === "teacher") return ["inbox", "classes", "mine", "groups", "circulars", "archive"];
+  return canManage(role) ? [...base, "classes", "manage"] : base;
 }
 /** Roles that start family conversations from the teacher side. */
 export function canStartFamilyChat(role: Role) {
