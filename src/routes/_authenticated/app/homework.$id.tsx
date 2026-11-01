@@ -33,9 +33,10 @@ function Page() {
       const [isT, files, teacher] = await Promise.all([
         db.rpc("is_course_teacher", { _course: data.course_id }),
         db.from("files").select("id, name, storage_path, size_bytes").eq("source_type", "homework").eq("source_id", id),
-        db.from("teacher_assignments").select("teachers(full_name)").eq("course_id", data.course_id).eq("status", "approved").limit(1),
+        db.rpc("homework_people", { _hw: id }),
       ]);
-      return { ...data, isTeacher: !!isT.data, files: files.data ?? [], teacherName: teacher.data?.[0]?.teachers?.full_name ?? "—" } as Row;
+      const ppl = (teacher.data as Row[] | null)?.[0];
+      return { ...data, isTeacher: !!isT.data, files: files.data ?? [], people: ppl ?? null } as Row;
     },
   });
   if (hw.isLoading) return <LoadingState />;
@@ -46,7 +47,7 @@ function Page() {
   return (
     <>
       <Link to="/app/homework" className="text-sm text-primary">→ الواجبات</Link>
-      <PageHeader title={h["title"]} desc={`${h["courses"]?.["subjects"]?.["name"] ?? ""} — ${h["sections"]?.["name"] ?? ""} · المعلم: ${h["teacherName"]}`} />
+      <PageHeader title={h["title"]} desc={`${h["courses"]?.["subjects"]?.["name"] ?? ""} — ${h["sections"]?.["name"] ?? ""} ${peopleLine(h["people"])}`} />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Details h={h} />
@@ -410,4 +411,17 @@ function FamilyPanel({ h }: { h: Row }) {
       <Attempts d={d.data} h={h} />
     </section>
   );
+}
+
+/** "أعدّه" = author (kept even after teacher change); "معلم المادة" = current approved assignment. Never swapped silently. */
+function peopleLine(p: Row | null) {
+  if (!p) return " · تعذر تحميل اسم المعلم";
+  const cur = (p["current_teachers"] ?? []) as string[];
+  const author = p["author_name"] as string | null;
+  const parts: string[] = [];
+  if (cur.length) parts.push(`معلم المادة: ${cur.join("، ")}`);
+  else parts.push("معلم المادة: لا يوجد تكليف ساري حاليًا");
+  if (author && !(p["author_is_current"] && cur.length === 1 && cur[0] === author)) parts.push(`أعدّه: ${author}`);
+  else if (!author) parts.push("أعدّه: غير مسجل في هذا السجل القديم");
+  return " · " + parts.join(" · ");
 }
