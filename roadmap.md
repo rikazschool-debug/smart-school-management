@@ -16,7 +16,7 @@
 - [x] 11 Notifications + unread + mute
 - [x] 12 Reports with audited reviewer access
 - [x] 15 scripts/comm-e2e.ts (76 checks) + browser: teacher→guardian chat with file, guardian reply on phone, principal group wizard + circular, teacher ack on phone
-- [ ] Cross-branch (org-wide) circulars and attachments in cross-branch groups — not built
+- [x] Cross-branch (org-wide) circulars and attachments in cross-branch groups — built (see 3b C, D)
 
 ## Package 3b — Closure (prompt: close packages 2+3) + mandatory class groups
 - [x] A Closure log docs/closure-log.md (per item: scope, server test, browser test, evidence, status)
