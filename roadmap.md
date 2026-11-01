@@ -36,9 +36,9 @@
 - [x] 3 Cross-branch group attachments — server 11/11 + browser (upload, view, download, outsider denied)
 - [x] 4 Package-2 remaining browser journeys — all done in browser; supervisor scope bug fixed
 - [x] 5 Extended communication browser tests (see P5)
-- [ ] 6 Cleanup scheduler health detection (stale last-run alert) + timing doc
-- [ ] 7 Department-head scope: currently reads the whole school; narrow to own department (needs decision)
-- [ ] 8 Remove 19 leftover test schools from older test runs (needs owner-safe cleanup)
+- [x] 6 Cleanup scheduler health detection — done as P6
+- [x] 7 Department-head scope — done as P3
+- [ ] 8 Remove leftover test schools — deferred by owner (plan in docs/test-schools-inventory.md)
 
 ## Package 4 — Permission corrections + closure (prompt: نفّذ حزمة تصحيح الصلاحيات)
 - [x] P1 Manual groups: create only by org owner (org/branches) or principal (own school); server-enforced; legacy groups handed to authorized admin with audit
