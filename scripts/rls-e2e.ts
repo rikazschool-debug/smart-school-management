@@ -336,4 +336,5 @@ await admin.from("invitations").delete().eq("org_id", orgId);
 await admin.from("memberships").delete().eq("org_id", orgId);
 await admin.from("schools").delete().eq("org_id", orgId);
 await admin.from("organizations").delete().eq("id", orgId);
+await tr.purgeOrg(orgId);
 for (const u of [owner, teacherU, guardU, studU, outsider, supU]) await admin.auth.admin.deleteUser(u.id);

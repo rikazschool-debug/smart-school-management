@@ -73,7 +73,7 @@ finally {
     await admin.from("conversations").delete().eq("org_id", o);
   }
   await tr.deleteNotifications();
-  for (const o of orgs) { await admin.from("invitations").delete().eq("org_id", o); await admin.from("memberships").delete().eq("org_id", o); await admin.from("schools").delete().eq("org_id", o); await admin.from("organizations").delete().eq("id", o); }
+  for (const o of orgs) { await admin.from("invitations").delete().eq("org_id", o); await admin.from("memberships").delete().eq("org_id", o); await admin.from("schools").delete().eq("org_id", o); await admin.from("organizations").delete().eq("id", o); await tr.purgeOrg(o); }
   for (const u of tr.users) await admin.auth.admin.deleteUser(u);
 }
 console.log(`\n${ok} passed, ${bad} failed`);
