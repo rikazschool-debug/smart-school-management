@@ -60,7 +60,7 @@ const ACTIONS: Record<string, string> = { started: "بدأ التنفيذ", resu
   awaiting_confirmation: "بانتظار التأكيد", blocked: "عائق", comment: "تعليق", clarify: "طلب توضيح", updated: "تعديل", cancelled: "أُلغي", confirmed: "أُكّد",
   suggested: "اقتراح توزيع", assigned: "إسناد مناوبة", unassigned: "حذف من المسودة", published: "نُشر", substituted: "تعيين بديل", conflict_detected: "تعارض بعد تغيير الجدول",
   executed: "نُفذت", not_executed: "تعذر التنفيذ", excuse_requested: "طلب اعتذار", change_requested: "طلب تغيير", change_accepted: "قُبل الطلب", change_declined: "رُفض الطلب",
-  invited: "أُرسلت الدعوات", rsvp_accepted: "قبول الدعوة", rsvp_declined: "اعتذار", attendance: "تسجيل الحضور", minutes_started: "بدء المحضر", minutes_new_version: "إصدار جديد للمحضر",
+  invited: "أُرسلت الدعوات", live_started: "بدء الاجتماع الافتراضي", live_joined: "انضمام أول مرة للبث", live_ended: "إنهاء الاجتماع للجميع", live_removed: "إزالة مشارك من البث", live_allowed_back: "السماح بالعودة", rsvp_accepted: "قبول الدعوة", rsvp_declined: "اعتذار", attendance: "تسجيل الحضور", minutes_started: "بدء المحضر", minutes_new_version: "إصدار جديد للمحضر",
   minutes_confirmed: "تثبيت المحضر", decision_added: "قرار جديد",
 };
 
