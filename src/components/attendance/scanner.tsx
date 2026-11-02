@@ -25,7 +25,7 @@ function useServerClock() {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t0 = Date.now();
-    void db.rpc("server_now").then(({ data }) => { if (data) setOffset(new Date(data as string).getTime() - (t0 + Date.now()) / 2); });
+    void db.rpc("server_now").then(({ data }: { data: unknown }) => { if (data) setOffset(new Date(data as string).getTime() - (t0 + Date.now()) / 2); });
     const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t);
   }, []);
   return offset === null ? null : new Date(now + offset);
