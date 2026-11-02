@@ -54,7 +54,7 @@ export function useEvents(entity: string, id: string) {
   });
 }
 
-const ACTIONS: Record<string, string> = {
+const ACTIONS: Record<string, string> = { started: "بدأ التنفيذ", file_added: "أُضيف مرفق", file_removed: "أُزيل مرفق", progress: "تحديث تقدم",
   created: "أُنشئ", edited: "عُدّل", new_version: "إصدار جديد", draft: "حُفظت مسودة", submitted: "قُدّم", in_progress: "بدأت المعالجة", completed: "اكتمل",
   rejected: "رُفض", returned: "أُعيد", reassigned: "حُوّل", acknowledged: "اطّلع المسؤول", progress: "تحديث التقدم", done: "أُنجز",
   awaiting_confirmation: "بانتظار التأكيد", blocked: "عائق", comment: "تعليق", clarify: "طلب توضيح", updated: "تعديل", cancelled: "أُلغي", confirmed: "أُكّد",
@@ -98,7 +98,7 @@ export function AdminFiles({ entity, id, canAdd, userId, doneAt }: { entity: "ta
     <div className="space-y-2 rounded-xl border bg-card p-4">
       <p className="font-semibold">المرفقات</p>
       {!files.length && <p className="text-sm text-muted-foreground">لا توجد مرفقات.</p>}
-      <FileList files={files} onRemove={canAdd ? async (f) => { if (f["uploaded_by"] !== userId) return void toast.error("يحذف الملف من رفعه فقط"); const { error } = await db.rpc("remove_admin_file", { _file: f["id"] }); if (error) toast.error(arabicError(error)); q.refetch(); } : undefined} />
+      <FileList files={files} onRemove={canAdd && !doneAt ? async (f) => { if (f["uploaded_by"] !== userId) return void toast.error("يحذف الملف من رفعه فقط"); const { error } = await db.rpc("remove_admin_file", { _file: f["id"] }); if (error) toast.error(arabicError(error)); q.refetch(); } : undefined} />
       {late.length > 0 && (
         <div className="space-y-1 border-t pt-2">
           <p className="text-sm font-medium">ملحق بعد الإنجاز</p>
