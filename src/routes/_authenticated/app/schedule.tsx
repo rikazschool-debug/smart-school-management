@@ -22,7 +22,7 @@ import { GeneratePanel } from "@/components/schedule/generate-panel";
 import { DAY_NAMES, slotLabel, todayISO, useCurrentTimetable, useDaySetup, useSlots, weekDates } from "@/lib/schedule";
 
 export const Route = createFileRoute("/_authenticated/app/schedule")({
-  validateSearch: (s: Record<string, unknown>): { tab?: ScheduleTab } => ({ tab: s["tab"] === "subs" || s["tab"] === "settings" || s["tab"] === "timetable" ? s["tab"] : undefined }),
+  validateSearch: (s: Record<string, unknown>): { tab?: ScheduleTab | undefined } => ({ tab: s["tab"] === "subs" || s["tab"] === "settings" || s["tab"] === "timetable" ? s["tab"] : undefined }),
   head: () => ({ meta: [{ title: "الجدول المدرسي | ركاز" }, { name: "description", content: "بناء الجدول المدرسي وتوليده ونشره، والبدلاء، وإعدادات اليوم الدراسي والأنصبة" }] }),
   component: Page,
 });
