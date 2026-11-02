@@ -123,10 +123,10 @@ try {
   // teacher edit keeps old/new, single notification per edit, repeated save with old rev rejected
   const ed = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "أفضل", _final: true, _rev: g1row.rev });
   const again = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "أفضل", _final: true, _rev: g1row.rev });
-  const hist5 = (await admin.from("homework_grade_hist5ory").select("old_score, new_score").eq("grade_id", g1row.id)).data!;
+  const hist5 = (await admin.from("homework_grade_history").select("old_score, new_score").eq("grade_id", g1row.id)).data!;
   const nAfter5 = (await admin.from("notifications").select("id").like("dedupe_key", "%res:%")).data?.length ?? -1;
   const sNow = (await s1.c.from("homework_grades").select("score")).data!;
-  check("5f teacher edit: hist5ory old 8 -> new 9, student sees 9, stale repeat rejected, notifications not duplicated", !ed.error && !!again.error && hist5.length === 1 && hist5[0]!.old_score == 8 && hist5[0]!.new_score == 9 && sNow[0]!.score == 9 && nAfter5 - nGrade5 <= 2, [ed.error, hist5, nGrade5, nAfter5]);
+  check("5f teacher edit: history old 8 -> new 9, student sees 9, stale repeat rejected, notifications not duplicated", !ed.error && !!again.error && hist5.length === 1 && hist5[0]!.old_score == 8 && hist5[0]!.new_score == 9 && sNow[0]!.score == 9 && nAfter5 - nGrade5 <= 2, [ed.error, hist5, nGrade5, nAfter5]);
   const rv = (await admin.from("homework_grades").select("rev").eq("submission_id", sub1).single()).data!.rev;
   const noReason = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "", _rev: rv });
   const corr = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "خطأ جمع", _rev: rv });
