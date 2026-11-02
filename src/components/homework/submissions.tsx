@@ -63,7 +63,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
     to_grade: needsGrade,
     to_publish: (r) => r["grade"]?.["status"] === "graded" && !r["grade"]["needs_review"],
   };
-  const labels: Record<Filter, string> = { all: "الكل", missing: "لم يسلّم", late: "متأخر", returned: "معاد", to_grade: "يحتاج تصحيحًا", to_publish: "جاهز للنشر" };
+  const labels: Record<Filter, string> = { all: "الكل", missing: "لم يسلّم", late: "متأخر", returned: "معاد", to_grade: "يحتاج تصحيحًا", to_publish: "محفوظ سابقًا وغير ظاهر" };
   const term = search.trim();
   const shown = rows.filter(fns[filter]).filter((r) => !term || (r["students"]?.["full_name"] ?? "").includes(term));
   const current = rows.find((r) => r["student_id"] === sel) ?? null;
@@ -74,12 +74,12 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">التسليمات {editable ? "والتصحيح" : "(اطلاع فقط)"}</h3>
         {editable && h["max_score"] !== undefined && (
-          <Button size="sm" disabled={!readyCount} onClick={async () => {
+          {readyCount > 0 && <Button size="sm" variant="outline" onClick={async () => {
             const names = rows.filter(fns.to_publish).map((r) => `• ${r["students"]?.["full_name"]}${r["grade"]?.["score"] != null ? ` — ${r["grade"]["score"]}/${h["max_score"]}` : ""}`).join("\n");
-            if (!(await ask(`معاينة قبل النشر — ستظهر هذه النتائج (${readyCount}) للطلاب وأولياء أمورهم:\n${names}`, { ok: "نشر النتائج" }))) return;
+            if (!(await ask(`تصحيحات حُفظت قبل التبسيط ولم تظهر بعد. ستظهر هذه الدرجات (${readyCount}) للطلاب وأولياء أمورهم:\n${names}`, { ok: "إظهار الدرجات" }))) return;
             const { data: n, error } = await db.rpc("publish_results", { _hw: h["id"], _subs: null });
-            if (error) toast.error(arabicError(error)); else { toast.success(`نُشرت ${n} نتيجة`); qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] }); }
-          }}>نشر كل المصحح ({readyCount})</Button>
+            if (error) toast.error(arabicError(error)); else { toast.success(`ظهرت ${n} درجة`); qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] }); }
+          }}>إظهار التصحيحات السابقة ({readyCount})</Button>}
         )}
       </div>
       <Input placeholder="ابحث باسم الطالب" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
@@ -188,18 +188,11 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
             </div>
           ) : <label className="flex items-center gap-2 text-sm">الدرجة (0–{h["max_score"]})<Input className="w-28" type="number" min={0} max={h["max_score"]} value={score} onChange={(e) => setScore(e.target.value)} /></label>)}
           <Textarea rows={3} placeholder="ملاحظات للطالب" value={fb} onChange={(e) => setFb(e.target.value)} />
-          {published ? (
-            <div className="flex flex-wrap gap-2">
-              <Input className="flex-1" placeholder="سبب تعديل النتيجة المنشورة (يُسجل ويُبلغ الطالب)" value={reason} onChange={(e) => setReason(e.target.value)} />
-              <Button size="sm" onClick={() => call("correct_result", { ...gradeArgs(), _reason: reason }, "عُدّلت النتيجة وسُجل التغيير")}>تعديل النتيجة</Button>
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => call("grade_submission", { ...gradeArgs(), _final: false }, "حُفظ التصحيح كمسودة")}>حفظ كمسودة</Button>
-              <Button size="sm" variant="secondary" onClick={() => call("grade_submission", { ...gradeArgs(), _final: true }, "اكتمل التصحيح (غير منشور)")}>اعتماد التصحيح</Button>
-              {g?.["status"] === "graded" && !g["needs_review"] && <Button size="sm" onClick={() => call("publish_results", { _hw: h["id"], _subs: [sub["id"]] }, "نُشرت النتيجة للطالب")}>نشر نتيجة هذا الطالب</Button>}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" onClick={() => call("grade_submission", { ...gradeArgs(), _final: true }, published ? "حُفظ التعديل وسُجل القديم والجديد" : "حُفظ التصحيح وظهرت الدرجة للطالب وولي أمره")}>{published ? "حفظ التعديل وتحديث الدرجة" : "حفظ التصحيح وإظهار الدرجة"}</Button>
+            {g?.["status"] === "graded" && !g["needs_review"] && <Button size="sm" variant="outline" onClick={() => call("publish_results", { _hw: h["id"], _subs: [sub["id"]] }, "ظهرت الدرجة المحفوظة سابقًا")}>إظهار التصحيح المحفوظ سابقًا</Button>}
+            <span className="text-xs text-muted-foreground">{published ? "الدرجة ظاهرة؛ أي تعديل يُسجل في السجل ويُبلغ الطالب وولي أمره." : "تظهر الدرجة والملاحظات ومرفقاتها فور الحفظ، دون اعتماد إداري."}</span>
+          </div>
           <div className="flex flex-wrap gap-2 border-t pt-2">
             <Input className="flex-1" placeholder="سبب الإعادة للاستكمال (مطلوب)" value={retReason} onChange={(e) => setRetReason(e.target.value)} />
             <Button size="sm" variant="outline" disabled={!retReason.trim()} onClick={() => call("return_submission", { _sub: sub["id"], _reason: retReason }, "أُعيد للطالب للاستكمال")}>إعادة للاستكمال</Button>
