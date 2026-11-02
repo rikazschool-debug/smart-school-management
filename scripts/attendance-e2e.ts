@@ -262,6 +262,63 @@ try {
   const quick = await gu.c.rpc("create_pickup_request", { _student: s2.id, _kind: "quick", _reason: null, _planned_at: null, _person: null });
   check("quick pickup refused during school hours", !!quick.error, quick.error?.message);
 
+  // ---- one-time delegation ----
+  const D = { name: "فهد سالم العتيبي", relationship: "صديق العائلة", phone: "0551234567", id_last4: "4321", ack: true };
+  const noAck = await gu.c.rpc("submit_pickup_request", { _student: s2.id, _kind: "permission", _reason: "موعد", _planned_at: null, _mode: "one_time", _person: null, _delegate: { ...D, ack: false } });
+  check("delegation needs guardian acknowledgement", !!noAck.error && /إقرار/.test(noAck.error.message), noAck.error?.message);
+  const r3 = (await gu.c.rpc("submit_pickup_request", { _student: s2.id, _kind: "permission", _reason: "موعد", _planned_at: null, _mode: "one_time", _person: null, _delegate: D })).data as string;
+  check("one-time delegation request created", !!r3);
+  const secPh = await sec.c.from("pickup_requests").select("delegate_phone").eq("id", r3);
+  const coPh = await co.c.from("pickup_requests").select("delegate_phone, delegate_id_last4").eq("id", r3);
+  check("security/counselor cannot read delegate phone or ID", !!secPh.error && !!coPh.error);
+  const coDet = (await co.c.rpc("pickup_delegate_detail", { _id: r3 })).data, guDet = (await gu.c.rpc("pickup_delegate_detail", { _id: r3 })).data;
+  check("delegate detail only for requester/approver", coDet === null && guDet?.phone === "0551234567", { coDet, guDet });
+  await vp.c.rpc("decide_pickup", { _id: r3, _approve: true, _note: null });
+  const arrPend = await sec.c.rpc("pickup_arrived", { _id: r3, _id_last4: "4321" });
+  check("exit approval alone does not authorize delegate", !!arrPend.error && /لم يُعتمد/.test(arrPend.error.message), arrPend.error?.message);
+  check("security cannot approve delegate", !!(await sec.c.rpc("decide_delegate", { _id: r3, _approve: true, _note: null })).error);
+  await vp.c.rpc("decide_delegate", { _id: r3, _approve: true, _note: null });
+  const upd = await gu.c.rpc("update_pickup_delegate", { _id: r3, _mode: "one_time", _person: null, _delegate: { ...D, phone: "0559999999" } });
+  const afterUpd = (await admin.from("pickup_requests").select("status,delegate_status").eq("id", r3).single()).data!;
+  check("changing recipient after approval re-opens review", !upd.error && afterUpd.status === "under_review" && afterUpd.delegate_status === "pending", { e: upd.error?.message, afterUpd });
+  await vp.c.rpc("decide_pickup", { _id: r3, _approve: true, _note: null }); await vp.c.rpc("decide_delegate", { _id: r3, _approve: true, _note: null });
+  const mis = (await sec.c.rpc("pickup_arrived", { _id: r3, _id_last4: "0000" })).data;
+  const misEv = (await admin.from("attendance_events").select("id").eq("entity_id", r3).eq("action", "delegate_mismatch")).data ?? [];
+  const st3 = (await admin.from("pickup_requests").select("status").eq("id", r3).single()).data!;
+  check("non-matching recipient refused and logged", mis?.ok === false && misEv.length === 1 && st3.status === "approved", { mis, n: misEv.length, st3 });
+  const okArr = (await sec.c.rpc("pickup_arrived", { _id: r3, _id_last4: "4321" })).data;
+  check("matching recipient → arrival", okArr?.ok === true, okArr);
+  await sec.c.rpc("pickup_progress", { _id: r3, _to: "ready" });
+  const hd = await sec.c.rpc("handover_pickup", { _id: r3 });
+  const used = (await admin.from("pickup_requests").select("delegate_used_at").eq("id", r3).single()).data!;
+  const hd2 = await sec.c.rpc("handover_pickup", { _id: r3 });
+  check("delegation used once on handover", !hd.error && !!used.delegate_used_at && !!hd2.error, hd.error?.message);
+  const asGuardian = (await admin.from("guardians").select("id").eq("school_id", A).eq("full_name", D.name)).data ?? [];
+  const asPicker = (await admin.from("authorized_pickups").select("id").eq("full_name", D.name)).data ?? [];
+  check("delegate never becomes guardian or permanent pickup", asGuardian.length === 0 && asPicker.length === 0);
+  const s1q = (await sec.c.rpc("pickup_queue", { _school: A })).data ?? [];
+  check("delegation not visible on the other child", !s1q.some((r: any) => r.student_id === s1.id && r.pickup_name === D.name));
+  // expiry + attachment
+  const r5 = (await gu.c.rpc("submit_pickup_request", { _student: s2.id, _kind: "permission", _reason: "تقرير", _planned_at: null, _mode: "one_time", _person: null, _delegate: D })).data as string;
+  const f = await gu.c.rpc("create_pickup_file", { _pickup: r5, _name: "تقرير.pdf", _mime: "application/pdf", _size: 1000 });
+  check("guardian attaches file before decision", !f.error, f.error?.message);
+  const fid = f.data?.[0]?.id;
+  const secF = (await sec.c.from("files").select("id").eq("id", fid)).data ?? [], coF = (await co.c.from("files").select("id").eq("id", fid)).data ?? [], vpF = (await vp.c.from("files").select("id").eq("id", fid)).data ?? [];
+  check("attachment readable by approver only (not security/counselor)", secF.length === 0 && coF.length === 0 && vpF.length === 1, { s: secF.length, c: coF.length, v: vpF.length });
+  await vp.c.rpc("decide_pickup", { _id: r5, _approve: true, _note: null }); await vp.c.rpc("decide_delegate", { _id: r5, _approve: true, _note: null });
+  const lateF = await gu.c.rpc("create_pickup_file", { _pickup: r5, _name: "x.pdf", _mime: "application/pdf", _size: 10 });
+  check("no attachment after decision", !!lateF.error);
+  await admin.from("pickup_requests").update({ delegate_valid_until: new Date(Date.now() - 60e3).toISOString() }).eq("id", r5);
+  const exp = await sec.c.rpc("pickup_arrived", { _id: r5, _id_last4: "4321" });
+  check("expired delegation refused", !!exp.error && /انتهت/.test(exp.error.message), exp.error?.message);
+  const gc5 = await gu.c.rpc("cancel_pickup", { _id: r5, _reason: null });
+  check("guardian cancels delegation request", !gc5.error, gc5.error?.message);
+  // branch comparison
+  const cmp = (await owner.c.rpc("attendance_compare", { _org: org, _from: today(), _to: today() })).data ?? [];
+  const cmpVp = (await vp.c.rpc("attendance_compare", { _org: org, _from: today(), _to: today() })).data ?? [];
+  const cmpX = (await owner2.c.rpc("attendance_compare", { _org: org, _from: today(), _to: today() })).data ?? [];
+  check("branch comparison owner-only and isolated", cmp.length === 1 && cmp[0].late >= 1 && cmpVp.length === 0 && cmpX.length === 0, { cmp, v: cmpVp.length, x: cmpX.length });
+
   // views
   const guDays = (await gu.c.from("attendance_days").select("student_id")).data ?? [];
   check("guardian sees only own children", guDays.length === 2 && guDays.every((d: any) => [s1.id, s2.id].includes(d.student_id)), guDays.length);
