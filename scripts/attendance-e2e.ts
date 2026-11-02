@@ -125,12 +125,12 @@ try {
   const sEnd = await ins(owner.c, A, "students", { full_name: "تسكين منتهٍ", gender: "male" });
   await admin.from("enrollments").insert({ school_id: A, student_id: sEnd.id, section_id: secA.id, year_id: year.id, start_date: "2026-01-01", end_date: yesterday, status: "ended" });
   const sAbs = await mkStudent("غائب ثم وصل");
-  await admin.from("student_guardians").insert({ school_id: A, student_id: sAbs.id, guardian_id: g1.id, relationship: "أب", can_follow: true, can_pickup: true, verified: true });
+  await admin.from("student_guardians").insert({ school_id: A, student_id: sAbs.id, guardian_id: g2.id, relationship: "أب", can_follow: true, can_pickup: true, verified: true });
   await admin.from("attendance_policies").update({ absence_review_at: "23:59" }).eq("id", pol.data);
   const earlyRev = await sec.c.rpc("build_absence_review", { _school: A, _date: today() });
   check("no absence list before cutoff", !!earlyRev.error && /بعد الساعة/.test(earlyRev.error.message), earlyRev.error?.message);
   const bEarly = (await sec.c.rpc("attendance_board", { _school: A, _date: today() })).data;
-  check("before cutoff: not-yet-recorded count, no pending", bEarly?.not_yet === 3 && bEarly?.pending_review === 0 && bEarly?.expected === 6, bEarly);
+  check("before cutoff: not-yet-recorded count, no pending", bEarly?.not_yet === 3 && bEarly?.pending_review === 0 && bEarly?.expected === 5, bEarly);
   await admin.from("attendance_policies").update({ absence_review_at: "00:00" }).eq("id", pol.data);
   const tickAuth = await sec.c.rpc("att_tick");
   check("signed-in users cannot run the server tick", !!tickAuth.error);
