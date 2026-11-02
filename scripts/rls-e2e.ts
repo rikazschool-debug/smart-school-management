@@ -30,7 +30,13 @@ const { data: sch } = await owner.c.from("schools").select("id").eq("org_id", or
 const S = sch!.id;
 tr.addSchool(S);
 const ins = async (t: string, v: any) => { const r = await owner.c.from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data; };
-const year = await ins("academic_years", { name: "1447", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
+// Dates derive from the run's Riyadh "today" so tests never age out (past/present/future boundaries stay covered).
+const riyToday = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Riyadh" }));
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const plus = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const TODAY = riyToday();
+const SUNDAY = plus(TODAY, (7 - TODAY.getDay()) % 7); // next Sunday on/after today
+const year = await ins("academic_years", { name: "1447", start_date: iso(plus(TODAY, -60)), end_date: iso(plus(TODAY, 220)), is_current: true });
 const stage = await ins("stages", { name: "متوسط" });
 const grade = await ins("grades", { name: "أول متوسط", stage_id: stage.id });
 const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 1 });
@@ -149,7 +155,8 @@ const ce = await outsider.c.rpc("check_enrollment" as any);
 check("trigger fn not callable", !!ce.error);
 
 // 9. timetable: draft visibility, conflicts, publish, revision, substitution
-const D = "2026-11-01"; // Sunday
+const D = iso(SUNDAY); // Sunday, never before today
+const D2 = iso(plus(SUNDAY, 7));
 await ins("school_day_settings", { study_days: [0, 1, 2, 3, 4] });
 const p1 = await ins("periods", { sort_order: 1, name: "الحصة الأولى", start_time: "07:00", end_time: "07:45" });
 const p2 = await ins("periods", { sort_order: 2, name: "الحصة الثانية", start_time: "07:50", end_time: "08:35" });
@@ -212,14 +219,14 @@ await owner.c.from("timetable_slots").update({ period_id: p2.id, day: 1 }).eq("t
 const stale = await ins("timetables", { year_id: year.id, name: "مسودة قديمة" });
 const stalePub = await owner.c.rpc("publish_timetable", { _id: stale.id, _effective_from: D });
 check("unbased draft cannot overwrite published", !!stalePub.error, stalePub.error);
-const pub2 = await owner.c.rpc("publish_timetable", { _id: r1.data, _effective_from: "2026-11-08" });
+const pub2 = await owner.c.rpc("publish_timetable", { _id: r1.data, _effective_from: D2 });
 check("publish v2", pub2.data === 2, pub2);
 const v1slots = await owner.c.from("timetable_slots").select("id").eq("timetable_id", tt.id);
 check("v1 preserved", v1slots.data?.length === 3, v1slots);
 const { count: rooms3 } = await admin.from("classrooms").select("id", { count: "exact", head: true }).eq("school_id", S);
 check("no new classroom from timetable edits", rooms3 === rooms2, [rooms2, rooms3]);
 const cur1 = await owner.c.rpc("current_timetable", { _school: S, _date: D });
-const cur2 = await owner.c.rpc("current_timetable", { _school: S, _date: "2026-11-08" });
+const cur2 = await owner.c.rpc("current_timetable", { _school: S, _date: D2 });
 check("effective dates pick version", cur1.data === tt.id && cur2.data === r1.data, [cur1, cur2]);
 // substitution on Nov 1 (v1)
 const ab = await owner.c.rpc("record_absence", { _teacher: teacher.id, _date: D, _note: "ظرف" });
@@ -312,7 +319,7 @@ await admin.from("supervisor_teachers").delete().eq("id", supLink.id);
 const sup2 = await supSee();
 check("unassigned again -> access gone", sup2.st === 0 && sup2.po === 0 && sup2.sl === 0 && !sup2.f, sup2);
 // transfer: move student out -> loses access
-await admin.from("enrollments").update({ status: "ended", end_date: "2026-11-02" }).eq("student_id", stu.id);
+await admin.from("enrollments").update({ status: "ended", end_date: iso(plus(TODAY, -1)) }).eq("student_id", stu.id);
 const sp2 = await studU.c.from("classroom_posts").select("id");
 const sdl2 = await studU.c.storage.from("rikaz-files").createSignedUrl(fpath, 60); // the app opens files only via signed URLs
 const vS2 = await studU.c.from("timetable_slots").select("id");
