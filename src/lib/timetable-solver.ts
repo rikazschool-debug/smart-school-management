@@ -1,24 +1,24 @@
-/** Timetable constraint solver — deterministic-seeded backtracking search with MRV ordering
- *  (most-constrained lesson first) and soft-preference scoring. No AI, no network. Runs inside a Web Worker. */
-import { DAYS_AR, Model, hasDouble, type TTInput, type TTSlot } from "./timetable-model";
+/** Timetable constraint solver — no AI, no network; runs in a Web Worker.
+ *  Algorithm: constructive placement (most-constrained lesson first) + ejection-chain repair:
+ *  when a lesson has no free position, it takes the position with the fewest movable blockers, the blockers
+ *  go back to the queue (tabu memory prevents cycling). Hard rules are never relaxed; the state is always valid.
+ *  Soft preferences only rank positions. Kept slots (all in "fill", pinned in "redistribute") never move. */
+import { DAYS_AR, Model, hasDouble, type TTCourse, type TTInput, type TTSlot } from "./timetable-model";
 
-export type SolveOptions = { mode: "fill" | "redistribute"; timeLimitMs?: number; seed?: number; weights?: Partial<Weights>; onProgress?: (p: { placed: number; total: number; nodes: number }) => void };
 export type Weights = { spread: number; dayPrefs: number; soft: number; gaps: number; balance: number };
+export type SolveOptions = { mode: "fill" | "redistribute"; timeLimitMs?: number; seed?: number; weights?: Partial<Weights>; onProgress?: (p: { placed: number; total: number; nodes: number }) => void };
 const DEF_W: Weights = { spread: 6, dayPrefs: 3, soft: 8, gaps: 2, balance: 1 };
 
 export type SolveResult = {
   status: "done" | "partial" | "infeasible" | "timeout";
-  slots: TTSlot[];          // new slots to add (kept slots are not included)
-  kept: TTSlot[];
+  slots: TTSlot[]; kept: TTSlot[];
   perCourse: { course_id: string; subject: string; section: string; required: number; placed: number; reason?: string }[];
   teacherLoads: { teacher_id: string; name: string; weekly_max: number | null; before: number; after: number }[];
-  softMisses: string[];
-  nodes: number; ms: number;
-  note: string;
+  softMisses: string[]; nodes: number; ms: number; note: string;
 };
 
-type Unit = { course: string; size: 1 | 2; idx: number };
-type Pos = { day: number; periods: string[]; room: string | null; score: number };
+type Unit = { course: TTCourse; teacher: string; size: 1 | 2 };
+type Pos = { day: number; periods: string[]; room: string | null };
 
 function rng(seed: number) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
@@ -29,20 +29,30 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
   const m = new Model(input);
   const rand = rng(opt.seed ?? 7);
   const kept = input.slots.filter((s) => opt.mode === "fill" || s.pinned).map((s) => ({ ...s }));
+  const KEPT = -1;
 
-  // ---- occupancy state ----
-  const slots: TTSlot[] = [...kept];
-  const tDay = new Map<string, number>(), tWeek = new Map<string, number>(), cDay = new Map<string, number>(), cWeek = new Map<string, number>();
-  const inc = (mp: Map<string, number>, k: string, d: number) => mp.set(k, (mp.get(k) ?? 0) + d);
-  const add = (s: TTSlot, d: 1 | -1) => {
-    inc(tDay, `${s.teacher_id}|${s.day}`, d); inc(tWeek, s.teacher_id, d); inc(cDay, `${s.course_id}|${s.day}`, d); inc(cWeek, s.course_id, d);
+  // overlap lists (periods whose real times intersect)
+  const ov = new Map<string, string[]>();
+  for (const p of input.periods) ov.set(p.id, input.periods.filter((q) => q.start < p.end && p.start < q.end).map((q) => q.id));
+
+  // occupancy: key -> owners (unit index or KEPT)
+  const occ = new Map<string, Set<number>>();
+  const mark = (k: string, o: number, on: boolean) => { let s = occ.get(k); if (!s) occ.set(k, (s = new Set())); on ? s.add(o) : s.delete(o); };
+  const owners = (k: string) => occ.get(k);
+  const cnt = new Map<string, number>(); // tw:teacher, td:teacher|day, cd:course|day, cw:course
+  const bump = (k: string, d: number) => cnt.set(k, (cnt.get(k) ?? 0) + d);
+  const sec = (cid: string) => m.course.get(cid)!.section_id;
+  const apply = (o: number, teacher: string, course: string, day: number, pid: string, room: string | null, on: boolean) => {
+    for (const q of ov.get(pid) ?? [pid]) {
+      mark(`t|${teacher}|${day}|${q}`, o, on); mark(`s|${sec(course)}|${day}|${q}`, o, on);
+      if (room) mark(`r|${room}|${day}|${q}`, o, on);
+    }
+    const d = on ? 1 : -1;
+    bump(`tw|${teacher}`, d); bump(`td|${teacher}|${day}`, d); bump(`cd|${course}|${day}`, d); bump(`cw|${course}`, d);
   };
-  kept.forEach((s) => add(s, 1));
-  const secOf = (cid: string) => m.course.get(cid)!.section_id;
-  const conflict = (day: number, period: string, teacher: string, section: string, room: string | null) =>
-    slots.some((o) => o.day === day && m.overlaps(o.period_id, period) && (o.teacher_id === teacher || secOf(o.course_id) === section || (room != null && o.room_id === room)));
+  for (const s of kept) apply(KEPT, s.teacher_id, s.course_id, s.day, s.period_id, s.room_id, true);
 
-  // ---- units to place ----
+  // ---- units ----
   const units: Unit[] = [];
   const skipped = new Map<string, string>();
   for (const c of input.courses) {
@@ -50,119 +60,144 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
     const t = m.teacher.get(c.teacher_id);
     if (!t || t.status !== "active") { skipped.set(c.id, "المعلم غير نشط"); continue; }
     if (t.weekly_max == null || t.daily_max == null) { skipped.set(c.id, "نصاب المعلم غير محدد"); continue; }
-    let left = c.weekly - (cWeek.get(c.id) ?? 0);
-    if (left <= 0) continue;
-    let k = 0;
-    if (c.needs_double && left >= 2 && !hasDouble(m, kept, c.id)) { units.push({ course: c.id, size: 2, idx: k++ }); left -= 2; }
-    for (; left > 0; left--) units.push({ course: c.id, size: 1, idx: k++ });
+    let left = c.weekly - (cnt.get(`cw|${c.id}`) ?? 0);
+    if (c.needs_double && left >= 2 && !hasDouble(m, kept, c.id)) { units.push({ course: c, teacher: t.id, size: 2 }); left -= 2; }
+    for (; left > 0; left--) units.push({ course: c, teacher: t.id, size: 1 });
   }
-  const total = units.length;
 
-  const freeRoom = (c: ReturnType<Model["course"]["get"]> & object, day: number, periods: string[]) => {
-    if (!c.room_kind) return null;
-    const rs = input.rooms.filter((r) => r.kind === c.room_kind);
-    for (const r of rs) if (periods.every((p) => !slots.some((o) => o.day === day && o.room_id === r.id && m.overlaps(o.period_id, p)))) return r.id;
-    return undefined;
-  };
-
-  const positions = (u: Unit): Pos[] => {
-    const c = m.course.get(u.course)!, t = m.teacher.get(c.teacher_id!)!;
+  // static candidate positions per unit (availability, period days, breaks for doubles, cross-branch busy, kept slots)
+  const roomsOf = (c: TTCourse) => (c.room_kind ? input.rooms.filter((r) => r.kind === c.room_kind).map((r) => r.id) : [null]);
+  const statics: Pos[][] = units.map((u) => {
     const out: Pos[] = [];
-    if ((tWeek.get(t.id) ?? 0) + u.size > t.weekly_max!) return out;
-    if ((cWeek.get(c.id) ?? 0) + u.size > c.weekly) return out;
     for (const day of m.days) {
-      if ((tDay.get(`${t.id}|${day}`) ?? 0) + u.size > t.daily_max!) continue;
-      const cd = cDay.get(`${c.id}|${day}`) ?? 0;
-      if (c.daily_max != null && cd + u.size > c.daily_max) continue;
       const les = m.dayLessons.get(day) ?? [];
       for (let i = 0; i + u.size <= les.length; i++) {
         const ps = les.slice(i, i + u.size);
         if (u.size === 2) {
-          // consecutive = adjacent lessons with no break between them
           const a = m.period.get(ps[0]!)!, b = m.period.get(ps[1]!)!;
           if (input.periods.some((p) => p.kind !== "lesson" && p.start >= a.end && p.end <= b.start && (!p.days || p.days.includes(day)))) continue;
         }
-        if (ps.some((p) => m.unavHit(t.id, day, p, true) || m.busyHit(t.id, day, p) || conflict(day, p, t.id, c.section_id, null))) continue;
-        const room = freeRoom(c, day, ps);
-        if (room === undefined) continue;
-        // soft score (lower is better)
-        let score = cd * W.spread * (c.daily_max == null ? 2 : 1);
-        if (c.day_prefs?.length && !c.day_prefs.includes(day)) score += W.dayPrefs;
-        score += ps.filter((p) => m.unavHit(t.id, day, p, false)).length * W.soft;
-        const td = (tDay.get(`${t.id}|${day}`) ?? 0);
-        score += td * W.balance;
-        // teacher gaps: distance from teacher's existing lessons that day
-        const mine = slots.filter((o) => o.teacher_id === t.id && o.day === day).map((o) => les.indexOf(o.period_id));
-        if (mine.length) score += Math.min(...mine.map((j) => Math.abs(j - i))) > 1 ? W.gaps : 0;
-        out.push({ day, periods: ps, room, score: score + rand() * 0.5 });
+        if (ps.some((p) => m.unavHit(u.teacher, day, p, true) || m.busyHit(u.teacher, day, p))) continue;
+        if (ps.some((p) => owners(`t|${u.teacher}|${day}|${p}`)?.has(KEPT) || owners(`s|${u.course.section_id}|${day}|${p}`)?.has(KEPT))) continue;
+        for (const room of roomsOf(u.course)) {
+          if (room && ps.some((p) => owners(`r|${room}|${day}|${p}`)?.has(KEPT))) continue;
+          out.push({ day, periods: ps, room });
+        }
       }
     }
-    return out.sort((a, b) => a.score - b.score);
+    return out;
+  });
+
+  const pos: (Pos | null)[] = units.map(() => null);
+  const t = (u: Unit) => m.teacher.get(u.teacher)!;
+  /** movable units blocking `p` for unit i, or null if impossible (kept slot / weekly cap) */
+  const blockers = (i: number, p: Pos): Set<number> | null => {
+    const u = units[i]!, tc = t(u), b = new Set<number>();
+    for (const pid of p.periods) {
+      for (const k of [`t|${u.teacher}|${p.day}|${pid}`, `s|${u.course.section_id}|${p.day}|${pid}`, ...(p.room ? [`r|${p.room}|${p.day}|${pid}`] : [])]) {
+        for (const o of owners(k) ?? []) { if (o === KEPT) return null; if (o !== i) b.add(o); }
+      }
+    }
+    // caps: daily teacher / daily course — eject same-day units of that teacher/course if needed
+    const capEject = (cur: number, cap: number, pick: (j: number) => boolean) => {
+      let over = cur + u.size - cap;
+      if (over <= 0) return true;
+      for (let j = 0; j < units.length && over > 0; j++) if (j !== i && pos[j] && pos[j]!.day === p.day && pick(j) && !b.has(j)) { b.add(j); over -= units[j]!.size; }
+      return over <= 0;
+    };
+    const keptTd = kept.filter((s) => s.teacher_id === u.teacher && s.day === p.day).length;
+    if (keptTd + u.size > tc.daily_max!) return null;
+    if (!capEject(cnt.get(`td|${u.teacher}|${p.day}`) ?? 0, tc.daily_max!, (j) => units[j]!.teacher === u.teacher)) return null;
+    if (u.course.daily_max != null) {
+      const keptCd = kept.filter((s) => s.course_id === u.course.id && s.day === p.day).length;
+      if (keptCd + u.size > u.course.daily_max) return null;
+      if (!capEject(cnt.get(`cd|${u.course.id}|${p.day}`) ?? 0, u.course.daily_max, (j) => units[j]!.course.id === u.course.id)) return null;
+    }
+    return b;
   };
+  const score = (i: number, p: Pos) => {
+    const u = units[i]!, les = m.dayLessons.get(p.day) ?? [];
+    let s = (cnt.get(`cd|${u.course.id}|${p.day}`) ?? 0) * W.spread * (u.course.daily_max == null ? 2 : 1);
+    if (u.course.day_prefs?.length && !u.course.day_prefs.includes(p.day)) s += W.dayPrefs;
+    s += p.periods.filter((x) => m.unavHit(u.teacher, p.day, x, false)).length * W.soft;
+    s += (cnt.get(`td|${u.teacher}|${p.day}`) ?? 0) * W.balance;
+    const idx = les.indexOf(p.periods[0]!);
+    const near = [-1, 1, -2, 2].some((d) => { const q = les[idx + d]; return q && owners(`t|${u.teacher}|${p.day}|${q}`)?.size; });
+    if ((cnt.get(`td|${u.teacher}|${p.day}`) ?? 0) > 0 && !near) s += W.gaps;
+    return s + rand() * 0.9;
+  };
+  const place = (i: number, p: Pos, on: boolean) => { const u = units[i]!; for (const pid of p.periods) apply(i, u.teacher, u.course.id, p.day, pid, p.room, on); pos[i] = on ? p : null; };
+
+  // weekly cap is static: units beyond it can never be placed
+  const dead = new Map<number, string>();
+  const needT = new Map<string, number>();
+  units.forEach((u, i) => {
+    const tc = t(u), before = (needT.get(u.teacher) ?? 0) + (cnt.get(`tw|${u.teacher}`) ?? 0);
+    if (before + u.size > tc.weekly_max!) dead.set(i, "يتجاوز النصاب الأسبوعي للمعلم");
+    else needT.set(u.teacher, (needT.get(u.teacher) ?? 0) + u.size);
+    if (!statics[i]!.length) dead.set(i, "لا يوجد موضع يحقق القيود الإلزامية (التوافر أو القاعة أو الحصص المثبتة)");
+  });
 
   // ---- search ----
-  let nodes = 0, timedOut = false, exhausted = true;
-  let best: TTSlot[] = [];
-  const placed: TTSlot[][] = [];
-  const remaining = new Set(units.map((_, i) => i));
-  const rootEmpty = new Map<string, number>();
-  for (const [i, u] of units.entries()) if (!positions(u).length) rootEmpty.set(u.course, (rootEmpty.get(u.course) ?? 0) + u.size), remaining.delete(i);
-  const placeable = remaining.size;
+  const queue = units.map((_, i) => i).filter((i) => !dead.has(i)).sort((a, b) => statics[a]!.length - statics[b]!.length || units[b]!.size - units[a]!.size);
+  const tabu = new Map<string, number>();
+  const ejected = new Map<number, number>();
+  let iter = 0, timedOut = false;
+  let best: { n: number; pos: (Pos | null)[] } = { n: -1, pos: [] };
+  const live = units.length - dead.size;
+  const MAX_ITER = 200000;
   let lastProg = 0;
-  const NODE_CAP = 400000;
-
-  const dfs = (): boolean => {
-    if (!remaining.size) return true;
-    if (++nodes % 256 === 0) {
+  while (queue.length) {
+    if (++iter > MAX_ITER) break;
+    if ((iter & 63) === 0) {
       const now = Date.now();
-      if (now - t0 > limit) { timedOut = true; return false; }
-      if (now - lastProg > 250) { lastProg = now; opt.onProgress?.({ placed: total - remaining.size - rootEmpty.size, total, nodes }); }
+      if (now - t0 > limit) { timedOut = true; break; }
+      if (now - lastProg > 250) { lastProg = now; opt.onProgress?.({ placed: live - queue.length, total: units.length, nodes: iter }); }
     }
-    if (nodes > NODE_CAP) { exhausted = false; return false; }
-    // MRV: pick the unit with fewest options
-    let pick = -1, opts: Pos[] = [];
-    for (const i of remaining) {
-      const o = positions(units[i]!);
-      if (pick < 0 || o.length < opts.length) { pick = i; opts = o; }
-      if (!o.length) break;
+    // most constrained first: fewest currently-free positions (sampled cheaply from statics)
+    queue.sort((a, b) => (ejected.get(b) ?? 0) - (ejected.get(a) ?? 0) || statics[a]!.length - statics[b]!.length);
+    const i = queue.shift()!;
+    let chosen: Pos | null = null, chosenB: Set<number> | null = null, bestCost = Infinity;
+    for (const p of statics[i]!) {
+      const b = blockers(i, p);
+      if (!b) continue;
+      const key = `${i}|${p.day}|${p.periods[0]}|${p.room}`;
+      const tb = (tabu.get(key) ?? 0) > iter ? 50 : 0;
+      let cost = score(i, p) + tb;
+      for (const j of b) cost += 100 + 20 * (ejected.get(j) ?? 0) + units[j]!.size * 10;
+      if (cost < bestCost) { bestCost = cost; chosen = p; chosenB = b; }
     }
-    if (!opts.length) return false;
-    const u = units[pick]!, c = m.course.get(u.course)!;
-    remaining.delete(pick);
-    for (const p of opts.slice(0, 6)) {
-      const add_ = p.periods.map((pid) => ({ day: p.day, period_id: pid, course_id: c.id, teacher_id: c.teacher_id!, room_id: p.room }));
-      add_.forEach((s) => { slots.push(s); add(s, 1); });
-      placed.push(add_);
-      if (placed.flat().length > best.length) best = placed.flat().map((s) => ({ ...s }));
-      if (dfs()) return true;
-      placed.pop();
-      add_.forEach((s) => { slots.splice(slots.indexOf(s), 1); add(s, -1); });
-      if (timedOut || nodes > NODE_CAP) break;
+    if (!chosen) { dead.set(i, "لا يوجد موضع يحقق القيود الإلزامية مع الحصص المثبتة والحدود اليومية"); continue; }
+    for (const j of chosenB!) {
+      const pj = pos[j]!;
+      tabu.set(`${j}|${pj.day}|${pj.periods[0]}|${pj.room}`, iter + 12 + Math.floor(rand() * 8));
+      place(j, pj, false); ejected.set(j, (ejected.get(j) ?? 0) + 1); queue.push(j);
     }
-    if (opts.length > 6) exhausted = false;
-    remaining.add(pick);
-    return false;
-  };
-  const full = placeable > 0 ? dfs() : true;
-  const out = full ? placed.flat() : best;
+    place(i, chosen, true);
+    const n = live - queue.length;
+    if (n > best.n) best = { n, pos: pos.map((x) => x && { ...x, periods: [...x.periods] }) };
+  }
+  const finalPos = queue.length ? best.pos : pos;
+  const out: TTSlot[] = [];
+  finalPos.forEach((p, i) => { if (p) for (const pid of p.periods) out.push({ day: p.day, period_id: pid, course_id: units[i]!.course.id, teacher_id: units[i]!.teacher, room_id: p.room }); });
 
   // ---- report ----
   const final = [...kept, ...out];
-  const cnt = (cid: string) => final.filter((s) => s.course_id === cid).length;
+  const deadBy = new Map<string, string>();
+  dead.forEach((r, i) => deadBy.set(units[i]!.course.id, r));
   const perCourse = input.courses.map((c) => {
-    const n = cnt(c.id);
-    let reason = skipped.get(c.id);
-    if (!reason && n < c.weekly) reason = rootEmpty.has(c.id) ? "لا يوجد موضع يحقق القيود الإلزامية (التوافر أو النصاب أو القاعة أو التعارض)" : timedOut ? "انتهى وقت البحث قبل توزيعه" : "تعذر توزيعه مع بقية الحصص";
-    return { course_id: c.id, subject: c.subject, section: c.section, required: c.weekly, placed: n, ...(reason && n < c.weekly ? { reason } : {}) };
+    const n = final.filter((s) => s.course_id === c.id).length;
+    const reason = n >= c.weekly ? undefined : skipped.get(c.id) ?? deadBy.get(c.id) ?? (timedOut ? "انتهى وقت البحث قبل توزيعه" : "تعذر توزيعه مع بقية الحصص ضمن حدود البحث");
+    return { course_id: c.id, subject: c.subject, section: c.section, required: c.weekly, placed: n, ...(reason ? { reason } : {}) };
   });
-  const teacherLoads = input.teachers.filter((t) => input.courses.some((c) => c.teacher_id === t.id)).map((t) => ({
-    teacher_id: t.id, name: t.name, weekly_max: t.weekly_max, before: kept.filter((s) => s.teacher_id === t.id).length, after: final.filter((s) => s.teacher_id === t.id).length,
+  const teacherLoads = input.teachers.filter((x) => input.courses.some((c) => c.teacher_id === x.id)).map((x) => ({
+    teacher_id: x.id, name: x.name, weekly_max: x.weekly_max, before: kept.filter((s) => s.teacher_id === x.id).length, after: final.filter((s) => s.teacher_id === x.id).length,
   }));
   const softMisses: string[] = [];
   for (const s of out) {
-    const c = m.course.get(s.course_id)!, t = m.teacher.get(s.teacher_id)!;
+    const c = m.course.get(s.course_id)!, tc = m.teacher.get(s.teacher_id)!;
     const h = m.unavHit(s.teacher_id, s.day, s.period_id, false);
-    if (h) softMisses.push(`${t.name}: ${h} — ${c.subject} ${c.section} (${m.label(s.day, s.period_id)})`);
+    if (h) softMisses.push(`${tc.name}: ${h} — ${c.subject} ${c.section} (${m.label(s.day, s.period_id)})`);
     if (c.day_prefs?.length && !c.day_prefs.includes(s.day)) softMisses.push(`${c.subject} — ${c.section}: يوم ${DAYS_AR[s.day]} ليس من الأيام المفضلة`);
   }
   for (const c of input.courses) {
@@ -170,10 +205,11 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
     for (const d of m.days) { const n = final.filter((s) => s.course_id === c.id && s.day === d).length; if (n > 1) softMisses.push(`${c.subject} — ${c.section}: ${n} حصص يوم ${DAYS_AR[d]} (توزيع غير متوازن)`); }
   }
   const complete = perCourse.every((p) => p.placed >= p.required);
-  const status: SolveResult["status"] = complete ? "done" : timedOut ? "timeout" : rootEmpty.size || (exhausted && !full) ? (out.length ? "partial" : "infeasible") : "partial";
+  const proven = dead.size > 0 && [...dead.values()].some((r) => r.startsWith("لا يوجد موضع") || r.startsWith("يتجاوز"));
+  const status: SolveResult["status"] = complete ? "done" : proven ? (out.length ? "partial" : "infeasible") : timedOut ? "timeout" : "partial";
   const note = status === "done" ? "اكتمل التوزيع وفق كل القيود الإلزامية."
-    : status === "timeout" ? "انتهى وقت البحث؛ هذا لا يعني استحالة الحل. يمكن إعادة التوليد بمهلة أطول."
-    : rootEmpty.size ? "بعض الحصص لا موضع لها إطلاقًا وفق القيود الإلزامية؛ راجع الأسباب أدناه."
-    : "تعذر إكمال التوزيع ضمن حدود البحث؛ النتيجة جزئية.";
-  return { status, slots: out, kept, perCourse, teacherLoads, softMisses: [...new Set(softMisses)], nodes, ms: Date.now() - t0, note };
+    : status === "timeout" ? "انتهى وقت البحث؛ هذا لا يعني استحالة الحل. يمكن إعادة التوليد."
+    : proven ? "بعض الحصص لا موضع لها وفق القيود الإلزامية؛ الأسباب أدناه. النتيجة جزئية ولا تخالف أي قيد إلزامي."
+    : "تعذر إكمال التوزيع ضمن حدود البحث؛ النتيجة جزئية ولا تخالف أي قيد إلزامي.";
+  return { status, slots: out, kept, perCourse, teacherLoads, softMisses: [...new Set(softMisses)], nodes: iter, ms: Date.now() - t0, note };
 }
