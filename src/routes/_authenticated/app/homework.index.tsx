@@ -214,7 +214,7 @@ function StudentHomework({ studentId, guardian }: { studentId: string; guardian?
               <p className="mt-2 text-sm">الموعد: {schoolTime(r["effective_due"])}{r["effective_due"] !== r["due_at"] && " (ممدد)"}</p>
               {r["last_late"] && <p className="text-xs text-destructive">سُلّم متأخرًا</p>}
               {r["removed"] && <p className="text-xs text-muted-foreground">انتقل الطالب من الشعبة — السجل للاطلاع</p>}
-              <p className="mt-1 text-sm">{r["result_published"] ? (r["score"] != null ? `الدرجة: ${r["score"]} من ${r["max_score"]}` : "نُشرت الملاحظات") : r["max_score"] == null ? "واجب دون درجة" : "لم تُصحَّح بعد"}</p>
+              <p className="mt-1 text-sm">{r["result_published"] ? (r["score"] != null ? `الدرجة: ${r["score"]} من ${r["max_score"]}` : "ظهرت الملاحظات") : r["max_score"] == null ? "واجب دون درجة" : "لم تُصحَّح بعد"}</p>
             </li>
           ))}
         </ul>
