@@ -79,17 +79,29 @@ export function Timeline({ entity, id }: { entity: string; id: string }) {
 }
 
 /** Attachments for a request/task: row via create_admin_file (checks role/type/size) → upload; reads go through signed URLs. */
-export function AdminFiles({ entity, id, canAdd, userId }: { entity: "task" | "request"; id: string; canAdd: boolean; userId: string }) {
+export function AdminFiles({ entity, id, canAdd, userId, doneAt }: { entity: "task" | "request"; id: string; canAdd: boolean; userId: string; doneAt?: string | null }) {
   const q = useQuery({
     queryKey: ["adm-files", entity, id],
-    queryFn: async () => ((await db.from("files").select("id, name, storage_path, size_bytes, uploaded_by").eq("source_type", "admin").eq("category", entity).eq("source_id", id).order("created_at")).data ?? []) as Row[],
+    queryFn: async () => ((await db.from("files").select("id, name, storage_path, size_bytes, uploaded_by, created_at, profiles:uploaded_by(full_name)").eq("source_type", "admin").eq("category", entity).eq("source_id", id).order("created_at")).data ?? []) as Row[],
   });
-  const files = q.data ?? [];
+  const all = q.data ?? [];
+  // Files added after completion are addenda: shown separately, never counted as the original proof.
+  const late = doneAt ? all.filter((f) => f["created_at"] > doneAt) : [];
+  const files = all.filter((f) => !late.includes(f));
   return (
     <div className="space-y-2 rounded-xl border bg-card p-4">
       <p className="font-semibold">المرفقات</p>
       {!files.length && <p className="text-sm text-muted-foreground">لا توجد مرفقات.</p>}
       <FileList files={files} onRemove={canAdd ? async (f) => { if (f["uploaded_by"] !== userId) return void toast.error("يحذف الملف من رفعه فقط"); const { error } = await db.rpc("remove_admin_file", { _file: f["id"] }); if (error) toast.error(arabicError(error)); q.refetch(); } : undefined} />
+      {late.length > 0 && (
+        <div className="space-y-1 border-t pt-2">
+          <p className="text-sm font-medium">ملحق بعد الإنجاز</p>
+          <p className="text-xs text-muted-foreground">أضيفت بعد إنجاز التكليف ولا تُعد بديلًا عن إثبات الإنجاز الأصلي.</p>
+          <FileList files={late} />
+          <ul className="text-xs text-muted-foreground">{late.map((f) => <li key={f["id"]}>{f["name"]} — {f["profiles"]?.["full_name"] ?? "—"}، {fmt(f["created_at"])}</li>)}</ul>
+        </div>
+      )}
+      {canAdd && doneAt && <p className="text-xs text-muted-foreground">أي ملف يُرفع الآن يظهر «ملحقًا بعد الإنجاز» ولا يغيّر حالة التكليف أو تاريخ إنجازه.</p>}
       {canAdd && <Uploader create={async (f) => { const { data, error } = await db.rpc("create_admin_file", { _entity: entity, _id: id, _name: f.name, _mime: f.type || "application/octet-stream", _size: f.size }); if (error) throw error; return (data as { id: string; storage_path: string }[])[0]!; }} release={(fid) => db.rpc("remove_admin_file", { _file: fid })} onDone={() => q.refetch()} />}
     </div>
   );
