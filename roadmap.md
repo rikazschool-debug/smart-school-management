@@ -234,3 +234,5 @@
 - Next: SR request journey in browser (items 1–10), then XLSX/PDF export checks + homework multi-page PDF visual check, then duties, meetings/minutes/decisions, calendar/final check.
 - Done (Nov 2): request journey in browser scripts/admin-request-journey.py 23/23 (form create/activate, draft, required field, bad file type, attachment, submit, return/resubmit, complete, reject, reassign, new version isolation, unauthorized UI+direct RPC, mobile). Fixed: form editor lacked "allow files" toggle (uploads failed silently); "resubmitted" event untranslated.
 - Next: XLSX/PDF export checks for requests/tasks (+ homework multi-page PDF visual), then duties.
+- Done (Nov 2): admin exports cover all filtered rows (paged fetch, filters in header, Arabic labels, Riyadh dates); scripts/admin-export-journey.py 5/5; tasks PDF 3 pages visually checked (repeated header, "صفحة X من Y", no clipping).
+- Next: homework multi-page PDF visual check; requests export browser run; then duties (D1–D10 acceptance).
