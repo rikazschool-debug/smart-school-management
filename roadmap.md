@@ -130,3 +130,13 @@
 - [x] A6 records/timeline/corrections/counselor alerts + XLSX/PDF
 - [ ] A7 field test with a real barcode reader and speakers (needs school devices)
 - [ ] A8 student photo on card/gate, attachment on permission request, owner cross-branch comparison board
+
+## حزمة تعديل الحضور والخروج (docs/attendance-package2-brief.md)
+- [ ] A1 حالات اليوم وموعد حصر مستقل + حصر خادمي (cron) + «تحديث قائمة الغياب» + الوصول المتأخر بعد الاعتماد
+- [ ] A2 شاشة «مسح بطاقات الحضور» (قارئ باركود + كاميرا BarcodeDetector/@zxing) + روابط الأمن ولوحة اليوم
+- [ ] A3 «المستلم والتفويض» في الاستلام السريع والاستئذان (مرة واحدة، مرتبط بالطالب والطلب والموعد)
+- [ ] A4 مراجعة التفويض وتنفيذه (اعتماد منفصل، إعادة الاعتماد عند التعديل، منع إعادة الاستخدام)
+- [ ] A5 تحديث واجهات الأدوار والتصدير دون تفاصيل حساسة
+- [ ] A6 الاختبارات العشرة ببيانات معزولة
+- [ ] A7 مرفق الاستئذان + مقارنة الفروع
+- صورة الطالب: موقوفة بقرار المالك
