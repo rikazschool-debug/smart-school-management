@@ -5414,6 +5414,13 @@ export type Database = {
           tasks_overdue: number
         }[]
       }
+      adm_party_names: {
+        Args: { _entity: string; _id: string }
+        Returns: {
+          full_name: string
+          user_id: string
+        }[]
+      }
       adm_reassign_request: {
         Args: { _id: string; _reason: string; _user: string }
         Returns: undefined
