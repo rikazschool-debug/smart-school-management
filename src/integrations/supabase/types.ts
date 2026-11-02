@@ -5042,6 +5042,7 @@ export type Database = {
           seq: number
         }[]
       }
+      server_now: { Args: never; Returns: string }
       set_authorized_pickup_active: {
         Args: { _active: boolean; _id: string }
         Returns: undefined
