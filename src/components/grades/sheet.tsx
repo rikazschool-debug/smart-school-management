@@ -41,6 +41,10 @@ export function GradebookView({ id, school, onBack }: { id: string; school: stri
   const [pubPrev, setPubPrev] = useState<Row | null>(null);
   const [note, setNote] = useState<{ sid: string; text: string } | null>(null);
   const dirtyRef = useRef(dirty); dirtyRef.current = dirty;
+  // Published-result sheet reads only current published snapshots (grade_results), never draft entries.
+  const pub = useQuery({ queryKey: ["gb-pub", id], enabled: q.data?.gradebook["status"] === "published", queryFn: async () => {
+    const { data, error } = await db.from("grade_results").select("student_name, section_name, subject_name, period_name, items, total, max_total, complete, version, published_at").eq("gradebook_id", id).is("superseded_at", null).order("student_name");
+    if (error) throw error; return data as Row[]; } });
 
   const server = useMemo(() => {
     const m: Record<string, Cell & { at: string }> = {};
@@ -226,6 +230,11 @@ export function GradebookView({ id, school, onBack }: { id: string; school: stri
           {g["is_admin"] && g["status"] === "approved" && <Button size="sm" disabled={!!busy} onClick={openPublish}>{busy === "pubprev" ? "…" : "معاينة النشر"}</Button>}
           {g["is_admin"] && ["submitted", "reviewed", "approved", "published"].includes(g["status"]) && <Button size="sm" variant="ghost" disabled={!!busy} onClick={async () => {
             const r = await askText("سبب إعادة فتح هذا السجل فقط (يُفتح 48 ساعة)", { required: true }); if (r) act("reopen", () => db.rpc("gb_reopen", { _gb: id, _reason: r, _hours: 48 }), "أُعيد فتح السجل"); }}>إعادة فتح السجل</Button>}
+          {g["status"] === "published" && pub.data && <ExportButtons title={`كشف النتائج المنشورة — ${g["course_label"]}`} school={school}
+            filters={[period["name"], `نشر ${fmt(pub.data[0]?.["published_at"])}`, `إصدار ${Math.max(0, ...pub.data.map((r) => r["version"] as number))}`]}
+            headers={["الطالب", "الشعبة", ...items.map((i) => `${i["name"]} (من ${i["max_score"]})`), "المجموع", "الحالة", "الإصدار", "تاريخ النشر"]}
+            rows={() => pub.data!.map((r) => [r["student_name"], r["section_name"] ?? "", ...items.map((i) => { const x = (r["items"] as Row[]).find((y) => y["name"] === i["name"]); return !x ? "—" : x["status"] === "score" ? Number(x["score"]) : ENTRY_STATUS[x["status"]]!; }),
+              r["total"] != null ? `${r["total"]} / ${r["max_total"]}` : "غير مكتمل", r["complete"] ? "مكتملة" : "غير مكتملة", r["version"], fmt(r["published_at"])])} />}
           <ExportButtons title={`كشف رصد داخلي — ${g["course_label"]}`} school={school} filters={[period["name"], GB_STATUS[g["status"]]!, `نسخة ${g["revision"]}`]}
             headers={["الطالب", ...items.map((i) => `${i["name"]} (من ${i["max_score"]}، وزن ${i["weight"]})`), `المجموع من ${plan["total"]}`]}
             rows={() => students.map((s) => [s["name"] + (s["active"] ? "" : " (منقول)"), ...items.map((i) => { const c = server[k(s["id"], i["id"])]; return c?.status === "score" ? Number(c.score) : ENTRY_STATUS[c?.status ?? "missing"]!; }), s["total"] ?? "غير مكتمل"])} />
