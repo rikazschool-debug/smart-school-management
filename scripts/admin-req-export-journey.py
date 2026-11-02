@@ -56,7 +56,6 @@ async def main():
         from datetime import datetime, timezone, timedelta
         today = datetime.now(timezone(timedelta(hours=3))).strftime("%Y-%m-%d")
         chk("Q5 submit date in Riyadh time", all(r[5] == today for r in R), {r[5] for r in R})
-        chk("Q6 no duplicate rows", len(R) == len(set(tuple(r) for r in R)) or True)
         await p.locator("select[aria-label='الحالة']").select_option("rejected"); await p.wait_for_timeout(2000)
         n = len([r for r in rows(await dl(p, "Excel", D + "req-f.xlsx")) if r and r[0] == "نموذج تصدير"])
         chk("Q7 status filter applied (7 rejected)", n == 7, n)
