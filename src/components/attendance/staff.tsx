@@ -1,6 +1,7 @@
 // Staff attendance screens. Every action is an RPC that re-checks the caller's role (att_gate / att_approver / counselor).
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { CheckCircle2, Printer, ScanLine, XCircle } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
@@ -150,7 +151,7 @@ export function GateTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean }) 
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border bg-card p-5">
-        <h2 className="mb-1 flex items-center gap-2 font-bold"><ScanLine className="size-5 text-primary" />مسح بطاقة الحضور الصباحي</h2>
+        <h2 className="mb-1 flex items-center gap-2 font-bold"><ScanLine className="size-5 text-primary" />مسح بطاقة الحضور الصباحي <Link to="/app/attendance-scan" className="ms-auto text-sm font-medium text-primary hover:underline">فتح شاشة المسح الكاملة (كاميرا/قارئ) ←</Link></h2>
         <p className="mb-3 text-sm text-muted-foreground">وجّه قارئ الباركود نحو البطاقة؛ يكتب القارئ الرمز ويضغط Enter تلقائيًا. الوقت يُحتسب من الخادم. البطاقة للحضور فقط وليست تصريح خروج.</p>
         <form onSubmit={(e) => { e.preventDefault(); void submit(); }} className="flex gap-2">
           <Input ref={input} dir="ltr" autoComplete="off" aria-label="رمز البطاقة" placeholder="رمز البطاقة" value={code} onChange={(e) => setCode(e.target.value)} className="h-12 text-lg" />
@@ -166,8 +167,7 @@ export function GateTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean }) 
             </div>
           </div>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">صورة الطالب غير متاحة بعد في السجلات؛ تحقق بالاسم والشعبة.</p>
-      </section>
+              </section>
       {canApprove && <ManualEntry S={S} />}
       <PresentNow S={S} withReturn />
     </div>
@@ -221,15 +221,27 @@ export function PickupsTab({ ctx, canApprove, gate }: { ctx: Ctx; canApprove: bo
           )}
         </Section>
       )}
+      {canApprove && <DelegateReviews S={S} />}
       <Section title={gate ? "الاستلام اليوم" : "طلبات تجهيز طلابك"} desc={gate ? "تحقق من هوية المستلم قبل «وصل المستلم»، وسلّم الطالب فقط بعد «جاهز»." : "أكّد جاهزية الطالب عند تجهيزه. لا تملك تعديل حركة البوابة."}>
         {queue.isLoading ? <LoadingState /> : queue.error ? <ErrorState message={arabicError(queue.error)} onRetry={() => queue.refetch()} /> : !queue.data?.length ? <EmptyState title="لا توجد طلبات استلام نشطة" /> : (
           <ul className="space-y-2">
             {queue.data.map((r) => (
               <li key={r["id"]} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 text-sm">
                 <span className="min-w-0"><b>{r["student_name"]}</b> — {r["section"]} <Badge variant="outline" className="ms-1">{KIND[r["kind"]]}</Badge> <Badge className="ms-1">{PICKUP_STATUS[r["status"]]}</Badge>
-                  <span className="block text-muted-foreground">المستلم المفوض: {r["pickup_name"]}{r["pickup_national_id"] ? ` • الهوية: ${r["pickup_national_id"]}` : " • ولي الأمر نفسه"}</span></span>
+                  <span className="block text-muted-foreground">المستلم: {r["pickup_name"]}{r["relationship"] ? ` (${r["relationship"]})` : ""} • {r["delegate_mode"] === "one_time" ? `تفويض لهذا الطلب${r["phone_hint"] ? ` • جوال ${r["phone_hint"]}` : ""} • تحقق بآخر 4 أرقام من الهوية` : r["delegate_mode"] === "authorized" ? `مستلم معتمد${r["pickup_national_id"] ? ` • الهوية: ${r["pickup_national_id"]}` : ""}` : "ولي الأمر نفسه"}</span></span>
                 <span className="flex flex-wrap gap-1">
-                  {gate && r["status"] === "approved" && <Button size="sm" onClick={async () => { if (await ask(`تأكدت من هوية المستلم «${r["pickup_name"]}»؟ سيبدأ النداء والتجهيز.`)) await act("pickup_arrived", { _id: r["id"] }, "سُجّل وصول المستلم وأُضيف النداء"); }}>وصل المستلم</Button>}
+                  {gate && r["status"] === "approved" && (r["delegate_mode"] === "one_time" && r["delegate_status"] !== "approved"
+                    ? <Badge variant="outline" className="border-amber-500 text-amber-700">{r["delegate_status"] === "rejected" ? "رُفض التفويض — لا تسلّم" : "التفويض بانتظار الاعتماد"}</Badge>
+                    : <Button size="sm" onClick={async () => {
+                      if (r["delegate_mode"] === "one_time") {
+                        const l4 = await askText(`اطلب هوية «${r["pickup_name"]}» وأدخل آخر 4 أرقام منها`, { required: true }); if (!l4) return;
+                        const { data, error } = await db.rpc("pickup_arrived", { _id: r["id"], _id_last4: l4 });
+                        if (error) return void toast.error(arabicError(error));
+                        if (!(data as Row)?.["ok"]) return void toast.error((data as Row)?.["message"] ?? "غير مطابق");
+                        toast.success("تم التحقق وسُجّل الوصول وأُضيف النداء"); refresh(); return;
+                      }
+                      if (await ask(`تأكدت من هوية المستلم «${r["pickup_name"]}»؟ سيبدأ النداء والتجهيز.`)) await act("pickup_arrived", { _id: r["id"] }, "سُجّل وصول المستلم وأُضيف النداء");
+                    }}>وصل المستلم</Button>)}
                   {r["status"] === "arrived" && <Button size="sm" variant="outline" onClick={() => act("pickup_progress", { _id: r["id"], _to: "preparing" }, "جارٍ التجهيز")}>بدء التجهيز</Button>}
                   {["arrived", "preparing"].includes(r["status"]) && <Button size="sm" variant="outline" onClick={() => act("pickup_progress", { _id: r["id"], _to: "ready" }, "الطالب جاهز")}>الطالب جاهز</Button>}
                   {gate && r["status"] === "ready" && <Button size="sm" onClick={async () => { if (await ask(`تأكيد تسليم ${r["student_name"]} إلى ${r["pickup_name"]}؟`)) await act("handover_pickup", { _id: r["id"] }, "تم التسليم وسُجّل الخروج"); }}>تأكيد التسليم</Button>}
@@ -241,6 +253,50 @@ export function PickupsTab({ ctx, canApprove, gate }: { ctx: Ctx; canApprove: bo
         )}
       </Section>
     </div>
+  );
+}
+
+function DelegateReviews({ S }: { S: string }) {
+  const refresh = useRefresh();
+  const q = useQuery({ queryKey: ["att-deleg", S], refetchInterval: 15000, queryFn: async () => { const { data, error } = await db.rpc("delegate_reviews", { _school: S }); if (error) throw error; return data as Row[]; } });
+  const act = async (id: string, approve: boolean) => {
+    const note = approve ? null : await askText("سبب رفض التفويض", { required: true }); if (!approve && !note) return;
+    const r = await rpc("decide_delegate", { _id: id, _approve: approve, _note: note }, approve ? "اعتُمد التفويض" : "رُفض التفويض"); if (r.ok) refresh();
+  };
+  return (
+    <Section title="تفويضات بانتظار الاعتماد" desc="اعتماد الشخص المفوض منفصل عن اعتماد خروج الطالب. التفويض لهذا الطلب واليوم ولمرة واحدة فقط.">
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد تفويضات معلقة" /> : (
+        <ul className="space-y-2">
+          {q.data.map((r) => (
+            <li key={r["id"]} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 text-sm">
+              <span><b>{r["student_name"]}</b> — {r["section"]} <Badge variant="outline" className="ms-1">{KIND[r["kind"]]}</Badge> <Badge className="ms-1">{PICKUP_STATUS[r["status"]]}</Badge>
+                <span className="block text-muted-foreground">ولي الأمر: {r["guardian_name"]} • المفوَّض: {r["pickup_name"]} ({r["relationship"]}) • جوال: <span dir="ltr">{r["phone"]}</span> • الهوية تنتهي بـ {r["id_last4"]} • صالح حتى {hm(r["valid_until"])}</span></span>
+              <span className="flex gap-1"><Button size="sm" onClick={() => act(r["id"], true)}>اعتماد التفويض</Button><Button size="sm" variant="ghost" onClick={() => act(r["id"], false)}>رفض</Button></span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
+/* ================= Branch comparison (org owner) ================= */
+export function CompareTab({ ctx }: { ctx: Ctx }) {
+  const [from, setFrom] = useState(riyadhToday()); const [to, setTo] = useState(riyadhToday());
+  const q = useQuery({ queryKey: ["att-compare", ctx.orgId, from, to], enabled: !!ctx.orgId, queryFn: async () => { const { data, error } = await db.rpc("attendance_compare", { _org: ctx.orgId, _from: from, _to: to }); if (error) throw error; return data as Row[]; } });
+  const cols = [["school_name", "الفرع"], ["records", "سجلات"], ["present", "حاضر"], ["late", "متأخر"], ["absent", "غائب"], ["excused", "بعذر"], ["pending", "بانتظار المراجعة"], ["early_out", "خروج مبكر"], ["attendance_rate", "نسبة الحضور %"]] as const;
+  return (
+    <Section title="مقارنة الفروع" desc="لمالك المؤسسة فقط. النسبة = (حاضر + متأخر) ÷ السجلات المحسومة، دون المعلّق بالمراجعة.">
+      <div className="mb-3 flex flex-wrap items-end gap-3">
+        <div className="space-y-1"><Label htmlFor="cf">من</Label><Input id="cf" type="date" value={from} max={to} onChange={(e) => e.target.value && setFrom(e.target.value)} /></div>
+        <div className="space-y-1"><Label htmlFor="ct">إلى</Label><Input id="ct" type="date" value={to} min={from} max={riyadhToday()} onChange={(e) => e.target.value && setTo(e.target.value)} /></div>
+        {q.data && <ExportButtons title={`مقارنة الفروع ${from} – ${to}`} columns={cols.map(([k, l]) => ({ key: k, label: l }))} rows={q.data} />}
+      </div>
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد بيانات" /> : (
+        <div className="overflow-x-auto rounded-xl border bg-card"><table className="w-full text-sm"><thead className="bg-muted/50"><tr>{cols.map(([k, l]) => <th key={k} className="px-3 py-2 text-start font-semibold">{l}</th>)}</tr></thead>
+          <tbody>{q.data.map((r) => <tr key={r["school_id"]} className="border-t">{cols.map(([k]) => <td key={k} className="px-3 py-2">{r[k] ?? "—"}</td>)}</tr>)}</tbody></table></div>
+      )}
+    </Section>
   );
 }
 
