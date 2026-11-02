@@ -35,7 +35,7 @@ async def main():
         await t2.get_by_role("button", name="حفظ مسودة").click(); chk("R2a staff saves draft", await seen(t2, "حُفظت المسودة"))
         await t2.set_input_files("input[type=file]", "/tmp/browser/adm/bad.exe"); await t2.wait_for_timeout(3000)
         chk("R9b forbidden file type rejected", await t2.get_by_text("bad.exe").count() == 0 or await seen(t2, "غير مسموح", 2000))
-        await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); chk("R2b attachment uploaded after retry", await seen(t2, "att.pdf", 15000))
+        open("/tmp/browser/adm/att.pdf","wb").write(b"%PDF-1.4\n%att\n"); await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); chk("R2b attachment uploaded after retry", await seen(t2, "اكتمل رفع الملف", 15000), await t2.locator("[data-sonner-toast]").all_inner_texts())
         await t2.get_by_role("button", name="تقديم الطلب").click(); chk("R3a staff submits", await seen(t2, "قُدّم الطلب"))
         t1 = await login(br, "t1"); await tab(t1, "الطلبات"); await t1.select_option("select[aria-label='النطاق']", "handling"); await t1.wait_for_timeout(2000)
         chk("R3b handler sees request once", await t1.get_by_text("طلب صيانة رحلة").count() == 1)
