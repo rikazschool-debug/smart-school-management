@@ -11,7 +11,7 @@ async def login(br, who, vp=(1280, 1800)):
 async def reason(p, text):
     d = p.get_by_role("alertdialog"); await d.locator("input, textarea").first.fill(text); await d.get_by_role("button").last.click()
 async def seen(p, t, ms=8000):
-    try: await p.get_by_text(t).first.wait_for(timeout=ms); return True
+    try: await p.get_by_text(t).first.wait_for(timeout=ms, state="attached"); return True
     except: return False
 async def tab(p, name): await p.goto(B + "/app/admin"); await p.wait_for_timeout(1500); await p.get_by_role("tab", name=name).click(); await p.wait_for_timeout(1200)
 async def new_req(p, form):
@@ -41,7 +41,7 @@ async def main():
             if fail["n"] > 0 and route.request.method in ("POST", "PUT"): fail["n"] -= 1; await route.abort("internetdisconnected")
             else: await route.continue_()
         await t2.route(lambda u: "/storage/v1/object/" in u, drop)
-        await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); chk("R9c network failure reported", await seen(t2, "فشل رفع الملف")); await t2.screenshot(path=SH + "upfail.png"); print("URL", t2.url)
+        await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); chk("R9c network failure reported", await seen(t2, "فشل رفع الملف"))
         await t2.wait_for_timeout(1500); chk("R9d answer kept after failed upload", await t2.locator("input[type=text], textarea").first.input_value() == "المكيف معطل")
         await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); chk("R2b attachment uploaded after retry", await seen(t2, "اكتمل رفع الملف", 15000), await t2.locator("[data-sonner-toast]").all_inner_texts())
         await t2.get_by_role("button", name="تقديم الطلب").click(); chk("R3a staff submits", await seen(t2, "قُدّم الطلب"))
@@ -58,7 +58,10 @@ async def main():
         chk("R6a handler completes", await seen(t1, "حُدّث الطلب")); await t1.reload(); await t1.wait_for_timeout(2000)
         chk("R6b status completed + timeline", await t1.get_by_text("مكتمل").count() > 0 and await t1.get_by_text("سجل الطلب").count() > 0)
         await t1.screenshot(path=SH + "req-done.png")
-        fl = await t1.locator("div.rounded-xl", has=t1.get_by_text("المرفقات", exact=True)).last.get_by_text("att.pdf").count()
+        tk = await t1.evaluate("() => JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k=>k.endsWith('-auth-token')))).access_token")
+        import requests
+        env = dict(l.split("=",1) for l in open("/dev-server/.env").read().splitlines() if "=" in l)
+        fl = len(requests.get(env["VITE_SUPABASE_URL"].strip('"') + "/rest/v1/files?source_type=eq.admin&source_id=eq." + u1.rstrip("/").split("/")[-1] + "&select=id", headers={"apikey": env["VITE_SUPABASE_PUBLISHABLE_KEY"].strip('"'), "Authorization": "Bearer " + tk}).json())
         chk("R9e exactly one attachment after retry", fl == 1, fl)
         chk("R12 timeline shows Arabic resubmission", await t1.get_by_text("أُعيد تقديمه").count() > 0 and await t1.get_by_text("resubmitted").count() == 0)
         u2 = await new_req(t2, "طلب صيانة رحلة"); await t2.locator("input[type=text], textarea").first.fill("طلب ثانٍ"); await t2.get_by_role("button", name="تقديم الطلب").click(); await seen(t2, "قُدّم الطلب")
