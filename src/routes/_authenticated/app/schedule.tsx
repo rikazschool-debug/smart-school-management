@@ -105,23 +105,6 @@ function Manager({ ctx }: { ctx: Ctx }) {
   const [sel_, setSel] = useState<string>("");
   const [nf, setNf] = useState({ name: "الجدول الأساسي", year: "", term: "" });
   const [filter, setFilter] = useState("");
-  // guardians: label each section with the child's name and open on the first child (one child at a time)
-  const kids = useQuery({
-    queryKey: ["schedule-kids", S, user.id],
-    enabled: ctx.role === "guardian",
-    queryFn: async () => {
-      const { data } = await db.from("student_guardians").select("students(full_name, enrollments(section_id, status)), guardians!inner(user_id)").eq("school_id", S).eq("guardians.user_id", user.id);
-      const m = new Map<string, string[]>();
-      for (const r of (data ?? []) as Row[]) {
-        const st = r["students"] as Row | null;
-        for (const e of ((st?.["enrollments"] ?? []) as Row[])) if (e["status"] === "active") m.set(e["section_id"] as string, [...(m.get(e["section_id"] as string) ?? []), st!["full_name"] as string]);
-      }
-      return m;
-    },
-  });
-  useEffect(() => {
-    if (ctx.role === "guardian" && !filter && kids.data?.size) setFilter("s:" + [...kids.data.keys()][0]);
-  }, [ctx.role, kids.data, filter]);
   const [eff, setEff] = useState(todayISO());
   const [adding, setAdding] = useState<{ day: number; period: Row } | null>(null);
   const [gen, setGen] = useState(false);
@@ -344,6 +327,23 @@ function Viewer({ ctx }: { ctx: Ctx }) {
     },
   });
   const [filter, setFilter] = useState("");
+  // guardians: label each section with the child's name and open on the first child (one child at a time)
+  const kids = useQuery({
+    queryKey: ["schedule-kids", S, user.id],
+    enabled: ctx.role === "guardian",
+    queryFn: async () => {
+      const { data } = await db.from("student_guardians").select("students(full_name, enrollments(section_id, status)), guardians!inner(user_id)").eq("school_id", S).eq("guardians.user_id", user.id);
+      const m = new Map<string, string[]>();
+      for (const r of (data ?? []) as Row[]) {
+        const st = r["students"] as Row | null;
+        for (const e of ((st?.["enrollments"] ?? []) as Row[])) if (e["status"] === "active") m.set(e["section_id"] as string, [...(m.get(e["section_id"] as string) ?? []), st!["full_name"] as string]);
+      }
+      return m;
+    },
+  });
+  useEffect(() => {
+    if (ctx.role === "guardian" && !filter && kids.data?.size) setFilter("s:" + [...kids.data.keys()][0]);
+  }, [ctx.role, kids.data, filter]);
 
   if (setup.isLoading || cur.isLoading) return <LoadingState />;
   if (setup.error || cur.error) return <ErrorState message={arabicError(setup.error ?? cur.error)} />;
