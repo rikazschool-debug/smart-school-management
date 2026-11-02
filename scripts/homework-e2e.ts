@@ -190,7 +190,7 @@ try {
   const f2 = await s1.c.rpc("create_submission_file", { _hw: hw, _name: "b.pdf", _mime: "application/pdf", _size: 50 });
   check("11 closed attempt budget blocks new uploads too", !!f2.error);
   // 12 simplified flow on a "test" targeted to one student
-  const tst = (await t1.c.rpc("save_homework", { _id: null, _d: { ...base, title: "اختبار قصير", due_at: iso(120), audience: "selected", students: [st1.id], submission_types: ["paper"] } })).data as string;
+  const tst = (await t1.c.rpc("save_homework", { _id: null, _d: { ...base, title: "اختبار قصير", due_at: iso(120), criteria: [], audience: "selected", students: [st1.id], submission_types: ["paper"] } })).data as string;
   const kd = await t1.c.rpc("set_homework_kind", { _id: tst, _kind: "test" });
   const kdBad = await pr.c.rpc("set_homework_kind", { _id: tst, _kind: "homework" });
   await t1.c.rpc("publish_homework", { _id: tst });
