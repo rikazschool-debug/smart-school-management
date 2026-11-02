@@ -166,7 +166,7 @@ try {
   const dh2 = await user("dh2");
   await admin.from("memberships").insert({ user_id: dh2.id, org_id: org, school_id: S, role: "dept_head", department_id: dep2.id });
   const before = (await dh.c.from("adm_tasks").select("id").eq("id", T)).data?.length === 1;
-  const del = await admin.from("departments").delete().eq("id", dep.id);
+  const del = await owner.c.from("departments").delete().eq("id", dep.id);
   const after = (await admin.from("adm_tasks").select("id, department_id").eq("id", T).single()).data;
   const evs = (await admin.from("adm_events").select("id", { count: "exact", head: true }).eq("entity_id", T)).count ?? 0;
   const fls = (await admin.from("files").select("id", { count: "exact", head: true }).eq("source_id", T).eq("source_type", "admin")).count ?? 0;
