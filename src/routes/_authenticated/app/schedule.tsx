@@ -82,7 +82,7 @@ function Filter({ slots, value, onChange, sectionsOnly, withRooms, names }: { sl
 function ScheduleExport({ rows, school, title, week, subBySlot, filters = [] }: { rows: Row[]; school: string; title: string; week?: string[]; subBySlot?: Map<string, Row>; filters?: string[] }) {
   const sorted = [...rows].sort((a, b) => a["day"] - b["day"] || String(a["periods"]?.start_time ?? "").localeCompare(String(b["periods"]?.start_time ?? "")));
   return <ExportButtons title={title} school={school} filters={filters} headers={["اليوم", "الحصة", "الوقت", "المادة", "الشعبة", "المعلم", "البديل", "القاعة", "مثبتة"]}
-    rows={() => sorted.map((s) => { const l = slotLabel(s); const sub = week && subBySlot?.get(`${s["id"]}|${week[s["day"]]}`); return [DAY_NAMES[s["day"]], s["periods"]?.name ?? "", `${String(s["periods"]?.start_time ?? "").slice(0, 5)}–${String(s["periods"]?.end_time ?? "").slice(0, 5)}`, l.subject, l.section, l.teacher, sub ? (sub["teachers"]?.full_name ?? "بديل") : "", l.room ?? "", s["pinned"] ? "نعم" : ""]; })} />;
+    rows={() => sorted.map((s) => { const l = slotLabel(s); const sub = week && subBySlot?.get(`${s["id"]}|${week[s["day"]]}`); return [DAY_NAMES[s["day"]], s["periods"]?.name ?? "", `من ${String(s["periods"]?.start_time ?? "").slice(0, 5)} إلى ${String(s["periods"]?.end_time ?? "").slice(0, 5)}`, l.subject, l.section, l.teacher, sub ? (sub["teachers"]?.full_name ?? "بديل") : "", l.room ?? "", s["pinned"] ? "نعم" : ""]; })} />;
 }
 const applyFilter = (slots: Row[], f: string) =>
   !f ? slots : f.startsWith("s:") ? slots.filter((s) => s["section_id"] === f.slice(2)) : f.startsWith("r:") ? slots.filter((s) => s["room_id"] === f.slice(2)) : slots.filter((s) => s["teacher_id"] === f.slice(2));
