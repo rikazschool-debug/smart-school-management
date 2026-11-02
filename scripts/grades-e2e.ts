@@ -238,6 +238,149 @@ try {
   check("org summary owner-only", org1.length === 1 && orgX.length === 0);
   const crr = (await pr.c.rpc("gb_corrections_report", { _school: A, _period: P })).data ?? [];
   check("corrections report lists the applied correction", crr.length === 1 && crr[0].status === "approved");
+
+  // ===================== G9–G14 =====================
+  // subject plan (two homework items + manual exam, absent → incomplete) takes precedence over the school plan for new math gradebooks
+  const sp = await pr.c.rpc("gb_save_plan", { _id: null, _d: { school_id: A, year_id: year.id, scope: "subject", subject_id: math.id, name: "خطة الرياضيات", total: 100, decimals: 2, absent_policy: "incomplete",
+    items: [{ name: "واجبات أ", max_score: 50, weight: 30, source: "homework" }, { name: "واجبات ب", max_score: 20, weight: 20, source: "homework" }, { name: "اختبار", max_score: 100, weight: 50 }] } });
+  await pr.c.rpc("gb_approve_plan", { _id: sp.data });
+  const per2 = await pr.c.rpc("gb_save_period", { _id: null, _d: { school_id: A, year_id: year.id, term_id: term.id, name: "الفترة الثانية", entry_start: day(-5), entry_end: day(10) } });
+  const G2 = (await te.c.rpc("gb_open", { _course: cMath.id, _period: per2.data })).data;
+  let sh2 = (await te.c.rpc("gb_sheet", { _gb: G2 })).data;
+  check("new gradebook uses the subject plan", sh2.plan.id === sp.data && sh2.items.length === 3, sh2.plan?.name);
+  const [hA, hB, hX] = sh2.items.map((i: any) => i.id);
+
+  // ---- G10: row-level save, conflicts, revision ----
+  const r1 = (await te.c.rpc("gb_save_entries", { _gb: G2, _rows: [{ student_id: s1.id, item_id: hX, status: "score", score: 60, base: null }, { student_id: s2.id, item_id: hX, status: "score", score: 150, base: null }] })).data;
+  check("bulk save keeps valid rows and reports the failing student/item", r1?.saved === 1 && r1?.errors?.length === 1 && r1.errors[0].student_id === s2.id && r1.errors[0].code === "range", r1);
+  sh2 = (await te.c.rpc("gb_sheet", { _gb: G2 })).data;
+  check("revision and last save recorded", sh2.gradebook.revision === 1 && !!sh2.gradebook.last_saved_at, sh2.gradebook.revision);
+  const base1 = sh2.entries.find((e: any) => e.student_id === s1.id && e.item_id === hX).at;
+  const stale = (await te.c.rpc("gb_save_entries", { _gb: G2, _rows: [{ student_id: s1.id, item_id: hX, status: "score", score: 65, base: null }] })).data;
+  const kept = (await te.c.from("gradebook_entries").select("score").eq("gradebook_id", G2).eq("student_id", s1.id).eq("item_id", hX).single()).data;
+  check("second window with stale base gets a conflict; newer value kept", stale?.errors?.[0]?.code === "conflict" && Number(kept?.score) === 60, { stale, kept });
+  const fresh = (await te.c.rpc("gb_save_entries", { _gb: G2, _rows: [{ student_id: s1.id, item_id: hX, status: "score", score: 65, base: base1 }] })).data;
+  check("save with current base succeeds", fresh?.saved === 1 && !fresh.errors.length, fresh);
+  const dupRows = await te.c.rpc("gb_save_entries", { _gb: G2, _rows: [{ student_id: s2.id, item_id: hX, status: "score", score: 1 }, { student_id: s2.id, item_id: hX, status: "score", score: 2 }] });
+  check("duplicate student/item in one batch rejected", !!dupRows.error && /تكرار/.test(dupRows.error.message), dupRows.error?.message);
+
+  // ---- G12: import batches ----
+  const impBad = (await te.c.rpc("gb_save_entries", { _gb: G2, _rows: [{ student_id: s2.id, item_id: hX, status: "score", score: 50 }, { student_id: crypto.randomUUID(), item_id: hX, status: "score", score: 50 }], _source: "import", _atomic: true, _batch: "file-1" })).data;
+  const s2x = (await te.c.from("gradebook_entries").select("id").eq("gradebook_id", G2).eq("student_id", s2.id).eq("item_id", hX)).data ?? [];
+  check("import with an out-of-course student saves nothing", impBad?.saved === 0 && impBad?.errors?.[0]?.code === "student" && s2x.length === 0, impBad);
+  const impOk = (await te.c.rpc("gb_save_entries", { _gb: G2, _rows: [{ student_id: s2.id, item_id: hX, status: "score", score: 50 }, { student_id: s3.id, item_id: hX, status: "absent" }], _source: "import", _atomic: true, _batch: "file-2" })).data;
+  check("valid import applied", impOk?.saved === 2, impOk);
+  const impAgain = await te.c.rpc("gb_save_entries", { _gb: G2, _rows: [{ student_id: s2.id, item_id: hX, status: "score", score: 50 }], _source: "import", _atomic: true, _batch: "file-2" });
+  check("same import file cannot run twice", !!impAgain.error && /مسبقًا/.test(impAgain.error.message), impAgain.error?.message);
+
+  // ---- G11: homework link preview, methods, double counting, drift ----
+  const hw2 = await admin.from("homework").insert({ school_id: A, course_id: cMath.id, section_id: secA.id, year_id: year.id, title: "واجب 2", due_at: new Date().toISOString(), max_score: 20, status: "published", created_by: te.id }).select().single();
+  const hw2g: Record<string, string> = {};
+  for (const [s, sc] of [[s1, 10], [s2, 20]] as const) {
+    const sb = await admin.from("homework_submissions").insert({ homework_id: hw2.data!.id, student_id: s.id, school_id: A, status: "submitted" }).select().single();
+    const gr = await admin.from("homework_grades").insert({ submission_id: sb.data!.id, homework_id: hw2.data!.id, student_id: s.id, attempt_no: 1, score: sc, rubric_version: 1, graded_by: te.id, status: "published", published_at: new Date().toISOString() }).select().single();
+    hw2g[s.id] = gr.data!.id;
+  }
+  const hws = [hw.data.id, hw2.data!.id];
+  const pv = (await te.c.rpc("gb_homework_preview", { _gb: G2, _item: hA, _homework: hws, _method: "average", _missing: "available" })).data;
+  const pvs = (sid: string) => pv?.students?.find((x: any) => x.student_id === sid);
+  check("preview average: (0.8+0.5)/2 × 50 = 32.5; s2 only published hw2 → 50; s3 nothing → stays not entered", Number(pvs(s1.id)?.value) === 32.5 && Number(pvs(s2.id)?.value) === 50 && pvs(s3.id)?.value === null, pv?.students);
+  check("preview explains why: unpublished grade / not submitted", pvs(s2.id)?.lacking?.[0]?.reason === "unpublished" && pvs(s3.id)?.lacking?.length === 2 && pvs(s3.id).lacking[0].reason === "not_submitted", { s2: pvs(s2.id)?.lacking, s3: pvs(s3.id)?.lacking });
+  const pvSum = (await te.c.rpc("gb_homework_preview", { _gb: G2, _item: hA, _homework: hws, _method: "sum", _missing: "require_all" })).data;
+  const ps = (sid: string) => pvSum?.students?.find((x: any) => x.student_id === sid);
+  check("sum + require all: s1 18/30 × 50 = 30; s2 lacks one → not entered (never zero)", Number(ps(s1.id)?.value) === 30 && ps(s2.id)?.value === null, pvSum?.students);
+  const dupHw = await te.c.rpc("gb_homework_preview", { _gb: G2, _item: hA, _homework: [hw.data.id, hw.data.id] });
+  check("same homework twice in one item rejected", !!dupHw.error);
+  const pulled = await te.c.rpc("gb_pull_homework", { _gb: G2, _item: hA, _homework: hws, _method: "sum", _missing: "require_all" });
+  check("pull writes only computable students (1)", pulled.data === 1, pulled);
+  const twice = await te.c.rpc("gb_homework_preview", { _gb: G2, _item: hB, _homework: [hw2.data!.id] });
+  check("homework already counted in another item refused", !!twice.error && /مرتين/.test(twice.error.message), twice.error?.message);
+  const src = (await te.c.from("gradebook_entries").select("hw_method, hw_source").eq("gradebook_id", G2).eq("student_id", s1.id).eq("item_id", hA).single()).data;
+  check("source method and grade versions stored", src?.hw_method === "sum:require_all" && src?.hw_source?.length === 2, src);
+
+  // fill the rest, add a family note, submit, review
+  await te.c.rpc("gb_set_entries", { _gb: G2, _rows: [{ student_id: s2.id, item_id: hA, status: "score", score: 25 }, { student_id: s3.id, item_id: hA, status: "score", score: 20 },
+    { student_id: s1.id, item_id: hB, status: "score", score: 10 }, { student_id: s2.id, item_id: hB, status: "score", score: 10 }, { student_id: s3.id, item_id: hB, status: "score", score: 10 }] });
+  const note = await te.c.rpc("gb_set_note", { _gb: G2, _student: s1.id, _note: "أحسنت في الاختبار" });
+  check("teacher saves a family note", !note.error, note.error?.message);
+  check("submit allowed (absent is a decision, not missing)", !(await te.c.rpc("gb_submit", { _gb: G2 })).error);
+  await dh.c.rpc("gb_review", { _gb: G2, _accept: true, _reason: null });
+  await admin.from("homework_grades").update({ score: 18, rev: 2 }).eq("id", hw2g[s1.id]!);
+  sh2 = (await pr.c.rpc("gb_sheet", { _gb: G2 })).data;
+  check("homework source change after review is flagged, value not changed", sh2.drift.length === 1 && Number(sh2.drift[0].stored) === 30 && Number(sh2.drift[0].current) === 43.33, sh2.drift);
+  const apDrift = await pr.c.rpc("gb_approve", { _gb: G2, _accept: true, _reason: null });
+  check("approval blocked while a homework source changed", !!apDrift.error && /واجبات مصدر/.test(apDrift.error.message), apDrift.error?.message);
+  await admin.from("homework_grades").update({ score: 10, rev: 3 }).eq("id", hw2g[s1.id]!);
+  const rv = sh2.gradebook.revision;
+  const apStale = await pr.c.rpc("gb_approve", { _gb: G2, _accept: true, _reason: null, _revision: rv - 1 });
+  check("approving a stale on-screen version is refused", !!apStale.error && /نسخة/.test(apStale.error.message), apStale.error?.message);
+  const apOk = await pr.c.rpc("gb_approve", { _gb: G2, _accept: true, _reason: null, _revision: rv });
+  check("approval binds the reviewed version", !apOk.error, apOk.error?.message);
+  const bound = (await pr.c.from("gradebooks").select("revision, reviewed_revision, approved_revision").eq("id", G2).single()).data;
+  check("reviewed = approved = current revision", bound?.reviewed_revision === bound?.revision && bound?.approved_revision === bound?.revision, bound);
+
+  // ---- G13: publish preview, incomplete confirmation, idempotent publish ----
+  const prev = (await pr.c.rpc("gb_publish_preview", { _gb: G2 })).data;
+  check("publish preview: 3 students, 1 incomplete (absent, incomplete policy)", prev?.students === 3 && prev?.complete === 2 && prev?.incomplete?.length === 1, prev);
+  const tePrev = await te.c.rpc("gb_publish_preview", { _gb: G2 });
+  check("teacher cannot see publish preview", !!tePrev.error);
+  const pubNo = await pr.c.rpc("gb_publish", { _gb: G2 });
+  check("incomplete results need explicit confirmation", !!pubNo.error && /غير مكتملة/.test(pubNo.error.message), pubNo.error?.message);
+  await admin.from("student_guardians").insert({ school_id: A, student_id: s3.id, guardian_id: g1.id, relationship: "أب", can_follow: true, verified: true });
+  const notesBefore = ((await gu.c.from("notifications").select("id").eq("kind", "grades")).data ?? []).length;
+  const pub2 = await pr.c.rpc("gb_publish", { _gb: G2, _allow_incomplete: true });
+  check("published with incomplete shown", pub2.data === 3, pub2);
+  const notesMid = ((await gu.c.from("notifications").select("id").eq("kind", "grades")).data ?? []).length;
+  const pub3 = await pr.c.rpc("gb_publish", { _gb: G2, _allow_incomplete: true });
+  const notesAfter = ((await gu.c.from("notifications").select("id").eq("kind", "grades")).data ?? []).length;
+  const verCount = ((await pr.c.from("grade_results").select("id").eq("gradebook_id", G2)).data ?? []).length;
+  check("repeat publish: no new version, no new notification", pub3.data === 0 && verCount === 3 && notesAfter === notesMid && notesMid === notesBefore + 2, { pub3: pub3.data, verCount, notesBefore, notesMid, notesAfter });
+
+  // ---- G14: family view ----
+  const famR = (await gu.c.from("grade_results").select("student_id, note, complete").eq("gradebook_id", G2)).data ?? [];
+  check("guardian with two children sees both, not the third", famR.length === 2 && famR.every((r: any) => [s1.id, s3.id].includes(r.student_id)), famR);
+  check("note visible to family after publish; incomplete flagged", famR.find((r: any) => r.student_id === s1.id)?.note === "أحسنت في الاختبار" && famR.find((r: any) => r.student_id === s3.id)?.complete === false, famR);
+  const stuNote = (await stu.c.from("grade_results").select("student_id").eq("gradebook_id", G2)).data ?? [];
+  check("student sees only own result", stuNote.length === 1 && stuNote[0].student_id === s1.id);
+  const famNotes = (await gu.c.from("gradebook_notes").select("note")).data ?? [];
+  check("family cannot read the internal notes table", famNotes.length === 0);
+
+  // ---- G9: deadline exceptions (period past its dates) ----
+  const per3 = await pr.c.rpc("gb_save_period", { _id: null, _d: { school_id: A, year_id: year.id, term_id: term.id, name: "الفترة المنتهية", entry_start: day(-10), entry_end: day(-2) } });
+  const G3 = (await te.c.rpc("gb_open", { _course: cMath.id, _period: per3.data })).data;
+  const late = await te.c.rpc("gb_save_entries", { _gb: G3, _rows: [{ student_id: s1.id, item_id: hX, status: "score", score: 50 }] });
+  check("entry refused after the period end date (server clock)", !!late.error, late.error?.message);
+  const teEx = await te.c.rpc("gb_grant_exception", { _gb: G3, _student: s1.id, _reason: "مرض", _until: new Date(Date.now() + 86400e3).toISOString() });
+  const noReasonEx = await pr.c.rpc("gb_grant_exception", { _gb: G3, _student: s1.id, _reason: "", _until: new Date(Date.now() + 86400e3).toISOString() });
+  const pastEx = await pr.c.rpc("gb_grant_exception", { _gb: G3, _student: s1.id, _reason: "مرض", _until: new Date(Date.now() - 1000).toISOString() });
+  check("exception: teacher cannot grant; reason and future expiry required", !!teEx.error && !!noReasonEx.error && !!pastEx.error);
+  const ex = await pr.c.rpc("gb_grant_exception", { _gb: G3, _student: s1.id, _reason: "غياب بعذر طبي", _until: new Date(Date.now() + 86400e3).toISOString() });
+  check("principal grants a one-student exception", !!ex.data, ex.error?.message);
+  const exSave = (await te.c.rpc("gb_save_entries", { _gb: G3, _rows: [{ student_id: s1.id, item_id: hX, status: "score", score: 50 }, { student_id: s2.id, item_id: hX, status: "score", score: 50 }] })).data;
+  check("exception opens only that student", exSave?.saved === 1 && exSave?.errors?.[0]?.student_id === s2.id && exSave.errors[0].code === "window", exSave);
+  await pr.c.rpc("gb_revoke_exception", { _id: ex.data, _reason: "انتهى العذر" });
+  const afterRevoke = await te.c.rpc("gb_save_entries", { _gb: G3, _rows: [{ student_id: s1.id, item_id: hX, status: "score", score: 40 }] });
+  check("revoked exception closes entry again", !!afterRevoke.error);
+  await pr.c.rpc("gb_set_period_status", { _id: per3.data, _status: "locked", _reason: null });
+  const lockedEx = await pr.c.rpc("gb_grant_exception", { _gb: G3, _student: null, _reason: "x", _until: new Date(Date.now() + 86400e3).toISOString() });
+  check("no exceptions on a locked period", !!lockedEx.error);
+
+  // ---- alternative review path: department without an active head ----
+  const depArt = await ins(owner.c, A, "departments", { name: "الفنون" });
+  const art = await ins(owner.c, A, "subjects", { name: "فنية", department_id: depArt.id });
+  const cArt = await ins(owner.c, A, "courses", { year_id: year.id, term_id: term.id, subject_id: art.id, section_id: secA.id });
+  const asgArt = await ins(owner.c, A, "teacher_assignments", { course_id: cArt.id, teacher_id: tRow.id, start_date: day(-30) });
+  await owner.c.rpc("decide_assignment", { _id: asgArt.id, _approve: true });
+  const GA = (await te.c.rpc("gb_open", { _course: cArt.id, _period: per2.data })).data;
+  const sha = (await te.c.rpc("gb_sheet", { _gb: GA })).data;
+  check("department without a head is flagged", sha?.gradebook?.dept_missing === true && sha?.gradebook?.has_dept === false, sha?.gradebook);
+  await te.c.rpc("gb_set_entries", { _gb: GA, _rows: [s1, s2, s3].flatMap((s) => sha.items.map((i: any) => ({ student_id: s.id, item_id: i.id, status: "score", score: 10 }))) });
+  const prNotesB = ((await pr.c.from("notifications").select("id").eq("kind", "grades")).data ?? []).length;
+  await te.c.rpc("gb_submit", { _gb: GA });
+  const prNotesA = ((await pr.c.from("notifications").select("id").eq("kind", "grades")).data ?? []).length;
+  check("administration notified instead of a missing dept head", prNotesA === prNotesB + 1, { prNotesB, prNotesA });
+  const prRev = await pr.c.rpc("gb_review", { _gb: GA, _accept: true, _reason: null });
+  check("principal reviews when no dept head exists (not skipped)", !prRev.error, prRev.error?.message);
 } catch (e) { bad++; console.log("FAIL exception", e); }
 finally { for (const o of orgs) await tr.purgeOrg(o); for (const u of tr.users) await admin.auth.admin.deleteUser(u); }
 console.log(`${ok} passed, ${bad} failed`);

@@ -1727,6 +1727,60 @@ export type Database = {
           },
         ]
       }
+      grade_exceptions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          gradebook_id: string
+          id: string
+          reason: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          student_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          gradebook_id: string
+          id?: string
+          reason: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          student_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          gradebook_id?: string
+          id?: string
+          reason?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_exceptions_gradebook_id_fkey"
+            columns: ["gradebook_id"]
+            isOneToOne: false
+            referencedRelation: "gradebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_exceptions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grade_periods: {
         Row: {
           approve_by: string | null
@@ -1966,6 +2020,7 @@ export type Database = {
           id: string
           items: Json
           max_total: number | null
+          note: string | null
           period_name: string | null
           published_at: string
           school_id: string
@@ -1984,6 +2039,7 @@ export type Database = {
           id?: string
           items?: Json
           max_total?: number | null
+          note?: string | null
           period_name?: string | null
           published_at?: string
           school_id: string
@@ -2002,6 +2058,7 @@ export type Database = {
           id?: string
           items?: Json
           max_total?: number | null
+          note?: string | null
           period_name?: string | null
           published_at?: string
           school_id?: string
@@ -2036,6 +2093,8 @@ export type Database = {
           entered_by: string | null
           gradebook_id: string
           homework_ids: string[] | null
+          hw_method: string | null
+          hw_source: Json | null
           id: string
           item_id: string
           score: number | null
@@ -2048,6 +2107,8 @@ export type Database = {
           entered_by?: string | null
           gradebook_id: string
           homework_ids?: string[] | null
+          hw_method?: string | null
+          hw_source?: Json | null
           id?: string
           item_id: string
           score?: number | null
@@ -2060,6 +2121,8 @@ export type Database = {
           entered_by?: string | null
           gradebook_id?: string
           homework_ids?: string[] | null
+          hw_method?: string | null
+          hw_source?: Json | null
           id?: string
           item_id?: string
           score?: number | null
@@ -2126,13 +2189,87 @@ export type Database = {
           },
         ]
       }
+      gradebook_import_batches: {
+        Row: {
+          batch_key: string
+          gradebook_id: string
+          imported_at: string
+          imported_by: string | null
+          row_count: number
+        }
+        Insert: {
+          batch_key: string
+          gradebook_id: string
+          imported_at?: string
+          imported_by?: string | null
+          row_count: number
+        }
+        Update: {
+          batch_key?: string
+          gradebook_id?: string
+          imported_at?: string
+          imported_by?: string | null
+          row_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gradebook_import_batches_gradebook_id_fkey"
+            columns: ["gradebook_id"]
+            isOneToOne: false
+            referencedRelation: "gradebooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gradebook_notes: {
+        Row: {
+          gradebook_id: string
+          note: string
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          gradebook_id: string
+          note: string
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          gradebook_id?: string
+          note?: string
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gradebook_notes_gradebook_id_fkey"
+            columns: ["gradebook_id"]
+            isOneToOne: false
+            referencedRelation: "gradebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gradebook_notes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gradebooks: {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          approved_revision: number | null
           course_id: string
           created_at: string
           id: string
+          last_saved_at: string | null
+          last_saved_by: string | null
           period_id: string
           plan_id: string
           published_at: string | null
@@ -2142,18 +2279,24 @@ export type Database = {
           return_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          reviewed_revision: number | null
+          revision: number
           school_id: string
           status: string
           submitted_at: string | null
           submitted_by: string | null
+          submitted_revision: number | null
           updated_at: string
         }
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          approved_revision?: number | null
           course_id: string
           created_at?: string
           id?: string
+          last_saved_at?: string | null
+          last_saved_by?: string | null
           period_id: string
           plan_id: string
           published_at?: string | null
@@ -2163,18 +2306,24 @@ export type Database = {
           return_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          reviewed_revision?: number | null
+          revision?: number
           school_id: string
           status?: string
           submitted_at?: string | null
           submitted_by?: string | null
+          submitted_revision?: number | null
           updated_at?: string
         }
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          approved_revision?: number | null
           course_id?: string
           created_at?: string
           id?: string
+          last_saved_at?: string | null
+          last_saved_by?: string | null
           period_id?: string
           plan_id?: string
           published_at?: string | null
@@ -2184,10 +2333,13 @@ export type Database = {
           return_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          reviewed_revision?: number | null
+          revision?: number
           school_id?: string
           status?: string
           submitted_at?: string | null
           submitted_by?: string | null
+          submitted_revision?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -4734,9 +4886,52 @@ export type Database = {
       }
       _gb_admin: { Args: { _school: string }; Returns: boolean }
       _gb_can_enter: { Args: { _gb: string }; Returns: boolean }
+      _gb_can_enter_student: {
+        Args: { _gb: string; _student: string }
+        Returns: boolean
+      }
       _gb_course_label: { Args: { _course: string }; Returns: string }
       _gb_dept: { Args: { _course: string }; Returns: boolean }
+      _gb_dept_missing: { Args: { _course: string }; Returns: boolean }
       _gb_has_dept: { Args: { _course: string }; Returns: boolean }
+      _gb_hw_calc: {
+        Args: {
+          _gb: string
+          _homework: string[]
+          _item: string
+          _method: string
+          _missing: string
+        }
+        Returns: {
+          lacking: Json
+          sources: Json
+          student_id: string
+          student_name: string
+          used: number
+          value: number
+        }[]
+      }
+      _gb_hw_check: {
+        Args: {
+          _gb: string
+          _homework: string[]
+          _item: string
+          _method: string
+          _missing: string
+        }
+        Returns: undefined
+      }
+      _gb_hw_drift: {
+        Args: { _gb: string }
+        Returns: {
+          current: number
+          item_id: string
+          item_name: string
+          stored: number
+          student_id: string
+          student_name: string
+        }[]
+      }
       _gb_log: {
         Args: { _action: string; _d: Json; _gb: string }
         Returns: undefined
@@ -4764,6 +4959,7 @@ export type Database = {
       }
       _gb_teacher: { Args: { _course: string }; Returns: boolean }
       _gb_total: { Args: { _gb: string; _student: string }; Returns: number }
+      _gb_window: { Args: { _gb: string; _student: string }; Returns: boolean }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
       _hw_check_score: {
         Args: { _criteria: Json; _score: number; h: Record<string, unknown> }
@@ -5342,7 +5538,12 @@ export type Database = {
         }[]
       }
       gb_approve: {
-        Args: { _accept: boolean; _gb: string; _reason: string }
+        Args: {
+          _accept: boolean
+          _gb: string
+          _reason: string
+          _revision?: number
+        }
         Returns: undefined
       }
       gb_approve_plan: { Args: { _id: string }; Returns: undefined }
@@ -5372,6 +5573,20 @@ export type Database = {
         Args: { _approve: boolean; _id: string; _note: string }
         Returns: undefined
       }
+      gb_grant_exception: {
+        Args: { _gb: string; _reason: string; _student: string; _until: string }
+        Returns: string
+      }
+      gb_homework_preview: {
+        Args: {
+          _gb: string
+          _homework: string[]
+          _item: string
+          _method?: string
+          _missing?: string
+        }
+        Returns: Json
+      }
       gb_new_plan_version: { Args: { _id: string }; Returns: string }
       gb_open: { Args: { _course: string; _period: string }; Returns: string }
       gb_org_summary: {
@@ -5397,10 +5612,13 @@ export type Database = {
           course_id: string
           course_label: string
           department_id: string
+          dept_missing: boolean
+          drift: number
           filled: number
           gradebook_id: string
           missing: number
           pending_corrections: number
+          revision: number
           section_id: string
           status: string
           students: number
@@ -5409,9 +5627,19 @@ export type Database = {
         }[]
       }
       gb_plan_impact: { Args: { _id: string }; Returns: Json }
-      gb_publish: { Args: { _gb: string }; Returns: number }
+      gb_publish: {
+        Args: { _allow_incomplete?: boolean; _gb: string }
+        Returns: number
+      }
+      gb_publish_preview: { Args: { _gb: string }; Returns: Json }
       gb_pull_homework: {
-        Args: { _gb: string; _homework: string[]; _item: string }
+        Args: {
+          _gb: string
+          _homework: string[]
+          _item: string
+          _method?: string
+          _missing?: string
+        }
         Returns: number
       }
       gb_reopen: {
@@ -5435,11 +5663,29 @@ export type Database = {
         Args: { _accept: boolean; _gb: string; _reason: string }
         Returns: undefined
       }
+      gb_revoke_exception: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      gb_save_entries: {
+        Args: {
+          _atomic?: boolean
+          _batch?: string
+          _gb: string
+          _rows: Json
+          _source?: string
+        }
+        Returns: Json
+      }
       gb_save_period: { Args: { _d: Json; _id: string }; Returns: string }
       gb_save_plan: { Args: { _d: Json; _id: string }; Returns: string }
       gb_set_entries: {
         Args: { _gb: string; _rows: Json; _source?: string }
         Returns: number
+      }
+      gb_set_note: {
+        Args: { _gb: string; _note: string; _student: string }
+        Returns: undefined
       }
       gb_set_period_status: {
         Args: { _id: string; _reason: string; _status: string }

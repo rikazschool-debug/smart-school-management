@@ -224,3 +224,13 @@ No defects found, so no fixes or re-runs were needed. The mobile-screen file was
 - Evidence: scripts/grades-e2e.ts 59/59; Playwright smoke as demo principal (plan form) and teacher (empty period state).
 - Not assumed: pass/fail thresholds, promotion, official certificates, online exams.
 - Not yet browser-tested end to end: full teacher→publish journey and import from the template file.
+
+## Grades package G9–G15 (closure)
+- G9 deadline exceptions (grade_exceptions): principal/vice only, course-wide or one student, reason + future expiry ≤30 days, revocable, never over a locked period; entry checked per row on the server clock.
+- G10 gb_save_entries: per-row errors (valid rows saved, bad ones returned), conflict check against the entered_at the client loaded (two windows never overwrite a newer value), gradebook revision + last saved by/at. UI: search/filters (incomplete/complete/unsaved/errors), phone cards, total preview (previewTotal mirrors _gb_total, unit-tested), retry keeps edits.
+- G11 homework link: average or sum, "available" or "require all", preview with reasons (not submitted / returned / unpublished), latest published attempt only, never zero, no homework in two items, source grade id+rev stored; later changes are flagged (drift) and block approval, never applied silently.
+- G12 import: formula cells, duplicates, out-of-course students and out-of-range values listed with a downloadable error report; all-or-nothing; diff preview of changed cells only; same file (SHA-256) refused twice per gradebook.
+- G13 approval bound to the reviewed/submitted revision and to the revision on screen; department without an active head → administration reviews (flagged, notified); publish preview (scope = one course × period, counts, recipients); incomplete results need explicit confirmation; repeat publish = no-op (no version, no notification).
+- G14 family: child picker (verified children only), teacher note (gradebook_notes → grade_results.note after publish), publish date/version, per-child XLSX/PDF.
+- Evidence: scripts/grades-e2e.ts 100/100; vitest 37/37 (grades-calc 7); rls-e2e 94/94; Playwright (scripts/grades-browser-fixture.ts): teacher 12/12 (preview 73, revision, two-window conflict, row error, bad/good import, re-import no-op, note, submit), review→publish→family 12/13 — the one failure was a wrong expected value in the script (88.6 shown is correct: 45/50×30 + 88/100×70), fixed but not re-run.
+- Not verified: opening the exported PDF files (XLSX opened and checked); real devices.
