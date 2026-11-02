@@ -12,7 +12,7 @@ T = {w: tok(w) for w in ["pr", "t1", "t2", "vp", "out"]}
 def rpc(who, fn, a):
     r = requests.post(U + f"/rest/v1/rpc/{fn}", headers={"apikey": K, "Authorization": "Bearer " + T[who], "Content-Type": "application/json"}, json=a)
     if r.status_code >= 300: raise Exception(fn + " " + r.text)
-    return r.json()
+    return r.json() if r.text.strip() else None
 S = F["S"]; uid = lambda w: F["users"][w]["id"]
 def form(fid, handler):
     return rpc("pr", "adm_save_form", {"_id": fid, "_school": S, "_d": {"name": "نموذج تصدير", "description": "", "purpose": "", "handler_user": handler, "audience": ["teacher", "vice_principal"], "allow_files": False, "fields": [{"label": "التفاصيل", "type": "text", "required": False, "options": []}]}})
