@@ -74,3 +74,20 @@ export function Timeline({ entity, id }: { entity: string; id: string }) {
     </ol>
   );
 }
+
+/** Attachments for a request/task: row via create_admin_file (checks role/type/size) → upload; reads go through signed URLs. */
+export function AdminFiles({ entity, id, canAdd, userId }: { entity: "task" | "request"; id: string; canAdd: boolean; userId: string }) {
+  const q = useQuery({
+    queryKey: ["adm-files", entity, id],
+    queryFn: async () => ((await db.from("files").select("id, name, storage_path, size_bytes, uploaded_by").eq("source_type", "admin").eq("category", entity).eq("source_id", id).order("created_at")).data ?? []) as Row[],
+  });
+  const files = q.data ?? [];
+  return (
+    <div className="space-y-2 rounded-xl border bg-card p-4">
+      <p className="font-semibold">المرفقات</p>
+      {!files.length && <p className="text-sm text-muted-foreground">لا توجد مرفقات.</p>}
+      <FileList files={files} onRemove={canAdd ? async (f) => { if (f.uploaded_by !== userId) return void toast.error("يحذف الملف من رفعه فقط"); const { error } = await db.rpc("remove_admin_file", { _file: f.id }); if (error) toast.error(arabicError(error)); q.refetch(); } : undefined} />
+      {canAdd && <Uploader create={async (f) => { const { data, error } = await db.rpc("create_admin_file", { _entity: entity, _id: id, _name: f.name, _mime: f.type || "application/octet-stream", _size: f.size }); if (error) throw error; return (data as { id: string; storage_path: string }[])[0]!; }} release={(fid) => db.rpc("remove_admin_file", { _file: fid })} onDone={() => q.refetch()} />}
+    </div>
+  );
+}
