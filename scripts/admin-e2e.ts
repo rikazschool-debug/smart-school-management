@@ -140,14 +140,14 @@ try {
   const fo = (await t1.c.rpc("create_admin_file", { _entity: "task", _id: T4, _name: "x.pdf", _mime: "application/pdf", _size: 10 }));
   check("T21 attach only by task parties", !!fl.error && !!fo.error);
   // attachments: parent-record permission, upload/read/signed URL, removal rules
-  const up = await t2.c.rpc("create_admin_file", { _entity: "task", _id: T4, _name: "proof.pdf", _mime: "application/pdf", _size: 9 });
-  const fr = (up.data as any[])?.[0];
+  const aUp = await t2.c.rpc("create_admin_file", { _entity: "task", _id: T4, _name: "proof.pdf", _mime: "application/pdf", _size: 9 });
+  const fr = (aUp.data as any[])?.[0];
   const put = fr ? await t2.c.storage.from("rikaz-files").upload(fr.storage_path, new Blob(["%PDF-1.4\n"], { type: "application/pdf" }), { contentType: "application/pdf" }) : { error: "no row" };
-  check("A1 assignee uploads to own task", !up.error && !put.error, [up.error, put.error]);
-  const s1 = await vp.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
-  const s2 = await t1.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
-  const s3 = await ownerB.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
-  check("A2 signed URL for assigner, refused to non-party and other org", !s1.error && !!s2.error && !!s3.error, [s1.error, s2.data, s3.data]);
+  check("A1 assignee uploads to own task", !aUp.error && !put.error, [aUp.error, put.error]);
+  const aS1 = await vp.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
+  const aS2 = await t1.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
+  const aS3 = await ownerB.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
+  check("A2 signed URL for assigner, refused to non-party and other org", !aS1.error && !!aS2.error && !!aS3.error, [aS1.error, aS2.data, aS3.data]);
   check("A3 non-party cannot list file rows", !(await t1.c.from("files").select("id").eq("id", fr.id)).data?.length);
   const badMime = await t2.c.rpc("create_admin_file", { _entity: "task", _id: T4, _name: "x.exe", _mime: "application/x-msdownload", _size: 9 });
   check("A4 disallowed type rejected", !!badMime.error);
