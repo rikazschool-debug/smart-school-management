@@ -27,7 +27,7 @@ function Grades({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const { gb, tab: t0 } = Route.useSearch();
   const nav = useNavigate({ from: "/app/grades" });
   // UI mirrors _gb_admin (principal / vice principal); owner only follows up; teachers open gradebooks of live assignments.
-  const admin = ctx.role === "principal" || ctx.role === "vice_principal";
+  const admin = false; // archive: read-only for everyone
   const tabs: Tab[] = ["books", "plans", "periods", "corrections", ...(ctx.role === "org_owner" ? (["org"] as Tab[]) : [])];
   const [tab, setTab] = useState<Tab>((t0 as Tab) && tabs.includes(t0 as Tab) ? (t0 as Tab) : "books");
   const periods = usePeriods(S);
@@ -37,7 +37,7 @@ function Grades({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const open = (id: string | undefined) => nav({ search: id ? { gb: id } : {} });
   return (
     <>
-      <PageHeader title="الدرجات والتقييم والنتائج" desc="خطة تقييم معتمدة ← رصد المعلم ← مراجعة رئيس القسم ← اعتماد المدير وقفل الرصد ← نشر للطالب وولي الأمر. لا تُفترض نسب نجاح أو رسوب أو ترحيل." />
+      <PageHeader title="أرشيف الدرجات الفصلية" desc="أرشيف إداري للقراءة فقط. الدرجات الآن تُسجَّل في «الواجبات والاختبارات»: يصحح المعلم ويحفظ فتظهر مباشرة للطالب وولي أمره. لا تُحذف بيانات هذا الأرشيف ولا تُنشر منه درجات قديمة." />
       {gb ? <GradebookView id={gb} school={ctx.schoolName} onBack={() => open(undefined)} /> : <>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <div role="tablist" className="flex flex-wrap gap-1 rounded-xl border bg-card p-1">
@@ -45,7 +45,7 @@ function Grades({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           </div>
           {(tab === "books" || tab === "corrections") && !!periods.data?.length && <select aria-label="فترة الرصد" className={selectCls("w-52")} value={pid} onChange={(e) => setPid(e.target.value)}>{periods.data.map((p) => <option key={p["id"]} value={p["id"]}>{p["name"]}</option>)}</select>}
         </div>
-        {tab === "books" && <OverviewTab S={S} school={ctx.schoolName} period={period} onOpen={open} canOpen={admin || ctx.role === "teacher"} />}
+        {tab === "books" && <OverviewTab S={S} school={ctx.schoolName} period={period} onOpen={open} canOpen={ctx.role === "principal" || ctx.role === "vice_principal" || ctx.role === "org_owner"} />}
         {tab === "plans" && <PlansTab S={S} admin={admin} />}
         {tab === "periods" && <PeriodsTab S={S} admin={admin} />}
         {tab === "corrections" && <CorrectionsTab S={S} school={ctx.schoolName} period={period} admin={admin} />}

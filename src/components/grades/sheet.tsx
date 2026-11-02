@@ -71,7 +71,9 @@ export function GradebookView({ id, school, onBack }: { id: string; school: stri
 
   if (q.isLoading) return <LoadingState />;
   if (q.error || !q.data) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
-  const { gradebook: g, plan, items, students, events, homework, period, exceptions, drift } = q.data;
+  const { gradebook: g0, plan, items, students, events, homework, period, exceptions, drift } = q.data;
+  // Read-only administrative archive: grading now lives in homework/tests; every gb_* write is revoked server-side.
+  const g: Row = { ...g0, can_enter: false, is_admin: false, is_teacher: false, is_dept: false };
   const enter = !!g["can_enter"];
   const locked = ["approved", "published"].includes(g["status"]);
   const active = students.filter((s) => s["active"]);

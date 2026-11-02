@@ -2482,6 +2482,7 @@ export type Database = {
           instructions: string
           join_days: number
           join_policy: string
+          kind: string
           late_policy: string
           late_until: string | null
           max_attempts: number
@@ -2518,6 +2519,7 @@ export type Database = {
           instructions?: string
           join_days?: number
           join_policy?: string
+          kind?: string
           late_policy?: string
           late_until?: string | null
           max_attempts?: number
@@ -2554,6 +2556,7 @@ export type Database = {
           instructions?: string
           join_days?: number
           join_policy?: string
+          kind?: string
           late_policy?: string
           late_until?: string | null
           max_attempts?: number
@@ -5724,6 +5727,7 @@ export type Database = {
       homework_list: {
         Args: {
           _course: string
+          _kind?: string
           _limit: number
           _offset: number
           _q: string
@@ -5737,6 +5741,7 @@ export type Database = {
           due_at: string
           id: string
           is_teacher: boolean
+          kind: string
           late: number
           max_score: number
           not_submitted: number
@@ -6132,6 +6137,10 @@ export type Database = {
         Args: { _days: number; _hw: string; _policy: string }
         Returns: undefined
       }
+      set_homework_kind: {
+        Args: { _id: string; _kind: string }
+        Returns: undefined
+      }
       set_homework_status: {
         Args: { _id: string; _reason: string; _status: string }
         Returns: undefined
@@ -6177,6 +6186,7 @@ export type Database = {
           due_at: string
           effective_due: string
           id: string
+          kind: string
           last_late: boolean
           last_submitted_at: string
           late_policy: string

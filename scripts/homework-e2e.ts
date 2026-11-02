@@ -109,16 +109,29 @@ try {
   const g1r = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [5, 3], _feedback: "جيد", _final: true, _rev: null });
   const stale = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "x", _final: true, _rev: 0 });
   check("5c grade saved = 8; stale second session rejected", !g1r.error && !!stale.error && (await admin.from("homework_grades").select("score").eq("submission_id", sub1).single()).data!.score == 8, [g1r.error, stale.data]);
-  const hidden = (await s1.c.from("homework_grades").select("id")).data!.length + (await g1.c.from("homework_grades").select("id")).data!.length;
   const pubR = await t1.c.rpc("publish_results", { _hw: hw, _subs: null });
   const shown = (await s1.c.from("homework_grades").select("score")).data!;
   const gShown = (await g1.c.from("homework_grades").select("score")).data!;
-  check("5d grade hidden until published, then visible to student and guardian", hidden === 0 && pubR.data === 1 && shown.length === 1 && gShown.length === 1, [hidden, pubR, shown]);
+  const nGrade5 = (await admin.from("notifications").select("id").like("dedupe_key", "%res:%")).data?.length ?? -1;
+  check("5d saved grade visible at once to student and guardian; no separate publish step left", pubR.data === 0 && shown.length === 1 && shown[0]!.score == 8 && gShown.length === 1, [pubR, shown]);
+  // observers cannot change the grade even by direct call
+  const g1row = (await admin.from("homework_grades").select("id, rev").eq("submission_id", sub1).single()).data!;
+  const prEdit = await pr.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "", _final: true, _rev: g1row.rev });
+  const prCorr = await pr.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "", _reason: "x", _rev: g1row.rev });
+  const prRaw = await pr.c.from("homework_grades").update({ score: 1 }).eq("id", g1row.id).select("id");
+  check("5e principal cannot edit a visible grade (RPC or direct write)", !!prEdit.error && !!prCorr.error && (!!prRaw.error || !prRaw.data?.length), [prEdit.error?.message, prRaw]);
+  // teacher edit keeps old/new, single notification per edit, repeated save with old rev rejected
+  const ed = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "أفضل", _final: true, _rev: g1row.rev });
+  const again = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "أفضل", _final: true, _rev: g1row.rev });
+  const hist5 = (await admin.from("homework_grade_history").select("old_score, new_score").eq("grade_id", g1row.id)).data!;
+  const nAfter5 = (await admin.from("notifications").select("id").like("dedupe_key", "%res:%")).data?.length ?? -1;
+  const sNow = (await s1.c.from("homework_grades").select("score")).data!;
+  check("5f teacher edit: history old 8 -> new 9, student sees 9, stale repeat rejected, notifications not duplicated", !ed.error && !!again.error && hist5.length === 1 && hist5[0]!.old_score == 8 && hist5[0]!.new_score == 9 && sNow[0]!.score == 9 && nAfter5 - nGrade5 <= 2, [ed.error, hist5, nGrade5, nAfter5]);
   const rv = (await admin.from("homework_grades").select("rev").eq("submission_id", sub1).single()).data!.rev;
   const noReason = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "", _rev: rv });
   const corr = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "خطأ جمع", _rev: rv });
   const hist = (await s1.c.from("homework_grade_history").select("old_score,new_score")).data!;
-  check("5e published grade correction needs reason; history old 8 -> new 9 visible to student", !!noReason.error && !corr.error && hist.length === 1 && hist[0].old_score == 8 && hist[0].new_score == 9, [corr.error, hist]);
+  check("5g legacy correct_result still needs a reason and appends history (2 rows after teacher edit + correction)", !!noReason.error && !corr.error && hist.length === 2 && hist.some((x: any) => x.old_score == 8 && x.new_score == 9), [corr.error, hist]);
   const dupRes = (await admin.from("homework_grades").select("id").eq("submission_id", sub1)).data!.length;
   check("5f correction does not duplicate the result", dupRes === 1);
 
@@ -176,6 +189,25 @@ try {
   // 11 files: submission file readable by teacher only after submit
   const f2 = await s1.c.rpc("create_submission_file", { _hw: hw, _name: "b.pdf", _mime: "application/pdf", _size: 50 });
   check("11 closed attempt budget blocks new uploads too", !!f2.error);
+  // 12 simplified flow on a "test" targeted to one student
+  const tst = (await t1.c.rpc("save_homework", { _id: null, _d: { ...base, title: "اختبار قصير", due_at: iso(120), criteria: [], audience: "selected", students: [st1.id], submission_types: ["paper"] } })).data as string;
+  const kd = await t1.c.rpc("set_homework_kind", { _id: tst, _kind: "test" });
+  const kdBad = await pr.c.rpc("set_homework_kind", { _id: tst, _kind: "homework" });
+  await t1.c.rpc("publish_homework", { _id: tst });
+  const s2sees = ((await s2.c.rpc("student_homework", { _student: st2.id })).data as any[]).some((r) => r.id === tst);
+  const s1row = ((await s1.c.rpc("student_homework", { _student: st1.id })).data as any[]).find((r) => r.id === tst);
+  check("12a test kind saved by teacher only; non-targeted student does not see it", !kd.error && !!kdBad.error && !s2sees && s1row?.kind === "test", [kd.error, s2sees, s1row]);
+  const pap = await t1.c.rpc("record_paper_submission", { _hw: tst, _student: st1.id, _received: new Date().toISOString(), _note: "ورقة الاختبار" });
+  const tsub = (await admin.from("homework_submissions").select("id").eq("homework_id", tst).eq("student_id", st1.id).single()).data?.id;
+  const tgr = tsub ? await t1.c.rpc("grade_submission", { _sub: tsub, _score: 7, _criteria: null, _feedback: "", _final: true, _rev: null }) : { error: "no sub" };
+  const tgOver = tsub ? await t1.c.rpc("grade_submission", { _sub: tsub, _score: 99, _criteria: null, _feedback: "", _final: true, _rev: 1 }) : { error: null };
+  const guSees = ((await g1.c.rpc("student_homework", { _student: st1.id })).data as any[]).find((r) => r.id === tst);
+  const ownList = ((await owner.c.rpc("homework_list", { _school: S, _course: null, _status: null, _q: null, _limit: 50, _offset: 0, _kind: "test" })).data as any[]) ?? [];
+  const ownEdit = tsub ? await owner.c.rpc("grade_submission", { _sub: tsub, _score: 1, _criteria: null, _feedback: "", _final: true, _rev: 1 }) : { error: "x" };
+  check("12b paper test graded -> guardian sees 7 at once; above max rejected; owner monitors (kind filter) but cannot edit", !(pap as any).error && !tgr.error && !!tgOver.error && guSees?.score == 7 && ownList.length === 1 && ownList[0].published_results === 1 && !!ownEdit.error, [(pap as any).error, tgr.error, guSees, ownList.length, ownEdit.error]);
+  await admin.from("teacher_assignments").update({ end_date: "2026-09-01" }).eq("id", a1.id);
+  const lateG = tsub ? await t1.c.rpc("grade_submission", { _sub: tsub, _score: 6, _criteria: null, _feedback: "", _final: true, _rev: 1 }) : { error: null };
+  check("12c ended assignment blocks new grading by the former teacher", !!lateG.error, lateG.error);
 } catch (e) { bad++; console.log("ERROR", e); }
 finally {
   await tr.deleteNotifications();

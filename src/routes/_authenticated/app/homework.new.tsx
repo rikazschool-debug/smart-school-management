@@ -43,7 +43,7 @@ function Page() {
   const [f, setF] = useState({
     course_id: "", title: "", instructions: "", grading_notes: "", types: ["text"] as string[], available_from: "", due_at: "",
     late_policy: "none", late_until: "", graded: true, max_score: "10", allow_resubmit: false, max_attempts: "2", audience: "all",
-    students: [] as string[], remind_hours: "", file_max_mb: "",
+    students: [] as string[], remind_hours: "", file_max_mb: "", kind: "homework",
   });
   const [crit, setCrit] = useState<Crit[]>([]);
   const [preview, setPreview] = useState(false);
@@ -55,7 +55,7 @@ function Page() {
       course_id: h["course_id"], title: h["title"], instructions: h["instructions"], grading_notes: h["grading_notes"] ?? "", types: h["submission_types"],
       available_from: toLocalInput(h["available_from"]), due_at: toLocalInput(h["due_at"]), late_policy: h["late_policy"], late_until: toLocalInput(h["late_until"]),
       graded: h["max_score"] != null, max_score: h["max_score"]?.toString() ?? "10", allow_resubmit: h["allow_resubmit"], max_attempts: String(h["max_attempts"]),
-      audience: h["audience"], students: h["selected_students"] ?? [], remind_hours: h["remind_hours"]?.toString() ?? "", file_max_mb: h["file_max_bytes"] ? String(h["file_max_bytes"] / 1048576) : "",
+      audience: h["audience"], students: h["selected_students"] ?? [], remind_hours: h["remind_hours"]?.toString() ?? "", file_max_mb: h["file_max_bytes"] ? String(h["file_max_bytes"] / 1048576) : "", kind: h["kind"] ?? "homework",
     });
     setCrit((h["criteria"] ?? []).map((c: Row) => ({ label: c["label"], max: String(c["max"]) })));
   }, [existing.data]);
@@ -85,6 +85,8 @@ function Page() {
     try {
       const { data: id, error } = await db.rpc("save_homework", { _id: edit ?? null, _d: payload() });
       if (error) throw error;
+      const k = await db.rpc("set_homework_kind", { _id: id, _kind: f.kind });
+      if (k.error) throw k.error;
       if (publish) {
         const p = await db.rpc("publish_homework", { _id: id });
         if (p.error) { toast.error(`حُفظت المسودة لكن تعذر النشر: ${arabicError(p.error)}`); nav({ to: "/app/homework/$id", params: { id } }); return; }
@@ -98,7 +100,7 @@ function Page() {
   return (
     <>
       <Link to="/app/homework" className="text-sm text-primary">→ الواجبات</Link>
-      <PageHeader title={edit ? "تعديل مسودة الواجب" : "واجب جديد"} desc="الأوقات بتوقيت المدرسة (الرياض)." />
+      <PageHeader title={edit ? (f.kind === "test" ? "تعديل مسودة الاختبار" : "تعديل مسودة الواجب") : f.kind === "test" ? "اختبار جديد" : "واجب أو اختبار جديد"} desc="الأوقات بتوقيت المدرسة (الرياض)." />
       {preview ? (
         <div className="space-y-3 rounded-2xl border bg-card p-6">
           <p className="text-xs text-muted-foreground">معاينة كما يراها الطالب</p>
@@ -120,6 +122,7 @@ function Page() {
               {courses.data.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]}</option>)}
             </select>
           </div>
+          <div className="space-y-1"><Label htmlFor="hw-kind">النوع</Label><select id="hw-kind" className={`${field} w-full`} value={f.kind} onChange={(e) => set("kind", e.target.value)}><option value="homework">واجب</option><option value="test">اختبار</option></select></div>
           <div className="space-y-1"><Label htmlFor="hw-title">العنوان</Label><Input id="hw-title" value={f.title} maxLength={200} onChange={(e) => set("title", e.target.value)} /></div>
           <div className="space-y-1 md:col-span-2"><Label htmlFor="hw-instr">التعليمات</Label><Textarea id="hw-instr" rows={5} value={f.instructions} onChange={(e) => set("instructions", e.target.value)} /></div>
           <div className="space-y-1">

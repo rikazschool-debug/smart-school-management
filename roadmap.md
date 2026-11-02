@@ -177,10 +177,11 @@
 ## Grades closure round (docs/grades-closure-brief.md)
 - [~] GC1 fresh re-run 12/12 + teacher 12/12; 88.6 proven (45/50×30=27 + 88/100×70=61.6). Open: return-for-revision step in browser
 - [x] GC2 7 PDFs opened (course published+internal, student, 2 children, completion, corrections); published sheet added; dates/section fixed. Open: multi-page grades PDF not exercised
-- [ ] GC3 exceptions/permissions (no auto vice powers; 30-day as policy)
-- [ ] GC4 two-window conflict without forced overwrite
-- [ ] GC5 incomplete publish
-- [ ] GC6 homework link proofs
-- [ ] GC7 transfer/teacher change/multi-role tests
-- [ ] GC8 review 9 new grades security warnings
-- [ ] GC9 design/actions/reports review
+- [-] GC3 (superseded by simplification) exceptions/permissions (no auto vice powers; 30-day as policy)
+- [-] GC4 (superseded) two-window conflict without forced overwrite
+- [-] GC5 (superseded) incomplete publish
+- [-] GC6 (superseded) homework link proofs
+- [-] GC7 (superseded) transfer/teacher change/multi-role tests
+- [-] GC8 (superseded) review 9 new grades security warnings
+- [-] GC9 (superseded) design/actions/reports review
+- [x] Simplify homework/tests grading (instant visibility, archive term grades)
