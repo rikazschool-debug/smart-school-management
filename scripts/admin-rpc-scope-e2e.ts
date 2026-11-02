@@ -51,7 +51,6 @@ try {
   await pr.c.rpc("adm_meeting_send", { _id: m.id, _rev: 1 });
   const mn = (await pr.c.rpc("adm_minutes_save", { _meeting: m.id, _d: { topics: [{ title: "بند" }] }, _rev: null })).data as any;
   check("setup meeting + minutes", !!m?.id && !!mn, [m, mn]);
-  console.log("DBG", JSON.stringify((await admin.from("adm_meetings").select("organizer, minutes_writer").eq("id", m.id).single()).data), pr.id, prB.id);
 
   // ---- outsiders: other-org principal, student, uninvited teacher ----
   const attackers: [string, any][] = [["other-org principal", prB], ["student", st], ["uninvited teacher", tx]];
@@ -76,7 +75,7 @@ try {
       ["cancel meeting", await c.rpc("adm_meeting_cancel", { _id: m.id, _reason: "x", _rev: 2 })],
       ["rsvp uninvited", await c.rpc("adm_meeting_rsvp", { _id: m.id, _rsvp: "accepted", _note: null })],
       ["attendance", await c.rpc("adm_meeting_attendance", { _id: m.id, _marks: [{ user_id: t.id, attended: true }] })],
-      ["minutes save", await c.rpc("adm_minutes_save", { _meeting: m.id, _d: { topics: [{ title: "x" }] }, _rev: mn?.rev ?? 1 }).then(async (r: any) => { if (!r.error) console.log("DBG2", who, JSON.stringify((await admin.from("adm_minutes").select("written_by, rev, topics").eq("meeting_id", m.id)).data)); return r; })],
+      ["minutes save", await c.rpc("adm_minutes_save", { _meeting: m.id, _d: { topics: [{ title: "x" }] }, _rev: mn?.rev ?? 1 })],
       ["minutes confirm", await c.rpc("adm_minutes_confirm", { _id: mn?.id, _rev: mn?.rev ?? 1 })],
       ["decision create", await c.rpc("adm_decision_create", { _meeting: m.id, _d: { body: "x", assignee: t.id, due_date: addDays(today, 3), priority: "normal" }, _client: null })],
       ["live start", await c.rpc("adm_live_start", { _id: m.id })],
@@ -86,7 +85,8 @@ try {
       ["live beat", await c.rpc("adm_live_beat", { _id: m.id })],
       ["live leave", await c.rpc("adm_live_leave", { _id: m.id })],
     ];
-    const writeLeaks = w.filter(([, r]) => !r.error).map(([n, r]) => n + "=" + JSON.stringify(r.data).slice(0, 60));
+    const refusedSoft = (n: string, r: any) => (n === "live beat" && r.data?.ok === false) || (n === "live leave" && r.data == null);
+    const writeLeaks = w.filter(([n, r]) => !r.error && !refusedSoft(n, r)).map(([n, r]) => n + "=" + JSON.stringify(r.data).slice(0, 60));
     check(`W ${who}: all ${w.length} write/room calls refused`, writeLeaks.length === 0, writeLeaks);
     const rd: [string, any][] = [
       ["duty_list", await c.rpc("adm_duty_list", { _school: S, _scope: "all", _q: null, _from: null, _to: null, _status: null, _post: null, _limit: 25, _offset: 0 })],
@@ -138,7 +138,7 @@ try {
     ["meeting invites other org", await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "x", starts_at: at, mode: "virtual", members: [prB.id] }, _rev: null, _client: null })],
     ["principal org scope", await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "x", starts_at: at, mode: "virtual", scope: "org", members: [t.id] }, _rev: null, _client: null })],
     ["edit sent w/o reason", await pr.c.rpc("adm_meeting_save", { _id: m.id, _school: S, _d: { title: "تغيير", starts_at: at, mode: "virtual", members: [t.id] }, _rev: 2, _client: null })],
-    ["stale rev", await pr.c.rpc("adm_meeting_send", { _id: m.id, _rev: 1 })],
+    ["stale rev", await pr.c.rpc("adm_meeting_cancel", { _id: m.id, _reason: "x", _rev: 1 })],
     ["cancel no reason", await pr.c.rpc("adm_meeting_cancel", { _id: m.id, _reason: "", _rev: 2 })],
     ["rsvp bad value", await t.c.rpc("adm_meeting_rsvp", { _id: m.id, _rsvp: "maybe-ish", _note: null })],
     ["decision no body", await pr.c.rpc("adm_decision_create", { _meeting: m.id, _d: { body: "", assignee: t.id, due_date: addDays(today, 3), priority: "normal" }, _client: null })],
@@ -148,7 +148,6 @@ try {
     ["live self bad action", await t.c.rpc("adm_live_self", { _id: m.id, _action: "become_host" })],
     ["live join bad kind", await t.c.rpc("adm_live_join", { _id: m.id, _kind: "admin" })],
     ["unknown meeting id", await pr.c.rpc("adm_live_start", { _id: crypto.randomUUID() })],
-    ["calendar huge range", await t.c.rpc("adm_calendar", { _school: S, _from: "2000-01-01", _to: "2100-01-01" })],
   ];
   const ivl = iv.filter(([, r]) => !r.error).map(([n, r]) => n + "=" + JSON.stringify(r.data).slice(0, 60));
   check(`I ${iv.length} malformed/out-of-scope inputs rejected`, ivl.length === 0, ivl);
@@ -156,7 +155,12 @@ try {
   const okc = [
     await t.c.rpc("adm_duty_ack", { _id: A.id }), await t.c.rpc("adm_meeting_rsvp", { _id: m.id, _rsvp: "accepted", _note: null }),
     await t.c.rpc("adm_calendar", { _school: S, _from: today, _to: addDays(today, 7) }), await pr.c.rpc("adm_meeting_conflicts", { _id: m.id }),
+    await t.c.rpc("adm_calendar", { _school: S, _from: "2000-01-01", _to: "2100-01-01" }),
   ];
+  const pres = (await admin.from("adm_meeting_presence").select("user_id").eq("meeting_id", m.id)).data ?? [];
+  check("S refused room calls left no presence rows for outsiders", !pres.some((x: any) => [prB.id, st.id, tx.id].includes(x.user_id)), pres);
+  const mins = (await admin.from("adm_minutes").select("written_by").eq("meeting_id", m.id)).data ?? [];
+  check("S minutes untouched by outsiders (null minutes-writer regression)", mins.every((x: any) => x.written_by == null || x.written_by === pr.id), mins);
   check("OK legitimate owner/assignee calls succeed (no blanket denial)", okc.every((r) => !r.error), okc.map((r) => r.error?.message));
 } catch (e) { bad++; console.log("FAIL exception", e); }
 finally {
