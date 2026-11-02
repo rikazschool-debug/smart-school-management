@@ -206,8 +206,8 @@ try {
   const ownEdit = tsub ? await owner.c.rpc("grade_submission", { _sub: tsub, _score: 1, _criteria: null, _feedback: "", _final: true, _rev: 1 }) : { error: "x" };
   check("12b paper test graded -> guardian sees 7 at once; above max rejected; owner monitors (kind filter) but cannot edit", !(pap as any).error && !tg.error && !!tgOver.error && guSees?.score == 7 && ownList.length === 1 && ownList[0].published_results === 1 && !!ownEdit.error, [(pap as any).error, tg.error, guSees, ownList.length, ownEdit.error]);
   await admin.from("teacher_assignments").update({ end_date: "2026-09-01" }).eq("id", a1.id);
-  const late = tsub ? await t1.c.rpc("grade_submission", { _sub: tsub, _score: 6, _criteria: null, _feedback: "", _final: true, _rev: 1 }) : { error: null };
-  check("12c ended assignment blocks new grading by the former teacher", !!late.error, late.error);
+  const lateG = tsub ? await t1.c.rpc("grade_submission", { _sub: tsub, _score: 6, _criteria: null, _feedback: "", _final: true, _rev: 1 }) : { error: null };
+  check("12c ended assignment blocks new grading by the former teacher", !!lateG.error, lateG.error);
 } catch (e) { bad++; console.log("ERROR", e); }
 finally {
   await tr.deleteNotifications();
