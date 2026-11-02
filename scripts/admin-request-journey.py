@@ -76,7 +76,7 @@ async def main():
         await tab(pr, "إعداد النماذج"); await pr.locator("li", has_text="طلب صيانة رحلة").first.get_by_role("button", name="إصدار جديد").click()
         await pr.get_by_role("button", name="إضافة حقل").click(); await pr.get_by_label("اسم الحقل 2").fill("حقل جديد"); await pr.get_by_role("button", name="حفظ").click(); await seen(pr, "أُنشئ إصدار جديد")
         await pr.wait_for_timeout(1500); await pr.locator("li", has_text="إصدار 2").first.get_by_role("button", name="تفعيل").click(); await seen(pr, "فُعّل النموذج")
-        await t2.goto(u1); await t2.wait_for_timeout(2500); body = await t2.locator("body").inner_text()
+        await t2.goto(u1); await seen(t2, "سجل الطلب", 15000); await t2.wait_for_timeout(1000); body = await t2.locator("body").inner_text()
         chk("R8 new form version leaves old request unchanged", "إصدار 1" in body and "حقل جديد" not in body, body[:300])
         out = await login(br, "out"); await out.goto(u1); await out.wait_for_timeout(2500)
         chk("R10a unauthorized user cannot open request", await out.get_by_text("غير موجود أو لا تملك").count() > 0)
