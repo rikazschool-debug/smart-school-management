@@ -29,8 +29,10 @@ Protections: the last active owner cannot be deactivated or demoted; ownership c
 | Student draft text/files | no | no | no | no | own | no | no |
 | Submit / resubmit | no | no | no | no | yes (server checks time, attempts) | no | no |
 | Record paper hand-in | yes | no | no | no | – | – | no |
-| Grade / return / publish / correct result | yes (correction needs reason, logged) | no | no | no | – | – | no |
-| See grade | yes | yes | yes | yes | after publish | after publish | no |
+| Grade («حفظ التصحيح وإظهار الدرجة») / return / edit grade (history logged) | yes, live assignment only | no (RPC and direct write rejected) | no | no | – | – | no |
+| Kind (homework / test) | yes | read + filter | read | read | read | read | no |
+| See grade | yes | yes (monitor) | yes | yes | immediately after teacher save | immediately after teacher save, own verified child | no |
+| Reveal legacy saved-but-hidden grades | yes (per homework/student) | no | no | no | – | – | no |
 
 
 ## Attendance, exit and permission (package: attendance)
@@ -59,7 +61,9 @@ Protections: the last active owner cannot be deactivated or demoted; ownership c
 - الحضور (جولة الإغلاق): الأمن والمرشد والمعتمدون يرون اسم الطالب وشعبته في سجلات الحضور اليومية لمدرستهم فقط (att_day_rows) دون باقي ملف الطالب. وصول المستلم يتطلب تأكيد الموظف للهوية؛ 3 محاولات غير مطابقة توقف التفويض. سياسة الحضور لا تُقرأ مباشرة من المتصفح.
 - حسابات أولياء الأمور: ينشئها مدير الطلاب (مالك/مدير/وكيل/شؤون طلاب) عند إضافة الطالب؛ الإخوة بنفس الهوية/الجوال في حساب واحد.
 
-## Grades & results
+## Grades & results (archived)
+Since the homework/tests simplification, term gradebooks are a read-only administrative archive for principal / vice principal / org owner. All gb_* write actions (plans, periods, entry, review, approve, publish, reopen, exceptions, corrections) are revoked for every role. The table below describes the archived flow only.
+
 | Capability | Principal / Vice | Dept head | Teacher | Supervisor | Org owner | Student / Guardian | Platform admin, counselor, nurse, security |
 |---|---|---|---|---|---|---|---|
 | Assessment plans & grading periods | create/approve/version/lock | read | read | read | read | — | — |
