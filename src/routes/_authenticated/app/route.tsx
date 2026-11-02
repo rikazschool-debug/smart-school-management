@@ -37,6 +37,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
   substitutions: { to: "/app/substitutions", label: "التبديل والبدلاء", icon: Repeat },
   attendance: { to: "/app/attendance", label: "الحضور والخروج", icon: ScanLine },
+  station: { to: "/app/attendance-station", label: "المسح والبوابة والنداء", icon: ScanLine },
   pickup: { to: "/app/pickup", label: "الخروج والاستئذان", icon: DoorOpen },
   communication: { to: "/app/communication", label: "التواصل", icon: MessagesSquare },
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
@@ -48,7 +49,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "الإعداد الأكاديمي", keys: ["academic", "teachers", "courses", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "homework"] },
   { label: "الجدول واليوم الدراسي", keys: ["schoolday", "schedule", "substitutions"] },
-  { label: "الحضور والمواظبة", keys: ["attendance", "pickup"] },
+  { label: "الحضور والمواظبة", keys: ["attendance", "station", "pickup"] },
   { label: "التواصل", keys: ["communication"] },
 ];
 
