@@ -241,7 +241,8 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
   const host = data.me.role === "host";
   const byUid = new Map(data.people.filter((p) => p.uid != null).map((p) => [p.uid!, p]));
   const sharer = data.people.find((p) => p.user_id === data.meeting.screen_sharer);
-  const canShareScreen = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
+  // phones/tablets browsers do not offer screen capture to web pages: listen and watch only
+  const canShareScreen = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia && !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   const mayShare = host || !!me?.can_share;
 
   if (phase === "left") return (
