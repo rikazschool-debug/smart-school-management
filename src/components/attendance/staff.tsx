@@ -290,7 +290,7 @@ export function CompareTab({ ctx }: { ctx: Ctx }) {
       <div className="mb-3 flex flex-wrap items-end gap-3">
         <div className="space-y-1"><Label htmlFor="cf">من</Label><Input id="cf" type="date" value={from} max={to} onChange={(e) => e.target.value && setFrom(e.target.value)} /></div>
         <div className="space-y-1"><Label htmlFor="ct">إلى</Label><Input id="ct" type="date" value={to} min={from} max={riyadhToday()} onChange={(e) => e.target.value && setTo(e.target.value)} /></div>
-        {q.data && <ExportButtons title={`مقارنة الفروع ${from} – ${to}`} columns={cols.map(([k, l]) => ({ key: k, label: l }))} rows={q.data} />}
+        {q.data && <ExportButtons title="مقارنة الفروع" school={ctx.orgName} filters={[`من ${from} إلى ${to}`]} headers={cols.map(([, l]) => l)} rows={() => (q.data ?? []).map((r) => cols.map(([k]) => r[k] ?? ""))} />}
       </div>
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد بيانات" /> : (
         <div className="overflow-x-auto rounded-xl border bg-card"><table className="w-full text-sm"><thead className="bg-muted/50"><tr>{cols.map(([k, l]) => <th key={k} className="px-3 py-2 text-start font-semibold">{l}</th>)}</tr></thead>
