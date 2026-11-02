@@ -21,6 +21,11 @@ async function user(tag: string) {
 const riyadh = () => new Date(Date.now() + 3 * 3600e3);
 const today = riyadh().toISOString().slice(0, 10);
 const orgs: string[] = [];
+const dow = riyadh().getUTCDay();
+const addDays = (d: string, n: number) => new Date(Date.parse(d + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+const week = addDays(today, -dow);
+const notes = async (u: string, like?: string) => { let q = admin.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", u); if (like) q = q.ilike("title", `%${like}%`); return (await q).count ?? 0; };
+const orgs: string[] = [];
 const empty = (d: any) => d == null || (Array.isArray(d) && d.length === 0) || (typeof d === "object" && !Array.isArray(d) && (Object.keys(d).length === 0 || (Array.isArray(d.rows) && d.rows.length === 0) || (Array.isArray(d.items) && d.items.length === 0)));
 const denied = (r: any) => !!r.error || empty(r.data);
 const fail = (r: any) => !!r.error;
