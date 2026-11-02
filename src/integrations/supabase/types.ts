@@ -6470,6 +6470,10 @@ export type Database = {
         }
         Returns: string
       }
+      _tt_unav_on: {
+        Args: { _date: string; _day: number; _period: string; _teacher: string }
+        Returns: string
+      }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
       ack_circular: { Args: { _id: string }; Returns: number }
