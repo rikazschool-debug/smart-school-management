@@ -142,13 +142,15 @@
 - صورة الطالب: موقوفة بقرار المالك
 
 ## Attendance closure round (docs/attendance-closure-brief.md)
-- [~] AC1 Auto absence-review per school schedule/timezone (evening schools, retries, batching, last-run status + alerts)
+- [x] AC1 Auto absence-review per school schedule/timezone (evening schools, retries, batching, last-run status + alerts)
 - [x] AC2 Fix 4 timetable tests (controlled clock / relative dates)
-- [ ] AC3 Server-time browser check: wait on real state, failure + retry, rerun all 15 journeys
-- [ ] AC4 Delegate verification at gate: name/relation, explicit staff ID check, attempt lockout, concurrency
-- [ ] AC5 Barcode/camera tests + in-app field test guide
-- [ ] AC6 Two-branch records/compare/export verification (open XLSX/PDF)
-- [ ] AC7 Section-related security warnings review
+- [x] AC3 Server-time browser check: wait on real state, failure + retry, rerun all 15 journeys
+- [x] AC4 Delegate verification at gate: name/relation, explicit staff ID check, attempt lockout, concurrency
+- [x] AC5 Barcode/camera tests + in-app field test guide
+- [x] AC6 Two-branch records/compare/export verification (open XLSX/PDF)
+- [x] AC7 Section-related security warnings review
 - [x] AC8 Manual attendance by student name/code with type-ahead
 - [x] AC9 New sub-section grouping scan attendance + gate + call queue
-- [~] AC10 Final classified report
+- [x] AC10 Final classified report
+- [ ] AC-TZ Per-school timezone (all schools Asia/Riyadh today) — waits on owner answer
+- [ ] AC-FIELD Real phone camera / USB reader / torch / speakers — needs school devices (in-app guide ready)
