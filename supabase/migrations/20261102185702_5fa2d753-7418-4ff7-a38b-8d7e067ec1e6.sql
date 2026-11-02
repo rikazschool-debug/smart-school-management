@@ -1,0 +1,1 @@
+revoke execute on function public._loads_trg() from public, anon, authenticated;
