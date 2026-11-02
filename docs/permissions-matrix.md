@@ -63,8 +63,9 @@ Protections: the last active owner cannot be deactivated or demoted; ownership c
 | Capability | Principal / Vice | Dept head | Teacher | Supervisor | Org owner | Student / Guardian | Platform admin, counselor, nurse, security |
 |---|---|---|---|---|---|---|---|
 | Assessment plans & grading periods | create/approve/version/lock | read | read | read | read | — | — |
-| Enter / import / link homework marks | — | — | own live-assignment courses, open period only | — | — | — | — |
-| Review (accept / return with reason) | only if subject has no department | own department only | — | — | — | — | — |
-| Approve + lock, publish, reopen one gradebook (reason) | yes | — | — | — | — | — | — |
+| Enter / import / link homework marks, family note | — | — | own live-assignment courses, open period, reopen or live exception only | — | — | — | — |
+| Deadline exception (course or one student, reason, expiry ≤30 days, revoke) | yes (not on a locked period) | — | — | — | — | — | — |
+| Review (accept / return with reason) | only if the subject's department has no active head (flagged) | own department only | — | — | — | — | — |
+| Approve (bound to the reviewed version, blocked on homework source drift) + lock, publish preview/publish (incomplete needs confirmation, repeat = no-op), reopen one gradebook (reason) | yes | — | — | — | — | — | — |
 | Correction request after lock | decide | — | request | — | — | — | — |
 | Read gradebooks / reports | school | own department | own courses | assigned teachers' courses | branch summary (no student marks edit) | current published results of self / verified child | none |
