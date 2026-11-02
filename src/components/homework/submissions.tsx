@@ -134,13 +134,11 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
   const [score, setScore] = useState<string>(g?.["score"]?.toString() ?? "");
   const [cs, setCs] = useState<string[]>(crit.map((_, i) => g?.["criteria_scores"]?.[i]?.toString() ?? ""));
   const [fb, setFb] = useState<string>(g?.["feedback"] ?? "");
-  const [reason, setReason] = useState("");
   const [retReason, setRetReason] = useState("");
   const [extReason, setExtReason] = useState("");
   const [ext, setExt] = useState("");
   const [paperNote, setPaperNote] = useState("");
   const [paperAt, setPaperAt] = useState("");
-  useEffect(() => { setReason(""); }, [r["student_id"]]);
   const isDirty = score !== (g?.["score"]?.toString() ?? "") || fb !== (g?.["feedback"] ?? "") || cs.some((x, i) => x !== (g?.["criteria_scores"]?.[i]?.toString() ?? ""));
   useEffect(() => { onDirty(isDirty); }, [isDirty, onDirty]);
   useEffect(() => () => onDirty(false), [onDirty]);
