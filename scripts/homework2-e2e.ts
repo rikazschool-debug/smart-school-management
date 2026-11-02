@@ -60,7 +60,7 @@ try {
   await s1.c.rpc("save_submission_draft", { _hw: hw, _body: "حلّي", _link: null });
   const sb = await s1.c.rpc("submit_homework", { _hw: hw, _client: crypto.randomUUID() });
   const sub = (await t1.c.from("homework_submissions").select("id").eq("homework_id", hw).eq("student_id", st1.id).single()).data!.id;
-  await t1.c.rpc("grade_submission", { _sub: sub, _score: null, _criteria: [5, 3], _feedback: "جيد", _final: true, _rev: null });
+  await t1.c.rpc("grade_submission", { _sub: sub, _score: null, _criteria: [5, 3], _feedback: "جيد", _final: false, _rev: null });
   const g = (await t1.c.from("homework_grades").select("id, rev").eq("submission_id", sub).single()).data!;
   // H11 feedback files
   const ff = await t1.c.rpc("create_feedback_file", { _grade: g.id, _name: "ملاحظات.pdf", _mime: "application/pdf", _size: 10 });
@@ -70,12 +70,13 @@ try {
   check("H11b other teacher cannot attach feedback", !!(await t2.c.rpc("create_feedback_file", { _grade: g.id, _name: "x.pdf", _mime: "application/pdf", _size: 10 })).error);
   const sBefore = await s1.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
   const gBefore = await g1.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
-  check("H11c unpublished feedback hidden from student and family", !!sBefore.error && !!gBefore.error);
-  await t1.c.rpc("publish_results", { _hw: hw, _subs: [sub] });
+  check("H11c feedback on an unsaved (in-progress) grading hidden from student and family", !!sBefore.error && !!gBefore.error);
+  const fin = await t1.c.rpc("grade_submission", { _sub: sub, _score: null, _criteria: [5, 3], _feedback: "جيد", _final: true, _rev: g.rev });
+  if (fin.error) console.log("FIN", fin.error.message);
   const sAfter = await s1.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
   const gAfter = await g1.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
   const oAfter = await s2.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
-  check("H11d after publish: student + family read, other student denied", !sAfter.error && !gAfter.error && !!oAfter.error, [sAfter.error, gAfter.error]);
+  check("H11d after «save grading and show grade»: student + family read, other student denied", !sAfter.error && !gAfter.error && !!oAfter.error, [sAfter.error, gAfter.error]);
   const rm = await t1.c.rpc("remove_feedback_file", { _file: fr.id });
   const ev = (await t1.c.from("homework_events").select("action").eq("homework_id", hw)).data!.map((e: any) => e.action);
   const subFiles = (await admin.from("homework_submission_files").select("file_id").eq("submission_id", sub)).data;
