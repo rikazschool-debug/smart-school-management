@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { db, type Row } from "@/components/crud-page";
+import { db } from "@/components/crud-page";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Row = any;
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
 import { ExportButtons } from "@/components/list-tools";
@@ -80,7 +82,7 @@ function Summary({ school, onPick }: { school: string; onPick: (t: string) => vo
     queryFn: async () => {
       const { data, error } = await db.rpc("adm_summary", { _school: school });
       if (error) throw error;
-      return (data ?? {}) as Record<string, number>;
+      return (data ?? {}) as Row;
     },
   });
   const s = q.data ?? {};

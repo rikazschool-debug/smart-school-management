@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { db, type Row } from "@/components/crud-page";
+import { db } from "@/components/crud-page";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Row = any;
 
 export const TASK_STATUS: Record<string, string> = {
   new: "جديد", in_progress: "قيد التنفيذ", awaiting_confirmation: "بانتظار التأكيد", done: "منجز", returned: "معاد للاستكمال", cancelled: "ملغى",
