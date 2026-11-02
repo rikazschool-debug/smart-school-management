@@ -163,7 +163,7 @@ export function GradebookView({ id, school, onBack }: { id: string; school: stri
   const disabledWhy = !enter ? (locked ? "السجل مقفل بعد الاعتماد؛ استخدم طلب التصحيح" : g["status"] === "submitted" || g["status"] === "reviewed" ? "السجل قيد المراجعة/الاعتماد" : !g["is_teacher"] ? "الرصد لمعلم المقرر بتكليف ساري فقط" : "فترة الرصد مغلقة أو خارج مواعيدها (بتوقيت الرياض)") : "";
   const usedElsewhere = (itemId: string) => new Set(q.data!.entries.filter((e) => e["item_id"] !== itemId && e["source"] === "homework").flatMap((e) => (e["homework_ids"] as string[]) ?? []));
 
-  const CellEdit = ({ s, i }: { s: Row; i: Row }) => {
+  const cellEdit = (s: Row, i: Row) => {
     const key = k(s["id"], i["id"]); const c = cellOf(s["id"], i["id"]); const er = errs[key];
     const can = enter && s["active"] && s["can_enter"];
     return (
@@ -181,12 +181,12 @@ export function GradebookView({ id, school, onBack }: { id: string; school: stri
       </div>
     );
   };
-  const Total = ({ s }: { s: Row }) => {
+  const total = (s: Row) => {
     const hasDirty = items.some((i) => dirty.has(k(s["id"], i["id"])));
     const v = hasDirty ? preview(s["id"]) : s["total"];
     return <span className="font-semibold">{v ?? <span className="text-xs font-normal text-muted-foreground">غير مكتمل</span>}{hasDirty && <span className="ms-1 text-xs font-normal text-muted-foreground">(معاينة)</span>}</span>;
   };
-  const NoteBtn = ({ s }: { s: Row }) => s["note"] || (enter && s["active"] && s["can_enter"]) ? (
+  const noteBtn = (s: Row) => s["note"] || (enter && s["active"] && s["can_enter"]) ? (
     <button className="text-xs text-primary underline-offset-2 hover:underline disabled:text-muted-foreground disabled:no-underline" disabled={!(enter && s["can_enter"])} onClick={() => setNote({ sid: s["id"], text: s["note"] ?? "" })}>
       {s["note"] ? `ملاحظة للأسرة: ${s["note"]}` : "+ ملاحظة للأسرة"}</button>) : null;
 
@@ -254,13 +254,13 @@ export function GradebookView({ id, school, onBack }: { id: string; school: stri
             {items.map((i) => <th key={i["id"]} className="px-2 py-2 text-start">{i["name"]}<div className="text-xs font-normal text-muted-foreground">من {i["max_score"]} • وزن {i["weight"]}{i["source"] === "homework" ? " • واجبات" : ""}</div></th>)}
             <th className="px-3 text-start">المجموع من {plan["total"]}</th></tr></thead>
             <tbody>{shown.map((s) => <tr key={s["id"]} className="border-t align-top" data-testid="gb-student">
-              <td className="px-3 py-2">{s["name"]}{!s["active"] && <span className="ms-1 text-xs text-muted-foreground">(منقول — محفوظ تاريخيًا)</span>}<div><NoteBtn s={s} /></div></td>
-              {items.map((i) => <td key={i["id"]} className="px-1 py-1"><CellEdit s={s} i={i} /></td>)}
-              <td className="px-3 py-2"><Total s={s} /></td></tr>)}</tbody></table></div>
+              <td className="px-3 py-2">{s["name"]}{!s["active"] && <span className="ms-1 text-xs text-muted-foreground">(منقول — محفوظ تاريخيًا)</span>}<div>{noteBtn(s)}</div></td>
+              {items.map((i) => <td key={i["id"]} className="px-1 py-1">{cellEdit(s, i)}</td>)}
+              <td className="px-3 py-2">{total(s)}</td></tr>)}</tbody></table></div>
           <div className="space-y-2 md:hidden" data-testid="gb-cards">{shown.map((s) => <div key={s["id"]} className="rounded-xl border bg-card p-3" data-testid="gb-card">
-            <div className="mb-2 flex items-start justify-between gap-2"><div className="font-medium">{s["name"]}{!s["active"] && <span className="ms-1 text-xs text-muted-foreground">(منقول)</span>}</div><Total s={s} /></div>
-            <div className="space-y-2">{items.map((i) => <div key={i["id"]}><div className="mb-0.5 text-xs text-muted-foreground">{i["name"]} — من {i["max_score"]} • وزن {i["weight"]}</div><CellEdit s={s} i={i} /></div>)}</div>
-            <div className="mt-2"><NoteBtn s={s} /></div></div>)}</div>
+            <div className="mb-2 flex items-start justify-between gap-2"><div className="font-medium">{s["name"]}{!s["active"] && <span className="ms-1 text-xs text-muted-foreground">(منقول)</span>}</div>{total(s)}</div>
+            <div className="space-y-2">{items.map((i) => <div key={i["id"]}><div className="mb-0.5 text-xs text-muted-foreground">{i["name"]} — من {i["max_score"]} • وزن {i["weight"]}</div>{cellEdit(s, i)}</div>)}</div>
+            <div className="mt-2">{noteBtn(s)}</div></div>)}</div>
         </>}
         {enter && dirty.size > 0 && <div className="sticky bottom-2 z-10 mt-3 flex items-center justify-between gap-2 rounded-xl border bg-card p-2 shadow-sm md:hidden"><span className="text-sm">{dirty.size} خانة غير محفوظة</span><Button size="sm" disabled={!!busy} onClick={save}>{busy === "save" ? "…" : "حفظ"}</Button></div>}
         {locked && g["is_teacher"] && <p className="mt-2 text-xs text-muted-foreground">السجل مقفل. اضغط على أي خانة لطلب تصحيح بسبب، ويبت فيه مدير المدرسة.</p>}
