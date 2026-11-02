@@ -208,3 +208,13 @@
 ### نقطة الاستئناف
 - آخر مكتمل: جداول وإجراءات النماذج/الطلبات/التكليفات + المرفقات + لوحة الأعداد + ملخص الفروع للمالك؛ scripts/admin-e2e.ts 39/39.
 - التالي: واجهات /app/admin (لوحة، نماذج، طلبات، تكليفات) + القائمة الجانبية لكل دور، ثم المناوبات (SA4)، ثم الاجتماعات والمحاضر والقرارات (SA5–SA6).
+
+## School administration — resume brief (docs/school-admin-resume-brief.md)
+- [ ] SR1 Review department delete (SET NULL) scope/audit + tests
+- [ ] SR2 Sidebar section + role tabs
+- [ ] SR3 Forms & requests screens (principal / user / handler)
+- [ ] SR4 Tasks screens (assigner / executor)
+- [ ] SR5 Duties (setup, suggestion, publish, my duties)
+- [ ] SR6 Meetings, minutes, decisions
+- [ ] SR7 Calendar + notifications
+- [ ] SR8 Search/filters/XLSX/PDF + final verification
