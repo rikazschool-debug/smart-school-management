@@ -115,7 +115,14 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
       client.current = c;
       // networks that block direct media (UDP) can route through Agora's TLS cloud proxy
       if (proxy()) c.startProxyServer(5);
-      c.on("connection-state-change", (cur) => setConn(cur));
+      c.on("connection-state-change", (cur, _prev, reason) => {
+        setConn(cur);
+        // provider-side enforcement (ban rule after removal, suspension or end) disconnects the client
+        if (cur === "DISCONNECTED" && reason && /BANNED/.test(String(reason))) {
+          (window as unknown as { __rikazKick?: string }).__rikazKick = String(reason);
+          void teardown(String(reason) === "CHANNEL_BANNED" ? "أُغلق الاجتماع للجميع." : "أوقف المضيف أو النظام وصولك إلى الاجتماع.", false);
+        }
+      });
       c.on("user-published", async (u: IAgoraRTCRemoteUser, kind) => {
         if (Number(u.uid) === t.screenUid) return; // my own screen stream
         await c.subscribe(u, kind);
@@ -207,17 +214,28 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
     if (sharing && data.meeting.screen_sharer !== data.me.user_id) { void stopScreen(false); toast.message("أُوقفت مشاركة شاشتك"); }
   }, [data, me, phase, micOn, sharing, stopScreen, teardown]);
 
+  useEffect(() => {
+    if (phase === "in" && roster.error) void teardown("أزالك المضيف من الاجتماع أو لم يعد لديك وصول إليه.", false);
+  }, [phase, roster.error, teardown]);
+
   // heartbeat keeps attendance accurate and enforces removal/suspension on the provider side
   useEffect(() => {
     if (phase !== "in") return;
     const t = setInterval(async () => {
-      try { const b = await beatFn({ data: { id: meetingId } }); if (!b.ok) void teardown(b.reason === "ended" ? "انتهى الاجتماع." : "لم يعد لديك وصول لهذا الاجتماع.", false); }
+      try { const b = await beatFn({ data: { id: meetingId } }); if (!b.ok) void teardown(b.reason === "ended" ? "انتهى الاجتماع." : "أزالك المضيف من الاجتماع أو لم يعد لديك وصول إليه.", false); }
       catch { /* network blip: Agora reconnects on its own; the next beat retries */ }
     }, 15000);
     return () => clearInterval(t);
   }, [phase, beatFn, meetingId, teardown]);
 
   if (roster.isLoading) return <LoadingState />;
+  if (phase === "left" && (roster.error || !data)) return (
+    <div className="space-y-3 rounded-xl border bg-card p-6 text-center">
+      <p className="font-semibold">غادرت الاجتماع</p>
+      {leftReason && <p className="text-sm text-muted-foreground">{leftReason}</p>}
+      <Button variant="outline" onClick={onExit}>رجوع إلى التفاصيل</Button>
+    </div>
+  );
   if (roster.error) return <ErrorState message={arabicError(roster.error)} onRetry={() => roster.refetch()} />;
   if (!data) return null;
   const host = data.me.role === "host";
