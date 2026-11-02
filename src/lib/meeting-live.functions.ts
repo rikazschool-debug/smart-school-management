@@ -96,7 +96,7 @@ async function processRevocations(meetingId: string): Promise<number> {
   if (!rows?.length) return 0;
   const cname = "rikaz-" + meetingId.replace(/-/g, "");
   let n = 0;
-  for (const r of rows as { id: string; user_id: string | null; uid: number | null; kind: string; rule_id: string | null }[]) {
+  for (const r of rows as { id: string; user_id: string | null; uid: number | null; kind: string; rule_id: string | null; attempts: number }[]) {
     // claim the row so parallel heartbeats do not apply it twice
     const { data: claimed } = await a.from("adm_meeting_revocations").update({ attempts: 99 }).eq("id", r.id).is("done_at", null).lt("attempts", 5).select("id, attempts");
     if (!claimed?.length) continue;
@@ -118,7 +118,7 @@ async function processRevocations(meetingId: string): Promise<number> {
       await a.from("adm_meeting_revocations").update({ done_at: new Date().toISOString(), rule_id: rule ?? r.rule_id, error: null }).eq("id", r.id);
       n++;
     } catch (e) {
-      await a.from("adm_meeting_revocations").update({ attempts: 1, error: String(e).slice(0, 300) }).eq("id", r.id);
+      await a.from("adm_meeting_revocations").update({ attempts: (r.attempts ?? 0) + 1, error: String(e).slice(0, 300) }).eq("id", r.id);
     }
   }
   return n;
