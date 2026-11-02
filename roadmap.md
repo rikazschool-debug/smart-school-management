@@ -210,9 +210,9 @@
 - التالي: واجهات /app/admin (لوحة، نماذج، طلبات، تكليفات) + القائمة الجانبية لكل دور، ثم المناوبات (SA4)، ثم الاجتماعات والمحاضر والقرارات (SA5–SA6).
 
 ## School administration — resume brief (docs/school-admin-resume-brief.md)
-- [ ] SR1 Review department delete (SET NULL) scope/audit + tests
+- [x] SR1 Department delete: tasks keep (department_id NULL); dept head loses read via _adm_dept null-check, assignee/assigner/lead keep it (logic-reviewed, no e2e yet)
 - [x] SR2 Sidebar section + role tabs (staff roles; owner sees branch counts only)
-- [x] SR3 Forms & requests screens (/app/admin + /app/admin/requests/$id; file fields not yet in UI) (principal / user / handler)
+- [x] SR3 Forms & requests screens (/app/admin + /app/admin/requests/$id; attachments via AdminFiles) (principal / user / handler)
 - [x] SR4 Tasks screens (assigner / executor) — browser: principal created + opened a task; task attachments not yet in UI
 - [ ] SR5 Duties (setup, suggestion, publish, my duties)
 - [ ] SR6 Meetings, minutes, decisions
