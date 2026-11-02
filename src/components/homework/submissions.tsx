@@ -149,12 +149,20 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
     const { error } = await db.rpc(fn, args);
     if (error) {
       const stale = /rev|stale|تعارض|حديث|جلسة/i.test(error.message ?? "");
-      toast.error(stale ? "عدّل مستخدم آخر هذا التصحيح من نافذة أخرى. حدّث البيانات ثم أعد المحاولة." : arabicError(error), { action: { label: stale ? "تحديث" : "إعادة المحاولة", onClick: () => (stale ? refresh() : void call(fn, args, ok)) } });
+      if (stale && sub) {
+        // keep the teacher's input on screen; load the newer saved version next to it — nothing is overwritten automatically
+        const { data } = await db.from("homework_grades").select("*").eq("submission_id", sub["id"]).maybeSingle();
+        setConflict((data as Row) ?? null);
+        toast.error("عدّل هذا التصحيح من نافذة أخرى. إدخالك ما زال ظاهرًا؛ قارنه بالنسخة الأحدث ثم اختر.");
+        return false;
+      }
+      toast.error(arabicError(error), { action: { label: "إعادة المحاولة", onClick: () => void call(fn, args, ok) } });
       return false;
     }
-    onDirty(false); toast.success(ok); refresh(); return true;
+    setConflict(null); onDirty(false); toast.success(ok); refresh(); return true;
   }
-  const gradeArgs = () => ({ _sub: sub["id"], _score: graded && !crit.length ? Number(score) : null, _criteria: crit.length ? cs.map(Number) : [], _feedback: fb, _rev: g?.["rev"] ?? null });
+  const [conflict, setConflict] = useState<Row | null>(null);
+  const gradeArgs = () => ({ _sub: sub["id"], _score: graded && !crit.length ? Number(score) : null, _criteria: crit.length ? cs.map(Number) : [], _feedback: fb, _rev: (conflict ?? g)?.["rev"] ?? null });
   const total = cs.reduce((s, x) => s + (Number(x) || 0), 0);
   return (
     <div className="space-y-3 rounded-xl border p-4">
@@ -186,8 +194,19 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
             </div>
           ) : <label className="flex items-center gap-2 text-sm">الدرجة (0–{h["max_score"]})<Input className="w-28" type="number" min={0} max={h["max_score"]} value={score} onChange={(e) => setScore(e.target.value)} /></label>)}
           <Textarea rows={3} placeholder="ملاحظات للطالب" value={fb} onChange={(e) => setFb(e.target.value)} />
+          {conflict && (
+            <div role="alert" className="space-y-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+              <p className="font-medium">تعارض: حُفظ تعديل أحدث من نافذة أخرى</p>
+              <p>النسخة المحفوظة الآن: الدرجة {conflict["score"] ?? "—"}{conflict["feedback"] ? ` · «${conflict["feedback"]}»` : ""}</p>
+              <p>إدخالك غير المحفوظ: الدرجة {crit.length ? total : score || "—"}{fb ? ` · «${fb}»` : ""}</p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => { setConflict(null); onDirty(false); refresh(); }}>تجاهل إدخالي وعرض الأحدث</Button>
+                <span className="self-center text-xs text-muted-foreground">أو اضغط زر الحفظ لاعتماد إدخالك بدل النسخة الأحدث (يُسجل في السجل).</span>
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" onClick={() => call("grade_submission", { ...gradeArgs(), _final: true }, published ? "حُفظ التعديل وسُجل القديم والجديد" : "حُفظ التصحيح وظهرت الدرجة للطالب وولي أمره")}>{published ? "حفظ التعديل وتحديث الدرجة" : "حفظ التصحيح وإظهار الدرجة"}</Button>
+            <Button size="sm" onClick={() => call("grade_submission", { ...gradeArgs(), _final: true }, published || conflict ? "حُفظ التعديل وسُجل القديم والجديد" : "حُفظ التصحيح وظهرت الدرجة للطالب وولي أمره")}>{conflict ? "اعتماد إدخالي على النسخة الأحدث" : published ? "حفظ التعديل وتحديث الدرجة" : "حفظ التصحيح وإظهار الدرجة"}</Button>
             {g?.["status"] === "graded" && !g["needs_review"] && <Button size="sm" variant="outline" onClick={() => call("publish_results", { _hw: h["id"], _subs: [sub["id"]] }, "ظهرت الدرجة المحفوظة سابقًا")}>إظهار التصحيح المحفوظ سابقًا</Button>}
             <span className="text-xs text-muted-foreground">{published ? "الدرجة ظاهرة؛ أي تعديل يُسجل في السجل ويُبلغ الطالب وولي أمره." : "تظهر الدرجة والملاحظات ومرفقاتها للطالب وولي أمره فور الحفظ."}</span>
           </div>
