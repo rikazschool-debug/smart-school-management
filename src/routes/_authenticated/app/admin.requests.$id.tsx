@@ -32,8 +32,8 @@ function Req({ role, school }: { role: string; school: string }) {
       const { data, error } = await db.from("adm_requests").select("*").eq("id", id).maybeSingle();
       if (error) throw error;
       if (!data) return null;
-      const { data: ps } = await db.from("profiles").select("id, full_name").in("id", [data.submitted_by, data.handler_user]);
-      return { ...data, names: Object.fromEntries(((ps ?? []) as Row[]).map((p) => [p.id, p.full_name])) } as Row;
+      const { data: ps } = await db.rpc("adm_party_names" as never, { _entity: "request", _id: id } as never);
+      return { ...data, names: Object.fromEntries(((ps ?? []) as Row[]).map((p) => [p.user_id, p.full_name])) } as Row;
     },
   });
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -93,7 +93,7 @@ function Req({ role, school }: { role: string; school: string }) {
   return (
     <div className="space-y-6">
       <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
-      <PageHeader title={r.form_name} desc={`إصدار ${r.form_version} · مقدم الطلب ${r.names[r.submitted_by] ?? "—"} · المسؤول ${r.names[r.handler_user] ?? "—"}`}
+      <PageHeader title={r.form_name} desc={`إصدار ${r.form_version} · مقدم الطلب ${r.names[r.submitted_by] ?? "مستخدم غير متاح"} · المسؤول ${r.names[r.handler_user] ?? "غير محدد"}`}
         action={<Pill tone={r.status === "completed" ? "ok" : r.status === "rejected" ? "bad" : "warn"}>{REQ_STATUS[r.status]}</Pill>} />
       {r.handler_note && <p className="rounded-lg bg-accent p-3 text-sm">ملاحظة المسؤول: {r.handler_note}</p>}
       <div className="grid gap-4 md:grid-cols-3">

@@ -84,10 +84,9 @@ export function AdminFiles({ entity, id, canAdd, userId, doneAt }: { entity: "ta
     queryKey: ["adm-files", entity, id],
     queryFn: async () => {
       const fs = ((await db.from("files").select("id, name, storage_path, size_bytes, uploaded_by, created_at").eq("source_type", "admin").eq("category", entity).eq("source_id", id).order("created_at")).data ?? []) as Row[];
-      const ids = [...new Set(fs.map((f) => f.uploaded_by))];
-      const ps = ids.length ? (((await db.from("profiles").select("id, full_name").in("id", ids)).data ?? []) as Row[]) : [];
-      const nm = Object.fromEntries(ps.map((p) => [p.id, p.full_name]));
-      return fs.map((f) => ({ ...f, uploader: nm[f.uploaded_by] ?? "—" }));
+      const ps = fs.length ? (((await db.rpc("adm_party_names" as never, { _entity: entity, _id: id } as never)).data ?? []) as Row[]) : [];
+      const nm = Object.fromEntries(ps.map((p) => [p.user_id, p.full_name]));
+      return fs.map((f) => ({ ...f, uploader: nm[f.uploaded_by] ?? "مستخدم غير متاح" }));
     },
   });
   const all = q.data ?? [];

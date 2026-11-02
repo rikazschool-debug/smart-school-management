@@ -30,9 +30,8 @@ function Task({ role }: { role: string }) {
       const { data, error } = await db.from("adm_tasks").select("*").eq("id", id).maybeSingle();
       if (error) throw error;
       if (!data) return null;
-      const ids = [data.assignee, data.assigner, ...(data.participants ?? [])];
-      const { data: ps } = await db.from("profiles").select("id, full_name").in("id", ids);
-      const names = Object.fromEntries(((ps ?? []) as Row[]).map((p) => [p.id, p.full_name]));
+      const { data: ps } = await db.rpc("adm_party_names" as never, { _entity: "task", _id: id } as never);
+      const names = Object.fromEntries(((ps ?? []) as Row[]).map((p) => [p.user_id, p.full_name]));
       return { ...data, names } as Row;
     },
   });
@@ -77,9 +76,9 @@ function Task({ role }: { role: string }) {
         <div className="space-y-3 rounded-xl border bg-card p-4 md:col-span-2">
           {t.description && <p className="whitespace-pre-wrap text-sm">{t.description}</p>}
           <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="text-muted-foreground">المسؤول</dt><dd>{t.names[t.assignee] ?? "—"}</dd>
-            <dt className="text-muted-foreground">المكلِّف</dt><dd>{t.names[t.assigner] ?? "—"}</dd>
-            <dt className="text-muted-foreground">المشاركون</dt><dd>{(t.participants as string[]).map((p) => t.names[p]).filter(Boolean).join("، ") || "—"}</dd>
+            <dt className="text-muted-foreground">المسؤول عن التنفيذ</dt><dd>{t.names[t.assignee] ?? "مستخدم غير متاح"}</dd>
+            <dt className="text-muted-foreground">أصدر التكليف</dt><dd>{t.names[t.assigner] ?? "مستخدم غير متاح"}</dd>
+            <dt className="text-muted-foreground">المشاركون</dt><dd>{(t.participants as string[] ?? []).length ? (t.participants as string[]).map((p) => t.names[p] ?? "مستخدم غير متاح").join("، ") : "لا يوجد مشاركون"}</dd>
             <dt className="text-muted-foreground">التقدم</dt><dd>{t.progress}%</dd>
             <dt className="text-muted-foreground">الاطلاع</dt><dd>{t.acknowledged_at ? fmt(t.acknowledged_at) : "لم يطّلع بعد"}</dd>
             {t.proof_required && <><dt className="text-muted-foreground">الإثبات المطلوب</dt><dd>{t.proof_required}</dd></>}

@@ -24,6 +24,11 @@ async def main():
         await vp.get_by_text("تقرير رحلة المتصفح").first.click(); await vp.wait_for_url("**/admin/tasks/**"); url = vp.url
         chk("B1 vice principal creates task from UI", "/admin/tasks/" in url)
         t1 = await login(br, "t1"); await t1.goto(url)
+        async def names_ok(pg):
+            await pg.wait_for_timeout(1500); dl = await pg.locator("dl").first.inner_text()
+            return "مستخدم غير متاح" not in dl and "أصدر التكليف" in dl and "\n—" not in dl
+        chk("N1 assignee sees party names", await names_ok(t1))
+        chk("N0 assigner sees party names", await names_ok(vp))
         await t1.get_by_role("button", name="اطلعت على التكليف").click(); chk("B2 assignee acknowledges", await toast(t1, "سُجّل اطلاعك"))
         await t1.fill("#pg", "40"); await t1.fill("#nt", "بدأت"); await t1.get_by_role("button", name="حفظ التقدم").click(); chk("B3 progress saved", await toast(t1, "حُدّث التقدم"))
         await t1.fill("#cm", "سؤال عن الصيغة"); await t1.get_by_role("button", name="طلب توضيح").click(); await t1.wait_for_timeout(1500)
@@ -34,6 +39,7 @@ async def main():
         chk("B6 proof uploaded from UI", await toast(t1, "اكتمل رفع الملف"))
         await t1.reload(); await t1.get_by_role("button", name="تم الإنجاز").click(); chk("B7 completion sent for confirmation", await toast(t1, "أُرسل للتأكيد"))
         t2 = await login(br, "t2"); await t2.goto(url); await t2.wait_for_timeout(2500)
+        chk("N2 participant sees party names", await names_ok(t2))
         chk("B8 participant sees task without assignee/confirm controls", await t2.get_by_text("تقرير رحلة المتصفح").count() > 0 and await t2.get_by_role("button", name="تأكيد الإنجاز").count() == 0 and await t2.get_by_role("button", name="تم الإنجاز").count() == 0)
         out = await login(br, "out"); await out.goto(url); await out.wait_for_timeout(2500)
         chk("B9 unauthorized staff gets no task", await out.get_by_text("غير موجود أو لا تملك").count() > 0)

@@ -228,3 +228,7 @@
 - [ ] Meetings, minutes, decisions
 - [ ] Calendar, reports, final scan
 - Note: leftover task eb1f8d17 «تجهيز قاعة الاجتماعات» (demo school, created 11:47 UTC by browser check) not deleted — no run registration proves its origin.
+
+## Resume point (Nov 2): admin names fix done
+- Done: task/request party names via adm_party_names RPC (only for readers of the item); browser journey 16/16 (assigner/assignee/participant names, unauthorized denied).
+- Next: SR request journey in browser (items 1–10), then XLSX/PDF export checks + homework multi-page PDF visual check, then duties, meetings/minutes/decisions, calendar/final check.
