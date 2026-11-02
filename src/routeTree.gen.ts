@@ -42,6 +42,7 @@ import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_authenticated/app/homework.index'
 import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
+import { Route as AuthenticatedAppAdminMeetingsIndexRouteImport } from './routes/_authenticated/app/admin.meetings.index'
 import { Route as AuthenticatedAppAdminRequestsIdRouteImport } from './routes/_authenticated/app/admin.requests.$id'
 import { Route as AuthenticatedAppAdminTasksIdRouteImport } from './routes/_authenticated/app/admin.tasks.$id'
 
@@ -229,6 +230,12 @@ const AuthenticatedAppHomeworkNewRoute =
     path: '/homework/new',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppAdminMeetingsIndexRoute =
+  AuthenticatedAppAdminMeetingsIndexRouteImport.update({
+    id: '/admin/meetings/',
+    path: '/admin/meetings/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppAdminRequestsIdRoute =
   AuthenticatedAppAdminRequestsIdRouteImport.update({
     id: '/admin/requests/$id',
@@ -277,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
   '/app/admin/requests/$id': typeof AuthenticatedAppAdminRequestsIdRoute
   '/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
+  '/app/admin/meetings/': typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -312,6 +320,7 @@ export interface FileRoutesByTo {
   '/app/homework': typeof AuthenticatedAppHomeworkIndexRoute
   '/app/admin/requests/$id': typeof AuthenticatedAppAdminRequestsIdRoute
   '/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
+  '/app/admin/meetings': typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -350,6 +359,7 @@ export interface FileRoutesById {
   '/_authenticated/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
   '/_authenticated/app/admin/requests/$id': typeof AuthenticatedAppAdminRequestsIdRoute
   '/_authenticated/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
+  '/_authenticated/app/admin/meetings/': typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -388,6 +398,7 @@ export interface FileRouteTypes {
     | '/app/homework/'
     | '/app/admin/requests/$id'
     | '/app/admin/tasks/$id'
+    | '/app/admin/meetings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -423,6 +434,7 @@ export interface FileRouteTypes {
     | '/app/homework'
     | '/app/admin/requests/$id'
     | '/app/admin/tasks/$id'
+    | '/app/admin/meetings'
   id:
     | '__root__'
     | '/'
@@ -460,6 +472,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/homework/'
     | '/_authenticated/app/admin/requests/$id'
     | '/_authenticated/app/admin/tasks/$id'
+    | '/_authenticated/app/admin/meetings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -703,6 +716,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHomeworkNewRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/admin/meetings/': {
+      id: '/_authenticated/app/admin/meetings/'
+      path: '/admin/meetings'
+      fullPath: '/app/admin/meetings/'
+      preLoaderRoute: typeof AuthenticatedAppAdminMeetingsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/admin/requests/$id': {
       id: '/_authenticated/app/admin/requests/$id'
       path: '/admin/requests/$id'
@@ -750,6 +770,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHomeworkIndexRoute: typeof AuthenticatedAppHomeworkIndexRoute
   AuthenticatedAppAdminRequestsIdRoute: typeof AuthenticatedAppAdminRequestsIdRoute
   AuthenticatedAppAdminTasksIdRoute: typeof AuthenticatedAppAdminTasksIdRoute
+  AuthenticatedAppAdminMeetingsIndexRoute: typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
@@ -783,6 +804,8 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHomeworkIndexRoute: AuthenticatedAppHomeworkIndexRoute,
   AuthenticatedAppAdminRequestsIdRoute: AuthenticatedAppAdminRequestsIdRoute,
   AuthenticatedAppAdminTasksIdRoute: AuthenticatedAppAdminTasksIdRoute,
+  AuthenticatedAppAdminMeetingsIndexRoute:
+    AuthenticatedAppAdminMeetingsIndexRoute,
 }
 
 const AuthenticatedAppRouteRouteWithChildren =
