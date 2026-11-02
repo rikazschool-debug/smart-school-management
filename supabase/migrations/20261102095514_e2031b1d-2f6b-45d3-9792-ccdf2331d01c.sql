@@ -1,0 +1,1 @@
+revoke execute on function public._adm_name(uuid), public._adm_log(uuid,text,uuid,text,jsonb), public._adm_check_fields(jsonb), public._adm_check_answers(jsonb,jsonb,boolean), public._adm_task_for(uuid,integer,text) from authenticated;
