@@ -76,7 +76,7 @@ try {
       ["cancel meeting", await c.rpc("adm_meeting_cancel", { _id: m.id, _reason: "x", _rev: 2 })],
       ["rsvp uninvited", await c.rpc("adm_meeting_rsvp", { _id: m.id, _rsvp: "accepted", _note: null })],
       ["attendance", await c.rpc("adm_meeting_attendance", { _id: m.id, _marks: [{ user_id: t.id, attended: true }] })],
-      ["minutes save", await c.rpc("adm_minutes_save", { _meeting: m.id, _d: { topics: [{ title: "x" }] }, _rev: mn?.rev ?? 1 })],
+      ["minutes save", await c.rpc("adm_minutes_save", { _meeting: m.id, _d: { topics: [{ title: "x" }] }, _rev: mn?.rev ?? 1 }).then(async (r: any) => { if (!r.error) console.log("DBG2", who, JSON.stringify((await admin.from("adm_minutes").select("written_by, rev, topics").eq("meeting_id", m.id)).data)); return r; })],
       ["minutes confirm", await c.rpc("adm_minutes_confirm", { _id: mn?.id, _rev: mn?.rev ?? 1 })],
       ["decision create", await c.rpc("adm_decision_create", { _meeting: m.id, _d: { body: "x", assignee: t.id, due_date: addDays(today, 3), priority: "normal" }, _client: null })],
       ["live start", await c.rpc("adm_live_start", { _id: m.id })],
