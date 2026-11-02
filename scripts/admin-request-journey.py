@@ -41,7 +41,10 @@ async def main():
             if fail["n"] > 0 and route.request.method in ("POST", "PUT"): fail["n"] -= 1; await route.abort("internetdisconnected")
             else: await route.continue_()
         await t2.route(lambda u: "/storage/v1/object/" in u, drop)
-        await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); chk("R9c network failure reported", await seen(t2, "فشل رفع الملف"))
+        await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); 
+        for _ in range(10):
+            await t2.wait_for_timeout(500); print("T", await t2.locator("li[data-sonner-toast]").all_text_contents())
+        chk("R9c network failure reported", await seen(t2, "فشل رفع الملف"))
         await t2.wait_for_timeout(1500); chk("R9d answer kept after failed upload", await t2.locator("input[type=text], textarea").first.input_value() == "المكيف معطل")
         await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); chk("R2b attachment uploaded after retry", await seen(t2, "اكتمل رفع الملف", 15000), await t2.locator("[data-sonner-toast]").all_inner_texts())
         await t2.get_by_role("button", name="تقديم الطلب").click(); chk("R3a staff submits", await seen(t2, "قُدّم الطلب"))
@@ -61,6 +64,7 @@ async def main():
         tk = await t1.evaluate("() => JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k=>k.endsWith('-auth-token')))).access_token")
         import requests
         env = dict(l.split("=",1) for l in open("/dev-server/.env").read().splitlines() if "=" in l)
+        print("FILES", requests.get(env["VITE_SUPABASE_URL"].strip('"') + "/rest/v1/files?source_id=eq." + u1.rstrip("/").split("/")[-1] + "&select=name,source_type,created_at", headers={"apikey": env["VITE_SUPABASE_PUBLISHABLE_KEY"].strip('"'), "Authorization": "Bearer " + tk}).text)
         fl = len(requests.get(env["VITE_SUPABASE_URL"].strip('"') + "/rest/v1/files?source_type=eq.admin&source_id=eq." + u1.rstrip("/").split("/")[-1] + "&select=id", headers={"apikey": env["VITE_SUPABASE_PUBLISHABLE_KEY"].strip('"'), "Authorization": "Bearer " + tk}).json())
         chk("R9e exactly one attachment after retry", fl == 1, fl)
         chk("R12 timeline shows Arabic resubmission", await t1.get_by_text("أُعيد تقديمه").count() > 0 and await t1.get_by_text("resubmitted").count() == 0)
