@@ -34,3 +34,4 @@
 - Attendance: all writes via RPCs on the server clock (Asia/Riyadh); details in src/components/attendance/AGENTS.md.
 - Guardian logins (exception to owner-only): student managers via upsert_student_guardian (dedupe ID/phone per school) + createGuardianAccount server fn → link_guardian_account (service-role, audited).
 - Grades (term gradebooks) are a read-only administrative archive: all gb_* write RPCs are revoked; grading lives in homework/tests. Never re-enable approval stages. Details in src/components/grades/AGENTS.md.
+- School administration (adm_*): forms (versioned, principal-only setup, one handler) → requests (snapshot of fields, rev-checked) and tasks (one assignee, optional confirmation) are written only via adm_* RPCs; adm_events is the shared activity log; files use source_type='admin' + category; owners get counts only (adm_org_summary). Test: scripts/admin-e2e.ts.

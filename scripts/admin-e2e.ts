@@ -1,0 +1,146 @@
+// School administration (forms/requests/tasks) server acceptance on isolated data. Run: NODE_PATH=node_modules bun scripts/admin-e2e.ts
+import { createClient } from "@supabase/supabase-js";
+import { readFileSync } from "fs";
+import { TestRun } from "./lib/test-run";
+const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
+const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
+const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+const tr = new TestRun(admin, "admin-e2e");
+const run = Date.now(), pw = "Test-pass-" + run;
+let ok = 0, bad = 0;
+const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)); };
+async function user(tag: string) {
+  const email = `adm-${tag}-${run}@rikaz.test`;
+  await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: tag } });
+  const c = createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
+  const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw s.error;
+  tr.addUser(s.data.user!.id); return { c, id: s.data.user!.id };
+}
+const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+const plus = (d: number) => new Date(Date.now() + 3 * 3600e3 + d * 864e5).toISOString().slice(0, 10);
+const notes = async (u: string) => (await admin.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", u)).count ?? 0;
+const orgs: string[] = [];
+try {
+  const owner = await user("owner"), pr = await user("pr"), vp = await user("vp"), t1 = await user("t1"), t2 = await user("t2"), dh = await user("dh"), st = await user("st"), ownerB = await user("ownerb");
+  const org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة الإدارة", _school_name: "فرع" })).data; orgs.push(org);
+  const S = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(S);
+  const orgB = (await ownerB.c.rpc("create_organization", { _org_name: "أخرى", _school_name: "فرع" })).data; orgs.push(orgB);
+  const SB = (await ownerB.c.from("schools").select("id").eq("org_id", orgB).single()).data!.id; tr.addSchool(SB);
+  const dep = (await owner.c.from("departments").insert({ school_id: S, name: "العلوم" }).select().single()).data!;
+  const dep2 = (await owner.c.from("departments").insert({ school_id: S, name: "اللغات" }).select().single()).data!;
+  for (const [u, r, d] of [[pr, "principal"], [vp, "vice_principal"], [t1, "teacher"], [t2, "teacher"], [dh, "dept_head", dep.id], [st, "student"]] as any[])
+    await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: r, department_id: d ?? null });
+  const formD = { name: "طلب نشاط مدرسي", purpose: "أنشطة", audience: ["teacher"], handler_user: vp.id, allow_files: true,
+    fields: [{ label: "اسم النشاط", type: "text", required: true }, { label: "التاريخ", type: "date", required: true }, { label: "النوع", type: "choice", options: ["ثقافي", "رياضي"], required: false }] };
+  // ---- forms ----
+  const fx = await vp.c.rpc("adm_save_form", { _id: null, _school: S, _d: formD });
+  check("F1 vice principal cannot create forms", !!fx.error);
+  const badH = await pr.c.rpc("adm_save_form", { _id: null, _school: S, _d: { ...formD, handler_user: st.id } });
+  check("F2 handler must be school staff (student rejected)", !!badH.error);
+  const f1 = (await pr.c.rpc("adm_save_form", { _id: null, _school: S, _d: formD })).data as string;
+  const t1draft = await t1.c.from("adm_forms").select("id").eq("id", f1);
+  check("F3 draft form hidden from audience", !t1draft.data?.length);
+  await pr.c.rpc("adm_set_form_status", { _id: f1, _status: "active" });
+  check("F4 active form visible to audience, not to student", (await t1.c.from("adm_forms").select("id").eq("id", f1)).data?.length === 1 && !(await st.c.from("adm_forms").select("id")).data?.length);
+  // ---- requests ----
+  const sx = await st.c.rpc("adm_save_request", { _id: null, _form: f1, _answers: {}, _rev: null });
+  check("R1 student cannot file staff form", !!sx.error);
+  const rq = (await t1.c.rpc("adm_save_request", { _id: null, _form: f1, _answers: { f1: "رحلة علمية" }, _rev: null })).data as any;
+  const miss = await t1.c.rpc("adm_submit_request", { _id: rq.id, _rev: rq.rev });
+  check("R2 submit blocked when required field missing", !!miss.error && /مطلوب/.test(miss.error.message), miss.error);
+  const badChoice = await t1.c.rpc("adm_save_request", { _id: rq.id, _form: null, _answers: { f1: "رحلة", f2: "2026-12-01", f3: "سياسي" }, _rev: rq.rev });
+  check("R3 choice outside options rejected", !!badChoice.error);
+  const s1 = (await t1.c.rpc("adm_save_request", { _id: rq.id, _form: null, _answers: { f1: "رحلة علمية", f2: "2026-12-01", f3: "ثقافي" }, _rev: rq.rev })).data as any;
+  const n0 = await notes(vp.id);
+  const sub = await t1.c.rpc("adm_submit_request", { _id: rq.id, _rev: s1.rev });
+  const again = await t1.c.rpc("adm_submit_request", { _id: rq.id, _rev: s1.rev });
+  check("R4 submit + retry: one notification to handler", !sub.error && again.data === sub.data && (await notes(vp.id)) === n0 + 1, [sub, again]);
+  const edit = await t1.c.rpc("adm_save_request", { _id: rq.id, _form: null, _answers: { f1: "تغيير صامت" }, _rev: sub.data });
+  check("R5 submitted request cannot be silently edited", !!edit.error);
+  const other = await t2.c.rpc("adm_handle_request", { _id: rq.id, _action: "start", _note: null, _rev: sub.data });
+  const prh = await pr.c.rpc("adm_handle_request", { _id: rq.id, _action: "start", _note: null, _rev: sub.data });
+  check("R6 only the assigned handler processes (teacher/principal rejected)", !!other.error && !!prh.error);
+  check("R7 other teacher cannot read the request", !(await t2.c.from("adm_requests").select("id").eq("id", rq.id)).data?.length);
+  const noReason = await vp.c.rpc("adm_handle_request", { _id: rq.id, _action: "return", _note: "", _rev: sub.data });
+  check("R8 return needs a reason", !!noReason.error);
+  const ret = (await vp.c.rpc("adm_handle_request", { _id: rq.id, _action: "return", _note: "أضف عدد الطلاب", _rev: sub.data })).data as number;
+  const mine = (await t1.c.from("adm_requests").select("status,handler_note").eq("id", rq.id).single()).data!;
+  check("R9 sender sees returned status and note", mine.status === "returned" && mine.handler_note === "أضف عدد الطلاب", mine);
+  const stale = await vp.c.rpc("adm_handle_request", { _id: rq.id, _action: "complete", _note: null, _rev: sub.data });
+  check("R10 stale revision rejected", !!stale.error);
+  const r2 = (await t1.c.rpc("adm_save_request", { _id: rq.id, _form: null, _answers: { f1: "رحلة علمية - 30 طالبًا", f2: "2026-12-01" }, _rev: ret })).data as any;
+  const sub2 = (await t1.c.rpc("adm_submit_request", { _id: rq.id, _rev: r2.rev })).data as number;
+  const done = await vp.c.rpc("adm_handle_request", { _id: rq.id, _action: "complete", _note: "تمت الموافقة على النشاط", _rev: sub2 });
+  const fin = (await admin.from("adm_requests").select("status,closed_at").eq("id", rq.id).single()).data!;
+  check("R11 resubmit then complete closes the request", !done.error && fin.status === "completed" && !!fin.closed_at, [done.error, fin]);
+  const reopen = await vp.c.rpc("adm_handle_request", { _id: rq.id, _action: "reject", _note: "x", _rev: done.data });
+  check("R12 final request cannot change", !!reopen.error);
+  // versioning
+  const v2 = (await pr.c.rpc("adm_save_form", { _id: f1, _school: null, _d: { ...formD, fields: [...formD.fields, { label: "عدد الطلاب", type: "number", required: true }] } })).data as string;
+  await pr.c.rpc("adm_set_form_status", { _id: v2, _status: "active" });
+  const old = (await admin.from("adm_requests").select("form_version,fields").eq("id", rq.id).single()).data!;
+  const fs = (await admin.from("adm_forms").select("id,version,status").in("id", [f1, v2])).data!;
+  check("R13 new form version leaves old request snapshot unchanged; old version archived", old.form_version === 1 && (old.fields as any[]).length === 3 && fs.find((x) => x.id === f1)!.status === "archived" && fs.find((x) => x.id === v2)!.version === 2, [old, fs]);
+  const xfer = await pr.c.rpc("adm_reassign_request", { _id: rq.id, _user: ownerB.id, _reason: "x" });
+  check("R14 cannot transfer outside school/finished", !!xfer.error);
+  // ---- tasks ----
+  const tx = await t1.c.rpc("adm_create_task", { _school: S, _d: { title: "x", assignee: t2.id, due_date: plus(3) }, _client: null });
+  const dx = await dh.c.rpc("adm_create_task", { _school: S, _d: { title: "x", assignee: t2.id, due_date: plus(3) }, _client: null });
+  check("T1 teacher / dept head cannot create tasks", !!tx.error && !!dx.error);
+  const outside = await vp.c.rpc("adm_create_task", { _school: S, _d: { title: "تكليف", assignee: ownerB.id, due_date: plus(3) }, _client: null });
+  check("T2 assignee outside school rejected", !!outside.error);
+  const cl = crypto.randomUUID(); const nT0 = await notes(t1.id);
+  const td = { title: "إعداد تقرير الأنشطة", assignee: t1.id, participants: [t2.id], due_date: plus(5), priority: "high", proof_required: "رفع التقرير", needs_confirmation: true, department_id: dep.id };
+  const T = (await vp.c.rpc("adm_create_task", { _school: S, _d: td, _client: cl })).data as string;
+  const T2 = (await vp.c.rpc("adm_create_task", { _school: S, _d: td, _client: cl })).data as string;
+  check("T3 retried create returns same task, one notification", T === T2 && (await notes(t1.id)) === nT0 + 1, [T, T2]);
+  check("T4 dept head of the department reads it; other dept head scope", (await dh.c.from("adm_tasks").select("id").eq("id", T)).data?.length === 1);
+  check("T5 student cannot read tasks", !(await st.c.from("adm_tasks").select("id")).data?.length);
+  await t1.c.rpc("adm_task_ack", { _id: T }); await t1.c.rpc("adm_task_ack", { _id: T });
+  const acks = (await admin.from("adm_events").select("id").eq("entity_id", T).eq("action", "acknowledged")).data!;
+  check("T6 acknowledgement recorded once", acks.length === 1);
+  const pchg = await t2.c.rpc("adm_task_update", { _id: T, _due: plus(10), _assignee: t2.id, _reason: "x", _rev: 1 });
+  check("T7 participant cannot change due/assignee", !!pchg.error);
+  const pg = (await t1.c.rpc("adm_task_progress", { _id: T, _progress: 40, _note: "بدأت", _rev: 1 })).data as number;
+  const noR = await vp.c.rpc("adm_task_update", { _id: T, _due: plus(8), _assignee: null, _reason: "", _rev: pg });
+  check("T8 change after start requires reason", !!noR.error);
+  const nT1 = await notes(t1.id);
+  const up = (await vp.c.rpc("adm_task_update", { _id: T, _due: plus(8), _assignee: null, _reason: "تأخر البيانات", _rev: pg })).data as number;
+  const ch = (await admin.from("adm_events").select("details").eq("entity_id", T).eq("action", "changed").single()).data!;
+  check("T9 due change logged with old/new + reason and notified", (ch.details as any).due_from === plus(5) && (ch.details as any).reason === "تأخر البيانات" && (await notes(t1.id)) === nT1 + 1, ch);
+  const noProof = await t1.c.rpc("adm_task_complete", { _id: T, _note: "", _rev: up });
+  check("T10 completion needs the required proof", !!noProof.error);
+  const c1 = (await t1.c.rpc("adm_task_complete", { _id: T, _note: "رفعت التقرير في المجلد", _rev: up })).data as number;
+  check("T11 needs-confirmation task waits for assigner", (await admin.from("adm_tasks").select("status").eq("id", T).single()).data!.status === "awaiting_confirmation");
+  const selfConfirm = await t1.c.rpc("adm_task_review", { _id: T, _action: "confirm", _reason: null, _rev: c1 });
+  check("T12 assignee cannot confirm own task", !!selfConfirm.error);
+  const rt = (await vp.c.rpc("adm_task_review", { _id: T, _action: "return", _reason: "ينقص جدول الأعداد", _rev: c1 })).data as number;
+  const c2 = (await t1.c.rpc("adm_task_complete", { _id: T, _note: "أضفت الجدول", _rev: rt })).data as number;
+  const cf = await vp.c.rpc("adm_task_review", { _id: T, _action: "confirm", _reason: null, _rev: c2 });
+  check("T13 return → complete → confirm = done", !cf.error && (await admin.from("adm_tasks").select("status").eq("id", T).single()).data!.status === "done");
+  const T3 = (await pr.c.rpc("adm_create_task", { _school: S, _d: { title: "تجهيز القاعة", assignee: t2.id, due_date: today }, _client: null })).data as string;
+  const d3 = await t2.c.rpc("adm_task_complete", { _id: T3, _note: null, _rev: 1 });
+  check("T14 task without confirmation is done at once", !d3.error && (await admin.from("adm_tasks").select("status").eq("id", T3).single()).data!.status === "done");
+  const T4 = (await pr.c.rpc("adm_create_task", { _school: S, _d: { title: "متأخر", assignee: t2.id, start_date: plus(-5), due_date: plus(-1), department_id: dep2.id }, _client: null })).data as string;
+  await t2.c.rpc("adm_task_blocked", { _id: T4, _reason: "القاعة مغلقة" });
+  check("T15 blocked keeps task open (not cancelled by assignee)", (await admin.from("adm_tasks").select("status,blocked_reason").eq("id", T4).single()).data!.status === "new");
+  check("T16 dept head does not see other department's task", !(await dh.c.from("adm_tasks").select("id").eq("id", T4)).data?.length);
+  const lst = (await vp.c.rpc("adm_task_list", { _school: S, _scope: "all", _q: null, _status: "overdue", _priority: null, _assignee: null, _dept: null, _from: null, _to: null, _limit: 25, _offset: 0 })).data as any[];
+  check("T17 server-side overdue filter", lst.length === 1 && lst[0].id === T4 && lst[0].overdue, lst);
+  const sm = (await vp.c.rpc("adm_summary", { _school: S })).data as any;
+  check("T18 dashboard counts from data", sm.tasks_overdue === 1 && sm.tasks_needs_action >= 1, sm);
+  const os = (await owner.c.rpc("adm_org_summary", { _org: org })).data as any[];
+  const ot = await owner.c.from("adm_tasks").select("id");
+  check("T19 owner sees branch counts only, no task rows", os[0]?.tasks_overdue === 1 && !ot.data?.length, [os, ot.data]);
+  const xo = (await ownerB.c.rpc("adm_org_summary", { _org: org })).data as any[];
+  check("T20 other org owner gets nothing", !xo?.length);
+  // files
+  const fl = await t2.c.rpc("create_admin_file", { _entity: "task", _id: T, _name: "x.pdf", _mime: "application/pdf", _size: 10 });
+  const fo = (await t1.c.rpc("create_admin_file", { _entity: "task", _id: T4, _name: "x.pdf", _mime: "application/pdf", _size: 10 }));
+  check("T21 attach only by task parties", !!fl.error && !!fo.error);
+} catch (e) { bad++; console.log("FAIL exception", e); }
+finally {
+  try { await tr.deleteNotifications(); for (const o of orgs) if (o) await tr.purgeOrg(o); for (const u of tr.users) await admin.auth.admin.deleteUser(u); console.log("cleanup ok"); } catch (e) { console.log("cleanup error", e); }
+  console.log(`\n${ok} passed, ${bad} failed`);
+}

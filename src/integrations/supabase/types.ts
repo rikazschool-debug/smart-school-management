@@ -188,6 +188,280 @@ export type Database = {
           },
         ]
       }
+      adm_events: {
+        Row: {
+          action: string
+          actor: string | null
+          client_id: string | null
+          created_at: string
+          details: Json
+          entity: string
+          entity_id: string
+          id: string
+          school_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          client_id?: string | null
+          created_at?: string
+          details?: Json
+          entity: string
+          entity_id: string
+          id?: string
+          school_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          client_id?: string | null
+          created_at?: string
+          details?: Json
+          entity?: string
+          entity_id?: string
+          id?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_events_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_forms: {
+        Row: {
+          allow_files: boolean
+          audience: string[]
+          created_at: string
+          created_by: string
+          description: string | null
+          fields: Json
+          handler_user: string
+          id: string
+          name: string
+          purpose: string | null
+          root_id: string
+          school_id: string
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          allow_files?: boolean
+          audience?: string[]
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          fields?: Json
+          handler_user: string
+          id?: string
+          name: string
+          purpose?: string | null
+          root_id: string
+          school_id: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          allow_files?: boolean
+          audience?: string[]
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          fields?: Json
+          handler_user?: string
+          id?: string
+          name?: string
+          purpose?: string | null
+          root_id?: string
+          school_id?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_forms_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_requests: {
+        Row: {
+          answers: Json
+          closed_at: string | null
+          created_at: string
+          fields: Json
+          form_id: string
+          form_name: string
+          form_version: number
+          handler_note: string | null
+          handler_user: string
+          id: string
+          rev: number
+          school_id: string
+          status: string
+          submitted_at: string | null
+          submitted_by: string
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json
+          closed_at?: string | null
+          created_at?: string
+          fields: Json
+          form_id: string
+          form_name: string
+          form_version: number
+          handler_note?: string | null
+          handler_user: string
+          id?: string
+          rev?: number
+          school_id: string
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          closed_at?: string | null
+          created_at?: string
+          fields?: Json
+          form_id?: string
+          form_name?: string
+          form_version?: number
+          handler_note?: string | null
+          handler_user?: string
+          id?: string
+          rev?: number
+          school_id?: string
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_requests_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "adm_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_tasks: {
+        Row: {
+          acknowledged_at: string | null
+          assignee: string
+          assigner: string
+          blocked_at: string | null
+          blocked_reason: string | null
+          client_id: string | null
+          created_at: string
+          decision_id: string | null
+          department_id: string | null
+          description: string | null
+          done_at: string | null
+          due_date: string
+          id: string
+          needs_confirmation: boolean
+          participants: string[]
+          priority: string
+          progress: number
+          proof_required: string | null
+          rev: number
+          school_id: string
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          assignee: string
+          assigner?: string
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          decision_id?: string | null
+          department_id?: string | null
+          description?: string | null
+          done_at?: string | null
+          due_date: string
+          id?: string
+          needs_confirmation?: boolean
+          participants?: string[]
+          priority?: string
+          progress?: number
+          proof_required?: string | null
+          rev?: number
+          school_id: string
+          start_date?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          assignee?: string
+          assigner?: string
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          decision_id?: string | null
+          department_id?: string | null
+          description?: string | null
+          done_at?: string | null
+          due_date?: string
+          id?: string
+          needs_confirmation?: boolean
+          participants?: string[]
+          priority?: string
+          progress?: number
+          proof_required?: string | null
+          rev?: number
+          school_id?: string
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_tasks_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_tasks_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_corrections: {
         Row: {
           day_id: string
@@ -4744,6 +5018,65 @@ export type Database = {
         }
         Returns: boolean
       }
+      _adm_can_read: {
+        Args: { _entity: string; _id: string }
+        Returns: boolean
+      }
+      _adm_check_answers: {
+        Args: { _a: Json; _fields: Json; _strict: boolean }
+        Returns: Json
+      }
+      _adm_check_fields: { Args: { _f: Json }; Returns: Json }
+      _adm_dept: { Args: { _dept: string; _school: string }; Returns: boolean }
+      _adm_lead: { Args: { _school: string }; Returns: boolean }
+      _adm_log: {
+        Args: {
+          _action: string
+          _details: Json
+          _entity: string
+          _id: string
+          _school: string
+        }
+        Returns: undefined
+      }
+      _adm_name: { Args: { _user: string }; Returns: string }
+      _adm_principal: { Args: { _school: string }; Returns: boolean }
+      _adm_staff: { Args: { _school: string; _user: string }; Returns: boolean }
+      _adm_task_for: {
+        Args: { _id: string; _rev: number; _who: string }
+        Returns: {
+          acknowledged_at: string | null
+          assignee: string
+          assigner: string
+          blocked_at: string | null
+          blocked_reason: string | null
+          client_id: string | null
+          created_at: string
+          decision_id: string | null
+          department_id: string | null
+          description: string | null
+          done_at: string | null
+          due_date: string
+          id: string
+          needs_confirmation: boolean
+          participants: string[]
+          priority: string
+          progress: number
+          proof_required: string | null
+          rev: number
+          school_id: string
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "adm_tasks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _apply_invitation: {
         Args: {
           _em: string
@@ -5057,6 +5390,137 @@ export type Database = {
       }
       add_group_members: {
         Args: { _conv: string; _users: string[] }
+        Returns: number
+      }
+      adm_can_read_request: { Args: { _id: string }; Returns: boolean }
+      adm_can_read_task: { Args: { _id: string }; Returns: boolean }
+      adm_create_task: {
+        Args: { _client: string; _d: Json; _school: string }
+        Returns: string
+      }
+      adm_handle_request: {
+        Args: { _action: string; _id: string; _note: string; _rev: number }
+        Returns: number
+      }
+      adm_org_summary: {
+        Args: { _org: string }
+        Returns: {
+          requests_closed_30d: number
+          requests_open: number
+          school: string
+          school_id: string
+          tasks_done_30d: number
+          tasks_open: number
+          tasks_overdue: number
+        }[]
+      }
+      adm_reassign_request: {
+        Args: { _id: string; _reason: string; _user: string }
+        Returns: undefined
+      }
+      adm_request_list: {
+        Args: {
+          _form: string
+          _limit: number
+          _offset: number
+          _q: string
+          _school: string
+          _scope: string
+          _status: string
+        }
+        Returns: {
+          form_name: string
+          form_version: number
+          handler: string
+          handling: boolean
+          id: string
+          mine: boolean
+          status: string
+          submitted_at: string
+          submitted_by: string
+          total: number
+          updated_at: string
+        }[]
+      }
+      adm_save_form: {
+        Args: { _d: Json; _id: string; _school: string }
+        Returns: string
+      }
+      adm_save_request: {
+        Args: { _answers: Json; _form: string; _id: string; _rev: number }
+        Returns: Json
+      }
+      adm_set_form_status: {
+        Args: { _id: string; _status: string }
+        Returns: undefined
+      }
+      adm_submit_request: {
+        Args: { _id: string; _rev: number }
+        Returns: number
+      }
+      adm_summary: { Args: { _school: string }; Returns: Json }
+      adm_task_ack: { Args: { _id: string }; Returns: undefined }
+      adm_task_blocked: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      adm_task_comment: {
+        Args: { _body: string; _clarify: boolean; _client: string; _id: string }
+        Returns: undefined
+      }
+      adm_task_complete: {
+        Args: { _id: string; _note: string; _rev: number }
+        Returns: number
+      }
+      adm_task_list: {
+        Args: {
+          _assignee: string
+          _dept: string
+          _from: string
+          _limit: number
+          _offset: number
+          _priority: string
+          _q: string
+          _school: string
+          _scope: string
+          _status: string
+          _to: string
+        }
+        Returns: {
+          acknowledged: boolean
+          assignee: string
+          assignee_name: string
+          assigner_name: string
+          blocked: boolean
+          department: string
+          due_date: string
+          id: string
+          needs_me: boolean
+          overdue: boolean
+          priority: string
+          progress: number
+          start_date: string
+          status: string
+          title: string
+          total: number
+        }[]
+      }
+      adm_task_progress: {
+        Args: { _id: string; _note: string; _progress: number; _rev: number }
+        Returns: number
+      }
+      adm_task_review: {
+        Args: { _action: string; _id: string; _reason: string; _rev: number }
+        Returns: number
+      }
+      adm_task_update: {
+        Args: {
+          _assignee: string
+          _due: string
+          _id: string
+          _reason: string
+          _rev: number
+        }
         Returns: number
       }
       affected_slots: {
@@ -5378,6 +5842,19 @@ export type Database = {
           has_account: boolean
           student_id: string
           unread: number
+        }[]
+      }
+      create_admin_file: {
+        Args: {
+          _entity: string
+          _id: string
+          _mime: string
+          _name: string
+          _size: number
+        }
+        Returns: {
+          id: string
+          storage_path: string
         }[]
       }
       create_circular_file: {
@@ -5981,6 +6458,7 @@ export type Database = {
         Returns: undefined
       }
       remind_circular_ack: { Args: { _id: string }; Returns: number }
+      remove_admin_file: { Args: { _file: string }; Returns: undefined }
       remove_feedback_file: { Args: { _file: string }; Returns: undefined }
       remove_group_member: {
         Args: { _conv: string; _user: string }
