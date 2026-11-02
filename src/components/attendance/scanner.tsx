@@ -19,17 +19,26 @@ function beep(ok: boolean) {
   } catch { /* audio optional */ }
 }
 
-/** Server clock offset from the API's Date header (no device time is used for attendance). */
-function useServerClock() {
-  const [offset, setOffset] = useState<number | null>(null);
+/** Server clock offset from server_now(); attendance is never recorded against device time. */
+type ClockState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; offset: number };
+export function useServerClock() {
+  const [state, setState] = useState<ClockState>({ status: "loading" });
   const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
+  const load = useCallback(async () => {
+    setState({ status: "loading" });
     const t0 = Date.now();
-    void db.rpc("server_now").then(({ data }: { data: unknown }) => { if (data) setOffset(new Date(data as string).getTime() - (t0 + Date.now()) / 2); });
-    const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t);
+    try {
+      const { data, error } = await db.rpc("server_now");
+      if (error || !data) return setState({ status: "error", message: "تعذر جلب وقت الخادم" });
+      setState({ status: "ready", offset: new Date(data as string).getTime() - (t0 + Date.now()) / 2 });
+    } catch { setState({ status: "error", message: "تعذر الاتصال بالخادم" }); }
   }, []);
-  return offset === null ? null : new Date(now + offset);
+  useEffect(() => { void load(); const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, [load]);
+  return { state, retry: load, time: state.status === "ready" ? new Date(now + state.offset) : null };
 }
+const fmtRiyadh = (d: Date | string, full = false) => new Date(d).toLocaleString("ar-SA-u-nu-latn", full
+  ? { timeZone: "Asia/Riyadh", weekday: "long", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }
+  : { timeZone: "Asia/Riyadh", hour: "2-digit", minute: "2-digit" });
 
 export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; schoolName: string }) {
   const [mode, setMode] = useState<Mode>("reader");
@@ -38,9 +47,13 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
   const [online, setOnline] = useState(true);
   const [sound, setSound] = useState(true);
   const busy = useRef(false);
+  const verifiedRef = useRef(false);
   const recent = useRef(new Map<string, number>());
-  const clock = useServerClock();
+  const { state: clockState, retry: retryClock, time: clock } = useServerClock();
+  const verified = clockState.status === "ready";
+  const [pending, setPending] = useState(false);
 
+  useEffect(() => { verifiedRef.current = verified; }, [verified]);
   useEffect(() => {
     setOnline(navigator.onLine);
     const on = () => setOnline(true), off = () => setOnline(false);
@@ -50,9 +63,10 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
 
   const submit = useCallback(async (raw: string) => {
     const token = raw.trim(); if (!token || busy.current) return;
+    if (!verifiedRef.current) { setLast({ result: "error", message: "لم يُتحقق من وقت الخادم بعد — لم يُسجَّل الحضور. أعد المحاولة بعد ظهور وقت الخادم." }); return; }
     const seen = recent.current.get(token); const t = Date.now();
     if (seen && t - seen < REPEAT_MS) return; // same card still in front of the camera/reader
-    recent.current.set(token, t); busy.current = true;
+    recent.current.set(token, t); busy.current = true; setPending(true);
     try {
       const { data, error } = await db.rpc("scan_attendance", { _school: schoolId, _token: token });
       if (error) {
@@ -69,7 +83,7 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
     } catch {
       recent.current.delete(token); setOnline(false);
       setLast({ result: "error", message: "تعذر الاتصال بالخادم — لم يُسجَّل الحضور." }); if (sound) beep(false);
-    } finally { busy.current = false; }
+    } finally { busy.current = false; setPending(false); }
   }, [schoolId, sound]);
 
   const tone = last?.["result"] === "present" ? "border-primary bg-primary/5" : last?.["result"] === "late" ? "border-amber-500 bg-amber-500/10" : last?.["result"] === "duplicate" ? "border-muted-foreground/30 bg-muted" : "border-destructive bg-destructive/5";
@@ -77,7 +91,7 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-4 text-sm">
         <span className="font-bold">{schoolName}</span>
-        <span className="text-muted-foreground">وقت الخادم: {clock ? clock.toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh", weekday: "long", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "…"}</span>
+        <span data-testid="server-clock" data-state={clockState.status} className="text-muted-foreground">وقت الخادم: {clockState.status === "ready" && clock ? fmtRiyadh(clock, true) : clockState.status === "loading" ? "جارٍ التحقق من وقت الخادم…" : <span className="text-destructive">{clockState.message} — التسجيل متوقف <Button size="sm" variant="outline" className="ms-1 h-7" onClick={() => void retryClock()}>إعادة المحاولة</Button></span>}</span>
         <span className={`inline-flex items-center gap-1 ${online ? "text-primary" : "text-destructive"}`}>{online ? <Wifi className="size-4" /> : <WifiOff className="size-4" />}{online ? "متصل" : "غير متصل"}</span>
         <span className="ms-auto">عمليات التسجيل في الجلسة: <b data-testid="scan-count">{count}</b></span>
         <label className="inline-flex items-center gap-1"><input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} />نغمة تأكيد</label>
@@ -87,15 +101,17 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
           <button key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)} className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-medium ${mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}><I className="size-4" />{l}</button>
         ))}
       </div>
+      {!verified && <p role="alert" className="rounded-xl border border-amber-500 bg-amber-500/10 p-3 text-sm">لا يُسجَّل أي حضور قبل التحقق من وقت الخادم. ساعة الجهاز لا تُستخدم أبدًا.</p>}
       {mode === "reader" ? <ReaderInput onCode={submit} /> : <CameraScan onCode={submit} />}
+      {pending && <p data-testid="scan-pending" role="status" className="rounded-xl border border-dashed p-3 text-sm text-muted-foreground">قُرئت البطاقة — بانتظار تأكيد الخادم…</p>}
       {last && (
         <div role="status" aria-live="assertive" className={`flex items-center gap-4 rounded-2xl border-2 p-4 ${tone}`}>
           <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-background text-2xl font-bold">{String(last["name"] ?? "؟").slice(0, 1)}</div>
           <div className="min-w-0">
             {last["name"] && <p className="text-xl font-bold">{last["name"]}</p>}
             {last["student_id"] && <p className="text-sm text-muted-foreground">رقم الطالب: {String(last["student_id"]).slice(0, 8)} • {last["section"]}</p>}
-            <p className="mt-1 flex items-center gap-1 font-semibold">{["present", "late"].includes(last["result"]) ? <CheckCircle2 className="size-5" /> : <XCircle className="size-5" />}{last["message"]}</p>
-            {["present", "late"].includes(last["result"]) && clock && <p className="text-xs text-muted-foreground">وقت الوصول: {clock.toLocaleTimeString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh", hour: "2-digit", minute: "2-digit" })}</p>}
+            <p className="mt-1 flex items-center gap-1 font-semibold">{["present", "late"].includes(last["result"]) ? <CheckCircle2 className="size-5" /> : <XCircle className="size-5" />}{["present", "late"].includes(last["result"]) ? `أكد الخادم تسجيل الحضور: ${last["message"]}` : last["message"]}</p>
+            {last["at"] && <p className="text-xs text-muted-foreground">{last["result"] === "duplicate" ? "سُجّل سابقًا اليوم الساعة" : "وقت الوصول (الخادم)"}: {fmtRiyadh(last["at"])}</p>}
           </div>
         </div>
       )}
