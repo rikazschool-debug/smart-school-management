@@ -73,13 +73,13 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
     <section className="space-y-3 rounded-2xl border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">التسليمات {editable ? "والتصحيح" : "(اطلاع فقط)"}</h3>
-        {editable && h["max_score"] !== undefined && (
-          {readyCount > 0 && <Button size="sm" variant="outline" onClick={async () => {
+        {editable && h["max_score"] !== undefined && readyCount > 0 && (
+          <Button size="sm" variant="outline" onClick={async () => {
             const names = rows.filter(fns.to_publish).map((r) => `• ${r["students"]?.["full_name"]}${r["grade"]?.["score"] != null ? ` — ${r["grade"]["score"]}/${h["max_score"]}` : ""}`).join("\n");
             if (!(await ask(`تصحيحات حُفظت قبل التبسيط ولم تظهر بعد. ستظهر هذه الدرجات (${readyCount}) للطلاب وأولياء أمورهم:\n${names}`, { ok: "إظهار الدرجات" }))) return;
             const { data: n, error } = await db.rpc("publish_results", { _hw: h["id"], _subs: null });
             if (error) toast.error(arabicError(error)); else { toast.success(`ظهرت ${n} درجة`); qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] }); }
-          }}>إظهار التصحيحات السابقة ({readyCount})</Button>}
+          }}>إظهار التصحيحات السابقة ({readyCount})</Button>
         )}
       </div>
       <Input placeholder="ابحث باسم الطالب" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
