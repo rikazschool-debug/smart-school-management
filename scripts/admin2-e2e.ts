@@ -83,7 +83,7 @@ try {
   const gap = (sg.data as any)?.gaps?.find((g: any) => g.date === today && g.post === "الفسحة");
   check("D2 uncovered slot reported with correct reasons", !!gap && gap.missing === 1 && gap.reasons["حصة"] === 1 && gap.reasons["غير متاح"] === 1 && gap.reasons["غياب مسجل"] === 1 && /يُستبعد/.test((sg.data as any).method), gap);
   const gate = asg.find((a) => a.date === today && a.start_time.startsWith("06:45"));
-  check("D1b gate (06:45–07:15) not given to t1? t1 free then; never a person already on overlapping duty", !!gate && !brkToday.includes(gate.user_id) || !!gate, gate);
+  check("D1b gate slot (06:45–07:15) is staffed", !!gate, gate);
   check("D3a draft hidden from teachers", !(await t[3]!.c.from("adm_duty_assignments").select("id")).data?.length);
   const direct = await vp.c.rpc("adm_duty_assign", { _roster: R, _post: brk, _date: today, _user: t[0]!.id, _client: crypto.randomUUID() });
   check("D1c manual assign of a teacher with a class is refused with reason", !!direct.error && /حصة/.test(direct.error.message), direct.error);
