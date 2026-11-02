@@ -43,12 +43,13 @@ export function TodayTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean })
   const [date, setDate] = useState(riyadhToday());
   const refresh = useRefresh();
   const board = useQuery({ queryKey: ["att-board", S, date], refetchInterval: 15000, queryFn: async () => { const { data, error } = await db.rpc("attendance_board", { _school: S, _date: date }); if (error) throw error; return data as Row | null; } });
-  const review = useQuery({ queryKey: ["att-review", S, date], queryFn: async () => { const { data, error } = await db.from("attendance_days").select("id, status, students(full_name, enrollments(status, sections(name, grades(name))))").eq("school_id", S).eq("date", date).eq("status", "pending_review"); if (error) throw error; return data as Row[]; } });
+  const review = useQuery({ queryKey: ["att-review", S, date], queryFn: async () => { const { data, error } = await db.from("attendance_days").select("id, status, escalated_at, escalation_note, students(full_name, enrollments(status, sections(name, grades(name))))").eq("school_id", S).eq("date", date).eq("status", "pending_review"); if (error) throw error; return data as Row[]; } });
   const corr = useQuery({ queryKey: ["att-corr", S], enabled: canApprove, queryFn: async () => { const { data, error } = await db.from("attendance_corrections").select("id, old_status, new_status, new_late, reason, requested_at, attendance_days(date, students(full_name))").eq("school_id", S).eq("status", "pending").order("requested_at"); if (error) throw error; return data as Row[]; } });
   const b = board.data;
   const pol = b?.["policy"] as Row | null | undefined;
   const tiles: [string, number | undefined, string][] = [
-    ["حاضر", b?.["present"], "text-primary"], ["متأخر", b?.["late"], "text-amber-600"], ["غياب يحتاج مراجعة", b?.["pending_review"], ""],
+    ["المتوقع حضورهم", b?.["expected"], ""], ["لم يُسجل حضوره بعد", b?.["not_yet"], ""],
+    ["حاضر", b?.["present"], "text-primary"], ["متأخر", b?.["late"], "text-amber-600"], ["غياب يحتاج مراجعة", b?.["pending_review"], ""], ["مُصعّد للوكيل", b?.["escalated"], "text-amber-600"],
     ["غائب بعد المراجعة", b?.["absent"], "text-destructive"], ["بعذر", b?.["excused"], ""], ["داخل المدرسة الآن", b?.["inside"], "text-primary"],
     ["خروج مبكر", b?.["early_out"], ""], ["طلبات مفتوحة", b?.["open_requests"], ""],
   ];
@@ -58,22 +59,23 @@ export function TodayTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean })
         <div className="space-y-1"><Label htmlFor="ad">التاريخ</Label><Input id="ad" type="date" value={date} max={riyadhToday()} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
         {pol ? <p className="pb-2 text-sm text-muted-foreground">الدوام {String(pol["day_start"]).slice(0, 5)} • السماح {pol["grace_minutes"]} د • التأخر يُحسب من {pol["late_from"] === "grace_end" ? "نهاية السماح" : "بداية الدوام"} • المراجعة {String(pol["absence_review_at"]).slice(0, 5)}</p>
           : board.isSuccess && <p className="pb-2 text-sm text-destructive">لم تُعتمد سياسة حضور لهذه المدرسة بعد — يحددها المالك أو المدير من «الإعدادات».</p>}
-        <Button variant="outline" className="ms-auto" onClick={async () => { const r = await rpc("build_absence_review", { _school: S, _date: date }); if (r.ok) { toast.success(`أُضيف ${r.data} طالب إلى قائمة المراجعة`); refresh(); } }}>إعداد قائمة الغياب للمراجعة</Button>
+        <Button variant="outline" className="ms-auto" onClick={async () => { const r = await rpc("build_absence_review", { _school: S, _date: date }); if (r.ok) { toast.success(r.data ? `أُضيف ${r.data} طالب إلى قائمة المراجعة` : "القائمة محدّثة"); refresh(); } }}>تحديث قائمة الغياب</Button>
       </div>
       {board.isLoading ? <LoadingState /> : board.error ? <ErrorState message={arabicError(board.error)} onRetry={() => board.refetch()} /> : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {tiles.map(([l, v, c]) => <div key={l} className="rounded-2xl border bg-card p-4"><p className="text-xs text-muted-foreground">{l}</p><p className={`text-2xl font-bold ${c}`}>{v ?? 0}</p></div>)}
         </div>
       )}
-      <Section title="غياب يحتاج مراجعة" desc="لا يُعتمد الغياب نهائيًا قبل معالجة الاستثناءات. وصول الطالب لاحقًا يحوّله تلقائيًا إلى «متأخر».">
+      <Section title="غياب يحتاج مراجعة" desc="تُعد القائمة تلقائيًا بعد موعد الحصر لمن لم يسجل دخوله من المسكنين في هذا اليوم. لا يُعتمد الغياب قبل المراجعة، ووصول الطالب لاحقًا يحوّله إلى «متأخر» مع حفظ القرار السابق.">
         {review.isLoading ? <LoadingState /> : !review.data?.length ? <EmptyState title="لا يوجد غياب بانتظار المراجعة" /> : (
           <ul className="divide-y rounded-xl border bg-card">
             {review.data.map((d) => (
               <li key={d["id"]} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
-                <span><b>{d["students"]?.full_name}</b> <span className="text-muted-foreground">— {sectionOf(d["students"] ?? {})}</span></span>
+                <span><b>{d["students"]?.full_name}</b> <span className="text-muted-foreground">— {sectionOf(d["students"] ?? {})}</span>{d["escalated_at"] && <Badge variant="outline" className="ms-2 border-amber-500 text-amber-700" title={d["escalation_note"] ?? ""}>مُصعّد للوكيل</Badge>}</span>
                 {canApprove && <span className="flex gap-1">
                   <Button size="sm" variant="outline" onClick={async () => { if (await ask("اعتماد الغياب؟ سيُشعر ولي الأمر.")) { const r = await rpc("resolve_absence", { _day: d["id"], _status: "absent", _reason: null }, "اعتُمد الغياب"); if (r.ok) refresh(); } }}>اعتماد غياب</Button>
                   <Button size="sm" variant="ghost" onClick={async () => { const t = await askText("سبب العذر", { required: true }); if (t) { const r = await rpc("resolve_absence", { _day: d["id"], _status: "excused", _reason: t }, "سُجّل العذر"); if (r.ok) refresh(); } }}>بعذر</Button>
+                  {!d["escalated_at"] && <Button size="sm" variant="ghost" onClick={async () => { const t = await askText("سبب التصعيد للوكيل", { required: true }); if (t) { const r = await rpc("escalate_absence", { _day: d["id"], _reason: t }, "صُعّد للوكيل"); if (r.ok) refresh(); } }}>تصعيد</Button>}
                 </span>}
               </li>
             ))}
@@ -334,7 +336,7 @@ export function RecordsTab({ ctx, canCorrect }: { ctx: Ctx; canCorrect: boolean 
         <ul className="divide-y rounded-xl border bg-card">
           {rows.slice(0, 300).map((d) => (
             <li key={d["id"]} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
-              <span><span className="text-muted-foreground">{d["date"]}</span> • <button className="font-semibold hover:text-primary" onClick={() => setTimeline({ id: d["student_id"], name: d["students"]?.full_name })}>{d["students"]?.full_name}</button> <span className="text-muted-foreground">— {sectionOf(d["students"] ?? {})}</span></span>
+              <span><span className="text-muted-foreground">{d["date"]}</span> • <button className="font-semibold hover:text-primary" onClick={() => setTimeline({ id: d["student_id"], name: d["students"]?.full_name })}>{d["students"]?.full_name}</button> <span className="text-muted-foreground">— {sectionOf(d["students"] ?? {})}</span>{d["escalated_at"] && <Badge variant="outline" className="ms-2 border-amber-500 text-amber-700" title={d["escalation_note"] ?? ""}>مُصعّد للوكيل</Badge>}</span>
               <span className="flex items-center gap-2"><Pill s={d["status"]} />{d["status"] === "late" && <span className="text-xs">{d["late_minutes"]} د</span>}<span className="text-xs text-muted-foreground">{hm(d["first_in_at"])}</span>
                 {canCorrect && d["status"] !== "pending_review" && <Button size="sm" variant="ghost" onClick={async () => {
                   const ns = await askText("الحالة الصحيحة: اكتب حاضر أو متأخر أو غائب أو بعذر", { required: true }); if (!ns) return;
