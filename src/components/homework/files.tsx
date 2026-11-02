@@ -48,7 +48,7 @@ export function Uploader({ create, onDone, release, label = "إرفاق ملف" 
     const r = await uploadObject(rec.storage_path, f, ac.current.signal);
     setBusy(null);
     if (r !== "ok") {
-      await release(rec.id).catch(() => undefined);
+      await Promise.resolve().then(() => release(rec.id)).catch(() => undefined);
       toast.error(r === "aborted" ? "أُلغي الرفع" : "فشل رفع الملف؛ أعد المحاولة");
     } else toast.success("اكتمل رفع الملف");
     onDone();

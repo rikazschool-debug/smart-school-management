@@ -95,7 +95,7 @@ function Req({ role, school }: { role: string; school: string }) {
     <div className="space-y-6">
       <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
       <PageHeader title={r.form_name} desc={`إصدار ${r.form_version} · مقدم الطلب ${r.names[r.submitted_by] ?? "مستخدم غير متاح"} · المسؤول ${r.names[r.handler_user] ?? "غير محدد"}`}
-        action={<Pill tone={r.status === "completed" ? "ok" : r.status === "rejected" ? "bad" : "warn"}>{REQ_STATUS[r.status]}</Pill>} />
+        action={<div><Pill tone={r.status === "completed" ? "ok" : r.status === "rejected" ? "bad" : "warn"}>{REQ_STATUS[r.status]}</Pill></div>} />
       {r.handler_note && <p className="rounded-lg bg-accent p-3 text-sm">ملاحظة المسؤول: {r.handler_note}</p>}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-3 rounded-xl border bg-card p-4 md:col-span-2">

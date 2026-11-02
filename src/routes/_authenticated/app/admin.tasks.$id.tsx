@@ -71,7 +71,7 @@ function Task({ role }: { role: string }) {
   return (
     <div className="space-y-6">
       <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
-      <PageHeader title={t.title} desc={`الاستحقاق ${t.due_date} · أولوية ${PRIORITY[t.priority]}`} action={<Pill tone={t.status === "done" ? "ok" : "warn"}>{TASK_STATUS[t.status]}</Pill>} />
+      <PageHeader title={t.title} desc={`الاستحقاق ${t.due_date} · أولوية ${PRIORITY[t.priority]}`} action={<div><Pill tone={t.status === "done" ? "ok" : "warn"}>{TASK_STATUS[t.status]}</Pill></div>} />
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-3 rounded-xl border bg-card p-4 md:col-span-2">
           {t.description && <p className="whitespace-pre-wrap text-sm">{t.description}</p>}
