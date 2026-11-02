@@ -85,4 +85,21 @@ describe("timetable solver", () => {
     expect(r.perCourse[0]!.reason).toContain("تكليف");
     expect(r.slots.some((s) => s.teacher_id === "t11")).toBe(false);
   });
+
+  it("fill rebuilds a broken double lesson: the missing lesson goes next to the remaining one", () => {
+    const inp = demoInput();
+    const m = new Model(inp);
+    const first = solve(inp, { mode: "fill", timeLimitMs: 15000 }).slots.map((s, i) => ({ ...s, id: `z${i}`, pinned: false }));
+    const dbl = inp.courses.find((c) => c.needs_double)!;
+    // remove one half of the double so only singles remain for that course
+    const day = [...new Set(first.filter((s) => s.course_id === dbl.id).map((s) => s.day))].find((d) => first.filter((s) => s.course_id === dbl.id && s.day === d).length >= 2)!;
+    const half = first.find((s) => s.course_id === dbl.id && s.day === day)!;
+    const kept = first.filter((s) => s.id !== half.id);
+    expect(hasDouble(m, kept, dbl.id)).toBe(false);
+    const r = solve({ ...inp, slots: kept }, { mode: "fill", timeLimitMs: 15000 });
+    expect(r.status).toBe("done");
+    expect(r.slots.length).toBe(1);
+    expect(hasDouble(m, [...kept, ...r.slots], dbl.id)).toBe(true);
+    expect(verify(inp, [...kept, ...r.slots])).toEqual([]);
+  });
 });
