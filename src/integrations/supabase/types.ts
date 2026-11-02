@@ -2351,7 +2351,11 @@ export type Database = {
       courses: {
         Row: {
           created_at: string
+          daily_max: number | null
+          day_prefs: number[] | null
           id: string
+          needs_double: boolean
+          room_kind: string | null
           school_id: string
           section_id: string
           subject_id: string
@@ -2362,7 +2366,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          daily_max?: number | null
+          day_prefs?: number[] | null
           id?: string
+          needs_double?: boolean
+          room_kind?: string | null
           school_id: string
           section_id: string
           subject_id: string
@@ -2373,7 +2381,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          daily_max?: number | null
+          day_prefs?: number[] | null
           id?: string
+          needs_double?: boolean
+          room_kind?: string | null
           school_id?: string
           section_id?: string
           subject_id?: string
@@ -4532,6 +4544,7 @@ export type Database = {
       periods: {
         Row: {
           created_at: string
+          days: number[] | null
           end_time: string
           id: string
           kind: string
@@ -4543,6 +4556,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          days?: number[] | null
           end_time: string
           id?: string
           kind?: string
@@ -4554,6 +4568,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          days?: number[] | null
           end_time?: string
           id?: string
           kind?: string
@@ -4826,6 +4841,8 @@ export type Database = {
           capacity: number | null
           created_at: string
           id: string
+          is_active: boolean
+          kind: string
           name: string
           school_id: string
           updated_at: string
@@ -4834,6 +4851,8 @@ export type Database = {
           capacity?: number | null
           created_at?: string
           id?: string
+          is_active?: boolean
+          kind?: string
           name: string
           school_id: string
           updated_at?: string
@@ -4842,6 +4861,8 @@ export type Database = {
           capacity?: number | null
           created_at?: string
           id?: string
+          is_active?: boolean
+          kind?: string
           name?: string
           school_id?: string
           updated_at?: string
@@ -4862,6 +4883,7 @@ export type Database = {
           day_start: string | null
           school_id: string
           study_days: number[]
+          subs_in_daily: boolean
           updated_at: string
         }
         Insert: {
@@ -4869,6 +4891,7 @@ export type Database = {
           day_start?: string | null
           school_id: string
           study_days?: number[]
+          subs_in_daily?: boolean
           updated_at?: string
         }
         Update: {
@@ -4876,6 +4899,7 @@ export type Database = {
           day_start?: string | null
           school_id?: string
           study_days?: number[]
+          subs_in_daily?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -5463,33 +5487,116 @@ export type Database = {
           },
         ]
       }
-      teacher_unavailability: {
+      teacher_loads: {
         Row: {
           created_at: string
-          day: number
+          daily_max: number
           id: string
           note: string | null
-          period_id: string
           school_id: string
           teacher_id: string
+          term_id: string | null
+          updated_at: string
+          weekly_max: number
+          year_id: string
         }
         Insert: {
           created_at?: string
-          day: number
+          daily_max: number
           id?: string
           note?: string | null
-          period_id: string
           school_id: string
           teacher_id: string
+          term_id?: string | null
+          updated_at?: string
+          weekly_max: number
+          year_id: string
         }
         Update: {
           created_at?: string
-          day?: number
+          daily_max?: number
           id?: string
           note?: string | null
-          period_id?: string
           school_id?: string
           teacher_id?: string
+          term_id?: string | null
+          updated_at?: string
+          weekly_max?: number
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_loads_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_loads_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_loads_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_loads_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_unavailability: {
+        Row: {
+          created_at: string
+          day: number | null
+          hard: boolean
+          id: string
+          kind: string
+          note: string | null
+          period_id: string | null
+          reason: string | null
+          school_id: string
+          teacher_id: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          day?: number | null
+          hard?: boolean
+          id?: string
+          kind?: string
+          note?: string | null
+          period_id?: string | null
+          reason?: string | null
+          school_id: string
+          teacher_id: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          day?: number | null
+          hard?: boolean
+          id?: string
+          kind?: string
+          note?: string | null
+          period_id?: string | null
+          reason?: string | null
+          school_id?: string
+          teacher_id?: string
+          valid_from?: string | null
+          valid_to?: string | null
         }
         Relationships: [
           {
@@ -5627,6 +5734,7 @@ export type Database = {
           day: number
           id: string
           period_id: string
+          pinned: boolean
           room_id: string | null
           school_id: string
           section_id: string
@@ -5640,6 +5748,7 @@ export type Database = {
           day: number
           id?: string
           period_id: string
+          pinned?: boolean
           room_id?: string | null
           school_id: string
           section_id: string
@@ -5653,6 +5762,7 @@ export type Database = {
           day?: number
           id?: string
           period_id?: string
+          pinned?: boolean
           room_id?: string | null
           school_id?: string
           section_id?: string
@@ -5788,6 +5898,63 @@ export type Database = {
             columns: ["year_id"]
             isOneToOne: false
             referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tt_gen_runs: {
+        Row: {
+          applied_at: string | null
+          finished_at: string | null
+          id: string
+          input_hash: string
+          mode: string
+          school_id: string
+          started_at: string
+          started_by: string
+          status: string
+          summary: Json | null
+          timetable_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          finished_at?: string | null
+          id?: string
+          input_hash: string
+          mode: string
+          school_id: string
+          started_at?: string
+          started_by?: string
+          status?: string
+          summary?: Json | null
+          timetable_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          finished_at?: string | null
+          id?: string
+          input_hash?: string
+          mode?: string
+          school_id?: string
+          started_at?: string
+          started_by?: string
+          status?: string
+          summary?: Json | null
+          timetable_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tt_gen_runs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tt_gen_runs_timetable_id_fkey"
+            columns: ["timetable_id"]
+            isOneToOne: false
+            referencedRelation: "timetables"
             referencedColumns: ["id"]
           },
         ]
@@ -6267,6 +6434,41 @@ export type Database = {
       _teaches_section: {
         Args: { _section: string; _user: string }
         Returns: boolean
+      }
+      _tt_courses: {
+        Args: { _tt: string }
+        Returns: {
+          course_id: string
+          teacher_count: number
+          teacher_id: string
+        }[]
+      }
+      _tt_day_lessons: {
+        Args: { _day: number; _school: string }
+        Returns: string[]
+      }
+      _tt_ref_date: { Args: { _tt: string }; Returns: string }
+      _tt_slot_problem: {
+        Args: {
+          _course: string
+          _day: number
+          _id: string
+          _period: string
+          _room: string
+          _teacher: string
+          _tt: string
+        }
+        Returns: string
+      }
+      _tt_unav_hit: {
+        Args: {
+          _day: number
+          _hard: boolean
+          _period: string
+          _ref: string
+          _teacher: string
+        }
+        Returns: string
       }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
@@ -7927,6 +8129,23 @@ export type Database = {
       transfer_group_owner: {
         Args: { _conv: string; _user: string }
         Returns: undefined
+      }
+      tt_gen_apply: { Args: { _run: string; _slots: Json }; Returns: number }
+      tt_gen_finish: {
+        Args: { _run: string; _status: string; _summary: Json }
+        Returns: undefined
+      }
+      tt_gen_ignore: { Args: { _run: string }; Returns: undefined }
+      tt_gen_start: { Args: { _mode: string; _tt: string }; Returns: Json }
+      tt_input: { Args: { _tt: string }; Returns: Json }
+      tt_validate: {
+        Args: { _tt: string }
+        Returns: {
+          code: string
+          course_id: string
+          message: string
+          slot_id: string
+        }[]
       }
       update_group_settings: {
         Args: {
