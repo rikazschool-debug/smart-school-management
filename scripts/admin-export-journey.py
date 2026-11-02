@@ -28,7 +28,7 @@ async def main():
         n = sum(1 for r in vals if any(str(v or "").startswith("تكليف تصدير") for v in r))
         chk("E1 XLSX has all 130 matching tasks (not first page)", n == 130, n)
         chk("E2 XLSX Arabic status/priority + names", "موظف مسؤول" in flat and "وكيل الإدارة" in flat and "open" not in flat.split() )
-        await vp.select_option("select[aria-label*='الأولوي']", index=1); await vp.wait_for_timeout(2000)
+        await vp.locator('select').filter(has_text='كل الأولويات').select_option('high'); await vp.wait_for_timeout(2000)
         x2 = await dl(vp, "Excel", D + "tasks-f.xlsx"); n2 = sum(1 for r in load_workbook(x2).active.iter_rows() if str(r[0].value or "").startswith("تكليف تصدير"))
         chk("E3 filter applied to export", 0 < n2 < 130, n2)
         pdf = await dl(vp, "تنزيل PDF", D + "tasks.pdf"); data = open(pdf, "rb").read()
