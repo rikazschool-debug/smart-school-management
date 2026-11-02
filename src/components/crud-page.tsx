@@ -162,7 +162,7 @@ export function CrudTable({
   searchKeys: string[]; filter?: Record<string, unknown>; filters?: FilterDef[]; canWrite: boolean;
   canDelete?: boolean; order?: string; defaults?: Row; extraActions?: (r: Row) => ReactNode;
   /** extra buttons next to «إضافة» (e.g. import) */ toolbar?: ReactNode; exportable?: boolean;
-  /** called with the new row after a successful create */ onCreated?: (r: Row) => void;
+  /** called with the new row after a successful create */ onCreated?: ((r: Row) => void) | undefined;
 }) {
   const qc = useQueryClient();
   const [input, setInput] = useState("");

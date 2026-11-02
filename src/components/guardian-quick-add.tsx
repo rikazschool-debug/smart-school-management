@@ -14,7 +14,7 @@ import { arabicError } from "@/lib/session";
 type Creds = { login: string; password: string };
 
 /** Shows a freshly created login once, for the school to hand to the guardian. */
-export function CredsCard({ c, name }: { c: Creds; name?: string }) {
+export function CredsCard({ c, name }: { c: Creds; name?: string | undefined }) {
   const text = `حساب ولي الأمر${name ? ` (${name})` : ""} في ركاز\nاسم الدخول: ${c.login}\nكلمة المرور المؤقتة: ${c.password}`;
   return (
     <div className="space-y-2 rounded-lg border border-primary/40 bg-secondary p-3 text-sm">
@@ -26,7 +26,7 @@ export function CredsCard({ c, name }: { c: Creds; name?: string }) {
   );
 }
 
-export function CreateAccountButton({ guardianId, name }: { guardianId: string; name?: string }) {
+export function CreateAccountButton({ guardianId, name }: { guardianId: string; name?: string | undefined }) {
   const create = useServerFn(createGuardianAccount);
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
@@ -42,7 +42,7 @@ export function CreateAccountButton({ guardianId, name }: { guardianId: string; 
 }
 
 /** Student → guardian by name + ID/phone. Same ID or phone in the school reuses the one guardian account. */
-export function GuardianQuickAdd({ studentId, studentName, onDone }: { studentId: string; studentName?: string; onDone: () => void }) {
+export function GuardianQuickAdd({ studentId, studentName, onDone }: { studentId: string; studentName?: string | undefined; onDone: () => void }) {
   const qc = useQueryClient();
   const create = useServerFn(createGuardianAccount);
   const [f, setF] = useState({ name: "", phone: "", nid: "", rel: "father" });
