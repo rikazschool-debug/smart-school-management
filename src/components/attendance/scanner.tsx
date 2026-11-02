@@ -181,7 +181,7 @@ function CameraScan({ onCode }: { onCode: (c: string) => Promise<void> }) {
       const track = s.getVideoTracks()[0];
       setCam(track?.getSettings().deviceId ?? "");
       const caps = (track?.getCapabilities?.() ?? {}) as { torch?: boolean; focusMode?: string[] };
-      if (caps.focusMode?.includes("continuous")) void track.applyConstraints({ advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet] }).catch(() => undefined);
+      if (track && caps.focusMode?.includes("continuous")) void track.applyConstraints({ advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet] }).catch(() => undefined);
       setTorch(caps.torch ? false : null);
       setRunning(true);
       let lastHit = Date.now();
