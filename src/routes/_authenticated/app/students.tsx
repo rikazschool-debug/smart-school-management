@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { canManageStudents, type Role } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
 import { ImportButton } from "@/components/import-dialog";
+import { GuardianQuickAdd } from "@/components/guardian-quick-add";
 import { arabicError, type AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/students")({ component: Page });
@@ -33,6 +34,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const [linking, setLinking] = useState<Row | null>(null);
   const [placing, setPlacing] = useState<Row | null>(null);
   const [viewing, setViewing] = useState<Row | null>(null);
+  const [guarding, setGuarding] = useState<Row | null>(null);
 
   const link = useMutation({
     mutationFn: async (v: Row) => {
@@ -79,6 +81,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           { key: "status", label: "الحالة", type: "select", required: true, options: STATUS },
         ]}
         defaults={{ status: "active" }}
+        onCreated={w ? (r) => setGuarding(r) : undefined}
         columns={[
           { label: "الاسم", text: (r) => r["full_name"], render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["full_name"]}</button> },
           { label: "الهوية", render: (r) => r["national_id"] ?? "—" },
@@ -92,7 +95,8 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         extraActions={(r) => w ? (
           <>
             <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>
-            <Button variant="ghost" size="sm" onClick={() => setLinking(r)}><Link2 className="size-4" /> ربط ولي أمر</Button>
+            <Button variant="ghost" size="sm" onClick={() => setGuarding(r)}><Link2 className="size-4" /> ولي الأمر</Button>
+            <Button variant="ghost" size="sm" onClick={() => setLinking(r)}>ربط بولي أمر مسجل</Button>
           </>
         ) : null} />
 
@@ -120,6 +124,13 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                 { key: "can_pickup", label: "مفوّض باستلام الطالب", type: "checkbox" },
               ]} />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!guarding} onOpenChange={(o) => !o && setGuarding(null)}>
+        <DialogContent dir="rtl">
+          <DialogHeader><DialogTitle>ولي أمر {guarding?.["full_name"]}</DialogTitle></DialogHeader>
+          {guarding && <GuardianQuickAdd key={guarding["id"]} studentId={guarding["id"]} studentName={guarding["full_name"]} onDone={() => setGuarding(null)} />}
         </DialogContent>
       </Dialog>
 
