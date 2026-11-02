@@ -103,6 +103,18 @@ function Summary({ school, onPick }: { school: string; onPick: (t: string) => vo
 }
 
 const PAGE = 25;
+/** Exports cover every matching row: page through the list RPC (capped at 100 per call) until exhausted. */
+async function fetchAll(call: (offset: number) => PromiseLike<{ data: unknown; error: unknown }>): Promise<Row[]> {
+  const out: Row[] = [];
+  for (let o = 0; o < 20000; o += 100) {
+    const { data, error } = await call(o);
+    if (error) throw error;
+    const rows = (data ?? []) as Row[];
+    out.push(...rows);
+    if (rows.length < 100) break;
+  }
+  return out;
+}
 
 function Tasks({ ctx }: { ctx: Ctx }) {
   const lead = isLead(ctx.role);
@@ -138,7 +150,11 @@ function Tasks({ ctx }: { ctx: Ctx }) {
         </select>
         <div className="ms-auto flex gap-2">
           <ExportButtons title="التكليفات" school={ctx.schoolName} headers={["العنوان", "المسؤول", "المكلِّف", "الحالة", "الأولوية", "الاستحقاق", "التقدم"]}
-            rows={() => (list.data ?? []).map((t) => [t.title, t.assignee_name, t.assigner_name, TASK_STATUS[t.status], PRIORITY[t.priority], t.due_date, `${t.progress}%`])} />
+            filters={[scope === "all" ? "كل ما أستطيع رؤيته" : scope === "mine" ? "المسندة إليّ" : "التي أنشأتها", status ? `الحالة: ${TASK_STATUS[status] ?? (status === "open" ? "المفتوحة" : status)}` : "كل الحالات", ...(priority ? [`الأولوية: ${PRIORITY[priority]}`] : []), ...(q.trim() ? [`بحث: ${q.trim()}`] : [])]}
+            rows={async () => {
+              const data = await fetchAll((o) => db.rpc("adm_task_list", { _school: ctx.schoolId, _scope: scope, _q: q.trim() || null, _status: status || null, _priority: priority || null, _assignee: null, _dept: null, _from: null, _to: null, _limit: 100, _offset: o }));
+              return data.map((t) => [t.title, t.assignee_name, t.assigner_name, TASK_STATUS[t.status], PRIORITY[t.priority], t.due_date, `${t.progress}%`]);
+            }} />
           {lead && <Button size="sm" onClick={() => setCreating((v) => !v)}>{creating ? "إغلاق" : "تكليف جديد"}</Button>}
         </div>
       </div>
@@ -251,8 +267,12 @@ function Requests({ ctx }: { ctx: Ctx }) {
         <select aria-label="الحالة" className={sel} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
           <option value="">كل الحالات</option><option value="open">المفتوحة</option>{Object.entries(REQ_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <div className="ms-auto"><ExportButtons title="الطلبات الإدارية" school={ctx.schoolName} headers={["النموذج", "مقدم الطلب", "المسؤول", "الحالة", "تاريخ التقديم"]}
-          rows={() => (list.data ?? []).map((r) => [r.form_name, r.submitted_by, r.handler, REQ_STATUS[r.status], r.submitted_at?.slice(0, 10) ?? ""])} /></div>
+        <div className="ms-auto"><ExportButtons title="الطلبات الإدارية" school={ctx.schoolName} headers={["النموذج", "الإصدار", "مقدم الطلب", "المسؤول", "الحالة", "تاريخ التقديم"]}
+          filters={[scope === "all" ? "الكل" : scope === "mine" ? "طلباتي" : "الواردة إليّ", status ? `الحالة: ${REQ_STATUS[status] ?? "المفتوحة"}` : "كل الحالات", ...(q.trim() ? [`بحث: ${q.trim()}`] : [])]}
+          rows={async () => {
+            const data = await fetchAll((o) => db.rpc("adm_request_list", { _school: ctx.schoolId, _scope: scope, _q: q.trim() || null, _status: status || null, _form: null, _limit: 100, _offset: o }));
+            return data.map((r) => [r.form_name, `إصدار ${r.form_version}`, r.submitted_by, r.handler, REQ_STATUS[r.status], r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" }) : ""]);
+          }} /></div>
       </div>
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? <EmptyState title="لا توجد طلبات" /> : (
         <ul className="space-y-2">

@@ -263,3 +263,4 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Open: assigner/participant names show "—" to the assignee (profile visibility); request journey, export, duties, meetings, calendar not done.
 - [2026-11-02] Admin task/request party names fixed (adm_party_names); admin-task-journey 16/16.
 - [2026-11-02] Admin request browser journey 23/23 (scripts/admin-request-journey.py); allow_files toggle added.
+- [2026-11-02] Admin exports: all filtered rows, 130-task XLSX/PDF 5/5, PDF 3 pages visually OK.
