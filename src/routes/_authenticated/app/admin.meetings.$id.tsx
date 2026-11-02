@@ -13,16 +13,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
-import { arabicError, useSession } from "@/lib/session";
+import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { MeetingForm } from "@/components/admin/meeting-form";
 import { AdminFiles, MEETING_STATUS, PRIORITY, Pill, RSVP, STAFF_ROLES, TASK_STATUS, Timeline, fmt, riyadhDate, riyadhTime, riyadhToday, useStaff } from "@/components/admin/shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin/meetings/$id")({
   head: () => ({ meta: [{ title: "تفاصيل الاجتماع | ركاز" }, { name: "description", content: "الدعوة والحضور والمحضر والقرارات" }] }),
-  component: () => <RequireSchool nav="meetings">{(ctx) => <Meeting school={ctx.schoolId} />}</RequireSchool>,
+  component: Page,
 });
 
-function Meeting({ school }: { school: string }) {
+function Page() {
+  const { active } = useSession();
+  if (active?.role === "org_owner" && !active.schoolId) return <Meeting school={null} ctx={active} />;
+  return <RequireSchool nav="meetings">{(ctx) => <Meeting school={ctx.schoolId} ctx={ctx} />}</RequireSchool>;
+}
+
+function Meeting({ school, ctx }: { school: string | null; ctx: AppContext }) {
   const { id } = Route.useParams();
   const { user } = useSession();
   const me = user.id;
@@ -66,13 +72,19 @@ function Meeting({ school }: { school: string }) {
     if (error) { toast.error(arabicError(error)); if (String(error.message).includes("نافذة أخرى")) refresh(); return false; }
     toast.success(ok); refresh(); return true;
   }
-  if (editing) return <div className="space-y-4"><PageHeader title="تعديل الاجتماع" /><MeetingForm school={school} me={me} meeting={m} members={members.map((x) => x.user_id)} onCancel={() => setEditing(false)} onDone={() => { setEditing(false); refresh(); }} /></div>;
+  if (editing) return <div className="space-y-4"><PageHeader title="تعديل الاجتماع" /><MeetingForm school={school} ctx={ctx} me={me} meeting={m} members={members.map((x) => x.user_id)} onCancel={() => setEditing(false)} onDone={() => { setEditing(false); refresh(); }} /></div>;
   const started = Date.parse(m.starts_at) - 15 * 60e3 <= Date.now();
   return (
     <div className="space-y-6">
       <Link to="/app/admin/meetings" className="text-sm text-primary">← الاجتماعات والقرارات</Link>
-      <PageHeader title={m.title} desc={`${riyadhDate(m.starts_at)} ${riyadhTime(m.starts_at)} · ${m.duration_min} دقيقة${m.location ? ` · ${m.location}` : ""}`}
-        action={<div className="flex gap-2"><Pill tone={m.status === "cancelled" ? "muted" : m.status === "held" ? "ok" : "warn"}>{MEETING_STATUS[m.status]}</Pill>{m.privacy === "restricted" && <Pill tone="bad">مقيد</Pill>}</div>} />
+      <PageHeader title={m.title} desc={`${riyadhDate(m.starts_at)} ${riyadhTime(m.starts_at)}–${riyadhTime(new Date(Date.parse(m.starts_at) + m.duration_min * 60e3).toISOString())} (الرياض) · ${m.duration_min} دقيقة${m.location ? ` · ${m.location}` : ""}`}
+        action={<div className="flex flex-wrap gap-2"><Pill tone={m.status === "cancelled" ? "muted" : m.status === "held" ? "ok" : "warn"}>{m.live_status === "live" ? "مباشر الآن" : m.live_status === "ended" ? "انتهى" : MEETING_STATUS[m.status]}</Pill><Pill>{m.mode === "virtual" ? "افتراضي — صوت وشاشة" : "حضوري"}</Pill>{m.scope === "org" && <Pill>بين الفروع</Pill>}{m.privacy === "restricted" && <Pill tone="bad">مقيد</Pill>}</div>} />
+      {m.mode === "virtual" && m.status === "scheduled" && m.live_status !== "ended" && (organizer || (mine && !mine.banned)) && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border-2 border-primary bg-accent p-4">
+          <p className="text-sm">{m.live_status === "live" ? "الاجتماع مباشر الآن." : organizer ? "تستطيع بدء الاجتماع قبل موعده بثلاثين دقيقة." : "يظهر زر الانضمام عند بدء المضيف."}</p>
+          <Button asChild className="min-h-11"><Link to="/app/admin/room/$id" params={{ id }}>{m.live_status === "live" ? "انضمام" : organizer ? "فتح الغرفة للبدء" : "فتح الغرفة"}</Link></Button>
+        </div>
+      )}
       {m.status === "cancelled" && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">أُلغي: {m.cancel_reason}</p>}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-3 rounded-xl border bg-card p-4 md:col-span-2">
@@ -123,7 +135,7 @@ function Meeting({ school }: { school: string }) {
       </div>
       {writer && ["scheduled", "held"].includes(m.status) && started && <Attendance members={members} nm={nm} busy={busy} onSave={(marks) => run("adm_meeting_attendance", { _id: id, _marks: marks }, "سُجّل الحضور")} />}
       {["scheduled", "held"].includes(m.status) && <Minutes meetingId={id} minutes={minutes} members={members} organizerId={m.organizer} nm={nm} writer={writer} organizer={organizer} onChange={refresh} />}
-      <Decisions meetingId={id} school={school} organizer={organizer && ["scheduled", "held"].includes(m.status)} />
+      <Decisions meetingId={id} school={m.school_id} cross={m.scope === "org"} orgId={m.org_id} organizer={organizer && ["scheduled", "held"].includes(m.status)} />
       <AdminFiles entity="meeting" id={id} userId={me} canAdd={writer && m.status !== "cancelled"} title="مرفقات الاجتماع والمحضر" />
       <section><h2 className="mb-2 font-semibold">سجل الاجتماع</h2><Timeline entity="meeting" id={id} /></section>
     </div>
@@ -216,9 +228,11 @@ function Minutes({ meetingId, minutes, members, organizerId, nm, writer, organiz
   );
 }
 
-function Decisions({ meetingId, school, organizer }: { meetingId: string; school: string; organizer: boolean }) {
+function Decisions({ meetingId, school, cross, orgId, organizer }: { meetingId: string; school: string; cross: boolean; orgId: string; organizer: boolean }) {
   const qc = useQueryClient();
-  const staff = useStaff(school);
+  const [branch, setBranch] = useState(school);
+  const staff = useStaff(branch);
+  const branches = useQuery({ enabled: cross && organizer, queryKey: ["org-schools", orgId], queryFn: async () => ((await db.from("schools").select("id, name").eq("org_id", orgId).order("name")).data ?? []) as Row[] });
   const q = useQuery({ queryKey: ["adm-decisions", "meeting", meetingId], queryFn: async () => ((await db.rpc("adm_decision_list" as never, { _school: school, _scope: "all", _meeting: meetingId, _q: null, _status: null, _limit: 100, _offset: 0 } as never)).data ?? []) as Row[] });
   const [clientId, setClientId] = useState(() => crypto.randomUUID());
   const [d, setD] = useState({ body: "", assignee: "", due_date: "", priority: "normal" });
@@ -226,7 +240,7 @@ function Decisions({ meetingId, school, organizer }: { meetingId: string; school
   async function add() {
     if (!d.body.trim() || !d.assignee || !d.due_date) return void toast.error("أكمل نص القرار والمسؤول والموعد");
     setBusy(true);
-    const { error } = await db.rpc("adm_decision_create" as never, { _meeting: meetingId, _d: d, _client: clientId } as never);
+    const { error } = await db.rpc("adm_decision_create" as never, { _meeting: meetingId, _d: { ...d, school_id: branch }, _client: clientId } as never);
     setBusy(false);
     if (error) return void toast.error(arabicError(error));
     toast.success("سُجّل القرار وأُنشئ تكليف مرتبط وأُشعر المسؤول");
@@ -249,6 +263,7 @@ function Decisions({ meetingId, school, organizer }: { meetingId: string; school
       {organizer && (
         <div className="grid gap-2 rounded-lg border p-3 md:grid-cols-4">
           <div className="md:col-span-4"><Label htmlFor="dc-b">نص القرار</Label><Textarea id="dc-b" value={d.body} onChange={(e) => setD({ ...d, body: e.target.value })} /></div>
+          {cross && <div><Label htmlFor="dc-s">فرع التنفيذ</Label><select id="dc-s" className={selectCls("w-full")} value={branch} onChange={(e) => { setBranch(e.target.value); setD({ ...d, assignee: "" }); }}>{(branches.data ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>}
           <div><Label htmlFor="dc-a">مسؤول التنفيذ</Label><select id="dc-a" className={selectCls("w-full")} value={d.assignee} onChange={(e) => setD({ ...d, assignee: e.target.value })}><option value="">اختر</option>{staff.data?.filter((s) => s.role !== "org_owner").map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name} — {STAFF_ROLES[s.role] ?? s.role}</option>)}</select></div>
           <div><Label htmlFor="dc-d">الموعد</Label><Input id="dc-d" type="date" min={riyadhToday()} value={d.due_date} onChange={(e) => setD({ ...d, due_date: e.target.value })} /></div>
           <div><Label htmlFor="dc-p">الأولوية</Label><select id="dc-p" className={selectCls("w-full")} value={d.priority} onChange={(e) => setD({ ...d, priority: e.target.value })}>{Object.entries(PRIORITY).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
