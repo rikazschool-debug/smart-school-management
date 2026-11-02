@@ -4290,6 +4290,23 @@ export type Database = {
         Returns: Json
       }
       att_counselor: { Args: { _school: string }; Returns: boolean }
+      att_day_rows: {
+        Args: { _from: string; _school: string; _status?: string; _to: string }
+        Returns: {
+          date: string
+          escalated_at: string
+          escalation_note: string
+          first_in_at: string
+          id: string
+          late_minutes: number
+          note: string
+          section: string
+          source: string
+          status: string
+          student_id: string
+          student_name: string
+        }[]
+      }
       att_gate: { Args: { _school: string }; Returns: boolean }
       att_is_school_day: {
         Args: {
