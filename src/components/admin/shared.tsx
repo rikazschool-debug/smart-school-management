@@ -82,7 +82,13 @@ export function Timeline({ entity, id }: { entity: string; id: string }) {
 export function AdminFiles({ entity, id, canAdd, userId, doneAt }: { entity: "task" | "request"; id: string; canAdd: boolean; userId: string; doneAt?: string | null }) {
   const q = useQuery({
     queryKey: ["adm-files", entity, id],
-    queryFn: async () => ((await db.from("files").select("id, name, storage_path, size_bytes, uploaded_by, created_at, profiles:uploaded_by(full_name)").eq("source_type", "admin").eq("category", entity).eq("source_id", id).order("created_at")).data ?? []) as Row[],
+    queryFn: async () => {
+      const fs = ((await db.from("files").select("id, name, storage_path, size_bytes, uploaded_by, created_at").eq("source_type", "admin").eq("category", entity).eq("source_id", id).order("created_at")).data ?? []) as Row[];
+      const ids = [...new Set(fs.map((f) => f.uploaded_by))];
+      const ps = ids.length ? (((await db.from("profiles").select("id, full_name").in("id", ids)).data ?? []) as Row[]) : [];
+      const nm = Object.fromEntries(ps.map((p) => [p.id, p.full_name]));
+      return fs.map((f) => ({ ...f, uploader: nm[f.uploaded_by] ?? "—" }));
+    },
   });
   const all = q.data ?? [];
   // Files added after completion are addenda: shown separately, never counted as the original proof.
@@ -98,7 +104,7 @@ export function AdminFiles({ entity, id, canAdd, userId, doneAt }: { entity: "ta
           <p className="text-sm font-medium">ملحق بعد الإنجاز</p>
           <p className="text-xs text-muted-foreground">أضيفت بعد إنجاز التكليف ولا تُعد بديلًا عن إثبات الإنجاز الأصلي.</p>
           <FileList files={late} />
-          <ul className="text-xs text-muted-foreground">{late.map((f) => <li key={f["id"]}>{f["name"]} — {f["profiles"]?.["full_name"] ?? "—"}، {fmt(f["created_at"])}</li>)}</ul>
+          <ul className="text-xs text-muted-foreground">{late.map((f) => <li key={f["id"]}>{f["name"]} — {f["uploader"]}، {fmt(f["created_at"])}</li>)}</ul>
         </div>
       )}
       {canAdd && doneAt && <p className="text-xs text-muted-foreground">أي ملف يُرفع الآن يظهر «ملحقًا بعد الإنجاز» ولا يغيّر حالة التكليف أو تاريخ إنجازه.</p>}
