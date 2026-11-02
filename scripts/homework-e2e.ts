@@ -131,7 +131,7 @@ try {
   const noReason = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "", _rev: rv });
   const corr = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "خطأ جمع", _rev: rv });
   const hist = (await s1.c.from("homework_grade_history").select("old_score,new_score")).data!;
-  check("5e published grade correction needs reason; history old 8 -> new 9 visible to student", !!noReason.error && !corr.error && hist.length === 1 && hist[0].old_score == 8 && hist[0].new_score == 9, [corr.error, hist]);
+  check("5g legacy correct_result still needs a reason and appends history (2 rows after teacher edit + correction)", !!noReason.error && !corr.error && hist.length === 2 && hist.some((x: any) => x.old_score == 8 && x.new_score == 9), [corr.error, hist]);
   const dupRes = (await admin.from("homework_grades").select("id").eq("submission_id", sub1)).data!.length;
   check("5f correction does not duplicate the result", dupRes === 1);
 
