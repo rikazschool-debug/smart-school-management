@@ -53,7 +53,7 @@ try {
     return { sec, c };
   };
   const cA = await course("أ", 0), cB = await course("ب", 4);
-  const tt = await ins("timetables", { year_id: year.id, name: "الجدول" });
+  const tt = await ins("timetables", { year_id: year.id, name: "الجدول", created_by: pr.id });
   const sl = await pr.c.from("timetable_slots").insert({ timetable_id: tt.id, school_id: S, day: dow, period_id: P2.id, course_id: cA.c.id, section_id: cA.sec.id, teacher_id: tch[0].id }).select().single();
   const pub = await pr.c.rpc("publish_timetable", { _id: tt.id, _effective_from: today });
   check("setup: published timetable with t1 teaching P2 today", !sl.error && !pub.error, [sl.error, pub.error]);
