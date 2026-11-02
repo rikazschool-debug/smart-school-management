@@ -4916,6 +4916,7 @@ export type Database = {
         Returns: undefined
       }
       remove_homework_file: { Args: { _file: string }; Returns: undefined }
+      remove_pickup_file: { Args: { _file: string }; Returns: undefined }
       remove_submission_file: { Args: { _file: string }; Returns: undefined }
       reopen_circular: { Args: { _id: string }; Returns: undefined }
       report_detail: {
