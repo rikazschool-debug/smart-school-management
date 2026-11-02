@@ -1,0 +1,1 @@
+alter table public.adm_tasks drop constraint adm_tasks_department_id_fkey, add constraint adm_tasks_department_id_fkey foreign key (department_id) references public.departments(id) on delete set null;
