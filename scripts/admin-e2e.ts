@@ -90,11 +90,11 @@ try {
   check("T1 teacher / dept head cannot create tasks", !!tx.error && !!dx.error);
   const outside = await vp.c.rpc("adm_create_task", { _school: S, _d: { title: "تكليف", assignee: ownerB.id, due_date: plus(3) }, _client: null });
   check("T2 assignee outside school rejected", !!outside.error);
-  const cl = crypto.randomUUID();
+  const cl = crypto.randomUUID(); const nT0 = await notes(t1.id);
   const td = { title: "إعداد تقرير الأنشطة", assignee: t1.id, participants: [t2.id], due_date: plus(5), priority: "high", proof_required: "رفع التقرير", needs_confirmation: true, department_id: dep.id };
   const T = (await vp.c.rpc("adm_create_task", { _school: S, _d: td, _client: cl })).data as string;
   const T2 = (await vp.c.rpc("adm_create_task", { _school: S, _d: td, _client: cl })).data as string;
-  check("T3 retried create returns same task, one notification", T === T2 && (await notes(t1.id)) === 1, [T, T2]);
+  check("T3 retried create returns same task, one notification", T === T2 && (await notes(t1.id)) === nT0 + 1, [T, T2]);
   check("T4 dept head of the department reads it; other dept head scope", (await dh.c.from("adm_tasks").select("id").eq("id", T)).data?.length === 1);
   check("T5 student cannot read tasks", !(await st.c.from("adm_tasks").select("id")).data?.length);
   await t1.c.rpc("adm_task_ack", { _id: T }); await t1.c.rpc("adm_task_ack", { _id: T });
