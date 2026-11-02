@@ -4093,6 +4093,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _auto_card: { Args: { _student: string }; Returns: undefined }
       _can_circ_scope: {
         Args: { _home: string; _org: string; _scope: string }
         Returns: boolean
@@ -4189,6 +4190,7 @@ export type Database = {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
         Returns: boolean
       }
+      _new_card_code: { Args: never; Returns: string }
       _notify: {
         Args: {
           _body: string
