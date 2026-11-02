@@ -52,7 +52,7 @@ try {
     await pr.c.rpc("decide_assignment", { _id: a.id, _approve: true });
     return { sec, c };
   };
-  const cA = await course("أ", 0), cB = await course("ب", 4);
+  const cA = await course("أ", 0); await course("ب", 4);
   const tt = await ins("timetables", { year_id: year.id, name: "الجدول", created_by: pr.id });
   const sl = await pr.c.from("timetable_slots").insert({ timetable_id: tt.id, school_id: S, day: dow, period_id: P2.id, course_id: cA.c.id, section_id: cA.sec.id, teacher_id: tch[0].id }).select().single();
   const pub = await pr.c.rpc("publish_timetable", { _id: tt.id, _effective_from: today });
@@ -136,10 +136,9 @@ try {
   check("D6b cancelling a published duty needs a reason and notifies", !!cx.error && !cy.error && (await notes(t[4]!.id, "أُلغيت مناوبتك")) === 1, [cx.error, cy.error]);
   // ---- timetable change after publish → conflict alert, no silent change ----
   const sub6t = await ins("teachers", { full_name: "t6", user_id: sub6.id });
-  const a6 = await ins("teacher_assignments", { course_id: cB.c.id, teacher_id: sub6t.id });
-  await pr.c.rpc("decide_assignment", { _id: a6.id, _approve: true });
+  tch.push(sub6t); const cC = await course("ج", 5);
   const rev = (await pr.c.rpc("start_timetable_revision", { _id: tt.id })).data as string;
-  const sl2 = await pr.c.from("timetable_slots").insert({ timetable_id: rev, school_id: S, day: dow, period_id: P2.id, course_id: cB.c.id, section_id: cB.sec.id, teacher_id: sub6t.id }).select().single();
+  const sl2 = await pr.c.from("timetable_slots").insert({ timetable_id: rev, school_id: S, day: dow, period_id: P2.id, course_id: cC.c.id, section_id: cC.sec.id, teacher_id: sub6t.id }).select().single();
   const nvp = await notes(vp.id, "تعارض");
   const pub2 = await pr.c.rpc("publish_timetable", { _id: rev, _effective_from: today });
   const lst = (await vp.c.rpc("adm_duty_list", { _school: S, _scope: "all", _q: null, _from: today, _to: today, _status: null, _post: null, _limit: 50, _offset: 0 })).data as any[];
