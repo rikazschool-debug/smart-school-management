@@ -19,7 +19,7 @@ try {
   const email = `tick-owner-${run}@rikaz.test`;
   const u = (await admin.auth.admin.createUser({ email, password: "Tick-" + run, email_confirm: true })).data.user!; tr.addUser(u.id);
   const mkOrg = async (name: string) => {
-    const { data: o } = await admin.from("organizations").insert({ name: `${name}-${run}` }).select().single(); orgs.push(o!.id);
+    const { data: o, error: oe } = await admin.from("organizations").insert({ name: `${name}-${run}`, created_by: u.id }).select().single(); if (oe) throw oe; orgs.push(o!.id);
     const { data: s } = await admin.from("schools").insert({ org_id: o!.id, name }).select().single(); tr.addSchool(s!.id);
     const { data: y } = await admin.from("academic_years").insert({ school_id: s!.id, name: "1448", start_date: "2026-01-01", end_date: "2027-12-31", is_current: true }).select().single();
     const { data: st } = await admin.from("stages").insert({ school_id: s!.id, name: "م" }).select().single();
