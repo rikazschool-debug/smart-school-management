@@ -234,3 +234,6 @@ No defects found, so no fixes or re-runs were needed. The mobile-screen file was
 - G14 family: child picker (verified children only), teacher note (gradebook_notes → grade_results.note after publish), publish date/version, per-child XLSX/PDF.
 - Evidence: scripts/grades-e2e.ts 100/100; vitest 37/37 (grades-calc 7); rls-e2e 94/94; Playwright (scripts/grades-browser-fixture.ts): teacher 12/12 (preview 73, revision, two-window conflict, row error, bad/good import, re-import no-op, note, submit), review→publish→family 12/13 — the one failure was a wrong expected value in the script (88.6 shown is correct: 45/50×30 + 88/100×70), fixed but not re-run.
 - Not verified: opening the exported PDF files (XLSX opened and checked); real devices.
+
+## GC1 (2026-11-02)
+Fresh fixture run: teacher journey 12/12, review→approve→publish→family/phone 12/12. Independent calc: 45/50×30=27.0, 88/100×70=61.6, total 88.6 (plan items max 50/w30, max 100/w70, total 100). 76.5 son result also matched. Return-for-revision not yet covered in browser.
