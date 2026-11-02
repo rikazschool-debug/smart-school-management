@@ -255,3 +255,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - تغييرات: revealed_by/revealed_at في homework_grades؛ حدث legacy_revealed؛ إزالة اطلاع الطالب/ولي الأمر المباشر على grade_results؛ تصدير Excel/PDF للواجبات؛ إبقاء إدخال المعلم عند التعارض؛ عبارات «ظاهرة» بدل «منشورة».
 - مراجعة التنبيهين: set_homework_kind — معلم المقرر الساري فقط؛ رُفض لمعلم آخر ومؤسسة أخرى وطالب ووكيل وقيمة غير صالحة. homework_list — مقيدة بـhw_staff؛ لا صفوف لطالب أو معلم غير مكلف أو مؤسسة أخرى؛ لا تعيد درجات فردية. الحكم خاص بهاتين؛ التنبيهات الأقدم «لم تُراجع».
 - لم يُختبر: PDF متعدد الصفحات لتقارير الواجبات، الأجهزة الحقيقية.
+
+## School admin — attachments & department delete (2026-11-02)
+- scripts/admin-e2e.ts 51/51: A1–A8 (parent-record permission, signed URLs refused to non-party/other org, type check, uploader-only removal, dated non-removable addendum on done task, closed request blocks upload, add/remove logged); D1–D4 (department delete by owner keeps task/history/files with department_id NULL; former and other dept heads lose detail/list/search/files/events/direct RPC; assignee/assigner/principal keep access).
+- UI: AdminFiles on request and task detail pages; not yet exercised in the browser.

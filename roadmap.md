@@ -210,7 +210,7 @@
 - التالي: واجهات /app/admin (لوحة، نماذج، طلبات، تكليفات) + القائمة الجانبية لكل دور، ثم المناوبات (SA4)، ثم الاجتماعات والمحاضر والقرارات (SA5–SA6).
 
 ## School administration — resume brief (docs/school-admin-resume-brief.md)
-- [x] SR1 Department delete: tasks keep (department_id NULL); dept head loses read via _adm_dept null-check, assignee/assigner/lead keep it (logic-reviewed, no e2e yet)
+- [x] SR1 Department delete: tasks keep (department_id NULL); dept head loses read via _adm_dept null-check, assignee/assigner/lead keep it — verified in scripts/admin-e2e.ts D1–D4 (51/51)
 - [x] SR2 Sidebar section + role tabs (staff roles; owner sees branch counts only)
 - [x] SR3 Forms & requests screens (/app/admin + /app/admin/requests/$id; attachments via AdminFiles) (principal / user / handler)
 - [x] SR4 Tasks screens (assigner / executor) — browser: principal created + opened a task; task attachments not yet in UI
@@ -218,3 +218,11 @@
 - [ ] SR6 Meetings, minutes, decisions
 - [ ] SR7 Calendar + notifications
 - [ ] SR8 Search/filters/XLSX/PDF + final verification
+
+## School admin resume 2 (docs/school-admin-resume2-brief.md)
+- [x] Server tests: attachments A1–A8 + department delete D1–D4 → scripts/admin-e2e.ts 51/51
+- [ ] Browser journeys with separate accounts (principal/vice/assignee/participant/unauthorized) for tasks, requests, attachments
+- [ ] Duty rosters (settings, suggest, draft/publish, my duties, reports, tests 1–10)
+- [ ] Meetings, minutes, decisions
+- [ ] Calendar, reports, final scan
+- Note: leftover task eb1f8d17 «تجهيز قاعة الاجتماعات» (demo school, created 11:47 UTC by browser check) not deleted — no run registration proves its origin.
