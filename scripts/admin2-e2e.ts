@@ -182,9 +182,9 @@ try {
   const conf = (await vp.c.rpc("adm_meeting_conflicts", { _id: M })).data as any[];
   check("M3 conflict warning: t1 has a class, t4 a duty at that time", conf?.some((c) => c.user_id === t[0]!.id && /حصة/.test(c.reason)) && conf.some((c) => c.user_id === t[3]!.id && /مناوبة/.test(c.reason)), conf);
   const later = new Date(Date.parse(addDays(today, 1) + "T12:00:00+03:00")).toISOString();
-  const mv = await vp.c.rpc("adm_meeting_save", { _id: M, _school: null, _d: { ...md, starts_at: later }, _rev: sd.data, _client: null });
+  const mv = await vp.c.rpc("adm_meeting_save", { _id: M, _school: null, _d: { ...md, starts_at: later, change_reason: "تعارض مع اختبار" }, _rev: sd.data, _client: null });
   const upd = (await admin.from("adm_events").select("details").eq("entity_id", M).eq("action", "updated")).data ?? [];
-  check("M4 reschedule notifies invitees and logs previous time", !mv.error && (await notes(t[3]!.id, "تغيّر موعد")) === 1 && /09:30/.test(upd[0]?.details?.note ?? ""), [mv.error, upd]);
+  check("M4 reschedule notifies invitees and logs previous time", !mv.error && (await notes(t[3]!.id, "تعديل اجتماع")) === 1 && /09:30/.test(upd[0]?.details?.note ?? ""), [mv.error, upd]);
   const r1 = await t[3]!.c.rpc("adm_meeting_rsvp", { _id: M, _rsvp: "declined", _note: "مناوبة" });
   const r2 = await t[1]!.c.rpc("adm_meeting_rsvp", { _id: M, _rsvp: "accepted", _note: null });
   check("M5 invitee declines (organizer notified); non-invitee cannot respond", !r1.error && !!r2.error && (await notes(vp.id, "اعتذار عن اجتماع")) === 1, [r1.error]);

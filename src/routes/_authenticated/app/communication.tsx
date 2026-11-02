@@ -17,6 +17,7 @@ import { NewChatDialog } from "@/components/comm/new-chat";
 import { CircularsTab } from "@/components/comm/circulars";
 import { ManageTab } from "@/components/comm/manage";
 import { ClassesTab } from "@/components/comm/classes";
+import { MeetingsTab } from "@/components/comm/meetings-tab";
 
 type Search = { tab?: CommTab; c?: string; circular?: string };
 
@@ -55,6 +56,7 @@ function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       {tab === "circulars" ? <CircularsTab ctx={ctx} focus={search.circular} onFocus={(id) => go(id ? { tab: "circulars", circular: id } : { tab: "circulars" })} />
         : tab === "manage" ? <ManageTab ctx={ctx} />
         : tab === "classes" ? <ClassesTab ctx={ctx} />
+        : tab === "meetings" ? <MeetingsTab />
         : <Conversations ctx={ctx} tab={tab} selected={search.c} onSelect={(c) => go(c ? { tab, c } : { tab })} />}
     </>
   );

@@ -84,8 +84,8 @@ const MANAGE: NavKey[] = [
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && k !== "station" && !ADMIN_KEYS.includes(k))],
-  // owner: branch counts only on the admin page — no personal duties/meetings/calendar
-  org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k === "admin" || !ADMIN_KEYS.includes(k))],
+  // owner: branch counts on the admin page + own (multi-branch) meetings and calendar — no duties
+  org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k !== "duties")],
   principal: MANAGE,
   vice_principal: MANAGE,
   student_affairs: ["home", "students", "guardians", "schedule", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
@@ -127,7 +127,7 @@ export function canEditSchedule(role: Role) {
   return canManage(role);
 }
 
-export type CommTab = "inbox" | "mine" | "groups" | "classes" | "circulars" | "archive" | "manage";
+export type CommTab = "inbox" | "mine" | "groups" | "classes" | "circulars" | "archive" | "manage" | "meetings";
 /** Communication tabs per role. Students see their class groups and private chats with their teachers (they never start chats);
  *  classes = teacher class groups + roster (managers monitor); manage = group/circular/report admin (mirrors can_manage_school). */
 export function commTabs(role: Role): CommTab[] {
@@ -135,13 +135,14 @@ export function commTabs(role: Role): CommTab[] {
   if (role === "student") return ["classes", "inbox", "archive"];
   // guardian: children's teachers + permitted school administration, targeted circulars; never student group discussions
   if (role === "guardian") return ["inbox", "circulars", "archive"];
-  if (role === "teacher") return ["classes", "inbox", "mine", "groups", "circulars", "archive"];
-  const base: CommTab[] = ["inbox", "mine", "groups", "circulars", "archive"];
+  // staff meetings tab (virtual meetings from the same meeting record); never for students/guardians
+  if (role === "teacher") return ["classes", "inbox", "mine", "groups", "meetings", "circulars", "archive"];
+  const base: CommTab[] = ["inbox", "mine", "groups", "meetings", "circulars", "archive"];
   return canManage(role) ? [...base, "classes", "manage"] : base;
 }
 export function commTabLabel(role: Role, t: CommTab): string {
   if (role === "student") return ({ classes: "مجموعات موادي", inbox: "رسائل معلميّ", archive: "الأرشيف" } as Record<string, string>)[t] ?? t;
-  const L: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي الخاصة", groups: role === "teacher" ? "مجموعاتي الإدارية" : "مجموعاتي", classes: role === "teacher" ? "مجموعات موادي" : "مجموعات المواد", circulars: "التعاميم", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
+  const L: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي الخاصة", groups: role === "teacher" ? "مجموعاتي الإدارية" : "مجموعاتي", classes: role === "teacher" ? "مجموعات موادي" : "مجموعات المواد", circulars: "التعاميم", meetings: "الاجتماعات", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
   return L[t];
 }
 export function commTitle(role: Role): { title: string; desc: string } {

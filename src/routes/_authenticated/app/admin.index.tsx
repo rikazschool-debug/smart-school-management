@@ -170,7 +170,7 @@ function Tasks({ ctx }: { ctx: Ctx }) {
         </select>
         <div className="ms-auto flex gap-2">
           <ExportButtons title="التكليفات" school={ctx.schoolName} headers={["العنوان", "المسؤول", "المكلِّف", "الحالة", "الأولوية", "الاستحقاق", "التقدم"]}
-            filters={[scope === "all" ? "كل ما أستطيع رؤيته" : scope === "mine" ? "المسندة إليّ" : "التي أنشأتها", status ? `الحالة: ${TASK_STATUS[status] ?? (status === "open" ? "المفتوحة" : status)}` : "كل الحالات", ...(priority ? [`الأولوية: ${PRIORITY[priority]}`] : []), ...(q.trim() ? [`بحث: ${q.trim()}`] : [])]}
+            filters={[scope === "all" ? "كل ما أستطيع رؤيته" : scope === "mine" ? "المسندة إليّ" : "التي أنشأتها", status ? `الحالة: ${TASK_STATUS[status] ?? (status === "open" ? "المفتوحة" : status)}` : "كل الحالات", ...(priority ? [`الأولوية: ${PRIORITY[priority]}`] : []), ...(q.trim() ? [`بحث: ${q.trim()}`] : []), "قائمة ملخصة بلا مرفقات؛ إثبات الإنجاز والملحق بعد الإنجاز يُعرضان منفصلين في صفحة التكليف"]}
             rows={async () => {
               const data = await fetchAll((o) => db.rpc("adm_task_list", { _school: ctx.schoolId, _scope: scope, _q: q.trim() || null, _status: status || null, _priority: priority || null, _assignee: null, _dept: null, _from: null, _to: null, _limit: 100, _offset: o }));
               return data.map((t) => [t.title, t.assignee_name, t.assigner_name, TASK_STATUS[t.status], PRIORITY[t.priority], t.due_date, `${t.progress}%`]);
@@ -288,7 +288,7 @@ function Requests({ ctx }: { ctx: Ctx }) {
           <option value="">كل الحالات</option><option value="open">المفتوحة</option>{Object.entries(REQ_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         <div className="ms-auto"><ExportButtons title="الطلبات الإدارية" school={ctx.schoolName} headers={["النموذج", "الإصدار", "مقدم الطلب", "المسؤول", "الحالة", "تاريخ التقديم"]}
-          filters={[scope === "all" ? "الكل" : scope === "mine" ? "طلباتي" : "الواردة إليّ", status ? `الحالة: ${REQ_STATUS[status] ?? "المفتوحة"}` : "كل الحالات", ...(q.trim() ? [`بحث: ${q.trim()}`] : [])]}
+          filters={[scope === "all" ? "الكل" : scope === "mine" ? "طلباتي" : "الواردة إليّ", status ? `الحالة: ${REQ_STATUS[status] ?? "المفتوحة"}` : "كل الحالات", ...(q.trim() ? [`بحث: ${q.trim()}`] : []), "قائمة ملخصة بلا مرفقات أو روابط ملفات"]}
           rows={async () => {
             const data = await fetchAll((o) => db.rpc("adm_request_list", { _school: ctx.schoolId, _scope: scope, _q: q.trim() || null, _status: status || null, _form: null, _limit: 100, _offset: o }));
             return data.map((r) => [r.form_name, `إصدار ${r.form_version}`, r.submitted_by, r.handler, REQ_STATUS[r.status], r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" }) : ""]);

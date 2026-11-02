@@ -82,10 +82,16 @@ Since the homework/tests simplification, term gradebooks are a read-only adminis
 | See draft roster | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ |
 | See own published duties, acknowledge, document done/not done, request excuse/change | ✔ | ✔ | ✔ | ✔ | ✘ | ✘ |
 | Decide excuse/change requests | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ |
-| Organize meeting (create/edit/send/cancel/confirm minutes/add decisions) | ✔ (own) | ✔ (own) | ✔ (own) | ✘ | ✘ | ✘ |
+| Organize meeting (create/edit/send/cancel/confirm minutes/add decisions) | ✔ (own school only) | ✔ (own school) | ✔ (own school) | ✘ | ✔ one branch or several branches of own org (host branch + room) | ✘ |
+| Invitees allowed | active staff of own school | same | same | — | active staff of any branch in own org | never invited |
 | Draft minutes | organizer or assigned writer | | | writer if assigned | ✘ | ✘ |
 | Read normal meeting | ✔ | ✔ | own department | invited | ✘ | ✘ |
 | Read restricted meeting / its minutes / files | only if organizer, writer or invited (no automatic access) | same | same | same | ✘ | ✘ |
 | Decision executor | sees the linked task and decision text only; restricted meeting title masked | | | | | |
-| Personal calendar | own items | own | own | own | ✘ | ✘ |
+| Personal calendar | own items | own | own | own | own meetings | ✘ |
+| Virtual room: start / mute / ask to unmute / remove & allow back / grant-revoke screen / end for all | organizer only | organizer only | organizer only | ✘ | organizer only | ✘ |
+| Virtual room: join, raise hand, request screen share, share after permission, leave | invited (not removed, active account) | same | same | same | same | ✘ |
+| Communication → «الاجتماعات» tab (virtual meetings from the same record) | ✔ own | ✔ own | ✔ own | ✔ own | ✔ own | tab hidden |
 | Branch counts (duties this week, uncovered slots, upcoming meetings, open decisions) | — | — | — | — | ✔ counts only | ✘ |
+
+Virtual meetings (2026-11-02): tokens are minted on the server only after adm_live_join re-checks invitation, active membership in scope and live state; renewals re-check. Removal, suspension, screen-permission revocation, host mute and end are enforced at Agora (kicking rules) through the service-role queue adm_meeting_revocations. Restricted meetings give owner/principal no automatic access.

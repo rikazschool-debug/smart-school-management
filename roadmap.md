@@ -243,10 +243,15 @@
 - Open (not blocking): task export lists no attachments (proof/addendum split only on task page); old-notification re-open after reassign checked by direct link only; reminders cron not yet observed firing; 15 new signed-in-callable admin RPCs follow the existing checked-inside pattern (security list).
 
 ## Meetings + Agora package (docs/school-admin-meetings-agora-brief.md)
-- [ ] M1 Close earlier gaps: real reminder run, old notification after reassign, request export pages, names/labels/mobile pill, upload retry, proof vs addendum note in exports
-- [ ] M2 Meeting permissions: owner multi-branch (host branch + room), principal own school only, invitees = active staff memberships in scope
-- [ ] M3 Meeting form/lifecycle: in-person|virtual, draft/preview/send once, edit/cancel with reason, RSVP, start/join/leave/end, conflicts, list filters/paging, change log
-- [ ] M4 Communication "الاجتماعات" tab + calendar from one record (staff only)
-- [ ] M5 Agora: server tokens (membership check, renew re-checks), mic pre-check, group audio, participants, raise hand, screen share with host permission (one at a time), host mute/remove/end, attendance without duplicates — blocked on Agora credentials
-- [ ] M6 Minutes/decisions for cross-branch meetings (execution branch + eligible assignee), exports
-- [ ] M7 Tests 1–13 + review of 15 earlier RPCs, docs updates, Arabic report
+- [x] M1 Close earlier gaps: real reminder run, old notification after reassign, request export pages, names/labels/mobile pill, upload retry, proof vs addendum note in exports
+- [x] M2 Meeting permissions: owner multi-branch (host branch + room), principal own school only, invitees = active staff memberships in scope
+- [x] M3 Meeting form/lifecycle: in-person|virtual, draft/preview/send once, edit/cancel with reason, RSVP, start/join/leave/end, conflicts, list filters/paging, change log
+- [x] M4 Communication "الاجتماعات" tab + calendar from one record (staff only)
+- [x] M5 Agora: server tokens (membership check, renew re-checks), mic pre-check, group audio, participants, raise hand, screen share with host permission (one at a time), host mute/remove/end, attendance without duplicates 
+- [x] M6 Minutes/decisions for cross-branch meetings (execution branch + eligible assignee), exports
+- [x] M7 Tests 1–13, docs updates, Arabic report
+- [ ] M8 Open: real-device checks (phones, headsets, tab audio, browser stop-bar), first real reminder cron run (2026-11-03 15:00 UTC), open meetings XLSX/PDF files, dedicated role/scope/input test pass over the 15 earlier duty/meeting RPCs beyond admin2-e2e
+
+## Resume point (Nov 2, meetings + Agora)
+- Done: meetings package M1–M7 (see docs/closure-log.md entry). Fixtures: scripts/meet-browser-fixture.ts setup|teardown (mbx-); journeys in /tmp/browser/meet/*.py need Chromium flag --webrtc-ip-handling-policy=default_public_and_private_interfaces in this sandbox.
+- Next: M8 items, then supervision section only when instructed.
