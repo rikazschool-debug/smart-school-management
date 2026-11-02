@@ -37,7 +37,6 @@ const QUICK: Partial<Record<NavKey, { label: string; hint: string; to: string; i
   teachers: { label: "المعلمون", hint: "ملفات المعلمين التعليمية", to: "/app/teachers", icon: UsersRound },
   courses: { label: "المقررات والتكليفات", hint: "توزيع المعلمين واعتماده", to: "/app/courses", icon: BookOpen },
   schedule: { label: "الجدول المدرسي", hint: "إعداد الجدول ونشره", to: "/app/schedule", icon: CalendarDays },
-  substitutions: { label: "التبديل والبدلاء", hint: "غياب اليوم وتغطية الحصص", to: "/app/substitutions", icon: Repeat },
   communication: { label: "التواصل", hint: "الرسائل والمجموعات والتعاميم", to: "/app/communication", icon: MessagesSquare },
   homework: { label: "الواجبات", hint: "متابعة الواجبات والنتائج", to: "/app/homework", icon: ClipboardList },
 };

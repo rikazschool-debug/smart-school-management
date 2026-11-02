@@ -5,11 +5,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
-  Bell, BookOpen, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarClock, CalendarDays, Repeat, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
+  Bell, BookOpen, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
-import { NAV_BY_ROLE, ROLE_LABELS, type NavKey } from "@/lib/roles";
+import { NAV_BY_ROLE, ROLE_LABELS, scheduleLabel, type NavKey } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
