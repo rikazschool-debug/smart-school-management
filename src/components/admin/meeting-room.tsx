@@ -22,6 +22,7 @@ type Roster = { meeting: { id: string; title: string; live_status: string; statu
 type Phase = "check" | "joining" | "in" | "left";
 type Agora = typeof import("agora-rtc-sdk-ng").default;
 const SCREEN_OFFSET = 100000;
+const proxy = () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("proxy") === "1";
 
 const micError = (e: unknown) => {
   const s = String((e as { code?: string; message?: string })?.code ?? "") + " " + String((e as Error)?.message ?? e);
@@ -112,6 +113,8 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
       myUid.current = t.uid;
       const c = A.createClient({ mode: "rtc", codec: "vp8" });
       client.current = c;
+      // networks that block direct media (UDP) can route through Agora's TLS cloud proxy
+      if (proxy()) c.startProxyServer(5);
       c.on("connection-state-change", (cur) => setConn(cur));
       c.on("user-published", async (u: IAgoraRTCRemoteUser, kind) => {
         if (Number(u.uid) === t.screenUid) return; // my own screen stream
@@ -178,6 +181,7 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
       const t = await tokenFn({ data: { id: meetingId, kind: "screen" } });
       const sc = A.createClient({ mode: "rtc", codec: "vp8" });
       screenClient.current = sc;
+      if (proxy()) sc.startProxyServer(5);
       sc.on("token-privilege-will-expire", async () => { try { const r = await tokenFn({ data: { id: meetingId, kind: "screen" } }); await sc.renewToken(r.token); } catch { void stopScreen(true); } });
       await sc.join(t.appId, t.channel, t.token, t.uid);
       await sc.publish(list);
