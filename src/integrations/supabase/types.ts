@@ -5727,6 +5727,7 @@ export type Database = {
       homework_list: {
         Args: {
           _course: string
+          _kind?: string
           _limit: number
           _offset: number
           _q: string
@@ -5740,6 +5741,7 @@ export type Database = {
           due_at: string
           id: string
           is_teacher: boolean
+          kind: string
           late: number
           max_score: number
           not_submitted: number
@@ -6184,6 +6186,7 @@ export type Database = {
           due_at: string
           effective_due: string
           id: string
+          kind: string
           last_late: boolean
           last_submitted_at: string
           late_policy: string
