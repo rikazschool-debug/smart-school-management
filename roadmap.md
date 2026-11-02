@@ -176,7 +176,7 @@
 
 ## Grades closure round (docs/grades-closure-brief.md)
 - [~] GC1 fresh re-run 12/12 + teacher 12/12; 88.6 proven (45/50×30=27 + 88/100×70=61.6). Open: return-for-revision step in browser
-- [ ] GC2 open/verify PDFs; separate internal sheet vs published result
+- [x] GC2 7 PDFs opened (course published+internal, student, 2 children, completion, corrections); published sheet added; dates/section fixed. Open: multi-page grades PDF not exercised
 - [ ] GC3 exceptions/permissions (no auto vice powers; 30-day as policy)
 - [ ] GC4 two-window conflict without forced overwrite
 - [ ] GC5 incomplete publish
