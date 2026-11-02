@@ -8,14 +8,14 @@ export function demoInput(): TTInput {
   const teachers: TTTeacher[] = Array.from({ length: 10 }, (_, i) => ({ id: `t${i + 1}`, name: `معلم ${i + 1}`, status: "active", has_account: i !== 9, department_id: null, weekly_max: 24, daily_max: 6 }));
   teachers.push({ id: "t11", name: "معلم بلا تكليف", status: "active", has_account: true, department_id: null, weekly_max: null, daily_max: null });
   const subjects: [string, number, number, Partial<TTCourse>?][] = [
-    ["رياضيات", 6, 0], ["لغة عربية", 6, 1], ["علوم", 4, 2, { needs_double: true, room_kind: "معمل" }], ["إنجليزي", 5, 3], ["دين", 4, 4],
+    ["رياضيات", 6, 0], ["لغة عربية", 6, 1], ["علوم", 4, 2, { needs_double: true, room_kind: "معمل" }], ["إنجليزي", 4, 3], ["دين", 4, 4],
     ["اجتماعيات", 3, 5], ["حاسب", 2, 6], ["تربية بدنية", 2, 7], ["فنية", 1, 8],
   ];
   const courses: TTCourse[] = [];
   for (let s = 0; s < 5; s++) for (const [name, w, ti, extra] of subjects) {
     // two teachers share the heavy subjects so loads stay feasible
     const teacher = ti <= 1 && s >= 3 ? `t${10}` : `t${ti + 1}`;
-    courses.push({ id: `c${s}-${name}`, subject: name, section_id: `s${s}`, section: `أول / ${"أبجده"[s]}`, weekly: w, daily_max: name === "رياضيات" || name === "لغة عربية" ? 2 : 1,
+    courses.push({ id: `c${s}-${name}`, subject: name, section_id: `s${s}`, section: `أول / ${"أبجده"[s]}`, weekly: w, daily_max: name === "رياضيات" || name === "لغة عربية" || name === "علوم" ? 2 : 1,
       needs_double: false, room_kind: null, day_prefs: null, teacher_id: teacher, teacher_count: 1, ...(extra ?? {}) });
   }
   const unavailability: TTUnav[] = [
