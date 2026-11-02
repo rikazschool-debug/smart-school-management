@@ -152,12 +152,14 @@ function Minutes({ meetingId, minutes, members, organizerId, nm, writer, organiz
   const base = draft ?? confirmed[0];
   const people = [organizerId, ...members.map((x) => x.user_id)];
   const [open, setOpen] = useState(false);
-  const [d, setD] = useState(() => ({
-    topics: ((base?.topics as Row[]) ?? [{ title: "", discussion: "" }]).map((t) => ({ title: t.title ?? "", discussion: t.discussion ?? "" })),
-    present: (base?.present as string[]) ?? members.filter((x) => x.attended).map((x) => x.user_id),
-    absent: (base?.absent as string[]) ?? members.filter((x) => x.attended === false || x.rsvp === "declined").map((x) => x.user_id),
+  const init = () => ({
+    topics: ((base?.topics as Row[] | undefined)?.length ? (base!.topics as Row[]) : [{ title: "", discussion: "" }]).map((t) => ({ title: t.title ?? "", discussion: t.discussion ?? "" })),
+    present: (base?.present as string[] | undefined)?.length ? (base!.present as string[]) : members.filter((x) => x.attended).map((x) => x.user_id),
+    absent: (base?.absent as string[] | undefined)?.length ? (base!.absent as string[]) : members.filter((x) => x.attended === false || x.rsvp === "declined").map((x) => x.user_id),
     notes: base?.notes ?? "", change_note: draft?.change_note ?? "",
-  }));
+  });
+  const [d, setD] = useState(init);
+  const startEdit = () => { setD(init()); setOpen(true); };
   const [busy, setBusy] = useState(false);
   async function save() {
     setBusy(true);
@@ -170,14 +172,14 @@ function Minutes({ meetingId, minutes, members, organizerId, nm, writer, organiz
     if (!draft || !(await ask("تثبيت هذا الإصدار؟ لا يُعدّل بعد التثبيت إلا بإصدار جديد موثق."))) return;
     const { error } = await db.rpc("adm_minutes_confirm" as never, { _id: draft.id, _rev: draft.rev } as never);
     if (error) return void toast.error(arabicError(error));
-    toast.success("ثُبّت المحضر"); onChange();
+    toast.success("ثُبّت المحضر"); setOpen(false); onChange();
   }
   const toggle = (k: "present" | "absent", u: string, on: boolean) => setD({ ...d, [k]: on ? [...d[k], u] : d[k].filter((x) => x !== u) });
   return (
     <section className="space-y-3 rounded-xl border bg-card p-4">
       <div className="flex flex-wrap items-center gap-2"><h2 className="font-semibold">المحضر</h2>
         {draft && <Pill tone="warn">مسودة إصدار {draft.version}</Pill>}
-        {writer && !open && <Button size="sm" variant="outline" className="ms-auto" onClick={() => setOpen(true)}>{draft ? "متابعة تحرير المسودة" : confirmed.length ? "إصدار جديد / ملحق" : "كتابة المحضر"}</Button>}
+        {writer && !open && <Button size="sm" variant="outline" className="ms-auto" onClick={startEdit}>{draft ? "متابعة تحرير المسودة" : confirmed.length ? "إصدار جديد / ملحق" : "كتابة المحضر"}</Button>}
       </div>
       {!minutes.length && !open && <p className="text-sm text-muted-foreground">لا يوجد محضر بعد.</p>}
       {open && writer && (
