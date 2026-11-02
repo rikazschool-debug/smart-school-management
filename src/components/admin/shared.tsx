@@ -54,7 +54,7 @@ export function useEvents(entity: string, id: string) {
   });
 }
 
-const ACTIONS: Record<string, string> = { started: "بدأ التنفيذ", file_added: "أُضيف مرفق", file_removed: "أُزيل مرفق", progress: "تحديث تقدم",
+const ACTIONS: Record<string, string> = { started: "بدأ التنفيذ", file_added: "أُضيف مرفق", file_removed: "أُزيل مرفق",
   created: "أُنشئ", edited: "عُدّل", new_version: "إصدار جديد", draft: "حُفظت مسودة", submitted: "قُدّم", in_progress: "بدأت المعالجة", completed: "اكتمل",
   rejected: "رُفض", returned: "أُعيد", reassigned: "حُوّل", acknowledged: "اطّلع المسؤول", progress: "تحديث التقدم", done: "أُنجز",
   awaiting_confirmation: "بانتظار التأكيد", blocked: "عائق", comment: "تعليق", clarify: "طلب توضيح", updated: "تعديل", cancelled: "أُلغي", confirmed: "أُكّد",
