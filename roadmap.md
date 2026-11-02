@@ -236,3 +236,6 @@
 - Next: XLSX/PDF export checks for requests/tasks (+ homework multi-page PDF visual), then duties.
 - Done (Nov 2): admin exports cover all filtered rows (paged fetch, filters in header, Arabic labels, Riyadh dates); scripts/admin-export-journey.py 5/5; tasks PDF 3 pages visually checked (repeated header, "صفحة X من Y", no clipping).
 - Next: homework multi-page PDF visual check; requests export browser run; then duties (D1–D10 acceptance).
+- Done (Nov 2, round 3): requests export 9/9 (scripts/admin-req-export-journey.py; 110 rows, 2 versions, drafts hidden, filters/scope/search, Riyadh dates), PDF 4 pages visually checked; stable ordering (id tiebreak) in adm_request_list/adm_task_list; request journey 29/29 incl. network-failure retry, Arabic "أُعيد تقديمه", reassign notification, mobile pill. Fixed shared Uploader: failed upload never released its file row nor showed an error (affected homework/feedback/pickup/admin).
+- Open: task export has no attachments (summary list) — proof/addendum split only on task page; detailed task report not built. Homework multi-page PDF visual check. Old-notification access re-check after reassign (only direct link checked).
+- Next: homework PDF visual check, then duties D1–D10.
