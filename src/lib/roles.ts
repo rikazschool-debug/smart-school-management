@@ -46,6 +46,7 @@ export type NavKey =
   | "communication"
   | "homework"
   | "attendance"
+  | "station"
   | "pickup"
   | "notifications";
 
@@ -62,16 +63,17 @@ const MANAGE: NavKey[] = [
   "schedule",
   "substitutions",
   "attendance",
+  "station",
   "communication",
   "notifications",
 ];
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
-  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "attendance")],
+  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "attendance" && k !== "station")],
   org_owner: ["home", "schools", "members", ...MANAGE.slice(1)],
   principal: MANAGE,
   vice_principal: MANAGE,
-  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "communication", "notifications"],
+  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "station", "communication", "notifications"],
   dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
   supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
   teacher: ["home", "classrooms", "homework", "schedule", "attendance", "communication", "notifications"],
@@ -79,7 +81,7 @@ export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   student: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
   counselor: ["home", "attendance", "communication", "notifications"],
   nurse: ["home", "communication", "notifications"],
-  security: ["home", "attendance", "communication", "notifications"],
+  security: ["home", "attendance", "station", "communication", "notifications"],
 };
 
 /** Roles a caller may invite (mirrors can_invite: organization owner only, never another owner). */
