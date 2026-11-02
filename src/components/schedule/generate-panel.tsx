@@ -73,7 +73,7 @@ export function GeneratePanel({ tt, open, onClose, onApplied }: { tt: Row; open:
         stopWorker(); setBusy(false); setProg(null);
         const r = m.res as SolveResult;
         setRes(r);
-        await finish(d.run_id, r.status, { status: r.status, placed: r.slots.length, ms: r.ms, perCourse: r.perCourse.filter((p) => p.placed < p.required), softMisses: r.softMisses.length });
+        await finish(d.run_id, r.status, { status: r.status, placed: r.slots.length, ms: r.ms, perCourse: r.perCourse.filter((p) => p.placed < p.required || !!p.reason), softMisses: r.softMisses.length });
       } else if (m.type === "error") {
         stopWorker(); setBusy(false); setProg(null);
         await finish(d.run_id, "failed", { reason: m.message });
@@ -150,7 +150,7 @@ export function GeneratePanel({ tt, open, onClose, onApplied }: { tt: Row; open:
             </p>
             {indep.length > 0 && <ul className="text-xs text-destructive">{indep.slice(0, 10).map((x) => <li key={x}>{x}</li>)}</ul>}
             <details open className="rounded-xl border p-2">
-              <summary className="cursor-pointer text-sm font-semibold">المقررات: المطلوب والموزع ({res.perCourse.filter((p) => p.placed < p.required).length} ناقص)</summary>
+              <summary className="cursor-pointer text-sm font-semibold">المقررات: المطلوب والموزع ({res.perCourse.filter((p) => p.placed < p.required || !!p.reason).length} ناقص)</summary>
               <table className="mt-2 w-full text-xs"><thead><tr className="text-muted-foreground"><th className="text-start">المقرر</th><th className="text-start">المطلوب</th><th className="text-start">الموزع</th><th className="text-start">السبب المعروف</th></tr></thead>
                 <tbody>{[...res.perCourse].sort((a, b) => (a.placed >= a.required ? 1 : 0) - (b.placed >= b.required ? 1 : 0)).map((p) => (
                   <tr key={p.course_id} className="border-t"><td>{p.subject} — {p.section}</td><td>{p.required}</td><td className={p.placed < p.required ? "font-bold text-destructive" : ""}>{p.placed}</td><td>{p.reason ?? (p.placed >= p.required ? "✓" : "")}</td></tr>
