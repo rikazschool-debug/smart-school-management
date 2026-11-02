@@ -6,15 +6,16 @@ import { AttendanceScanner } from "@/components/attendance/scanner";
 import { StudentSearchCheckin } from "@/components/attendance/student-search";
 import { GateTab } from "@/components/attendance/staff";
 import { CallsTab } from "@/components/attendance/calls-settings";
+import { FieldTestGuide } from "@/components/attendance/field-test-guide";
 import { attTabs, canManage } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/app/attendance-station")({
-  head: () => ({ meta: [{ title: "حضور الطلاب والنداء بالمسح — ركاز" }, { name: "description", content: "مسح بطاقات الحضور، البحث بالاسم، البوابة والنداء في مكان واحد." }] }),
+  head: () => ({ meta: [{ title: "حضور الطلاب والنداء بالمسح — ركاز" }, { name: "description", content: "مسح بطاقات الحضور، البحث بالاسم، البوابة والنداء في مكان واحد." }, { property: "og:title", content: "حضور الطلاب والنداء بالمسح — ركاز" }, { property: "og:description", content: "مسح الحضور والبوابة والنداء في مكان واحد." }] }),
   component: Page,
 });
 
-type T = "scan" | "gate" | "calls";
-const LABEL: Record<T, string> = { scan: "مسح الحضور والبحث", gate: "البوابة", calls: "النداء" };
+type T = "scan" | "gate" | "calls" | "guide";
+const LABEL: Record<T, string> = { scan: "مسح الحضور والبحث", gate: "البوابة", calls: "النداء", guide: "دليل الاختبار الميداني" };
 
 function Page() {
   const [tab, setTab] = useState<T>("scan");
@@ -24,7 +25,7 @@ function Page() {
         const allowed = attTabs(ctx.role);
         if (!allowed.includes("gate")) return <EmptyState title="هذا القسم متاح للأمن والاستقبال والمخولين فقط" />;
         const canApprove = canManage(ctx.role) || ctx.role === "student_affairs";
-        const tabs: T[] = ["scan", "gate", ...(allowed.includes("calls") ? (["calls"] as T[]) : [])];
+        const tabs: T[] = ["scan", "gate", ...(allowed.includes("calls") ? (["calls"] as T[]) : []), "guide"];
         return (
           <>
             <PageHeader title="حضور الطلاب والنداء بالمسح" desc="الحضور الصباحي بالبطاقة أو بالبحث، وحركة البوابة، وطابور النداء. الوقت والحالة يحددهما الخادم." />
@@ -35,6 +36,7 @@ function Page() {
             {tab === "scan" && <div className="space-y-6"><AttendanceScanner schoolId={ctx.schoolId} schoolName={ctx.schoolName} /><StudentSearchCheckin schoolId={ctx.schoolId} /></div>}
             {tab === "gate" && <GateTab ctx={ctx} canApprove={canApprove} />}
             {tab === "calls" && <CallsTab ctx={ctx} />}
+            {tab === "guide" && <FieldTestGuide schoolName={ctx.schoolName} />}
           </>
         );
       }}

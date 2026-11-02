@@ -216,7 +216,11 @@ try {
   check("counselor reads but cannot decide", coRows.length === 1 && !!coDec.error);
   const stuReq = await stu.c.rpc("create_pickup_request", { _student: sSelf.id, _kind: "permission", _reason: "x", _planned_at: null, _person: null });
   check("student cannot request exit", !!stuReq.error);
-  await sec.c.rpc("pickup_arrived", { _id: req });
+  const noConf = await sec.c.rpc("pickup_arrived", { _id: req });
+  check("arrival needs explicit staff identity confirmation", !!noConf.error && /تأكيد/.test(noConf.error.message), noConf.error?.message);
+  await sec.c.rpc("pickup_arrived", { _id: req, _confirmed: true });
+  const idc = (await admin.from("pickup_requests").select("identity_checked_by,identity_checked_at").eq("id", req).single()).data!;
+  check("identity check recorded (staff + time)", idc.identity_checked_by === sec.id && !!idc.identity_checked_at, idc);
   const q1 = (await admin.from("call_queue").select("announce,status").eq("pickup_id", req).single()).data!;
   check("call queued without reason/family data", q1.status === "queued" && !q1.announce.includes("طبي") && !q1.announce.includes("أبو") && q1.announce.includes("خالد المسح"), q1);
   const tNot = (await admin.from("notifications").select("id").eq("user_id", te.id).eq("dedupe_key", "pickup-prep:" + req)).data ?? [];
@@ -253,7 +257,7 @@ try {
   // cancel removes pending call
   const r2 = (await gu.c.rpc("create_pickup_request", { _student: s2.id, _kind: "permission", _reason: "ظرف", _planned_at: null, _person: null })).data;
   await vp.c.rpc("decide_pickup", { _id: r2, _approve: true, _note: null });
-  await sec.c.rpc("pickup_arrived", { _id: r2 });
+  await sec.c.rpc("pickup_arrived", { _id: r2, _confirmed: true });
   const gc = await gu.c.rpc("cancel_pickup", { _id: r2, _reason: null });
   const q2 = (await admin.from("call_queue").select("status").eq("pickup_id", r2).single()).data!;
   check("guardian cancels before preparing, call removed", !gc.error && q2.status === "cancelled", { e: gc.error?.message, q2 });
@@ -274,7 +278,7 @@ try {
   const coDet = (await co.c.rpc("pickup_delegate_detail", { _id: r3 })).data, guDet = (await gu.c.rpc("pickup_delegate_detail", { _id: r3 })).data;
   check("delegate detail only for requester/approver", coDet === null && guDet?.phone === "0551234567", { coDet, guDet });
   await vp.c.rpc("decide_pickup", { _id: r3, _approve: true, _note: null });
-  const arrPend = await sec.c.rpc("pickup_arrived", { _id: r3, _id_last4: "4321" });
+  const arrPend = await sec.c.rpc("pickup_arrived", { _id: r3, _id_last4: "4321", _confirmed: true });
   check("exit approval alone does not authorize delegate", !!arrPend.error && /لم يُعتمد/.test(arrPend.error.message), arrPend.error?.message);
   check("security cannot approve delegate", !!(await sec.c.rpc("decide_delegate", { _id: r3, _approve: true, _note: null })).error);
   await vp.c.rpc("decide_delegate", { _id: r3, _approve: true, _note: null });
@@ -282,11 +286,11 @@ try {
   const afterUpd = (await admin.from("pickup_requests").select("status,delegate_status").eq("id", r3).single()).data!;
   check("changing recipient after approval re-opens review", !upd.error && afterUpd.status === "under_review" && afterUpd.delegate_status === "pending", { e: upd.error?.message, afterUpd });
   await vp.c.rpc("decide_pickup", { _id: r3, _approve: true, _note: null }); await vp.c.rpc("decide_delegate", { _id: r3, _approve: true, _note: null });
-  const mis = (await sec.c.rpc("pickup_arrived", { _id: r3, _id_last4: "0000" })).data;
+  const mis = (await sec.c.rpc("pickup_arrived", { _id: r3, _id_last4: "0000", _confirmed: true })).data;
   const misEv = (await admin.from("attendance_events").select("id").eq("entity_id", r3).eq("action", "delegate_mismatch")).data ?? [];
   const st3 = (await admin.from("pickup_requests").select("status").eq("id", r3).single()).data!;
   check("non-matching recipient refused and logged", mis?.ok === false && misEv.length === 1 && st3.status === "approved", { mis, n: misEv.length, st3 });
-  const okArr = (await sec.c.rpc("pickup_arrived", { _id: r3, _id_last4: "4321" })).data;
+  const okArr = (await sec.c.rpc("pickup_arrived", { _id: r3, _id_last4: "4321", _confirmed: true })).data;
   check("matching recipient → arrival", okArr?.ok === true, okArr);
   await sec.c.rpc("pickup_progress", { _id: r3, _to: "ready" });
   const hd = await sec.c.rpc("handover_pickup", { _id: r3 });
@@ -309,10 +313,34 @@ try {
   const lateF = await gu.c.rpc("create_pickup_file", { _pickup: r5, _name: "x.pdf", _mime: "application/pdf", _size: 10 });
   check("no attachment after decision", !!lateF.error);
   await admin.from("pickup_requests").update({ delegate_valid_until: new Date(Date.now() - 60e3).toISOString() }).eq("id", r5);
-  const exp = await sec.c.rpc("pickup_arrived", { _id: r5, _id_last4: "4321" });
+  const exp = await sec.c.rpc("pickup_arrived", { _id: r5, _id_last4: "4321", _confirmed: true });
   check("expired delegation refused", !!exp.error && /انتهت/.test(exp.error.message), exp.error?.message);
   const gc5 = await gu.c.rpc("cancel_pickup", { _id: r5, _reason: null });
   check("guardian cancels delegation request", !gc5.error, gc5.error?.message);
+  // lockout after repeated mismatches, browser tampering, other day
+  const r6 = (await gu.c.rpc("submit_pickup_request", { _student: s2.id, _kind: "permission", _reason: "موعد", _planned_at: null, _mode: "one_time", _person: null, _delegate: D })).data as string;
+  await vp.c.rpc("decide_pickup", { _id: r6, _approve: true, _note: null }); await vp.c.rpc("decide_delegate", { _id: r6, _approve: true, _note: null });
+  const m1 = (await sec.c.rpc("pickup_arrived", { _id: r6, _id_last4: "1111", _confirmed: true })).data;
+  const m2 = (await sec.c.rpc("pickup_arrived", { _id: r6, _id_last4: "2222", _confirmed: true })).data;
+  const m3 = (await sec.c.rpc("pickup_arrived", { _id: r6, _id_last4: "3333", _confirmed: true })).data;
+  const m4 = await sec.c.rpc("pickup_arrived", { _id: r6, _id_last4: "4321", _confirmed: true });
+  const lockEv = (await admin.from("attendance_events").select("action").eq("entity_id", r6).in("action", ["delegate_mismatch", "delegate_locked"])).data ?? [];
+  check("3 mismatches lock the delegation; correct digits then refused", m1?.attempts_left === 2 && m2?.attempts_left === 1 && m3?.locked === true && !!m4.error && /أُوقف/.test(m4.error.message) && lockEv.length === 3, { m1, m2, m3, e: m4.error?.message, n: lockEv.length });
+  const lockN = (await admin.from("notifications").select("id").eq("user_id", vp.id).eq("dedupe_key", `pickup-lock:${r6}:${vp.id}`)).data ?? [];
+  check("approver notified of lockout", lockN.length === 1);
+  const tg = await gu.c.from("pickup_requests").update({ status: "ready" }).eq("id", r6).select("id");
+  const ts = await sec.c.from("pickup_requests").update({ status: "ready" }).eq("id", r6).select("id");
+  const st6 = (await admin.from("pickup_requests").select("status").eq("id", r6).single()).data!;
+  check("browser cannot jump status to ready", (!!tg.error || !tg.data?.length) && (!!ts.error || !ts.data?.length) && st6.status === "approved", { tg: tg.error?.message, ts: ts.error?.message, st6 });
+  await gu.c.rpc("update_pickup_delegate", { _id: r6, _mode: "one_time", _person: null, _delegate: { ...D, name: "شخص بديل كامل" } });
+  const rs6 = (await admin.from("pickup_requests").select("delegate_locked_at,delegate_failed_attempts,delegate_status").eq("id", r6).single()).data!;
+  check("new recipient resets lockout and needs new review", rs6.delegate_locked_at === null && rs6.delegate_failed_attempts === 0 && rs6.delegate_status === "pending", rs6);
+  await vp.c.rpc("decide_pickup", { _id: r6, _approve: true, _note: null }); await vp.c.rpc("decide_delegate", { _id: r6, _approve: true, _note: null });
+  const yest = new Date(riyadhNow().getTime() - 86400e3).toISOString().slice(0, 10);
+  await admin.from("pickup_requests").update({ req_date: yest }).eq("id", r6);
+  const od = await sec.c.rpc("pickup_arrived", { _id: r6, _id_last4: "4321", _confirmed: true });
+  check("delegation does not work on another day", !!od.error && /لهذا اليوم/.test(od.error.message), od.error?.message);
+
   // branch comparison
   const cmp = (await owner.c.rpc("attendance_compare", { _org: org, _from: today(), _to: today() })).data ?? [];
   const cmpVp = (await vp.c.rpc("attendance_compare", { _org: org, _from: today(), _to: today() })).data ?? [];
@@ -330,6 +358,8 @@ try {
   check("counselor cannot edit attendance", !!coManual.error);
   const board = (await vp.c.rpc("attendance_board", { _school: A, _date: today() })).data;
   check("board counts", board?.late >= 1 && board?.present >= 1, board);
+  const polX = await owner2.c.rpc("attendance_policy", { _school: A, _date: today() });
+  check("school policy not readable directly by other signed-in users", !!polX.error);
   const gBoard = (await gu.c.rpc("attendance_board", { _school: A, _date: today() })).data;
   check("guardian has no board", gBoard === null);
 } catch (e) { bad++; console.log("FAIL exception", e); }

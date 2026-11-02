@@ -44,7 +44,7 @@ export function TodayTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean })
   const [date, setDate] = useState(riyadhToday());
   const refresh = useRefresh();
   const board = useQuery({ queryKey: ["att-board", S, date], refetchInterval: 15000, queryFn: async () => { const { data, error } = await db.rpc("attendance_board", { _school: S, _date: date }); if (error) throw error; return data as Row | null; } });
-  const review = useQuery({ queryKey: ["att-review", S, date], queryFn: async () => { const { data, error } = await db.from("attendance_days").select("id, status, escalated_at, escalation_note, students(full_name, enrollments(status, sections(name, grades(name))))").eq("school_id", S).eq("date", date).eq("status", "pending_review"); if (error) throw error; return data as Row[]; } });
+  const review = useQuery({ queryKey: ["att-review", S, date], queryFn: async () => { const { data, error } = await db.rpc("att_day_rows", { _school: S, _from: date, _to: date, _status: "pending_review" }); if (error) throw error; return data as Row[]; } });
   const corr = useQuery({ queryKey: ["att-corr", S], enabled: canApprove, queryFn: async () => { const { data, error } = await db.from("attendance_corrections").select("id, old_status, new_status, new_late, reason, requested_at, attendance_days(date, students(full_name))").eq("school_id", S).eq("status", "pending").order("requested_at"); if (error) throw error; return data as Row[]; } });
   const b = board.data;
   const pol = b?.["policy"] as Row | null | undefined;
@@ -72,7 +72,7 @@ export function TodayTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean })
           <ul className="divide-y rounded-xl border bg-card">
             {review.data.map((d) => (
               <li key={d["id"]} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
-                <span><b>{d["students"]?.full_name}</b> <span className="text-muted-foreground">— {sectionOf(d["students"] ?? {})}</span>{d["escalated_at"] && <Badge variant="outline" className="ms-2 border-amber-500 text-amber-700" title={d["escalation_note"] ?? ""}>مُصعّد للوكيل</Badge>}</span>
+                <span><b>{d["student_name"]}</b> <span className="text-muted-foreground">— {d["section"]}</span>{d["escalated_at"] && <Badge variant="outline" className="ms-2 border-amber-500 text-amber-700" title={d["escalation_note"] ?? ""}>مُصعّد للوكيل</Badge>}</span>
                 {canApprove && <span className="flex gap-1">
                   <Button size="sm" variant="outline" onClick={async () => { if (await ask("اعتماد الغياب؟ سيُشعر ولي الأمر.")) { const r = await rpc("resolve_absence", { _day: d["id"], _status: "absent", _reason: null }, "اعتُمد الغياب"); if (r.ok) refresh(); } }}>اعتماد غياب</Button>
                   <Button size="sm" variant="ghost" onClick={async () => { const t = await askText("سبب العذر", { required: true }); if (t) { const r = await rpc("resolve_absence", { _day: d["id"], _status: "excused", _reason: t }, "سُجّل العذر"); if (r.ok) refresh(); } }}>بعذر</Button>
@@ -233,14 +233,17 @@ export function PickupsTab({ ctx, canApprove, gate }: { ctx: Ctx; canApprove: bo
                   {gate && r["status"] === "approved" && (r["delegate_mode"] === "one_time" && r["delegate_status"] !== "approved"
                     ? <Badge variant="outline" className="border-amber-500 text-amber-700">{r["delegate_status"] === "rejected" ? "رُفض التفويض — لا تسلّم" : "التفويض بانتظار الاعتماد"}</Badge>
                     : <Button size="sm" onClick={async () => {
+                      const who = `«${r["pickup_name"]}»${r["relationship"] ? ` — ${r["relationship"]} للطالب` : ""}`;
+                      if (!(await ask(`اطلب الهوية الأصلية وطابق الاسم ${who} مع الصورة والبيانات وفق إجراء المدرسة. هل تحققت بنفسك من الهوية؟ (لا تصوّر الهوية ولا تدوّن رقمها)`, { ok: "نعم، تحققت من الهوية" }))) return;
                       if (r["delegate_mode"] === "one_time") {
-                        const l4 = await askText(`اطلب هوية «${r["pickup_name"]}» وأدخل آخر 4 أرقام منها`, { required: true }); if (!l4) return;
-                        const { data, error } = await db.rpc("pickup_arrived", { _id: r["id"], _id_last4: l4 });
+                        const l4 = await askText(`أدخل آخر 4 أرقام من هوية ${r["pickup_name"]} (مطابقة إضافية فقط)`, { required: true }); if (!l4) return;
+                        const { data, error } = await db.rpc("pickup_arrived", { _id: r["id"], _id_last4: l4, _confirmed: true });
                         if (error) return void toast.error(arabicError(error));
-                        if (!(data as Row)?.["ok"]) return void toast.error((data as Row)?.["message"] ?? "غير مطابق");
+                        const d = data as Row;
+                        if (!d?.["ok"]) { toast.error(`${d?.["message"] ?? "غير مطابق"}${d?.["attempts_left"] != null ? ` — المحاولات المتبقية: ${d["attempts_left"]}` : ""}`); refresh(); return; }
                         toast.success("تم التحقق وسُجّل الوصول وأُضيف النداء"); refresh(); return;
                       }
-                      if (await ask(`تأكدت من هوية المستلم «${r["pickup_name"]}»؟ سيبدأ النداء والتجهيز.`)) await act("pickup_arrived", { _id: r["id"] }, "سُجّل وصول المستلم وأُضيف النداء");
+                      await act("pickup_arrived", { _id: r["id"], _confirmed: true }, "سُجّل وصول المستلم وأُضيف النداء");
                     }}>وصل المستلم</Button>)}
                   {r["status"] === "arrived" && <Button size="sm" variant="outline" onClick={() => act("pickup_progress", { _id: r["id"], _to: "preparing" }, "جارٍ التجهيز")}>بدء التجهيز</Button>}
                   {["arrived", "preparing"].includes(r["status"]) && <Button size="sm" variant="outline" onClick={() => act("pickup_progress", { _id: r["id"], _to: "ready" }, "الطالب جاهز")}>الطالب جاهز</Button>}
@@ -374,25 +377,25 @@ export function RecordsTab({ ctx, canCorrect }: { ctx: Ctx; canCorrect: boolean 
   const S = ctx.schoolId;
   const [from, setFrom] = useState(riyadhToday()); const [to, setTo] = useState(riyadhToday());
   const [timeline, setTimeline] = useState<Row | null>(null);
-  const q = useQuery({ queryKey: ["att-records", S, from, to], queryFn: async () => { const { data, error } = await db.from("attendance_days").select("id, date, status, late_minutes, first_in_at, source, note, student_id, students(full_name, enrollments(status, sections(name, grades(name))))").eq("school_id", S).gte("date", from).lte("date", to).order("date", { ascending: false }).limit(2000); if (error) throw error; return data as Row[]; } });
-  const sections = [...new Set((q.data ?? []).map((d) => sectionOf(d["students"] ?? {})))].sort();
+  const q = useQuery({ queryKey: ["att-records", S, from, to], queryFn: async () => { const { data, error } = await db.rpc("att_day_rows", { _school: S, _from: from, _to: to }); if (error) throw error; return data as Row[]; } });
+  const sections = [...new Set((q.data ?? []).map((d) => d["section"]))].sort();
   const t = useListTools([
     { key: "status", label: "الحالة", options: Object.entries(DAY_STATUS).map(([value, label]) => ({ value, label })) },
     { key: "section", label: "الشعبة", options: sections.map((s) => ({ value: s, label: s })) },
   ]);
-  const rows = applyListTools(t, q.data ?? [], (d) => d["students"]?.full_name ?? "", (d, k) => (k === "status" ? d["status"] : sectionOf(d["students"] ?? {})));
+  const rows = applyListTools(t, q.data ?? [], (d) => d["student_name"] ?? "", (d, k) => (k === "status" ? d["status"] : d["section"]));
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-end gap-3">
         <div className="space-y-1"><Label htmlFor="rf">من</Label><Input id="rf" type="date" value={from} onChange={(e) => e.target.value && setFrom(e.target.value)} /></div>
         <div className="space-y-1"><Label htmlFor="rt">إلى</Label><Input id="rt" type="date" value={to} onChange={(e) => e.target.value && setTo(e.target.value)} /></div>
       </div>
-      <ListTools s={t} placeholder="ابحث باسم الطالب" count={rows.length} exp={{ title: `سجل الحضور ${from} — ${to}`, school: ctx.schoolName, headers: ["التاريخ", "الطالب", "الشعبة", "الحالة", "دقائق التأخر", "وقت الدخول", "المصدر", "ملاحظة"], rows: () => rows.map((d) => [d["date"], d["students"]?.full_name, sectionOf(d["students"] ?? {}), DAY_STATUS[d["status"]], d["late_minutes"] || "", hm(d["first_in_at"]), d["source"] === "scan" ? "مسح" : d["source"] === "manual" ? "يدوي" : "مراجعة", d["note"] ?? ""]) }} />
+      <ListTools s={t} placeholder="ابحث باسم الطالب" count={rows.length} exp={{ title: `سجل الحضور ${from} — ${to}`, school: ctx.schoolName, headers: ["التاريخ", "الطالب", "الشعبة", "الحالة", "دقائق التأخر", "وقت الدخول", "المصدر", "ملاحظة"], rows: () => rows.map((d) => [d["date"], d["student_name"], d["section"], DAY_STATUS[d["status"]], d["late_minutes"] || "", hm(d["first_in_at"]), d["source"] === "scan" ? "مسح" : d["source"] === "manual" ? "يدوي" : "مراجعة", d["note"] ?? ""]) }} />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !rows.length ? <EmptyState title={q.data?.length ? "لا نتائج مطابقة" : "لا توجد سجلات في هذه الفترة"} /> : (
         <ul className="divide-y rounded-xl border bg-card">
           {rows.slice(0, 300).map((d) => (
             <li key={d["id"]} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
-              <span><span className="text-muted-foreground">{d["date"]}</span> • <button className="font-semibold hover:text-primary" onClick={() => setTimeline({ id: d["student_id"], name: d["students"]?.full_name })}>{d["students"]?.full_name}</button> <span className="text-muted-foreground">— {sectionOf(d["students"] ?? {})}</span>{d["escalated_at"] && <Badge variant="outline" className="ms-2 border-amber-500 text-amber-700" title={d["escalation_note"] ?? ""}>مُصعّد للوكيل</Badge>}</span>
+              <span><span className="text-muted-foreground">{d["date"]}</span> • <button className="font-semibold hover:text-primary" onClick={() => setTimeline({ id: d["student_id"], name: d["student_name"] })}>{d["student_name"]}</button> <span className="text-muted-foreground">— {d["section"]}</span>{d["escalated_at"] && <Badge variant="outline" className="ms-2 border-amber-500 text-amber-700" title={d["escalation_note"] ?? ""}>مُصعّد للوكيل</Badge>}</span>
               <span className="flex items-center gap-2"><Pill s={d["status"]} />{d["status"] === "late" && <span className="text-xs">{d["late_minutes"]} د</span>}<span className="text-xs text-muted-foreground">{hm(d["first_in_at"])}</span>
                 {canCorrect && d["status"] !== "pending_review" && <Button size="sm" variant="ghost" onClick={async () => {
                   const ns = await askText("الحالة الصحيحة: اكتب حاضر أو متأخر أو غائب أو بعذر", { required: true }); if (!ns) return;

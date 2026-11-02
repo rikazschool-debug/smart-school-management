@@ -55,3 +55,5 @@ Protections: the last active owner cannot be deactivated or demoted; ownership c
 | See delegate phone / ID last 4 | yes | yes | approver roles | masked phone only; verifies ID last 4 | no | no | own request | no |
 | Permission attachment | read | read | approver roles read | no | no | no | own (upload before decision) | no |
 | Branch comparison | yes | no | no | no | no | no | no | no |
+
+- الحضور (جولة الإغلاق): الأمن والمرشد والمعتمدون يرون اسم الطالب وشعبته في سجلات الحضور اليومية لمدرستهم فقط (att_day_rows) دون باقي ملف الطالب. وصول المستلم يتطلب تأكيد الموظف للهوية؛ 3 محاولات غير مطابقة توقف التفويض. سياسة الحضور لا تُقرأ مباشرة من المتصفح.

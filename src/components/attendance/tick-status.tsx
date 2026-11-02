@@ -17,7 +17,7 @@ export function TickStatus({ schoolId }: { schoolId: string }) {
       <span className="font-semibold">الحصر التلقائي للغياب:</span>
       {!d["school_day"] ? <span>اليوم ليس يوم دراسة</span>
         : today?.["status"] === "ok" ? <span>تم اليوم الساعة {fmt(today["ran_at"])} — أضيف {today["added"]} للمراجعة</span>
-        : today?.["status"] === "failed" ? <span>فشل آخر تشغيل ({fmt(today["ran_at"])}) — ستُعاد المحاولة تلقائيًا خلال 10 دقائق</span>
+        : today?.["status"] === "failed" ? <span>فشل آخر تشغيل ({fmt(today["ran_at"])}) — {Number(today["attempts"]) >= 12 ? "توقفت المحاولات التلقائية بعد 12 محاولة — استخدم «تحديث قائمة الغياب»" : `ستُعاد المحاولة تلقائيًا خلال 10 دقائق (محاولة ${today["attempts"]} من 12)`}</span>
         : <span>مجدول بعد الساعة {cutoff ?? "—"}</span>}
       {d["overdue"] && <span className="font-semibold text-destructive">متأخر عن موعده بأكثر من 30 دقيقة — استخدم «تحديث قائمة الغياب» وأبلغ الدعم</span>}
       <span className="ms-auto text-muted-foreground">آخر حصر ناجح: {fmt(d["last_ok_at"] as string)}</span>

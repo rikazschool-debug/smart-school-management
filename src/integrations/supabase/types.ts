@@ -2776,7 +2776,9 @@ export type Database = {
           delegate_ack_at: string | null
           delegate_decided_at: string | null
           delegate_decided_by: string | null
+          delegate_failed_attempts: number
           delegate_id_last4: string | null
+          delegate_locked_at: string | null
           delegate_mode: string
           delegate_note: string | null
           delegate_phone: string | null
@@ -2788,6 +2790,8 @@ export type Database = {
           handed_at: string | null
           handed_by: string | null
           id: string
+          identity_checked_at: string | null
+          identity_checked_by: string | null
           kind: string
           pickup_name: string
           pickup_person_id: string | null
@@ -2816,7 +2820,9 @@ export type Database = {
           delegate_ack_at?: string | null
           delegate_decided_at?: string | null
           delegate_decided_by?: string | null
+          delegate_failed_attempts?: number
           delegate_id_last4?: string | null
+          delegate_locked_at?: string | null
           delegate_mode?: string
           delegate_note?: string | null
           delegate_phone?: string | null
@@ -2828,6 +2834,8 @@ export type Database = {
           handed_at?: string | null
           handed_by?: string | null
           id?: string
+          identity_checked_at?: string | null
+          identity_checked_by?: string | null
           kind: string
           pickup_name: string
           pickup_person_id?: string | null
@@ -2856,7 +2864,9 @@ export type Database = {
           delegate_ack_at?: string | null
           delegate_decided_at?: string | null
           delegate_decided_by?: string | null
+          delegate_failed_attempts?: number
           delegate_id_last4?: string | null
+          delegate_locked_at?: string | null
           delegate_mode?: string
           delegate_note?: string | null
           delegate_phone?: string | null
@@ -2868,6 +2878,8 @@ export type Database = {
           handed_at?: string | null
           handed_by?: string | null
           id?: string
+          identity_checked_at?: string | null
+          identity_checked_by?: string | null
           kind?: string
           pickup_name?: string
           pickup_person_id?: string | null
@@ -4008,7 +4020,7 @@ export type Database = {
       }
       _att_announce_section: { Args: { _student: string }; Returns: string }
       _att_build_review: {
-        Args: { _actor: string; _date: string; _school: string }
+        Args: { _actor: string; _date: string; _now?: string; _school: string }
         Returns: Json
       }
       _att_default_policy: {
@@ -4278,6 +4290,23 @@ export type Database = {
         Returns: Json
       }
       att_counselor: { Args: { _school: string }; Returns: boolean }
+      att_day_rows: {
+        Args: { _from: string; _school: string; _status?: string; _to: string }
+        Returns: {
+          date: string
+          escalated_at: string
+          escalation_note: string
+          first_in_at: string
+          id: string
+          late_minutes: number
+          note: string
+          section: string
+          source: string
+          status: string
+          student_id: string
+          student_name: string
+        }[]
+      }
       att_gate: { Args: { _school: string }; Returns: boolean }
       att_is_school_day: {
         Args: {
@@ -4295,7 +4324,10 @@ export type Database = {
           section: string
         }[]
       }
-      att_tick: { Args: { _limit?: number }; Returns: number }
+      att_tick: {
+        Args: { _limit?: number; _now?: string; _only?: string[] }
+        Returns: number
+      }
       att_tick_status: { Args: { _school: string }; Returns: Json }
       attendance_alerts: {
         Args: { _from: string; _min: number; _school: string; _to: string }
@@ -4880,7 +4912,7 @@ export type Database = {
       my_teacher_ids: { Args: never; Returns: string[] }
       open_circular: { Args: { _id: string }; Returns: undefined }
       pickup_arrived: {
-        Args: { _id: string; _id_last4?: string }
+        Args: { _confirmed?: boolean; _id: string; _id_last4?: string }
         Returns: Json
       }
       pickup_delegate_detail: { Args: { _id: string }; Returns: Json }
