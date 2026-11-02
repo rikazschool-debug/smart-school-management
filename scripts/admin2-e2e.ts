@@ -47,7 +47,7 @@ try {
   for (let i = 0; i < 5; i++) tch.push(await ins("teachers", { full_name: "t" + (i + 1), user_id: t[i]!.id }));
   const course = async (n: string, ti: number) => {
     const sec = await ins("sections", { name: n, grade_id: grade.id, year_id: year.id, capacity: 30 });
-    const c = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec.id });
+    const c = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec.id, weekly_periods: n === "ب" ? 0 : 1 }); // publishing needs complete weekly counts
     const a = await ins("teacher_assignments", { course_id: c.id, teacher_id: tch[ti].id });
     await pr.c.rpc("decide_assignment", { _id: a.id, _approve: true });
     return { sec, c };

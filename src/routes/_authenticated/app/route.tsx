@@ -5,11 +5,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
-  Bell, BookOpen, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarClock, CalendarDays, Repeat, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
+  Bell, BookOpen, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
-import { NAV_BY_ROLE, ROLE_LABELS, type NavKey } from "@/lib/roles";
+import { NAV_BY_ROLE, ROLE_LABELS, scheduleLabel, type NavKey } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,9 +35,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   homework: { to: "/app/homework", label: "الواجبات والاختبارات", icon: ClipboardList },
   grades: { to: "/app/grades", label: "أرشيف الدرجات الفصلية", icon: Award },
   results: { to: "/app/results", label: "النتائج", icon: Award },
-  schoolday: { to: "/app/school-day", label: "إعداد اليوم الدراسي", icon: CalendarClock },
   schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
-  substitutions: { to: "/app/substitutions", label: "التبديل والبدلاء", icon: Repeat },
   attendance: { to: "/app/attendance", label: "الحضور والخروج", icon: ScanLine },
   station: { to: "/app/attendance-station", label: "المسح والبوابة والنداء", icon: ScanLine },
   pickup: { to: "/app/pickup", label: "الخروج والاستئذان", icon: DoorOpen },
@@ -54,7 +52,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members"] },
   { label: "الإعداد الأكاديمي", keys: ["academic", "teachers", "courses", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
-  { label: "الجدول واليوم الدراسي", keys: ["schoolday", "schedule", "substitutions"] },
+  { label: "الجدول واليوم الدراسي", keys: ["schedule"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "station", "pickup"] },
   { label: "الإدارة المدرسية", keys: ["admin", "duties", "meetings", "calendar"] },
   { label: "التواصل", keys: ["communication"] },
@@ -113,7 +111,7 @@ function Shell() {
                     className="group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
                   >
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
-                    <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{n.label}</span>
+                    <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{k === "schedule" && active ? scheduleLabel(active.role) : n.label}</span>
                   </Link>
                 );
               })}

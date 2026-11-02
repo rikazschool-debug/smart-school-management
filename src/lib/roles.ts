@@ -41,8 +41,6 @@ export type NavKey =
   | "guardians"
   | "classrooms"
   | "schedule"
-  | "schoolday"
-  | "substitutions"
   | "communication"
   | "homework"
   | "grades"
@@ -69,9 +67,7 @@ const MANAGE: NavKey[] = [
   "classrooms",
   "homework",
   "grades",
-  "schoolday",
   "schedule",
-  "substitutions",
   "attendance",
   "station",
   "admin",
@@ -125,6 +121,15 @@ export function canManageStudents(role: Role) {
 /** Only principal-level managers edit timetables and assign substitutes (mirrors can_manage_school). */
 export function canEditSchedule(role: Role) {
   return canManage(role);
+}
+
+export type ScheduleTab = "timetable" | "subs" | "settings";
+/** «الجدول المدرسي» tabs: managers get build/substitutes/settings; everyone else sees only «جدولي» (their scoped view). */
+export function scheduleTabs(role: Role): ScheduleTab[] {
+  return canEditSchedule(role) ? ["timetable", "subs", "settings"] : [];
+}
+export function scheduleLabel(role: Role) {
+  return canEditSchedule(role) ? "الجدول المدرسي" : "جدولي";
 }
 
 export type CommTab = "inbox" | "mine" | "groups" | "classes" | "circulars" | "archive" | "manage" | "meetings";

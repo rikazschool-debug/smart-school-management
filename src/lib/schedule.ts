@@ -4,7 +4,7 @@ import { db, type Row } from "@/components/crud-page";
 export const DAY_NAMES = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
 export const SLOT_SELECT =
-  "id, timetable_id, day, period_id, course_id, section_id, teacher_id, room_id, periods(name, sort_order, start_time, end_time), courses(subjects(name, department_id)), sections(name, grades(name)), teachers(full_name, department_id), rooms(name)";
+  "id, timetable_id, day, period_id, course_id, section_id, teacher_id, room_id, pinned, periods(name, sort_order, start_time, end_time), courses(subjects(name, department_id)), sections(name, grades(name)), teachers(full_name, department_id), rooms(name)";
 
 export function todayISO() {
   const d = new Date();

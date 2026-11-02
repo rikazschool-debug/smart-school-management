@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, BookOpen, CalendarDays, ClipboardList, GraduationCap, Layers, MessagesSquare, Repeat, School, UserPlus, UsersRound, type LucideIcon } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, ClipboardList, GraduationCap, Layers, MessagesSquare, School, UserPlus, UsersRound, type LucideIcon } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader, Section } from "@/components/states";
 import { ClassroomGrid, useClassrooms } from "./classrooms.index";
@@ -37,7 +37,6 @@ const QUICK: Partial<Record<NavKey, { label: string; hint: string; to: string; i
   teachers: { label: "المعلمون", hint: "ملفات المعلمين التعليمية", to: "/app/teachers", icon: UsersRound },
   courses: { label: "المقررات والتكليفات", hint: "توزيع المعلمين واعتماده", to: "/app/courses", icon: BookOpen },
   schedule: { label: "الجدول المدرسي", hint: "إعداد الجدول ونشره", to: "/app/schedule", icon: CalendarDays },
-  substitutions: { label: "التبديل والبدلاء", hint: "غياب اليوم وتغطية الحصص", to: "/app/substitutions", icon: Repeat },
   communication: { label: "التواصل", hint: "الرسائل والمجموعات والتعاميم", to: "/app/communication", icon: MessagesSquare },
   homework: { label: "الواجبات", hint: "متابعة الواجبات والنتائج", to: "/app/homework", icon: ClipboardList },
 };

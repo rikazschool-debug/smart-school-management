@@ -198,6 +198,8 @@ await slot({ day: 0, period_id: p2.id, course_id: course3.id, teacher_id: teache
 const dT = await teacherU.c.from("timetable_slots").select("id");
 const dS = await studU.c.from("timetable_slots").select("id");
 check("draft hidden from teacher & student", dT.data?.length === 0 && dS.data?.length === 0, [dT, dS]);
+// publishing requires every course's weekly count to be met: align this minimal fixture's requirements with what it places
+for (const [cid, n] of [[course.id, 1], [course2.id, 1], [course3.id, 1], [course4.id, 0]] as const) await admin.from("courses").update({ weekly_periods: n }).eq("id", cid);
 const pub = await owner.c.rpc("publish_timetable", { _id: tt.id, _effective_from: D });
 check("publish v1", pub.data === 1, pub);
 const pubAgain = await owner.c.rpc("publish_timetable", { _id: tt.id, _effective_from: D });

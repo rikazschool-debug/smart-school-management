@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NAV_BY_ROLE, attTabs, canCreateGroup, canManageUsers, commTabs, invitableRoles, type Role } from "@/lib/roles";
+import { NAV_BY_ROLE, attTabs, canCreateGroup, canManageUsers, commTabs, invitableRoles, type Role, scheduleTabs, scheduleLabel } from "@/lib/roles";
 const ALL = Object.keys(NAV_BY_ROLE) as Role[];
 
 describe("attendance roles", () => {
@@ -70,11 +70,13 @@ describe("role rules", () => {
     expect(commTabs("guardian")).not.toContain("meetings");
     for (const r of ["teacher", "principal", "org_owner", "nurse"] as const) expect(commTabs(r)).toContain("meetings");
   });
-  it("only managers get school-day setup and substitutions", () => {
+  it("one «الجدول المدرسي» link; only managers get the build/substitutes/settings tabs, others see «جدولي»", () => {
     for (const r of ["teacher", "student", "guardian", "dept_head", "supervisor", "student_affairs"] as const) {
-      expect(NAV_BY_ROLE[r]).not.toContain("substitutions");
-      expect(NAV_BY_ROLE[r]).not.toContain("schoolday");
+      expect(scheduleTabs(r)).toEqual([]);
+      expect(scheduleLabel(r)).toBe("جدولي");
+      expect(NAV_BY_ROLE[r]).toContain("schedule");
     }
-    expect(NAV_BY_ROLE.vice_principal).toContain("substitutions");
+    for (const r of ["principal", "vice_principal", "org_owner"] as const) expect(scheduleTabs(r)).toEqual(["timetable", "subs", "settings"]);
+    for (const r of Object.keys(NAV_BY_ROLE) as (keyof typeof NAV_BY_ROLE)[]) expect(NAV_BY_ROLE[r].filter((k) => (k as string) === "schoolday" || (k as string) === "substitutions")).toEqual([]);
   });
 });
