@@ -26,7 +26,7 @@
 - Cleanup health: file_cleanup_runs records status; a separate hourly cron job runs check_cleanup_health (dedup alerts in cleanup_alerts, channel-isolated so tests never touch live alerts).
 - docs/permissions-matrix.md is the role capability table; update it with any permission change.
 - docs/closure-log.md: per-item status log; update with new evidence.
-- scripts/ and src/components/comm/, src/components/attendance/ have their own AGENTS.md (tests/cleanup; communication + circular rules) — read before changing files there.
+- scripts/, src/components/comm/ and src/components/attendance/ have their own AGENTS.md — read before changing files there.
 - Homework: homework → homework_targets (resolved at publish) → homework_submissions/attempts (immutable) → homework_grades (visible to family only after publish); all writes via RPCs (save/publish/revise/extend_homework, submit_homework, grade_submission, publish_results, correct_result). Feedback files (source_type='feedback' on the grade) are readable by family only after publish; late joiners follow homework.join_policy via _hw_join_trg; exports only through homework_report (server-scoped). Tests: scripts/homework-e2e.ts, homework2-e2e.ts.
 - UI primitives: native selects use selectCls (src/components/ui/native-select.ts); confirmations/reasons use ask/askText (src/components/confirm.tsx), never window.confirm/prompt — one consistent RTL look.
 - Teacher permissions derive from teacher_assignments only through assignment_live(start,end) on school_today(); never check status alone.
