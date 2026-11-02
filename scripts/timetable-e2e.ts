@@ -286,7 +286,7 @@ try {
   check("12d revision copy keeps pinned lessons", pinCopy === 12, pinCopy);
 
   // ---------- 13. substitutes: never change base, respect hard rules and daily cap ----------
-  const absDay = nextDow(1);
+  const absDay = addDays(nextDow(0), 1); // Monday after the effective date
   const ab = (await pr.c.rpc("record_absence", { _teacher: T[0].id, _date: absDay, _note: "اختبار" })).data;
   const aff = (await pr.c.rpc("affected_slots", { _absence: ab })).data as any[];
   const target = aff[0];
