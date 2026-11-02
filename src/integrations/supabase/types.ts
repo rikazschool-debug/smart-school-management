@@ -4859,6 +4859,10 @@ export type Database = {
         }[]
       }
       leave_group: { Args: { _conv: string }; Returns: undefined }
+      link_guardian_account: {
+        Args: { _actor: string; _guardian: string; _uid: string }
+        Returns: undefined
+      }
       manual_attendance: {
         Args: { _reason: string; _status: string; _student: string }
         Returns: string
@@ -5274,6 +5278,20 @@ export type Database = {
       update_pickup_delegate: {
         Args: { _delegate: Json; _id: string; _mode: string; _person: string }
         Returns: undefined
+      }
+      upsert_student_guardian: {
+        Args: {
+          _name: string
+          _national_id: string
+          _phone: string
+          _relationship: string
+          _student: string
+        }
+        Returns: {
+          created: boolean
+          guardian_id: string
+          has_account: boolean
+        }[]
       }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
     }

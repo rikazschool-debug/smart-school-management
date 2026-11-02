@@ -156,12 +156,13 @@ export function RecordForm({
 
 export function CrudTable({
   title, table, schoolId, select = "*", fields, columns, searchKeys, filter, filters, canWrite,
-  canDelete = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true,
+  canDelete = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated,
 }: {
   title: string; table: string; schoolId: string; select?: string; fields: Field[]; columns: Column[];
   searchKeys: string[]; filter?: Record<string, unknown>; filters?: FilterDef[]; canWrite: boolean;
   canDelete?: boolean; order?: string; defaults?: Row; extraActions?: (r: Row) => ReactNode;
   /** extra buttons next to «إضافة» (e.g. import) */ toolbar?: ReactNode; exportable?: boolean;
+  /** called with the new row after a successful create */ onCreated?: ((r: Row) => void) | undefined;
 }) {
   const qc = useQueryClient();
   const [input, setInput] = useState("");
@@ -202,10 +203,12 @@ export function CrudTable({
   const save = useMutation({
     mutationFn: async (v: Row) => {
       const payload = { ...defaults, ...v, school_id: schoolId };
-      const res = editing?.["id"] ? await db.from(table).update(v).eq("id", editing["id"]) : await db.from(table).insert(payload);
+      if (editing?.["id"]) { const res = await db.from(table).update(v).eq("id", editing["id"]); if (res.error) throw res.error; return null; }
+      const res = onCreated ? await db.from(table).insert(payload).select().single() : await db.from(table).insert(payload);
       if (res.error) throw res.error;
+      return (res.data as Row | null) ?? null;
     },
-    onSuccess: () => { toast.success("تم الحفظ"); setEditing(null); qc.invalidateQueries(); },
+    onSuccess: (row) => { toast.success("تم الحفظ"); setEditing(null); qc.invalidateQueries(); if (row && onCreated) onCreated(row); },
     onError: (e) => toast.error(arabicError(e)),
   });
   const del = useMutation({
