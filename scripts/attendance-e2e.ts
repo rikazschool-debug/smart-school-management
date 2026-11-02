@@ -358,6 +358,8 @@ try {
   check("counselor cannot edit attendance", !!coManual.error);
   const board = (await vp.c.rpc("attendance_board", { _school: A, _date: today() })).data;
   check("board counts", board?.late >= 1 && board?.present >= 1, board);
+  const polX = await owner2.c.rpc("attendance_policy", { _school: A, _date: today() });
+  check("school policy not readable directly by other signed-in users", !!polX.error);
   const gBoard = (await gu.c.rpc("attendance_board", { _school: A, _date: today() })).data;
   check("guardian has no board", gBoard === null);
 } catch (e) { bad++; console.log("FAIL exception", e); }
