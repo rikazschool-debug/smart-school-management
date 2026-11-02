@@ -189,7 +189,7 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" onClick={() => call("grade_submission", { ...gradeArgs(), _final: true }, published ? "حُفظ التعديل وسُجل القديم والجديد" : "حُفظ التصحيح وظهرت الدرجة للطالب وولي أمره")}>{published ? "حفظ التعديل وتحديث الدرجة" : "حفظ التصحيح وإظهار الدرجة"}</Button>
             {g?.["status"] === "graded" && !g["needs_review"] && <Button size="sm" variant="outline" onClick={() => call("publish_results", { _hw: h["id"], _subs: [sub["id"]] }, "ظهرت الدرجة المحفوظة سابقًا")}>إظهار التصحيح المحفوظ سابقًا</Button>}
-            <span className="text-xs text-muted-foreground">{published ? "الدرجة ظاهرة؛ أي تعديل يُسجل في السجل ويُبلغ الطالب وولي أمره." : "تظهر الدرجة والملاحظات ومرفقاتها فور الحفظ، دون اعتماد إداري."}</span>
+            <span className="text-xs text-muted-foreground">{published ? "الدرجة ظاهرة؛ أي تعديل يُسجل في السجل ويُبلغ الطالب وولي أمره." : "تظهر الدرجة والملاحظات ومرفقاتها للطالب وولي أمره فور الحفظ."}</span>
           </div>
           <div className="flex flex-wrap gap-2 border-t pt-2">
             <Input className="flex-1" placeholder="سبب الإعادة للاستكمال (مطلوب)" value={retReason} onChange={(e) => setRetReason(e.target.value)} />
