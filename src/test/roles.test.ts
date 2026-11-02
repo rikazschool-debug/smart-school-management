@@ -39,9 +39,9 @@ describe("role rules", () => {
     expect(invitableRoles("teacher")).toEqual([]);
   });
   it("counselor, nurse and security dashboards expose only communication and notifications", () => {
-    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "communication", "notifications"]);
-    expect(NAV_BY_ROLE.nurse).toEqual(["home", "communication", "notifications"]);
-    expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "communication", "notifications"]);
+    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "communication", "notifications"]);
+    expect(NAV_BY_ROLE.nurse).toEqual(["home", "admin", "communication", "notifications"]);
+    expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "communication", "notifications"]);
   });
   it("students get subject groups and teacher chats only — no circulars, groups or management", () => {
     expect(commTabs("student")).toEqual(["classes", "inbox", "archive"]);

@@ -4,7 +4,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Award,
+import { Award, Briefcase,
   Bell, BookOpen, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarClock, CalendarDays, Repeat, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +41,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   attendance: { to: "/app/attendance", label: "الحضور والخروج", icon: ScanLine },
   station: { to: "/app/attendance-station", label: "المسح والبوابة والنداء", icon: ScanLine },
   pickup: { to: "/app/pickup", label: "الخروج والاستئذان", icon: DoorOpen },
+  admin: { to: "/app/admin", label: "الإدارة المدرسية", icon: Briefcase },
   communication: { to: "/app/communication", label: "التواصل", icon: MessagesSquare },
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
 };
@@ -52,6 +53,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
   { label: "الجدول واليوم الدراسي", keys: ["schoolday", "schedule", "substitutions"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "station", "pickup"] },
+  { label: "الإدارة المدرسية", keys: ["admin"] },
   { label: "التواصل", keys: ["communication"] },
 ];
 

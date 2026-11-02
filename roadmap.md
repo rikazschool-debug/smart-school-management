@@ -211,9 +211,9 @@
 
 ## School administration — resume brief (docs/school-admin-resume-brief.md)
 - [ ] SR1 Review department delete (SET NULL) scope/audit + tests
-- [ ] SR2 Sidebar section + role tabs
-- [ ] SR3 Forms & requests screens (principal / user / handler)
-- [ ] SR4 Tasks screens (assigner / executor)
+- [x] SR2 Sidebar section + role tabs (staff roles; owner sees branch counts only)
+- [x] SR3 Forms & requests screens (/app/admin + /app/admin/requests/$id; file fields not yet in UI) (principal / user / handler)
+- [x] SR4 Tasks screens (assigner / executor) — browser: principal created + opened a task; task attachments not yet in UI
 - [ ] SR5 Duties (setup, suggestion, publish, my duties)
 - [ ] SR6 Meetings, minutes, decisions
 - [ ] SR7 Calendar + notifications

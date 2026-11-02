@@ -50,6 +50,7 @@ export type NavKey =
   | "attendance"
   | "station"
   | "pickup"
+  | "admin"
   | "notifications";
 
 const MANAGE: NavKey[] = [
@@ -67,24 +68,25 @@ const MANAGE: NavKey[] = [
   "substitutions",
   "attendance",
   "station",
+  "admin",
   "communication",
   "notifications",
 ];
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
-  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && k !== "station")],
+  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && k !== "station" && k !== "admin")],
   org_owner: ["home", "schools", "members", ...MANAGE.slice(1)],
   principal: MANAGE,
   vice_principal: MANAGE,
-  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "station", "communication", "notifications"],
-  dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
-  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
-  teacher: ["home", "classrooms", "homework", "schedule", "attendance", "communication", "notifications"],
+  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "station", "admin", "communication", "notifications"],
+  dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "communication", "notifications"],
+  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "communication", "notifications"],
+  teacher: ["home", "classrooms", "homework", "schedule", "attendance", "admin", "communication", "notifications"],
   guardian: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
   student: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
-  counselor: ["home", "attendance", "communication", "notifications"],
-  nurse: ["home", "communication", "notifications"],
-  security: ["home", "attendance", "station", "communication", "notifications"],
+  counselor: ["home", "attendance", "admin", "communication", "notifications"],
+  nurse: ["home", "admin", "communication", "notifications"],
+  security: ["home", "attendance", "station", "admin", "communication", "notifications"],
 };
 
 /** Roles a caller may invite (mirrors can_invite: organization owner only, never another owner). */
