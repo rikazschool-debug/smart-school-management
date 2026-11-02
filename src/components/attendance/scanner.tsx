@@ -24,8 +24,8 @@ function useServerClock() {
   const [offset, setOffset] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const url = import.meta.env["VITE_SUPABASE_URL"] as string, key = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string;
-    fetch(`${url}/rest/v1/`, { method: "HEAD", headers: { apikey: key } }).then((r) => { const d = r.headers.get("date"); if (d) setOffset(new Date(d).getTime() - Date.now()); }).catch(() => undefined);
+    const t0 = Date.now();
+    void db.rpc("server_now").then(({ data }) => { if (data) setOffset(new Date(data as string).getTime() - (t0 + Date.now()) / 2); });
     const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t);
   }, []);
   return offset === null ? null : new Date(now + offset);
