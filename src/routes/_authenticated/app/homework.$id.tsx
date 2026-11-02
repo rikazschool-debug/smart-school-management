@@ -244,7 +244,7 @@ function Activity({ id }: { id: string }) {
     queryFn: async () => (await db.from("homework_events").select("*").eq("homework_id", id).order("created_at", { ascending: false }).limit(30)).data as Row[],
   });
   const LBL: Record<string, string> = { created: "إنشاء", published: "نشر", scheduled: "جدولة", revised: "تعديل بعد النشر", extended_all: "تمديد للجميع", extended_student: "تمديد لطالب",
-    submitted: "تسليم", returned: "إعادة للاستكمال", paper_recorded: "تسجيل تسليم ورقي", result_published: "حفظ تصحيح وإظهار الدرجة", result_corrected: "تعديل درجة ظاهرة", copied: "نسخ", late_join_added: "إلحاق طالب منضم", late_join_pending: "طالب منضم بانتظار القرار", late_join_declined: "عدم إلحاق منضم", join_policy: "تغيير سياسة المنضمين", feedback_file_added_after_publish: "إضافة مرفق ملاحظات بعد النشر", feedback_file_removed_after_publish: "حذف مرفق ملاحظات بعد النشر", feedback_file_removed: "حذف مرفق ملاحظات",
+    submitted: "تسليم", returned: "إعادة للاستكمال", paper_recorded: "تسجيل تسليم ورقي", result_published: "حفظ تصحيح وإظهار الدرجة", result_corrected: "تعديل درجة ظاهرة", legacy_revealed: "إظهار تصحيح محفوظ قبل التبسيط", copied: "نسخ", late_join_added: "إلحاق طالب منضم", late_join_pending: "طالب منضم بانتظار القرار", late_join_declined: "عدم إلحاق منضم", join_policy: "تغيير سياسة المنضمين", feedback_file_added_after_publish: "إضافة مرفق ملاحظات بعد ظهور الدرجة", feedback_file_removed_after_publish: "حذف مرفق ملاحظات بعد ظهور الدرجة", feedback_file_removed: "حذف مرفق ملاحظات",
     "status:closed": "إغلاق", "status:archived": "أرشفة", "status:cancelled": "إلغاء" };
   if (!ev.data?.length) return null;
   return (
