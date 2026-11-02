@@ -467,6 +467,53 @@ export type Database = {
           },
         ]
       }
+      attendance_tick_runs: {
+        Row: {
+          added: number
+          attempts: number
+          cutoff: string | null
+          date: string
+          error: string | null
+          id: string
+          ran_at: string
+          removed: number
+          school_id: string
+          status: string
+        }
+        Insert: {
+          added?: number
+          attempts?: number
+          cutoff?: string | null
+          date: string
+          error?: string | null
+          id?: string
+          ran_at?: string
+          removed?: number
+          school_id: string
+          status: string
+        }
+        Update: {
+          added?: number
+          attempts?: number
+          cutoff?: string | null
+          date?: string
+          error?: string | null
+          id?: string
+          ran_at?: string
+          removed?: number
+          school_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_tick_runs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       authorized_pickups: {
         Row: {
           active: boolean
@@ -4239,7 +4286,17 @@ export type Database = {
         }
         Returns: boolean
       }
-      att_tick: { Args: never; Returns: number }
+      att_search_students: {
+        Args: { _q: string; _school: string }
+        Returns: {
+          code: string
+          full_name: string
+          id: string
+          section: string
+        }[]
+      }
+      att_tick: { Args: { _limit?: number }; Returns: number }
+      att_tick_status: { Args: { _school: string }; Returns: Json }
       attendance_alerts: {
         Args: { _from: string; _min: number; _school: string; _to: string }
         Returns: {
@@ -4387,6 +4444,10 @@ export type Database = {
       }
       check_cleanup_health: {
         Args: { _channel?: string; _notify_to?: string[]; _now?: string }
+        Returns: Json
+      }
+      checkin_student: {
+        Args: { _school: string; _student: string }
         Returns: Json
       }
       circular_stats: {
