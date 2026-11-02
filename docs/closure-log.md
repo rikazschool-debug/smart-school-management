@@ -240,3 +240,11 @@ Fresh fixture run: teacher journey 12/12, review→approve→publish→family/ph
 
 ## GC2 (2026-11-02)
 Downloaded and opened 7 PDFs: course published sheet (new, reads current published snapshots only), internal sheet, student, two children of one guardian, completion, corrections. Arabic shaping/RTL/Cairo OK; values match screen and XLSX (88.6, 76.5, 18 = 30/50×30 + absent counted 0 per plan absent_policy=zero). Fixed: corrections date was raw UTC ISO -> Riyadh format; child sheet now shows section. Guardian: gb_sheet rejected, 0 entries, results only own 2 kids current version, corrections report 0 rows. Not exercised: multi-page grades PDF.
+
+## Simplification: homework & tests grading (2026-11-02) — supersedes grades closure round GC3–GC9
+- New flow: teacher creates homework or test (kind) → targets → students submit (or paper) → teacher «حفظ التصحيح وإظهار الدرجة» → grade, feedback and feedback files visible at once to student/guardian; one notification (dedupe res:<id>, edits res:<id>:r<rev>).
+- Removed: draft/approve/publish buttons on grading; term gradebook review/approve/publish/reopen/exceptions/corrections (gb_* writes revoked); grades/results menu for teacher, dept head, supervisor, guardian, student.
+- Kept: all homework grades, history, versions; term gradebooks + published snapshots as read-only archive (principal/vice/owner). Legacy saved-but-hidden homework grades stay hidden; teacher sees filter «محفوظ سابقًا وغير ظاهر» and decides per homework/student.
+- Server: homework-e2e 37/37 (instant visibility, principal/owner cannot edit via RPC or direct write, edit history 8→9, stale repeat rejected, targeted test hidden from others, paper test 7 visible to guardian, above max rejected, owner monitors with kind filter, ended assignment blocks grading); homework2-e2e 25/25.
+- Browser 7/7: teacher menu/form/buttons, save → edit mode, student phone sees 9/10 immediately, principal read-only, archive page.
+- Not tested: vice principal browser view; two real browser windows (server stale-rev check covers it).
