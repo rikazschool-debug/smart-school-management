@@ -196,3 +196,9 @@ No defects found, so no fixes or re-runs were needed. The mobile-screen file was
 - خادم: attendance-e2e 96/96. متصفح (محاكاة): 15/15 — القارئ بالكتابة، الكاميرا بجهاز وهمي (تشغيل/إيقاف/رفض إذن)، التفويض من ولي الأمر حتى تحقق الأمن.
 - غير مختبر ميدانيًا: قارئ باركود حقيقي، قراءة بطاقة مطبوعة بكاميرا هاتف حقيقي، الإضاءة.
 - rls-e2e: 4 حالات جدول تفشل لأن الاختبار يستخدم تاريخ سريان ثابتًا (2026-11-01) أصبح ماضيًا — لا علاقة لها بالحضور.
+
+
+## Attendance closure round (2026-11-02)
+- AC1: att_tick rewritten (due schools only, per-school retry, attendance_tick_runs); cron */10 all day; scheduled run observed 04:40 UTC succeeded (no school past cutoff yet). Morning/evening/holiday/versioned-cutoff tests pending.
+- AC2: rls-e2e timetable failures caused by fixed date 2026-11-01 preceding assignment start; dates now derived from Riyadh today. 94/94.
+- AC8/AC9: name/code check-in + /app/attendance-station. attendance-e2e 96/96.
