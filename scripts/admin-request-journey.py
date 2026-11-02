@@ -40,7 +40,7 @@ async def main():
         async def drop(route):
             if fail["n"] > 0 and route.request.method in ("POST", "PUT"): fail["n"] -= 1; await route.abort("internetdisconnected")
             else: await route.continue_()
-        await t2.context.route("**/storage/v1/object/**", drop)
+        await t2.context.route(lambda u: "/storage/v1/object/" in u, drop)
         await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); chk("R9c network failure reported", await seen(t2, "فشل رفع الملف"))
         await t2.wait_for_timeout(1500); chk("R9d answer kept after failed upload", await t2.locator("input[type=text], textarea").first.input_value() == "المكيف معطل")
         await t2.set_input_files("input[type=file]", "/tmp/browser/adm/att.pdf"); chk("R2b attachment uploaded after retry", await seen(t2, "اكتمل رفع الملف", 15000), await t2.locator("[data-sonner-toast]").all_inner_texts())
