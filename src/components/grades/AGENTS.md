@@ -1,3 +1,3 @@
 # grades rules
 - Term gradebooks are a read-only administrative archive since the homework/tests simplification: every gb_* write RPC (plans, periods, entries, review/approve/publish, reopen, exceptions, corrections) is revoked from authenticated; data is never deleted or bulk-published. UI forces read-only flags in sheet.tsx; nav shows it only to principal/vice/owner.
-- Legacy design notes (for reading archived data): totals came from _gb_total; grade_results are published snapshots superseded on correction. Tests: scripts/grades-e2e.ts targets the old write flow and is expected to fail on writes now.
+- Legacy design notes (for reading archived data): totals came from _gb_total; grade_results are published snapshots superseded on correction. Tests: archive behaviour is checked in scripts/hw-closure-e2e.ts (HC4); grades-e2e.ts is the superseded write flow. grade_results is readable only by gradebook readers (no direct student/guardian path).

@@ -2811,6 +2811,8 @@ export type Database = {
           needs_review: boolean
           published_at: string | null
           rev: number
+          revealed_at: string | null
+          revealed_by: string | null
           rubric_version: number
           score: number | null
           status: string
@@ -2828,6 +2830,8 @@ export type Database = {
           needs_review?: boolean
           published_at?: string | null
           rev?: number
+          revealed_at?: string | null
+          revealed_by?: string | null
           rubric_version: number
           score?: number | null
           status?: string
@@ -2845,6 +2849,8 @@ export type Database = {
           needs_review?: boolean
           published_at?: string | null
           rev?: number
+          revealed_at?: string | null
+          revealed_by?: string | null
           rubric_version?: number
           score?: number | null
           status?: string

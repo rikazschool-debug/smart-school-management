@@ -97,7 +97,7 @@ function StaffList({ schoolId, author }: { schoolId: string; author: boolean }) 
                     <td className="whitespace-nowrap px-4 py-3">{schoolTime(r["due_at"])}</td>
                     <td className="px-4 py-3"><Progress done={r["submitted"]} total={r["targets"]} late={r["late"]} /></td>
                     <td className="px-4 py-3">{Number(r["to_grade"]) > 0 ? <span className="rounded-full bg-warning/20 px-2.5 py-0.5 text-xs font-semibold text-warning-foreground">{r["to_grade"]}</span> : <span className="text-muted-foreground">—</span>}</td>
-                    <td className="px-4 py-3 text-xs">{r["max_score"] == null ? "غير مقيّم" : `${r["published_results"]} منشورة · ${r["unpublished"]} بانتظار النشر`}</td>
+                    <td className="px-4 py-3 text-xs">{r["max_score"] == null ? "غير مقيّم" : `${r["published_results"]} ظاهرة${r["unpublished"] ? ` · ${r["unpublished"]} تصحيح سابق غير ظاهر` : ""}`}</td>
                   </tr>
                 ))}
               </tbody>
@@ -161,7 +161,7 @@ function GuardianList({ schoolId }: { schoolId: string }) {
   return (
     <>
       <PageHeader title="واجبات الأبناء" />
-      <ExportBar course={null} kinds={["family"]} note="يشمل أبناءك الموثّقين فقط، والدرجات المنشورة فقط." />
+      <ExportBar course={null} kinds={["family"]} note="يشمل أبناءك الموثّقين فقط، والدرجات التي حفظها المعلم فقط." />
       <div className="mb-4 flex flex-wrap gap-2">
         {kids.data.map((k) => (
           <Button key={k["id"]} variant={kid === k["id"] ? "default" : "outline"} size="sm" onClick={() => setKid(k["id"])}>{k["full_name"]}</Button>

@@ -10,7 +10,7 @@ describe("homework CSV export", () => {
     expect(head).toBe("الطالب,الواجب,الحالة,الدرجة");
   });
   it("translates status values to Arabic", () => {
-    expect(toCsv([{ "الحالة": "published" }]).split("\r\n")[1]).toBe("منشور");
+    expect(toCsv([{ "الحالة": "published" }]).split("\r\n")[1]).toBe("متاح للطلاب");
   });
   it("neutralises spreadsheet formulas in text cells", () => {
     expect(toCsv([{ "الطالب": "=HYPERLINK(1)" }]).split("\r\n")[1]).toBe("'=HYPERLINK(1)");

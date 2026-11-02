@@ -42,7 +42,7 @@ const iso = (min: number) => new Date(Date.now() + min * 60000).toISOString();
 const pdf = (t: string) => new Blob([`%PDF-1.4 ${t}`], { type: "application/pdf" });
 
 async function setup() {
-  const owner = await user("owner", "مالك اختبار"), t1 = await user("t1", "أ. سامي المعلم"), s1 = await user("s1", "خالد الطالب"), s2 = await user("s2", "ريم الطالبة"), s3 = await user("s3", "فهد المنضم"), g1 = await user("g1", "أبو خالد"), t2 = await user("t2", "أ. منى المعلمة"), s4 = await user("s4", "سلمى أخت خالد"), pr = await user("pr", "مدير الاختبار");
+  const owner = await user("owner", "مالك اختبار"), t1 = await user("t1", "أ. سامي المعلم"), s1 = await user("s1", "خالد الطالب"), s2 = await user("s2", "ريم الطالبة"), s3 = await user("s3", "فهد المنضم"), g1 = await user("g1", "أبو خالد"), t2 = await user("t2", "أ. منى المعلمة"), s4 = await user("s4", "سلمى أخت خالد"), pr = await user("pr", "مدير الاختبار"), vp = await user("vp", "وكيل الاختبار");
   const org = must(await owner.c.rpc("create_organization", { _org_name: `مؤسسة اختبار الواجبات ${run}`, _school_name: "فرع الاختبار" }), "org") as string;
   const S = must(await owner.c.from("schools").select("id").eq("org_id", org).single(), "school")!.id;
   const ins = async (t: string, v: any) => must(await owner.c.from(t).insert({ ...v, school_id: S }).select().single(), t) as any;
@@ -71,7 +71,7 @@ async function setup() {
   await admin.from("student_guardians").insert({ school_id: S, student_id: st[0].id, guardian_id: gu.id, relationship: "father", verified: true, can_follow: true });
   for (const s of st.slice(0, 2)) await ins("enrollments", { student_id: s.id, section_id: sec.id, year_id: year.id, start_date: "2026-08-20" });
   await admin.from("teacher_assignments").insert({ school_id: S, course_id: course.id, teacher_id: te.id, start_date: "2026-08-20", status: "approved" });
-  for (const [u, role] of [[t1, "teacher"], [s1, "student"], [s2, "student"], [s3, "student"], [g1, "guardian"], [t2, "teacher"], [s4, "student"], [pr, "principal"]] as const)
+  for (const [u, role] of [[t1, "teacher"], [s1, "student"], [s2, "student"], [s3, "student"], [g1, "guardian"], [t2, "teacher"], [s4, "student"], [pr, "principal"], [vp, "vice_principal"]] as const)
     await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role });
 
   const base = { course_id: course.id, title: "واجب قوانين نيوتن", instructions: "حل التمارين من 1 إلى 5", submission_types: ["text", "file"], due_at: iso(3 * 24 * 60), max_score: 10,
@@ -91,6 +91,8 @@ async function setup() {
   const g = must(await t1.c.from("homework_grades").select("id").eq("submission_id", subs[0]).single(), "grade row")!;
   const ff = must(await t1.c.rpc("create_feedback_file", { _grade: g.id, _name: "ملاحظات التصحيح.pdf", _mime: "application/pdf", _size: 20 }), "feedback")[0];
   must(await t1.c.storage.from("rikaz-files").upload(ff.storage_path, pdf("feedback"), { contentType: "application/pdf" }) as any, "upload feedback");
+  // legacy hidden grade (saved before simplification, never shown) for the second student
+  must(await admin.from("homework_grades").insert({ submission_id: subs[1], homework_id: hw, student_id: st[1].id, attempt_no: 1, score: 6, status: "graded", graded_by: t1.id, rubric_version: 1 }) as any, "legacy grade");
   // second child's homework (other teacher) + one family chat per child
   const hw2 = must(await t2.c.rpc("save_homework", { _id: null, _d: { ...base, course_id: course2.id, title: "واجب التفاعلات الكيميائية" } }), "hw2") as string;
   must(await t2.c.rpc("publish_homework", { _id: hw2 }), "publish2");
@@ -105,7 +107,7 @@ async function setup() {
   // late joiner after publish (review policy → pending)
   await ins("enrollments", { student_id: st[2].id, section_id: sec.id, year_id: year.id, start_date: new Date().toISOString().slice(0, 10) });
   const fx = { run, pw, org, school: S, course: course.id, hw, feedback_file: ff.id, feedback_path: ff.storage_path, grade: g.id, subs, hw2, fam1, fam2, copy: cp, course2: course2.id, te1: te.id, te2: te2.id,
-    users: Object.fromEntries(Object.entries({ owner, t1, s1, s2, s3, g1, t2, s4, pr }).map(([k, v]) => [k, { email: v.email, id: v.id }])) };
+    users: Object.fromEntries(Object.entries({ owner, t1, s1, s2, s3, g1, t2, s4, pr, vp }).map(([k, v]) => [k, { email: v.email, id: v.id }])) };
   mkdirSync("/tmp/browser/hw", { recursive: true });
   writeFileSync(OUT, JSON.stringify(fx, null, 2));
   const lj = await t1.c.rpc("late_joiners", { _hw: hw });

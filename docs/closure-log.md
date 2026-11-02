@@ -248,3 +248,10 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Server: homework-e2e 37/37 (instant visibility, principal/owner cannot edit via RPC or direct write, edit history 8→9, stale repeat rejected, targeted test hidden from others, paper test 7 visible to guardian, above max rejected, owner monitors with kind filter, ended assignment blocks grading); homework2-e2e 25/25.
 - Browser 7/7: teacher menu/form/buttons, save → edit mode, student phone sees 9/10 immediately, principal read-only, archive page.
 - Not tested: vice principal browser view; two real browser windows (server stale-rev check covers it).
+
+## جولة إغلاق الواجبات والاختبارات بعد التبسيط (2026-11-02)
+- خادم: scripts/hw-closure-e2e.ts — 29/29 (وكيل، تعارض نسخ، عدم تكرار السجل/الإشعار، انتهاء التكليف، إظهار التصحيحات القديمة، أرشيف الدرجات، مراجعة set_homework_kind وhomework_list).
+- متصفح: /tmp/browser/hw/closure.py — 22/22 (وكيل، نافذتان فعليتان، إظهار فردي/جماعي بمعاينة، Excel/PDF للمراقب والأسرة).
+- تغييرات: revealed_by/revealed_at في homework_grades؛ حدث legacy_revealed؛ إزالة اطلاع الطالب/ولي الأمر المباشر على grade_results؛ تصدير Excel/PDF للواجبات؛ إبقاء إدخال المعلم عند التعارض؛ عبارات «ظاهرة» بدل «منشورة».
+- مراجعة التنبيهين: set_homework_kind — معلم المقرر الساري فقط؛ رُفض لمعلم آخر ومؤسسة أخرى وطالب ووكيل وقيمة غير صالحة. homework_list — مقيدة بـhw_staff؛ لا صفوف لطالب أو معلم غير مكلف أو مؤسسة أخرى؛ لا تعيد درجات فردية. الحكم خاص بهاتين؛ التنبيهات الأقدم «لم تُراجع».
+- لم يُختبر: PDF متعدد الصفحات لتقارير الواجبات، الأجهزة الحقيقية.

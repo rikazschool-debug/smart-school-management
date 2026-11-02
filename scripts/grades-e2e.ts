@@ -1,3 +1,4 @@
+// SUPERSEDED for writes: term gradebooks are a read-only archive (all gb_* writes revoked). Archive behaviour (read scope, write/approve/publish/reopen denial, student/guardian denial, data unchanged) is tested in scripts/hw-closure-e2e.ts (HC4). Keep this file only as a reference for reading legacy data.
 // Grades / assessment / results lifecycle and permissions on isolated data only.
 // Run: NODE_PATH=node_modules bun scripts/grades-e2e.ts
 import { createClient } from "@supabase/supabase-js";

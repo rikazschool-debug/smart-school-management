@@ -119,7 +119,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
       </div>
       {!shown.length && <p className="p-3 text-sm text-muted-foreground">{rows.length ? "لا نتائج مطابقة للبحث أو التصنيف." : "لا يوجد طلاب مستهدفون."}</p>}
       {current && (
-        <StudentReview key={`${current["student_id"]}-${current["grade"]?.["rev"] ?? 0}-${current["sub"]?.["attempt_count"] ?? 0}`} h={h} r={current} editable={editable} onDirty={(d) => { dirty.current = d; }}
+        <StudentReview key={`${current["student_id"]}-${current["grade"] ? 1 : 0}-${current["sub"]?.["attempt_count"] ?? 0}`} h={h} r={current} editable={editable} onDirty={(d) => { dirty.current = d; }}
           prev={idx > 0 ? () => setSel(shown[idx - 1]!["student_id"]) : undefined}
           next={idx >= 0 && idx < shown.length - 1 ? () => setSel(shown[idx + 1]!["student_id"]) : undefined}
           refresh={() => qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] })} />
@@ -139,6 +139,21 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
   const [ext, setExt] = useState("");
   const [paperNote, setPaperNote] = useState("");
   const [paperAt, setPaperAt] = useState("");
+  const [conflict, setConflict] = useState<Row | null>(null);
+  // Baseline = the saved version the inputs were loaded from. When a newer version arrives (own save or another window):
+  // untouched inputs follow it; edited inputs are kept and a conflict notice is shown instead of overwriting them.
+  const base = useRef<Row | null>(g);
+  const vals = (x: Row | null) => ({ s: x?.["score"]?.toString() ?? "", f: x?.["feedback"] ?? "", c: crit.map((_, i) => x?.["criteria_scores"]?.[i]?.toString() ?? "").join("|") });
+  useEffect(() => {
+    if ((g?.["rev"] ?? null) === (base.current?.["rev"] ?? null)) return;
+    const b = vals(base.current), now = vals(g);
+    const untouched = score === b.s && fb === b.f && cs.join("|") === b.c;
+    const same = score === now.s && fb === now.f && cs.join("|") === now.c;
+    base.current = g;
+    if (untouched || same) { setScore(now.s); setFb(now.f); setCs(now.c.split("|").slice(0, crit.length)); setConflict(null); }
+    else setConflict(g);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [g?.["rev"]]);
   const isDirty = score !== (g?.["score"]?.toString() ?? "") || fb !== (g?.["feedback"] ?? "") || cs.some((x, i) => x !== (g?.["criteria_scores"]?.[i]?.toString() ?? ""));
   useEffect(() => { onDirty(isDirty); }, [isDirty, onDirty]);
   useEffect(() => () => onDirty(false), [onDirty]);
@@ -149,12 +164,20 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
     const { error } = await db.rpc(fn, args);
     if (error) {
       const stale = /rev|stale|تعارض|حديث|جلسة/i.test(error.message ?? "");
-      toast.error(stale ? "عدّل مستخدم آخر هذا التصحيح من نافذة أخرى. حدّث البيانات ثم أعد المحاولة." : arabicError(error), { action: { label: stale ? "تحديث" : "إعادة المحاولة", onClick: () => (stale ? refresh() : void call(fn, args, ok)) } });
+      if (stale && sub) {
+        // keep the teacher's input on screen; load the newer saved version next to it — nothing is overwritten automatically
+        const { data } = await db.from("homework_grades").select("*").eq("submission_id", sub["id"]).maybeSingle();
+        setConflict((data as Row) ?? null);
+        toast.error("عدّل هذا التصحيح من نافذة أخرى. إدخالك ما زال ظاهرًا؛ قارنه بالنسخة الأحدث ثم اختر.");
+        return false;
+      }
+      toast.error(arabicError(error), { action: { label: "إعادة المحاولة", onClick: () => void call(fn, args, ok) } });
       return false;
     }
+    setConflict(null); if (fn === "grade_submission") base.current = { ...(g ?? {}), rev: -1, score: args["_score"], feedback: args["_feedback"] || null, criteria_scores: args["_criteria"] };
     onDirty(false); toast.success(ok); refresh(); return true;
   }
-  const gradeArgs = () => ({ _sub: sub["id"], _score: graded && !crit.length ? Number(score) : null, _criteria: crit.length ? cs.map(Number) : [], _feedback: fb, _rev: g?.["rev"] ?? null });
+  const gradeArgs = () => ({ _sub: sub["id"], _score: graded && !crit.length ? Number(score) : null, _criteria: crit.length ? cs.map(Number) : [], _feedback: fb, _rev: (conflict ?? g)?.["rev"] ?? null });
   const total = cs.reduce((s, x) => s + (Number(x) || 0), 0);
   return (
     <div className="space-y-3 rounded-xl border p-4">
@@ -186,10 +209,21 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
             </div>
           ) : <label className="flex items-center gap-2 text-sm">الدرجة (0–{h["max_score"]})<Input className="w-28" type="number" min={0} max={h["max_score"]} value={score} onChange={(e) => setScore(e.target.value)} /></label>)}
           <Textarea rows={3} placeholder="ملاحظات للطالب" value={fb} onChange={(e) => setFb(e.target.value)} />
+          {conflict && (
+            <div role="alert" className="space-y-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+              <p className="font-medium">تعارض: حُفظ تعديل أحدث من نافذة أخرى</p>
+              <p>النسخة المحفوظة الآن: الدرجة {conflict["score"] ?? "—"}{conflict["feedback"] ? ` · «${conflict["feedback"]}»` : ""}</p>
+              <p>إدخالك غير المحفوظ: الدرجة {crit.length ? total : score || "—"}{fb ? ` · «${fb}»` : ""}</p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => { const n = vals(conflict); base.current = conflict; setScore(n.s); setFb(n.f); setCs(n.c.split("|").slice(0, crit.length)); setConflict(null); onDirty(false); refresh(); }}>تجاهل إدخالي وعرض الأحدث</Button>
+                <span className="self-center text-xs text-muted-foreground">أو اضغط زر الحفظ لاعتماد إدخالك بدل النسخة الأحدث (يُسجل في السجل).</span>
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" onClick={() => call("grade_submission", { ...gradeArgs(), _final: true }, published ? "حُفظ التعديل وسُجل القديم والجديد" : "حُفظ التصحيح وظهرت الدرجة للطالب وولي أمره")}>{published ? "حفظ التعديل وتحديث الدرجة" : "حفظ التصحيح وإظهار الدرجة"}</Button>
+            <Button size="sm" onClick={() => call("grade_submission", { ...gradeArgs(), _final: true }, published || conflict ? "حُفظ التعديل وسُجل القديم والجديد" : "حُفظ التصحيح وظهرت الدرجة للطالب وولي أمره")}>{conflict ? "اعتماد إدخالي على النسخة الأحدث" : published ? "حفظ التعديل وتحديث الدرجة" : "حفظ التصحيح وإظهار الدرجة"}</Button>
             {g?.["status"] === "graded" && !g["needs_review"] && <Button size="sm" variant="outline" onClick={() => call("publish_results", { _hw: h["id"], _subs: [sub["id"]] }, "ظهرت الدرجة المحفوظة سابقًا")}>إظهار التصحيح المحفوظ سابقًا</Button>}
-            <span className="text-xs text-muted-foreground">{published ? "الدرجة ظاهرة؛ أي تعديل يُسجل في السجل ويُبلغ الطالب وولي أمره." : "تظهر الدرجة والملاحظات ومرفقاتها فور الحفظ، دون اعتماد إداري."}</span>
+            <span className="text-xs text-muted-foreground">{published ? "الدرجة ظاهرة؛ أي تعديل يُسجل في السجل ويُبلغ الطالب وولي أمره." : "تظهر الدرجة والملاحظات ومرفقاتها للطالب وولي أمره فور الحفظ."}</span>
           </div>
           <div className="flex flex-wrap gap-2 border-t pt-2">
             <Input className="flex-1" placeholder="سبب الإعادة للاستكمال (مطلوب)" value={retReason} onChange={(e) => setRetReason(e.target.value)} />

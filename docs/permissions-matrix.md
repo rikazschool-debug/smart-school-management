@@ -32,7 +32,7 @@ Protections: the last active owner cannot be deactivated or demoted; ownership c
 | Grade («حفظ التصحيح وإظهار الدرجة») / return / edit grade (history logged) | yes, live assignment only | no (RPC and direct write rejected) | no | no | – | – | no |
 | Kind (homework / test) | yes | read + filter | read | read | read | read | no |
 | See grade | yes | yes (monitor) | yes | yes | immediately after teacher save | immediately after teacher save, own verified child | no |
-| Reveal legacy saved-but-hidden grades | yes (per homework/student) | no | no | no | – | – | no |
+| Reveal legacy saved-but-hidden grades (preview first; revealer + time recorded, original grader kept) | yes (per homework/student) | no | no | no | – | – | no |
 
 
 ## Attendance, exit and permission (package: attendance)
@@ -72,4 +72,4 @@ Since the homework/tests simplification, term gradebooks are a read-only adminis
 | Review (accept / return with reason) | only if the subject's department has no active head (flagged) | own department only | — | — | — | — | — |
 | Approve (bound to the reviewed version, blocked on homework source drift) + lock, publish preview/publish (incomplete needs confirmation, repeat = no-op), reopen one gradebook (reason) | yes | — | — | — | — | — | — |
 | Correction request after lock | decide | — | request | — | — | — | — |
-| Read gradebooks / reports | school | own department | own courses | assigned teachers' courses | branch summary (no student marks edit) | current published results of self / verified child | none |
+| Read gradebooks / reports | school | own department | own courses | assigned teachers' courses | branch summary (no student marks edit) | none (no direct archive path since simplification) | none |
