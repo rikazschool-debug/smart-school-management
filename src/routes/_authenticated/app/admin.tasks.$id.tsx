@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { arabicError, useSession } from "@/lib/session";
-import { PRIORITY, TASK_STATUS, Pill, Timeline, fmt, isLead } from "@/components/admin/shared";
+import { AdminFiles, PRIORITY, TASK_STATUS, Pill, Timeline, fmt, isLead } from "@/components/admin/shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin/tasks/$id")({
   head: () => ({ meta: [{ title: "تفاصيل التكليف | ركاز" }, { name: "description", content: "متابعة تكليف إداري" }] }),
@@ -105,6 +105,7 @@ function Task({ role }: { role: string }) {
           <Comment id={id} onDone={() => qc.invalidateQueries({ queryKey: ["adm-events", "task", id] })} />
         </div>
       </div>
+      <AdminFiles entity="task" id={id} userId={me} canAdd={t.status !== "cancelled" && (assignee || reviewer)} />
       <section><h2 className="mb-2 font-semibold">سجل التكليف</h2><Timeline entity="task" id={id} /></section>
     </div>
   );

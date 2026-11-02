@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, useSession } from "@/lib/session";
-import { REQ_STATUS, STAFF_ROLES, Pill, Timeline, fmt, useStaff, type Field } from "@/components/admin/shared";
+import { AdminFiles, REQ_STATUS, STAFF_ROLES, Pill, Timeline, fmt, useStaff, type Field } from "@/components/admin/shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin/requests/$id")({
   head: () => ({ meta: [{ title: "تفاصيل الطلب | ركاز" }, { name: "description", content: "متابعة طلب إداري" }] }),
@@ -136,6 +136,7 @@ function Req({ role, school }: { role: string; school: string }) {
           {!handler && !editable && role !== "principal" && <p className="text-sm text-muted-foreground">لا توجد إجراءات متاحة لك الآن.</p>}
         </div>
       </div>
+      <AdminFiles entity="request" id={id} userId={user.id} canAdd={editable || handler} />
       <section><h2 className="mb-2 font-semibold">سجل الطلب</h2><Timeline entity="request" id={id} /></section>
     </div>
   );
