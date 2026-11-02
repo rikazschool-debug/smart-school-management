@@ -38,7 +38,7 @@ async function user(tag: string, name: string) {
 function xlsx(path: string, rows: unknown[][], formula?: string) {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   if (formula) ws[formula] = { t: "n", v: 5, f: "2+3" };
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "البيانات"); XLSX.writeFile(wb, path);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "البيانات"); writeFileSync(path, XLSX.write(wb, { type: "buffer", bookType: "xlsx" }));
 }
 
 async function setup() {
