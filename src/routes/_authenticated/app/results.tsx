@@ -58,7 +58,7 @@ function Results({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         </div>
         {!rows.length ? <EmptyState title={`لا توجد نتائج منشورة لـ ${name} بعد`} hint="تظهر النتيجة بعد اعتمادها ونشرها من إدارة المدرسة." /> : (
           <Section title={name} desc={rows[0]!["section_name"] ?? ""}
-            action={<ExportButtons title={`كشف نتائج ${name}`} school={ctx.schoolName} filters={[period || "كل الفترات", "النتائج المنشورة فقط"]} headers={["المادة", "الفترة", "البنود", "المجموع", "تاريخ النشر", "الإصدار", "ملاحظة المعلم"]}
+            action={<ExportButtons title={`كشف نتائج ${name}`} school={ctx.schoolName} filters={[rows[0]!["section_name"] ?? "", period || "كل الفترات", "النتائج المنشورة فقط"].filter(Boolean)} headers={["المادة", "الفترة", "البنود", "المجموع", "تاريخ النشر", "الإصدار", "ملاحظة المعلم"]}
               rows={() => rows.map((r) => [r["subject_name"], r["period_name"], (r["items"] as Row[]).map((i) => `${i["name"]}: ${val(i)}`).join(" • "), r["total"] != null ? `${r["total"]} / ${r["max_total"]}` : "غير مكتمل", date(r["published_at"]), r["version"], r["note"] ?? ""])} />}>
             <div className="grid gap-3 md:grid-cols-2">
               {rows.map((r) => (
