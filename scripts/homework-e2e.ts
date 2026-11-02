@@ -109,11 +109,24 @@ try {
   const g1r = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [5, 3], _feedback: "جيد", _final: true, _rev: null });
   const stale = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "x", _final: true, _rev: 0 });
   check("5c grade saved = 8; stale second session rejected", !g1r.error && !!stale.error && (await admin.from("homework_grades").select("score").eq("submission_id", sub1).single()).data!.score == 8, [g1r.error, stale.data]);
-  const hidden = (await s1.c.from("homework_grades").select("id")).data!.length + (await g1.c.from("homework_grades").select("id")).data!.length;
   const pubR = await t1.c.rpc("publish_results", { _hw: hw, _subs: null });
   const shown = (await s1.c.from("homework_grades").select("score")).data!;
   const gShown = (await g1.c.from("homework_grades").select("score")).data!;
-  check("5d grade hidden until published, then visible to student and guardian", hidden === 0 && pubR.data === 1 && shown.length === 1 && gShown.length === 1, [hidden, pubR, shown]);
+  const nGrade = (await admin.from("notifications").select("id").like("dedupe_key", "%res:%")).data?.length ?? -1;
+  check("5d saved grade visible at once to student and guardian; no separate publish step left", pubR.data === 0 && shown.length === 1 && shown[0]!.score == 8 && gShown.length === 1, [pubR, shown]);
+  // observers cannot change the grade even by direct call
+  const g1row = (await admin.from("homework_grades").select("id, rev").eq("submission_id", sub1).single()).data!;
+  const prEdit = await pr.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "", _final: true, _rev: g1row.rev });
+  const prCorr = await pr.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "", _reason: "x", _rev: g1row.rev });
+  const prRaw = await pr.c.from("homework_grades").update({ score: 1 }).eq("id", g1row.id).select("id");
+  check("5e principal cannot edit a visible grade (RPC or direct write)", !!prEdit.error && !!prCorr.error && (!!prRaw.error || !prRaw.data?.length), [prEdit.error?.message, prRaw]);
+  // teacher edit keeps old/new, single notification per edit, repeated save with old rev rejected
+  const ed = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "أفضل", _final: true, _rev: g1row.rev });
+  const again = await t1.c.rpc("grade_submission", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "أفضل", _final: true, _rev: g1row.rev });
+  const hist = (await admin.from("homework_grade_history").select("old_score, new_score").eq("grade_id", g1row.id)).data!;
+  const nAfter = (await admin.from("notifications").select("id").like("dedupe_key", "%res:%")).data?.length ?? -1;
+  const sNow = (await s1.c.from("homework_grades").select("score")).data!;
+  check("5f teacher edit: history old 8 -> new 9, student sees 9, stale repeat rejected, notifications not duplicated", !ed.error && !!again.error && hist.length === 1 && hist[0]!.old_score == 8 && hist[0]!.new_score == 9 && sNow[0]!.score == 9 && nAfter - nGrade <= 2, [ed.error, hist, nGrade, nAfter]);
   const rv = (await admin.from("homework_grades").select("rev").eq("submission_id", sub1).single()).data!.rev;
   const noReason = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "", _rev: rv });
   const corr = await t1.c.rpc("correct_result", { _sub: sub1, _score: null, _criteria: [6, 3], _feedback: "جيد", _reason: "خطأ جمع", _rev: rv });
