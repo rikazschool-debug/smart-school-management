@@ -154,3 +154,13 @@
 - [x] AC10 Final classified report
 - [ ] AC-TZ Per-school timezone (all schools Asia/Riyadh today) — waits on owner answer
 - [ ] AC-FIELD Real phone camera / USB reader / torch / speakers — needs school devices (in-app guide ready)
+
+## Grades package (docs/grades-package-brief.md)
+- [ ] G1 Attendance compare: expected/resolved/unresolved + completion %, Riyadh-time scope note
+- [ ] G2 Assessment plans, items, weights, versions
+- [ ] G3 Grading periods and deadlines
+- [ ] G4 Gradebook per course (manual + homework link, missing/zero/absent/exempt)
+- [ ] G5 Dept head review, principal approval, publish to student/guardian
+- [ ] G6 Lock + correction requests + reopen with reason
+- [ ] G7 XLSX/PDF reports
+- [ ] G8 Tests (server + browser)
