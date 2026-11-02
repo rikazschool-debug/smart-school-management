@@ -39,7 +39,11 @@ try {
   const mRes = (await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "سري للغاية", privacy: "restricted", starts_at: at, mode: "virtual", members: [t3.id] }, _rev: null, _client: null })).data as any;
   for (const m of [mOk, mCan, mRes]) await pr.c.rpc("adm_meeting_send", { _id: m.id, _rev: 1 });
   await pr.c.rpc("adm_meeting_cancel", { _id: mCan.id, _reason: "تأجيل", _rev: 2 });
-  const ro = (await admin.from("adm_duty_rosters").insert({ school_id: S, week_start: riyadhToday, status: "published" }).select().single()).data!;
+  const dow = new Date(Date.parse(riyadhToday + "T00:00:00Z")).getUTCDay();
+  const wk = new Date(Date.parse(riyadhToday + "T00:00:00Z") - dow * 864e5).toISOString().slice(0, 10);
+  const roI = await admin.from("adm_duty_rosters").insert({ school_id: S, week_start: wk, status: "published" }).select().single();
+  if (roI.error) throw roI.error;
+  const ro = roI.data!;
   const po = (await admin.from("adm_duty_posts").insert({ school_id: S, name: "البوابة", start_time: "06:45", end_time: "07:15" }).select().single()).data!;
   await admin.from("adm_duty_assignments").insert([{ school_id: S, roster_id: ro.id, post_id: po.id, date: tomorrow, start_time: "06:45", end_time: "07:15", user_id: t1.id, status: "assigned" },
     { school_id: S, roster_id: ro.id, post_id: po.id, date: tomorrow, start_time: "06:45", end_time: "07:15", user_id: t2.id, status: "cancelled" }]);
@@ -59,7 +63,7 @@ try {
   await pr.c.rpc("adm_set_form_status", { _id: f1, _status: "active" });
   const rq = (await t1.c.rpc("adm_save_request", { _id: null, _form: f1, _answers: { f1: "موضوع" }, _rev: null })).data as any;
   const fr = (await t1.c.rpc("create_admin_file", { _entity: "request", _id: rq.id, _name: "a.pdf", _mime: "application/pdf", _size: 9 })).data as any;
-  const fid = typeof fr === "string" ? fr : fr?.id;
+  const fid = Array.isArray(fr) ? fr[0]?.id : typeof fr === "string" ? fr : fr?.id;
   const frow = (await admin.from("files").select("id, storage_path").eq("id", fid).single()).data!;
   await t1.c.storage.from("rikaz-files").upload(frow.storage_path, new Blob(["%PDF-1.4\n"], { type: "application/pdf" }), { contentType: "application/pdf" });
   const sub = (await t1.c.rpc("adm_submit_request", { _id: rq.id, _rev: rq.rev })).data as number;
