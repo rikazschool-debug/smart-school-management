@@ -213,3 +213,8 @@ No defects found, so no fixes or re-runs were needed. The mobile-screen file was
 - AC6 فرعان (متصفح 17/17، j3): حضور في الموعد (أ) ووصول متأخر (ب)، مراجعة ثم اعتماد، وصول بعد الاعتماد = متأخر، استئذان وتسليم وخروج ثم عودة (حضر 2 / داخل الآن 1 ثم 2)، تسكين قادم مستبعد. XLSX وPDF فُتحا: المقارنة أ=2/2/خروج 1/100%، ب=3 سجلات/متأخر 2/غائب 1/66.7% (المقام = السجلات المحسومة). اكتُشف وأُصلح: المرشد والأمن كانوا يرون السجلات بلا أسماء (att_day_rows).
 - AC7: من دوال الحضور القابلة للاستدعاء، attendance_policy كانت بلا فحص → أُغلقت (اختبار). create/submit_pickup_request تتحقق من صلة ولي الأمر الموثقة. بقية الدوال تفحص الدور داخليًا.
 - الانحدار: attendance-e2e 104/104، rls-e2e 94/94، vitest 27/27.
+
+## G1 — Attendance scope freeze (before grades)
+- Timezone: Asia/Riyadh only for this release (documented scope limit; no per-school timezone screen).
+- Pending field acceptance: physical barcode reader, camera, speakers — NOT claimed complete.
+- attendance_compare now returns expected / resolved / unresolved / completion_rate; attendance_rate is labelled "from resolved only".

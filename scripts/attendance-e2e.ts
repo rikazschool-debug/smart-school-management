@@ -347,6 +347,8 @@ try {
   const cmp = (await owner.c.rpc("attendance_compare", { _org: org, _from: today(), _to: today() })).data ?? [];
   const cmpVp = (await vp.c.rpc("attendance_compare", { _org: org, _from: today(), _to: today() })).data ?? [];
   const cmpX = (await owner2.c.rpc("attendance_compare", { _org: org, _from: today(), _to: today() })).data ?? [];
+  { const c = cmp[0] ?? {}; check("comparison counts: resolved+pending=records, unresolved=expected-resolved, rate only from resolved",
+    c.resolved === c.records - c.pending && c.unresolved === Math.max(c.expected - c.resolved, 0) && (c.expected === 0 ? c.completion_rate === null : Number(c.completion_rate) === Math.round(1000 * c.resolved / c.expected) / 10), c); }
   check("branch comparison owner-only and isolated", cmp.length === 1 && cmp[0].late >= 1 && cmpVp.length === 0 && cmpX.length === 0, { cmp, v: cmpVp.length, x: cmpX.length });
 
   // views

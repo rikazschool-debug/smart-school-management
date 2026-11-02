@@ -4351,14 +4351,18 @@ export type Database = {
         Returns: {
           absent: number
           attendance_rate: number
+          completion_rate: number
           early_out: number
           excused: number
+          expected: number
           late: number
           pending: number
           present: number
           records: number
+          resolved: number
           school_id: string
           school_name: string
+          unresolved: number
         }[]
       }
       attendance_policy: {

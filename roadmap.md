@@ -156,7 +156,7 @@
 - [ ] AC-FIELD Real phone camera / USB reader / torch / speakers — needs school devices (in-app guide ready)
 
 ## Grades package (docs/grades-package-brief.md)
-- [ ] G1 Attendance compare: expected/resolved/unresolved + completion %, Riyadh-time scope note
+- [x] G1 Attendance compare: expected/resolved/unresolved + completion %, Riyadh-time scope note
 - [ ] G2 Assessment plans, items, weights, versions
 - [ ] G3 Grading periods and deadlines
 - [ ] G4 Gradebook per course (manual + homework link, missing/zero/absent/exempt)

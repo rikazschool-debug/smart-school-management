@@ -287,9 +287,9 @@ function DelegateReviews({ S }: { S: string }) {
 export function CompareTab({ ctx }: { ctx: Ctx }) {
   const [from, setFrom] = useState(riyadhToday()); const [to, setTo] = useState(riyadhToday());
   const q = useQuery({ queryKey: ["att-compare", ctx.orgId, from, to], enabled: !!ctx.orgId, queryFn: async () => { const { data, error } = await db.rpc("attendance_compare", { _org: ctx.orgId, _from: from, _to: to }); if (error) throw error; return data as Row[]; } });
-  const cols = [["school_name", "الفرع"], ["records", "سجلات"], ["present", "حاضر"], ["late", "متأخر"], ["absent", "غائب"], ["excused", "بعذر"], ["pending", "بانتظار المراجعة"], ["early_out", "خروج مبكر"], ["attendance_rate", "نسبة الحضور %"]] as const;
+  const cols = [["school_name", "الفرع"], ["expected", "المتوقعون"], ["resolved", "محسوم"], ["unresolved", "غير محسوم"], ["completion_rate", "اكتمال الرصد %"], ["records", "سجلات"], ["present", "حاضر"], ["late", "متأخر"], ["absent", "غائب"], ["excused", "بعذر"], ["pending", "بانتظار المراجعة"], ["early_out", "خروج مبكر"], ["attendance_rate", "نسبة الحضور من المحسوم %"]] as const;
   return (
-    <Section title="مقارنة الفروع" desc="لمالك المؤسسة فقط. النسبة = (حاضر + متأخر) ÷ السجلات المحسومة، دون المعلّق بالمراجعة.">
+    <Section title="مقارنة الفروع" desc="لمالك المؤسسة فقط. المتوقعون = الطلاب المسكّنون في أيام الدراسة حتى اليوم. اكتمال الرصد = المحسوم ÷ المتوقعين. نسبة الحضور = (حاضر + متأخر) ÷ المحسوم فقط، وليست نسبة نهائية لكل المتوقعين ما لم يكتمل الرصد. التوقيت المعتمد: الرياض.">
       <div className="mb-3 flex flex-wrap items-end gap-3">
         <div className="space-y-1"><Label htmlFor="cf">من</Label><Input id="cf" type="date" value={from} max={to} onChange={(e) => e.target.value && setFrom(e.target.value)} /></div>
         <div className="space-y-1"><Label htmlFor="ct">إلى</Label><Input id="ct" type="date" value={to} min={from} max={riyadhToday()} onChange={(e) => e.target.value && setTo(e.target.value)} /></div>
