@@ -187,10 +187,10 @@
 - [x] Simplify homework/tests grading (instant visibility, archive term grades)
 
 ## جولة إغلاق الواجبات بعد التبسيط (docs/homework-closure-brief.md)
-- [ ] HC1 اختبار الوكيل بالمتصفح
-- [ ] HC2 التعديل من نافذتين فعليتين + انتهاء التكليف
-- [ ] HC3 التصحيحات القديمة غير الظاهرة (معاينة، إظهار فردي، سجل من أظهر)
-- [ ] HC4 تحديث grades-e2e لسلوك الأرشيف
-- [ ] HC5 فتح XLSX/PDF والتحقق من النطاق
-- [ ] HC6 مراجعة set_homework_kind و homework_list
-- [ ] HC7 التقرير
+- [x] HC1 اختبار الوكيل بالمتصفح
+- [x] HC2 التعديل من نافذتين فعليتين + انتهاء التكليف
+- [x] HC3 التصحيحات القديمة غير الظاهرة (معاينة، إظهار فردي، سجل من أظهر)
+- [x] HC4 تحديث grades-e2e لسلوك الأرشيف
+- [x] HC5 فتح XLSX/PDF والتحقق من النطاق
+- [x] HC6 مراجعة set_homework_kind و homework_list
+- [x] HC7 التقرير

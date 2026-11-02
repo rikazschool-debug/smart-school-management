@@ -15,5 +15,5 @@
 - scripts/hw-browser-fixture.ts setup|teardown: isolated homework data (hbx-) for browser journeys; always run teardown after.
 - scripts/assignment-validity-e2e.ts: assignment start/end boundaries (future, ended-but-approved, ends today, end<start, open session, independent dept-head role) on isolated data.
 - scripts/attendance-e2e.ts: attendance/gate/pickup/call permissions and lifecycle (104 checks; incl. delegation lockout/confirmation, attachments, branch compare). scripts/attendance-tick-e2e.ts: scheduled absence review with a controlled clock (`--cron` waits for a real pg_cron run). scripts/att-closure-fixture.ts setup|teardown: two-branch data (acx-) for closure browser journeys. scripts/att-browser-fixture.ts setup|teardown: isolated data (abx-) for attendance browser journeys; always run teardown after.
-- scripts/grades-e2e.ts: grades lifecycle/permissions (plans, periods, weights/missing/absent/exempt, homework link, review/approve/publish, corrections + versions, reopen, scoped reports).
+- scripts/grades-e2e.ts: legacy write flow (superseded; fails on writes by design). Archive + homework closure checks: scripts/hw-closure-e2e.ts (`NODE_PATH=node_modules bun scripts/hw-closure-e2e.ts`).
 - scripts/grades-browser-fixture.ts setup|teardown: isolated grades data (gbx-) + import XLSX files in /tmp/browser/gb; always run teardown after.
