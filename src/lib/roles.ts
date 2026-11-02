@@ -142,7 +142,7 @@ export function canAuthorHomework(role: Role) {
   return role === "teacher";
 }
 
-export type AttTab = "today" | "gate" | "pickups" | "calls" | "cards" | "records" | "followup" | "settings";
+export type AttTab = "today" | "gate" | "pickups" | "calls" | "cards" | "records" | "followup" | "settings" | "compare";
 /** Attendance tabs per role (mirrors att_gate / att_approver / att_counselor in SQL). Security runs the gate, never approvals or settings;
  *  teachers only see preparation requests of their own students; the counselor reads records and follow-ups only. */
 export function attTabs(role: Role): AttTab[] {
@@ -150,7 +150,8 @@ export function attTabs(role: Role): AttTab[] {
   if (role === "teacher") return ["pickups"];
   if (role === "counselor") return ["today", "records", "followup"];
   if (role === "student_affairs") return ["today", "gate", "pickups", "calls", "cards", "records", "followup"];
-  if (role === "org_owner" || role === "principal") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls"];
+  if (role === "org_owner") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls", "compare"];
+  if (role === "principal") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls"];
   if (role === "vice_principal") return ["today", "pickups", "records", "followup", "cards", "gate", "calls"];
   return [];
 }
