@@ -51,6 +51,7 @@ try {
   await pr.c.rpc("adm_meeting_send", { _id: m.id, _rev: 1 });
   const mn = (await pr.c.rpc("adm_minutes_save", { _meeting: m.id, _d: { topics: [{ title: "بند" }] }, _rev: null })).data as any;
   check("setup meeting + minutes", !!m?.id && !!mn, [m, mn]);
+  console.log("DBG", JSON.stringify((await admin.from("adm_meetings").select("organizer, minutes_writer").eq("id", m.id).single()).data), pr.id, prB.id);
 
   // ---- outsiders: other-org principal, student, uninvited teacher ----
   const attackers: [string, any][] = [["other-org principal", prB], ["student", st], ["uninvited teacher", tx]];
