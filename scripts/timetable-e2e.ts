@@ -31,6 +31,12 @@ const addDays = (d: string, n: number) => new Date(Date.parse(d + "T00:00:00Z") 
 const nextDow = (dow: number) => { for (let i = 0; i < 7; i++) { const d = addDays(today, i); if (new Date(d + "T00:00:00Z").getUTCDay() === dow) return d; } return today; };
 const orgs: string[] = [];
 const rpc = async (c: any, fn: string, args: any) => c.rpc(fn, args);
+if (process.argv.includes("--teardown")) {
+  const r = JSON.parse(readFileSync("/tmp/browser/tt/run.json", "utf8"));
+  for (const u of r.users) tr.addUser(u); for (const sc of r.schools) tr.addSchool(sc);
+  await tr.deleteNotifications(); for (const o of r.orgs) if (o) await tr.purgeOrg(o); for (const u of r.users) await admin.auth.admin.deleteUser(u);
+  console.log("teardown ok"); process.exit(0);
+}
 
 try {
   const owner = await user("owner"), pr = await user("pr"), vp = await user("vp"), st = await user("st"), gu = await user("gu"), ownerB = await user("ownerb"), prB = await user("prb");
