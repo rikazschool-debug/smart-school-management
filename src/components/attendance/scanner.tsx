@@ -9,7 +9,8 @@ import { selectCls } from "@/components/ui/native-select";
 import { arabicError } from "@/lib/session";
 
 type Mode = "reader" | "camera";
-const REPEAT_MS = 4000;
+const REPEAT_MS = 2000; // same code ignored for 2s (card still in front of the camera)
+const FORMATS = ["code_128", "qr_code", "code_39", "ean_13"];
 
 function beep(ok: boolean) {
   try {
@@ -61,8 +62,14 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
   }, []);
 
-  const submit = useCallback(async (raw: string) => {
-    const token = raw.trim(); if (!token || busy.current) return;
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const submit = useCallback((raw: string) => {
+    // queue scans instead of dropping them while the previous one is still waiting for the server
+    const p = queue.current.then(() => submitOne(raw)); queue.current = p.catch(() => undefined); return p;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schoolId, sound]);
+  const submitOne = async (raw: string) => {
+    const token = raw.trim().replace(/\s+/g, ""); if (!token) return;
     if (!verifiedRef.current) { setLast({ result: "error", message: "لم يُتحقق من وقت الخادم بعد — لم يُسجَّل الحضور. أعد المحاولة بعد ظهور وقت الخادم." }); return; }
     const seen = recent.current.get(token); const t = Date.now();
     if (seen && t - seen < REPEAT_MS) return; // same card still in front of the camera/reader
@@ -84,7 +91,7 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
       recent.current.delete(token); setOnline(false);
       setLast({ result: "error", message: "تعذر الاتصال بالخادم — لم يُسجَّل الحضور." }); if (sound) beep(false);
     } finally { busy.current = false; setPending(false); }
-  }, [schoolId, sound]);
+  };
 
   const tone = last?.["result"] === "present" ? "border-primary bg-primary/5" : last?.["result"] === "late" ? "border-amber-500 bg-amber-500/10" : last?.["result"] === "duplicate" ? "border-muted-foreground/30 bg-muted" : "border-destructive bg-destructive/5";
   return (
@@ -167,30 +174,32 @@ function CameraScan({ onCode }: { onCode: (c: string) => Promise<void> }) {
     stop(); setErr(null); setWeak(false);
     if (!navigator.mediaDevices?.getUserMedia) return setErr("المتصفح لا يدعم الكاميرا. استخدم قارئ الباركود.");
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ audio: false, video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: "environment" } } });
+      const s = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: "environment" } }), width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } } });
       stream.current = s;
       const v = video.current!; v.srcObject = s; await v.play();
       const list = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === "videoinput"); setCams(list);
       const track = s.getVideoTracks()[0];
       setCam(track?.getSettings().deviceId ?? "");
-      const caps = (track?.getCapabilities?.() ?? {}) as { torch?: boolean };
+      const caps = (track?.getCapabilities?.() ?? {}) as { torch?: boolean; focusMode?: string[] };
+      if (track && caps.focusMode?.includes("continuous")) void track.applyConstraints({ advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet] }).catch(() => undefined);
       setTorch(caps.torch ? false : null);
       setRunning(true);
       let lastHit = Date.now();
       const weakT = setInterval(() => setWeak(Date.now() - lastHit > 8000), 2000);
       const hit = (txt: string) => { lastHit = Date.now(); setWeak(false); void onCodeRef.current(txt); };
       const BD = (window as unknown as { BarcodeDetector?: { new (o: { formats: string[] }): Detector; getSupportedFormats: () => Promise<string[]> } }).BarcodeDetector;
-      if (BD && (await BD.getSupportedFormats()).includes("code_128")) {
+      const supported = BD ? await BD.getSupportedFormats().catch(() => [] as string[]) : [];
+      if (BD && supported.includes("code_128")) {
         setEngine("BarcodeDetector");
-        const det = new BD({ formats: ["code_128"] }); let alive = true;
-        const loop = async () => { if (!alive) return; try { const r = await det.detect(v); if (r[0]?.rawValue) hit(r[0].rawValue); } catch { /* frame not ready */ } if (alive) setTimeout(loop, 250); };
+        const det = new BD({ formats: FORMATS.filter((f) => supported.includes(f)) }); let alive = true;
+        const loop = async () => { if (!alive) return; try { if (v.readyState >= 2) { const r = await det.detect(v); if (r[0]?.rawValue) hit(r[0].rawValue); } } catch { /* frame not ready */ } if (alive) setTimeout(loop, 80); };
         void loop();
         stopLoop.current = () => { alive = false; clearInterval(weakT); };
       } else {
         setEngine("ZXing");
         const [{ BrowserMultiFormatReader }, { DecodeHintType, BarcodeFormat }] = await Promise.all([import("@zxing/browser"), import("@zxing/library")]);
-        const hints = new Map([[DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]]]);
-        const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 250 });
+        const hints = new Map<number, unknown>([[DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128, BarcodeFormat.QR_CODE, BarcodeFormat.CODE_39, BarcodeFormat.EAN_13]], [DecodeHintType.TRY_HARDER, true]]);
+        const reader = new BrowserMultiFormatReader(hints as Map<never, unknown>, { delayBetweenScanAttempts: 100 });
         const controls = await reader.decodeFromVideoElement(v, (res) => { if (res) hit(res.getText()); });
         stopLoop.current = () => { controls.stop(); clearInterval(weakT); };
       }

@@ -315,16 +315,16 @@ export function CardsTab({ ctx }: { ctx: Ctx }) {
   const rows = applyListTools(t, st.data ?? [], (s) => `${s["full_name"]} ${sectionOf(s)}`, (s) => (byStudent.has(s["id"]) ? "yes" : "no"));
   const print = async (list: Row[]) => {
     const { default: JsBarcode } = await import("jsbarcode");
-    const html = list.map((s) => { const c = byStudent.get(s["id"]); if (!c) return ""; const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); JsBarcode(svg, c["token"], { format: "CODE128", height: 50, displayValue: false, margin: 0 });
+    const html = list.map((s) => { const c = byStudent.get(s["id"]); if (!c) return ""; const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); JsBarcode(svg, c["token"], { format: "CODE128", width: 3, height: 70, displayValue: true, fontSize: 14, margin: 6 });
       return `<div class="card"><div class="n">${s["full_name"]}</div><div class="m">${ctx.schoolName} • ${sectionOf(s)}</div><div class="m">رقم الطالب: ${String(s["id"]).slice(0, 8)}</div>${svg.outerHTML}<div class="f">بطاقة حضور صباحي فقط — ليست تصريح خروج</div></div>`; }).join("");
     if (!html) return void toast.error("لا توجد بطاقات صادرة للطباعة");
     const w = window.open("", "_blank"); if (!w) return void toast.error("اسمح بالنوافذ المنبثقة للطباعة");
-    w.document.write(`<html dir="rtl"><head><title>بطاقات الطلاب</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet"><style>body{font-family:Cairo,sans-serif;display:flex;flex-wrap:wrap;gap:8px}.card{width:85mm;height:54mm;border:1px solid #999;border-radius:8px;padding:8px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px}.n{font-weight:700;font-size:15px}.m{font-size:11px;color:#444}svg{width:100%;height:50px;margin-top:auto}.f{font-size:9px;color:#666}@media print{.card{break-inside:avoid}}</style></head><body>${html}<script>setTimeout(()=>print(),600)</script></body></html>`);
+    w.document.write(`<html dir="rtl"><head><title>بطاقات الطلاب</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet"><style>body{font-family:Cairo,sans-serif;display:flex;flex-wrap:wrap;gap:8px}.card{width:85mm;height:54mm;border:1px solid #999;border-radius:8px;padding:8px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px}.n{font-weight:700;font-size:15px}.m{font-size:11px;color:#444}svg{max-width:100%;height:auto;margin-top:auto;align-self:center}.f{font-size:9px;color:#666}@media print{.card{break-inside:avoid}}</style></head><body>${html}<script>setTimeout(()=>print(),600)</script></body></html>`);
     w.document.close();
   };
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">الرمز عشوائي ولا يحمل بيانات الطالب. إلغاء البطاقة المفقودة يوقفها فورًا عند البوابة، ويُطلب سبب لإصدار البديل.</p>
+      <p className="text-sm text-muted-foreground">تُصدر البطاقة تلقائيًا عند إضافة الطالب أو تسكينه. الرمز 10 أرقام عشوائية لا تحمل بيانات الطالب. إلغاء البطاقة المفقودة يوقفها فورًا عند البوابة، ويُطلب سبب لإصدار البديل.</p>
       <ListTools s={t} placeholder="ابحث باسم الطالب أو الشعبة" count={rows.length} exp={{ title: "بطاقات الطلاب", school: ctx.schoolName, headers: ["الطالب", "الشعبة", "البطاقة", "تاريخ الإصدار"], rows: () => rows.map((s) => [s["full_name"], sectionOf(s), byStudent.has(s["id"]) ? "صادرة" : "لا توجد", byStudent.get(s["id"])?.["issued_at"]?.slice(0, 10) ?? ""]) }} />
       <Button size="sm" variant="outline" onClick={() => print(rows)}><Printer className="size-4" />طباعة بطاقات النتائج</Button>
       {st.isLoading ? <LoadingState /> : !rows.length ? <EmptyState title="لا نتائج" /> : (

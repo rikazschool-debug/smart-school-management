@@ -76,7 +76,7 @@ try {
   // ---- cards + scan ----
   const card1 = (await owner.c.rpc("issue_student_card", { _student: s1.id })).data;
   const tok1 = (await owner.c.from("student_cards").select("token").eq("id", card1).single()).data!.token as string;
-  check("token is random (no student data)", /^[0-9a-f]{32}$/.test(tok1) && !tok1.includes(s1.id.replace(/-/g, "").slice(0, 8)));
+  check("token is random (no student data)", /^[1-9][0-9]{9}$/.test(tok1) && !tok1.includes(s1.id.replace(/-/g, "").slice(0, 8)));
   const gScan = await gu.c.rpc("scan_attendance", { _school: A, _token: tok1 });
   check("guardian cannot scan", !!gScan.error);
   const sc1 = (await sec.c.rpc("scan_attendance", { _school: A, _token: tok1 })).data;
@@ -85,8 +85,10 @@ try {
   check("duplicate scan → already recorded", sc2?.result === "duplicate", sc2);
   const ins1 = (await admin.from("gate_movements").select("id").eq("student_id", s1.id)).data ?? [];
   check("duplicate creates no extra movement", ins1.length === 1, ins1.length);
+  const auto1 = (await admin.from("student_cards").select("id").eq("student_id", s1.id).eq("status", "active")).data ?? [];
+  check("card auto-issued when student added", auto1.length === 1 && auto1[0].id === card1, auto1);
   const card1b = await owner.c.rpc("issue_student_card", { _student: s1.id });
-  check("replacement needs a reason", !!card1b.error);
+  check("issue without reason returns the existing card (no silent replacement)", card1b.data === card1, card1b);
   const card1c = (await owner.c.rpc("issue_student_card", { _student: s1.id, _reason: "مفقودة" })).data;
   const old = (await sec.c.rpc("scan_attendance", { _school: A, _token: tok1 })).data;
   check("revoked card rejected", old?.result === "rejected" && /ملغاة/.test(old?.message), old);
