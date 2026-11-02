@@ -34,7 +34,7 @@ try {
   const tOpen = await mk("تكليف مفتوح", t1.id); const tDone = await mk("تكليف منجز", t2.id);
   await admin.from("adm_tasks").update({ status: "done", done_at: new Date().toISOString() }).eq("id", tDone);
   const at = new Date(Date.parse(tomorrow + "T10:00:00+03:00")).toISOString();
-  const mOk = (await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "اجتماع غدًا", starts_at: at, mode: "in_person", location: "قاعة", members: [t1.id] }, _rev: null, _client: null })).data as any;
+  const mOk = (await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "لقاء الصباح", starts_at: at, mode: "in_person", location: "قاعة", members: [t1.id] }, _rev: null, _client: null })).data as any;
   const mCan = (await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "اجتماع ملغى", starts_at: at, mode: "in_person", location: "قاعة", members: [t2.id] }, _rev: null, _client: null })).data as any;
   const mRes = (await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "سري للغاية", privacy: "restricted", starts_at: at, mode: "virtual", members: [t3.id] }, _rev: null, _client: null })).data as any;
   for (const m of [mOk, mCan, mRes]) await pr.c.rpc("adm_meeting_send", { _id: m.id, _rev: 1 });
