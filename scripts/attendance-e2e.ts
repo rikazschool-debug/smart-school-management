@@ -125,9 +125,10 @@ try {
   const sEnd = await ins(owner.c, A, "students", { full_name: "تسكين منتهٍ", gender: "male" });
   await admin.from("enrollments").insert({ school_id: A, student_id: sEnd.id, section_id: secA.id, year_id: year.id, start_date: "2026-01-01", end_date: yesterday, status: "ended" });
   const sAbs = await mkStudent("غائب ثم وصل");
+  await admin.from("student_guardians").insert({ school_id: A, student_id: sAbs.id, guardian_id: g1.id, relationship: "أب", can_follow: true, can_pickup: true, verified: true });
   await admin.from("attendance_policies").update({ absence_review_at: "23:59" }).eq("id", pol.data);
-  const early = await sec.c.rpc("build_absence_review", { _school: A, _date: today() });
-  check("no absence list before cutoff", !!early.error && /بعد الساعة/.test(early.error.message), early.error?.message);
+  const earlyRev = await sec.c.rpc("build_absence_review", { _school: A, _date: today() });
+  check("no absence list before cutoff", !!earlyRev.error && /بعد الساعة/.test(earlyRev.error.message), earlyRev.error?.message);
   const bEarly = (await sec.c.rpc("attendance_board", { _school: A, _date: today() })).data;
   check("before cutoff: not-yet-recorded count, no pending", bEarly?.not_yet === 3 && bEarly?.pending_review === 0 && bEarly?.expected === 6, bEarly);
   await admin.from("attendance_policies").update({ absence_review_at: "00:00" }).eq("id", pol.data);
@@ -164,7 +165,7 @@ try {
   await sec.c.rpc("build_absence_review", { _school: A, _date: today() });
   const absN = (await admin.from("notifications").select("id").like("dedupe_key", `absent:${sAbs.id}%`)).data ?? [];
   const dAbs3 = (await admin.from("attendance_days").select("status").eq("id", dAbs.id).single()).data!;
-  check("refresh keeps arrival; absence notice not repeated", dAbs3.status === "late" && absN.length === 0, { dAbs3, absN: absN.length });
+  check("refresh keeps arrival; absence notice not repeated", dAbs3.status === "late" && absN.length === 1, { dAbs3, absN: absN.length });
   const secManual = await sec.c.rpc("manual_attendance", { _student: sSelf.id, _status: "arrived", _reason: "نسي البطاقة" });
   check("security cannot record manual attendance", !!secManual.error);
   const noReason = await vp.c.rpc("manual_attendance", { _student: sSelf.id, _status: "arrived", _reason: "" });
