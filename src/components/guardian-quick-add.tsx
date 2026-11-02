@@ -80,7 +80,7 @@ export function GuardianQuickAdd({ studentId, studentName, onDone }: { studentId
       <div className="space-y-1.5"><Label>رقم الهوية</Label><Input dir="ltr" inputMode="numeric" value={f.nid} onChange={(e) => setF({ ...f, nid: e.target.value })} /></div>
       <div className="space-y-1.5"><Label>رقم الجوال</Label><Input dir="ltr" inputMode="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
       <div className="space-y-1.5"><Label>صلة القرابة</Label>
-        <select className={selectCls} value={f.rel} onChange={(e) => setF({ ...f, rel: e.target.value })}>
+        <select className={selectCls()} value={f.rel} onChange={(e) => setF({ ...f, rel: e.target.value })}>
           <option value="father">الأب</option><option value="mother">الأم</option><option value="brother">الأخ</option><option value="other">أخرى</option>
         </select>
       </div>
