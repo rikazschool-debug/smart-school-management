@@ -7,10 +7,10 @@ const TOKEN_TTL = 600;
 const UUID = /^[0-9a-f-]{36}$/i;
 
 function agoraEnv() {
-  const appId = process.env.AGORA_APP_ID;
-  const cert = process.env.AGORA_APP_CERTIFICATE;
-  const cid = process.env.AGORA_CUSTOMER_ID;
-  const csec = process.env.AGORA_CUSTOMER_SECRET;
+  const appId = process.env["AGORA_APP_ID"];
+  const cert = process.env["AGORA_APP_CERTIFICATE"];
+  const cid = process.env["AGORA_CUSTOMER_ID"];
+  const csec = process.env["AGORA_CUSTOMER_SECRET"];
   if (!appId || !cert) throw new Error("إعدادات Agora ناقصة على الخادم (معرّف التطبيق أو الشهادة)");
   return { appId, cert, rest: cid && csec ? "Basic " + btoa(`${cid}:${csec}`) : null };
 }

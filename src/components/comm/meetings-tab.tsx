@@ -3,7 +3,9 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { db, type Row } from "@/components/crud-page";
+import { db } from "@/components/crud-page";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Row = any;
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Pill, riyadhDate, riyadhTime } from "@/components/admin/shared";
