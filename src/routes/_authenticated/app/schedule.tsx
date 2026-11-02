@@ -66,7 +66,7 @@ function SlotCard({ s, show, sub, problem }: { s: Row; show: ("teacher" | "secti
   );
 }
 
-function Filter({ slots, value, onChange, sectionsOnly, withRooms, names }: { slots: Row[]; value: string; onChange: (v: string) => void; sectionsOnly?: boolean; withRooms?: boolean; names?: Map<string, string[]> }) {
+function Filter({ slots, value, onChange, sectionsOnly, withRooms, names }: { slots: Row[]; value: string; onChange: (v: string) => void; sectionsOnly?: boolean; withRooms?: boolean; names?: Map<string, string[]> | undefined }) {
   const rms = useMemo(() => [...new Map(slots.filter((s) => s["room_id"]).map((s) => [s["room_id"], slotLabel(s).room])).entries()], [slots]);
   const secs = useMemo(() => [...new Map(slots.map((s) => [s["section_id"], slotLabel(s).section])).entries()], [slots]);
   const tchs = useMemo(() => [...new Map(slots.map((s) => [s["teacher_id"], slotLabel(s).teacher])).entries()], [slots]);
