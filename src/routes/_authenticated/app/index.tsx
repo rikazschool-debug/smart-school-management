@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, BookOpen, CalendarDays, ClipboardList, GraduationCap, Layers, MessagesSquare, Repeat, School, UserPlus, UsersRound, type LucideIcon } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, ClipboardList, GraduationCap, Layers, MessagesSquare, School, UserPlus, UsersRound, type LucideIcon } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader, Section } from "@/components/states";
 import { ClassroomGrid, useClassrooms } from "./classrooms.index";
