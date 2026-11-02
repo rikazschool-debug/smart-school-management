@@ -119,7 +119,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
       </div>
       {!shown.length && <p className="p-3 text-sm text-muted-foreground">{rows.length ? "لا نتائج مطابقة للبحث أو التصنيف." : "لا يوجد طلاب مستهدفون."}</p>}
       {current && (
-        <StudentReview key={`${current["student_id"]}-${current["grade"]?.["rev"] ?? 0}-${current["sub"]?.["attempt_count"] ?? 0}`} h={h} r={current} editable={editable} onDirty={(d) => { dirty.current = d; }}
+        <StudentReview key={`${current["student_id"]}-${current["grade"] ? 1 : 0}-${current["sub"]?.["attempt_count"] ?? 0}`} h={h} r={current} editable={editable} onDirty={(d) => { dirty.current = d; }}
           prev={idx > 0 ? () => setSel(shown[idx - 1]!["student_id"]) : undefined}
           next={idx >= 0 && idx < shown.length - 1 ? () => setSel(shown[idx + 1]!["student_id"]) : undefined}
           refresh={() => qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] })} />
@@ -139,6 +139,21 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
   const [ext, setExt] = useState("");
   const [paperNote, setPaperNote] = useState("");
   const [paperAt, setPaperAt] = useState("");
+  const [conflict, setConflict] = useState<Row | null>(null);
+  // Baseline = the saved version the inputs were loaded from. When a newer version arrives (own save or another window):
+  // untouched inputs follow it; edited inputs are kept and a conflict notice is shown instead of overwriting them.
+  const base = useRef<Row | null>(g);
+  const vals = (x: Row | null) => ({ s: x?.["score"]?.toString() ?? "", f: x?.["feedback"] ?? "", c: crit.map((_, i) => x?.["criteria_scores"]?.[i]?.toString() ?? "").join("|") });
+  useEffect(() => {
+    if ((g?.["rev"] ?? null) === (base.current?.["rev"] ?? null)) return;
+    const b = vals(base.current), now = vals(g);
+    const untouched = score === b.s && fb === b.f && cs.join("|") === b.c;
+    const same = score === now.s && fb === now.f && cs.join("|") === now.c;
+    base.current = g;
+    if (untouched || same) { setScore(now.s); setFb(now.f); setCs(now.c.split("|").slice(0, crit.length)); setConflict(null); }
+    else setConflict(g);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [g?.["rev"]]);
   const isDirty = score !== (g?.["score"]?.toString() ?? "") || fb !== (g?.["feedback"] ?? "") || cs.some((x, i) => x !== (g?.["criteria_scores"]?.[i]?.toString() ?? ""));
   useEffect(() => { onDirty(isDirty); }, [isDirty, onDirty]);
   useEffect(() => () => onDirty(false), [onDirty]);
@@ -159,9 +174,9 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
       toast.error(arabicError(error), { action: { label: "إعادة المحاولة", onClick: () => void call(fn, args, ok) } });
       return false;
     }
-    setConflict(null); onDirty(false); toast.success(ok); refresh(); return true;
+    setConflict(null); if (fn === "grade_submission") base.current = { ...(g ?? {}), rev: -1, score: args["_score"], feedback: args["_feedback"] || null, criteria_scores: args["_criteria"] };
+    onDirty(false); toast.success(ok); refresh(); return true;
   }
-  const [conflict, setConflict] = useState<Row | null>(null);
   const gradeArgs = () => ({ _sub: sub["id"], _score: graded && !crit.length ? Number(score) : null, _criteria: crit.length ? cs.map(Number) : [], _feedback: fb, _rev: (conflict ?? g)?.["rev"] ?? null });
   const total = cs.reduce((s, x) => s + (Number(x) || 0), 0);
   return (
@@ -200,7 +215,7 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
               <p>النسخة المحفوظة الآن: الدرجة {conflict["score"] ?? "—"}{conflict["feedback"] ? ` · «${conflict["feedback"]}»` : ""}</p>
               <p>إدخالك غير المحفوظ: الدرجة {crit.length ? total : score || "—"}{fb ? ` · «${fb}»` : ""}</p>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => { setConflict(null); onDirty(false); refresh(); }}>تجاهل إدخالي وعرض الأحدث</Button>
+                <Button size="sm" variant="outline" onClick={() => { const n = vals(conflict); base.current = conflict; setScore(n.s); setFb(n.f); setCs(n.c.split("|").slice(0, crit.length)); setConflict(null); onDirty(false); refresh(); }}>تجاهل إدخالي وعرض الأحدث</Button>
                 <span className="self-center text-xs text-muted-foreground">أو اضغط زر الحفظ لاعتماد إدخالك بدل النسخة الأحدث (يُسجل في السجل).</span>
               </div>
             </div>
