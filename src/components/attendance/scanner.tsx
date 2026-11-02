@@ -91,7 +91,7 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-4 text-sm">
         <span className="font-bold">{schoolName}</span>
-        <span data-testid="server-clock" data-state={clockState.status} className="text-muted-foreground">وقت الخادم: {clockState.status === "ready" && clock ? fmtRiyadh(clock, true) : clockState.status === "loading" ? "جارٍ التحقق من وقت الخادم…" : <span className="text-destructive">{clockState.message} — التسجيل متوقف <Button size="sm" variant="outline" className="ms-1 h-7" onClick={() => void retryClock()}>إعادة المحاولة</Button></span>}</span>
+        <span data-testid="server-clock" data-state={clockState.status} className="text-muted-foreground">وقت الخادم: {clockState.status === "ready" && clock ? fmtRiyadh(clock, true) : clockState.status === "loading" ? "جارٍ التحقق من وقت الخادم…" : <span className="text-destructive">{clockState.status === "error" ? clockState.message : ""} — التسجيل متوقف <Button size="sm" variant="outline" className="ms-1 h-7" onClick={() => void retryClock()}>إعادة المحاولة</Button></span>}</span>
         <span className={`inline-flex items-center gap-1 ${online ? "text-primary" : "text-destructive"}`}>{online ? <Wifi className="size-4" /> : <WifiOff className="size-4" />}{online ? "متصل" : "غير متصل"}</span>
         <span className="ms-auto">عمليات التسجيل في الجلسة: <b data-testid="scan-count">{count}</b></span>
         <label className="inline-flex items-center gap-1"><input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} />نغمة تأكيد</label>
