@@ -221,7 +221,9 @@
 
 ## School admin resume 2 (docs/school-admin-resume2-brief.md)
 - [x] Server tests: attachments A1–A8 + department delete D1–D4 → scripts/admin-e2e.ts 51/51
-- [ ] Browser journeys with separate accounts (principal/vice/assignee/participant/unauthorized) for tasks, requests, attachments
+- [x] Browser task journey (vice/assignee/participant/unauthorized, proof upload, return, confirm, addendum) 13/13
+- [ ] Browser request journey (form create/activate, draft, submit, return, resubmit, complete/reject, transfer, new version)
+- [ ] Excel/PDF export for this section (multi-page, filters, permissions)
 - [ ] Duty rosters (settings, suggest, draft/publish, my duties, reports, tests 1–10)
 - [ ] Meetings, minutes, decisions
 - [ ] Calendar, reports, final scan
