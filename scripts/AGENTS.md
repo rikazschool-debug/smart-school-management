@@ -18,4 +18,4 @@
 - scripts/grades-e2e.ts: legacy write flow (superseded; fails on writes by design). Archive + homework closure checks: scripts/hw-closure-e2e.ts (`NODE_PATH=node_modules bun scripts/hw-closure-e2e.ts`).
 - scripts/grades-browser-fixture.ts setup|teardown: isolated grades data (gbx-) + import XLSX files in /tmp/browser/gb; always run teardown after.
 - scripts/admin-e2e.ts: school administration forms/requests/tasks permissions and lifecycle (`NODE_PATH=node_modules bun scripts/admin-e2e.ts`).
-- scripts/admin-browser-fixture.ts setup|teardown: isolated abm- data for admin browser journeys; scripts/admin-task-journey.py runs the full task cycle (13 checks).
+- scripts/admin-browser-fixture.ts setup|teardown: isolated abm- data for admin browser journeys; scripts/admin-task-journey.py runs the full task cycle (13 checks).; scripts/admin-request-journey.py runs the full request cycle (23 checks).

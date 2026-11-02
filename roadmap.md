@@ -232,3 +232,5 @@
 ## Resume point (Nov 2): admin names fix done
 - Done: task/request party names via adm_party_names RPC (only for readers of the item); browser journey 16/16 (assigner/assignee/participant names, unauthorized denied).
 - Next: SR request journey in browser (items 1–10), then XLSX/PDF export checks + homework multi-page PDF visual check, then duties, meetings/minutes/decisions, calendar/final check.
+- Done (Nov 2): request journey in browser scripts/admin-request-journey.py 23/23 (form create/activate, draft, required field, bad file type, attachment, submit, return/resubmit, complete, reject, reassign, new version isolation, unauthorized UI+direct RPC, mobile). Fixed: form editor lacked "allow files" toggle (uploads failed silently); "resubmitted" event untranslated.
+- Next: XLSX/PDF export checks for requests/tasks (+ homework multi-page PDF visual), then duties.

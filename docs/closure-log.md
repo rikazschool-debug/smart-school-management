@@ -262,3 +262,4 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Browser task journey (scripts/admin-task-journey.py, isolated abm- fixture, torn down) 13/13: vice creates with participant+proof+confirmation; assignee acknowledges, progress, clarification, blocker; completion refused without proof; proof upload; participant has no assignee/confirm controls; unauthorized staff sees "not found"; return with reason; confirm → done; post-completion upload shown as «ملحق بعد الإنجاز» with uploader/time, status stays done, no delete button. Timeline labels translated (started/file_added/file_removed).
 - Open: assigner/participant names show "—" to the assignee (profile visibility); request journey, export, duties, meetings, calendar not done.
 - [2026-11-02] Admin task/request party names fixed (adm_party_names); admin-task-journey 16/16.
+- [2026-11-02] Admin request browser journey 23/23 (scripts/admin-request-journey.py); allow_files toggle added.
