@@ -108,7 +108,7 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
     setPhase("joining");
     try {
       const A = agora.current ?? (agora.current = (await import("agora-rtc-sdk-ng")).default);
-      A.setLogLevel(3);
+      A.setLogLevel(new URLSearchParams(window.location.search).get("debug") === "1" ? 1 : 3);
       const t = await tokenFn({ data: { id: meetingId, kind: "join" } });
       myUid.current = t.uid;
       const c = A.createClient({ mode: "rtc", codec: "vp8" });
