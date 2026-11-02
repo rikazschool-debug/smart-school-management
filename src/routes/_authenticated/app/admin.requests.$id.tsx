@@ -32,8 +32,9 @@ function Req({ role, school }: { role: string; school: string }) {
       const { data, error } = await db.from("adm_requests").select("*").eq("id", id).maybeSingle();
       if (error) throw error;
       if (!data) return null;
+      const { data: fm } = await db.from("adm_forms").select("allow_files").eq("id", data.form_id).maybeSingle();
       const { data: ps } = await db.rpc("adm_party_names" as never, { _entity: "request", _id: id } as never);
-      return { ...data, names: Object.fromEntries(((ps ?? []) as Row[]).map((p) => [p.user_id, p.full_name])) } as Row;
+      return { ...data, allow_files: fm ? fm.allow_files : true, names: Object.fromEntries(((ps ?? []) as Row[]).map((p) => [p.user_id, p.full_name])) } as Row;
     },
   });
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -136,7 +137,7 @@ function Req({ role, school }: { role: string; school: string }) {
           {!handler && !editable && role !== "principal" && <p className="text-sm text-muted-foreground">لا توجد إجراءات متاحة لك الآن.</p>}
         </div>
       </div>
-      <AdminFiles entity="request" id={id} userId={user.id} canAdd={editable || handler} />
+      <AdminFiles entity="request" id={id} userId={user.id} canAdd={(editable || handler) && r.allow_files !== false} />
       <section><h2 className="mb-2 font-semibold">سجل الطلب</h2><Timeline entity="request" id={id} /></section>
     </div>
   );

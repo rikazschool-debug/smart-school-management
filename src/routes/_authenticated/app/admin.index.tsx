@@ -357,6 +357,7 @@ function FormEditor({ ctx, form, onClose }: { ctx: Ctx; form: Row; onClose: () =
   const [d, setD] = useState({
     name: form.name ?? "", description: form.description ?? "", purpose: form.purpose ?? "", handler_user: form.handler_user ?? "",
     audience: (form.audience as string[]) ?? ["teacher"],
+    allow_files: (form.allow_files as boolean | undefined) ?? true,
     fields: ((form.fields as Field[]) ?? [{ label: "", type: "text", required: true, options: [] }]).map((f) => ({ ...f, options: f.options ?? [] })),
   });
   const [busy, setBusy] = useState(false);
@@ -388,6 +389,7 @@ function FormEditor({ ctx, form, onClose }: { ctx: Ctx; form: Row; onClose: () =
           <label key={k} className="flex items-center gap-1 rounded-md border px-2 py-1 text-xs"><input type="checkbox" checked={d.audience.includes(k)} onChange={(e) => setD({ ...d, audience: e.target.checked ? [...d.audience, k] : d.audience.filter((x) => x !== k) })} />{v}</label>
         ))}</div>
       </div>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.allow_files} onChange={(e) => setD({ ...d, allow_files: e.target.checked })} />السماح بإرفاق ملفات مع الطلب</label>
       <div className="space-y-2"><Label>الحقول</Label>
         {d.fields.map((f, i) => (
           <div key={i} className="flex flex-wrap items-center gap-2 rounded-lg border p-2">
