@@ -58,7 +58,7 @@ try {
   const pub = await pr.c.rpc("publish_timetable", { _id: tt.id, _effective_from: today });
   check("setup: published timetable with t1 teaching P2 today", !sl.error && !pub.error, [sl.error, pub.error]);
   await ins("teacher_unavailability", { teacher_id: tch[1].id, day: dow, period_id: P2.id, note: "تشغيلي" });
-  await ins("teacher_absences", { teacher_id: tch[2].id, date: today, note: "غياب" });
+  await ins("teacher_absences", { teacher_id: tch[2].id, date: today, note: "غياب", created_by: pr.id });
 
   // ---- duty settings ----
   const days = [0, 1, 2, 3, 4, 5, 6];
