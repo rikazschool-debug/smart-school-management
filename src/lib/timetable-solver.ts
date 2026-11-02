@@ -17,7 +17,7 @@ export type SolveResult = {
   softMisses: string[]; nodes: number; ms: number; note: string;
 };
 
-type Unit = { course: TTCourse; teacher: string; size: 1 | 2 };
+type Unit = { course: TTCourse; teacher: string; size: 1 | 2; adj?: boolean };
 type Pos = { day: number; periods: string[]; room: string | null };
 
 function rng(seed: number) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
@@ -62,6 +62,8 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
     if (t.weekly_max == null || t.daily_max == null) { skipped.set(c.id, "نصاب المعلم غير محدد"); continue; }
     let left = c.weekly - (cnt.get(`cw|${c.id}`) ?? 0);
     if (c.needs_double && left >= 2 && !hasDouble(m, kept, c.id)) { units.push({ course: c, teacher: t.id, size: 2 }); left -= 2; }
+    // fill with one lesson missing and no double yet: that lesson must sit next to a kept lesson of the same course
+    else if (c.needs_double && left === 1 && !hasDouble(m, kept, c.id) && kept.some((k) => k.course_id === c.id)) { units.push({ course: c, teacher: t.id, size: 1, adj: true }); left = 0; }
     for (; left > 0; left--) units.push({ course: c, teacher: t.id, size: 1 });
   }
 
@@ -79,7 +81,14 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
         }
         if (ps.some((p) => m.unavHit(u.teacher, day, p, true) || m.busyHit(u.teacher, day, p))) continue;
         if (ps.some((p) => owners(`t|${u.teacher}|${day}|${p}`)?.has(KEPT) || owners(`s|${u.course.section_id}|${day}|${p}`)?.has(KEPT))) continue;
+        let mates: TTSlot[] | null = null;
+        if (u.adj) {
+          mates = kept.filter((k) => k.course_id === u.course.id && k.day === day && Math.abs(les.indexOf(k.period_id) - i) === 1 && les.indexOf(k.period_id) >= 0
+            && !input.periods.some((p) => { const [x, y] = [m.period.get(les[Math.min(i, les.indexOf(k.period_id))]!)!, m.period.get(les[Math.max(i, les.indexOf(k.period_id))]!)!]; return p.kind !== "lesson" && p.start >= x.end && p.end <= y.start && (!p.days || p.days.includes(day)); }));
+          if (!mates.length) continue;
+        }
         for (const room of roomsOf(u.course)) {
+          if (mates && u.course.room_kind && !mates.some((k) => k.room_id === room)) continue;
           if (room && ps.some((p) => owners(`r|${room}|${day}|${p}`)?.has(KEPT))) continue;
           out.push({ day, periods: ps, room });
         }
@@ -187,7 +196,8 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
   dead.forEach((r, i) => deadBy.set(units[i]!.course.id, r));
   const perCourse = input.courses.map((c) => {
     const n = final.filter((s) => s.course_id === c.id).length;
-    const reason = n >= c.weekly ? undefined : skipped.get(c.id) ?? deadBy.get(c.id) ?? (timedOut ? "انتهى وقت البحث قبل توزيعه" : "تعذر توزيعه مع بقية الحصص ضمن حدود البحث");
+    const noDouble = c.needs_double && c.weekly >= 2 && n >= c.weekly && !hasDouble(m, final, c.id);
+    const reason = noDouble ? "لا توجد حصتان متتاليتان؛ استخدم «إعادة التوزيع» أو انقل حصة يدويًا" : n >= c.weekly ? undefined : skipped.get(c.id) ?? deadBy.get(c.id) ?? (timedOut ? "انتهى وقت البحث قبل توزيعه" : "تعذر توزيعه مع بقية الحصص ضمن حدود البحث");
     return { course_id: c.id, subject: c.subject, section: c.section, required: c.weekly, placed: n, ...(reason ? { reason } : {}) };
   });
   const teacherLoads = input.teachers.filter((x) => input.courses.some((c) => c.teacher_id === x.id)).map((x) => ({
@@ -204,7 +214,7 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
     if (c.daily_max != null) continue;
     for (const d of m.days) { const n = final.filter((s) => s.course_id === c.id && s.day === d).length; if (n > 1) softMisses.push(`${c.subject} — ${c.section}: ${n} حصص يوم ${DAYS_AR[d]} (توزيع غير متوازن)`); }
   }
-  const complete = perCourse.every((p) => p.placed >= p.required);
+  const complete = perCourse.every((p) => p.placed >= p.required && !p.reason);
   const proven = dead.size > 0 && [...dead.values()].some((r) => r.startsWith("لا يوجد موضع") || r.startsWith("يتجاوز"));
   const status: SolveResult["status"] = complete ? "done" : proven ? (out.length ? "partial" : "infeasible") : timedOut ? "timeout" : "partial";
   const note = status === "done" ? "اكتمل التوزيع وفق كل القيود الإلزامية."
