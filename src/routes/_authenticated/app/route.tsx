@@ -108,7 +108,7 @@ function Shell() {
                   <Link
                     key={k}
                     to={n.to}
-                    activeOptions={{ exact: k === "home" }}
+                    activeOptions={{ exact: k === "home" || k === "admin" }}
                     onClick={() => setOpen(false)}
                     className="group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
                   >
