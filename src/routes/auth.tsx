@@ -60,12 +60,13 @@ function AuthPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email)) return void toast.error("أدخل بريدًا إلكترونيًا صحيحًا");
+    const loginEmail = mode === "signin" ? toLoginEmail(email) : email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(loginEmail)) return void toast.error(mode === "signin" ? "أدخل البريد أو رقم الهوية/الجوال" : "أدخل بريدًا إلكترونيًا صحيحًا");
     if (mode !== "forgot" && password.length < 8) return void toast.error("كلمة المرور 8 أحرف على الأقل");
     setBusy(true);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
         if (error) throw error;
         go();
       } else if (mode === "signup") {
@@ -113,8 +114,8 @@ function AuthPage() {
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label htmlFor="email">البريد الإلكتروني</Label>
-                <Input id="email" type="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Label htmlFor="email">{mode === "signin" ? "البريد الإلكتروني أو رقم الهوية/الجوال (لولي الأمر)" : "البريد الإلكتروني"}</Label>
+                <Input id="email" type={mode === "signin" ? "text" : "email"} dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               {mode !== "forgot" && (
                 <div className="space-y-1.5">
