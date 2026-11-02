@@ -738,39 +738,158 @@ export type Database = {
         Row: {
           attendance_note: string | null
           attended: boolean | null
+          ban_rule: string | null
+          banned: boolean
+          can_share: boolean
+          hand_at: string | null
+          host_muted: boolean
           marked_at: string | null
           marked_by: string | null
           meeting_id: string
+          mic_req_at: string | null
+          mute_rule: string | null
           rsvp: string
           rsvp_at: string | null
           rsvp_note: string | null
+          school_id: string | null
+          share_req_at: string | null
           user_id: string
         }
         Insert: {
           attendance_note?: string | null
           attended?: boolean | null
+          ban_rule?: string | null
+          banned?: boolean
+          can_share?: boolean
+          hand_at?: string | null
+          host_muted?: boolean
           marked_at?: string | null
           marked_by?: string | null
           meeting_id: string
+          mic_req_at?: string | null
+          mute_rule?: string | null
           rsvp?: string
           rsvp_at?: string | null
           rsvp_note?: string | null
+          school_id?: string | null
+          share_req_at?: string | null
           user_id: string
         }
         Update: {
           attendance_note?: string | null
           attended?: boolean | null
+          ban_rule?: string | null
+          banned?: boolean
+          can_share?: boolean
+          hand_at?: string | null
+          host_muted?: boolean
           marked_at?: string | null
           marked_by?: string | null
           meeting_id?: string
+          mic_req_at?: string | null
+          mute_rule?: string | null
           rsvp?: string
           rsvp_at?: string | null
           rsvp_note?: string | null
+          school_id?: string | null
+          share_req_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "adm_meeting_members_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "adm_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_meeting_members_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_meeting_presence: {
+        Row: {
+          first_joined_at: string
+          joins: number
+          last_seen_at: string
+          left_at: string | null
+          meeting_id: string
+          uid: number
+          user_id: string
+        }
+        Insert: {
+          first_joined_at?: string
+          joins?: number
+          last_seen_at?: string
+          left_at?: string | null
+          meeting_id: string
+          uid: number
+          user_id: string
+        }
+        Update: {
+          first_joined_at?: string
+          joins?: number
+          last_seen_at?: string
+          left_at?: string | null
+          meeting_id?: string
+          uid?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_meeting_presence_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "adm_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_meeting_revocations: {
+        Row: {
+          attempts: number
+          created_at: string
+          done_at: string | null
+          error: string | null
+          id: string
+          kind: string
+          meeting_id: string
+          rule_id: string | null
+          uid: number | null
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          done_at?: string | null
+          error?: string | null
+          id?: string
+          kind: string
+          meeting_id: string
+          rule_id?: string | null
+          uid?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          done_at?: string | null
+          error?: string | null
+          id?: string
+          kind?: string
+          meeting_id?: string
+          rule_id?: string | null
+          uid?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_meeting_revocations_meeting_id_fkey"
             columns: ["meeting_id"]
             isOneToOne: false
             referencedRelation: "adm_meetings"
@@ -788,14 +907,23 @@ export type Database = {
           duration_min: number
           id: string
           link: string | null
+          live_ended_at: string | null
+          live_started_at: string | null
+          live_status: string
           location: string | null
           minutes_writer: string | null
+          mode: string
           needs_rsvp: boolean
+          org_id: string
           organizer: string
           privacy: string
           purpose: string | null
           rev: number
           school_id: string
+          scope: string
+          screen_sharer: string | null
+          screen_since: string | null
+          sent_at: string | null
           starts_at: string
           status: string
           title: string
@@ -810,14 +938,23 @@ export type Database = {
           duration_min?: number
           id?: string
           link?: string | null
+          live_ended_at?: string | null
+          live_started_at?: string | null
+          live_status?: string
           location?: string | null
           minutes_writer?: string | null
+          mode?: string
           needs_rsvp?: boolean
+          org_id: string
           organizer?: string
           privacy?: string
           purpose?: string | null
           rev?: number
           school_id: string
+          scope?: string
+          screen_sharer?: string | null
+          screen_since?: string | null
+          sent_at?: string | null
           starts_at: string
           status?: string
           title: string
@@ -832,14 +969,23 @@ export type Database = {
           duration_min?: number
           id?: string
           link?: string | null
+          live_ended_at?: string | null
+          live_started_at?: string | null
+          live_status?: string
           location?: string | null
           minutes_writer?: string | null
+          mode?: string
           needs_rsvp?: boolean
+          org_id?: string
           organizer?: string
           privacy?: string
           purpose?: string | null
           rev?: number
           school_id?: string
+          scope?: string
+          screen_sharer?: string | null
+          screen_since?: string | null
+          sent_at?: string | null
           starts_at?: string
           status?: string
           title?: string
@@ -851,6 +997,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_meetings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -5668,6 +5821,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      _adm_can_organize: { Args: { _school: string }; Returns: boolean }
       _adm_can_read: {
         Args: { _entity: string; _id: string }
         Returns: boolean
@@ -5678,7 +5832,12 @@ export type Database = {
       }
       _adm_check_fields: { Args: { _f: Json }; Returns: Json }
       _adm_dept: { Args: { _dept: string; _school: string }; Returns: boolean }
+      _adm_invitee_school: {
+        Args: { _org: string; _school: string; _scope: string; _user: string }
+        Returns: string
+      }
       _adm_lead: { Args: { _school: string }; Returns: boolean }
+      _adm_live_role: { Args: { _id: string }; Returns: string }
       _adm_log: {
         Args: {
           _action: string
@@ -6326,6 +6485,19 @@ export type Database = {
         Args: { _action: string; _id: string; _note: string; _rev: number }
         Returns: number
       }
+      adm_live_beat: { Args: { _id: string }; Returns: Json }
+      adm_live_host: {
+        Args: { _action: string; _id: string; _user: string }
+        Returns: undefined
+      }
+      adm_live_join: { Args: { _id: string; _kind: string }; Returns: Json }
+      adm_live_leave: { Args: { _id: string }; Returns: undefined }
+      adm_live_roster: { Args: { _id: string }; Returns: Json }
+      adm_live_self: {
+        Args: { _action: string; _id: string }
+        Returns: undefined
+      }
+      adm_live_start: { Args: { _id: string }; Returns: undefined }
       adm_meeting_attendance: {
         Args: { _id: string; _marks: Json }
         Returns: undefined
@@ -6333,6 +6505,24 @@ export type Database = {
       adm_meeting_cancel: {
         Args: { _id: string; _reason: string; _rev: number }
         Returns: number
+      }
+      adm_meeting_candidates: {
+        Args: {
+          _branch: string
+          _dept: string
+          _q: string
+          _role: string
+          _school: string
+          _scope: string
+        }
+        Returns: {
+          dept_name: string
+          full_name: string
+          roles: string
+          school_id: string
+          school_name: string
+          user_id: string
+        }[]
       }
       adm_meeting_conflicts: {
         Args: { _id: string }
@@ -6346,7 +6536,9 @@ export type Database = {
         Args: {
           _from: string
           _limit: number
+          _mode: string
           _offset: number
+          _org: string
           _q: string
           _school: string
           _scope: string
@@ -6357,11 +6549,15 @@ export type Database = {
           am_organizer: boolean
           duration_min: number
           id: string
+          live_status: string
           location: string
           members: number
+          mode: string
           my_rsvp: string
           organizer_name: string
           privacy: string
+          school_name: string
+          scope: string
           starts_at: string
           status: string
           title: string
@@ -6390,6 +6586,21 @@ export type Database = {
       adm_minutes_save: {
         Args: { _d: Json; _meeting: string; _rev: number }
         Returns: Json
+      }
+      adm_my_virtual_meetings: {
+        Args: never
+        Returns: {
+          am_organizer: boolean
+          duration_min: number
+          id: string
+          live_status: string
+          my_rsvp: string
+          organizer_name: string
+          school_name: string
+          starts_at: string
+          status: string
+          title: string
+        }[]
       }
       adm_org_summary: {
         Args: { _org: string }
