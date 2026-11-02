@@ -258,6 +258,9 @@ export type Database = {
         Row: {
           created_at: string
           date: string
+          escalated_at: string | null
+          escalated_by: string | null
+          escalation_note: string | null
           first_in_at: string | null
           id: string
           late_minutes: number
@@ -273,6 +276,9 @@ export type Database = {
         Insert: {
           created_at?: string
           date: string
+          escalated_at?: string | null
+          escalated_by?: string | null
+          escalation_note?: string | null
           first_in_at?: string | null
           id?: string
           late_minutes?: number
@@ -288,6 +294,9 @@ export type Database = {
         Update: {
           created_at?: string
           date?: string
+          escalated_at?: string | null
+          escalated_by?: string | null
+          escalation_note?: string | null
           first_in_at?: string | null
           id?: string
           late_minutes?: number
@@ -3918,6 +3927,10 @@ export type Database = {
         Returns: undefined
       }
       _att_announce_section: { Args: { _student: string }; Returns: string }
+      _att_build_review: {
+        Args: { _actor: string; _date: string; _school: string }
+        Returns: Json
+      }
       _att_default_policy: {
         Args: { _school: string }
         Returns: {
@@ -3961,6 +3974,10 @@ export type Database = {
           _school: string
         }
         Returns: undefined
+      }
+      _att_expected: {
+        Args: { _date: string; _school: string }
+        Returns: string[]
       }
       _att_notify_guardians: {
         Args: {
@@ -4185,6 +4202,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      att_tick: { Args: never; Returns: number }
       attendance_alerts: {
         Args: { _from: string; _min: number; _school: string; _to: string }
         Returns: {
@@ -4523,6 +4541,10 @@ export type Database = {
       edit_message: { Args: { _body: string; _id: string }; Returns: undefined }
       end_assignment: { Args: { _id: string }; Returns: undefined }
       ensure_classroom: { Args: { _course: string }; Returns: string }
+      escalate_absence: {
+        Args: { _day: string; _reason: string }
+        Returns: undefined
+      }
       extend_homework: {
         Args: { _due: string; _id: string; _reason: string; _student: string }
         Returns: undefined
