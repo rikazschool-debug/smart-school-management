@@ -18,6 +18,7 @@ import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
 import { Route as AuthenticatedAppAcademicRouteImport } from './routes/_authenticated/app/academic'
 import { Route as AuthenticatedAppAttendanceRouteImport } from './routes/_authenticated/app/attendance'
+import { Route as AuthenticatedAppAttendanceScanRouteImport } from './routes/_authenticated/app/attendance-scan'
 import { Route as AuthenticatedAppCommunicationRouteImport } from './routes/_authenticated/app/communication'
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
@@ -81,6 +82,12 @@ const AuthenticatedAppAttendanceRoute =
   AuthenticatedAppAttendanceRouteImport.update({
     id: '/attendance',
     path: '/attendance',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppAttendanceScanRoute =
+  AuthenticatedAppAttendanceScanRouteImport.update({
+    id: '/attendance-scan',
+    path: '/attendance-scan',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppCommunicationRoute =
@@ -196,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof InviteTokenRoute
   '/app/academic': typeof AuthenticatedAppAcademicRoute
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
+  '/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -223,6 +231,7 @@ export interface FileRoutesByTo {
   '/invite/$token': typeof InviteTokenRoute
   '/app/academic': typeof AuthenticatedAppAcademicRoute
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
+  '/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -253,6 +262,7 @@ export interface FileRoutesById {
   '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/app/academic': typeof AuthenticatedAppAcademicRoute
   '/_authenticated/app/attendance': typeof AuthenticatedAppAttendanceRoute
+  '/_authenticated/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
   '/_authenticated/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -283,6 +293,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/app/academic'
     | '/app/attendance'
+    | '/app/attendance-scan'
     | '/app/communication'
     | '/app/courses'
     | '/app/guardians'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/app/academic'
     | '/app/attendance'
+    | '/app/attendance-scan'
     | '/app/communication'
     | '/app/courses'
     | '/app/guardians'
@@ -339,6 +351,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/_authenticated/app/academic'
     | '/_authenticated/app/attendance'
+    | '/_authenticated/app/attendance-scan'
     | '/_authenticated/app/communication'
     | '/_authenticated/app/courses'
     | '/_authenticated/app/guardians'
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       path: '/attendance'
       fullPath: '/app/attendance'
       preLoaderRoute: typeof AuthenticatedAppAttendanceRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/attendance-scan': {
+      id: '/_authenticated/app/attendance-scan'
+      path: '/attendance-scan'
+      fullPath: '/app/attendance-scan'
+      preLoaderRoute: typeof AuthenticatedAppAttendanceScanRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/communication': {
@@ -565,6 +585,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppAcademicRoute: typeof AuthenticatedAppAcademicRoute
   AuthenticatedAppAttendanceRoute: typeof AuthenticatedAppAttendanceRoute
+  AuthenticatedAppAttendanceScanRoute: typeof AuthenticatedAppAttendanceScanRoute
   AuthenticatedAppCommunicationRoute: typeof AuthenticatedAppCommunicationRoute
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
@@ -589,6 +610,7 @@ interface AuthenticatedAppRouteRouteChildren {
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppAcademicRoute: AuthenticatedAppAcademicRoute,
   AuthenticatedAppAttendanceRoute: AuthenticatedAppAttendanceRoute,
+  AuthenticatedAppAttendanceScanRoute: AuthenticatedAppAttendanceScanRoute,
   AuthenticatedAppCommunicationRoute: AuthenticatedAppCommunicationRoute,
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,

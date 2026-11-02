@@ -2726,6 +2726,17 @@ export type Database = {
           decided_at: string | null
           decided_by: string | null
           decision_note: string | null
+          delegate_ack_at: string | null
+          delegate_decided_at: string | null
+          delegate_decided_by: string | null
+          delegate_id_last4: string | null
+          delegate_mode: string
+          delegate_note: string | null
+          delegate_phone: string | null
+          delegate_relationship: string | null
+          delegate_status: string | null
+          delegate_used_at: string | null
+          delegate_valid_until: string | null
           guardian_id: string
           handed_at: string | null
           handed_by: string | null
@@ -2755,6 +2766,17 @@ export type Database = {
           decided_at?: string | null
           decided_by?: string | null
           decision_note?: string | null
+          delegate_ack_at?: string | null
+          delegate_decided_at?: string | null
+          delegate_decided_by?: string | null
+          delegate_id_last4?: string | null
+          delegate_mode?: string
+          delegate_note?: string | null
+          delegate_phone?: string | null
+          delegate_relationship?: string | null
+          delegate_status?: string | null
+          delegate_used_at?: string | null
+          delegate_valid_until?: string | null
           guardian_id: string
           handed_at?: string | null
           handed_by?: string | null
@@ -2784,6 +2806,17 @@ export type Database = {
           decided_at?: string | null
           decided_by?: string | null
           decision_note?: string | null
+          delegate_ack_at?: string | null
+          delegate_decided_at?: string | null
+          delegate_decided_by?: string | null
+          delegate_id_last4?: string | null
+          delegate_mode?: string
+          delegate_note?: string | null
+          delegate_phone?: string | null
+          delegate_relationship?: string | null
+          delegate_status?: string | null
+          delegate_used_at?: string | null
+          delegate_valid_until?: string | null
           guardian_id?: string
           handed_at?: string | null
           handed_by?: string | null
@@ -4109,6 +4142,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _pickup_delegate_set: {
+        Args: { _d: Json; _id: string; _mode: string; _person: string }
+        Returns: undefined
+      }
       _report_reviewer: {
         Args: { _org: string; _school: string }
         Returns: boolean
@@ -4217,6 +4254,21 @@ export type Database = {
       attendance_board: {
         Args: { _date: string; _school: string }
         Returns: Json
+      }
+      attendance_compare: {
+        Args: { _from: string; _org: string; _to: string }
+        Returns: {
+          absent: number
+          attendance_rate: number
+          early_out: number
+          excused: number
+          late: number
+          pending: number
+          present: number
+          records: number
+          school_id: string
+          school_name: string
+        }[]
       }
       attendance_policy: {
         Args: { _date: string; _school: string }
@@ -4472,6 +4524,13 @@ export type Database = {
         Args: { _org_name: string; _school_name: string }
         Returns: string
       }
+      create_pickup_file: {
+        Args: { _mime: string; _name: string; _pickup: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
       create_pickup_request: {
         Args: {
           _kind: string
@@ -4519,6 +4578,10 @@ export type Database = {
         Args: { _approve: boolean; _id: string; _note: string }
         Returns: undefined
       }
+      decide_delegate: {
+        Args: { _approve: boolean; _id: string; _note: string }
+        Returns: undefined
+      }
       decide_late_joiner: {
         Args: { _approve: boolean; _due: string; _hw: string; _student: string }
         Returns: undefined
@@ -4535,6 +4598,23 @@ export type Database = {
           _status: string
         }
         Returns: undefined
+      }
+      delegate_reviews: {
+        Args: { _school: string }
+        Returns: {
+          created_at: string
+          guardian_name: string
+          id: string
+          id_last4: string
+          kind: string
+          phone: string
+          pickup_name: string
+          relationship: string
+          section: string
+          status: string
+          student_name: string
+          valid_until: string
+        }[]
       }
       delete_message: { Args: { _id: string }; Returns: undefined }
       dept_teacher_ids: { Args: never; Returns: string[] }
@@ -4738,7 +4818,11 @@ export type Database = {
       my_dept_ids: { Args: never; Returns: string[] }
       my_teacher_ids: { Args: never; Returns: string[] }
       open_circular: { Args: { _id: string }; Returns: undefined }
-      pickup_arrived: { Args: { _id: string }; Returns: undefined }
+      pickup_arrived: {
+        Args: { _id: string; _id_last4?: string }
+        Returns: Json
+      }
+      pickup_delegate_detail: { Args: { _id: string }; Returns: Json }
       pickup_progress: {
         Args: { _id: string; _to: string }
         Returns: undefined
@@ -4747,11 +4831,15 @@ export type Database = {
         Args: { _school: string }
         Returns: {
           created_at: string
+          delegate_mode: string
+          delegate_status: string
           id: string
           kind: string
+          phone_hint: string
           pickup_name: string
           pickup_national_id: string
           planned_at: string
+          relationship: string
           section: string
           status: string
           student_id: string
@@ -4828,6 +4916,7 @@ export type Database = {
         Returns: undefined
       }
       remove_homework_file: { Args: { _file: string }; Returns: undefined }
+      remove_pickup_file: { Args: { _file: string }; Returns: undefined }
       remove_submission_file: { Args: { _file: string }; Returns: undefined }
       reopen_circular: { Args: { _id: string }; Returns: undefined }
       report_detail: {
@@ -4953,6 +5042,7 @@ export type Database = {
           seq: number
         }[]
       }
+      server_now: { Args: never; Returns: string }
       set_authorized_pickup_active: {
         Args: { _active: boolean; _id: string }
         Returns: undefined
@@ -5044,6 +5134,18 @@ export type Database = {
         Args: { _client: string; _hw: string }
         Returns: string
       }
+      submit_pickup_request: {
+        Args: {
+          _delegate: Json
+          _kind: string
+          _mode: string
+          _person: string
+          _planned_at: string
+          _reason: string
+          _student: string
+        }
+        Returns: string
+      }
       supervised_teacher_ids: { Args: never; Returns: string[] }
       sync_course_group: { Args: { _course: string }; Returns: string }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
@@ -5073,6 +5175,10 @@ export type Database = {
           _title: string
         }
         Returns: string
+      }
+      update_pickup_delegate: {
+        Args: { _delegate: Json; _id: string; _mode: string; _person: string }
+        Returns: undefined
       }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
     }

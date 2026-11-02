@@ -41,5 +41,9 @@ const course = await ins("courses", { year_id: year.id, subject_id: sub.id, sect
 const t = await ins("teachers", { full_name: "معلم الشعبة", email: te.email, department_id: dep.id });
 await admin.from("teachers").update({ user_id: te.id }).eq("id", t.id);
 const a = await ins("teacher_assignments", { course_id: course.id, teacher_id: t.id }); await owner.c.rpc("decide_assignment", { _id: a.id, _approve: true });
-writeFileSync(STATE, JSON.stringify({ org, schools: [A], users, pw, school: A, kids: kids.map((k) => k.id), emails: { owner: owner.email, vp: vp.email, security: sec.email, guardian: gu.email, teacher: te.email, counselor: co.email } }));
+const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+await owner.c.rpc("save_attendance_policy", { _org: org, _school: A, _effective_from: today, _v: { arrival_open: "00:00", day_start: "00:01", day_end: "23:58", grace_minutes: 0, study_days: [0, 1, 2, 3, 4, 5, 6], absence_review_at: "23:59" } });
+const tokens: string[] = [];
+for (const k of kids) { const c = (await owner.c.rpc("issue_student_card", { _student: k.id })).data; tokens.push((await owner.c.from("student_cards").select("token").eq("id", c).single()).data!.token); }
+writeFileSync(STATE, JSON.stringify({ org, schools: [A], users, pw, school: A, tokens, kids: kids.map((k) => k.id), emails: { owner: owner.email, vp: vp.email, security: sec.email, guardian: gu.email, teacher: te.email, counselor: co.email } }));
 console.log("setup done", A);

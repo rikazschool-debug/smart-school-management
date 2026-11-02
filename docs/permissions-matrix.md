@@ -49,3 +49,9 @@ Protections: the last active owner cannot be deactivated or demoted; ownership c
 | Mark preparing / ready | yes | yes | yes | yes | own section students | no | no | no |
 | See permission reason | yes | yes | yes | no | no | yes (read) | own | no |
 | Records / follow-up alerts | yes | yes | yes | today board only | no | read only | own children | self |
+| Refresh absence list / escalate to vice principal | yes | yes | approver roles (escalate) / gate refresh | refresh only | no | no | no | no |
+| One-time delegate in own request (create/change/cancel) | no | no | no | no | no | no | own request | no |
+| Approve one-time delegate | yes | yes | approver roles in policy | no | no | no | no | no |
+| See delegate phone / ID last 4 | yes | yes | approver roles | masked phone only; verifies ID last 4 | no | no | own request | no |
+| Permission attachment | read | read | approver roles read | no | no | no | own (upload before decision) | no |
+| Branch comparison | yes | no | no | no | no | no | no | no |
