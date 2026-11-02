@@ -6311,7 +6311,7 @@ export type Database = {
         Args: { _client: string; _d: Json; _school: string }
         Returns: string
       }
-      adm_daily_reminders: { Args: never; Returns: Json }
+      adm_daily_reminders: { Args: { _only?: string[] }; Returns: Json }
       adm_decision_create: {
         Args: { _client: string; _d: Json; _meeting: string }
         Returns: string
