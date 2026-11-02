@@ -17,7 +17,7 @@ import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { FIELD_TYPES, FORM_STATUS, PRIORITY, REQ_STATUS, STAFF_ROLES, TASK_STATUS, isLead, Pill, useStaff, type Field } from "@/components/admin/shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin/")({
-  head: () => ({ meta: [{ title: "الإدارة المدرسية | ركاز" }, { name: "description", content: "التكليفات والطلبات والنماذج الإدارية في المدرسة" }] }),
+  head: () => ({ meta: [{ title: "الإدارة المدرسية | ركاز" }, { name: "description", content: "التكليفات والطلبات والنماذج والمناوبات والاجتماعات في المدرسة" }] }),
   component: Page,
 });
 
@@ -44,9 +44,9 @@ function OrgSummary({ orgId }: { orgId: string }) {
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد فروع" /> : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-right"><tr>{["الفرع", "تكليفات مفتوحة", "متأخرة", "منجزة (30 يومًا)", "طلبات مفتوحة", "طلبات مغلقة (30 يومًا)"].map((h) => <th key={h} className="p-3 font-semibold">{h}</th>)}</tr></thead>
+            <thead className="bg-muted/50 text-right"><tr>{["الفرع", "تكليفات مفتوحة", "متأخرة", "منجزة (30 يومًا)", "طلبات مفتوحة", "طلبات مغلقة (30 يومًا)", "مناوبات الأسبوع", "نقص التغطية", "اجتماعات قادمة", "قرارات مفتوحة"].map((h) => <th key={h} className="p-3 font-semibold">{h}</th>)}</tr></thead>
             <tbody>{q.data.map((r) => (
-              <tr key={r.school_id} className="border-t"><td className="p-3 font-medium">{r.school}</td><td className="p-3">{r.tasks_open}</td><td className="p-3">{r.tasks_overdue}</td><td className="p-3">{r.tasks_done_30d}</td><td className="p-3">{r.requests_open}</td><td className="p-3">{r.requests_closed_30d}</td></tr>
+              <tr key={r.school_id} className="border-t"><td className="p-3 font-medium">{r.school}</td><td className="p-3">{r.tasks_open}</td><td className="p-3">{r.tasks_overdue}</td><td className="p-3">{r.tasks_done_30d}</td><td className="p-3">{r.requests_open}</td><td className="p-3">{r.requests_closed_30d}</td><td className="p-3">{r.duties_week}</td><td className="p-3">{r.duty_gaps_week}</td><td className="p-3">{r.meetings_upcoming}</td><td className="p-3">{r.decisions_open}</td></tr>
             ))}</tbody>
           </table>
         </div>
@@ -63,6 +63,7 @@ function Admin({ ctx }: { ctx: Ctx }) {
     <div>
       <PageHeader eyebrow={ctx.schoolName} title="الإدارة المدرسية" desc="تكليفات الموظفين والطلبات الإدارية في مكان واحد." />
       <Summary school={ctx.schoolId} onPick={setTab} />
+      <SectionLinks school={ctx.schoolId} lead={isLead(ctx.role)} />
       <div role="tablist" className="mb-4 flex flex-wrap gap-2 border-b pb-2">
         {tabs.map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${tab === k ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{l}</button>
@@ -97,6 +98,25 @@ function Summary({ school, onPick }: { school: string; onPick: (t: string) => vo
           <p className="text-xs text-muted-foreground">{l}</p>
           <p className="mt-1 text-2xl font-bold">{q.isLoading ? "…" : (v ?? 0)}</p>
         </button>
+      ))}
+    </div>
+  );
+}
+
+function SectionLinks({ school, lead }: { school: string; lead: boolean }) {
+  const q = useQuery({ queryKey: ["adm-summary", school], queryFn: async () => ((await db.rpc("adm_summary", { _school: school })).data ?? {}) as Row });
+  const s = q.data ?? {};
+  const links = [
+    { to: "/app/admin/duties", label: "المناوبات", hint: lead ? `نقص التغطية هذا الأسبوع: ${s.duty_gaps_week ?? 0} · طلبات اعتذار: ${s.duty_changes_open ?? 0}` : `مناوباتي اليوم: ${s.duties_today_mine ?? 0}` },
+    { to: "/app/admin/meetings", label: "الاجتماعات والقرارات", hint: `اجتماعاتي القادمة: ${s.meetings_upcoming_mine ?? 0} · قراراتي المفتوحة: ${s.decisions_open_mine ?? 0}` },
+    { to: "/app/admin/calendar", label: "تقويمي", hint: "التكليفات والمناوبات والاجتماعات والقرارات" },
+  ] as const;
+  return (
+    <div className="mb-6 grid gap-3 md:grid-cols-3">
+      {links.map((l) => (
+        <Link key={l.to} to={l.to} className="rounded-xl border bg-card p-4 hover:border-primary">
+          <p className="font-semibold">{l.label}</p><p className="mt-1 text-xs text-muted-foreground">{q.isLoading ? "…" : l.hint}</p>
+        </Link>
       ))}
     </div>
   );

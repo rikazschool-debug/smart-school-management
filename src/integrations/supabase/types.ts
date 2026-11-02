@@ -188,6 +188,446 @@ export type Database = {
           },
         ]
       }
+      adm_decisions: {
+        Row: {
+          assignee: string
+          body: string
+          client_id: string | null
+          created_at: string
+          created_by: string
+          due_date: string
+          id: string
+          meeting_id: string
+          minutes_id: string | null
+          priority: string
+          school_id: string
+          task_id: string
+        }
+        Insert: {
+          assignee: string
+          body: string
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          due_date: string
+          id?: string
+          meeting_id: string
+          minutes_id?: string | null
+          priority?: string
+          school_id: string
+          task_id: string
+        }
+        Update: {
+          assignee?: string
+          body?: string
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          due_date?: string
+          id?: string
+          meeting_id?: string
+          minutes_id?: string | null
+          priority?: string
+          school_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_decisions_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "adm_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_decisions_minutes_id_fkey"
+            columns: ["minutes_id"]
+            isOneToOne: false
+            referencedRelation: "adm_minutes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_decisions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_decisions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "adm_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_duty_assignments: {
+        Row: {
+          ack_at: string | null
+          cancel_reason: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          date: string
+          end_time: string
+          exec_at: string | null
+          exec_note: string | null
+          exec_status: string
+          id: string
+          post_id: string
+          rev: number
+          roster_id: string
+          school_id: string
+          source: string
+          start_time: string
+          status: string
+          substitute_for: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ack_at?: string | null
+          cancel_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date: string
+          end_time: string
+          exec_at?: string | null
+          exec_note?: string | null
+          exec_status?: string
+          id?: string
+          post_id: string
+          rev?: number
+          roster_id: string
+          school_id: string
+          source?: string
+          start_time: string
+          status?: string
+          substitute_for?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ack_at?: string | null
+          cancel_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          end_time?: string
+          exec_at?: string | null
+          exec_note?: string | null
+          exec_status?: string
+          id?: string
+          post_id?: string
+          rev?: number
+          roster_id?: string
+          school_id?: string
+          source?: string
+          start_time?: string
+          status?: string
+          substitute_for?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_duty_assignments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "adm_duty_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_duty_assignments_roster_id_fkey"
+            columns: ["roster_id"]
+            isOneToOne: false
+            referencedRelation: "adm_duty_rosters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_duty_assignments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_duty_assignments_substitute_for_fkey"
+            columns: ["substitute_for"]
+            isOneToOne: false
+            referencedRelation: "adm_duty_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_duty_changes: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          id: string
+          kind: string
+          reason: string
+          school_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          kind: string
+          reason: string
+          school_id: string
+          status?: string
+          user_id?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          kind?: string
+          reason?: string
+          school_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_duty_changes_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "adm_duty_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_duty_changes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_duty_exempt: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          reason: string
+          school_id: string
+          until: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          reason: string
+          school_id: string
+          until?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          reason?: string
+          school_id?: string
+          until?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_duty_exempt_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_duty_posts: {
+        Row: {
+          active: boolean
+          created_at: string
+          days: number[]
+          eligible_roles: string[]
+          end_time: string
+          id: string
+          kind: string
+          name: string
+          required: number
+          school_id: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          days?: number[]
+          eligible_roles?: string[]
+          end_time: string
+          id?: string
+          kind?: string
+          name: string
+          required?: number
+          school_id: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          days?: number[]
+          eligible_roles?: string[]
+          end_time?: string
+          id?: string
+          kind?: string
+          name?: string
+          required?: number
+          school_id?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_duty_posts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_duty_rosters: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_from: string | null
+          id: string
+          published_at: string | null
+          published_by: string | null
+          report: Json
+          rev: number
+          school_id: string
+          status: string
+          updated_at: string
+          version: number
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          id?: string
+          published_at?: string | null
+          published_by?: string | null
+          report?: Json
+          rev?: number
+          school_id: string
+          status?: string
+          updated_at?: string
+          version?: number
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          id?: string
+          published_at?: string | null
+          published_by?: string | null
+          report?: Json
+          rev?: number
+          school_id?: string
+          status?: string
+          updated_at?: string
+          version?: number
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_duty_rosters_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_duty_settings: {
+        Row: {
+          load_weeks: number
+          max_per_week: number
+          school_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          load_weeks?: number
+          max_per_week?: number
+          school_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          load_weeks?: number
+          max_per_week?: number
+          school_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_duty_settings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_duty_snapshots: {
+        Row: {
+          data: Json
+          published_at: string
+          published_by: string | null
+          roster_id: string
+          version: number
+        }
+        Insert: {
+          data: Json
+          published_at?: string
+          published_by?: string | null
+          roster_id: string
+          version: number
+        }
+        Update: {
+          data?: Json
+          published_at?: string
+          published_by?: string | null
+          roster_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_duty_snapshots_roster_id_fkey"
+            columns: ["roster_id"]
+            isOneToOne: false
+            referencedRelation: "adm_duty_rosters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       adm_events: {
         Row: {
           action: string
@@ -287,6 +727,216 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "adm_forms_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_meeting_members: {
+        Row: {
+          attendance_note: string | null
+          attended: boolean | null
+          marked_at: string | null
+          marked_by: string | null
+          meeting_id: string
+          rsvp: string
+          rsvp_at: string | null
+          rsvp_note: string | null
+          user_id: string
+        }
+        Insert: {
+          attendance_note?: string | null
+          attended?: boolean | null
+          marked_at?: string | null
+          marked_by?: string | null
+          meeting_id: string
+          rsvp?: string
+          rsvp_at?: string | null
+          rsvp_note?: string | null
+          user_id: string
+        }
+        Update: {
+          attendance_note?: string | null
+          attended?: boolean | null
+          marked_at?: string | null
+          marked_by?: string | null
+          meeting_id?: string
+          rsvp?: string
+          rsvp_at?: string | null
+          rsvp_note?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_meeting_members_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "adm_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_meetings: {
+        Row: {
+          agenda: string | null
+          cancel_reason: string | null
+          client_id: string | null
+          created_at: string
+          department_id: string | null
+          duration_min: number
+          id: string
+          link: string | null
+          location: string | null
+          minutes_writer: string | null
+          needs_rsvp: boolean
+          organizer: string
+          privacy: string
+          purpose: string | null
+          rev: number
+          school_id: string
+          starts_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agenda?: string | null
+          cancel_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          duration_min?: number
+          id?: string
+          link?: string | null
+          location?: string | null
+          minutes_writer?: string | null
+          needs_rsvp?: boolean
+          organizer?: string
+          privacy?: string
+          purpose?: string | null
+          rev?: number
+          school_id: string
+          starts_at: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agenda?: string | null
+          cancel_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          duration_min?: number
+          id?: string
+          link?: string | null
+          location?: string | null
+          minutes_writer?: string | null
+          needs_rsvp?: boolean
+          organizer?: string
+          privacy?: string
+          purpose?: string | null
+          rev?: number
+          school_id?: string
+          starts_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_meetings_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_meetings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_minutes: {
+        Row: {
+          absent: string[]
+          based_on: string | null
+          change_note: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          meeting_id: string
+          notes: string | null
+          present: string[]
+          rev: number
+          saved_at: string
+          school_id: string
+          status: string
+          topics: Json
+          version: number
+          written_by: string | null
+        }
+        Insert: {
+          absent?: string[]
+          based_on?: string | null
+          change_note?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          meeting_id: string
+          notes?: string | null
+          present?: string[]
+          rev?: number
+          saved_at?: string
+          school_id: string
+          status?: string
+          topics?: Json
+          version: number
+          written_by?: string | null
+        }
+        Update: {
+          absent?: string[]
+          based_on?: string | null
+          change_note?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          notes?: string | null
+          present?: string[]
+          rev?: number
+          saved_at?: string
+          school_id?: string
+          status?: string
+          topics?: Json
+          version?: number
+          written_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_minutes_based_on_fkey"
+            columns: ["based_on"]
+            isOneToOne: false
+            referencedRelation: "adm_minutes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_minutes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "adm_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_minutes_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
@@ -5206,6 +5856,83 @@ export type Database = {
         }[]
       }
       _course_title: { Args: { _course: string }; Returns: string }
+      _duty_assignment_mine: {
+        Args: { _id: string }
+        Returns: {
+          ack_at: string | null
+          cancel_reason: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          date: string
+          end_time: string
+          exec_at: string | null
+          exec_note: string | null
+          exec_status: string
+          id: string
+          post_id: string
+          rev: number
+          roster_id: string
+          school_id: string
+          source: string
+          start_time: string
+          status: string
+          substitute_for: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "adm_duty_assignments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _duty_busy: {
+        Args: {
+          _date: string
+          _e: string
+          _exclude: string
+          _s: string
+          _school: string
+          _user: string
+        }
+        Returns: string
+      }
+      _duty_check_conflicts: {
+        Args: { _key: string; _school: string }
+        Returns: number
+      }
+      _duty_gaps: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: number
+      }
+      _duty_roster_for: {
+        Args: { _rev: number; _roster: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          effective_from: string | null
+          id: string
+          published_at: string | null
+          published_by: string | null
+          report: Json
+          rev: number
+          school_id: string
+          status: string
+          updated_at: string
+          version: number
+          week_start: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "adm_duty_rosters"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _duty_snapshot: { Args: { _roster: string }; Returns: number }
+      _duty_study_days: { Args: { _school: string }; Returns: number[] }
       _eligible_staff: {
         Args: { _org: string; _school: string; _user: string }
         Returns: boolean
@@ -5333,6 +6060,17 @@ export type Database = {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
         Returns: boolean
       }
+      _meet_busy: {
+        Args: {
+          _date: string
+          _e: string
+          _meeting: string
+          _s: string
+          _school: string
+          _user: string
+        }
+        Returns: string
+      }
       _new_card_code: { Args: never; Returns: string }
       _notify: {
         Args: {
@@ -5392,19 +6130,274 @@ export type Database = {
         Args: { _conv: string; _users: string[] }
         Returns: number
       }
+      adm_calendar: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: {
+          day: string
+          end_time: string
+          id: string
+          kind: string
+          link: string
+          start_time: string
+          status: string
+          title: string
+        }[]
+      }
+      adm_can_read_decision: { Args: { _id: string }; Returns: boolean }
+      adm_can_read_meeting: { Args: { _id: string }; Returns: boolean }
+      adm_can_read_minutes: { Args: { _id: string }; Returns: boolean }
       adm_can_read_request: { Args: { _id: string }; Returns: boolean }
       adm_can_read_task: { Args: { _id: string }; Returns: boolean }
       adm_create_task: {
         Args: { _client: string; _d: Json; _school: string }
         Returns: string
       }
+      adm_daily_reminders: { Args: never; Returns: Json }
+      adm_decision_create: {
+        Args: { _client: string; _d: Json; _meeting: string }
+        Returns: string
+      }
+      adm_decision_list: {
+        Args: {
+          _limit: number
+          _meeting: string
+          _offset: number
+          _q: string
+          _school: string
+          _scope: string
+          _status: string
+        }
+        Returns: {
+          assignee_name: string
+          body: string
+          can_open_meeting: boolean
+          created_at: string
+          due_date: string
+          id: string
+          meeting_id: string
+          meeting_title: string
+          overdue: boolean
+          priority: string
+          status: string
+          task_id: string
+          total: number
+        }[]
+      }
+      adm_duty_ack: { Args: { _id: string }; Returns: undefined }
+      adm_duty_assign: {
+        Args: {
+          _client: string
+          _date: string
+          _post: string
+          _roster: string
+          _user: string
+        }
+        Returns: string
+      }
+      adm_duty_change_list: {
+        Args: { _school: string; _status: string }
+        Returns: {
+          assignment_id: string
+          created_at: string
+          date: string
+          decision_note: string
+          id: string
+          kind: string
+          post: string
+          reason: string
+          status: string
+          user_name: string
+        }[]
+      }
+      adm_duty_coverage: {
+        Args: { _roster: string }
+        Returns: {
+          assigned: number
+          date: string
+          end_time: string
+          kind: string
+          names: string
+          post: string
+          post_id: string
+          required: number
+          start_time: string
+        }[]
+      }
+      adm_duty_decide_change: {
+        Args: { _accept: boolean; _id: string; _note: string }
+        Returns: undefined
+      }
+      adm_duty_exec: {
+        Args: { _id: string; _note: string; _rev: number; _status: string }
+        Returns: number
+      }
+      adm_duty_list: {
+        Args: {
+          _from: string
+          _limit: number
+          _offset: number
+          _post: string
+          _q: string
+          _school: string
+          _scope: string
+          _status: string
+          _to: string
+        }
+        Returns: {
+          ack_at: string
+          cancel_reason: string
+          conflict: string
+          date: string
+          end_time: string
+          exec_note: string
+          exec_status: string
+          id: string
+          kind: string
+          open_change: string
+          post: string
+          rev: number
+          roster_id: string
+          roster_status: string
+          start_time: string
+          status: string
+          substitute: boolean
+          total: number
+          user_id: string
+          user_name: string
+        }[]
+      }
+      adm_duty_load: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: {
+          changes: number
+          done: number
+          duties: number
+          minutes: number
+          not_done: number
+          pending: number
+          user_id: string
+          user_name: string
+        }[]
+      }
+      adm_duty_preview: { Args: { _roster: string }; Returns: Json }
+      adm_duty_publish: {
+        Args: { _rev: number; _roster: string }
+        Returns: number
+      }
+      adm_duty_remove: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      adm_duty_request_change: {
+        Args: { _id: string; _kind: string; _reason: string }
+        Returns: string
+      }
+      adm_duty_roster_open: {
+        Args: { _school: string; _week: string }
+        Returns: string
+      }
+      adm_duty_save_post: {
+        Args: { _d: Json; _id: string; _school: string }
+        Returns: string
+      }
+      adm_duty_save_settings: {
+        Args: { _max: number; _school: string; _weeks: number }
+        Returns: undefined
+      }
+      adm_duty_set_exempt: {
+        Args: {
+          _reason: string
+          _remove: boolean
+          _school: string
+          _until: string
+          _user: string
+        }
+        Returns: undefined
+      }
+      adm_duty_substitute: {
+        Args: { _client: string; _id: string; _reason: string; _user: string }
+        Returns: string
+      }
+      adm_duty_suggest: {
+        Args: { _rev: number; _roster: string }
+        Returns: Json
+      }
       adm_handle_request: {
         Args: { _action: string; _id: string; _note: string; _rev: number }
         Returns: number
       }
+      adm_meeting_attendance: {
+        Args: { _id: string; _marks: Json }
+        Returns: undefined
+      }
+      adm_meeting_cancel: {
+        Args: { _id: string; _reason: string; _rev: number }
+        Returns: number
+      }
+      adm_meeting_conflicts: {
+        Args: { _id: string }
+        Returns: {
+          full_name: string
+          reason: string
+          user_id: string
+        }[]
+      }
+      adm_meeting_list: {
+        Args: {
+          _from: string
+          _limit: number
+          _offset: number
+          _q: string
+          _school: string
+          _scope: string
+          _status: string
+          _to: string
+        }
+        Returns: {
+          am_organizer: boolean
+          duration_min: number
+          id: string
+          location: string
+          members: number
+          my_rsvp: string
+          organizer_name: string
+          privacy: string
+          starts_at: string
+          status: string
+          title: string
+          total: number
+        }[]
+      }
+      adm_meeting_rsvp: {
+        Args: { _id: string; _note: string; _rsvp: string }
+        Returns: undefined
+      }
+      adm_meeting_save: {
+        Args: {
+          _client: string
+          _d: Json
+          _id: string
+          _rev: number
+          _school: string
+        }
+        Returns: Json
+      }
+      adm_meeting_send: { Args: { _id: string; _rev: number }; Returns: number }
+      adm_minutes_confirm: {
+        Args: { _id: string; _rev: number }
+        Returns: undefined
+      }
+      adm_minutes_save: {
+        Args: { _d: Json; _meeting: string; _rev: number }
+        Returns: Json
+      }
       adm_org_summary: {
         Args: { _org: string }
         Returns: {
+          decisions_open: number
+          duties_week: number
+          duty_gaps_week: number
+          meetings_upcoming: number
           requests_closed_30d: number
           requests_open: number
           school: string

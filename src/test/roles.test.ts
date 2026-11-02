@@ -39,9 +39,9 @@ describe("role rules", () => {
     expect(invitableRoles("teacher")).toEqual([]);
   });
   it("counselor, nurse and security dashboards expose only communication and notifications", () => {
-    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "communication", "notifications"]);
-    expect(NAV_BY_ROLE.nurse).toEqual(["home", "admin", "communication", "notifications"]);
-    expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "communication", "notifications"]);
+    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"]);
+    expect(NAV_BY_ROLE.nurse).toEqual(["home", "admin", "duties", "meetings", "calendar", "communication", "notifications"]);
+    expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications"]);
   });
   it("students get subject groups and teacher chats only — no circulars, groups or management", () => {
     expect(commTabs("student")).toEqual(["classes", "inbox", "archive"]);
@@ -52,6 +52,13 @@ describe("role rules", () => {
   it("only managers get the communication admin tab", () => {
     expect(commTabs("principal")).toContain("manage");
     for (const r of ["teacher", "guardian", "dept_head", "supervisor", "student_affairs"] as const) expect(commTabs(r)).not.toContain("manage");
+  });
+  it("duties, meetings and calendar: every staff role; never students, families, owner or platform admin", () => {
+    for (const r of ["principal", "vice_principal", "dept_head", "supervisor", "student_affairs", "teacher", "counselor", "nurse", "security"] as const)
+      for (const k of ["duties", "meetings", "calendar"] as const) expect(NAV_BY_ROLE[r]).toContain(k);
+    for (const r of ["student", "guardian", "org_owner", "platform_admin"] as const)
+      for (const k of ["duties", "meetings", "calendar"] as const) expect(NAV_BY_ROLE[r]).not.toContain(k);
+    expect(NAV_BY_ROLE.org_owner).toContain("admin");
   });
   it("only managers get school-day setup and substitutions", () => {
     for (const r of ["teacher", "student", "guardian", "dept_head", "supervisor", "student_affairs"] as const) {

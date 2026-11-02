@@ -51,7 +51,13 @@ export type NavKey =
   | "station"
   | "pickup"
   | "admin"
+  | "duties"
+  | "meetings"
+  | "calendar"
   | "notifications";
+
+/** School administration sub-sections (duties, meetings, personal calendar) for every staff role. */
+const ADMIN_KEYS: NavKey[] = ["admin", "duties", "meetings", "calendar"];
 
 const MANAGE: NavKey[] = [
   "home",
@@ -69,24 +75,28 @@ const MANAGE: NavKey[] = [
   "attendance",
   "station",
   "admin",
+  "duties",
+  "meetings",
+  "calendar",
   "communication",
   "notifications",
 ];
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
-  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && k !== "station" && k !== "admin")],
-  org_owner: ["home", "schools", "members", ...MANAGE.slice(1)],
+  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && k !== "station" && !ADMIN_KEYS.includes(k))],
+  // owner: branch counts only on the admin page — no personal duties/meetings/calendar
+  org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k === "admin" || !ADMIN_KEYS.includes(k))],
   principal: MANAGE,
   vice_principal: MANAGE,
-  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "station", "admin", "communication", "notifications"],
-  dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "communication", "notifications"],
-  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "communication", "notifications"],
-  teacher: ["home", "classrooms", "homework", "schedule", "attendance", "admin", "communication", "notifications"],
+  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
+  dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
+  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
+  teacher: ["home", "classrooms", "homework", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   guardian: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
   student: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
-  counselor: ["home", "attendance", "admin", "communication", "notifications"],
-  nurse: ["home", "admin", "communication", "notifications"],
-  security: ["home", "attendance", "station", "admin", "communication", "notifications"],
+  counselor: ["home", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
+  nurse: ["home", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
+  security: ["home", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
 };
 
 /** Roles a caller may invite (mirrors can_invite: organization owner only, never another owner). */

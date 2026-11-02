@@ -73,3 +73,19 @@ Since the homework/tests simplification, term gradebooks are a read-only adminis
 | Approve (bound to the reviewed version, blocked on homework source drift) + lock, publish preview/publish (incomplete needs confirmation, repeat = no-op), reopen one gradebook (reason) | yes | — | — | — | — | — | — |
 | Correction request after lock | decide | — | request | — | — | — | — |
 | Read gradebooks / reports | school | own department | own courses | assigned teachers' courses | branch summary (no student marks edit) | none (no direct archive path since simplification) | none |
+
+## School administration — duties, meetings, decisions, calendar (2026-11-02)
+| Action | Principal | Vice principal | Dept head | Teacher / other staff | Org owner | Student / Guardian |
+|---|---|---|---|---|---|---|
+| Duty posts, weekly cap, exemptions | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| Open/suggest/edit/publish weekly roster, substitute, cancel (reason) | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ |
+| See draft roster | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ |
+| See own published duties, acknowledge, document done/not done, request excuse/change | ✔ | ✔ | ✔ | ✔ | ✘ | ✘ |
+| Decide excuse/change requests | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ |
+| Organize meeting (create/edit/send/cancel/confirm minutes/add decisions) | ✔ (own) | ✔ (own) | ✔ (own) | ✘ | ✘ | ✘ |
+| Draft minutes | organizer or assigned writer | | | writer if assigned | ✘ | ✘ |
+| Read normal meeting | ✔ | ✔ | own department | invited | ✘ | ✘ |
+| Read restricted meeting / its minutes / files | only if organizer, writer or invited (no automatic access) | same | same | same | ✘ | ✘ |
+| Decision executor | sees the linked task and decision text only; restricted meeting title masked | | | | | |
+| Personal calendar | own items | own | own | own | ✘ | ✘ |
+| Branch counts (duties this week, uncovered slots, upcoming meetings, open decisions) | — | — | — | — | ✔ counts only | ✘ |
