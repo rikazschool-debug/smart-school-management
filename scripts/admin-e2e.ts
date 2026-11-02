@@ -139,6 +139,43 @@ try {
   const fl = await t2.c.rpc("create_admin_file", { _entity: "task", _id: T, _name: "x.pdf", _mime: "application/pdf", _size: 10 });
   const fo = (await t1.c.rpc("create_admin_file", { _entity: "task", _id: T4, _name: "x.pdf", _mime: "application/pdf", _size: 10 }));
   check("T21 attach only by task parties", !!fl.error && !!fo.error);
+  // attachments: parent-record permission, upload/read/signed URL, removal rules
+  const aUp = await t2.c.rpc("create_admin_file", { _entity: "task", _id: T4, _name: "proof.pdf", _mime: "application/pdf", _size: 9 });
+  const fr = (aUp.data as any[])?.[0];
+  const put = fr ? await t2.c.storage.from("rikaz-files").upload(fr.storage_path, new Blob(["%PDF-1.4\n"], { type: "application/pdf" }), { contentType: "application/pdf" }) : { error: "no row" };
+  check("A1 assignee uploads to own task", !aUp.error && !put.error, [aUp.error, put.error]);
+  const aS1 = await vp.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
+  const aS2 = await t1.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
+  const aS3 = await ownerB.c.storage.from("rikaz-files").createSignedUrl(fr.storage_path, 60);
+  check("A2 signed URL for assigner, refused to non-party and other org", !aS1.error && !!aS2.error && !!aS3.error, [aS1.error, aS2.data, aS3.data]);
+  check("A3 non-party cannot list file rows", !(await t1.c.from("files").select("id").eq("id", fr.id)).data?.length);
+  const badMime = await t2.c.rpc("create_admin_file", { _entity: "task", _id: T4, _name: "x.exe", _mime: "application/x-msdownload", _size: 9 });
+  check("A4 disallowed type rejected", !!badMime.error);
+  const rmOther = await vp.c.rpc("remove_admin_file", { _file: fr.id });
+  check("A5 only uploader removes", !!rmOther.error);
+  const doneUp = (await t1.c.rpc("create_admin_file", { _entity: "task", _id: T, _name: "late.pdf", _mime: "application/pdf", _size: 9 })).data as any[];
+  const rmDone = doneUp?.[0] ? await t1.c.rpc("remove_admin_file", { _file: doneUp[0].id }) : { error: "no add" };
+  const lg = (await admin.from("adm_events").select("action").eq("entity_id", T).eq("action", "file_added")).data ?? [];
+  check("A6 addendum on done task is dated+logged; it cannot be removed", !!doneUp?.[0] && !!rmDone.error && lg.length >= 1, [rmDone, lg]);
+  const rmOk = await t2.c.rpc("remove_admin_file", { _file: fr.id });
+  const lr = (await admin.from("adm_events").select("action").eq("entity_id", T4).eq("action", "file_removed")).data ?? [];
+  check("A7 uploader removes from open task, removal logged", !rmOk.error && lr.length === 1, [rmOk.error, lr]);
+  const reqF = await t1.c.rpc("create_admin_file", { _entity: "request", _id: rq.id, _name: "x.pdf", _mime: "application/pdf", _size: 9 });
+  check("A8 no attaching to a closed request", !!reqF.error);
+  // department deletion: task kept, dept heads lose access, parties keep it
+  const dh2 = await user("dh2");
+  await admin.from("memberships").insert({ user_id: dh2.id, org_id: org, school_id: S, role: "dept_head", department_id: dep2.id });
+  const before = (await dh.c.from("adm_tasks").select("id").eq("id", T)).data?.length === 1;
+  const del = await owner.c.from("departments").delete().eq("id", dep.id);
+  const after = (await admin.from("adm_tasks").select("id, department_id").eq("id", T).single()).data;
+  const evs = (await admin.from("adm_events").select("id", { count: "exact", head: true }).eq("entity_id", T)).count ?? 0;
+  const fls = (await admin.from("files").select("id", { count: "exact", head: true }).eq("source_id", T).eq("source_type", "admin")).count ?? 0;
+  check("D1 delete keeps task (dept null), history and files", before && !del.error && !!after && after.department_id === null && evs > 0 && fls >= 1, [before, del.error, after, evs, fls]);
+  const dhList = (await dh.c.rpc("adm_task_list", { _school: S, _scope: "all", _q: "تقرير", _status: null, _priority: null, _assignee: null, _dept: null, _from: null, _to: null, _limit: 25, _offset: 0 })).data as any[] ?? [];
+  check("D2 former/other dept head lose detail, list, search, files", !(await dh.c.from("adm_tasks").select("id").eq("id", T)).data?.length && !(await dh2.c.from("adm_tasks").select("id").eq("id", T)).data?.length && !dhList.some((x) => x.id === T) && !(await dh.c.from("files").select("id").eq("source_id", T)).data?.length && !(await dh.c.from("adm_events").select("id").eq("entity_id", T)).data?.length, dhList);
+  const dDirect = await dh.c.rpc("create_admin_file", { _entity: "task", _id: T, _name: "x.pdf", _mime: "application/pdf", _size: 9 });
+  check("D3 direct RPC by former dept head refused", !!dDirect.error);
+  check("D4 assignee, assigner and principal keep access", (await t1.c.from("adm_tasks").select("id").eq("id", T)).data?.length === 1 && (await pr.c.from("adm_tasks").select("id").eq("id", T)).data?.length === 1 && (await vp.c.from("adm_tasks").select("id").eq("id", T)).data?.length === 1);
 } catch (e) { bad++; console.log("FAIL exception", e); }
 finally {
   try { await tr.deleteNotifications(); for (const o of orgs) if (o) await tr.purgeOrg(o); for (const u of tr.users) await admin.auth.admin.deleteUser(u); console.log("cleanup ok"); } catch (e) { console.log("cleanup error", e); }
