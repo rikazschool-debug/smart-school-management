@@ -118,14 +118,53 @@ try {
   await admin.from("attendance_policies").update({ holidays: [], day_start: hhmm(-30), absence_review_at: "00:00" }).eq("id", pol.data);
 
   // ---- absence review → late arrival; manual; correction keeps history ----
+  // expected list comes from the enrollment valid on the date
+  const tomorrow = new Date(riyadhNow().getTime() + 864e5).toISOString().slice(0, 10), yesterday = new Date(riyadhNow().getTime() - 864e5).toISOString().slice(0, 10);
+  const sFut = await ins(owner.c, A, "students", { full_name: "تسكين قادم", gender: "male" });
+  await ins(owner.c, A, "enrollments", { student_id: sFut.id, section_id: secA.id, year_id: year.id, start_date: tomorrow });
+  const sEnd = await ins(owner.c, A, "students", { full_name: "تسكين منتهٍ", gender: "male" });
+  await admin.from("enrollments").insert({ school_id: A, student_id: sEnd.id, section_id: secA.id, year_id: year.id, start_date: "2026-01-01", end_date: yesterday, status: "ended" });
+  const sAbs = await mkStudent("غائب ثم وصل");
+  await admin.from("attendance_policies").update({ absence_review_at: "23:59" }).eq("id", pol.data);
+  const early = await sec.c.rpc("build_absence_review", { _school: A, _date: today() });
+  check("no absence list before cutoff", !!early.error && /بعد الساعة/.test(early.error.message), early.error?.message);
+  const bEarly = (await sec.c.rpc("attendance_board", { _school: A, _date: today() })).data;
+  check("before cutoff: not-yet-recorded count, no pending", bEarly?.not_yet === 3 && bEarly?.pending_review === 0 && bEarly?.expected === 6, bEarly);
+  await admin.from("attendance_policies").update({ absence_review_at: "00:00" }).eq("id", pol.data);
+  const tickAuth = await sec.c.rpc("att_tick");
+  check("signed-in users cannot run the server tick", !!tickAuth.error);
   const nRev = (await sec.c.rpc("build_absence_review", { _school: A, _date: today() })).data;
-  check("review list includes students without entry", nRev === 2, nRev);
+  check("review list includes students without entry", nRev === 3, nRev);
+  const pend = (await admin.from("attendance_days").select("student_id").eq("school_id", A).eq("status", "pending_review")).data ?? [];
+  check("future/ended enrollments excluded", !pend.some((r) => r.student_id === sFut.id || r.student_id === sEnd.id) && pend.length === 3, pend.length);
   const nRev2 = (await sec.c.rpc("build_absence_review", { _school: A, _date: today() })).data;
   check("review list idempotent", nRev2 === 0, nRev2);
   const late3 = (await sec.c.rpc("scan_attendance", { _school: A, _token: t3 })).data;
   check("pending review then arrival → late", late3?.result === "late", late3);
   const ev = (await admin.from("attendance_events").select("before").eq("action", "late_arrival").eq("school_id", A)).data ?? [];
   check("pending state kept in history", ev.length === 1 && ev[0].before?.status === "pending_review");
+  // escalation + approved absence then late arrival
+  const dAbs = (await admin.from("attendance_days").select("id").eq("student_id", sAbs.id).single()).data!;
+  check("security cannot escalate", !!(await sec.c.rpc("escalate_absence", { _day: dAbs.id, _reason: "x" })).error);
+  check("escalation needs reason", !!(await vp.c.rpc("escalate_absence", { _day: dAbs.id, _reason: "" })).error);
+  const esc = await vp.c.rpc("escalate_absence", { _day: dAbs.id, _reason: "غياب متكرر" });
+  check("approver escalates to vice principal", !esc.error, esc.error?.message);
+  const vpN = (await admin.from("notifications").select("id").eq("user_id", vp.id).like("dedupe_key", `att-esc:${dAbs.id}%`)).data ?? [];
+  check("vice principal notified once", vpN.length === 1, vpN.length);
+  await vp.c.rpc("resolve_absence", { _day: dAbs.id, _status: "absent", _reason: null });
+  const cAbs = (await owner.c.rpc("issue_student_card", { _student: sAbs.id })).data;
+  const tAbs = (await owner.c.from("student_cards").select("token").eq("id", cAbs).single()).data!.token;
+  const lateAbs = (await sec.c.rpc("scan_attendance", { _school: A, _token: tAbs })).data;
+  check("approved absence then arrival → late", lateAbs?.result === "late", lateAbs);
+  const evAbs = (await admin.from("attendance_events").select("action,before").eq("entity_id", dAbs.id)).data ?? [];
+  check("absence decision kept in history", evAbs.some((e) => e.action === "resolve") && evAbs.some((e) => e.action === "late_arrival" && e.before?.status === "absent"), evAbs);
+  const bAfter = (await sec.c.rpc("attendance_board", { _school: A, _date: today() })).data;
+  const dAbs2 = (await admin.from("attendance_days").select("status").eq("id", dAbs.id).single()).data!;
+  check("not counted absent and present together", dAbs2.status === "late" && bAfter?.absent === 0, { dAbs2, bAfter });
+  await sec.c.rpc("build_absence_review", { _school: A, _date: today() });
+  const absN = (await admin.from("notifications").select("id").like("dedupe_key", `absent:${sAbs.id}%`)).data ?? [];
+  const dAbs3 = (await admin.from("attendance_days").select("status").eq("id", dAbs.id).single()).data!;
+  check("refresh keeps arrival; absence notice not repeated", dAbs3.status === "late" && absN.length === 0, { dAbs3, absN: absN.length });
   const secManual = await sec.c.rpc("manual_attendance", { _student: sSelf.id, _status: "arrived", _reason: "نسي البطاقة" });
   check("security cannot record manual attendance", !!secManual.error);
   const noReason = await vp.c.rpc("manual_attendance", { _student: sSelf.id, _status: "arrived", _reason: "" });
