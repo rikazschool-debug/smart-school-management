@@ -211,8 +211,23 @@ try {
   const r3 = solve(g3.data.input, { mode: "fill", timeLimitMs: 20000 });
   await rpc(pr.c, "tt_gen_finish", { _run: g3.data.run_id, _status: r3.status, _summary: {} });
   const ap3 = await rpc(pr.c, "tt_gen_apply", { _run: g3.data.run_id, _slots: r3.slots });
-  const db3 = (await admin.from("timetable_slots").select("id").eq("timetable_id", tt.id)).data!;
+  let db3 = (await admin.from("timetable_slots").select("id").eq("timetable_id", tt.id)).data!;
   check("8b fill completes the 7 missing lessons without deleting any existing one", ap3.data === 7 && db3.length === required && keepIds.every((id) => db3.some((x) => x.id === id)), [ap3.error?.message, ap3.data, db3.length]);
+
+  // 8c: deleting one half of a double lesson then "fill" puts the lesson back next to the other half
+  const sciAll = (await admin.from("timetable_slots").select("id, day, period_id, pinned").eq("timetable_id", tt.id).eq("course_id", cSci.id)).data!;
+  const pidx = (id: string) => P.findIndex((p) => p.id === id);
+  const pairDay = [0, 1, 2, 3, 4].find((d) => { const xs = sciAll.filter((s) => s.day === d).map((s) => pidx(s.period_id)).sort(); return xs.length === 2 && xs[1]! - xs[0]! === 1; });
+  const halfS = sciAll.find((s) => s.day === pairDay && !s.pinned);
+  if (halfS) await admin.from("timetable_slots").delete().eq("id", halfS.id);
+  const g8 = await rpc(pr.c, "tt_gen_start", { _tt: tt.id, _mode: "fill" });
+  const r8 = solve(g8.data.input, { mode: "fill", timeLimitMs: 20000 });
+  await rpc(pr.c, "tt_gen_finish", { _run: g8.data.run_id, _status: r8.status, _summary: {} });
+  const ap8 = await rpc(pr.c, "tt_gen_apply", { _run: g8.data.run_id, _slots: r8.slots });
+  const val8 = await rpc(pr.c, "tt_validate", { _tt: tt.id });
+  check("8c fill rebuilds a broken science double next to the remaining half (server validation clean)", !!halfS && ap8.data === 1 && (val8.data ?? []).length === 0, [pairDay, ap8.error?.message, ap8.data, val8.data]);
+  const db3b = (await admin.from("timetable_slots").select("id").eq("timetable_id", tt.id)).data!;
+  db3.length = 0; db3.push(...db3b);
 
   // ---------- 9. cancel / failure / retry ----------
   const before9 = db3.length;
