@@ -255,3 +255,13 @@
 ## Resume point (Nov 2, meetings + Agora)
 - Done: meetings package M1–M7 (see docs/closure-log.md entry). Fixtures: scripts/meet-browser-fixture.ts setup|teardown (mbx-); journeys in /tmp/browser/meet/*.py need Chromium flag --webrtc-ip-handling-policy=default_public_and_private_interfaces in this sandbox.
 - Next: M8 items, then supervision section only when instructed.
+
+## Timetable package (docs/timetable-package-brief.md)
+- [ ] TT1 One sidebar link «الجدول المدرسي» with 3 tabs (الجدول / البدلاء / الإعدادات); old links redirect; notification links kept; «جدولي» for teacher/student/guardian
+- [ ] TT2 Settings: school day/rooms reuse; course requirements (weekly count, daily cap, double period, room type, day prefs); teacher loads per year/term (all teacher profiles, weekly/daily max, required/placed/remaining); availability (day/periods/first/last/last-two, validity, reason, hard|soft)
+- [ ] TT3 Readiness report before generation
+- [ ] TT4 Constraint solver (no AI): runs in a browser Web Worker (cancel/timeout/progress, page never freezes); input snapshot + versions; result preview (complete/partial/infeasible/timeout); apply/regenerate/ignore; server re-validates on apply (stale input rejected)
+- [ ] TT5 Pinned slots, fill-missing vs redistribute-unpinned, manual edit with server conflict checks (real time overlap, cross-branch commitments)
+- [ ] TT6 Publish re-validation (hard conflicts, missing requirements, stale base); substitutes stay separate with load/availability checks; duty-conflict alerts kept
+- [ ] TT7 UI: weekly desktop / daily phone, pinned/constraint markers with text+icon, Excel/PDF per section/teacher/room/school with version + draft marking
+- [ ] TT8 Isolated demo (5 sections, 10 teachers, 5 days, ≥6 periods) + tests 1–17, docs, Arabic report
