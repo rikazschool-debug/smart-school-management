@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Pin, PinOff, ShieldCheck, Wand2 } from "lucide-react";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -13,16 +14,41 @@ import { Label } from "@/components/ui/label";
 import { ExportButtons } from "@/components/list-tools";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
-import { canEditSchedule } from "@/lib/roles";
+import { canEditSchedule, scheduleLabel, scheduleTabs, type ScheduleTab } from "@/lib/roles";
+import { SubstitutionsTab } from "@/components/schedule/substitutions-tab";
+import { SettingsTab } from "@/components/schedule/settings-tab";
+import { GeneratePanel } from "@/components/schedule/generate-panel";
 import { DAY_NAMES, slotLabel, todayISO, useCurrentTimetable, useDaySetup, useSlots, weekDates } from "@/lib/schedule";
 
-export const Route = createFileRoute("/_authenticated/app/schedule")({ component: Page });
+export const Route = createFileRoute("/_authenticated/app/schedule")({
+  validateSearch: (s: Record<string, unknown>): { tab?: ScheduleTab } => ({ tab: s["tab"] === "subs" || s["tab"] === "settings" || s["tab"] === "timetable" ? s["tab"] : undefined }),
+  head: () => ({ meta: [{ title: "الجدول المدرسي | ركاز" }, { name: "description", content: "بناء الجدول المدرسي وتوليده ونشره، والبدلاء، وإعدادات اليوم الدراسي والأنصبة" }] }),
+  component: Page,
+});
+const TAB_LABEL: Record<ScheduleTab, string> = { timetable: "الجدول", subs: "البدلاء", settings: "الإعدادات" };
 
 type Ctx = AppContext & { schoolId: string };
 const sel = selectCls("w-full");
 
 function Page() {
-  return <RequireSchool nav="schedule">{(ctx) => (canEditSchedule(ctx.role) ? <Manager ctx={ctx} /> : <Viewer ctx={ctx} />)}</RequireSchool>;
+  return <RequireSchool nav="schedule">{(ctx) => (canEditSchedule(ctx.role) ? <ManagerTabs ctx={ctx} /> : <Viewer ctx={ctx} />)}</RequireSchool>;
+}
+
+function ManagerTabs({ ctx }: { ctx: Ctx }) {
+  const { tab = "timetable" } = Route.useSearch();
+  const nav = useNavigate({ from: "/app/schedule" });
+  return (
+    <>
+      <PageHeader title="الجدول المدرسي" desc="الجدول والبدلاء والإعدادات في مكان واحد. المسودة لا تظهر للمعلمين والطلاب والأسر حتى تنشرها." />
+      <div role="tablist" aria-label="أقسام الجدول" className="mb-5 flex gap-1 border-b">
+        {scheduleTabs(ctx.role).map((t) => (
+          <button key={t} role="tab" aria-selected={tab === t} onClick={() => nav({ search: { tab: t }, replace: true })}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{TAB_LABEL[t]}</button>
+        ))}
+      </div>
+      {tab === "subs" ? <SubstitutionsTab ctx={ctx} /> : tab === "settings" ? <SettingsTab ctx={ctx} /> : <Manager ctx={ctx} />}
+    </>
+  );
 }
 
 function SlotCard({ s, show, sub }: { s: Row; show: ("teacher" | "section")[]; sub?: Row | undefined }) {
