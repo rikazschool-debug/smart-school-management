@@ -151,7 +151,7 @@ export function GateTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean }) 
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border bg-card p-5">
-        <h2 className="mb-1 flex items-center gap-2 font-bold"><ScanLine className="size-5 text-primary" />مسح بطاقة الحضور الصباحي <Link to="/app/attendance-scan" className="ms-auto text-sm font-medium text-primary hover:underline">فتح شاشة المسح الكاملة (كاميرا/قارئ) ←</Link></h2>
+        <h2 className="mb-1 flex items-center gap-2 font-bold"><ScanLine className="size-5 text-primary" />مسح بطاقة الحضور الصباحي <Link to="/app/attendance-station" className="ms-auto text-sm font-medium text-primary hover:underline">فتح شاشة المسح الكاملة (كاميرا/قارئ) ←</Link></h2>
         <p className="mb-3 text-sm text-muted-foreground">وجّه قارئ الباركود نحو البطاقة؛ يكتب القارئ الرمز ويضغط Enter تلقائيًا. الوقت يُحتسب من الخادم. البطاقة للحضور فقط وليست تصريح خروج.</p>
         <form onSubmit={(e) => { e.preventDefault(); void submit(); }} className="flex gap-2">
           <Input ref={input} dir="ltr" autoComplete="off" aria-label="رمز البطاقة" placeholder="رمز البطاقة" value={code} onChange={(e) => setCode(e.target.value)} className="h-12 text-lg" />

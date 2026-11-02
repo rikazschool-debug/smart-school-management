@@ -19,6 +19,7 @@ import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppAcademicRouteImport } from './routes/_authenticated/app/academic'
 import { Route as AuthenticatedAppAttendanceRouteImport } from './routes/_authenticated/app/attendance'
 import { Route as AuthenticatedAppAttendanceScanRouteImport } from './routes/_authenticated/app/attendance-scan'
+import { Route as AuthenticatedAppAttendanceStationRouteImport } from './routes/_authenticated/app/attendance-station'
 import { Route as AuthenticatedAppCommunicationRouteImport } from './routes/_authenticated/app/communication'
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
@@ -88,6 +89,12 @@ const AuthenticatedAppAttendanceScanRoute =
   AuthenticatedAppAttendanceScanRouteImport.update({
     id: '/attendance-scan',
     path: '/attendance-scan',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppAttendanceStationRoute =
+  AuthenticatedAppAttendanceStationRouteImport.update({
+    id: '/attendance-station',
+    path: '/attendance-station',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppCommunicationRoute =
@@ -204,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/app/academic': typeof AuthenticatedAppAcademicRoute
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
   '/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
+  '/app/attendance-station': typeof AuthenticatedAppAttendanceStationRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -232,6 +240,7 @@ export interface FileRoutesByTo {
   '/app/academic': typeof AuthenticatedAppAcademicRoute
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
   '/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
+  '/app/attendance-station': typeof AuthenticatedAppAttendanceStationRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -263,6 +272,7 @@ export interface FileRoutesById {
   '/_authenticated/app/academic': typeof AuthenticatedAppAcademicRoute
   '/_authenticated/app/attendance': typeof AuthenticatedAppAttendanceRoute
   '/_authenticated/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
+  '/_authenticated/app/attendance-station': typeof AuthenticatedAppAttendanceStationRoute
   '/_authenticated/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/app/academic'
     | '/app/attendance'
     | '/app/attendance-scan'
+    | '/app/attendance-station'
     | '/app/communication'
     | '/app/courses'
     | '/app/guardians'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/app/academic'
     | '/app/attendance'
     | '/app/attendance-scan'
+    | '/app/attendance-station'
     | '/app/communication'
     | '/app/courses'
     | '/app/guardians'
@@ -352,6 +364,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/academic'
     | '/_authenticated/app/attendance'
     | '/_authenticated/app/attendance-scan'
+    | '/_authenticated/app/attendance-station'
     | '/_authenticated/app/communication'
     | '/_authenticated/app/courses'
     | '/_authenticated/app/guardians'
@@ -451,6 +464,13 @@ declare module '@tanstack/react-router' {
       path: '/attendance-scan'
       fullPath: '/app/attendance-scan'
       preLoaderRoute: typeof AuthenticatedAppAttendanceScanRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/attendance-station': {
+      id: '/_authenticated/app/attendance-station'
+      path: '/attendance-station'
+      fullPath: '/app/attendance-station'
+      preLoaderRoute: typeof AuthenticatedAppAttendanceStationRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/communication': {
@@ -586,6 +606,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppAcademicRoute: typeof AuthenticatedAppAcademicRoute
   AuthenticatedAppAttendanceRoute: typeof AuthenticatedAppAttendanceRoute
   AuthenticatedAppAttendanceScanRoute: typeof AuthenticatedAppAttendanceScanRoute
+  AuthenticatedAppAttendanceStationRoute: typeof AuthenticatedAppAttendanceStationRoute
   AuthenticatedAppCommunicationRoute: typeof AuthenticatedAppCommunicationRoute
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
@@ -611,6 +632,8 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppAcademicRoute: AuthenticatedAppAcademicRoute,
   AuthenticatedAppAttendanceRoute: AuthenticatedAppAttendanceRoute,
   AuthenticatedAppAttendanceScanRoute: AuthenticatedAppAttendanceScanRoute,
+  AuthenticatedAppAttendanceStationRoute:
+    AuthenticatedAppAttendanceStationRoute,
   AuthenticatedAppCommunicationRoute: AuthenticatedAppCommunicationRoute,
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,
