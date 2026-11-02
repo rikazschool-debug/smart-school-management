@@ -66,14 +66,14 @@ function SlotCard({ s, show, sub, problem }: { s: Row; show: ("teacher" | "secti
   );
 }
 
-function Filter({ slots, value, onChange, sectionsOnly, withRooms }: { slots: Row[]; value: string; onChange: (v: string) => void; sectionsOnly?: boolean; withRooms?: boolean }) {
+function Filter({ slots, value, onChange, sectionsOnly, withRooms, names }: { slots: Row[]; value: string; onChange: (v: string) => void; sectionsOnly?: boolean; withRooms?: boolean; names?: Map<string, string[]> }) {
   const rms = useMemo(() => [...new Map(slots.filter((s) => s["room_id"]).map((s) => [s["room_id"], slotLabel(s).room])).entries()], [slots]);
   const secs = useMemo(() => [...new Map(slots.map((s) => [s["section_id"], slotLabel(s).section])).entries()], [slots]);
   const tchs = useMemo(() => [...new Map(slots.map((s) => [s["teacher_id"], slotLabel(s).teacher])).entries()], [slots]);
   return (
     <select className={sel + " sm:w-72"} aria-label="عرض حسب" value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">كل الحصص</option>
-      <optgroup label="الشعب">{secs.map(([id, n]) => <option key={id} value={"s:" + id}>شعبة {n}</option>)}</optgroup>
+      <optgroup label="الشعب">{secs.map(([id, n]) => <option key={id} value={"s:" + id}>{names?.get(id as string)?.length ? `${names.get(id as string)!.join("، ")} — ${n}` : `شعبة ${n}`}</option>)}</optgroup>
       {!sectionsOnly && <optgroup label="المعلمون">{tchs.map(([id, n]) => <option key={id} value={"t:" + id}>{n || "معلم"}</option>)}</optgroup>}
       {withRooms && rms.length > 0 && <optgroup label="القاعات">{rms.map(([id, n]) => <option key={id} value={"r:" + id}>{n}</option>)}</optgroup>}
     </select>
@@ -105,6 +105,23 @@ function Manager({ ctx }: { ctx: Ctx }) {
   const [sel_, setSel] = useState<string>("");
   const [nf, setNf] = useState({ name: "الجدول الأساسي", year: "", term: "" });
   const [filter, setFilter] = useState("");
+  // guardians: label each section with the child's name and open on the first child (one child at a time)
+  const kids = useQuery({
+    queryKey: ["schedule-kids", S, user.id],
+    enabled: ctx.role === "guardian",
+    queryFn: async () => {
+      const { data } = await db.from("student_guardians").select("students(full_name, enrollments(section_id, status)), guardians!inner(user_id)").eq("school_id", S).eq("guardians.user_id", user.id);
+      const m = new Map<string, string[]>();
+      for (const r of (data ?? []) as Row[]) {
+        const st = r["students"] as Row | null;
+        for (const e of ((st?.["enrollments"] ?? []) as Row[])) if (e["status"] === "active") m.set(e["section_id"] as string, [...(m.get(e["section_id"] as string) ?? []), st!["full_name"] as string]);
+      }
+      return m;
+    },
+  });
+  useEffect(() => {
+    if (ctx.role === "guardian" && !filter && kids.data?.size) setFilter("s:" + [...kids.data.keys()][0]);
+  }, [ctx.role, kids.data, filter]);
   const [eff, setEff] = useState(todayISO());
   const [adding, setAdding] = useState<{ day: number; period: Row } | null>(null);
   const [gen, setGen] = useState(false);
@@ -348,7 +365,7 @@ function Viewer({ ctx }: { ctx: Ctx }) {
       <PageHeader title={title} desc={`${sub_} — الجدول المنشور الساري في الأسبوع المحدد، مع التبديلات اليومية.`} />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="space-y-1"><Label htmlFor="dt">الأسبوع الذي يتضمن</Label><Input id="dt" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
-        {needsFilter && base.length > 0 && <div className="space-y-1"><Label>{ctx.role === "guardian" ? "الابن / الشعبة" : "عرض"}</Label><Filter slots={base} value={filter} onChange={setFilter} sectionsOnly={ctx.role === "guardian"} /></div>}
+        {needsFilter && base.length > 0 && <div className="space-y-1"><Label>{ctx.role === "guardian" ? "الابن / الشعبة" : "عرض"}</Label><Filter slots={base} value={filter} onChange={setFilter} sectionsOnly={ctx.role === "guardian"} names={kids.data} /></div>}
         {cur.data && shown.length > 0 && <ScheduleExport rows={shown} school={ctx.schoolName} title={`${title} — أسبوع ${week[0]}`} week={week} subBySlot={subBySlot} filters={[sub_]} />}
       </div>
       {(ctx.role === "supervisor" && scope.data?.length === 0) ? <EmptyState title="لم يُسند إليك معلمون بعد" hint="تُسند إدارة المدرسة المعلمين للمشرف من صفحة إعداد اليوم الدراسي." /> :
