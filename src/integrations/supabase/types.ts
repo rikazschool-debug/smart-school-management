@@ -188,6 +188,80 @@ export type Database = {
           },
         ]
       }
+      adm_decisions: {
+        Row: {
+          assignee: string
+          body: string
+          client_id: string | null
+          created_at: string
+          created_by: string
+          due_date: string
+          id: string
+          meeting_id: string
+          minutes_id: string | null
+          priority: string
+          school_id: string
+          task_id: string
+        }
+        Insert: {
+          assignee: string
+          body: string
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          due_date: string
+          id?: string
+          meeting_id: string
+          minutes_id?: string | null
+          priority?: string
+          school_id: string
+          task_id: string
+        }
+        Update: {
+          assignee?: string
+          body?: string
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          due_date?: string
+          id?: string
+          meeting_id?: string
+          minutes_id?: string | null
+          priority?: string
+          school_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_decisions_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "adm_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_decisions_minutes_id_fkey"
+            columns: ["minutes_id"]
+            isOneToOne: false
+            referencedRelation: "adm_minutes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_decisions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_decisions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "adm_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       adm_duty_assignments: {
         Row: {
           ack_at: string | null
@@ -653,6 +727,216 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "adm_forms_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_meeting_members: {
+        Row: {
+          attendance_note: string | null
+          attended: boolean | null
+          marked_at: string | null
+          marked_by: string | null
+          meeting_id: string
+          rsvp: string
+          rsvp_at: string | null
+          rsvp_note: string | null
+          user_id: string
+        }
+        Insert: {
+          attendance_note?: string | null
+          attended?: boolean | null
+          marked_at?: string | null
+          marked_by?: string | null
+          meeting_id: string
+          rsvp?: string
+          rsvp_at?: string | null
+          rsvp_note?: string | null
+          user_id: string
+        }
+        Update: {
+          attendance_note?: string | null
+          attended?: boolean | null
+          marked_at?: string | null
+          marked_by?: string | null
+          meeting_id?: string
+          rsvp?: string
+          rsvp_at?: string | null
+          rsvp_note?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_meeting_members_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "adm_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_meetings: {
+        Row: {
+          agenda: string | null
+          cancel_reason: string | null
+          client_id: string | null
+          created_at: string
+          department_id: string | null
+          duration_min: number
+          id: string
+          link: string | null
+          location: string | null
+          minutes_writer: string | null
+          needs_rsvp: boolean
+          organizer: string
+          privacy: string
+          purpose: string | null
+          rev: number
+          school_id: string
+          starts_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agenda?: string | null
+          cancel_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          duration_min?: number
+          id?: string
+          link?: string | null
+          location?: string | null
+          minutes_writer?: string | null
+          needs_rsvp?: boolean
+          organizer?: string
+          privacy?: string
+          purpose?: string | null
+          rev?: number
+          school_id: string
+          starts_at: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agenda?: string | null
+          cancel_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          duration_min?: number
+          id?: string
+          link?: string | null
+          location?: string | null
+          minutes_writer?: string | null
+          needs_rsvp?: boolean
+          organizer?: string
+          privacy?: string
+          purpose?: string | null
+          rev?: number
+          school_id?: string
+          starts_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_meetings_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_meetings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adm_minutes: {
+        Row: {
+          absent: string[]
+          based_on: string | null
+          change_note: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          meeting_id: string
+          notes: string | null
+          present: string[]
+          rev: number
+          saved_at: string
+          school_id: string
+          status: string
+          topics: Json
+          version: number
+          written_by: string | null
+        }
+        Insert: {
+          absent?: string[]
+          based_on?: string | null
+          change_note?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          meeting_id: string
+          notes?: string | null
+          present?: string[]
+          rev?: number
+          saved_at?: string
+          school_id: string
+          status?: string
+          topics?: Json
+          version: number
+          written_by?: string | null
+        }
+        Update: {
+          absent?: string[]
+          based_on?: string | null
+          change_note?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          notes?: string | null
+          present?: string[]
+          rev?: number
+          saved_at?: string
+          school_id?: string
+          status?: string
+          topics?: Json
+          version?: number
+          written_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_minutes_based_on_fkey"
+            columns: ["based_on"]
+            isOneToOne: false
+            referencedRelation: "adm_minutes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_minutes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "adm_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_minutes_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
@@ -5619,6 +5903,10 @@ export type Database = {
         Args: { _key: string; _school: string }
         Returns: number
       }
+      _duty_gaps: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: number
+      }
       _duty_roster_for: {
         Args: { _rev: number; _roster: string }
         Returns: {
@@ -5772,6 +6060,17 @@ export type Database = {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
         Returns: boolean
       }
+      _meet_busy: {
+        Args: {
+          _date: string
+          _e: string
+          _meeting: string
+          _s: string
+          _school: string
+          _user: string
+        }
+        Returns: string
+      }
       _new_card_code: { Args: never; Returns: string }
       _notify: {
         Args: {
@@ -5831,11 +6130,58 @@ export type Database = {
         Args: { _conv: string; _users: string[] }
         Returns: number
       }
+      adm_calendar: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: {
+          day: string
+          end_time: string
+          id: string
+          kind: string
+          link: string
+          start_time: string
+          status: string
+          title: string
+        }[]
+      }
+      adm_can_read_decision: { Args: { _id: string }; Returns: boolean }
+      adm_can_read_meeting: { Args: { _id: string }; Returns: boolean }
+      adm_can_read_minutes: { Args: { _id: string }; Returns: boolean }
       adm_can_read_request: { Args: { _id: string }; Returns: boolean }
       adm_can_read_task: { Args: { _id: string }; Returns: boolean }
       adm_create_task: {
         Args: { _client: string; _d: Json; _school: string }
         Returns: string
+      }
+      adm_daily_reminders: { Args: never; Returns: Json }
+      adm_decision_create: {
+        Args: { _client: string; _d: Json; _meeting: string }
+        Returns: string
+      }
+      adm_decision_list: {
+        Args: {
+          _limit: number
+          _meeting: string
+          _offset: number
+          _q: string
+          _school: string
+          _scope: string
+          _status: string
+        }
+        Returns: {
+          assignee_name: string
+          body: string
+          can_open_meeting: boolean
+          created_at: string
+          due_date: string
+          id: string
+          meeting_id: string
+          meeting_title: string
+          overdue: boolean
+          priority: string
+          status: string
+          task_id: string
+          total: number
+        }[]
       }
       adm_duty_ack: { Args: { _id: string }; Returns: undefined }
       adm_duty_assign: {
@@ -5980,9 +6326,78 @@ export type Database = {
         Args: { _action: string; _id: string; _note: string; _rev: number }
         Returns: number
       }
+      adm_meeting_attendance: {
+        Args: { _id: string; _marks: Json }
+        Returns: undefined
+      }
+      adm_meeting_cancel: {
+        Args: { _id: string; _reason: string; _rev: number }
+        Returns: number
+      }
+      adm_meeting_conflicts: {
+        Args: { _id: string }
+        Returns: {
+          full_name: string
+          reason: string
+          user_id: string
+        }[]
+      }
+      adm_meeting_list: {
+        Args: {
+          _from: string
+          _limit: number
+          _offset: number
+          _q: string
+          _school: string
+          _scope: string
+          _status: string
+          _to: string
+        }
+        Returns: {
+          am_organizer: boolean
+          duration_min: number
+          id: string
+          location: string
+          members: number
+          my_rsvp: string
+          organizer_name: string
+          privacy: string
+          starts_at: string
+          status: string
+          title: string
+          total: number
+        }[]
+      }
+      adm_meeting_rsvp: {
+        Args: { _id: string; _note: string; _rsvp: string }
+        Returns: undefined
+      }
+      adm_meeting_save: {
+        Args: {
+          _client: string
+          _d: Json
+          _id: string
+          _rev: number
+          _school: string
+        }
+        Returns: Json
+      }
+      adm_meeting_send: { Args: { _id: string; _rev: number }; Returns: number }
+      adm_minutes_confirm: {
+        Args: { _id: string; _rev: number }
+        Returns: undefined
+      }
+      adm_minutes_save: {
+        Args: { _d: Json; _meeting: string; _rev: number }
+        Returns: Json
+      }
       adm_org_summary: {
         Args: { _org: string }
         Returns: {
+          decisions_open: number
+          duties_week: number
+          duty_gaps_week: number
+          meetings_upcoming: number
           requests_closed_30d: number
           requests_open: number
           school: string
