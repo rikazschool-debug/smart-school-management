@@ -12,12 +12,14 @@ type Mode = "reader" | "camera";
 const REPEAT_MS = 2000; // same code ignored for 2s (card still in front of the camera)
 const FORMATS = ["code_128", "qr_code", "code_39", "ean_13"];
 
+let audio: AudioContext | null = null; // one shared context: creating one per scan delays the tone
 function beep(ok: boolean) {
   try {
-    const ac = new AudioContext(); const o = ac.createOscillator(); const g = ac.createGain();
+    audio ??= new AudioContext(); const ac = audio; if (ac.state === "suspended") void ac.resume();
+    const o = ac.createOscillator(); const g = ac.createGain();
     o.frequency.value = ok ? 880 : 220; g.gain.value = 0.08; o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + (ok ? 0.12 : 0.3));
-    o.onended = () => void ac.close();
   } catch { /* audio optional */ }
+  try { navigator.vibrate?.(ok ? 60 : [80, 60, 80]); } catch { /* optional */ }
 }
 
 /** Server clock offset from server_now(); attendance is never recorded against device time. */
@@ -53,6 +55,13 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
   const { state: clockState, retry: retryClock, time: clock } = useServerClock();
   const verified = clockState.status === "ready";
   const [pending, setPending] = useState(false);
+  // big ✓ / ✗ shown over the screen right after the server answers
+  const [flash, setFlash] = useState<{ kind: "ok" | "dup" | "bad"; text: string; n: number } | null>(null);
+  const flashT = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const showFlash = (kind: "ok" | "dup" | "bad", text: string) => {
+    clearTimeout(flashT.current); setFlash({ kind, text, n: Date.now() });
+    flashT.current = setTimeout(() => setFlash(null), kind === "bad" ? 1800 : 1200);
+  };
 
   useEffect(() => { verifiedRef.current = verified; }, [verified]);
   useEffect(() => {
@@ -70,7 +79,7 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
   }, [schoolId, sound]);
   const submitOne = async (raw: string) => {
     const token = raw.trim().replace(/\s+/g, ""); if (!token) return;
-    if (!verifiedRef.current) { setLast({ result: "error", message: "لم يُتحقق من وقت الخادم بعد — لم يُسجَّل الحضور. أعد المحاولة بعد ظهور وقت الخادم." }); return; }
+    if (!verifiedRef.current) { setLast({ result: "error", message: "لم يُتحقق من وقت الخادم بعد — لم يُسجَّل الحضور. أعد المحاولة بعد ظهور وقت الخادم." }); showFlash("bad", "لم يُسجَّل"); return; }
     const seen = recent.current.get(token); const t = Date.now();
     if (seen && t - seen < REPEAT_MS) return; // same card still in front of the camera/reader
     recent.current.set(token, t); busy.current = true; setPending(true);
@@ -81,21 +90,31 @@ export function AttendanceScanner({ schoolId, schoolName }: { schoolId: string; 
         const net = /fetch|network|Failed/i.test(error.message ?? "");
         if (net) setOnline(false);
         setLast({ result: "error", message: net ? "تعذر الاتصال بالخادم — لم يُسجَّل الحضور. أعد المسح بعد عودة الاتصال." : arabicError(error) });
-        if (sound) beep(false); return;
+        showFlash("bad", net ? "لا يوجد اتصال" : "مسح خاطئ"); if (sound) beep(false); return;
       }
       setOnline(true);
       const r = data as Row; setLast(r);
-      if (["present", "late"].includes(r["result"])) setCount((c) => c + 1);
+      const ok = ["present", "late"].includes(r["result"]);
+      showFlash(ok ? "ok" : r["result"] === "duplicate" ? "dup" : "bad", ok ? String(r["name"] ?? "تم") : String(r["message"] ?? "مسح خاطئ"));
+      if (ok) setCount((c) => c + 1);
       if (sound) beep(["present", "late", "duplicate"].includes(r["result"]));
     } catch {
       recent.current.delete(token); setOnline(false);
-      setLast({ result: "error", message: "تعذر الاتصال بالخادم — لم يُسجَّل الحضور." }); if (sound) beep(false);
+      setLast({ result: "error", message: "تعذر الاتصال بالخادم — لم يُسجَّل الحضور." }); showFlash("bad", "لا يوجد اتصال"); if (sound) beep(false);
     } finally { busy.current = false; setPending(false); }
   };
 
   const tone = last?.["result"] === "present" ? "border-primary bg-primary/5" : last?.["result"] === "late" ? "border-amber-500 bg-amber-500/10" : last?.["result"] === "duplicate" ? "border-muted-foreground/30 bg-muted" : "border-destructive bg-destructive/5";
   return (
     <div className="space-y-4">
+      {flash && (
+        <div key={flash.n} data-testid="scan-flash" data-kind={flash.kind} aria-hidden className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center animate-in fade-in zoom-in-90 duration-150">
+          <div className={`flex flex-col items-center gap-3 rounded-3xl px-10 py-8 shadow-2xl ${flash.kind === "ok" ? "bg-primary text-primary-foreground" : flash.kind === "dup" ? "bg-secondary text-secondary-foreground" : "bg-destructive text-destructive-foreground"}`}>
+            {flash.kind === "bad" ? <XCircle className="size-32" strokeWidth={2.5} /> : <CheckCircle2 className="size-32" strokeWidth={2.5} />}
+            <p className="max-w-xs text-center text-2xl font-bold">{flash.kind === "dup" ? "مسجّل مسبقًا" : flash.text}</p>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-4 text-sm">
         <span className="font-bold">{schoolName}</span>
         <span data-testid="server-clock" data-state={clockState.status} className="text-muted-foreground">وقت الخادم: {clockState.status === "ready" && clock ? fmtRiyadh(clock, true) : clockState.status === "loading" ? "جارٍ التحقق من وقت الخادم…" : <span className="text-destructive">{clockState.status === "error" ? clockState.message : ""} — التسجيل متوقف <Button size="sm" variant="outline" className="ms-1 h-7" onClick={() => void retryClock()}>إعادة المحاولة</Button></span>}</span>
