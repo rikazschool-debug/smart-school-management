@@ -241,3 +241,12 @@
 - Next: homework PDF visual check, then duties D1–D10.
 - Done (Nov 2, round 4): duties, meetings/minutes/decisions, personal calendar, reminders, owner counts; admin2-e2e 44/44; browser journey 24/24; homework PDF 6 pages visual OK.
 - Open (not blocking): task export lists no attachments (proof/addendum split only on task page); old-notification re-open after reassign checked by direct link only; reminders cron not yet observed firing; 15 new signed-in-callable admin RPCs follow the existing checked-inside pattern (security list).
+
+## Meetings + Agora package (docs/school-admin-meetings-agora-brief.md)
+- [ ] M1 Close earlier gaps: real reminder run, old notification after reassign, request export pages, names/labels/mobile pill, upload retry, proof vs addendum note in exports
+- [ ] M2 Meeting permissions: owner multi-branch (host branch + room), principal own school only, invitees = active staff memberships in scope
+- [ ] M3 Meeting form/lifecycle: in-person|virtual, draft/preview/send once, edit/cancel with reason, RSVP, start/join/leave/end, conflicts, list filters/paging, change log
+- [ ] M4 Communication "الاجتماعات" tab + calendar from one record (staff only)
+- [ ] M5 Agora: server tokens (membership check, renew re-checks), mic pre-check, group audio, participants, raise hand, screen share with host permission (one at a time), host mute/remove/end, attendance without duplicates — blocked on Agora credentials
+- [ ] M6 Minutes/decisions for cross-branch meetings (execution branch + eligible assignee), exports
+- [ ] M7 Tests 1–13 + review of 15 earlier RPCs, docs updates, Arabic report
