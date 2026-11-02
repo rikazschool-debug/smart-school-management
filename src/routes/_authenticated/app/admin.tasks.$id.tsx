@@ -105,7 +105,7 @@ function Task({ role }: { role: string }) {
           <Comment id={id} onDone={() => qc.invalidateQueries({ queryKey: ["adm-events", "task", id] })} />
         </div>
       </div>
-      <AdminFiles entity="task" id={id} userId={me} canAdd={t.status !== "cancelled" && (assignee || reviewer)} />
+      <AdminFiles entity="task" id={id} userId={me} doneAt={["done", "awaiting_confirmation"].includes(t.status) ? t.done_at : null} canAdd={t.status !== "cancelled" && (assignee || reviewer)} />
       <section><h2 className="mb-2 font-semibold">سجل التكليف</h2><Timeline entity="task" id={id} /></section>
     </div>
   );
