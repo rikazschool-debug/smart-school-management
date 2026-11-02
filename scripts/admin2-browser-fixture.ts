@@ -61,7 +61,7 @@ async function setup() {
   const subj = await ins("subjects", { name: "رياضيات" });
   const tch = await ins("teachers", { full_name: "معلم لديه حصة", user_id: t1.id });
   const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });
-  const c = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec.id });
+  const c = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec.id, weekly_periods: 1 });
   const a = await ins("teacher_assignments", { course_id: c.id, teacher_id: tch.id });
   await pr.c.rpc("decide_assignment", { _id: a.id, _approve: true });
   const tt = await ins("timetables", { year_id: year.id, name: "الجدول", created_by: pr.id });
