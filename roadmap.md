@@ -185,3 +185,12 @@
 - [-] GC8 (superseded) review 9 new grades security warnings
 - [-] GC9 (superseded) design/actions/reports review
 - [x] Simplify homework/tests grading (instant visibility, archive term grades)
+
+## جولة إغلاق الواجبات بعد التبسيط (docs/homework-closure-brief.md)
+- [ ] HC1 اختبار الوكيل بالمتصفح
+- [ ] HC2 التعديل من نافذتين فعليتين + انتهاء التكليف
+- [ ] HC3 التصحيحات القديمة غير الظاهرة (معاينة، إظهار فردي، سجل من أظهر)
+- [ ] HC4 تحديث grades-e2e لسلوك الأرشيف
+- [ ] HC5 فتح XLSX/PDF والتحقق من النطاق
+- [ ] HC6 مراجعة set_homework_kind و homework_list
+- [ ] HC7 التقرير
