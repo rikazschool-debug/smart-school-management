@@ -95,3 +95,14 @@ Since the homework/tests simplification, term gradebooks are a read-only adminis
 | Branch counts (duties this week, uncovered slots, upcoming meetings, open decisions) | — | — | — | — | ✔ counts only | ✘ |
 
 Virtual meetings (2026-11-02): tokens are minted on the server only after adm_live_join re-checks invitation, active membership in scope and live state; renewals re-check. Removal, suspension, screen-permission revocation, host mute and end are enforced at Agora (kicking rules) through the service-role queue adm_meeting_revocations. Restricted meetings give owner/principal no automatic access.
+
+## School timetable (2026-11-02)
+
+| Capability | Org owner | Principal | Vice principal | Dept head | Supervisor | Student affairs | Teacher | Guardian / Student |
+|---|---|---|---|---|---|---|---|---|
+| Settings (periods, rooms, course requirements, loads, availability, substitute policy) | ✔ | ✔ | ✔ | ✘ | ✘ | ✘ (reads loads/availability) | ✘ (reads own) | ✘ |
+| Create draft, edit slots, pin, generate, apply, validate, publish, revise | ✔ | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| Generation runs / inputs (`tt_input`, `tt_gen_*`, `tt_validate`) | ✔ | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| Published timetable | school | school | school | department courses | assigned teachers | school | own lessons + cover («جدولي») | own section / each child |
+| Substitutes (record absence, assign, cancel) | ✔ | ✔ | ✔ | ✘ | ✘ | ✘ | sees own cover | sees substitute name |
+
