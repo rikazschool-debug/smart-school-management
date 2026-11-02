@@ -164,3 +164,12 @@
 - [x] G6 Lock + correction requests + reopen with reason
 - [x] G7 XLSX/PDF reports
 - [x] G8 Tests (server + browser)
+
+## Grades package — remaining gaps (resume here)
+- [ ] G9 Period exception for one course/student (reason, permission, expiry)
+- [ ] G10 Teacher sheet: search/filter (missing/complete/returned), mobile cards, final-total preview, last-save/version, two-window conflict check, per-row bulk-save errors
+- [ ] G11 Homework link: choose average/sum, preview before pull, handle unsubmitted/returned, store source version, flag source changes after approval
+- [ ] G12 Import: diff preview, reject duplicates/formula cells, prevent double-run, downloadable error report (reuse import-dialog)
+- [ ] G13 Approval binds the reviewed version (block approve if changed after review); publish preview; idempotent publish/notifications
+- [ ] G14 Family view: child picker, notes allowed, per-child result download
+- [ ] G15 Browser journeys + open exported XLSX/PDF; mobile; acceptance items 8,9,10b,11,14,17,18,19,20
