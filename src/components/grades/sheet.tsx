@@ -57,6 +57,7 @@ export function GradebookView({ id, school, onBack }: { id: string; school: stri
     window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h);
   }, [dirty]);
 
+  useEffect(() => { if (filter === "errors" && !Object.keys(errs).length) setFilter("all"); }, [errs, filter]);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["gb-sheet", id] }); qc.invalidateQueries({ queryKey: ["gb-overview"] }); qc.invalidateQueries({ queryKey: ["gb-corr"] }); };
   const act = async (name: string, fn: () => Promise<{ error: unknown; data?: unknown }>, ok: string) => {
     setBusy(name); const { error } = await fn(); setBusy("");
