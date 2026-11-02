@@ -41,7 +41,10 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   attendance: { to: "/app/attendance", label: "الحضور والخروج", icon: ScanLine },
   station: { to: "/app/attendance-station", label: "المسح والبوابة والنداء", icon: ScanLine },
   pickup: { to: "/app/pickup", label: "الخروج والاستئذان", icon: DoorOpen },
-  admin: { to: "/app/admin", label: "الإدارة المدرسية", icon: Briefcase },
+  admin: { to: "/app/admin", label: "التكليفات والطلبات", icon: Briefcase },
+  duties: { to: "/app/admin/duties", label: "المناوبات", icon: ShieldCheck },
+  meetings: { to: "/app/admin/meetings", label: "الاجتماعات والقرارات", icon: UsersRound },
+  calendar: { to: "/app/admin/calendar", label: "تقويمي", icon: CalendarDays },
   communication: { to: "/app/communication", label: "التواصل", icon: MessagesSquare },
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
 };
@@ -53,7 +56,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
   { label: "الجدول واليوم الدراسي", keys: ["schoolday", "schedule", "substitutions"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "station", "pickup"] },
-  { label: "الإدارة المدرسية", keys: ["admin"] },
+  { label: "الإدارة المدرسية", keys: ["admin", "duties", "meetings", "calendar"] },
   { label: "التواصل", keys: ["communication"] },
 ];
 
