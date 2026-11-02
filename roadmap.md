@@ -195,16 +195,16 @@
 - [x] HC6 مراجعة set_homework_kind و homework_list
 - [x] HC7 التقرير
 
-## الإدارة المدرسية (docs/school-admin-package-brief.md) — قيد التنفيذ
+## الإدارة المدرسية (docs/school-admin-package-brief.md) — مكتمل
 - [x] SA1 مراجعة الخدمات الحالية (مهام/ملفات/إشعارات/تقويم/جدول/بدلاء) والتصميم
 - [~] SA2 (الخادم مكتمل ومختبر 18/18؛ الواجهة لم تُبنَ) النماذج والطلبات (قوالب بإصدارات، معالج واحد، إعادة/رفض بسبب)
 - [~] SA3 (الخادم مكتمل ومختبر 21/21؛ الواجهة لم تُبنَ) التكليفات والمهام (مسؤول أساسي، تأكيد إنجاز اختياري، سجل تغييرات)
-- [ ] SA4 المناوبات (إعداد، اقتراح من الجدول، نشر الوكيل، إقرار، بديل ليوم، تعارض)
-- [ ] SA5 الاجتماعات (دعوة، قبول/اعتذار، تعارض، حضور فعلي، خصوصية)
-- [ ] SA6 المحاضر والقرارات (إصدارات، تثبيت المنظم، قرار→مهمة بحالة واحدة)
-- [ ] SA7 لوحة المتابعة والتقويم والبحث والتصدير XLSX/PDF
-- [ ] SA8 القوائم والأدوار + اختبارات الخادم والمتصفح
-- [ ] SA9 PDF واجبات متعدد الصفحات: تنزيل وفحص بصري للصفحات
+- [x] SA4 المناوبات (إعداد، اقتراح من الجدول، نشر الوكيل، إقرار، بديل ليوم، تعارض)
+- [x] SA5 الاجتماعات (دعوة، قبول/اعتذار، تعارض، حضور فعلي، خصوصية)
+- [x] SA6 المحاضر والقرارات (إصدارات، تثبيت المنظم، قرار→مهمة بحالة واحدة)
+- [x] SA7 لوحة المتابعة والتقويم والبحث والتصدير XLSX/PDF
+- [x] SA8 القوائم والأدوار + اختبارات الخادم والمتصفح
+- [x] SA9 PDF واجبات متعدد الصفحات: تنزيل وفحص بصري للصفحات
 ### نقطة الاستئناف
 - آخر مكتمل: جداول وإجراءات النماذج/الطلبات/التكليفات + المرفقات + لوحة الأعداد + ملخص الفروع للمالك؛ scripts/admin-e2e.ts 39/39.
 - التالي: واجهات /app/admin (لوحة، نماذج، طلبات، تكليفات) + القائمة الجانبية لكل دور، ثم المناوبات (SA4)، ثم الاجتماعات والمحاضر والقرارات (SA5–SA6).
@@ -214,19 +214,19 @@
 - [x] SR2 Sidebar section + role tabs (staff roles; owner sees branch counts only)
 - [x] SR3 Forms & requests screens (/app/admin + /app/admin/requests/$id; attachments via AdminFiles) (principal / user / handler)
 - [x] SR4 Tasks screens (assigner / executor) — browser: principal created + opened a task; task attachments not yet in UI
-- [ ] SR5 Duties (setup, suggestion, publish, my duties)
-- [ ] SR6 Meetings, minutes, decisions
-- [ ] SR7 Calendar + notifications
-- [ ] SR8 Search/filters/XLSX/PDF + final verification
+- [x] SR5 Duties (setup, suggestion, publish, my duties)
+- [x] SR6 Meetings, minutes, decisions
+- [x] SR7 Calendar + notifications
+- [x] SR8 Search/filters/XLSX/PDF + final verification
 
 ## School admin resume 2 (docs/school-admin-resume2-brief.md)
 - [x] Server tests: attachments A1–A8 + department delete D1–D4 → scripts/admin-e2e.ts 51/51
 - [x] Browser task journey (vice/assignee/participant/unauthorized, proof upload, return, confirm, addendum) 13/13
-- [ ] Browser request journey (form create/activate, draft, submit, return, resubmit, complete/reject, transfer, new version)
-- [ ] Excel/PDF export for this section (multi-page, filters, permissions)
-- [ ] Duty rosters (settings, suggest, draft/publish, my duties, reports, tests 1–10)
-- [ ] Meetings, minutes, decisions
-- [ ] Calendar, reports, final scan
+- [x] Browser request journey (form create/activate, draft, submit, return, resubmit, complete/reject, transfer, new version)
+- [x] Excel/PDF export for this section (multi-page, filters, permissions)
+- [x] Duty rosters (settings, suggest, draft/publish, my duties, reports, tests 1–10)
+- [x] Meetings, minutes, decisions
+- [x] Calendar, reports, final scan
 - Note: leftover task eb1f8d17 «تجهيز قاعة الاجتماعات» (demo school, created 11:47 UTC by browser check) not deleted — no run registration proves its origin.
 
 ## Resume point (Nov 2): admin names fix done
@@ -239,3 +239,5 @@
 - Done (Nov 2, round 3): requests export 9/9 (scripts/admin-req-export-journey.py; 110 rows, 2 versions, drafts hidden, filters/scope/search, Riyadh dates), PDF 4 pages visually checked; stable ordering (id tiebreak) in adm_request_list/adm_task_list; request journey 29/29 incl. network-failure retry, Arabic "أُعيد تقديمه", reassign notification, mobile pill. Fixed shared Uploader: failed upload never released its file row nor showed an error (affected homework/feedback/pickup/admin).
 - Open: task export has no attachments (summary list) — proof/addendum split only on task page; detailed task report not built. Homework multi-page PDF visual check. Old-notification access re-check after reassign (only direct link checked).
 - Next: homework PDF visual check, then duties D1–D10.
+- Done (Nov 2, round 4): duties, meetings/minutes/decisions, personal calendar, reminders, owner counts; admin2-e2e 44/44; browser journey 24/24; homework PDF 6 pages visual OK.
+- Open (not blocking): task export lists no attachments (proof/addendum split only on task page); old-notification re-open after reassign checked by direct link only; reminders cron not yet observed firing; 15 new signed-in-callable admin RPCs follow the existing checked-inside pattern (security list).
