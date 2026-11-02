@@ -49,7 +49,7 @@ export class TestRun {
     const ids = (ss ?? []).map((x) => x.id as string);
     const foreign = ids.filter((id) => !this.schools.has(id));
     if (foreign.length) throw new Error(`[${this.label} ${this.id}] refusing purge of org ${orgId}: schools not created by this run: ${foreign.join(",")}`);
-    const bySchool = ["homework", "files", "post_comments", "classroom_posts", "substitutions", "teacher_absences", "timetable_slots", "timetables", "teacher_unavailability", "supervisor_teachers", "rooms", "periods", "school_day_settings", "file_policies",
+    const bySchool = ["grade_results", "gradebooks", "grade_periods", "grade_plans", "homework", "files", "post_comments", "classroom_posts", "substitutions", "teacher_absences", "timetable_slots", "timetables", "teacher_unavailability", "supervisor_teachers", "rooms", "periods", "school_day_settings", "file_policies",
       "circulars", "comm_settings", "classrooms", "enrollments", "student_guardians", "teacher_assignments", "courses", "students", "guardians", "teachers", "subjects", "departments", "sections", "grades", "stages", "terms", "academic_years"];
     let last = "";
     for (let pass = 0; pass < 3; pass++) {

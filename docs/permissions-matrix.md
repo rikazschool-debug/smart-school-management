@@ -58,3 +58,13 @@ Protections: the last active owner cannot be deactivated or demoted; ownership c
 
 - الحضور (جولة الإغلاق): الأمن والمرشد والمعتمدون يرون اسم الطالب وشعبته في سجلات الحضور اليومية لمدرستهم فقط (att_day_rows) دون باقي ملف الطالب. وصول المستلم يتطلب تأكيد الموظف للهوية؛ 3 محاولات غير مطابقة توقف التفويض. سياسة الحضور لا تُقرأ مباشرة من المتصفح.
 - حسابات أولياء الأمور: ينشئها مدير الطلاب (مالك/مدير/وكيل/شؤون طلاب) عند إضافة الطالب؛ الإخوة بنفس الهوية/الجوال في حساب واحد.
+
+## Grades & results
+| Capability | Principal / Vice | Dept head | Teacher | Supervisor | Org owner | Student / Guardian | Platform admin, counselor, nurse, security |
+|---|---|---|---|---|---|---|---|
+| Assessment plans & grading periods | create/approve/version/lock | read | read | read | read | — | — |
+| Enter / import / link homework marks | — | — | own live-assignment courses, open period only | — | — | — | — |
+| Review (accept / return with reason) | only if subject has no department | own department only | — | — | — | — | — |
+| Approve + lock, publish, reopen one gradebook (reason) | yes | — | — | — | — | — | — |
+| Correction request after lock | decide | — | request | — | — | — | — |
+| Read gradebooks / reports | school | own department | own courses | assigned teachers' courses | branch summary (no student marks edit) | current published results of self / verified child | none |

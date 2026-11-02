@@ -4,7 +4,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import {
+import { Award,
   Bell, BookOpen, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarClock, CalendarDays, Repeat, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +33,8 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   guardians: { to: "/app/guardians", label: "أولياء الأمور", icon: Users },
   classrooms: { to: "/app/classrooms", label: "الفصول الرقمية", icon: School },
   homework: { to: "/app/homework", label: "الواجبات", icon: ClipboardList },
+  grades: { to: "/app/grades", label: "الدرجات والنتائج", icon: Award },
+  results: { to: "/app/results", label: "النتائج", icon: Award },
   schoolday: { to: "/app/school-day", label: "إعداد اليوم الدراسي", icon: CalendarClock },
   schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
   substitutions: { to: "/app/substitutions", label: "التبديل والبدلاء", icon: Repeat },
@@ -47,7 +49,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "notifications"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members"] },
   { label: "الإعداد الأكاديمي", keys: ["academic", "teachers", "courses", "students", "guardians"] },
-  { label: "التعليم", keys: ["classrooms", "homework"] },
+  { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
   { label: "الجدول واليوم الدراسي", keys: ["schoolday", "schedule", "substitutions"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "station", "pickup"] },
   { label: "التواصل", keys: ["communication"] },

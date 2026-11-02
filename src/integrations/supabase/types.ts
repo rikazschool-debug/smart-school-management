@@ -1648,6 +1648,579 @@ export type Database = {
           },
         ]
       }
+      grade_corrections: {
+        Row: {
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          evidence: string | null
+          gradebook_id: string
+          id: string
+          item_id: string
+          new_score: number | null
+          new_status: string
+          old_score: number | null
+          old_status: string | null
+          reason: string
+          requested_at: string
+          requested_by: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          evidence?: string | null
+          gradebook_id: string
+          id?: string
+          item_id: string
+          new_score?: number | null
+          new_status: string
+          old_score?: number | null
+          old_status?: string | null
+          reason: string
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          evidence?: string | null
+          gradebook_id?: string
+          id?: string
+          item_id?: string
+          new_score?: number | null
+          new_status?: string
+          old_score?: number | null
+          old_status?: string | null
+          reason?: string
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_corrections_gradebook_id_fkey"
+            columns: ["gradebook_id"]
+            isOneToOne: false
+            referencedRelation: "gradebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_corrections_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "grade_plan_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_corrections_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grade_periods: {
+        Row: {
+          approve_by: string | null
+          created_at: string
+          created_by: string | null
+          entry_end: string
+          entry_start: string
+          id: string
+          name: string
+          publish_by: string | null
+          review_by: string | null
+          school_id: string
+          status: string
+          status_reason: string | null
+          submit_by: string | null
+          term_id: string | null
+          updated_at: string
+          year_id: string
+        }
+        Insert: {
+          approve_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          entry_end: string
+          entry_start: string
+          id?: string
+          name: string
+          publish_by?: string | null
+          review_by?: string | null
+          school_id: string
+          status?: string
+          status_reason?: string | null
+          submit_by?: string | null
+          term_id?: string | null
+          updated_at?: string
+          year_id: string
+        }
+        Update: {
+          approve_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          entry_end?: string
+          entry_start?: string
+          id?: string
+          name?: string
+          publish_by?: string | null
+          review_by?: string | null
+          school_id?: string
+          status?: string
+          status_reason?: string | null
+          submit_by?: string | null
+          term_id?: string | null
+          updated_at?: string
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_periods_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_periods_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_periods_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grade_plan_items: {
+        Row: {
+          id: string
+          max_score: number
+          name: string
+          plan_id: string
+          sort_order: number
+          source: string
+          weight: number
+        }
+        Insert: {
+          id?: string
+          max_score: number
+          name: string
+          plan_id: string
+          sort_order?: number
+          source?: string
+          weight: number
+        }
+        Update: {
+          id?: string
+          max_score?: number
+          name?: string
+          plan_id?: string
+          sort_order?: number
+          source?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_plan_items_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "grade_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grade_plans: {
+        Row: {
+          absent_policy: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          decimals: number
+          description: string
+          effective_from: string
+          exempt_policy: string
+          grade_id: string | null
+          id: string
+          name: string
+          root_id: string | null
+          rounding: string
+          school_id: string
+          scope: string
+          status: string
+          subject_id: string | null
+          term_id: string | null
+          total: number
+          updated_at: string
+          version: number
+          year_id: string
+        }
+        Insert: {
+          absent_policy?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          decimals?: number
+          description?: string
+          effective_from?: string
+          exempt_policy?: string
+          grade_id?: string | null
+          id?: string
+          name: string
+          root_id?: string | null
+          rounding?: string
+          school_id: string
+          scope?: string
+          status?: string
+          subject_id?: string | null
+          term_id?: string | null
+          total?: number
+          updated_at?: string
+          version?: number
+          year_id: string
+        }
+        Update: {
+          absent_policy?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          decimals?: number
+          description?: string
+          effective_from?: string
+          exempt_policy?: string
+          grade_id?: string | null
+          id?: string
+          name?: string
+          root_id?: string | null
+          rounding?: string
+          school_id?: string
+          scope?: string
+          status?: string
+          subject_id?: string | null
+          term_id?: string | null
+          total?: number
+          updated_at?: string
+          version?: number
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_plans_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_plans_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_plans_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_plans_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_plans_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grade_results: {
+        Row: {
+          change_note: string | null
+          complete: boolean
+          gradebook_id: string
+          id: string
+          items: Json
+          max_total: number | null
+          period_name: string | null
+          published_at: string
+          school_id: string
+          section_name: string | null
+          student_id: string
+          student_name: string
+          subject_name: string | null
+          superseded_at: string | null
+          total: number | null
+          version: number
+        }
+        Insert: {
+          change_note?: string | null
+          complete?: boolean
+          gradebook_id: string
+          id?: string
+          items?: Json
+          max_total?: number | null
+          period_name?: string | null
+          published_at?: string
+          school_id: string
+          section_name?: string | null
+          student_id: string
+          student_name: string
+          subject_name?: string | null
+          superseded_at?: string | null
+          total?: number | null
+          version: number
+        }
+        Update: {
+          change_note?: string | null
+          complete?: boolean
+          gradebook_id?: string
+          id?: string
+          items?: Json
+          max_total?: number | null
+          period_name?: string | null
+          published_at?: string
+          school_id?: string
+          section_name?: string | null
+          student_id?: string
+          student_name?: string
+          subject_name?: string | null
+          superseded_at?: string | null
+          total?: number | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_results_gradebook_id_fkey"
+            columns: ["gradebook_id"]
+            isOneToOne: false
+            referencedRelation: "gradebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gradebook_entries: {
+        Row: {
+          entered_at: string
+          entered_by: string | null
+          gradebook_id: string
+          homework_ids: string[] | null
+          id: string
+          item_id: string
+          score: number | null
+          source: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          entered_at?: string
+          entered_by?: string | null
+          gradebook_id: string
+          homework_ids?: string[] | null
+          id?: string
+          item_id: string
+          score?: number | null
+          source?: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          entered_at?: string
+          entered_by?: string | null
+          gradebook_id?: string
+          homework_ids?: string[] | null
+          id?: string
+          item_id?: string
+          score?: number | null
+          source?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gradebook_entries_gradebook_id_fkey"
+            columns: ["gradebook_id"]
+            isOneToOne: false
+            referencedRelation: "gradebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gradebook_entries_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "grade_plan_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gradebook_entries_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gradebook_events: {
+        Row: {
+          action: string
+          actor: string | null
+          at: string
+          details: Json
+          gradebook_id: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          at?: string
+          details?: Json
+          gradebook_id: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          at?: string
+          details?: Json
+          gradebook_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gradebook_events_gradebook_id_fkey"
+            columns: ["gradebook_id"]
+            isOneToOne: false
+            referencedRelation: "gradebooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gradebooks: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          course_id: string
+          created_at: string
+          id: string
+          period_id: string
+          plan_id: string
+          published_at: string | null
+          reopen_reason: string | null
+          reopen_until: string | null
+          result_version: number
+          return_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school_id: string
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          period_id: string
+          plan_id: string
+          published_at?: string | null
+          reopen_reason?: string | null
+          reopen_until?: string | null
+          result_version?: number
+          return_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id: string
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          period_id?: string
+          plan_id?: string
+          published_at?: string | null
+          reopen_reason?: string | null
+          reopen_until?: string | null
+          result_version?: number
+          return_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gradebooks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gradebooks_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "grade_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gradebooks_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "grade_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gradebooks_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grades: {
         Row: {
           created_at: string
@@ -4159,6 +4732,38 @@ export type Database = {
           max_bytes: number
         }[]
       }
+      _gb_admin: { Args: { _school: string }; Returns: boolean }
+      _gb_can_enter: { Args: { _gb: string }; Returns: boolean }
+      _gb_course_label: { Args: { _course: string }; Returns: string }
+      _gb_dept: { Args: { _course: string }; Returns: boolean }
+      _gb_has_dept: { Args: { _course: string }; Returns: boolean }
+      _gb_log: {
+        Args: { _action: string; _d: Json; _gb: string }
+        Returns: undefined
+      }
+      _gb_notify_teacher: {
+        Args: { _body: string; _gb: string; _title: string }
+        Returns: undefined
+      }
+      _gb_read: { Args: { _course: string; _school: string }; Returns: boolean }
+      _gb_roster: {
+        Args: { _gb: string }
+        Returns: {
+          active: boolean
+          full_name: string
+          student_id: string
+        }[]
+      }
+      _gb_round: {
+        Args: { _dec: number; _mode: string; _x: number }
+        Returns: number
+      }
+      _gb_snapshot: {
+        Args: { _gb: string; _note: string; _student: string }
+        Returns: number
+      }
+      _gb_teacher: { Args: { _course: string }; Returns: boolean }
+      _gb_total: { Args: { _gb: string; _student: string }; Returns: number }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
       _hw_check_score: {
         Args: { _criteria: Json; _score: number; h: Record<string, unknown> }
@@ -4736,6 +5341,112 @@ export type Database = {
           relationship: string
         }[]
       }
+      gb_approve: {
+        Args: { _accept: boolean; _gb: string; _reason: string }
+        Returns: undefined
+      }
+      gb_approve_plan: { Args: { _id: string }; Returns: undefined }
+      gb_corrections_report: {
+        Args: { _period: string; _school: string }
+        Returns: {
+          course_label: string
+          decided_at: string
+          decided_by: string
+          decision_note: string
+          evidence: string
+          gradebook_id: string
+          id: string
+          item_name: string
+          new_score: number
+          new_status: string
+          old_score: number
+          old_status: string
+          reason: string
+          requested_at: string
+          requested_by: string
+          status: string
+          student_name: string
+        }[]
+      }
+      gb_decide_correction: {
+        Args: { _approve: boolean; _id: string; _note: string }
+        Returns: undefined
+      }
+      gb_new_plan_version: { Args: { _id: string }; Returns: string }
+      gb_open: { Args: { _course: string; _period: string }; Returns: string }
+      gb_org_summary: {
+        Args: { _org: string }
+        Returns: {
+          approved: number
+          draft: number
+          gradebooks: number
+          pending_corrections: number
+          published: number
+          reviewed: number
+          school_id: string
+          school_name: string
+          submitted: number
+        }[]
+      }
+      gb_overview: {
+        Args: { _period: string; _school: string }
+        Returns: {
+          average: number
+          cells: number
+          computed: number
+          course_id: string
+          course_label: string
+          department_id: string
+          filled: number
+          gradebook_id: string
+          missing: number
+          pending_corrections: number
+          section_id: string
+          status: string
+          students: number
+          subject_id: string
+          teacher_name: string
+        }[]
+      }
+      gb_plan_impact: { Args: { _id: string }; Returns: Json }
+      gb_publish: { Args: { _gb: string }; Returns: number }
+      gb_pull_homework: {
+        Args: { _gb: string; _homework: string[]; _item: string }
+        Returns: number
+      }
+      gb_reopen: {
+        Args: { _gb: string; _hours: number; _reason: string }
+        Returns: undefined
+      }
+      gb_request_correction: {
+        Args: {
+          _evidence: string
+          _gb: string
+          _item: string
+          _reason: string
+          _score: number
+          _status: string
+          _student: string
+        }
+        Returns: string
+      }
+      gb_retire_plan: { Args: { _id: string }; Returns: undefined }
+      gb_review: {
+        Args: { _accept: boolean; _gb: string; _reason: string }
+        Returns: undefined
+      }
+      gb_save_period: { Args: { _d: Json; _id: string }; Returns: string }
+      gb_save_plan: { Args: { _d: Json; _id: string }; Returns: string }
+      gb_set_entries: {
+        Args: { _gb: string; _rows: Json; _source?: string }
+        Returns: number
+      }
+      gb_set_period_status: {
+        Args: { _id: string; _reason: string; _status: string }
+        Returns: undefined
+      }
+      gb_sheet: { Args: { _gb: string }; Returns: Json }
+      gb_submit: { Args: { _gb: string }; Returns: undefined }
       grade_submission: {
         Args: {
           _criteria: Json

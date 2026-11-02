@@ -157,10 +157,10 @@
 
 ## Grades package (docs/grades-package-brief.md)
 - [x] G1 Attendance compare: expected/resolved/unresolved + completion %, Riyadh-time scope note
-- [ ] G2 Assessment plans, items, weights, versions
-- [ ] G3 Grading periods and deadlines
-- [ ] G4 Gradebook per course (manual + homework link, missing/zero/absent/exempt)
-- [ ] G5 Dept head review, principal approval, publish to student/guardian
-- [ ] G6 Lock + correction requests + reopen with reason
-- [ ] G7 XLSX/PDF reports
-- [ ] G8 Tests (server + browser)
+- [x] G2 Assessment plans, items, weights, versions
+- [x] G3 Grading periods and deadlines
+- [x] G4 Gradebook per course (manual + homework link, missing/zero/absent/exempt)
+- [x] G5 Dept head review, principal approval, publish to student/guardian
+- [x] G6 Lock + correction requests + reopen with reason
+- [x] G7 XLSX/PDF reports
+- [x] G8 Tests (server + browser)

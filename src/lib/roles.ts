@@ -45,6 +45,8 @@ export type NavKey =
   | "substitutions"
   | "communication"
   | "homework"
+  | "grades"
+  | "results"
   | "attendance"
   | "station"
   | "pickup"
@@ -59,6 +61,7 @@ const MANAGE: NavKey[] = [
   "guardians",
   "classrooms",
   "homework",
+  "grades",
   "schoolday",
   "schedule",
   "substitutions",
@@ -69,16 +72,16 @@ const MANAGE: NavKey[] = [
 ];
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
-  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "attendance" && k !== "station")],
+  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && k !== "station")],
   org_owner: ["home", "schools", "members", ...MANAGE.slice(1)],
   principal: MANAGE,
   vice_principal: MANAGE,
   student_affairs: ["home", "students", "guardians", "schedule", "attendance", "station", "communication", "notifications"],
-  dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
-  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "communication", "notifications"],
-  teacher: ["home", "classrooms", "homework", "schedule", "attendance", "communication", "notifications"],
-  guardian: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
-  student: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
+  dept_head: ["home", "teachers", "courses", "classrooms", "homework", "grades", "schedule", "communication", "notifications"],
+  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "grades", "schedule", "communication", "notifications"],
+  teacher: ["home", "classrooms", "homework", "grades", "schedule", "attendance", "communication", "notifications"],
+  guardian: ["home", "classrooms", "homework", "results", "schedule", "pickup", "communication", "notifications"],
+  student: ["home", "classrooms", "homework", "results", "schedule", "pickup", "communication", "notifications"],
   counselor: ["home", "attendance", "communication", "notifications"],
   nurse: ["home", "communication", "notifications"],
   security: ["home", "attendance", "station", "communication", "notifications"],

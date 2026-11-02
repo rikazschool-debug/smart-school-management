@@ -218,3 +218,9 @@ No defects found, so no fixes or re-runs were needed. The mobile-screen file was
 - Timezone: Asia/Riyadh only for this release (documented scope limit; no per-school timezone screen).
 - Pending field acceptance: physical barcode reader, camera, speakers — NOT claimed complete.
 - attendance_compare now returns expected / resolved / unresolved / completion_rate; attendance_rate is labelled "from resolved only".
+
+## Grades package G2–G8
+- Implemented: plans/items/versions, periods, gradebooks, homework link (published only), review/approve/publish, lock + corrections + result versions, single-gradebook reopen, XLSX/PDF exports (completion, corrections, gradebook sheet, family results, org summary).
+- Evidence: scripts/grades-e2e.ts 59/59; Playwright smoke as demo principal (plan form) and teacher (empty period state).
+- Not assumed: pass/fail thresholds, promotion, official certificates, online exams.
+- Not yet browser-tested end to end: full teacher→publish journey and import from the template file.
