@@ -94,8 +94,14 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
     (window as unknown as { __rikazRoom?: unknown }).__rikazRoom = undefined;
   }, [actionFn, meetingId, stopScreen]);
 
-  // release devices if the page closes
-  useEffect(() => () => { void teardown(null, true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // release devices and connections if the page closes (no state updates here: this also runs on dev remounts)
+  useEffect(() => () => {
+    for (const t of screenTracks.current) { t.stop(); t.close(); }
+    screenTracks.current = [];
+    void screenClient.current?.leave().catch(() => undefined); screenClient.current = null;
+    if (mic.current) { mic.current.stop(); mic.current.close(); mic.current = null; }
+    if (client.current) { void client.current.leave().catch(() => undefined); client.current = null; void actionFn({ data: { id: meetingId, action: "leave" } }).catch(() => undefined); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function join(deviceId: string | null) {
     setPhase("joining");
