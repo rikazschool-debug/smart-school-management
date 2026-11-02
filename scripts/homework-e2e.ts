@@ -199,12 +199,12 @@ try {
   check("12a test kind saved by teacher only; non-targeted student does not see it", !kd.error && !!kdBad.error && !s2sees && s1row?.kind === "test", [kd.error, s2sees, s1row]);
   const pap = await t1.c.rpc("record_paper_submission", { _hw: tst, _student: st1.id, _received: new Date().toISOString(), _note: "ورقة الاختبار" });
   const tsub = (await admin.from("homework_submissions").select("id").eq("homework_id", tst).eq("student_id", st1.id).single()).data?.id;
-  const tg = tsub ? await t1.c.rpc("grade_submission", { _sub: tsub, _score: 7, _criteria: null, _feedback: "", _final: true, _rev: null }) : { error: "no sub" };
+  const tgr = tsub ? await t1.c.rpc("grade_submission", { _sub: tsub, _score: 7, _criteria: null, _feedback: "", _final: true, _rev: null }) : { error: "no sub" };
   const tgOver = tsub ? await t1.c.rpc("grade_submission", { _sub: tsub, _score: 99, _criteria: null, _feedback: "", _final: true, _rev: 1 }) : { error: null };
   const guSees = ((await g1.c.rpc("student_homework", { _student: st1.id })).data as any[]).find((r) => r.id === tst);
   const ownList = ((await owner.c.rpc("homework_list", { _school: S, _course: null, _status: null, _q: null, _limit: 50, _offset: 0, _kind: "test" })).data as any[]) ?? [];
   const ownEdit = tsub ? await owner.c.rpc("grade_submission", { _sub: tsub, _score: 1, _criteria: null, _feedback: "", _final: true, _rev: 1 }) : { error: "x" };
-  check("12b paper test graded -> guardian sees 7 at once; above max rejected; owner monitors (kind filter) but cannot edit", !(pap as any).error && !tg.error && !!tgOver.error && guSees?.score == 7 && ownList.length === 1 && ownList[0].published_results === 1 && !!ownEdit.error, [(pap as any).error, tg.error, guSees, ownList.length, ownEdit.error]);
+  check("12b paper test graded -> guardian sees 7 at once; above max rejected; owner monitors (kind filter) but cannot edit", !(pap as any).error && !tgr.error && !!tgOver.error && guSees?.score == 7 && ownList.length === 1 && ownList[0].published_results === 1 && !!ownEdit.error, [(pap as any).error, tgr.error, guSees, ownList.length, ownEdit.error]);
   await admin.from("teacher_assignments").update({ end_date: "2026-09-01" }).eq("id", a1.id);
   const lateG = tsub ? await t1.c.rpc("grade_submission", { _sub: tsub, _score: 6, _criteria: null, _feedback: "", _final: true, _rev: 1 }) : { error: null };
   check("12c ended assignment blocks new grading by the former teacher", !!lateG.error, lateG.error);
