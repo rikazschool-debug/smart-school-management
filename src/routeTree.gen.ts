@@ -36,6 +36,7 @@ import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppSubstitutionsRouteImport } from './routes/_authenticated/app/substitutions'
 import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
 import { Route as AuthenticatedAppAdminIndexRouteImport } from './routes/_authenticated/app/admin.index'
+import { Route as AuthenticatedAppAdminCalendarRouteImport } from './routes/_authenticated/app/admin.calendar'
 import { Route as AuthenticatedAppAdminDutiesRouteImport } from './routes/_authenticated/app/admin.duties'
 import { Route as AuthenticatedAppClassroomsIndexRouteImport } from './routes/_authenticated/app/classrooms.index'
 import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_authenticated/app/classrooms.$id'
@@ -43,6 +44,7 @@ import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
 import { Route as AuthenticatedAppAdminMeetingsIndexRouteImport } from './routes/_authenticated/app/admin.meetings.index'
+import { Route as AuthenticatedAppAdminMeetingsIdRouteImport } from './routes/_authenticated/app/admin.meetings.$id'
 import { Route as AuthenticatedAppAdminRequestsIdRouteImport } from './routes/_authenticated/app/admin.requests.$id'
 import { Route as AuthenticatedAppAdminTasksIdRouteImport } from './routes/_authenticated/app/admin.tasks.$id'
 
@@ -194,6 +196,12 @@ const AuthenticatedAppAdminIndexRoute =
     path: '/admin/',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppAdminCalendarRoute =
+  AuthenticatedAppAdminCalendarRouteImport.update({
+    id: '/admin/calendar',
+    path: '/admin/calendar',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppAdminDutiesRoute =
   AuthenticatedAppAdminDutiesRouteImport.update({
     id: '/admin/duties',
@@ -236,6 +244,12 @@ const AuthenticatedAppAdminMeetingsIndexRoute =
     path: '/admin/meetings/',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppAdminMeetingsIdRoute =
+  AuthenticatedAppAdminMeetingsIdRouteImport.update({
+    id: '/admin/meetings/$id',
+    path: '/admin/meetings/$id',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppAdminRequestsIdRoute =
   AuthenticatedAppAdminRequestsIdRouteImport.update({
     id: '/admin/requests/$id',
@@ -275,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
@@ -282,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
   '/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
+  '/app/admin/meetings/$id': typeof AuthenticatedAppAdminMeetingsIdRoute
   '/app/admin/requests/$id': typeof AuthenticatedAppAdminRequestsIdRoute
   '/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
   '/app/admin/meetings/': typeof AuthenticatedAppAdminMeetingsIndexRoute
@@ -311,6 +327,7 @@ export interface FileRoutesByTo {
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
@@ -318,6 +335,7 @@ export interface FileRoutesByTo {
   '/app/admin': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
   '/app/homework': typeof AuthenticatedAppHomeworkIndexRoute
+  '/app/admin/meetings/$id': typeof AuthenticatedAppAdminMeetingsIdRoute
   '/app/admin/requests/$id': typeof AuthenticatedAppAdminRequestsIdRoute
   '/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
   '/app/admin/meetings': typeof AuthenticatedAppAdminMeetingsIndexRoute
@@ -350,6 +368,7 @@ export interface FileRoutesById {
   '/_authenticated/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/_authenticated/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/_authenticated/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
@@ -357,6 +376,7 @@ export interface FileRoutesById {
   '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
   '/_authenticated/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
+  '/_authenticated/app/admin/meetings/$id': typeof AuthenticatedAppAdminMeetingsIdRoute
   '/_authenticated/app/admin/requests/$id': typeof AuthenticatedAppAdminRequestsIdRoute
   '/_authenticated/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
   '/_authenticated/app/admin/meetings/': typeof AuthenticatedAppAdminMeetingsIndexRoute
@@ -389,6 +409,7 @@ export interface FileRouteTypes {
     | '/app/substitutions'
     | '/app/teachers'
     | '/app/'
+    | '/app/admin/calendar'
     | '/app/admin/duties'
     | '/app/classrooms/$id'
     | '/app/homework/$id'
@@ -396,6 +417,7 @@ export interface FileRouteTypes {
     | '/app/admin/'
     | '/app/classrooms/'
     | '/app/homework/'
+    | '/app/admin/meetings/$id'
     | '/app/admin/requests/$id'
     | '/app/admin/tasks/$id'
     | '/app/admin/meetings/'
@@ -425,6 +447,7 @@ export interface FileRouteTypes {
     | '/app/substitutions'
     | '/app/teachers'
     | '/app'
+    | '/app/admin/calendar'
     | '/app/admin/duties'
     | '/app/classrooms/$id'
     | '/app/homework/$id'
@@ -432,6 +455,7 @@ export interface FileRouteTypes {
     | '/app/admin'
     | '/app/classrooms'
     | '/app/homework'
+    | '/app/admin/meetings/$id'
     | '/app/admin/requests/$id'
     | '/app/admin/tasks/$id'
     | '/app/admin/meetings'
@@ -463,6 +487,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/substitutions'
     | '/_authenticated/app/teachers'
     | '/_authenticated/app/'
+    | '/_authenticated/app/admin/calendar'
     | '/_authenticated/app/admin/duties'
     | '/_authenticated/app/classrooms/$id'
     | '/_authenticated/app/homework/$id'
@@ -470,6 +495,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/admin/'
     | '/_authenticated/app/classrooms/'
     | '/_authenticated/app/homework/'
+    | '/_authenticated/app/admin/meetings/$id'
     | '/_authenticated/app/admin/requests/$id'
     | '/_authenticated/app/admin/tasks/$id'
     | '/_authenticated/app/admin/meetings/'
@@ -674,6 +700,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/admin/calendar': {
+      id: '/_authenticated/app/admin/calendar'
+      path: '/admin/calendar'
+      fullPath: '/app/admin/calendar'
+      preLoaderRoute: typeof AuthenticatedAppAdminCalendarRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/admin/duties': {
       id: '/_authenticated/app/admin/duties'
       path: '/admin/duties'
@@ -723,6 +756,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAdminMeetingsIndexRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/admin/meetings/$id': {
+      id: '/_authenticated/app/admin/meetings/$id'
+      path: '/admin/meetings/$id'
+      fullPath: '/app/admin/meetings/$id'
+      preLoaderRoute: typeof AuthenticatedAppAdminMeetingsIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/admin/requests/$id': {
       id: '/_authenticated/app/admin/requests/$id'
       path: '/admin/requests/$id'
@@ -761,6 +801,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppSubstitutionsRoute: typeof AuthenticatedAppSubstitutionsRoute
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppAdminCalendarRoute: typeof AuthenticatedAppAdminCalendarRoute
   AuthenticatedAppAdminDutiesRoute: typeof AuthenticatedAppAdminDutiesRoute
   AuthenticatedAppClassroomsIdRoute: typeof AuthenticatedAppClassroomsIdRoute
   AuthenticatedAppHomeworkIdRoute: typeof AuthenticatedAppHomeworkIdRoute
@@ -768,6 +809,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
   AuthenticatedAppHomeworkIndexRoute: typeof AuthenticatedAppHomeworkIndexRoute
+  AuthenticatedAppAdminMeetingsIdRoute: typeof AuthenticatedAppAdminMeetingsIdRoute
   AuthenticatedAppAdminRequestsIdRoute: typeof AuthenticatedAppAdminRequestsIdRoute
   AuthenticatedAppAdminTasksIdRoute: typeof AuthenticatedAppAdminTasksIdRoute
   AuthenticatedAppAdminMeetingsIndexRoute: typeof AuthenticatedAppAdminMeetingsIndexRoute
@@ -795,6 +837,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppSubstitutionsRoute: AuthenticatedAppSubstitutionsRoute,
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppAdminCalendarRoute: AuthenticatedAppAdminCalendarRoute,
   AuthenticatedAppAdminDutiesRoute: AuthenticatedAppAdminDutiesRoute,
   AuthenticatedAppClassroomsIdRoute: AuthenticatedAppClassroomsIdRoute,
   AuthenticatedAppHomeworkIdRoute: AuthenticatedAppHomeworkIdRoute,
@@ -802,6 +845,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
   AuthenticatedAppHomeworkIndexRoute: AuthenticatedAppHomeworkIndexRoute,
+  AuthenticatedAppAdminMeetingsIdRoute: AuthenticatedAppAdminMeetingsIdRoute,
   AuthenticatedAppAdminRequestsIdRoute: AuthenticatedAppAdminRequestsIdRoute,
   AuthenticatedAppAdminTasksIdRoute: AuthenticatedAppAdminTasksIdRoute,
   AuthenticatedAppAdminMeetingsIndexRoute:
