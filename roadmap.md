@@ -175,7 +175,7 @@
 - [x] G15 Browser journeys + open exported XLSX; mobile (PDF opened: not yet — XLSX verified)
 
 ## Grades closure round (docs/grades-closure-brief.md)
-- [ ] GC1 re-run review/publish journey with independent 88.6 proof
+- [~] GC1 fresh re-run 12/12 + teacher 12/12; 88.6 proven (45/50×30=27 + 88/100×70=61.6). Open: return-for-revision step in browser
 - [ ] GC2 open/verify PDFs; separate internal sheet vs published result
 - [ ] GC3 exceptions/permissions (no auto vice powers; 30-day as policy)
 - [ ] GC4 two-window conflict without forced overwrite
