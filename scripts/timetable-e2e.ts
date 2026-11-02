@@ -316,6 +316,17 @@ try {
     !!as.data && !!badSub.error && baseBefore === baseAfter && (!lastMon || !cand6.some((x) => x.teacher_id === T[5].id)) && (t8mon < 1 || !candCap.some((x) => x.teacher_id === T[7].id)),
     [as.error?.message, badSub.error?.message, baseBefore === baseAfter, cand6.map((x) => x.full_name), t8mon, candCap.map((x) => x.full_name)]);
 
+  // 13b: a hard rule that starts after the absence date does not hide a free teacher for that date; once in effect, it does
+  const busyMon = new Set((await admin.from("timetable_slots").select("teacher_id").eq("timetable_id", tt.id).eq("day", 1).eq("period_id", target.period_id)).data!.map((x) => x.teacher_id));
+  const freeT = T.slice(1, 9).find((t) => !busyMon.has(t.id) && t.id !== T[5].id && t.id !== T[7].id && t.id !== T[3].id && t.id !== T[4].id);
+  const offered = async () => (((await pr.c.rpc("available_substitutes", { _slot: target.slot_id, _date: absDay })).data ?? []) as any[]).some((x) => x.teacher_id === freeT?.id);
+  const rule = (await pr.c.from("teacher_unavailability").insert({ school_id: S, teacher_id: freeT?.id, kind: "day", day: 1, hard: true, valid_from: addDays(absDay, 7) }).select().single()).data;
+  const futureOk = await offered();
+  await pr.c.from("teacher_unavailability").update({ valid_from: absDay }).eq("id", rule?.id);
+  const nowBlocked = !(await offered());
+  check("13b substitute dates: rule starting next week does not block; rule in effect does", !!freeT && futureOk && nowBlocked, [freeT?.full_name, futureOk, nowBlocked]);
+  await pr.c.from("teacher_unavailability").delete().eq("id", rule?.id);
+
   if (KEEP) {
     writeFileSync("/tmp/browser/tt/fixture.json", JSON.stringify({ pw, users, school: S, org, orgB, tt: tt.id, rev: revA, year: year.id, teacher: T[0].id }, null, 1));
     console.log("fixture kept: /tmp/browser/tt/fixture.json");
