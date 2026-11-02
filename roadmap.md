@@ -173,3 +173,14 @@
 - [x] G13 Approval binds the reviewed version (block approve if changed after review); publish preview; idempotent publish/notifications
 - [x] G14 Family view: child picker, notes allowed, per-child result download
 - [x] G15 Browser journeys + open exported XLSX; mobile (PDF opened: not yet — XLSX verified)
+
+## Grades closure round (docs/grades-closure-brief.md)
+- [ ] GC1 re-run review/publish journey with independent 88.6 proof
+- [ ] GC2 open/verify PDFs; separate internal sheet vs published result
+- [ ] GC3 exceptions/permissions (no auto vice powers; 30-day as policy)
+- [ ] GC4 two-window conflict without forced overwrite
+- [ ] GC5 incomplete publish
+- [ ] GC6 homework link proofs
+- [ ] GC7 transfer/teacher change/multi-role tests
+- [ ] GC8 review 9 new grades security warnings
+- [ ] GC9 design/actions/reports review
