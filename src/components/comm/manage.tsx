@@ -36,6 +36,7 @@ export function ManageTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
 }
 
 function GroupsList({ ctx }: { ctx: AppContext & { schoolId: string } }) {
+  const perms = useSchoolPerms(ctx.schoolId);
   const [open, setOpen] = useState<string | null>(null);
   const q = useQuery({
     queryKey: ["admin-groups", ctx.schoolId, ctx.orgId],
