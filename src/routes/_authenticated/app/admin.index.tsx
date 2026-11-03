@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { db } from "@/components/crud-page";
+import { PeoplePicker } from "@/components/people-picker";
 import { canCreateTask } from "@/lib/roles";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -218,15 +219,6 @@ function Pager({ page, total, setPage }: { page: number; total: number; setPage:
 
 function NewTask({ ctx, onDone }: { ctx: Ctx; onDone: () => void }) {
   const qc = useQueryClient();
-  // only people inside the caller's task scope (principal: school staff; vice: scope teachers; supervisor: assigned teachers)
-  const staff = useQuery({
-    queryKey: ["adm-task-candidates", ctx.schoolId],
-    queryFn: async () => {
-      const { data, error } = await db.rpc("adm_task_candidates" as never, { _school: ctx.schoolId } as never);
-      if (error) throw error;
-      return data as unknown as Row[];
-    },
-  });
   const [clientId] = useState(() => crypto.randomUUID());
   const [d, setD] = useState({ title: "", description: "", assignee: "", due_date: "", priority: "normal", proof_required: "", needs_confirmation: false, participants: [] as string[] });
   const [busy, setBusy] = useState(false);
@@ -246,10 +238,8 @@ function NewTask({ ctx, onDone }: { ctx: Ctx; onDone: () => void }) {
     <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-2">
       <div className="md:col-span-2"><Label htmlFor="t-title">العنوان</Label><Input id="t-title" value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} /></div>
       <div className="md:col-span-2"><Label htmlFor="t-desc">الوصف</Label><Textarea id="t-desc" value={d.description} onChange={(e) => setD({ ...d, description: e.target.value })} /></div>
-      <div><Label htmlFor="t-as">المسؤول الأساسي</Label>
-        <select id="t-as" className={sel} value={d.assignee} onChange={(e) => setD({ ...d, assignee: e.target.value })}>
-          <option value="">{staff.data && !staff.data.length ? "لا يوجد أشخاص ضمن نطاقك" : "اختر موظفًا"}</option>{staff.data?.map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name} — {STAFF_ROLES[s.role] ?? s.role}</option>)}
-        </select>
+      <div className="md:col-span-2"><Label>المسؤول الأساسي</Label>
+        <PeoplePicker purpose="task" school={ctx.schoolId} label="المسؤول الأساسي" single compact value={d.assignee ? [d.assignee] : []} onChange={(v) => setD({ ...d, assignee: v[0] ?? "", participants: d.participants.filter((x) => x !== v[0]) })} />
       </div>
       <div><Label htmlFor="t-due">تاريخ الاستحقاق</Label><Input id="t-due" type="date" value={d.due_date} onChange={(e) => setD({ ...d, due_date: e.target.value })} /></div>
       <div><Label htmlFor="t-pr">الأولوية</Label>
@@ -257,13 +247,7 @@ function NewTask({ ctx, onDone }: { ctx: Ctx; onDone: () => void }) {
       </div>
       <div><Label htmlFor="t-proof">الإثبات المطلوب (اختياري)</Label><Input id="t-proof" value={d.proof_required} onChange={(e) => setD({ ...d, proof_required: e.target.value })} /></div>
       <div className="md:col-span-2"><Label>مشاركون (اختياري)</Label>
-        <div className="mt-1 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
-          {staff.data?.filter((s) => s.user_id !== d.assignee).map((s) => (
-            <label key={s.user_id} className="flex items-center gap-1 rounded-md border px-2 py-1 text-xs">
-              <input type="checkbox" checked={d.participants.includes(s.user_id)} onChange={(e) => setD({ ...d, participants: e.target.checked ? [...d.participants, s.user_id] : d.participants.filter((x) => x !== s.user_id) })} />{s.full_name}
-            </label>
-          ))}
-        </div>
+        <PeoplePicker purpose="task" school={ctx.schoolId} label="المشاركون" compact exclude={d.assignee ? [d.assignee] : []} value={d.participants} onChange={(v) => setD({ ...d, participants: v })} />
       </div>
       <label className="flex items-center gap-2 text-sm md:col-span-2"><input type="checkbox" checked={d.needs_confirmation} onChange={(e) => setD({ ...d, needs_confirmation: e.target.checked })} />يتطلب تأكيد الإنجاز مني</label>
       <div className="md:col-span-2"><Button onClick={save} disabled={busy}>{busy ? "جارٍ الإرسال…" : "إرسال التكليف"}</Button></div>
