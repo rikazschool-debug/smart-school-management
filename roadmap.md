@@ -268,4 +268,4 @@
 
 ## Next package (docs/package-next-brief.md) — pending, after timetable performance
 - [ ] P1 permissions/scope  - [ ] P2 people picker  - [ ] P3 Excel import + accounts  - [ ] P4 WATI OTP  - [ ] P5 meetings in communication
-- [ ] TP timetable performance for large schools
+- [x] TP timetable performance for large schools (scale tests in src/lib/timetable-scale.test.ts)
