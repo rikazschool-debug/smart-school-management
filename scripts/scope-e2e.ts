@@ -51,9 +51,9 @@ try {
     const d = await pr.c.rpc("decide_assignment", { _id: a.id, _approve: true }); if (d.error) throw d.error;
     C.push(c);
   }
-  const tt = await ins("timetables", { year_id: year.id, name: "جدول النطاق" });
+  const tt = await ins("timetables", { year_id: year.id, name: "جدول النطاق", created_by: pr.id });
   for (let i = 0; i < 3; i++) await ins("timetable_slots", { timetable_id: tt.id, day: 0, period_id: P[i].id, course_id: C[i].id, section_id: sct.id, teacher_id: T[i].id });
-  const draft = await ins("timetables", { year_id: year.id, name: "مسودة" });
+  const draft = await ins("timetables", { year_id: year.id, name: "مسودة", created_by: pr.id });
   await admin.from("timetables").update({ status: "published", effective_from: today, published_at: new Date().toISOString() }).eq("id", tt.id);
   const slotsOf = async (u: any, id = tt.id) => ((await u.c.from("timetable_slots").select("teacher_id").eq("timetable_id", id)).data ?? []).map((x: any) => x.teacher_id).sort();
 
