@@ -360,3 +360,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Close also refused while a disbursed/top-up amount is unconfirmed by the holder: pc2-e2e 8b. pc-e2e 32/32, pc2-e2e 20/20.
 - Requests list shows cards on phone (390px checked).
 
+
+## Closure C1 — owner home + schools management (2026-11-03)
+- Owner home: four large cards, no side menu on the home page; each section (schools, finance, HR, users) shows only its own side menu. Browser: desktop 1280 + phone 390 — no menu on home; finance section menu lists only finance items.
+- «إدارة المدارس» card: live counts (active/suspended branches, linked staff, students) + add school, edit data, activate/suspend branch, link staff.
+- Schools writes moved to owner-only RPCs (principal direct update removed). Suspension requires a reason, refuses the last active branch, pauses branch accounts (meetings cut by existing trigger), blocks activation/joining while suspended; reactivation restores only branch-paused accounts; all logged in access_audit. scripts/schools-e2e.ts 13/13; rls-e2e 94/94.
+- Browser: add school → suspend with reason → reactivate, change log shown. Fixed: pages kept stale data after an access change (session now resets instead of removing cached queries).

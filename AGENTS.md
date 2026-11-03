@@ -22,9 +22,10 @@
 - Substitutions are per date+slot rows written only via record_absence/assign_substitute/cancel_substitution; they never modify slots, assignments or course ownership.
 - Notifications are inserted only by SECURITY DEFINER code through _notify with a unique (user_id, dedupe_key) so retries never duplicate.
 - Files: private bucket rikaz-files; a public.files row (created by create_post_file, which validates type/size against file_policies) must exist before upload, and storage read access is derived from the file's source (can_read_file). The UI opens files only through short-lived signed URLs.
-- Unlinked files are removed only by run_file_cleanup (pg_cron hourly → pg_net → Storage API, credentials in Vault). Never delete storage.objects rows directly.
+- Unlinked files: only run_file_cleanup (cron → pg_net → Storage API); never delete storage.objects rows.
 - Course rows are readable only through can_view_course (+ day substitute); dept heads see only their department's courses and no student records.
-- Cleanup health: file_cleanup_runs records status; a separate hourly cron job runs check_cleanup_health (dedup alerts in cleanup_alerts, channel-isolated so tests never touch live alerts).
+- Cleanup health: hourly check_cleanup_health over file_cleanup_runs (dedup cleanup_alerts, test channel isolated).
+- Schools: owner-only org_school_save/org_school_set_active; branch suspension pauses its memberships (branch_suspended) and a trigger blocks activation there. Tests: scripts/schools-e2e.ts.
 - docs/permissions-matrix.md (role capabilities) and docs/closure-log.md (evidence log): update with every change.
 - scripts/, src/components/schedule/, src/components/comm/, src/components/attendance/, src/components/grades/, src/components/admin/ and src/components/support/ have their own AGENTS.md — read before changing files there.
 - Homework & tests: homework → homework_targets → immutable submissions/attempts → homework_grades; the teacher's saved grade is visible at once (no review/publish), edits append homework_grade_history; observers read only. Tests: scripts/homework-e2e.ts, homework2-e2e.ts.
