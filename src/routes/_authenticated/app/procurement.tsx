@@ -6,6 +6,7 @@ import { useSession, arabicError } from "@/lib/session";
 import { useState } from "react";
 import { usePcMe, type Row } from "@/components/procurement/shared";
 import { CustodyOps, RequestDetail, RequestForm, RequestList } from "@/components/procurement/requests";
+import { ArchiveTab } from "@/components/procurement/archive";
 import { ReportsPanel } from "@/components/procurement/reports";
 import { CustodyDetail, CustodyForm, CustodyList } from "@/components/procurement/custody";
 import { ExpenseDetail, ExpenseForm, ExpenseList } from "@/components/procurement/expense";
@@ -13,7 +14,7 @@ import { ExpenseGrid } from "@/components/procurement/expense-grid";
 import { NeedDetail, NeedForm, NeedList } from "@/components/procurement/needs";
 import { CapsNote, SettingsTab, SummaryTab, TasksTab } from "@/components/procurement/workspace";
 
-const TABS = { summary: "الملخص", needs: "طلبات الاحتياج", custodies: "العهد", expenses: "المشتريات والفواتير", requests: "الطلبات", settings: "الإعدادات" } as const;
+const TABS = { summary: "الملخص", needs: "طلبات الاحتياج", custodies: "العهد", expenses: "المشتريات والفواتير", requests: "الطلبات", archive: "الأرشيف", settings: "الإعدادات" } as const;
 type Tab = keyof typeof TABS;
 type Search = { tab?: Tab; c?: string; e?: string; r?: string; n?: string; need?: string; new?: "custody" | "expense" | "request" | "need"; for?: string; kind?: string };
 
@@ -79,6 +80,7 @@ function Page() {
     : <RequestDetail id={search.r} me={me} back={() => go({ tab: "requests" })} openCustody={openC} openExpense={openE} edit={setEditing} />;
   else if (search.e) body = <ExpenseDetail id={search.e} me={me} back={() => go({ tab: "expenses" })} openCustody={openC} openExpense={openE} />;
   else if (tab === "summary") body = <div className="space-y-6"><TasksTab orgId={orgId} openC={openC} openE={openE} openR={openR} />{me.caps.view !== "own" && <SummaryTab orgId={orgId} me={me} />}<ReportsPanel orgId={orgId} me={me} orgName={active.orgName} /></div>;
+  else if (tab === "archive") body = <ArchiveTab orgId={orgId} me={me} orgName={active.orgName} openExpense={openE} openCustody={openC} />;
   else if (tab === "requests") body = <RequestList orgId={orgId} me={me} orgName={active.orgName} open={openR} onNew={canCreate ? () => newReq() : undefined} />;
   else if (tab === "custodies") body = <CustodyList orgId={orgId} me={me} orgName={active.orgName} open={openC} onNew={canCreate ? () => go({ tab: "custodies", new: "custody" }) : undefined} />;
   else if (tab === "expenses") body = <div className="space-y-6">{canCreate && !isOwner && <ExpenseGrid orgId={orgId} me={me} />}<h3 className="font-semibold">الفواتير المسجلة</h3><ExpenseList orgId={orgId} me={me} orgName={active.orgName} open={openE} /></div>;

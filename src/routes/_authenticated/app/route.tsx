@@ -61,7 +61,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
 };
 
 /** Procurement sub-sections shown under its menu entry (the page re-checks each tab). */
-const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "المشتريات والفواتير"], ["requests", "الطلبات"], ["settings", "الإعدادات"]] as const;
+const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "المشتريات والفواتير"], ["requests", "الطلبات"], ["archive", "الأرشيف"], ["settings", "الإعدادات"]] as const;
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "hr", "profile"] },
