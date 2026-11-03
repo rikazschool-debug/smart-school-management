@@ -68,7 +68,7 @@ export function ExpenseList({ orgId, me, open, orgName, onNew }: { orgId: string
         </span>
       </div>
       {list.data && list.data.total > 0 && <p className="text-sm text-muted-foreground">{total} سجل · قبل الضريبة {sar(list.data.sums.net)} · الضريبة {sar(list.data.sums.vat)} · الإجمالي <b className="text-foreground">{sar(list.data.sums.total)}</b></p>}
-      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? <EmptyState title="لا توجد مصروفات" hint="المصروفات تُسجَّل من داخل العهدة المصروفة." /> : (
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? <EmptyState title="لا توجد مصروفات" hint={onNew ? "سجّل فاتورة مشتريات من الزر أعلاه، أو من داخل العهدة المصروفة لك." : "لا توجد مصروفات ضمن نطاقك."} /> : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "التاريخ", "العهدة", "المورد", "الفاتورة", "البيان", "الحالة", "الضريبة", "الإجمالي"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
