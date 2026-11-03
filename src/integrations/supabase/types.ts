@@ -7056,7 +7056,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      _support_internal_actions: { Args: never; Returns: string[] }
       _support_notify: {
         Args: {
           _key: string
