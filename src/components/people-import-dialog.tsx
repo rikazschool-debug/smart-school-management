@@ -53,6 +53,9 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { s
   };
 }
 
+const AR_VALUE: Record<string, string> = { male: "ذكر", female: "أنثى", father: "أب", mother: "أم", brother: "أخ", sister: "أخت", other: "أخرى" };
+const shown = (key: string, v: unknown) => { const t = String(v ?? ""); return key === "gender" || key === "relationship" ? AR_VALUE[t] ?? t : t; };
+
 export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string }) {
   const qc = useQueryClient();
   const provision = useServerFn(provisionAccounts);
@@ -278,7 +281,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
                       <tbody>{rows.map((r) => (
                         <tr key={`${r.sheet}:${r.line}`} className={`border-t ${r.errors.length ? "bg-destructive/5" : ""}`}>
                           <td className="whitespace-nowrap p-1.5">{r.sheet} · {r.line}</td>
-                          {fields.map((c) => <td key={c.key} className="p-1.5" dir={/phone|national_id|guardian_id/.test(c.key) ? "ltr" : undefined}>{String(r.data[c.key] ?? r.values[c.key] ?? "")}</td>)}
+                          {fields.map((c) => <td key={c.key} className="p-1.5" dir={/phone|national_id|guardian_id/.test(c.key) ? "ltr" : undefined}>{shown(c.key, r.data[c.key] ?? r.values[c.key])}</td>)}
                           <td className="p-1.5">{r.errors.length ? <span className="text-destructive">{r.errors.join("، ")}</span> : r.notes.length ? <span>{r.notes.join("، ")}</span> : "صالح"}</td>
                         </tr>))}</tbody></table>
                   </div>
