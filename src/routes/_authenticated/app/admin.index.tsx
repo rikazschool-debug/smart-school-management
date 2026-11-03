@@ -175,11 +175,11 @@ function Tasks({ ctx }: { ctx: Ctx }) {
               const data = await fetchAll((o) => db.rpc("adm_task_list", { _school: ctx.schoolId, _scope: scope, _q: q.trim() || null, _status: status || null, _priority: priority || null, _assignee: null, _dept: null, _from: null, _to: null, _limit: 100, _offset: o }));
               return data.map((t) => [t.title, t.assignee_name, t.assigner_name, TASK_STATUS[t.status], PRIORITY[t.priority], t.due_date, `${t.progress}%`]);
             }} />
-          {lead && <Button size="sm" onClick={() => setCreating((v) => !v)}>{creating ? "إغلاق" : "تكليف جديد"}</Button>}
+          {canCreateTask(ctx.role) && <Button size="sm" onClick={() => setCreating((v) => !v)}>{creating ? "إغلاق" : "تكليف جديد"}</Button>}
         </div>
       </div>
       {creating && <NewTask ctx={ctx} onDone={() => setCreating(false)} />}
-      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? <EmptyState title="لا توجد تكليفات" hint={lead ? "أنشئ تكليفًا من الزر أعلاه." : "ستظهر هنا التكليفات المسندة إليك."} /> : (
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? <EmptyState title="لا توجد تكليفات" hint={canCreateTask(ctx.role) ? "أنشئ تكليفًا من الزر أعلاه." : "ستظهر هنا التكليفات المسندة إليك."} /> : (
         <ul className="space-y-2">
           {list.data.map((t) => (
             <li key={t.id}>
@@ -217,7 +217,15 @@ function Pager({ page, total, setPage }: { page: number; total: number; setPage:
 
 function NewTask({ ctx, onDone }: { ctx: Ctx; onDone: () => void }) {
   const qc = useQueryClient();
-  const staff = useStaff(ctx.schoolId);
+  // only people inside the caller's task scope (principal: school staff; vice: scope teachers; supervisor: assigned teachers)
+  const staff = useQuery({
+    queryKey: ["adm-task-candidates", ctx.schoolId],
+    queryFn: async () => {
+      const { data, error } = await db.rpc("adm_task_candidates" as never, { _school: ctx.schoolId } as never);
+      if (error) throw error;
+      return data as unknown as Row[];
+    },
+  });
   const [clientId] = useState(() => crypto.randomUUID());
   const [d, setD] = useState({ title: "", description: "", assignee: "", due_date: "", priority: "normal", proof_required: "", needs_confirmation: false, participants: [] as string[] });
   const [busy, setBusy] = useState(false);
@@ -239,7 +247,7 @@ function NewTask({ ctx, onDone }: { ctx: Ctx; onDone: () => void }) {
       <div className="md:col-span-2"><Label htmlFor="t-desc">الوصف</Label><Textarea id="t-desc" value={d.description} onChange={(e) => setD({ ...d, description: e.target.value })} /></div>
       <div><Label htmlFor="t-as">المسؤول الأساسي</Label>
         <select id="t-as" className={sel} value={d.assignee} onChange={(e) => setD({ ...d, assignee: e.target.value })}>
-          <option value="">اختر موظفًا</option>{staff.data?.map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name} — {STAFF_ROLES[s.role] ?? s.role}</option>)}
+          <option value="">{staff.data && !staff.data.length ? "لا يوجد أشخاص ضمن نطاقك" : "اختر موظفًا"}</option>{staff.data?.map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name} — {STAFF_ROLES[s.role] ?? s.role}</option>)}
         </select>
       </div>
       <div><Label htmlFor="t-due">تاريخ الاستحقاق</Label><Input id="t-due" type="date" value={d.due_date} onChange={(e) => setD({ ...d, due_date: e.target.value })} /></div>
