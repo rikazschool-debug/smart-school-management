@@ -1,0 +1,12 @@
+revoke execute on function public.is_school_principal(uuid) from public, anon;
+revoke execute on function public.vice_teacher_ids() from public, anon;
+revoke execute on function public.att_scanner(uuid) from public, anon;
+revoke execute on function public._task_target_ok(uuid, uuid) from public, anon;
+revoke execute on function public._adm_can_organize(uuid) from public, anon;
+revoke execute on function public.can_view_slot(uuid) from public, anon;
+grant execute on function public.is_school_principal(uuid) to authenticated, service_role;
+grant execute on function public.vice_teacher_ids() to authenticated, service_role;
+grant execute on function public.att_scanner(uuid) to authenticated, service_role;
+grant execute on function public._task_target_ok(uuid, uuid) to authenticated, service_role;
+grant execute on function public._adm_can_organize(uuid) to authenticated, service_role;
+grant execute on function public.can_view_slot(uuid) to authenticated, service_role;
