@@ -80,7 +80,9 @@ try {
   check("20 platform admin cannot read staff permissions; no direct table reads", !!pe.error && (!!direct.error || !direct.data?.length));
 } catch (e) { bad++; console.error(e); }
 finally {
-  for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.error("purge", e));
-  await tr.cleanup?.().catch?.(() => {});
   console.log(`\n${ok} passed, ${bad} failed`);
+  await tr.deleteNotifications();
+  for (const o of orgs) { await admin.from("perm_log").delete().eq("org_id", o); await admin.from("memberships").delete().eq("org_id", o); await admin.from("schools").delete().eq("org_id", o); await admin.from("organizations").delete().eq("id", o); await tr.purgeOrg(o).catch(() => {}); }
+  for (const u of tr.users) { await admin.from("platform_admins").delete().eq("user_id", u); await admin.auth.admin.deleteUser(u); }
+  process.exit(bad ? 1 : 0);
 }
