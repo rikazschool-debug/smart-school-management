@@ -260,6 +260,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["support-ticket", id],
+    retry: false,
     queryFn: async () => { const { data, error } = await db.rpc("support_get", { _ticket: id }); if (error) throw error; return data as Row; },
   });
   const files = useQuery({
