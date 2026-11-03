@@ -36,14 +36,14 @@ export function FormBuilder({ orgId }: { orgId: string }) {
   const body = () => fields.map((f) => ({ key: f.key, label: f.label, help: f.help, type: f.type, required: f.required, options: f.type === "choice" ? String(f.optionsText ?? "").split(/[،,]/).map((x: string) => x.trim()).filter(Boolean) : [] }));
   async function save() {
     setBusy(true);
-    const { error } = await db.rpc("pc_form_save", { _org: orgId, _core: core.map((c) => ({ key: c.key, label: c.label, help: c.help, required: c.required })), _fields: body(), _note: null });
+    const { error } = await db.rpc("pc_form_save", { _org: orgId, _core: core.map((c) => ({ key: c.key, label: c.label, help: c.help, required: c.required, hidden: !!c.hidden })), _fields: body(), _note: null });
     setBusy(false);
     if (error) toast.error(arabicError(error)); else { toast.success("حُفظت المسودة"); inv(); }
   }
   async function publish() {
     const why = await askText("سبب النشر (يُحفظ في السجل). يؤثر في الفواتير الجديدة فقط.", { required: true }); if (!why) return;
     setBusy(true);
-    const s = await db.rpc("pc_form_save", { _org: orgId, _core: core.map((c) => ({ key: c.key, label: c.label, help: c.help, required: c.required })), _fields: body(), _note: null });
+    const s = await db.rpc("pc_form_save", { _org: orgId, _core: core.map((c) => ({ key: c.key, label: c.label, help: c.help, required: c.required, hidden: !!c.hidden })), _fields: body(), _note: null });
     const { error } = s.error ? s : await db.rpc("pc_form_publish", { _org: orgId, _reason: why });
     setBusy(false);
     if (error) toast.error(arabicError(error)); else { toast.success("نُشر الإصدار الجديد"); inv(); }
@@ -60,16 +60,17 @@ export function FormBuilder({ orgId }: { orgId: string }) {
           {draft && <Button size="sm" variant="ghost" onClick={async () => { if (await ask("حذف المسودة؟ الإصدار المنشور لا يتأثر.")) { const { error } = await db.rpc("pc_form_discard", { _org: orgId }); if (error) toast.error(arabicError(error)); else inv(); } }}>حذف المسودة</Button>}
         </span>
       </div>
-      <p className="text-xs text-muted-foreground">الحقول المالية والروابط (البيان، المورد، تاريخ الشراء، البنود، الضريبة، الفرع المستفيد) محمية: يمكن تسميتها وترتيبها ووصفها فقط. لا تُقبل الرموز أو الصيغ. النموذج لا يمنح صلاحيات ولا يتجاوز الاعتماد.</p>
+      <p className="text-xs text-muted-foreground">الحقول المالية والروابط (البيان، المورد، تاريخ الشراء، البنود، الضريبة، الفرع المستفيد) محمية: يمكن تسميتها وترتيبها ووصفها فقط، وباقي الحقول يمكن حذفها من النموذج أو إعادتها، ويمكن إضافة حقول جديدة. لا تُقبل الرموز أو الصيغ. النموذج لا يمنح صلاحيات ولا يتجاوز الاعتماد.</p>
       <div className="space-y-2">
         <h4 className="text-sm font-semibold">الحقول الأساسية</h4>
         {core.map((c, i) => (
-          <div key={c.key} className="flex flex-wrap items-center gap-2 rounded-lg border p-2">
+          <div key={c.key} className={`flex flex-wrap items-center gap-2 rounded-lg border p-2 ${c.hidden ? "opacity-50" : ""}`}>
             <span className="flex flex-col"><Button size="icon" variant="ghost" aria-label="أعلى" onClick={() => setCore(move(core, i, -1))}><ArrowUp className="size-3" /></Button><Button size="icon" variant="ghost" aria-label="أسفل" onClick={() => setCore(move(core, i, 1))}><ArrowDown className="size-3" /></Button></span>
             <Input className="w-44" value={c.label} onChange={(e) => setCore(core.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} aria-label="التسمية" />
             <Input className="min-w-40 flex-1" placeholder="وصف مساعد" value={c.help ?? ""} onChange={(e) => setCore(core.map((x, j) => (j === i ? { ...x, help: e.target.value } : x)))} aria-label="الوصف" />
             {c.protected ? <span className="text-xs text-muted-foreground">محمي</span>
-              : <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={!!c.required} onChange={(e) => setCore(core.map((x, j) => (j === i ? { ...x, required: e.target.checked } : x)))} /> إلزامي</label>}
+              : <>{!c.hidden && <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={!!c.required} onChange={(e) => setCore(core.map((x, j) => (j === i ? { ...x, required: e.target.checked } : x)))} /> إلزامي</label>}
+                <Button size="sm" variant="ghost" onClick={() => setCore(core.map((x, j) => (j === i ? { ...x, hidden: !x.hidden, required: false } : x)))}>{c.hidden ? <><Plus className="size-4" />إعادة الحقل</> : <><Trash2 className="size-4" />حذف من النموذج</>}</Button></>}
           </div>
         ))}
       </div>
@@ -92,7 +93,7 @@ export function FormBuilder({ orgId }: { orgId: string }) {
         <div className="space-y-2 rounded-xl border border-dashed p-4">
           <p className="text-xs font-semibold text-muted-foreground">معاينة (كما يراها مسجّل الفاتورة)</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {core.map((c) => <div key={c.key}><Label>{c.label}{c.required && !c.protected ? " *" : ""}</Label><Input disabled placeholder={c.key === "lines" ? "بنود ومبالغ…" : ""} />{c.help && <p className="text-xs text-muted-foreground">{c.help}</p>}</div>)}
+            {core.filter((c) => !c.hidden).map((c) => <div key={c.key}><Label>{c.label}{c.required && !c.protected ? " *" : ""}</Label><Input disabled placeholder={c.key === "lines" ? "بنود ومبالغ…" : ""} />{c.help && <p className="text-xs text-muted-foreground">{c.help}</p>}</div>)}
             {fields.map((f, i) => <div key={i}><Label>{f.label || "—"}{f.required ? " *" : ""}</Label>{f.type === "choice" ? <select disabled className={selectCls()}><option>{String(f.optionsText ?? "").split(/[،,]/)[0] ?? ""}</option></select> : <Input disabled placeholder={TYPES[f.type]} />}{f.help && <p className="text-xs text-muted-foreground">{f.help}</p>}</div>)}
           </div>
         </div>

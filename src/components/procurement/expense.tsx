@@ -213,7 +213,7 @@ export function ExpenseForm({ orgId, me, custodyId, needId, initial, corrects, o
         ) : (
           <div><Label>الفرع</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{ownSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         )}
-        {core.map((c) => blocks[c.key] ?? null)}
+        {core.filter((c) => !c.hidden).map((c) => blocks[c.key] ?? null)}
         {custom.map((f) => (
           <div key={f.key} className={f.type === "longtext" ? "sm:col-span-2" : ""}>
             <Label>{f.label}{f.required ? " *" : ""}</Label>

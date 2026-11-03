@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tan
 import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
   Bell, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
@@ -59,6 +59,9 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   hr: { to: "/app/hr", label: "الموارد البشرية", icon: Construction },
   permissions: { to: "/app/permissions", label: "الأدوار والصلاحيات", icon: KeyRound },
 };
+
+/** Procurement sub-sections shown under its menu entry (the page re-checks each tab). */
+const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "المشتريات والفواتير"], ["requests", "الطلبات"], ["settings", "الإعدادات"]] as const;
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "hr", "profile"] },
@@ -118,6 +121,7 @@ function Shell() {
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
     ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : [])] as NavKey[];
+  const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   const nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
@@ -139,8 +143,8 @@ function Shell() {
               {g.keys.map((k) => {
                 const n = NAV[k];
                 return (
+                  <Fragment key={k}>
                   <Link
-                    key={k}
                     to={n.to}
                     {...(n.tab ? { search: { tab: n.tab } } : {})}
                     activeOptions={{ exact: k === "home" || k === "admin", includeSearch: k === "communication" || !!n.tab }}
@@ -150,6 +154,15 @@ function Shell() {
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
                     <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{k === "schedule" && active ? scheduleLabel(active.role) : n.label}</span>
                   </Link>
+                  {k === "procurement" && path.startsWith("/app/procurement") && (
+                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                      {PC_SUB.filter(([t]) => (pcNeedsOnly ? t === "needs" : t !== "settings" || owner || pc.data?.caps.settings === "org")).map(([t, label]) => (
+                        <Link key={t} to="/app/procurement" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)}
+                          className="flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary">{label}</Link>
+                      ))}
+                    </div>
+                  )}
+                  </Fragment>
                 );
               })}
             </div>
