@@ -10,7 +10,7 @@ export const speakArabic = createServerFn({ method: "POST" })
     return { text: t };
   })
   .handler(async ({ data }) => {
-    const key = process.env.LOVABLE_API_KEY;
+    const key = process.env["LOVABLE_API_KEY"];
     if (!key) throw new Error("خدمة الصوت غير مهيأة");
     const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
       method: "POST",
