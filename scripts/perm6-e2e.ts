@@ -42,7 +42,7 @@ try {
     !(await yes(t.c, "att_gate", { _school: A })) && !(await yes(t.c, "att_scanner", { _school: A })) &&
     (await yes(sec.c, "att_gate", { _school: A })) && (await yes(sec.c, "att_scanner", { _school: A })) &&
     (await yes(co.c, "att_counselor", { _school: A })) && !(await yes(co.c, "att_approver", { _school: A })));
-  const srch0 = await t.c.rpc("att_search_students", { _school: A, _q: "ab" });
+  const srch0 = await t.c.rpc("call_next", { _school: A });
   check("2 teacher refused by a real gate RPC before any grant", !!srch0.error);
 
   // 3 templates mirror the base role exactly (preview = current rule)
@@ -59,8 +59,8 @@ try {
   const a1 = await owner.c.rpc("perm_assign", { _org: org, _user: t.id, _role: tpl("البوابة والاستلام").id, _assign: true, _school_ids: null, _limit: null, _reason: "تكليف بوابة" });
   check("4 teacher with «البوابة والاستلام» operates gate in own branch, not scan", !a1.error && (await yes(t.c, "att_gate", { _school: A })) && !(await yes(t.c, "att_scanner", { _school: A })), a1.error);
   check("5 branch scope: not in another branch where teacher does not work", !(await yes(t.c, "att_gate", { _school: B })));
-  const srch1 = await t.c.rpc("att_search_students", { _school: A, _q: "ab" });
-  check("6 real gate RPC now allowed for the teacher", !srch1.error, srch1.error);
+  const srch1 = await t.c.rpc("call_next", { _school: A });
+  check("6 real gate RPC now allowed; scan-only RPC still refused", !srch1.error && !!(await t.c.rpc("att_search_students", { _school: A, _q: "ab" })).error, srch1.error);
   const my = (await t.c.rpc("perm_my_school", { _school: A })).data as Record<string, boolean>;
   check("7 own-branch mirror shows gate.operate only", my["gate.operate"] === true && my["gate.scan"] === false && my["groups.create"] === false, my);
 
@@ -82,7 +82,7 @@ try {
 
   // 12 revoke on next request
   await owner.c.rpc("perm_assign", { _org: org, _user: t.id, _role: tpl("البوابة والاستلام").id, _assign: false, _school_ids: null, _limit: null, _reason: "انتهاء" });
-  check("12 withdrawing the role removes access at once", !(await yes(t.c, "att_gate", { _school: A })) && !!(await t.c.rpc("att_search_students", { _school: A, _q: "ab" })).error);
+  check("12 withdrawing the role removes access at once", !(await yes(t.c, "att_gate", { _school: A })) && !!(await t.c.rpc("call_next", { _school: A })).error);
 
   // 13-16 protections
   const so = await owner.c.rpc("perm_override_set", { _org: org, _user: owner.id, _section: "gate", _action: "operate", _effect: "deny", _scope: null, _reason: "x x x" });
