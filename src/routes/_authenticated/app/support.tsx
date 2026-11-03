@@ -12,7 +12,7 @@ type Search = { t?: string; tab?: SupportTab | "settings" };
 export const Route = createFileRoute("/_authenticated/app/support")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     ...(typeof s["t"] === "string" ? { t: s["t"] } : {}),
-    ...(["mine", "assigned", "manage", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as Search["tab"] } : {}),
+    ...(["mine", "assigned", "manage", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
   }),
   head: () => ({ meta: [{ title: "الدعم والمساعدة — ركاز" }, { name: "description", content: "تذاكر الدعم والمساعدة في ركاز." }, { name: "robots", content: "noindex" }] }),
   component: Page,
