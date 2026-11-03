@@ -40,3 +40,4 @@
 - scripts/perm6-e2e.ts: flexible school permissions (base equivalence, templates = role rules, grant/deny/branch/org scope, suspended branch, real gate RPC, isolation; 20 checks).
 - scripts/pc-need-e2e.ts: purchase needs (principal need → officer, line-linked invoices, partial delivery, separation of duties, isolation; 12 checks). pc-browser-fixture now also creates a principal.
 - scripts/pc-journey-e2e.ts: full procurement journey (need→officer, draft-blocked settlement, reviewer edit, per-invoice decisions, notifications, branch overview scope, zero-balance auto-close → archive; 8 checks).
+- scripts/vc-e2e.ts: class virtual sessions (schedulers, host/join, enrollment loss, isolation from admin meetings, attendance timings, report scope, cancel/end; 9 checks).
