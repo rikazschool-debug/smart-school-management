@@ -179,3 +179,16 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 | See own effective permissions | Staff member (self) |
 | Read staff permissions | Not platform admin |
 | Suspended section | Grants nothing to anyone (owner included) until re-enabled |
+
+## Procurement & custody (finance)
+| Capability | Who |
+|---|---|
+| Request a custody / record expenses | Holders of procurement «create» (own = self only; branch/org = for others in scope) |
+| Approve/reject custody or expense | «approve» in scope, within approval limit; never the requester/holder (owner included) |
+| Review / return an expense | «review» or «approve» in scope; reviewers cannot approve |
+| Disburse (proof + reference required) / confirm refunds | «disburse» in scope; never to self |
+| Confirm receipt of disbursed cash | The custody holder only |
+| Settings (VAT rate, rules, categories) | «settings» (owner by default); changes logged, old records keep their rate |
+| Platform admin, students, guardians, other orgs | No access |
+| Finance section suspended | Every procurement request refused, owner included |
+

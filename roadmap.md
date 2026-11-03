@@ -296,7 +296,7 @@
 ## Package: owner home + section availability + flexible permissions + petty cash/procurement (prompt-64)
 - [x] P1 Owner home (4 cards), platform-admin per-org section enable/suspend with audit, locked vs under-construction states
 - [x] P2 Flexible roles: templates migrated from current roles, custom org roles, section×action×scope matrix, deny-wins, no self-escalation, last-owner guard, effective-permission view
-- [ ] P3 Finance > Procurement & custody: custodies lifecycle, disbursement proof, multi-line invoices with VAT, derived ledger balances, separation of duties, approval limits
+- [x] P3 Finance > Procurement & custody: custodies lifecycle, disbursement proof, multi-line invoices with VAT, derived ledger balances, separation of duties, approval limits — scripts/pc-e2e.ts 31/31; browser journey (request → approve → disburse with proof → ack → 2-line VAT invoice → approve → balance 440)
 - [ ] P4 Requests/top-ups/settlement/carry-over, custom form versions, alerts, reports + Excel/PDF
 - [ ] P5 Two-org browser journeys, phone, exports, closure log + report
 - Finance deferral lifted for procurement & custody only (user confirmed).

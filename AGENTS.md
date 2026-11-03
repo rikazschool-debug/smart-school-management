@@ -39,3 +39,4 @@
 - Support tickets: RPC-only access (support_*), identity from the session; see src/components/support/AGENTS.md.
 - Section availability: platform admin toggles per-org sections via platform_set_section (logged); missing row = enabled; section RPCs check section_enabled() server-side.
 - Flexible permissions (perm_* tables): resolved only by perm_scope() server-side (deny wins, suspended section grants nothing); owner-only RPCs; base app_role checks unchanged. Tests: scripts/perm5-e2e.ts.
+- Procurement/custody (pc_*): RPC-only, balances derived from immutable pc_moves (corrections are new linked rows), VAT computed server-side per line. Tests: scripts/pc-e2e.ts.
