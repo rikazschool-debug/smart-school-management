@@ -25,9 +25,9 @@ if (mode === "teardown") {
 
 const run = Date.now(), pw = "Pcb-pass-" + run;
 const users: Record<string, { email: string; id: string; c: any }> = {};
-for (const tag of ["owner", "officer", "approver", "disburser"]) {
+for (const tag of ["owner", "officer", "approver", "disburser", "officer2"]) {
   const email = `pcb-${tag}-${run}@rikaz.test`;
-  await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: { owner: "مالك الاختبار", officer: "سعد المشتريات", approver: "نورة المعتمدة", disburser: "خالد الصرف" }[tag] } });
+  await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: { owner: "مالك الاختبار", officer: "سعد المشتريات", approver: "نورة المعتمدة", disburser: "خالد الصرف", officer2: "هند المستلمة" }[tag] } });
   const c = createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
   const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw s.error;
   users[tag] = { email, id: s.data.user!.id, c };
@@ -35,12 +35,32 @@ for (const tag of ["owner", "officer", "approver", "disburser"]) {
 const o = users.owner!;
 const { data: org, error } = await o.c.rpc("create_organization", { _org_name: "مؤسسة عهد تجريبية", _school_name: "الفرع الرئيسي" }); if (error) throw error;
 const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id;
-await admin.from("memberships").insert(["officer", "approver", "disburser"].map((t) => ({ user_id: users[t]!.id, org_id: org, school_id: A, role: "teacher" })));
+await admin.from("memberships").insert(["officer", "approver", "disburser", "officer2"].map((t) => ({ user_id: users[t]!.id, org_id: org, school_id: A, role: "teacher" })));
 const roles = (await o.c.rpc("perm_roles_list", { _org: org })).data as any[];
 const R = (n: string) => roles.find((r) => r.name === n).id;
 await o.c.rpc("perm_assign", { _org: org, _user: users.officer!.id, _role: R("مسؤول مشتريات"), _assign: true, _school_ids: null, _limit: null, _reason: "تجربة" });
 await o.c.rpc("perm_assign", { _org: org, _user: users.approver!.id, _role: R("معتمد مالي"), _assign: true, _school_ids: [A], _limit: 5000, _reason: "تجربة" });
 await o.c.rpc("perm_assign", { _org: org, _user: users.disburser!.id, _role: R("منفذ صرف"), _assign: true, _school_ids: [A], _limit: null, _reason: "تجربة" });
+await o.c.rpc("perm_assign", { _org: org, _user: users.officer2!.id, _role: R("مسؤول مشتريات"), _assign: true, _school_ids: null, _limit: null, _reason: "تجربة" });
+await o.c.rpc("perm_assign", { _org: org, _user: users.disburser!.id, _role: R("محاسب"), _assign: true, _school_ids: null, _limit: null, _reason: "تجربة" });
+if (process.argv.includes("--open")) {
+  // A disbursed, acknowledged custody (1,000) with one approved tax invoice — starting point for settlement journeys.
+  const off = users.officer!.c, apr = users.approver!.c, dis = users.disburser!.c;
+  const due = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10), today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+  const cid = (await off.rpc("pc_custody_save", { _org: org, _id: null, _school: A, _school_ids: null, _holder: users.officer!.id, _purpose: "مشتريات الفصل الأول", _amount: 1000, _due: due, _rev: 0, _key: crypto.randomUUID() })).data;
+  const rev = async (cl: any) => (await cl.rpc("pc_custody_get", { _id: cid })).data.rev;
+  await off.rpc("pc_custody_action", { _id: cid, _action: "submit", _rev: await rev(off), _reason: null });
+  await apr.rpc("pc_custody_action", { _id: cid, _action: "approve", _rev: await rev(apr), _reason: null });
+  const f = (await dis.rpc("create_pc_file", { _entity: "custody", _id: cid, _name: "سند-صرف.pdf", _mime: "application/pdf", _size: 100 })).data[0].id;
+  const mv = (await dis.rpc("pc_disburse", { _id: cid, _rev: await rev(dis), _method: "transfer", _external_ref: "TRX-100", _file: f, _doc_date: today, _note: null, _key: crypto.randomUUID() })).data;
+  await off.rpc("pc_ack", { _move: mv });
+  const eid = (await off.rpc("pc_expense_save", { _org: org, _id: null, _d: { custody_id: cid, purchase_date: today, description: "قرطاسية", supplier: "مكتبة الرياض", tax_invoice: true, invoice_no: "INV-1", lines: [{ description: "أوراق", amount: 200 }] }, _rev: 0, _key: crypto.randomUUID() })).data;
+  await off.rpc("create_pc_file", { _entity: "expense", _id: eid, _name: "فاتورة.pdf", _mime: "application/pdf", _size: 100 });
+  const er = async (cl: any) => (await cl.rpc("pc_expense_get", { _id: eid })).data.rev;
+  await off.rpc("pc_expense_action", { _id: eid, _action: "submit", _rev: await er(off), _reason: null });
+  const ap = await apr.rpc("pc_expense_action", { _id: eid, _action: "approve", _rev: await er(apr), _reason: null });
+  if (ap.error) throw ap.error;
+}
 mkdirSync("/tmp/browser/pc", { recursive: true });
 writeFileSync(FX, JSON.stringify({ org, schools: [A], userIds: Object.values(users).map((u) => u.id), pw, emails: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, u.email])) }, null, 1));
 console.log("fixture ready", FX);
