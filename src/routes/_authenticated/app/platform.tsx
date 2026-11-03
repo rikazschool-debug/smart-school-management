@@ -89,7 +89,7 @@ function SectionsDialog({ org }: { org: Row }) {
   const s = useOrgSections(open ? org["id"] : null);
   const log = useQuery({ queryKey: ["section-log", org["id"]], enabled: open, queryFn: async () => { const { data, error } = await db.rpc("platform_section_log", { _org: org["id"] }); if (error) throw error; return data as Row[]; } });
   async function toggle(k: SectionKey, enabled: boolean) {
-    const reason = await askText({ title: `${enabled ? "تفعيل" : "تعليق"} ${SECTION_LABELS[k]}`, label: "السبب", confirmLabel: enabled ? "تفعيل" : "تعليق" });
+    const reason = await askText(`سبب ${enabled ? "تفعيل" : "تعليق"} ${SECTION_LABELS[k]}`, { required: true, ok: enabled ? "تفعيل" : "تعليق" });
     if (!reason) return;
     const { error } = await db.rpc("platform_set_section", { _org: org["id"], _section: k, _enabled: enabled, _reason: reason });
     if (error) return toast.error(arabicError(error));
