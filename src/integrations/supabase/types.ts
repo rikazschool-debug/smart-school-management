@@ -5543,6 +5543,53 @@ export type Database = {
           },
         ]
       }
+      support_info_requests: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          asked_by: string
+          asked_to: string
+          client_key: string | null
+          created_at: string
+          id: string
+          question: string
+          status: string
+          ticket_id: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          asked_by: string
+          asked_to: string
+          client_key?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          status?: string
+          ticket_id: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          asked_by?: string
+          asked_to?: string
+          client_key?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          status?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_info_requests_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_message_revisions: {
         Row: {
           created_at: string
@@ -5619,6 +5666,47 @@ export type Database = {
           },
         ]
       }
+      support_notes: {
+        Row: {
+          author: string
+          body: string
+          client_key: string | null
+          created_at: string
+          id: string
+          kind: string
+          recipient: string | null
+          ticket_id: string
+        }
+        Insert: {
+          author: string
+          body: string
+          client_key?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          recipient?: string | null
+          ticket_id: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          client_key?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          recipient?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_notes_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_settings: {
         Row: {
           id: string
@@ -5664,6 +5752,7 @@ export type Database = {
           created_at: string
           first_response_at: string | null
           id: string
+          linked_ticket: string | null
           org_id: string
           priority: string
           rating: number | null
@@ -5689,6 +5778,7 @@ export type Database = {
           created_at?: string
           first_response_at?: string | null
           id?: string
+          linked_ticket?: string | null
           org_id: string
           priority?: string
           rating?: number | null
@@ -5714,6 +5804,7 @@ export type Database = {
           created_at?: string
           first_response_at?: string | null
           id?: string
+          linked_ticket?: string | null
           org_id?: string
           priority?: string
           rating?: number | null
@@ -5736,6 +5827,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "support_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_linked_ticket_fkey"
+            columns: ["linked_ticket"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
             referencedColumns: ["id"]
           },
           {
@@ -6930,6 +7028,20 @@ export type Database = {
           _to_managers: boolean
         }
         Returns: undefined
+      }
+      _support_notify_one: {
+        Args: {
+          _key: string
+          _link: string
+          _t: Database["public"]["Tables"]["support_tickets"]["Row"]
+          _title: string
+          _u: string
+        }
+        Returns: undefined
+      }
+      _support_user_school: {
+        Args: { _fallback: string; _org: string; _u: string }
+        Returns: string
       }
       _task_target_ok: {
         Args: { _school: string; _user: string }
@@ -8739,6 +8851,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      support_add_note: {
+        Args: {
+          _body: string
+          _client_key?: string
+          _kind: string
+          _recipient: string
+          _ticket: string
+        }
+        Returns: string
+      }
       support_can_read: { Args: { _ticket: string }; Returns: boolean }
       support_create: {
         Args: {
@@ -8757,6 +8879,15 @@ export type Database = {
         Args: { _body: string; _message: string; _reason: string }
         Returns: undefined
       }
+      support_escalate: {
+        Args: {
+          _body: string
+          _client_key?: string
+          _ticket: string
+          _title: string
+        }
+        Returns: string
+      }
       support_files: {
         Args: { _ticket: string }
         Returns: {
@@ -8770,6 +8901,29 @@ export type Database = {
         }[]
       }
       support_get: { Args: { _ticket: string }; Returns: Json }
+      support_handler: {
+        Args: { _t: Database["public"]["Tables"]["support_tickets"]["Row"] }
+        Returns: boolean
+      }
+      support_info_answer: {
+        Args: { _answer: string; _req: string }
+        Returns: undefined
+      }
+      support_info_cancel: { Args: { _req: string }; Returns: undefined }
+      support_info_inbox: {
+        Args: never
+        Returns: {
+          answer: string
+          answered_at: string
+          asked_by_name: string
+          created_at: string
+          id: string
+          question: string
+          ref: string
+          school_name: string
+          status: string
+        }[]
+      }
       support_list: {
         Args: {
           _box: string
@@ -8822,6 +8976,15 @@ export type Database = {
       support_release_file: { Args: { _file: string }; Returns: undefined }
       support_reply: {
         Args: { _body: string; _client_key?: string; _ticket: string }
+        Returns: string
+      }
+      support_request_info: {
+        Args: {
+          _client_key?: string
+          _question: string
+          _ticket: string
+          _to: string
+        }
         Returns: string
       }
       support_save_category: {
