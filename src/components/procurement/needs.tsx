@@ -115,7 +115,7 @@ export function NeedDetail({ id, me, back, edit, openExpense, newInvoice }: { id
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} />;
   const r = q.data;
-  const can = r.can as Record<string, boolean>;
+  const can = r.can as { edit: boolean; approve: boolean; assign: boolean; claim: boolean; invoice: boolean; close: boolean; cancel: boolean };
   async function act(action: string, ask: string | null, required: boolean, user: string | null = null) {
     let reason: string | null = null;
     if (ask) { reason = await askText(ask, { required }); if (reason === null) return; }
