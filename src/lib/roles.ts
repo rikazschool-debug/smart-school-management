@@ -207,10 +207,10 @@ export function attTabs(role: Role): AttTab[] {
   return [];
 }
 
-export type SupportTab = "mine" | "assigned" | "manage";
+export type SupportTab = "mine" | "assigned" | "info" | "manage";
 /** «الدعم والمساعدة» tabs (mirrors support_manager in SQL): owner/principal manage their scope; platform admin manages platform tickets only. */
 export function supportTabs(role: Role): SupportTab[] {
   if (role === "platform_admin") return ["manage"];
   const staff = !["student", "guardian"].includes(role);
-  return [ "mine", ...(staff ? (["assigned"] as SupportTab[]) : []), ...(role === "org_owner" || role === "principal" ? (["manage"] as SupportTab[]) : []) ];
+  return [ "mine", ...(staff ? (["assigned"] as SupportTab[]) : []), "info", ...(role === "org_owner" || role === "principal" ? (["manage"] as SupportTab[]) : []) ];
 }
