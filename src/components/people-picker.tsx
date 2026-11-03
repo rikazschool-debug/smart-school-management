@@ -91,7 +91,7 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
         </select>
         {depts.length > 0 && (
           <select aria-label="القسم" className={sm} value={dept} onChange={(e) => setDept(e.target.value)}>
-            <option value="">كل الأقسام</option>{depts.filter((d) => !branch || true).map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
+            <option value="">كل الأقسام</option>{depts.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
           </select>
         )}
         {multiBranch && (
