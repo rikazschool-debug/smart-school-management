@@ -90,12 +90,12 @@ export function CustodyList({ orgId, me, open, onNew, orgName }: { orgId: string
     <div className="space-y-3">
       <div className="flex flex-wrap items-end gap-2">
         <Input className="w-56" placeholder="بحث بالمرجع أو الغرض أو المستلم" value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
-        <select className={selectCls + " w-44"} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} aria-label="الحالة">
+        <select className={selectCls("w-44")} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} aria-label="الحالة">
           <option value="">كل الحالات</option><option value="open">المفتوحة</option><option value="overdue">المتأخرة التسوية</option>
           {Object.entries(C_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         {me.schools.length > 1 && (
-          <select className={selectCls + " w-40"} value={school} onChange={(e) => { setSchool(e.target.value); setPage(0); }} aria-label="الفرع">
+          <select className={selectCls("w-40")} value={school} onChange={(e) => { setSchool(e.target.value); setPage(0); }} aria-label="الفرع">
             <option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         )}
@@ -116,7 +116,7 @@ export function CustodyList({ orgId, me, open, onNew, orgName }: { orgId: string
                 <tr key={c.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => open(c.id)}>
                   <td className="px-3 py-2 font-mono text-xs">{c.ref}</td><td className="px-3 py-2">{c.holder}</td><td className="px-3 py-2">{c.school}</td>
                   <td className="max-w-56 truncate px-3 py-2">{c.purpose}</td>
-                  <td className="px-3 py-2"><Pill tone={TONE[c.status]}>{C_STATUS[c.status]}</Pill>{c.overdue && <span className="ms-1"><Pill tone="bad">متأخرة</Pill></span>}</td>
+                  <td className="px-3 py-2"><Pill tone={TONE[c.status] ?? "muted"}>{C_STATUS[c.status]}</Pill>{c.overdue && <span className="ms-1"><Pill tone="bad">متأخرة</Pill></span>}</td>
                   <td className="px-3 py-2 tabular-nums">{sar(c.amount)}</td><td className="px-3 py-2 tabular-nums">{sar(c.bal.book)}</td><td className="px-3 py-2 tabular-nums">{sar(c.bal.available)}</td>
                   <td className="px-3 py-2">{day(c.settle_due)}</td>
                 </tr>
@@ -165,7 +165,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
     <div className="max-w-2xl space-y-4 rounded-2xl border bg-card p-5">
       <h2 className="font-bold">{initial ? `تعديل ${initial.ref}` : "طلب عهدة جديدة"}</h2>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><Label>الفرع المسؤول</Label><select className={selectCls} value={school} onChange={(e) => setSchool(e.target.value)}>{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><Label>الفرع المسؤول</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         <div><Label>المبلغ (ريال سعودي)</Label><Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" /></div>
         <div className="sm:col-span-2"><Label>الغرض</Label><Textarea value={purpose} onChange={(e) => setPurpose(e.target.value)} rows={2} /></div>
         <div><Label>موعد التسوية</Label><Input type="date" min={todayRiyadh()} value={due} onChange={(e) => setDue(e.target.value)} /></div>
@@ -203,7 +203,7 @@ function DisburseForm({ c, onDone }: { c: Row; onDone: () => void }) {
     <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
       <h3 className="font-semibold">صرف العهدة {sar(c.amount)}</h3>
       <div className="grid gap-3 sm:grid-cols-3">
-        <div><Label>طريقة الصرف</Label><select className={selectCls} value={method} onChange={(e) => setMethod(e.target.value)}>{Object.entries(METHOD).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+        <div><Label>طريقة الصرف</Label><select className={selectCls()} value={method} onChange={(e) => setMethod(e.target.value)}>{Object.entries(METHOD).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
         <div><Label>رقم العملية / المرجع الخارجي</Label><Input value={ext} onChange={(e) => setExt(e.target.value)} /></div>
         <div><Label>تاريخ المستند</Label><Input type="date" max={todayRiyadh()} value={doc} onChange={(e) => setDoc(e.target.value)} /></div>
         <div className="sm:col-span-3"><Label>ملاحظة</Label><Input value={note} onChange={(e) => setNote(e.target.value)} /></div>
@@ -213,7 +213,7 @@ function DisburseForm({ c, onDone }: { c: Row; onDone: () => void }) {
         <Uploader label="رفع إثبات" create={async (f) => { const { data, error } = await db.rpc("create_pc_file", { _entity: "custody", _id: c.id, _name: f.name, _mime: f.type, _size: f.size }); if (error) throw error; return data[0]; }}
           release={(id) => db.rpc("pc_file_remove", { _file: id })} onDone={inv} />
         {fs.length > 0 && (
-          <select className={selectCls} value={file} onChange={(e) => setFile(e.target.value)} aria-label="الإثبات">
+          <select className={selectCls()} value={file} onChange={(e) => setFile(e.target.value)} aria-label="الإثبات">
             <option value="">— اختر ملف الإثبات —</option>{fs.map((f: Row) => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
         )}
@@ -273,7 +273,7 @@ export function CustodyDetail({ id, me, orgName, back, openExpense, newExpense }
           {c.overdue_exception && <p className="text-sm text-warning">استثناء عهدة متأخرة: {c.overdue_exception}</p>}
         </div>
         <div className="flex flex-col items-end gap-2">
-          <span className="flex gap-1"><Pill tone={TONE[c.status]}>{C_STATUS[c.status]}</Pill>{c.overdue && <Pill tone="bad">متأخرة التسوية</Pill>}</span>
+          <span className="flex gap-1"><Pill tone={TONE[c.status] ?? "muted"}>{C_STATUS[c.status]}</Pill>{c.overdue && <Pill tone="bad">متأخرة التسوية</Pill>}</span>
           <div className="flex flex-wrap justify-end gap-2">
             {c.can.edit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>تعديل</Button>}
             {c.can.submit && <Button size="sm" onClick={() => void act("submit", "أُرسلت للاعتماد")}>إرسال للاعتماد</Button>}
@@ -320,7 +320,7 @@ export function CustodyDetail({ id, me, orgName, back, openExpense, newExpense }
           <ul className="divide-y rounded-xl border bg-card text-sm">{(c.expenses as Row[]).map((e) => (
             <li key={e.id} className="flex cursor-pointer flex-wrap items-center gap-2 px-3 py-2 hover:bg-muted/40" onClick={() => openExpense(e.id)}>
               <span className="font-mono text-xs">{e.ref}</span><span>{e.description}</span><span className="text-muted-foreground">{e.supplier}{e.invoice_no ? ` · ${e.invoice_no}` : ""}</span>
-              <span className="ms-auto tabular-nums">{sar(e.total)}</span><Pill tone={TONE[e.status]}>{e.status === "approved" ? "معتمد" : e.status === "draft" ? "مسودة" : e.status === "returned" ? "معاد" : e.status === "rejected" ? "مرفوض" : e.status === "cancelled" ? "ملغى" : "قيد المراجعة"}</Pill>
+              <span className="ms-auto tabular-nums">{sar(e.total)}</span><Pill tone={TONE[e.status] ?? "muted"}>{e.status === "approved" ? "معتمد" : e.status === "draft" ? "مسودة" : e.status === "returned" ? "معاد" : e.status === "rejected" ? "مرفوض" : e.status === "cancelled" ? "ملغى" : "قيد المراجعة"}</Pill>
             </li>
           ))}</ul>
         </section>

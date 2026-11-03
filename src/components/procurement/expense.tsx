@@ -54,11 +54,11 @@ export function ExpenseList({ orgId, me, open, orgName }: { orgId: string; me: P
     <div className="space-y-3">
       <div className="flex flex-wrap items-end gap-2">
         <Input className="w-56" placeholder="بحث بالمورد أو الفاتورة أو البيان" value={q} onChange={(e) => { setQ(e.target.value); reset(); }} />
-        <select className={selectCls + " w-40"} value={status} onChange={(e) => { setStatus(e.target.value); reset(); }} aria-label="الحالة">
+        <select className={selectCls("w-40")} value={status} onChange={(e) => { setStatus(e.target.value); reset(); }} aria-label="الحالة">
           <option value="">كل الحالات</option><option value="pending">بانتظار القرار</option>{Object.entries(E_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        {me.schools.length > 1 && <select className={selectCls + " w-36"} value={school} onChange={(e) => { setSchool(e.target.value); reset(); }} aria-label="الفرع"><option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
-        {me.categories.length > 0 && <select className={selectCls + " w-36"} value={cat} onChange={(e) => { setCat(e.target.value); reset(); }} aria-label="التصنيف"><option value="">كل التصنيفات</option>{me.categories.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
+        {me.schools.length > 1 && <select className={selectCls("w-36")} value={school} onChange={(e) => { setSchool(e.target.value); reset(); }} aria-label="الفرع"><option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
+        {me.categories.length > 0 && <select className={selectCls("w-36")} value={cat} onChange={(e) => { setCat(e.target.value); reset(); }} aria-label="التصنيف"><option value="">كل التصنيفات</option>{me.categories.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
         <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value); reset(); }} /></label>
         <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value); reset(); }} /></label>
         {me.caps.export && <span className="ms-auto flex gap-2"><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></span>}
@@ -72,7 +72,7 @@ export function ExpenseList({ orgId, me, open, orgName }: { orgId: string; me: P
               <tr key={e.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => open(e.id)}>
                 <td className="px-3 py-2 font-mono text-xs">{e.ref}</td><td className="px-3 py-2">{day(e.purchase_date)}</td><td className="px-3 py-2">{e.custody_ref ?? "من مال الموظف"}</td>
                 <td className="px-3 py-2">{e.supplier}</td><td className="px-3 py-2">{e.invoice_no ?? "—"}</td><td className="max-w-48 truncate px-3 py-2">{e.description}</td>
-                <td className="px-3 py-2"><Pill tone={TONE[e.status]}>{E_STATUS[e.status]}</Pill>{e.dup_ref && <span className="ms-1"><Pill tone="bad">مكرر محتمل</Pill></span>}</td>
+                <td className="px-3 py-2"><Pill tone={TONE[e.status] ?? "muted"}>{E_STATUS[e.status]}</Pill>{e.dup_ref && <span className="ms-1"><Pill tone="bad">مكرر محتمل</Pill></span>}</td>
                 <td className="px-3 py-2 tabular-nums">{sar(e.vat)}</td><td className="px-3 py-2 tabular-nums">{sar(e.total)}</td>
               </tr>
             ))}</tbody>
@@ -141,15 +141,15 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
       <div className="grid gap-3 sm:grid-cols-2">
         {!own ? (
           <div><Label>العهدة</Label>
-            <select className={selectCls} value={custody} disabled={!!corrects} onChange={(e) => setCustody(e.target.value)}>
+            <select className={selectCls()} value={custody} disabled={!!corrects} onChange={(e) => setCustody(e.target.value)}>
               <option value="">— اختر —</option>{(custodies.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.ref} · {c.holder} · المتاح {sar(c.bal.available)}</option>)}
             </select>
             {sel && <p className="mt-1 text-xs text-muted-foreground">المتاح الآن: {sar(sel.bal.available)}</p>}
           </div>
         ) : (
-          <div><Label>الفرع</Label><select className={selectCls} value={school} onChange={(e) => setSchool(e.target.value)}>{ownSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+          <div><Label>الفرع</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{ownSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         )}
-        {!own && benOptions.length > 1 && <div><Label>الفرع المستفيد</Label><select className={selectCls} value={ben} onChange={(e) => setBen(e.target.value)}><option value="">فرع العهدة</option>{benOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
+        {!own && benOptions.length > 1 && <div><Label>الفرع المستفيد</Label><select className={selectCls()} value={ben} onChange={(e) => setBen(e.target.value)}><option value="">فرع العهدة</option>{benOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
         <div><Label>تاريخ الشراء</Label><Input type="date" max={todayRiyadh()} value={d.purchase_date} onChange={(e) => set("purchase_date", e.target.value)} /></div>
         <div><Label>المورد</Label><Input value={d.supplier} onChange={(e) => set("supplier", e.target.value)} /></div>
         <div className="sm:col-span-2"><Label>البيان</Label><Input value={d.description} onChange={(e) => set("description", e.target.value)} /></div>
@@ -163,7 +163,7 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
           </div>
         </>}
         {!tax && <div><Label>رقم الإيصال (اختياري)</Label><Input value={d.invoice_no} onChange={(e) => set("invoice_no", e.target.value)} /></div>}
-        {me.categories.length > 0 && <div><Label>التصنيف</Label><select className={selectCls} value={d.category_id} onChange={(e) => set("category_id", e.target.value)}><option value="">بدون</option>{me.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>}
+        {me.categories.length > 0 && <div><Label>التصنيف</Label><select className={selectCls()} value={d.category_id} onChange={(e) => set("category_id", e.target.value)}><option value="">بدون</option>{me.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>}
       </div>
       <div className="space-y-2">
         <Label>البنود</Label>
@@ -238,7 +238,7 @@ export function ExpenseDetail({ id, me, back, openCustody, openExpense }: { id: 
           {e.dup_ref && <p className="text-sm text-destructive">تنبيه: المورد ورقم الفاتورة يطابقان {e.dup_ref} — لا يُعتمد مكرر.</p>}
         </div>
         <div className="flex flex-col items-end gap-2">
-          <Pill tone={TONE[e.status]}>{E_STATUS[e.status]}</Pill>
+          <Pill tone={TONE[e.status] ?? "muted"}>{E_STATUS[e.status]}</Pill>
           <div className="flex flex-wrap justify-end gap-2">
             {e.can.edit && <><Button size="sm" variant="outline" onClick={() => setMode("edit")}>تعديل</Button><Button size="sm" onClick={() => void act("submit", "أُرسل للمراجعة")}>إرسال للمراجعة</Button></>}
             {e.can.review && <Button size="sm" variant="outline" onClick={() => void act("review", "بدأت المراجعة")}>بدء المراجعة</Button>}
@@ -263,7 +263,7 @@ export function ExpenseDetail({ id, me, back, openCustody, openExpense }: { id: 
       </div>
       <section className="space-y-2">
         <h3 className="font-semibold">الفاتورة والمرفقات</h3>
-        <FileList files={files(e.files)} onRemove={e.can.edit ? async (f) => { if (await run(db.rpc("pc_file_remove", { _file: f.id }), "أُزيل الملف")) inv(); } : undefined} />
+        <FileList files={files(e.files)} onRemove={e.can.edit ? async (f) => { if (await run(db.rpc("pc_file_remove", { _file: f["id"] }), "أُزيل الملف")) inv(); } : undefined} />
         {!e.files.length && <p className="text-sm text-muted-foreground">لا مرفقات.</p>}
         {e.can.edit && <Uploader label="إرفاق الفاتورة" create={async (f) => { const { data, error } = await db.rpc("create_pc_file", { _entity: "expense", _id: e.id, _name: f.name, _mime: f.type, _size: f.size }); if (error) throw error; return data[0]; }} release={(fid) => db.rpc("pc_file_remove", { _file: fid })} onDone={inv} />}
       </section>

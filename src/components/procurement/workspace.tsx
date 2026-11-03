@@ -20,7 +20,7 @@ function Item({ r, onClick, extra }: { r: Row; onClick: () => void; extra?: Reac
       <span className="min-w-0 truncate">{isExp ? `${r.description} — ${r.supplier}` : r.purpose}</span>
       <span className="text-muted-foreground">{isExp ? r.creator : r.holder}</span>
       <span className="ms-auto tabular-nums">{sar(isExp ? r.total : r.amount)}</span>
-      <Pill tone={TONE[r.status]}>{isExp ? E_STATUS[r.status] : C_STATUS[r.status]}</Pill>{extra}
+      <Pill tone={TONE[r.status] ?? "muted"}>{isExp ? E_STATUS[r.status] : C_STATUS[r.status]}</Pill>{extra}
     </li>
   );
 }
