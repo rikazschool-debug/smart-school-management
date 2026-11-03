@@ -331,3 +331,7 @@
 - [x] Profile/notifications/support keep the owner's current section menu
 - [x] Owner/managers: "إضافة عهدة" (branch + assigned purchasing officer) instead of "طلب عهدة"
 - [x] Purchases tab: "تسجيل فاتورة مشتريات" button for officers
+
+## Virtual class sessions 2026-11-03
+- [x] vc_* scheduling (principal picks class+teacher, teacher own/instant), room reuse, attendance per session, teacher/student report, link from classroom
+- [ ] Browser journey with real microphone (needs a live device test)
