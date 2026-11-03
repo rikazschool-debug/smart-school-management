@@ -265,3 +265,7 @@
 - [x] TT6 Publish re-validation (hard conflicts, missing requirements, stale base); substitutes stay separate with load/availability checks; duty-conflict alerts kept
 - [x] TT7 UI: weekly desktop / daily phone, pinned/constraint markers with text+icon, Excel/PDF per section/teacher/room/school with version + draft marking
 - [x] TT8 Isolated demo (5 sections, 10 teachers, 5 days, ≥6 periods) + tests 1–17, docs, Arabic report
+
+## Next package (docs/package-next-brief.md) — pending, after timetable performance
+- [ ] P1 permissions/scope  - [ ] P2 people picker  - [ ] P3 Excel import + accounts  - [ ] P4 WATI OTP  - [ ] P5 meetings in communication
+- [ ] TP timetable performance for large schools
