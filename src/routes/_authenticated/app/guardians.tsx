@@ -5,6 +5,7 @@ import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
 import { canManageStudents } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
+import { localPhone } from "@/lib/people-import";
 import { CreateAccountButton } from "@/components/guardian-quick-add";
 
 export const Route = createFileRoute("/_authenticated/app/guardians")({ component: Page });
@@ -25,13 +26,13 @@ function Page() {
             ]}
             columns={[
               { label: "الاسم", render: (r) => r["full_name"] },
-              { label: "الجوال", render: (r) => r["phone"] ?? "—" },
+              { label: "الجوال", render: (r) => <span dir="ltr">{localPhone(r["phone"]) || "—"}</span> },
               { label: "الأبناء المرتبطون", render: (r) => r["student_guardians"]?.length ?? 0 },
-              { label: "الحساب", render: (r) => (r["user_id"] ? "مرتبط" : "بلا حساب") },
+              { label: "الحساب", render: (r) => (r["user_id"] ? "مرتبط" : r["phone"] ? "بلا حساب (يُنشأ بالجوال)" : "بلا جوال") },
             ]}
             extraActions={(r) =>
               canManageStudents(ctx.role) && !r["user_id"] ? (
-                r["national_id"] || r["phone"] ? <CreateAccountButton guardianId={r["id"]} name={r["full_name"]} />
+                r["phone"] ? <CreateAccountButton guardianId={r["id"]} name={r["full_name"]} />
                 : r["email"] ? <AccountButton role={ctx.role} kind="guardian" recordId={r["id"]} email={r["email"]} schoolId={ctx.schoolId} /> : null
               ) : null
             } />
