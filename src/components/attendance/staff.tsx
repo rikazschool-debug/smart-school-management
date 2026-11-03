@@ -135,6 +135,7 @@ function PresentNow({ S, withReturn }: { S: string; withReturn?: boolean }) {
 
 /* ================= Gate: barcode scan, manual entry, returns ================= */
 export function GateTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean }) {
+  const canScan = canScanWith(ctx.role, useSchoolPerms(ctx.schoolId));
   const S = ctx.schoolId;
   const refresh = useRefresh();
   const [code, setCode] = useState("");
