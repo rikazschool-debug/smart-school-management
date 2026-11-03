@@ -100,3 +100,13 @@ describe("staff scope rules (package next, item 1)", () => {
     expect(ALL.filter(canOrganizeMeeting).sort()).toEqual(["org_owner", "principal"]);
   });
 });
+
+describe("owner shared pages keep the current section", () => {
+  it("profile opened from HR stays in HR", async () => {
+    const { ownerSection } = await import("@/lib/roles");
+    expect(ownerSection("/app/profile", "hr")).toBe("hr");
+    expect(ownerSection("/app/notifications", "finance")).toBe("finance");
+    expect(ownerSection("/app/profile", null)).toBeNull();
+    expect(ownerSection("/app/hr", "school_admin")).toBe("hr");
+  });
+});
