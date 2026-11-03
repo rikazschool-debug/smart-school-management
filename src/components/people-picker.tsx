@@ -16,7 +16,7 @@ export const PERSON_ROLE: Record<string, string> = {
 };
 export const rolesLabel = (rs: string[]) => rs.map((r) => PERSON_ROLE[r] ?? r).join("، ");
 
-type Scope = { purpose: PickPurpose; school: string | null; org?: string | null; post?: string | null };
+type Scope = { purpose: PickPurpose; school: string | null; org?: string | null | undefined; post?: string | null | undefined };
 const args = (s: Scope) => ({ _purpose: s.purpose, _school: s.school, _org: s.org ?? null, _post: s.post ?? null });
 
 /** Names for already-selected ids, resolved through the same authorized pool (anything outside scope stays unnamed). */
