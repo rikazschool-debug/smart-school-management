@@ -54,6 +54,8 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
   const micPublished = useRef(false);
   const screenTracks = useRef<(ILocalVideoTrack | ILocalAudioTrack)[]>([]);
   const screenBox = useRef<HTMLDivElement | null>(null);
+  const localBox = useRef<HTMLDivElement | null>(null);
+  const remoteVideo = useRef<IAgoraRTCRemoteUser["videoTrack"] | null>(null);
   const myUid = useRef<number>(0);
 
   const roster = useQuery({
@@ -127,7 +129,7 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
         if (Number(u.uid) === t.screenUid) return; // my own screen stream
         await c.subscribe(u, kind);
         if (kind === "audio") u.audioTrack?.play();
-        if (kind === "video") { setRemoteScreen(Number(u.uid)); setTimeout(() => screenBox.current && u.videoTrack?.play(screenBox.current, { fit: "contain" }), 0); }
+        if (kind === "video") { remoteVideo.current = u.videoTrack ?? null; setRemoteScreen(Number(u.uid)); }
       });
       c.on("user-unpublished", (u, kind) => { if (kind === "video") setRemoteScreen((s) => (s === Number(u.uid) ? null : s)); });
       c.on("user-left", (u) => setRemoteScreen((s) => (s === Number(u.uid) ? null : s)));
@@ -169,6 +171,15 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
       } else { await mic.current.setMuted(true); setMicOn(false); }
     } catch (e) { toast.error(micError(e)); }
   }
+
+  // render the shared screen inside the meeting box once the box exists (remote viewers and the sharer's own preview)
+  useEffect(() => {
+    if (remoteScreen && screenBox.current && remoteVideo.current) remoteVideo.current.play(screenBox.current, { fit: "contain" });
+  }, [remoteScreen]);
+  useEffect(() => {
+    const v = screenTracks.current[0] as ILocalVideoTrack | undefined;
+    if (sharing && localBox.current && v) v.play(localBox.current, { fit: "contain" });
+  }, [sharing]);
 
   async function startShare() {
     if (!navigator.mediaDevices?.getDisplayMedia) return void toast.error("هذا المتصفح لا يدعم مشاركة الشاشة");
@@ -281,7 +292,12 @@ export function MeetingRoom({ meetingId, onExit }: { meetingId: string; onExit: 
                   <button aria-label="تكبير الشاشة" className="rounded p-1 hover:bg-muted" onClick={() => screenBox.current?.requestFullscreen?.()}><Maximize2 className="size-4" /></button>
                 </div>
               </>
-            ) : sharing ? <p className="text-sm">تشارك شاشتك الآن مع الجميع.</p>
+            ) : sharing ? (
+              <>
+                <div ref={localBox} className="h-[min(60vh,560px)] w-full" data-testid="my-screen-preview" />
+                <div className="absolute start-2 top-2 rounded-md bg-card/90 px-2 py-1 text-xs">معاينة شاشتك — يراها جميع المشاركين</div>
+              </>
+            )
               : <p className="text-sm text-muted-foreground">{sharer ? `يبدأ ${sharer.full_name} مشاركة الشاشة…` : "لا توجد شاشة مشتركة الآن."}</p>}
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl border bg-card p-3">
