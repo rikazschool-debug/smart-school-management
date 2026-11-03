@@ -170,7 +170,9 @@ export function parseWorkbook(buf: ArrayBuffer, kind: PKind, override?: Record<s
       // English duplicate lines in ministry reports carry no ID/phone: skip them. A row with an ID or phone but no Arabic
       // name is kept so validation reports it instead of dropping it silently.
       const keyed = !!(values["national_id"] || values["phone"] || values["guardian_phone"]);
-      if (!values["full_name"] || !HAS_AR.test(values["full_name"])) { if (!keyed) continue; values["full_name"] = HAS_AR.test(values["full_name"] ?? "") ? values["full_name"]! : ""; }
+      const prev = rows[rows.length - 1]?.values;
+      const echo = !!prev && !!values["national_id"] && prev["national_id"] === values["national_id"];
+      if (!values["full_name"] || !HAS_AR.test(values["full_name"])) { if (!keyed || echo) continue; values["full_name"] = HAS_AR.test(values["full_name"] ?? "") ? values["full_name"]! : ""; }
       if (fields.some((f) => norm(values[f.key]) === norm(f.label))) continue; // repeated header line on a printed page
       const formulas = fields.filter((f) => map[f.key] !== undefined && g.formula[r]![map[f.key]!]).map((f) => f.label);
       rows.push({ sheet: name, line: r + 1, values, formulas });
