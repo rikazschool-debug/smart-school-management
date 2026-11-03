@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
-  Bell, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
+  Bell, MonitorPlay, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
   ReceiptText, Wallet, Construction, KeyRound, LayoutDashboard,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +35,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   students: { to: "/app/students", label: "الطلاب والتسكين", icon: GraduationCap },
   guardians: { to: "/app/guardians", label: "أولياء الأمور", icon: Users },
   classrooms: { to: "/app/classrooms", label: "الفصول الرقمية", icon: School },
+  virtual: { to: "/app/virtual-classes", label: "الحصص الافتراضية", icon: MonitorPlay },
   homework: { to: "/app/homework", label: "الواجبات والاختبارات", icon: ClipboardList },
   grades: { to: "/app/grades", label: "أرشيف الدرجات الفصلية", icon: Award },
   results: { to: "/app/results", label: "النتائج", icon: Award },
@@ -68,7 +69,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
   { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "procurement"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
-  { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
+  { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
   { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage"] },
   { label: "التنبيهات والدعم", keys: ["notifications", "support"] },

@@ -51,6 +51,7 @@ import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_authenticated/app/homework.index'
 import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
+import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './routes/_authenticated/app/virtual-classes.index'
 import { Route as ApiPublicAuthSendSmsRouteImport } from './routes/api/public/auth/send-sms'
 import { Route as ApiPublicWatiWebhookRouteImport } from './routes/api/public/wati/webhook'
 import { Route as AuthenticatedAppAdminMeetingsIndexRouteImport } from './routes/_authenticated/app/admin.meetings.index'
@@ -58,6 +59,7 @@ import { Route as AuthenticatedAppAdminMeetingsIdRouteImport } from './routes/_a
 import { Route as AuthenticatedAppAdminRequestsIdRouteImport } from './routes/_authenticated/app/admin.requests.$id'
 import { Route as AuthenticatedAppAdminRoomIdRouteImport } from './routes/_authenticated/app/admin.room.$id'
 import { Route as AuthenticatedAppAdminTasksIdRouteImport } from './routes/_authenticated/app/admin.tasks.$id'
+import { Route as AuthenticatedAppVirtualClassesRoomIdRouteImport } from './routes/_authenticated/app/virtual-classes.room.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -293,6 +295,12 @@ const AuthenticatedAppHomeworkNewRoute =
     path: '/homework/new',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppVirtualClassesIndexRoute =
+  AuthenticatedAppVirtualClassesIndexRouteImport.update({
+    id: '/virtual-classes/',
+    path: '/virtual-classes/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const ApiPublicAuthSendSmsRoute = ApiPublicAuthSendSmsRouteImport.update({
   id: '/api/public/auth/send-sms',
   path: '/api/public/auth/send-sms',
@@ -331,6 +339,12 @@ const AuthenticatedAppAdminTasksIdRoute =
   AuthenticatedAppAdminTasksIdRouteImport.update({
     id: '/admin/tasks/$id',
     path: '/admin/tasks/$id',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppVirtualClassesRoomIdRoute =
+  AuthenticatedAppVirtualClassesRoomIdRouteImport.update({
+    id: '/virtual-classes/room/$id',
+    path: '/virtual-classes/room/$id',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 
@@ -378,10 +392,12 @@ export interface FileRoutesByFullPath {
   '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
   '/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
+  '/app/virtual-classes/': typeof AuthenticatedAppVirtualClassesIndexRoute
   '/app/admin/meetings/$id': typeof AuthenticatedAppAdminMeetingsIdRoute
   '/app/admin/requests/$id': typeof AuthenticatedAppAdminRequestsIdRoute
   '/app/admin/room/$id': typeof AuthenticatedAppAdminRoomIdRoute
   '/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
+  '/app/virtual-classes/room/$id': typeof AuthenticatedAppVirtualClassesRoomIdRoute
   '/app/admin/meetings/': typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -427,10 +443,12 @@ export interface FileRoutesByTo {
   '/app/admin': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
   '/app/homework': typeof AuthenticatedAppHomeworkIndexRoute
+  '/app/virtual-classes': typeof AuthenticatedAppVirtualClassesIndexRoute
   '/app/admin/meetings/$id': typeof AuthenticatedAppAdminMeetingsIdRoute
   '/app/admin/requests/$id': typeof AuthenticatedAppAdminRequestsIdRoute
   '/app/admin/room/$id': typeof AuthenticatedAppAdminRoomIdRoute
   '/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
+  '/app/virtual-classes/room/$id': typeof AuthenticatedAppVirtualClassesRoomIdRoute
   '/app/admin/meetings': typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 export interface FileRoutesById {
@@ -479,10 +497,12 @@ export interface FileRoutesById {
   '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
   '/_authenticated/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
+  '/_authenticated/app/virtual-classes/': typeof AuthenticatedAppVirtualClassesIndexRoute
   '/_authenticated/app/admin/meetings/$id': typeof AuthenticatedAppAdminMeetingsIdRoute
   '/_authenticated/app/admin/requests/$id': typeof AuthenticatedAppAdminRequestsIdRoute
   '/_authenticated/app/admin/room/$id': typeof AuthenticatedAppAdminRoomIdRoute
   '/_authenticated/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
+  '/_authenticated/app/virtual-classes/room/$id': typeof AuthenticatedAppVirtualClassesRoomIdRoute
   '/_authenticated/app/admin/meetings/': typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -531,10 +551,12 @@ export interface FileRouteTypes {
     | '/app/admin/'
     | '/app/classrooms/'
     | '/app/homework/'
+    | '/app/virtual-classes/'
     | '/app/admin/meetings/$id'
     | '/app/admin/requests/$id'
     | '/app/admin/room/$id'
     | '/app/admin/tasks/$id'
+    | '/app/virtual-classes/room/$id'
     | '/app/admin/meetings/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -580,10 +602,12 @@ export interface FileRouteTypes {
     | '/app/admin'
     | '/app/classrooms'
     | '/app/homework'
+    | '/app/virtual-classes'
     | '/app/admin/meetings/$id'
     | '/app/admin/requests/$id'
     | '/app/admin/room/$id'
     | '/app/admin/tasks/$id'
+    | '/app/virtual-classes/room/$id'
     | '/app/admin/meetings'
   id:
     | '__root__'
@@ -631,10 +655,12 @@ export interface FileRouteTypes {
     | '/_authenticated/app/admin/'
     | '/_authenticated/app/classrooms/'
     | '/_authenticated/app/homework/'
+    | '/_authenticated/app/virtual-classes/'
     | '/_authenticated/app/admin/meetings/$id'
     | '/_authenticated/app/admin/requests/$id'
     | '/_authenticated/app/admin/room/$id'
     | '/_authenticated/app/admin/tasks/$id'
+    | '/_authenticated/app/virtual-classes/room/$id'
     | '/_authenticated/app/admin/meetings/'
   fileRoutesById: FileRoutesById
 }
@@ -944,6 +970,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHomeworkNewRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/virtual-classes/': {
+      id: '/_authenticated/app/virtual-classes/'
+      path: '/virtual-classes'
+      fullPath: '/app/virtual-classes/'
+      preLoaderRoute: typeof AuthenticatedAppVirtualClassesIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/api/public/auth/send-sms': {
       id: '/api/public/auth/send-sms'
       path: '/api/public/auth/send-sms'
@@ -993,6 +1026,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAdminTasksIdRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/virtual-classes/room/$id': {
+      id: '/_authenticated/app/virtual-classes/room/$id'
+      path: '/virtual-classes/room/$id'
+      fullPath: '/app/virtual-classes/room/$id'
+      preLoaderRoute: typeof AuthenticatedAppVirtualClassesRoomIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
   }
 }
 
@@ -1033,10 +1073,12 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
   AuthenticatedAppHomeworkIndexRoute: typeof AuthenticatedAppHomeworkIndexRoute
+  AuthenticatedAppVirtualClassesIndexRoute: typeof AuthenticatedAppVirtualClassesIndexRoute
   AuthenticatedAppAdminMeetingsIdRoute: typeof AuthenticatedAppAdminMeetingsIdRoute
   AuthenticatedAppAdminRequestsIdRoute: typeof AuthenticatedAppAdminRequestsIdRoute
   AuthenticatedAppAdminRoomIdRoute: typeof AuthenticatedAppAdminRoomIdRoute
   AuthenticatedAppAdminTasksIdRoute: typeof AuthenticatedAppAdminTasksIdRoute
+  AuthenticatedAppVirtualClassesRoomIdRoute: typeof AuthenticatedAppVirtualClassesRoomIdRoute
   AuthenticatedAppAdminMeetingsIndexRoute: typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 
@@ -1078,10 +1120,14 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
   AuthenticatedAppHomeworkIndexRoute: AuthenticatedAppHomeworkIndexRoute,
+  AuthenticatedAppVirtualClassesIndexRoute:
+    AuthenticatedAppVirtualClassesIndexRoute,
   AuthenticatedAppAdminMeetingsIdRoute: AuthenticatedAppAdminMeetingsIdRoute,
   AuthenticatedAppAdminRequestsIdRoute: AuthenticatedAppAdminRequestsIdRoute,
   AuthenticatedAppAdminRoomIdRoute: AuthenticatedAppAdminRoomIdRoute,
   AuthenticatedAppAdminTasksIdRoute: AuthenticatedAppAdminTasksIdRoute,
+  AuthenticatedAppVirtualClassesRoomIdRoute:
+    AuthenticatedAppVirtualClassesRoomIdRoute,
   AuthenticatedAppAdminMeetingsIndexRoute:
     AuthenticatedAppAdminMeetingsIndexRoute,
 }

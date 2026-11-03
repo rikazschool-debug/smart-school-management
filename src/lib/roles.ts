@@ -40,6 +40,7 @@ export type NavKey =
   | "students"
   | "guardians"
   | "classrooms"
+  | "virtual"
   | "schedule"
   | "communication"
   | "circulars"
@@ -68,7 +69,7 @@ export type NavKey =
 export type OwnerSection = "school_admin" | "finance" | "hr" | "users";
 export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", finance: "المالية والمحاسبة", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
-  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "homework", "grades", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage"],
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "virtual", "homework", "grades", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage"],
   finance: ["finance", "procurement"],
   hr: ["hr"],
   users: ["members", "permissions"],
@@ -106,6 +107,7 @@ const MANAGE: NavKey[] = [
   "students",
   "guardians",
   "classrooms",
+  "virtual",
   "homework",
   "grades",
   "schedule",
@@ -128,9 +130,9 @@ export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   student_affairs: ["home", "students", "guardians", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
-  teacher: ["home", "classrooms", "homework", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
+  teacher: ["home", "classrooms", "virtual", "homework", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   guardian: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
-  student: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
+  student: ["home", "classrooms", "virtual", "homework", "schedule", "pickup", "communication", "notifications"],
   counselor: ["home", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   nurse: ["home", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   security: ["home", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
