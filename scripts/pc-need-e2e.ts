@@ -89,5 +89,10 @@ try {
   await act(pri.c, n2.data, "approve"); g = (await get(off.c, n2.data)).data;
   check("11 one authorized officer → assigned automatically", g.status === "in_progress" && g.assigned_to === off.id, [g.status, g.assigned_to]);
 } catch (e) { bad++; console.error("ERROR", e); }
-finally { for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.error("cleanup", e)); await tr.cleanup().catch((e) => console.error("cleanup", e)); }
-console.log(`\n${ok} passed, ${bad} failed`); process.exit(bad ? 1 : 0);
+finally {
+  console.log(`\n${ok} passed, ${bad} failed`);
+  await tr.deleteNotifications().catch((e) => console.log("notif cleanup", e.message));
+  for (const o of orgs) { await admin.from("perm_log").delete().eq("org_id", o); await admin.from("perm_assignments").delete().eq("org_id", o); await admin.from("org_section_log").delete().eq("org_id", o); await admin.from("org_sections").delete().eq("org_id", o); await tr.purgeOrg(o).catch((e) => console.log(e.message)); }
+  for (const u of tr.users) { await admin.auth.admin.deleteUser(u); }
+  process.exit(bad ? 1 : 0);
+}
