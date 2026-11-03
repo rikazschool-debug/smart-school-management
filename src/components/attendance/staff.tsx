@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, type AppContext } from "@/lib/session";
 import { DAY_STATUS, DAY_TONE, KIND, MOVE_KIND, PICKUP_STATUS, hm, riyadhToday, sectionOf } from "@/lib/attendance";
+import { canScanAttendance } from "@/lib/roles";
 
 type Ctx = AppContext & { schoolId: string };
 const rpc = async (fn: string, args: Record<string, unknown>, ok?: string) => {

@@ -7,7 +7,7 @@ import { StudentSearchCheckin } from "@/components/attendance/student-search";
 import { GateTab } from "@/components/attendance/staff";
 import { CallsTab } from "@/components/attendance/calls-settings";
 import { FieldTestGuide } from "@/components/attendance/field-test-guide";
-import { attTabs, canManage } from "@/lib/roles";
+import { attTabs, canManage, canScanAttendance } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/app/attendance-station")({
   head: () => ({ meta: [{ title: "حضور الطلاب والنداء بالمسح — ركاز" }, { name: "description", content: "مسح بطاقات الحضور، البحث بالاسم، البوابة والنداء في مكان واحد." }, { property: "og:title", content: "حضور الطلاب والنداء بالمسح — ركاز" }, { property: "og:description", content: "مسح الحضور والبوابة والنداء في مكان واحد." }] }),
@@ -18,14 +18,16 @@ type T = "scan" | "gate" | "calls" | "guide";
 const LABEL: Record<T, string> = { scan: "مسح الحضور والبحث", gate: "البوابة", calls: "النداء", guide: "دليل الاختبار الميداني" };
 
 function Page() {
-  const [tab, setTab] = useState<T>("scan");
+  const [picked, setTab] = useState<T | null>(null);
   return (
     <RequireSchool nav="attendance">
       {(ctx) => {
         const allowed = attTabs(ctx.role);
         if (!allowed.includes("gate")) return <EmptyState title="هذا القسم متاح للأمن والاستقبال والمخولين فقط" />;
         const canApprove = canManage(ctx.role) || ctx.role === "student_affairs";
-        const tabs: T[] = ["scan", "gate", ...(allowed.includes("calls") ? (["calls"] as T[]) : []), "guide"];
+        // scanning (camera/reader/name search) is for the gate account only — mirrors att_scanner
+        const tabs: T[] = [...(canScanAttendance(ctx.role) ? (["scan"] as T[]) : []), "gate", ...(allowed.includes("calls") ? (["calls"] as T[]) : []), ...(canScanAttendance(ctx.role) ? (["guide"] as T[]) : [])];
+        const tab: T = picked && tabs.includes(picked) ? picked : tabs[0]!;
         return (
           <>
             <PageHeader title="حضور الطلاب والنداء بالمسح" desc="الحضور الصباحي بالبطاقة أو بالبحث، وحركة البوابة، وطابور النداء. الوقت والحالة يحددهما الخادم." />
