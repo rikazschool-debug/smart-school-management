@@ -229,11 +229,13 @@ try {
   const cal4 = (await t[3]!.c.rpc("adm_calendar", { _school: S, _from: week, _to: addDays(week, 6) })).data as any[];
   check("M11 personal calendar: decision for executor; duties for duty teacher; declined meeting excluded", cal?.some((x) => x.kind === "decision") && cal4?.some((x) => x.kind === "duty") && !cal4?.some((x) => x.kind === "meeting"), [cal, cal4?.map((x) => x.kind)]);
   // normal meeting + cancel
-  const m2 = (await dh.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "اجتماع القسم", starts_at: later, members: [t[2]!.id] }, _rev: null, _client: null })).data as any;
-  await dh.c.rpc("adm_meeting_send", { _id: m2.id, _rev: m2.rev });
+  const dhOrg = await dh.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "اجتماع القسم", starts_at: later, members: [t[2]!.id] }, _rev: null, _client: null });
+  check("M11b dept head / vice cannot organize meetings (principal and owner only)", !!dhOrg.error && !!(await vp.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "x", starts_at: later, members: [t[2]!.id] }, _rev: null, _client: null })).error);
+  const m2 = (await mpr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "اجتماع القسم", starts_at: later, members: [t[2]!.id] }, _rev: null, _client: null })).data as any;
+  await mpr.c.rpc("adm_meeting_send", { _id: m2.id, _rev: m2.rev });
   const prSees = (await pr.c.from("adm_meetings").select("id").eq("id", m2.id)).data?.length === 1;
-  const cn0 = await dh.c.rpc("adm_meeting_cancel", { _id: m2.id, _reason: "", _rev: m2.rev + 1 });
-  const cn = await dh.c.rpc("adm_meeting_cancel", { _id: m2.id, _reason: "تعارض مع اختبار", _rev: m2.rev + 1 });
+  const cn0 = await mpr.c.rpc("adm_meeting_cancel", { _id: m2.id, _reason: "", _rev: m2.rev + 1 });
+  const cn = await mpr.c.rpc("adm_meeting_cancel", { _id: m2.id, _reason: "تعارض مع اختبار", _rev: m2.rev + 1 });
   check("M12 normal meeting visible to principal; cancel needs a reason and notifies", prSees && !!cn0.error && !cn.error && (await notes(t[2]!.id, "أُلغي اجتماع")) === 1, [cn0.error, cn.error]);
   const bM = await prB.c.from("adm_meetings").select("id").in("id", [M, m2.id]);
   const bD = (await prB.c.rpc("adm_decision_list", { _school: S, _scope: "all", _meeting: null, _q: null, _status: null, _limit: 25, _offset: 0 })).data as any[];
