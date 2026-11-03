@@ -55,6 +55,9 @@ export class TestRun {
     for (let pass = 0; pass < 3; pass++) {
       for (const t of ["comm_audit", "message_reports", "conversations", "account_requests", "access_audit", "invitations"]) await this.admin.from(t).delete().eq("org_id", orgId);
       for (const id of ids) for (const t of bySchool) await this.admin.from(t).delete().eq("school_id", id);
+      for (const t of ["pc_refunds", "pc_moves"]) await this.admin.from(t).delete().eq("org_id", orgId);
+      await this.admin.from("pc_expenses").delete().eq("org_id", orgId).not("corrects_id", "is", null);
+      for (const t of ["pc_expenses", "pc_custodies", "pc_log", "pc_counters", "pc_categories", "pc_settings"]) await this.admin.from(t).delete().eq("org_id", orgId);
       await this.admin.from("memberships").delete().eq("org_id", orgId);
       const r = await this.admin.from("schools").delete().eq("org_id", orgId);
       const o = r.error ? r : await this.admin.from("organizations").delete().eq("id", orgId);
