@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { canManageStudents, type Role } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
-import { ImportButton } from "@/components/import-dialog";
+import { PeopleImport } from "@/components/people-import-dialog";
+import { AccountPanel } from "@/components/account-panel";
 import { GuardianQuickAdd } from "@/components/guardian-quick-add";
 import { arabicError, type AppContext } from "@/lib/session";
 
@@ -71,7 +72,8 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           { key: "gender", label: "الجنس", options: [{ value: "male", label: "ذكر" }, { value: "female", label: "أنثى" }] },
           { key: "section", label: "الشعبة", remote: { table: "sections", label: "name" }, path: "enrollments.section_id", inner: "enrollments", extra: { "enrollments.status": "active" } },
         ]}
-        toolbar={w ? <ImportButton kind="students" schoolId={ctx.schoolId} /> : undefined}
+        canCreate={false}
+        toolbar={w ? <PeopleImport kind="students" schoolId={ctx.schoolId} /> : undefined}
         fields={[
           { key: "full_name", label: "الاسم الكامل", required: true },
           { key: "national_id", label: "رقم الهوية" },
@@ -144,7 +146,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   );
 }
 
-const REL: Record<string, string> = { father: "الأب", mother: "الأم", brother: "الأخ", other: "أخرى" };
+const REL: Record<string, string> = { father: "الأب", mother: "الأم", brother: "الأخ", sister: "الأخت", other: "أخرى" };
 
 function StudentLinks({ studentId, schoolId, canWrite, email, hasAccount, role }: { studentId: string; schoolId: string; canWrite: boolean; email: string | null; hasAccount: boolean; role: Role }) {
   const qc = useQueryClient();
@@ -176,8 +178,9 @@ function StudentLinks({ studentId, schoolId, canWrite, email, hasAccount, role }
           ) : <span className="ms-auto text-xs text-muted-foreground">غير موثّقة</span>}
         </div>
       ))}
-      {canWrite && email && !hasAccount && (
-        <AccountButton role={role} kind="student" recordId={studentId} email={email} schoolId={schoolId} label="دعوة الطالب لحساب دخول" />
+      <AccountPanel kind="student" id={studentId} canWrite={canWrite} />
+      {canWrite && email && !hasAccount && role === "org_owner" && (
+        <AccountButton role={role} kind="student" recordId={studentId} email={email} schoolId={schoolId} label="دعوة ببريد الطالب (بديل)" />
       )}
     </div>
   );

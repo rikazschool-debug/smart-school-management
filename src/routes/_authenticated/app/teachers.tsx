@@ -5,7 +5,9 @@ import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
 import { canManageAcademic } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
-import { ImportButton } from "@/components/import-dialog";
+import { PeopleImport } from "@/components/people-import-dialog";
+import { AccountPanel } from "@/components/account-panel";
+import { localPhone } from "@/lib/people-import";
 
 export const Route = createFileRoute("/_authenticated/app/teachers")({ component: Page });
 
@@ -21,7 +23,8 @@ function Page() {
               { key: "department_id", label: "القسم", remote: { table: "departments", label: "name" } },
               { key: "status", label: "الحالة", options: [{ value: "active", label: "نشط" }, { value: "inactive", label: "موقوف" }] },
             ]}
-            toolbar={canManageAcademic(ctx.role) ? <ImportButton kind="teachers" schoolId={ctx.schoolId} /> : undefined}
+            canCreate={false}
+            toolbar={canManageAcademic(ctx.role) ? <PeopleImport kind="teachers" schoolId={ctx.schoolId} /> : undefined}
             fields={[
               { key: "full_name", label: "الاسم الكامل", required: true },
               { key: "email", label: "البريد (لدعوته للدخول)", type: "email" },
@@ -35,7 +38,8 @@ function Page() {
               { label: "الاسم", render: (r) => r["full_name"] },
               { label: "التخصص", render: (r) => r["specialization"] ?? "—" },
               { label: "القسم", render: (r) => r["departments"]?.name ?? "—" },
-              { label: "الحساب", render: (r) => (r["user_id"] ? "مرتبط" : r["email"] ? "بانتظار الدخول" : "بلا بريد") },
+              { label: "الجوال", render: (r) => <span dir="ltr">{localPhone(r["phone"]) || "—"}</span> },
+              { label: "الحساب", render: (r) => <AccountPanel kind="teacher" id={r["id"]} canWrite={canManageAcademic(ctx.role)} /> },
             ]}
             extraActions={(r) =>
               canManageAcademic(ctx.role) && !r["user_id"] && r["email"] ? (
