@@ -9979,6 +9979,7 @@ export type Database = {
       pc_custody_get: { Args: { _id: string }; Returns: Json }
       pc_custody_list: {
         Args: {
+          _from?: string
           _limit: number
           _mine: boolean
           _offset: number
@@ -9986,6 +9987,7 @@ export type Database = {
           _q: string
           _school: string
           _status: string
+          _to?: string
         }
         Returns: Json
       }
@@ -10071,7 +10073,15 @@ export type Database = {
       }
       pc_need_get: { Args: { _id: string }; Returns: Json }
       pc_need_list: {
-        Args: { _limit: number; _offset: number; _org: string; _status: string }
+        Args: {
+          _from?: string
+          _limit: number
+          _offset: number
+          _org: string
+          _q?: string
+          _status: string
+          _to?: string
+        }
         Returns: Json
       }
       pc_need_save: {
@@ -10115,12 +10125,14 @@ export type Database = {
       pc_request_list: {
         Args: {
           _custody: string
+          _from?: string
           _kind: string
           _limit: number
           _offset: number
           _org: string
           _q: string
           _status: string
+          _to?: string
         }
         Returns: Json
       }

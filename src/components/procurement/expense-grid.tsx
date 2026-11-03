@@ -15,7 +15,7 @@ type G = { k: string; date: string; supplier: string; invoice_no: string; descri
 const blank = (): G => ({ k: crypto.randomUUID(), date: todayRiyadh(), supplier: "", invoice_no: "", description: "", category_id: "", amount: "", tax: true, notes: "", custom: {} });
 
 /** Spreadsheet-style entry: one row per invoice, saved together. Each row goes through the same pc_expense_save RPC (server checks, VAT, form version). */
-export function ExpenseGrid({ orgId, me, onDone, onCancel }: { orgId: string; me: PcMe; onDone: () => void; onCancel: () => void }) {
+export function ExpenseGrid({ orgId, me, onDone, onCancel }: { orgId: string; me: PcMe; onDone?: () => void; onCancel?: () => void }) {
   const custodies = useQuery({
     queryKey: ["pc-my-open", orgId],
     queryFn: async () => { const { data, error } = await db.rpc("pc_custody_list", { _org: orgId, _status: "open", _q: null, _school: null, _mine: false, _limit: 200, _offset: 0 }); if (error) throw error; return data.rows as Row[]; },
@@ -59,7 +59,7 @@ export function ExpenseGrid({ orgId, me, onDone, onCancel }: { orgId: string; me
     setBusy(false);
     inv();
     if (ok) toast.success(`حُفظت ${ok} فاتورة كمسودات — أرفق صورة كل فاتورة ثم أرسلها للمراجعة`);
-    if (next.length) { toast.error(`لم تُحفظ ${next.length} — راجع الصفوف المظللة`); setRows(next); } else onDone();
+    if (next.length) { toast.error(`لم تُحفظ ${next.length} — راجع الصفوف المظللة`); setRows(next); } else { setRows([blank(), blank(), blank()]); onDone?.(); }
   }
 
   const cell = "h-9 rounded-none border-0 bg-transparent px-2 shadow-none focus-visible:ring-1";
@@ -130,7 +130,7 @@ export function ExpenseGrid({ orgId, me, onDone, onCancel }: { orgId: string; me
       <div className="flex flex-wrap gap-2">
         {rows.length < 50 && <Button variant="outline" onClick={() => setRows([...rows, blank()])}><Plus className="size-4" />صف</Button>}
         <Button disabled={busy} onClick={() => void saveAll()}>{busy ? "جارٍ الحفظ…" : "حفظ الكل"}</Button>
-        <Button variant="ghost" onClick={onCancel}>إلغاء</Button>
+        {onCancel && <Button variant="ghost" onClick={onCancel}>إلغاء</Button>}
       </div>
       <p className="text-xs text-muted-foreground">تُحفظ كل فاتورة مسودة مستقلة؛ أرفق صورتها من صفحتها ثم أرسلها للمراجعة. لربط فاتورة بطلب احتياج استخدم زر «فاتورة» من صفحة الطلب.</p>
     </div>

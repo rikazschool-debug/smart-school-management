@@ -29,16 +29,22 @@ function useNeedInvalidate() {
 
 export function NeedList({ orgId, open, onNew }: { orgId: string; open: (id: string) => void; onNew: () => void }) {
   const [status, setStatus] = useState("");
-  const q = useQuery({ queryKey: ["pc-needs", orgId, status], queryFn: () => rpc("pc_need_list", { _org: orgId, _status: status || null, _limit: 100, _offset: 0 }) });
+  const [term, setTerm] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const q = useQuery({ queryKey: ["pc-needs", orgId, status, term, from, to], queryFn: () => rpc("pc_need_list", { _org: orgId, _status: status || null, _limit: 100, _offset: 0, _q: term || null, _from: from || null, _to: to || null }) });
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} />;
   const rows = q.data.rows as Row[];
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
+        <Input className="w-56" placeholder="بحث بالمرجع أو الغرض" value={term} onChange={(e) => setTerm(e.target.value)} />
         <select aria-label="الحالة" className={selectCls("min-w-0")} value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">كل الحالات</option>{Object.entries(N_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
+        <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value);  }} /></label>
+        <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value);  }} /></label>
         {q.data.can_create && <Button size="sm" className="ms-auto" onClick={onNew}><Plus className="size-4" />طلب احتياج</Button>}
       </div>
       <p className="text-xs text-muted-foreground">مدير المدرسة يكتب الاحتياج ويعتمده، فيصل إلى مسؤول المشتريات المرتبط بالمدرسة. اعتماد الفاتورة والصرف خطوة مستقلة لدى معتمد آخر.</p>

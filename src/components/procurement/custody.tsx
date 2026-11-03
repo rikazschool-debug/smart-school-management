@@ -69,8 +69,10 @@ export function CustodyList({ orgId, me, open, onNew, orgName }: { orgId: string
   const [q, setQ] = useState("");
   const [school, setSchool] = useState("");
   const [mine, setMine] = useState(false);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [page, setPage] = useState(0);
-  const args = { _org: orgId, _status: status || null, _q: q || null, _school: school || null, _mine: mine };
+  const args = { _org: orgId, _status: status || null, _q: q || null, _school: school || null, _mine: mine, _from: from || null, _to: to || null };
   const list = useQuery({
     queryKey: ["pc-custodies", args, page],
     queryFn: async () => {
@@ -93,7 +95,7 @@ export function CustodyList({ orgId, me, open, onNew, orgName }: { orgId: string
       <div className="flex flex-wrap items-end gap-2">
         <Input className="w-56" placeholder="بحث بالمرجع أو الغرض أو المستلم" value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
         <select className={selectCls("w-44")} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} aria-label="الحالة">
-          <option value="">كل الحالات</option><option value="open">المفتوحة</option><option value="overdue">المتأخرة التسوية</option>
+          <option value="">كل الحالات</option><option value="open">المفتوحة</option><option value="overdue">المتأخرة التسوية</option><option value="past">سجل العهد السابقة</option>
           {Object.entries(C_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         {me.schools.length > 1 && (
@@ -101,6 +103,8 @@ export function CustodyList({ orgId, me, open, onNew, orgName }: { orgId: string
             <option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         )}
+        <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
+        <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
         <label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={mine} onChange={(e) => { setMine(e.target.checked); setPage(0); }} /> عهدي فقط</label>
         <span className="ms-auto flex gap-2">
           {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
