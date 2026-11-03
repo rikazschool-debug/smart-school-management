@@ -9,6 +9,7 @@ import { CustodyOps, RequestDetail, RequestForm, RequestList } from "@/component
 import { ReportsPanel } from "@/components/procurement/reports";
 import { CustodyDetail, CustodyForm, CustodyList } from "@/components/procurement/custody";
 import { ExpenseDetail, ExpenseForm, ExpenseList } from "@/components/procurement/expense";
+import { ExpenseGrid } from "@/components/procurement/expense-grid";
 import { NeedDetail, NeedForm, NeedList } from "@/components/procurement/needs";
 import { CapsNote, SettingsTab, SummaryTab, TasksTab } from "@/components/procurement/workspace";
 
@@ -69,6 +70,7 @@ function Page() {
     : <NeedDetail id={search.n} me={me} back={() => go({ tab: "needs" })} edit={setEditing} openExpense={openE} newInvoice={(nid) => go({ tab: "expenses", new: "expense", need: nid })} />;
   else if (tab === "needs") body = <NeedList orgId={orgId} open={openN} onNew={() => go({ tab: "needs", new: "need" })} />;
   else if (search.new === "custody") body = <CustodyForm orgId={orgId} me={me} onDone={openC} onCancel={() => go({ tab: "custodies" })} />;
+  else if (search.new === "expense" && !search.for && !search.need) body = <ExpenseGrid orgId={orgId} me={me} onDone={() => go({ tab: "expenses" })} onCancel={() => go({ tab: "expenses" })} />;
   else if (search.new === "expense") body = <ExpenseForm orgId={orgId} me={me} custodyId={search.for} needId={search.need} onDone={openE} onCancel={() => (search.for ? openC(search.for) : go({ tab: "expenses" }))} />;
   else if (search.new === "request") body = <RequestForm key={`${search.kind}-${search.for}`} orgId={orgId} me={me} kind={search.kind} custodyId={search.for} onDone={openR} onCancel={() => (search.for ? openC(search.for) : go({ tab: "requests" }))} newCustody={() => go({ tab: "custodies", new: "custody" })} />;
   else if (search.c) body = <CustodyDetail id={search.c} me={me} orgName={active.orgName} back={() => go({ tab: "custodies" })} openExpense={openE} newExpense={(cid) => go({ tab: "expenses", new: "expense", for: cid })}
@@ -86,12 +88,7 @@ function Page() {
     <div className="space-y-4">
       {header}
       {!needsOnly && <CapsNote me={me} />}
-      <div className="flex flex-wrap gap-1 border-b" role="tablist">
-        {tabs.map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t && !search.c && !search.e && !search.r && !search.n && !search.new} onClick={() => go({ tab: t })}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm ${tab === t ? "border-primary font-semibold text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{TABS[t]}</button>
-        ))}
-      </div>
+      {!search.c && !search.e && !search.r && !search.n && !search.new && <h2 className="text-lg font-bold">{TABS[tab]}</h2>}
       {body}
     </div>
   );
