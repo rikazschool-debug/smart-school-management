@@ -10039,6 +10039,10 @@ export type Database = {
         }
         Returns: Json
       }
+      pc_expense_review_edit: {
+        Args: { _id: string; _p: Json; _reason: string; _rev: number }
+        Returns: undefined
+      }
       pc_expense_save: {
         Args: {
           _d: Json
