@@ -7,9 +7,9 @@ tok = lambda w: requests.post(U + "/auth/v1/token?grant_type=password", headers=
 def rpc(w, fn, a):
     r = requests.post(U + f"/rest/v1/rpc/{fn}", headers={"apikey": K, "Authorization": "Bearer " + tok(w), "Content-Type": "application/json"}, json=a)
     assert r.status_code < 300, r.text; return r.json() if r.text.strip() else None
-T = rpc("tch", "support_create", {"_scope": "school", "_school": F["A"], "_title": "تذكرة اختبار الجوال", "_body": "وصف", "_priority": "high", "_category": None, "_student": None, "_client_key": None})
+T = rpc("tch", "support_create", {"_scope": "school", "_school": F["A"], "_title": "تذكرة اختبار الجوال", "_body": "وصف تجريبي لمشكلة الجوال", "_priority": "high", "_category": None, "_student": None, "_client_key": None})
 rpc("pr1", "support_request_info", {"_ticket": T, "_to": F["users"]["tchB"]["id"], "_question": "هل تظهر المشكلة لديكم؟", "_client_key": None})
-P = rpc("owner", "support_escalate", {"_ticket": T, "_title": "تصعيد اختبار الجوال", "_body": "مقتطف", "_client_key": None})
+P = rpc("owner", "support_escalate", {"_ticket": T, "_title": "تصعيد اختبار الجوال", "_body": "مقتطف مختار للمنصة", "_client_key": None})
 res = []
 def chk(n, c, info=""): res.append(bool(c)); print("PASS" if c else "FAIL", n, "" if c else info, flush=True)
 async def screen(br, who, q, name, must):
