@@ -4753,6 +4753,210 @@ export type Database = {
           },
         ]
       }
+      perm_assignments: {
+        Row: {
+          approval_limit: number | null
+          created_at: string
+          created_by: string
+          id: string
+          org_id: string
+          role_id: string
+          school_ids: string[] | null
+          user_id: string
+        }
+        Insert: {
+          approval_limit?: number | null
+          created_at?: string
+          created_by: string
+          id?: string
+          org_id: string
+          role_id: string
+          school_ids?: string[] | null
+          user_id: string
+        }
+        Update: {
+          approval_limit?: number | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          org_id?: string
+          role_id?: string
+          school_ids?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perm_assignments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perm_assignments_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "perm_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perm_log: {
+        Row: {
+          action: string
+          actor: string
+          after: Json | null
+          at: string
+          before: Json | null
+          id: string
+          org_id: string | null
+          reason: string | null
+          role_id: string | null
+          target_user: string | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          id?: string
+          org_id?: string | null
+          reason?: string | null
+          role_id?: string | null
+          target_user?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          id?: string
+          org_id?: string | null
+          reason?: string | null
+          role_id?: string | null
+          target_user?: string | null
+        }
+        Relationships: []
+      }
+      perm_overrides: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string
+          effect: string
+          org_id: string
+          reason: string
+          scope: string | null
+          section: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          created_by: string
+          effect: string
+          org_id: string
+          reason: string
+          scope?: string | null
+          section: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string
+          effect?: string
+          org_id?: string
+          reason?: string
+          scope?: string | null
+          section?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perm_overrides_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perm_role_grants: {
+        Row: {
+          action: string
+          role_id: string
+          scope: string
+          section: string
+        }
+        Insert: {
+          action: string
+          role_id: string
+          scope: string
+          section: string
+        }
+        Update: {
+          action?: string
+          role_id?: string
+          scope?: string
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perm_role_grants_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "perm_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perm_roles: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          key: string | null
+          name: string
+          org_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          key?: string | null
+          name: string
+          org_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          key?: string | null
+          name?: string
+          org_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perm_roles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pickup_requests: {
         Row: {
           arrived_at: string | null
@@ -7080,6 +7284,11 @@ export type Database = {
           user_id: string
         }[]
       }
+      _perm_staff: { Args: { _org: string; _user: string }; Returns: boolean }
+      _perm_valid: {
+        Args: { _action: string; _scope: string; _section: string }
+        Returns: boolean
+      }
       _pickup_delegate_set: {
         Args: { _d: Json; _id: string; _mode: string; _person: string }
         Returns: undefined
@@ -7102,6 +7311,7 @@ export type Database = {
         Args: { _org: string; _school: string }
         Returns: boolean
       }
+      _scope_rank: { Args: { _s: string }; Returns: number }
       _section_title: { Args: { _section: string }; Returns: string }
       _section_users: {
         Args: { _guardians: boolean; _section: string; _year: string }
@@ -8623,6 +8833,53 @@ export type Database = {
           kind: string
           label: string
         }[]
+      }
+      perm_assign: {
+        Args: {
+          _assign: boolean
+          _limit: number
+          _org: string
+          _reason: string
+          _role: string
+          _school_ids: string[]
+          _user: string
+        }
+        Returns: undefined
+      }
+      perm_catalog: { Args: never; Returns: Json }
+      perm_effective: { Args: { _org: string; _user: string }; Returns: Json }
+      perm_log_list: { Args: { _org: string }; Returns: Json }
+      perm_override_set: {
+        Args: {
+          _action: string
+          _effect: string
+          _org: string
+          _reason: string
+          _scope: string
+          _section: string
+          _user: string
+        }
+        Returns: undefined
+      }
+      perm_role_archive: {
+        Args: { _archive: boolean; _id: string; _org: string; _reason: string }
+        Returns: undefined
+      }
+      perm_role_save: {
+        Args: {
+          _description: string
+          _grants: Json
+          _id: string
+          _name: string
+          _org: string
+          _reason: string
+        }
+        Returns: string
+      }
+      perm_roles_list: { Args: { _org: string }; Returns: Json }
+      perm_scope: {
+        Args: { _action: string; _org: string; _section: string; _user: string }
+        Returns: string
       }
       pickup_arrived: {
         Args: { _confirmed?: boolean; _id: string; _id_last4?: string }
