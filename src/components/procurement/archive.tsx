@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ExportButtons } from "@/components/procurement/export-buttons";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 import { db } from "@/components/crud-page";
@@ -49,6 +50,9 @@ export function ArchiveTab({ orgId, me, orgName, openExpense, openCustody }: { o
         <div><Label>الفرع</Label><select className={selectCls("w-56")} value={school} onChange={(e) => setSchool(e.target.value)}><option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         <div><Label>من تاريخ التسوية</Label><Input type="date" className="w-40" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
         <div><Label>إلى</Label><Input type="date" className="w-40" value={to} onChange={(e) => setTo(e.target.value)} /></div>
+        <span className="ms-auto" /><ExportButtons meta={{ title: "أرشيف العهد المسوّاة", school: orgName, filters: [school && `الفرع: ${me.schools.find((s) => s.id === school)?.name ?? ""}`, from && `من ${from}`, to && `إلى ${to}`].filter(Boolean) as string[] }}
+          headers={["المرجع", "الفرع", "الغرض", "المستلم", "تاريخ التسوية", "المبلغ", "المصروف المعتمد"]}
+          rows={() => rows.map((c) => [c.ref, c.school ?? "—", c.purpose, c.holder, day(settled(c)), Number(c.amount), Number(c.bal?.spent ?? 0)])} />
       </div>
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={(q.error as Error).message} /> : !rows.length ? <EmptyState title="لا عهد مؤرشفة" hint="تنتقل العهدة إلى الأرشيف بعد اعتماد تسويتها وإغلاقها." /> : (
         [...groups.entries()].map(([branch, days]) => (

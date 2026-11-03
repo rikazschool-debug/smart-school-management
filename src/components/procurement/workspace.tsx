@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ExportButtons } from "@/components/procurement/export-buttons";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { db } from "@/components/crud-page";
@@ -93,6 +94,10 @@ export function SummaryTab({ orgId, me }: { orgId: string; me: PcMe }) {
   return (
     <div className="space-y-4">
       {me.schools.length > 1 && <select className="h-9 rounded-md border bg-background px-2 text-sm" value={school} onChange={(e) => setSchool(e.target.value)} aria-label="الفرع"><option value="">كل الفروع ضمن نطاقك</option>{me.schools.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>}
+      <div className="flex justify-end"><ExportButtons meta={{ title: "ملخص العهد والمشتريات", filters: [school && `الفرع: ${me.schools.find((x) => x.id === school)?.name ?? ""}`].filter(Boolean) as string[] }}
+        headers={["البند", "القيمة", "", "", "", ""]}
+        rows={() => [...cards.map(([l, v]) => [l, v, "", "", "", ""]), ["", "", "", "", "", ""], ["حسب المستلم / الفرع", "عدد العهد", "المصروف لها", "المعتمد", "المعلّق", "الرصيد"],
+          ...[...(s.by_holder ?? []), ...(s.by_school ?? [])].map((r: Row) => [r.name, Number(r.count), Number(r.disbursed), Number(r.spent), Number(r.pending), Number(r.book)])]} /></div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{cards.map(([l, v]) => <div key={l} className="rounded-xl border bg-card p-3"><p className="text-xs text-muted-foreground">{l}</p><p className="mt-1 text-lg font-bold tabular-nums">{v}</p></div>)}</div>
       <p className="text-xs text-muted-foreground">الأرقام محسوبة من حركات العهد المعتمدة ضمن نطاق صلاحيتك فقط.</p>
       <Table title="حسب المستلم" rows={s.by_holder} />
