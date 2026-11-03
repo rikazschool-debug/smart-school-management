@@ -6537,6 +6537,10 @@ export type Database = {
       }
       _hw_snapshot: { Args: { _hw: string; _note: string }; Returns: undefined }
       _hw_year_archived: { Args: { _year: string }; Returns: boolean }
+      _identity_conflict: {
+        Args: { _kind: string; _subject: string; _uid: string }
+        Returns: boolean
+      }
       _invite_valid: {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
         Returns: boolean
@@ -6553,6 +6557,7 @@ export type Database = {
         Returns: string
       }
       _new_card_code: { Args: never; Returns: string }
+      _nid: { Args: { _v: string }; Returns: string }
       _notify: {
         Args: {
           _body: string
