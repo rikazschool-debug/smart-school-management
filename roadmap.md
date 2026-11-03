@@ -278,3 +278,8 @@
 - [x] C4 Agora (browser 9/9 scripts/meet-room3-journey.py; meetings-live 33/33; meet-comm 13/13): owner 2-branch / principal own; invite in admin+comm+calendar; 3-account audio + screen share + permission revoke; uninvited blocked; remove + no return; end for all; RSVP≠attendance; in-person shows place
 - [x] C4b Screen share shows inside the meeting tile as a preview (prompt-47)
 - [ ] C5 Exports opened, phone width, direct permission calls, security review of new account/login functions, closure-log table
+
+## Support & help desk (tickets)
+- [x] S1 Phase 1: tickets, categories, settings (hours/response note/reopen days), public replies with kept corrections, full workflow (claim/info/internal/resolve/confirm+rating/close/reopen/cancel), timeline, attachments, notifications, list search/filters/paging, Excel/PDF export for managers, guardian child link, platform support for owners/principals (scripts/support-e2e.ts 17/17; browser teacher→principal reply journey)
+- [ ] S2 Phase 2: assign to another person, information request (partial view for student/guardian), cross-branch transfer with reason, private note per recipient, shared team notes, escalation to platform with chosen shared content
+- [ ] S3 Phase 3: response/resolution targets per priority + overdue alerts/escalation, KPIs (open/overdue, first response, resolution time, load per branch/assignee, rating), full multi-org browser journeys + report
