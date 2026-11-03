@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-rout
 import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
   Bell, BookOpen, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
@@ -181,6 +181,21 @@ function Onboarding({ onSignOut }: { onSignOut: () => void }) {
   const [school, setSchool] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [pending, setPending] = useState<boolean | null>(null);
+  useEffect(() => { supabase.rpc("my_link_pending" as never).then(({ data }) => setPending(data === true)); }, []);
+  if (pending === null) return <LoadingState />;
+  if (pending) return (
+    <div className="flex min-h-screen items-center justify-center p-6">
+      <div className="w-full max-w-lg space-y-4 rounded-2xl border bg-card p-8 shadow-sm">
+        <h1 className="font-display text-2xl">حسابك بانتظار استكمال الربط</h1>
+        <p className="text-sm text-muted-foreground">دخلت بنجاح، لكن حسابك غير مرتبط بعد بسجلك في المدرسة. تواصل مع إدارة المدرسة لاستكمال الربط، ثم اضغط «تحديث».</p>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={refresh}>تحديث</Button>
+          <Button type="button" variant="ghost" onClick={onSignOut}>خروج</Button>
+        </div>
+      </div>
+    </div>
+  );
   return (
     <div className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-lg space-y-6 rounded-2xl border bg-card p-8 shadow-sm">
