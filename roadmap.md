@@ -283,3 +283,12 @@
 - [x] S1 Phase 1: tickets, categories, settings (hours/response note/reopen days), public replies with kept corrections, full workflow (claim/info/internal/resolve/confirm+rating/close/reopen/cancel), timeline, attachments, notifications, list search/filters/paging, Excel/PDF export for managers, guardian child link, platform support for owners/principals (scripts/support-e2e.ts 17/17; browser teacher→principal reply journey)
 - [x] S2 Phase 2 (support2-e2e 17/17 + browser note/info journey): assign to another person, information request (partial view for student/guardian), cross-branch transfer with reason, private note per recipient, shared team notes, escalation to platform with chosen shared content
 - [x] S3 Phase 3 (support3-e2e 14/14 + browser reports/settings/overdue): response/resolution targets per priority + overdue alerts/escalation, KPIs (open/overdue, first response, resolution time, load per branch/assignee, rating), full multi-org browser journeys + report
+
+## Support closure (prompt-61) — open
+- [ ] Two-org/two-branch browser journey (create+file, assign/reassign/revoke, transfer, info request, private/team notes, escalation, resolve/rate/close/reopen, platform admin, direct-link/RPC denial)
+- [ ] Principal assignment to anyone in the org; cross-branch partial info requests (privacy kept); branch transfer stays owner-only
+- [ ] Private notes: author+recipient only, not inherited, absent from notifications/search/export
+- [ ] Download & open Excel/PDF for lists and reports (all PDF pages, Arabic, filters, completeness, scope)
+- [ ] Overdue alerts via real pg_cron run: dedupe, recipients, waiting-on-requester pause vs resolve-target policy, priority change, transfer, reopen
+- [ ] Security review of support RPCs/tables/attachments + finish earlier open security review
+- [ ] Update closure log + requirements matrix; final report
