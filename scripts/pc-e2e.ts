@@ -50,7 +50,7 @@ try {
   const cOther = await off.c.rpc("pc_custody_save", { _org: org, _id: null, _school: A, _school_ids: null, _holder: dis.id, _purpose: "لغيري", _amount: 50, _due: later, _rev: 0, _key: k() });
   const stu = await st.c.rpc("pc_custody_save", { _org: org, _id: null, _school: A, _school_ids: null, _holder: st.id, _purpose: "طالب", _amount: 50, _due: later, _rev: 0, _key: k() });
   const apr0 = await owner.c.rpc("pc_custody_save", { _org: org, _id: null, _school: A, _school_ids: null, _holder: apr.id, _purpose: "لمعتمد بلا صلاحية إنشاء", _amount: 50, _due: later, _rev: 0, _key: k() });
-  const pool = await owner.c.rpc("people_pick", { _purpose: "pc_holder", _org: org, _q: null, _school: null, _limit: 200 } as any);
+  const pool = await owner.c.rpc("people_pick", { _purpose: "pc_holder", _school: null, _org: org, _limit: 200 } as any);
   const poolIds = JSON.stringify(pool.data ?? pool.error);
   check("1b holder must hold procurement «create»: owner cannot open a custody for an approver-only user; picker excludes them", !!apr0.error && !poolIds.includes(apr.id) && poolIds.includes(off.id), [apr0.error, poolIds.slice(0, 300)]);
   check("1 officer creates own custody; cannot create for another person; student refused", !c1.error && !!cOther.error && !!stu.error, [c1.error, cOther.error, stu.error]);
