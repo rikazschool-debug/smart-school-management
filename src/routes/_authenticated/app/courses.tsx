@@ -9,7 +9,7 @@ import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { canManage } from "@/lib/roles";
+import { canManageAcademic } from "@/lib/roles";
 import { arabicError, type AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/courses")({ component: Page });
@@ -26,7 +26,7 @@ function Page() {
 
 function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const qc = useQueryClient();
-  const manage = canManage(ctx.role);
+  const manage = canManageAcademic(ctx.role);
   const canAssign = manage || ctx.role === "dept_head";
   const [assigning, setAssigning] = useState<Row | null>(null);
 

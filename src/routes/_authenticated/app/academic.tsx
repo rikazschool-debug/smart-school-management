@@ -3,7 +3,7 @@ import { CrudTable } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { canManage } from "@/lib/roles";
+import { canManageAcademic } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/app/academic")({ component: Page });
 
@@ -11,7 +11,7 @@ function Page() {
   return (
     <RequireSchool nav="academic">
       {(ctx) => {
-        const w = canManage(ctx.role);
+        const w = canManageAcademic(ctx.role);
         const s = ctx.schoolId;
         return (
           <>
