@@ -6,5 +6,5 @@
 - Message/circular attachments reuse the files service: create_message_file makes a 'message_pending' row, the client uploads, and send_message verifies the storage object exists before linking it (source_type='message'). Stale pending files are removed by the uploader's client (cleanupStalePending).
 - Teacher↔student private chats are kind='student' (dedupe 'student:<student>:<teacher>'), started only by the teacher via start_student_conversation and gated by _student_ok; guardians are never added — student privacy and no student↔student chats.
 - Report review rights come from comm_settings.report_reviewer_roles via _report_reviewer (org owner only for cross-branch groups); never widen to all managers or platform admins.
-- Manual groups: created/filled only by org owner (any branch/cross-branch) or principal (own school) via _can_create_group; derived class groups are untouched.
+- Manual groups: created/filled only by org owner (any branch/cross-branch), principal (own school) or an owner-granted groups.create holder, via _can_create_group (perm_allows); derived class groups are untouched.
 - Server test: scripts/comm-e2e.ts (see scripts/AGENTS.md).
