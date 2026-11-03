@@ -376,3 +376,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## C3 Permissions page by role (2026-11-03)
 - perm_people (owner-only) lists staff with base roles + assigned roles; page: role tabs → people → person panel. Browser: demo owner desktop + 390px, no overflow, no page errors. Unit: src/test/perm-tabs.test.ts 3/3. Status: done.
+
+## C4 Purchase needs (2026-11-03)
+- Server: scripts/pc-need-e2e.ts 12/12 (principal-only create, estimate, awaiting assignment + owner notice, no assigning approver/unauthorized, self-claim only, generic RPC refused, only assignee links, over-quantity/duplicate refused, no self-approval, partial remaining, partial close needs reason, auto done, org isolation, auto-assign with one officer). Regression pc-e2e 32/32, pc2-e2e 20/20.
+- Browser (isolated pcb- fixture, torn down): principal at 390px creates 2-line need and approves → «بانتظار الإسناد»; officer claims, records invoice prefilled from remaining lines, detail shows remaining 4/0 and linked invoice. 6/6, no page errors. Status: done.

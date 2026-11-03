@@ -307,9 +307,18 @@
 - [x] C1 Owner home: 4 large cards, no side menu on home; each section opens its own side menu; «إدارة المدارس» card details (add/edit school, activate/suspend branch, link staff)
 - [x] C2 Flexible permissions for school sections (finance + school admin + HR placeholders, sub-sections), role presets (vice, supervisor, counselor, security, gate…) with preview, migrate without widening existing access; custom titles
 - [x] C3 Permissions page: side tab per role (base + assigned roles) → people → person panel (assign/withdraw/grant/deny/remove); phone: chips → list → panel with back (browser desktop+390px, perm-tabs unit 3/3)
-- [ ] C4 Principal purchase request → goes to linked procurement officer → after purchase recorded as invoice with categories
+- [x] C4 Purchase needs: principal creates+approves → linked officer (auto if one; else «بانتظار الإسناد» + owner notified; claim/assign); invoice lines linked with qty/category, partial delivery, remaining, no over-quantity/duplicates; need approval separate from invoice approval. scripts/pc-need-e2e.ts 12/12, pc-e2e 32/32, pc2-e2e 20/20; browser 6/6 (principal phone, officer desktop)
 - [~] C5 Settlement close: unconfirmed paid amounts now block close (pc2 8b); pending invoices/drafts/refunds/open requests already blocked; correction/refund concurrency review open
 - [ ] C6 Browser closure: custom field on invoice (old invoice keeps version), transfer + acceptance + old holder loses access, carry-over two moves + no double total
 - [~] C7 Requests list as phone cards done; open-session revocation + finance suspension (direct RPC, files, export); phone tests for section availability/roles/permissions; requests table as phone cards
 - [ ] C8 Alerts via real cron run; new due date / new low after top-up still alerts
 - [ ] C9 Restore docs (student ID login + forced change, teacher/guardian WhatsApp code, grade visibility) in dedicated files linked from main scope; requirements matrix + closure log
+
+## prompt-71 closure (C4 + remaining)
+- [x] C4 purchase needs (see above)
+- [ ] Permissions completeness: map every school section/action to the original brief; list non-customizable items; supervisor template with assigned-teacher scope; split action permission from data scope for tasks/duties; explain sensitive limits in UI
+- [ ] Owner exception: owner bound by platform section suspension, org isolation, no self-approve/self-disburse — explicit tests
+- [ ] Branch suspension: blocks branch data/ops, not other active branch links; open session + reactivation; previously-suspended stays suspended
+- [ ] Browser journeys on isolated data: assign/grant/deny/withdraw on the new permissions page, staff link invitation, login after branch suspension
+- [ ] C6 invoice custom field (old version kept), custody transfer acceptance, carry-over; finance suspension + permission withdrawal in open session; alerts via real cron (C8)
+- [ ] C9 restore docs (login documents, grade visibility) + requirements matrix with evidence; review new security warnings by actual permission
