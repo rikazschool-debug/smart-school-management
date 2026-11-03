@@ -113,11 +113,12 @@ try {
   await act(off.c, st1.data, "submit");
   g = await get(off.c, C);
   const noTopupNow = await req(off.c, { kind: "topup", custody_id: C, amount: 10, purpose: "أثناء التسوية" });
+  const early = await act(apr.c, st1.data, "approve"); // refused: an invoice on the sheet is still undecided
+  await approveE(pend); // book 980 - 100 = 880
   await act(apr.c, st1.data, "approve");
   g = await get(apr.c, C);
   const close1 = await apr.c.rpc("pc_custody_close", { _id: C, _rev: g.rev, _reason: "إغلاق" });
-  check("6 settlement moves custody to settling; approval does not zero it; close refused with pending + remainder", g.status === "settling" && Number(g.bal.book) === 980 && !!dupSt.error && !!noTopupNow.error && !!close1.error && /المتبقي|قيد المراجعة/.test(close1.error.message), [g.status, dupSt.error, noTopupNow.error, close1.error]);
-  await approveE(pend); // book 980 - 100 = 880
+  check("6 settlement moves custody to settling; approval refused while invoices undecided; approval keeps remainder; close refused with remainder", !!early.error && g.status === "settling" && Number(g.bal.book) === 880 && !!dupSt.error && !!noTopupNow.error && !!close1.error && /المتبقي|قيد المراجعة/.test(close1.error.message), [early.error, g.status, g.bal?.book, dupSt.error, noTopupNow.error, close1.error]);
   // 7 carry 300 to a new custody of the same holder (two opposite approved moves), return the rest with proof
   const C2 = await openCustody(off, 200);
   const carrySelf = await off.c.rpc("pc_carry", { _from: C, _to: C2, _amount: 300, _reason: "ترحيل", _key: k() });
