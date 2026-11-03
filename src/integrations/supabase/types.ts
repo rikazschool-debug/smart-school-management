@@ -10116,6 +10116,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      perm_people: { Args: { _org: string }; Returns: Json }
       perm_role_archive: {
         Args: { _archive: boolean; _id: string; _org: string; _reason: string }
         Returns: undefined
