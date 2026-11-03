@@ -4594,6 +4594,42 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_sends: {
+        Row: {
+          created_at: string
+          failed_code: string | null
+          failed_detail: string | null
+          id: string
+          local_message_id: string
+          phone: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          failed_code?: string | null
+          failed_detail?: string | null
+          id?: string
+          local_message_id: string
+          phone: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          failed_code?: string | null
+          failed_detail?: string | null
+          id?: string
+          local_message_id?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       periods: {
         Row: {
           created_at: string
@@ -6529,6 +6565,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _otp_may_send: { Args: { _phone: string; _uid: string }; Returns: string }
       _people_pool: {
         Args: { _org: string; _post: string; _purpose: string; _school: string }
         Returns: {
