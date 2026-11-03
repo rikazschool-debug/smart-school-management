@@ -92,7 +92,7 @@ function SectionsDialog({ org }: { org: Row }) {
     const reason = await askText(`سبب ${enabled ? "تفعيل" : "تعليق"} ${SECTION_LABELS[k]}`, { required: true, ok: enabled ? "تفعيل" : "تعليق" });
     if (!reason) return;
     const { error } = await db.rpc("platform_set_section", { _org: org["id"], _section: k, _enabled: enabled, _reason: reason });
-    if (error) return toast.error(arabicError(error));
+    if (error) { toast.error(arabicError(error)); return; }
     toast.success("تم الحفظ");
     qc.invalidateQueries({ queryKey: ["org-sections", org["id"]] }); log.refetch();
   }
