@@ -198,3 +198,8 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 | Platform admin, students, guardians, other orgs | No access |
 | Finance section suspended | Every procurement request refused, owner included |
 
+
+## Schools & branches (2026-11-03)
+- Add school, edit data, suspend/reactivate branch: organization owner only (platform admin too); principals no longer edit school records.
+- Suspending a branch pauses access for its staff, students and guardians until reactivated; reason required; last active branch cannot be suspended.
+- Linking staff to a school: owner invitation (invite_member) — the account links on sign-in with the matching confirmed email.

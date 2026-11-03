@@ -71,7 +71,8 @@ export function SessionProvider({ user, children }: { user: User; children: Reac
     if (!q.data) return;
     if (prevSig.current !== null && prevSig.current !== sig) {
       // access changed: drop every cached page result and live subscription, then refetch under the new scope
-      qc.removeQueries({ predicate: (x) => x.queryKey[0] !== "contexts" });
+      // reset (not remove) so mounted pages refetch under the new scope instead of holding orphaned data
+      void qc.resetQueries({ predicate: (x) => x.queryKey[0] !== "contexts" });
       void supabase.removeAllChannels();
     }
     prevSig.current = sig;

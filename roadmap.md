@@ -304,7 +304,7 @@
 ## Package closure (prompt-67)
 - [x] Fix: procurement summary "read-only transaction" error; settings page crash without saved settings
 - [x] Custody recipients limited to holders of procurement «create» (picker + server trigger; pc-e2e 32/32)
-- [ ] C1 Owner home: 4 large cards, no side menu on home; each section opens its own side menu; «إدارة المدارس» card details (add/edit school, activate/suspend branch, link staff)
+- [x] C1 Owner home: 4 large cards, no side menu on home; each section opens its own side menu; «إدارة المدارس» card details (add/edit school, activate/suspend branch, link staff)
 - [ ] C2 Flexible permissions for school sections (finance + school admin + HR placeholders, sub-sections), role presets (vice, supervisor, counselor, security, gate…) with preview, migrate without widening existing access; custom titles
 - [ ] C3 Permissions page: side tab per role → people → person's permissions (edit/add/remove); phone layout
 - [ ] C4 Principal purchase request → goes to linked procurement officer → after purchase recorded as invoice with categories

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useQueryClient } from "@tanstack/react-query";
@@ -6,12 +6,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
   Bell, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
-  ReceiptText,
+  ReceiptText, Wallet, Construction, KeyRound, LayoutDashboard,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { usePcMe } from "@/components/procurement/shared";
-import { NAV_BY_ROLE, ROLE_LABELS, commTabs, scheduleLabel, type NavKey } from "@/lib/roles";
+import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,11 +53,15 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
   support: { to: "/app/support", label: "الدعم والمساعدة", icon: LifeBuoy },
   procurement: { to: "/app/procurement", label: "المشتريات والعهد", icon: ReceiptText },
+  school_home: { to: "/app/school-home", label: "لوحة المدرسة", icon: LayoutDashboard },
+  finance: { to: "/app/finance", label: "بوابة المالية", icon: Wallet },
+  hr: { to: "/app/hr", label: "الموارد البشرية", icon: Construction },
+  permissions: { to: "/app/permissions", label: "الأدوار والصلاحيات", icon: KeyRound },
 };
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
-  { label: "", keys: ["home", "profile"] },
-  { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members"] },
+  { label: "", keys: ["home", "school_home", "finance", "hr", "profile"] },
+  { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
   { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "procurement"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
@@ -83,6 +87,7 @@ function Shell() {
   const pcRole = !!active?.orgId && !["org_owner", "platform_admin", "student", "guardian"].includes(active.role);
   const pc = usePcMe(active?.orgId ?? null, pcRole);
   const navigate = useNavigate();
+  const path = useRouterState({ select: (r) => r.location.pathname });
 
   async function signOut() {
     await qc.cancelQueries();
@@ -102,7 +107,12 @@ function Shell() {
   if (!active) return <Onboarding onSignOut={signOut} />;
 
   const ct = commTabs(active.role);
-  const nav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && pc.data.caps.view ? ["procurement"] : [])] as NavKey[];
+  const owner = active.role === "org_owner";
+  const section = owner ? ownerSection(path) : null;
+  // Owner home has no side menu; inside a section only that section's menu shows.
+  const noSidebar = owner && section === null;
+  const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && pc.data.caps.view ? ["procurement"] : [])] as NavKey[];
+  const nav = owner && section ? ownerSectionNav(section, baseNav) : baseNav;
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (
@@ -114,6 +124,7 @@ function Shell() {
           <p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{active.schoolName}</p>
         </div>
       </div>
+      {owner && section && <p className="mx-3 mb-3 rounded-lg bg-secondary px-3 py-2 text-sm font-bold text-primary">{OWNER_SECTION_LABELS[section]}</p>}
       <div className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
         {groups.map((g) => (
           <div key={g.label}>
@@ -154,17 +165,21 @@ function Shell() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-l border-sidebar-border bg-sidebar lg:block">{sidebar}</aside>
-      {open && (
+      {!noSidebar && <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-l border-sidebar-border bg-sidebar lg:block">{sidebar}</aside>}
+      {open && !noSidebar && (
         <div className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)}>
           <aside className="h-full w-72 max-w-[85vw] bg-sidebar shadow-xl" onClick={(e) => e.stopPropagation()}>{sidebar}</aside>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur sm:px-6">
-          <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" aria-label="القائمة" onClick={() => setOpen(true)}>
-            <Menu className="size-5" />
-          </Button>
+          {noSidebar ? (
+            <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary font-display text-primary-foreground">ر</span>
+          ) : (
+            <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" aria-label="القائمة" onClick={() => setOpen(true)}>
+              <Menu className="size-5" />
+            </Button>
+          )}
           <div className="relative flex min-w-0 flex-1 items-center sm:flex-none">
             <Building2 aria-hidden className="pointer-events-none absolute right-3 size-4 text-primary" />
             <label className="sr-only" htmlFor="ctx">تبديل الدور أو المدرسة</label>
@@ -184,6 +199,7 @@ function Shell() {
           </div>
           <div className="ms-auto flex shrink-0 items-center gap-1">
             <NotificationBell />
+            {noSidebar && <Button variant="ghost" size="icon" onClick={signOut} aria-label="تسجيل الخروج" title="تسجيل الخروج"><LogOut className="size-4" /></Button>}
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 md:py-8">

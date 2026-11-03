@@ -4296,6 +4296,7 @@ export type Database = {
       }
       memberships: {
         Row: {
+          branch_suspended: boolean
           created_at: string
           department_id: string | null
           id: string
@@ -4307,6 +4308,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          branch_suspended?: boolean
           created_at?: string
           department_id?: string | null
           id?: string
@@ -4318,6 +4320,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          branch_suspended?: boolean
           created_at?: string
           department_id?: string | null
           id?: string
@@ -9757,6 +9760,37 @@ export type Database = {
       my_teacher_ids: { Args: never; Returns: string[] }
       norm_phone: { Args: { _p: string }; Returns: string }
       open_circular: { Args: { _id: string }; Returns: undefined }
+      org_school_save: {
+        Args: {
+          _city?: string
+          _code?: string
+          _id: string
+          _name: string
+          _org: string
+          _stage_type?: string
+        }
+        Returns: string
+      }
+      org_school_set_active: {
+        Args: { _active: boolean; _id: string; _reason?: string }
+        Returns: number
+      }
+      org_schools_overview: {
+        Args: { _org: string }
+        Returns: {
+          city: string
+          code: string
+          id: string
+          is_active: boolean
+          name: string
+          paused: number
+          pending_invites: number
+          staff: Json
+          staff_total: number
+          stage_type: string
+          students: number
+        }[]
+      }
       org_sections_get: { Args: { _org: string }; Returns: Json }
       pc_ack: { Args: { _move: string }; Returns: undefined }
       pc_alerts_tick: { Args: never; Returns: number }

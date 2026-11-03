@@ -36,3 +36,4 @@
 - scripts/perm5-e2e.ts: section availability + flexible permissions (templates, custom roles, deny wins, multi-role, no self-escalation, students excluded, suspension wins, isolation; 20 checks).
 - scripts/pc-e2e.ts: procurement & custody (lifecycle, VAT, derived balances, separation of duties, limits, duplicates, corrections, refunds, parallel disbursement, suspension, isolation; 31 checks). scripts/pc-browser-fixture.ts setup|teardown: isolated pcb- data; always run teardown after.
 - scripts/pc2-e2e.ts: procurement phase 4 (requests, top-ups, settlement/close, carry-over, transfers, form versions, alerts, reports/export scope; 19 checks). pc-browser-fixture.ts `setup --open` also creates a disbursed custody with one approved invoice.
+- scripts/schools-e2e.ts: owner schools/branches (add/edit, suspend pauses accounts + blocks joining, last-branch guard, restore only paused, audit, isolation; 13 checks).
