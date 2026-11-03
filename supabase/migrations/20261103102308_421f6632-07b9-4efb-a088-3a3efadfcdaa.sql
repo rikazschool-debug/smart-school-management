@@ -1,0 +1,1 @@
+alter function public._pc_today() set search_path = public;

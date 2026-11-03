@@ -57,7 +57,8 @@ export type NavKey =
   | "duties"
   | "meetings"
   | "calendar"
-  | "notifications";
+  | "notifications"
+  | "procurement";
 
 /** School administration sub-sections (duties, meetings, personal calendar) for every staff role. */
 const ADMIN_KEYS: NavKey[] = ["admin", "duties", "meetings", "calendar"];

@@ -4706,6 +4706,598 @@ export type Database = {
         }
         Relationships: []
       }
+      pc_categories: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_categories_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pc_counters: {
+        Row: {
+          kind: string
+          n: number
+          org_id: string
+        }
+        Insert: {
+          kind: string
+          n?: number
+          org_id: string
+        }
+        Update: {
+          kind?: string
+          n?: number
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_counters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pc_custodies: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          currency: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          holder_id: string
+          id: string
+          idem_key: string | null
+          org_id: string
+          overdue_exception: string | null
+          purpose: string
+          ref: string
+          rev: number
+          school_id: string
+          school_ids: string[]
+          settle_due: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          currency?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          holder_id: string
+          id?: string
+          idem_key?: string | null
+          org_id: string
+          overdue_exception?: string | null
+          purpose: string
+          ref: string
+          rev?: number
+          school_id: string
+          school_ids?: string[]
+          settle_due: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          currency?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          holder_id?: string
+          id?: string
+          idem_key?: string | null
+          org_id?: string
+          overdue_exception?: string | null
+          purpose?: string
+          ref?: string
+          rev?: number
+          school_id?: string
+          school_ids?: string[]
+          settle_due?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_custodies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_custodies_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pc_expense_lines: {
+        Row: {
+          amount: number
+          description: string
+          expense_id: string
+          id: string
+          net: number
+          ord: number
+          taxable: boolean
+          total: number
+          vat: number
+        }
+        Insert: {
+          amount: number
+          description: string
+          expense_id: string
+          id?: string
+          net: number
+          ord: number
+          taxable: boolean
+          total: number
+          vat: number
+        }
+        Update: {
+          amount?: number
+          description?: string
+          expense_id?: string
+          id?: string
+          net?: number
+          ord?: number
+          taxable?: boolean
+          total?: number
+          vat?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_expense_lines_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "pc_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pc_expenses: {
+        Row: {
+          benefit_school_id: string
+          category_id: string | null
+          corrects_id: string | null
+          created_at: string
+          created_by: string
+          custody_id: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          description: string
+          dup_of: string | null
+          id: string
+          idem_key: string | null
+          invoice_date: string | null
+          invoice_no: string | null
+          net: number
+          no_attachment_ok_by: string | null
+          no_attachment_reason: string | null
+          notes: string | null
+          org_id: string
+          own_funds: boolean
+          purchase_date: string
+          ref: string
+          rev: number
+          reviewed_by: string | null
+          school_id: string
+          status: string
+          submitted_at: string | null
+          supplier: string
+          tax_invoice: boolean
+          total: number
+          updated_at: string
+          vat: number
+          vat_inclusive: boolean
+          vat_rate: number
+        }
+        Insert: {
+          benefit_school_id: string
+          category_id?: string | null
+          corrects_id?: string | null
+          created_at?: string
+          created_by: string
+          custody_id?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          description: string
+          dup_of?: string | null
+          id?: string
+          idem_key?: string | null
+          invoice_date?: string | null
+          invoice_no?: string | null
+          net?: number
+          no_attachment_ok_by?: string | null
+          no_attachment_reason?: string | null
+          notes?: string | null
+          org_id: string
+          own_funds?: boolean
+          purchase_date: string
+          ref: string
+          rev?: number
+          reviewed_by?: string | null
+          school_id: string
+          status?: string
+          submitted_at?: string | null
+          supplier: string
+          tax_invoice?: boolean
+          total?: number
+          updated_at?: string
+          vat?: number
+          vat_inclusive?: boolean
+          vat_rate: number
+        }
+        Update: {
+          benefit_school_id?: string
+          category_id?: string | null
+          corrects_id?: string | null
+          created_at?: string
+          created_by?: string
+          custody_id?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          description?: string
+          dup_of?: string | null
+          id?: string
+          idem_key?: string | null
+          invoice_date?: string | null
+          invoice_no?: string | null
+          net?: number
+          no_attachment_ok_by?: string | null
+          no_attachment_reason?: string | null
+          notes?: string | null
+          org_id?: string
+          own_funds?: boolean
+          purchase_date?: string
+          ref?: string
+          rev?: number
+          reviewed_by?: string | null
+          school_id?: string
+          status?: string
+          submitted_at?: string | null
+          supplier?: string
+          tax_invoice?: boolean
+          total?: number
+          updated_at?: string
+          vat?: number
+          vat_inclusive?: boolean
+          vat_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_expenses_benefit_school_id_fkey"
+            columns: ["benefit_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "pc_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_expenses_corrects_id_fkey"
+            columns: ["corrects_id"]
+            isOneToOne: false
+            referencedRelation: "pc_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_expenses_custody_id_fkey"
+            columns: ["custody_id"]
+            isOneToOne: false
+            referencedRelation: "pc_custodies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_expenses_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_expenses_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pc_log: {
+        Row: {
+          action: string
+          actor: string
+          after: Json | null
+          at: string
+          before: Json | null
+          entity: string
+          entity_id: string | null
+          id: string
+          org_id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          entity: string
+          entity_id?: string | null
+          id?: string
+          org_id: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          org_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pc_moves: {
+        Row: {
+          actor: string
+          amount: number
+          at: string
+          custody_id: string
+          doc_date: string | null
+          expense_id: string | null
+          external_ref: string | null
+          file_id: string | null
+          holder_ack_at: string | null
+          holder_ack_by: string | null
+          id: string
+          idem_key: string | null
+          kind: string
+          method: string | null
+          note: string | null
+          org_id: string
+          ref: string
+        }
+        Insert: {
+          actor: string
+          amount: number
+          at?: string
+          custody_id: string
+          doc_date?: string | null
+          expense_id?: string | null
+          external_ref?: string | null
+          file_id?: string | null
+          holder_ack_at?: string | null
+          holder_ack_by?: string | null
+          id?: string
+          idem_key?: string | null
+          kind: string
+          method?: string | null
+          note?: string | null
+          org_id: string
+          ref: string
+        }
+        Update: {
+          actor?: string
+          amount?: number
+          at?: string
+          custody_id?: string
+          doc_date?: string | null
+          expense_id?: string | null
+          external_ref?: string | null
+          file_id?: string | null
+          holder_ack_at?: string | null
+          holder_ack_by?: string | null
+          id?: string
+          idem_key?: string | null
+          kind?: string
+          method?: string | null
+          note?: string | null
+          org_id?: string
+          ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_moves_custody_id_fkey"
+            columns: ["custody_id"]
+            isOneToOne: false
+            referencedRelation: "pc_custodies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_moves_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "pc_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_moves_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pc_refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          custody_id: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          expense_id: string
+          id: string
+          idem_key: string | null
+          move_id: string | null
+          org_id: string
+          reason: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          custody_id: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          expense_id: string
+          id?: string
+          idem_key?: string | null
+          move_id?: string | null
+          org_id: string
+          reason: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          custody_id?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          expense_id?: string
+          id?: string
+          idem_key?: string | null
+          move_id?: string | null
+          org_id?: string
+          reason?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_refunds_custody_id_fkey"
+            columns: ["custody_id"]
+            isOneToOne: false
+            referencedRelation: "pc_custodies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_refunds_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "pc_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_refunds_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pc_settings: {
+        Row: {
+          block_overdue: boolean
+          low_balance: number
+          org_id: string
+          require_attachment: boolean
+          rev: number
+          updated_at: string
+          updated_by: string | null
+          vat_inclusive: boolean
+          vat_rate: number
+        }
+        Insert: {
+          block_overdue?: boolean
+          low_balance?: number
+          org_id: string
+          require_attachment?: boolean
+          rev?: number
+          updated_at?: string
+          updated_by?: string | null
+          vat_inclusive?: boolean
+          vat_rate?: number
+        }
+        Update: {
+          block_overdue?: boolean
+          low_balance?: number
+          org_id?: string
+          require_attachment?: boolean
+          rev?: number
+          updated_at?: string
+          updated_by?: string | null
+          vat_inclusive?: boolean
+          vat_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       periods: {
         Row: {
           created_at: string
@@ -7276,6 +7868,131 @@ export type Database = {
         Returns: undefined
       }
       _otp_may_send: { Args: { _phone: string; _uid: string }; Returns: string }
+      _pc_bal: {
+        Args: { _custody: string; _exclude?: string }
+        Returns: {
+          adjusted: number
+          available: number
+          book: number
+          carried: number
+          disbursed: number
+          pending: number
+          refunds: number
+          returned: number
+          spent: number
+          topups: number
+        }[]
+      }
+      _pc_branches: {
+        Args: { _action: string; _org: string; _uid: string }
+        Returns: string[]
+      }
+      _pc_calc: {
+        Args: {
+          _amount: number
+          _incl: boolean
+          _rate: number
+          _taxable: boolean
+        }
+        Returns: Record<string, unknown>
+      }
+      _pc_can_custody: {
+        Args: { _action: string; _id: string }
+        Returns: boolean
+      }
+      _pc_can_expense: {
+        Args: { _action: string; _id: string }
+        Returns: boolean
+      }
+      _pc_custody_row: {
+        Args: { c: Database["public"]["Tables"]["pc_custodies"]["Row"] }
+        Returns: Json
+      }
+      _pc_expense_row: {
+        Args: { e: Database["public"]["Tables"]["pc_expenses"]["Row"] }
+        Returns: Json
+      }
+      _pc_file_ok: {
+        Args: { _category: string; _id: string }
+        Returns: boolean
+      }
+      _pc_files: { Args: { _category: string; _id: string }; Returns: Json }
+      _pc_limit: { Args: { _org: string; _uid: string }; Returns: number }
+      _pc_log: {
+        Args: {
+          _action: string
+          _after: Json
+          _before: Json
+          _entity: string
+          _id: string
+          _org: string
+          _reason: string
+        }
+        Returns: undefined
+      }
+      _pc_name: { Args: { _u: string }; Returns: string }
+      _pc_notify: {
+        Args: {
+          _body: string
+          _key: string
+          _school: string
+          _title: string
+          _user: string
+        }
+        Returns: undefined
+      }
+      _pc_notify_can: {
+        Args: {
+          _action: string
+          _body: string
+          _exclude: string[]
+          _key: string
+          _org: string
+          _school: string
+          _title: string
+        }
+        Returns: undefined
+      }
+      _pc_ok: {
+        Args: {
+          _action: string
+          _creator: string
+          _holder: string
+          _org: string
+          _school: string
+          _uid: string
+        }
+        Returns: boolean
+      }
+      _pc_overdue: {
+        Args: { _exclude: string; _holder: string; _org: string }
+        Returns: number
+      }
+      _pc_ref: {
+        Args: { _kind: string; _org: string; _prefix: string }
+        Returns: string
+      }
+      _pc_settings: {
+        Args: { _org: string }
+        Returns: {
+          block_overdue: boolean
+          low_balance: number
+          org_id: string
+          require_attachment: boolean
+          rev: number
+          updated_at: string
+          updated_by: string | null
+          vat_inclusive: boolean
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pc_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _pc_today: { Args: never; Returns: string }
       _people_pool: {
         Args: { _org: string; _post: string; _purpose: string; _school: string }
         Returns: {
@@ -8329,6 +9046,19 @@ export type Database = {
         Args: { _org_name: string; _school_name: string }
         Returns: string
       }
+      create_pc_file: {
+        Args: {
+          _entity: string
+          _id: string
+          _mime: string
+          _name: string
+          _size: number
+        }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
       create_pickup_file: {
         Args: { _mime: string; _name: string; _pickup: string; _size: number }
         Returns: {
@@ -8797,6 +9527,126 @@ export type Database = {
       norm_phone: { Args: { _p: string }; Returns: string }
       open_circular: { Args: { _id: string }; Returns: undefined }
       org_sections_get: { Args: { _org: string }; Returns: Json }
+      pc_ack: { Args: { _move: string }; Returns: undefined }
+      pc_category_save: {
+        Args: { _archived: boolean; _id: string; _name: string; _org: string }
+        Returns: string
+      }
+      pc_custody_action: {
+        Args: {
+          _action: string
+          _exception?: string
+          _id: string
+          _reason: string
+          _rev: number
+        }
+        Returns: undefined
+      }
+      pc_custody_get: { Args: { _id: string }; Returns: Json }
+      pc_custody_list: {
+        Args: {
+          _limit: number
+          _mine: boolean
+          _offset: number
+          _org: string
+          _q: string
+          _school: string
+          _status: string
+        }
+        Returns: Json
+      }
+      pc_custody_save: {
+        Args: {
+          _amount: number
+          _due: string
+          _holder: string
+          _id: string
+          _key: string
+          _org: string
+          _purpose: string
+          _rev: number
+          _school: string
+          _school_ids: string[]
+        }
+        Returns: string
+      }
+      pc_disburse: {
+        Args: {
+          _doc_date: string
+          _external_ref: string
+          _file: string
+          _id: string
+          _key: string
+          _method: string
+          _note: string
+          _rev: number
+        }
+        Returns: string
+      }
+      pc_expense_action: {
+        Args: { _action: string; _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      pc_expense_get: { Args: { _id: string }; Returns: Json }
+      pc_expense_list: {
+        Args: {
+          _category: string
+          _custody: string
+          _from: string
+          _limit: number
+          _offset: number
+          _org: string
+          _q: string
+          _school: string
+          _status: string
+          _to: string
+        }
+        Returns: Json
+      }
+      pc_expense_save: {
+        Args: {
+          _d: Json
+          _id: string
+          _key: string
+          _org: string
+          _rev: number
+        }
+        Returns: string
+      }
+      pc_file_remove: { Args: { _file: string }; Returns: undefined }
+      pc_me: { Args: { _org: string }; Returns: Json }
+      pc_refund_create: {
+        Args: {
+          _amount: number
+          _expense: string
+          _key: string
+          _reason: string
+        }
+        Returns: string
+      }
+      pc_refund_decide: {
+        Args: { _collect: boolean; _id: string; _reason: string }
+        Returns: undefined
+      }
+      pc_settings_log: { Args: { _org: string }; Returns: Json }
+      pc_settings_save: {
+        Args: {
+          _block_overdue: boolean
+          _low_balance: number
+          _org: string
+          _reason: string
+          _require_attachment: boolean
+          _rev: number
+          _vat_inclusive: boolean
+          _vat_rate: number
+        }
+        Returns: undefined
+      }
+      pc_summary: {
+        Args: { _from: string; _org: string; _school: string; _to: string }
+        Returns: Json
+      }
+      pc_tasks: { Args: { _org: string }; Returns: Json }
       people_pick: {
         Args: {
           _branch?: string

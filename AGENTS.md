@@ -30,7 +30,7 @@
 - Homework & tests: homework → homework_targets → immutable submissions/attempts → homework_grades; the teacher's saved grade is visible at once (no review/publish), edits append homework_grade_history; observers read only. Tests: scripts/homework-e2e.ts, homework2-e2e.ts.
 - UI primitives: native selects use selectCls (src/components/ui/native-select.ts); confirmations/reasons use ask/askText (src/components/confirm.tsx), never window.confirm/prompt — one consistent RTL look.
 - Choosing people (groups, direct chat, tasks, duties, meetings, decisions) uses PeoplePicker (src/components/people-picker.tsx) over people_pick: the server pool per purpose is the only source of who may be listed — never a per-screen staff query. Tests: scripts/people-e2e.ts.
-- Teacher permissions derive from teacher_assignments only through assignment_live(start,end) on school_today(); never check status alone.
+- Teacher permissions derive from teacher_assignments only via assignment_live(start,end) (school_today).
 - Lists: CrudTable does server-side search/filters/paging and Excel/PDF export (src/lib/export.ts); imports run row-by-row with the RLS client — never a privileged bulk path.
 - Attendance: all writes via RPCs on the server clock (Asia/Riyadh); details in src/components/attendance/AGENTS.md.
 - School administration (adm_*: forms/requests/tasks, duties, meetings incl. Agora virtual rooms): writes only via adm_* RPCs; details in src/components/admin/AGENTS.md.
@@ -39,3 +39,4 @@
 - Support tickets: RPC-only access (support_*), identity from the session; see src/components/support/AGENTS.md.
 - Section availability: platform admin toggles per-org sections via platform_set_section (logged); missing row = enabled; section RPCs check section_enabled() server-side.
 - Flexible permissions (perm_* tables): resolved only by perm_scope() server-side (deny wins, suspended section grants nothing); owner-only RPCs; base app_role checks unchanged. Tests: scripts/perm5-e2e.ts.
+- Procurement (pc_*): RPC-only; balances = sum of immutable pc_moves; VAT on server. Tests: pc-e2e.ts.

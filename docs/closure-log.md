@@ -341,3 +341,10 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Platform per-org section availability (org_sections, reason/actor/time, org_section_log).
 - Flexible permissions (perm_*): templates, custom roles, assignments with branches/limit, grant/deny overrides, effective view with source, change log. scripts/perm5-e2e.ts 20/20. Browser: permissions page renders templates and people chooser.
 - Not tested: open-session revocation in browser, phone width.
+
+## Procurement & custody — phase 3 (2026-11-03)
+- Scope: custody request/approve/disburse/ack, multi-line invoices with VAT (inclusive/exclusive, exempt lines), pending vs book vs available balances from immutable movements, returns, corrections, refunds, duplicate invoices, approval limits, branch scope, settings.
+- Server: scripts/pc-e2e.ts 31/31; perm5-e2e 20/20 still passing.
+- Browser: officer requested 1,000 → approver approved → disburser blocked without reference, then disbursed with proof → officer confirmed receipt → 2-line tax invoice (400 taxable + 100 exempt = 560) with attachment → approver approved → statement shows 1,000 / −560 / balance 440.
+- Not tested: phone width; Excel/PDF files opened; top-ups, settlement, carry-over (phase 4).
+
