@@ -5709,28 +5709,43 @@ export type Database = {
       }
       support_settings: {
         Row: {
+          escalate_to: string | null
           id: string
           org_id: string | null
           reopen_days: number
           response_note: string
+          sla: Json
           updated_at: string
+          work_days: number[]
+          work_end: string
           work_hours: string
+          work_start: string
         }
         Insert: {
+          escalate_to?: string | null
           id?: string
           org_id?: string | null
           reopen_days?: number
           response_note?: string
+          sla?: Json
           updated_at?: string
+          work_days?: number[]
+          work_end?: string
           work_hours?: string
+          work_start?: string
         }
         Update: {
+          escalate_to?: string | null
           id?: string
           org_id?: string | null
           reopen_days?: number
           response_note?: string
+          sla?: Json
           updated_at?: string
+          work_days?: number[]
+          work_end?: string
           work_hours?: string
+          work_start?: string
         }
         Relationships: [
           {
@@ -5760,7 +5775,11 @@ export type Database = {
           requester: string
           requester_role: string
           resolution: string | null
+          resolve_alerted_at: string | null
+          resolve_due: string | null
           resolved_at: string | null
+          response_alerted_at: string | null
+          response_due: string | null
           rev: number
           school_id: string
           scope: string
@@ -5786,7 +5805,11 @@ export type Database = {
           requester: string
           requester_role: string
           resolution?: string | null
+          resolve_alerted_at?: string | null
+          resolve_due?: string | null
           resolved_at?: string | null
+          response_alerted_at?: string | null
+          response_due?: string | null
           rev?: number
           school_id: string
           scope: string
@@ -5812,7 +5835,11 @@ export type Database = {
           requester?: string
           requester_role?: string
           resolution?: string | null
+          resolve_alerted_at?: string | null
+          resolve_due?: string | null
           resolved_at?: string | null
+          response_alerted_at?: string | null
+          response_due?: string | null
           rev?: number
           school_id?: string
           scope?: string
@@ -7009,6 +7036,16 @@ export type Database = {
         Args: { _student: string; _teacher: string }
         Returns: boolean
       }
+      _support_add_work: {
+        Args: {
+          _days: number[]
+          _e: string
+          _hours: number
+          _s: string
+          _start: string
+        }
+        Returns: string
+      }
       _support_event: {
         Args: {
           _action: string
@@ -7019,6 +7056,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _support_internal_actions: { Args: never; Returns: string[] }
       _support_notify: {
         Args: {
           _key: string
@@ -7038,6 +7076,28 @@ export type Database = {
           _u: string
         }
         Returns: undefined
+      }
+      _support_policy: {
+        Args: { _org: string; _scope: string }
+        Returns: {
+          escalate_to: string | null
+          id: string
+          org_id: string | null
+          reopen_days: number
+          response_note: string
+          sla: Json
+          updated_at: string
+          work_days: number[]
+          work_end: string
+          work_hours: string
+          work_start: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "support_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       _support_user_school: {
         Args: { _fallback: string; _org: string; _u: string }
@@ -8861,6 +8921,13 @@ export type Database = {
         }
         Returns: string
       }
+      support_assignees: {
+        Args: { _school?: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       support_can_read: { Args: { _ticket: string }; Returns: boolean }
       support_create: {
         Args: {
@@ -8887,6 +8954,15 @@ export type Database = {
           _title: string
         }
         Returns: string
+      }
+      support_escalate_candidates: {
+        Args: { _org: string }
+        Returns: {
+          full_name: string
+          roles: string
+          school_name: string
+          user_id: string
+        }[]
       }
       support_files: {
         Args: { _ticket: string }
@@ -8926,6 +9002,7 @@ export type Database = {
       }
       support_list: {
         Args: {
+          _assignee?: string
           _box: string
           _category?: string
           _from?: string
@@ -8942,10 +9019,13 @@ export type Database = {
           category: string
           created_at: string
           id: string
+          overdue: boolean
           priority: string
           ref: string
           requester_name: string
           requester_role: string
+          resolve_due: string
+          response_due: string
           school_name: string
           scope: string
           status: string
@@ -8992,8 +9072,22 @@ export type Database = {
         Returns: string
       }
       support_save_settings: {
-        Args: { _hours: string; _note: string; _org: string; _reopen: number }
+        Args: {
+          _days: number[]
+          _end: string
+          _escalate: string
+          _note: string
+          _org: string
+          _reopen: number
+          _sla: Json
+          _start: string
+        }
         Returns: undefined
+      }
+      support_sla_tick: { Args: { _only?: string[] }; Returns: number }
+      support_stats: {
+        Args: { _from?: string; _school?: string; _to?: string }
+        Returns: Json
       }
       sync_course_group: { Args: { _course: string }; Returns: string }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
