@@ -1,3 +1,4 @@
+import { useSchoolPerms } from "@/lib/school-perms";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -43,7 +44,9 @@ function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const navigate = useNavigate({ from: "/app/communication" });
   // Sidebar sections: «التواصل» = chats only; «المجموعات» (?tab=groups|classes) and «إدارة المجموعات» (?tab=manage) are separate;
   // circulars and meetings have their own pages. Old links (?tab=circulars|meetings) still open here.
-  const all = commTabs(ctx.role);
+  const sp = useSchoolPerms(ctx.schoolId);
+  const base = commTabs(ctx.role);
+  const all = sp?.["groups.create"] && !base.includes("manage") ? [...base, "manage" as CommTab] : base;
   const section: "groups" | "manage" | "chat" = search.tab === "manage" ? "manage" : search.tab === "groups" || search.tab === "classes" ? "groups" : "chat";
   const tabs = section === "manage" ? all.filter((t) => t === "manage")
     : section === "groups" ? all.filter((t) => t === "groups" || t === "classes")
