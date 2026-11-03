@@ -314,6 +314,10 @@
 - [ ] C8 Alerts via real cron run; new due date / new low after top-up still alerts
 - [ ] C9 Restore docs (student ID login + forced change, teacher/guardian WhatsApp code, grade visibility) in dedicated files linked from main scope; requirements matrix + closure log
 
+## prompt-72 C4 verification
+- [x] Reservation at submission (drafts reserve nothing; released on reject/cancel; pending ≠ approved/spent), concurrent submissions serialized, concurrent claims → one winner, partial close → closed_partial, net spent incl. corrections − collected refunds, corrections cannot carry need quantities, pc_need_lines RLS+no grants verified (anon/teacher/officer refused). pc-need-e2e 18/18
+- [ ] Explicit test of correction/refund effect on a need (needs a custody-based need invoice)
+
 ## prompt-71 closure (C4 + remaining)
 - [x] C4 purchase needs (see above)
 - [ ] Permissions completeness: map every school section/action to the original brief; list non-customizable items; supervisor template with assigned-teacher scope; split action permission from data scope for tasks/duties; explain sensitive limits in UI

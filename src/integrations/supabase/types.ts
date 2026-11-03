@@ -8243,6 +8243,7 @@ export type Database = {
       _pc_low_check: { Args: { _custody: string }; Returns: undefined }
       _pc_name: { Args: { _u: string }; Returns: string }
       _pc_need_lines_json: { Args: { _id: string }; Returns: Json }
+      _pc_need_net: { Args: { _req: string }; Returns: number }
       _pc_need_notify_owners: {
         Args: {
           _body: string
@@ -8261,6 +8262,10 @@ export type Database = {
       _pc_need_route: { Args: { _id: string }; Returns: undefined }
       _pc_need_used: {
         Args: { _approved_only: boolean; _line: string }
+        Returns: number
+      }
+      _pc_need_used_excl: {
+        Args: { _eid: string; _line: string }
         Returns: number
       }
       _pc_notify: {
