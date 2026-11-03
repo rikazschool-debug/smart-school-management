@@ -25,7 +25,7 @@
 - Unlinked files: only run_file_cleanup (cron → pg_net → Storage API); never delete storage.objects rows.
 - Course rows are readable only through can_view_course (+ day substitute); dept heads see only their department's courses and no student records.
 - Cleanup health: hourly check_cleanup_health over file_cleanup_runs (dedup cleanup_alerts, test channel isolated).
-- Schools: owner-only org_school_save/org_school_set_active; suspension pauses branch memberships (branch_suspended); trigger blocks activation. Tests: scripts/schools-e2e.ts.
+- Schools: owner-only org_school_save/org_school_set_active; suspension pauses branch memberships (branch_suspended); trigger blocks activation. Test: schools-e2e.
 - docs/permissions-matrix.md (role capabilities) and docs/closure-log.md (evidence log): update with every change.
 - scripts/, src/components/schedule/, src/components/comm/, src/components/attendance/, src/components/grades/, src/components/admin/ and src/components/support/ have their own AGENTS.md — read before changing files there.
 - Homework & tests: homework → homework_targets → immutable submissions/attempts → homework_grades; the teacher's saved grade is visible at once (no review/publish), edits append homework_grade_history; observers read only. Tests: scripts/homework-e2e.ts, homework2-e2e.ts.
