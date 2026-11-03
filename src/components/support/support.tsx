@@ -394,7 +394,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
           {d.events.map((e: Row, i: number) => (
             <li key={i} className="rounded-lg border bg-card p-2.5 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span><span className="font-medium">{ACT[e.action] ?? e.action}</span> — {e.actor_name ?? "النظام"}{e.to && ` · ${STATUS[e.from] ?? "—"} ← ${STATUS[e.to]}`}</span>
+                <span><span className="font-medium">{ACT[e.action] ?? e.action}</span> — {e.actor_name ?? "النظام"}{e.to && (e.from ? ` · ${STATUS[e.from]} ← ${STATUS[e.to]}` : ` · ${STATUS[e.to]}`)}</span>
                 <span className="text-xs text-muted-foreground">{fmt(e.created_at)}</span>
               </div>
               {e.details?.reason && <p className="mt-0.5 text-muted-foreground">{e.details.reason}</p>}
