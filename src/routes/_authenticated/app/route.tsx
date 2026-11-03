@@ -139,8 +139,8 @@ function Shell() {
               {g.keys.map((k) => {
                 const n = NAV[k];
                 return (
+                  <Fragment key={k}>
                   <Link
-                    key={k}
                     to={n.to}
                     {...(n.tab ? { search: { tab: n.tab } } : {})}
                     activeOptions={{ exact: k === "home" || k === "admin", includeSearch: k === "communication" || !!n.tab }}
@@ -150,6 +150,15 @@ function Shell() {
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
                     <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{k === "schedule" && active ? scheduleLabel(active.role) : n.label}</span>
                   </Link>
+                  {k === "procurement" && path.startsWith("/app/procurement") && (
+                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                      {PC_SUB.filter(([t]) => (pcNeedsOnly ? t === "needs" : t !== "settings" || owner || pc.data?.caps.settings === "org")).map(([t, label]) => (
+                        <Link key={t} to="/app/procurement" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)}
+                          className="flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary">{label}</Link>
+                      ))}
+                    </div>
+                  )}
+                  </Fragment>
                 );
               })}
             </div>
