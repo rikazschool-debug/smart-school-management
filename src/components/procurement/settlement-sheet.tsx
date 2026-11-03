@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Download, FileText } from "lucide-react";
 import { db } from "@/components/crud-page";
@@ -18,6 +20,7 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
   orgId: string; custodyId: string; title: string; me: PcMe; open: (id: string) => void; readOnly?: boolean; orgName: string;
 }) {
   const inv = useInvalidate();
+  const [ed, setEd] = useState<Record<string, Row>>({});
   const q = useQuery({
     queryKey: ["pc-expenses", "sheet", custodyId],
     queryFn: async () => {
@@ -48,6 +51,23 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
     inv(); void q.refetch();
   }
 
+  async function saveEdit(e: Row) {
+    const d = ed[e.id] ?? {}; const p: Row = {};
+    for (const k of ["supplier", "invoice_no", "description", "purchase_date"]) if (d[k] !== undefined && d[k] !== (e[k] ?? "")) p[k] = d[k];
+    if (d.amount !== undefined && Number(d.amount) !== Number(e.vat_inclusive ? e.total : e.net)) p.amount = Number(d.amount);
+    if (!Object.keys(p).length) { setEd(({ [e.id]: _, ...rest }) => rest); return; }
+    const reason = await askText("سبب التعديل (يُحفظ في السجل ويُبلَّغ به مسؤول المشتريات)", { required: true });
+    if (!reason) return;
+    const { error } = await db.rpc("pc_expense_review_edit" as never, { _id: e.id, _rev: e.rev, _p: p, _reason: reason } as never);
+    if (error) { toast.error(arabicError(error)); return; }
+    toast.success("حُفظ التعديل"); setEd(({ [e.id]: _, ...rest }) => rest); inv(); void q.refetch();
+  }
+  const canEdit = (e: Row) => !readOnly && me.caps.approve && ["submitted", "in_review"].includes(e.status);
+  const cell = (e: Row, k: string, type = "text") => {
+    const d = ed[e.id];
+    if (!d) return k === "purchase_date" ? day(e[k]) : (e[k] ?? "—");
+    return <Input type={type} className="h-7 min-w-24 px-1 text-xs" value={d[k] ?? ""} onChange={(x) => setEd({ ...ed, [e.id]: { ...d, [k]: x.target.value } })} />;
+  };
   const H = ["#", "المرجع", "تاريخ الشراء", "الفرع", "المورد", "رقم الفاتورة", "البيان", "التصنيف", "قبل الضريبة", "الضريبة", "الإجمالي", "الحالة"];
   async function exp(kind: "xlsx" | "pdf") {
     const data = rows.map((e, i) => [i + 1, e.ref, day(e.purchase_date), e.school ?? "", e.supplier, e.invoice_no ?? "", e.description, e.category ?? "", Number(e.net), Number(e.vat), Number(e.total), E_STATUS[e.status] ?? e.status]);
@@ -71,17 +91,20 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
               <tr key={e.id} className="border-t hover:bg-muted/30">
                 <td className="px-2 py-1.5 text-muted-foreground">{i + 1}</td>
                 <td className="px-2 py-1.5"><button className="font-mono text-xs text-primary" onClick={() => open(e.id)}>{e.ref}</button></td>
-                <td className="whitespace-nowrap px-2 py-1.5">{day(e.purchase_date)}</td>
+                <td className="whitespace-nowrap px-2 py-1.5">{cell(e, "purchase_date", "date")}</td>
                 <td className="px-2 py-1.5">{e.school ?? "—"}</td>
-                <td className="px-2 py-1.5">{e.supplier}</td><td className="px-2 py-1.5">{e.invoice_no ?? "—"}</td>
-                <td className="max-w-48 truncate px-2 py-1.5">{e.description}</td><td className="px-2 py-1.5">{e.category ?? "—"}</td>
-                <td className="px-2 py-1.5 tabular-nums">{sar(e.net)}</td><td className="px-2 py-1.5 tabular-nums">{sar(e.vat)}</td><td className="px-2 py-1.5 font-medium tabular-nums">{sar(e.total)}</td>
+                <td className="px-2 py-1.5">{cell(e, "supplier")}</td><td className="px-2 py-1.5">{cell(e, "invoice_no")}</td>
+                <td className="max-w-48 truncate px-2 py-1.5">{cell(e, "description")}</td><td className="px-2 py-1.5">{e.category ?? "—"}</td>
+                <td className="px-2 py-1.5 tabular-nums">{sar(e.net)}</td><td className="px-2 py-1.5 tabular-nums">{sar(e.vat)}</td><td className="px-2 py-1.5 font-medium tabular-nums">{ed[e.id] ? cell(e, "amount", "number") : sar(e.total)}</td>
                 <td className="px-2 py-1.5"><Pill tone={TONE[e.status] ?? "muted"}>{E_STATUS[e.status]}</Pill></td>
                 {!readOnly && <td className="whitespace-nowrap px-2 py-1.5">{["submitted", "in_review"].includes(e.status) && me.caps.approve ? (
                   <span className="flex gap-1">
+                    {canEdit(e) && (ed[e.id] ? <><Button size="sm" className="h-7 px-2" onClick={() => void saveEdit(e)}>حفظ</Button><Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEd(({ [e.id]: _, ...rest }) => rest)}>تراجع</Button></>
+                      : <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => setEd({ ...ed, [e.id]: { supplier: e.supplier ?? "", invoice_no: e.invoice_no ?? "", description: e.description ?? "", purchase_date: e.purchase_date ?? "", amount: String(e.vat_inclusive ? e.total : e.net) } })}>تعديل</Button>)}
+                    {!ed[e.id] && <>
                     <Button size="sm" className="h-7 px-2" onClick={() => void act(e, "approve")}>اعتماد</Button>
                     <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => void act(e, "return")}>إعادة للتعديل</Button>
-                    <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => void act(e, "reject")}>رفض</Button>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => void act(e, "reject")}>رفض</Button></>}
                   </span>) : <span className="text-xs text-muted-foreground">—</span>}</td>}
               </tr>
             ))}</tbody>
@@ -97,7 +120,7 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
           </table>
         </div>
       )}
-      {!readOnly && <p className="text-xs text-muted-foreground">لا يعدّل المراجع بيانات الفاتورة مباشرة حفاظًا على المسؤولية؛ «إعادة للتعديل» ترجعها لمسؤول المشتريات بملاحظتك، ثم يعيد إرسالها. ولا يمكنك البت في فاتورة أنشأتها أو على عهدتك.</p>}
+      {!readOnly && <p className="text-xs text-muted-foreground">«تعديل» يغيّر بيانات الفاتورة مباشرة مع سبب يُحفظ في السجل (القيم قبل وبعد) ويُبلَّغ به مسؤول المشتريات؛ المبلغ يُعدّل للفاتورة ذات البند الواحد. «إعادة للتعديل» ترجعها له ليعدّلها بنفسه. ولا يمكنك البت في فاتورة أنشأتها أو على عهدتك.</p>}
     </section>
   );
 }

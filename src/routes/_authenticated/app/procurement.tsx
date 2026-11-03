@@ -7,6 +7,7 @@ import { useState } from "react";
 import { usePcMe, type Row } from "@/components/procurement/shared";
 import { CustodyOps, RequestDetail, RequestForm, RequestList } from "@/components/procurement/requests";
 import { ArchiveTab } from "@/components/procurement/archive";
+import { BranchOverview } from "@/components/procurement/branch-overview";
 import { ReportsPanel } from "@/components/procurement/reports";
 import { CustodyDetail, CustodyForm, CustodyList } from "@/components/procurement/custody";
 import { ExpenseDetail, ExpenseForm, ExpenseList } from "@/components/procurement/expense";
@@ -79,7 +80,7 @@ function Page() {
   else if (search.r) body = editing ? <RequestForm orgId={orgId} me={me} initial={editing} onDone={() => { setEditing(null); }} onCancel={() => setEditing(null)} newCustody={() => go({ tab: "custodies", new: "custody" })} />
     : <RequestDetail id={search.r} me={me} back={() => go({ tab: "requests" })} openCustody={openC} openExpense={openE} edit={setEditing} />;
   else if (search.e) body = <ExpenseDetail id={search.e} me={me} back={() => go({ tab: "expenses" })} openCustody={openC} openExpense={openE} />;
-  else if (tab === "summary") body = <div className="space-y-6"><TasksTab orgId={orgId} openC={openC} openE={openE} openR={openR} />{me.caps.view !== "own" && <SummaryTab orgId={orgId} me={me} />}<ReportsPanel orgId={orgId} me={me} orgName={active.orgName} /></div>;
+  else if (tab === "summary") body = <div className="space-y-6">{(me.caps.view === "org" || me.caps.view === "branch") && <BranchOverview orgId={orgId} />}<TasksTab orgId={orgId} openC={openC} openE={openE} openR={openR} />{me.caps.view !== "own" && <SummaryTab orgId={orgId} me={me} />}<ReportsPanel orgId={orgId} me={me} orgName={active.orgName} /></div>;
   else if (tab === "archive") body = <ArchiveTab orgId={orgId} me={me} orgName={active.orgName} openExpense={openE} openCustody={openC} />;
   else if (tab === "requests") body = <RequestList orgId={orgId} me={me} orgName={active.orgName} open={openR} onNew={canCreate ? () => newReq() : undefined} />;
   else if (tab === "custodies") body = <CustodyList orgId={orgId} me={me} orgName={active.orgName} open={openC} onNew={canCreate ? () => go({ tab: "custodies", new: "custody" }) : undefined} />;
