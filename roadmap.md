@@ -267,5 +267,5 @@
 - [x] TT8 Isolated demo (5 sections, 10 teachers, 5 days, ≥6 periods) + tests 1–17, docs, Arabic report
 
 ## Next package (docs/package-next-brief.md) — pending, after timetable performance
-- [x] P1 permissions/scope (scripts/scope-e2e.ts 37/37)  - [x] P2 people picker (scripts/people-e2e.ts 30/30, browser 8/8)  - [ ] P3 Excel import + accounts  - [ ] P4 WATI OTP  - [ ] P5 meetings in communication
+- [x] P1 permissions/scope (scripts/scope-e2e.ts 37/37)  - [x] P2 people picker (scripts/people-e2e.ts 30/30, browser 8/8)  - [x] P3 Excel import + accounts (accounts-e2e 20/20, browser 18/18)  - [~] P4 WATI OTP — code built; waiting for WATI token/URL, approved template, hook secret and dashboard setup  - [x] P5 meetings in communication
 - [x] TP timetable performance for large schools (scale tests in src/lib/timetable-scale.test.ts)
