@@ -35,7 +35,7 @@ const ACT: Record<string, string> = {
 };
 export const DEFAULT_SLA: Record<string, { response: number; resolve: number }> = { urgent: { response: 2, resolve: 8 }, high: { response: 4, resolve: 24 }, normal: { response: 8, resolve: 40 }, low: { response: 24, resolve: 80 } };
 const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-export const isOverdue = (t: Row) => !["resolved", "closed", "cancelled"].includes(t.status) && ((!t.first_response_at && t.response_due && new Date(t.response_due) < new Date()) || (t.resolve_due && new Date(t.resolve_due) < new Date()));
+export const isOverdue = (t: Row) => !["resolved", "closed", "cancelled", "waiting_requester"].includes(t.status) && ((!t.first_response_at && t.response_due && new Date(t.response_due) < new Date()) || (t.resolve_due && new Date(t.resolve_due) < new Date()));
 export const TAB_LABEL: Record<SupportTab, string> = { mine: "تذاكري", assigned: "المسندة إليّ", info: "طلبات الإفادة", manage: "إدارة التذاكر", reports: "التقارير" };
 const roleLabel = (r: string) => ROLE_LABELS[r as Role] ?? r;
 const PAGE = 20;
