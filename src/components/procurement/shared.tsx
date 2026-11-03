@@ -58,7 +58,7 @@ export const ACTION: Record<string, string> = {
   disburse: "صرف", ack: "تأكيد الاستلام", refund_request: "طلب استرداد", refund_collected: "تأكيد الاسترداد", refund_rejected: "رفض الاسترداد",
   file_added: "إرفاق ملف", settle_request: "طلب تسوية", settle_reopened: "إعادة فتح بعد التسوية", topup: "تعزيز مصروف", topup_paid: "صرف التعزيز",
   adjust: "معالجة فرق", carry_out: "ترحيل خارج", carry_in: "ترحيل داخل", return_cash: "استلام مبلغ معاد", close: "إغلاق بعد التسوية", transfer_out: "نقل لشخص آخر",
-  transfer_in: "استلام عهدة منقولة", transfer_accepted: "تسلّم المستلم الجديد", decline: "اعتذار عن التسلّم", form_draft: "حفظ مسودة النموذج", form_publish: "نشر النموذج", form_discard: "حذف مسودة النموذج", file_removed: "إزالة ملف", settings: "تغيير الإعدادات", category: "تصنيف",
+  transfer_in: "استلام عهدة منقولة", transfer_accepted: "تسلّم المستلم الجديد", decline: "اعتذار عن التسلّم", form_draft: "حفظ مسودة النموذج", form_publish: "نشر النموذج", form_discard: "حذف مسودة النموذج", file_removed: "إزالة ملف", settings: "تغيير الإعدادات", category: "تصنيف", review_edit: "تعديل المراجع",
 };
 
 const nf = new Intl.NumberFormat("ar-SA-u-nu-latn", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
