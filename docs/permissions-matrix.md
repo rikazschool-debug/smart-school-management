@@ -150,3 +150,21 @@ Staff name list (circular "specific people"): school-wide for eligible school st
 Phase 2: assign → principal (own branch tickets, to any active staff of the org) and owner; assignee handles only that ticket, loses access when reassigned/transferred. Transfer between branches → owner only, reason required. Information request → manager or assignee; asked person sees only the question (inbox), never the ticket. Private note → visible to author + chosen recipient only; team note → managers + current assignee; requester sees neither. Escalation → owner only; platform sees only the new ticket text, never the internal ticket or its files.
 
 Phase 3: targets/hours/alert person → org owner (org) or platform admin (platform); alert person must be active org staff. Reports and the overdue/assignee filters → owner (all branches), principal (own branch), platform admin (platform tickets); requesters never see overdue flags or alert steps.
+
+Closure (2026-11-03): info requests may go to any active staff member of the organization in any branch (students/guardians only of the ticket's branch); the asked person still sees only the question and the asker gains nothing in the other branch. Support tables have no client privileges at all (RPC-only); categories/settings are read-only to signed-in members. The delay check and internal helpers are not callable by users.
+
+### Support requirements match (closure)
+| Requirement | Status | Evidence |
+|---|---|---|
+| Create ticket + attachment | done, tested | support-journey J1; support-e2e |
+| Assign / change / revoke access of assignee (any person in the org) | done, tested | J2–J4; support2 #2, #7; support4 #8 |
+| Cross-branch transfer, owner only | done, tested | J8; support2 #11–13 |
+| Partial info request across branches, privacy kept | done, tested | J5–J7; support4 #6 |
+| Private notes: author+recipient only, not inherited, not in notifications/search/export | done, tested | J3–J4, J7; support4 #7–8; export E3 |
+| Team notes hidden from requester | done, tested | J7; support2 #5 |
+| Escalation shares only chosen text; platform admin cannot open the school ticket | done, tested | J9–J10; support2 #14–16 |
+| Resolve, rate, close, reopen | done, tested | J11–J12 |
+| Direct links / direct requests refused | done, tested | J4, J8, J10; support4 #9–10 |
+| Excel/PDF for lists and reports: complete, filtered, Arabic, scoped, all PDF pages | done, tested | support-export-journey E1–E12 (5-page PDF viewed) |
+| Delay alerts from the real scheduled job, once, right recipients | done, tested | support4 --cron #2; #3–5 |
+| Pause while waiting on requester, resume extends target | done, tested | support4 #1 |
