@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tan
 import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
   Bell, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
@@ -59,6 +59,9 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   hr: { to: "/app/hr", label: "الموارد البشرية", icon: Construction },
   permissions: { to: "/app/permissions", label: "الأدوار والصلاحيات", icon: KeyRound },
 };
+
+/** Procurement sub-sections shown under its menu entry (the page re-checks each tab). */
+const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "المشتريات والفواتير"], ["requests", "الطلبات"], ["settings", "الإعدادات"]] as const;
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "hr", "profile"] },
@@ -118,6 +121,7 @@ function Shell() {
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
     ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : [])] as NavKey[];
+  const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   const nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
