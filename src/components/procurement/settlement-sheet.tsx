@@ -86,9 +86,13 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
               </tr>
             ))}</tbody>
             <tfoot className="border-t-2 bg-muted/40 font-semibold"><tr>
-              <td className="px-2 py-2" colSpan={8}>الإجمالي المعتمد ({approved.length} فاتورة)</td>
-              <td className="px-2 py-2 tabular-nums">{sar(sum(approved, "net"))}</td><td className="px-2 py-2 tabular-nums">{sar(sum(approved, "vat"))}</td><td className="px-2 py-2 tabular-nums">{sar(sum(approved, "total"))}</td>
-              <td colSpan={readOnly ? 1 : 2} className="px-2 py-2 text-xs font-normal text-muted-foreground">{pending.length ? `بانتظار القرار: ${sar(sum(pending, "total"))}` : ""}</td>
+              <td className="px-2 py-2" colSpan={8}>إجمالي الكشف ({rows.length} فاتورة)</td>
+              <td className="px-2 py-2 tabular-nums">{sar(sum(rows, "net"))}</td><td className="px-2 py-2 tabular-nums">{sar(sum(rows, "vat"))}</td><td className="px-2 py-2 tabular-nums">{sar(sum(rows, "total"))}</td>
+              <td colSpan={readOnly ? 1 : 2} />
+            </tr><tr className="text-xs font-normal">
+              <td className="px-2 py-1.5" colSpan={8}>منها معتمد ({approved.length})</td>
+              <td className="px-2 py-1.5 tabular-nums">{sar(sum(approved, "net"))}</td><td className="px-2 py-1.5 tabular-nums">{sar(sum(approved, "vat"))}</td><td className="px-2 py-1.5 tabular-nums">{sar(sum(approved, "total"))}</td>
+              <td colSpan={readOnly ? 1 : 2} className="px-2 py-1.5 text-muted-foreground">{rows.some((r) => ["draft", "returned"].includes(r.status)) ? "توجد مسودات لم يرسلها مسؤول المشتريات" : pending.length ? `بانتظار القرار: ${sar(sum(pending, "total"))}` : ""}</td>
             </tr></tfoot>
           </table>
         </div>
