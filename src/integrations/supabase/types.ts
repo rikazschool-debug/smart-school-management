@@ -8812,6 +8812,13 @@ export type Database = {
           reason: string
         }[]
       }
+      support_my_children: {
+        Args: { _school: string }
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       support_release_file: { Args: { _file: string }; Returns: undefined }
       support_reply: {
         Args: { _body: string; _client_key?: string; _ticket: string }
