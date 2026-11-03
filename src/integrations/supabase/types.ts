@@ -188,6 +188,59 @@ export type Database = {
           },
         ]
       }
+      account_setup: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          kind: string
+          membership_id: string | null
+          need_password: boolean
+          need_phone: boolean
+          restore_active: boolean
+          school_id: string
+          subject_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          kind: string
+          membership_id?: string | null
+          need_password?: boolean
+          need_phone?: boolean
+          restore_active?: boolean
+          school_id: string
+          subject_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          kind?: string
+          membership_id?: string | null
+          need_password?: boolean
+          need_phone?: boolean
+          restore_active?: boolean
+          school_id?: string
+          subject_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_setup_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       adm_decisions: {
         Row: {
           assignee: string
@@ -5629,6 +5682,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          national_id: string | null
           phone: string | null
           school_id: string
           specialization: string | null
@@ -5642,6 +5696,7 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          national_id?: string | null
           phone?: string | null
           school_id: string
           specialization?: string | null
@@ -5655,6 +5710,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          national_id?: string | null
           phone?: string | null
           school_id?: string
           specialization?: string | null
@@ -6188,6 +6244,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      _auth_user_lookup: {
+        Args: { _email: string; _phone: string }
+        Returns: {
+          phone_confirmed: boolean
+          user_id: string
+        }[]
+      }
       _auto_card: { Args: { _student: string }; Returns: undefined }
       _can_circ_scope: {
         Args: { _home: string; _org: string; _scope: string }
@@ -6224,6 +6287,10 @@ export type Database = {
       _circular_audience: {
         Args: { _aud: Json; _school: string }
         Returns: string[]
+      }
+      _complete_account_setup: {
+        Args: { _password_changed: boolean; _uid: string }
+        Returns: string
       }
       _conv_link: { Args: { _conv: string }; Returns: string }
       _course_members: {
@@ -6474,6 +6541,16 @@ export type Database = {
         Args: { _d: Json; _id: string; _mode: string; _person: string }
         Returns: undefined
       }
+      _provision_link: {
+        Args: {
+          _actor: string
+          _kind: string
+          _pending: boolean
+          _subject: string
+          _uid: string
+        }
+        Returns: string
+      }
       _report_reviewer: {
         Args: { _org: string; _school: string }
         Returns: boolean
@@ -6486,6 +6563,10 @@ export type Database = {
       _section_users: {
         Args: { _guardians: boolean; _section: string; _year: string }
         Returns: string[]
+      }
+      _stage_student_password: {
+        Args: { _actor: string; _student: string; _uid: string }
+        Returns: undefined
       }
       _student_ok: {
         Args: { _student: string; _teacher: string }
@@ -6540,6 +6621,13 @@ export type Database = {
       }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
+      account_status: {
+        Args: { _ids: string[]; _kind: string }
+        Returns: {
+          state: string
+          subject_id: string
+        }[]
+      }
       ack_circular: { Args: { _id: string }; Returns: number }
       add_authorized_pickup: {
         Args: {
@@ -7878,6 +7966,7 @@ export type Database = {
       }
       my_dept_ids: { Args: never; Returns: string[] }
       my_teacher_ids: { Args: never; Returns: string[] }
+      norm_phone: { Args: { _p: string }; Returns: string }
       open_circular: { Args: { _id: string }; Returns: undefined }
       people_pick: {
         Args: {
