@@ -151,11 +151,11 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
         )}
         {!own && benOptions.length > 1 && <div><Label>الفرع المستفيد</Label><select className={selectCls()} value={ben} onChange={(e) => setBen(e.target.value)}><option value="">فرع العهدة</option>{benOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
         <div><Label>تاريخ الشراء</Label><Input type="date" max={todayRiyadh()} value={d.purchase_date} onChange={(e) => set("purchase_date", e.target.value)} /></div>
-        <div><Label>المورد</Label><Input value={d.supplier} onChange={(e) => set("supplier", e.target.value)} /></div>
-        <div className="sm:col-span-2"><Label>البيان</Label><Input value={d.description} onChange={(e) => set("description", e.target.value)} /></div>
+        <div><Label htmlFor="pc-supplier">المورد</Label><Input id="pc-supplier" value={d.supplier} onChange={(e) => set("supplier", e.target.value)} /></div>
+        <div className="sm:col-span-2"><Label htmlFor="pc-desc">البيان</Label><Input id="pc-desc" value={d.description} onChange={(e) => set("description", e.target.value)} /></div>
         <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={tax} onChange={(e) => setTax(e.target.checked)} /> فاتورة ضريبية (ضريبة القيمة المضافة {rate}%)</label>
         {tax && <>
-          <div><Label>رقم الفاتورة</Label><Input value={d.invoice_no} onChange={(e) => set("invoice_no", e.target.value)} /></div>
+          <div><Label htmlFor="pc-inv">رقم الفاتورة</Label><Input id="pc-inv" value={d.invoice_no} onChange={(e) => set("invoice_no", e.target.value)} /></div>
           <div><Label>تاريخ الفاتورة</Label><Input type="date" max={todayRiyadh()} value={d.invoice_date} onChange={(e) => set("invoice_date", e.target.value)} /></div>
           <div className="sm:col-span-2 flex gap-4 text-sm">
             <label className="flex items-center gap-1"><input type="radio" checked={!incl} onChange={() => setIncl(false)} /> المبالغ قبل الضريبة</label>
