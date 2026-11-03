@@ -17,6 +17,7 @@ import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { METHOD, day, sar, todayRiyadh, type PcMe, type Row } from "@/components/procurement/shared";
 import { LogList, useInvalidate } from "@/components/procurement/custody";
+import { SettlementSheet } from "@/components/procurement/settlement-sheet";
 
 export const R_KIND: Record<string, string> = { topup: "تعزيز عهدة", settlement: "تسوية عهدة", purchase: "شراء مسبق", adjust: "معالجة عجز/زيادة", transfer: "نقل عهدة لشخص آخر", need: "طلب احتياج" };
 export const R_STATUS: Record<string, string> = { draft: "مسودة", submitted: "بانتظار القرار", approved: "معتمد", rejected: "مرفوض", cancelled: "ملغى", done: "منفّذ", awaiting_assignment: "بانتظار الإسناد", in_progress: "لدى مسؤول المشتريات", closed_partial: "مغلق بتنفيذ جزئي" };
@@ -267,6 +268,7 @@ export function RequestDetail({ id, me, back, openCustody, openExpense, edit }: 
         </div>
       </div>
       {pay && <TopupDisburse r={r} onDone={() => setPay(false)} />}
+      {r.kind === "settlement" && r.custody_id && <SettlementSheet orgId={r.org_id} custodyId={r.custody_id} me={me} open={openExpense} orgName={r.school ?? ""} readOnly={r.status !== "submitted" && r.status !== "approved"} title={`كشف مشتريات العهدة ${r.custody_ref} — ${r.school}`} />}
       <section className="space-y-2">
         <h3 className="font-semibold">المرفقات</h3>
         <FileList files={files(r.files)} onRemove={r.can.edit ? async (f) => { if (await run(db.rpc("pc_file_remove", { _file: f["id"] }), "أُزيل الملف")) inv(); } : undefined} />

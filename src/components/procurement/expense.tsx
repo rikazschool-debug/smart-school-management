@@ -71,10 +71,10 @@ export function ExpenseList({ orgId, me, open, orgName, onNew }: { orgId: string
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? <EmptyState title="لا توجد مصروفات" hint={onNew ? "سجّل فاتورة مشتريات من الزر أعلاه، أو من داخل العهدة المصروفة لك." : "الفواتير التي تحفظها من الجدول أعلاه تظهر هنا."} /> : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "التاريخ", "العهدة", "المورد", "الفاتورة", "البيان", "الحالة", "الضريبة", "الإجمالي"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+            <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "التاريخ", "الفرع", "العهدة", "المورد", "الفاتورة", "البيان", "الحالة", "الضريبة", "الإجمالي"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
             <tbody>{list.data.rows.map((e) => (
               <tr key={e.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => open(e.id)}>
-                <td className="px-3 py-2 font-mono text-xs">{e.ref}</td><td className="px-3 py-2">{day(e.purchase_date)}</td><td className="px-3 py-2">{e.custody_ref ?? "من مال الموظف"}</td>
+                <td className="px-3 py-2 font-mono text-xs">{e.ref}</td><td className="px-3 py-2">{day(e.purchase_date)}</td><td className="px-3 py-2">{e.school ?? "—"}</td><td className="px-3 py-2">{e.custody_ref ?? "من مال الموظف"}</td>
                 <td className="px-3 py-2">{e.supplier}</td><td className="px-3 py-2">{e.invoice_no ?? "—"}</td><td className="max-w-48 truncate px-3 py-2">{e.description}</td>
                 <td className="px-3 py-2"><Pill tone={TONE[e.status] ?? "muted"}>{E_STATUS[e.status]}</Pill>{e.dup_ref && <span className="ms-1"><Pill tone="bad">مكرر محتمل</Pill></span>}</td>
                 <td className="px-3 py-2 tabular-nums">{sar(e.vat)}</td><td className="px-3 py-2 tabular-nums">{sar(e.total)}</td>
