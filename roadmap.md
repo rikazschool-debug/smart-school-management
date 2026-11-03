@@ -326,3 +326,8 @@
 - [ ] Browser journeys on isolated data: assign/grant/deny/withdraw on the new permissions page, staff link invitation, login after branch suspension
 - [ ] C6 invoice custom field (old version kept), custody transfer acceptance, carry-over; finance suspension + permission withdrawal in open session; alerts via real cron (C8)
 - [ ] C9 restore docs (login documents, grade visibility) + requirements matrix with evidence; review new security warnings by actual permission
+
+## Owner feedback 2026-11-03
+- [x] Profile/notifications/support keep the owner's current section menu
+- [x] Owner/managers: "إضافة عهدة" (branch + assigned purchasing officer) instead of "طلب عهدة"
+- [x] Purchases tab: "تسجيل فاتورة مشتريات" button for officers
