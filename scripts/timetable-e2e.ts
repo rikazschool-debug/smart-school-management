@@ -221,6 +221,7 @@ try {
   const pairDays = [0, 1, 2, 3, 4].filter((d) => { const xs = sciAll.filter((s) => s.day === d).map((s) => pidx(s.period_id)).sort((a, b) => a - b); return xs.length === 2 && xs[1]! - xs[0]! === 1; });
   const pairDay = pairDays.find((d) => sciAll.some((s) => s.day === d && !s.pinned));
   if (pairDay === undefined) console.log("   8c diagnostic: science doubles on days", pairDays, "all halves pinned:", sciAll.map((s) => [s.day, pidx(s.period_id), s.pinned]));
+  if (pairDays.length && !sciAll.some((s) => s.day === pairDays[0] && !s.pinned)) console.log("   8c note: first double fully pinned — the previous selection would have failed here");
   const halfS = sciAll.find((s) => s.day === pairDay && !s.pinned);
   if (halfS) await admin.from("timetable_slots").delete().eq("id", halfS.id);
   const g8 = await rpc(pr.c, "tt_gen_start", { _tt: tt.id, _mode: "fill" });
