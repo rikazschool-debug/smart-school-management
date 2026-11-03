@@ -12,21 +12,23 @@ import { arabicError, type AppContext } from "@/lib/session";
 import { GROUP_TYPE_LABEL, ROLE_AR } from "@/lib/comm";
 import { PeoplePicker, usePeopleByIds } from "@/components/people-picker";
 import { GroupPanel } from "@/components/comm/group-panel";
-import { canCreateGroup } from "@/lib/roles";
+import { canCreateGroupWith } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
 
 const sel = selectCls("w-full");
 
 export function ManageTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const [view, setView] = useState<"groups" | "new" | "settings" | "reports">("groups");
+  const canNew = canCreateGroupWith(ctx.role, useSchoolPerms(ctx.schoolId));
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        {([["groups", "المجموعات"], ...(canCreateGroup(ctx.role) ? [["new", "إنشاء مجموعة"]] as const : []), ["reports", "البلاغات"], ["settings", "إعدادات التواصل"]] as const).map(([k, l]) => (
+        {([["groups", "المجموعات"], ...(canNew ? [["new", "إنشاء مجموعة"]] as const : []), ["reports", "البلاغات"], ["settings", "إعدادات التواصل"]] as const).map(([k, l]) => (
           <Button key={k} size="sm" variant={view === k ? "default" : "outline"} onClick={() => setView(k)}>{l}</Button>
         ))}
       </div>
       {view === "groups" && <GroupsList ctx={ctx} />}
-      {view === "new" && canCreateGroup(ctx.role) && <GroupWizard ctx={ctx} onDone={() => setView("groups")} />}
+      {view === "new" && canNew && <GroupWizard ctx={ctx} onDone={() => setView("groups")} />}
       {view === "settings" && <CommSettings schoolId={ctx.schoolId} />}
       {view === "reports" && <Reports ctx={ctx} />}
     </div>

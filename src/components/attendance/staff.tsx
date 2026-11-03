@@ -17,7 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, type AppContext } from "@/lib/session";
 import { DAY_STATUS, DAY_TONE, KIND, MOVE_KIND, PICKUP_STATUS, hm, riyadhToday, sectionOf } from "@/lib/attendance";
-import { canScanAttendance } from "@/lib/roles";
+import { canScanWith } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
 
 type Ctx = AppContext & { schoolId: string };
 const rpc = async (fn: string, args: Record<string, unknown>, ok?: string) => {
@@ -153,7 +154,7 @@ export function GateTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean }) 
   return (
     <div className="space-y-6">
       {/* card scanning is the gate account's job only (att_scanner); others keep manual entry, returns and the present list */}
-      {canScanAttendance(ctx.role) && <section className="rounded-2xl border bg-card p-5">
+      {canScan && <section className="rounded-2xl border bg-card p-5">
         <h2 className="mb-1 flex items-center gap-2 font-bold"><ScanLine className="size-5 text-primary" />مسح بطاقة الحضور الصباحي <Link to="/app/attendance-station" className="ms-auto text-sm font-medium text-primary hover:underline">فتح شاشة المسح الكاملة (كاميرا/قارئ) ←</Link></h2>
         <p className="mb-3 text-sm text-muted-foreground">وجّه قارئ الباركود نحو البطاقة؛ يكتب القارئ الرمز ويضغط Enter تلقائيًا. الوقت يُحتسب من الخادم. البطاقة للحضور فقط وليست تصريح خروج.</p>
         <form onSubmit={(e) => { e.preventDefault(); void submit(); }} className="flex gap-2">
