@@ -112,9 +112,8 @@ try {
   const allN = ((await admin.from("notifications").select("title, body").like("link", `%${T6}%`)).data ?? []) as any[];
   check("7 private note text is not searchable, not in any notification, not in list rows or report data used for export",
     ids(s1).length === 0 && ids(s2).length === 0 && !JSON.stringify(s3.data).includes("سرّيxyz") && !JSON.stringify(st.data).includes("سرّيxyz") && !JSON.stringify(allN).includes("سرّيxyz"), [ids(s1), ids(s2)]);
-  await act(pr1, T6, "assign", tch.id === tch.id ? pr2.id : null).catch(() => null);
-  const reassign = await act(owner, T6, "assign", (await admin.from("memberships").select("user_id").eq("user_id", pr2.id).single()).data!.user_id);
-  const newNotes = (((await get(pr2, T6)).data?.notes ?? []) as any[]).map((n) => n.body), oldA = await get(tchB, T6);
+  const reassign = await act(owner, T6, "assign", tch.id);
+  const newNotes = (((await get(tch, T6)).data?.notes ?? []) as any[]).map((n) => n.body), oldA = await get(tchB, T6);
   check("8 a new person in charge does not inherit the private note; the old one loses access", !reassign.error && !newNotes.some((b) => b.includes("سرّيxyz")) && !!oldA.error, [reassign.error, newNotes]);
 
   // 9 platform admin + direct access
