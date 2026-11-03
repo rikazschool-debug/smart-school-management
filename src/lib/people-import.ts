@@ -197,10 +197,19 @@ export type Lookups = {
   departments: Map<string, string>; // norm(name) → id
   existingIds: Map<string, string>; // national_id → row id
   existingPhones: Map<string, string>; // normalized phone → teacher id
+  /** explicit choices made in the preview: file key norm(grade)|norm(section) → section id */
+  sectionChoice?: Map<string, string>;
 };
+/** Rikaz sections for a file label that did not match exactly — the user must pick one; a numeric label only gets a *suggestion*. */
+export function sectionSuggestion(label: string): string | null {
+  const n = Number(label.trim());
+  return /^\d{1,2}$/.test(label.trim()) && LETTERS[n - 1] ? LETTERS[n - 1]! : null;
+}
 export type CheckedRow = RawRow & {
   data: Record<string, string | null>; errors: string[]; notes: string[];
   existingId?: string; section?: { id: string; year_id: string } | null; department_id?: string | null;
+  /** set when the file's grade/section has no exact match and no explicit choice yet */
+  unmatchedSection?: { key: string; grade: string; section: string };
 };
 
 const LETTERS = ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح", "ط", "ي", "ك", "ل"];
@@ -224,14 +233,17 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
       if (!nid) e.push("رقم الهوية مطلوب (يدخل به الطالب)");
       if (nid && lk.existingIds.has(nid)) { out.existingId = lk.existingIds.get(nid)!; notes.push("الطالب موجود مسبقًا — لن يُكرر، تُستكمل بقية الخطوات"); }
       const bd = parseDate(v["birth_date"] ?? ""); if (bd.err) e.push(`تاريخ الميلاد: ${bd.err}`); data["birth_date"] = bd.v;
-      if (bd.hijri) notes.push("حُوّل تاريخ الميلاد من الهجري (أم القرى)");
+      if (bd.hijri) notes.push(`تاريخ الميلاد هجري «${(v["birth_date"] ?? "").trim()}» حُوّل إلى ${bd.v} (تقويم أم القرى)`);
       const gn = norm(v["gender"]); data["gender"] = !gn ? null : ["ذكر", "male", "m"].map(norm).includes(gn) ? "male" : ["انثي", "أنثى", "female", "f"].map(norm).includes(gn) ? "female" : null;
       if (gn && !data["gender"]) e.push("الجنس: ذكر أو أنثى");
       const g = v["grade"] ?? "", s = v["section"] ?? "";
       if (g || s) {
-        const sec = lk.sections.get(`${norm(g)}|${norm(s)}`) ?? (/^\d{1,2}$/.test(s.trim()) ? lk.sections.get(`${norm(g)}|${norm(LETTERS[Number(s.trim()) - 1] ?? "")}`) : undefined);
+        const key = `${norm(g)}|${norm(s)}`;
+        const chosen = lk.sectionChoice?.get(key);
+        const sec = lk.sections.get(key) ?? (chosen ? [...lk.sections.values()].find((x) => x.id === chosen) : undefined);
+        if (chosen && sec) notes.push(`الشعبة «${g} / ${s}» قوبلت باختيارك`);
         if (!g || !s) e.push("الصف والفصل معًا مطلوبان للتسكين");
-        else if (!sec) e.push(`الشعبة «${g} / ${s}» غير موجودة في السنة الحالية`);
+        else if (!sec) { out.unmatchedSection = { key, grade: g, section: s }; e.push(`الشعبة «${g} / ${s}» لا تطابق شعبة في السنة الحالية — اختر الشعبة المقابلة أعلى المعاينة`); }
         else if (!out.existingId) {
           const k = sec.id; const n = (planned.get(k) ?? 0) + 1; planned.set(k, n);
           if (sec.capacity != null && sec.used + n > sec.capacity) e.push(`الشعبة ممتلئة (السعة ${sec.capacity})`);
@@ -253,7 +265,9 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
       if (!ph) e.push("الجوال مطلوب بصيغة 05XXXXXXXX (يدخل به المعلم برمز واتساب)");
       data["phone"] = ph;
       if (ph) { if (seenPhone.has(ph)) e.push("الجوال مكرر في الملف"); seenPhone.add(ph); }
-      const ex = (nid && lk.existingIds.get(nid)) || (ph && lk.existingPhones.get(ph)) || undefined;
+      const byId = nid ? lk.existingIds.get(nid) : undefined, byPhone = ph ? lk.existingPhones.get(ph) : undefined;
+      if (byId && byPhone && byId !== byPhone) e.push("تعارض: رقم الهوية لمعلم والجوال لمعلم آخر — راجع السجلين يدويًا");
+      const ex = byId && byPhone && byId !== byPhone ? undefined : byId ?? byPhone;
       if (ex) { out.existingId = ex; notes.push("المعلم موجود مسبقًا — لن يُكرر، يُستكمل الحساب"); }
       const em = (v["email"] ?? "").trim().toLowerCase();
       if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) e.push("بريد غير صالح");
