@@ -43,6 +43,8 @@ export type NavKey =
   | "schedule"
   | "communication"
   | "circulars"
+  | "comm_groups"
+  | "comm_manage"
   | "profile"
   | "homework"
   | "grades"
