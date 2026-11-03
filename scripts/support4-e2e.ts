@@ -90,7 +90,7 @@ try {
 
   // 5 reopen re-arms the resolution alert
   await pr1.c.rpc("support_reply", { _ticket: T2, _body: "تم الحل", _client_key: null });
-  await act(pr1, T2, "resolve", null, "تم");
+  await act(pr1, T2, "resolve", null, "تم الإصلاح");
   await act(tch, T2, "reopen", null, "عادت");
   const t5 = (await get(pr1, T2)).data.ticket;
   await admin.from("support_tickets").update({ resolve_due: past(0.1) }).eq("id", T2);
@@ -112,8 +112,8 @@ try {
   const allN = ((await admin.from("notifications").select("title, body").like("link", `%${T6}%`)).data ?? []) as any[];
   check("7 private note text is not searchable, not in any notification, not in list rows or report data used for export",
     ids(s1).length === 0 && ids(s2).length === 0 && !JSON.stringify(s3.data).includes("سرّيxyz") && !JSON.stringify(st.data).includes("سرّيxyz") && !JSON.stringify(allN).includes("سرّيxyz"), [ids(s1), ids(s2)]);
-  const reassign = await act(owner, T6, "assign", tch.id);
-  const newNotes = (((await get(tch, T6)).data?.notes ?? []) as any[]).map((n) => n.body), oldA = await get(tchB, T6);
+  const reassign = await act(owner, T6, "assign", pr2.id);
+  const newNotes = (((await get(pr2, T6)).data?.notes ?? []) as any[]).map((n) => n.body), oldA = await get(tchB, T6);
   check("8 a new person in charge does not inherit the private note; the old one loses access", !reassign.error && !newNotes.some((b) => b.includes("سرّيxyz")) && !!oldA.error, [reassign.error, newNotes]);
 
   // 9 platform admin + direct access
