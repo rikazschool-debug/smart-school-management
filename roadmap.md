@@ -269,3 +269,12 @@
 ## Next package (docs/package-next-brief.md) — pending, after timetable performance
 - [x] P1 permissions/scope (scripts/scope-e2e.ts 37/37)  - [x] P2 people picker (scripts/people-e2e.ts 30/30, browser 8/8)  - [x] P3 Excel import + accounts (accounts-e2e 20/20, browser 18/18)  - [~] P4 WATI OTP — code built; waiting for WATI token/URL, approved template, hook secret and dashboard setup  - [x] P5 meetings in communication
 - [x] TP timetable performance for large schools (scale tests in src/lib/timetable-scale.test.ts)
+
+## Package-next closure round (Nov 3)
+- [ ] C1 WATI: secrets via secure form, hook + delivery-webhook URLs, external steps; real send/verify test (teacher + guardian) — waits on secrets + test number
+- [ ] C1b OTP negatives: wrong/expired/used code, attempt + resend limits, provider failure, suspended account, unknown mobile
+- [ ] C2 Linking review: ID/mobile conflict → review not merge; guardian link needs approval; section number/Hijri mapping explicit in preview; two blank templates download+upload, missing fields, partial failure/retry
+- [ ] C3 Tests: timetable 1-in-5 flake root cause; owner picks staff from 2 branches + real duty assign + substitute (browser); circular people list scope; teachers without account in loads/availability but not chat/invite
+- [ ] C4 Agora: owner 2-branch / principal own; invite in admin+comm+calendar; 3-account audio + screen share + permission revoke; uninvited blocked; remove + no return; end for all; RSVP≠attendance; in-person shows place
+- [ ] C4b Screen share shows inside the meeting tile as a preview (prompt-47)
+- [ ] C5 Exports opened, phone width, direct permission calls, security review of new account/login functions, closure-log table
