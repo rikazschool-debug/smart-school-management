@@ -39,13 +39,13 @@ if (process.argv.includes("--teardown")) {
 }
 
 try {
-  const owner = await user("owner"), pr = await user("pr"), vp = await user("vp"), st = await user("st"), gu = await user("gu"), ownerB = await user("ownerb"), prB = await user("prb");
+  const owner = await user("owner"), pr = await user("pr"), pr2 = await user("pr2"), vp = await user("vp"), st = await user("st"), gu = await user("gu"), ownerB = await user("ownerb"), prB = await user("prb");
   const tu: any[] = []; for (let i = 1; i <= 10; i++) tu.push(await user("t" + i));
   const org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة الجداول", _school_name: "مدرسة الجدول" })).data; orgs.push(org);
   const S = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(S);
   const orgB = (await ownerB.c.rpc("create_organization", { _org_name: "أخرى", _school_name: "فرع" })).data; orgs.push(orgB);
   const SB = (await ownerB.c.from("schools").select("id").eq("org_id", orgB).single()).data!.id; tr.addSchool(SB);
-  for (const [u, r] of [[pr, "principal"], [vp, "vice_principal"], [st, "student"], [gu, "guardian"], ...tu.map((x) => [x, "teacher"])] as any[])
+  for (const [u, r] of [[pr, "principal"], [pr2, "principal"], [vp, "vice_principal"], [st, "student"], [gu, "guardian"], ...tu.map((x) => [x, "teacher"])] as any[])
     await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: r });
   await admin.from("memberships").insert({ user_id: prB.id, org_id: orgB, school_id: SB, role: "principal" });
   const ins = async (tb: string, v: any) => { const r = await admin.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
@@ -249,16 +249,16 @@ try {
   const g7 = await rpc(pr.c, "tt_gen_start", { _tt: tt.id, _mode: "redistribute" });
   const r7 = solve(g7.data.input, { mode: "redistribute", timeLimitMs: 20000, seed: 5 });
   await rpc(pr.c, "tt_gen_finish", { _run: g7.data.run_id, _status: r7.status, _summary: {} });
-  await vp.c.from("teacher_loads").update({ daily_max: 5 }).eq("teacher_id", T[6].id); // another window changes a setting
+  await pr2.c.from("teacher_loads").update({ daily_max: 5 }).eq("teacher_id", T[6].id); // another window changes a setting
   const ap7 = await rpc(pr.c, "tt_gen_apply", { _run: g7.data.run_id, _slots: r7.slots });
   const after10 = (await admin.from("timetable_slots").select("id", { count: "exact", head: true }).eq("timetable_id", tt.id)).count;
   check("10 a result computed before a settings change is refused (no silent stale apply); draft untouched", !!ap7.error && /أعد التوليد/.test(ap7.error.message) && after10 === before9, ap7.error?.message);
-  await vp.c.from("teacher_loads").update({ daily_max: 6 }).eq("teacher_id", T[6].id);
+  await pr2.c.from("teacher_loads").update({ daily_max: 6 }).eq("teacher_id", T[6].id);
   // two windows add a lesson into the same free cell: delete one, then both windows try to re-add it
   const one = (await admin.from("timetable_slots").select("*").eq("timetable_id", tt.id).eq("pinned", false).limit(1).single()).data!;
   await pr.c.from("timetable_slots").delete().eq("id", one.id);
   const cOne = courses.find((c) => c.id === one.course_id);
-  const [wA, wB] = await Promise.all([slot(cOne, one.day, { id: one.period_id }, one.room_id, one.teacher_id), (async () => vp.c.from("timetable_slots").insert({ timetable_id: tt.id, school_id: S, day: one.day, period_id: one.period_id, course_id: one.course_id, section_id: one.section_id, teacher_id: one.teacher_id, room_id: one.room_id }).select().single())()]);
+  const [wA, wB] = await Promise.all([slot(cOne, one.day, { id: one.period_id }, one.room_id, one.teacher_id), (async () => pr2.c.from("timetable_slots").insert({ timetable_id: tt.id, school_id: S, day: one.day, period_id: one.period_id, course_id: one.course_id, section_id: one.section_id, teacher_id: one.teacher_id, room_id: one.room_id }).select().single())()]);
   const nOne = (await admin.from("timetable_slots").select("id", { count: "exact", head: true }).eq("timetable_id", tt.id).eq("course_id", one.course_id)).count;
   check("10b two windows adding the same lesson: exactly one succeeds (no duplicate)", [wA, wB].filter((x) => !x.error).length === 1 && nOne === cOne.weekly_periods, [wA.error?.message, wB.error?.message, nOne]);
 
@@ -281,9 +281,11 @@ try {
   const clsBefore = (await admin.from("classrooms").select("id", { count: "exact", head: true }).eq("school_id", S)).count;
   const grpBefore = (await admin.from("conversations").select("id", { count: "exact", head: true }).eq("school_id", S)).count;
   const eff = nextDow(0);
-  const pub = await vp.c.rpc("publish_timetable", { _id: tt.id, _effective_from: eff });
+  const vpPub = await vp.c.rpc("publish_timetable", { _id: tt.id, _effective_from: eff });
+  check("12a the vice principal cannot publish (principal level only)", !!vpPub.error, vpPub.error?.message);
+  const pub = await pr2.c.rpc("publish_timetable", { _id: tt.id, _effective_from: eff });
   const pubAgain = await pr.c.rpc("publish_timetable", { _id: tt.id, _effective_from: eff });
-  check("12 vice principal publishes (server re-validated); publishing twice refused", pub.data === 1 && !!pubAgain.error, [pub.error?.message, pubAgain.error?.message]);
+  check("12 a second principal publishes (server re-validated); publishing twice refused", pub.data === 1 && !!pubAgain.error, [pub.error?.message, pubAgain.error?.message]);
   const mine = (await tu[0].c.from("timetable_slots").select("id, teacher_id").eq("timetable_id", tt.id)).data ?? [];
   const stuSee = (await st.c.from("timetable_slots").select("id, section_id").eq("timetable_id", tt.id)).data ?? [];
   const guSee = (await gu.c.from("timetable_slots").select("id, section_id").eq("timetable_id", tt.id)).data ?? [];
