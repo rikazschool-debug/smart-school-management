@@ -176,13 +176,13 @@ export function InternalPanel({ d, userId, onChange }: { d: Row; userId: string;
         ))}
         {open && (
           <div className="space-y-2 rounded-lg bg-muted/30 p-3">
-            <div className="grid gap-2 sm:grid-cols-2">
-              <select aria-label="نوع الملاحظة" className={selectCls()} value={kind} onChange={(e) => setKind(e.target.value as "private" | "team")}>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <select aria-label="نوع الملاحظة" className={selectCls("w-full min-w-0")} value={kind} onChange={(e) => setKind(e.target.value as "private" | "team")}>
                 <option value="team">ملاحظة الفريق — يراها مديرو التذكرة والمسؤول الحالي</option>
                 <option value="private">ملاحظة خاصة — يراها كاتبها ومستلمها فقط</option>
               </select>
               {kind === "private" && (
-                <select aria-label="مستلم الملاحظة" className={selectCls()} value={to} onChange={(e) => setTo(e.target.value)}>
+                <select aria-label="مستلم الملاحظة" className={selectCls("w-full min-w-0")} value={to} onChange={(e) => setTo(e.target.value)}>
                   <option value="">اختر المستلم</option>
                   {recipients.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
                 </select>
