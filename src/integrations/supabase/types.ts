@@ -5467,6 +5467,300 @@ export type Database = {
           },
         ]
       }
+      support_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string | null
+          sort: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id?: string | null
+          sort?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string | null
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_categories_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_events: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          details: Json
+          from_status: string | null
+          id: string
+          ticket_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          from_status?: string | null
+          id?: string
+          ticket_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          from_status?: string | null
+          id?: string
+          ticket_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_message_revisions: {
+        Row: {
+          created_at: string
+          edited_by: string
+          id: string
+          message_id: string
+          old_body: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          edited_by: string
+          id?: string
+          message_id: string
+          old_body: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          edited_by?: string
+          id?: string
+          message_id?: string
+          old_body?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_message_revisions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "support_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_messages: {
+        Row: {
+          author: string
+          body: string
+          client_key: string | null
+          created_at: string
+          edited_at: string | null
+          id: string
+          kind: string
+          ticket_id: string
+        }
+        Insert: {
+          author: string
+          body: string
+          client_key?: string | null
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          kind?: string
+          ticket_id: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          client_key?: string | null
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          kind?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_settings: {
+        Row: {
+          id: string
+          org_id: string | null
+          reopen_days: number
+          response_note: string
+          updated_at: string
+          work_hours: string
+        }
+        Insert: {
+          id?: string
+          org_id?: string | null
+          reopen_days?: number
+          response_note?: string
+          updated_at?: string
+          work_hours?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string | null
+          reopen_days?: number
+          response_note?: string
+          updated_at?: string
+          work_hours?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assignee: string | null
+          body: string
+          category_id: string | null
+          client_key: string | null
+          closed_at: string | null
+          created_at: string
+          first_response_at: string | null
+          id: string
+          org_id: string
+          priority: string
+          rating: number | null
+          ref: string
+          requester: string
+          requester_role: string
+          resolution: string | null
+          resolved_at: string | null
+          rev: number
+          school_id: string
+          scope: string
+          status: string
+          student_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee?: string | null
+          body: string
+          category_id?: string | null
+          client_key?: string | null
+          closed_at?: string | null
+          created_at?: string
+          first_response_at?: string | null
+          id?: string
+          org_id: string
+          priority?: string
+          rating?: number | null
+          ref?: string
+          requester: string
+          requester_role: string
+          resolution?: string | null
+          resolved_at?: string | null
+          rev?: number
+          school_id: string
+          scope: string
+          status?: string
+          student_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee?: string | null
+          body?: string
+          category_id?: string | null
+          client_key?: string | null
+          closed_at?: string | null
+          created_at?: string
+          first_response_at?: string | null
+          id?: string
+          org_id?: string
+          priority?: string
+          rating?: number | null
+          ref?: string
+          requester?: string
+          requester_role?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          rev?: number
+          school_id?: string
+          scope?: string
+          status?: string
+          student_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "support_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_absences: {
         Row: {
           created_at: string
@@ -6617,6 +6911,26 @@ export type Database = {
         Args: { _student: string; _teacher: string }
         Returns: boolean
       }
+      _support_event: {
+        Args: {
+          _action: string
+          _d: Json
+          _from: string
+          _t: string
+          _to: string
+        }
+        Returns: undefined
+      }
+      _support_notify: {
+        Args: {
+          _key: string
+          _kind: string
+          _t: Database["public"]["Tables"]["support_tickets"]["Row"]
+          _title: string
+          _to_managers: boolean
+        }
+        Returns: undefined
+      }
       _task_target_ok: {
         Args: { _school: string; _user: string }
         Returns: boolean
@@ -7593,6 +7907,13 @@ export type Database = {
           storage_path: string
         }[]
       }
+      create_support_file: {
+        Args: { _mime: string; _name: string; _size: number; _ticket: string }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
       current_timetable: {
         Args: { _date: string; _school: string }
         Returns: string
@@ -8408,6 +8729,109 @@ export type Database = {
         Returns: string
       }
       supervised_teacher_ids: { Args: never; Returns: string[] }
+      support_action: {
+        Args: {
+          _action: string
+          _reason?: string
+          _rev: number
+          _ticket: string
+          _value?: string
+        }
+        Returns: undefined
+      }
+      support_can_read: { Args: { _ticket: string }; Returns: boolean }
+      support_create: {
+        Args: {
+          _body: string
+          _category?: string
+          _client_key?: string
+          _priority?: string
+          _school: string
+          _scope: string
+          _student?: string
+          _title: string
+        }
+        Returns: string
+      }
+      support_edit_message: {
+        Args: { _body: string; _message: string; _reason: string }
+        Returns: undefined
+      }
+      support_files: {
+        Args: { _ticket: string }
+        Returns: {
+          created_at: string
+          id: string
+          name: string
+          size_bytes: number
+          storage_path: string
+          uploaded_by: string
+          uploader: string
+        }[]
+      }
+      support_get: { Args: { _ticket: string }; Returns: Json }
+      support_list: {
+        Args: {
+          _box: string
+          _category?: string
+          _from?: string
+          _limit?: number
+          _offset?: number
+          _priority?: string
+          _q?: string
+          _school?: string
+          _status?: string
+          _to?: string
+        }
+        Returns: {
+          assignee_name: string
+          category: string
+          created_at: string
+          id: string
+          priority: string
+          ref: string
+          requester_name: string
+          requester_role: string
+          school_name: string
+          scope: string
+          status: string
+          title: string
+          total: number
+          updated_at: string
+        }[]
+      }
+      support_manager: {
+        Args: { _t: Database["public"]["Tables"]["support_tickets"]["Row"] }
+        Returns: boolean
+      }
+      support_message_history: {
+        Args: { _message: string }
+        Returns: {
+          created_at: string
+          old_body: string
+          reason: string
+        }[]
+      }
+      support_my_children: {
+        Args: { _school: string }
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
+      support_release_file: { Args: { _file: string }; Returns: undefined }
+      support_reply: {
+        Args: { _body: string; _client_key?: string; _ticket: string }
+        Returns: string
+      }
+      support_save_category: {
+        Args: { _active: boolean; _id: string; _name: string; _org: string }
+        Returns: string
+      }
+      support_save_settings: {
+        Args: { _hours: string; _note: string; _org: string; _reopen: number }
+        Returns: undefined
+      }
       sync_course_group: { Args: { _course: string }; Returns: string }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
       sync_section_group: { Args: { _section: string }; Returns: string }

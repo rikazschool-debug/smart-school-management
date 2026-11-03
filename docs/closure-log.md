@@ -309,3 +309,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Menu group «التواصل والعمل»: التواصل / الاجتماعات / التعميمات (/app/circulars); chat page no longer shows circulars/meetings tabs.
 - Single student add now requires guardian name + mobile → auto-linked via upsert_student_guardian (import already linked when guardian columns filled).
 - create_organization refuses school-provisioned/phone-only logins; they see «حسابك بانتظار استكمال الربط».
+
+### Support tickets — phase 1 (Nov 3)
+- Built: «الدعم والمساعدة» page (tabs تذاكري / المسندة إليّ / إدارة التذاكر / الإعدادات), support_* tables + RPCs, attachments (source_type support), default categories per org.
+- Tested: scripts/support-e2e.ts 17/17 (scopes, direct-access refusal, notifications without description, concurrency, idempotent create/reply, correction history, workflow, no delete, guardian child, platform scope, files, org isolation). Browser: demo teacher creates → demo principal claims+replies → teacher sees reply; phone width no horizontal scroll.
+- Not tested yet: export files opened, file upload in browser, platform admin view in browser.

@@ -46,6 +46,7 @@ export type NavKey =
   | "comm_groups"
   | "comm_manage"
   | "profile"
+  | "support"
   | "homework"
   | "grades"
   | "results"
@@ -204,4 +205,12 @@ export function attTabs(role: Role): AttTab[] {
   if (role === "principal") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls"];
   if (role === "vice_principal") return ["today", "pickups", "records", "followup", "cards", "gate", "calls"];
   return [];
+}
+
+export type SupportTab = "mine" | "assigned" | "manage";
+/** «الدعم والمساعدة» tabs (mirrors support_manager in SQL): owner/principal manage their scope; platform admin manages platform tickets only. */
+export function supportTabs(role: Role): SupportTab[] {
+  if (role === "platform_admin") return ["manage"];
+  const staff = !["student", "guardian"].includes(role);
+  return [ "mine", ...(staff ? (["assigned"] as SupportTab[]) : []), ...(role === "org_owner" || role === "principal" ? (["manage"] as SupportTab[]) : []) ];
 }

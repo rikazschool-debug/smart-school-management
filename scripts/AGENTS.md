@@ -28,3 +28,4 @@
 - scripts/people-e2e.ts: unified people picker (people_pick) pools/gates per purpose, multi-role dedupe, prefix search, filters, id-leak and forged-participant checks (30 checks).
 - scripts/accounts-e2e.ts: automatic accounts (staged access, forced change, phone confirmation, existing-account linking, one guardian for siblings, code-send rules; 20 checks). scripts/accounts-browser-fixture.ts setup|teardown: isolated acb- data + synthetic XLSX in /tmp/browser/acc; always run teardown after.
 - scripts/otp-live-test.ts setup|local|supabase|status|teardown --phone 9665…: live WhatsApp code test on one consenting number via an isolated marked test login (never touches real accounts); run teardown when done.
+- scripts/support-e2e.ts: support tickets phase 1 (scopes, workflow, edits history, guardian child link, platform scope, files, org isolation; 17 checks).
