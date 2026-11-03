@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
 });
 
-const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
+const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: "groups" | "manage" }> = {
   home: { to: "/app", label: "الرئيسية", icon: Home },
   platform: { to: "/app/platform", label: "المؤسسات", icon: ShieldCheck },
   schools: { to: "/app/schools", label: "المدارس والفروع", icon: Building2 },
@@ -44,20 +44,22 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   meetings: { to: "/app/admin/meetings", label: "الاجتماعات", icon: UsersRound },
   calendar: { to: "/app/admin/calendar", label: "تقويمي", icon: CalendarDays },
   communication: { to: "/app/communication", label: "التواصل", icon: MessagesSquare },
-  circulars: { to: "/app/circulars", label: "التعميمات", icon: Megaphone },
+  comm_groups: { to: "/app/communication", label: "المجموعات", icon: Users, tab: "groups" },
+  circulars: { to: "/app/circulars", label: "التعاميم", icon: Megaphone },
+  comm_manage: { to: "/app/communication", label: "إدارة المجموعات", icon: UserCog, tab: "manage" },
   profile: { to: "/app/profile", label: "الملف الشخصي", icon: UserCircle },
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
 };
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
-  { label: "", keys: ["home", "profile", "notifications"] },
+  { label: "", keys: ["home", "profile"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members"] },
-  { label: "الإعداد الأكاديمي", keys: ["academic", "teachers", "courses", "students", "guardians"] },
+  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule"] },
+  { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
-  { label: "الجدول واليوم الدراسي", keys: ["schedule"] },
-  { label: "الحضور والمواظبة", keys: ["attendance", "station", "pickup"] },
-  { label: "الإدارة المدرسية", keys: ["admin", "duties", "calendar"] },
-  { label: "التواصل والعمل", keys: ["communication", "meetings", "circulars"] },
+  { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
+  { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage"] },
+  { label: "التنبيهات", keys: ["notifications"] },
 ];
 
 function AppLayout() {
@@ -92,7 +94,8 @@ function Shell() {
   if (loading) return <div className="p-10"><LoadingState /></div>;
   if (!active) return <Onboarding onSignOut={signOut} />;
 
-  const nav = [...NAV_BY_ROLE[active.role], "profile", ...(commTabs(active.role).includes("circulars") ? ["circulars"] : [])] as NavKey[];
+  const ct = commTabs(active.role);
+  const nav = [...NAV_BY_ROLE[active.role], "profile", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : [])] as NavKey[];
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (
@@ -107,7 +110,7 @@ function Shell() {
       <div className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
         {groups.map((g) => (
           <div key={g.label}>
-            {g.label && <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">{g.label}</p>}
+            {g.label && <p className="mb-1.5 flex items-center gap-2 border-r-[3px] border-primary px-3 py-1 text-[13px] font-bold text-primary">{g.label}</p>}
             <div className="space-y-0.5">
               {g.keys.map((k) => {
                 const n = NAV[k];
@@ -115,7 +118,8 @@ function Shell() {
                   <Link
                     key={k}
                     to={n.to}
-                    activeOptions={{ exact: k === "home" || k === "admin" }}
+                    {...(n.tab ? { search: { tab: n.tab } } : {})}
+                    activeOptions={{ exact: k === "home" || k === "admin", includeSearch: k === "communication" || !!n.tab }}
                     onClick={() => setOpen(false)}
                     className="group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
                   >
