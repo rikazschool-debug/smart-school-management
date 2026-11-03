@@ -11,7 +11,7 @@ import { askText } from "@/components/confirm";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Pill } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
-import { E_STATUS, sar, type PcMe, type Row } from "@/components/procurement/shared";
+import { E_STATUS, day, sar, type PcMe, type Row } from "@/components/procurement/shared";
 
 export const N_STATUS: Record<string, string> = { draft: "مسودة", awaiting_assignment: "بانتظار الإسناد", in_progress: "لدى مسؤول المشتريات", done: "منفّذ بالكامل", closed_partial: "مغلق بتنفيذ جزئي", cancelled: "ملغى" };
 const N_TONE: Record<string, "muted" | "warn" | "ok" | "bad"> = { draft: "muted", awaiting_assignment: "warn", in_progress: "warn", done: "ok", closed_partial: "warn", cancelled: "muted" };
