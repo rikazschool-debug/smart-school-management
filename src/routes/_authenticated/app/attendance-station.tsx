@@ -9,6 +9,7 @@ import { CallsTab } from "@/components/attendance/calls-settings";
 import { FieldTestGuide } from "@/components/attendance/field-test-guide";
 import { attTabsWith, canApproveAttendanceWith, canScanWith } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
+import type { AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/attendance-station")({
   head: () => ({ meta: [{ title: "حضور الطلاب والنداء بالمسح — ركاز" }, { name: "description", content: "مسح بطاقات الحضور، البحث بالاسم، البوابة والنداء في مكان واحد." }, { property: "og:title", content: "حضور الطلاب والنداء بالمسح — ركاز" }, { property: "og:description", content: "مسح الحضور والبوابة والنداء في مكان واحد." }] }),
@@ -48,7 +49,4 @@ function Station({ ctx, picked, setTab }: { ctx: AppContext & { schoolId: string
             {tab === "guide" && <FieldTestGuide schoolName={ctx.schoolName} />}
           </>
         );
-      }}
-    </RequireSchool>
-  );
 }
