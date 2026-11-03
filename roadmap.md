@@ -306,7 +306,7 @@
 - [x] Custody recipients limited to holders of procurement «create» (picker + server trigger; pc-e2e 32/32)
 - [x] C1 Owner home: 4 large cards, no side menu on home; each section opens its own side menu; «إدارة المدارس» card details (add/edit school, activate/suspend branch, link staff)
 - [x] C2 Flexible permissions for school sections (finance + school admin + HR placeholders, sub-sections), role presets (vice, supervisor, counselor, security, gate…) with preview, migrate without widening existing access; custom titles
-- [ ] C3 Permissions page: side tab per role → people → person's permissions (edit/add/remove); phone layout
+- [x] C3 Permissions page: side tab per role (base + assigned roles) → people → person panel (assign/withdraw/grant/deny/remove); phone: chips → list → panel with back (browser desktop+390px, perm-tabs unit 3/3)
 - [ ] C4 Principal purchase request → goes to linked procurement officer → after purchase recorded as invoice with categories
 - [~] C5 Settlement close: unconfirmed paid amounts now block close (pc2 8b); pending invoices/drafts/refunds/open requests already blocked; correction/refund concurrency review open
 - [ ] C6 Browser closure: custom field on invoice (old invoice keeps version), transfer + acceptance + old holder loses access, carry-over two moves + no double total

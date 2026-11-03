@@ -373,3 +373,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Ready-made roles mirroring today's rules: مدير مدرسة، وكيل، شؤون الطلاب، أمن واستقبال، البوابة والاستلام، مرشد طلابي; custom titles can start from any template and add/remove sections.
 - Server: perm6-e2e 20/20; perm5 20/20; rls 94/94; attendance 106/106; comm 95/95. Unit: school-perms + roles 23/23.
 - Browser: owner starts a custom role from «وكيل» (sections prefilled); assigns «البوابة والاستلام» to a teacher → effective view shows the branch; teacher (phone 390px) sees gate + calls tabs, no scan tab; withdrawing removes it; no horizontal overflow; no page errors.
+
+## C3 Permissions page by role (2026-11-03)
+- perm_people (owner-only) lists staff with base roles + assigned roles; page: role tabs → people → person panel. Browser: demo owner desktop + 390px, no overflow, no page errors. Unit: src/test/perm-tabs.test.ts 3/3. Status: done.
