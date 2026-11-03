@@ -29,6 +29,7 @@ import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppHrRouteImport } from './routes/_authenticated/app/hr'
 import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authenticated/app/members'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app/notifications'
+import { Route as AuthenticatedAppPermissionsRouteImport } from './routes/_authenticated/app/permissions'
 import { Route as AuthenticatedAppPickupRouteImport } from './routes/_authenticated/app/pickup'
 import { Route as AuthenticatedAppPlatformRouteImport } from './routes/_authenticated/app/platform'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app/profile'
@@ -162,6 +163,12 @@ const AuthenticatedAppNotificationsRoute =
   AuthenticatedAppNotificationsRouteImport.update({
     id: '/notifications',
     path: '/notifications',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppPermissionsRoute =
+  AuthenticatedAppPermissionsRouteImport.update({
+    id: '/permissions',
+    path: '/permissions',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppPickupRoute = AuthenticatedAppPickupRouteImport.update({
@@ -339,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/app/hr': typeof AuthenticatedAppHrRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
@@ -386,6 +394,7 @@ export interface FileRoutesByTo {
   '/app/hr': typeof AuthenticatedAppHrRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
@@ -436,6 +445,7 @@ export interface FileRoutesById {
   '/_authenticated/app/hr': typeof AuthenticatedAppHrRoute
   '/_authenticated/app/members': typeof AuthenticatedAppMembersRoute
   '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/_authenticated/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/_authenticated/app/pickup': typeof AuthenticatedAppPickupRoute
   '/_authenticated/app/platform': typeof AuthenticatedAppPlatformRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/app/hr'
     | '/app/members'
     | '/app/notifications'
+    | '/app/permissions'
     | '/app/pickup'
     | '/app/platform'
     | '/app/profile'
@@ -533,6 +544,7 @@ export interface FileRouteTypes {
     | '/app/hr'
     | '/app/members'
     | '/app/notifications'
+    | '/app/permissions'
     | '/app/pickup'
     | '/app/platform'
     | '/app/profile'
@@ -582,6 +594,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/hr'
     | '/_authenticated/app/members'
     | '/_authenticated/app/notifications'
+    | '/_authenticated/app/permissions'
     | '/_authenticated/app/pickup'
     | '/_authenticated/app/platform'
     | '/_authenticated/app/profile'
@@ -762,6 +775,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/app/notifications'
       preLoaderRoute: typeof AuthenticatedAppNotificationsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/permissions': {
+      id: '/_authenticated/app/permissions'
+      path: '/permissions'
+      fullPath: '/app/permissions'
+      preLoaderRoute: typeof AuthenticatedAppPermissionsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/pickup': {
@@ -970,6 +990,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHrRoute: typeof AuthenticatedAppHrRoute
   AuthenticatedAppMembersRoute: typeof AuthenticatedAppMembersRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
+  AuthenticatedAppPermissionsRoute: typeof AuthenticatedAppPermissionsRoute
   AuthenticatedAppPickupRoute: typeof AuthenticatedAppPickupRoute
   AuthenticatedAppPlatformRoute: typeof AuthenticatedAppPlatformRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
@@ -1013,6 +1034,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHrRoute: AuthenticatedAppHrRoute,
   AuthenticatedAppMembersRoute: AuthenticatedAppMembersRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
+  AuthenticatedAppPermissionsRoute: AuthenticatedAppPermissionsRoute,
   AuthenticatedAppPickupRoute: AuthenticatedAppPickupRoute,
   AuthenticatedAppPlatformRoute: AuthenticatedAppPlatformRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,

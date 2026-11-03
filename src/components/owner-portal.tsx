@@ -48,7 +48,7 @@ const CARDS: Card[] = [
   { key: "schools", section: "school_admin", title: "إدارة المدارس", desc: "المدارس والفروع والأقسام التعليمية والتشغيلية.", to: "/app/school-home", icon: Building2 },
   { key: "hr", section: "hr", title: "الموارد البشرية", desc: "شؤون الموظفين.", to: "/app/hr", icon: Construction, note: "تحت الإنشاء" },
   { key: "finance", section: "finance", title: "المالية والمحاسبة", desc: "المشتريات والعهد المالية. بقية المحاسبة لم تُنفّذ بعد.", to: "/app/finance", icon: Wallet },
-  { key: "users", title: "إعداد المستخدمين والصلاحيات", desc: "المستخدمون والمسميات والأدوار والصلاحيات ونطاقاتها.", to: "/app/members", icon: ShieldCheck },
+  { key: "users", title: "إعداد المستخدمين والصلاحيات", desc: "المستخدمون والمسميات والأدوار والصلاحيات ونطاقاتها.", to: "/app/permissions", icon: ShieldCheck },
 ];
 
 export function OwnerPortal({ orgId }: { orgId: string | null }) {

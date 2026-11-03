@@ -170,3 +170,12 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 | Pause while waiting on requester, resume extends target | done, tested | support4 #1 |
 | Re-armed alerts (priority change, reopen) from the real scheduled job | done, tested | support4 --cron #2, #5 |
 | Phone width (390px) for all support roles | done, tested | support-phone-journey 6/6 |
+
+## Section availability & flexible permissions
+| Capability | Who |
+|---|---|
+| Enable/suspend a section per org | Platform admin only (reason required, logged) |
+| Create/edit/archive custom roles, assign roles, grant/deny overrides | Org owner only; never on self; never students/guardians |
+| See own effective permissions | Staff member (self) |
+| Read staff permissions | Not platform admin |
+| Suspended section | Grants nothing to anyone (owner included) until re-enabled |

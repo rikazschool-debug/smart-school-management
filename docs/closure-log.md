@@ -335,3 +335,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - General security review of the "signed-in users can execute" notices: computed (transitively) every SECURITY DEFINER function callable by signed-in users that never checks the caller. 9 remained; 6 internal relationship checks (_eligible_staff, _family_ok, _file_policy, _gb_has_dept, _student_ok, _teaches_section) were revoked; kept: _adm_staff and school_org (used inside row policies, yes/no or org id only) and current_timetable (used by the app, returns an id that is unreadable without access). All other ~313 notices are actions that check the caller themselves. Regression: comm 95/95, comm-roles 36/36, people 30/30, rls 94/94, homework 37/37, xbranch-files 11/11, attendance 106/106.
 - Real scheduled job (--cron, 3 consecutive 15-minute runs): first alert, re-armed alert after a priority change, and re-armed alert after reopen each arrived once; support4 --cron 10/10. Support section closed.
 - Remaining outside the code: leaked-password protection is a Supabase dashboard setting.
+
+## Package 64 — phases 1–2 (2026-11-03)
+- Owner home with 4 cards; HR «تحت الإنشاء»; locked state «غير مفعّل لمؤسستك». Browser: platform admin suspended finance → owner saw lock; restored.
+- Platform per-org section availability (org_sections, reason/actor/time, org_section_log).
+- Flexible permissions (perm_*): templates, custom roles, assignments with branches/limit, grant/deny overrides, effective view with source, change log. scripts/perm5-e2e.ts 20/20. Browser: permissions page renders templates and people chooser.
+- Not tested: open-session revocation in browser, phone width.
