@@ -54,7 +54,8 @@ try {
   const tt = await ins("timetables", { year_id: year.id, name: "جدول النطاق", created_by: pr.id });
   for (let i = 0; i < 3; i++) await ins("timetable_slots", { timetable_id: tt.id, day: 0, period_id: P[i].id, course_id: C[i].id, section_id: sct.id, teacher_id: T[i].id });
   const draft = await ins("timetables", { year_id: year.id, name: "مسودة", created_by: pr.id });
-  await admin.from("timetables").update({ status: "published", effective_from: today, published_at: new Date().toISOString() }).eq("id", tt.id);
+  const pubR = await admin.from("timetables").update({ status: "published", effective_from: today, published_at: new Date().toISOString(), published_by: pr.id }).eq("id", tt.id).select();
+  console.log("debug publish", pubR.error?.message, (await admin.from("timetable_slots").select("id").eq("timetable_id", tt.id)).data?.length, (await pr.c.from("timetable_slots").select("id").eq("timetable_id", tt.id)));
   const slotsOf = async (u: any, id = tt.id) => ((await u.c.from("timetable_slots").select("teacher_id").eq("timetable_id", id)).data ?? []).map((x: any) => x.teacher_id).sort();
 
   // ---- 1. scope management: principal only, role-checked, audited ----
