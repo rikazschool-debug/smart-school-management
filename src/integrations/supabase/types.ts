@@ -5959,6 +5959,58 @@ export type Database = {
           },
         ]
       }
+      vice_scopes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department_id: string | null
+          id: string
+          school_id: string
+          teacher_id: string | null
+          vice_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          id?: string
+          school_id: string
+          teacher_id?: string | null
+          vice_user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          id?: string
+          school_id?: string
+          teacher_id?: string | null
+          vice_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vice_scopes_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vice_scopes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vice_scopes_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -6431,6 +6483,10 @@ export type Database = {
         Args: { _student: string; _teacher: string }
         Returns: boolean
       }
+      _task_target_ok: {
+        Args: { _school: string; _user: string }
+        Returns: boolean
+      }
       _teaches_section: {
         Args: { _section: string; _user: string }
         Returns: boolean
@@ -6881,6 +6937,16 @@ export type Database = {
         Args: { _id: string; _reason: string }
         Returns: undefined
       }
+      adm_task_candidates: {
+        Args: { _school: string }
+        Returns: {
+          department: string
+          department_id: string
+          full_name: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }[]
+      }
       adm_task_comment: {
         Args: { _body: string; _clarify: boolean; _client: string; _id: string }
         Returns: undefined
@@ -7008,6 +7074,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      att_scanner: { Args: { _school: string }; Returns: boolean }
       att_search_students: {
         Args: { _q: string; _school: string }
         Returns: {
@@ -7706,6 +7773,7 @@ export type Database = {
       is_org_owner: { Args: { _org: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
       is_school_member: { Args: { _school: string }; Returns: boolean }
+      is_school_principal: { Args: { _school: string }; Returns: boolean }
       is_student_self: { Args: { _student: string }; Returns: boolean }
       is_supervised_course: { Args: { _course: string }; Returns: boolean }
       is_supervised_student: { Args: { _student: string }; Returns: boolean }
@@ -8054,6 +8122,16 @@ export type Database = {
         Args: { _active: boolean; _id: string; _reason?: string }
         Returns: undefined
       }
+      set_staff_scope: {
+        Args: {
+          _departments: string[]
+          _kind: string
+          _school: string
+          _teachers: string[]
+          _user: string
+        }
+        Returns: undefined
+      }
       staff_directory: {
         Args: { _org?: string; _school: string }
         Returns: {
@@ -8062,6 +8140,16 @@ export type Database = {
           full_name: string
           role: Database["public"]["Enums"]["app_role"]
           school_name: string
+          user_id: string
+        }[]
+      }
+      staff_scope_list: {
+        Args: { _school: string }
+        Returns: {
+          departments: string[]
+          full_name: string
+          kind: string
+          teachers: string[]
           user_id: string
         }[]
       }
@@ -8183,6 +8271,7 @@ export type Database = {
         }[]
       }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
+      vice_teacher_ids: { Args: never; Returns: string[] }
     }
     Enums: {
       app_role:
