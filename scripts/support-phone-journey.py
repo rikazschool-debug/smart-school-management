@@ -18,7 +18,9 @@ async def screen(br, who, q, name, must):
     await p.fill("#email", F["users"][who]["email"]); await p.fill("#password", F["pw"]); await p.press("#password", "Enter")
     await p.wait_for_function("location.pathname.startsWith('/app')", timeout=30000)
     await p.goto(B + "/app/support" + q); await p.wait_for_timeout(4000)
+    await p.wait_for_timeout(2000)
     ov = await p.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
+    if ov > 1: print(await p.evaluate("""() => { const W=document.documentElement.clientWidth; const o=[]; for (const e of document.querySelectorAll('body *')) { const r=e.getBoundingClientRect(); if (r.width>0 && (r.left<-1 || r.right>W+1)) o.push([e.tagName, Math.round(r.left), Math.round(r.right), e.getAttribute('data-tsd-source')||'']); } return o.slice(-6); }"""))
     vis = [await p.get_by_text(m).first.is_visible() if await p.get_by_text(m).count() else False for m in must]
     await p.screenshot(path=D + f"phone-{name}.png")
     chk(f"{name}: no horizontal scroll and {', '.join(must)} visible", ov <= 1 and all(vis), (ov, vis)); await ctx.close()
