@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { arabicError, useSession } from "@/lib/session";
 import { GROUP_TYPE_LABEL } from "@/lib/comm";
-import { MemberPicker } from "@/components/comm/member-picker";
+import { PeoplePicker } from "@/components/people-picker";
 
 const sel = selectCls("w-full", true);
 const ACTION: Record<string, string> = {
@@ -106,7 +106,7 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
         <section className="space-y-2 rounded-xl border bg-card p-3">
           <h3 className="font-bold">إضافة أعضاء</h3>
           <p className="text-xs text-muted-foreground">تظهر فقط الحسابات السارية ضمن نطاق المجموعة. {c["history_policy"] === "full" ? "سيرى المضافون التاريخ كاملًا." : "سيرى المضافون الرسائل من لحظة إضافتهم فقط."}</p>
-          <MemberPicker schoolId={c["school_id"]} orgId={c["org_id"]} exclude={(people.data ?? []).map((p) => p["user_id"])} value={adding} onChange={setAdding} />
+          <PeoplePicker purpose="group" school={c["school_id"]} org={c["org_id"]} label="إضافة أعضاء" exclude={(people.data ?? []).map((p) => p["user_id"])} value={adding} onChange={setAdding} />
           <Button size="sm" disabled={!adding.length} onClick={async () => { await call("add_group_members", { _conv: convId, _users: adding }, `أُضيف ${adding.length}`); setAdding([]); }}>إضافة {adding.length || ""}</Button>
         </section>
       )}

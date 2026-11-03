@@ -1,3 +1,4 @@
+import { PeoplePicker } from "@/components/people-picker";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -15,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { MeetingForm } from "@/components/admin/meeting-form";
-import { AdminFiles, MEETING_STATUS, PRIORITY, Pill, RSVP, STAFF_ROLES, TASK_STATUS, Timeline, fmt, riyadhDate, riyadhTime, riyadhToday, useStaff } from "@/components/admin/shared";
+import { AdminFiles, MEETING_STATUS, PRIORITY, Pill, RSVP, TASK_STATUS, Timeline, fmt, riyadhDate, riyadhTime, riyadhToday } from "@/components/admin/shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin/meetings/$id")({
   head: () => ({ meta: [{ title: "تفاصيل الاجتماع | ركاز" }, { name: "description", content: "الدعوة والحضور والمحضر والقرارات" }] }),
@@ -231,7 +232,6 @@ function Minutes({ meetingId, minutes, members, organizerId, nm, writer, organiz
 function Decisions({ meetingId, school, cross, orgId, organizer }: { meetingId: string; school: string; cross: boolean; orgId: string; organizer: boolean }) {
   const qc = useQueryClient();
   const [branch, setBranch] = useState(school);
-  const staff = useStaff(branch);
   const branches = useQuery({ enabled: cross && organizer, queryKey: ["org-schools", orgId], queryFn: async () => ((await db.from("schools").select("id, name").eq("org_id", orgId).order("name")).data ?? []) as Row[] });
   const q = useQuery({ queryKey: ["adm-decisions", "meeting", meetingId], queryFn: async () => ((await db.rpc("adm_decision_list" as never, { _school: school, _scope: "all", _meeting: meetingId, _q: null, _status: null, _limit: 100, _offset: 0 } as never)).data ?? []) as Row[] });
   const [clientId, setClientId] = useState(() => crypto.randomUUID());
@@ -264,7 +264,7 @@ function Decisions({ meetingId, school, cross, orgId, organizer }: { meetingId: 
         <div className="grid gap-2 rounded-lg border p-3 md:grid-cols-4">
           <div className="md:col-span-4"><Label htmlFor="dc-b">نص القرار</Label><Textarea id="dc-b" value={d.body} onChange={(e) => setD({ ...d, body: e.target.value })} /></div>
           {cross && <div><Label htmlFor="dc-s">فرع التنفيذ</Label><select id="dc-s" className={selectCls("w-full")} value={branch} onChange={(e) => { setBranch(e.target.value); setD({ ...d, assignee: "" }); }}>{(branches.data ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>}
-          <div><Label htmlFor="dc-a">مسؤول التنفيذ</Label><select id="dc-a" className={selectCls("w-full")} value={d.assignee} onChange={(e) => setD({ ...d, assignee: e.target.value })}><option value="">اختر</option>{staff.data?.filter((s) => s.role !== "org_owner").map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name} — {STAFF_ROLES[s.role] ?? s.role}</option>)}</select></div>
+          <div className="md:col-span-4"><Label>مسؤول التنفيذ</Label><PeoplePicker purpose="decision" school={branch} label="مسؤول التنفيذ" single compact value={d.assignee ? [d.assignee] : []} onChange={(v) => setD({ ...d, assignee: v[0] ?? "" })} /></div>
           <div><Label htmlFor="dc-d">الموعد</Label><Input id="dc-d" type="date" min={riyadhToday()} value={d.due_date} onChange={(e) => setD({ ...d, due_date: e.target.value })} /></div>
           <div><Label htmlFor="dc-p">الأولوية</Label><select id="dc-p" className={selectCls("w-full")} value={d.priority} onChange={(e) => setD({ ...d, priority: e.target.value })}>{Object.entries(PRIORITY).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
           <div className="self-end"><Button disabled={busy} onClick={add}>إضافة القرار</Button></div>

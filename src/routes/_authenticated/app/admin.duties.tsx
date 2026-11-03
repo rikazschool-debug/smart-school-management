@@ -1,3 +1,4 @@
+import { PeoplePicker } from "@/components/people-picker";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -132,7 +133,6 @@ function Week({ ctx }: { ctx: Ctx }) {
   const [week, setWeek] = useState(() => weekStartOf(riyadhToday()));
   const [day, setDay] = useState("");
   const { run, busy } = useRun();
-  const staff = useStaff(ctx.schoolId);
   const roster = useQuery({
     queryKey: ["duty", "roster", ctx.schoolId, week],
     queryFn: async () => {
@@ -280,9 +280,7 @@ function Week({ ctx }: { ctx: Ctx }) {
                     </ul>
                     {adding && adding.post_id === c.post_id && adding.date === c.date && (
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <select aria-label="الموظف" className={selectCls("", true)} value={pick} onChange={(e) => setPick(e.target.value)}>
-                          <option value="">اختر موظفًا</option>{staff.data?.filter((s) => s.role !== "org_owner").map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name} — {STAFF_ROLES[s.role] ?? s.role}</option>)}
-                        </select>
+                        <div className="w-full"><PeoplePicker purpose="duty" school={ctx.schoolId} post={c.post_id} label="الموظف" single compact exclude={people.map((p) => p.user_id)} value={pick ? [pick] : []} onChange={(v) => setPick(v[0] ?? "")} /></div>
                         <Button size="sm" disabled={busy || !pick} onClick={add}>إسناد</Button><Button size="sm" variant="ghost" onClick={() => setAdding(null)}>إلغاء</Button>
                         <span className="text-xs text-muted-foreground">يرفض النظام أي شخص لديه حصة أو غياب أو عدم توافر أو مناوبة متداخلة.</span>
                       </div>
@@ -290,9 +288,7 @@ function Week({ ctx }: { ctx: Ctx }) {
                     {subFor && people.some((p) => p.id === subFor.id) && (
                       <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-accent p-2">
                         <span className="text-sm">بديل عن {subFor.user_name} ليوم {c.date} فقط:</span>
-                        <select aria-label="البديل" className={selectCls("", true)} value={pick} onChange={(e) => setPick(e.target.value)}>
-                          <option value="">اختر موظفًا</option>{staff.data?.filter((s) => s.user_id !== subFor.user_id && s.role !== "org_owner").map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name}</option>)}
-                        </select>
+                        <div className="w-full"><PeoplePicker purpose="duty" school={ctx.schoolId} post={c.post_id} label="البديل" single compact exclude={[subFor.user_id]} value={pick ? [pick] : []} onChange={(v) => setPick(v[0] ?? "")} /></div>
                         <Button size="sm" disabled={busy || !pick} onClick={substitute}>تعيين البديل</Button><Button size="sm" variant="ghost" onClick={() => setSubFor(null)}>إلغاء</Button>
                       </div>
                     )}
@@ -474,7 +470,7 @@ function Setup({ ctx }: { ctx: Ctx }) {
       <section className="space-y-2 rounded-xl border bg-card p-4">
         <h2 className="font-semibold">الاستثناءات التشغيلية</h2>
         <div className="flex flex-wrap items-end gap-2">
-          <select aria-label="الموظف" className={selectCls("", true)} value={exU} onChange={(e) => setExU(e.target.value)}><option value="">اختر موظفًا</option>{staff.data?.filter((x) => x.role !== "org_owner").map((x) => <option key={x.user_id} value={x.user_id}>{x.full_name}</option>)}</select>
+          <div className="w-full"><PeoplePicker purpose="duty" school={ctx.schoolId} label="الموظف المستثنى" single compact value={exU ? [exU] : []} onChange={(v) => setExU(v[0] ?? "")} /></div>
           <Input aria-label="السبب" placeholder="السبب" value={exR} onChange={(e) => setExR(e.target.value)} className="h-9 w-56" />
           <div><Label htmlFor="exd">حتى (اختياري)</Label><Input id="exd" type="date" value={exD} onChange={(e) => setExD(e.target.value)} className="h-9" /></div>
           <Button size="sm" disabled={busy || !exU} onClick={async () => { const r = await run("adm_duty_set_exempt", { _school: ctx.schoolId, _user: exU, _reason: exR, _until: exD || null, _remove: false }, "أُضيف الاستثناء"); if (r) { setExU(""); setExR(""); setExD(""); } }}>إضافة</Button>

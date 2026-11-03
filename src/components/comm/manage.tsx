@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { arabicError, type AppContext } from "@/lib/session";
 import { GROUP_TYPE_LABEL, ROLE_AR } from "@/lib/comm";
-import { MemberPicker, useStaffDirectory } from "@/components/comm/member-picker";
+import { PeoplePicker, usePeopleByIds } from "@/components/people-picker";
 import { GroupPanel } from "@/components/comm/group-panel";
 import { canCreateGroup } from "@/lib/roles";
 
@@ -75,8 +75,8 @@ function GroupWizard({ ctx, onDone }: { ctx: AppContext & { schoolId: string }; 
   const depts = useOptions("departments", "name", ctx.schoolId);
   const years = useOptions("academic_years", "name", ctx.schoolId);
   const schoolScope = v.scope === "school" ? ctx.schoolId : null;
-  const dir = useStaffDirectory(schoolScope, ctx.orgId);
-  const nameOf = (id: string) => dir.data?.find((r) => r["user_id"] === id)?.["full_name"] ?? "—";
+  const picked = usePeopleByIds({ purpose: "group", school: schoolScope, org: ctx.orgId }, [...owner, ...mods, ...members]);
+  const nameOf = (id: string) => picked.data?.get(id)?.full_name ?? "—";
   const derivedPreview = useQuery({
     queryKey: ["derived-preview", v.department],
     enabled: v.membership_mode === "derived" && !!v.department,
@@ -129,10 +129,10 @@ function GroupWizard({ ctx, onDone }: { ctx: AppContext & { schoolId: string }; 
       )}
       {step === 3 && (
         <div className="space-y-4">
-          <div><h4 className="mb-1 text-sm font-semibold">المالك (افتراضيًا أنت)</h4><MemberPicker schoolId={schoolScope} orgId={ctx.orgId} value={owner} onChange={setOwner} single /></div>
-          <div><h4 className="mb-1 text-sm font-semibold">المشرفون</h4><MemberPicker schoolId={schoolScope} orgId={ctx.orgId} exclude={owner} value={mods} onChange={setMods} /></div>
+          <div><h4 className="mb-1 text-sm font-semibold">المالك (افتراضيًا أنت)</h4><PeoplePicker purpose="group" school={schoolScope} org={ctx.orgId} label="المالك" value={owner} onChange={setOwner} single compact /></div>
+          <div><h4 className="mb-1 text-sm font-semibold">المشرفون</h4><PeoplePicker purpose="group" school={schoolScope} org={ctx.orgId} label="المشرفون" exclude={owner} value={mods} onChange={setMods} compact /></div>
           {v.membership_mode === "manual" ? (
-            <div><h4 className="mb-1 text-sm font-semibold">الأعضاء</h4><MemberPicker schoolId={schoolScope} orgId={ctx.orgId} exclude={[...owner, ...mods]} value={members} onChange={setMembers} /></div>
+            <div><h4 className="mb-1 text-sm font-semibold">الأعضاء</h4><PeoplePicker purpose="group" school={schoolScope} org={ctx.orgId} label="الأعضاء" exclude={[...owner, ...mods]} value={members} onChange={setMembers} /></div>
           ) : (
             <p className="rounded-lg bg-muted p-3 text-sm">الأعضاء يُحسبون تلقائيًا: {derivedPreview.data?.length ?? 0} معلم في القسم حاليًا{derivedPreview.data?.length ? ` (${derivedPreview.data.map((t) => t["full_name"]).join("، ")})` : ""}.</p>
           )}

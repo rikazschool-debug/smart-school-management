@@ -6462,6 +6462,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      _people_pool: {
+        Args: { _org: string; _post: string; _purpose: string; _school: string }
+        Returns: {
+          role: string
+          school_id: string
+          user_id: string
+        }[]
+      }
       _pickup_delegate_set: {
         Args: { _d: Json; _id: string; _mode: string; _person: string }
         Returns: undefined
@@ -7851,6 +7859,43 @@ export type Database = {
       my_dept_ids: { Args: never; Returns: string[] }
       my_teacher_ids: { Args: never; Returns: string[] }
       open_circular: { Args: { _id: string }; Returns: undefined }
+      people_pick: {
+        Args: {
+          _branch?: string
+          _dept?: string
+          _ids?: string[]
+          _limit?: number
+          _org?: string
+          _post?: string
+          _purpose: string
+          _q?: string
+          _role?: string
+          _school: string
+        }
+        Returns: {
+          dept_id: string
+          dept_name: string
+          full_name: string
+          roles: string[]
+          school_id: string
+          school_name: string
+          total: number
+          user_id: string
+        }[]
+      }
+      people_pick_facets: {
+        Args: {
+          _org?: string
+          _post?: string
+          _purpose: string
+          _school: string
+        }
+        Returns: {
+          id: string
+          kind: string
+          label: string
+        }[]
+      }
       pickup_arrived: {
         Args: { _confirmed?: boolean; _id: string; _id_last4?: string }
         Returns: Json

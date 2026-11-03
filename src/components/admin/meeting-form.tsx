@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { X } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,10 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, type AppContext } from "@/lib/session";
-import { STAFF_ROLES, riyadhDate, riyadhTime } from "@/components/admin/shared";
+import { riyadhDate, riyadhTime } from "@/components/admin/shared";
+import { PeoplePicker, usePeopleByIds, type Person } from "@/components/people-picker";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
-type Cand = { user_id: string; full_name: string; school_id: string; school_name: string; roles: string; dept_name: string | null };
 
 const addMin = (hhmm: string, min: number) => { const [h, m] = hhmm.split(":").map(Number); const t = (h! * 60 + m! + min) % 1440; return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
 const diffMin = (a: string, b: string) => { const [h1, m1] = a.split(":").map(Number); const [h2, m2] = b.split(":").map(Number); return h2! * 60 + m2! - (h1! * 60 + m1!); };
@@ -29,7 +28,6 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
     privacy: meeting?.privacy ?? "normal", needs_rsvp: meeting?.needs_rsvp ?? true, minutes_writer: meeting?.minutes_writer ?? "", members: members ?? ([] as string[]),
     mode: meeting?.mode ?? "in_person", scope: meeting?.scope ?? "school", host: meeting?.school_id ?? school ?? "", change_reason: "",
   });
-  const [f, setF] = useState({ q: "", branch: "", role: "", dept: "" });
   const [busy, setBusy] = useState(false);
   const schools = useQuery({
     enabled: owner && !!ctx?.orgId,
@@ -37,28 +35,9 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
     queryFn: async () => ((await db.from("schools").select("id, name").eq("org_id", ctx!.orgId!).order("name")).data ?? []) as Row[],
   });
   const host = d.host || school || "";
-  const depts = useQuery({
-    enabled: !!(f.branch || host),
-    queryKey: ["adm-depts", f.branch || host],
-    queryFn: async () => ((await db.from("departments").select("id, name").eq("school_id", f.branch || host).order("name")).data ?? []) as Row[],
-  });
-  const cands = useQuery({
-    enabled: !!host,
-    queryKey: ["adm-meet-cands", host, d.scope, f],
-    queryFn: async () => {
-      const { data, error } = await db.rpc("adm_meeting_candidates" as never, { _school: host, _scope: d.scope, _q: f.q.trim() || null, _branch: f.branch || null, _role: f.role || null, _dept: f.dept || null } as never);
-      if (error) throw error;
-      return data as unknown as Cand[];
-    },
-  });
-  // names for selected people independent of the current filter
-  const all = useQuery({
-    enabled: !!host,
-    queryKey: ["adm-meet-cands", host, d.scope, "all"],
-    queryFn: async () => ((await db.rpc("adm_meeting_candidates" as never, { _school: host, _scope: d.scope, _q: null, _branch: null, _role: null, _dept: null } as never)).data ?? []) as unknown as Cand[],
-  });
-  const byId = useMemo(() => new Map((all.data ?? []).map((c) => [c.user_id, c])), [all.data]);
-  const roleLabel = (rs: string) => rs.split(",").map((r) => STAFF_ROLES[r] ?? r).join("، ");
+  const pickScope = { purpose: "meeting" as const, school: host || null, org: d.scope === "org" ? (ctx?.orgId ?? null) : null };
+  const chosen = usePeopleByIds(pickScope, d.members);
+  const byId: Map<string, Person> = chosen.data ?? new Map();
 
   async function save() {
     if (!d.title.trim() || !d.date || !d.time || !d.end) return void toast.error("أكمل العنوان والتاريخ ووقتي البداية والنهاية");
@@ -74,9 +53,7 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
     toast.success(meeting ? (meeting.status === "scheduled" ? "حُفظ التعديل وأُبلغ المدعوون بالسبب" : "حُفظ التعديل") : "حُفظت المسودة — لم تُرسل أي دعوة بعد");
     onDone((data as Row).id);
   }
-  const toggle = (id: string, on: boolean) => setD({ ...d, members: on ? [...new Set([...d.members, id])] : d.members.filter((x) => x !== id), minutes_writer: !on && d.minutes_writer === id ? "" : d.minutes_writer });
   const sel = selectCls("w-full");
-  const list = (cands.data ?? []).filter((c) => c.user_id !== me);
   return (
     <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-2">
       <div className="md:col-span-2"><Label htmlFor="m-title">العنوان</Label><Input id="m-title" value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} /></div>
@@ -129,30 +106,8 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
       </div>
       <div className="space-y-2 md:col-span-2">
         <Label>المدعوون</Label>
-        <div className="flex flex-wrap gap-2">
-          <Input aria-label="بحث عن مدعو" placeholder="بحث بالاسم" className="h-9 w-48" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} />
-          {owner && d.scope === "org" && <select aria-label="الفرع" className={selectCls("", true)} value={f.branch} onChange={(e) => setF({ ...f, branch: e.target.value, dept: "" })}><option value="">كل الفروع</option>{(schools.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
-          <select aria-label="الدور" className={selectCls("", true)} value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}><option value="">كل الأدوار</option>{Object.entries(STAFF_ROLES).filter(([k]) => k !== "org_owner").map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-          <select aria-label="القسم" className={selectCls("", true)} value={f.dept} onChange={(e) => setF({ ...f, dept: e.target.value })}><option value="">كل الأقسام</option>{(depts.data ?? []).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
-          {list.length > 0 && <Button size="sm" variant="outline" onClick={() => setD({ ...d, members: [...new Set([...d.members, ...list.map((c) => c.user_id)])] })}>إضافة كل النتائج ({list.length})</Button>}
-        </div>
-        <div className="max-h-48 overflow-y-auto rounded-lg border">
-          {cands.isLoading ? <p className="p-2 text-xs text-muted-foreground">جارٍ التحميل…</p> : cands.error ? <p className="p-2 text-xs text-destructive">{arabicError(cands.error)}</p> : !list.length ? <p className="p-2 text-xs text-muted-foreground">لا نتائج مطابقة.</p> : (
-            <ul>{list.map((c) => (
-              <li key={c.user_id}><label className="flex min-h-10 items-center gap-2 border-b px-2 text-sm last:border-0">
-                <input type="checkbox" checked={d.members.includes(c.user_id)} onChange={(e) => toggle(c.user_id, e.target.checked)} />
-                <span>{c.full_name}</span><span className="text-xs text-muted-foreground">{roleLabel(c.roles)}{c.dept_name ? ` · ${c.dept_name}` : ""}{d.scope === "org" ? ` · ${c.school_name}` : ""}</span>
-              </label></li>
-            ))}</ul>
-          )}
-        </div>
-        <div className="rounded-lg bg-muted/50 p-2">
-          <p className="mb-1 text-xs font-medium">المختارون ({d.members.length}) — كل شخص يُدعى مرة واحدة ولو تعددت أدواره</p>
-          <div className="flex flex-wrap gap-1">{d.members.map((u) => (
-            <span key={u} className="flex items-center gap-1 rounded-md border bg-card px-2 py-0.5 text-xs">{byId.get(u)?.full_name ?? "مستخدم غير متاح"}{d.scope === "org" && byId.get(u) ? ` (${byId.get(u)!.school_name})` : ""}
-              <button aria-label={`إزالة ${byId.get(u)?.full_name ?? ""}`} onClick={() => toggle(u, false)}><X className="size-3" /></button></span>
-          ))}</div>
-        </div>
+        <PeoplePicker {...pickScope} label="المدعوون" exclude={[me]} value={d.members} onChange={(v) => setD({ ...d, members: v, minutes_writer: v.includes(d.minutes_writer) ? d.minutes_writer : "" })} />
+        <p className="text-xs text-muted-foreground">كل شخص يُدعى مرة واحدة ولو تعددت أدواره. اختيار الفئة يعرض أسماءها فقط، ولا يُدعى أحد حتى تختاره.</p>
         <p className="text-xs text-muted-foreground">لا يُدرج الطلاب وأولياء الأمور والحسابات الموقوفة. لا تُنشأ مجموعة تواصل يدوية.</p>
       </div>
       <label className="flex items-center gap-2 text-sm md:col-span-2"><input type="checkbox" checked={d.needs_rsvp} onChange={(e) => setD({ ...d, needs_rsvp: e.target.checked })} />يُطلب من المدعوين القبول أو الاعتذار</label>
