@@ -57,6 +57,13 @@ describe("ministry report parsing", () => {
     expect(p.sheets).toBe(2);
     expect(p.rows.map((r) => r.values["full_name"])).toEqual(["طالب أول تجريبي", "طالب ثان تجريبي", "طالب ثالث تجريبي"]);
   });
+  it("keeps a row that has an ID but no name so it is reported, and skips an English line repeating the previous ID", () => {
+    const w = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(w, XLSX.utils.aoa_to_sheet([["اسم الطالب", "رقم الهوية"], ["طالب أ", "1000000041"], ["Student A", "1000000041"], ["", "1000000042"]]), "s");
+    const q = parseWorkbook(buf(w), "students");
+    expect(q.rows.map((r) => r.values["national_id"])).toEqual(["1000000041", "1000000042"]);
+    expect(validate("students", q.rows, empty)[1]!.errors).toContain("الاسم مطلوب");
+  });
   it("finds the ID under a two-line merged header and the sheet's grade/section", () => {
     expect(p.rows[0]!.values["national_id"]).toBe("1000000001");
     expect(p.rows[2]!.values["grade"]).toBe("الثاني الابتدائي");
@@ -89,9 +96,24 @@ describe("validation rules (import and single add)", () => {
     const r = validate("students", [raw({ full_name: "قديم", national_id: "1000000005" })], lk)[0]!;
     expect(r.existingId).toBe("OLD"); expect(r.errors).toEqual([]);
   });
-  it("section number 2 matches section «ب» when no section is literally named 2", () => {
+  it("section number is never mapped to a letter automatically; an explicit choice is required", () => {
     const l2: Lookups = { ...empty, sections: new Map([["الاول|ب", { id: "SB", year_id: "Y", capacity: null, used: 0 }]]) };
-    expect(validate("students", [raw({ full_name: "أ", national_id: "1000000021", grade: "الأول", section: "2" })], l2)[0]!.section?.id).toBe("SB");
+    const row = raw({ full_name: "أ", national_id: "1000000021", grade: "الأول", section: "2" });
+    const before = validate("students", [row], l2)[0]!;
+    expect(before.section).toBeUndefined(); expect(before.unmatchedSection?.key).toBe("الاول|2"); expect(before.errors.join()).toMatch(/اختر الشعبة/);
+    const after = validate("students", [row], { ...l2, sectionChoice: new Map([["الاول|2", "SB"]]) })[0]!;
+    expect(after.section?.id).toBe("SB"); expect(after.errors).toEqual([]); expect(after.notes.join()).toMatch(/باختيارك/);
+  });
+  it("Hijri conversion is shown in the row note with both dates", () => {
+    const r = validate("students", [raw({ full_name: "أ", national_id: "1000000022", birth_date: "1436/05/10" })], empty)[0]!;
+    expect(r.data["birth_date"]).toBe("2015-03-01"); expect(r.notes.join()).toMatch(/1436\/05\/10.*2015-03-01/);
+  });
+  it("teacher ID and mobile pointing to different people is a conflict, not a merge", () => {
+    const lk: Lookups = { ...empty, existingIds: new Map([["1000000031", "T1"]]), existingPhones: new Map([["966501111112", "T2"]]), rowNid: new Map([["T2", "1000000032"]]) };
+    const a = validate("teachers", [raw({ full_name: "م", national_id: "1000000031", phone: "0501111112" })], lk)[0]!;
+    expect(a.existingId).toBeUndefined(); expect(a.errors.join()).toMatch(/تعارض/);
+    const b = validate("teachers", [raw({ full_name: "م", national_id: "1000000033", phone: "0501111112" })], lk)[0]!;
+    expect(b.existingId).toBeUndefined(); expect(b.errors.join()).toMatch(/تعارض/);
   });
   it("section capacity is enforced before saving", () => {
     const r = validate("students", [raw({ full_name: "أ", national_id: "1000000011", grade: "الأول", section: "أ" }), raw({ full_name: "ب", national_id: "1000000012", grade: "الأول", section: "أ" })], lk);

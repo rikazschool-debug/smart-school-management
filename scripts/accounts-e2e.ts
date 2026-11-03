@@ -20,7 +20,7 @@ async function user(tag: string) {
   tr.addUser(s.data.user!.id); return { c, id: s.data.user!.id };
 }
 const sfx = String(run).slice(-8);
-const nid = (n: number) => `1${sfx}${n}`.slice(0, 10);
+const nid = (n: number) => `1${sfx.slice(-7)}${String(n).padStart(2, "0")}`;
 const phone = (n: number) => `9665${sfx.slice(-7)}${n}`;
 let org: string | null = null;
 try {
@@ -97,6 +97,12 @@ try {
   const steal = await admin.rpc("_provision_link", { _kind: "teacher", _subject: other.id, _uid: ex.data.user!.id, _actor: pr.id, _pending: false });
   check("3b one account cannot be linked to a second teacher record in the same school", !!steal.error);
 
+  await admin.from("teachers").update({ national_id: nid(11) }).eq("id", t2.id);
+  const t3 = await ins("teachers", { full_name: "شخص آخر بنفس الجوال", national_id: nid(12), phone: phone(9), status: "active" }, pr.c);
+  const rv = await admin.rpc("_provision_link", { _kind: "teacher", _subject: t3.id, _uid: ex.data.user!.id, _actor: pr.id, _pending: false });
+  const t3row = (await admin.from("teachers").select("user_id").eq("id", t3.id).single()).data;
+  check("3c existing account of a person with another national ID → review, not linked", rv.data === "review" && !t3row?.user_id, [rv.error, rv.data]);
+
   // ---- guardian: two children, one account, same mobile in different formats ----
   const s2 = await ins("students", { full_name: "الأخ الثاني", national_id: nid(5), status: "active" }, sa.c);
   const g1 = await sa.c.rpc("upsert_student_guardian", { _student: st.id, _name: "ولي الأمر", _phone: "05" + phone(6).slice(4), _national_id: "", _relationship: "father" });
@@ -105,6 +111,13 @@ try {
   check("4a same mobile (05… / 9665…) gives one guardian for both children", !!gid && gid === (g2.data as any[])?.[0]?.guardian_id, [g1.error, g2.error]);
   const byName = await sa.c.rpc("upsert_student_guardian", { _student: s2.id, _name: "ولي الأمر", _phone: phone(7), _national_id: "", _relationship: "father" });
   check("4b same name with a different mobile is a different guardian (never matched by name)", (byName.data as any[])?.[0]?.guardian_id !== gid);
+  const nA = nid(21), nB = nid(22);
+  const g3 = await sa.c.rpc("upsert_student_guardian", { _student: s2.id, _name: "ولي ثالث", _phone: phone(5), _national_id: nA, _relationship: "mother" });
+  const c1 = await sa.c.rpc("upsert_student_guardian", { _student: st.id, _name: "x", _phone: phone(6), _national_id: nA, _relationship: "father" });
+  const c2 = await sa.c.rpc("upsert_student_guardian", { _student: st.id, _name: "x", _phone: phone(5), _national_id: nB, _relationship: "father" });
+  const c3 = await sa.c.rpc("upsert_student_guardian", { _student: st.id, _name: "x", _phone: phone(0), _national_id: nA, _relationship: "father" });
+  const linksSt = ((await admin.from("student_guardians").select("guardian_id").eq("student_id", st.id)).data ?? []).map((x) => x.guardian_id);
+  check("4d ID→one guardian + mobile→another, mobile with other ID, ID with other mobile: all stopped for review, no link made", !g3.error && /تعارض/.test(c1.error?.message ?? "") && /تعارض/.test(c2.error?.message ?? "") && /تعارض/.test(c3.error?.message ?? "") && !linksSt.includes((g3.data as any[])[0].guardian_id), [c1.error?.message, c2.error?.message, c3.error?.message]);
   const gu = await admin.auth.admin.createUser({ phone: phone(6), phone_confirm: false }); tr.addUser(gu.data.user!.id);
   await admin.rpc("_provision_link", { _kind: "guardian", _subject: gid, _uid: gu.data.user!.id, _actor: sa.id, _pending: true });
   const gEarly = await admin.rpc("is_guardian_of" as any, { _student: st.id });
@@ -128,6 +141,9 @@ try {
   await admin.from("otp_sends").insert({ user_id: tu.data.user!.id, phone: phone(2), local_message_id: "t-" + run, status: "accepted" });
   const may3 = await admin.rpc("_otp_may_send", { _uid: tu.data.user!.id, _phone: phone(2) });
   check("6a codes only for school accounts; 60-second cooldown between sends", may1.data === "not_school_account" && may2.data === null && may3.data === "cooldown", [may1.data, may2.data, may3.data]);
+  await admin.from("memberships").update({ is_active: false }).eq("user_id", ex.data.user!.id);
+  const may4 = await admin.rpc("_otp_may_send", { _uid: ex.data.user!.id, _phone: phone(3) });
+  check("6c suspended account (no active membership) gets no code", may4.data === "not_school_account", may4.data);
   const leak = await tch.c.from("otp_sends").select("*");
   check("6b the send log is not readable from the app", !!leak.error || !(leak.data ?? []).length);
   await admin.from("otp_sends").delete().like("local_message_id", "t-" + run);

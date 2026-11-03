@@ -136,3 +136,5 @@ Vice principals and supervisors are scoped individually: same role ≠ same acce
 | decision | meeting organizers | staff of the chosen executing branch |
 No phone/email returned; ids outside the pool resolve to nothing.
 
+
+Staff name list (circular "specific people"): school-wide for eligible school staff; organization-wide for the org owner only (platform admins excluded). Teachers without a login never appear as chat members, invitees, task/duty assignees or circular recipients, but do appear in timetable loads and availability. Tests: scripts/closure-e2e.ts.

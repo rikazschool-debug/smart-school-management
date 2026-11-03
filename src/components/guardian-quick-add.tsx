@@ -17,6 +17,7 @@ export const ACCOUNT_STATE: Record<string, string> = {
   pending_phone: "بانتظار أول دخول بالجوال ورمز واتساب",
   pending_password: "بانتظار تغيير كلمة المرور الأولية",
   none: "بلا حساب",
+  review: "يحتاج مراجعة: الجوال/الهوية لحساب شخص آخر — لم يُربط",
 };
 
 /** Guardian login = mobile + WhatsApp code. Created with no access until the guardian confirms the mobile on first sign-in. */

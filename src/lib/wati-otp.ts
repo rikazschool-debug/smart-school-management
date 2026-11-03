@@ -23,11 +23,14 @@ export function safeEqual(a: string, b: string): boolean {
   return r === 0;
 }
 
+/** WATI v3 routes live at the host root; the token selects the workspace. Accepts a base pasted with or without /api/... */
+export function watiOrigin(base: string): string { return new URL(base).origin; }
+
 export type WatiConfig = { baseUrl: string; token: string; template: string; param: string; channel?: string | undefined };
 
 /** Sends the code with the approved template (v3 messageTemplates/send). Returns accepted only when WATI reports success for this recipient. */
 export async function sendWatiOtp(cfg: WatiConfig, phone: string, code: string, localId: string): Promise<{ ok: boolean; detail: string }> {
-  const url = `${cfg.baseUrl.replace(/\/+$/, "")}/api/ext/v3/messageTemplates/send`;
+  const url = `${watiOrigin(cfg.baseUrl)}/api/ext/v3/messageTemplates/send`;
   const body: Record<string, unknown> = {
     template_name: cfg.template,
     broadcast_name: "rikaz_login",
