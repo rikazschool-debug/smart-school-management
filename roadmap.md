@@ -273,8 +273,8 @@
 ## Package-next closure round (Nov 3)
 - [ ] C1 WATI: secrets via secure form, hook + delivery-webhook URLs, external steps; real send/verify test (teacher + guardian) — waits on secrets + test number
 - [ ] C1b OTP negatives: wrong/expired/used code, attempt + resend limits, provider failure, suspended account, unknown mobile
-- [ ] C2 Linking review: ID/mobile conflict → review not merge; guardian link needs approval; section number/Hijri mapping explicit in preview; two blank templates download+upload, missing fields, partial failure/retry
-- [ ] C3 Tests: timetable 1-in-5 flake root cause; owner picks staff from 2 branches + real duty assign + substitute (browser); circular people list scope; teachers without account in loads/availability but not chat/invite
-- [ ] C4 Agora: owner 2-branch / principal own; invite in admin+comm+calendar; 3-account audio + screen share + permission revoke; uninvited blocked; remove + no return; end for all; RSVP≠attendance; in-person shows place
-- [ ] C4b Screen share shows inside the meeting tile as a preview (prompt-47)
+- [x] C2 Linking review (templates browser 10/10 scripts/accounts-templates-journey.py; rows with ID but no name now reported, not dropped): ID/mobile conflict → review not merge; guardian link needs approval; section number/Hijri mapping explicit in preview; two blank templates download+upload, missing fields, partial failure/retry
+- [~] C3 Tests (done: circular list scope + no-login teachers, scripts/closure-e2e.ts 4/4; open: owner 2-branch pick + duty/substitute in browser, timetable flake root cause): timetable 1-in-5 flake root cause; owner picks staff from 2 branches + real duty assign + substitute (browser); circular people list scope; teachers without account in loads/availability but not chat/invite
+- [x] C4 Agora (browser 9/9 scripts/meet-room3-journey.py; meetings-live 33/33; meet-comm 13/13): owner 2-branch / principal own; invite in admin+comm+calendar; 3-account audio + screen share + permission revoke; uninvited blocked; remove + no return; end for all; RSVP≠attendance; in-person shows place
+- [x] C4b Screen share shows inside the meeting tile as a preview (prompt-47)
 - [ ] C5 Exports opened, phone width, direct permission calls, security review of new account/login functions, closure-log table

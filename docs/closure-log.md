@@ -284,3 +284,15 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
   Evidence: scripts/accounts-e2e.ts 20/20; Vitest 71/71 (people-import 15); rls-e2e 94/94; browser 18/18 (ministry-style file 4 rows/2 sheets → 3 saved + 1 full-section refusal, retry no duplicates, single add + guardian, reused ID, initial password → student forced change → in, old password refused, teacher import, phone form). Both reference files parsed (213 students / 27 sheets, 33 teachers) without storing their data.
   P4: Send SMS hook route + WATI v3 template send + delivery webhook (otp_sends log, cooldown 60 s, 5/hour, school accounts only) built and unit-tested (signature verify, status mapping). Not verified: real WhatsApp delivery (no WATI credentials/approved template/hook configured yet).
   P5: meet-comm-e2e 13/13, meetings-live-e2e 33/33, admin2-e2e 45/45, browser 7/7.
+
+## 2026-11-03 — package-next closure round (continued)
+| Item | Evidence | Result |
+|---|---|---|
+| Live meeting, 3 accounts (owner + branch-B principal + branch-A teacher), uninvited blocked, two-way audio, screen share preview inside the meeting box for the sharer and others, revoke, remove/no return, end for all | scripts/meet-room3-journey.py (browser, fake media) | 9/9 |
+| Meeting permissions / communication tab | meetings-live-e2e, meet-comm-e2e | 33/33, 13/13 |
+| Blank templates: download, columns, text format, fill+upload, missing name/ID, bad ID, re-upload without duplicates, phone width | scripts/accounts-templates-journey.py | 10/10 |
+| Import parser: row with ID but no name is reported (was silently dropped) | src/lib/people-import.test.ts | 18/18 |
+| Teachers without a login: in loads/availability, never in chat/invite/task/duty pools or circular audience; org-wide staff names owner-only (platform admin removed) | scripts/closure-e2e.ts | 4/4 |
+| Regression | people-e2e, comm-roles-e2e | 30/30, 36/36 |
+| Account/login functions | _provision_link, _complete_account_setup, _otp_may_send, link_guardian_account not executable by signed-in users | checked |
+| Open | real WATI send + Supabase Send SMS hook; owner 2-branch picker + duty/substitute browser journey; timetable 1-in-5 flake root cause | — |
