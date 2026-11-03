@@ -5769,6 +5769,7 @@ export type Database = {
           id: string
           linked_ticket: string | null
           org_id: string
+          paused_at: string | null
           priority: string
           rating: number | null
           ref: string
@@ -5799,6 +5800,7 @@ export type Database = {
           id?: string
           linked_ticket?: string | null
           org_id: string
+          paused_at?: string | null
           priority?: string
           rating?: number | null
           ref?: string
@@ -5829,6 +5831,7 @@ export type Database = {
           id?: string
           linked_ticket?: string | null
           org_id?: string
+          paused_at?: string | null
           priority?: string
           rating?: number | null
           ref?: string
