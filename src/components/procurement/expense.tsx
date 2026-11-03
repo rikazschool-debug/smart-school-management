@@ -27,7 +27,7 @@ const run = async (p: PromiseLike<{ error: unknown }>, ok?: string) => {
 };
 const PAGE = 20;
 
-export function ExpenseList({ orgId, me, open, orgName }: { orgId: string; me: PcMe; open: (id: string) => void; orgName: string }) {
+export function ExpenseList({ orgId, me, open, orgName, onNew }: { orgId: string; me: PcMe; open: (id: string) => void; orgName: string; onNew?: (() => void) | undefined }) {
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
   const [school, setSchool] = useState("");
@@ -62,10 +62,13 @@ export function ExpenseList({ orgId, me, open, orgName }: { orgId: string; me: P
         {me.categories.length > 0 && <select className={selectCls("w-36")} value={cat} onChange={(e) => { setCat(e.target.value); reset(); }} aria-label="التصنيف"><option value="">كل التصنيفات</option>{me.categories.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
         <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value); reset(); }} /></label>
         <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value); reset(); }} /></label>
-        {me.caps.export && <span className="ms-auto flex gap-2"><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></span>}
+        <span className="ms-auto flex gap-2">
+          {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
+          {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />تسجيل فاتورة مشتريات</Button>}
+        </span>
       </div>
       {list.data && list.data.total > 0 && <p className="text-sm text-muted-foreground">{total} سجل · قبل الضريبة {sar(list.data.sums.net)} · الضريبة {sar(list.data.sums.vat)} · الإجمالي <b className="text-foreground">{sar(list.data.sums.total)}</b></p>}
-      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? <EmptyState title="لا توجد مصروفات" hint="المصروفات تُسجَّل من داخل العهدة المصروفة." /> : (
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? <EmptyState title="لا توجد مصروفات" hint={onNew ? "سجّل فاتورة مشتريات من الزر أعلاه، أو من داخل العهدة المصروفة لك." : "لا توجد مصروفات ضمن نطاقك."} /> : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "التاريخ", "العهدة", "المورد", "الفاتورة", "البيان", "الحالة", "الضريبة", "الإجمالي"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>

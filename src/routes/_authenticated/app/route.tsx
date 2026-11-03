@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tan
 import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
   Bell, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { usePcMe } from "@/components/procurement/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
-import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey } from "@/lib/roles";
+import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,6 +90,7 @@ function Shell() {
   const sp = useSchoolPerms(pcRole ? active?.schoolId : null);
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const lastSection = useRef<OwnerSection | null>(null);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -110,8 +111,9 @@ function Shell() {
 
   const ct = commTabs(active.role);
   const owner = active.role === "org_owner";
-  const section = owner ? ownerSection(path) : null;
-  // Owner home has no side menu; inside a section only that section's menu shows.
+  const section = owner ? ownerSection(path, lastSection.current) : null;
+  lastSection.current = section;
+  // Owner home has no side menu; inside a section only that section's menu shows; shared pages (profile…) keep the last section.
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action

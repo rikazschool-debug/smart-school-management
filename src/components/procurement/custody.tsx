@@ -104,7 +104,7 @@ export function CustodyList({ orgId, me, open, onNew, orgName }: { orgId: string
         <label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={mine} onChange={(e) => { setMine(e.target.checked); setPage(0); }} /> عهدي فقط</label>
         <span className="ms-auto flex gap-2">
           {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
-          {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />طلب عهدة</Button>}
+          {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />{me.caps.create && me.caps.create !== "own" ? "إضافة عهدة" : "طلب عهدة"}</Button>}
         </span>
       </div>
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? (
@@ -142,7 +142,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   const createSchools = me.schools.filter((s) => me.create_schools.includes(s.id));
   const canOthers = me.caps.create && me.caps.create !== "own";
   const [school, setSchool] = useState<string>(initial?.school_id ?? createSchools[0]?.id ?? "");
-  const [holder, setHolder] = useState<string[]>([initial?.holder_id ?? me.me]);
+  const [holder, setHolder] = useState<string[]>(initial?.holder_id ? [initial.holder_id] : canOthers ? [] : [me.me]);
   const [extra, setExtra] = useState<string[]>(initial?.school_ids ?? []);
   const [purpose, setPurpose] = useState(initial?.purpose ?? "");
   const [amount, setAmount] = useState(initial ? String(initial.amount) : "");
@@ -151,6 +151,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   const [key] = useState(() => crypto.randomUUID());
   const inv = useInvalidate();
   async function save(submit: boolean) {
+    if (canOthers && !holder[0]) { toast.error("اختر مسؤول المشتريات المنسوب إليه العهدة"); return; }
     setBusy(true);
     const { data, error } = await db.rpc("pc_custody_save", { _org: orgId, _id: initial?.id ?? null, _school: school, _school_ids: extra.filter((x) => x !== school), _holder: holder[0] ?? me.me,
       _purpose: purpose, _amount: Number(amount), _due: due || null, _rev: initial?.rev ?? 0, _key: initial ? null : key });
@@ -165,9 +166,9 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   if (!createSchools.length) return <EmptyState title="لا تملك طلب عهدة" hint="اطلب من مالك المؤسسة منحك صلاحية الإنشاء." />;
   return (
     <div className="max-w-2xl space-y-4 rounded-2xl border bg-card p-5">
-      <h2 className="font-bold">{initial ? `تعديل ${initial.ref}` : "طلب عهدة جديدة"}</h2>
+      <h2 className="font-bold">{initial ? `تعديل ${initial.ref}` : canOthers ? "إضافة عهدة" : "طلب عهدة جديدة"}</h2>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><Label>الفرع المسؤول</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><Label>الفرع</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         <div><Label>المبلغ (ريال سعودي)</Label><Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" /></div>
         <div className="sm:col-span-2"><Label>الغرض</Label><Textarea value={purpose} onChange={(e) => setPurpose(e.target.value)} rows={2} /></div>
         <div><Label>موعد التسوية</Label><Input type="date" min={todayRiyadh()} value={due} onChange={(e) => setDue(e.target.value)} /></div>
@@ -180,7 +181,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
         )}
       </div>
       {canOthers ? (
-        <PeoplePicker purpose="pc_holder" school={school || null} org={orgId} value={holder} onChange={(v) => setHolder(v.length ? v : [me.me])} single label="مستلم العهدة" compact />
+        <PeoplePicker purpose="pc_holder" school={school || null} org={orgId} value={holder} onChange={setHolder} single label="مسؤول المشتريات المنسوب إليه العهدة" compact />
       ) : <p className="text-sm text-muted-foreground">المستلم: أنت (صلاحيتك تشمل عهدك الخاصة فقط).</p>}
       <div className="flex flex-wrap gap-2">
         <Button disabled={busy} onClick={() => void save(true)}>حفظ وإرسال للاعتماد</Button>
