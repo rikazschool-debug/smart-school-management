@@ -145,13 +145,13 @@ try {
   check("7a security (gate account) can scan and search", !(await scan(sec)).error && !(await search(sec)).error);
   const denied = [await scan(v1), await scan(pr), await scan(sa), await search(v1), await search(pr)];
   check("7b vice, principal and student affairs cannot scan or name-search", denied.every((r) => !!r.error), denied.map((r) => r.error?.message));
-  const man = await v1.c.rpc("att_day_rows", { _school: S, _date: today });
+  const man = await v1.c.rpc("att_day_rows", { _school: S, _from: today, _to: today, _status: null });
   check("7c the vice keeps attendance records", !man.error, man.error?.message);
 
   // ---- 8. groups/users unchanged: vice cannot create groups or manage roles ----
-  const g = await v1.c.rpc("create_group", { _org: org, _school: S, _name: "مجموعة الوكيل", _kind: "staff", _members: [] });
+  const g = await v1.c.rpc("create_group", { _org: org, _school: S, _title: "مجموعة الوكيل", _description: null, _group_type: "staff", _membership_mode: "manual", _department: null, _post_policy: "all", _allow_attachments: true, _history_policy: "all", _expires_at: null, _year: null, _members: [], _moderators: [], _owner: null, _request_key: null });
   check("8a the vice cannot create manual groups", !!g.error);
-  const inv = await pr.c.rpc("invite_member", { _email: `x-${run}@rikaz.test`, _school: S, _role: "teacher" });
+  const inv = await pr.c.rpc("invite_member", { _email: `x-${run}@rikaz.test`, _school: S, _role: "teacher", _department: null });
   check("8b the principal cannot manage users/roles (owner only)", !!inv.error || inv.data === null);
 } catch (e) { bad++; console.log("FAIL exception", e); }
 finally { if (org) await tr.purgeOrg(org); for (const u of tr.users) await admin.auth.admin.deleteUser(u); }
