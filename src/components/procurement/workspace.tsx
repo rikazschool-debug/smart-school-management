@@ -102,7 +102,7 @@ export function SummaryTab({ orgId, me }: { orgId: string; me: PcMe }) {
 }
 
 export function SettingsTab({ orgId, me }: { orgId: string; me: PcMe }) {
-  const st = me.settings!;
+  const st = me.settings ?? ({ vat_rate: 15, vat_inclusive: false, require_attachment: true, block_overdue: true, low_balance: 0, purchase_request_above: null, due_soon_days: 3, rev: 0 } as NonNullable<PcMe["settings"]>);
   const [f, setF] = useState({ vat_rate: String(st.vat_rate), vat_inclusive: st.vat_inclusive, require_attachment: st.require_attachment, block_overdue: st.block_overdue, low_balance: String(st.low_balance), purchase_above: st.purchase_request_above == null ? "" : String(st.purchase_request_above), due_soon: String(st.due_soon_days ?? 3) });
   const [cat, setCat] = useState("");
   const inv = useInvalidate();
