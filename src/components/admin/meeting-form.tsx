@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { X } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +53,6 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
     toast.success(meeting ? (meeting.status === "scheduled" ? "حُفظ التعديل وأُبلغ المدعوون بالسبب" : "حُفظ التعديل") : "حُفظت المسودة — لم تُرسل أي دعوة بعد");
     onDone((data as Row).id);
   }
-  const toggle = (id: string, on: boolean) => setD({ ...d, members: on ? [...new Set([...d.members, id])] : d.members.filter((x) => x !== id), minutes_writer: !on && d.minutes_writer === id ? "" : d.minutes_writer });
   const sel = selectCls("w-full");
   return (
     <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-2">
