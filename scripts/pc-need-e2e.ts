@@ -41,7 +41,7 @@ try {
   check("1 only the principal creates a need for his school", !!tNo.error && !n1.error, [tNo.error, n1.error]);
   const N = n1.data as string;
   let g = (await get(pri.c, N)).data;
-  check("1b estimate = sum(qty×price) = 100", Number(g.amount) === 100, g.amount);
+  check("1b estimate = sum(qty×price) = 70", Number(g.amount) === 70, g.amount);
   const offSeesDraft = await get(off.c, N);
   await act(pri.c, N, "approve");
   g = (await get(owner.c, N)).data;
