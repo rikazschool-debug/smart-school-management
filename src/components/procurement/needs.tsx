@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ExportButtons } from "@/components/procurement/export-buttons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowRight, Plus, Trash2 } from "lucide-react";
@@ -50,7 +51,10 @@ export function NeedList({ orgId, open, onNew }: { orgId: string; open: (id: str
         {branches.length > 1 && <select aria-label="الفرع" className={selectCls("min-w-0")} value={branch} onChange={(e) => setBranch(e.target.value)}><option value="">كل الفروع</option>{branches.map((b) => <option key={b} value={b}>{b}</option>)}</select>}
         <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value);  }} /></label>
         <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value);  }} /></label>
-        {q.data.can_create && <Button size="sm" className="ms-auto" onClick={onNew}><Plus className="size-4" />طلب احتياج</Button>}
+        <span className="ms-auto" /><ExportButtons meta={{ title: "طلبات الاحتياج", filters: [status && `الحالة: ${N_STATUS[status] ?? status}`, branch && `الفرع: ${branch}`, term && `بحث: ${term}`, from && `من ${from}`, to && `إلى ${to}`].filter(Boolean) as string[] }}
+          headers={["المرجع", "الفرع", "الغرض", "التاريخ", "مقدّم الطلب", "المستلم", "المبلغ التقديري", "الحالة"]}
+          rows={() => rows.map((r) => [r.ref, r.school ?? "—", r.purpose, day(r.created_at), r.creator ?? "", r.assigned_name ?? "لم يُستلم", r.amount == null ? null : Number(r.amount), N_STATUS[r.status] ?? r.status])} />
+        {q.data.can_create && <Button size="sm" onClick={onNew}><Plus className="size-4" />طلب احتياج</Button>}
       </div>
       <p className="text-xs text-muted-foreground">مدير المدرسة يكتب الاحتياج ويعتمده، فيصل إلى مسؤول المشتريات المرتبط بالمدرسة. اعتماد الفاتورة والصرف خطوة مستقلة لدى معتمد آخر.</p>
       {!rows.length ? <EmptyState title="لا توجد طلبات احتياج" hint="ستظهر هنا طلبات مدرستك أو المسندة إليك." /> : (

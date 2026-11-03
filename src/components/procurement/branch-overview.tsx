@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { ExportButtons } from "@/components/procurement/export-buttons";
 import { db } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -14,7 +15,10 @@ export function BranchOverview({ orgId }: { orgId: string }) {
   const H = ["الفرع", "احتياج مفتوح", "احتياج منفّذ", "فواتير معتمدة", "المصروف المعتمد", "بانتظار القرار", "مسودات لم تُرسل", "عهد مفتوحة", "الرصيد المتبقي"];
   return (
     <section className="space-y-2">
-      <h3 className="font-semibold">متابعة الفروع</h3>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">متابعة الفروع</h3>
+        <ExportButtons meta={{ title: "متابعة الفروع — المشتريات والعهد", filters: [] }} headers={H}
+          rows={() => [...rows.map((r) => [r.name, Number(r.needs_open), Number(r.needs_done), Number(r.inv_approved), Number(r.spent), Number(r.pending_total), Number(r.inv_draft), Number(r.custodies_open), Number(r.balance)]),
+            ...(rows.length > 1 ? [["الإجمالي", t("needs_open"), t("needs_done"), t("inv_approved"), t("spent"), t("pending_total"), t("inv_draft"), t("custodies_open"), t("balance")]] : [])]} /></div>
       <div className="overflow-x-auto rounded-xl border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{H.map((h) => <th key={h} className="whitespace-nowrap px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
