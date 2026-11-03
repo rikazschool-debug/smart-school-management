@@ -14,7 +14,7 @@ import { FileList, Uploader } from "@/components/homework/files";
 import { Pill, fmt } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
-import { E_STATUS, TONE, calcLine, day, num, sar, todayRiyadh, type PcMe, type Row } from "@/components/procurement/shared";
+import { E_STATUS, TONE, calcLine, day, num, sar, todayRiyadh, usePcForms, type PcMe, type Row } from "@/components/procurement/shared";
 import { LogList, useInvalidate } from "@/components/procurement/custody";
 
 const files = (fs: Row[]) => (fs ?? []).map((f: Row) => ({ ...f, size_bytes: f.size ?? 0 }));
@@ -113,6 +113,16 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
   const [lines, setLines] = useState<Line[]>(initial?.lines?.map((l: Row) => ({ description: l.description, amount: String(l.amount), taxable: l.taxable })) ?? [{ description: "", amount: "", taxable: true }]);
   const [busy, setBusy] = useState(false);
   const [key] = useState(() => crypto.randomUUID());
+  const [answers, setAnswers] = useState<Record<string, string>>(initial?.custom ?? {});
+  const [pr, setPr] = useState<string>(initial?.purchase_request_id ?? "");
+  const forms = usePcForms(orgId);
+  const form = initial ? forms.data?.versions.find((v) => v.id === initial.form_id) : forms.data?.versions.find((v) => v.status === "published");
+  const core = (form?.core ?? forms.data?.default_core ?? []) as Row[];
+  const custom = (form?.fields ?? []) as Row[];
+  const purchases = useQuery({
+    queryKey: ["pc-purchase-open", orgId],
+    queryFn: async () => { const { data, error } = await db.rpc("pc_request_list", { _org: orgId, _kind: "purchase", _status: "approved", _q: null, _custody: null, _limit: 100, _offset: 0 }); if (error) throw error; return data.rows as Row[]; },
+  });
   const inv = useInvalidate();
   const rate = Number(initial?.vat_rate ?? me.settings?.vat_rate ?? 15);
   const sel = custodies.data?.find((c) => c.id === custody);
@@ -122,16 +132,53 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
   async function save() {
     setBusy(true);
     const body = { ...d, own_funds: own, custody_id: own ? null : custody, school_id: own ? school : null, benefit_school_id: ben || null, corrects_id: corrects?.id ?? initial?.corrects_id ?? null,
-      tax_invoice: tax, vat_inclusive: incl, category_id: d.category_id || null, lines: lines.map((l) => ({ description: l.description, amount: Number(l.amount), taxable: l.taxable })) };
+      tax_invoice: tax, vat_inclusive: incl, category_id: d.category_id || null, custom: answers, purchase_request_id: pr || null, lines: lines.map((l) => ({ description: l.description, amount: Number(l.amount), taxable: l.taxable })) };
     const { data, error } = await db.rpc("pc_expense_save", { _org: orgId, _id: initial?.id ?? null, _d: body, _rev: initial?.rev ?? 0, _key: initial ? null : key });
     setBusy(false);
     if (error) { toast.error(arabicError(error)); return; }
     toast.success("حُفظ المصروف — أرفق الفاتورة ثم أرسله للمراجعة"); inv(); onDone(data as string);
   }
   const benOptions = sel ? me.schools.filter((s) => s.id === sel.school_id || (sel.school_ids ?? []).includes(s.id)) : [];
+  const L = (k: string, fallback: string) => { const c = core.find((x) => x.key === k); return c ? c.label + (c.required && !c.protected ? " *" : "") : fallback; };
+  const H = (k: string) => { const h = core.find((x) => x.key === k)?.help; return h ? <p className="mt-0.5 text-xs text-muted-foreground">{h}</p> : null; };
+  const blocks: Record<string, React.ReactNode> = {
+    purchase_date: <div key="purchase_date"><Label>{L("purchase_date", "تاريخ الشراء")}</Label><Input type="date" max={todayRiyadh()} value={d.purchase_date} onChange={(e) => set("purchase_date", e.target.value)} />{H("purchase_date")}</div>,
+    supplier: <div key="supplier"><Label htmlFor="pc-supplier">{L("supplier", "المورد")}</Label><Input id="pc-supplier" value={d.supplier} onChange={(e) => set("supplier", e.target.value)} />{H("supplier")}</div>,
+    description: <div key="description" className="sm:col-span-2"><Label htmlFor="pc-desc">{L("description", "البيان")}</Label><Input id="pc-desc" value={d.description} onChange={(e) => set("description", e.target.value)} />{H("description")}</div>,
+    tax: <div key="tax" className="sm:col-span-2 space-y-2">
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={tax} onChange={(e) => setTax(e.target.checked)} /> {L("tax", "فاتورة ضريبية")} (ضريبة القيمة المضافة {rate}%)</label>{H("tax")}
+      {tax && <div className="flex gap-4 text-sm">
+        <label className="flex items-center gap-1"><input type="radio" checked={!incl} onChange={() => setIncl(false)} /> المبالغ قبل الضريبة</label>
+        <label className="flex items-center gap-1"><input type="radio" checked={incl} onChange={() => setIncl(true)} /> المبالغ شاملة الضريبة</label>
+      </div>}
+      {tax && <p className="text-xs text-muted-foreground">اختيار «ضريبية» لا يثبت صحة الفاتورة أو أهلية استرداد ضريبتها.</p>}
+    </div>,
+    invoice_no: <div key="invoice_no"><Label htmlFor="pc-inv">{tax ? L("invoice_no", "رقم الفاتورة") + (tax ? " (إلزامي)" : "") : `${L("invoice_no", "رقم الفاتورة")} / الإيصال`}</Label><Input id="pc-inv" value={d.invoice_no} onChange={(e) => set("invoice_no", e.target.value)} />{H("invoice_no")}</div>,
+    invoice_date: <div key="invoice_date"><Label>{L("invoice_date", "تاريخ الفاتورة")}</Label><Input type="date" max={todayRiyadh()} value={d.invoice_date} onChange={(e) => set("invoice_date", e.target.value)} />{H("invoice_date")}</div>,
+    category: me.categories.length > 0 ? <div key="category"><Label>{L("category", "التصنيف")}</Label><select className={selectCls()} value={d.category_id} onChange={(e) => set("category_id", e.target.value)}><option value="">بدون</option>{me.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>{H("category")}</div> : null,
+    benefit_school: !own && benOptions.length > 1 ? <div key="benefit_school"><Label>{L("benefit_school", "الفرع المستفيد")}</Label><select className={selectCls()} value={ben} onChange={(e) => setBen(e.target.value)}><option value="">فرع العهدة</option>{benOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>{H("benefit_school")}</div> : null,
+    notes: <div key="notes" className="sm:col-span-2"><Label>{L("notes", "ملاحظات")}{corrects ? " (سبب التصحيح — إلزامي)" : ""}</Label><Textarea rows={2} value={d.notes} onChange={(e) => set("notes", e.target.value)} />{H("notes")}</div>,
+    lines: <div key="lines" className="space-y-2 sm:col-span-2">
+      <Label>{L("lines", "البنود")}</Label>{H("lines")}
+      {lines.map((l, i) => (
+        <div key={i} className="flex flex-wrap items-center gap-2">
+          <Input className="min-w-40 flex-1" placeholder="بيان البند" value={l.description} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} />
+          <Input className="w-28" inputMode="decimal" placeholder="المبلغ" value={l.amount} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, amount: e.target.value } : x)))} />
+          {tax && <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={l.taxable} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, taxable: e.target.checked } : x)))} /> خاضع</label>}
+          <span className="w-40 text-xs tabular-nums text-muted-foreground">{tax ? `ضريبة ${sar(preview[i]!.vat)} · ` : ""}{sar(preview[i]!.total)}</span>
+          {lines.length > 1 && <Button size="icon" variant="ghost" aria-label="حذف البند" onClick={() => setLines(lines.filter((_, j) => j !== i))}><Trash2 className="size-4" /></Button>}
+        </div>
+      ))}
+      {lines.length < 50 && <Button size="sm" variant="outline" onClick={() => setLines([...lines, { description: "", amount: "", taxable: true }])}><Plus className="size-4" />بند</Button>}
+      <p className="rounded-lg bg-muted/50 p-2 text-sm tabular-nums">قبل الضريبة {sar(tot.net)} · الضريبة {sar(tot.vat)} · <b>الإجمالي {sar(tot.total)}</b> <span className="text-xs text-muted-foreground">(معاينة — يحسب الخادم القيمة النهائية)</span></p>
+      {corrects && <p className="text-xs text-muted-foreground">للتخفيض استخدم مبلغًا سالبًا (مثل −15).</p>}
+    </div>,
+  };
+  const threshold = me.settings?.purchase_request_above;
   return (
     <div className="max-w-3xl space-y-4 rounded-2xl border bg-card p-5">
       <h2 className="font-bold">{initial ? `تعديل ${initial.ref}` : corrects ? `تصحيح المصروف ${corrects.ref}` : "تسجيل مصروف / فاتورة"}</h2>
+      {form && <p className="text-xs text-muted-foreground">نموذج الإدخال: الإصدار {form.version}</p>}
       {!corrects && !initial?.corrects_id && (
         <div className="flex flex-wrap gap-4 text-sm">
           <label className="flex items-center gap-1"><input type="radio" checked={!own} onChange={() => setOwn(false)} /> على عهدة</label>
@@ -140,8 +187,8 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
       )}
       <div className="grid gap-3 sm:grid-cols-2">
         {!own ? (
-          <div><Label>العهدة</Label>
-            <select className={selectCls()} value={custody} disabled={!!corrects} onChange={(e) => setCustody(e.target.value)}>
+          <div className="sm:col-span-2"><Label>العهدة</Label>
+            <select className={selectCls()} value={custody} disabled={!!corrects || !!initial} onChange={(e) => setCustody(e.target.value)}>
               <option value="">— اختر —</option>{(custodies.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.ref} · {c.holder} · المتاح {sar(c.bal.available)}</option>)}
             </select>
             {sel && <p className="mt-1 text-xs text-muted-foreground">المتاح الآن: {sar(sel.bal.available)}</p>}
@@ -149,40 +196,25 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
         ) : (
           <div><Label>الفرع</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{ownSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         )}
-        {!own && benOptions.length > 1 && <div><Label>الفرع المستفيد</Label><select className={selectCls()} value={ben} onChange={(e) => setBen(e.target.value)}><option value="">فرع العهدة</option>{benOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
-        <div><Label>تاريخ الشراء</Label><Input type="date" max={todayRiyadh()} value={d.purchase_date} onChange={(e) => set("purchase_date", e.target.value)} /></div>
-        <div><Label htmlFor="pc-supplier">المورد</Label><Input id="pc-supplier" value={d.supplier} onChange={(e) => set("supplier", e.target.value)} /></div>
-        <div className="sm:col-span-2"><Label htmlFor="pc-desc">البيان</Label><Input id="pc-desc" value={d.description} onChange={(e) => set("description", e.target.value)} /></div>
-        <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={tax} onChange={(e) => setTax(e.target.checked)} /> فاتورة ضريبية (ضريبة القيمة المضافة {rate}%)</label>
-        {tax && <>
-          <div><Label htmlFor="pc-inv">رقم الفاتورة</Label><Input id="pc-inv" value={d.invoice_no} onChange={(e) => set("invoice_no", e.target.value)} /></div>
-          <div><Label>تاريخ الفاتورة</Label><Input type="date" max={todayRiyadh()} value={d.invoice_date} onChange={(e) => set("invoice_date", e.target.value)} /></div>
-          <div className="sm:col-span-2 flex gap-4 text-sm">
-            <label className="flex items-center gap-1"><input type="radio" checked={!incl} onChange={() => setIncl(false)} /> المبالغ قبل الضريبة</label>
-            <label className="flex items-center gap-1"><input type="radio" checked={incl} onChange={() => setIncl(true)} /> المبالغ شاملة الضريبة</label>
-          </div>
-        </>}
-        {!tax && <div><Label>رقم الإيصال (اختياري)</Label><Input value={d.invoice_no} onChange={(e) => set("invoice_no", e.target.value)} /></div>}
-        {me.categories.length > 0 && <div><Label>التصنيف</Label><select className={selectCls()} value={d.category_id} onChange={(e) => set("category_id", e.target.value)}><option value="">بدون</option>{me.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>}
-      </div>
-      <div className="space-y-2">
-        <Label>البنود</Label>
-        {lines.map((l, i) => (
-          <div key={i} className="flex flex-wrap items-center gap-2">
-            <Input className="min-w-40 flex-1" placeholder="بيان البند" value={l.description} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} />
-            <Input className="w-28" inputMode="decimal" placeholder="المبلغ" value={l.amount} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, amount: e.target.value } : x)))} />
-            {tax && <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={l.taxable} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, taxable: e.target.checked } : x)))} /> خاضع</label>}
-            <span className="w-40 text-xs tabular-nums text-muted-foreground">{tax ? `ضريبة ${sar(preview[i]!.vat)} · ` : ""}{sar(preview[i]!.total)}</span>
-            {lines.length > 1 && <Button size="icon" variant="ghost" aria-label="حذف البند" onClick={() => setLines(lines.filter((_, j) => j !== i))}><Trash2 className="size-4" /></Button>}
+        {core.map((c) => blocks[c.key] ?? null)}
+        {custom.map((f) => (
+          <div key={f.key} className={f.type === "longtext" ? "sm:col-span-2" : ""}>
+            <Label>{f.label}{f.required ? " *" : ""}</Label>
+            {f.type === "longtext" ? <Textarea rows={2} value={answers[f.key] ?? ""} onChange={(e) => setAnswers({ ...answers, [f.key]: e.target.value })} />
+              : f.type === "choice" ? <select className={selectCls()} value={answers[f.key] ?? ""} onChange={(e) => setAnswers({ ...answers, [f.key]: e.target.value })}><option value="">— اختر —</option>{(f.options as string[]).map((o) => <option key={o} value={o}>{o}</option>)}</select>
+              : f.type === "file" ? (initial?.files?.length ? <select className={selectCls()} value={answers[f.key] ?? ""} onChange={(e) => setAnswers({ ...answers, [f.key]: e.target.value })}><option value="">— اختر من المرفقات —</option>{(initial.files as Row[]).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
+                : <p className="text-xs text-muted-foreground">احفظ ثم ارفع الملف ضمن المرفقات واختره هنا عند التعديل.</p>)
+              : <Input type={f.type === "date" ? "date" : "text"} inputMode={f.type === "number" ? "decimal" : undefined} value={answers[f.key] ?? ""} onChange={(e) => setAnswers({ ...answers, [f.key]: e.target.value })} />}
+            {f.help && <p className="mt-0.5 text-xs text-muted-foreground">{f.help}</p>}
           </div>
         ))}
-        {lines.length < 50 && <Button size="sm" variant="outline" onClick={() => setLines([...lines, { description: "", amount: "", taxable: true }])}><Plus className="size-4" />بند</Button>}
-        <p className="rounded-lg bg-muted/50 p-2 text-sm tabular-nums">قبل الضريبة {sar(tot.net)} · الضريبة {sar(tot.vat)} · <b>الإجمالي {sar(tot.total)}</b> <span className="text-xs text-muted-foreground">(معاينة — يحسب الخادم القيمة النهائية)</span></p>
-        {corrects && <p className="text-xs text-muted-foreground">للتخفيض استخدم مبلغًا سالبًا (مثل −15).</p>}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div><Label>ملاحظات{corrects ? " (سبب التصحيح — إلزامي)" : ""}</Label><Textarea rows={2} value={d.notes} onChange={(e) => set("notes", e.target.value)} /></div>
-        <div><Label>سبب عدم وجود مرفق (عند تعذّر الفاتورة)</Label><Textarea rows={2} value={d.no_attachment_reason} onChange={(e) => set("no_attachment_reason", e.target.value)} placeholder="يُعتمد استثناءً من شخص آخر" /></div>
+        {!corrects && (purchases.data?.length ?? 0) > 0 && (
+          <div className="sm:col-span-2"><Label>طلب شراء مسبق معتمد{threshold ? ` (إلزامي فوق ${sar(threshold)})` : " (اختياري)"}</Label>
+            <select className={selectCls()} value={pr} onChange={(e) => setPr(e.target.value)}><option value="">بدون</option>{(purchases.data ?? []).map((r) => <option key={r.id} value={r.id}>{r.ref} · {r.purpose} · {sar(r.amount)}</option>)}</select>
+          </div>
+        )}
+        {!corrects && threshold && !(purchases.data?.length) && <p className="text-xs text-muted-foreground sm:col-span-2">المصروف فوق {sar(threshold)} يحتاج طلب شراء مسبق معتمد.</p>}
+        <div className="sm:col-span-2"><Label>سبب عدم وجود مرفق (عند تعذّر الفاتورة)</Label><Textarea rows={2} value={d.no_attachment_reason} onChange={(e) => set("no_attachment_reason", e.target.value)} placeholder="يُعتمد استثناءً من شخص آخر" /></div>
       </div>
       <div className="flex gap-2"><Button disabled={busy || (!own && !custody)} onClick={() => void save()}>حفظ</Button><Button variant="ghost" onClick={onCancel}>إلغاء</Button></div>
     </div>
@@ -233,6 +265,7 @@ export function ExpenseDetail({ id, me, back, openCustody, openExpense }: { id: 
           </p>
           {e.corrects_id && <p className="text-sm"><button className="text-primary" onClick={() => openExpense(e.corrects_id)}>المصروف الأصلي</button></p>}
           {e.notes && <p className="text-sm">ملاحظات: {e.notes}</p>}
+          <CustomValues e={e} />
           {e.no_attachment_reason && <p className="text-sm text-warning">بلا مرفق: {e.no_attachment_reason}</p>}
           {e.decision_reason && <p className="text-sm text-muted-foreground">سبب القرار: {e.decision_reason}</p>}
           {e.dup_ref && <p className="text-sm text-destructive">تنبيه: المورد ورقم الفاتورة يطابقان {e.dup_ref} — لا يُعتمد مكرر.</p>}
@@ -285,6 +318,20 @@ export function ExpenseDetail({ id, me, back, openCustody, openExpense }: { id: 
         </section>
       )}
       <LogList log={e.log} />
+    </div>
+  );
+}
+
+function CustomValues({ e }: { e: Row }) {
+  const forms = usePcForms(e.org_id);
+  const f = forms.data?.versions.find((v) => v.id === e.form_id);
+  if (!f) return null;
+  const vals = (f.fields as Row[]).filter((x) => e.custom?.[x.key]);
+  return (
+    <div className="text-sm">
+      <span className="text-xs text-muted-foreground">نموذج الإصدار {f.version}</span>
+      {vals.map((x) => <p key={x.key}>{x.label}: {x.type === "file" ? ((e.files as Row[]).find((y) => y.id === e.custom[x.key])?.name ?? "ملف") : e.custom[x.key]}</p>)}
+      {e.purchase_request_id && <p className="text-xs text-muted-foreground">مرتبط بطلب شراء مسبق</p>}
     </div>
   );
 }

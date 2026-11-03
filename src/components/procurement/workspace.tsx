@@ -11,6 +11,8 @@ import { Pill, fmt } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
 import { ACTION, C_STATUS, E_STATUS, SCOPE_LABEL, TONE, sar, type PcMe, type Row } from "@/components/procurement/shared";
 import { useInvalidate } from "@/components/procurement/custody";
+import { R_KIND, R_STATUS } from "@/components/procurement/requests";
+import { FormBuilder } from "@/components/procurement/form-builder";
 
 function Item({ r, onClick, extra }: { r: Row; onClick: () => void; extra?: React.ReactNode }) {
   const isExp = r.entity === "expense" || r.supplier !== undefined;
@@ -25,18 +27,27 @@ function Item({ r, onClick, extra }: { r: Row; onClick: () => void; extra?: Reac
   );
 }
 
+function ReqItem({ r, onClick }: { r: Row; onClick: () => void }) {
+  return (
+    <li className="flex cursor-pointer flex-wrap items-center gap-2 px-3 py-2 text-sm hover:bg-muted/40" onClick={onClick}>
+      <span className="font-mono text-xs">{r.ref}</span><span>{R_KIND[r.kind]}</span><span className="min-w-0 truncate text-muted-foreground">{r.purpose}{r.custody_ref ? ` · ${r.custody_ref}` : ""}</span>
+      <span className="ms-auto tabular-nums">{r.amount == null ? "" : sar(r.amount)}</span><Pill tone={r.status === "approved" ? "ok" : "warn"}>{R_STATUS[r.status]}</Pill>
+    </li>
+  );
+}
+
 function Block({ title, rows, children }: { title: string; rows: number; children: React.ReactNode }) {
   if (!rows) return null;
   return <section className="space-y-2"><h3 className="font-semibold">{title} <span className="text-sm text-muted-foreground">({rows})</span></h3><ul className="divide-y rounded-xl border bg-card">{children}</ul></section>;
 }
 
-export function TasksTab({ orgId, openC, openE }: { orgId: string; openC: (id: string) => void; openE: (id: string) => void }) {
+export function TasksTab({ orgId, openC, openE, openR }: { orgId: string; openC: (id: string) => void; openE: (id: string) => void; openR: (id: string) => void }) {
   const q = useQuery({ queryKey: ["pc-tasks", orgId], queryFn: async () => { const { data, error } = await db.rpc("pc_tasks", { _org: orgId }); if (error) throw error; return data as Row; } });
   const inv = useInvalidate();
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} />;
   const t = q.data;
-  const n = t.ack.length + t.custody_decide.length + t.custody_disburse.length + t.expense_decide.length + t.refund_decide.length + t.mine.length;
+  const n = ["ack", "custody_decide", "custody_disburse", "expense_decide", "refund_decide", "request_decide", "topup_disburse", "transfer_accept", "settle_close", "due_soon", "mine"].reduce((a, k) => a + (t[k]?.length ?? 0), 0);
   if (!n) return <EmptyState title="لا مهام بانتظارك" hint="ستظهر هنا العهد والفواتير التي تحتاج قرارك أو استكمالك." />;
   return (
     <div className="space-y-5">
@@ -54,7 +65,12 @@ export function TasksTab({ orgId, openC, openE }: { orgId: string; openC: (id: s
       <Block title="استردادات بانتظار التأكيد" rows={t.refund_decide.length}>
         {t.refund_decide.map((r: Row) => <li key={r.id} className="flex cursor-pointer gap-2 px-3 py-2 text-sm hover:bg-muted/40" onClick={() => openE(r.expense_id)}><span className="font-mono text-xs">{r.ref}</span><span>{r.reason} — {r.by}</span><span className="ms-auto tabular-nums">{sar(r.amount)}</span></li>)}
       </Block>
-      <Block title="طلباتي المفتوحة" rows={t.mine.length}>{t.mine.map((r: Row) => <Item key={r.id} r={r} onClick={() => (r.entity === "expense" ? openE(r.id) : openC(r.id))} />)}</Block>
+      <Block title="عهد منقولة إليك بانتظار تسلّمك" rows={t.transfer_accept.length}>{t.transfer_accept.map((r: Row) => <ReqItem key={r.id} r={r} onClick={() => openR(r.id)} />)}</Block>
+      <Block title="طلبات بانتظار اعتمادك" rows={t.request_decide.length}>{t.request_decide.map((r: Row) => <ReqItem key={r.id} r={r} onClick={() => openR(r.id)} />)}</Block>
+      <Block title="تعزيزات معتمدة بانتظار الصرف" rows={t.topup_disburse.length}>{t.topup_disburse.map((r: Row) => <ReqItem key={r.id} r={r} onClick={() => openR(r.id)} />)}</Block>
+      <Block title="تسويات جاهزة للمطابقة والإغلاق" rows={t.settle_close.length}>{t.settle_close.map((r: Row) => <Item key={r.id} r={r} onClick={() => openC(r.id)} />)}</Block>
+      <Block title="اقترب أو فات موعد تسوية عهدك" rows={t.due_soon.length}>{t.due_soon.map((r: Row) => <Item key={r.id} r={r} onClick={() => openC(r.id)} extra={<span className="text-xs text-muted-foreground">التسوية {r.settle_due}</span>} />)}</Block>
+      <Block title="طلباتي المفتوحة" rows={t.mine.length}>{t.mine.map((r: Row) => r.entity === "request" ? <ReqItem key={r.id} r={r} onClick={() => openR(r.id)} /> : <Item key={r.id} r={r} onClick={() => (r.entity === "expense" ? openE(r.id) : openC(r.id))} />)}</Block>
     </div>
   );
 }
@@ -87,13 +103,13 @@ export function SummaryTab({ orgId, me }: { orgId: string; me: PcMe }) {
 
 export function SettingsTab({ orgId, me }: { orgId: string; me: PcMe }) {
   const st = me.settings!;
-  const [f, setF] = useState({ vat_rate: String(st.vat_rate), vat_inclusive: st.vat_inclusive, require_attachment: st.require_attachment, block_overdue: st.block_overdue, low_balance: String(st.low_balance) });
+  const [f, setF] = useState({ vat_rate: String(st.vat_rate), vat_inclusive: st.vat_inclusive, require_attachment: st.require_attachment, block_overdue: st.block_overdue, low_balance: String(st.low_balance), purchase_above: st.purchase_request_above == null ? "" : String(st.purchase_request_above), due_soon: String(st.due_soon_days ?? 3) });
   const [cat, setCat] = useState("");
   const inv = useInvalidate();
   const log = useQuery({ queryKey: ["pc-settings-log", orgId], queryFn: async () => { const { data, error } = await db.rpc("pc_settings_log", { _org: orgId }); if (error) throw error; return data as Row[]; } });
   async function save() {
     const reason = await askText("سبب التغيير (يُحفظ في السجل)", { required: true }); if (!reason) return;
-    const { error } = await db.rpc("pc_settings_save", { _org: orgId, _vat_rate: Number(f.vat_rate), _vat_inclusive: f.vat_inclusive, _require_attachment: f.require_attachment, _block_overdue: f.block_overdue, _low_balance: Number(f.low_balance), _rev: st.rev, _reason: reason });
+    const { error } = await db.rpc("pc_settings_save", { _org: orgId, _vat_rate: Number(f.vat_rate), _vat_inclusive: f.vat_inclusive, _require_attachment: f.require_attachment, _block_overdue: f.block_overdue, _low_balance: Number(f.low_balance), _rev: st.rev, _reason: reason, _purchase_above: f.purchase_above ? Number(f.purchase_above) : null, _due_soon: Number(f.due_soon) });
     if (error) toast.error(arabicError(error)); else { toast.success("حُفظت الإعدادات — تسري على السجلات الجديدة فقط"); inv(); }
   }
   async function saveCat(id: string | null, name: string, archived: boolean) {
@@ -107,6 +123,8 @@ export function SettingsTab({ orgId, me }: { orgId: string; me: PcMe }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <div><Label>نسبة ضريبة القيمة المضافة %</Label><Input inputMode="decimal" value={f.vat_rate} onChange={(e) => setF({ ...f, vat_rate: e.target.value })} /></div>
           <div><Label>تنبيه انخفاض الرصيد (ريال)</Label><Input inputMode="decimal" value={f.low_balance} onChange={(e) => setF({ ...f, low_balance: e.target.value })} /></div>
+          <div><Label>طلب شراء مسبق إلزامي فوق (ريال، فارغ = اختياري)</Label><Input inputMode="decimal" value={f.purchase_above} onChange={(e) => setF({ ...f, purchase_above: e.target.value })} /></div>
+          <div><Label>التنبيه قبل موعد التسوية (أيام)</Label><Input inputMode="numeric" value={f.due_soon} onChange={(e) => setF({ ...f, due_soon: e.target.value })} /></div>
         </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.vat_inclusive} onChange={(e) => setF({ ...f, vat_inclusive: e.target.checked })} /> الإدخال الافتراضي شامل الضريبة</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.require_attachment} onChange={(e) => setF({ ...f, require_attachment: e.target.checked })} /> الفاتورة إلزامية (الاستثناء بسبب واعتماد مستقل)</label>
@@ -119,6 +137,7 @@ export function SettingsTab({ orgId, me }: { orgId: string; me: PcMe }) {
         <div className="flex gap-2"><Input value={cat} onChange={(e) => setCat(e.target.value)} placeholder="تصنيف جديد" /><Button disabled={cat.trim().length < 2} onClick={() => void saveCat(null, cat.trim(), false)}>إضافة</Button></div>
         <ul className="divide-y text-sm">{me.categories.map((c) => <li key={c.id} className="flex items-center justify-between py-1.5">{c.name}<Button size="sm" variant="ghost" onClick={() => void saveCat(c.id, c.name, true)}>أرشفة</Button></li>)}</ul>
       </section>
+      <FormBuilder orgId={orgId} />
       <section className="space-y-2 rounded-2xl border bg-card p-5 lg:col-span-2">
         <h3 className="font-semibold">سجل تغييرات الإعدادات</h3>
         {!log.data?.length ? <p className="text-sm text-muted-foreground">لا تغييرات بعد.</p> : <ul className="space-y-1 text-sm">{log.data.map((l, i) => <li key={i}><span className="text-muted-foreground">{fmt(l.at)}</span> · {ACTION[l.action] ?? l.action} · {l.actor}{l.reason ? ` «${l.reason}»` : ""}</li>)}</ul>}

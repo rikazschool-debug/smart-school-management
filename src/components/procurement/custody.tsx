@@ -30,8 +30,10 @@ const run = async (p: PromiseLike<{ error: unknown }>, ok?: string) => {
 };
 
 export function Balances({ bal }: { bal: Row }) {
-  const items: [string, unknown, string?][] = [
-    ["المصروف للعهدة", Number(bal.disbursed) + Number(bal.topups)], ["المعتمد صرفه", bal.spent], ["الاستردادات", bal.refunds],
+  const items: [string, unknown, (string | undefined)?][] = [
+    ["المصروف للعهدة", Number(bal.disbursed) + Number(bal.topups), Number(bal.topups) ? `منها تعزيز ${sar(bal.topups)}` : undefined], ["المعتمد صرفه", bal.spent], ["الاستردادات", bal.refunds],
+    ...(Number(bal.returned) ? [["المعاد للإدارة", bal.returned] as [string, unknown]] : []), ...(Number(bal.carried) ? [["المرحّل (±)", bal.carried] as [string, unknown]] : []),
+    ...(Number(bal.adjusted) ? [["فروق معالجة (±)", bal.adjusted] as [string, unknown]] : []),
     ["قيد المراجعة", bal.pending, "معلّق ولا يُخصم بعد"], ["الرصيد الدفتري", bal.book], ["المتاح للصرف", bal.available, "الدفتري ناقص المعلّق"],
   ];
   return (
@@ -228,7 +230,7 @@ function DisburseForm({ c, onDone }: { c: Row; onDone: () => void }) {
   );
 }
 
-export function CustodyDetail({ id, me, orgName, back, openExpense, newExpense }: { id: string; me: PcMe; orgName: string; back: () => void; openExpense: (id: string) => void; newExpense: (custody: string) => void }) {
+export function CustodyDetail({ id, me, orgName, back, openExpense, newExpense, ops }: { id: string; me: PcMe; orgName: string; back: () => void; openExpense: (id: string) => void; newExpense: (custody: string) => void; ops?: (c: Row) => React.ReactNode }) {
   const q = useQuery({
     queryKey: ["pc-custody", id],
     queryFn: async () => { const { data, error } = await db.rpc("pc_custody_get", { _id: id }); if (error) throw error; return data as Row; },
@@ -293,6 +295,7 @@ export function CustodyDetail({ id, me, orgName, back, openExpense, newExpense }
       )}
       {disb && <DisburseForm c={c} onDone={() => setDisb(false)} />}
       {["disbursed", "settling", "closed"].includes(c.status) && <Balances bal={c.bal} />}
+      {ops?.(c)}
       {Number(me.settings?.low_balance ?? 0) > 0 && c.status === "disbursed" && Number(c.bal.available) <= Number(me.settings!.low_balance) && <p className="text-sm text-warning">الرصيد المتاح منخفض (أقل من {sar(me.settings!.low_balance)}).</p>}
       <section className="space-y-2">
         <div className="flex items-center justify-between"><h3 className="font-semibold">كشف حساب العهدة</h3>

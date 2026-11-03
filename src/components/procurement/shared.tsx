@@ -8,7 +8,7 @@ export type PcMe = {
   enabled: boolean; is_owner: boolean; me: string; limit: number | null;
   caps: Record<"view" | "create" | "edit" | "review" | "approve" | "disburse" | "cancel" | "export" | "settings", Scope>;
   schools: { id: string; name: string }[]; create_schools: string[]; categories: { id: string; name: string }[];
-  settings: { vat_rate: number; vat_inclusive: boolean; require_attachment: boolean; block_overdue: boolean; low_balance: number; rev: number } | null;
+  settings: { vat_rate: number; vat_inclusive: boolean; require_attachment: boolean; block_overdue: boolean; low_balance: number; purchase_request_above: number | null; due_soon_days: number; rev: number } | null;
 };
 
 /** Capabilities come only from the server (pc_me → perm_scope); the UI just mirrors them. */
@@ -22,6 +22,20 @@ export function usePcMe(orgId: string | null, enabled = true) {
       return data as PcMe;
     },
     staleTime: 30_000,
+  });
+}
+
+export type PcForm = { id: string; version: number; status: "draft" | "published" | "archived"; core: Row[]; fields: Row[]; note: string | null; published_at: string | null; published_by: string | null };
+/** All form versions the caller may see (drafts only for settings holders); records keep the version they were created with. */
+export function usePcForms(orgId: string | null) {
+  return useQuery({
+    enabled: !!orgId,
+    queryKey: ["pc-forms", orgId],
+    queryFn: async () => {
+      const { data, error } = await db.rpc("pc_form_get", { _org: orgId });
+      if (error) throw error;
+      return data as { default_core: Row[]; can_edit: boolean; versions: PcForm[] };
+    },
   });
 }
 
@@ -42,7 +56,9 @@ export const METHOD: Record<string, string> = { cash: "نقدًا", transfer: "�
 export const ACTION: Record<string, string> = {
   create: "إنشاء", update: "تعديل", submit: "إرسال", approve: "اعتماد", reject: "رفض", return: "إعادة للاستكمال", cancel: "إلغاء", review: "بدء المراجعة",
   disburse: "صرف", ack: "تأكيد الاستلام", refund_request: "طلب استرداد", refund_collected: "تأكيد الاسترداد", refund_rejected: "رفض الاسترداد",
-  file_added: "إرفاق ملف", file_removed: "إزالة ملف", settings: "تغيير الإعدادات", category: "تصنيف",
+  file_added: "إرفاق ملف", settle_request: "طلب تسوية", settle_reopened: "إعادة فتح بعد التسوية", topup: "تعزيز مصروف", topup_paid: "صرف التعزيز",
+  adjust: "معالجة فرق", carry_out: "ترحيل خارج", carry_in: "ترحيل داخل", return_cash: "استلام مبلغ معاد", close: "إغلاق بعد التسوية", transfer_out: "نقل لشخص آخر",
+  transfer_in: "استلام عهدة منقولة", transfer_accepted: "تسلّم المستلم الجديد", decline: "اعتذار عن التسلّم", form_draft: "حفظ مسودة النموذج", form_publish: "نشر النموذج", form_discard: "حذف مسودة النموذج", file_removed: "إزالة ملف", settings: "تغيير الإعدادات", category: "تصنيف",
 };
 
 const nf = new Intl.NumberFormat("ar-SA-u-nu-latn", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

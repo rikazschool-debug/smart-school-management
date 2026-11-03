@@ -188,6 +188,12 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 | Review / return an expense | «review» or «approve» in scope; reviewers cannot approve |
 | Disburse (proof + reference required) / confirm refunds | «disburse» in scope; never to self |
 | Confirm receipt of disbursed cash | The custody holder only |
+| Request top-up / settlement / pre-purchase / adjustment / transfer | Holder of the custody (or «create» in scope); never decided by the requester |
+| Approve requests | «approve» in scope within limit; transfer also needs the new holder to accept |
+| Disburse a top-up, receive returned cash | «disburse» in scope, proof required |
+| Carry balance / close custody | «approve» in scope; close only when every reconciliation check passes |
+| Reports + Excel/PDF export | «export» in scope (server re-checks scope on every export) |
+| Invoice form versions (custom fields) | «settings» at org level; protected core fields; old invoices keep their version |
 | Settings (VAT rate, rules, categories) | «settings» (owner by default); changes logged, old records keep their rate |
 | Platform admin, students, guardians, other orgs | No access |
 | Finance section suspended | Every procurement request refused, owner included |

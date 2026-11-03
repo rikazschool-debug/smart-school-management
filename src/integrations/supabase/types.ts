@@ -4767,6 +4767,8 @@ export type Database = {
       pc_custodies: {
         Row: {
           amount: number
+          closed_at: string | null
+          closed_by: string | null
           created_at: string
           created_by: string
           currency: string
@@ -4790,6 +4792,8 @@ export type Database = {
         }
         Insert: {
           amount: number
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           created_by: string
           currency?: string
@@ -4813,6 +4817,8 @@ export type Database = {
         }
         Update: {
           amount?: number
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           created_by?: string
           currency?: string
@@ -4903,11 +4909,13 @@ export type Database = {
           created_at: string
           created_by: string
           custody_id: string | null
+          custom: Json
           decided_at: string | null
           decided_by: string | null
           decision_reason: string | null
           description: string
           dup_of: string | null
+          form_id: string | null
           id: string
           idem_key: string | null
           invoice_date: string | null
@@ -4919,6 +4927,7 @@ export type Database = {
           org_id: string
           own_funds: boolean
           purchase_date: string
+          purchase_request_id: string | null
           ref: string
           rev: number
           reviewed_by: string | null
@@ -4940,11 +4949,13 @@ export type Database = {
           created_at?: string
           created_by: string
           custody_id?: string | null
+          custom?: Json
           decided_at?: string | null
           decided_by?: string | null
           decision_reason?: string | null
           description: string
           dup_of?: string | null
+          form_id?: string | null
           id?: string
           idem_key?: string | null
           invoice_date?: string | null
@@ -4956,6 +4967,7 @@ export type Database = {
           org_id: string
           own_funds?: boolean
           purchase_date: string
+          purchase_request_id?: string | null
           ref: string
           rev?: number
           reviewed_by?: string | null
@@ -4977,11 +4989,13 @@ export type Database = {
           created_at?: string
           created_by?: string
           custody_id?: string | null
+          custom?: Json
           decided_at?: string | null
           decided_by?: string | null
           decision_reason?: string | null
           description?: string
           dup_of?: string | null
+          form_id?: string | null
           id?: string
           idem_key?: string | null
           invoice_date?: string | null
@@ -4993,6 +5007,7 @@ export type Database = {
           org_id?: string
           own_funds?: boolean
           purchase_date?: string
+          purchase_request_id?: string | null
           ref?: string
           rev?: number
           reviewed_by?: string | null
@@ -5037,6 +5052,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pc_expenses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "pc_forms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pc_expenses_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
@@ -5044,10 +5066,70 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pc_expenses_purchase_request_id_fkey"
+            columns: ["purchase_request_id"]
+            isOneToOne: false
+            referencedRelation: "pc_requests"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pc_expenses_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pc_forms: {
+        Row: {
+          core: Json
+          created_at: string
+          created_by: string
+          fields: Json
+          id: string
+          note: string | null
+          org_id: string
+          published_at: string | null
+          published_by: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          core: Json
+          created_at?: string
+          created_by: string
+          fields?: Json
+          id?: string
+          note?: string | null
+          org_id: string
+          published_at?: string | null
+          published_by?: string | null
+          status?: string
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          core?: Json
+          created_at?: string
+          created_by?: string
+          fields?: Json
+          id?: string
+          note?: string | null
+          org_id?: string
+          published_at?: string | null
+          published_by?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_forms_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -5254,11 +5336,133 @@ export type Database = {
           },
         ]
       }
+      pc_requests: {
+        Row: {
+          amount: number | null
+          category_id: string | null
+          created_at: string
+          created_by: string
+          custody_id: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          done_at: string | null
+          done_by: string | null
+          id: string
+          idem_key: string | null
+          kind: string
+          move_id: string | null
+          new_custody_id: string | null
+          org_id: string
+          purpose: string
+          ref: string
+          rev: number
+          school_id: string
+          status: string
+          submitted_at: string | null
+          supplier: string | null
+          to_holder: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          category_id?: string | null
+          created_at?: string
+          created_by: string
+          custody_id?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          idem_key?: string | null
+          kind: string
+          move_id?: string | null
+          new_custody_id?: string | null
+          org_id: string
+          purpose: string
+          ref: string
+          rev?: number
+          school_id: string
+          status?: string
+          submitted_at?: string | null
+          supplier?: string | null
+          to_holder?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string
+          custody_id?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          idem_key?: string | null
+          kind?: string
+          move_id?: string | null
+          new_custody_id?: string | null
+          org_id?: string
+          purpose?: string
+          ref?: string
+          rev?: number
+          school_id?: string
+          status?: string
+          submitted_at?: string | null
+          supplier?: string | null
+          to_holder?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_requests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "pc_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_requests_custody_id_fkey"
+            columns: ["custody_id"]
+            isOneToOne: false
+            referencedRelation: "pc_custodies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_requests_new_custody_id_fkey"
+            columns: ["new_custody_id"]
+            isOneToOne: false
+            referencedRelation: "pc_custodies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pc_settings: {
         Row: {
           block_overdue: boolean
+          due_soon_days: number
           low_balance: number
           org_id: string
+          purchase_request_above: number | null
           require_attachment: boolean
           rev: number
           updated_at: string
@@ -5268,8 +5472,10 @@ export type Database = {
         }
         Insert: {
           block_overdue?: boolean
+          due_soon_days?: number
           low_balance?: number
           org_id: string
+          purchase_request_above?: number | null
           require_attachment?: boolean
           rev?: number
           updated_at?: string
@@ -5279,8 +5485,10 @@ export type Database = {
         }
         Update: {
           block_overdue?: boolean
+          due_soon_days?: number
           low_balance?: number
           org_id?: string
+          purchase_request_above?: number | null
           require_attachment?: boolean
           rev?: number
           updated_at?: string
@@ -7904,14 +8112,27 @@ export type Database = {
         Args: { _action: string; _id: string }
         Returns: boolean
       }
+      _pc_check_answers: {
+        Args: { _a: Json; _expense: string; _fields: Json; _strict: boolean }
+        Returns: Json
+      }
+      _pc_check_core: { Args: { _c: Json }; Returns: Json }
+      _pc_check_custom: { Args: { _f: Json }; Returns: Json }
+      _pc_core_default: { Args: never; Returns: Json }
       _pc_custody_row: {
         Args: { c: Database["public"]["Tables"]["pc_custodies"]["Row"] }
         Returns: Json
+      }
+      _pc_expense_approved: { Args: { _eid: string }; Returns: undefined }
+      _pc_expense_ext: {
+        Args: { _d: Json; _eid: string; _new: boolean }
+        Returns: undefined
       }
       _pc_expense_row: {
         Args: { e: Database["public"]["Tables"]["pc_expenses"]["Row"] }
         Returns: Json
       }
+      _pc_expense_submit_check: { Args: { _eid: string }; Returns: undefined }
       _pc_file_ok: {
         Args: { _category: string; _id: string }
         Returns: boolean
@@ -7930,6 +8151,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _pc_low_check: { Args: { _custody: string }; Returns: undefined }
       _pc_name: { Args: { _u: string }; Returns: string }
       _pc_notify: {
         Args: {
@@ -7972,12 +8194,20 @@ export type Database = {
         Args: { _kind: string; _org: string; _prefix: string }
         Returns: string
       }
+      _pc_req_ok: { Args: { _action: string; _id: string }; Returns: boolean }
+      _pc_request_row: {
+        Args: { r: Database["public"]["Tables"]["pc_requests"]["Row"] }
+        Returns: Json
+      }
+      _pc_safe: { Args: { _t: string }; Returns: boolean }
       _pc_settings: {
         Args: { _org: string }
         Returns: {
           block_overdue: boolean
+          due_soon_days: number
           low_balance: number
           org_id: string
+          purchase_request_above: number | null
           require_attachment: boolean
           rev: number
           updated_at: string
@@ -7992,6 +8222,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _pc_settle_check: { Args: { _id: string }; Returns: Json }
       _pc_today: { Args: never; Returns: string }
       _people_pool: {
         Args: { _org: string; _post: string; _purpose: string; _school: string }
@@ -9528,6 +9759,17 @@ export type Database = {
       open_circular: { Args: { _id: string }; Returns: undefined }
       org_sections_get: { Args: { _org: string }; Returns: Json }
       pc_ack: { Args: { _move: string }; Returns: undefined }
+      pc_alerts_tick: { Args: never; Returns: number }
+      pc_carry: {
+        Args: {
+          _amount: number
+          _from: string
+          _key: string
+          _reason: string
+          _to: string
+        }
+        Returns: string
+      }
       pc_category_save: {
         Args: { _archived: boolean; _id: string; _name: string; _org: string }
         Returns: string
@@ -9540,6 +9782,11 @@ export type Database = {
           _reason: string
           _rev: number
         }
+        Returns: undefined
+      }
+      pc_custody_caps: { Args: { _id: string }; Returns: Json }
+      pc_custody_close: {
+        Args: { _id: string; _reason: string; _rev: number }
         Returns: undefined
       }
       pc_custody_get: { Args: { _id: string }; Returns: Json }
@@ -9614,6 +9861,16 @@ export type Database = {
         Returns: string
       }
       pc_file_remove: { Args: { _file: string }; Returns: undefined }
+      pc_form_discard: { Args: { _org: string }; Returns: undefined }
+      pc_form_get: { Args: { _org: string }; Returns: Json }
+      pc_form_publish: {
+        Args: { _org: string; _reason: string }
+        Returns: string
+      }
+      pc_form_save: {
+        Args: { _core: Json; _fields: Json; _note: string; _org: string }
+        Returns: string
+      }
       pc_me: { Args: { _org: string }; Returns: Json }
       pc_refund_create: {
         Args: {
@@ -9628,12 +9885,63 @@ export type Database = {
         Args: { _collect: boolean; _id: string; _reason: string }
         Returns: undefined
       }
+      pc_report: {
+        Args: {
+          _d: Json
+          _kind: string
+          _limit: number
+          _offset: number
+          _org: string
+        }
+        Returns: Json
+      }
+      pc_request_action: {
+        Args: { _action: string; _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      pc_request_get: { Args: { _id: string }; Returns: Json }
+      pc_request_list: {
+        Args: {
+          _custody: string
+          _kind: string
+          _limit: number
+          _offset: number
+          _org: string
+          _q: string
+          _status: string
+        }
+        Returns: Json
+      }
+      pc_request_save: {
+        Args: {
+          _d: Json
+          _id: string
+          _key: string
+          _org: string
+          _rev: number
+        }
+        Returns: string
+      }
+      pc_return_cash: {
+        Args: {
+          _amount: number
+          _custody: string
+          _doc_date: string
+          _file: string
+          _key: string
+          _method: string
+          _note: string
+        }
+        Returns: string
+      }
       pc_settings_log: { Args: { _org: string }; Returns: Json }
       pc_settings_save: {
         Args: {
           _block_overdue: boolean
+          _due_soon?: number
           _low_balance: number
           _org: string
+          _purchase_above?: number
           _reason: string
           _require_attachment: boolean
           _rev: number
@@ -9647,6 +9955,20 @@ export type Database = {
         Returns: Json
       }
       pc_tasks: { Args: { _org: string }; Returns: Json }
+      pc_topup_disburse: {
+        Args: {
+          _doc_date: string
+          _external_ref: string
+          _file: string
+          _id: string
+          _key: string
+          _method: string
+          _note: string
+          _rev: number
+        }
+        Returns: string
+      }
+      pc_transfer_accept: { Args: { _id: string }; Returns: string }
       people_pick: {
         Args: {
           _branch?: string
