@@ -6,9 +6,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
   Bell, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
+  ReceiptText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
+import { usePcMe } from "@/components/procurement/shared";
 import { NAV_BY_ROLE, ROLE_LABELS, commTabs, scheduleLabel, type NavKey } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,12 +52,13 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   profile: { to: "/app/profile", label: "الملف الشخصي", icon: UserCircle },
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
   support: { to: "/app/support", label: "الدعم والمساعدة", icon: LifeBuoy },
+  procurement: { to: "/app/procurement", label: "المشتريات والعهد", icon: ReceiptText },
 };
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "profile"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members"] },
-  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule"] },
+  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "procurement"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
@@ -76,6 +79,9 @@ function Shell() {
   const { contexts, active, setActive, loading, user } = useSession();
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
+  // Staff granted procurement permissions get a workspace entry; the server (pc_me → perm_scope) is the only source.
+  const pcRole = !!active?.orgId && !["org_owner", "platform_admin", "student", "guardian"].includes(active.role);
+  const pc = usePcMe(active?.orgId ?? null, pcRole);
   const navigate = useNavigate();
 
   async function signOut() {
@@ -96,7 +102,7 @@ function Shell() {
   if (!active) return <Onboarding onSignOut={signOut} />;
 
   const ct = commTabs(active.role);
-  const nav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : [])] as NavKey[];
+  const nav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && pc.data.caps.view ? ["procurement"] : [])] as NavKey[];
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (

@@ -178,7 +178,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
         )}
       </div>
       {canOthers ? (
-        <PeoplePicker purpose={"pc_holder" as never} school={school || null} org={orgId} value={holder} onChange={(v) => setHolder(v.length ? v : [me.me])} single label="مستلم العهدة" compact />
+        <PeoplePicker purpose="pc_holder" school={school || null} org={orgId} value={holder} onChange={(v) => setHolder(v.length ? v : [me.me])} single label="مستلم العهدة" compact />
       ) : <p className="text-sm text-muted-foreground">المستلم: أنت (صلاحيتك تشمل عهدك الخاصة فقط).</p>}
       <div className="flex flex-wrap gap-2">
         <Button disabled={busy} onClick={() => void save(true)}>حفظ وإرسال للاعتماد</Button>
