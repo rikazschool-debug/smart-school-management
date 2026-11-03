@@ -47,7 +47,7 @@ function GroupsList({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   });
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
-  if (!q.data?.length) return <EmptyState title="لا توجد مجموعات بعد" hint={canCreateGroup(ctx.role) ? "أنشئ لجنة أو فريق عمل من «إنشاء مجموعة»." : "إنشاء المجموعات لمالك المؤسسة أو مدير المدرسة."} />;
+  if (!q.data?.length) return <EmptyState title="لا توجد مجموعات بعد" hint={canCreateGroupWith(ctx.role, perms) ? "أنشئ لجنة أو فريق عمل من «إنشاء مجموعة»." : "إنشاء المجموعات لمالك المؤسسة أو مدير المدرسة."} />;
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">تظهر لك هنا بيانات المجموعات وأعضاؤها للإدارة. محتوى الرسائل لا يظهر إلا إذا كنت عضوًا فيها.</p>
