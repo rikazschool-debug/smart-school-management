@@ -31,3 +31,4 @@
 - scripts/support-e2e.ts: support tickets phase 1 (scopes, workflow, edits history, guardian child link, platform scope, files, org isolation; 17 checks).
 - scripts/support2-e2e.ts: support phase 2 (assign, cross-branch transfer, info requests partial view, private/team notes, escalation to platform; 17 checks).
 - scripts/support3-e2e.ts: support phase 3 (working-hour targets, overdue filter/alerts once, designated alert person, assignee filter, scoped KPIs; 14 checks).
+- scripts/support4-e2e.ts: support closure (pause/resume, re-armed alerts, cross-branch info, private-note leaks, helper lockout; `--cron` waits for the real job). scripts/support-browser-fixture.ts setup|teardown: isolated sbx- data; support-journey.py (12 checks, 8 accounts) and support-export-journey.py (12 checks); always run teardown after.
