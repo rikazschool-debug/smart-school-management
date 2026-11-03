@@ -91,6 +91,7 @@ export function verify(input: TTInput, slots: TTSlot[]): string[] {
       if (oc && oc.section_id === c.section_id) out.push(`تعارض الشعبة ${c.section} (${w})`);
       if (s.room_id && o.room_id === s.room_id) out.push(`تعارض القاعة (${w})`);
     }
+    push();
   });
   const by = <K,>(f: (s: TTSlot) => K) => { const r = new Map<K, number>(); for (const s of slots) r.set(f(s), (r.get(f(s)) ?? 0) + 1); return r; };
   for (const [cid, n] of by((s) => s.course_id)) { const c = m.course.get(cid); if (c && n > c.weekly) out.push(`${c.subject} — ${c.section}: ${n} حصة أكثر من المطلوب ${c.weekly}`); }
