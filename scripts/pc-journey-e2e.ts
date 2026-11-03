@@ -92,12 +92,11 @@ try {
     ov?.length === 1 && Number(ov[0].spent) === 5000 && Number(ov[0].balance) === 0 && Number(ov[0].custodies_open) === 0 && !!ovX.error && !!offOv.error, [ov, ovX.error?.message, offOv.error?.message]);
 
   // 8 zero balance closes the custody → archive; officer notified; approved request cannot be cancelled
-  const cx = await apr.c.rpc("pc_request_get", { _id: st.data });
-  const cancel = await ract(apr.c, st.data, "cancel");
+  const cancel = await ract(apr.c, st.data, "cancel", "إلغاء بعد الاعتماد");
   const cg = await cget(off.c, C);
   const arch = (await owner.c.rpc("pc_custody_list", { _org: org, _status: "closed", _q: null, _school: A, _mine: false, _limit: 50, _offset: 0, _from: null, _to: null })).data as any;
   check("8 settlement approved: balance 0 → custody closed and listed in the branch archive; officer notified",
-    !!cancel.error && cg.status === "closed" && Number(cg.bal.book) === 0 && arch.rows.some((r: any) => r.id === C && r.school) && (await notes(off.id, `pc-q-approved:${st.data}%`)) === 1, [cancel.error, cx.error, cg.status, cg.bal?.book]);
+    !!cancel.error && cg.status === "closed" && Number(cg.bal.book) === 0 && arch.rows.some((r: any) => r.id === C && r.school) && (await notes(off.id, `pc-q-approved:${st.data}%`)) === 1, [cancel.error, cg.status, cg.bal?.book]);
 } catch (e) { bad++; console.log("ERROR", e); }
 finally {
   console.log(`\n${ok} passed, ${bad} failed`);
