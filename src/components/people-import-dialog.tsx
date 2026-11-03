@@ -127,7 +127,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
         if (d["guardian_phone"]) {
           const g = await db.rpc("upsert_student_guardian", { _student: id, _name: d["guardian_name"], _phone: d["guardian_phone"], _national_id: d["guardian_id"] ?? "", _relationship: d["relationship"] ?? "father" });
           if (g.error) res.guardian = { ok: false, msg: arabicError(g.error) };
-          else { const gg = (g.data as Row[])[0]; (res as Result & { gid?: string }).gid = gg["guardian_id"]; res.guardian = { ok: true, msg: gg["created"] ? "أُضيف ولي الأمر" : "رُبط بولي أمر موجود" }; }
+          else { const gg = (g.data as Row[])[0] ?? {}; (res as Result & { gid?: string }).gid = gg["guardian_id"]; res.guardian = { ok: true, msg: gg["created"] ? "أُضيف ولي الأمر" : "رُبط بولي أمر موجود" }; }
         }
       }
     }

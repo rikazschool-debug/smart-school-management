@@ -8,8 +8,8 @@ export async function verifyAuthHook(secret: string, headers: Headers, body: str
   const t = Number(ts);
   if (!Number.isFinite(t) || Math.abs(now / 1000 - t) > 300) return false;
   const raw = secret.replace(/^v1,/, "").replace(/^whsec_/, "");
-  let keyBytes: Uint8Array;
-  try { keyBytes = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0)); } catch { return false; }
+  let keyBytes: Uint8Array<ArrayBuffer>;
+  try { keyBytes = new Uint8Array(Array.from(atob(raw), (c) => c.charCodeAt(0))); } catch { return false; }
   const key = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${id}.${ts}.${body}`)));
   const expected = btoa(String.fromCharCode(...mac));
