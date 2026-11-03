@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Pin, PinOff, ShieldCheck, Wand2 } from "lucide-react";
+import { Pin, PinOff, Printer, ShieldCheck, Wand2 } from "lucide-react";
 import { selectCls } from "@/components/ui/native-select";
 import { ask } from "@/components/confirm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -32,22 +32,25 @@ type Ctx = AppContext & { schoolId: string };
 const sel = selectCls("w-full");
 
 function Page() {
-  return <RequireSchool nav="schedule">{(ctx) => (canEditSchedule(ctx.role) ? <ManagerTabs ctx={ctx} /> : <Viewer ctx={ctx} />)}</RequireSchool>;
+  return <RequireSchool nav="schedule">{(ctx) => (scheduleTabs(ctx.role).length ? <ManagerTabs ctx={ctx} /> : <Viewer ctx={ctx} />)}</RequireSchool>;
 }
 
 function ManagerTabs({ ctx }: { ctx: Ctx }) {
-  const { tab = "timetable" } = Route.useSearch();
+  const tabs = scheduleTabs(ctx.role);
+  const { tab: wanted = "timetable" } = Route.useSearch();
+  const tab = tabs.includes(wanted) ? wanted : "timetable";
   const nav = useNavigate({ from: "/app/schedule" });
+  const editor = canEditSchedule(ctx.role);
   return (
     <>
-      <PageHeader title="الجدول المدرسي" desc="الجدول والبدلاء والإعدادات في مكان واحد. المسودة لا تظهر للمعلمين والطلاب والأسر حتى تنشرها." />
+      <PageHeader title="الجدول المدرسي" desc={editor ? "الجدول والبدلاء والإعدادات في مكان واحد. المسودة لا تظهر للمعلمين والطلاب والأسر حتى تنشرها." : "الجدول المنشور لمعلمي نطاقك (كاملًا أو حسب المعلم) مع الطباعة والتصدير، والبدلاء اليومية. الإعداد والتوليد والنشر لمدير المدرسة."} />
       <div role="tablist" aria-label="أقسام الجدول" className="mb-5 flex gap-1 border-b">
-        {scheduleTabs(ctx.role).map((t) => (
+        {tabs.map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => nav({ search: { tab: t }, replace: true })}
             className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{TAB_LABEL[t]}</button>
         ))}
       </div>
-      {tab === "subs" ? <SubstitutionsTab ctx={ctx} /> : tab === "settings" ? <SettingsTab ctx={ctx} /> : <Manager ctx={ctx} />}
+      {tab === "subs" ? <SubstitutionsTab ctx={ctx} /> : tab === "settings" ? <SettingsTab ctx={ctx} /> : editor ? <Manager ctx={ctx} /> : <Viewer ctx={ctx} embedded />}
     </>
   );
 }
@@ -299,7 +302,7 @@ function AddSlot({ ctx, tt, rooms, target, filter, onClose, onDone }: { ctx: Ctx
 }
 
 /* ============ Viewer: every other role, one published source ============ */
-function Viewer({ ctx }: { ctx: Ctx }) {
+function Viewer({ ctx, embedded }: { ctx: Ctx; embedded?: boolean }) {
   const S = ctx.schoolId;
   const { user } = useSession();
   const [date, setDate] = useState(todayISO());
@@ -324,8 +327,13 @@ function Viewer({ ctx }: { ctx: Ctx }) {
   });
   const scope = useQuery({
     queryKey: ["schedule-scope", S, ctx.role, ctx.departmentId, user.id],
-    enabled: ctx.role === "supervisor",
+    enabled: ctx.role === "supervisor" || ctx.role === "vice_principal",
     queryFn: async () => {
+      // the vice's scope (departments + teachers) is set by the principal; the database already filters slots to it (vice_teacher_ids)
+      if (ctx.role === "vice_principal") {
+        const { data } = await db.from("vice_scopes" as never).select("id").eq("school_id", S).eq("vice_user_id", user.id);
+        return ((data ?? []) as Row[]).map((r) => r["id"] as string);
+      }
       const { data } = await db.from("supervisor_teachers").select("teacher_id").eq("supervisor_user_id", user.id);
       return ((data ?? []) as Row[]).map((r) => r["teacher_id"] as string);
     },
@@ -362,18 +370,20 @@ function Viewer({ ctx }: { ctx: Ctx }) {
   const shown = applyFilter(base, filter);
   const cells = byCell(shown);
   const title = scheduleLabel(ctx.role);
-  const sub_ = { teacher: "حصصي وحصص التغطية", student: "جدول شعبتي", guardian: "جدول كل ابن على حدة", dept_head: "جداول معلمي القسم", supervisor: "حصص المعلمين المسندين إليّ" }[ctx.role as string] ?? "الجدول المنشور";
-  const needsFilter = ["guardian", "dept_head", "supervisor", "student_affairs"].includes(ctx.role);
+  const sub_ = { teacher: "حصصي وحصص التغطية", student: "جدول شعبتي", guardian: "جدول كل ابن على حدة", dept_head: "جداول معلمي القسم", supervisor: "حصص المعلمين المسندين إليّ", vice_principal: "جداول معلمي نطاقك" }[ctx.role as string] ?? "الجدول المنشور";
+  const needsFilter = ["guardian", "dept_head", "supervisor", "student_affairs", "vice_principal"].includes(ctx.role);
 
   return (
     <>
-      <PageHeader title={title} desc={`${sub_} — الجدول المنشور الساري في الأسبوع المحدد، مع التبديلات اليومية.`} />
+      {!embedded && <PageHeader title={title} desc={`${sub_} — الجدول المنشور الساري في الأسبوع المحدد، مع التبديلات اليومية.`} />}
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="space-y-1"><Label htmlFor="dt">الأسبوع الذي يتضمن</Label><Input id="dt" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
         {needsFilter && base.length > 0 && <div className="space-y-1"><Label>{ctx.role === "guardian" ? "الابن / الشعبة" : "عرض"}</Label><Filter slots={base} value={filter} onChange={setFilter} sectionsOnly={ctx.role === "guardian"} names={kids.data} /></div>}
         {cur.data && shown.length > 0 && <ScheduleExport rows={shown} school={ctx.schoolName} title={`${title} — أسبوع ${week[0]}`} week={week} subBySlot={subBySlot} filters={[sub_]} />}
+        {cur.data && shown.length > 0 && <Button size="sm" variant="outline" onClick={() => window.print()}><Printer className="size-4" />طباعة</Button>}
       </div>
-      {(ctx.role === "supervisor" && scope.data?.length === 0) ? <EmptyState title="لم يُسند إليك معلمون بعد" hint="تُسند إدارة المدرسة المعلمين للمشرف من صفحة إعداد اليوم الدراسي." /> :
+      {(ctx.role === "vice_principal" && scope.data?.length === 0) ? <EmptyState title="لم يُحدد نطاقك بعد" hint="يحدد مدير المدرسة الأقسام والمعلمين الذين يشملهم نطاقك من «الإعداد الأكاديمي ← نطاق الوكلاء والمشرفين»." /> :
+        (ctx.role === "supervisor" && scope.data?.length === 0) ? <EmptyState title="لم يُسند إليك معلمون بعد" hint="يُسند مدير المدرسة المعلمين للمشرف من «الإعداد الأكاديمي ← نطاق الوكلاء والمشرفين»." /> :
         (ctx.role === "dept_head" && !ctx.departmentId) ? <EmptyState title="لم يُسند إليك قسم بعد" hint="يحدد مالك المؤسسة قسمك من المستخدمين والأدوار." /> :
         !cur.data ? <EmptyState title="لا يوجد جدول منشور ساري لهذا التاريخ" /> :
         slots.isLoading ? <LoadingState /> : !base.length ? <EmptyState title="لا توجد حصص ضمن صلاحيتك في هذا الجدول" /> : (

@@ -267,5 +267,5 @@
 - [x] TT8 Isolated demo (5 sections, 10 teachers, 5 days, ≥6 periods) + tests 1–17, docs, Arabic report
 
 ## Next package (docs/package-next-brief.md) — pending, after timetable performance
-- [ ] P1 permissions/scope  - [ ] P2 people picker  - [ ] P3 Excel import + accounts  - [ ] P4 WATI OTP  - [ ] P5 meetings in communication
+- [x] P1 permissions/scope (scripts/scope-e2e.ts 37/37)  - [ ] P2 people picker  - [ ] P3 Excel import + accounts  - [ ] P4 WATI OTP  - [ ] P5 meetings in communication
 - [x] TP timetable performance for large schools (scale tests in src/lib/timetable-scale.test.ts)

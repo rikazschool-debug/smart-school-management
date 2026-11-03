@@ -71,7 +71,7 @@ export function SettingsTab({ ctx }: { ctx: Ctx }) {
       </> : <p className="mb-3 text-sm text-muted-foreground">أضف سنة دراسية من الإعداد الأكاديمي أولًا.</p>}
       <Availability S={S} />
       <SubPolicy S={S} />
-      <Supervisors S={S} />
+      <p className="text-sm text-muted-foreground">إسناد المعلمين للمشرفين ونطاق الوكلاء صار في «الإعداد الأكاديمي ← نطاق الوكلاء والمشرفين».</p>
     </>
   );
 }
@@ -408,50 +408,6 @@ function SubPolicy({ S }: { S: string }) {
         تُحسب حصص التبديل ضمن الحد اليومي للمعلم (لا يُقترح بديل بلغ حده اليومي)
       </label>
       <p className="mt-1 text-xs text-muted-foreground">حصص التبديل لا تُحسب ضمن النصاب الأسبوعي للجدول الأساسي، وتظهر منفصلة في الأنصبة.</p>
-    </Group>
-  );
-}
-
-function Supervisors({ S }: { S: string }) {
-  const qc = useQueryClient();
-  const teachers = useOptions("teachers", "full_name", S);
-  const [f, setF] = useState({ sup: "", teacher: "" });
-  const q = useQuery({
-    queryKey: ["supervisors", S],
-    queryFn: async () => {
-      const [m, l] = await Promise.all([
-        db.from("memberships").select("user_id").eq("school_id", S).eq("role", "supervisor").eq("is_active", true),
-        db.from("supervisor_teachers").select("id, supervisor_user_id, teachers(full_name)").eq("school_id", S),
-      ]);
-      const ids = ((m.data ?? []) as Row[]).map((x) => x["user_id"]);
-      const { data: profs } = await db.from("profiles").select("id, full_name, email").in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-      return { sups: (profs ?? []) as Row[], links: (l.data ?? []) as Row[] };
-    },
-  });
-  const name = (id: string) => { const p = q.data?.sups.find((x) => x["id"] === id); return p?.["full_name"] || p?.["email"] || "مشرف"; };
-  return (
-    <Group title="إسناد المعلمين للمشرفين" hint="يرى المشرف حصص المعلمين المسندين إليه فقط">
-      <ul className="mb-3 space-y-1 text-sm">
-        {q.data?.links.map((l) => (
-          <li key={l["id"]} className="flex items-center justify-between rounded-lg border px-3 py-1.5">
-            <span>{name(l["supervisor_user_id"])} ← {l["teachers"]?.full_name}</span>
-            <Button size="sm" variant="ghost" onClick={async () => { await db.from("supervisor_teachers").delete().eq("id", l["id"]); qc.invalidateQueries({ queryKey: ["supervisors", S] }); }}>حذف</Button>
-          </li>
-        ))}
-      </ul>
-      {q.data && !q.data.sups.length ? <p className="text-sm text-muted-foreground">لا يوجد مشرفون في المدرسة.</p> : (
-        <form className="grid gap-2 sm:grid-cols-3" onSubmit={async (e) => {
-          e.preventDefault();
-          if (!f.sup || !f.teacher) return void toast.error("اختر المشرف والمعلم");
-          const { error } = await db.from("supervisor_teachers").insert({ school_id: S, supervisor_user_id: f.sup, teacher_id: f.teacher });
-          if (error) return void toast.error(arabicError(error));
-          toast.success("تم الإسناد"); qc.invalidateQueries({ queryKey: ["supervisors", S] });
-        }}>
-          <select className={sel} aria-label="المشرف" value={f.sup} onChange={(e) => setF({ ...f, sup: e.target.value })}><option value="">— المشرف —</option>{q.data?.sups.map((p) => <option key={p["id"]} value={p["id"]}>{p["full_name"] || p["email"]}</option>)}</select>
-          <select className={sel} aria-label="معلم الإسناد" value={f.teacher} onChange={(e) => setF({ ...f, teacher: e.target.value })}><option value="">— المعلم —</option>{teachers.data?.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
-          <Button>إسناد</Button>
-        </form>
-      )}
     </Group>
   );
 }

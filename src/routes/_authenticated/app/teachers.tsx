@@ -3,7 +3,7 @@ import { CrudTable } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
-import { canManage } from "@/lib/roles";
+import { canManageAcademic } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
 import { ImportButton } from "@/components/import-dialog";
 
@@ -15,13 +15,13 @@ function Page() {
       {(ctx) => (
         <>
           <PageHeader title="المعلمون" desc="حسابات المعلمين وتخصصاتهم وأقسامهم (إدارة تعليمية فقط)." />
-          <CrudTable title="المعلمون" table="teachers" schoolId={ctx.schoolId} canWrite={canManage(ctx.role)} order="full_name"
+          <CrudTable title="المعلمون" table="teachers" schoolId={ctx.schoolId} canWrite={canManageAcademic(ctx.role)} order="full_name"
             select="*, departments(name)" searchKeys={["full_name", "email", "specialization"]}
             filters={[
               { key: "department_id", label: "القسم", remote: { table: "departments", label: "name" } },
               { key: "status", label: "الحالة", options: [{ value: "active", label: "نشط" }, { value: "inactive", label: "موقوف" }] },
             ]}
-            toolbar={canManage(ctx.role) ? <ImportButton kind="teachers" schoolId={ctx.schoolId} /> : undefined}
+            toolbar={canManageAcademic(ctx.role) ? <ImportButton kind="teachers" schoolId={ctx.schoolId} /> : undefined}
             fields={[
               { key: "full_name", label: "الاسم الكامل", required: true },
               { key: "email", label: "البريد (لدعوته للدخول)", type: "email" },
@@ -38,7 +38,7 @@ function Page() {
               { label: "الحساب", render: (r) => (r["user_id"] ? "مرتبط" : r["email"] ? "بانتظار الدخول" : "بلا بريد") },
             ]}
             extraActions={(r) =>
-              canManage(ctx.role) && !r["user_id"] && r["email"] ? (
+              canManageAcademic(ctx.role) && !r["user_id"] && r["email"] ? (
                 <AccountButton role={ctx.role} kind="teacher" recordId={r["id"]} email={r["email"]} schoolId={ctx.schoolId} />
               ) : null
             } />

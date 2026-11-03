@@ -82,7 +82,7 @@ Since the homework/tests simplification, term gradebooks are a read-only adminis
 | See draft roster | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ |
 | See own published duties, acknowledge, document done/not done, request excuse/change | ✔ | ✔ | ✔ | ✔ | ✘ | ✘ |
 | Decide excuse/change requests | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ |
-| Organize meeting (create/edit/send/cancel/confirm minutes/add decisions) | ✔ (own school only) | ✔ (own school) | ✔ (own school) | ✘ | ✔ one branch or several branches of own org (host branch + room) | ✘ |
+| Organize meeting (create/edit/send/cancel/confirm minutes/add decisions) | ✔ (own school only) | ✘ (since 2026-11-03) | ✘ (since 2026-11-03) | ✘ | ✔ one branch or several branches of own org (host branch + room) | ✘ |
 | Invitees allowed | active staff of own school | same | same | — | active staff of any branch in own org | never invited |
 | Draft minutes | organizer or assigned writer | | | writer if assigned | ✘ | ✘ |
 | Read normal meeting | ✔ | ✔ | own department | invited | ✘ | ✘ |
@@ -100,9 +100,27 @@ Virtual meetings (2026-11-02): tokens are minted on the server only after adm_li
 
 | Capability | Org owner | Principal | Vice principal | Dept head | Supervisor | Student affairs | Teacher | Guardian / Student |
 |---|---|---|---|---|---|---|---|---|
-| Settings (periods, rooms, course requirements, loads, availability, substitute policy) | ✔ | ✔ | ✔ | ✘ | ✘ | ✘ (reads loads/availability) | ✘ (reads own) | ✘ |
-| Create draft, edit slots, pin, generate, apply, validate, publish, revise | ✔ | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ |
-| Generation runs / inputs (`tt_input`, `tt_gen_*`, `tt_validate`) | ✔ | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ |
-| Published timetable | school | school | school | department courses | assigned teachers | school | own lessons + cover («جدولي») | own section / each child |
+| Settings (periods, rooms, course requirements, loads, availability, substitute policy) | ✔ | ✔ | ✘ (since 2026-11-03) | ✘ | ✘ | ✘ (reads loads/availability) | ✘ (reads own) | ✘ |
+| Create draft, edit slots, pin, generate, apply, validate, publish, revise | ✔ | ✔ | ✘ (since 2026-11-03) | ✘ | ✘ | ✘ | ✘ | ✘ |
+| Generation runs / inputs (`tt_input`, `tt_gen_*`, `tt_validate`) | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| Published timetable | school | school | vice scope only (departments + named teachers), whole or per teacher, print/Excel/PDF | department courses | assigned teachers | school | own lessons + cover («جدولي») | own section / each child |
 | Substitutes (record absence, assign, cancel) | ✔ | ✔ | ✔ | ✘ | ✘ | ✘ | sees own cover | sees substitute name |
 
+
+## Staff scope (2026-11-03, package-next item 1)
+
+Vice principals and supervisors are scoped individually: same role ≠ same access. Server helpers: `is_school_principal` (platform admin / org owner / principal), `vice_teacher_ids()` (vice_scopes: departments → their teachers, plus named teachers), `supervised_teacher_ids()` (supervisor_teachers). Scope is re-evaluated on every request, so narrowing it removes access at once. Tests: scripts/scope-e2e.ts.
+
+| Capability | Org owner | Principal | Vice principal | Supervisor | Student affairs | Security (gate) | Others |
+|---|---|---|---|---|---|---|---|
+| Set vice scope (departments/teachers) and supervisor teachers (`set_staff_scope`, audited) | ✔ | ✔ own school | ✘ | ✘ | ✘ | ✘ | ✘ |
+| Academic setup writes (years, terms, stages, grades, sections, departments, subjects, courses, teachers, assignments, periods, rooms, loads, availability) | ✔ | ✔ | ✘ read only | ✘ | ✘ | ✘ | ✘ |
+| Timetable setup/generate/edit/publish/revise | ✔ | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| Published timetable view | school | school | scope teachers only | assigned teachers | school | ✘ | own (unchanged) |
+| Daily substitutes (absence, assign, cancel) | ✔ | ✔ | ✔ unchanged | ✘ | ✘ | ✘ | ✘ |
+| Card scan / camera / name check-in (`scan_attendance`, `checkin_student`, `att_search_students`) | ✘ | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
+| Manual attendance, records, pickups, returns | as before | as before | as before (kept) | ✘ | as before | as before | ✘ |
+| Create task (`adm_create_task`, reassignment in `adm_task_update`) | ✘ | any school staff | scope teachers only | assigned teachers only | ✘ | ✘ | ✘ |
+| Organize meeting | ✔ own org / branches | ✔ own school | ✘ | ✘ | ✘ | ✘ | ✘ (dept head too) |
+| Manual groups / members | ✔ | ✔ own school | ✘ | ✘ | ✘ | ✘ | ✘ (subject groups automatic) |
+| Users, roles, suspend/activate | ✔ only | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |

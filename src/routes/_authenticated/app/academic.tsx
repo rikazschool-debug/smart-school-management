@@ -3,15 +3,19 @@ import { CrudTable } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { canManage } from "@/lib/roles";
+import { canManageAcademic } from "@/lib/roles";
+import { StaffScopes } from "@/components/staff-scopes";
 
-export const Route = createFileRoute("/_authenticated/app/academic")({ component: Page });
+export const Route = createFileRoute("/_authenticated/app/academic")({
+  head: () => ({ meta: [{ title: "الإعداد الأكاديمي — ركاز" }, { name: "description", content: "السنوات والمراحل والشعب والأقسام والمواد ونطاق الوكلاء والمشرفين." }, { property: "og:title", content: "الإعداد الأكاديمي — ركاز" }, { property: "og:description", content: "إعداد المدرسة الأكاديمي لمدير المدرسة." }] }),
+  component: Page,
+});
 
 function Page() {
   return (
     <RequireSchool nav="academic">
       {(ctx) => {
-        const w = canManage(ctx.role);
+        const w = canManageAcademic(ctx.role);
         const s = ctx.schoolId;
         return (
           <>
@@ -22,6 +26,7 @@ function Page() {
                 <TabsTrigger value="structure">المراحل والصفوف</TabsTrigger>
                 <TabsTrigger value="sections">الشعب</TabsTrigger>
                 <TabsTrigger value="subjects">الأقسام والمواد</TabsTrigger>
+                {w && <TabsTrigger value="scopes">نطاق الوكلاء والمشرفين</TabsTrigger>}
               </TabsList>
               <TabsContent value="years" className="space-y-10">
                 <CrudTable title="السنوات الدراسية" table="academic_years" schoolId={s} canWrite={w} order="start_date" searchKeys={["name"]}
@@ -93,6 +98,7 @@ function Page() {
                     { label: "القسم", render: (r) => r["departments"]?.name ?? "—" },
                   ]} />
               </TabsContent>
+              {w && <TabsContent value="scopes"><StaffScopes schoolId={s} /></TabsContent>}
             </Tabs>
           </>
         );

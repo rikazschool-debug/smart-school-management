@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/app/admin/meetings/")({
 });
 
 type Ctx = AppContext;
-const ORGANIZERS = ["principal", "vice_principal", "dept_head", "org_owner"];
+const ORGANIZERS = ["principal", "org_owner"]; // mirrors _adm_can_organize
 
 /** Owners may work at organization level (no branch selected) for their multi-branch meetings. */
 function Page() {
