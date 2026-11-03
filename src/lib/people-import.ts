@@ -199,6 +199,8 @@ export type Lookups = {
   existingPhones: Map<string, string>; // normalized phone → teacher id
   /** explicit choices made in the preview: file key norm(grade)|norm(section) → section id */
   sectionChoice?: Map<string, string>;
+  /** teacher row id → national ID (to detect a mobile that belongs to someone with another ID) */
+  rowNid?: Map<string, string>;
 };
 /** Rikaz sections for a file label that did not match exactly — the user must pick one; a numeric label only gets a *suggestion*. */
 export function sectionSuggestion(label: string): string | null {
@@ -266,8 +268,10 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
       data["phone"] = ph;
       if (ph) { if (seenPhone.has(ph)) e.push("الجوال مكرر في الملف"); seenPhone.add(ph); }
       const byId = nid ? lk.existingIds.get(nid) : undefined, byPhone = ph ? lk.existingPhones.get(ph) : undefined;
+      if (!byId && byPhone && nid && lk.rowNid?.get(byPhone) && lk.rowNid.get(byPhone) !== nid) e.push("تعارض: الجوال مسجل لمعلم برقم هوية مختلف — راجع يدويًا");
       if (byId && byPhone && byId !== byPhone) e.push("تعارض: رقم الهوية لمعلم والجوال لمعلم آخر — راجع السجلين يدويًا");
-      const ex = byId && byPhone && byId !== byPhone ? undefined : byId ?? byPhone;
+      const conflict = (byId && byPhone && byId !== byPhone) || (!byId && byPhone && nid && lk.rowNid?.get(byPhone) && lk.rowNid.get(byPhone) !== nid);
+      const ex = conflict ? undefined : byId ?? byPhone;
       if (ex) { out.existingId = ex; notes.push("المعلم موجود مسبقًا — لن يُكرر، يُستكمل الحساب"); }
       const em = (v["email"] ?? "").trim().toLowerCase();
       if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) e.push("بريد غير صالح");

@@ -14,14 +14,15 @@ import { selectCls } from "@/components/ui/native-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { arabicError } from "@/lib/session";
 import { provisionAccounts } from "@/lib/accounts.functions";
-import { FIELDS, norm, parseWorkbook, templateBook, validate, type CheckedRow, type Lookups, type PKind, type RawRow } from "@/lib/people-import";
+import { FIELDS, norm, parseWorkbook, sectionSuggestion, templateBook, validate, type CheckedRow, type Lookups, type PKind, type RawRow } from "@/lib/people-import";
 import { ACCOUNT_STATE } from "@/components/guardian-quick-add";
 
 type Stage = { ok: boolean; msg: string } | null;
 type Result = { key: string; line: string; name: string; academic: Stage; placement: Stage; guardian: Stage; account: Stage; guardianAccount: Stage; row: CheckedRow };
 const TITLE: Record<PKind, string> = { students: "الطلاب", teachers: "المعلمين" };
 
-async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups> {
+type SecOpt = { id: string; label: string };
+async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { secList: SecOpt[] }> {
   if (kind === "students") {
     const [ex, secs, enr] = await Promise.all([
       db.from("students").select("id, national_id").eq("school_id", schoolId).not("national_id", "is", null).limit(20000),
@@ -34,6 +35,7 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups> {
       existingIds: new Map(((ex.data ?? []) as Row[]).map((x) => [String(x["national_id"]).replace(/\D/g, ""), x["id"]])),
       existingPhones: new Map(), departments: new Map(),
       sections: new Map(((secs.data ?? []) as Row[]).map((x) => [`${norm(x["grades"]?.["name"])}|${norm(x["name"])}`, { id: x["id"], year_id: x["year_id"], capacity: x["capacity"], used: used.get(x["id"]) ?? 0 }])),
+      secList: ((secs.data ?? []) as Row[]).map((x) => ({ id: x["id"], label: `${x["grades"]?.["name"] ?? ""} / ${x["name"]}` })).sort((a, b) => a.label.localeCompare(b.label, "ar")),
     };
   }
   const [ex, deps] = await Promise.all([
@@ -47,6 +49,7 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups> {
     existingIds: new Map(rows.filter((x) => x["national_id"]).map((x) => [String(x["national_id"]), x["id"]])),
     existingPhones: new Map(rows.map((x) => [normPhone(x["phone"]) ?? "", x["id"]] as [string, string]).filter(([p]) => p)),
     departments: new Map(((deps.data ?? []) as Row[]).map((x) => [norm(x["name"]), x["id"]])), sections: new Map(),
+    rowNid: new Map(rows.filter((x) => x["national_id"]).map((x) => [x["id"], String(x["national_id"])])), secList: [],
   };
 }
 
@@ -63,10 +66,19 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
   const [results, setResults] = useState<Result[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [single, setSingle] = useState<Record<string, string>>({});
-  const reset = () => { setBuf(null); setMap(null); setRows(null); setResults(null); setHeaders([]); setSheets(0); };
+  const [raw, setRaw] = useState<RawRow[]>([]);
+  const [lookups, setLookups] = useState<(Lookups & { secList: SecOpt[] }) | null>(null);
+  const [choice, setChoice] = useState<Map<string, string>>(new Map());
+  const reset = () => { setBuf(null); setMap(null); setRows(null); setResults(null); setHeaders([]); setSheets(0); setLookups(null); setChoice(new Map()); setRaw([]); };
 
-  async function check(raw: RawRow[]) {
-    setRows(validate(kind, raw, await loadLookups(kind, schoolId)));
+  async function check(list: RawRow[], ch = choice) {
+    const lk = lookups ?? await loadLookups(kind, schoolId);
+    setLookups(lk); setRaw(list);
+    setRows(validate(kind, list, { ...lk, sectionChoice: ch }));
+  }
+  function choose(key: string, id: string) {
+    const next = new Map(choice); if (id) next.set(key, id); else next.delete(key);
+    setChoice(next); if (lookups) setRows(validate(kind, raw, { ...lookups, sectionChoice: next }));
   }
   async function onFile(f: File, override?: Record<string, number>) {
     setBusy(true);
@@ -158,7 +170,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
   async function retry() {
     if (!results) return;
     const fresh = await loadLookups(kind, schoolId);
-    const again = validate(kind, results.filter(hasFailure).map((x) => x.row), fresh);
+    const again = validate(kind, results.filter(hasFailure).map((x) => x.row), { ...fresh, sectionChoice: choice });
     await write(again, results);
   }
 
@@ -183,6 +195,15 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
   }
 
   const valid = rows?.filter((r) => !r.errors.length).length ?? 0;
+  const unmatched = (() => {
+    const m = new Map<string, { key: string; grade: string; section: string; count: number }>();
+    for (const r of rows ?? []) {
+      const u = r.unmatchedSection; if (!u) continue;
+      const cur = m.get(u.key) ?? { ...u, count: 0 }; cur.count++; m.set(u.key, cur);
+    }
+    for (const k of choice.keys()) if (!m.has(k)) { const r = rows?.find((x) => `${norm(x.values["grade"])}|${norm(x.values["section"])}` === k); if (r) m.set(k, { key: k, grade: r.values["grade"] ?? "", section: r.values["section"] ?? "", count: rows!.filter((x) => `${norm(x.values["grade"])}|${norm(x.values["section"])}` === k).length }); }
+    return [...m.values()];
+  })();
   const cols = Math.max(0, ...headers.map((_, i) => i)) + 1;
   const colName = (c: number) => `${XLSX.utils.encode_col(c)}${headers[c] ? ` — ${headers[c]}` : ""}`;
   const stageCell = (x: Stage) => !x ? <span className="text-muted-foreground">—</span> : <span className={x.ok ? "text-primary" : "text-destructive"}>{x.msg}</span>;
@@ -236,6 +257,21 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
                       ))}
                     </div>
                   </details>
+                  {unmatched.length > 0 && (
+                    <div className="space-y-2 rounded-lg border border-destructive/40 p-2">
+                      <p className="text-sm font-medium">شعب في الملف لا تطابق أسماء الشعب في ركاز — اختر المقابل لكل منها صراحة (لا يُفترض أن «1» تعني «أ»):</p>
+                      {unmatched.map((u) => (
+                        <label key={u.key} className="flex flex-wrap items-center gap-2 text-xs">
+                          <span className="min-w-40">«{u.grade} / {u.section}» ({u.count} صف){sectionSuggestion(u.section) ? ` — اقتراح: «${sectionSuggestion(u.section)}»` : ""}</span>
+                          <select aria-label={`مقابل ${u.grade} / ${u.section}`} className={selectCls("w-64", true)} value={choice.get(u.key) ?? ""} onChange={(e) => choose(u.key, e.target.value)}>
+                            <option value="">— اختر الشعبة —</option>
+                            {(lookups?.secList ?? []).map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                          </select>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {choice.size > 0 && <p className="text-xs text-muted-foreground">اخترت مقابل {choice.size} شعبة؛ يظهر ذلك في ملاحظة كل صف.</p>}
                   <p className="text-sm">المعاينة: <b>{rows.length}</b> صف — <span className="text-primary">{valid} صالح</span> · <span className="text-destructive">{rows.length - valid} به أخطاء</span></p>
                   <div className="max-h-80 overflow-auto rounded-lg border">
                     <table className="w-full text-xs"><thead className="sticky top-0 bg-muted"><tr><th className="p-1.5 text-start">الورقة · السطر</th>{fields.map((c) => <th key={c.key} className="p-1.5 text-start">{c.label}</th>)}<th className="p-1.5 text-start">الحالة</th></tr></thead>
