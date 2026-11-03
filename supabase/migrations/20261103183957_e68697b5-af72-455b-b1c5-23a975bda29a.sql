@@ -1,0 +1,3 @@
+DO $m$ declare d text := pg_get_functiondef('public._pc_request_row(pc_requests)'::regprocedure); o text := d;
+begin d := replace(d, $a$'holder_id', (select holder_id from pc_custodies where id=r.custody_id),$a$, $b$'holder_id', (select holder_id from pc_custodies where id=r.custody_id), 'custody_amount', (select amount from pc_custodies where id=r.custody_id),$b$);
+if d=o then raise exception 'patch failed'; end if; execute d; end $m$;

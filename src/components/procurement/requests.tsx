@@ -30,7 +30,7 @@ const run = async (p: PromiseLike<{ error: unknown }>, ok?: string) => {
   return true;
 };
 const PAGE = 20;
-const amountText = (r: Row) => (r.amount == null ? "—" : sar(r.amount));
+const amountText = (r: Row) => (r.amount != null ? sar(r.amount) : r.custody_amount != null ? `العهدة ${sar(r.custody_amount)}` : "—");
 
 export function RequestList({ orgId, me, open, onNew, orgName }: { orgId: string; me: PcMe; open: (id: string) => void; onNew?: (() => void) | undefined; orgName: string }) {
   const [kind, setKind] = useState("");
@@ -49,7 +49,7 @@ export function RequestList({ orgId, me, open, onNew, orgName }: { orgId: string
     if (error) { toast.error(arabicError(error)); return; }
     const rows = (data.rows as Row[]).map((r) => [r.ref, R_KIND[r.kind] ?? r.kind, r.custody_ref ?? "", r.creator, r.purpose, r.amount == null ? "" : Number(r.amount), R_STATUS[r.status] ?? r.status, day(r.created_at)]);
     const meta = { title: "سجل طلبات المشتريات والعهد", school: orgName, filters: [kind && R_KIND[kind], status && R_STATUS[status], q && `بحث: ${q}`].filter(Boolean) as string[] };
-    const h = ["المرجع", "النوع", "العهدة", "مقدّم الطلب", "الغرض", "المبلغ", "الحالة", "التاريخ"];
+    const h = ["المرجع", "النوع", "الفرع", "العهدة", "مقدّم الطلب", "الغرض", "المبلغ", "الحالة", "التاريخ"];
     if (kindX === "xlsx") exportXlsx(meta, h, rows); else await exportPdf(meta, h, rows);
   }
   const total = list.data?.total ?? 0;
@@ -90,10 +90,10 @@ export function RequestList({ orgId, me, open, onNew, orgName }: { orgId: string
         </ul>
         <div className="hidden overflow-x-auto rounded-xl border bg-card md:block">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "النوع", "العهدة", "مقدّم الطلب", "الغرض", "المبلغ", "الحالة"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+            <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "النوع", "الفرع", "العهدة", "مقدّم الطلب", "الغرض", "المبلغ", "الحالة"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
             <tbody>{list.data.rows.map((r) => (
               <tr key={r.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => open(r.id)}>
-                <td className="px-3 py-2 font-mono text-xs">{r.ref}</td><td className="px-3 py-2">{R_KIND[r.kind]}</td><td className="px-3 py-2 font-mono text-xs">{r.custody_ref ?? "—"}</td>
+                <td className="px-3 py-2 font-mono text-xs">{r.ref}</td><td className="px-3 py-2">{R_KIND[r.kind]}</td><td className="px-3 py-2">{r.school ?? "—"}</td><td className="px-3 py-2 font-mono text-xs">{r.custody_ref ?? "—"}</td>
                 <td className="px-3 py-2">{r.creator}</td><td className="max-w-56 truncate px-3 py-2">{r.purpose}</td><td className="px-3 py-2 tabular-nums">{amountText(r)}</td>
                 <td className="px-3 py-2"><Pill tone={R_TONE[r.status] ?? "muted"}>{R_STATUS[r.status]}</Pill></td>
               </tr>

@@ -11,7 +11,7 @@ import { askText } from "@/components/confirm";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Pill } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
-import { E_STATUS, sar, type PcMe, type Row } from "@/components/procurement/shared";
+import { E_STATUS, day, sar, type PcMe, type Row } from "@/components/procurement/shared";
 
 export const N_STATUS: Record<string, string> = { draft: "مسودة", awaiting_assignment: "بانتظار الإسناد", in_progress: "لدى مسؤول المشتريات", done: "منفّذ بالكامل", closed_partial: "مغلق بتنفيذ جزئي", cancelled: "ملغى" };
 const N_TONE: Record<string, "muted" | "warn" | "ok" | "bad"> = { draft: "muted", awaiting_assignment: "warn", in_progress: "warn", done: "ok", closed_partial: "warn", cancelled: "muted" };
@@ -32,10 +32,14 @@ export function NeedList({ orgId, open, onNew }: { orgId: string; open: (id: str
   const [term, setTerm] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [branch, setBranch] = useState("");
   const q = useQuery({ queryKey: ["pc-needs", orgId, status, term, from, to], queryFn: () => rpc("pc_need_list", { _org: orgId, _status: status || null, _limit: 100, _offset: 0, _q: term || null, _from: from || null, _to: to || null }) });
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} />;
-  const rows = q.data.rows as Row[];
+  const all = q.data.rows as Row[];
+  const branches = [...new Set(all.map((r) => r.school ?? "—"))];
+  const rows = branch ? all.filter((r) => (r.school ?? "—") === branch) : all;
+  const groups = [...new Set(rows.map((r) => r.school ?? "—"))].map((b) => [b, rows.filter((r) => (r.school ?? "—") === b)] as const);
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -43,24 +47,27 @@ export function NeedList({ orgId, open, onNew }: { orgId: string; open: (id: str
         <select aria-label="الحالة" className={selectCls("min-w-0")} value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">كل الحالات</option>{Object.entries(N_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
+        {branches.length > 1 && <select aria-label="الفرع" className={selectCls("min-w-0")} value={branch} onChange={(e) => setBranch(e.target.value)}><option value="">كل الفروع</option>{branches.map((b) => <option key={b} value={b}>{b}</option>)}</select>}
         <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value);  }} /></label>
         <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value);  }} /></label>
         {q.data.can_create && <Button size="sm" className="ms-auto" onClick={onNew}><Plus className="size-4" />طلب احتياج</Button>}
       </div>
       <p className="text-xs text-muted-foreground">مدير المدرسة يكتب الاحتياج ويعتمده، فيصل إلى مسؤول المشتريات المرتبط بالمدرسة. اعتماد الفاتورة والصرف خطوة مستقلة لدى معتمد آخر.</p>
       {!rows.length ? <EmptyState title="لا توجد طلبات احتياج" hint="ستظهر هنا طلبات مدرستك أو المسندة إليك." /> : (
+        <div className="space-y-4">{groups.map(([b, rs]) => (
+        <section key={b} className="space-y-1"><h3 className="text-sm font-semibold">{b} <span className="text-xs font-normal text-muted-foreground">({rs.length})</span></h3>
         <ul className="divide-y rounded-xl border bg-card">
-          {rows.map((r) => (
+          {rs.map((r) => (
             <li key={r.id}>
               <button type="button" onClick={() => open(r.id)} className="flex min-h-12 w-full flex-wrap items-center gap-2 px-3 py-2 text-start text-sm hover:bg-muted/40">
                 <span className="font-mono text-xs">{r.ref}</span>
-                <span className="min-w-0 flex-1 truncate">{r.purpose}<span className="block text-xs text-muted-foreground">{r.school}{r.assigned_name ? ` · ${r.assigned_name}` : ""}</span></span>
+                <span className="min-w-0 flex-1 truncate">{r.purpose}<span className="block text-xs text-muted-foreground">{day(r.created_at)} · {r.creator ?? ""}{r.assigned_name ? ` · استلمه: ${r.assigned_name}` : " · لم يُستلم بعد"}</span></span>
                 <span className="tabular-nums">{r.amount == null ? "" : sar(r.amount)}</span>
                 <Pill tone={N_TONE[r.status] ?? "muted"}>{N_STATUS[r.status] ?? r.status}</Pill>
               </button>
             </li>
           ))}
-        </ul>
+        </ul></section>))}</div>
       )}
     </div>
   );
