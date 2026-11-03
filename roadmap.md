@@ -292,3 +292,11 @@
 - [x] Overdue alerts via real pg_cron run: dedupe, recipients, waiting-on-requester pause vs resolve-target policy, priority change, transfer, reopen
 - [x] Security review of support RPCs/tables/attachments + finish earlier open security review
 - [x] Update closure log + requirements matrix; final report
+
+## Package: owner home + section availability + flexible permissions + petty cash/procurement (prompt-64)
+- [ ] P1 Owner home (4 cards), platform-admin per-org section enable/suspend with audit, locked vs under-construction states
+- [ ] P2 Flexible roles: templates migrated from current roles, custom org roles, section×action×scope matrix, deny-wins, no self-escalation, last-owner guard, effective-permission view
+- [ ] P3 Finance > Procurement & custody: custodies lifecycle, disbursement proof, multi-line invoices with VAT, derived ledger balances, separation of duties, approval limits
+- [ ] P4 Requests/top-ups/settlement/carry-over, custom form versions, alerts, reports + Excel/PDF
+- [ ] P5 Two-org browser journeys, phone, exports, closure log + report
+- Blocked: memory says finance/HR deferred — awaiting user confirmation to lift for procurement & custody only
