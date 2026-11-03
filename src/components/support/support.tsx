@@ -124,18 +124,18 @@ export function TicketList({ ctx, box, onOpen }: { ctx: Ctx; box: SupportTab; on
           <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input aria-label="بحث" className="pr-9" placeholder="ابحث برقم التذكرة أو العنوان" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <select aria-label="الحالة" className={selectCls} value={status} onChange={(e) => setStatus(e.target.value)}>
+        <select aria-label="الحالة" className={selectCls()} value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">كل الحالات</option><option value="open">المفتوحة فقط</option>
           {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <select aria-label="الأولوية" className={selectCls} value={prio} onChange={(e) => setPrio(e.target.value)}>
+        <select aria-label="الأولوية" className={selectCls()} value={prio} onChange={(e) => setPrio(e.target.value)}>
           <option value="">كل الأولويات</option>{Object.entries(PRIO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <select aria-label="التصنيف" className={selectCls} value={cat} onChange={(e) => setCat(e.target.value)}>
+        <select aria-label="التصنيف" className={selectCls()} value={cat} onChange={(e) => setCat(e.target.value)}>
           <option value="">كل التصنيفات</option>{(cats.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         {owner && (
-          <select aria-label="الفرع" className={selectCls} value={school} onChange={(e) => setSchool(e.target.value)}>
+          <select aria-label="الفرع" className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>
             <option value="">كل الفروع</option>{(branches.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         )}
@@ -158,7 +158,7 @@ export function TicketList({ ctx, box, onOpen }: { ctx: Ctx; box: SupportTab; on
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-xs text-muted-foreground" dir="ltr">{r.ref}</span>
                   <span className="font-semibold">{r.title}</span>
-                  <Pill tone={TONE[r.status]}>{STATUS[r.status]}</Pill>
+                  <Pill tone={TONE[r.status] ?? "muted"}>{STATUS[r.status]}</Pill>
                   {(r.priority === "high" || r.priority === "urgent") && <Pill tone="bad">{PRIO[r.priority]}</Pill>}
                   {r.scope === "platform" && <Pill>دعم المنصة</Pill>}
                 </div>
@@ -199,7 +199,7 @@ export function NewTicket({ ctx, onDone, onCancel }: { ctx: Ctx; onDone: (id: st
   const kids = useQuery({
     enabled: ctx.role === "guardian",
     queryKey: ["support-kids", ctx.schoolId],
-    queryFn: async () => ((await db.rpc("my_profile", { _school: ctx.schoolId })).data?.children ?? []) as Row[],
+    queryFn: async () => ((await db.rpc("support_my_children", { _school: ctx.schoolId })).data ?? []) as Row[],
   });
   async function submit() {
     if (!ctx.schoolId) return void toast.error("اختر مدرسة من شريط السياق أولًا");
@@ -216,7 +216,7 @@ export function NewTicket({ ctx, onDone, onCancel }: { ctx: Ctx; onDone: (id: st
       {canPlatform && (
         <div className="space-y-1">
           <Label htmlFor="sp-scope">الجهة</Label>
-          <select id="sp-scope" className={selectCls} value={scope} onChange={(e) => { setScope(e.target.value as "school" | "platform"); setCat(""); }}>
+          <select id="sp-scope" className={selectCls()} value={scope} onChange={(e) => { setScope(e.target.value as "school" | "platform"); setCat(""); }}>
             {ctx.role !== "org_owner" && <option value="school">دعم المدرسة (داخلي)</option>}
             <option value="platform">دعم منصة ركاز</option>
           </select>
@@ -226,17 +226,17 @@ export function NewTicket({ ctx, onDone, onCancel }: { ctx: Ctx; onDone: (id: st
       <div className="space-y-1"><Label htmlFor="sp-body">الوصف</Label><Textarea id="sp-body" rows={5} value={body} onChange={(e) => setBody(e.target.value)} /></div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1"><Label htmlFor="sp-cat">التصنيف</Label>
-          <select id="sp-cat" className={selectCls} value={cat} onChange={(e) => setCat(e.target.value)}>
+          <select id="sp-cat" className={selectCls()} value={cat} onChange={(e) => setCat(e.target.value)}>
             <option value="">بدون</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div className="space-y-1"><Label htmlFor="sp-prio">الأولوية</Label>
-          <select id="sp-prio" className={selectCls} value={prio} onChange={(e) => setPrio(e.target.value)}>{Object.entries(PRIO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+          <select id="sp-prio" className={selectCls()} value={prio} onChange={(e) => setPrio(e.target.value)}>{Object.entries(PRIO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         </div>
       </div>
       {ctx.role === "guardian" && (
         <div className="space-y-1"><Label htmlFor="sp-kid">الابن المعني (اختياري)</Label>
-          <select id="sp-kid" className={selectCls} value={student} onChange={(e) => setStudent(e.target.value)}>
+          <select id="sp-kid" className={selectCls()} value={student} onChange={(e) => setStudent(e.target.value)}>
             <option value="">لا يخص ابنًا محددًا</option>{(kids.data ?? []).map((k) => <option key={k.id} value={k.id}>{k.full_name}</option>)}
           </select>
         </div>
@@ -251,7 +251,7 @@ export function NewTicket({ ctx, onDone, onCancel }: { ctx: Ctx; onDone: (id: st
 }
 
 /* ---------------- detail ---------------- */
-export function TicketDetail({ id, ctx, onBack }: { id: string; ctx: Ctx; onBack: () => void }) {
+export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx; userId: string; onBack: () => void }) {
   const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["support-ticket", id],
@@ -275,7 +275,7 @@ export function TicketDetail({ id, ctx, onBack }: { id: string; ctx: Ctx; onBack
     let reason = opts.reason ?? null;
     if (opts.reasonPrompt) { reason = await askText(opts.reasonPrompt, { required: true }); if (!reason) return; }
     if (opts.confirm && !(await ask(opts.confirm))) return;
-    const { error } = await db.rpc("support_action", { _ticket: id, _action: action, _rev: t.rev, _reason: reason, _value: opts.value ?? null });
+    const { error } = await db.rpc("support_action", { _ticket: id, _action: action, _rev: t.rev, _reason: reason, _value: opts.value || null });
     if (error) toast.error(arabicError(error)); else toast.success("تم");
     refresh();
   }
@@ -307,7 +307,7 @@ export function TicketDetail({ id, ctx, onBack }: { id: string; ctx: Ctx; onBack
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-xs text-muted-foreground" dir="ltr">{t.ref}</span>
           <h2 className="text-lg font-bold">{t.title}</h2>
-          <Pill tone={TONE[t.status]}>{STATUS[t.status]}</Pill>
+          <Pill tone={TONE[t.status] ?? "muted"}>{STATUS[t.status]}</Pill>
           <Pill tone={t.priority === "urgent" || t.priority === "high" ? "bad" : "muted"}>{PRIO[t.priority]}</Pill>
           {t.scope === "platform" && <Pill>دعم المنصة</Pill>}
         </div>
@@ -329,7 +329,7 @@ export function TicketDetail({ id, ctx, onBack }: { id: string; ctx: Ctx; onBack
 
       {/* actions */}
       <div className="flex flex-wrap gap-2">
-        {can.manage && ["new", "waiting_internal", "in_progress"].includes(t.status) && t.assignee !== ctx.userId && <Button size="sm" onClick={() => act("claim")}>استلام التذكرة</Button>}
+        {can.manage && ["new", "waiting_internal", "in_progress"].includes(t.status) && t.assignee !== userId && <Button size="sm" onClick={() => act("claim")}>استلام التذكرة</Button>}
         {can.handle && open && t.status !== "resolved" && <>
           <Button size="sm" variant="outline" onClick={() => act("waiting_requester", { confirm: "تحويل الحالة إلى «بانتظار مقدم الطلب»؟ اكتب سؤالك في الرد." })}>طلب معلومات</Button>
           <Button size="sm" variant="outline" onClick={() => act("waiting_internal")}>بانتظار جهة داخلية</Button>
@@ -345,10 +345,10 @@ export function TicketDetail({ id, ctx, onBack }: { id: string; ctx: Ctx; onBack
       </div>
       {can.manage && open && (
         <div className="grid gap-2 sm:grid-cols-2">
-          <select aria-label="تغيير الأولوية" className={selectCls} value={t.priority} onChange={(e) => act("priority", { value: e.target.value })}>
+          <select aria-label="تغيير الأولوية" className={selectCls()} value={t.priority} onChange={(e) => act("priority", { value: e.target.value })}>
             {Object.entries(PRIO).map(([k, v]) => <option key={k} value={k}>الأولوية: {v}</option>)}
           </select>
-          <select aria-label="تغيير التصنيف" className={selectCls} value={t.category_id ?? ""} onChange={(e) => act("category", { value: e.target.value || undefined })}>
+          <select aria-label="تغيير التصنيف" className={selectCls()} value={t.category_id ?? ""} onChange={(e) => act("category", { value: e.target.value })}>
             <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active || c.id === t.category_id).map((c) => <option key={c.id} value={c.id}>التصنيف: {c.name}</option>)}
           </select>
         </div>
@@ -366,7 +366,7 @@ export function TicketDetail({ id, ctx, onBack }: { id: string; ctx: Ctx; onBack
             </div>
             <p className="whitespace-pre-wrap">{m.body}</p>
             <div className="mt-1 flex gap-2">
-              {m.author === ctx.userId && open && <Button variant="ghost" size="sm" onClick={() => edit(m)}>تصحيح</Button>}
+              {m.author === userId && open && <Button variant="ghost" size="sm" onClick={() => edit(m)}>تصحيح</Button>}
               {m.revisions > 0 && <Button variant="ghost" size="sm" onClick={() => history(m)}>سجل التصحيح ({m.revisions})</Button>}
             </div>
           </div>

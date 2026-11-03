@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/app/support")({
 });
 
 function Page() {
-  const { active } = useSession();
+  const { active, user } = useSession();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/app/support" });
   const [creating, setCreating] = useState(false);
@@ -40,7 +40,7 @@ function Page() {
       />
       <HoursNote orgId={active.role === "platform_admin" ? null : active.orgId} />
       {search.t ? (
-        <TicketDetail id={search.t} ctx={ctx} onBack={() => go({ tab })} />
+        <TicketDetail id={search.t} ctx={ctx} userId={user.id} onBack={() => go({ tab })} />
       ) : creating ? (
         <NewTicket ctx={ctx} onCancel={() => setCreating(false)} onDone={(id) => { setCreating(false); go({ t: id }); }} />
       ) : (
