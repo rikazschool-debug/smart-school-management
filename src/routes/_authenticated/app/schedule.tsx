@@ -130,8 +130,8 @@ function Manager({ ctx }: { ctx: Ctx }) {
   const d = setup.data!;
   if (!d.periods.some((p) => p["kind"] === "lesson")) return <EmptyState title="أضف الحصص أولًا" hint="من تبويب «الإعدادات» حدّد أيام الدراسة والحصص." />;
   const isDraft = tt?.["status"] === "draft";
-  const shown = useMemo(() => applyFilter(slots.data ?? [], filter), [slots.data, filter]);
-  const cells = useMemo(() => byCell(shown), [shown]);
+  const shown = applyFilter(slots.data ?? [], filter);
+  const cells = byCell(shown);
   const latestPublished = tts.data?.filter((t) => t["status"] === "published").sort((a, b) => (b["version"] ?? 0) - (a["version"] ?? 0))[0];
   const ttLabel = (t: Row) => t["status"] === "draft" ? (t["based_on"] ? "مسودة تعديل" : "مسودة") : `منشور — إصدار ${t["version"]} — يسري من ${t["effective_from"]}`;
   const filterLabel = !filter ? "كل الحصص" : filter.startsWith("s:") ? `شعبة ${slotLabel(shown[0] ?? {}).section}` : filter.startsWith("t:") ? `المعلم ${slotLabel(shown[0] ?? {}).teacher}` : `القاعة ${slotLabel(shown[0] ?? {}).room}`;
@@ -359,8 +359,8 @@ function Viewer({ ctx }: { ctx: Ctx }) {
   const subBySlot = new Map((subs.data ?? []).map((x) => [`${x["slot_id"]}|${x["date"]}`, x]));
   const myCover = ctx.role === "teacher" ? (subs.data ?? []).filter((x) => mine.data?.includes(x["substitute_teacher_id"])) : [];
   const allSlots = new Map((slots.data ?? []).map((s) => [s["id"], s]));
-  const shown = useMemo(() => applyFilter(base, filter), [base, filter]);
-  const cells = useMemo(() => byCell(shown), [shown]);
+  const shown = applyFilter(base, filter);
+  const cells = byCell(shown);
   const title = scheduleLabel(ctx.role);
   const sub_ = { teacher: "حصصي وحصص التغطية", student: "جدول شعبتي", guardian: "جدول كل ابن على حدة", dept_head: "جداول معلمي القسم", supervisor: "حصص المعلمين المسندين إليّ" }[ctx.role as string] ?? "الجدول المنشور";
   const needsFilter = ["guardian", "dept_head", "supervisor", "student_affairs"].includes(ctx.role);
