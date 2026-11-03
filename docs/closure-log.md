@@ -296,3 +296,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 | Regression | people-e2e, comm-roles-e2e | 30/30, 36/36 |
 | Account/login functions | _provision_link, _complete_account_setup, _otp_may_send, link_guardian_account not executable by signed-in users | checked |
 | Open | real WATI send + Supabase Send SMS hook; owner 2-branch picker + duty/substitute browser journey; timetable 1-in-5 flake root cause | — |
+
+## 2026-11-03 — Live WhatsApp code (WATI) on the owner's consenting number
+- Sender now passes the WATI channel and records WATI's rejection reason (code masked) in otp_sends.failed_detail.
+- Number 966570567341 had no login (only a no-login teacher record) → isolated test login created (metadata otp_live_test, account_setup staged, no membership); no existing account changed.
+- Local signed hook → WATI template rikaz_login_otp: accepted by WATI. Delivery callbacks reach /api/public/wati/webhook with a key but the deployed preview (old build) rejects them 401, and its send-sms returns 503 (secrets missing in that build). Pending: re-check both after the preview redeploys, then run the real Supabase path (`otp-live-test.ts supabase`).

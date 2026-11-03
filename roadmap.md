@@ -271,7 +271,7 @@
 - [x] TP timetable performance for large schools (scale tests in src/lib/timetable-scale.test.ts)
 
 ## Package-next closure round (Nov 3)
-- [ ] C1 WATI: secrets via secure form, hook + delivery-webhook URLs, external steps; real send/verify test (teacher + guardian) — waits on secrets + test number
+- [~] C1 WATI: secrets + hook set; test send to owner number accepted by WATI (isolated test login). Open: deployed preview still old (send-sms 503, status webhook 401) → after redeploy run `otp-live-test.ts supabase`, confirm delivered, then teardown
 - [ ] C1b OTP negatives: wrong/expired/used code, attempt + resend limits, provider failure, suspended account, unknown mobile
 - [x] C2 Linking review (templates browser 10/10 scripts/accounts-templates-journey.py; rows with ID but no name now reported, not dropped): ID/mobile conflict → review not merge; guardian link needs approval; section number/Hijri mapping explicit in preview; two blank templates download+upload, missing fields, partial failure/retry
 - [~] C3 Tests (done: circular list scope + no-login teachers, scripts/closure-e2e.ts 4/4; open: owner 2-branch pick + duty/substitute in browser, timetable flake root cause): timetable 1-in-5 flake root cause; owner picks staff from 2 branches + real duty assign + substitute (browser); circular people list scope; teachers without account in loads/availability but not chat/invite

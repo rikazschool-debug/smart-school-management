@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/auth/send-sms")({
           return fail(429, "Too many requests");
         }
         await supabaseAdmin.from("otp_sends" as never).insert({ user_id: uid, phone, local_message_id: localId } as never);
-        const r = await sendWatiOtp({ baseUrl, token, template: process.env["WATI_OTP_TEMPLATE"] || "rikaz_login_otp", param: process.env["WATI_OTP_PARAM"] || "1" }, phone, code, localId);
+        const r = await sendWatiOtp({ baseUrl, token, template: process.env["WATI_OTP_TEMPLATE"] || "rikaz_login_otp", param: process.env["WATI_OTP_PARAM"] || "1", channel: process.env["WATI_CHANNEL"]?.trim() || undefined }, phone, code, localId);
         await supabaseAdmin.from("otp_sends" as never).update({ status: r.ok ? "accepted" : "failed", failed_detail: r.ok ? null : r.detail, updated_at: new Date().toISOString() } as never).eq("local_message_id", localId);
         if (!r.ok) return fail(502, "WhatsApp delivery failed");
         return Response.json({});

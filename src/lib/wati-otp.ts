@@ -41,11 +41,13 @@ export async function sendWatiOtp(cfg: WatiConfig, phone: string, code: string, 
   try {
     res = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${cfg.token.replace(/^Bearer\s+/i, "")}`, "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(10_000) });
   } catch { return { ok: false, detail: "network" }; }
-  if (!res.ok) return { ok: false, detail: `http_${res.status}` };
-  const j = (await res.json().catch(() => null)) as { success?: boolean; result?: boolean; error?: unknown; recipients?: { error?: unknown; local_message_id?: string }[] } | null;
+  // keep a short provider reason for diagnosis; the code itself is masked out
+  const text = (await res.text().catch(() => "")).split(code).join("******");
+  if (!res.ok) return { ok: false, detail: `http_${res.status}: ${text.slice(0, 160)}` };
+  const j = (() => { try { return JSON.parse(text); } catch { return null; } })() as { success?: boolean; result?: boolean; error?: unknown; recipients?: { error?: unknown; local_message_id?: string }[] } | null;
   const success = j?.success ?? j?.result ?? false;
   const rec = j?.recipients?.find((r) => r.local_message_id === localId) ?? j?.recipients?.[0];
-  if (!success || (rec && rec.error)) return { ok: false, detail: "rejected" };
+  if (!success || (rec && rec.error)) return { ok: false, detail: `rejected: ${text.slice(0, 160)}` };
   return { ok: true, detail: "accepted" };
 }
 
