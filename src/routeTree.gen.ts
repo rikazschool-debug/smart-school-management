@@ -36,6 +36,7 @@ import { Route as AuthenticatedAppSchoolDayRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppSchoolsRouteImport } from './routes/_authenticated/app/schools'
 import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenticated/app/students'
 import { Route as AuthenticatedAppSubstitutionsRouteImport } from './routes/_authenticated/app/substitutions'
+import { Route as AuthenticatedAppSupportRouteImport } from './routes/_authenticated/app/support'
 import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
 import { Route as AuthenticatedAppAdminIndexRouteImport } from './routes/_authenticated/app/admin.index'
 import { Route as AuthenticatedAppAdminCalendarRouteImport } from './routes/_authenticated/app/admin.calendar'
@@ -200,6 +201,11 @@ const AuthenticatedAppSubstitutionsRoute =
     path: '/substitutions',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppSupportRoute = AuthenticatedAppSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
 const AuthenticatedAppTeachersRoute =
   AuthenticatedAppTeachersRouteImport.update({
     id: '/teachers',
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
+  '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
+  '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
@@ -410,6 +418,7 @@ export interface FileRoutesById {
   '/_authenticated/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/_authenticated/app/students': typeof AuthenticatedAppStudentsRoute
   '/_authenticated/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
+  '/_authenticated/app/support': typeof AuthenticatedAppSupportRoute
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
@@ -456,6 +465,7 @@ export interface FileRouteTypes {
     | '/app/schools'
     | '/app/students'
     | '/app/substitutions'
+    | '/app/support'
     | '/app/teachers'
     | '/app/'
     | '/app/admin/calendar'
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/app/schools'
     | '/app/students'
     | '/app/substitutions'
+    | '/app/support'
     | '/app/teachers'
     | '/app'
     | '/app/admin/calendar'
@@ -544,6 +555,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/schools'
     | '/_authenticated/app/students'
     | '/_authenticated/app/substitutions'
+    | '/_authenticated/app/support'
     | '/_authenticated/app/teachers'
     | '/_authenticated/app/'
     | '/_authenticated/app/admin/calendar'
@@ -764,6 +776,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSubstitutionsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/support': {
+      id: '/_authenticated/app/support'
+      path: '/support'
+      fullPath: '/app/support'
+      preLoaderRoute: typeof AuthenticatedAppSupportRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/teachers': {
       id: '/_authenticated/app/teachers'
       path: '/teachers'
@@ -900,6 +919,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppSchoolsRoute: typeof AuthenticatedAppSchoolsRoute
   AuthenticatedAppStudentsRoute: typeof AuthenticatedAppStudentsRoute
   AuthenticatedAppSubstitutionsRoute: typeof AuthenticatedAppSubstitutionsRoute
+  AuthenticatedAppSupportRoute: typeof AuthenticatedAppSupportRoute
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppAdminCalendarRoute: typeof AuthenticatedAppAdminCalendarRoute
@@ -939,6 +959,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppSchoolsRoute: AuthenticatedAppSchoolsRoute,
   AuthenticatedAppStudentsRoute: AuthenticatedAppStudentsRoute,
   AuthenticatedAppSubstitutionsRoute: AuthenticatedAppSubstitutionsRoute,
+  AuthenticatedAppSupportRoute: AuthenticatedAppSupportRoute,
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppAdminCalendarRoute: AuthenticatedAppAdminCalendarRoute,
