@@ -15,6 +15,7 @@ import { Pill, fmt, fetchAllRows } from "@/components/admin/shared";
 import { arabicError, type AppContext } from "@/lib/session";
 import { ROLE_LABELS, type Role, type SupportTab } from "@/lib/roles";
 import { exportPdf, exportXlsx } from "@/lib/export";
+import { InternalPanel, ManagePanel } from "@/components/support/handling";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -29,8 +30,10 @@ const ACT: Record<string, string> = {
   created: "أُنشئت التذكرة", reply: "رد", reply_edited: "تصحيح رد", claim: "استلام", in_progress: "قيد المعالجة", waiting_requester: "طلب معلومات من مقدم الطلب",
   waiting_internal: "بانتظار جهة داخلية", priority: "تغيير الأولوية", category: "تغيير التصنيف", resolve: "حل", confirm: "تأكيد الحل وإغلاق", close: "إغلاق",
   reopen: "إعادة فتح", cancel: "إلغاء", file_added: "إرفاق ملف",
+  assign: "إسناد المعالجة", transfer: "تحويل إلى فرع آخر", escalated: "تصعيد إلى دعم المنصة", note_private: "ملاحظة خاصة", note_team: "ملاحظة الفريق",
+  info_requested: "طلب إفادة", info_answered: "وصول إفادة", info_cancelled: "إلغاء طلب إفادة",
 };
-export const TAB_LABEL: Record<SupportTab, string> = { mine: "تذاكري", assigned: "المسندة إليّ", manage: "إدارة التذاكر" };
+export const TAB_LABEL: Record<SupportTab, string> = { mine: "تذاكري", assigned: "المسندة إليّ", info: "طلبات الإفادة", manage: "إدارة التذاكر" };
 const roleLabel = (r: string) => ROLE_LABELS[r as Role] ?? r;
 const PAGE = 20;
 
@@ -73,6 +76,8 @@ export function HoursNote({ orgId }: { orgId: string | null }) {
 }
 
 /* ---------------- list ---------------- */
+export { InfoInbox } from "@/components/support/handling";
+
 export function TicketList({ ctx, box, onOpen }: { ctx: Ctx; box: SupportTab; onOpen: (id: string) => void }) {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
@@ -316,6 +321,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
           <div><dt className="inline text-muted-foreground">الفرع: </dt><dd className="inline">{t.school_name}</dd></div>
           <div><dt className="inline text-muted-foreground">التصنيف: </dt><dd className="inline">{t.category ?? "بلا تصنيف"}</dd></div>
           <div><dt className="inline text-muted-foreground">المسؤول الحالي: </dt><dd className="inline">{t.assignee_name ?? "لم يُستلم بعد"}</dd></div>
+          {t.linked && <div><dt className="inline text-muted-foreground">تصعيد من: </dt><dd className="inline font-mono" dir="ltr">{t.linked.ref}</dd></div>}
           {t.student_name && <div><dt className="inline text-muted-foreground">الابن المعني: </dt><dd className="inline">{t.student_name}</dd></div>}
           <div><dt className="inline text-muted-foreground">الإنشاء: </dt><dd className="inline">{fmt(t.created_at)}</dd></div>
           <div><dt className="inline text-muted-foreground">آخر تحديث: </dt><dd className="inline">{fmt(t.updated_at)}</dd></div>
@@ -354,6 +360,8 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
         </div>
       )}
 
+      {can.manage && <ManagePanel d={d} onChange={refresh} />}
+
       {/* conversation */}
       <div className="space-y-2">
         <p className="font-semibold">المحادثة</p>
@@ -380,6 +388,8 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
         ) : <p className="text-sm text-muted-foreground">التذكرة {STATUS[t.status]}؛ أعد فتحها للرد.</p>}
       </div>
 
+      {can.handle && <InternalPanel d={d} userId={userId} onChange={refresh} />}
+
       <div className="space-y-2 rounded-xl border bg-card p-4">
         <p className="font-semibold">المرفقات</p>
         {!files.data?.length && <p className="text-sm text-muted-foreground">لا توجد مرفقات.</p>}
@@ -400,6 +410,10 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
               {e.details?.reason && <p className="mt-0.5 text-muted-foreground">{e.details.reason}</p>}
               {e.action === "priority" && <p className="mt-0.5 text-muted-foreground">{PRIO[e.details.from]} ← {PRIO[e.details.to]}</p>}
               {e.details?.name && <p className="mt-0.5 text-muted-foreground">{e.details.name}</p>}
+              {e.action === "transfer" && <p className="mt-0.5 text-muted-foreground">{e.details.from_school} ← {e.details.to_school}</p>}
+              {e.action === "assign" && <p className="mt-0.5 text-muted-foreground">{e.details.from ?? "بلا مسؤول"} ← {e.details.to ?? "بلا مسؤول"}</p>}
+              {e.action === "info_requested" && e.details?.to && <p className="mt-0.5 text-muted-foreground">إلى {e.details.to}</p>}
+              {e.action === "escalated" && <p className="mt-0.5 font-mono text-muted-foreground" dir="ltr">{e.details.ref}</p>}
             </li>
           ))}
         </ol>
