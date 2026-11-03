@@ -60,7 +60,7 @@ const ACTIONS: Record<string, string> = { started: "بدأ التنفيذ", resu
   awaiting_confirmation: "بانتظار التأكيد", blocked: "عائق", comment: "تعليق", clarify: "طلب توضيح", updated: "تعديل", cancelled: "أُلغي", confirmed: "أُكّد",
   suggested: "اقتراح توزيع", assigned: "إسناد مناوبة", unassigned: "حذف من المسودة", published: "نُشر", substituted: "تعيين بديل", conflict_detected: "تعارض بعد تغيير الجدول",
   executed: "نُفذت", not_executed: "تعذر التنفيذ", excuse_requested: "طلب اعتذار", change_requested: "طلب تغيير", change_accepted: "قُبل الطلب", change_declined: "رُفض الطلب",
-  invited: "أُرسلت الدعوات", live_started: "بدء الاجتماع الافتراضي", live_joined: "انضمام أول مرة للبث", live_ended: "إنهاء الاجتماع للجميع", live_removed: "إزالة مشارك من البث", live_allowed_back: "السماح بالعودة", rsvp_accepted: "قبول الدعوة", rsvp_declined: "اعتذار", attendance: "تسجيل الحضور", minutes_started: "بدء المحضر", minutes_new_version: "إصدار جديد للمحضر",
+  invited: "أُرسلت الدعوات", live_started: "بدء الاجتماع الافتراضي", live_joined: "انضمام أول مرة للبث", live_ended: "إنهاء الاجتماع للجميع", live_removed: "إزالة مشارك من البث", live_allowed_back: "السماح بالعودة", rsvp_accepted: "قبول الدعوة", rsvp_declined: "اعتذار", rsvp_rejected: "رفض الدعوة", attendance: "تسجيل الحضور", minutes_started: "بدء المحضر", minutes_new_version: "إصدار جديد للمحضر",
   minutes_confirmed: "تثبيت المحضر", decision_added: "قرار جديد",
 };
 
@@ -156,4 +156,4 @@ export const DUTY_KIND: Record<string, string> = { break: "الفسحة", gate: 
 export const DUTY_STATUS: Record<string, string> = { assigned: "مسندة", replaced: "استُبدلت ببديل", cancelled: "ملغاة" };
 export const EXEC_STATUS: Record<string, string> = { pending: "لم يوثق", done: "نُفذت", not_done: "تعذر التنفيذ" };
 export const MEETING_STATUS: Record<string, string> = { draft: "مسودة", scheduled: "مجدول", cancelled: "ملغى", held: "منعقد" };
-export const RSVP: Record<string, string> = { pending: "لم يرد", accepted: "قبل", declined: "اعتذر" };
+export const RSVP: Record<string, string> = { pending: "لم يرد", accepted: "قبل", declined: "اعتذر", rejected: "رفض" };

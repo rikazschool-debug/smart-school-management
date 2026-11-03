@@ -1,3 +1,4 @@
+import { RsvpActions } from "@/components/admin/rsvp";
 import { PeoplePicker } from "@/components/people-picker";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -100,7 +101,7 @@ function Meeting({ school, ctx }: { school: string | null; ctx: AppContext }) {
             <p className="mb-1 font-semibold">المدعوون ({members.length})</p>
             <ul className="space-y-1 text-sm">{members.map((x) => (
               <li key={x.user_id} className="flex flex-wrap items-center gap-2">{nm(x.user_id)}
-                {m.needs_rsvp && <Pill tone={x.rsvp === "accepted" ? "ok" : x.rsvp === "declined" ? "bad" : "muted"}>{RSVP[x.rsvp]}</Pill>}
+                {m.needs_rsvp && <Pill tone={x.rsvp === "accepted" ? "ok" : x.rsvp === "declined" || x.rsvp === "rejected" ? "bad" : "muted"}>{RSVP[x.rsvp]}</Pill>}
                 {x.rsvp_note && <span className="text-xs text-muted-foreground">{x.rsvp_note}</span>}
                 {x.attended !== null && <Pill tone={x.attended ? "ok" : "bad"}>{x.attended ? "حضر" : "لم يحضر"}</Pill>}
               </li>
@@ -125,12 +126,7 @@ function Meeting({ school, ctx }: { school: string | null; ctx: AppContext }) {
             </div>
           )}
           {organizer && ["draft", "scheduled"].includes(m.status) && <Button className="w-full" variant="outline" disabled={busy} onClick={async () => { const r = await askText("سبب الإلغاء (يُبلغ المدعوون)", { required: true }); if (r) run("adm_meeting_cancel", { _id: id, _reason: r, _rev: m.rev }, "أُلغي الاجتماع"); }}>إلغاء الاجتماع</Button>}
-          {mine && m.status === "scheduled" && m.needs_rsvp && (
-            <>
-              {mine.rsvp !== "accepted" && <Button className="w-full" disabled={busy} onClick={() => run("adm_meeting_rsvp", { _id: id, _rsvp: "accepted", _note: null }, "سُجّل قبولك")}>قبول الدعوة</Button>}
-              {mine.rsvp !== "declined" && <Button className="w-full" variant="outline" disabled={busy} onClick={async () => { const r = await askText("سبب الاعتذار (اختياري)"); if (r !== null) run("adm_meeting_rsvp", { _id: id, _rsvp: "declined", _note: r }, "سُجّل اعتذارك"); }}>اعتذار</Button>}
-            </>
-          )}
+          {mine && m.status === "scheduled" && m.needs_rsvp && <RsvpActions meetingId={id} current={mine.rsvp} onDone={() => qc.invalidateQueries()} />}
           <p className="text-xs text-muted-foreground">الإشعار لا يُعد إثباتًا للحضور؛ الحضور الفعلي يُسجّل منفصلًا.</p>
         </div>
       </div>
@@ -168,7 +164,7 @@ function Minutes({ meetingId, minutes, members, organizerId, nm, writer, organiz
   const init = () => ({
     topics: ((base?.topics as Row[] | undefined)?.length ? (base!.topics as Row[]) : [{ title: "", discussion: "" }]).map((t) => ({ title: t.title ?? "", discussion: t.discussion ?? "" })),
     present: (base?.present as string[] | undefined)?.length ? (base!.present as string[]) : members.filter((x) => x.attended).map((x) => x.user_id),
-    absent: (base?.absent as string[] | undefined)?.length ? (base!.absent as string[]) : members.filter((x) => x.attended === false || x.rsvp === "declined").map((x) => x.user_id),
+    absent: (base?.absent as string[] | undefined)?.length ? (base!.absent as string[]) : members.filter((x) => x.attended === false || x.rsvp === "declined" || x.rsvp === "rejected").map((x) => x.user_id),
     notes: base?.notes ?? "", change_note: draft?.change_note ?? "",
   });
   const [d, setD] = useState(init);
