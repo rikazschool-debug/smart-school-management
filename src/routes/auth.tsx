@@ -1,4 +1,5 @@
 import { toLoginEmail } from "@/lib/guardian-login";
+import { normPhone, studentLoginEmail } from "@/lib/people-import";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -67,7 +68,9 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
+        let { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
+        // digits = guardian login (legacy) or student national ID
+        if (error && /^[\d\s+-]{6,}$/.test(email.trim())) ({ error } = await supabase.auth.signInWithPassword({ email: studentLoginEmail(email), password }));
         if (error) throw error;
         go();
       } else if (mode === "signup") {
@@ -115,7 +118,7 @@ function AuthPage() {
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label htmlFor="email">{mode === "signin" ? "البريد الإلكتروني أو رقم الهوية/الجوال (لولي الأمر)" : "البريد الإلكتروني"}</Label>
+                <Label htmlFor="email">{mode === "signin" ? "البريد الإلكتروني أو رقم الهوية" : "البريد الإلكتروني"}</Label>
                 <Input id="email" type={mode === "signin" ? "text" : "email"} dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               {mode !== "forgot" && (
@@ -139,6 +142,7 @@ function AuthPage() {
               <button type="button" className="text-muted-foreground" onClick={() => setMode("forgot")}>نسيت كلمة المرور؟</button>
             )}
           </div>
+          {mode === "signin" && !sent && <PhoneLogin onDone={go} />}
           {import.meta.env.DEV && (
             <div className="space-y-2 rounded-xl border bg-card p-3">
               <p className="text-sm font-semibold">دخول سريع بالحسابات التجريبية</p>
@@ -155,6 +159,58 @@ function AuthPage() {
           <p className="text-xs text-muted-foreground">إن دُعيت من مدرستك، أنشئ حسابًا بنفس البريد الذي دُعيت به وستظهر لك عضويتك تلقائيًا.</p>
         </form>
       </div>
+    </div>
+  );
+}
+
+/** Teachers and guardians: mobile + one-time code on WhatsApp (sent by the auth service through WATI; 5-minute expiry enforced by auth).
+ *  Only accounts added by a school can receive a code; the reply never says whether the number exists. */
+function PhoneLogin({ onDone }: { onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [busy, setBusy] = useState(false);
+  const [wait, setWait] = useState(0);
+  const [note, setNote] = useState<string | null>(null);
+  useEffect(() => { if (wait <= 0) return; const t = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(t); }, [wait]);
+  async function send() {
+    const p = normPhone(phone);
+    if (!p) return void toast.error("أدخل جوالًا سعوديًا بصيغة 05XXXXXXXX");
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithOtp({ phone: p, options: { shouldCreateUser: false } });
+    setBusy(false);
+    // unknown numbers and real sends look the same; only a delivery outage is reported as such
+    if (error && /(sending|provider|hook|delivery|503|502|500)/i.test(`${error.message} ${error.status ?? ""}`) && !/signups? not allowed|not found|otp_disabled/i.test(error.message)) {
+      return void toast.error("تعذّر إرسال الرمز على واتساب الآن. حاول بعد قليل.");
+    }
+    if (error && /rate|too many|429|seconds/i.test(`${error.message} ${error.status ?? ""}`)) return void toast.error("طلبت رموزًا كثيرة. انتظر قليلًا ثم أعد المحاولة.");
+    setStep("code"); setWait(60);
+    setNote("إن كان هذا الجوال مسجلًا في مدرستك فسيصلك رمز على واتساب خلال دقيقة. صلاحية الرمز 5 دقائق ويُستخدم مرة واحدة.");
+  }
+  async function verify() {
+    const p = normPhone(phone);
+    if (!p || !/^\d{4,8}$/.test(code.trim())) return void toast.error("أدخل الرمز المكون من أرقام");
+    setBusy(true);
+    const { error } = await supabase.auth.verifyOtp({ phone: p, token: code.trim(), type: "sms" });
+    setBusy(false);
+    if (error) return void toast.error(/expired/i.test(error.message) ? "انتهت صلاحية الرمز. اطلب رمزًا جديدًا." : "الرمز غير صحيح أو مستخدم من قبل.");
+    onDone();
+  }
+  if (!open) return <Button type="button" variant="outline" className="w-full" onClick={() => setOpen(true)}>الدخول بالجوال ورمز واتساب (المعلم وولي الأمر)</Button>;
+  return (
+    <div className="space-y-3 rounded-xl border bg-card p-3">
+      <p className="text-sm font-semibold">الدخول بالجوال — يصلك الرمز على واتساب</p>
+      <div className="space-y-1.5"><Label htmlFor="otp-phone">رقم الجوال</Label><Input id="otp-phone" dir="ltr" inputMode="tel" placeholder="05XXXXXXXX" value={phone} disabled={step === "code"} onChange={(e) => setPhone(e.target.value)} /></div>
+      {step === "code" && <div className="space-y-1.5"><Label htmlFor="otp-code">الرمز</Label><Input id="otp-code" dir="ltr" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} /></div>}
+      {note && <p className="text-xs text-muted-foreground">{note}</p>}
+      {step === "phone" ? <Button type="button" className="w-full" disabled={busy} onClick={send}>إرسال الرمز على واتساب</Button> : (
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" disabled={busy} onClick={verify}>دخول</Button>
+          <Button type="button" variant="outline" disabled={busy || wait > 0} onClick={send}>{wait > 0 ? `إعادة الإرسال بعد ${wait} ث` : "إعادة إرسال الرمز"}</Button>
+          <Button type="button" variant="ghost" onClick={() => { setStep("phone"); setCode(""); setNote(null); }}>تغيير الرقم</Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -59,7 +59,7 @@ Protections: the last active owner cannot be deactivated or demoted; ownership c
 | Branch comparison | yes | no | no | no | no | no | no | no |
 
 - الحضور (جولة الإغلاق): الأمن والمرشد والمعتمدون يرون اسم الطالب وشعبته في سجلات الحضور اليومية لمدرستهم فقط (att_day_rows) دون باقي ملف الطالب. وصول المستلم يتطلب تأكيد الموظف للهوية؛ 3 محاولات غير مطابقة توقف التفويض. سياسة الحضور لا تُقرأ مباشرة من المتصفح.
-- حسابات أولياء الأمور: ينشئها مدير الطلاب (مالك/مدير/وكيل/شؤون طلاب) عند إضافة الطالب؛ الإخوة بنفس الهوية/الجوال في حساب واحد.
+- الحسابات التلقائية (دور ثابت لكل سجل): الطالب وولي الأمر ينشئهما مدير الطلاب (مالك/مدير/وكيل/شؤون طلاب)، والمعلم ينشئه المالك/المدير. الطالب: رقم الهوية + كلمة مرور أولية تُعرض مرة واحدة ويلزم تغييرها قبل أي وصول. المعلم وولي الأمر: الجوال + رمز واتساب، ولا وصول قبل أول دخول. الحسابات الموجودة تُربط دون تغيير كلمة المرور أو الأدوار. ولي الأمر حساب واحد لكل أبنائه (مطابقة بالجوال/الهوية فقط). حالة الحساب يراها من ينشئه فقط.
 
 ## Grades & results (archived)
 Since the homework/tests simplification, term gradebooks are a read-only administrative archive for principal / vice principal / org owner. All gb_* write actions (plans, periods, entry, review, approve, publish, reopen, exceptions, corrections) are revoked for every role. The table below describes the archived flow only.

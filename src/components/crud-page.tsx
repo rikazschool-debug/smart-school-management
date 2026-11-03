@@ -156,10 +156,10 @@ export function RecordForm({
 
 export function CrudTable({
   title, table, schoolId, select = "*", fields, columns, searchKeys, filter, filters, canWrite,
-  canDelete = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated,
+  canDelete = canWrite, canCreate = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated,
 }: {
   title: string; table: string; schoolId: string; select?: string; fields: Field[]; columns: Column[];
-  searchKeys: string[]; filter?: Record<string, unknown>; filters?: FilterDef[]; canWrite: boolean;
+  searchKeys: string[]; filter?: Record<string, unknown>; filters?: FilterDef[]; canWrite: boolean; /** hide the generic «إضافة» when a screen owns its own add flow */ canCreate?: boolean;
   canDelete?: boolean; order?: string; defaults?: Row; extraActions?: (r: Row) => ReactNode;
   /** extra buttons next to «إضافة» (e.g. import) */ toolbar?: ReactNode; exportable?: boolean;
   /** called with the new row after a successful create */ onCreated?: ((r: Row) => void) | undefined;
@@ -256,7 +256,7 @@ export function CrudTable({
             <Button variant="outline" size="sm" disabled={exporting || !count} onClick={() => doExport("pdf")}><FileDown className="size-4" /> {exporting ? "جارٍ التجهيز…" : "تنزيل PDF"}</Button>
             <Button variant="ghost" size="sm" disabled={exporting || !count} onClick={() => doExport("print")} title="يفتح نافذة الطباعة في المتصفح"><Printer className="size-4" /> طباعة</Button>
           </>)}
-          {canWrite && <Button size="sm" onClick={() => setEditing({})}><Plus className="size-4" /> إضافة</Button>}
+          {canWrite && canCreate && <Button size="sm" onClick={() => setEditing({})}><Plus className="size-4" /> إضافة</Button>}
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">

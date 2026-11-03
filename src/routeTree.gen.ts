@@ -43,6 +43,8 @@ import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_authenticated/app/homework.index'
 import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
+import { Route as ApiPublicAuthSendSmsRouteImport } from './routes/api/public/auth/send-sms'
+import { Route as ApiPublicWatiWebhookRouteImport } from './routes/api/public/wati/webhook'
 import { Route as AuthenticatedAppAdminMeetingsIndexRouteImport } from './routes/_authenticated/app/admin.meetings.index'
 import { Route as AuthenticatedAppAdminMeetingsIdRouteImport } from './routes/_authenticated/app/admin.meetings.$id'
 import { Route as AuthenticatedAppAdminRequestsIdRouteImport } from './routes/_authenticated/app/admin.requests.$id'
@@ -239,6 +241,16 @@ const AuthenticatedAppHomeworkNewRoute =
     path: '/homework/new',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const ApiPublicAuthSendSmsRoute = ApiPublicAuthSendSmsRouteImport.update({
+  id: '/api/public/auth/send-sms',
+  path: '/api/public/auth/send-sms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWatiWebhookRoute = ApiPublicWatiWebhookRouteImport.update({
+  id: '/api/public/wati/webhook',
+  path: '/api/public/wati/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppAdminMeetingsIndexRoute =
   AuthenticatedAppAdminMeetingsIndexRouteImport.update({
     id: '/admin/meetings/',
@@ -301,6 +313,8 @@ export interface FileRoutesByFullPath {
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
+  '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
   '/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
@@ -340,6 +354,8 @@ export interface FileRoutesByTo {
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
+  '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
   '/app/homework': typeof AuthenticatedAppHomeworkIndexRoute
@@ -382,6 +398,8 @@ export interface FileRoutesById {
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/_authenticated/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/_authenticated/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
+  '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
   '/_authenticated/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
@@ -424,6 +442,8 @@ export interface FileRouteTypes {
     | '/app/classrooms/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
+    | '/api/public/auth/send-sms'
+    | '/api/public/wati/webhook'
     | '/app/admin/'
     | '/app/classrooms/'
     | '/app/homework/'
@@ -463,6 +483,8 @@ export interface FileRouteTypes {
     | '/app/classrooms/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
+    | '/api/public/auth/send-sms'
+    | '/api/public/wati/webhook'
     | '/app/admin'
     | '/app/classrooms'
     | '/app/homework'
@@ -504,6 +526,8 @@ export interface FileRouteTypes {
     | '/_authenticated/app/classrooms/$id'
     | '/_authenticated/app/homework/$id'
     | '/_authenticated/app/homework/new'
+    | '/api/public/auth/send-sms'
+    | '/api/public/wati/webhook'
     | '/_authenticated/app/admin/'
     | '/_authenticated/app/classrooms/'
     | '/_authenticated/app/homework/'
@@ -520,6 +544,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  ApiPublicAuthSendSmsRoute: typeof ApiPublicAuthSendSmsRoute
+  ApiPublicWatiWebhookRoute: typeof ApiPublicWatiWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -762,6 +788,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHomeworkNewRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/api/public/auth/send-sms': {
+      id: '/api/public/auth/send-sms'
+      path: '/api/public/auth/send-sms'
+      fullPath: '/api/public/auth/send-sms'
+      preLoaderRoute: typeof ApiPublicAuthSendSmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/wati/webhook': {
+      id: '/api/public/wati/webhook'
+      path: '/api/public/wati/webhook'
+      fullPath: '/api/public/wati/webhook'
+      preLoaderRoute: typeof ApiPublicWatiWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/admin/meetings/': {
       id: '/_authenticated/app/admin/meetings/'
       path: '/admin/meetings'
@@ -896,6 +936,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   InviteTokenRoute: InviteTokenRoute,
+  ApiPublicAuthSendSmsRoute: ApiPublicAuthSendSmsRoute,
+  ApiPublicWatiWebhookRoute: ApiPublicWatiWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
