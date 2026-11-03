@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Pin, PinOff, ShieldCheck, Wand2 } from "lucide-react";
+import { Pin, PinOff, Printer, ShieldCheck, Wand2 } from "lucide-react";
 import { selectCls } from "@/components/ui/native-select";
 import { ask } from "@/components/confirm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -380,6 +380,7 @@ function Viewer({ ctx, embedded }: { ctx: Ctx; embedded?: boolean }) {
         <div className="space-y-1"><Label htmlFor="dt">الأسبوع الذي يتضمن</Label><Input id="dt" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
         {needsFilter && base.length > 0 && <div className="space-y-1"><Label>{ctx.role === "guardian" ? "الابن / الشعبة" : "عرض"}</Label><Filter slots={base} value={filter} onChange={setFilter} sectionsOnly={ctx.role === "guardian"} names={kids.data} /></div>}
         {cur.data && shown.length > 0 && <ScheduleExport rows={shown} school={ctx.schoolName} title={`${title} — أسبوع ${week[0]}`} week={week} subBySlot={subBySlot} filters={[sub_]} />}
+        {cur.data && shown.length > 0 && <Button size="sm" variant="outline" onClick={() => window.print()}><Printer className="size-4" />طباعة</Button>}
       </div>
       {(ctx.role === "vice_principal" && scope.data?.length === 0) ? <EmptyState title="لم يُحدد نطاقك بعد" hint="يحدد مدير المدرسة الأقسام والمعلمين الذين يشملهم نطاقك من «الإعداد الأكاديمي ← نطاق الوكلاء والمشرفين»." /> :
         (ctx.role === "supervisor" && scope.data?.length === 0) ? <EmptyState title="لم يُسند إليك معلمون بعد" hint="يُسند مدير المدرسة المعلمين للمشرف من «الإعداد الأكاديمي ← نطاق الوكلاء والمشرفين»." /> :
