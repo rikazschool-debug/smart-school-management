@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
-  Bell, BookOpen, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
+  Bell, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
@@ -49,6 +49,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   comm_manage: { to: "/app/communication", label: "إدارة المجموعات", icon: UserCog, tab: "manage" },
   profile: { to: "/app/profile", label: "الملف الشخصي", icon: UserCircle },
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
+  support: { to: "/app/support", label: "الدعم والمساعدة", icon: LifeBuoy },
 };
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
@@ -59,7 +60,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
   { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage"] },
-  { label: "التنبيهات", keys: ["notifications"] },
+  { label: "التنبيهات والدعم", keys: ["notifications", "support"] },
 ];
 
 function AppLayout() {
@@ -95,7 +96,7 @@ function Shell() {
   if (!active) return <Onboarding onSignOut={signOut} />;
 
   const ct = commTabs(active.role);
-  const nav = [...NAV_BY_ROLE[active.role], "profile", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : [])] as NavKey[];
+  const nav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : [])] as NavKey[];
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (
