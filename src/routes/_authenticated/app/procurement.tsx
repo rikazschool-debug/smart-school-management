@@ -79,7 +79,7 @@ function Page() {
   else if (tab === "summary") body = <div className="space-y-6"><TasksTab orgId={orgId} openC={openC} openE={openE} openR={openR} />{me.caps.view !== "own" && <SummaryTab orgId={orgId} me={me} />}<ReportsPanel orgId={orgId} me={me} orgName={active.orgName} /></div>;
   else if (tab === "requests") body = <RequestList orgId={orgId} me={me} orgName={active.orgName} open={openR} onNew={canCreate ? () => newReq() : undefined} />;
   else if (tab === "custodies") body = <CustodyList orgId={orgId} me={me} orgName={active.orgName} open={openC} onNew={canCreate ? () => go({ tab: "custodies", new: "custody" }) : undefined} />;
-  else if (tab === "expenses") body = <ExpenseList orgId={orgId} me={me} orgName={active.orgName} open={openE} />;
+  else if (tab === "expenses") body = <ExpenseList orgId={orgId} me={me} orgName={active.orgName} open={openE} onNew={canCreate && !isOwner ? () => go({ tab: "expenses", new: "expense" }) : undefined} />;
   else body = <SettingsTab orgId={orgId} me={me} />;
 
   return (
