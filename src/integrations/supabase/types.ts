@@ -8007,6 +8007,7 @@ export type Database = {
         }[]
       }
       my_dept_ids: { Args: never; Returns: string[] }
+      my_link_pending: { Args: never; Returns: boolean }
       my_teacher_ids: { Args: never; Returns: string[] }
       norm_phone: { Args: { _p: string }; Returns: string }
       open_circular: { Args: { _id: string }; Returns: undefined }
