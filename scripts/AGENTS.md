@@ -33,3 +33,4 @@
 - scripts/support3-e2e.ts: support phase 3 (working-hour targets, overdue filter/alerts once, designated alert person, assignee filter, scoped KPIs; 14 checks).
 - scripts/support4-e2e.ts: support closure (pause/resume, re-armed alerts, cross-branch info, private-note leaks, helper lockout; `--cron` waits for the real job). scripts/support-browser-fixture.ts setup|teardown: isolated sbx- data; support-journey.py (12 checks, 8 accounts) and support-export-journey.py (12 checks); always run teardown after.
 - scripts/support-phone-journey.py: support screens at 390px for 6 roles (needs support-browser-fixture).
+- scripts/perm5-e2e.ts: section availability + flexible permissions (templates, custom roles, deny wins, multi-role, no self-escalation, students excluded, suspension wins, isolation; 20 checks).

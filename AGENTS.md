@@ -38,3 +38,4 @@
 - Grades (term gradebooks) are a read-only administrative archive: all gb_* write RPCs are revoked; grading lives in homework/tests. Never re-enable approval stages. Details in src/components/grades/AGENTS.md.
 - Support tickets: RPC-only access (support_*), identity from the session; see src/components/support/AGENTS.md.
 - Section availability: platform admin toggles per-org sections (org_sections via platform_set_section, logged in org_section_log); missing row = enabled; every section RPC must check section_enabled() server-side — UI lock only mirrors it.
+- Flexible permissions: perm_roles (system templates org_id null, read-only; org custom roles) → perm_role_grants (section×action×scope) → perm_assignments (+branches, approval_limit) + perm_overrides (deny wins); resolved only by perm_scope() server-side, owner-only RPCs, catalog in perm_catalog(). Base app_role checks are unchanged. Tests: scripts/perm5-e2e.ts.
