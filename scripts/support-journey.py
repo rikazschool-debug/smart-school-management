@@ -34,6 +34,7 @@ async def main():
         await t.screenshot(path=D + "j1.png")
         p1 = P["pr1"]; await go(p1, f"?t={T}")
         await pick(p1, "مسؤول المعالجة", "معلم فرع ب"); await p1.get_by_role("button", name="إسناد", exact=True).click(); await p1.wait_for_timeout(3000)
+        await go(p1, f"?t={T}"); await p1.screenshot(path=D + "j2.png")
         await p1.get_by_label("نوع الملاحظة").select_option("private"); await p1.wait_for_timeout(500)
         await p1.get_by_label("مستلم الملاحظة").select_option(label="معلم فرع ب"); await p1.get_by_label("نص الملاحظة").fill("سري-ج للمعلم فقط")
         await p1.get_by_role("button", name="حفظ الملاحظة").click(); await p1.wait_for_timeout(3000)
