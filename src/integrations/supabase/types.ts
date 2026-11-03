@@ -9947,6 +9947,7 @@ export type Database = {
       org_sections_get: { Args: { _org: string }; Returns: Json }
       pc_ack: { Args: { _move: string }; Returns: undefined }
       pc_alerts_tick: { Args: never; Returns: number }
+      pc_branch_overview: { Args: { _org: string }; Returns: Json }
       pc_carry: {
         Args: {
           _amount: number
