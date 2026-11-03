@@ -4863,43 +4863,66 @@ export type Database = {
       pc_expense_lines: {
         Row: {
           amount: number
+          category_id: string | null
           description: string
           expense_id: string
           id: string
+          need_line_id: string | null
           net: number
           ord: number
+          qty: number | null
           taxable: boolean
           total: number
           vat: number
         }
         Insert: {
           amount: number
+          category_id?: string | null
           description: string
           expense_id: string
           id?: string
+          need_line_id?: string | null
           net: number
           ord: number
+          qty?: number | null
           taxable: boolean
           total: number
           vat: number
         }
         Update: {
           amount?: number
+          category_id?: string | null
           description?: string
           expense_id?: string
           id?: string
+          need_line_id?: string | null
           net?: number
           ord?: number
+          qty?: number | null
           taxable?: boolean
           total?: number
           vat?: number
         }
         Relationships: [
           {
+            foreignKeyName: "pc_expense_lines_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "pc_categories"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pc_expense_lines_expense_id_fkey"
             columns: ["expense_id"]
             isOneToOne: false
             referencedRelation: "pc_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_expense_lines_need_line_id_fkey"
+            columns: ["need_line_id"]
+            isOneToOne: false
+            referencedRelation: "pc_need_lines"
             referencedColumns: ["id"]
           },
         ]
@@ -5266,6 +5289,51 @@ export type Database = {
           },
         ]
       }
+      pc_need_lines: {
+        Row: {
+          category_id: string | null
+          description: string
+          id: string
+          ord: number
+          qty: number
+          request_id: string
+          unit_price: number | null
+        }
+        Insert: {
+          category_id?: string | null
+          description: string
+          id?: string
+          ord: number
+          qty: number
+          request_id: string
+          unit_price?: number | null
+        }
+        Update: {
+          category_id?: string | null
+          description?: string
+          id?: string
+          ord?: number
+          qty?: number
+          request_id?: string
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pc_need_lines_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "pc_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pc_need_lines_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "pc_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pc_refunds: {
         Row: {
           amount: number
@@ -5342,7 +5410,10 @@ export type Database = {
       pc_requests: {
         Row: {
           amount: number | null
+          assigned_at: string | null
+          assigned_to: string | null
           category_id: string | null
+          close_note: string | null
           created_at: string
           created_by: string
           custody_id: string | null
@@ -5355,6 +5426,8 @@ export type Database = {
           idem_key: string | null
           kind: string
           move_id: string | null
+          need_approved_at: string | null
+          need_approved_by: string | null
           new_custody_id: string | null
           org_id: string
           purpose: string
@@ -5369,7 +5442,10 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          assigned_at?: string | null
+          assigned_to?: string | null
           category_id?: string | null
+          close_note?: string | null
           created_at?: string
           created_by: string
           custody_id?: string | null
@@ -5382,6 +5458,8 @@ export type Database = {
           idem_key?: string | null
           kind: string
           move_id?: string | null
+          need_approved_at?: string | null
+          need_approved_by?: string | null
           new_custody_id?: string | null
           org_id: string
           purpose: string
@@ -5396,7 +5474,10 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          assigned_at?: string | null
+          assigned_to?: string | null
           category_id?: string | null
+          close_note?: string | null
           created_at?: string
           created_by?: string
           custody_id?: string | null
@@ -5409,6 +5490,8 @@ export type Database = {
           idem_key?: string | null
           kind?: string
           move_id?: string | null
+          need_approved_at?: string | null
+          need_approved_by?: string | null
           new_custody_id?: string | null
           org_id?: string
           purpose?: string
@@ -8159,6 +8242,27 @@ export type Database = {
       }
       _pc_low_check: { Args: { _custody: string }; Returns: undefined }
       _pc_name: { Args: { _u: string }; Returns: string }
+      _pc_need_lines_json: { Args: { _id: string }; Returns: Json }
+      _pc_need_notify_owners: {
+        Args: {
+          _body: string
+          _key: string
+          _org: string
+          _school: string
+          _title: string
+        }
+        Returns: undefined
+      }
+      _pc_need_officers: {
+        Args: { _org: string; _school: string }
+        Returns: string[]
+      }
+      _pc_need_ok: { Args: { _id: string }; Returns: boolean }
+      _pc_need_route: { Args: { _id: string }; Returns: undefined }
+      _pc_need_used: {
+        Args: { _approved_only: boolean; _line: string }
+        Returns: number
+      }
       _pc_notify: {
         Args: {
           _body: string
@@ -9950,6 +10054,31 @@ export type Database = {
         Returns: string
       }
       pc_me: { Args: { _org: string }; Returns: Json }
+      pc_need_action: {
+        Args: {
+          _action: string
+          _id: string
+          _reason: string
+          _rev: number
+          _user: string
+        }
+        Returns: undefined
+      }
+      pc_need_get: { Args: { _id: string }; Returns: Json }
+      pc_need_list: {
+        Args: { _limit: number; _offset: number; _org: string; _status: string }
+        Returns: Json
+      }
+      pc_need_save: {
+        Args: {
+          _d: Json
+          _id: string
+          _key: string
+          _org: string
+          _rev: number
+        }
+        Returns: string
+      }
       pc_refund_create: {
         Args: {
           _amount: number
