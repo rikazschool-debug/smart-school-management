@@ -217,7 +217,10 @@ try {
   // 8c: deleting one half of a double lesson then "fill" puts the lesson back next to the other half
   const sciAll = (await admin.from("timetable_slots").select("id, day, period_id, pinned").eq("timetable_id", tt.id).eq("course_id", cSci.id)).data!;
   const pidx = (id: string) => P.findIndex((p) => p.id === id);
-  const pairDay = [0, 1, 2, 3, 4].find((d) => { const xs = sciAll.filter((s) => s.day === d).map((s) => pidx(s.period_id)).sort(); return xs.length === 2 && xs[1]! - xs[0]! === 1; });
+  // pick a double that has an unpinned half (the 12 pinned slots are an arbitrary first-12 set, so both halves can be pinned on some days)
+  const pairDays = [0, 1, 2, 3, 4].filter((d) => { const xs = sciAll.filter((s) => s.day === d).map((s) => pidx(s.period_id)).sort((a, b) => a - b); return xs.length === 2 && xs[1]! - xs[0]! === 1; });
+  const pairDay = pairDays.find((d) => sciAll.some((s) => s.day === d && !s.pinned));
+  if (pairDay === undefined) console.log("   8c diagnostic: science doubles on days", pairDays, "all halves pinned:", sciAll.map((s) => [s.day, pidx(s.period_id), s.pinned]));
   const halfS = sciAll.find((s) => s.day === pairDay && !s.pinned);
   if (halfS) await admin.from("timetable_slots").delete().eq("id", halfS.id);
   const g8 = await rpc(pr.c, "tt_gen_start", { _tt: tt.id, _mode: "fill" });
