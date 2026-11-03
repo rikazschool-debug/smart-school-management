@@ -90,6 +90,7 @@ function Shell() {
   const sp = useSchoolPerms(pcRole ? active?.schoolId : null);
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const lastSection = useRef<OwnerSection | null>(null);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -110,8 +111,9 @@ function Shell() {
 
   const ct = commTabs(active.role);
   const owner = active.role === "org_owner";
-  const section = owner ? ownerSection(path) : null;
-  // Owner home has no side menu; inside a section only that section's menu shows.
+  const section = owner ? ownerSection(path, lastSection.current) : null;
+  lastSection.current = section;
+  // Owner home has no side menu; inside a section only that section's menu shows; shared pages (profile…) keep the last section.
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action

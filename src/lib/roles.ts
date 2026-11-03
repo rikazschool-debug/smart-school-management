@@ -75,10 +75,14 @@ const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
 };
 const OWNER_COMMON: NavKey[] = ["home", "profile", "notifications", "support"];
 
-/** Which owner section a path belongs to; null = the owner home (no side menu). */
-export function ownerSection(path: string): OwnerSection | null {
+/** Pages shared by every section (profile, notifications, support) — they keep the section the owner came from. */
+const OWNER_SHARED = ["/app/profile", "/app/notifications", "/app/support"];
+
+/** Which owner section a path belongs to; null = the owner home (no side menu). `prev` = section shown before. */
+export function ownerSection(path: string, prev: OwnerSection | null = null): OwnerSection | null {
   const p = path.replace(/\/+$/, "") || "/";
   if (p === "/app") return null;
+  if (OWNER_SHARED.some((s) => p === s || p.startsWith(s + "/"))) return prev;
   if (p.startsWith("/app/finance") || p.startsWith("/app/procurement")) return "finance";
   if (p.startsWith("/app/hr")) return "hr";
   if (p.startsWith("/app/permissions") || p.startsWith("/app/members")) return "users";
