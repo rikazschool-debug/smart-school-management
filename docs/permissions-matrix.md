@@ -124,3 +124,15 @@ Vice principals and supervisors are scoped individually: same role ≠ same acce
 | Organize meeting | ✔ own org / branches | ✔ own school | ✘ | ✘ | ✘ | ✘ | ✘ (dept head too) |
 | Manual groups / members | ✔ | ✔ own school | ✘ | ✘ | ✘ | ✘ | ✘ (subject groups automatic) |
 | Users, roles, suspend/activate | ✔ only | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
+
+## People picker (2026-11-03, package-next item 2)
+| Purpose | Who may list | Who appears |
+|---|---|---|
+| group | org owner (org/branches), principal (own school) | active staff of that scope (no students/guardians/inactive) |
+| direct | eligible staff of the school | active staff of the school |
+| task | principal, vice, supervisor | principal: all school staff; vice: scope teachers; supervisor: assigned teachers (never self) |
+| duty | principal, vice (_adm_lead) | school staff; with a post, only its eligible roles |
+| meeting | principal (own school), org owner (branches) | staff of the meeting scope, never the organizer or owner |
+| decision | meeting organizers | staff of the chosen executing branch |
+No phone/email returned; ids outside the pool resolve to nothing.
+
