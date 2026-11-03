@@ -26,14 +26,14 @@ const week = addDays(today, -dow);
 const notes = async (u: string, like?: string) => { let q = admin.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", u); if (like) q = q.ilike("title", `%${like}%`); return (await q).count ?? 0; };
 const orgs: string[] = [];
 try {
-  const owner = await user("owner"), pr = await user("pr"), vp = await user("vp"), dh = await user("dh"), nurse = await user("nurse");
+  const owner = await user("owner"), pr = await user("pr"), mpr = await user("mpr"), vp = await user("vp"), dh = await user("dh"), nurse = await user("nurse");
   const t = [await user("t1"), await user("t2"), await user("t3"), await user("t4"), await user("t5")];
   const ownerB = await user("ownerb"), prB = await user("prb");
   const org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة المناوبات", _school_name: "فرع" })).data; orgs.push(org);
   const S = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(S);
   const orgB = (await ownerB.c.rpc("create_organization", { _org_name: "أخرى", _school_name: "فرع" })).data; orgs.push(orgB);
   const SB = (await ownerB.c.from("schools").select("id").eq("org_id", orgB).single()).data!.id; tr.addSchool(SB);
-  for (const [u, r] of [[pr, "principal"], [vp, "vice_principal"], [dh, "dept_head"], [nurse, "nurse"], ...t.map((x) => [x, "teacher"])] as any[])
+  for (const [u, r] of [[pr, "principal"], [mpr, "principal"], [vp, "vice_principal"], [dh, "dept_head"], [nurse, "nurse"], ...t.map((x) => [x, "teacher"])] as any[])
     await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: r });
   await admin.from("memberships").insert({ user_id: prB.id, org_id: orgB, school_id: SB, role: "principal" });
   const ins = async (tb: string, v: any) => { const r = await admin.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
@@ -163,36 +163,36 @@ try {
   const load = (await vp.c.rpc("adm_duty_load", { _school: S, _from: week, _to: addDays(week, 6) })).data as any[];
   check("D10 load report per person (count + minutes)", load?.length >= 2 && load.every((l) => l.minutes > 0));
 
-  // ================= meetings =================
+  // ================= meetings (organized by a principal: mpr; pr is the non-invited principal) =================
   const start = new Date(Date.parse(today + "T09:30:00+03:00")).toISOString();
   const tm = await t[0]!.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { title: "اجتماع", starts_at: start, members: [t[3]!.id] }, _rev: null, _client: null });
   check("M1 teacher cannot organize meetings", !!tm.error);
   const mc = crypto.randomUUID();
   const md = { title: "لجنة الانضباط السرية", purpose: "حالة خاصة", starts_at: start, duration_min: 45, location: "مكتب الوكيل", agenda: "1. الحالة", privacy: "restricted", members: [t[0]!.id, t[3]!.id], minutes_writer: t[0]!.id };
-  const m1 = (await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: md, _rev: null, _client: mc })).data as any;
-  const m1b = (await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: md, _rev: null, _client: mc })).data as any;
+  const m1 = (await mpr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: md, _rev: null, _client: mc })).data as any;
+  const m1b = (await mpr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: md, _rev: null, _client: mc })).data as any;
   const M = m1.id;
   check("M1b create is idempotent; draft hidden from invitees", m1.id === m1b.id && !(await t[3]!.c.from("adm_meetings").select("id").eq("id", M)).data?.length);
-  const out = await pr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { ...md, members: [prB.id] }, _rev: null, _client: null });
+  const out = await mpr.c.rpc("adm_meeting_save", { _id: null, _school: S, _d: { ...md, members: [prB.id] }, _rev: null, _client: null });
   check("M1c participants from another org refused", !!out.error);
   const n1 = await notes(t[3]!.id, "دعوة");
-  const sd = await pr.c.rpc("adm_meeting_send", { _id: M, _rev: m1.rev });
-  const sd2 = await pr.c.rpc("adm_meeting_send", { _id: M, _rev: m1.rev });
+  const sd = await mpr.c.rpc("adm_meeting_send", { _id: M, _rev: m1.rev });
+  const sd2 = await mpr.c.rpc("adm_meeting_send", { _id: M, _rev: m1.rev });
   check("M2 invitation sent once (retry safe)", !sd.error && sd2.data === sd.data && (await notes(t[3]!.id, "دعوة")) === n1 + 1, [sd.error]);
-  const conf = (await pr.c.rpc("adm_meeting_conflicts", { _id: M })).data as any[];
+  const conf = (await mpr.c.rpc("adm_meeting_conflicts", { _id: M })).data as any[];
   check("M3 conflict warning: t1 has a class, t4 a duty at that time", conf?.some((c) => c.user_id === t[0]!.id && /حصة/.test(c.reason)) && conf.some((c) => c.user_id === t[3]!.id && /مناوبة/.test(c.reason)), conf);
   const later = new Date(Date.parse(addDays(today, 1) + "T12:00:00+03:00")).toISOString();
-  const mv = await pr.c.rpc("adm_meeting_save", { _id: M, _school: null, _d: { ...md, starts_at: later, change_reason: "تعارض مع اختبار" }, _rev: sd.data, _client: null });
+  const mv = await mpr.c.rpc("adm_meeting_save", { _id: M, _school: null, _d: { ...md, starts_at: later, change_reason: "تعارض مع اختبار" }, _rev: sd.data, _client: null });
   const upd = (await admin.from("adm_events").select("details").eq("entity_id", M).eq("action", "updated")).data ?? [];
   check("M4 reschedule notifies invitees and logs previous time", !mv.error && (await notes(t[3]!.id, "تعديل اجتماع")) === 1 && /09:30/.test(upd[0]?.details?.note ?? ""), [mv.error, upd]);
   const r1 = await t[3]!.c.rpc("adm_meeting_rsvp", { _id: M, _rsvp: "declined", _note: "مناوبة" });
   const r2 = await t[1]!.c.rpc("adm_meeting_rsvp", { _id: M, _rsvp: "accepted", _note: null });
-  check("M5 invitee declines (organizer notified); non-invitee cannot respond", !r1.error && !!r2.error && (await notes(vp.id, "اعتذار عن اجتماع")) === 1, [r1.error]);
+  check("M5 invitee declines (organizer notified); non-invitee cannot respond", !r1.error && !!r2.error && (await notes(mpr.id, "اعتذار عن اجتماع")) === 1, [r1.error]);
   const prRead = await pr.c.from("adm_meetings").select("id").eq("id", M);
-  const prList = (await pr.c.rpc("adm_meeting_list", { _school: S, _scope: "all", _q: "الانضباط", _status: null, _from: null, _to: null, _limit: 25, _offset: 0 })).data as any[];
+  const prList = (await mpr.c.rpc("adm_meeting_list", { _school: S, _scope: "all", _q: "الانضباط", _status: null, _from: null, _to: null, _limit: 25, _offset: 0 })).data as any[];
   const t2cal = (await t[1]!.c.rpc("adm_calendar", { _school: S, _from: today, _to: today })).data as any[];
   check("M5b restricted meeting hidden from non-invited principal (detail, search) and others' calendars", !prRead.data?.length && !prList?.length && !t2cal?.some((x) => x.kind === "meeting"), [prRead.data, prList]);
-  const earlyAtt = await pr.c.rpc("adm_meeting_attendance", { _id: M, _marks: [{ user_id: t[0]!.id, attended: true }] });
+  const earlyAtt = await mpr.c.rpc("adm_meeting_attendance", { _id: M, _marks: [{ user_id: t[0]!.id, attended: true }] });
   check("M6a attendance cannot be recorded before the meeting starts", !!earlyAtt.error);
   await admin.from("adm_meetings").update({ starts_at: new Date(Date.now() - 3600e3).toISOString() }).eq("id", M);
   const att = await t[0]!.c.rpc("adm_meeting_attendance", { _id: M, _marks: [{ user_id: t[0]!.id, attended: true }, { user_id: t[3]!.id, attended: false, note: "اعتذر" }] });
@@ -200,10 +200,10 @@ try {
   check("M6 actual attendance recorded separately from RSVP", !att.error && mem.find((x) => x.user_id === t[3]!.id)?.rsvp === "declined" && mem.find((x) => x.user_id === t[3]!.id)?.attended === false && mem.find((x) => x.user_id === t[0]!.id)?.attended === true, [att.error, mem]);
   // minutes
   const outW = await t[3]!.c.rpc("adm_minutes_save", { _meeting: M, _d: { topics: [{ title: "x" }] }, _rev: null });
-  const mn = (await t[0]!.c.rpc("adm_minutes_save", { _meeting: M, _d: { topics: [{ title: "الحالة", discussion: "نوقشت" }], present: [t[0]!.id, vp.id], absent: [t[3]!.id] }, _rev: null })).data as any;
+  const mn = (await t[0]!.c.rpc("adm_minutes_save", { _meeting: M, _d: { topics: [{ title: "الحالة", discussion: "نوقشت" }], present: [t[0]!.id, mpr.id], absent: [t[3]!.id] }, _rev: null })).data as any;
   check("M7a only organizer or assigned writer drafts minutes; draft hidden from invitees", !!outW.error && !!mn?.id && !(await t[3]!.c.from("adm_minutes").select("id").eq("id", mn.id)).data?.length, outW.error);
   const wc = await t[0]!.c.rpc("adm_minutes_confirm", { _id: mn.id, _rev: mn.rev });
-  const cf = await vp.c.rpc("adm_minutes_confirm", { _id: mn.id, _rev: mn.rev });
+  const cf = await mpr.c.rpc("adm_minutes_confirm", { _id: mn.id, _rev: mn.rev });
   check("M7b only the organizer confirms; confirmed minutes readable by invitees", !!wc.error && !cf.error && (await t[3]!.c.from("adm_minutes").select("id").eq("id", mn.id)).data?.length === 1, [wc.error, cf.error]);
   const noNote = await t[0]!.c.rpc("adm_minutes_save", { _meeting: M, _d: { topics: [{ title: "تعديل" }] }, _rev: null });
   const v2 = (await t[0]!.c.rpc("adm_minutes_save", { _meeting: M, _d: { topics: [{ title: "الحالة", discussion: "نوقشت + ملحق" }], change_note: "ملحق: تصحيح اسم" }, _rev: null })).data as any;
@@ -212,8 +212,8 @@ try {
   // decisions
   const dc = crypto.randomUUID();
   const dw = await t[0]!.c.rpc("adm_decision_create", { _meeting: M, _d: { body: "x", assignee: t[1]!.id, due_date: today }, _client: null });
-  const D = (await vp.c.rpc("adm_decision_create", { _meeting: M, _d: { body: "متابعة ولي الأمر خلال أسبوع", assignee: t[1]!.id, due_date: addDays(today, 3), priority: "high" }, _client: dc })).data as string;
-  const Db = (await vp.c.rpc("adm_decision_create", { _meeting: M, _d: { body: "متابعة ولي الأمر خلال أسبوع", assignee: t[1]!.id, due_date: addDays(today, 3), priority: "high" }, _client: dc })).data as string;
+  const D = (await mpr.c.rpc("adm_decision_create", { _meeting: M, _d: { body: "متابعة ولي الأمر خلال أسبوع", assignee: t[1]!.id, due_date: addDays(today, 3), priority: "high" }, _client: dc })).data as string;
+  const Db = (await mpr.c.rpc("adm_decision_create", { _meeting: M, _d: { body: "متابعة ولي الأمر خلال أسبوع", assignee: t[1]!.id, due_date: addDays(today, 3), priority: "high" }, _client: dc })).data as string;
   const dec = (await admin.from("adm_decisions").select("*").eq("id", D).single()).data!;
   const task = (await t[1]!.c.from("adm_tasks").select("*").eq("id", dec.task_id).maybeSingle()).data;
   check("M8 decision (organizer only, idempotent) creates one linked task through the task service", !!dw.error && D === Db && !!task && task.decision_id === D && task.assignee === t[1]!.id, [dw.error, task]);
@@ -223,7 +223,7 @@ try {
   const dl = (await t[1]!.c.rpc("adm_decision_list", { _school: S, _scope: "mine", _meeting: null, _q: null, _status: null, _limit: 25, _offset: 0 })).data as any[];
   check("M9b executor's decision list masks the meeting title", dl?.length === 1 && dl[0].meeting_title === "اجتماع مقيد" && dl[0].can_open_meeting === false, dl);
   await t[1]!.c.rpc("adm_task_complete", { _id: dec.task_id, _note: "تم الاتصال", _rev: task!.rev });
-  const dv = (await vp.c.rpc("adm_decision_list", { _school: S, _scope: "all", _meeting: M, _q: null, _status: null, _limit: 25, _offset: 0 })).data as any[];
+  const dv = (await mpr.c.rpc("adm_decision_list", { _school: S, _scope: "all", _meeting: M, _q: null, _status: null, _limit: 25, _offset: 0 })).data as any[];
   check("M10 decision shows the task's single status (done) to the organizer", dv?.[0]?.status === "done", dv);
   const cal = (await t[1]!.c.rpc("adm_calendar", { _school: S, _from: today, _to: addDays(today, 6) })).data as any[];
   const cal4 = (await t[3]!.c.rpc("adm_calendar", { _school: S, _from: week, _to: addDays(week, 6) })).data as any[];

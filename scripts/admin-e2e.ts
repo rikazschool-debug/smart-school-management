@@ -31,9 +31,9 @@ try {
   const dep2 = (await owner.c.from("departments").insert({ school_id: S, name: "اللغات" }).select().single()).data!;
   for (const [u, r, d] of [[pr, "principal"], [vp, "vice_principal"], [t1, "teacher"], [t2, "teacher"], [dh, "dept_head", dep.id], [st, "student"]] as any[])
     await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: r, department_id: d ?? null });
-  // the vice assigns tasks only inside the scope the principal sets (department العلوم covers both teachers)
-  for (const u of [t1, t2]) await admin.from("teachers").insert({ school_id: S, full_name: "معلم " + u.id.slice(0, 4), user_id: u.id, department_id: dep.id, status: "active" });
-  const sc = await pr.c.rpc("set_staff_scope", { _school: S, _user: vp.id, _kind: "vice", _departments: [dep.id], _teachers: [] });
+  // the vice assigns tasks only inside the scope the principal sets (both teachers by name)
+  const tRows = []; for (const u of [t1, t2]) tRows.push((await admin.from("teachers").insert({ school_id: S, full_name: "معلم " + u.id.slice(0, 4), user_id: u.id, status: "active" }).select().single()).data!.id);
+  const sc = await pr.c.rpc("set_staff_scope", { _school: S, _user: vp.id, _kind: "vice", _departments: [], _teachers: tRows });
   if (sc.error) throw sc.error;
   const formD = { name: "طلب نشاط مدرسي", purpose: "أنشطة", audience: ["teacher"], handler_user: vp.id, allow_files: true,
     fields: [{ label: "اسم النشاط", type: "text", required: true }, { label: "التاريخ", type: "date", required: true }, { label: "النوع", type: "choice", options: ["ثقافي", "رياضي"], required: false }] };
