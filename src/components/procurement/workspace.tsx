@@ -130,5 +130,5 @@ export function SettingsTab({ orgId, me }: { orgId: string; me: PcMe }) {
 export function CapsNote({ me }: { me: PcMe }) {
   const labels: Record<string, string> = { view: "عرض", create: "إنشاء", review: "مراجعة", approve: "اعتماد", disburse: "صرف", export: "تصدير", settings: "إعدادات" };
   const parts = Object.entries(labels).filter(([k]) => me.caps[k as keyof PcMe["caps"]]).map(([k, l]) => `${l} (${SCOPE_LABEL[me.caps[k as keyof PcMe["caps"]]!]})`);
-  return <p className="text-xs text-muted-foreground">صلاحياتك: {parts.join("، ") || "لا شيء"}{me.limit != null ? ` · حد الاعتماد ${sar(me.limit)}` : ""}</p>;
+  return <p className="text-xs text-muted-foreground">صلاحياتك: {parts.join("، ") || "لا شيء"}{me.caps.approve && me.limit != null ? ` · حد الاعتماد ${sar(me.limit)}` : ""}</p>;
 }

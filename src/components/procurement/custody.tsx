@@ -204,7 +204,7 @@ function DisburseForm({ c, onDone }: { c: Row; onDone: () => void }) {
       <h3 className="font-semibold">صرف العهدة {sar(c.amount)}</h3>
       <div className="grid gap-3 sm:grid-cols-3">
         <div><Label>طريقة الصرف</Label><select className={selectCls()} value={method} onChange={(e) => setMethod(e.target.value)}>{Object.entries(METHOD).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
-        <div><Label>رقم العملية / المرجع الخارجي</Label><Input value={ext} onChange={(e) => setExt(e.target.value)} /></div>
+        <div><Label>رقم العملية / المرجع الخارجي{method !== "cash" ? " (إلزامي)" : ""}</Label><Input value={ext} onChange={(e) => setExt(e.target.value)} /></div>
         <div><Label>تاريخ المستند</Label><Input type="date" max={todayRiyadh()} value={doc} onChange={(e) => setDoc(e.target.value)} /></div>
         <div className="sm:col-span-3"><Label>ملاحظة</Label><Input value={note} onChange={(e) => setNote(e.target.value)} /></div>
       </div>
@@ -218,7 +218,7 @@ function DisburseForm({ c, onDone }: { c: Row; onDone: () => void }) {
           </select>
         )}
       </div>
-      <Button disabled={busy || !file} onClick={async () => {
+      <Button disabled={busy || !file || (method !== "cash" && !ext.trim())} onClick={async () => {
         if (!(await ask(`تأكيد صرف ${sar(c.amount)} إلى ${c.holder}؟ لا يمكن التراجع عن الحركة.`))) return;
         setBusy(true);
         const ok = await run(db.rpc("pc_disburse", { _id: c.id, _rev: c.rev, _method: method, _external_ref: ext || null, _file: file, _doc_date: doc, _note: note || null, _key: key }), "سُجّل الصرف");
@@ -267,7 +267,7 @@ export function CustodyDetail({ id, me, orgName, back, openExpense, newExpense }
         <div className="space-y-1">
           <p className="font-mono text-xs text-muted-foreground">{c.ref}</p>
           <h2 className="text-lg font-bold">{c.purpose}</h2>
-          <p className="text-sm text-muted-foreground">المستلم: {c.holder} · الفرع: {c.school}{c.schools?.length ? ` · فروع مستفيدة: ${c.schools.join("، ")}` : ""}</p>
+          <p className="text-sm text-muted-foreground">المستلم: {c.holder} · الفرع: {c.school}{c.schools?.filter((n: string) => n !== c.school).length ? ` · فروع مستفيدة: ${c.schools.filter((n: string) => n !== c.school).join("، ")}` : ""}</p>
           <p className="text-sm text-muted-foreground">المبلغ: <b className="text-foreground">{sar(c.amount)}</b> · موعد التسوية: {day(c.settle_due)} · مقدّم الطلب: {c.creator}</p>
           {c.decider && <p className="text-sm text-muted-foreground">القرار: {c.decider} — {fmt(c.decided_at)}{c.decision_reason ? ` «${c.decision_reason}»` : ""}</p>}
           {c.overdue_exception && <p className="text-sm text-warning">استثناء عهدة متأخرة: {c.overdue_exception}</p>}
