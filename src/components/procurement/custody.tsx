@@ -30,7 +30,7 @@ const run = async (p: PromiseLike<{ error: unknown }>, ok?: string) => {
 };
 
 export function Balances({ bal }: { bal: Row }) {
-  const items: [string, unknown, string?][] = [
+  const items: [string, unknown, (string | undefined)?][] = [
     ["المصروف للعهدة", Number(bal.disbursed) + Number(bal.topups), Number(bal.topups) ? `منها تعزيز ${sar(bal.topups)}` : undefined], ["المعتمد صرفه", bal.spent], ["الاستردادات", bal.refunds],
     ...(Number(bal.returned) ? [["المعاد للإدارة", bal.returned] as [string, unknown]] : []), ...(Number(bal.carried) ? [["المرحّل (±)", bal.carried] as [string, unknown]] : []),
     ...(Number(bal.adjusted) ? [["فروق معالجة (±)", bal.adjusted] as [string, unknown]] : []),
