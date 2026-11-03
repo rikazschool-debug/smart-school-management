@@ -41,19 +41,25 @@ function Page() {
 function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/app/communication" });
-  // circulars and meetings have their own pages under «التواصل والعمل»; old links (?tab=circulars|meetings) still open here
-  const tabs = commTabs(ctx.role).filter((t) => t !== "circulars" && t !== "meetings" || search.tab === t);
+  // Sidebar sections: «التواصل» = chats only; «المجموعات» (?tab=groups|classes) and «إدارة المجموعات» (?tab=manage) are separate;
+  // circulars and meetings have their own pages. Old links (?tab=circulars|meetings) still open here.
+  const all = commTabs(ctx.role);
+  const section: "groups" | "manage" | "chat" = search.tab === "manage" ? "manage" : search.tab === "groups" || search.tab === "classes" ? "groups" : "chat";
+  const tabs = section === "manage" ? all.filter((t) => t === "manage")
+    : section === "groups" ? all.filter((t) => t === "groups" || t === "classes")
+    : all.filter((t) => t === "inbox" || t === "mine" || t === "archive" || ((t === "circulars" || t === "meetings") && search.tab === t) || (t === "classes" && !all.includes("groups")));
   const tab: CommTab = search.tab && tabs.includes(search.tab) ? search.tab : search.c ? "inbox" : tabs[0]!;
   const go = (s: Search) => navigate({ search: s, replace: false });
+  const head = section === "groups" ? { title: "المجموعات", description: "مجموعاتك الإدارية ومجموعات المواد." } : section === "manage" ? { title: "إدارة المجموعات", description: "إنشاء المجموعات وأعضاؤها وإعدادات التواصل." } : commTitle(ctx.role);
   return (
     <>
-      <PageHeader {...commTitle(ctx.role)} />
-      <div className="mb-5 flex w-full gap-1 overflow-x-auto rounded-xl bg-muted p-1 sm:w-fit" role="tablist">
+      <PageHeader {...head} />
+      {tabs.length > 1 && <div className="mb-5 flex w-full gap-1 overflow-x-auto rounded-xl bg-muted p-1 sm:w-fit" role="tablist">
         {tabs.map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => go({ tab: t })}
             className={`min-h-9 shrink-0 rounded-lg px-4 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${tab === t ? "bg-card font-semibold text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{commTabLabel(ctx.role, t)}</button>
         ))}
-      </div>
+      </div>}
       {tab === "circulars" ? <CircularsTab ctx={ctx} focus={search.circular} onFocus={(id) => go(id ? { tab: "circulars", circular: id } : { tab: "circulars" })} />
         : tab === "manage" ? <ManageTab ctx={ctx} />
         : tab === "classes" ? <ClassesTab ctx={ctx} />
