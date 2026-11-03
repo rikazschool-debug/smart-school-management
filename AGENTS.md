@@ -13,7 +13,7 @@
 - Scope reference: docs/rikaz-scope-v8.md. Build per shared function across all affected role dashboards.
 - Authorization lives in Postgres RLS + SECURITY DEFINER helpers (can_manage_school, can_view_student, ...); UI nav (src/lib/roles.ts) only mirrors it — never rely on hidden buttons.
 - Users/roles/invitations/memberships: org owner only, via RPCs (invite_member, revoke/resend_invitation, set_membership_active, change_member_role, decide_account_request); others only file request_account; acceptance needs matching confirmed email + live token; authenticated has no direct write on memberships; every change goes to access_audit — one accountable authority, no self-escalation.
-- Platform admins are added only via SQL (insert into platform_admins) — no in-app path or hardcoded credentials.
+- Platform admins: added only via SQL insert into platform_admins; no in-app path.
 - One classroom per course, created only by decide_assignment via ensure_classroom (idempotent).
 - Browser pages query Supabase directly with the RLS-bound client; the generic CrudTable in src/components/crud-page.tsx is the shared list/form/search component.
 - Supervisors read only assigned teachers (supervisor_teachers) and their classes/students via supervised_* helpers, read-only; staff_view (school-wide read) excludes them.
@@ -25,7 +25,7 @@
 - Unlinked files: only run_file_cleanup (cron → pg_net → Storage API); never delete storage.objects rows.
 - Course rows are readable only through can_view_course (+ day substitute); dept heads see only their department's courses and no student records.
 - Cleanup health: hourly check_cleanup_health over file_cleanup_runs (dedup cleanup_alerts, test channel isolated).
-- Schools: owner-only org_school_save/org_school_set_active; branch suspension pauses its memberships (branch_suspended) and a trigger blocks activation there. Tests: scripts/schools-e2e.ts.
+- Schools: owner-only org_school_save/org_school_set_active; suspension pauses branch memberships (branch_suspended); trigger blocks activation. Tests: scripts/schools-e2e.ts.
 - docs/permissions-matrix.md (role capabilities) and docs/closure-log.md (evidence log): update with every change.
 - scripts/, src/components/schedule/, src/components/comm/, src/components/attendance/, src/components/grades/, src/components/admin/ and src/components/support/ have their own AGENTS.md — read before changing files there.
 - Homework & tests: homework → homework_targets → immutable submissions/attempts → homework_grades; the teacher's saved grade is visible at once (no review/publish), edits append homework_grade_history; observers read only. Tests: scripts/homework-e2e.ts, homework2-e2e.ts.
