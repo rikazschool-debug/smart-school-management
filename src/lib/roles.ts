@@ -58,7 +58,38 @@ export type NavKey =
   | "meetings"
   | "calendar"
   | "notifications"
-  | "procurement";
+  | "procurement"
+  | "school_home"
+  | "finance"
+  | "hr"
+  | "permissions";
+
+/** Owner home is split into four sections; each section shows only its own side menu. */
+export type OwnerSection = "school_admin" | "finance" | "hr" | "users";
+export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", finance: "المالية والمحاسبة", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات" };
+const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "homework", "grades", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage"],
+  finance: ["finance", "procurement"],
+  hr: ["hr"],
+  users: ["members", "permissions"],
+};
+const OWNER_COMMON: NavKey[] = ["home", "profile", "notifications", "support"];
+
+/** Which owner section a path belongs to; null = the owner home (no side menu). */
+export function ownerSection(path: string): OwnerSection | null {
+  const p = path.replace(/\/+$/, "") || "/";
+  if (p === "/app") return null;
+  if (p.startsWith("/app/finance") || p.startsWith("/app/procurement")) return "finance";
+  if (p.startsWith("/app/hr")) return "hr";
+  if (p.startsWith("/app/permissions") || p.startsWith("/app/members")) return "users";
+  return "school_admin";
+}
+
+/** Side-menu keys an owner sees inside a section (filtered further by what the role may open). */
+export function ownerSectionNav(section: OwnerSection, allowed: NavKey[]): NavKey[] {
+  const own = OWNER_SECTION_KEYS[section].filter((k) => allowed.includes(k) || k === "school_home" || k === "finance" || k === "hr" || k === "permissions" || k === "procurement");
+  return [...own, ...OWNER_COMMON];
+}
 
 /** School administration sub-sections (duties, meetings, personal calendar) for every staff role. */
 const ADMIN_KEYS: NavKey[] = ["admin", "duties", "meetings", "calendar"];
