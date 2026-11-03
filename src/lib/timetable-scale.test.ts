@@ -30,4 +30,11 @@ describe("timetable at scale", () => {
     expect(verify(inp, r.slots)).toEqual([]);
     expect(Date.now() - v0).toBeLessThan(2000);
   }, 60000);
+  it("solves a 100-section school completely within 30s", () => {
+    const inp = big(20);
+    const r = solve(inp, { mode: "fill", timeLimitMs: 30000 });
+    expect(r.status).toBe("done");
+    expect(r.ms).toBeLessThan(30000);
+    expect(verify(inp, r.slots)).toEqual([]);
+  }, 90000);
 });
