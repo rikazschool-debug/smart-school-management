@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NAV_BY_ROLE, attTabs, canCreateGroup, canManageUsers, commTabs, invitableRoles, type Role, scheduleTabs, scheduleLabel } from "@/lib/roles";
+import { NAV_BY_ROLE, attTabs, canCreateGroup, canCreateTask, canEditSchedule, canManageAcademic, canManageUsers, canOrganizeMeeting, canScanAttendance, commTabs, invitableRoles, type Role, scheduleTabs, scheduleLabel } from "@/lib/roles";
 const ALL = Object.keys(NAV_BY_ROLE) as Role[];
 
 describe("attendance roles", () => {
@@ -78,5 +78,25 @@ describe("role rules", () => {
     }
     for (const r of ["principal", "vice_principal", "org_owner"] as const) expect(scheduleTabs(r)).toEqual(["timetable", "subs", "settings"]);
     for (const r of Object.keys(NAV_BY_ROLE) as (keyof typeof NAV_BY_ROLE)[]) expect(NAV_BY_ROLE[r].filter((k) => (k as string) === "schoolday" || (k as string) === "substitutions")).toEqual([]);
+  });
+});
+
+describe("staff scope rules (package next, item 1)", () => {
+  it("academic setup and timetable editing are principal level only — never the vice", () => {
+    expect(ALL.filter(canManageAcademic).sort()).toEqual(["org_owner", "platform_admin", "principal"]);
+    expect(canEditSchedule("vice_principal")).toBe(false);
+    expect(NAV_BY_ROLE.vice_principal).not.toContain("academic");
+  });
+  it("the vice views the published timetable and keeps daily substitutes, without settings", () => {
+    expect(scheduleTabs("vice_principal")).toEqual(["timetable", "subs"]);
+    expect(scheduleLabel("vice_principal")).toBe("الجدول المدرسي");
+  });
+  it("card scanning and the scanning station are for the gate account only", () => {
+    expect(ALL.filter(canScanAttendance)).toEqual(["security"]);
+    expect(ALL.filter((r) => NAV_BY_ROLE[r].includes("station"))).toEqual(["security"]);
+  });
+  it("tasks: principal, vice and supervisor create; meetings: principal and owner organize", () => {
+    expect(ALL.filter(canCreateTask).sort()).toEqual(["principal", "supervisor", "vice_principal"]);
+    expect(ALL.filter(canOrganizeMeeting).sort()).toEqual(["org_owner", "principal"]);
   });
 });
