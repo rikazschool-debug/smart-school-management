@@ -124,6 +124,10 @@ try {
   check("9 platform admin can't open school tickets or list them; direct table reads return nothing; unknown/foreign ticket links are refused",
     !!paInt.error && !ids(paList).some((i: string) => [T1, T2, T3, T6].includes(i)) && direct.every((d) => !!d.error || (d.data ?? []).length === 0) && !!fake.error && !!x2.error,
     [paInt.error, direct.map((d) => d.error?.message ?? d.data?.length)]);
+  // 10 internal helpers are not callable from the app
+  const h = await Promise.all([tch.c.rpc("support_sla_tick", { _only: null }), tch.c.rpc("_support_add_work", { _start: new Date().toISOString(), _hours: 1, _days: [0], _s: "07:00", _e: "15:00" }),
+    tch.c.rpc("_gb_roster", { _gb: "00000000-0000-0000-0000-000000000000" }), tch.c.rpc("_gb_total", { _gb: "00000000-0000-0000-0000-000000000000", _student: "00000000-0000-0000-0000-000000000000" })]);
+  check("10 the delay check and internal helpers (incl. grade roster/total) are refused for signed-in users", h.every((r) => !!r.error), h.map((r) => r.error?.code));
 } catch (e) { bad++; console.log("FAIL exception", e); }
 finally {
   if (padmin) await admin.from("platform_admins").delete().eq("user_id", padmin);
