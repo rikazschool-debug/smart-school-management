@@ -69,7 +69,9 @@ export function verify(input: TTInput, slots: TTSlot[]): string[] {
   const m = new Model(input);
   const out: string[] = [];
   const rooms = new Map(input.rooms.map((r) => [r.id, r]));
-  slots.forEach((s, i) => {
+  const byDay = new Map<number, TTSlot[]>();
+  slots.forEach((s) => {
+    const push = () => { const l = byDay.get(s.day); l ? l.push(s) : byDay.set(s.day, [s]); };
     const c = m.course.get(s.course_id), t = m.teacher.get(s.teacher_id), p = m.period.get(s.period_id);
     const w = p ? m.label(s.day, s.period_id) : "?";
     if (!c) return void out.push(`مقرر غير معروف (${w})`);
@@ -81,9 +83,9 @@ export function verify(input: TTInput, slots: TTSlot[]): string[] {
     if (hit) out.push(`${t?.name}: ${hit} (${w})`);
     if (m.busyHit(s.teacher_id, s.day, s.period_id)) out.push(`${t?.name}: حصة في فرع آخر (${w})`);
     if (c.room_kind && (!s.room_id || rooms.get(s.room_id)?.kind !== c.room_kind)) out.push(`${c.subject} — ${c.section}: يتطلب قاعة «${c.room_kind}» (${w})`);
-    for (let j = 0; j < i; j++) {
-      const o = slots[j]!;
-      if (o.day !== s.day || !m.overlaps(o.period_id, s.period_id)) continue;
+    const prev = byDay.get(s.day) ?? [];
+    for (const o of prev) {
+      if (!m.overlaps(o.period_id, s.period_id)) continue;
       const oc = m.course.get(o.course_id);
       if (o.teacher_id === s.teacher_id) out.push(`تعارض المعلم ${t?.name} (${w})`);
       if (oc && oc.section_id === c.section_id) out.push(`تعارض الشعبة ${c.section} (${w})`);

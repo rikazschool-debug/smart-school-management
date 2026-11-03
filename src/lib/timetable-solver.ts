@@ -50,6 +50,11 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
     const d = on ? 1 : -1;
     bump(`tw|${teacher}`, d); bump(`td|${teacher}|${day}`, d); bump(`cd|${course}|${day}`, d); bump(`cw|${course}`, d);
   };
+  // per teacher/course per-day indexes so cap checks never scan all slots/units
+  const keptTD = new Map<string, number>(), keptCD = new Map<string, number>();
+  for (const s of kept) { keptTD.set(`${s.teacher_id}|${s.day}`, (keptTD.get(`${s.teacher_id}|${s.day}`) ?? 0) + 1); keptCD.set(`${s.course_id}|${s.day}`, (keptCD.get(`${s.course_id}|${s.day}`) ?? 0) + 1); }
+  const onDay = new Map<string, Set<number>>(); // "t|teacher|day" / "c|course|day" -> placed unit indexes
+  const idx = (k: string, i: number, on: boolean) => { let x = onDay.get(k); if (!x) onDay.set(k, (x = new Set())); on ? x.add(i) : x.delete(i); };
   for (const s of kept) apply(KEPT, s.teacher_id, s.course_id, s.day, s.period_id, s.room_id, true);
 
   // ---- units ----
@@ -108,19 +113,17 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
       }
     }
     // caps: daily teacher / daily course — eject same-day units of that teacher/course if needed
-    const capEject = (cur: number, cap: number, pick: (j: number) => boolean) => {
+    const capEject = (cur: number, cap: number, group: Set<number> | undefined) => {
       let over = cur + u.size - cap;
       if (over <= 0) return true;
-      for (let j = 0; j < units.length && over > 0; j++) if (j !== i && pos[j] && pos[j]!.day === p.day && pick(j) && !b.has(j)) { b.add(j); over -= units[j]!.size; }
+      for (const j of group ?? []) { if (over <= 0) break; if (j !== i && !b.has(j)) { b.add(j); over -= units[j]!.size; } }
       return over <= 0;
     };
-    const keptTd = kept.filter((s) => s.teacher_id === u.teacher && s.day === p.day).length;
-    if (keptTd + u.size > tc.daily_max!) return null;
-    if (!capEject(cnt.get(`td|${u.teacher}|${p.day}`) ?? 0, tc.daily_max!, (j) => units[j]!.teacher === u.teacher)) return null;
+    if ((keptTD.get(`${u.teacher}|${p.day}`) ?? 0) + u.size > tc.daily_max!) return null;
+    if (!capEject(cnt.get(`td|${u.teacher}|${p.day}`) ?? 0, tc.daily_max!, onDay.get(`t|${u.teacher}|${p.day}`))) return null;
     if (u.course.daily_max != null) {
-      const keptCd = kept.filter((s) => s.course_id === u.course.id && s.day === p.day).length;
-      if (keptCd + u.size > u.course.daily_max) return null;
-      if (!capEject(cnt.get(`cd|${u.course.id}|${p.day}`) ?? 0, u.course.daily_max, (j) => units[j]!.course.id === u.course.id)) return null;
+      if ((keptCD.get(`${u.course.id}|${p.day}`) ?? 0) + u.size > u.course.daily_max) return null;
+      if (!capEject(cnt.get(`cd|${u.course.id}|${p.day}`) ?? 0, u.course.daily_max, onDay.get(`c|${u.course.id}|${p.day}`))) return null;
     }
     return b;
   };
@@ -135,7 +138,7 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
     if ((cnt.get(`td|${u.teacher}|${p.day}`) ?? 0) > 0 && !near) s += W.gaps;
     return s + rand() * 0.9;
   };
-  const place = (i: number, p: Pos, on: boolean) => { const u = units[i]!; for (const pid of p.periods) apply(i, u.teacher, u.course.id, p.day, pid, p.room, on); pos[i] = on ? p : null; };
+  const place = (i: number, p: Pos, on: boolean) => { const u = units[i]!; for (const pid of p.periods) apply(i, u.teacher, u.course.id, p.day, pid, p.room, on); idx(`t|${u.teacher}|${p.day}`, i, on); idx(`c|${u.course.id}|${p.day}`, i, on); pos[i] = on ? p : null; };
 
   // weekly cap is static: units beyond it can never be placed
   const dead = new Map<number, string>();
@@ -164,8 +167,12 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
       if (now - lastProg > 250) { lastProg = now; opt.onProgress?.({ placed: live - queue.length, total: units.length, nodes: iter }); }
     }
     // most constrained first: fewest currently-free positions (sampled cheaply from statics)
-    queue.sort((a, b) => (ejected.get(b) ?? 0) - (ejected.get(a) ?? 0) || statics[a]!.length - statics[b]!.length);
-    const i = queue.shift()!;
+    let qi = 0;
+    for (let k = 1; k < queue.length; k++) {
+      const a = queue[k]!, c = queue[qi]!, ea = ejected.get(a) ?? 0, ec = ejected.get(c) ?? 0;
+      if (ea > ec || (ea === ec && statics[a]!.length < statics[c]!.length)) qi = k;
+    }
+    const i = queue[qi]!; queue[qi] = queue[queue.length - 1]!; queue.pop();
     let chosen: Pos | null = null, chosenB: Set<number> | null = null, bestCost = Infinity;
     for (const p of statics[i]!) {
       const b = blockers(i, p);
@@ -194,14 +201,18 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
   const final = [...kept, ...out];
   const deadBy = new Map<string, string>();
   dead.forEach((r, i) => deadBy.set(units[i]!.course.id, r));
+  const nC = new Map<string, number>(), nT = new Map<string, number>(), nKT = new Map<string, number>(), nCD = new Map<string, number>();
+  for (const s of final) { nC.set(s.course_id, (nC.get(s.course_id) ?? 0) + 1); nT.set(s.teacher_id, (nT.get(s.teacher_id) ?? 0) + 1); nCD.set(`${s.course_id}|${s.day}`, (nCD.get(`${s.course_id}|${s.day}`) ?? 0) + 1); }
+  for (const s of kept) nKT.set(s.teacher_id, (nKT.get(s.teacher_id) ?? 0) + 1);
+  const taught = new Set(input.courses.map((c) => c.teacher_id));
   const perCourse = input.courses.map((c) => {
-    const n = final.filter((s) => s.course_id === c.id).length;
+    const n = nC.get(c.id) ?? 0;
     const noDouble = c.needs_double && c.weekly >= 2 && n >= c.weekly && !hasDouble(m, final, c.id);
     const reason = noDouble ? "لا توجد حصتان متتاليتان؛ استخدم «إعادة التوزيع» أو انقل حصة يدويًا" : n >= c.weekly ? undefined : skipped.get(c.id) ?? deadBy.get(c.id) ?? (timedOut ? "انتهى وقت البحث قبل توزيعه" : "تعذر توزيعه مع بقية الحصص ضمن حدود البحث");
     return { course_id: c.id, subject: c.subject, section: c.section, required: c.weekly, placed: n, ...(reason ? { reason } : {}) };
   });
-  const teacherLoads = input.teachers.filter((x) => input.courses.some((c) => c.teacher_id === x.id)).map((x) => ({
-    teacher_id: x.id, name: x.name, weekly_max: x.weekly_max, before: kept.filter((s) => s.teacher_id === x.id).length, after: final.filter((s) => s.teacher_id === x.id).length,
+  const teacherLoads = input.teachers.filter((x) => taught.has(x.id)).map((x) => ({
+    teacher_id: x.id, name: x.name, weekly_max: x.weekly_max, before: nKT.get(x.id) ?? 0, after: nT.get(x.id) ?? 0,
   }));
   const softMisses: string[] = [];
   for (const s of out) {
@@ -212,7 +223,7 @@ export function solve(input: TTInput, opt: SolveOptions): SolveResult {
   }
   for (const c of input.courses) {
     if (c.daily_max != null) continue;
-    for (const d of m.days) { const n = final.filter((s) => s.course_id === c.id && s.day === d).length; if (n > 1) softMisses.push(`${c.subject} — ${c.section}: ${n} حصص يوم ${DAYS_AR[d]} (توزيع غير متوازن)`); }
+    for (const d of m.days) { const n = nCD.get(`${c.id}|${d}`) ?? 0; if (n > 1) softMisses.push(`${c.subject} — ${c.section}: ${n} حصص يوم ${DAYS_AR[d]} (توزيع غير متوازن)`); }
   }
   const complete = perCourse.every((p) => p.placed >= p.required && !p.reason);
   const proven = dead.size > 0 && [...dead.values()].some((r) => r.startsWith("لا يوجد موضع") || r.startsWith("يتجاوز"));
