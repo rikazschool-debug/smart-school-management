@@ -11,7 +11,7 @@ import { arabicError } from "@/lib/session";
 import { calcLine, num, sar, todayRiyadh, usePcForms, type PcMe, type Row } from "@/components/procurement/shared";
 import { useInvalidate } from "@/components/procurement/custody";
 
-type G = { k: string; date: string; supplier: string; invoice_no: string; description: string; category_id: string; amount: string; tax: boolean; notes: string; custom: Record<string, string>; err?: string };
+type G = { k: string; date: string; supplier: string; invoice_no: string; description: string; category_id: string; amount: string; tax: boolean; notes: string; custom: Record<string, string>; err?: string | undefined };
 const blank = (): G => ({ k: crypto.randomUUID(), date: todayRiyadh(), supplier: "", invoice_no: "", description: "", category_id: "", amount: "", tax: true, notes: "", custom: {} });
 
 /** Spreadsheet-style entry: one row per invoice, saved together. Each row goes through the same pc_expense_save RPC (server checks, VAT, form version). */
