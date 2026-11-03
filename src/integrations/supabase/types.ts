@@ -4900,6 +4900,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_path: string | null
           created_at: string
           email: string | null
           full_name: string
@@ -4908,6 +4909,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_path?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
@@ -4916,6 +4918,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_path?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
@@ -8008,6 +8011,7 @@ export type Database = {
       }
       my_dept_ids: { Args: never; Returns: string[] }
       my_link_pending: { Args: never; Returns: boolean }
+      my_profile: { Args: { _school: string }; Returns: Json }
       my_teacher_ids: { Args: never; Returns: string[] }
       norm_phone: { Args: { _p: string }; Returns: string }
       open_circular: { Args: { _id: string }; Returns: undefined }
@@ -8319,6 +8323,7 @@ export type Database = {
         Args: { _active: boolean; _id: string; _reason?: string }
         Returns: undefined
       }
+      set_my_avatar: { Args: { _path: string }; Returns: undefined }
       set_staff_scope: {
         Args: {
           _departments: string[]
