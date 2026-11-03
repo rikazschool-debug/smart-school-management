@@ -60,7 +60,7 @@ try {
   const keys = Object.keys((g.data as any[])[0] ?? {});
   check("1c no phone/email or other contact fields returned", !keys.some((k) => /phone|email|mobile|national/i.test(k)), keys);
   check("1d search by first letters matches the start of any name word", JSON.stringify(names(await pick(pr, { _purpose: "group", _school: S, _q: "أح" }))) === JSON.stringify(["أحمد خالد", "أحمد سالم"]) && JSON.stringify(names(await pick(pr, { _purpose: "group", _school: S, _q: "سال" }))) === JSON.stringify(["أحمد سالم"]));
-  check("1e no mid-word matches and wildcard characters are literal", names(await pick(pr, { _purpose: "group", _school: S, _q: "الم" })).length === 0 && names(await pick(pr, { _purpose: "group", _school: S, _q: "%" })).length === 0);
+  check("1e no mid-word matches and wildcard characters are literal", names(await pick(pr, { _purpose: "group", _school: S, _q: "الد" })).length === 0 && names(await pick(pr, { _purpose: "group", _school: S, _q: "%" })).length === 0);
   const teachers = names(await pick(pr, { _purpose: "group", _school: S, _role: "teacher" }));
   check("1f category 'teacher' lists every eligible teacher (incl. multi-role), nothing else", JSON.stringify(teachers) === JSON.stringify(["أحمد خالد", "أحمد سالم", "سارة علي"]), teachers);
   check("1g department filter", JSON.stringify(names(await pick(pr, { _purpose: "group", _school: S, _dept: D2.id }))) === JSON.stringify(["أحمد خالد", "سارة علي"]));
