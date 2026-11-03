@@ -354,3 +354,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Browser: officer requested 250 top-up → approver approved → disburser paid with proof → officer confirmed → settlement requested and approved → close blocked (1,020 remaining) → disburser received 1,020 with receipt → approver closed (balance 0). Owner published a form version with a custom field; downloaded Excel (supplier rows 200/30/230) and PDF (1 page, Arabic RTL) opened and checked. Phone 390px: summary, custody, requests.
 - Not tested in browser: filling the custom field on a new invoice (server-tested), custody transfer acceptance (server-tested).
 
+## Procurement fixes (prompt-67, part 1)
+- Summary «read-only transaction» error fixed: settings read no longer writes; every org gets a settings row (trigger on new orgs). Browser: owner summary loads without the error.
+- Custody recipients must hold procurement «create» (picker pool + server trigger). pc-e2e 1b; browser: officer listed, approver-only user not listed.
+- Close also refused while a disbursed/top-up amount is unconfirmed by the holder: pc2-e2e 8b. pc-e2e 32/32, pc2-e2e 20/20.
+- Requests list shows cards on phone (390px checked).
+
