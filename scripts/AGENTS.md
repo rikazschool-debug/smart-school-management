@@ -30,3 +30,4 @@
 - scripts/otp-live-test.ts setup|local|supabase|status|teardown --phone 9665…: live WhatsApp code test on one consenting number via an isolated marked test login (never touches real accounts); run teardown when done.
 - scripts/support-e2e.ts: support tickets phase 1 (scopes, workflow, edits history, guardian child link, platform scope, files, org isolation; 17 checks).
 - scripts/support2-e2e.ts: support phase 2 (assign, cross-branch transfer, info requests partial view, private/team notes, escalation to platform; 17 checks).
+- scripts/support3-e2e.ts: support phase 3 (working-hour targets, overdue filter/alerts once, designated alert person, assignee filter, scoped KPIs; 14 checks).
