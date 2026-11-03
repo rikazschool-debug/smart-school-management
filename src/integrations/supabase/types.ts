@@ -6857,6 +6857,26 @@ export type Database = {
         Args: { _d: Json; _meeting: string; _rev: number }
         Returns: Json
       }
+      adm_my_meetings: {
+        Args: never
+        Returns: {
+          am_organizer: boolean
+          duration_min: number
+          id: string
+          invited_at: string
+          live_status: string
+          location: string
+          mode: string
+          my_note: string
+          my_rsvp: string
+          needs_rsvp: boolean
+          organizer_name: string
+          school_name: string
+          starts_at: string
+          status: string
+          title: string
+        }[]
+      }
       adm_my_virtual_meetings: {
         Args: never
         Returns: {
