@@ -20,7 +20,7 @@ async function user(tag: string) {
   tr.addUser(s.data.user!.id); return { c, id: s.data.user!.id };
 }
 const sfx = String(run).slice(-8);
-const nid = (n: number) => `1${sfx}${n}`.slice(0, 10);
+const nid = (n: number) => `1${sfx.slice(-7)}${String(n).padStart(2, "0")}`;
 const phone = (n: number) => `9665${sfx.slice(-7)}${n}`;
 let org: string | null = null;
 try {
