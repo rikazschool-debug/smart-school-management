@@ -62,7 +62,7 @@ describe("ministry report parsing", () => {
     XLSX.utils.book_append_sheet(w, XLSX.utils.aoa_to_sheet([["اسم الطالب", "رقم الهوية"], ["طالب أ", "1000000041"], ["Student A", "1000000041"], ["", "1000000042"]]), "s");
     const q = parseWorkbook(buf(w), "students");
     expect(q.rows.map((r) => r.values["national_id"])).toEqual(["1000000041", "1000000042"]);
-    expect(validate("students", q.rows, { grades: [], sections: [], existingIds: new Map(), existingPhones: new Map(), depts: [] } as never)[1]!.errors).toContain("الاسم مطلوب");
+    expect(validate("students", q.rows, empty)[1]!.errors).toContain("الاسم مطلوب");
   });
   it("finds the ID under a two-line merged header and the sheet's grade/section", () => {
     expect(p.rows[0]!.values["national_id"]).toBe("1000000001");
