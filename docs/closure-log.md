@@ -301,3 +301,11 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Sender now passes the WATI channel and records WATI's rejection reason (code masked) in otp_sends.failed_detail.
 - Number 966570567341 had no login (only a no-login teacher record) → isolated test login created (metadata otp_live_test, account_setup staged, no membership); no existing account changed.
 - Local signed hook → WATI template rikaz_login_otp: accepted by WATI. Delivery callbacks reach /api/public/wati/webhook with a key but the deployed preview (old build) rejects them 401, and its send-sms returns 503 (secrets missing in that build). Pending: re-check both after the preview redeploys, then run the real Supabase path (`otp-live-test.ts supabase`).
+
+## 2026-11-03 — Gate call button, profiles, communication menu
+- Gate pickup list: «نداء» beside each student; queued Arabic call ×3 on the gate device (announcer.ts).
+- Login toast «تم تسجيل الدخول إلى حساب <الدور>» (verified with demo teacher).
+- /app/profile for every account via my_profile(_school) (caller's own data only): name, photo (private avatars bucket, own folder), ID, mobile as 966…, teacher specialization/department/stages, vice stages, student class, guardian children. Verified with demo teacher.
+- Menu group «التواصل والعمل»: التواصل / الاجتماعات / التعميمات (/app/circulars); chat page no longer shows circulars/meetings tabs.
+- Single student add now requires guardian name + mobile → auto-linked via upsert_student_guardian (import already linked when guardian columns filled).
+- create_organization refuses school-provisioned/phone-only logins; they see «حسابك بانتظار استكمال الربط».
