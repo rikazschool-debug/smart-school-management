@@ -36,4 +36,4 @@
 - School administration (adm_*: forms/requests/tasks, duties, meetings incl. Agora virtual rooms): writes only via adm_* RPCs; details in src/components/admin/AGENTS.md.
 - Auto logins (fixed role per record, exception to owner-only): src/lib/accounts.functions.ts → service-only _provision_link/_complete_account_setup; account_setup blocks access until first login (student: ID + forced password change; teacher/guardian: mobile + WhatsApp code via Send SMS hook → WATI). Import/add rules: src/lib/people-import.ts. Tests: scripts/accounts-e2e.ts.
 - Grades (term gradebooks) are a read-only administrative archive: all gb_* write RPCs are revoked; grading lives in homework/tests. Never re-enable approval stages. Details in src/components/grades/AGENTS.md.
-- Support tickets (support_*): no direct table access; all reads/writes via support_* RPCs that derive identity from the session. Details in src/components/support/AGENTS.md.
+- Support tickets: RPC-only access (support_*), identity from the session; see src/components/support/AGENTS.md.
