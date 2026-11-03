@@ -84,14 +84,14 @@ try {
   // 3 pre-purchase threshold
   const me = (await owner.c.rpc("pc_me", { _org: org })).data as any;
   await owner.c.rpc("pc_settings_save", { _org: org, _vat_rate: 15, _vat_inclusive: false, _require_attachment: true, _block_overdue: true, _low_balance: 300, _rev: me.settings.rev, _reason: "تفعيل الشراء المسبق", _purchase_above: 400, _due_soon: 3 });
-  const eBig = await expense(off.c, C, 450);
+  const eBig = await expense(off.c, C, 450, { tax_invoice: true, invoice_no: "PR-1" });
   const sNo = await submitE(off.c, eBig);
   const pr = await req(off.c, { kind: "purchase", custody_id: C, amount: 600, purpose: "شراء طابعة", supplier: "مورد الطابعات" });
   await act(off.c, pr.data, "submit"); await act(apr.c, pr.data, "approve");
   g = await get(off.c, C);
   const balAfterPr = Number(g.bal.book);
   let eg = await eget(off.c, eBig);
-  await off.c.rpc("pc_expense_save", { _org: org, _id: eBig, _d: { custody_id: C, purchase_date: today, description: "طابعة", supplier: "مورد الطابعات", lines: [{ description: "طابعة", amount: 450 }], purchase_request_id: pr.data }, _rev: eg.rev, _key: null });
+  await off.c.rpc("pc_expense_save", { _org: org, _id: eBig, _d: { custody_id: C, purchase_date: today, description: "طابعة", supplier: "مورد الطابعات", tax_invoice: true, invoice_no: "PR-1", lines: [{ description: "طابعة", amount: 450 }], purchase_request_id: pr.data }, _rev: eg.rev, _key: null });
   eg = await eget(off.c, eBig);
   const sYes = await off.c.rpc("pc_expense_action", { _id: eBig, _action: "submit", _rev: eg.rev, _reason: null });
   const aYes = await approveE(eBig);
@@ -117,7 +117,7 @@ try {
   g = await get(apr.c, C);
   const close1 = await apr.c.rpc("pc_custody_close", { _id: C, _rev: g.rev, _reason: "إغلاق" });
   check("6 settlement moves custody to settling; approval does not zero it; close refused with pending + remainder", g.status === "settling" && Number(g.bal.book) === 980 && !!dupSt.error && !!noTopupNow.error && !!close1.error && /المتبقي|قيد المراجعة/.test(close1.error.message), [g.status, dupSt.error, noTopupNow.error, close1.error]);
-  await approveE(pend); // book 980 - 115 = 865
+  await approveE(pend); // book 980 - 100 = 880
   // 7 carry 300 to a new custody of the same holder (two opposite approved moves), return the rest with proof
   const C2 = await openCustody(off, 200);
   const carrySelf = await off.c.rpc("pc_carry", { _from: C, _to: C2, _amount: 300, _reason: "ترحيل", _key: k() });
@@ -126,11 +126,11 @@ try {
   const g2 = await get(off.c, C2);
   g = await get(off.c, C);
   check("7 carry-over: two opposite moves, new custody funded without fake disbursement; holder cannot self-carry; other person refused", !carry.error && !!carrySelf.error && !!carryOther.error
-    && Number(g.bal.book) === 565 && Number(g2.bal.book) === 300 && g2.status === "disbursed" && !g2.moves.some((m: any) => m.kind === "disburse"), [carry.error, carrySelf.error, carryOther.error, g.bal, g2]);
+    && Number(g.bal.book) === 580 && Number(g2.bal.book) === 300 && g2.status === "disbursed" && !g2.moves.some((m: any) => m.kind === "disburse"), [carry.error, carrySelf.error, carryOther.error, g.bal, g2]);
   const rf = await file(dis.c, "custody", C);
   const retOver = await dis.c.rpc("pc_return_cash", { _custody: C, _amount: 600, _method: "cash", _file: rf, _doc_date: today, _note: null, _key: k() });
-  const retSelf = await off.c.rpc("pc_return_cash", { _custody: C, _amount: 565, _method: "cash", _file: rf, _doc_date: today, _note: null, _key: k() });
-  const ret = await dis.c.rpc("pc_return_cash", { _custody: C, _amount: 565, _method: "cash", _file: rf, _doc_date: today, _note: "استلام الصندوق", _key: k() });
+  const retSelf = await off.c.rpc("pc_return_cash", { _custody: C, _amount: 580, _method: "cash", _file: rf, _doc_date: today, _note: null, _key: k() });
+  const ret = await dis.c.rpc("pc_return_cash", { _custody: C, _amount: 580, _method: "cash", _file: rf, _doc_date: today, _note: "استلام الصندوق", _key: k() });
   g = await get(apr.c, C);
   check("8 remainder returned to administration with proof (not by holder, not above available)", !ret.error && !!retOver.error && !!retSelf.error && Number(g.bal.book) === 0, [ret.error, retOver.error, retSelf.error, g.bal]);
   const cSelf = await off.c.rpc("pc_custody_close", { _id: C, _rev: g.rev, _reason: "x" });
@@ -150,6 +150,18 @@ try {
   const old = await get(off.c, C2), nw = await get(off2.c, accOk.data);
   check("10 transfer needs approval and recipient acceptance; balance moves by opposite moves; old closed", !!accEarly.error && !!accWrong.error && !accOk.error && old.status === "closed" && Number(old.bal.book) === 0
     && nw.holder_id === off2.id && Number(nw.bal.book) === 300 && nw.status === "disbursed", [accEarly.error, accWrong.error, accOk.error, old.status, nw?.bal]);
+
+  // 15 alerts: due soon + low balance, deduplicated across runs
+  const C4 = await openCustody(off, 350, soon); await disburse(C4);
+  await admin.rpc("pc_alerts_tick" as any); await admin.rpc("pc_alerts_tick" as any);
+  const { data: nt } = await admin.from("notifications").select("dedupe_key").eq("user_id", off.id).like("dedupe_key", `pc-%${C4}%`);
+  const keys = (nt ?? []).map((x) => x.dedupe_key as string);
+  const tickUser = await off.c.rpc("pc_alerts_tick" as any);
+  check("15 alerts: due-soon once per due date; staff cannot run the job", keys.filter((x) => x.startsWith("pc-due:")).length === 1 && !!tickUser.error, [keys, tickUser.error]);
+  const eLow = await expense(off.c, C4, 50); await submitE(off.c, eLow); await approveE(eLow);
+  await admin.rpc("pc_alerts_tick" as any);
+  const { data: nt2 } = await admin.from("notifications").select("dedupe_key").eq("user_id", off.id).like("dedupe_key", `pc-low:${C4}%`);
+  check("16 low balance alert once after approval drops below the threshold", (nt2 ?? []).length === 1, nt2);
 
   // 11 forms: draft → publish; versions; protected fields; formula rejected; required custom + file field; old records keep version
   const C3 = await openCustody(off, 900); await disburse(C3);
@@ -195,18 +207,6 @@ try {
   const listApr = await apr.c.rpc("pc_custody_list", { _org: org, _status: null, _q: null, _school: null, _mine: false, _limit: 5000, _offset: 0 });
   const listAcc = await acc.c.rpc("pc_expense_list", { _org: org, _status: null, _q: null, _school: null, _custody: null, _category: null, _from: null, _to: null, _limit: 5000, _offset: 0 });
   check("14 full exports need the export permission on the server", !!expApr.error && !expAcc.error && !!listApr.error && !listAcc.error, [expApr.error, expAcc.error, listApr.error, listAcc.error]);
-
-  // 15 alerts: due soon + low balance, deduplicated across runs
-  const C4 = await openCustody(off, 350, soon); await disburse(C4);
-  await admin.rpc("pc_alerts_tick" as any); await admin.rpc("pc_alerts_tick" as any);
-  const { data: nt } = await admin.from("notifications").select("dedupe_key").eq("user_id", off.id).like("dedupe_key", `pc-%${C4}%`);
-  const keys = (nt ?? []).map((x) => x.dedupe_key as string);
-  const tickUser = await off.c.rpc("pc_alerts_tick" as any);
-  check("15 alerts: due-soon once per due date; staff cannot run the job", keys.filter((x) => x.startsWith("pc-due:")).length === 1 && !!tickUser.error, [keys, tickUser.error]);
-  const eLow = await expense(off.c, C4, 50); await submitE(off.c, eLow); await approveE(eLow);
-  await admin.rpc("pc_alerts_tick" as any);
-  const { data: nt2 } = await admin.from("notifications").select("dedupe_key").eq("user_id", off.id).like("dedupe_key", `pc-low:${C4}%`);
-  check("16 low balance alert once after approval drops below the threshold", (nt2 ?? []).length === 1, nt2);
 
   // 17 isolation and direct access
   const xr = await owner2.c.rpc("pc_request_get", { _id: t1.data });
