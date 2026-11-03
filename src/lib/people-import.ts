@@ -167,7 +167,10 @@ export function parseWorkbook(buf: ArrayBuffer, kind: PKind, override?: Record<s
       const values: Record<string, string> = {};
       for (const f of fields) { const c = map[f.key]; values[f.key] = c === undefined ? "" : row[c] ?? ""; }
       for (const [k, v] of Object.entries(ctx)) if (!values[k]) values[k] = v;
-      if (!values["full_name"] || !HAS_AR.test(values["full_name"])) continue;
+      // English duplicate lines in ministry reports carry no ID/phone: skip them. A row with an ID or phone but no Arabic
+      // name is kept so validation reports it instead of dropping it silently.
+      const keyed = !!(values["national_id"] || values["phone"] || values["guardian_phone"]);
+      if (!values["full_name"] || !HAS_AR.test(values["full_name"])) { if (!keyed) continue; values["full_name"] = HAS_AR.test(values["full_name"] ?? "") ? values["full_name"]! : ""; }
       if (fields.some((f) => norm(values[f.key]) === norm(f.label))) continue; // repeated header line on a printed page
       const formulas = fields.filter((f) => map[f.key] !== undefined && g.formula[r]![map[f.key]!]).map((f) => f.label);
       rows.push({ sheet: name, line: r + 1, values, formulas });
