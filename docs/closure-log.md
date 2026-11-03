@@ -348,3 +348,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Browser: officer requested 1,000 → approver approved → disburser blocked without reference, then disbursed with proof → officer confirmed receipt → 2-line tax invoice (400 taxable + 100 exempt = 560) with attachment → approver approved → statement shows 1,000 / −560 / balance 440.
 - Not tested: phone width; Excel/PDF files opened; top-ups, settlement, carry-over (phase 4).
 
+## Procurement phase 4 — requests, settlement, forms, reports
+- Scope: top-up/settlement/pre-purchase/adjustment/transfer requests, top-up disbursement with proof, cash return, carry-over, close gated by reconciliation checklist, invoice form versions with custom fields, low-balance/due-soon/overdue alerts (hourly, deduplicated), reports (purchases by supplier/category/branch/period, per person, statement, settlements) with Excel/PDF.
+- Server: scripts/pc2-e2e.ts 19/19; pc-e2e.ts 31/31 still passing.
+- Browser: officer requested 250 top-up → approver approved → disburser paid with proof → officer confirmed → settlement requested and approved → close blocked (1,020 remaining) → disburser received 1,020 with receipt → approver closed (balance 0). Owner published a form version with a custom field; downloaded Excel (supplier rows 200/30/230) and PDF (1 page, Arabic RTL) opened and checked. Phone 390px: summary, custody, requests.
+- Not tested in browser: filling the custom field on a new invoice (server-tested), custody transfer acceptance (server-tested).
+
