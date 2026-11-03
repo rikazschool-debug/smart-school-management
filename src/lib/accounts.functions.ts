@@ -1,0 +1,142 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { normPhone, studentLoginEmail, strongEnough } from "@/lib/people-import";
+
+type Kind = "student" | "teacher" | "guardian";
+const UUID = /^[0-9a-f-]{36}$/i;
+
+function tempPassword() {
+  const a = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  const b = new Uint8Array(12);
+  crypto.getRandomValues(b);
+  return Array.from(b, (x) => a[x % a.length]).join("") + "7a";
+}
+
+/**
+ * Creates or links the fixed-role login for students (national ID + initial password), teachers and guardians (mobile + WhatsApp code).
+ * The caller's permission is checked with their own RLS client; only then the service role creates/links. New accounts have no access
+ * until the first-login step (account_setup); existing accounts are linked without touching their password or roles.
+ */
+export const provisionAccounts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { kind: Kind; ids: string[] }) => {
+    if (!["student", "teacher", "guardian"].includes(d?.kind)) throw new Error("نوع غير صالح");
+    if (!Array.isArray(d.ids) || d.ids.length > 200 || !d.ids.every((x) => UUID.test(x))) throw new Error("معرّفات غير صالحة");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const table = data.kind === "student" ? "students" : data.kind === "teacher" ? "teachers" : "guardians";
+    const { data: rows, error } = await context.supabase.from(table).select("*").in("id", data.ids);
+    if (error) throw new Error("تعذّرت قراءة السجلات");
+    const out: { id: string; state: string; msg?: string }[] = [];
+    const allowed = new Map<string, boolean>();
+    for (const r of (rows ?? []) as Record<string, string | null>[]) {
+      const id = r["id"]!, school = r["school_id"]!;
+      try {
+        if (!allowed.has(school)) {
+          const fn = data.kind === "teacher" ? "is_school_principal" : "can_manage_students";
+          const { data: ok } = await context.supabase.rpc(fn as never, { _school: school } as never);
+          allowed.set(school, !!ok);
+        }
+        if (!allowed.get(school)) throw new Error("لا تملك صلاحية إنشاء هذا الحساب");
+        if (r["user_id"]) { out.push({ id, state: "linked" }); continue; }
+        let email: string | null = null, phone: string | null = null;
+        if (data.kind === "student") {
+          const nid = String(r["national_id"] ?? "").replace(/\D/g, "");
+          if (!nid) throw new Error("رقم هوية الطالب مطلوب لإنشاء حسابه");
+          email = studentLoginEmail(nid);
+        } else {
+          phone = normPhone(r["phone"]);
+          if (!phone) throw new Error("جوال سعودي صحيح مطلوب لإنشاء الحساب");
+        }
+        const { data: found } = await supabaseAdmin.rpc("_auth_user_lookup" as never, { _email: email, _phone: phone } as never);
+        const ex = (found as unknown as { user_id: string; phone_confirmed: boolean }[] | null)?.[0];
+        let uid = ex?.user_id ?? null;
+        let pending = true;
+        if (uid) {
+          // existing login: link without changing password/roles; an unconfirmed phone still has to be confirmed
+          pending = data.kind !== "student" && !ex!.phone_confirmed;
+        } else {
+          const created = data.kind === "student"
+            ? await supabaseAdmin.auth.admin.createUser({ email: email!, password: tempPassword(), email_confirm: true, user_metadata: { full_name: r["full_name"] } })
+            : await supabaseAdmin.auth.admin.createUser({ phone: phone!, phone_confirm: false, user_metadata: { full_name: r["full_name"] } });
+          if (created.error || !created.data.user) throw new Error("تعذّر إنشاء الحساب");
+          uid = created.data.user.id;
+        }
+        const { data: st, error: e2 } = await supabaseAdmin.rpc("_provision_link" as never, { _kind: data.kind, _subject: id, _uid: uid, _actor: context.userId, _pending: pending } as never);
+        if (e2) throw new Error(e2.message);
+        out.push({ id, state: String(st) });
+      } catch (e) {
+        out.push({ id, state: "error", msg: (e as Error).message });
+      }
+    }
+    for (const id of data.ids) if (!out.some((o) => o.id === id)) out.push({ id, state: "error", msg: "السجل غير متاح" });
+    return out;
+  });
+
+/** Issues a one-time initial password for a student (shown once to the authorized manager, never stored). Also the safe recovery path. */
+export const issueStudentPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { studentId: string }) => { if (!UUID.test(d?.studentId ?? "")) throw new Error("معرّف غير صالح"); return d; })
+  .handler(async ({ data, context }) => {
+    const { data: s } = await context.supabase.from("students").select("id, school_id, national_id, user_id, full_name").eq("id", data.studentId).maybeSingle();
+    if (!s) throw new Error("الطالب غير موجود");
+    const { data: ok } = await context.supabase.rpc("can_manage_students", { _school: s.school_id });
+    if (!ok) throw new Error("لا تملك صلاحية إدارة الطلاب");
+    const nid = String(s.national_id ?? "").replace(/\D/g, "");
+    if (!nid) throw new Error("رقم هوية الطالب مطلوب");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let uid = s.user_id as string | null;
+    if (!uid) {
+      const { data: setup } = await supabaseAdmin.from("account_setup" as never).select("user_id").eq("subject_id", s.id).maybeSingle();
+      uid = (setup as { user_id: string } | null)?.user_id ?? null;
+    }
+    if (!uid) {
+      const { data: found } = await supabaseAdmin.rpc("_auth_user_lookup" as never, { _email: studentLoginEmail(nid), _phone: null } as never);
+      uid = (found as unknown as { user_id: string }[] | null)?.[0]?.user_id ?? null;
+    }
+    const password = tempPassword();
+    if (uid) {
+      const u = await supabaseAdmin.auth.admin.updateUserById(uid, { password });
+      if (u.error) throw new Error("تعذّر تعيين كلمة المرور");
+    } else {
+      const c = await supabaseAdmin.auth.admin.createUser({ email: studentLoginEmail(nid), password, email_confirm: true, user_metadata: { full_name: s.full_name } });
+      if (c.error || !c.data.user) throw new Error("تعذّر إنشاء الحساب");
+      uid = c.data.user.id;
+    }
+    const { error } = await supabaseAdmin.rpc("_stage_student_password" as never, { _student: s.id, _uid: uid, _actor: context.userId } as never);
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.auth.admin.signOut(uid, "global").catch(() => undefined);
+    return { login: nid, password };
+  });
+
+/** First login of a student: sets the new password, then the server unlocks access. Enforced in the database (no access before). */
+export const completeFirstPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { password: string }) => {
+    const err = strongEnough(d?.password ?? "");
+    if (err) throw new Error(err);
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: a } = await supabaseAdmin.from("account_setup" as never).select("need_password, completed_at").eq("user_id", context.userId).maybeSingle();
+    const row = a as { need_password: boolean; completed_at: string | null } | null;
+    if (!row || row.completed_at || !row.need_password) throw new Error("لا يلزم تغيير كلمة المرور");
+    const u = await supabaseAdmin.auth.admin.updateUserById(context.userId, { password: data.password });
+    if (u.error) throw new Error("تعذّر حفظ كلمة المرور");
+    const { error } = await supabaseAdmin.rpc("_complete_account_setup" as never, { _uid: context.userId, _password_changed: true } as never);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** After the first WhatsApp-code sign-in (phone confirmed by auth), unlock the staged teacher/guardian account. */
+export const completePhoneSetup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.rpc("_complete_account_setup" as never, { _uid: context.userId, _password_changed: false } as never);
+    if (error) throw new Error(error.message);
+    return { state: String(data) };
+  });
