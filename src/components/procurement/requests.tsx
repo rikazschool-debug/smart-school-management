@@ -36,7 +36,9 @@ export function RequestList({ orgId, me, open, onNew, orgName }: { orgId: string
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
-  const args = { _org: orgId, _kind: kind || null, _status: status || null, _q: q || null, _custody: null };
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const args = { _org: orgId, _kind: kind || null, _status: status || null, _q: q || null, _custody: null, _from: from || null, _to: to || null };
   const list = useQuery({
     queryKey: ["pc-requests", args, page],
     queryFn: async () => { const { data, error } = await db.rpc("pc_request_list", { ...args, _limit: PAGE, _offset: page * PAGE }); if (error) throw error; return data as { total: number; rows: Row[] }; },
@@ -60,6 +62,8 @@ export function RequestList({ orgId, me, open, onNew, orgName }: { orgId: string
         <select className={selectCls("w-40")} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} aria-label="الحالة">
           <option value="">كل الحالات</option><option value="open">المفتوحة</option>{Object.entries(R_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
+        <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
+        <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
         <span className="ms-auto flex gap-2">
           {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
           {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />طلب جديد</Button>}
@@ -297,11 +301,11 @@ export function CustodyOps({ c, me, newRequest, openRequest }: { c: Row; me: PcM
         <div className="flex flex-wrap gap-2 rounded-xl border bg-card p-3">
           {k.topup && <Button size="sm" variant="outline" onClick={() => newRequest("topup")}>طلب تعزيز</Button>}
           {k.purchase && <Button size="sm" variant="outline" onClick={() => newRequest("purchase")}>طلب شراء مسبق</Button>}
-          {k.settle && <Button size="sm" variant="outline" onClick={() => newRequest("settlement")}>طلب تسوية</Button>}
+          {k.settle && <Button size="sm" variant="outline" onClick={() => newRequest("settlement")}>تسوية ومراجعة العهدة</Button>}
           {k.adjust && <Button size="sm" variant="outline" onClick={() => newRequest("adjust")}>معالجة عجز/زيادة</Button>}
           {k.transfer && <Button size="sm" variant="outline" onClick={() => newRequest("transfer")}>نقل لشخص آخر</Button>}
           {k.return_cash && <Button size="sm" variant="outline" onClick={() => setMode(mode === "return" ? "" : "return")}>استلام مبلغ معاد</Button>}
-          {k.carry && <Button size="sm" variant="outline" onClick={() => setMode(mode === "carry" ? "" : "carry")}>ترحيل لعهدة جديدة</Button>}
+          {k.carry && <Button size="sm" variant="outline" onClick={() => setMode(mode === "carry" ? "" : "carry")}>عهدة جديدة يُضاف إليها المتبقي</Button>}
         </div>
       )}
       {mode === "return" && (
