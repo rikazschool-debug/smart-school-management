@@ -151,7 +151,7 @@ function People({ org, school }: { org: string; school: string | null }) {
     ...BASE_TABS.map((r) => ({ key: `base:${r}`, label: ROLE_LABELS[r], n: peopleForTab(all, `base:${r}`).length })).filter((t) => t.n > 0),
     ...roles.data!.filter((r) => !r["archived"]).map((r) => ({ key: `role:${r["id"]}`, label: r["name"] as string, n: Number(r["holders"]), extra: true })),
   ];
-  const cur = tabs.find((t) => t.key === tab) ?? tabs[0];
+  const cur = tabs.find((t) => t.key === tab) ?? tabs[0]!;
   const list = peopleForTab(all, cur.key).filter((p) => !q.trim() || p.name.includes(q.trim()));
   const sel = user ? all.find((p) => p.user_id === user) : null;
   const roleId = cur.key.startsWith("role:") ? cur.key.slice(5) : null;
