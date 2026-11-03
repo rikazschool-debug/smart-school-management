@@ -955,6 +955,7 @@ export type Database = {
           agenda: string | null
           cancel_reason: string | null
           client_id: string | null
+          course_id: string | null
           created_at: string
           department_id: string | null
           duration_min: number
@@ -986,6 +987,7 @@ export type Database = {
           agenda?: string | null
           cancel_reason?: string | null
           client_id?: string | null
+          course_id?: string | null
           created_at?: string
           department_id?: string | null
           duration_min?: number
@@ -1017,6 +1019,7 @@ export type Database = {
           agenda?: string | null
           cancel_reason?: string | null
           client_id?: string | null
+          course_id?: string | null
           created_at?: string
           department_id?: string | null
           duration_min?: number
@@ -1045,6 +1048,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "adm_meetings_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "adm_meetings_department_id_fkey"
             columns: ["department_id"]
@@ -8542,6 +8552,15 @@ export type Database = {
         Args: { _date: string; _day: number; _period: string; _teacher: string }
         Returns: string
       }
+      _vc_manage: { Args: { _school: string }; Returns: boolean }
+      _vc_student: {
+        Args: { _course: string; _user: string }
+        Returns: boolean
+      }
+      _vc_teacher: {
+        Args: { _course: string; _user: string }
+        Returns: boolean
+      }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
       account_status: {
@@ -10909,6 +10928,29 @@ export type Database = {
           guardian_id: string
           has_account: boolean
         }[]
+      }
+      vc_attendance: { Args: { _id: string }; Returns: Json }
+      vc_cancel: { Args: { _id: string; _reason: string }; Returns: undefined }
+      vc_courses: { Args: { _school: string }; Returns: Json }
+      vc_list: {
+        Args: { _course: string; _from: string; _school: string; _to: string }
+        Returns: Json
+      }
+      vc_report: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: Json
+      }
+      vc_save: {
+        Args: {
+          _course: string
+          _duration: number
+          _id: string
+          _rev: number
+          _starts: string
+          _teacher: string
+          _title: string
+        }
+        Returns: string
       }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
       vice_teacher_ids: { Args: never; Returns: string[] }
