@@ -33,6 +33,7 @@ try {
   const A = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(A);
   const B = (await admin.from("schools").insert({ org_id: org, name: "فرع ب" }).select().single()).data!.id; tr.addSchool(B);
   const org2 = (await owner2.c.rpc("create_organization", { _org_name: "مؤسسة أخرى 2", _school_name: "فرع س" })).data; orgs.push(org2);
+  tr.addSchool((await owner2.c.from("schools").select("id").eq("org_id", org2).single()).data!.id);
   for (const [u, r, s] of [[pr1, "principal", A], [pr2, "principal", B], [tch, "teacher", A], [tchB, "teacher", B], [tchA2, "teacher", A], [stu, "student", A], [gua, "guardian", A], [off, "teacher", A]] as any[])
     await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: s, role: r });
   await admin.from("memberships").update({ is_active: false }).eq("user_id", off.id);
