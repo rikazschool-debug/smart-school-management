@@ -32,6 +32,7 @@ import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppPermissionsRouteImport } from './routes/_authenticated/app/permissions'
 import { Route as AuthenticatedAppPickupRouteImport } from './routes/_authenticated/app/pickup'
 import { Route as AuthenticatedAppPlatformRouteImport } from './routes/_authenticated/app/platform'
+import { Route as AuthenticatedAppProcurementRouteImport } from './routes/_authenticated/app/procurement'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app/profile'
 import { Route as AuthenticatedAppResultsRouteImport } from './routes/_authenticated/app/results'
 import { Route as AuthenticatedAppScheduleRouteImport } from './routes/_authenticated/app/schedule'
@@ -180,6 +181,12 @@ const AuthenticatedAppPlatformRoute =
   AuthenticatedAppPlatformRouteImport.update({
     id: '/platform',
     path: '/platform',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProcurementRoute =
+  AuthenticatedAppProcurementRouteImport.update({
+    id: '/procurement',
+    path: '/procurement',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
@@ -349,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
@@ -397,6 +405,7 @@ export interface FileRoutesByTo {
   '/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
@@ -448,6 +457,7 @@ export interface FileRoutesById {
   '/_authenticated/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/_authenticated/app/pickup': typeof AuthenticatedAppPickupRoute
   '/_authenticated/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/_authenticated/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/results': typeof AuthenticatedAppResultsRoute
   '/_authenticated/app/schedule': typeof AuthenticatedAppScheduleRoute
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/app/permissions'
     | '/app/pickup'
     | '/app/platform'
+    | '/app/procurement'
     | '/app/profile'
     | '/app/results'
     | '/app/schedule'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '/app/permissions'
     | '/app/pickup'
     | '/app/platform'
+    | '/app/procurement'
     | '/app/profile'
     | '/app/results'
     | '/app/schedule'
@@ -597,6 +609,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/permissions'
     | '/_authenticated/app/pickup'
     | '/_authenticated/app/platform'
+    | '/_authenticated/app/procurement'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/results'
     | '/_authenticated/app/schedule'
@@ -798,6 +811,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPlatformRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/procurement': {
+      id: '/_authenticated/app/procurement'
+      path: '/procurement'
+      fullPath: '/app/procurement'
+      preLoaderRoute: typeof AuthenticatedAppProcurementRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/profile': {
       id: '/_authenticated/app/profile'
       path: '/profile'
@@ -993,6 +1013,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppPermissionsRoute: typeof AuthenticatedAppPermissionsRoute
   AuthenticatedAppPickupRoute: typeof AuthenticatedAppPickupRoute
   AuthenticatedAppPlatformRoute: typeof AuthenticatedAppPlatformRoute
+  AuthenticatedAppProcurementRoute: typeof AuthenticatedAppProcurementRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppResultsRoute: typeof AuthenticatedAppResultsRoute
   AuthenticatedAppScheduleRoute: typeof AuthenticatedAppScheduleRoute
@@ -1037,6 +1058,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppPermissionsRoute: AuthenticatedAppPermissionsRoute,
   AuthenticatedAppPickupRoute: AuthenticatedAppPickupRoute,
   AuthenticatedAppPlatformRoute: AuthenticatedAppPlatformRoute,
+  AuthenticatedAppProcurementRoute: AuthenticatedAppProcurementRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppResultsRoute: AuthenticatedAppResultsRoute,
   AuthenticatedAppScheduleRoute: AuthenticatedAppScheduleRoute,
