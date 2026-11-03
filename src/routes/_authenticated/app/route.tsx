@@ -5,11 +5,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
-  Bell, BookOpen, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
+  Bell, BookOpen, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
-import { NAV_BY_ROLE, ROLE_LABELS, scheduleLabel, type NavKey } from "@/lib/roles";
+import { NAV_BY_ROLE, ROLE_LABELS, commTabs, scheduleLabel, type NavKey } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,21 +41,23 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home }> = {
   pickup: { to: "/app/pickup", label: "الخروج والاستئذان", icon: DoorOpen },
   admin: { to: "/app/admin", label: "التكليفات والطلبات", icon: Briefcase },
   duties: { to: "/app/admin/duties", label: "المناوبات", icon: ShieldCheck },
-  meetings: { to: "/app/admin/meetings", label: "الاجتماعات والقرارات", icon: UsersRound },
+  meetings: { to: "/app/admin/meetings", label: "الاجتماعات", icon: UsersRound },
   calendar: { to: "/app/admin/calendar", label: "تقويمي", icon: CalendarDays },
   communication: { to: "/app/communication", label: "التواصل", icon: MessagesSquare },
+  circulars: { to: "/app/circulars", label: "التعميمات", icon: Megaphone },
+  profile: { to: "/app/profile", label: "الملف الشخصي", icon: UserCircle },
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
 };
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
-  { label: "", keys: ["home", "notifications"] },
+  { label: "", keys: ["home", "profile", "notifications"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members"] },
   { label: "الإعداد الأكاديمي", keys: ["academic", "teachers", "courses", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "homework", "grades", "results"] },
   { label: "الجدول واليوم الدراسي", keys: ["schedule"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "station", "pickup"] },
-  { label: "الإدارة المدرسية", keys: ["admin", "duties", "meetings", "calendar"] },
-  { label: "التواصل", keys: ["communication"] },
+  { label: "الإدارة المدرسية", keys: ["admin", "duties", "calendar"] },
+  { label: "التواصل والعمل", keys: ["communication", "meetings", "circulars"] },
 ];
 
 function AppLayout() {
@@ -80,10 +82,17 @@ function Shell() {
     navigate({ to: "/auth", replace: true });
   }
 
+  useEffect(() => {
+    if (!active) return;
+    const k = `rikaz-login-toast:${user.id}`;
+    if (sessionStorage.getItem(k)) return;
+    sessionStorage.setItem(k, "1");
+    toast.success(`تم تسجيل الدخول إلى حساب ${ROLE_LABELS[active.role]}`, { description: active.schoolName });
+  }, [active, user.id]);
   if (loading) return <div className="p-10"><LoadingState /></div>;
   if (!active) return <Onboarding onSignOut={signOut} />;
 
-  const nav = NAV_BY_ROLE[active.role];
+  const nav = [...NAV_BY_ROLE[active.role], "profile", ...(commTabs(active.role).includes("circulars") ? ["circulars"] : [])] as NavKey[];
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (

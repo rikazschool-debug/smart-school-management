@@ -42,6 +42,8 @@ export type NavKey =
   | "classrooms"
   | "schedule"
   | "communication"
+  | "circulars"
+  | "profile"
   | "homework"
   | "grades"
   | "results"

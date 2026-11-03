@@ -188,6 +188,8 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
 
   async function addSingle(e: React.FormEvent) {
     e.preventDefault();
+    // a single added student is always linked to a guardian (same ID or mobile reuses the existing guardian)
+    if (kind === "students" && (!(single["guardian_name"] ?? "").trim() || !(single["guardian_phone"] ?? "").trim())) return void toast.error("أدخل اسم ولي الأمر وجواله ليُربط بالطالب تلقائيًا");
     setBusy(true);
     try {
       const raw: RawRow = { sheet: "إضافة فردية", line: 1, values: Object.fromEntries(fields.map((f) => [f.key, single[f.key] ?? ""])), formulas: [] };

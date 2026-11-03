@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { CheckCircle2, Printer, ScanLine, XCircle } from "lucide-react";
+import { CheckCircle2, Printer, ScanLine, Volume2, XCircle } from "lucide-react";
+import { announceText, enqueueCall, isQueued, onQueueSize } from "@/lib/announcer";
 import { db, type Row } from "@/components/crud-page";
 import { ask, askText } from "@/components/confirm";
 import { EmptyState, ErrorState, LoadingState, Section } from "@/components/states";
@@ -226,10 +227,10 @@ export function PickupsTab({ ctx, canApprove, gate }: { ctx: Ctx; canApprove: bo
       {canApprove && <DelegateReviews S={S} />}
       <Section title={gate ? "الاستلام اليوم" : "طلبات تجهيز طلابك"} desc={gate ? "تحقق من هوية المستلم قبل «وصل المستلم»، وسلّم الطالب فقط بعد «جاهز»." : "أكّد جاهزية الطالب عند تجهيزه. لا تملك تعديل حركة البوابة."}>
         {queue.isLoading ? <LoadingState /> : queue.error ? <ErrorState message={arabicError(queue.error)} onRetry={() => queue.refetch()} /> : !queue.data?.length ? <EmptyState title="لا توجد طلبات استلام نشطة" /> : (
-          <ul className="space-y-2">
+          <>{gate && <div className="mb-2"><CallQueueBadge /></div>}<ul className="space-y-2">
             {queue.data.map((r) => (
               <li key={r["id"]} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 text-sm">
-                <span className="min-w-0"><b>{r["student_name"]}</b> — {r["section"]} <Badge variant="outline" className="ms-1">{KIND[r["kind"]]}</Badge> <Badge className="ms-1">{PICKUP_STATUS[r["status"]]}</Badge>
+                <span className="min-w-0"><b>{r["student_name"]}</b>{gate && <CallButton name={r["student_name"]} section={r["section"]} />} — {r["section"]} <Badge variant="outline" className="ms-1">{KIND[r["kind"]]}</Badge> <Badge className="ms-1">{PICKUP_STATUS[r["status"]]}</Badge>
                   <span className="block text-muted-foreground">المستلم: {r["pickup_name"]}{r["relationship"] ? ` (${r["relationship"]})` : ""} • {r["delegate_mode"] === "one_time" ? `تفويض لهذا الطلب${r["phone_hint"] ? ` • جوال ${r["phone_hint"]}` : ""} • تحقق بآخر 4 أرقام من الهوية` : r["delegate_mode"] === "authorized" ? `مستلم معتمد${r["pickup_national_id"] ? ` • الهوية: ${r["pickup_national_id"]}` : ""}` : "ولي الأمر نفسه"}</span></span>
                 <span className="flex flex-wrap gap-1">
                   {gate && r["status"] === "approved" && (r["delegate_mode"] === "one_time" && r["delegate_status"] !== "approved"
@@ -254,7 +255,7 @@ export function PickupsTab({ ctx, canApprove, gate }: { ctx: Ctx; canApprove: bo
                 </span>
               </li>
             ))}
-          </ul>
+          </ul></>
         )}
       </Section>
     </div>
@@ -473,4 +474,25 @@ export function FollowupTab({ ctx }: { ctx: Ctx }) {
       <Dialog open={!!tl} onOpenChange={(o) => !o && setTl(null)}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>السجل الزمني — {tl?.["name"]}</DialogTitle></DialogHeader>{tl && <StudentTimeline studentId={tl["id"]} days={days} />}</DialogContent></Dialog>
     </div>
   );
+}
+
+function CallButton({ name, section }: { name: string; section?: string | null }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button type="button" size="sm" variant="outline" className="ms-2 h-7 gap-1 px-2" disabled={busy} title="نداء الطالب 3 مرات"
+      onClick={async () => {
+        const text = announceText(name, section);
+        if (isQueued(text)) return void toast.info("النداء موجود في الطابور");
+        setBusy(true); toast.success(`أُضيف نداء ${name} إلى الطابور`);
+        try { await enqueueCall(text); } catch (e) { toast.error(`تعذّر النداء: ${e instanceof Error ? e.message : e}`); } finally { setBusy(false); }
+      }}>
+      <Volume2 className="size-3.5" />{busy ? "يُنادى…" : "نداء"}
+    </Button>
+  );
+}
+
+export function CallQueueBadge() {
+  const [n, setN] = useState(0);
+  useEffect(() => onQueueSize(setN), []);
+  return n ? <Badge variant="outline" className="gap-1"><Volume2 className="size-3" />نداءات في الطابور: {n}</Badge> : null;
 }

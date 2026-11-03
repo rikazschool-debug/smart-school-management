@@ -20,6 +20,7 @@ import { Route as AuthenticatedAppAcademicRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppAttendanceRouteImport } from './routes/_authenticated/app/attendance'
 import { Route as AuthenticatedAppAttendanceScanRouteImport } from './routes/_authenticated/app/attendance-scan'
 import { Route as AuthenticatedAppAttendanceStationRouteImport } from './routes/_authenticated/app/attendance-station'
+import { Route as AuthenticatedAppCircularsRouteImport } from './routes/_authenticated/app/circulars'
 import { Route as AuthenticatedAppCommunicationRouteImport } from './routes/_authenticated/app/communication'
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
 import { Route as AuthenticatedAppGradesRouteImport } from './routes/_authenticated/app/grades'
@@ -28,6 +29,7 @@ import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app/notifications'
 import { Route as AuthenticatedAppPickupRouteImport } from './routes/_authenticated/app/pickup'
 import { Route as AuthenticatedAppPlatformRouteImport } from './routes/_authenticated/app/platform'
+import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app/profile'
 import { Route as AuthenticatedAppResultsRouteImport } from './routes/_authenticated/app/results'
 import { Route as AuthenticatedAppScheduleRouteImport } from './routes/_authenticated/app/schedule'
 import { Route as AuthenticatedAppSchoolDayRouteImport } from './routes/_authenticated/app/school-day'
@@ -109,6 +111,12 @@ const AuthenticatedAppAttendanceStationRoute =
     path: '/attendance-station',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppCircularsRoute =
+  AuthenticatedAppCircularsRouteImport.update({
+    id: '/circulars',
+    path: '/circulars',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppCommunicationRoute =
   AuthenticatedAppCommunicationRouteImport.update({
     id: '/communication',
@@ -153,6 +161,11 @@ const AuthenticatedAppPlatformRoute =
     path: '/platform',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
 const AuthenticatedAppResultsRoute = AuthenticatedAppResultsRouteImport.update({
   id: '/results',
   path: '/results',
@@ -292,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
   '/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
   '/app/attendance-station': typeof AuthenticatedAppAttendanceStationRoute
+  '/app/circulars': typeof AuthenticatedAppCircularsRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/grades': typeof AuthenticatedAppGradesRoute
@@ -300,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/app/school-day': typeof AuthenticatedAppSchoolDayRoute
@@ -333,6 +348,7 @@ export interface FileRoutesByTo {
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
   '/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
   '/app/attendance-station': typeof AuthenticatedAppAttendanceStationRoute
+  '/app/circulars': typeof AuthenticatedAppCircularsRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/grades': typeof AuthenticatedAppGradesRoute
@@ -341,6 +357,7 @@ export interface FileRoutesByTo {
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/app/school-day': typeof AuthenticatedAppSchoolDayRoute
@@ -377,6 +394,7 @@ export interface FileRoutesById {
   '/_authenticated/app/attendance': typeof AuthenticatedAppAttendanceRoute
   '/_authenticated/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
   '/_authenticated/app/attendance-station': typeof AuthenticatedAppAttendanceStationRoute
+  '/_authenticated/app/circulars': typeof AuthenticatedAppCircularsRoute
   '/_authenticated/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/grades': typeof AuthenticatedAppGradesRoute
@@ -385,6 +403,7 @@ export interface FileRoutesById {
   '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/_authenticated/app/pickup': typeof AuthenticatedAppPickupRoute
   '/_authenticated/app/platform': typeof AuthenticatedAppPlatformRoute
+  '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/results': typeof AuthenticatedAppResultsRoute
   '/_authenticated/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/_authenticated/app/school-day': typeof AuthenticatedAppSchoolDayRoute
@@ -421,6 +440,7 @@ export interface FileRouteTypes {
     | '/app/attendance'
     | '/app/attendance-scan'
     | '/app/attendance-station'
+    | '/app/circulars'
     | '/app/communication'
     | '/app/courses'
     | '/app/grades'
@@ -429,6 +449,7 @@ export interface FileRouteTypes {
     | '/app/notifications'
     | '/app/pickup'
     | '/app/platform'
+    | '/app/profile'
     | '/app/results'
     | '/app/schedule'
     | '/app/school-day'
@@ -462,6 +483,7 @@ export interface FileRouteTypes {
     | '/app/attendance'
     | '/app/attendance-scan'
     | '/app/attendance-station'
+    | '/app/circulars'
     | '/app/communication'
     | '/app/courses'
     | '/app/grades'
@@ -470,6 +492,7 @@ export interface FileRouteTypes {
     | '/app/notifications'
     | '/app/pickup'
     | '/app/platform'
+    | '/app/profile'
     | '/app/results'
     | '/app/schedule'
     | '/app/school-day'
@@ -505,6 +528,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/attendance'
     | '/_authenticated/app/attendance-scan'
     | '/_authenticated/app/attendance-station'
+    | '/_authenticated/app/circulars'
     | '/_authenticated/app/communication'
     | '/_authenticated/app/courses'
     | '/_authenticated/app/grades'
@@ -513,6 +537,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/notifications'
     | '/_authenticated/app/pickup'
     | '/_authenticated/app/platform'
+    | '/_authenticated/app/profile'
     | '/_authenticated/app/results'
     | '/_authenticated/app/schedule'
     | '/_authenticated/app/school-day'
@@ -627,6 +652,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAttendanceStationRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/circulars': {
+      id: '/_authenticated/app/circulars'
+      path: '/circulars'
+      fullPath: '/app/circulars'
+      preLoaderRoute: typeof AuthenticatedAppCircularsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/communication': {
       id: '/_authenticated/app/communication'
       path: '/communication'
@@ -681,6 +713,13 @@ declare module '@tanstack/react-router' {
       path: '/platform'
       fullPath: '/app/platform'
       preLoaderRoute: typeof AuthenticatedAppPlatformRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/profile': {
+      id: '/_authenticated/app/profile'
+      path: '/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/results': {
@@ -845,6 +884,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppAttendanceRoute: typeof AuthenticatedAppAttendanceRoute
   AuthenticatedAppAttendanceScanRoute: typeof AuthenticatedAppAttendanceScanRoute
   AuthenticatedAppAttendanceStationRoute: typeof AuthenticatedAppAttendanceStationRoute
+  AuthenticatedAppCircularsRoute: typeof AuthenticatedAppCircularsRoute
   AuthenticatedAppCommunicationRoute: typeof AuthenticatedAppCommunicationRoute
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppGradesRoute: typeof AuthenticatedAppGradesRoute
@@ -853,6 +893,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
   AuthenticatedAppPickupRoute: typeof AuthenticatedAppPickupRoute
   AuthenticatedAppPlatformRoute: typeof AuthenticatedAppPlatformRoute
+  AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppResultsRoute: typeof AuthenticatedAppResultsRoute
   AuthenticatedAppScheduleRoute: typeof AuthenticatedAppScheduleRoute
   AuthenticatedAppSchoolDayRoute: typeof AuthenticatedAppSchoolDayRoute
@@ -882,6 +923,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppAttendanceScanRoute: AuthenticatedAppAttendanceScanRoute,
   AuthenticatedAppAttendanceStationRoute:
     AuthenticatedAppAttendanceStationRoute,
+  AuthenticatedAppCircularsRoute: AuthenticatedAppCircularsRoute,
   AuthenticatedAppCommunicationRoute: AuthenticatedAppCommunicationRoute,
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppGradesRoute: AuthenticatedAppGradesRoute,
@@ -890,6 +932,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
   AuthenticatedAppPickupRoute: AuthenticatedAppPickupRoute,
   AuthenticatedAppPlatformRoute: AuthenticatedAppPlatformRoute,
+  AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppResultsRoute: AuthenticatedAppResultsRoute,
   AuthenticatedAppScheduleRoute: AuthenticatedAppScheduleRoute,
   AuthenticatedAppSchoolDayRoute: AuthenticatedAppSchoolDayRoute,
