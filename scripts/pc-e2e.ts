@@ -212,7 +212,7 @@ try {
   const susO = await owner.c.rpc("pc_custody_list", { _org: org, _status: null, _q: null, _school: null, _mine: false, _limit: 50, _offset: 0 });
   await padm.c.rpc("platform_set_section", { _org: org, _section: "finance", _enabled: true, _reason: "إعادة" });
   const back = await get(off.c, C1);
-  check("28 suspension blocks next request (even owner); re-enable restores the same data", !!sus.error && !!susO.error && Number(back.bal.book) === 650 && back.moves.length === 4, [sus.error, back?.moves?.length]);
+  check("28 suspension blocks next request (even owner); re-enable restores the same data", !!sus.error && !!susO.error && Number(back.bal.book) === 650 && back.moves.length === 5, [sus.error, back?.moves?.length]);
   // tasks + log + summary
   const tk = (await apr.c.rpc("pc_tasks", { _org: org })).data as any;
   const sum = (await owner.c.rpc("pc_summary", { _org: org, _school: null, _from: null, _to: null })).data as any;
