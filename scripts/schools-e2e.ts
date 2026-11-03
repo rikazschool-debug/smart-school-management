@@ -35,7 +35,7 @@ try {
   const row = (await admin.from("schools").select("name, city").eq("id", B).single()).data;
   check("3 owner edits school data", !ed.error && row?.name === "فرع ب المطوّر" && row?.city === "جدة", ed.error ?? row);
 
-  await admin.from("memberships").insert([{ user_id: p.id, org_id: org, school_id: B, role: "principal" }, { user_id: t.id, org_id: org, school_id: B, role: "teacher" }, { user_id: off.id, org_id: org, school_id: B, role: "teacher", is_active: false }]);
+  const mi = await admin.from("memberships").insert([{ user_id: p.id, org_id: org, school_id: B, role: "principal" }, { user_id: t.id, org_id: org, school_id: B, role: "teacher" }, { user_id: off.id, org_id: org, school_id: B, role: "teacher", is_active: false }]); if (mi.error) console.log("insert", mi.error);
   const pu = await p.c.from("schools").update({ name: "تعديل مدير" }).eq("id", B).select();
   const pr = await p.c.rpc("org_school_set_active", { _id: B, _active: false, _reason: "x" });
   check("4 principal cannot edit or suspend the school directly", (!!pu.error || !pu.data?.length) && !!pr.error);
