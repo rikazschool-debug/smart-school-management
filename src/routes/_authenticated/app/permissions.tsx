@@ -12,6 +12,7 @@ import { askText } from "@/components/confirm";
 import { PeoplePicker } from "@/components/people-picker";
 import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { BASE_TABS, peopleForTab, type PermPerson } from "@/lib/perm-tabs";
 
 export const Route = createFileRoute("/_authenticated/app/permissions")({
   head: () => ({ meta: [{ title: "إعداد المستخدمين والصلاحيات — ركاز" }, { name: "description", content: "الأدوار والمسميات وصلاحيات الأقسام ونطاقاتها." }] }),
@@ -71,7 +72,7 @@ function Roles({ org }: { org: string }) {
   async function archive(r: Row, on: boolean) {
     const reason = await askText(on ? "سبب الأرشفة" : "سبب الاستعادة", { required: true });
     if (!reason) return;
-    try { await call("perm_role_archive", { _org: org, _id: r["id"], _archive: on, _reason: reason }); qc.invalidateQueries({ queryKey: ["perm-roles", org] }); }
+    try { await call("perm_role_archive", { _org: org, _id: r["id"], _archive: on, _reason: reason }); qc.invalidateQueries({ queryKey: ["perm-roles", org] }); qc.invalidateQueries({ queryKey: ["perm-people", org] }); }
     catch (e) { toast.error(arabicError(e)); }
   }
   const setScope = (section: string, action: string, scope: string) => setEdit((e) => e && ({ ...e, grants: [...e.grants.filter((g) => !(g.section === section && g.action === action)), ...(scope ? [{ section, action, scope }] : [])] }));
@@ -133,20 +134,11 @@ function Roles({ org }: { org: string }) {
   );
 }
 
-type Person = { user_id: string; name: string; base: { role: Role; school: string | null; active: boolean }[]; roles: string[] };
-const BASE_TABS: Role[] = ["org_owner", "principal", "vice_principal", "supervisor", "dept_head", "student_affairs", "counselor", "nurse", "security", "teacher"];
-
-export function peopleForTab(people: Person[], tab: string): Person[] {
-  if (tab === "all") return people;
-  if (tab.startsWith("base:")) { const r = tab.slice(5); return people.filter((p) => p.base.some((b) => b.role === r)); }
-  const id = tab.slice(5); return people.filter((p) => p.roles.includes(id));
-}
-
 function People({ org, school }: { org: string; school: string | null }) {
   const qc = useQueryClient();
   const cat = useCatalog();
   const roles = useQuery({ queryKey: ["perm-roles", org], queryFn: async () => (await call("perm_roles_list", { _org: org })) as Row[] });
-  const people = useQuery({ queryKey: ["perm-people", org], queryFn: async () => (await call("perm_people", { _org: org })) as Person[] });
+  const people = useQuery({ queryKey: ["perm-people", org], queryFn: async () => (await call("perm_people", { _org: org })) as PermPerson[] });
   const [tab, setTab] = useState("all");
   const [user, setUser] = useState<string | null>(null);
   const [q, setQ] = useState("");
