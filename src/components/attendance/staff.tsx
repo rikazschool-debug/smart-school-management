@@ -150,7 +150,8 @@ export function GateTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean }) 
   const tone = last?.["result"] === "present" ? "border-primary bg-primary/5" : last?.["result"] === "late" ? "border-amber-500 bg-amber-500/10" : last?.["result"] === "duplicate" ? "border-muted-foreground/30 bg-muted" : "border-destructive bg-destructive/5";
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border bg-card p-5">
+      {/* card scanning is the gate account's job only (att_scanner); others keep manual entry, returns and the present list */}
+      {canScanAttendance(ctx.role) && <section className="rounded-2xl border bg-card p-5">
         <h2 className="mb-1 flex items-center gap-2 font-bold"><ScanLine className="size-5 text-primary" />مسح بطاقة الحضور الصباحي <Link to="/app/attendance-station" className="ms-auto text-sm font-medium text-primary hover:underline">فتح شاشة المسح الكاملة (كاميرا/قارئ) ←</Link></h2>
         <p className="mb-3 text-sm text-muted-foreground">وجّه قارئ الباركود نحو البطاقة؛ يكتب القارئ الرمز ويضغط Enter تلقائيًا. الوقت يُحتسب من الخادم. البطاقة للحضور فقط وليست تصريح خروج.</p>
         <form onSubmit={(e) => { e.preventDefault(); void submit(); }} className="flex gap-2">
@@ -167,7 +168,7 @@ export function GateTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean }) 
             </div>
           </div>
         )}
-              </section>
+      </section>}
       {canApprove && <ManualEntry S={S} />}
       <PresentNow S={S} withReturn />
     </div>
