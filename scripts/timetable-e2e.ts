@@ -319,7 +319,10 @@ try {
   const pick = cand.find((x) => x.teacher_id !== tNoAsg.id) ?? cand[0];
   const as = await pr.c.rpc("assign_substitute", { _absence: ab, _slot: target.slot_id, _substitute: pick.teacher_id, _reason: "تغطية" });
   const busyT = (await admin.from("timetable_slots").select("teacher_id").eq("timetable_id", tt.id).eq("day", 1).eq("period_id", target.period_id)).data!.map((x) => x.teacher_id);
-  const badSub = await pr.c.rpc("assign_substitute", { _absence: ab, _slot: aff[1]?.slot_id ?? target.slot_id, _substitute: busyT.find((x) => x !== T[0].id), _reason: "x" });
+  // busy teacher must be busy at the period of the slot being covered (not at another period)
+  const badSlot = aff[1] ?? target;
+  const busyBad = (await admin.from("timetable_slots").select("teacher_id").eq("timetable_id", tt.id).eq("day", 1).eq("period_id", badSlot.period_id)).data!.map((x) => x.teacher_id);
+  const badSub = await pr.c.rpc("assign_substitute", { _absence: ab, _slot: badSlot.slot_id, _substitute: busyBad.find((x) => x !== T[0].id), _reason: "x" });
   await pr.c.rpc("cancel_substitution", { _id: as.data, _reason: "عاد المعلم" });
   const baseAfter = JSON.stringify((await admin.from("timetable_slots").select("id, day, period_id, teacher_id").eq("timetable_id", tt.id).order("id")).data);
   const lastMon = aff.find((x) => x.period_id === P[6].id || x.period_id === P[5].id);
