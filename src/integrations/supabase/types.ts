@@ -4567,6 +4567,82 @@ export type Database = {
           },
         ]
       }
+      org_section_log: {
+        Row: {
+          actor: string
+          after_enabled: boolean
+          at: string
+          before_enabled: boolean | null
+          id: string
+          org_id: string
+          reason: string
+          section: string
+        }
+        Insert: {
+          actor: string
+          after_enabled: boolean
+          at?: string
+          before_enabled?: boolean | null
+          id?: string
+          org_id: string
+          reason: string
+          section: string
+        }
+        Update: {
+          actor?: string
+          after_enabled?: boolean
+          at?: string
+          before_enabled?: boolean | null
+          id?: string
+          org_id?: string
+          reason?: string
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_section_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_sections: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          enabled: boolean
+          org_id: string
+          reason: string | null
+          section: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          enabled?: boolean
+          org_id: string
+          reason?: string | null
+          section: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          enabled?: boolean
+          org_id?: string
+          reason?: string | null
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_sections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -8510,6 +8586,7 @@ export type Database = {
       my_teacher_ids: { Args: never; Returns: string[] }
       norm_phone: { Args: { _p: string }; Returns: string }
       open_circular: { Args: { _id: string }; Returns: undefined }
+      org_sections_get: { Args: { _org: string }; Returns: Json }
       people_pick: {
         Args: {
           _branch?: string
@@ -8576,6 +8653,16 @@ export type Database = {
         }[]
       }
       pin_message: { Args: { _id: string; _pin: boolean }; Returns: undefined }
+      platform_section_log: { Args: { _org: string }; Returns: Json }
+      platform_set_section: {
+        Args: {
+          _enabled: boolean
+          _org: string
+          _reason: string
+          _section: string
+        }
+        Returns: undefined
+      }
       prepare_template_files: {
         Args: { _files: string[]; _new: string }
         Returns: {
@@ -8757,6 +8844,10 @@ export type Database = {
           message_id: string
           seq: number
         }[]
+      }
+      section_enabled: {
+        Args: { _org: string; _section: string }
+        Returns: boolean
       }
       send_message: {
         Args: {

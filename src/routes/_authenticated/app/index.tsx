@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, LoadingState, PageHeader, Section } from "@/com
 import { ClassroomGrid, useClassrooms } from "./classrooms.index";
 import { NAV_BY_ROLE, ROLE_LABELS, canManage, type NavKey } from "@/lib/roles";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
+import { OwnerPortal } from "@/components/owner-portal";
 
 export const Route = createFileRoute("/_authenticated/app/")({ component: Home });
 
@@ -49,6 +50,8 @@ function Home() {
       <PageHeader eyebrow={today()} title={`لوحة ${ROLE_LABELS[active.role]}`} desc={`${active.schoolName}${active.orgName ? ` — ${active.orgName}` : ""}`} />
       {!active.schoolId ? (
         <EmptyState title="اختر مدرسة من شريط السياق" hint={active.role === "platform_admin" ? "أو افتح صفحة المؤسسات." : "أو أضف مدرسة من صفحة المدارس."} />
+      ) : active.role === "org_owner" ? (
+        <OwnerPortal orgId={active.orgId} />
       ) : canManage(active.role) || active.role === "student_affairs" || active.role === "dept_head" || active.role === "supervisor" ? (
         <StaffHome ctx={active as AppContext & { schoolId: string }} />
       ) : active.role === "teacher" ? (
@@ -64,7 +67,7 @@ function Home() {
   );
 }
 
-function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
+export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const s = ctx.schoolId;
   const nav = NAV_BY_ROLE[ctx.role];
   const q = useQuery({

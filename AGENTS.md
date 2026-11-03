@@ -37,3 +37,4 @@
 - Auto logins (fixed role per record, exception to owner-only): src/lib/accounts.functions.ts → service-only _provision_link/_complete_account_setup; account_setup blocks access until first login (student: ID + forced password change; teacher/guardian: mobile + WhatsApp code via Send SMS hook → WATI). Import/add rules: src/lib/people-import.ts. Tests: scripts/accounts-e2e.ts.
 - Grades (term gradebooks) are a read-only administrative archive: all gb_* write RPCs are revoked; grading lives in homework/tests. Never re-enable approval stages. Details in src/components/grades/AGENTS.md.
 - Support tickets: RPC-only access (support_*), identity from the session; see src/components/support/AGENTS.md.
+- Section availability: platform admin toggles per-org sections (org_sections via platform_set_section, logged in org_section_log); missing row = enabled; every section RPC must check section_enabled() server-side — UI lock only mirrors it.
