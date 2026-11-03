@@ -16,6 +16,7 @@ import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { E_STATUS, TONE, calcLine, day, num, sar, todayRiyadh, usePcForms, type PcMe, type Row } from "@/components/procurement/shared";
 import { LogList, useInvalidate } from "@/components/procurement/custody";
+import { useMyNeeds } from "@/components/procurement/needs";
 
 const files = (fs: Row[]) => (fs ?? []).map((f: Row) => ({ ...f, size_bytes: f.size ?? 0 }));
 const run = async (p: PromiseLike<{ error: unknown }>, ok?: string) => {
@@ -90,8 +91,9 @@ export function ExpenseList({ orgId, me, open, orgName }: { orgId: string; me: P
   );
 }
 
-type Line = { description: string; amount: string; taxable: boolean };
-export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, onCancel }: {
+type Line = { description: string; amount: string; taxable: boolean; need_line_id?: string; qty?: string };
+export function ExpenseForm({ orgId, me, custodyId, needId, initial, corrects, onDone, onCancel }: {
+  needId?: string | undefined;
   orgId: string; me: PcMe; custodyId?: string | null | undefined; initial?: Row; corrects?: Row | undefined; onDone: (id: string) => void; onCancel: () => void;
 }) {
   const custodies = useQuery({
@@ -110,11 +112,20 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
   });
   const [tax, setTax] = useState<boolean>(initial?.tax_invoice ?? corrects?.tax_invoice ?? false);
   const [incl, setIncl] = useState<boolean>(initial?.vat_inclusive ?? corrects?.vat_inclusive ?? me.settings?.vat_inclusive ?? false);
-  const [lines, setLines] = useState<Line[]>(initial?.lines?.map((l: Row) => ({ description: l.description, amount: String(l.amount), taxable: l.taxable })) ?? [{ description: "", amount: "", taxable: true }]);
+  const [lines, setLines] = useState<Line[]>(initial?.lines?.map((l: Row) => ({ description: l.description, amount: String(l.amount), taxable: l.taxable, need_line_id: l.need_line_id ?? "", qty: l.qty == null ? "" : String(l.qty) })) ?? [{ description: "", amount: "", taxable: true }]);
   const [busy, setBusy] = useState(false);
   const [key] = useState(() => crypto.randomUUID());
   const [answers, setAnswers] = useState<Record<string, string>>(initial?.custom ?? {});
-  const [pr, setPr] = useState<string>(initial?.purchase_request_id ?? "");
+  const [pr, setPr] = useState<string>(initial?.purchase_request_id ?? needId ?? "");
+  const needs = useMyNeeds(orgId);
+  const need = needs.data?.find((n) => n.id === pr);
+  const [prefilled, setPrefilled] = useState(!!initial);
+  if (!prefilled && need) {
+    setPrefilled(true);
+    if (!own && !custody) setOwn(true);
+    const rest = (need.lines as Row[]).filter((l) => Number(l.remaining) > 0);
+    if (rest.length) setLines(rest.map((l) => ({ description: l.description, amount: "", taxable: true, need_line_id: l.id, qty: String(l.remaining) })));
+  }
   const forms = usePcForms(orgId);
   const form = initial ? forms.data?.versions.find((v) => v.id === initial.form_id) : forms.data?.versions.find((v) => v.status === "published");
   const core = (form?.core ?? forms.data?.default_core ?? []) as Row[];
@@ -132,7 +143,7 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
   async function save() {
     setBusy(true);
     const body = { ...d, own_funds: own, custody_id: own ? null : custody, school_id: own ? school : null, benefit_school_id: ben || null, corrects_id: corrects?.id ?? initial?.corrects_id ?? null,
-      tax_invoice: tax, vat_inclusive: incl, category_id: d.category_id || null, custom: answers, purchase_request_id: pr || null, lines: lines.map((l) => ({ description: l.description, amount: Number(l.amount), taxable: l.taxable })) };
+      tax_invoice: tax, vat_inclusive: incl, category_id: d.category_id || null, custom: answers, purchase_request_id: pr || null, lines: lines.map((l) => ({ description: l.description, amount: Number(l.amount), taxable: l.taxable, need_line_id: need ? l.need_line_id || null : null, qty: need && l.qty ? Number(l.qty) : null })) };
     const { data, error } = await db.rpc("pc_expense_save", { _org: orgId, _id: initial?.id ?? null, _d: body, _rev: initial?.rev ?? 0, _key: initial ? null : key });
     setBusy(false);
     if (error) { toast.error(arabicError(error)); return; }
@@ -163,6 +174,9 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
       {lines.map((l, i) => (
         <div key={i} className="flex flex-wrap items-center gap-2">
           <Input className="min-w-40 flex-1" placeholder="بيان البند" value={l.description} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} />
+          {need && <select aria-label={`بند الاحتياج ${i + 1}`} className={selectCls("w-full sm:w-48")} value={l.need_line_id ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, need_line_id: e.target.value } : x)))}>
+            <option value="">غير مرتبط بالاحتياج</option>{(need.lines as Row[]).map((n) => <option key={n.id} value={n.id}>{n.description} (متبقٍ {Number(n.remaining)})</option>)}</select>}
+          {need && l.need_line_id && <Input aria-label={`الكمية ${i + 1}`} className="w-20" inputMode="decimal" placeholder="الكمية" value={l.qty ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, qty: e.target.value } : x)))} />}
           <Input className="w-28" inputMode="decimal" placeholder="المبلغ" value={l.amount} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, amount: e.target.value } : x)))} />
           {tax && <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={l.taxable} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, taxable: e.target.checked } : x)))} /> خاضع</label>}
           <span className="w-40 text-xs tabular-nums text-muted-foreground">{tax ? `ضريبة ${sar(preview[i]!.vat)} · ` : ""}{sar(preview[i]!.total)}</span>
@@ -208,9 +222,15 @@ export function ExpenseForm({ orgId, me, custodyId, initial, corrects, onDone, o
             {f.help && <p className="mt-0.5 text-xs text-muted-foreground">{f.help}</p>}
           </div>
         ))}
-        {!corrects && (purchases.data?.length ?? 0) > 0 && (
+        {!corrects && (needs.data?.length ?? 0) > 0 && (
+          <div className="sm:col-span-2"><Label>طلب احتياج مسند إليك</Label>
+            <select className={selectCls()} value={need ? pr : ""} onChange={(e) => { setPr(e.target.value); setPrefilled(false); }}><option value="">بدون</option>{(needs.data ?? []).map((r) => <option key={r.id} value={r.id}>{r.ref} · {r.purpose} · {r.school}</option>)}</select>
+            {need && <p className="mt-1 text-xs text-muted-foreground">اربط كل بند ببند الاحتياج وكميته؛ يمكن تنفيذ الطلب على أكثر من فاتورة، ولا تتجاوز الكمية المتبقي.</p>}
+          </div>
+        )}
+        {!corrects && !need && (purchases.data?.length ?? 0) > 0 && (
           <div className="sm:col-span-2"><Label>طلب شراء مسبق معتمد{threshold ? ` (إلزامي فوق ${sar(threshold)})` : " (اختياري)"}</Label>
-            <select className={selectCls()} value={pr} onChange={(e) => setPr(e.target.value)}><option value="">بدون</option>{(purchases.data ?? []).map((r) => <option key={r.id} value={r.id}>{r.ref} · {r.purpose} · {sar(r.amount)}</option>)}</select>
+            <select className={selectCls()} value={need ? "" : pr} onChange={(e) => setPr(e.target.value)}><option value="">بدون</option>{(purchases.data ?? []).map((r) => <option key={r.id} value={r.id}>{r.ref} · {r.purpose} · {sar(r.amount)}</option>)}</select>
           </div>
         )}
         {!corrects && threshold && !(purchases.data?.length) && <p className="text-xs text-muted-foreground sm:col-span-2">المصروف فوق {sar(threshold)} يحتاج طلب شراء مسبق معتمد.</p>}
