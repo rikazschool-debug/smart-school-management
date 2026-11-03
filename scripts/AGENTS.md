@@ -38,3 +38,4 @@
 - scripts/pc2-e2e.ts: procurement phase 4 (requests, top-ups, settlement/close, carry-over, transfers, form versions, alerts, reports/export scope; 19 checks). pc-browser-fixture.ts `setup --open` also creates a disbursed custody with one approved invoice.
 - scripts/schools-e2e.ts: owner schools/branches (add/edit, suspend pauses accounts + blocks joining, last-branch guard, restore only paused, audit, isolation; 13 checks).
 - scripts/perm6-e2e.ts: flexible school permissions (base equivalence, templates = role rules, grant/deny/branch/org scope, suspended branch, real gate RPC, isolation; 20 checks).
+- scripts/pc-need-e2e.ts: purchase needs (principal need → officer, line-linked invoices, partial delivery, separation of duties, isolation; 12 checks). pc-browser-fixture now also creates a principal.

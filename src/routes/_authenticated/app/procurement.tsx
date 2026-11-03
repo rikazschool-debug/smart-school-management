@@ -9,11 +9,12 @@ import { CustodyOps, RequestDetail, RequestForm, RequestList } from "@/component
 import { ReportsPanel } from "@/components/procurement/reports";
 import { CustodyDetail, CustodyForm, CustodyList } from "@/components/procurement/custody";
 import { ExpenseDetail, ExpenseForm, ExpenseList } from "@/components/procurement/expense";
+import { NeedDetail, NeedForm, NeedList } from "@/components/procurement/needs";
 import { CapsNote, SettingsTab, SummaryTab, TasksTab } from "@/components/procurement/workspace";
 
-const TABS = { summary: "الملخص", custodies: "العهد", expenses: "المشتريات والفواتير", requests: "الطلبات", settings: "الإعدادات" } as const;
+const TABS = { summary: "الملخص", needs: "طلبات الاحتياج", custodies: "العهد", expenses: "المشتريات والفواتير", requests: "الطلبات", settings: "الإعدادات" } as const;
 type Tab = keyof typeof TABS;
-type Search = { tab?: Tab; c?: string; e?: string; r?: string; new?: "custody" | "expense" | "request"; for?: string; kind?: string };
+type Search = { tab?: Tab; c?: string; e?: string; r?: string; n?: string; need?: string; new?: "custody" | "expense" | "request" | "need"; for?: string; kind?: string };
 
 export const Route = createFileRoute("/_authenticated/app/procurement")({
   validateSearch: (s: Record<string, unknown>): Search => ({
@@ -21,7 +22,9 @@ export const Route = createFileRoute("/_authenticated/app/procurement")({
     ...(typeof s["c"] === "string" ? { c: s["c"] } : {}),
     ...(typeof s["e"] === "string" ? { e: s["e"] } : {}),
     ...(typeof s["r"] === "string" ? { r: s["r"] } : {}),
-    ...(s["new"] === "custody" || s["new"] === "expense" || s["new"] === "request" ? { new: s["new"] } : {}),
+    ...(typeof s["n"] === "string" ? { n: s["n"] } : {}),
+    ...(typeof s["need"] === "string" ? { need: s["need"] } : {}),
+    ...(s["new"] === "custody" || s["new"] === "expense" || s["new"] === "request" || s["new"] === "need" ? { new: s["new"] } : {}),
     ...(typeof s["kind"] === "string" ? { kind: s["kind"] } : {}),
     ...(typeof s["for"] === "string" ? { for: s["for"] } : {}),
   }),
@@ -47,10 +50,12 @@ function Page() {
     </>
   );
   if (!me.enabled) return <>{header}<SectionLocked /></>;
-  if (!me.caps.view) return <>{header}<ForbiddenState /></>;
   const orgId = active.orgId;
-  const tabs = (Object.keys(TABS) as Tab[]).filter((t) => (t === "settings" ? me.caps.settings === "org" : true));
-  const tab = search.tab && tabs.includes(search.tab) ? search.tab : "summary";
+  const needsOnly = !me.caps.view;
+  if (needsOnly && active.role !== "principal") return <>{header}<ForbiddenState /></>;
+  const tabs = (Object.keys(TABS) as Tab[]).filter((t) => (needsOnly ? t === "needs" : t === "settings" ? me.caps.settings === "org" : true));
+  const tab = search.tab && tabs.includes(search.tab) ? search.tab : tabs[0]!;
+  const openN = (id: string) => go({ tab: "needs", n: id });
   const go = (s: Search) => void navigate({ search: s });
   const openC = (id: string) => go({ tab: "custodies", c: id });
   const openE = (id: string) => go({ tab: "expenses", e: id });
@@ -59,8 +64,12 @@ function Page() {
   const canCreate = me.create_schools.length > 0 && !!me.caps.create;
 
   let body: React.ReactNode;
-  if (search.new === "custody") body = <CustodyForm orgId={orgId} me={me} onDone={openC} onCancel={() => go({ tab: "custodies" })} />;
-  else if (search.new === "expense") body = <ExpenseForm orgId={orgId} me={me} custodyId={search.for} onDone={openE} onCancel={() => (search.for ? openC(search.for) : go({ tab: "expenses" }))} />;
+  if (search.new === "need") body = <NeedForm orgId={orgId} me={me} onDone={openN} onCancel={() => go({ tab: "needs" })} />;
+  else if (search.n) body = editing ? <NeedForm orgId={orgId} me={me} initial={editing} onDone={() => setEditing(null)} onCancel={() => setEditing(null)} />
+    : <NeedDetail id={search.n} me={me} back={() => go({ tab: "needs" })} edit={setEditing} openExpense={openE} newInvoice={(nid) => go({ tab: "expenses", new: "expense", need: nid })} />;
+  else if (tab === "needs") body = <NeedList orgId={orgId} open={openN} onNew={() => go({ tab: "needs", new: "need" })} />;
+  else if (search.new === "custody") body = <CustodyForm orgId={orgId} me={me} onDone={openC} onCancel={() => go({ tab: "custodies" })} />;
+  else if (search.new === "expense") body = <ExpenseForm orgId={orgId} me={me} custodyId={search.for} needId={search.need} onDone={openE} onCancel={() => (search.for ? openC(search.for) : go({ tab: "expenses" }))} />;
   else if (search.new === "request") body = <RequestForm key={`${search.kind}-${search.for}`} orgId={orgId} me={me} kind={search.kind} custodyId={search.for} onDone={openR} onCancel={() => (search.for ? openC(search.for) : go({ tab: "requests" }))} newCustody={() => go({ tab: "custodies", new: "custody" })} />;
   else if (search.c) body = <CustodyDetail id={search.c} me={me} orgName={active.orgName} back={() => go({ tab: "custodies" })} openExpense={openE} newExpense={(cid) => go({ tab: "expenses", new: "expense", for: cid })}
     ops={(c) => <CustodyOps c={c} me={me} newRequest={(k) => newReq(k, c.id)} openRequest={openR} />} />;
@@ -76,10 +85,10 @@ function Page() {
   return (
     <div className="space-y-4">
       {header}
-      <CapsNote me={me} />
+      {!needsOnly && <CapsNote me={me} />}
       <div className="flex flex-wrap gap-1 border-b" role="tablist">
         {tabs.map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t && !search.c && !search.e && !search.r && !search.new} onClick={() => go({ tab: t })}
+          <button key={t} role="tab" aria-selected={tab === t && !search.c && !search.e && !search.r && !search.n && !search.new} onClick={() => go({ tab: t })}
             className={`-mb-px border-b-2 px-3 py-2 text-sm ${tab === t ? "border-primary font-semibold text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{TABS[t]}</button>
         ))}
       </div>

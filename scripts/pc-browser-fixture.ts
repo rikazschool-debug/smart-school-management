@@ -25,9 +25,9 @@ if (mode === "teardown") {
 
 const run = Date.now(), pw = "Pcb-pass-" + run;
 const users: Record<string, { email: string; id: string; c: any }> = {};
-for (const tag of ["owner", "officer", "approver", "disburser", "officer2"]) {
+for (const tag of ["owner", "officer", "approver", "disburser", "officer2", "principal"]) {
   const email = `pcb-${tag}-${run}@rikaz.test`;
-  await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: { owner: "مالك الاختبار", officer: "سعد المشتريات", approver: "نورة المعتمدة", disburser: "خالد الصرف", officer2: "هند المستلمة" }[tag] } });
+  await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: { owner: "مالك الاختبار", officer: "سعد المشتريات", approver: "نورة المعتمدة", disburser: "خالد الصرف", officer2: "هند المستلمة", principal: "مدير الاختبار" }[tag] } });
   const c = createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
   const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw s.error;
   users[tag] = { email, id: s.data.user!.id, c };
@@ -35,7 +35,7 @@ for (const tag of ["owner", "officer", "approver", "disburser", "officer2"]) {
 const o = users.owner!;
 const { data: org, error } = await o.c.rpc("create_organization", { _org_name: "مؤسسة عهد تجريبية", _school_name: "الفرع الرئيسي" }); if (error) throw error;
 const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id;
-await admin.from("memberships").insert(["officer", "approver", "disburser", "officer2"].map((t) => ({ user_id: users[t]!.id, org_id: org, school_id: A, role: "teacher" })));
+await admin.from("memberships").insert([...["officer", "approver", "disburser", "officer2"].map((t) => ({ user_id: users[t]!.id, org_id: org, school_id: A, role: "teacher" as const })), { user_id: users.principal!.id, org_id: org, school_id: A, role: "principal" as const }]);
 const roles = (await o.c.rpc("perm_roles_list", { _org: org })).data as any[];
 const R = (n: string) => roles.find((r) => r.name === n).id;
 await o.c.rpc("perm_assign", { _org: org, _user: users.officer!.id, _role: R("مسؤول مشتريات"), _assign: true, _school_ids: null, _limit: null, _reason: "تجربة" });
