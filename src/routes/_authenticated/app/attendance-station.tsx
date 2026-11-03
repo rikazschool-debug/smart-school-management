@@ -7,7 +7,9 @@ import { StudentSearchCheckin } from "@/components/attendance/student-search";
 import { GateTab } from "@/components/attendance/staff";
 import { CallsTab } from "@/components/attendance/calls-settings";
 import { FieldTestGuide } from "@/components/attendance/field-test-guide";
-import { attTabs, canManage, canScanAttendance } from "@/lib/roles";
+import { attTabsWith, canApproveAttendanceWith, canScanWith } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
+import type { AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/attendance-station")({
   head: () => ({ meta: [{ title: "حضور الطلاب والنداء بالمسح — ركاز" }, { name: "description", content: "مسح بطاقات الحضور، البحث بالاسم، البوابة والنداء في مكان واحد." }, { property: "og:title", content: "حضور الطلاب والنداء بالمسح — ركاز" }, { property: "og:description", content: "مسح الحضور والبوابة والنداء في مكان واحد." }] }),
@@ -20,13 +22,19 @@ const LABEL: Record<T, string> = { scan: "مسح الحضور والبحث", gat
 function Page() {
   const [picked, setTab] = useState<T | null>(null);
   return (
-    <RequireSchool nav="attendance">
-      {(ctx) => {
-        const allowed = attTabs(ctx.role);
+    <RequireSchool nav="attendance" extra={(p) => !!p["gate.operate"]}>
+      {(ctx) => <Station ctx={ctx} picked={picked} setTab={setTab} />}
+    </RequireSchool>
+  );
+}
+
+function Station({ ctx, picked, setTab }: { ctx: AppContext & { schoolId: string }; picked: T | null; setTab: (t: T) => void }) {
+        const perms = useSchoolPerms(ctx.schoolId);
+        const allowed = attTabsWith(ctx.role, perms);
         if (!allowed.includes("gate")) return <EmptyState title="هذا القسم متاح للأمن والاستقبال والمخولين فقط" />;
-        const canApprove = canManage(ctx.role) || ctx.role === "student_affairs";
+        const canApprove = canApproveAttendanceWith(ctx.role, perms);
         // scanning (camera/reader/name search) is for the gate account only — mirrors att_scanner
-        const tabs: T[] = [...(canScanAttendance(ctx.role) ? (["scan"] as T[]) : []), "gate", ...(allowed.includes("calls") ? (["calls"] as T[]) : []), ...(canScanAttendance(ctx.role) ? (["guide"] as T[]) : [])];
+        const tabs: T[] = [...(canScanWith(ctx.role, perms) ? (["scan"] as T[]) : []), "gate", ...(allowed.includes("calls") ? (["calls"] as T[]) : []), ...(canScanWith(ctx.role, perms) ? (["guide"] as T[]) : [])];
         const tab: T = picked && tabs.includes(picked) ? picked : tabs[0]!;
         return (
           <>
@@ -41,7 +49,4 @@ function Page() {
             {tab === "guide" && <FieldTestGuide schoolName={ctx.schoolName} />}
           </>
         );
-      }}
-    </RequireSchool>
-  );
 }

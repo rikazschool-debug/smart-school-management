@@ -12,21 +12,23 @@ import { arabicError, type AppContext } from "@/lib/session";
 import { GROUP_TYPE_LABEL, ROLE_AR } from "@/lib/comm";
 import { PeoplePicker, usePeopleByIds } from "@/components/people-picker";
 import { GroupPanel } from "@/components/comm/group-panel";
-import { canCreateGroup } from "@/lib/roles";
+import { canCreateGroupWith } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
 
 const sel = selectCls("w-full");
 
 export function ManageTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const [view, setView] = useState<"groups" | "new" | "settings" | "reports">("groups");
+  const canNew = canCreateGroupWith(ctx.role, useSchoolPerms(ctx.schoolId));
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        {([["groups", "المجموعات"], ...(canCreateGroup(ctx.role) ? [["new", "إنشاء مجموعة"]] as const : []), ["reports", "البلاغات"], ["settings", "إعدادات التواصل"]] as const).map(([k, l]) => (
+        {([["groups", "المجموعات"], ...(canNew ? [["new", "إنشاء مجموعة"]] as const : []), ["reports", "البلاغات"], ["settings", "إعدادات التواصل"]] as const).map(([k, l]) => (
           <Button key={k} size="sm" variant={view === k ? "default" : "outline"} onClick={() => setView(k)}>{l}</Button>
         ))}
       </div>
       {view === "groups" && <GroupsList ctx={ctx} />}
-      {view === "new" && canCreateGroup(ctx.role) && <GroupWizard ctx={ctx} onDone={() => setView("groups")} />}
+      {view === "new" && canNew && <GroupWizard ctx={ctx} onDone={() => setView("groups")} />}
       {view === "settings" && <CommSettings schoolId={ctx.schoolId} />}
       {view === "reports" && <Reports ctx={ctx} />}
     </div>
@@ -34,6 +36,7 @@ export function ManageTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
 }
 
 function GroupsList({ ctx }: { ctx: AppContext & { schoolId: string } }) {
+  const perms = useSchoolPerms(ctx.schoolId);
   const [open, setOpen] = useState<string | null>(null);
   const q = useQuery({
     queryKey: ["admin-groups", ctx.schoolId, ctx.orgId],
@@ -45,7 +48,7 @@ function GroupsList({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   });
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
-  if (!q.data?.length) return <EmptyState title="لا توجد مجموعات بعد" hint={canCreateGroup(ctx.role) ? "أنشئ لجنة أو فريق عمل من «إنشاء مجموعة»." : "إنشاء المجموعات لمالك المؤسسة أو مدير المدرسة."} />;
+  if (!q.data?.length) return <EmptyState title="لا توجد مجموعات بعد" hint={canCreateGroupWith(ctx.role, perms) ? "أنشئ لجنة أو فريق عمل من «إنشاء مجموعة»." : "إنشاء المجموعات لمالك المؤسسة أو مدير المدرسة."} />;
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">تظهر لك هنا بيانات المجموعات وأعضاؤها للإدارة. محتوى الرسائل لا يظهر إلا إذا كنت عضوًا فيها.</p>

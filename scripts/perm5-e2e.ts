@@ -19,7 +19,7 @@ async function user(tag: string) {
   tr.addUser(s.data.user!.id); return { c, id: s.data.user!.id };
 }
 const orgs: string[] = [];
-const eff = async (c: any, org: string, u: string, a: string) => ((await c.rpc("perm_effective", { _org: org, _user: u })).data?.effective ?? []).find((x: any) => x.action === a);
+const eff = async (c: any, org: string, u: string, a: string) => ((await c.rpc("perm_effective", { _org: org, _user: u })).data?.effective ?? []).find((x: any) => x.section === "procurement" && x.action === a);
 try {
   const owner = await user("owner"), owner2 = await user("owner2"), t = await user("teacher"), st = await user("student"), padm = await user("padm");
   const { data: org } = await owner.c.rpc("create_organization", { _org_name: "مؤسسة ص5", _school_name: "فرع أ" }); orgs.push(org);

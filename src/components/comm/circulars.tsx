@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { arabicError, type AppContext } from "@/lib/session";
-import { canManage } from "@/lib/roles";
+import { canPublishCircularWith } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
 import { BUCKET, PRIORITY_LABEL, ROLE_AR, SafeText, openFile } from "@/lib/comm";
 import { MemberPicker } from "@/components/comm/member-picker";
 
@@ -28,7 +29,7 @@ function scopeText(c: Row, schools: Row[] | undefined) {
 }
 
 export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { schoolId: string }; focus: string | undefined; onFocus: (id: string | undefined) => void }) {
-  const manager = canManage(ctx.role);
+  const manager = canPublishCircularWith(ctx.role, useSchoolPerms(ctx.schoolId));
   const [editing, setEditing] = useState<Row | null>(null);
   const q = useQuery({
     queryKey: ["circulars", ctx.schoolId],

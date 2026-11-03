@@ -366,3 +366,10 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - «إدارة المدارس» card: live counts (active/suspended branches, linked staff, students) + add school, edit data, activate/suspend branch, link staff.
 - Schools writes moved to owner-only RPCs (principal direct update removed). Suspension requires a reason, refuses the last active branch, pauses branch accounts (meetings cut by existing trigger), blocks activation/joining while suspended; reactivation restores only branch-paused accounts; all logged in access_audit. scripts/schools-e2e.ts 13/13; rls-e2e 94/94.
 - Browser: add school → suspend with reason → reactivate, change log shown. Fixed: pages kept stale data after an access change (session now resets instead of removing cached queries).
+
+## Closure C2 — flexible permissions for school sections (2026-11-03)
+- Sections now delegable: meetings (organize), school circulars (publish), school groups (create), attendance (approve, counselor follow-up), gate (operate, card scan); finance → procurement unchanged; HR shown as «تحت الإنشاء». Not delegable: users/roles/invitations, academic setup/timetable, student/guardian records outside these sections.
+- The 7 existing server checks now resolve through one rule: old role rule (unchanged) + owner grants − explicit deny. Migration proved equivalence for every active account × branch before committing (aborts on any difference); no account gained or lost anything.
+- Ready-made roles mirroring today's rules: مدير مدرسة، وكيل، شؤون الطلاب، أمن واستقبال، البوابة والاستلام، مرشد طلابي; custom titles can start from any template and add/remove sections.
+- Server: perm6-e2e 20/20; perm5 20/20; rls 94/94; attendance 106/106; comm 95/95. Unit: school-perms + roles 23/23.
+- Browser: owner starts a custom role from «وكيل» (sections prefilled); assigns «البوابة والاستلام» to a teacher → effective view shows the branch; teacher (phone 390px) sees gate + calls tabs, no scan tab; withdrawing removes it; no horizontal overflow; no page errors.

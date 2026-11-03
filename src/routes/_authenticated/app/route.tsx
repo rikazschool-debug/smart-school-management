@@ -11,6 +11,7 @@ import { Award, Briefcase,
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { usePcMe } from "@/components/procurement/shared";
+import { useSchoolPerms } from "@/lib/school-perms";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +87,7 @@ function Shell() {
   // Staff granted procurement permissions get a workspace entry; the server (pc_me → perm_scope) is the only source.
   const pcRole = !!active?.orgId && !["org_owner", "platform_admin", "student", "guardian"].includes(active.role);
   const pc = usePcMe(active?.orgId ?? null, pcRole);
+  const sp = useSchoolPerms(pcRole ? active?.schoolId : null);
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
 
@@ -111,8 +113,10 @@ function Shell() {
   const section = owner ? ownerSection(path) : null;
   // Owner home has no side menu; inside a section only that section's menu shows.
   const noSidebar = owner && section === null;
-  const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && pc.data.caps.view ? ["procurement"] : [])] as NavKey[];
-  const nav = owner && section ? ownerSectionNav(section, baseNav) : baseNav;
+  const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && pc.data.caps.view ? ["procurement"] : []),
+    // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
+    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : [])] as NavKey[];
+  const nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (

@@ -11,15 +11,19 @@ import { selectCls } from "@/components/ui/native-select";
 import { askText } from "@/components/confirm";
 import { PeoplePicker } from "@/components/people-picker";
 import { arabicError, useSession } from "@/lib/session";
+import { ROLE_LABELS, type Role } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/app/permissions")({
   head: () => ({ meta: [{ title: "إعداد المستخدمين والصلاحيات — ركاز" }, { name: "description", content: "الأدوار والمسميات وصلاحيات الأقسام ونطاقاتها." }] }),
   component: Page,
 });
 
-type Catalog = { sections: { key: string; label: string; actions: string[] }[]; actions: Record<string, string>; scopes: Record<string, string> };
+type Sec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean };
+type Catalog = { areas: { key: string; label: string; soon?: boolean }[]; sections: Sec[]; actions: Record<string, string>; scopes: Record<string, string>; locked: string[] };
 type Grant = { section: string; action: string; scope: string };
-const SOURCE: Record<string, string> = { owner: "مالك المؤسسة", role: "من الدور", override: "تفويض إضافي", deny: "منع خاص" };
+const SOURCE: Record<string, string> = { owner: "مالك المؤسسة", role: "من دور مسند", override: "تفويض إضافي", deny: "منع خاص", base: "من دوره الأساسي" };
+const actLabel = (c: Catalog, section: string, a: string) => c.sections.find((s) => s.key === section)?.labels?.[a] ?? c.actions[a];
+const grantText = (c: Catalog, gs: Grant[]) => gs.map((g) => `${actLabel(c, g.section, g.action)} (${c.scopes[g.scope]})`).join("، ");
 
 async function call(fn: string, args: Record<string, unknown>) {
   const { data, error } = await db.rpc(fn as never, args as never);
@@ -73,13 +77,20 @@ function Roles({ org }: { org: string }) {
   const setScope = (section: string, action: string, scope: string) => setEdit((e) => e && ({ ...e, grants: [...e.grants.filter((g) => !(g.section === section && g.action === action)), ...(scope ? [{ section, action, scope }] : [])] }));
   return (
     <Section title="الأدوار والمسميات الوظيفية">
-      <div className="mb-3"><Button size="sm" onClick={() => setEdit({ id: null, name: "", description: "", grants: [] })}>دور مخصص جديد</Button></div>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Button size="sm" onClick={() => setEdit({ id: null, name: "", description: "", grants: [] })}>دور مخصص جديد</Button>
+        <select aria-label="ابدأ من قالب" className={selectCls("min-w-0")} value="" onChange={(e) => { const r = roles.data!.find((x) => x["id"] === e.target.value); if (r) setEdit({ id: null, name: `${r["name"]} (مخصص)`, description: r["description"] ?? "", grants: r["grants"] as Grant[] }); }}>
+          <option value="">أو ابدأ من دور جاهز (وكيل، أمن، مسؤول مشتريات…)</option>
+          {roles.data!.filter((r) => r["system"]).map((r) => <option key={r["id"]} value={r["id"]}>{r["name"]}</option>)}
+        </select>
+      </div>
+      <p className="mb-3 text-xs text-muted-foreground">الأدوار الجاهزة تطابق ما يملكه صاحب الدور اليوم؛ إسنادها لشخص آخر يمنحه هذه الصلاحيات في فرعه فقط ما لم تحدد غير ذلك. لا يتغير شيء لأي حساب قائم تلقائيًا.</p>
       <ul className="divide-y rounded-xl border bg-card">
         {roles.data!.map((r) => (
           <li key={r["id"]} className="flex flex-wrap items-center gap-3 p-3 text-sm">
             <span className="min-w-0 flex-1">
               <span className="block font-semibold">{r["name"]} <span className="text-xs font-normal text-muted-foreground">{r["system"] ? "قالب النظام" : "مخصص"}{r["archived"] ? " • مؤرشف" : ""} • {r["holders"]} مستخدم</span></span>
-              <span className="block text-xs text-muted-foreground">{(r["grants"] as Grant[]).map((g) => `${c.actions[g.action]} (${c.scopes[g.scope]})`).join("، ") || "بلا صلاحيات"}</span>
+              <span className="block text-xs text-muted-foreground">{grantText(c, r["grants"] as Grant[]) || "بلا صلاحيات"}</span>
             </span>
             {r["system"] ? (
               <Button size="sm" variant="outline" onClick={() => setEdit({ id: null, name: `${r["name"]} (نسخة)`, description: r["description"] ?? "", grants: r["grants"] as Grant[] })}>نسخ إلى دور مخصص</Button>
@@ -96,19 +107,25 @@ function Roles({ org }: { org: string }) {
             <Input placeholder="اسم الدور" value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
             <Input placeholder="الوصف" value={edit.description} onChange={(e) => setEdit({ ...edit, description: e.target.value })} />
           </div>
-          {c.sections.map((s) => (
-            <div key={s.key}>
-              <p className="mb-2 text-sm font-bold">{s.label}</p>
-              <div className="grid gap-2 sm:grid-cols-3">
-                {s.actions.map((a) => { const cur = edit.grants.find((g) => g.section === s.key && g.action === a)?.scope ?? ""; return (
-                  <label key={a} className="flex items-center gap-2 text-sm"><span className="w-24 shrink-0">{c.actions[a]}</span>
-                    <select className={selectCls("w-full min-w-0", true)} value={cur} onChange={(e) => setScope(s.key, a, e.target.value)}>
-                      <option value="">لا</option>{Object.entries(c.scopes).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                    </select></label>); })}
-              </div>
-            </div>
+          {c.areas.map((ar) => (
+            <fieldset key={ar.key} className="rounded-lg border p-3">
+              <legend className="px-1 text-sm font-bold">{ar.label}</legend>
+              {ar.soon ? <p className="text-xs text-muted-foreground">تحت الإنشاء — لا توجد صلاحيات لهذا القسم بعد.</p> : c.sections.filter((s) => s.parent === ar.key).map((s) => (
+                <div key={s.key} className="mb-3 last:mb-0">
+                  <p className="mb-2 text-sm font-semibold">{s.label}{s.sensitive && <span className="ms-2 text-xs font-normal text-muted-foreground">يتيح الاطلاع على أسماء الطلاب في الفرع</span>}</p>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {s.actions.map((a) => { const cur = edit.grants.find((g) => g.section === s.key && g.action === a)?.scope ?? ""; return (
+                      <label key={a} className="flex items-center gap-2 text-sm"><span className="w-40 shrink-0 text-xs sm:text-sm">{actLabel(c, s.key, a)}</span>
+                        <select className={selectCls("w-full min-w-0", true)} value={cur} onChange={(e) => setScope(s.key, a, e.target.value)}>
+                          <option value="">لا</option>{s.scopes.map((k) => <option key={k} value={k}>{c.scopes[k]}</option>)}
+                        </select></label>); })}
+                  </div>
+                </div>
+              ))}
+            </fieldset>
           ))}
-          <p className="rounded-lg bg-secondary/50 p-2 text-xs">معاينة ما سيظهر للحساب: {edit.grants.length ? edit.grants.map((g) => `${c.actions[g.action]} — ${c.scopes[g.scope]}`).join("، ") : "لا شيء"}. {edit.id ? "التعديل يسري على جميع حاملي الدور من الطلب التالي؛ الاستثناءات الشخصية تبقى كما هي." : ""}</p>
+          <p className="text-xs text-muted-foreground">لا تُفوَّض: {c.locked.join("؛ ")}.</p>
+          <p className="rounded-lg bg-secondary/50 p-2 text-xs">معاينة ما سيظهر للحساب: {grantText(c, edit.grants) || "لا شيء"}. {edit.id ? "التعديل يسري على جميع حاملي الدور من الطلب التالي؛ الاستثناءات الشخصية تبقى كما هي." : ""}</p>
           <div className="flex gap-2"><Button size="sm" onClick={save}>حفظ</Button><Button size="sm" variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
         </div>
       )}
@@ -135,6 +152,7 @@ function Person({ org, school }: { org: string; school: string | null }) {
       <PeoplePicker purpose="perm" school={school} org={org} single value={ids} onChange={setIds} label="الموظف" showBranch />
       {user && (eff.isLoading || !c ? <LoadingState /> : eff.error ? <ErrorState message={arabicError(eff.error)} /> : (
         <div className="mt-4 space-y-4 rounded-xl border bg-card p-4 text-sm">
+          <p className="text-xs text-muted-foreground">الدور الأساسي: {(eff.data!["base_roles"] as Row[]).map((b) => `${ROLE_LABELS[b["role"] as Role] ?? b["role"]}${b["school"] ? ` — ${b["school"]}` : ""}`).join("، ") || "—"}</p>
           <div>
             <p className="mb-2 font-bold">الأدوار المسندة</p>
             {!(eff.data!["roles"] as Row[]).length ? <p className="text-muted-foreground">لا أدوار إضافية.</p> : (
@@ -149,21 +167,9 @@ function Person({ org, school }: { org: string; school: string | null }) {
               <Input className="w-40" inputMode="decimal" placeholder="حد الاعتماد (اختياري)" value={limit} onChange={(e) => setLimit(e.target.value)} />
               <Button size="sm" disabled={!role} onClick={() => run("perm_assign", { _org: org, _user: user, _role: role, _assign: true, _school_ids: null, _limit: limit ? Number(limit) : null }, "سبب إسناد الدور")}>إسناد</Button>
             </div>
-            {role && <p className="mt-1 text-xs text-muted-foreground">سيُحمَّل: {(roles.data?.find((r) => r["id"] === role)?.["grants"] as Grant[] | undefined)?.map((g) => `${c.actions[g.action]} (${c.scopes[g.scope]})`).join("، ") || "لا شيء"}</p>}
+            {role && <p className="mt-1 text-xs text-muted-foreground">سيُحمَّل: {grantText(c, (roles.data?.find((r) => r["id"] === role)?.["grants"] as Grant[] | undefined) ?? []) || "لا شيء"}</p>}
           </div>
-          <div>
-            <p className="mb-2 font-bold">الصلاحيات الفعلية — المشتريات والعهد</p>
-            <ul className="divide-y rounded-lg border">{(eff.data!["effective"] as Row[]).map((e) => (
-              <li key={e["action"]} className="flex flex-wrap items-center gap-2 p-2">
-                <span className="w-24">{c.actions[e["action"]]}</span>
-                <span className="min-w-0 flex-1 text-xs">{e["scope"] ? `${c.scopes[e["scope"]]} — ${SOURCE[e["source"]] ?? ""}` : e["source"] === "deny" ? "ممنوع (منع خاص)" : "غير مسموح"}</span>
-                {!eff.data!["is_owner"] && (<>
-                  <Button size="sm" variant="ghost" onClick={() => run("perm_override_set", { _org: org, _user: user, _section: "procurement", _action: e["action"], _effect: "deny", _scope: null }, "سبب المنع")}>منع</Button>
-                  <Button size="sm" variant="ghost" onClick={() => run("perm_override_set", { _org: org, _user: user, _section: "procurement", _action: e["action"], _effect: "grant", _scope: "branch" }, "سبب التفويض (نطاق: فروع محددة)")}>تفويض</Button>
-                  {(e["source"] === "deny" || e["source"] === "override") && <Button size="sm" variant="ghost" onClick={() => run("perm_override_set", { _org: org, _user: user, _section: "procurement", _action: e["action"], _effect: null, _scope: null }, "سبب إزالة الاستثناء")}>إزالة الاستثناء</Button>}
-                </>)}
-              </li>))}</ul>
-          </div>
+          <EffectiveList c={c} eff={eff.data!} onOverride={(section, action, effect, scope, ask) => run("perm_override_set", { _org: org, _user: user, _section: section, _action: action, _effect: effect, _scope: scope }, ask)} />
         </div>
       ))}
     </Section>
@@ -181,5 +187,35 @@ function Log({ org }: { org: string }) {
         </ul>
       )}
     </Section>
+  );
+}
+
+function EffectiveList({ c, eff, onOverride }: { c: Catalog; eff: Row; onOverride: (section: string, action: string, effect: string | null, scope: string | null, ask: string) => void }) {
+  const list = eff["effective"] as Row[];
+  return (
+    <div className="space-y-3">
+      <p className="font-bold">الصلاحيات الفعلية</p>
+      {c.sections.map((s) => (
+        <div key={s.key}>
+          <p className="mb-1 text-xs font-semibold text-muted-foreground">{c.areas.find((a) => a.key === s.parent)?.label} ← {s.label}</p>
+          <ul className="divide-y rounded-lg border">
+            {list.filter((e) => e["section"] === s.key).map((e) => {
+              const where = s.key === "procurement" ? (e["scope"] ? c.scopes[e["scope"]] : "") : (e["allowed_schools"] as string[]).join("، ");
+              const on = s.key === "procurement" ? !!e["scope"] : (e["allowed_schools"] as string[]).length > 0;
+              return (
+                <li key={e["action"]} className="flex flex-wrap items-center gap-2 p-2">
+                  <span className="w-44 shrink-0">{actLabel(c, s.key, e["action"])}</span>
+                  <span className="min-w-0 flex-1 text-xs">{e["source"] === "deny" ? "ممنوع (منع خاص)" : on ? `${where} — ${SOURCE[e["source"]] ?? ""}` : "غير مسموح"}</span>
+                  {!eff["is_owner"] && (<>
+                    <Button size="sm" variant="ghost" onClick={() => onOverride(s.key, e["action"], "deny", null, "سبب المنع")}>منع</Button>
+                    <Button size="sm" variant="ghost" onClick={() => onOverride(s.key, e["action"], "grant", "branch", s.key === "procurement" ? "سبب التفويض (نطاق: فروعه)" : "سبب التفويض (في الفروع التي يعمل بها)")}>تفويض</Button>
+                    {(e["source"] === "deny" || e["source"] === "override") && <Button size="sm" variant="ghost" onClick={() => onOverride(s.key, e["action"], null, null, "سبب إزالة الاستثناء")}>إزالة الاستثناء</Button>}
+                  </>)}
+                </li>);
+            })}
+          </ul>
+        </div>
+      ))}
+    </div>
   );
 }

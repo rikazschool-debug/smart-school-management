@@ -203,3 +203,7 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 - Add school, edit data, suspend/reactivate branch: organization owner only (platform admin too); principals no longer edit school records.
 - Suspending a branch pauses access for its staff, students and guardians until reactivated; reason required; last active branch cannot be suspended.
 - Linking staff to a school: owner invitation (invite_member) — the account links on sign-in with the matching confirmed email.
+
+## Flexible school permissions (2026-11-03)
+- Each person keeps exactly their role's rule. The org owner may add (role template, custom title or personal grant, branch or whole-org scope) or deny (deny wins) these actions: organize meetings, publish school circulars, create school groups, approve attendance, counselor follow-up, operate gate/pickup/calls, scan attendance cards.
+- Owners cannot be restricted; students/guardians cannot receive grants; nobody edits their own permissions; suspended branches grant nothing; every change is logged with a reason.

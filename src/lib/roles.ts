@@ -246,3 +246,31 @@ export function supportTabs(role: Role): SupportTab[] {
   const staff = !["student", "guardian"].includes(role);
   return [ "mine", ...(staff ? (["assigned"] as SupportTab[]) : []), "info", ...(role === "org_owner" || role === "principal" ? (["manage", "reports"] as SupportTab[]) : []) ];
 }
+
+/** Flexible school permissions of the signed-in person in the active branch (perm_my_school; keys like "gate.operate").
+ *  UI mirror only — the server resolves the same rule (base role + owner grants − explicit deny) on every request. */
+export type SchoolPerms = Record<string, boolean>;
+export function attTabsWith(role: Role, p?: SchoolPerms): AttTab[] {
+  // keep the role's own order (its first tab is the default); grants append, denials remove
+  let t = attTabs(role);
+  if (p && role !== "org_owner") {
+    const add = (ks: AttTab[]) => { t = [...t, ...ks.filter((k) => !t.includes(k))]; };
+    if (p["gate.operate"]) add(["today", "gate", "pickups", "calls"]);
+    else t = t.filter((k) => k !== "gate" && k !== "calls");
+    if (p["attendance.follow"] || p["attendance.approve"]) add(["today", "records", "followup"]);
+    if (p["attendance.approve"]) add(["pickups"]);
+  }
+  return t;
+}
+export function canScanWith(role: Role, p?: SchoolPerms) {
+  return p && role !== "org_owner" ? !!p["gate.scan"] : canScanAttendance(role);
+}
+export function canApproveAttendanceWith(role: Role, p?: SchoolPerms) {
+  return p && role !== "org_owner" ? !!p["attendance.approve"] : canManage(role) || role === "student_affairs";
+}
+export function canCreateGroupWith(role: Role, p?: SchoolPerms) {
+  return role === "org_owner" || (p ? !!p["groups.create"] : canCreateGroup(role));
+}
+export function canPublishCircularWith(role: Role, p?: SchoolPerms) {
+  return role === "org_owner" || (p ? !!p["circulars.publish"] : canManage(role));
+}
