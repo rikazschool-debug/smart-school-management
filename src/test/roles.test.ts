@@ -70,13 +70,13 @@ describe("role rules", () => {
     expect(commTabs("guardian")).not.toContain("meetings");
     for (const r of ["teacher", "principal", "org_owner", "nurse"] as const) expect(commTabs(r)).toContain("meetings");
   });
-  it("one «الجدول المدرسي» link; only managers get the build/substitutes/settings tabs, others see «جدولي»", () => {
+  it("one «الجدول المدرسي» link; only the principal level gets the build/substitutes/settings tabs, others see «جدولي»", () => {
     for (const r of ["teacher", "student", "guardian", "dept_head", "supervisor", "student_affairs"] as const) {
       expect(scheduleTabs(r)).toEqual([]);
       expect(scheduleLabel(r)).toBe("جدولي");
       expect(NAV_BY_ROLE[r]).toContain("schedule");
     }
-    for (const r of ["principal", "vice_principal", "org_owner"] as const) expect(scheduleTabs(r)).toEqual(["timetable", "subs", "settings"]);
+    for (const r of ["principal", "org_owner"] as const) expect(scheduleTabs(r)).toEqual(["timetable", "subs", "settings"]);
     for (const r of Object.keys(NAV_BY_ROLE) as (keyof typeof NAV_BY_ROLE)[]) expect(NAV_BY_ROLE[r].filter((k) => (k as string) === "schoolday" || (k as string) === "substitutions")).toEqual([]);
   });
 });
