@@ -24,11 +24,20 @@ async function user(tag: string) {
 const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
 const ids = (r: any) => ((r.data ?? []) as any[]).map((x) => x.teacher_id ?? x.id);
 let org: string | null = null;
+const KEEP = process.argv.includes("--keep");
+if (process.argv.includes("--teardown")) {
+  const f = JSON.parse(readFileSync("/tmp/browser/scope/fixture.json", "utf8"));
+  f.schools.forEach((x: string) => tr.addSchool(x)); f.users.forEach((x: string) => tr.addUser(x));
+  await tr.purgeOrg(f.org); for (const u of f.users) await admin.auth.admin.deleteUser(u);
+  console.log("teardown ok"); process.exit(0);
+}
+let fixture: any = {};
 try {
   const owner = await user("owner"), pr = await user("pr"), v1 = await user("v1"), v2 = await user("v2"), sup = await user("sup"), sec = await user("sec"), sa = await user("sa");
   const tu = [await user("t1"), await user("t2"), await user("t3")];
   org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة النطاق", _school_name: "فرع النطاق" })).data;
   const S = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(S);
+  fixture = { org, schools: [S], pw, pr: pr.email, v1: v1.email, v2: v2.email, sup: sup.email, sec: sec.email };
   for (const [u, r] of [[pr, "principal"], [v1, "vice_principal"], [v2, "vice_principal"], [sup, "supervisor"], [sec, "security"], [sa, "student_affairs"], ...tu.map((x) => [x, "teacher"])] as any[])
     await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: r });
   const ins = async (tb: string, v: any) => { const r = await admin.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
@@ -155,6 +164,9 @@ try {
   const inv = await pr.c.rpc("invite_member", { _email: `x-${run}@rikaz.test`, _school: S, _role: "teacher", _department: null });
   check("8b the principal cannot manage users/roles (owner only)", !!inv.error || inv.data === null);
 } catch (e) { bad++; console.log("FAIL exception", e); }
-finally { if (org) await tr.purgeOrg(org); for (const u of tr.users) await admin.auth.admin.deleteUser(u); }
+finally {
+  if (KEEP && org) { const fs = await import("fs"); fs.mkdirSync("/tmp/browser/scope", { recursive: true }); fs.writeFileSync("/tmp/browser/scope/fixture.json", JSON.stringify({ ...fixture, users: [...tr.users] })); console.log("kept fixture"); }
+  else { if (org) await tr.purgeOrg(org); for (const u of tr.users) await admin.auth.admin.deleteUser(u); }
+}
 console.log(`${ok} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);
