@@ -102,7 +102,7 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
                     {canEdit(e) && (ed[e.id] ? <><Button size="sm" className="h-7 px-2" onClick={() => void saveEdit(e)}>حفظ</Button><Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEd(({ [e.id]: _, ...rest }) => rest)}>تراجع</Button></>
                       : <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => setEd({ ...ed, [e.id]: { supplier: e.supplier ?? "", invoice_no: e.invoice_no ?? "", description: e.description ?? "", purchase_date: e.purchase_date ?? "", amount: String(e.vat_inclusive ? e.total : e.net) } })}>تعديل</Button>)}
                     {!ed[e.id] && <>
-                    <Button size="sm" className="h-7 px-2" onClick={() => void act(e, "approve")}>اعتماد</Button>
+                    
                     <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => void act(e, "return")}>إعادة للتعديل</Button>
                     <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => void act(e, "reject")}>رفض</Button></>}
                   </span>) : <span className="text-xs text-muted-foreground">—</span>}</td>}
