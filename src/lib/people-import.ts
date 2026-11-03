@@ -54,8 +54,21 @@ export function strongEnough(p: string): string | null {
   return null;
 }
 
-/** Gregorian date → YYYY-MM-DD; Hijri or invalid → error text. */
-export function parseDate(s: string): { v: string | null; err?: string } {
+const HFMT = typeof Intl !== "undefined" ? new Intl.DateTimeFormat("en-u-ca-islamic-umalqura-nu-latn", { timeZone: "UTC", year: "numeric", month: "numeric", day: "numeric" }) : null;
+/** Umm al-Qura Hijri → Gregorian ISO by searching around an estimate (Intl formats Gregorian→Hijri only). */
+export function hijriToGregorian(y: number, m: number, d: number): string | null {
+  if (!HFMT || m < 1 || m > 12 || d < 1 || d > 30) return null;
+  const est = Date.UTC(622, 6, 16) + ((y - 1) * 354.36667 + (m - 1) * 29.5306 + (d - 1)) * 86400000;
+  for (let k = -45; k <= 45; k++) {
+    const t = est + k * 86400000;
+    const parts = Object.fromEntries(HFMT.formatToParts(new Date(t)).map((p) => [p.type, p.value]));
+    if (Number(parts["year"]) === y && Number(parts["month"]) === m && Number(parts["day"]) === d) return new Date(t).toISOString().slice(0, 10);
+  }
+  return null;
+}
+
+/** Gregorian (or Umm al-Qura Hijri, converted) date → YYYY-MM-DD; invalid → error text. */
+export function parseDate(s: string): { v: string | null; err?: string; hijri?: boolean } {
   const t = s.trim();
   if (!t) return { v: null };
   let y: number, m: number, d: number;
@@ -63,7 +76,7 @@ export function parseDate(s: string): { v: string | null; err?: string } {
   if (mt) { y = +mt[1]!; m = +mt[2]!; d = +mt[3]!; }
   else if ((mt = t.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/))) { d = +mt[1]!; m = +mt[2]!; y = +mt[3]!; }
   else return { v: null, err: "صيغة التاريخ غير مفهومة" };
-  if (y >= 1300 && y <= 1500) return { v: null, err: "التاريخ هجري؛ أدخل الميلادي" };
+  if (y >= 1300 && y <= 1500) { const g = hijriToGregorian(y, m, d); return g ? { v: g, hijri: true } : { v: null, err: "تاريخ هجري غير صالح" }; }
   const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   const dt = new Date(iso + "T00:00:00Z");
   if (Number.isNaN(dt.getTime()) || dt.getUTCMonth() + 1 !== m || dt.getUTCDate() !== d) return { v: null, err: "تاريخ غير صالح" };
@@ -190,6 +203,7 @@ export type CheckedRow = RawRow & {
   existingId?: string; section?: { id: string; year_id: string } | null; department_id?: string | null;
 };
 
+const LETTERS = ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح", "ط", "ي", "ك", "ل"];
 const REL: Record<string, string> = { [norm("أب")]: "father", [norm("الأب")]: "father", [norm("والد")]: "father", [norm("أم")]: "mother", [norm("الأم")]: "mother", [norm("والدة")]: "mother", [norm("أخ")]: "brother", [norm("أخت")]: "sister", [norm("أخرى")]: "other" };
 
 /** Same rules for import rows and the single-add form. */
@@ -210,11 +224,12 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
       if (!nid) e.push("رقم الهوية مطلوب (يدخل به الطالب)");
       if (nid && lk.existingIds.has(nid)) { out.existingId = lk.existingIds.get(nid)!; notes.push("الطالب موجود مسبقًا — لن يُكرر، تُستكمل بقية الخطوات"); }
       const bd = parseDate(v["birth_date"] ?? ""); if (bd.err) e.push(`تاريخ الميلاد: ${bd.err}`); data["birth_date"] = bd.v;
+      if (bd.hijri) notes.push("حُوّل تاريخ الميلاد من الهجري (أم القرى)");
       const gn = norm(v["gender"]); data["gender"] = !gn ? null : ["ذكر", "male", "m"].map(norm).includes(gn) ? "male" : ["انثي", "أنثى", "female", "f"].map(norm).includes(gn) ? "female" : null;
       if (gn && !data["gender"]) e.push("الجنس: ذكر أو أنثى");
       const g = v["grade"] ?? "", s = v["section"] ?? "";
       if (g || s) {
-        const sec = lk.sections.get(`${norm(g)}|${norm(s)}`);
+        const sec = lk.sections.get(`${norm(g)}|${norm(s)}`) ?? (/^\d{1,2}$/.test(s.trim()) ? lk.sections.get(`${norm(g)}|${norm(LETTERS[Number(s.trim()) - 1] ?? "")}`) : undefined);
         if (!g || !s) e.push("الصف والفصل معًا مطلوبان للتسكين");
         else if (!sec) e.push(`الشعبة «${g} / ${s}» غير موجودة في السنة الحالية`);
         else if (!out.existingId) {

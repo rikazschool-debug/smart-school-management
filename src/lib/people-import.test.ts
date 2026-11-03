@@ -37,7 +37,8 @@ describe("phone, date and password rules", () => {
   it("accepts Gregorian dates in two orders and rejects Hijri", () => {
     expect(parseDate("2015-03-01").v).toBe("2015-03-01");
     expect(parseDate("01/03/2015").v).toBe("2015-03-01");
-    expect(parseDate("1436/05/10").err).toMatch(/هجري/);
+    expect(parseDate("1436/05/10").v).toBe("2015-03-01");
+    expect(parseDate("1436/05/10").hijri).toBe(true);
     expect(parseDate("2015-02-30").err).toBeTruthy();
   });
   it("requires 8+ chars with letters and digits", () => {
@@ -87,6 +88,10 @@ describe("validation rules (import and single add)", () => {
   it("existing student is reused, not duplicated", () => {
     const r = validate("students", [raw({ full_name: "قديم", national_id: "1000000005" })], lk)[0]!;
     expect(r.existingId).toBe("OLD"); expect(r.errors).toEqual([]);
+  });
+  it("section number 2 matches section «ب» when no section is literally named 2", () => {
+    const l2: Lookups = { ...empty, sections: new Map([["الاول|ب", { id: "SB", year_id: "Y", capacity: null, used: 0 }]]) };
+    expect(validate("students", [raw({ full_name: "أ", national_id: "1000000021", grade: "الأول", section: "2" })], l2)[0]!.section?.id).toBe("SB");
   });
   it("section capacity is enforced before saving", () => {
     const r = validate("students", [raw({ full_name: "أ", national_id: "1000000011", grade: "الأول", section: "أ" }), raw({ full_name: "ب", national_id: "1000000012", grade: "الأول", section: "أ" })], lk);
