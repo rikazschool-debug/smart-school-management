@@ -84,6 +84,9 @@ function ScheduleExport({ rows, school, title, week, subBySlot, filters = [] }: 
   return <ExportButtons title={title} school={school} filters={filters} headers={["اليوم", "الحصة", "الوقت", "المادة", "الشعبة", "المعلم", "البديل", "القاعة", "مثبتة"]}
     rows={() => sorted.map((s) => { const l = slotLabel(s); const sub = week && subBySlot?.get(`${s["id"]}|${week[s["day"]]}`); return [DAY_NAMES[s["day"]], s["periods"]?.name ?? "", `من ${String(s["periods"]?.start_time ?? "").slice(0, 5)} إلى ${String(s["periods"]?.end_time ?? "").slice(0, 5)}`, l.subject, l.section, l.teacher, sub ? (sub["teachers"]?.full_name ?? "بديل") : "", l.room ?? "", s["pinned"] ? "نعم" : ""]; })} />;
 }
+/** day|period -> slots, so each grid cell is a lookup instead of a scan over every slot */
+export const byCell = (slots: Row[]) => { const m = new Map<string, Row[]>(); for (const s of slots) { const k = `${s["day"]}|${s["period_id"]}`; const l = m.get(k); l ? l.push(s) : m.set(k, [s]); } return m; };
+const NONE: Row[] = [];
 const applyFilter = (slots: Row[], f: string) =>
   !f ? slots : f.startsWith("s:") ? slots.filter((s) => s["section_id"] === f.slice(2)) : f.startsWith("r:") ? slots.filter((s) => s["room_id"] === f.slice(2)) : slots.filter((s) => s["teacher_id"] === f.slice(2));
 
@@ -127,7 +130,8 @@ function Manager({ ctx }: { ctx: Ctx }) {
   const d = setup.data!;
   if (!d.periods.some((p) => p["kind"] === "lesson")) return <EmptyState title="أضف الحصص أولًا" hint="من تبويب «الإعدادات» حدّد أيام الدراسة والحصص." />;
   const isDraft = tt?.["status"] === "draft";
-  const shown = applyFilter(slots.data ?? [], filter);
+  const shown = useMemo(() => applyFilter(slots.data ?? [], filter), [slots.data, filter]);
+  const cells = useMemo(() => byCell(shown), [shown]);
   const latestPublished = tts.data?.filter((t) => t["status"] === "published").sort((a, b) => (b["version"] ?? 0) - (a["version"] ?? 0))[0];
   const ttLabel = (t: Row) => t["status"] === "draft" ? (t["based_on"] ? "مسودة تعديل" : "مسودة") : `منشور — إصدار ${t["version"]} — يسري من ${t["effective_from"]}`;
   const filterLabel = !filter ? "كل الحصص" : filter.startsWith("s:") ? `شعبة ${slotLabel(shown[0] ?? {}).section}` : filter.startsWith("t:") ? `المعلم ${slotLabel(shown[0] ?? {}).teacher}` : `القاعة ${slotLabel(shown[0] ?? {}).room}`;
@@ -218,7 +222,7 @@ function Manager({ ctx }: { ctx: Ctx }) {
               cell={(day, p) => {
                 const pd = p["days"] as number[] | null;
                 if (pd && !pd.includes(day)) return <span className="text-xs text-muted-foreground">— لا تُعقد</span>;
-                const here = shown.filter((s) => s["day"] === day && s["period_id"] === p["id"]);
+                const here = cells.get(`${day}|${p["id"]}`) ?? NONE;
                 return (
                   <div className="space-y-1">
                     {here.map((s) => (
@@ -355,7 +359,8 @@ function Viewer({ ctx }: { ctx: Ctx }) {
   const subBySlot = new Map((subs.data ?? []).map((x) => [`${x["slot_id"]}|${x["date"]}`, x]));
   const myCover = ctx.role === "teacher" ? (subs.data ?? []).filter((x) => mine.data?.includes(x["substitute_teacher_id"])) : [];
   const allSlots = new Map((slots.data ?? []).map((s) => [s["id"], s]));
-  const shown = applyFilter(base, filter);
+  const shown = useMemo(() => applyFilter(base, filter), [base, filter]);
+  const cells = useMemo(() => byCell(shown), [shown]);
   const title = scheduleLabel(ctx.role);
   const sub_ = { teacher: "حصصي وحصص التغطية", student: "جدول شعبتي", guardian: "جدول كل ابن على حدة", dept_head: "جداول معلمي القسم", supervisor: "حصص المعلمين المسندين إليّ" }[ctx.role as string] ?? "الجدول المنشور";
   const needsFilter = ["guardian", "dept_head", "supervisor", "student_affairs"].includes(ctx.role);
@@ -378,7 +383,7 @@ function Viewer({ ctx }: { ctx: Ctx }) {
             initialDay={new Date(date + "T00:00:00").getDay()}
             cell={(day, p) => (
               <div className="space-y-1">
-                {shown.filter((s) => s["day"] === day && s["period_id"] === p["id"]).map((s) => (
+                {(cells.get(`${day}|${p["id"]}`) ?? NONE).map((s) => (
                   <SlotCard key={s["id"]} s={s} show={ctx.role === "teacher" ? ["section"] : ctx.role === "student" || ctx.role === "guardian" ? ["teacher"] : ["teacher", "section"]} sub={subBySlot.get(`${s["id"]}|${week[day]}`)} />
                 ))}
               </div>

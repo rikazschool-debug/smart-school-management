@@ -48,10 +48,17 @@ export function useSlots(timetableId: string | null | undefined) {
     queryKey: ["slots", timetableId],
     enabled: !!timetableId,
     queryFn: async () => {
-      const [{ data, error }, names] = await Promise.all([
-        db.from("timetable_slots").select(SLOT_SELECT).eq("timetable_id", timetableId),
-        db.rpc("schedule_teacher_names", { _timetable: timetableId }),
-      ]);
+      // page past the 1000-row API cap: large schools have thousands of slots per timetable
+      const page = async () => {
+        const all: Row[] = [];
+        for (let from = 0; ; from += 1000) {
+          const { data, error } = await db.from("timetable_slots").select(SLOT_SELECT).eq("timetable_id", timetableId).order("id").range(from, from + 999);
+          if (error) return { data: null, error };
+          all.push(...(data as Row[]));
+          if ((data as Row[]).length < 1000) return { data: all, error: null };
+        }
+      };
+      const [{ data, error }, names] = await Promise.all([page(), db.rpc("schedule_teacher_names", { _timetable: timetableId })]);
       if (error) throw error;
       const nm = new Map(((names.data ?? []) as Row[]).map((n) => [n["teacher_id"], n["full_name"]]));
       return (data as Row[]).map((s): Row => ({ ...s, teachers: { ...(s["teachers"] ?? {}), full_name: s["teachers"]?.full_name ?? nm.get(s["teacher_id"]) ?? "" }, _names: nm }));
