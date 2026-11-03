@@ -80,7 +80,7 @@ function Roles({ org }: { org: string }) {
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Button size="sm" onClick={() => setEdit({ id: null, name: "", description: "", grants: [] })}>دور مخصص جديد</Button>
         <select aria-label="ابدأ من قالب" className={selectCls("min-w-0")} value="" onChange={(e) => { const r = roles.data!.find((x) => x["id"] === e.target.value); if (r) setEdit({ id: null, name: `${r["name"]} (مخصص)`, description: r["description"] ?? "", grants: r["grants"] as Grant[] }); }}>
-          <option value="">أو ابدأ من دور جاهز (وكيل، مشرف مالي، أمن…)</option>
+          <option value="">أو ابدأ من دور جاهز (وكيل، أمن، مسؤول مشتريات…)</option>
           {roles.data!.filter((r) => r["system"]).map((r) => <option key={r["id"]} value={r["id"]}>{r["name"]}</option>)}
         </select>
       </div>
