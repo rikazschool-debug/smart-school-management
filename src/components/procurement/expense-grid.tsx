@@ -31,7 +31,7 @@ export function ExpenseGrid({ orgId, me, onDone, onCancel }: { orgId: string; me
   const [custody, setCustody] = useState("");
   const [school, setSchool] = useState(ownSchools[0]?.id ?? "");
   const [incl, setIncl] = useState(true);
-  const [rows, setRows] = useState<G[]>(() => [blank(), blank(), blank()]);
+  const [rows, setRows] = useState<G[]>(() => Array.from({ length: 10 }, blank));
   const [busy, setBusy] = useState(false);
   const inv = useInvalidate();
   const rate = Number(me.settings?.vat_rate ?? 15);
@@ -59,7 +59,7 @@ export function ExpenseGrid({ orgId, me, onDone, onCancel }: { orgId: string; me
     setBusy(false);
     inv();
     if (ok) toast.success(`حُفظت ${ok} فاتورة كمسودات — أرفق صورة كل فاتورة ثم أرسلها للمراجعة`);
-    if (next.length) { toast.error(`لم تُحفظ ${next.length} — راجع الصفوف المظللة`); setRows(next); } else { setRows([blank(), blank(), blank()]); onDone?.(); }
+    if (next.length) { toast.error(`لم تُحفظ ${next.length} — راجع الصفوف المظللة`); setRows(next); } else { setRows(Array.from({ length: 10 }, blank)); onDone?.(); }
   }
 
   const cell = "h-9 rounded-none border-0 bg-transparent px-2 shadow-none focus-visible:ring-1";
