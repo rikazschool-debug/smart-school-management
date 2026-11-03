@@ -139,7 +139,7 @@ No phone/email returned; ids outside the pool resolve to nothing.
 
 Staff name list (circular "specific people"): school-wide for eligible school staff; organization-wide for the org owner only (platform admins excluded). Teachers without a login never appear as chat members, invitees, task/duty assignees or circular recipients, but do appear in timetable loads and availability. Tests: scripts/closure-e2e.ts.
 
-## Support tickets (phases 1–2)
+## Support tickets (phases 1–3)
 | Role | Create | Sees | Manage (claim/status/priority/category/resolve/close) | Settings & categories |
 |---|---|---|---|---|
 | Student, guardian, teacher, staff | school tickets | own tickets (+ assigned) | — (assignee: status/resolve only) | — |
@@ -148,3 +148,5 @@ Staff name list (circular "specific people"): school-wide for eligible school st
 | Platform admin | — | platform tickets only (never internal) | platform | platform |
 
 Phase 2: assign → principal (own branch tickets, to any active staff of the org) and owner; assignee handles only that ticket, loses access when reassigned/transferred. Transfer between branches → owner only, reason required. Information request → manager or assignee; asked person sees only the question (inbox), never the ticket. Private note → visible to author + chosen recipient only; team note → managers + current assignee; requester sees neither. Escalation → owner only; platform sees only the new ticket text, never the internal ticket or its files.
+
+Phase 3: targets/hours/alert person → org owner (org) or platform admin (platform); alert person must be active org staff. Reports and the overdue/assignee filters → owner (all branches), principal (own branch), platform admin (platform tickets); requesters never see overdue flags or alert steps.

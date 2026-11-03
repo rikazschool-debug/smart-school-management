@@ -118,7 +118,7 @@ try {
   const cOk = await owner.c.rpc("support_save_category", { _org: org, _id: null, _name: "تصنيف اختبار", _active: true });
   const cBad = await pr1.c.rpc("support_save_category", { _org: org, _id: null, _name: "تصنيف مدير", _active: true });
   const cX = await owner2.c.rpc("support_save_category", { _org: org, _id: null, _name: "دخيل", _active: true });
-  const sBad = await pr1.c.rpc("support_save_settings", { _org: org, _hours: "x", _note: "y", _reopen: 3 });
+  const sBad = await pr1.c.rpc("support_save_settings", { _org: org, _note: "y", _reopen: 3, _days: [0, 1], _start: "07:00", _end: "15:00", _sla: { urgent: { response: 1, resolve: 2 }, high: { response: 1, resolve: 2 }, normal: { response: 1, resolve: 2 }, low: { response: 1, resolve: 2 } }, _escalate: null });
   const cats2 = (await owner2.c.from("support_categories").select("id").eq("org_id", org)).data ?? [];
   check("16 categories/settings managed by the org owner only; other orgs can't read or write them", !cOk.error && !!cBad.error && !!cX.error && !!sBad.error && cats2.length === 0, [cOk.error, cBad.error?.message, cX.error?.message]);
   const xCat = await tch.c.rpc("support_create", { _scope: "school", _school: A, _title: "تصنيف خاطئ", _body: "تصنيف مؤسسة أخرى", _priority: "normal", _category: ((await admin.from("support_categories").select("id").eq("org_id", org2).limit(1).single()).data!.id), _student: null, _client_key: null });

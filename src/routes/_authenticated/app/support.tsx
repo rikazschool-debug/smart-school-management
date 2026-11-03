@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { ForbiddenState, PageHeader } from "@/components/states";
 import { useSession } from "@/lib/session";
 import { supportTabs, type SupportTab } from "@/lib/roles";
-import { HoursNote, InfoInbox, NewTicket, SupportSettings, TAB_LABEL, TicketDetail, TicketList } from "@/components/support/support";
+import { HoursNote, InfoInbox, NewTicket, SupportReports, SupportSettings, TAB_LABEL, TicketDetail, TicketList } from "@/components/support/support";
 
 type Search = { t?: string; tab?: SupportTab | "settings" };
 
 export const Route = createFileRoute("/_authenticated/app/support")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     ...(typeof s["t"] === "string" ? { t: s["t"] } : {}),
-    ...(["mine", "assigned", "info", "manage", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
+    ...(["mine", "assigned", "info", "manage", "reports", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
   }),
   head: () => ({ meta: [{ title: "الدعم والمساعدة — ركاز" }, { name: "description", content: "تذاكر الدعم والمساعدة في ركاز." }, { name: "robots", content: "noindex" }] }),
   component: Page,
@@ -55,7 +55,7 @@ function Page() {
               ))}
             </div>
           )}
-          {tab === "settings" ? <SupportSettings ctx={ctx} /> : tab === "info" ? <InfoInbox /> : <TicketList key={tab} ctx={ctx} box={tab} onOpen={(id) => go({ t: id, tab })} />}
+          {tab === "settings" ? <SupportSettings ctx={ctx} /> : tab === "info" ? <InfoInbox /> : tab === "reports" ? <SupportReports ctx={ctx} /> : <TicketList key={tab} ctx={ctx} box={tab} onOpen={(id) => go({ t: id, tab })} />}
         </>
       )}
     </div>
