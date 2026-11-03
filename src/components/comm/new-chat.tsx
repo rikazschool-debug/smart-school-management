@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { arabicError, type AppContext } from "@/lib/session";
-import { MemberPicker } from "@/components/comm/member-picker";
+import { PeoplePicker } from "@/components/people-picker";
 
 const sel = selectCls("w-full");
 
@@ -187,7 +187,7 @@ function DirectStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: string 
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">الدليل يعرض موظفي هذه المدرسة الساريين فقط، دون أرقام هواتف أو بريد.</p>
-      <MemberPicker schoolId={ctx.schoolId} orgId={ctx.orgId} value={to} onChange={setTo} single />
+      <PeoplePicker purpose="direct" school={ctx.schoolId} org={ctx.orgId} label="الموظف" value={to} onChange={setTo} single />
       <Textarea aria-label="الرسالة الأولى" placeholder="الرسالة الأولى (اختياري)" value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} />
       <Button disabled={!to.length || busy} onClick={async () => {
         setBusy(true);
