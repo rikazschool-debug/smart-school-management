@@ -93,7 +93,7 @@ try {
   const post = (await pr.c.rpc("adm_duty_save_post", { _id: null, _school: S, _d: { name: "البوابة", kind: "gate", days: [0, 1, 2, 3, 4], start_time: "06:45", end_time: "07:15", required: 2, eligible_roles: ["teacher"] } })).data as string;
   const dp = await pick(pr, { _purpose: "duty", _school: S, _post: post });
   check("3a duty picker for a teachers-only post lists only teachers", JSON.stringify(names(dp)) === JSON.stringify(["أحمد خالد", "أحمد سالم", "سارة علي"]), [dp.error, names(dp)]);
-  check("3b without a post: all school staff (no owner, students, guardians)", (() => { return true; })() && !uids(await pick(pr, { _purpose: "duty", _school: S })).some((x: string) => [owner.id, stu.id, gua.id].includes(x)));
+  check("3b without a post: all school staff (no owner, students, guardians)", !uids(await pick(pr, { _purpose: "duty", _school: S })).some((x: string) => [owner.id, stu.id, gua.id].includes(x)));
   const dT = await pick(a1, { _purpose: "duty", _school: S }), dB = await pick(prB, { _purpose: "duty", _school: S, _post: post });
   check("3c teacher and other-branch principal cannot list duty candidates", !!dT.error && !!dB.error);
 
@@ -119,7 +119,7 @@ try {
   bad++; console.log("FAIL setup", (e as Error).message);
 } finally {
   if (org) await tr.purgeOrg(org);
-  await tr.cleanupUsers?.();
+  for (const u of tr.users) await admin.auth.admin.deleteUser(u);
 }
 console.log(`\n${ok} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);
