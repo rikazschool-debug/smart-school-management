@@ -183,7 +183,7 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 ## Procurement & custody (finance)
 | Capability | Who |
 |---|---|
-| Request a custody / record expenses | Holders of procurement «create» (own = self only; branch/org = for others in scope) |
+| Request a custody / record expenses | Holders of procurement «create» (own = self only; branch/org = for others in scope); the custody holder must also hold «create» — other staff (security, reception…) can't receive a custody |
 | Approve/reject custody or expense | «approve» in scope, within approval limit; never the requester/holder (owner included) |
 | Review / return an expense | «review» or «approve» in scope; reviewers cannot approve |
 | Disburse (proof + reference required) / confirm refunds | «disburse» in scope; never to self |

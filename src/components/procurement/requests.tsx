@@ -68,7 +68,22 @@ export function RequestList({ orgId, me, open, onNew, orgName }: { orgId: string
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? (
         <EmptyState title="لا توجد طلبات" hint="التعزيز والتسوية والشراء المسبق ومعالجة الفروق ونقل العهدة تُطلب من هنا أو من داخل العهدة." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border bg-card">
+        <>
+        <ul className="divide-y rounded-xl border bg-card md:hidden">
+          {list.data.rows.map((r) => (
+            <li key={r.id}>
+              <button type="button" className="w-full space-y-1 px-3 py-3 text-start hover:bg-muted/40" onClick={() => open(r.id)}>
+                <div className="flex items-center gap-2"><span className="font-medium">{R_KIND[r.kind]}</span><span className="ms-auto"><Pill tone={R_TONE[r.status] ?? "muted"}>{R_STATUS[r.status]}</Pill></span></div>
+                <p className="line-clamp-2 text-sm text-muted-foreground">{r.purpose}</p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span className="font-mono">{r.ref}</span>{r.custody_ref && <span className="font-mono">{r.custody_ref}</span>}<span>{r.creator}</span>
+                  <span className="ms-auto text-sm font-medium tabular-nums text-foreground">{amountText(r)}</span>
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden overflow-x-auto rounded-xl border bg-card md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "النوع", "العهدة", "مقدّم الطلب", "الغرض", "المبلغ", "الحالة"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
             <tbody>{list.data.rows.map((r) => (
@@ -80,6 +95,7 @@ export function RequestList({ orgId, me, open, onNew, orgName }: { orgId: string
             ))}</tbody>
           </table>
         </div>
+        </>
       )}
       {total > PAGE && (
         <div className="flex items-center justify-center gap-2 text-sm">
