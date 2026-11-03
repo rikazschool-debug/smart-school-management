@@ -69,7 +69,6 @@ const MANAGE: NavKey[] = [
   "grades",
   "schedule",
   "attendance",
-  "station",
   "admin",
   "duties",
   "meetings",
@@ -79,12 +78,13 @@ const MANAGE: NavKey[] = [
 ];
 
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
-  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && k !== "station" && !ADMIN_KEYS.includes(k))],
+  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && !ADMIN_KEYS.includes(k))],
   // owner: branch counts on the admin page + own (multi-branch) meetings and calendar — no duties
   org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k !== "duties")],
   principal: MANAGE,
-  vice_principal: MANAGE,
-  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
+  // vice: no academic setup (principal only) and no scanning station (gate account only); timetable view limited to the vice's scope
+  vice_principal: MANAGE.filter((k) => k !== "academic"),
+  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   teacher: ["home", "classrooms", "homework", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
@@ -118,18 +118,41 @@ export function canManageStudents(role: Role) {
   return canManage(role) || role === "student_affairs";
 }
 
-/** Only principal-level managers edit timetables and assign substitutes (mirrors can_manage_school). */
+/** Academic setup (years, structure, sections, subjects, courses, teachers, assignments) — principal level only (mirrors is_school_principal). */
+export function canManageAcademic(role: Role) {
+  return ["platform_admin", "org_owner", "principal"].includes(role);
+}
+
+/** Timetable setup/generation/editing/publishing — principal level only (mirrors is_school_principal). */
 export function canEditSchedule(role: Role) {
-  return canManage(role);
+  return canManageAcademic(role);
 }
 
 export type ScheduleTab = "timetable" | "subs" | "settings";
-/** «الجدول المدرسي» tabs: managers get build/substitutes/settings; everyone else sees only «جدولي» (their scoped view). */
+/** «الجدول المدرسي» tabs: principal builds/substitutes/settings; the vice views the published timetable of their scope and keeps daily substitutes;
+ *  everyone else sees only «جدولي» (their scoped view). */
 export function scheduleTabs(role: Role): ScheduleTab[] {
-  return canEditSchedule(role) ? ["timetable", "subs", "settings"] : [];
+  if (canEditSchedule(role)) return ["timetable", "subs", "settings"];
+  if (role === "vice_principal") return ["timetable", "subs"];
+  return [];
 }
 export function scheduleLabel(role: Role) {
-  return canEditSchedule(role) ? "الجدول المدرسي" : "جدولي";
+  return canEditSchedule(role) || role === "vice_principal" ? "الجدول المدرسي" : "جدولي";
+}
+
+/** Card/camera/name check-in is for the gate account only (mirrors att_scanner). */
+export function canScanAttendance(role: Role) {
+  return role === "security";
+}
+
+/** Tasks: principal (any staff), vice (scope teachers), supervisor (assigned teachers) — mirrors adm_create_task/_task_target_ok. */
+export function canCreateTask(role: Role) {
+  return role === "principal" || role === "vice_principal" || role === "supervisor";
+}
+
+/** Meetings: principal (own school) and organization owner (org/branches) — mirrors _adm_can_organize. */
+export function canOrganizeMeeting(role: Role) {
+  return role === "principal" || role === "org_owner";
 }
 
 export type CommTab = "inbox" | "mine" | "groups" | "classes" | "circulars" | "archive" | "manage" | "meetings";
