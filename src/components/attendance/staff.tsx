@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { CheckCircle2, Printer, ScanLine, XCircle } from "lucide-react";
+import { CheckCircle2, Printer, ScanLine, Volume2, XCircle } from "lucide-react";
+import { announceText, enqueueCall, isQueued, onQueueSize } from "@/lib/announcer";
 import { db, type Row } from "@/components/crud-page";
 import { ask, askText } from "@/components/confirm";
 import { EmptyState, ErrorState, LoadingState, Section } from "@/components/states";
@@ -226,7 +227,7 @@ export function PickupsTab({ ctx, canApprove, gate }: { ctx: Ctx; canApprove: bo
       {canApprove && <DelegateReviews S={S} />}
       <Section title={gate ? "الاستلام اليوم" : "طلبات تجهيز طلابك"} desc={gate ? "تحقق من هوية المستلم قبل «وصل المستلم»، وسلّم الطالب فقط بعد «جاهز»." : "أكّد جاهزية الطالب عند تجهيزه. لا تملك تعديل حركة البوابة."}>
         {queue.isLoading ? <LoadingState /> : queue.error ? <ErrorState message={arabicError(queue.error)} onRetry={() => queue.refetch()} /> : !queue.data?.length ? <EmptyState title="لا توجد طلبات استلام نشطة" /> : (
-          <ul className="space-y-2">
+          <>{gate && <div className="mb-2"><CallQueueBadge /></div>}<ul className="space-y-2">
             {queue.data.map((r) => (
               <li key={r["id"]} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 text-sm">
                 <span className="min-w-0"><b>{r["student_name"]}</b>{gate && <CallButton name={r["student_name"]} section={r["section"]} />} — {r["section"]} <Badge variant="outline" className="ms-1">{KIND[r["kind"]]}</Badge> <Badge className="ms-1">{PICKUP_STATUS[r["status"]]}</Badge>
@@ -254,7 +255,7 @@ export function PickupsTab({ ctx, canApprove, gate }: { ctx: Ctx; canApprove: bo
                 </span>
               </li>
             ))}
-          </ul>
+          </ul></>
         )}
       </Section>
     </div>

@@ -41,7 +41,8 @@ function Page() {
 function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/app/communication" });
-  const tabs = commTabs(ctx.role);
+  // circulars and meetings have their own pages under «التواصل والعمل»; old links (?tab=circulars|meetings) still open here
+  const tabs = commTabs(ctx.role).filter((t) => t !== "circulars" && t !== "meetings" || search.tab === t);
   const tab: CommTab = search.tab && tabs.includes(search.tab) ? search.tab : search.c ? "inbox" : tabs[0]!;
   const go = (s: Search) => navigate({ search: s, replace: false });
   return (
