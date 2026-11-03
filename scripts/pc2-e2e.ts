@@ -133,6 +133,11 @@ try {
   const ret = await dis.c.rpc("pc_return_cash", { _custody: C, _amount: 580, _method: "cash", _file: rf, _doc_date: today, _note: "استلام الصندوق", _key: k() });
   g = await get(apr.c, C);
   check("8 remainder returned to administration with proof (not by holder, not above available)", !ret.error && !!retOver.error && !!retSelf.error && Number(g.bal.book) === 0, [ret.error, retOver.error, retSelf.error, g.bal]);
+  const unacked = g.moves.filter((m: any) => ["disburse", "topup", "carry_in"].includes(m.kind) && !m.ack_at);
+  const clEarly = unacked.length ? await apr.c.rpc("pc_custody_close", { _id: C, _rev: g.rev, _reason: "مبكر" }) : { error: { message: "لا يمكن الإغلاق: مؤكَّد استلامها" } };
+  for (const m of unacked) await off.c.rpc("pc_ack", { _move: m.id });
+  g = await get(apr.c, C);
+  check("8b zero balance alone is not enough: close refused while a paid amount is unconfirmed by the holder", !!clEarly.error && /مؤكَّد استلامها/.test(clEarly.error.message), clEarly.error);
   const cSelf = await off.c.rpc("pc_custody_close", { _id: C, _rev: g.rev, _reason: "x" });
   const cl = await apr.c.rpc("pc_custody_close", { _id: C, _rev: g.rev, _reason: "مطابقة نهائية" });
   g = await get(off.c, C);
