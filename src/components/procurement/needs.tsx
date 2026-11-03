@@ -13,8 +13,8 @@ import { Pill } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
 import { E_STATUS, sar, type PcMe, type Row } from "@/components/procurement/shared";
 
-export const N_STATUS: Record<string, string> = { draft: "مسودة", awaiting_assignment: "بانتظار الإسناد", in_progress: "لدى مسؤول المشتريات", done: "منفّذ", cancelled: "ملغى" };
-const N_TONE: Record<string, "muted" | "warn" | "ok" | "bad"> = { draft: "muted", awaiting_assignment: "warn", in_progress: "warn", done: "ok", cancelled: "muted" };
+export const N_STATUS: Record<string, string> = { draft: "مسودة", awaiting_assignment: "بانتظار الإسناد", in_progress: "لدى مسؤول المشتريات", done: "منفّذ بالكامل", closed_partial: "مغلق بتنفيذ جزئي", cancelled: "ملغى" };
+const N_TONE: Record<string, "muted" | "warn" | "ok" | "bad"> = { draft: "muted", awaiting_assignment: "warn", in_progress: "warn", done: "ok", closed_partial: "warn", cancelled: "muted" };
 const qn = (v: unknown) => new Intl.NumberFormat("ar-SA-u-nu-latn", { maximumFractionDigits: 2 }).format(Number(v ?? 0));
 
 async function rpc(fn: string, args: Record<string, unknown>) {

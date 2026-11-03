@@ -19,7 +19,7 @@ import { METHOD, day, sar, todayRiyadh, type PcMe, type Row } from "@/components
 import { LogList, useInvalidate } from "@/components/procurement/custody";
 
 export const R_KIND: Record<string, string> = { topup: "تعزيز عهدة", settlement: "تسوية عهدة", purchase: "شراء مسبق", adjust: "معالجة عجز/زيادة", transfer: "نقل عهدة لشخص آخر", need: "طلب احتياج" };
-export const R_STATUS: Record<string, string> = { draft: "مسودة", submitted: "بانتظار القرار", approved: "معتمد", rejected: "مرفوض", cancelled: "ملغى", done: "منفّذ", awaiting_assignment: "بانتظار الإسناد", in_progress: "لدى مسؤول المشتريات" };
+export const R_STATUS: Record<string, string> = { draft: "مسودة", submitted: "بانتظار القرار", approved: "معتمد", rejected: "مرفوض", cancelled: "ملغى", done: "منفّذ", awaiting_assignment: "بانتظار الإسناد", in_progress: "لدى مسؤول المشتريات", closed_partial: "مغلق بتنفيذ جزئي" };
 const R_TONE: Record<string, "muted" | "warn" | "ok" | "bad"> = { draft: "muted", submitted: "warn", approved: "ok", rejected: "bad", cancelled: "muted", done: "ok" };
 const files = (fs: Row[]) => (fs ?? []).map((f: Row) => ({ ...f, size_bytes: f.size ?? 0 }));
 const run = async (p: PromiseLike<{ error: unknown }>, ok?: string) => {
