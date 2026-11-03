@@ -5719,6 +5719,7 @@ export type Database = {
       perm_roles: {
         Row: {
           archived_at: string | null
+          base_role: Database["public"]["Enums"]["app_role"] | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -5730,6 +5731,7 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          base_role?: Database["public"]["Enums"]["app_role"] | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -5741,6 +5743,7 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          base_role?: Database["public"]["Enums"]["app_role"] | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -8235,6 +8238,47 @@ export type Database = {
           user_id: string
         }[]
       }
+      _perm_allows_user: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
+      _perm_area: { Args: { _section: string }; Returns: string }
+      _perm_base: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
+      _perm_denied: {
+        Args: { _action: string; _org: string; _section: string; _uid: string }
+        Returns: boolean
+      }
+      _perm_granted: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
+      _perm_has_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _school: string
+          _uid: string
+        }
+        Returns: boolean
+      }
+      _perm_owner: { Args: { _org: string; _uid: string }; Returns: boolean }
       _perm_staff: { Args: { _org: string; _user: string }; Returns: boolean }
       _perm_valid: {
         Args: { _action: string; _scope: string; _section: string }
@@ -10040,6 +10084,10 @@ export type Database = {
           label: string
         }[]
       }
+      perm_allows: {
+        Args: { _action: string; _school: string; _section: string }
+        Returns: boolean
+      }
       perm_assign: {
         Args: {
           _assign: boolean
@@ -10055,6 +10103,7 @@ export type Database = {
       perm_catalog: { Args: never; Returns: Json }
       perm_effective: { Args: { _org: string; _user: string }; Returns: Json }
       perm_log_list: { Args: { _org: string }; Returns: Json }
+      perm_my_school: { Args: { _school: string }; Returns: Json }
       perm_override_set: {
         Args: {
           _action: string
