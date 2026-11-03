@@ -57,7 +57,7 @@ try {
   await apr.c.rpc("pc_custody_action", { _id: C, _action: "approve", _rev: (await cget(apr.c, C)).rev, _reason: null });
   await dis.c.rpc("pc_disburse", { _id: C, _rev: (await cget(dis.c, C)).rev, _method: "cash", _external_ref: null, _file: await file(dis.c, "custody", C), _doc_date: today, _note: null, _key: k() });
   const exp = async (amount: number, sup: string) => (await off.c.rpc("pc_expense_save", { _org: org, _id: null, _d: { custody_id: C, purchase_date: today, description: "شراء " + sup, supplier: sup, lines: [{ description: "بند", amount }] }, _rev: 0, _key: k() })).data as string;
-  const E1 = await exp(4100, "مورد أ"), E2 = await exp(500, "مورد ب"), E3 = await exp(500, "مورد ج");
+  const E1 = await exp(4000, "مورد أ"), E2 = await exp(500, "مورد ب"), E3 = await exp(400, "مورد ج");
 
   // 2 settlement cannot be sent while invoices are drafts
   const st = await off.c.rpc("pc_request_save", { _org: org, _id: null, _d: { kind: "settlement", custody_id: C, purpose: "تسوية الفصل" }, _rev: 0, _key: k() });
@@ -67,16 +67,16 @@ try {
   const sub = await ract(off.c, st.data, "submit");
   check("3 after sending invoices the settlement is submitted and the custody is under settlement", !sub.error && (await cget(off.c, C)).status === "settling", sub.error);
 
-  // 4 reviewer edit: officer cannot edit as reviewer; approver edits amount 4100→4000 with reason, logged + officer notified
+  // 4 reviewer edit: officer cannot edit as reviewer; approver edits amount 4000→4100 with reason, logged + officer notified
   const g1 = await eget(apr.c, E1);
-  const selfEdit = await off.c.rpc("pc_expense_review_edit", { _id: E1, _rev: g1.rev, _p: { amount: 4000 }, _reason: "تعديل" });
-  const noReason = await apr.c.rpc("pc_expense_review_edit", { _id: E1, _rev: g1.rev, _p: { amount: 4000 }, _reason: "" });
-  const outsider = await owner2.c.rpc("pc_expense_review_edit", { _id: E1, _rev: g1.rev, _p: { amount: 4000 }, _reason: "تعديل خارجي" });
-  const ed = await apr.c.rpc("pc_expense_review_edit", { _id: E1, _rev: g1.rev, _p: { amount: 4000, supplier: "مورد أ المعدل" }, _reason: "المبلغ في الصورة 4000" });
+  const selfEdit = await off.c.rpc("pc_expense_review_edit", { _id: E1, _rev: g1.rev, _p: { amount: 4100 }, _reason: "تعديل" });
+  const noReason = await apr.c.rpc("pc_expense_review_edit", { _id: E1, _rev: g1.rev, _p: { amount: 4100 }, _reason: "" });
+  const outsider = await owner2.c.rpc("pc_expense_review_edit", { _id: E1, _rev: g1.rev, _p: { amount: 4100 }, _reason: "تعديل خارجي" });
+  const ed = await apr.c.rpc("pc_expense_review_edit", { _id: E1, _rev: g1.rev, _p: { amount: 4100, supplier: "مورد أ المعدل" }, _reason: "المبلغ في الصورة 4100" });
   const g1b = await eget(apr.c, E1);
   const log = (g1b.log ?? []) as any[];
   check("4 reviewer edits amount/supplier with reason; VAT recalculated; officer/outsider/no-reason refused; logged and notified",
-    !!selfEdit.error && !!noReason.error && !!outsider.error && !ed.error && Number(g1b.total) === 4000 && g1b.supplier === "مورد أ المعدل" && log.some((l) => l.action === "review_edit") && (await notes(off.id, `pc-e-edit:${E1}%`)) === 1,
+    !!selfEdit.error && !!noReason.error && !!outsider.error && !ed.error && Number(g1b.total) === 4100 && g1b.supplier === "مورد أ المعدل" && log.some((l) => l.action === "review_edit") && (await notes(off.id, `pc-e-edit:${E1}%`)) === 1,
     [selfEdit.error?.message, noReason.error?.message, outsider.error?.message, ed.error, g1b.total, g1b.supplier]);
 
   // 5 settlement approval refused until every invoice is decided
@@ -100,8 +100,9 @@ try {
     !ap.error && cg.status === "closed" && Number(cg.bal.book) === 0 && arch.rows.some((r: any) => r.id === C && r.school) && (await notes(off.id, `pc-q-approved:${st.data}%`)) === 1, [ap.error, cg.status, cg.bal?.book]);
 } catch (e) { bad++; console.log("ERROR", e); }
 finally {
-  for (const o of orgs) { await admin.from("perm_log").delete().eq("org_id", o); await admin.from("perm_assignments").delete().eq("org_id", o); await tr.purgeOrg(o).catch((e) => console.log(e.message)); }
-  await tr.purgeUsers?.().catch?.(() => {});
+  console.log(`\n${ok} passed, ${bad} failed`);
+  await tr.deleteNotifications().catch((e) => console.log("notif cleanup", e.message));
+  for (const o of orgs) { await admin.from("perm_log").delete().eq("org_id", o); await admin.from("perm_assignments").delete().eq("org_id", o); await admin.from("org_section_log").delete().eq("org_id", o); await admin.from("org_sections").delete().eq("org_id", o); await tr.purgeOrg(o).catch((e) => console.log(e.message)); }
+  for (const u of tr.users) { await admin.auth.admin.deleteUser(u); }
+  process.exit(bad ? 1 : 0);
 }
-console.log(`\n${ok} passed, ${bad} failed`);
-process.exit(bad ? 1 : 0);
