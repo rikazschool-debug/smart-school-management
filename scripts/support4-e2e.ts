@@ -75,7 +75,7 @@ try {
   await act(pr1, T2, "priority", "high");
   const t2 = (await get(pr1, T2)).data.ticket;
   await admin.from("support_tickets").update({ resolve_due: past(0.1) }).eq("id", T2);
-  await admin.rpc("support_sla_tick", { _only: [T2] }); await admin.rpc("support_sla_tick", { _only: [T2] });
+  await tick([T2]); await admin.rpc("support_sla_tick", { _only: [T2] });
   const nB = late(await notifs(pr1.id, T2)).length;
   check(`2 ${CRON ? "the real scheduled job" : "the tick"} alerts once; a repeat run sends nothing; changing priority re-arms exactly one more alert`, a1 >= 1 && a1b === 0 && nA === 1 && new Date(t2.resolve_due) > new Date() && nB === 2, [a1, a1b, nA, nB]);
   const nTch = late(await notifs(tch.id, T2)).length;
@@ -94,7 +94,7 @@ try {
   await act(tch, T2, "reopen", null, "عادت");
   const t5 = (await get(pr1, T2)).data.ticket;
   await admin.from("support_tickets").update({ resolve_due: past(0.1) }).eq("id", T2);
-  await admin.rpc("support_sla_tick", { _only: [T2] });
+  await tick([T2]);
   check("5 reopening gives a fresh target and one new alert when it is missed", new Date(t5.resolve_due) > new Date() && late(await notifs(pr1.id, T2)).length === 3, [t5.resolve_due]);
 
   // 6 cross-branch info request keeps privacy
