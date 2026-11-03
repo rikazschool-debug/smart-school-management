@@ -168,3 +168,5 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 | Excel/PDF for lists and reports: complete, filtered, Arabic, scoped, all PDF pages | done, tested | support-export-journey E1–E12 (5-page PDF viewed) |
 | Delay alerts from the real scheduled job, once, right recipients | done, tested | support4 --cron #2; #3–5 |
 | Pause while waiting on requester, resume extends target | done, tested | support4 #1 |
+| Re-armed alerts (priority change, reopen) from the real scheduled job | done, tested | support4 --cron #2, #5 |
+| Phone width (390px) for all support roles | done, tested | support-phone-journey 6/6 |
