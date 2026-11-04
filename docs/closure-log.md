@@ -475,3 +475,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Browser reopen journeys (maint-journey.py): bus 14/14, school 10/10 — request pending, executor cannot decide, reject with reason, approve → cycle 2 with previous closure in history, bus stays «متاح للخدمة». Test rows cleaned (7 requests, 6 buses).
 - Demo isolation: all 19 demo accounts belong only to «مجموعة ركاز التجريبية»; FOUND demo-admin@rikaz.demo was a platform admin (reach into real orgs incl. Al-Malki) → removed from platform_admins and from the demo buttons.
 - Resume point: live-session revocation in browser → duties/substitutes → class visits/teacher evaluation → imports/grade visibility → timetable regression → screens/phone/reports → security review.
+
+## 2026-11-04 (b) — Bus workflow per owner + custody recipient by unit
+- Bus maintenance officer template now org-scope (sees all branches' buses/requests); follow-up stays branch. Bus requests assigned only by group owner or bus maintenance staff (forward), not follow-up. New steps: استلام الباص → صيانة بملاحظات → تسليم الباص للمدرسة → follow-up approve/return/notes. Evidence: maint-e2e 32/32 (19b, 21a), browser bus 16/16.
+- Custody form: «الجهة المستفيدة» = branches + صيانة الباصات + صيانة المدارس; branch lists only that branch's custody-eligible people (no maintenance staff); units list only their maintenance staff with procurement rights. Browser checked as owner.
+- Demo platform-owner removed (it reached real orgs).
+- pc-e2e 30/32: checks 11/17 expect attachment-required rules that migration 20261103191546 removed deliberately; awaiting owner decision. pc2-e2e 20/20.
