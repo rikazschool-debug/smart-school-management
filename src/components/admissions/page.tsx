@@ -19,7 +19,7 @@ export type AdSearch = { tab?: "summary" | "apps" | "students" | "settings"; r?:
 export function validateAdSearch(s: Record<string, unknown>): AdSearch {
   const str = (k: string) => (typeof s[k] === "string" && s[k] ? { [k]: s[k] as string } : {});
   const tabs = ["summary", "apps", "students", "settings"];
-  return { ...(tabs.includes(s["tab"] as string) ? { tab: s["tab"] as AdSearch["tab"] } : {}), ...str("r"), ...(s["new"] === "1" || s["new"] === 1 ? { new: "1" as const } : {}),
+  return { ...(tabs.includes(s["tab"] as string) ? { tab: s["tab"] as NonNullable<AdSearch["tab"]> } : {}), ...str("r"), ...(s["new"] === "1" || s["new"] === 1 ? { new: "1" as const } : {}),
     ...str("status"), ...str("assignee"), ...str("due"), ...str("pending"), ...str("linked") };
 }
 
@@ -132,7 +132,7 @@ function AppList({ orgId, orgName, me, sp, go }: { orgId: string; orgName: strin
   const canExport = me.caps!.export.length > 0 || !!me.org_level;
   async function doExport(kind: "x" | "p") {
     const { data, error } = await db.rpc("ad_list", { _org: orgId, _f: { ...f, export: true }, _limit: 5000, _offset: 0 });
-    if (error) return toast.error(arabicError(error));
+    if (error) { toast.error(arabicError(error)); return; }
     const rows = (data as { rows: Row[] }).rows.map(rowCells);
     const meta = { title: "طلبات القبول", school: orgName, filters: [status && `الحالة: ${STATUS[status] ?? status}`, school && `الفرع: ${schools.find((s) => s.id === school)?.name}`, q && `بحث: ${q}`, sp.assignee && "حسب المسؤول", sp.due && "المتابعات"].filter(Boolean) as string[] };
     if (kind === "x") exportXlsx(meta, HEAD, rows); else printReport(meta, HEAD, rows);
@@ -302,7 +302,7 @@ function Students({ orgId, orgName, me }: { orgId: string; orgName: string; me: 
   const cells = (r: Row) => [r["full_name"], r["school_name"], r["year_name"] ?? "—", r["stage_name"] ?? "—", r["grade_name"] ?? "—", r["section_name"] ?? "—", ENR[r["enr_status"] ?? "none"] ?? r["enr_status"], r["has_login"] ? "مفعّل" : "بدون حساب", r["app_ref"] ?? "—"];
   async function exp(kind: "x" | "p") {
     const { data, error } = await db.rpc("ad_students", { _org: orgId, _f: { ...f, export: true }, _limit: 5000, _offset: 0 });
-    if (error) return toast.error(arabicError(error));
+    if (error) { toast.error(arabicError(error)); return; }
     const meta = { title: "الطلاب الحاليون", school: orgName, filters: [q && `بحث: ${q}`, status && `القيد: ${ENR[status]}`].filter(Boolean) as string[] };
     const rows = (data as { rows: Row[] }).rows.map(cells); if (kind === "x") exportXlsx(meta, H, rows); else printReport(meta, H, rows);
   }
