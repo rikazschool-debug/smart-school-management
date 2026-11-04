@@ -8,6 +8,8 @@ async def login(b,label):
     await p.wait_for_url("**/app**",timeout=20000); return ctx,p
 async def openreq(p,path):
     await p.goto(B+path); await p.get_by_placeholder("رقم، عنوان أو مكان").fill(T); await p.wait_for_timeout(1500)
+    if not await p.get_by_text(T).count():
+        await p.get_by_text("الطلبات السابقة",exact=True).click(); await p.wait_for_timeout(800); await p.get_by_placeholder("رقم، عنوان أو مكان").fill(T); await p.wait_for_timeout(1500)
     await p.get_by_text(T).first.click(); await p.wait_for_timeout(1500)
 async def reason(p,txt):
     d=p.get_by_role("alertdialog"); await d.locator("input").first.fill(txt); await d.get_by_role("button").last.click(); await p.wait_for_timeout(1500)
