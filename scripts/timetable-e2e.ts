@@ -344,7 +344,7 @@ try {
   const busyPick = busyBad.find((x) => x !== T[0].id);
   const candBad = ((await pr.c.rpc("available_substitutes", { _slot: badSlot.slot_id, _date: absDay })).data ?? []) as any[];
   const busyRefusals = await Promise.all(busyBad.filter((x) => x !== T[0].id).map((x) => pr.c.rpc("assign_substitute", { _absence: ab, _slot: badSlot.slot_id, _substitute: x, _reason: "x" })));
-  check("13b busy-teacher regression: real busy teacher, every one refused, none suggested",
+  check("13a busy-teacher regression: real busy teacher, every one refused, none suggested",
     !!busyPick && busyRefusals.length > 0 && busyRefusals.every((r) => !!r.error && !r.data) && !candBad.some((x) => busyBad.includes(x.teacher_id)),
     [busyPick, busyRefusals.map((r) => r.error?.message), candBad.filter((x) => busyBad.includes(x.teacher_id)).map((x) => x.full_name)]);
 
