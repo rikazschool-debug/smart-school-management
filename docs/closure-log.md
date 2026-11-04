@@ -405,3 +405,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-04 M10 step 1 — «عملي اليوم»
 - home_work(_school): caller-own counts (notifications, tasks, admin requests, support, maintenance per kind, procurement tasks); cards link to filtered lists. Browser: principal 1280px, teacher and nurse 390px, no page errors.
+
+## 2026-11-04 — staff username logins + users/permissions page split
+- Done: «إضافة موظف جديد» 3-step wizard (data+branches → base role + «إضافة دور آخر» with per-role scope → preview+reason), atomic save; username sign-in (case-insensitive); forced change on first login; owner temp-password reset (logged, value never stored); show/hide + strength meter; generic login errors; page split into «إدارة المستخدمين» (branch/status/username filters) / «الأدوار والصلاحيات» (actions + templates sub-tab) / «سجل التغييرات». Maintenance managers can hold custodies; follow-up officers get a reduced view.
+- Tested: staff-e2e 23/23; browser: owner creates employee with 2 roles → employee signs in with uppercase username → forced change → dashboard; owner reset → re-forced change → dashboard.
+- Open: section tree with tri-state checkboxes, before/after diff in preview, «view as employee» preview, mobile journey.

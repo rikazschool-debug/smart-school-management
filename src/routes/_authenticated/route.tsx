@@ -63,7 +63,7 @@ function FirstPassword({ onDone }: { onDone: () => void }) {
     if (err) return void toast.error(err);
     if (p1 !== p2) return void toast.error("كلمتا المرور غير متطابقتين");
     setBusy(true);
-    try { await run({ data: { password: p1 } }); toast.success("حُفظت كلمة المرور الجديدة"); onDone(); }
+    try { const em = (await supabase.auth.getUser()).data.user?.email; await run({ data: { password: p1 } }); if (em) await supabase.auth.signInWithPassword({ email: em, password: p1 }); toast.success("حُفظت كلمة المرور الجديدة"); onDone(); }
     catch (e2) { toast.error(arabicError(e2)); } finally { setBusy(false); }
   }
   return (

@@ -233,8 +233,8 @@ function People({ org, school, initialUser = null }: { org: string; school: stri
           {sel ? (
             <>
               <button type="button" onClick={() => setUser(null)} className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />{cur.label}</button>
-              <PersonPanel org={org} user={sel.user_id} name={sel.name} c={cat.data!} roles={roles.data!} />
               {login(sel.user_id) && <ResetPassword org={org} user={sel.user_id} username={login(sel.user_id)!.username} />}
+              <PersonPanel org={org} user={sel.user_id} name={sel.name} c={cat.data!} roles={roles.data!} />
             </>
           ) : (
             <>
@@ -371,7 +371,7 @@ function ResetPassword({ org, user, username }: { org: string; user: string; use
     catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
   }
   return (
-    <div className="mt-4 space-y-2 rounded-xl border bg-card p-4 text-sm">
+    <div className="mb-4 space-y-2 rounded-xl border bg-card p-4 text-sm">
       <p className="font-bold">بيانات الدخول</p>
       <p className="text-xs text-muted-foreground">اسم المستخدم: <span dir="ltr" className="font-mono">{username}</span> — كلمة المرور لا تُعرض ولا تُسترجع.</p>
       <div className="flex flex-wrap items-center gap-2">
