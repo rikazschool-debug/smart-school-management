@@ -309,7 +309,7 @@
 - [x] C3 Permissions page: side tab per role (base + assigned roles) → people → person panel (assign/withdraw/grant/deny/remove); phone: chips → list → panel with back (browser desktop+390px, perm-tabs unit 3/3)
 - [x] C4 Purchase needs: principal creates+approves → linked officer (auto if one; else «بانتظار الإسناد» + owner notified; claim/assign); invoice lines linked with qty/category, partial delivery, remaining, no over-quantity/duplicates; need approval separate from invoice approval. scripts/pc-need-e2e.ts 12/12, pc-e2e 32/32, pc2-e2e 20/20; browser 6/6 (principal phone, officer desktop)
 - [~] C5 Settlement close: unconfirmed paid amounts now block close (pc2 8b); pending invoices/drafts/refunds/open requests already blocked; correction/refund concurrency review open
-- [ ] C6 Browser closure: custom field on invoice (old invoice keeps version), transfer + acceptance + old holder loses access, carry-over two moves + no double total
+- [~] C6 Browser closure: transfer + acceptance + old holder loses access DONE (scripts/pc-transfer-journey.py 8/8; server fix: transfer-born custody owned by recipient; pc2 check 10). Open: custom field on invoice (old version kept) and carry-over in browser
 - [~] C7 Requests list as phone cards done; open-session revocation + finance suspension (direct RPC, files, export); phone tests for section availability/roles/permissions; requests table as phone cards
 - [ ] C8 Alerts via real cron run; new due date / new low after top-up still alerts
 - [ ] C9 Restore docs (student ID login + forced change, teacher/guardian WhatsApp code, grade visibility) in dedicated files linked from main scope; requirements matrix + closure log

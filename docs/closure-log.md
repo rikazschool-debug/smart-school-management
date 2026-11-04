@@ -429,3 +429,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Role homes (M10): «عملي اليوم» adds teacher submissions awaiting grading, student homework due in 3 days not submitted, guardian children absent/late today (server-scoped via _home_roles). Browser: teacher/guardian/student homes open with no errors; guardian shows today's late child.
 
 - prompt-105: wizard role step shows all base roles as cards, the base role's default dashboard sections (checked, read-only; teacher note: needs a teacher record), and every assignable extra role grouped by area with its sub-sections/actions and scope. Phone journey re-run: 2 roles + deny → login → access = preview.
+
+## 2026-11-04 — Custody handover (C6, part 1)
+- Found: after a handover, the previous holder could still open the recipient's new custody (it was recorded as created by them). Fixed in pc_transfer_accept (new custody owned by recipient) + existing rows corrected.
+- UI: approved handover shows «بانتظار تسلّم …»; a custody closed by handover shows «أُغلقت بالنقل لشخص آخر» instead of a failing settlement checklist.
+- Evidence: scripts/pc-transfer-journey.py 8/8 (holder request → approver → recipient accepts → new custody 770 for recipient → old closed at 0, no actions → old holder refused on new custody); pc2-e2e 20/20 (check 10 extended).
