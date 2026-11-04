@@ -12,6 +12,10 @@ import { askText } from "@/components/confirm";
 import { PeoplePicker } from "@/components/people-picker";
 import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { StaffWizard } from "@/components/staff-wizard";
+import { PasswordInput } from "@/components/password-input";
+import { resetStaffPassword } from "@/lib/accounts.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { BASE_TABS, peopleForTab, type PermPerson } from "@/lib/perm-tabs";
 
 export const Route = createFileRoute("/_authenticated/app/permissions")({
@@ -40,13 +44,54 @@ function Page() {
     <>
       <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>
       <PageHeader title="إعداد المستخدمين والصلاحيات" desc="الدور الوظيفي يحدد الأقسام والإجراءات والنطاق، وهو منفصل عن القسم الأكاديمي والفرع. المنع الخاص يغلب أي منح." />
-      <p className="mb-6 text-sm"><Link to="/app/members" className="text-primary underline">المستخدمون والدعوات والعضويات</Link> — الأدوار الأساسية الحالية (معلم، وكيل، مشرف...) تبقى كما هي دون توسيع.</p>
-      <div className="space-y-8">
-        <People org={active.orgId} school={active.schoolId} />
-        <Roles org={active.orgId} />
-        <Log org={active.orgId} />
-      </div>
+      <p className="mb-4 text-sm"><Link to="/app/members" className="text-primary underline">الدعوات والعضويات</Link> — الأدوار الأساسية الحالية تبقى كما هي حتى يُحفظ تعديل صريح.</p>
+      <Tabs org={active.orgId} school={active.schoolId} />
     </>
+  );
+}
+
+function Tabs({ org, school }: { org: string; school: string | null }) {
+  const cat = useCatalog();
+  const [tab, setTab] = useState<"users" | "roles" | "log">("users");
+  const [sub, setSub] = useState<"actions" | "templates">("actions");
+  const [wiz, setWiz] = useState(false);
+  const [focus, setFocus] = useState<string | null>(null);
+  const gt = (g: Grant[]) => (cat.data ? grantText(cat.data, g) : "");
+  const T = (k: string, label: string, on: boolean, fn: () => void) => (
+    <button key={k} type="button" role="tab" aria-selected={on} onClick={fn} className={"min-h-9 rounded-lg px-4 text-sm " + (on ? "bg-primary font-semibold text-primary-foreground" : "hover:bg-muted")}>{label}</button>
+  );
+  return (
+    <div className="space-y-5">
+      <div role="tablist" className="flex flex-wrap gap-1 rounded-xl border bg-card p-1">
+        {T("users", "إدارة المستخدمين", tab === "users", () => setTab("users"))}
+        {T("roles", "الأدوار والصلاحيات", tab === "roles", () => setTab("roles"))}
+        {T("log", "سجل التغييرات", tab === "log", () => setTab("log"))}
+      </div>
+      {tab === "users" && <People org={org} school={school} />}
+      {tab === "roles" && (
+        <div className="space-y-4">
+          <div role="tablist" className="flex flex-wrap gap-2">
+            {[["actions", "إضافة وتعديل الموظفين"], ["templates", "قوالب الأدوار والمسميات"]].map(([k, l]) => (
+              <Button key={k} size="sm" role="tab" aria-selected={sub === k} variant={sub === k ? "default" : "outline"} onClick={() => setSub(k as "actions" | "templates")}>{l}</Button>
+            ))}
+          </div>
+          {sub === "templates" ? <Roles org={org} /> : wiz ? (
+            <StaffWizard org={org} school={school} grantText={gt} onCancel={() => setWiz(false)} onDone={(uid) => { setWiz(false); setFocus(uid); }} />
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button type="button" onClick={() => setWiz(true)} className="rounded-xl border bg-card p-4 text-start hover:border-primary/40">
+                  <span className="block font-bold">إضافة موظف جديد</span><span className="text-xs text-muted-foreground">اسم مستخدم وكلمة مرور أولية، الفروع، الدور الأساسي وأدوار إضافية، ثم معاينة قبل الحفظ.</span></button>
+                <a href="#edit-staff" className="rounded-xl border bg-card p-4 text-start hover:border-primary/40">
+                  <span className="block font-bold">تعديل صلاحيات موظف حالي</span><span className="text-xs text-muted-foreground">اختر الموظف من القائمة أدناه لإضافة دور أو سحبه أو استثناء شخصي أو إعادة كلمة المرور.</span></a>
+              </div>
+              <div id="edit-staff"><People key={focus ?? ""} org={org} school={school} initialUser={focus} /></div>
+            </>
+          )}
+        </div>
+      )}
+      {tab === "log" && <Log org={org} />}
+    </div>
   );
 }
 
@@ -134,13 +179,15 @@ function Roles({ org }: { org: string }) {
   );
 }
 
-function People({ org, school }: { org: string; school: string | null }) {
+function People({ org, school, initialUser = null }: { org: string; school: string | null; initialUser?: string | null }) {
   const qc = useQueryClient();
   const cat = useCatalog();
   const roles = useQuery({ queryKey: ["perm-roles", org], queryFn: async () => (await call("perm_roles_list", { _org: org })) as Row[] });
   const people = useQuery({ queryKey: ["perm-people", org], queryFn: async () => (await call("perm_people", { _org: org })) as PermPerson[] });
   const [tab, setTab] = useState("all");
-  const [user, setUser] = useState<string | null>(null);
+  const [user, setUser] = useState<string | null>(initialUser);
+  const [branch, setBranch] = useState(""); const [state, setState] = useState("");
+  const logins = useQuery({ queryKey: ["staff-logins", org], queryFn: async () => (await call("staff_logins_list", { _org: org })) as { user_id: string; username: string; pending: boolean }[] });
   const [q, setQ] = useState("");
   const [add, setAdd] = useState<string[]>([]);
   if (roles.isLoading || people.isLoading || cat.isLoading) return <LoadingState />;
@@ -152,7 +199,11 @@ function People({ org, school }: { org: string; school: string | null }) {
     ...roles.data!.filter((r) => !r["archived"]).map((r) => ({ key: `role:${r["id"]}`, label: r["name"] as string, n: Number(r["holders"]), extra: true })),
   ];
   const cur = tabs.find((t) => t.key === tab) ?? tabs[0]!;
-  const list = peopleForTab(all, cur.key).filter((p) => !q.trim() || p.name.includes(q.trim()));
+  const branchNames = [...new Set(all.flatMap((p) => p.base.map((b) => b.school).filter(Boolean)))] as string[];
+  const login = (id: string) => logins.data?.find((l) => l.user_id === id);
+  const list = peopleForTab(all, cur.key).filter((p) => (!q.trim() || p.name.includes(q.trim()) || (login(p.user_id)?.username ?? "").includes(q.trim().toLowerCase()))
+    && (!branch || p.base.some((b) => b.school === branch))
+    && (!state || (state === "active" ? p.base.some((b) => b.active) && !login(p.user_id)?.pending : state === "pending" ? !!login(p.user_id)?.pending : !p.base.some((b) => b.active) && !login(p.user_id)?.pending)));
   const sel = user ? all.find((p) => p.user_id === user) : null;
   const roleId = cur.key.startsWith("role:") ? cur.key.slice(5) : null;
   async function assignToRole() {
@@ -183,11 +234,14 @@ function People({ org, school }: { org: string; school: string | null }) {
             <>
               <button type="button" onClick={() => setUser(null)} className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />{cur.label}</button>
               <PersonPanel org={org} user={sel.user_id} name={sel.name} c={cat.data!} roles={roles.data!} />
+              {login(sel.user_id) && <ResetPassword org={org} user={sel.user_id} username={login(sel.user_id)!.username} />}
             </>
           ) : (
             <>
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <Input aria-label="بحث بالاسم" placeholder="بحث بالاسم" className="w-full sm:w-64" value={q} onChange={(e) => setQ(e.target.value)} />
+                <Input aria-label="بحث بالاسم" placeholder="بحث بالاسم أو اسم المستخدم" className="w-full sm:w-64" value={q} onChange={(e) => setQ(e.target.value)} />
+                {branchNames.length > 1 && <select aria-label="الفرع" className={selectCls("w-40")} value={branch} onChange={(e) => setBranch(e.target.value)}><option value="">كل الفروع</option>{branchNames.map((b) => <option key={b}>{b}</option>)}</select>}
+                <select aria-label="حالة الحساب" className={selectCls("w-40")} value={state} onChange={(e) => setState(e.target.value)}><option value="">كل الحالات</option><option value="active">نشط</option><option value="pending">بانتظار أول دخول</option><option value="stopped">موقوف</option></select>
                 {roleId && <p className="text-xs text-muted-foreground">يحمل: {grantText(cat.data!, (roles.data!.find((r) => r["id"] === roleId)?.["grants"] as Grant[]) ?? []) || "بلا صلاحيات"}</p>}
               </div>
               {roleId && (
@@ -202,13 +256,13 @@ function People({ org, school }: { org: string; school: string | null }) {
                     <li key={p.user_id}>
                       <button type="button" onClick={() => setUser(p.user_id)} className="flex min-h-12 w-full items-center gap-3 p-3 text-start text-sm hover:bg-secondary/50">
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate font-semibold">{p.name}</span>
+                          <span className="block truncate font-semibold">{p.name}{login(p.user_id) && <span dir="ltr" className="ms-2 font-mono text-xs font-normal text-muted-foreground">{login(p.user_id)!.username}</span>}{login(p.user_id)?.pending && <span className="ms-2 rounded bg-warning/15 px-1.5 text-xs font-normal">بانتظار أول دخول</span>}</span>
                           <span className="block truncate text-xs text-muted-foreground">
                             {p.base.map((b) => `${ROLE_LABELS[b.role] ?? b.role}${b.school ? ` — ${b.school}` : ""}${b.active ? "" : " (موقوف)"}`).join("، ") || "—"}
                             {p.roles.length ? ` • ${p.roles.map((id) => roles.data!.find((r) => r["id"] === id)?.["name"]).filter(Boolean).join("، ")}` : ""}
                           </span>
                         </span>
-                        <span className="shrink-0 text-xs text-primary">الصلاحيات</span>
+                        <span className="shrink-0 text-xs text-primary">إدارة الحساب والصلاحيات</span>
                       </button>
                     </li>
                   ))}
@@ -302,6 +356,28 @@ function EffectiveList({ c, eff, onOverride }: { c: Catalog; eff: Row; onOverrid
           </ul>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ResetPassword({ org, user, username }: { org: string; user: string; username: string }) {
+  const run = useServerFn(resetStaffPassword);
+  const qc = useQueryClient();
+  const [pw, setPw] = useState(""); const [busy, setBusy] = useState(false);
+  async function go() {
+    const reason = await askText("سبب إصدار كلمة مرور مؤقتة", { required: true }); if (!reason) return;
+    setBusy(true);
+    try { await run({ data: { orgId: org, userId: user, password: pw, reason } }); setPw(""); toast.success("صدرت كلمة مرور مؤقتة؛ أُغلقت جلساته وسيُلزم بتغييرها عند الدخول"); qc.invalidateQueries({ queryKey: ["staff-logins", org] }); }
+    catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
+  }
+  return (
+    <div className="mt-4 space-y-2 rounded-xl border bg-card p-4 text-sm">
+      <p className="font-bold">بيانات الدخول</p>
+      <p className="text-xs text-muted-foreground">اسم المستخدم: <span dir="ltr" className="font-mono">{username}</span> — كلمة المرور لا تُعرض ولا تُسترجع.</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="w-full sm:w-64"><PasswordInput aria-label="كلمة مرور مؤقتة جديدة" placeholder="كلمة مرور مؤقتة جديدة" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} /></div>
+        <Button size="sm" variant="outline" disabled={busy || pw.length < 8} onClick={go}>إصدار كلمة مرور مؤقتة</Button>
+      </div>
     </div>
   );
 }

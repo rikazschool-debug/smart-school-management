@@ -198,6 +198,7 @@ export type Database = {
           need_password: boolean
           need_phone: boolean
           restore_active: boolean
+          restore_ids: string[] | null
           school_id: string
           subject_id: string
           updated_at: string
@@ -212,6 +213,7 @@ export type Database = {
           need_password?: boolean
           need_phone?: boolean
           restore_active?: boolean
+          restore_ids?: string[] | null
           school_id: string
           subject_id: string
           updated_at?: string
@@ -226,6 +228,7 @@ export type Database = {
           need_password?: boolean
           need_phone?: boolean
           restore_active?: boolean
+          restore_ids?: string[] | null
           school_id?: string
           subject_id?: string
           updated_at?: string
@@ -6731,6 +6734,41 @@ export type Database = {
           },
         ]
       }
+      staff_logins: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          org_id: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          org_id: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          org_id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_logins_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stages: {
         Row: {
           created_at: string
@@ -8929,6 +8967,25 @@ export type Database = {
       _section_users: {
         Args: { _guardians: boolean; _section: string; _year: string }
         Returns: string[]
+      }
+      _staff_provision: {
+        Args: {
+          _actor: string
+          _base: string
+          _is_new: boolean
+          _name: string
+          _org: string
+          _reason: string
+          _roles: Json
+          _schools: string[]
+          _uid: string
+          _username: string
+        }
+        Returns: Json
+      }
+      _staff_reset: {
+        Args: { _actor: string; _org: string; _reason: string; _uid: string }
+        Returns: undefined
       }
       _stage_student_password: {
         Args: { _actor: string; _student: string; _uid: string }
@@ -11180,6 +11237,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      staff_logins_list: {
+        Args: { _org: string }
+        Returns: {
+          pending: boolean
+          user_id: string
+          username: string
+        }[]
+      }
       staff_scope_list: {
         Args: { _school: string }
         Returns: {
@@ -11190,6 +11255,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      staff_username_free: { Args: { _username: string }; Returns: boolean }
       staff_view: { Args: { _school: string }; Returns: boolean }
       start_direct_conversation: {
         Args: { _other: string; _school: string }

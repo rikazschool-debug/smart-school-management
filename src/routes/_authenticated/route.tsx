@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 import { completeFirstPassword, completePhoneSetup } from "@/lib/accounts.functions";
 import { strongEnough } from "@/lib/people-import";
 import { arabicError } from "@/lib/session";
@@ -70,8 +71,8 @@ function FirstPassword({ onDone }: { onDone: () => void }) {
       <h1 className="text-lg font-bold">غيّر كلمة المرور الأولية</h1>
       <p className="text-sm text-muted-foreground">هذه كلمة مرور مؤقتة. لن تصل إلى ركاز قبل اختيار كلمة مرور جديدة خاصة بك.</p>
       <form onSubmit={submit} className="space-y-3">
-        <div className="space-y-1"><Label htmlFor="np1">كلمة المرور الجديدة</Label><Input id="np1" type="password" autoComplete="new-password" value={p1} onChange={(e) => setP1(e.target.value)} /></div>
-        <div className="space-y-1"><Label htmlFor="np2">تأكيد كلمة المرور</Label><Input id="np2" type="password" autoComplete="new-password" value={p2} onChange={(e) => setP2(e.target.value)} /></div>
+        <div className="space-y-1"><Label htmlFor="np1">كلمة المرور الجديدة</Label><PasswordInput id="np1" autoComplete="new-password" value={p1} onChange={(e) => setP1(e.target.value)} /></div>
+        <div className="space-y-1"><Label htmlFor="np2">تأكيد كلمة المرور</Label><PasswordInput id="np2" autoComplete="new-password" value={p2} onChange={(e) => setP2(e.target.value)} /></div>
         <p className="text-xs text-muted-foreground">8 أحرف على الأقل، حروف وأرقام معًا.</p>
         <Button type="submit" className="w-full" disabled={busy}>{busy ? "جارٍ الحفظ…" : "حفظ والمتابعة"}</Button>
         <Button type="button" variant="ghost" className="w-full" onClick={async () => { await supabase.auth.signOut(); location.href = "/auth"; }}>تسجيل الخروج</Button>

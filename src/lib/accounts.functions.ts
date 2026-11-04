@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { STAFF_DOMAIN } from "@/lib/guardian-login";
 import { normPhone, studentLoginEmail, strongEnough } from "@/lib/people-import";
 
 type Kind = "student" | "teacher" | "guardian";
@@ -139,4 +140,69 @@ export const completePhoneSetup = createServerFn({ method: "POST" })
     const { data, error } = await supabaseAdmin.rpc("_complete_account_setup" as never, { _uid: context.userId, _password_changed: false } as never);
     if (error) throw new Error(error.message);
     return { state: String(data) };
+  });
+
+const USERNAME = /^[a-z0-9][a-z0-9._-]{2,29}$/;
+type StaffInput = { orgId: string; existingUserId?: string | null; username?: string; fullName?: string; password?: string; base: string; schools: string[]; roles: { role_id: string; school_ids: string[] | null; limit: number | null }[]; reason: string };
+
+/**
+ * Owner adds a staff member: a new username/password login (created through Supabase Auth, password never stored by us)
+ * or an existing org account (roles added, password untouched). All memberships/roles/gate are written in one transaction.
+ */
+export const createStaffAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: StaffInput) => {
+    if (!UUID.test(d?.orgId ?? "")) throw new Error("مؤسسة غير صالحة");
+    if (!Array.isArray(d.schools) || !d.schools.length || !d.schools.every((x) => UUID.test(x))) throw new Error("اختر فرعًا واحدًا على الأقل");
+    if (!Array.isArray(d.roles) || d.roles.length > 20 || !d.roles.every((r) => UUID.test(r.role_id))) throw new Error("أدوار غير صالحة");
+    if (!d.reason?.trim()) throw new Error("السبب مطلوب");
+    if (d.existingUserId) { if (!UUID.test(d.existingUserId)) throw new Error("حساب غير صالح"); return d; }
+    const u = (d.username ?? "").trim().toLowerCase();
+    if (!USERNAME.test(u)) throw new Error("اسم المستخدم: 3–30 حرفًا إنجليزيًا صغيرًا أو أرقامًا أو . _ -");
+    if ((d.fullName ?? "").trim().length < 3) throw new Error("اسم الموظف مطلوب");
+    const err = strongEnough(d.password ?? ""); if (err) throw new Error(err);
+    return { ...d, username: u };
+  })
+  .handler(async ({ data, context }) => {
+    const { data: owner } = await context.supabase.rpc("is_org_owner" as never, { _org: data.orgId } as never);
+    if (!owner) throw new Error("إضافة الموظفين لمالك المؤسسة");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let uid = data.existingUserId ?? null;
+    let created = false;
+    if (!uid) {
+      const { data: free } = await context.supabase.rpc("staff_username_free" as never, { _username: data.username } as never);
+      if (!free) throw new Error("اسم المستخدم مستخدم من قبل؛ اختر اسمًا آخر");
+      const c = await supabaseAdmin.auth.admin.createUser({ email: `${data.username}@${STAFF_DOMAIN}`, password: data.password!, email_confirm: true, user_metadata: { full_name: data.fullName!.trim() } });
+      if (c.error || !c.data.user) throw new Error(/already/i.test(c.error?.message ?? "") ? "اسم المستخدم مستخدم من قبل؛ اختر اسمًا آخر" : "تعذّر إنشاء الحساب");
+      uid = c.data.user.id; created = true;
+    }
+    const { data: res, error } = await supabaseAdmin.rpc("_staff_provision" as never, {
+      _actor: context.userId, _org: data.orgId, _uid: uid, _is_new: created, _username: data.username ?? null, _name: data.fullName ?? null,
+      _base: data.base, _schools: data.schools, _roles: data.roles, _reason: data.reason.trim() } as never);
+    if (error) {
+      if (created) await supabaseAdmin.auth.admin.deleteUser(uid!).catch(() => undefined); // nothing half-created
+      throw new Error(error.message);
+    }
+    return { userId: uid!, created, ...(res as object) };
+  });
+
+/** Owner issues a new temporary password; access is locked until the employee changes it. The value is never logged. */
+export const resetStaffPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { orgId: string; userId: string; password: string; reason: string }) => {
+    if (!UUID.test(d?.orgId ?? "") || !UUID.test(d?.userId ?? "")) throw new Error("بيانات غير صالحة");
+    const err = strongEnough(d.password ?? ""); if (err) throw new Error(err);
+    if (!d.reason?.trim()) throw new Error("السبب مطلوب");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const { data: owner } = await context.supabase.rpc("is_org_owner" as never, { _org: data.orgId } as never);
+    if (!owner) throw new Error("لمالك المؤسسة فقط");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("_staff_reset" as never, { _actor: context.userId, _org: data.orgId, _uid: data.userId, _reason: data.reason.trim() } as never);
+    if (error) throw new Error(error.message);
+    const u = await supabaseAdmin.auth.admin.updateUserById(data.userId, { password: data.password });
+    if (u.error) throw new Error("تعذّر تعيين كلمة المرور");
+    await supabaseAdmin.auth.admin.signOut(data.userId, "global").catch(() => undefined);
+    return { ok: true };
   });
