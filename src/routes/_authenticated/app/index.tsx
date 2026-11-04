@@ -7,6 +7,7 @@ import { ClassroomGrid, useClassrooms } from "./classrooms.index";
 import { NAV_BY_ROLE, ROLE_LABELS, canManage, type NavKey } from "@/lib/roles";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { OwnerPortal } from "@/components/owner-portal";
+import { WorkToday } from "@/components/work-today";
 
 export const Route = createFileRoute("/_authenticated/app/")({ component: Home });
 
@@ -52,7 +53,10 @@ function Home() {
         <EmptyState title="اختر مدرسة من شريط السياق" hint={active.role === "platform_admin" ? "أو افتح صفحة المؤسسات." : "أو أضف مدرسة من صفحة المدارس."} />
       ) : active.role === "org_owner" ? (
         <OwnerPortal orgId={active.orgId} />
-      ) : canManage(active.role) || active.role === "student_affairs" || active.role === "dept_head" || active.role === "supervisor" ? (
+      ) : (
+        <div className="space-y-8">
+          {active.role !== "platform_admin" && <WorkToday schoolId={active.schoolId} />}
+          {canManage(active.role) || active.role === "student_affairs" || active.role === "dept_head" || active.role === "supervisor" ? (
         <StaffHome ctx={active as AppContext & { schoolId: string }} />
       ) : active.role === "teacher" ? (
         <TeacherHome schoolId={active.schoolId} />
@@ -61,7 +65,9 @@ function Home() {
       ) : active.role === "student" ? (
         <StudentHome schoolId={active.schoolId} />
       ) : (
-        <EmptyState title="هذه اللوحة جاهزة هيكليًا فقط" hint="وظائف هذا الدور (السجلات الخاصة، الزيارات، الانصراف) ستُبنى في حزم لاحقة، ولا تُعرض بيانات حساسة هنا." />
+        <EmptyState title="لا توجد مؤشرات إضافية لهذا الدور بعد" hint="سجلات هذا الدور الخاصة (الزيارات، الانصراف…) ستُبنى في حزم لاحقة؛ أعمالك المعلّقة تظهر أعلاه." />
+      )}
+        </div>
       )}
     </>
   );
