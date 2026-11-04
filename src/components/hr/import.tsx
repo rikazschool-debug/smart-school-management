@@ -67,8 +67,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     const fixed = data.map((r, i) => r.map((c, k) => (dateCols.has(k) && typeof rawA[i + 1]?.[k] === "number" ? rawA[i + 1]![k] : c)));
     if (!head.some(Boolean) || data.length === 0) return toast.error("الملف لا يحتوي صفوف بيانات");
     if (data.length > MAX_ROWS) return toast.error(`الحد الأقصى ${MAX_ROWS} صف في الملف الواحد`);
-    setRaw({ name: file.name, head, data: fixed }); setMap(mp); setRes(null); return;
-    setRaw({ name: file.name, head, data }); setMap(mp); setRes(null);
+    setRaw({ name: file.name, head, data: fixed }); setMap(mp); setRes(null);
   };
 
   const rows = useMemo<Row[]>(() => {
