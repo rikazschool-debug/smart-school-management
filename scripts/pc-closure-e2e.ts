@@ -31,10 +31,9 @@ async function cleanup(orgs: string[], users: string[], schools: string[]) {
 if (mode === "--cron-check") {
   if (!existsSync(CRON)) { console.log("run --cron-setup first"); process.exit(1); }
   const fx = JSON.parse(readFileSync(CRON, "utf8"));
-  const runs = await admin.rpc("_pc_cron_last" as any).then((r) => r, () => null);
   const { data: n } = await admin.from("notifications").select("dedupe_key, created_at").eq("user_id", fx.officer).like("dedupe_key", `pc-due:${fx.custody}%`);
   const after = (n ?? []).filter((x) => new Date(x.created_at as string).getTime() > fx.setupAt);
-  check("C1 the real scheduled job (pg_cron, hourly at :20) sent the due-soon alert once to the holder", after.length === 1, { n, runs: runs?.data });
+  check("C1 the real scheduled job (pg_cron, hourly at :20) sent the due-soon alert once to the holder", after.length === 1, n);
   await cleanup(fx.orgs, fx.users, fx.schools); rmSync(CRON);
   console.log(`\n${ok} passed, ${bad} failed`); process.exit(bad ? 1 : 0);
 }
