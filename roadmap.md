@@ -321,8 +321,8 @@
 ## prompt-71 closure (C4 + remaining)
 - [x] C4 purchase needs (see above)
 - [ ] Permissions completeness: map every school section/action to the original brief; list non-customizable items; supervisor template with assigned-teacher scope; split action permission from data scope for tasks/duties; explain sensitive limits in UI
-- [ ] Owner exception: owner bound by platform section suspension, org isolation, no self-approve/self-disburse — explicit tests
-- [ ] Branch suspension: blocks branch data/ops, not other active branch links; open session + reactivation; previously-suspended stays suspended
+- [x] Owner exception (bounds-e2e 8/8): owner bound by platform section suspension, org isolation, no self-approve/self-disburse — explicit tests
+- [x] Branch suspension (bounds-e2e): blocks branch data/ops, not other active branch links; open session + reactivation; previously-suspended stays suspended
 - [ ] Browser journeys on isolated data: assign/grant/deny/withdraw on the new permissions page, staff link invitation, login after branch suspension
 - [ ] C6 invoice custom field (old version kept), custody transfer acceptance, carry-over; finance suspension + permission withdrawal in open session; alerts via real cron (C8)
 - [ ] C9 restore docs (login documents, grade visibility) + requirements matrix with evidence; review new security warnings by actual permission
@@ -349,7 +349,7 @@
 - [x] M7 (mt_parts_suggest/mt_need_create/mt_need_info; maint-need-e2e 8/8) Link to procurement needs (no financial rights; estimated vs approved actual cost; no duplicate invoices)
 - [x] M8 (mt_alerts_tick daily 05:00 UTC via pg_cron; maint-alerts-e2e 6/6; list search/filters/paging/export already in RequestList) Event log, deduped notifications + periodic overdue alerts, search/filters/paging, Excel/PDF
 - [x] M9 (platform_overview: platform-wide counts only, per-section availability; browser-checked as demo platform admin) Platform-admin counterparts (schools, finance, HR, users & permissions, transport & maintenance): availability + aggregate stats only, HR «تحت الإنشاء», no cross-org data without explicit logged access
-- [ ] M10 (step 1 done: «عملي اليوم» via home_work on every non-owner home, clickable filtered cards, last-updated + refresh, phone-checked principal/teacher/nurse; remaining: role-specific KPIs e.g. homework to grade, child absences) Role homes redesign for all roles (real scoped KPIs, clickable cards → filtered lists, last-updated, empty/error states, phone)
+- [x] M10 (role KPIs added: hw to grade, hw due, child absences; step 1 done: «عملي اليوم» via home_work on every non-owner home, clickable filtered cards, last-updated + refresh, phone-checked principal/teacher/nurse; remaining: role-specific KPIs e.g. homework to grade, child absences) Role homes redesign for all roles (real scoped KPIs, clickable cards → filtered lists, last-updated, empty/error states, phone)
 - [ ] M11 Tests: maint-e2e (2 orgs/2 branches, full school + bus journeys, decline/reassign, concurrent accept, self-approval block, procurement link, isolation, revocation, suspension, alerts) + browser journeys + docs (permissions matrix, closure log)
 - [x] prompt-90: split «إدارة صيانة المدارس» (/app/maintenance) from «إدارة تشغيل وصيانة الباصات» (/app/bus-maintenance: requests + buses/status) as separate menu entries and portal cards
 - [x] prompt-100: maintenance managers can hold custodies; follow-up officers see current/awaiting/past + new request only
