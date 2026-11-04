@@ -77,6 +77,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly }: {
                           <span className="font-medium">{s.label}</span>
                           {s.sensitive && <span className="text-xs text-muted-foreground">يتيح الاطلاع على أسماء الطلاب في الفرع</span>}
                         </div>
+                        {so && !baseAction(s) && secState(s) === "none" && <p className="ms-8 mt-1 text-xs text-muted-foreground">لا عرض مستقلًا لهذا القسم؛ اختر الإجراء المطلوب صراحة.</p>}
                         {so && (
                           <div className="ms-8 mt-2 grid gap-2 sm:grid-cols-2">
                             {s.actions.map((a) => { const g = has(s.key, a); return (
