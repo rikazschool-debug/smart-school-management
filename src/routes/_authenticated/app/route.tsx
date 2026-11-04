@@ -184,7 +184,7 @@ function Shell() {
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">{initial}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{ops.title ?? ROLE_LABELS[active.role]}</p>
+            <p className="truncate text-sm font-semibold">{ops.title === "عملي" ? "متعدد الأدوار" : ops.title ?? ROLE_LABELS[active.role]}</p>
             <p className="truncate text-xs text-muted-foreground" dir="ltr">{user.email}</p>
           </div>
           <Button variant="ghost" size="icon" onClick={signOut} aria-label="تسجيل الخروج" title="تسجيل الخروج"><LogOut className="size-4" /></Button>
@@ -222,7 +222,7 @@ function Shell() {
             >
               {contexts.map((c) => (
                 <option key={c.key} value={c.key}>
-                  {opsOnly && c.schoolId === active.schoolId && c.role === active.role ? ops.title : ROLE_LABELS[c.role]} · {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
+                  {opsOnly && c.schoolId === active.schoolId && c.role === active.role ? (ops.title === "عملي" ? "متعدد الأدوار" : ops.title) : ROLE_LABELS[c.role]} · {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
                 </option>
               ))}
             </select>
