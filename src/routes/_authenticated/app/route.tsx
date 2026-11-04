@@ -69,6 +69,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   bus_maintenance: { to: "/app/bus-maintenance", label: "إدارة تشغيل وصيانة الباصات", icon: Bus },
   admissions: { to: "/app/admissions", label: "القبول والتسجيل", icon: UserPlus },
   visits: { to: "/app/visits", label: "الزيارات الصفية", icon: ClipboardList },
+  evaluation: { to: "/app/evaluation", label: "نظام التقييم الشامل", icon: Award },
 };
 
 /** Procurement sub-sections shown under its menu entry (the page re-checks each tab). */
@@ -80,7 +81,7 @@ const AD_SUB = [["apps", "الطلاب المحتملون"], ["settings", "ال�
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "profile"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
-  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "procurement", "transport", "maintenance", "bus_maintenance", "admissions"] },
+  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },

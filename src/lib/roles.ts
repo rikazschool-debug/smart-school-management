@@ -69,13 +69,14 @@ export type NavKey =
   | "transport"
   | "admissions"
   | "visits"
+  | "evaluation"
   | "permissions";
 
 /** Owner home is split into four sections; each section shows only its own side menu. */
 export type OwnerSection = "school_admin" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users";
 export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", maintenance: "إدارة صيانة المدارس", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
-  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "virtual", "homework", "grades", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "visits", "communication", "comm_groups", "circulars", "comm_manage"],
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "virtual", "homework", "grades", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "visits", "evaluation", "communication", "comm_groups", "circulars", "comm_manage"],
   admissions: ["admissions"],
   finance: ["finance", "procurement"],
   operations: ["operations", "transport", "bus_maintenance"],
@@ -135,16 +136,16 @@ const MANAGE: NavKey[] = [
 export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && !ADMIN_KEYS.includes(k))],
   // owner: branch counts on the admin page + own (multi-branch) meetings and calendar — no duties
-  org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k !== "duties"), "visits"],
+  org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k !== "duties"), "visits", "evaluation"],
   // class visits: principal-level (all branch teachers) and supervisor (assigned teachers) only — mirrors _cv_can_eval
-  principal: [...MANAGE, "visits"],
+  principal: [...MANAGE, "visits", "evaluation"],
   // vice: no academic setup (principal only) and no scanning station (gate account only); timetable view limited to the vice's scope
   vice_principal: MANAGE.filter((k) => k !== "academic"),
   student_affairs: ["home", "students", "guardians", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "visits", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   teacher: ["home", "classrooms", "virtual", "homework", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
-  guardian: ["home", "classrooms", "homework", "schedule", "pickup", "communication", "notifications"],
+  guardian: ["home", "classrooms", "homework", "schedule", "evaluation", "pickup", "communication", "notifications"],
   student: ["home", "classrooms", "virtual", "homework", "schedule", "pickup", "communication", "notifications"],
   counselor: ["home", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   nurse: ["home", "admin", "duties", "meetings", "calendar", "communication", "notifications"],

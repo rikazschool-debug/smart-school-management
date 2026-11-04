@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, CheckCircle2, Construction, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, type LucideIcon } from "lucide-react";
+import { Star, ArrowLeft, Building2, CheckCircle2, Construction, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, type LucideIcon } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -76,6 +76,14 @@ const CARDS: Card[] = [
     features: [
       { icon: UserPlus, label: "الطلاب المحتملون", to: "/app/admissions", search: { tab: "apps" } },
       { icon: Building2, label: "الإعدادات والربط", to: "/app/admissions", search: { tab: "settings" } },
+    ],
+  },
+  {
+    key: "evaluation", title: "نظام التقييم الشامل", icon: Star, to: "/app/evaluation", open: "فتح نظام التقييم",
+    desc: "تقييمات أولياء الأمور للمعلمين، والزيارات الصفية، والتقييم الشهري للكادر — مصادر منفصلة لكل فرع.",
+    features: [
+      { icon: Star, label: "الملخص والمؤشرات", to: "/app/evaluation", search: { tab: "summary" } },
+      { icon: PencilLine, label: "النماذج والإعدادات", to: "/app/evaluation", search: { tab: "forms" } },
     ],
   },
   {
