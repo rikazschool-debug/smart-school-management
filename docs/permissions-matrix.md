@@ -219,3 +219,4 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 | مسؤول متابعة الصيانة | follow, view | follow, view |
 | مسؤول حركة النقل بالمدرسة | — | request, view, fleet |
 All scopes are per assigned branches; the platform switch «النقل المدرسي والصيانة» (operations) disables every action. Owner-only assignment, logged; no self-assignment; students/guardians excluded.
+Request access: owner (all, no execution), requester, current assignee (lost on reassign), follow/view holders of the branch; executors of the branch see only unassigned requests to claim. Internal notes: assignee, follow-up, owner.

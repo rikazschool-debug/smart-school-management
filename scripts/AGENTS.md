@@ -42,3 +42,4 @@
 - scripts/pc-journey-e2e.ts: full procurement journey (need→officer, draft-blocked settlement, reviewer edit, per-invoice decisions, notifications, branch overview scope, zero-balance auto-close → archive; 8 checks).
 - scripts/vc-e2e.ts: class virtual sessions (schedulers, host/join, enrollment loss, isolation from admin meetings, attendance timings, report scope, cancel/end; 9 checks).
 - scripts/maint-roles-e2e.ts: maintenance/transport role templates, principal base rule, branch scope, operations-area suspension, revocation, isolation (12 checks).
+- scripts/maint-e2e.ts: maintenance lifecycle — school + bus journeys, routing, clarify, reschedule, decline/reassign, concurrent claim, no self-approval, internal notes, reopen/cancel, bus out-of-service/inspection/return, files, isolation, suspension, notification dedupe (26 checks).
