@@ -449,3 +449,10 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Scope: section + area, templates «مسؤول القبول والتسجيل»/«موظف متابعة القبول», applications lifecycle, contact log, follow-ups, decision, assign, transfer, reopen, explicit link, current students (read), summary, settings, daily alerts.
 - Server: scripts/admissions-e2e.ts 18/18. Browser: owner summary/apps/settings render with no errors.
 - Open: WordPress receiver + plugin ZIP (needs reference PHP template + install), officer/phone browser journey.
+
+## Admissions — phase 2: WordPress link + role journeys (2026-11-04)
+- Receiver /api/public/admissions/wordpress: HMAC-SHA256(ts.nonce.body), ±5 min, nonce replay 409, 60/min per connection, org from connection only, reply = ref only; section paused → 503 (WordPress keeps it pending).
+- Plugin rikaz-admissions (ZIP in Files): queue on wp_after_insert_post (meta complete), shutdown + 5-min cron retries with backoff, statuses pending/success/failed, manual retry, history only by explicit selection, no IP sent.
+- Template patch: duplicate = name+phone+school+year; server check of school/stage.
+- Tests: wp-e2e 14/14 (real plugin PHP), admissions-e2e 18/18, adm-journey.py 12/12 (Excel opened: 2 rows Arabic; PDF 1 page "صفحة 1 من 1").
+- Open: live trial from the real site (needs publish + install); real cron run of rikaz-ad-alerts (first scheduled run 05:10 UTC tomorrow).
