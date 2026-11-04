@@ -80,7 +80,7 @@ async def main(kind,path):
         await m.screenshot(path="bus4.png"); ok("bus: separate authorised action returned it", "متاح للخدمة" in await m.locator("tbody tr").filter(has_text=BUS).inner_text())
         await m.screenshot(path="/tmp/browser/bus3.png")
     # reopen request cycle: requester asks, executor cannot decide, follow-up rejects then approves
-    await openreq(p,path); await p.get_by_role("button",name="طلب إعادة فتح").click(); await reason(p,"عاد العطل")
+    await p.goto(B+path); await p.wait_for_timeout(2000); await p.screenshot(path="/tmp/browser/req_list.png"); await openreq(p,path); await p.get_by_role("button",name="طلب إعادة فتح").click(); await reason(p,"عاد العطل")
     ok(f"{kind}: requester's reopen request pending, still closed", "بانتظار قرار المتابعة" in await status(p))
     await openreq(m,path); ok(f"{kind}: executor has no reopen decision", await m.get_by_role("button",name="قبول إعادة الفتح").count()==0)
     await openreq(f2,path); await f2.get_by_role("button",name="رفض إعادة الفتح").click(); await reason(f2,"عطل مختلف")
