@@ -107,7 +107,7 @@ function GuardianView() {
               <div className="font-semibold">{t.name}</div>
               <div className="mb-2 text-sm text-muted-foreground">{t.subjects}</div>
               <div className="mb-3 text-sm">{t.rating ? `قيّمته — آخر تعديل ${new Date(t.rating.updated_at).toLocaleDateString("ar-SA")}` : "لم تقيّمه بعد"}</div>
-              <Button size="sm" onClick={() => { setOpen(t); setAns(t.rating?.answers ?? {}); setComment(t.rating?.comment ?? ""); }}>{t.rating ? "تعديل التقييم" : "تقييم"}</Button>
+              {canEdit && <Button size="sm" onClick={() => { setOpen(t); setAns(t.rating?.answers ?? {}); setComment(t.rating?.comment ?? ""); }}>{t.rating ? "تعديل التقييم" : "تقييم"}</Button>
             </div>))}
         </div>)}
     </>
@@ -307,8 +307,10 @@ function MonthlyTab({ schools, school, month, dueDay, orgId }: { schools: [strin
 
 /* ---------- forms editor ---------- */
 type EvForm = { id: string; kind: string; role_key: string; version: number; title: string; description: string | null; items: FormItem[]; status: string; published_at: string | null };
-function FormsTab({ orgId }: { orgId: string }) {
+function FormsTab({ orgId, owner }: { orgId: string; owner: boolean }) {
   const qc = useQueryClient();
+  const can = useCan();
+  const canEdit = can("ev_forms.edit"), canPub = can("ev_forms.publish");
   const forms = useQuery({ queryKey: ["ev-forms", orgId], queryFn: () => rpc<EvForm[]>("ev_forms_list", { _org: orgId }) });
   const [ed, setEd] = useState<{ kind: string; role_key: string; title: string; description: string; items: FormItem[]; preview: boolean } | null>(null);
   if (forms.isLoading) return <LoadingState />;
@@ -344,19 +346,21 @@ function FormsTab({ orgId }: { orgId: string }) {
             </div>
           </div>))}
         <Button variant="outline" className="mb-3" onClick={() => setEd({ ...ed, items: [...ed.items, { code: "q" + Date.now().toString(36), text: "", na: true }] })}><Plus className="size-4" />بند جديد</Button>
-        <div className="flex flex-wrap gap-2"><Button onClick={() => save(true)}>نشر إصدار جديد</Button><Button variant="outline" onClick={() => save(false)}>حفظ مسودة</Button><Button variant="outline" onClick={() => setEd({ ...ed, preview: true })}>معاينة</Button><Button variant="ghost" onClick={() => setEd(null)}>إلغاء</Button></div>
+        <div className="flex flex-wrap gap-2">{canPub && <Button onClick={() => save(true)}>نشر إصدار جديد</Button>}<Button variant="outline" onClick={() => save(false)}>حفظ مسودة</Button><Button variant="outline" onClick={() => setEd({ ...ed, preview: true })}>معاينة</Button><Button variant="ghost" onClick={() => setEd(null)}>إلغاء</Button></div>
       </>
     );
   }
   return (
     <>
+      <CycleSettings orgId={orgId} owner={owner} />
+      {!canEdit && <p className="mb-3 rounded-md border bg-muted/40 p-2 text-sm">لديك عرض النماذج فقط؛ التحرير والنشر صلاحيتان منفصلتان يمنحهما المالك.</p>}
       <p className="mb-3 text-sm text-muted-foreground">نموذج الزيارة الصفية (5 محاور، 24 بندًا) معتمد ومستخدم في صفحة الزيارات. هنا نماذج أولياء الأمور والتقييم الشهري.</p>
-      <div className="mb-3 flex flex-wrap gap-2">{[["monthly", "teacher"]].filter(([k, r]) => !groups.includes(k + "|" + r)).map(([k, r]) => <Button key={r} variant="outline" size="sm" onClick={() => setEd({ kind: k!, role_key: r!, title: "التقييم الشهري — المعلم", description: "", items: [], preview: false })}><Plus className="size-4" />إنشاء نموذج شهري للمعلم</Button>)}</div>
+      <div className="mb-3 flex flex-wrap gap-2">{canEdit && [["monthly", "teacher"]].filter(([k, r]) => !groups.includes(k + "|" + r)).map(([k, r]) => <Button key={r} variant="outline" size="sm" onClick={() => setEd({ kind: k!, role_key: r!, title: "التقييم الشهري — المعلم", description: "", items: [], preview: false })}><Plus className="size-4" />إنشاء نموذج شهري للمعلم</Button>)}</div>
       {groups.map((g) => { const vs = forms.data!.filter((f) => f.kind + "|" + f.role_key === g); const cur = vs.find((f) => f.status === "draft") ?? vs.find((f) => f.status === "published") ?? vs[0]!;
         return (
           <section key={g} className="mb-3 rounded-lg border bg-card p-3">
             <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{cur.kind === "guardian" ? "تقييم ولي الأمر للمعلم" : `التقييم الشهري — ${ROLE_LABEL[cur.role_key]}`}</h3>
-              <Button size="sm" onClick={() => setEd({ kind: cur.kind, role_key: cur.role_key, title: cur.title, description: cur.description ?? "", items: cur.items, preview: false })}>{cur.status === "draft" ? "متابعة المسودة" : "تعديل (إصدار جديد)"}</Button></div>
+              <Button size="sm" onClick={() => setEd({ kind: cur.kind, role_key: cur.role_key, title: cur.title, description: cur.description ?? "", items: cur.items, preview: false })}>{cur.status === "draft" ? "متابعة المسودة" : "تعديل (إصدار جديد)"}</Button>}</div>
             <ul className="mt-2 text-sm">{vs.map((f) => <li key={f.id}>الإصدار {f.version} · {f.items.length} بند · {f.status === "published" ? "منشور" : f.status === "draft" ? "مسودة" : "مؤرشف"}</li>)}</ul>
           </section>); })}
     </>
@@ -424,5 +428,30 @@ function StaffFile({ sch, p, month, form, ans, approved, version, saved, history
       </div>
       <ItemBars title="نتيجة البنود" items={form.items.filter((i) => (i as { type?: string }).type !== "section").map((i) => ({ label: i.text, value: typeof ans[i.code] === "number" ? (ans[i.code] as number) : null, note: ans[i.code] === "na" ? "غير منطبق" : undefined }))} />
     </div>
+  );
+}
+
+function CycleSettings({ orgId, owner }: { orgId: string; owner: boolean }) {
+  const qc = useQueryClient();
+  const st = useQuery({ queryKey: ["ev-set", orgId], queryFn: () => rpc<{ due_day: number; reminders: boolean } | null>("ev_settings_get", { _org: orgId }) });
+  const [d, setD] = useState<number | null>(null); const [rem, setRem] = useState<boolean | null>(null);
+  if (!st.data) return null;
+  const day = d ?? st.data.due_day, on = rem ?? st.data.reminders;
+  async function save() {
+    const r = await supabase.rpc("ev_settings_save" as never, { _org: orgId, _due_day: day, _reminders: on } as never);
+    if (r.error) { toast.error(arabicError(r.error)); return; }
+    toast.success("حُفظت إعدادات الدورة"); qc.invalidateQueries({ queryKey: ["ev-set"] }); qc.invalidateQueries({ queryKey: ["ev-me"] });
+  }
+  return (
+    <section className="mb-4 rounded-lg border bg-card p-3" aria-label="دورة التقييم الشهري">
+      <h3 className="mb-2 font-semibold">دورة التقييم الشهري</h3>
+      <p className="mb-2 text-sm text-muted-foreground">يصل تذكير بداية الدورة ثم تذكير التأخر بعد يوم الاستحقاق لمن يملك «إجراء التقييم الشهري» فقط، مرة واحدة لكل شهر، بالأعداد دون أسماء أو نتائج.</p>
+      <div className="flex flex-wrap items-end gap-3">
+        <div><Label htmlFor="ev-due">يوم الاستحقاق (1–28)</Label><Input id="ev-due" type="number" min={1} max={28} className="w-24" disabled={!owner} value={day} onChange={(e) => setD(Number(e.target.value))} /></div>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" disabled={!owner} checked={on} onChange={(e) => setRem(e.target.checked)} />إرسال التذكيرات</label>
+        {owner && <Button size="sm" onClick={save}>حفظ</Button>}
+        {!owner && <span className="text-xs text-muted-foreground">يضبطها المالك</span>}
+      </div>
+    </section>
   );
 }
