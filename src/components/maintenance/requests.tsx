@@ -271,10 +271,13 @@ export function RequestDetail({ id, back }: { id: string; back: () => void }) {
                 <Field label="التكلفة التقديرية"><Input type="number" min={0} value={pr.est} onChange={(e) => setPr({ ...pr, est: e.target.value })} /></Field>
                 <label className="flex items-end gap-2 pb-2 text-sm"><input type="checkbox" checked={pr.waiting} onChange={(e) => setPr({ ...pr, waiting: e.target.checked })} />بانتظار قطع أو جهة خارجية</label>
               </div>
+              {r.kind === "bus" && (r.bus_received_at
+                ? <p className="text-sm text-success">استُلم الباص: {dt(r.bus_received_at)}</p>
+                : c.receive_bus && <div><Button variant="outline" onClick={() => void act("receive_bus", { body: txt || null }, "سُجل استلام الباص")}>استلام الباص</Button><p className="mt-1 text-xs text-muted-foreground">الخطوة الأولى: استلام الباص، ثم الصيانة مع الملاحظات، ثم تسليمه للمدرسة.</p></div>)}
               <Textarea rows={2} placeholder="الأعمال المنفذة أو العوائق" value={txt} onChange={(e) => setTxt(e.target.value)} />
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" disabled={!pr.progress || !txt.trim()} onClick={() => void act("progress", { progress: Number(pr.progress), body: txt, waiting: pr.waiting, est_cost: pr.est || null }, "سُجل التحديث")}>تسجيل التحديث</Button>
-                {c.submit && <Button disabled={txt.trim().length < 5} onClick={() => void act("submit_completion", { body: txt }, "أُرسل طلب اعتماد الإنجاز")}>إنهاء وإرسال للمتابعة</Button>}
+                {c.submit && <Button disabled={txt.trim().length < 5} onClick={() => void act("submit_completion", { body: txt }, r.kind === "bus" ? "سُلّم الباص للمدرسة وأُرسل للمتابعة" : "أُرسل طلب اعتماد الإنجاز")}>{r.kind === "bus" ? "تسليم الباص للمدرسة" : "إنهاء وإرسال للمتابعة"}</Button>}
               </div>
               <p className="text-xs text-muted-foreground">نسبة 100% لا تغلق الطلب؛ الإغلاق باعتماد مسؤول المتابعة فقط.</p>
             </ActionBox>
