@@ -141,7 +141,7 @@ try {
   const D = await openCustody(150, plus(2));
   await tick(); await tick();
   const due1 = await keys(`pc-due:${D}`);
-  await admin.from("pc_custodies").update({ settle_due: plus(4) }).eq("id", D);
+  await admin.from("pc_custodies").update({ settle_due: plus(3) }).eq("id", D);
   await tick(); await tick();
   const due2 = await keys(`pc-due:${D}`);
   check("C2 due-soon alert once per due date; a new due date alerts again once", due1.length === 1 && due2.length === 2, [due1, due2]);
@@ -163,7 +163,7 @@ try {
   const low4 = await keys(`pc-low:${D}`);
   check("C3 low balance: one alert; top-up above the threshold sends none; a new drop after the top-up alerts again once", low1.length === 0 && low2.length === 1 && !tp.error && low3.length === 1 && low4.length === 2, [low1, low2, tp.error, low3, low4]);
   await padm.c.rpc("platform_set_section", { _org: org, _section: "finance", _enabled: false, _reason: "تعليق" });
-  await admin.from("pc_custodies").update({ settle_due: plus(5) }).eq("id", D);
+  await admin.from("pc_custodies").update({ settle_due: plus(1) }).eq("id", D);
   await tick();
   const due3 = await keys(`pc-due:${D}`);
   await padm.c.rpc("platform_set_section", { _org: org, _section: "finance", _enabled: true, _reason: "إعادة" });
