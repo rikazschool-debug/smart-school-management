@@ -2818,6 +2818,113 @@ export type Database = {
           },
         ]
       }
+      cv_events: {
+        Row: {
+          action: string
+          actor: string | null
+          at: string
+          details: Json | null
+          id: number
+          visit_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          at?: string
+          details?: Json | null
+          id?: number
+          visit_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          at?: string
+          details?: Json | null
+          id?: number
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_events_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "cv_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_visits: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          evaluator_id: string
+          form_version: number
+          id: string
+          lesson: string | null
+          notes: Json
+          return_reason: string | null
+          school_id: string
+          scores: Json
+          status: string
+          summary: string | null
+          teacher_id: string
+          updated_at: string
+          visit_date: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          evaluator_id?: string
+          form_version?: number
+          id?: string
+          lesson?: string | null
+          notes?: Json
+          return_reason?: string | null
+          school_id: string
+          scores?: Json
+          status?: string
+          summary?: string | null
+          teacher_id: string
+          updated_at?: string
+          visit_date: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          evaluator_id?: string
+          form_version?: number
+          id?: string
+          lesson?: string | null
+          notes?: Json
+          return_reason?: string | null
+          school_id?: string
+          scores?: Json
+          status?: string
+          summary?: string | null
+          teacher_id?: string
+          updated_at?: string
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_visits_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_visits_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string
@@ -8812,6 +8919,12 @@ export type Database = {
         }[]
       }
       _course_title: { Args: { _course: string }; Returns: string }
+      _cv_can_eval: { Args: { _teacher: string }; Returns: boolean }
+      _cv_can_read: {
+        Args: { v: Database["public"]["Tables"]["cv_visits"]["Row"] }
+        Returns: boolean
+      }
+      _cv_codes: { Args: never; Returns: string[] }
       _duty_assignment_mine: {
         Args: { _id: string }
         Returns: {
@@ -10540,6 +10653,25 @@ export type Database = {
         Args: { _date: string; _school: string }
         Returns: string
       }
+      cv_decide: {
+        Args: { _approve: boolean; _id: string; _reason: string }
+        Returns: undefined
+      }
+      cv_list: { Args: { _school: string }; Returns: Json }
+      cv_save: {
+        Args: {
+          _date: string
+          _id: string
+          _lesson: string
+          _notes: Json
+          _scores: Json
+          _submit: boolean
+          _summary: string
+          _teacher: string
+        }
+        Returns: string
+      }
+      cv_teachers: { Args: { _school: string }; Returns: Json }
       decide_account_request: {
         Args: { _approve: boolean; _id: string; _note?: string }
         Returns: string
