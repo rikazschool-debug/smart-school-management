@@ -5137,6 +5137,8 @@ export type Database = {
           priority: string
           progress: number
           ref: string
+          reopen_cycle: number
+          reopen_pending: Json | null
           reopen_until: string | null
           requested_by: string
           rev: number
@@ -5184,6 +5186,8 @@ export type Database = {
           priority?: string
           progress?: number
           ref: string
+          reopen_cycle?: number
+          reopen_pending?: Json | null
           reopen_until?: string | null
           requested_by: string
           rev?: number
@@ -5231,6 +5235,8 @@ export type Database = {
           priority?: string
           progress?: number
           ref?: string
+          reopen_cycle?: number
+          reopen_pending?: Json | null
           reopen_until?: string | null
           requested_by?: string
           rev?: number
@@ -9023,6 +9029,10 @@ export type Database = {
         }
         Returns: string
       }
+      _mt_action_core: {
+        Args: { _action: string; _data: Json; _id: string; _rev: number }
+        Returns: Json
+      }
       _mt_can_read: { Args: { _id: string; _uid: string }; Returns: boolean }
       _mt_doc_state: { Args: { _d: string }; Returns: string }
       _mt_ev: {
@@ -9036,6 +9046,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _mt_get_core: { Args: { _id: string }; Returns: Json }
       _mt_note: {
         Args: {
           _key: string
