@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, FileSpreadsheet, FileText, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ClipboardCheck, FileSpreadsheet, FileText, History, ListChecks, Plus, ShieldCheck, Star, Target, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicError, useSession } from "@/lib/session";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
@@ -13,6 +13,8 @@ import { selectCls } from "@/components/ui/native-select";
 import { ask, askText } from "@/components/confirm";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { StarPicker, scoreOf, type FormItem } from "@/components/evaluation/stars";
+import { ItemBars, ProcessFlow, ScoreRing, TrendChart, pctOf5 } from "@/components/evaluation/charts";
+import { VISIT_AXES, visitPercent } from "@/lib/visit-form";
 
 type Tab = "summary" | "guardians" | "visits" | "monthly" | "forms";
 export const Route = createFileRoute("/_authenticated/app/evaluation")({
@@ -117,10 +119,7 @@ function StaffView() {
   const schools = sum.data ? [...new Map(sum.data.monthly.map((m) => [m.school_id, m.school])).entries()] : [];
   return (
     <>
-      <PageHeader title="نظام التقييم الشامل" desc="المصادر معروضة منفصلة؛ لا تُدمج في درجة شاملة ولا يُصنَّف أحد آليًا." />
-      <nav className="mb-4 flex flex-wrap gap-1 border-b" aria-label="تبويبات التقييم">
-        {tabs.map(([k, l]) => <Link key={k} to="/app/evaluation" search={{ tab: k }} className={"-mb-px border-b-2 px-3 py-2 text-sm " + (tab === k ? "border-primary font-semibold text-primary" : "border-transparent text-muted-foreground")}>{l}</Link>)}
-      </nav>
+      <PageHeader title={tabs.find(([k]) => k === tab)?.[1] ?? "نظام التقييم الشامل"} desc="نظام التقييم الشامل — المصادر معروضة منفصلة؛ لا تُدمج في درجة شاملة ولا يُصنَّف أحد آليًا. الأقسام الفرعية في القائمة الجانبية." />
       {tab !== "forms" && tab !== "visits" && (
         <div className="mb-4 flex flex-wrap items-end gap-3">
           {isOwner && <div><Label htmlFor="ev-s">الفرع</Label><select id="ev-s" className={selectCls("min-w-48")} value={school} onChange={(e) => setSchool(e.target.value)}><option value="">كل الفروع</option>{(sum.data?.monthly ?? []).map((m) => <option key={m.school_id} value={m.school_id}>{m.school}</option>)}</select></div>}
@@ -201,6 +200,7 @@ function TeacherFile({ id, onBack }: { id: string; onBack: () => void }) {
       <Button variant="ghost" size="sm" onClick={onBack} className="mb-2">→ رجوع</Button>
       <h3 className="mb-1 text-lg font-bold">ملف تقييم: {d.teacher.name}</h3>
       <p className="mb-3 text-sm text-muted-foreground">{d.guardian.ratings} تقييم حالي · {d.guardian.raters} مقيّم · {d.guardian.students} طالب</p>
+      <TeacherOverview d={d} />
       <div className="mb-3 flex gap-1 border-b">{([["g", "أولياء الأمور"], ["v", "الزيارات الصفية"], ["p", "خطة التحسين والمتابعة"]] as const).map(([k, l]) =>
         <button key={k} onClick={() => setT(k)} className={"-mb-px border-b-2 px-3 py-2 text-sm " + (t === k ? "border-primary font-semibold" : "border-transparent text-muted-foreground")}>{l}</button>)}</div>
       {t === "g" && (!d.guardian.by_version.length ? <EmptyState title="لا توجد تقييمات من أولياء الأمور" /> : d.guardian.by_version.map((v) => (
@@ -220,7 +220,7 @@ function TeacherFile({ id, onBack }: { id: string; onBack: () => void }) {
 }
 
 /* ---------- monthly ---------- */
-type MStaff = { user_id: string; name: string; role_key: string; status: string | null; id: string | null };
+type MStaff = { user_id: string; name: string; role_key: string; status: string | null; id: string | null; avg: number | null; pct: number | null; version: number | null };
 function MonthlyTab({ schools, school, month, canEdit }: { schools: [string, string][]; school: string; month: string; canEdit: boolean }) {
   const qc = useQueryClient();
   const [sch, setSch] = useState(school);
@@ -250,6 +250,7 @@ function MonthlyTab({ schools, school, month, canEdit }: { schools: [string, str
       <>
         <h3 className="mb-1 text-lg font-bold">{ed.p.name} — {ROLE_LABEL[ed.p.role_key]} — {month}</h3>
         <p className="mb-3 text-sm text-muted-foreground">{ed.form.title} (إصدار النموذج {ed.form.version}){ed.approved && ` · معتمد، إصدار التقييم ${ed.version}`}. «غير منطبق» يحتاج سببًا ولا يُحسب صفرًا. البنود بلا بيانات تُقيَّم يدويًا.</p>
+        <StaffFile sch={sch} p={ed.p} month={month} form={ed.form} ans={ed.ans} approved={ed.approved} version={ed.version} saved={!!ed.p.id} history={ed.history.length} />
         {ed.form.items.map((i) => (
           <fieldset key={i.code} className="mb-3 rounded-lg border bg-card p-3" disabled={!canEdit}>
             <legend className="px-1 font-semibold">{i.text}</legend>{i.desc && <p className="mb-2 text-sm text-muted-foreground">{i.desc}</p>}
@@ -259,7 +260,7 @@ function MonthlyTab({ schools, school, month, canEdit }: { schools: [string, str
           </fieldset>))}
         <Label htmlFor="ev-n">ملاحظات</Label>
         <textarea id="ev-n" disabled={!canEdit} className="mb-3 min-h-20 w-full rounded-md border bg-background p-2 text-sm" value={ed.notes} onChange={(e) => setEd({ ...ed, notes: e.target.value })} />
-        <p className="mb-3 text-sm">أُجيب {sc.answered} من {sc.total} · المتوسط {sc.avg ?? "—"} من 5{ed.history.length > 0 && ` · إصدارات سابقة: ${ed.history.length}`}</p>
+        <p className="mb-3 text-sm">أُجيب {sc.answered} من {sc.total} · المتوسط {sc.avg ?? "—"} من 5{sc.avg != null && ` (${pctOf5(sc.avg)}٪)`}{ed.history.length > 0 && ` · إصدارات سابقة: ${ed.history.length}`}</p>
         <div className="flex flex-wrap gap-2">{canEdit && (ed.approved ? <Button onClick={() => save(true)}>حفظ التصحيح بسبب</Button> : <><Button onClick={() => save(true)}>اعتماد</Button><Button variant="outline" onClick={() => save(false)}>حفظ مسودة</Button></>)}<Button variant="ghost" onClick={() => setEd(null)}>رجوع</Button></div>
       </>
     );
@@ -269,9 +270,10 @@ function MonthlyTab({ schools, school, month, canEdit }: { schools: [string, str
       {schools.length > 1 && <div className="mb-3 max-w-xs"><Label htmlFor="ev-ms">فرع التقييم</Label><select id="ev-ms" className={selectCls("w-full")} value={sch} onChange={(e) => setSch(e.target.value)}>{schools.map(([id, n]) => <option key={id} value={id}>{n}</option>)}</select></div>}
       <p className="mb-3 text-sm text-muted-foreground">سجل واحد لكل موظف ودور وفرع وشهر. الموظف متعدد الأدوار يُقيَّم بنموذج مستقل لكل دور. لا يوجد نموذج شهري للمعلم ما لم ينشئه المالك.</p>
       {staff.isLoading ? <LoadingState /> : staff.error ? <ErrorState message={arabicError(staff.error as Error)} /> : !staff.data?.length ? <EmptyState title="لا يوجد موظفون مطلوب تقييمهم في هذا الفرع" /> : (
-        <div className="overflow-x-auto rounded-lg border bg-card"><table className="w-full text-sm"><thead><tr className="border-b text-muted-foreground"><th className="p-2 text-start">الموظف</th><th className="p-2 text-start">الدور</th><th className="p-2 text-start">الحالة</th><th /></tr></thead>
+        <div className="overflow-x-auto rounded-lg border bg-card"><table className="w-full text-sm"><thead><tr className="border-b text-muted-foreground"><th className="p-2 text-start">الموظف</th><th className="p-2 text-start">الدور</th><th className="p-2 text-start">الحالة</th><th className="p-2 text-start">الدرجة والنسبة</th><th /></tr></thead>
           <tbody>{staff.data.map((p) => <tr key={p.user_id + p.role_key} className="border-b last:border-0"><td className="p-2">{p.name || "—"}</td><td className="p-2">{ROLE_LABEL[p.role_key]}</td>
             <td className="p-2">{p.status === "approved" ? "معتمد" : p.status === "draft" ? "مسودة" : month < thisMonth() ? "متأخر" : "مطلوب"}</td>
+            <td className="p-2" data-score>{p.status && p.avg != null ? <ScoreCell avg={Number(p.avg)} pct={Number(p.pct)} draft={p.status !== "approved"} /> : <span className="text-muted-foreground">—</span>}</td>
             <td className="p-2 text-end"><Button size="sm" variant="outline" onClick={() => open(p)}>{p.status ? (canEdit ? "فتح" : "عرض") : canEdit ? "تقييم" : "—"}</Button></td></tr>)}</tbody></table></div>)}
     </>
   );
@@ -332,5 +334,69 @@ function FormsTab({ orgId }: { orgId: string }) {
             <ul className="mt-2 text-sm">{vs.map((f) => <li key={f.id}>الإصدار {f.version} · {f.items.length} بند · {f.status === "published" ? "منشور" : f.status === "draft" ? "مسودة" : "مؤرشف"}</li>)}</ul>
           </section>); })}
     </>
+  );
+}
+
+/* ---------- evaluation file visuals ---------- */
+function ScoreCell({ avg, pct, draft }: { avg: number; pct: number; draft: boolean }) {
+  return (
+    <div className={"flex min-w-36 items-center gap-2 " + (draft ? "opacity-60" : "")} title={draft ? "مسودة غير معتمدة" : "تقييم معتمد"}>
+      <span className="font-semibold tabular-nums">{avg.toFixed(2)} / 5</span>
+      <span className={"rounded-full px-2 py-0.5 text-xs font-bold tabular-nums " + (pct >= 80 ? "bg-success/15 text-success" : pct >= 60 ? "bg-primary/10 text-primary" : "bg-warning/20 text-foreground")}>{pct}٪</span>
+      {draft && <span className="text-[11px] text-muted-foreground">مسودة</span>}
+    </div>
+  );
+}
+
+function TeacherOverview({ d }: { d: TFile }) {
+  const latest = d.guardian.by_version[d.guardian.by_version.length - 1];
+  const approved = d.visits.filter((v) => v.status === "approved");
+  const base = approved.length ? approved : d.visits;
+  const lastVisit = base[base.length - 1];
+  let n = 0;
+  const axes = VISIT_AXES.map((a) => {
+    const codes = a.items.map(() => "c" + ++n);
+    const vals = base.flatMap((v) => codes.map((c) => v.scores[c]).filter((x): x is number => typeof x === "number" && x >= 1 && x <= 5));
+    return { label: a.title.replace(/^المحور [^:]+:\s*/, ""), value: vals.length ? vals.reduce((x, y) => x + y, 0) / vals.length : null };
+  });
+  const hasPlan = d.visits.some((v) => v.plan);
+  return (
+    <div className="mb-5 space-y-3">
+      <ProcessFlow title="كيف يُقيَّم المعلم؟ (مصادر منفصلة لا تُدمج في درجة واحدة)" steps={[
+        { title: "تقييم أولياء الأمور", desc: "ولي الأمر يقيّم معلمي ابنه الحاليين بالنجوم، ويمكنه التعديل.", icon: Users, state: d.guardian.ratings ? "done" : "current", meta: `${d.guardian.ratings} تقييم` },
+        { title: "الزيارة الصفية", desc: "المشرف أو المدير يزور الحصة ويقيّم 5 محاور و24 بندًا.", icon: ClipboardCheck, state: d.visits.length ? "done" : d.guardian.ratings ? "current" : "todo", meta: `${d.visits.length} زيارة` },
+        { title: "اعتماد المدير", desc: "يعتمد المدير الزيارة أو يعيدها بسبب؛ التصحيح بعد الاعتماد إصدار جديد.", icon: ShieldCheck, state: approved.length ? "done" : d.visits.length ? "current" : "todo", meta: `${approved.length} معتمدة` },
+        { title: "خطة التحسين والمتابعة", desc: "نقاط التطوير وموعد المتابعة تُسجَّل مع الزيارة.", icon: Target, state: hasPlan ? "done" : approved.length ? "current" : "todo", meta: hasPlan ? "مسجّلة" : "لا توجد" },
+      ]} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ScoreRing label="متوسط أولياء الأمور (أحدث إصدار)" pct={pctOf5(latest?.avg ?? null)} sub={latest ? `${fmt(latest.avg)} من 5 · ${latest.n} تقييم${latest.n < 5 ? " · عينة صغيرة" : ""}` : "لا توجد تقييمات"} />
+        <ScoreRing label={approved.length ? "آخر زيارة صفية معتمدة" : "آخر زيارة صفية"} pct={lastVisit ? visitPercent(lastVisit.scores) : null} sub={lastVisit ? lastVisit.date : "لا توجد زيارات"} />
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <ItemBars title="محاور الزيارات الصفية (متوسط الزيارات)" items={axes} />
+        <TrendChart title="تطور نتائج الزيارات الصفية" empty="لا توجد زيارات بعد" points={d.visits.map((v) => ({ label: v.date.slice(5), pct: visitPercent(v.scores) }))} />
+      </div>
+      {latest && <ItemBars title={`أسئلة أولياء الأمور — ${latest.title} (إصدار ${latest.version})`} items={latest.items.map((i) => ({ label: i.text, value: i.avg, note: `(${i.n})` }))} />}
+    </div>
+  );
+}
+
+function StaffFile({ sch, p, month, form, ans, approved, version, saved, history }: { sch: string; p: MStaff; month: string; form: { items: FormItem[]; title: string; version: number }; ans: Record<string, number | "na">; approved: boolean; version: number; saved: boolean; history: number }) {
+  const hist = useQuery({ queryKey: ["ev-mp", sch, p.user_id, p.role_key], queryFn: () => rpc<{ month: string; status: string; pct: number | null }[]>("ev_m_person", { _school: sch, _user: p.user_id, _role: p.role_key }) });
+  const sc = scoreOf(form.items, ans);
+  return (
+    <div className="mb-5 space-y-3">
+      <ProcessFlow title="كيف يجري التقييم الشهري؟" steps={[
+        { title: "نموذج الدور", desc: "نموذج مستقل لكل دور يحدده المالك ويُحفظ نصه مع التقييم.", icon: ListChecks, state: "done", meta: `إصدار ${form.version}` },
+        { title: "تقييم المدير", desc: "المدير يقيّم كل بند من 1 إلى 5؛ «غير منطبق» بسبب ولا يُحسب صفرًا.", icon: Star, state: saved ? "done" : "current", meta: `${sc.answered} / ${sc.total} بند` },
+        { title: "الاعتماد", desc: "بعد الاعتماد تظهر الدرجة والنسبة في قائمة الشهر.", icon: ShieldCheck, state: approved ? "done" : saved ? "current" : "todo", meta: approved ? "معتمد" : saved ? "مسودة" : "لم يبدأ" },
+        { title: "التصحيح بسبب", desc: "أي تعديل بعد الاعتماد يحفظ الإصدار السابق مع سببه.", icon: History, state: history ? "done" : "todo", meta: `إصدار التقييم ${version}` },
+      ]} />
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,16rem)_1fr]">
+        <ScoreRing label={`نتيجة ${month}`} pct={pctOf5(sc.avg)} sub={sc.avg != null ? `${sc.avg} من 5${approved ? "" : " · غير معتمد"}` : "لم تُقيَّم بنود بعد"} />
+        <TrendChart title="التقييم الشهري خلال آخر 12 شهرًا" empty={hist.isLoading ? "جارٍ التحميل…" : "لا توجد تقييمات سابقة"} points={(hist.data ?? []).map((h) => ({ label: h.month, pct: h.pct == null ? null : Number(h.pct) }))} />
+      </div>
+      <ItemBars title="نتيجة البنود" items={form.items.filter((i) => (i as { type?: string }).type !== "section").map((i) => ({ label: i.text, value: typeof ans[i.code] === "number" ? (ans[i.code] as number) : null, note: ans[i.code] === "na" ? "غير منطبق" : undefined }))} />
+    </div>
   );
 }
