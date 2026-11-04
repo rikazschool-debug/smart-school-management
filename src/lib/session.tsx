@@ -115,7 +115,8 @@ export function arabicError(e: unknown): string {
   if (msg.includes("violates foreign key")) return "لا يمكن الحذف: السجل مرتبط بسجلات أخرى. أوقفه أو انقل ارتباطاته أولًا.";
   if (msg.includes("duplicate key") || msg.includes("unique")) return "السجل موجود مسبقًا (تكرار غير مسموح).";
   if (msg.includes("row-level security") || msg.includes("permission denied")) return "ليست لديك صلاحية لهذا الإجراء.";
-  if (msg.includes("Invalid login credentials")) return "البريد أو كلمة المرور غير صحيحة.";
+  if (msg.includes("Invalid login credentials")) return "بيانات الدخول غير صحيحة.";
+  if (/rate limit|too many/i.test(msg)) return "محاولات كثيرة؛ انتظر قليلًا ثم حاول مجددًا.";
   if (msg.includes("Email not confirmed")) return "لم يتم تأكيد البريد الإلكتروني بعد.";
   return msg;
 }

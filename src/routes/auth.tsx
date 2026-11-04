@@ -1,3 +1,4 @@
+import { PasswordInput } from "@/components/password-input";
 import { toLoginEmail } from "@/lib/guardian-login";
 import { normPhone, studentLoginEmail } from "@/lib/people-import";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -63,7 +64,7 @@ function AuthPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const loginEmail = mode === "signin" ? toLoginEmail(email) : email.trim();
-    if (!/^\S+@\S+\.\S+$/.test(loginEmail)) return void toast.error(mode === "signin" ? "أدخل البريد أو رقم الهوية/الجوال" : "أدخل بريدًا إلكترونيًا صحيحًا");
+    if (!/^\S+@\S+\.\S+$/.test(loginEmail)) return void toast.error(mode === "signin" ? "أدخل اسم المستخدم أو البريد أو رقم الهوية/الجوال" : "أدخل بريدًا إلكترونيًا صحيحًا");
     if (mode !== "forgot" && password.length < 8) return void toast.error("كلمة المرور 8 أحرف على الأقل");
     setBusy(true);
     try {
@@ -118,13 +119,13 @@ function AuthPage() {
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label htmlFor="email">{mode === "signin" ? "البريد الإلكتروني أو رقم الهوية" : "البريد الإلكتروني"}</Label>
+                <Label htmlFor="email">{mode === "signin" ? "اسم المستخدم أو البريد أو رقم الهوية" : "البريد الإلكتروني"}</Label>
                 <Input id="email" type={mode === "signin" ? "text" : "email"} dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               {mode !== "forgot" && (
                 <div className="space-y-1.5">
                   <Label htmlFor="password">كلمة المرور</Label>
-                  <Input id="password" type="password" dir="ltr" value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <PasswordInput id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
               )}
               <Button className="w-full" disabled={busy}>
