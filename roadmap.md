@@ -390,3 +390,13 @@ Nov 4 (prompt-126): comprehensive evaluation built on class visits — done & te
 Nov 4 (prompt-127/128): evaluation side sub-menu (owner sees only evaluation), teacher/staff files with process diagram + charts, monthly score/percentage column — done & tested (journey 26/26, e2e 26/26). Open: monthly-cycle/overdue reminders (needs daily job), forms-delegation node in the permission tree UI.
 Nov 4 (prompt-129): evaluation fully in the permission tree (5 sub-sections, separate actions/scopes, templates, users-by-section), monthly reminders on the existing job (real run proven) — done & tested. Evaluation closed. NEXT = HR (see docs/hr-handoff.md); not started.
 Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md, docs/hr/execution-log.md). Decisions D1/D2/D5 taken. P1 + P2 first part done & tested (employee files, assignments, self file, manager team). NEXT: P2 import, P3 contracts/documents, P4 leave (needs owner-entered leave types). D4 (ledger) open for P7.
+
+## Package 15 — HR expansion (prompt: «واصل بناء قسم الموارد البشرية»)
+- [ ] A Close employee-import acceptance (real synthetic XLSX, desktop+phone browser journey)
+- [ ] B Contracts + compensation lines (versioned, dated, reasoned; comp view/edit separate perms)
+- [ ] C Documents & letters center (on existing files/rikaz-files)
+- [ ] D Work & leave settings (owner-entered only, never guessed)
+- [ ] E Leave balances + approval engine + leave cycle (manager→HR→vice cover)
+- [ ] F Teacher leave → existing absences/substitutions (no parallel system)
+- [ ] G Role screens, permission tree, reports
+- [ ] H Security review, E2E per track, docs/hr/execution-log.md
