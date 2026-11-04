@@ -465,3 +465,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Fixed: adding a bus with an empty odometer failed with a technical error (mt_bus_save). Added demo account «مسؤول حركة النقل» (template مسؤول حركة النقل بالمدرسة).
 - Open: reopen after close not offered to follow-up in UI (decide if intended); live-session permission withdrawal in browser not yet run.
 - Timetable: timetable-e2e 30/30 three times in a row today; the earlier intermittent busy-teacher step (fixed with scope work) did not recur. No constraint weakened, no timeouts added.
+
+## 2026-11-04 — Bus documents & maintenance reopen request
+- Bus inspection date + license expiry; status valid/soon(≤15d)/expired; daily mt_alerts_tick notifies fleet + follow-up 15 days before and on expiry (dedupe per date). Bus follow-up template gained maint_bus.fleet (own branch).
+- Reopen is now a request by the requester → follow-up approves/rejects with reason; executor cannot decide; approval starts a new cycle (reopen_cycle) and stores previous closure/completion in the event; bus op_status untouched. Evidence: maint-e2e 29/29 (10a–10c, 21b).
+- Not yet done this round: browser reopen journey, live-session revocation in browser, school gaps, screens/phone, security review, timetable root-cause regression, demo-account isolation check. WordPress live link and reminder cron stay open.
