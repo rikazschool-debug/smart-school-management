@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/app/visits")({
   component: Page,
 });
 
-type Visit = { id: string; teacher_id: string; teacher: string; visit_date: string; lesson: string | null; status: string; scores: Record<string, number>; notes: Record<string, string>; summary: string | null; return_reason: string | null; evaluator: string; mine: boolean; can_decide: boolean };
+type Visit = { id: string; teacher_id: string; teacher: string; visit_date: string; lesson: string | null; status: string; scores: Record<string, number>; notes: Record<string, string>; summary: string | null; return_reason: string | null; evaluator: string; mine: boolean; can_decide: boolean; can_correct?: boolean; version?: number; subject?: string | null; section?: string | null; visit_type?: string | null; improvement_plan?: string | null; follow_up?: string | null };
 const STATUS: Record<string, string> = { draft: "مسودة", submitted: "بانتظار اعتماد المدير", approved: "معتمدة", returned: "معادة للتعديل" };
 const ALLOWED = ["org_owner", "principal", "supervisor", "platform_admin"];
 const today = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -26,7 +26,7 @@ function Page() {
   const { active } = useSession();
   const school = active?.schoolId ?? null;
   const qc = useQueryClient();
-  const [edit, setEdit] = useState<Partial<Visit> | null>(null);
+  const [edit, setEdit] = useState<(Partial<Visit> & { correcting?: boolean }) | null>(null);
   const [view, setView] = useState<Visit | null>(null);
   const list = useQuery({ queryKey: ["cv", school], enabled: !!school, queryFn: async () => { const r = await supabase.rpc("cv_list" as never, { _school: school } as never); if (r.error) throw r.error; return r.data as unknown as Visit[]; } });
   const teachers = useQuery({ queryKey: ["cv-t", school], enabled: !!school, queryFn: async () => { const r = await supabase.rpc("cv_teachers" as never, { _school: school } as never); if (r.error) throw r.error; return r.data as unknown as { id: string; name: string }[]; } });
@@ -37,9 +37,18 @@ function Page() {
 
   async function save(submit: boolean) {
     if (!edit?.teacher_id) { toast.error("اختر المعلم"); return; }
+    if (edit.correcting) {
+      const reason = await askText("سبب تصحيح النتيجة المعتمدة (يُحفظ الإصدار السابق)", { required: true }); if (!reason) return;
+      const c = await supabase.rpc("cv_correct" as never, { _id: edit.id, _scores: edit.scores ?? {}, _notes: edit.notes ?? {}, _summary: edit.summary ?? null, _reason: reason } as never);
+      if (c.error) { toast.error(arabicError(c.error)); return; }
+      await supabase.rpc("cv_plan" as never, { _id: edit.id, _plan: edit.improvement_plan ?? null, _follow: edit.follow_up || null, _subject: edit.subject ?? null, _section: edit.section ?? null, _type: edit.visit_type ?? null } as never);
+      toast.success("حُفظ التصحيح كإصدار جديد"); setEdit(null); refresh(); return;
+    }
     if (submit && !(await ask("إرسال الزيارة للمدير لاعتمادها؟ لا يمكن تعديلها بعد الإرسال إلا إذا أعادها."))) return;
     const r = await supabase.rpc("cv_save" as never, { _id: edit.id ?? null, _teacher: edit.teacher_id, _date: edit.visit_date ?? today(), _lesson: edit.lesson ?? null, _scores: edit.scores ?? {}, _notes: edit.notes ?? {}, _summary: edit.summary ?? null, _submit: submit } as never);
     if (r.error) { toast.error(arabicError(r.error)); return; }
+    const p = await supabase.rpc("cv_plan" as never, { _id: r.data, _plan: edit.improvement_plan ?? null, _follow: edit.follow_up || null, _subject: edit.subject ?? null, _section: edit.section ?? null, _type: edit.visit_type ?? null } as never);
+    if (p.error) toast.error(arabicError(p.error));
     toast.success(submit ? "أُرسلت للاعتماد" : "حُفظت المسودة"); setEdit(null); refresh();
   }
   async function decide(v: Visit, approve: boolean) {
@@ -56,12 +65,15 @@ function Page() {
     let n = 0;
     return (
       <>
-        <PageHeader title={edit.id ? "تعديل زيارة صفية" : "زيارة صفية جديدة"} desc="الدرجة من 1 (ضعيف) إلى 5 (ممتاز). لا يطّلع المعلم على الزيارة." />
+        <PageHeader title={edit.correcting ? `تصحيح زيارة معتمدة (الإصدار ${(edit.version ?? 1) + 1})` : edit.id ? "تعديل زيارة صفية" : "زيارة صفية جديدة"} desc="الدرجة من 1 (ضعيف) إلى 5 (ممتاز). لا يطّلع المعلم على الزيارة." />
         {edit.return_reason && <p className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">سبب الإعادة: {edit.return_reason}</p>}
         <div className="mb-4 grid gap-3 sm:grid-cols-3">
           <div><Label>المعلم</Label><select className={selectCls("w-full")} value={edit.teacher_id ?? ""} onChange={(e) => setEdit({ ...edit, teacher_id: e.target.value })}><option value="">— اختر —</option>{(teachers.data ?? []).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
           <div><Label>تاريخ الزيارة</Label><Input type="date" max={today()} value={edit.visit_date ?? today()} onChange={(e) => setEdit({ ...edit, visit_date: e.target.value })} /></div>
           <div><Label>الحصة / الدرس</Label><Input value={edit.lesson ?? ""} onChange={(e) => setEdit({ ...edit, lesson: e.target.value })} /></div>
+          <div><Label>المادة</Label><Input value={edit.subject ?? ""} onChange={(e) => setEdit({ ...edit, subject: e.target.value })} /></div>
+          <div><Label>الشعبة</Label><Input value={edit.section ?? ""} onChange={(e) => setEdit({ ...edit, section: e.target.value })} /></div>
+          <div><Label>نوع الزيارة</Label><select className={selectCls("w-full")} value={edit.visit_type ?? ""} onChange={(e) => setEdit({ ...edit, visit_type: e.target.value })}><option value="">—</option><option>مجدولة</option><option>مفاجئة</option><option>متابعة</option><option>تبادلية</option></select></div>
         </div>
         {VISIT_AXES.map((a) => (
           <section key={a.title} className="mb-4 rounded-lg border bg-card p-3">
@@ -78,8 +90,12 @@ function Page() {
         ))}
         <Label>التوصيات والملخص</Label>
         <textarea className="mb-3 min-h-24 w-full rounded-md border bg-background p-2 text-sm" value={edit.summary ?? ""} onChange={(e) => setEdit({ ...edit, summary: e.target.value })} />
+        <div className="mb-3 grid gap-3 sm:grid-cols-[2fr_1fr]">
+          <div><Label>خطة التحسين</Label><textarea className="min-h-20 w-full rounded-md border bg-background p-2 text-sm" value={edit.improvement_plan ?? ""} onChange={(e) => setEdit({ ...edit, improvement_plan: e.target.value })} /></div>
+          <div><Label>موعد المتابعة</Label><Input type="date" value={edit.follow_up ?? ""} onChange={(e) => setEdit({ ...edit, follow_up: e.target.value })} /></div>
+        </div>
         <p className="mb-3 text-sm text-muted-foreground">المقيَّم: {Object.keys(sc).length} من {VISIT_ITEM_COUNT} · النسبة {visitPercent(sc) ?? "—"}%</p>
-        <div className="flex flex-wrap gap-2"><Button onClick={() => save(true)}>إرسال للاعتماد</Button><Button variant="outline" onClick={() => save(false)}>حفظ مسودة</Button><Button variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
+        <div className="flex flex-wrap gap-2">{edit.correcting ? <Button onClick={() => save(true)}>حفظ التصحيح بسبب</Button> : <><Button onClick={() => save(true)}>إرسال للاعتماد</Button><Button variant="outline" onClick={() => save(false)}>حفظ مسودة</Button></>}<Button variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
       </>
     );
   }
@@ -94,8 +110,11 @@ function Page() {
             {a.items.map((it) => { const c = "c" + ++n; return <div key={c} className="flex justify-between gap-2 border-t py-1.5 text-sm"><span>{it}{view.notes[c] ? ` — ${view.notes[c]}` : ""}</span><b>{view.scores[c] ?? "—"}</b></div>; })}
           </section>))}
         {view.summary && <p className="mb-3 whitespace-pre-wrap rounded-md border p-3 text-sm">{view.summary}</p>}
-        <p className="mb-3 text-sm">النسبة الكلية: <b>{visitPercent(view.scores) ?? "—"}%</b></p>
+        {(view.subject || view.visit_type) && <p className="mb-2 text-sm">{[view.subject, view.section, view.visit_type].filter(Boolean).join(" · ")}</p>}
+        {view.improvement_plan && <p className="mb-2 whitespace-pre-wrap rounded-md border p-3 text-sm"><b>خطة التحسين:</b> {view.improvement_plan}{view.follow_up && ` — المتابعة ${view.follow_up}`}</p>}
+        <p className="mb-3 text-sm">الإصدار {view.version ?? 1} · النسبة الكلية: <b>{visitPercent(view.scores) ?? "—"}%</b></p>
         <div className="flex flex-wrap gap-2">
+          {view.can_correct && <Button variant="outline" onClick={() => { setEdit({ ...view, correcting: true }); setView(null); }}>تصحيح بإصدار جديد</Button>}
           {view.can_decide && <><Button onClick={() => decide(view, true)}>اعتماد</Button><Button variant="outline" onClick={() => decide(view, false)}>إعادة للتعديل</Button></>}
           <Button variant="ghost" onClick={() => setView(null)}>رجوع</Button>
         </div>
