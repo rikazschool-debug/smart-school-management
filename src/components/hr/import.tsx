@@ -34,7 +34,7 @@ function toDate(v: unknown): string | null {
   m = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/); if (m) return `${m[3]}-${m[2]!.padStart(2, "0")}-${m[1]!.padStart(2, "0")}`;
   return null;
 }
-type Row = { i: number; p: Record<string, string>; errs: string[]; state: "new" | "dup" | "bad" | "ok" | "fail"; msg?: string };
+type Row = { i: number; p: Record<string, string>; errs: string[]; state: "new" | "dup" | "bad" | "ok" | "fail"; msg?: string | undefined };
 
 export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m: HrMe; existing: HrEmp[]; onClose: () => void; onDone: () => void }) {
   const [raw, setRaw] = useState<{ name: string; head: string[]; data: unknown[][] } | null>(null);
@@ -68,18 +68,18 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
       const g = (k: string) => (map[k] == null ? "" : r[map[k]!]);
       const p: Record<string, string> = {}, errs: string[] = [];
       for (const f of fields) if (!["school", "hire_date", "birth_date", "gender"].includes(f.key)) p[f.key] = String(g(f.key) ?? "").trim();
-      if (!p.full_name) errs.push("الاسم مطلوب");
+      if (!p["full_name"]) errs.push("الاسم مطلوب");
       const sn = n(g("school")); const sc = schools.find((s) => n(s.name) === sn);
-      if (!sn) errs.push("المدرسة مطلوبة"); else if (!sc) errs.push("مدرسة غير معروفة أو غير مصرح بها"); else p.school_id = sc.id;
+      if (!sn) errs.push("المدرسة مطلوبة"); else if (!sc) errs.push("مدرسة غير معروفة أو غير مصرح بها"); else p["school_id"] = sc.id;
       for (const k of ["hire_date", "birth_date"]) { if (map[k] == null) continue; const d = toDate(g(k)); if (d === null) errs.push(`${FIELDS.find((f) => f.key === k)!.label} غير صحيح`); else p[k] = d; }
-      const gv = n(g("gender")); p.gender = ["ذكر", "male", "m"].map(n).includes(gv) ? "male" : ["انثى", "female", "f"].map(n).includes(gv) ? "female" : "";
-      if (gv && !p.gender) errs.push("الجنس: ذكر أو أنثى");
-      if (p.national_id) { p.national_id = digits(p.national_id); if (!/^\d{5,20}$/.test(p.national_id)) errs.push("رقم الهوية أرقام فقط (5–20)"); }
-      if (p.phone) p.phone = digits(p.phone);
-      if (p.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(p.email)) errs.push("بريد غير صحيح");
+      const gv = n(g("gender")); p["gender"] = ["ذكر", "male", "m"].map(n).includes(gv) ? "male" : ["انثى", "female", "f"].map(n).includes(gv) ? "female" : "";
+      if (gv && !p["gender"]) errs.push("الجنس: ذكر أو أنثى");
+      if (p["national_id"]) { p["national_id"] = digits(p["national_id"]); if (!/^\d{5,20}$/.test(p["national_id"])) errs.push("رقم الهوية أرقام فقط (5–20)"); }
+      if (p["phone"]) p["phone"] = digits(p["phone"]);
+      if (p["email"] && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(p["email"])) errs.push("بريد غير صحيح");
       let dup = "";
-      if (p.employee_no) { const k = n(p.employee_no); if (exNo.has(k)) dup = "الرقم الوظيفي موجود مسبقًا"; else if (seenNo.has(k)) errs.push("الرقم الوظيفي مكرر في الملف"); seenNo.add(k); }
-      if (p.national_id) { if (exId.has(p.national_id)) dup = "رقم الهوية مسجل لموظف في المؤسسة"; else if (seenId.has(p.national_id)) errs.push("رقم الهوية مكرر في الملف"); seenId.add(p.national_id); }
+      if (p["employee_no"]) { const k = n(p["employee_no"]); if (exNo.has(k)) dup = "الرقم الوظيفي موجود مسبقًا"; else if (seenNo.has(k)) errs.push("الرقم الوظيفي مكرر في الملف"); seenNo.add(k); }
+      if (p["national_id"]) { if (exId.has(p["national_id"])) dup = "رقم الهوية مسجل لموظف في المؤسسة"; else if (seenId.has(p["national_id"])) errs.push("رقم الهوية مكرر في الملف"); seenId.add(p["national_id"]); }
       return { i: i + 2, p, errs, state: errs.length ? "bad" : dup ? "dup" : "new", msg: dup || undefined };
     });
   }, [raw, map, existing]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -97,7 +97,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     const ok = out.filter((x) => x.state === "ok").length; toast.success(`أُضيف ${ok} موظفًا`);
   };
   const report = () => {
-    const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, r.p.full_name ?? "", LBL[r.state], [...r.errs, r.msg].filter(Boolean).join("، ")])]);
+    const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, r.p["full_name"] ?? "", LBL[r.state], [...r.errs, r.msg].filter(Boolean).join("، ")])]);
     const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] }; XLSX.utils.book_append_sheet(wb, ws, "النتائج"); XLSX.writeFile(wb, "تقرير-استيراد-الموظفين.xlsx");
   };
   const shown = res ?? rows;
@@ -131,7 +131,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
           <div className="max-h-96 overflow-auto rounded border">
             <table className="w-full text-sm"><thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-start">الصف</th><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">المدرسة</th><th className="p-2 text-start">النتيجة</th></tr></thead>
               <tbody>{shown.map((r) => (
-                <tr key={r.i} className="border-t"><td className="p-2">{r.i}</td><td className="p-2">{r.p.full_name || "—"}</td><td className="p-2">{schools.find((s) => s.id === r.p.school_id)?.name ?? "—"}</td>
+                <tr key={r.i} className="border-t"><td className="p-2">{r.i}</td><td className="p-2">{r.p["full_name"] || "—"}</td><td className="p-2">{schools.find((s) => s.id === r.p["school_id"])?.name ?? "—"}</td>
                   <td className="p-2"><span className={`rounded px-1.5 ${CLS[r.state]}`}>{LBL[r.state]}</span> <span className="text-xs text-muted-foreground">{[...r.errs, r.msg].filter(Boolean).join("، ")}</span></td></tr>
               ))}</tbody></table>
           </div>
