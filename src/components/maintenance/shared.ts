@@ -38,7 +38,7 @@ export const STATUS_TONE: Record<string, string> = {
 export const PRIORITY: Record<string, string> = { low: "منخفضة", normal: "عادية", high: "مرتفعة", urgent: "عاجلة" };
 export const BUS_STATUS: Record<string, string> = { available: "متاح للخدمة", stopped: "متوقف للصيانة", inspection: "بانتظار فحص" };
 export const EVENT: Record<string, string> = {
-  create: "إنشاء الطلب", auto_assign: "إسناد تلقائي", assign: "إسناد", reassign: "إعادة إسناد", claim: "استلام الطلب", accept: "استلام الطلب",
+  create: "إنشاء الطلب", parts: "اقتراح بنود شراء", need: "إنشاء احتياج شراء مرتبط", auto_assign: "إسناد تلقائي", assign: "إسناد", reassign: "إعادة إسناد", claim: "استلام الطلب", accept: "استلام الطلب",
   decline: "اعتذار عن الإسناد", clarify: "طلب توضيح", clarified: "توضيح من مقدم الطلب", reply: "رد", note: "ملاحظة داخلية", schedule: "تحديد موعد الزيارة",
   reschedule: "إعادة جدولة", progress: "تحديث التقدم", waiting: "بانتظار قطع أو جهة خارجية", submit_completion: "طلب اعتماد الإنجاز", approve: "اعتماد الإنجاز وإغلاق",
   return: "إعادة للاستكمال", reopen: "إعادة فتح", cancel: "إلغاء", cost: "تحديث التكلفة التقديرية", file: "إرفاق ملف",

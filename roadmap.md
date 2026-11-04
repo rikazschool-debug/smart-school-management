@@ -346,7 +346,7 @@
 - [x] M4 (server + form; maint-e2e) Maintenance requests: server ref/time/identity, categories+subcategories (managed), location, attachments, urgent warning, «أخرى» needs description
 - [x] M5 (mt_action; maint-e2e 26/26) Lifecycle RPCs: 11 statuses, routing/auto-assign, accept with lock, decline/clarify, reassign (access revoked), schedule/reschedule with history, progress 0–100, completion request, follow-up approve/return, no self-approval (owner alerted), reopen window, internal notes vs visible replies, cancel/reject with reason
 - [x] M6 (maint-e2e checks 16–21) Bus flow: requester = movement officer, odometer, return-to-service as separate inspected action
-- [ ] M7 Link to procurement needs (no financial rights; estimated vs approved actual cost; no duplicate invoices)
+- [x] M7 (mt_parts_suggest/mt_need_create/mt_need_info; maint-need-e2e 8/8) Link to procurement needs (no financial rights; estimated vs approved actual cost; no duplicate invoices)
 - [ ] M8 Event log, deduped notifications + periodic overdue alerts, search/filters/paging, Excel/PDF
 - [ ] M9 Platform-admin counterparts (schools, finance, HR, users & permissions, transport & maintenance): availability + aggregate stats only, HR «تحت الإنشاء», no cross-org data without explicit logged access
 - [ ] M10 Role homes redesign for all roles (real scoped KPIs, clickable cards → filtered lists, last-updated, empty/error states, phone)

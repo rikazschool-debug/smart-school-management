@@ -14,6 +14,7 @@ import { FileList, Uploader } from "@/components/homework/files";
 import { ExportButtons } from "@/components/procurement/export-buttons";
 import { ActionBox, BackLink, DateRange, DetailHeader, Field, FormActions, FormCard, Pager, Panel, SearchBox, TableCard, TabIntro, TD, TH, THEAD, Toolbar, TRC } from "@/components/procurement/ui";
 import { arabicError } from "@/lib/session";
+import { NeedPanel } from "./need-panel";
 import { BUS_STATUS, EVENT, KIND_LABEL, PLACE_TYPES, PRIORITY, STATUS, STATUS_TONE, dd, dt, type Kind, type MtMe } from "./shared";
 
 const PAGE = 25;
@@ -308,6 +309,7 @@ export function RequestDetail({ id, back }: { id: string; back: () => void }) {
             {files.length ? <FileList files={files} onRemove={c.attach ? async (f) => { if (await run(db.rpc("mt_file_remove", { _file: f["id"] }), "أُزيل الملف")) inv(); } : undefined} /> : <p className="text-sm text-muted-foreground">لا مرفقات.</p>}
             {c.attach && <div className="mt-3"><Uploader label="إرفاق صورة أو مستند" create={async (f) => { const { data, error } = await db.rpc("create_mt_file", { _id: id, _name: f.name, _mime: f.type, _size: f.size }); if (error) throw error; return data[0]; }} release={(fid) => db.rpc("mt_file_remove", { _file: fid })} onDone={inv} /></div>}
           </Panel>
+          <NeedPanel id={id} />
           <Panel title="المواعيد"><ul className="space-y-1 text-sm"><li>الإنشاء: {dt(r.created_at)}</li><li>موعد الزيارة: {r.visit_at ? dt(r.visit_at) : "—"}</li><li>الإنجاز المتوقع: {dd(r.expected_done)}</li>{r.closed_at && <li>الإغلاق: {dt(r.closed_at)}</li>}{r.reopen_until && r.status === "closed" && <li>إعادة الفتح متاحة حتى: {dt(r.reopen_until)}</li>}</ul></Panel>
         </div>
       </div>

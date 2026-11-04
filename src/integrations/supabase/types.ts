@@ -4802,6 +4802,7 @@ export type Database = {
           odometer: number | null
           org_id: string
           other_text: string | null
+          parts: Json | null
           place: string | null
           place_type: string | null
           priority: string
@@ -4848,6 +4849,7 @@ export type Database = {
           odometer?: number | null
           org_id: string
           other_text?: string | null
+          parts?: Json | null
           place?: string | null
           place_type?: string | null
           priority?: string
@@ -4894,6 +4896,7 @@ export type Database = {
           odometer?: number | null
           org_id?: string
           other_text?: string | null
+          parts?: Json | null
           place?: string | null
           place_type?: string | null
           priority?: string
@@ -10418,6 +10421,15 @@ export type Database = {
       mt_get: { Args: { _id: string }; Returns: Json }
       mt_list: { Args: { _f: Json; _org: string }; Returns: Json }
       mt_me: { Args: { _org: string }; Returns: Json }
+      mt_need_create: {
+        Args: { _d: Json; _id: string; _key: string }
+        Returns: string
+      }
+      mt_need_info: { Args: { _id: string }; Returns: Json }
+      mt_parts_suggest: {
+        Args: { _id: string; _lines: Json }
+        Returns: undefined
+      }
       mt_settings_save: {
         Args: { _org: string; _reopen_days: number }
         Returns: undefined

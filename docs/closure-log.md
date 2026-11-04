@@ -393,3 +393,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Server test: scripts/maint-e2e.ts 26/26, maint-roles-e2e 12/12. Bug found: reference counter name clash (fixed).
 - Browser (demo owner, 1280px): owner home card, request form with urgent warning, detail, list. Found: owner could take a request → fixed (owner never executes). Not yet browser-tested: officer/follow-up/transport accounts, phone width, Excel/PDF opening.
 - Open: M7 procurement link, M8 overdue/next-service alerts, M9 platform counterparts, M10 role homes, M11 full browser journeys.
+
+## 2026-11-04 M7 maintenance → purchase need
+- Team suggests items (mt_parts_suggest), principal converts to one live need (mt_need_create → pc_need_save), amounts visible to principal/owner only (mt_need_info). Evidence: scripts/maint-need-e2e.ts 8/8. UI panel not browser-tested.
