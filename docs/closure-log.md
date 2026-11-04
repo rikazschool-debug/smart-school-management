@@ -481,3 +481,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Custody form: «الجهة المستفيدة» = branches + صيانة الباصات + صيانة المدارس; branch lists only that branch's custody-eligible people (no maintenance staff); units list only their maintenance staff with procurement rights. Browser checked as owner.
 - Demo platform-owner removed (it reached real orgs).
 - pc-e2e 30/32: checks 11/17 expect attachment-required rules that migration 20261103191546 removed deliberately; awaiting owner decision. pc2-e2e 20/20.
+
+## 2026-11-04 (c) — Invoice attachment optional (owner decision, prompt-124)
+- Server: approval no longer records a no-attachment exception; «invoice required» setting forced off (trigger). Custody disbursement/refund proof unchanged.
+- UI: no-attachment reason field and approver reason prompts removed (invoice form, invoice detail, settlement sheet); setting checkbox removed.
+- Evidence: pc-e2e 32/32 (11: wrong type, oversize, other person and after-submit refused, valid file readable by branch approver only, not other org; 17: submit+approve with no file and no reason), pc2-e2e 20/20, pc-closure-e2e 11/11.
