@@ -139,6 +139,8 @@ try {
   const rs = await tro.c.rpc("mt_bus_set_status", { _bus: bus.data, _status: "available", _note: "فحص الفرامل على الطريق سليم" });
   const log = (await tro.c.rpc("mt_bus_log", { _bus: bus.data })).data as any[];
   check("21 return to service is a separate inspected action by the movement officer", !!rs0.error && !!rsP.error && !rs.error && (await busRow()).op_status === "available" && log.some((l) => l.action === "return_to_service"), rs.error);
+  await act(tro.c, BR, "reopen", { reason: "الصوت عاد" }); const bro = await act(fol.c, BR, "reopen_decide", { approve: true, reason: "مقبول" });
+  check("21b reopening bus repair keeps bus operating status unchanged", !bro.error && (await get(tro.c, BR)).status === "returned" && (await busRow()).op_status === "available", bro.error);
 
   // files + isolation + suspension
   const f1 = await prin.c.rpc("create_mt_file", { _id: R, _name: "صورة.jpg", _mime: "image/jpeg", _size: 1000 });
