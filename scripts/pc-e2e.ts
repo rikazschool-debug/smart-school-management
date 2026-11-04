@@ -105,7 +105,7 @@ try {
   check("10 inclusive VAT extracted (115 → 100 + 15); non-tax invoice carries no VAT", Number(ig.net) === 100 && Number(ig.vat) === 15 && Number(ng.vat) === 0 && Number(ng.total) === 33.33, [ig, ng]);
   const s0 = await off.c.rpc("pc_expense_action", { _id: E1, _action: "submit", _rev: eg.rev, _reason: null });
   await off.c.rpc("create_pc_file", { _entity: "expense", _id: E1, _name: "فاتورة.pdf", _mime: "application/pdf", _size: 2000 });
-  const s1 = await off.c.rpc("pc_expense_action", { _id: E1, _action: "submit", _rev: eg.rev, _reason: null });
+  const s1 = await off.c.rpc("pc_expense_action", { _id: E1, _action: "submit", _rev: (await off.c.rpc("pc_expense_get", { _id: E1 })).data.rev, _reason: null });
   g = await get(off.c, C1);
   check("11 attachment required to submit; submitted amount is pending, not deducted", !!s0.error && !s1.error && Number(g.bal.book) === 800 && Number(g.bal.pending) === 165 && Number(g.bal.available) === 635, [s0.error, s1.error, g.bal]);
   eg = (await rev.c.rpc("pc_expense_get", { _id: E1 })).data as any;
