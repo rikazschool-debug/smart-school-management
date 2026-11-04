@@ -24,7 +24,8 @@ function TriBox({ state, onChange, disabled, label: l }: { state: "none" | "some
  * Collapsible tree of areas → sections → actions with tri-state boxes and search.
  * Ticking a section grants only its basic (view) action at the narrowest scope; stronger actions stay separate.
  */
-export function PermTree({ c, value, onChange, disabledAreas = [], readOnly }: { c: PermCatalog; value: Grant[]; onChange: (g: Grant[]) => void; disabledAreas?: string[]; readOnly?: boolean }) {
+export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, denied = [], onUndeny, sources = {} }: { c: PermCatalog; value: Grant[]; onChange: (g: Grant[]) => void; disabledAreas?: string[]; readOnly?: boolean;
+  /** "section.action" keys blocked explicitly (shown, never hidden); onUndeny returns them to the role's rules. */ denied?: string[]; onUndeny?: (key: string) => void; sources?: Record<string, string> }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const has = (s: string, a: string) => value.find((g) => g.section === s && g.action === a);
@@ -80,13 +81,18 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly }: {
                         {so && !baseAction(s) && secState(s) === "none" && <p className="ms-8 mt-1 text-xs text-muted-foreground">لا عرض مستقلًا لهذا القسم؛ اختر الإجراء المطلوب صراحة.</p>}
                         {so && (
                           <div className="ms-8 mt-2 grid gap-2 sm:grid-cols-2">
-                            {s.actions.map((a) => { const g = has(s.key, a); return (
-                              <label key={a} className="flex min-w-0 items-center gap-2 text-sm">
+                            {s.actions.map((a) => { const g = has(s.key, a); const k = `${s.key}.${a}`; const dn = denied.includes(k); return (
+                              <div key={a} className={"min-w-0 rounded " + (dn ? "bg-destructive/5 p-1" : "")}>
+                              <label className="flex min-w-0 items-center gap-2 text-sm">
                                 <input type="checkbox" className="size-4 accent-primary" disabled={readOnly || locked} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? s.scopes[0]! : "")} />
                                 <span className="min-w-0 flex-1 truncate" title={label(c, s, a)}>{label(c, s, a)}</span>
                                 {g && <select aria-label={`نطاق ${label(c, s, a)}`} disabled={readOnly || locked} className={selectCls("w-32 shrink-0", true)} value={g.scope} onChange={(e) => set(s, a, e.target.value)}>
                                   {s.scopes.map((sc) => <option key={sc} value={sc}>{c.scopes[sc]}</option>)}</select>}
-                              </label>); })}
+                              </label>
+                              {g && sources[k] && <p className="ms-6 text-[11px] text-muted-foreground">المصدر: {sources[k]}</p>}
+                              {dn && <p className="ms-6 flex flex-wrap items-center gap-2 text-[11px] text-destructive">ممنوع صراحة — يغلب أي دور
+                                {onUndeny && !readOnly && <button type="button" className="underline" onClick={() => onUndeny(k)}>رفع المنع والعودة لصلاحيات الدور</button>}</p>}
+                              </div>); })}
                           </div>
                         )}
                       </li>
@@ -98,7 +104,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly }: {
           );
         })}
       </ul>
-      <p className="text-xs text-muted-foreground">تحديد القسم يمنح العرض فقط ضمن أضيق نطاق؛ الإنشاء والتعديل والاعتماد والصرف والإعدادات تُختار منفصلة. لا تُمنح أقسام مستقبلية تلقائيًا.</p>
+      <p className="text-xs text-muted-foreground">تحديد القسم يمنح العرض فقط ضمن أضيق نطاق؛ الإنشاء والتعديل والاعتماد والصرف والإعدادات تُختار منفصلة. إلغاء تحديد صلاحية آتية من دور يجعلها «ممنوعة صراحة» وتظهر بالأحمر؛ إلغاء صلاحية أضفتها أنت يعيدها لقواعد الدور فقط. لا تُمنح أقسام مستقبلية تلقائيًا.</p>
     </div>
   );
 }
