@@ -74,9 +74,8 @@ try {
   const ro2 = await act(pr, "reopen", { reason: "طلب ولي الأمر" });
   check("10 reopening a decided application needs decide permission + reason", !!ro1.error && !ro2.error, [ro1.error?.message, ro2.error?.message]);
   const asgNo = await act(off, "assign", { user: fol.id });
-  await owner.c.rpc("perm_apply", { _org: org, _user: off.id, _changes: { overrides: [{ section: "admissions", action: "assign", effect: "grant", scope: "branch" }] }, _reason: "منح الإسناد" }).then((r) => r.error && console.log("perm_apply", r.error.message));
-  let asgYes = await act(off, "assign", { user: fol.id });
-  if (asgYes.error) { await admin.from("perm_overrides").insert({ org_id: org, user_id: off.id, section: "admissions", action: "assign", effect: "grant", scope: "branch", reason: "منح" }); asgYes = await act(off, "assign", { user: fol.id }); }
+  const og = await admin.from("perm_overrides").insert({ org_id: org, user_id: off.id, section: "admissions", action: "assign", effect: "grant", scope: "branch", reason: "منح", created_by: owner.id }); if (og.error) console.log(og.error.message);
+  const asgYes = await act(off, "assign", { user: fol.id });
   const folSees = await fol.c.rpc("ad_get", { _id: id }); const folSib = await fol.c.rpc("ad_get", { _id: sib.data });
   const notif = (await admin.from("notifications").select("id").eq("user_id", fol.id).eq("kind", "admissions")).data?.length;
   check("11 assign only after a separate grant; follow-up employee sees assigned only + notified", !!asgNo.error && !asgYes.error && !folSees.error && !!folSib.error && (notif ?? 0) >= 1, [asgYes.error?.message, folSib.error, notif]);
@@ -92,8 +91,8 @@ try {
   const stuRow = (await admin.from("students").select("user_id,full_name").eq("id", stu!.id).single()).data;
   const after = (await owner.c.rpc("ad_get", { _id: id })).data as any;
   check("13 explicit link to manually-added student; relink needs reason; student record untouched; status unchanged", !lk.error && !!lk2.error && stuRow?.user_id === null && after.app.student_id === stu!.id && after.app.status === "following", [lk.error?.message, after?.app?.status]);
-  await admin.from("perm_overrides").insert({ org_id: org, user_id: off.id, section: "admissions", action: "view_branch", effect: "deny", reason: "سحب" });
-  await admin.from("perm_overrides").insert({ org_id: org, user_id: off.id, section: "admissions", action: "view", effect: "deny", reason: "سحب" });
+  await admin.from("perm_overrides").insert({ org_id: org, user_id: off.id, section: "admissions", action: "view_branch", effect: "deny", reason: "سحب", created_by: owner.id });
+  await admin.from("perm_overrides").insert({ org_id: org, user_id: off.id, section: "admissions", action: "view", effect: "deny", reason: "سحب", created_by: owner.id });
   const w1 = await off.c.rpc("ad_list", { _org: org, _f: {} }); const w2 = await off.c.rpc("ad_get", { _id: sib.data });
   check("14 withdrawal applies in the open session (list empty, detail refused)", !(w1.data as any)?.rows?.length && !!w2.error, [w1.data, w2.error]);
   await admin.from("org_sections").upsert({ org_id: org, section: "admissions", enabled: false, reason: "اختبار" });
@@ -106,6 +105,7 @@ try {
   check("16 summary counts real rows; export without grant returns nothing", sum?.total === 2 && sum.linked === 1 && !(ex.data as any)?.rows?.length, [sum?.total, (ex.data as any)?.rows?.length]);
   const pS = await pr.c.rpc("ad_students", { _org: org, _f: {} }); const oS = await owner.c.rpc("ad_students", { _org: org, _f: {} });
   check("17 current students: principal without grant refused; owner reads from the academic source", !!pS.error && (oS.data as any)?.total === 1, [pS.error?.message, oS.error?.message]);
+  await act(owner, "assign", { user: fol.id }); await act(owner, "follow", { next_follow: "2020-01-02" });
   const tick = await admin.rpc("ad_alerts_tick"); const tick2 = await admin.rpc("ad_alerts_tick");
   const fn = (await admin.from("notifications").select("id").like("dedupe_key", `ad-follow:${id}%`)).data?.length;
   check("18 follow-up alert sent once (dedupe)", !tick.error && !tick2.error && fn === 1, [tick.error?.message, fn]);
