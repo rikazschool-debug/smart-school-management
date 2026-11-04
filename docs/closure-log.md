@@ -423,3 +423,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Deny vs reset: unticking role access = visible explicit deny; unticking own grant or «رفع المنع» = back to role rules; no hidden deny.
 - Tested in browser at 1280 and 390: new employee, 2 roles with different scopes (branch / own records), 1 denied action → first login → forced password change → menu and server effective access identical to the preview. perm7 20/20, staff 23/23, perm6 20/20. Test accounts removed.
 - Still open (unchanged): procurement/maintenance gaps awaiting tests, earlier security review (442 pre-existing linter findings).
+
+## 2026-11-04 — «اكمل الكل» batch (prompt-104)
+- Owner limits + branch suspension: scripts/bounds-e2e.ts 8/8 (owner one-step custody for himself refused, own draft can't be self-approved; another org's owner can't read/write; platform suspension of finance/operations blocks the owner; suspending branch B blocks it in an open session while branch A link and other staff stay; reactivation restores only branch-paused links).
+- Role homes (M10): «عملي اليوم» adds teacher submissions awaiting grading, student homework due in 3 days not submitted, guardian children absent/late today (server-scoped via _home_roles). Browser: teacher/guardian/student homes open with no errors; guardian shows today's late child.
