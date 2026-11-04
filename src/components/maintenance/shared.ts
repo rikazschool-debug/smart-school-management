@@ -41,7 +41,7 @@ export const EVENT: Record<string, string> = {
   create: "إنشاء الطلب", parts: "اقتراح بنود شراء", need: "إنشاء احتياج شراء مرتبط", auto_assign: "إسناد تلقائي", assign: "إسناد", reassign: "إعادة إسناد", claim: "استلام الطلب", accept: "استلام الطلب",
   decline: "اعتذار عن الإسناد", clarify: "طلب توضيح", clarified: "توضيح من مقدم الطلب", reply: "رد", note: "ملاحظة داخلية", schedule: "تحديد موعد الزيارة",
   reschedule: "إعادة جدولة", progress: "تحديث التقدم", waiting: "بانتظار قطع أو جهة خارجية", submit_completion: "طلب اعتماد الإنجاز", approve: "اعتماد الإنجاز وإغلاق",
-  return: "إعادة للاستكمال", reopen: "إعادة فتح", cancel: "إلغاء", cost: "تحديث التكلفة التقديرية", file: "إرفاق ملف",
+  return: "إعادة للاستكمال", reopen: "قبول إعادة الفتح (دورة جديدة)", reopen_request: "طلب إعادة فتح", reopen_reject: "رفض إعادة الفتح", cancel: "إلغاء", cost: "تحديث التكلفة التقديرية", file: "إرفاق ملف",
 };
 export const PLACE_TYPES = ["فصل", "مكتب", "دورة مياه", "معمل", "ممر", "ساحة", "مستودع", "أخرى"];
 export const dt = (d?: string | null) => (d ? new Date(d).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }) : "—");
