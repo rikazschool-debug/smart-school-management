@@ -25,6 +25,7 @@ try {
   const { data: org } = await owner.c.rpc("create_organization", { _org_name: "مؤسسة حدود", _school_name: "فرع أ" }); orgs.push(org);
   const { data: org2 } = await owner2.c.rpc("create_organization", { _org_name: "مؤسسة أخرى", _school_name: "فرع خ" }); orgs.push(org2);
   const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(A);
+  tr.addSchool((await admin.from("schools").select("id").eq("org_id", org2).single()).data!.id);
   const B = (await owner.c.rpc("org_school_save", { _org: org, _id: null, _name: "فرع ب", _code: null, _city: null, _stage_type: null })).data as string; tr.addSchool(B);
   await admin.from("memberships").insert([
     { user_id: off.id, org_id: org, school_id: A, role: "teacher", is_active: true },
