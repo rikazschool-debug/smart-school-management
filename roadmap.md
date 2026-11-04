@@ -367,3 +367,19 @@
 - [x] F2 scripts/adm-journey.py 12/12 (officer phone, follow-up, principal, owner; Excel+PDF opened)
 - [ ] F3 Real pg_cron follow-up reminder (rikaz-ad-alerts, daily 05:10 UTC) — first run tomorrow
 - [ ] Next: maintenance multi-org test + bus maintenance browser journey
+
+## Package 14 — Final closure before HR (prompt: «أغلق الآن جميع البنود المتبقية»)
+Resume point: start at 1.3. Rule: an item closes only with a test as evidence; closed items reopen only with a proven reason.
+1. Real org + admissions
+ - [x] 1.1 Separate student-category field (student_gender); classification removed from city
+ - [ ] 1.2 Verify owner/4 branches isolated from demo org (read-only check)
+ - [ ] 1.3 Move WordPress connection to Al-Malki org — blocked: the owner creates the connection and pastes the secret into the WordPress plugin
+ - [ ] 1.4 Synthetic request → correct branch; resend without duplicates
+ - [ ] 1.5 Disable demo connection after 1.4 passes
+ - [ ] 1.6 Admissions reminder via real cron (evidence from cron run log)
+2. Maintenance: full multi-org journey, separation of duties, bus return-to-service, procurement link
+3. Users/permissions: wizard tree, supervisor scope, live-session revocation, reset invalidates sessions
+4. School gaps: flaky timetable test root cause, duties/substitute journeys, class visits/teacher evaluation gap analysis, Excel imports, grade visibility
+5. UI: unified homes, KPI→list match, phone/desktop, regression suite, Excel/PDF checks
+6. Security review one by one, auth redirect/leaked-password settings (owner action in Supabase), docs
+Out of scope this round: HR, accounting, fees, transport ops, hosting move.
