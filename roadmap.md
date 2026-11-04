@@ -361,6 +361,9 @@
 - [x] B Applications lifecycle (statuses, contact log, follow-ups, decision, assign, transfer, reopen, link to existing student) — RPC-only
 - [x] C UI: 4 tabs (summary, prospects, current students, settings) + owner card + menu + officer home card
 - [x] D Follow-up alerts in daily tick
-- [ ] E WordPress receiver (HMAC, idempotent) + plugin ZIP + template fix — needs the reference PHP template and site install by the user
+- [x] E WordPress receiver (HMAC, replay/rate guard, idempotent) + plugin ZIP + limited template fix — scripts/wp-e2e.ts 14/14 (real plugin PHP vs local receiver)
+- [ ] E2 Live trial from the real site — waits for: app publish + plugin install + agreed test submission
 - [x] F1 scripts/admissions-e2e.ts 18/18 (two orgs, two branches) + owner browser check
-- [ ] F2 Officer browser + phone journey; WordPress path end-to-end (after E)
+- [x] F2 scripts/adm-journey.py 12/12 (officer phone, follow-up, principal, owner; Excel+PDF opened)
+- [ ] F3 Real pg_cron follow-up reminder (rikaz-ad-alerts, daily 05:10 UTC) — first run tomorrow
+- [ ] Next: maintenance multi-org test + bus maintenance browser journey

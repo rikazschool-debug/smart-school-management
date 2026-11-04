@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { askText } from "@/components/confirm";
 import { Field, Pager, Panel, SearchBox, Stat, StatGrid, TableCard, Toolbar, TD, TH, TRC, TR } from "@/components/procurement/ui";
-import { exportXlsx, printReport } from "@/lib/export";
+import { exportPdf, exportXlsx } from "@/lib/export";
 import { arabicError, useSession } from "@/lib/session";
 import { ACTION, CHANNEL, ENR, OUTCOME, STATUS, hasAdmissions, tone, useAdMe, type AdMe, type Sch } from "@/components/admissions/shared";
 
@@ -135,7 +135,7 @@ function AppList({ orgId, orgName, me, sp, go }: { orgId: string; orgName: strin
     if (error) { toast.error(arabicError(error)); return; }
     const rows = (data as { rows: Row[] }).rows.map(rowCells);
     const meta = { title: "طلبات القبول", school: orgName, filters: [status && `الحالة: ${STATUS[status] ?? status}`, school && `الفرع: ${schools.find((s) => s.id === school)?.name}`, q && `بحث: ${q}`, sp.assignee && "حسب المسؤول", sp.due && "المتابعات"].filter(Boolean) as string[] };
-    if (kind === "x") exportXlsx(meta, HEAD, rows); else printReport(meta, HEAD, rows);
+    if (kind === "x") exportXlsx(meta, HEAD, rows); else await exportPdf(meta, HEAD, rows);
   }
   const chips = [sp.assignee === "me" && "المسندة إليّ", sp.assignee === "none" && "غير مسندة", sp.due === "due" && "متابعات مستحقة", sp.due === "overdue" && "متابعات متأخرة", sp.pending && "بانتظار تحديد الفرع", sp.linked === "1" && "مرتبطة بطالب"].filter(Boolean) as string[];
   return (
@@ -304,7 +304,7 @@ function Students({ orgId, orgName, me }: { orgId: string; orgName: string; me: 
     const { data, error } = await db.rpc("ad_students", { _org: orgId, _f: { ...f, export: true }, _limit: 5000, _offset: 0 });
     if (error) { toast.error(arabicError(error)); return; }
     const meta = { title: "الطلاب الحاليون", school: orgName, filters: [q && `بحث: ${q}`, status && `القيد: ${ENR[status]}`].filter(Boolean) as string[] };
-    const rows = (data as { rows: Row[] }).rows.map(cells); if (kind === "x") exportXlsx(meta, H, rows); else printReport(meta, H, rows);
+    const rows = (data as { rows: Row[] }).rows.map(cells); if (kind === "x") exportXlsx(meta, H, rows); else await exportPdf(meta, H, rows);
   }
   const canExp = me.caps!.export.length > 0 || !!me.owner;
   return (
@@ -348,7 +348,7 @@ function SettingsTab({ orgId }: { orgId: string }) {
       </Panel>
       {q.data!["org_level"] && (
         <Panel title="ربط نموذج الموقع (WordPress)">
-          <p className="mb-2 text-xs text-muted-foreground">اربط قيم «المدرسة» في نموذج التسجيل بفروع المؤسسة. القيمة غير المربوطة تُحفظ في «بانتظار تحديد الفرع». حالة الاتصال: <b>غير مربوط بعد</b> — يحتاج تثبيت إضافة الموقع.</p>
+          <p className="mb-2 text-xs text-muted-foreground">اربط قيم «المدرسة» في نموذج التسجيل بفروع المؤسسة. القيمة غير المربوطة تُحفظ في «بانتظار تحديد الفرع». أنشئ الربط من «اتصال الموقع» أدناه ثم ثبّت إضافة ركاز في الموقع.</p>
           <div className="grid gap-2 sm:grid-cols-2">{FORM_SCHOOLS.map((k) => (
             <Field key={k} label={`«${k}»`}><select className={selectCls("", true)} value={m[k] ?? ""} onChange={(e) => setMap({ ...m, [k]: e.target.value })}>
               <option value="">غير مربوط</option>{schools.map((s) => <option key={s["id"]} value={s["id"]}>{s["name"]}</option>)}</select></Field>))}
@@ -357,6 +357,47 @@ function SettingsTab({ orgId }: { orgId: string }) {
         </Panel>
       )}
       <Button disabled={save.isPending} onClick={() => save.mutate()}>حفظ الإعدادات</Button>
+      {q.data!["org_level"] && <Connections orgId={orgId} />}
     </div>
+  );
+}
+
+/** Website connections: the signing key is shown once (create/rotate) and never again; the owner pastes it into the WordPress plugin. */
+function Connections({ orgId }: { orgId: string }) {
+  const l = useQuery({ queryKey: ["ad-sources", orgId], queryFn: async () => { const { data, error } = await db.rpc("ad_source_list", { _org: orgId }); if (error) throw error; return data as Row[]; } });
+  const [shown, setShown] = useState<{ id: string; secret: string } | null>(null);
+  const endpoint = `${typeof window === "undefined" ? "" : window.location.origin}/api/public/admissions/wordpress`;
+  async function create() {
+    const n = await askText("اسم الربط (مثال: موقع المالكي)", { required: true }); if (!n) return;
+    const { data, error } = await db.rpc("ad_source_create", { _org: orgId, _name: n }); if (error) { toast.error(arabicError(error)); return; }
+    setShown(data as { id: string; secret: string }); void l.refetch();
+  }
+  async function rotate(id: string) {
+    const { data, error } = await db.rpc("ad_source_rotate", { _id: id }); if (error) { toast.error(arabicError(error)); return; }
+    setShown(data as { id: string; secret: string }); void l.refetch();
+  }
+  async function toggle(id: string, on: boolean) { const { error } = await db.rpc("ad_source_set_active", { _id: id, _active: on }); if (error) toast.error(arabicError(error)); void l.refetch(); }
+  return (
+    <Panel title="اتصال الموقع" actions={<Button size="sm" variant="outline" onClick={() => void create()}><Plus className="size-4" />ربط جديد</Button>}>
+      <p className="mb-2 text-xs text-muted-foreground">عنوان الاستقبال: <bdi dir="ltr" className="font-mono">{endpoint}</bdi> — يُنشر بعد نشر التطبيق على عنوانه المنشور.</p>
+      {shown && (
+        <div role="alert" className="mb-3 rounded-xl border border-warning/50 bg-warning/10 p-3 text-sm">
+          <p className="font-bold">انسخ القيمتين الآن إلى إعدادات الإضافة — لن يظهر المفتاح مرة أخرى.</p>
+          <p>معرّف الربط: <bdi dir="ltr" className="select-all font-mono">{shown.id}</bdi></p>
+          <p className="break-all">المفتاح السري: <bdi dir="ltr" className="select-all font-mono">{shown.secret}</bdi></p>
+          <Button size="sm" variant="ghost" onClick={() => setShown(null)}>نسختهما — إخفاء</Button>
+        </div>
+      )}
+      {l.isLoading ? <LoadingState /> : !l.data?.length ? <p className="text-sm text-muted-foreground">لا يوجد ربط بعد.</p> : (
+        <ul className="divide-y text-sm">{l.data.map((s) => (
+          <li key={s["id"]} className="flex flex-wrap items-center gap-2 py-2">
+            <b>{s["name"]}</b><span className={s["is_active"] ? "text-success" : "text-muted-foreground"}>{s["is_active"] ? "مفعّل" : "موقوف"}</span>
+            <span className="text-muted-foreground">المفتاح {s["secret_hint"]} · وصل {s["received"]} طلب · آخر استقبال {fmt(s["last_seen_at"])}</span>
+            {s["last_error"] && <span className="text-destructive">{s["last_error"]}</span>}
+            <span className="ms-auto flex gap-1"><Button size="sm" variant="ghost" onClick={() => void rotate(s["id"])}>تغيير المفتاح</Button>
+              <Button size="sm" variant="ghost" onClick={() => void toggle(s["id"], !s["is_active"])}>{s["is_active"] ? "إيقاف" : "تفعيل"}</Button></span>
+          </li>))}</ul>
+      )}
+    </Panel>
   );
 }

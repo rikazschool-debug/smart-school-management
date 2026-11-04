@@ -52,3 +52,5 @@
 - scripts/pc-carry-form-journey.py: carry-over (no double totals) + custom invoice field with form versions (needs pc-browser-fixture setup --open --carry; 9 checks).
 - scripts/pc-closure-e2e.ts: need correction/refund effect, open-session suspension/withdrawal (RPC, files, export), alert re-arming (11 checks); --cron-setup / --cron-check verify the real hourly pg_cron run.
 - scripts/admissions-e2e.ts: admissions roles, separate grants, isolation, lifecycle, no student on accept, explicit link, open-session withdrawal, alert dedupe (18 checks).
+- scripts/wp-e2e.ts: WordPress plugin (real PHP via scripts/wp/harness.php) → signed receiver: queue, retry, duplicates, concurrency, bad key, stale/replay, paused section, key rotation (14 checks; needs dev server).
+- scripts/adm-browser-fixture.ts setup|teardown + scripts/adm-journey.py: admissions roles in the browser (12 checks); always run teardown after.

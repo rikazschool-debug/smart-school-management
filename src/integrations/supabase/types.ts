@@ -453,6 +453,32 @@ export type Database = {
           },
         ]
       }
+      ad_nonces: {
+        Row: {
+          at: string
+          nonce: string
+          source_id: string
+        }
+        Insert: {
+          at?: string
+          nonce: string
+          source_id: string
+        }
+        Update: {
+          at?: string
+          nonce?: string
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_nonces_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "ad_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_settings: {
         Row: {
           defaults: Json
@@ -486,6 +512,53 @@ export type Database = {
             foreignKeyName: "ad_settings_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_sources: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          last_error: string | null
+          last_seen_at: string | null
+          name: string
+          org_id: string
+          rotated_at: string | null
+          secret: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          last_seen_at?: string | null
+          name: string
+          org_id: string
+          rotated_at?: string | null
+          secret: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          last_seen_at?: string | null
+          name?: string
+          org_id?: string
+          rotated_at?: string | null
+          secret?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_sources_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -8473,6 +8546,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _ad_ingest: {
+        Args: { _nonce: string; _p: Json; _source: string }
+        Returns: Json
+      }
       _ad_label: { Args: { _s: string }; Returns: string }
       _ad_new_ref: { Args: { _org: string }; Returns: string }
       _ad_notify: {
@@ -8501,6 +8578,7 @@ export type Database = {
         Args: { a: Database["public"]["Tables"]["ad_applications"]["Row"] }
         Returns: Json
       }
+      _ad_source_auth: { Args: { _id: string; _nonce: string }; Returns: Json }
       _add_member: {
         Args: {
           _conv: string
@@ -9474,6 +9552,13 @@ export type Database = {
           _stage_map: Json
           _year: string
         }
+        Returns: undefined
+      }
+      ad_source_create: { Args: { _name: string; _org: string }; Returns: Json }
+      ad_source_list: { Args: { _org: string }; Returns: Json }
+      ad_source_rotate: { Args: { _id: string }; Returns: Json }
+      ad_source_set_active: {
+        Args: { _active: boolean; _id: string }
         Returns: undefined
       }
       ad_students: {
