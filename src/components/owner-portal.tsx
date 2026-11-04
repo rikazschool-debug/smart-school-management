@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Star, ArrowLeft, Building2, CheckCircle2, Construction, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, type LucideIcon } from "lucide-react";
+import { Star, ArrowLeft, Building2, CheckCircle2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, type LucideIcon } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -104,9 +104,12 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "hr", section: "hr", title: "الموارد البشرية", icon: Construction, to: "/app/hr", open: "فتح القسم", note: "تحت الإنشاء",
-    desc: "شؤون الموظفين. لم تُنفّذ وظائفه بعد، ولا تُعرض فيه بيانات.",
-    features: [],
+    key: "hr", section: "hr", title: "الموارد البشرية", icon: IdCard, to: "/app/hr", open: "فتح القسم", note: "الحزمة الأولى",
+    desc: "ملفات الموظفين وتعييناتهم في المدارس، مربوطة بحساباتهم وسجلات المعلمين دون تكرار. الإجازات والعقود والرواتب تُضاف تباعًا.",
+    features: [
+      { icon: IdCard, label: "ملفات الموظفين", to: "/app/hr" },
+      { icon: Plus, label: "إضافة موظف", to: "/app/hr", search: { add: "1" } },
+    ],
   },
   {
     key: "finance", section: "finance", title: "المالية والمحاسبة", icon: Wallet, to: "/app/finance", open: "فتح المالية",

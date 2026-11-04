@@ -14,7 +14,7 @@ import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
-import { UserPlus } from "lucide-react";
+import { IdCard, UserPlus } from "lucide-react";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,8 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   procurement: { to: "/app/procurement", label: "المشتريات والعهد", icon: ReceiptText },
   school_home: { to: "/app/school-home", label: "لوحة المدرسة", icon: LayoutDashboard },
   finance: { to: "/app/finance", label: "بوابة المالية", icon: Wallet },
-  hr: { to: "/app/hr", label: "الموارد البشرية", icon: Construction },
+  hr: { to: "/app/hr", label: "الموارد البشرية", icon: IdCard },
+  my_hr: { to: "/app/my-employment", label: "ملفي الوظيفي", icon: IdCard },
   permissions: { to: "/app/permissions", label: "الأدوار والصلاحيات", icon: KeyRound },
   operations: { to: "/app/operations", label: "بوابة النقل والصيانة", icon: Bus },
   transport: { to: "/app/transport", label: "النقل المدرسي", icon: Construction },
@@ -83,7 +84,7 @@ const EV_SUB = [["summary", "الملخص والمؤشرات"], ["guardians", "�
 const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary";
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
-  { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "profile"] },
+  { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "profile", "my_hr"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
   { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
@@ -113,6 +114,9 @@ function Shell() {
   const mt = useMtMe(active?.orgId ?? null, pcRole);
   const ad = useAdMe(active?.orgId ?? null, pcRole);
   const ops = useOpsStaff(active ?? null, user.id);
+  // HR: own employment file for any staff member who has one (hr_my_employment returns null otherwise); HR workspace via perm_my_school hr_* keys
+  const myHr = useQuery({ queryKey: ["hr-mine", active?.orgId], enabled: pcRole, staleTime: 60_000, queryFn: async () => { const r = await supabase.rpc("hr_my_employment" as never, { _org: active!.orgId } as never); if (r.error) return null; return r.data as unknown; } });
+  const hrGranted = !!sp && Object.entries(sp).some(([k, v]) => k.startsWith("hr_") && !!v);
   // evaluation access: owner/platform always see the section; other staff only through the permission tree (perm_my_school ev_* keys; RPCs re-check)
   const evGranted = !!sp && Object.entries(sp).some(([k, v]) => k.startsWith("ev_") && !!v);
   const evOwner = !!active && ["org_owner", "platform_admin"].includes(active.role);
@@ -149,9 +153,9 @@ function Shell() {
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
-    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : [])] as NavKey[];
+    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr"] : []), ...(myHr.data ? ["my_hr"] : [])] as NavKey[];
   const opsOnly = ops.opsOnly;
-  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation"].includes(k)));
+  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   let nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   // class visits live under the evaluation sub-menu for roles that have both

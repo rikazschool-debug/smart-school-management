@@ -5079,6 +5079,214 @@ export type Database = {
           },
         ]
       }
+      hr_assignments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department: string | null
+          employee_id: string
+          end_date: string | null
+          id: string
+          is_primary: boolean
+          job_title: string | null
+          manager_id: string | null
+          org_id: string
+          school_id: string
+          start_date: string
+          teacher_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          is_primary?: boolean
+          job_title?: string | null
+          manager_id?: string | null
+          org_id: string
+          school_id: string
+          start_date: string
+          teacher_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          is_primary?: boolean
+          job_title?: string | null
+          manager_id?: string | null
+          org_id?: string
+          school_id?: string
+          start_date?: string
+          teacher_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_assignments_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_assignments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_assignments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_assignments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_employees: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          employee_no: string
+          end_date: string | null
+          full_name: string
+          gender: string | null
+          hire_date: string | null
+          id: string
+          job_title: string | null
+          national_id: string | null
+          nationality: string | null
+          notes: string | null
+          org_id: string
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          employee_no: string
+          end_date?: string | null
+          full_name: string
+          gender?: string | null
+          hire_date?: string | null
+          id?: string
+          job_title?: string | null
+          national_id?: string | null
+          nationality?: string | null
+          notes?: string | null
+          org_id: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          employee_no?: string
+          end_date?: string | null
+          full_name?: string
+          gender?: string | null
+          hire_date?: string | null
+          id?: string
+          job_title?: string | null
+          national_id?: string | null
+          nationality?: string | null
+          notes?: string | null
+          org_id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_employees_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_events: {
+        Row: {
+          action: string
+          actor: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          entity: string
+          entity_id: string
+          id: string
+          org_id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity: string
+          entity_id: string
+          id?: string
+          org_id: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity?: string
+          entity_id?: string
+          id?: string
+          org_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -9593,6 +9801,46 @@ export type Database = {
       _gb_window: { Args: { _gb: string; _student: string }; Returns: boolean }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
       _home_roles: { Args: { _me: string; _school: string }; Returns: Json }
+      _hr_assign_json: {
+        Args: { _emp: string; _only_active: boolean }
+        Returns: Json
+      }
+      _hr_check_teacher: {
+        Args: {
+          _assign: string
+          _emp: Database["public"]["Tables"]["hr_employees"]["Row"]
+          _school: string
+          _teacher: string
+        }
+        Returns: undefined
+      }
+      _hr_emp_json: {
+        Args: {
+          _sensitive: boolean
+          e: Database["public"]["Tables"]["hr_employees"]["Row"]
+        }
+        Returns: Json
+      }
+      _hr_emp_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
+      _hr_log: {
+        Args: {
+          _action: string
+          _after: Json
+          _before: Json
+          _entity: string
+          _id: string
+          _org: string
+          _reason: string
+        }
+        Returns: undefined
+      }
+      _hr_me_emp: { Args: { _org: string }; Returns: string }
+      _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_school_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
+      }
+      _hr_today: { Args: never; Returns: string }
       _hw_check_score: {
         Args: { _criteria: Json; _score: number; h: Record<string, unknown> }
         Returns: number
@@ -11552,6 +11800,23 @@ export type Database = {
         Args: { _course: string; _kind: string }
         Returns: Json
       }
+      hr_assignment_save: {
+        Args: { _employee: string; _id: string; _p: Json; _reason?: string }
+        Returns: string
+      }
+      hr_candidates: { Args: { _org: string }; Returns: Json }
+      hr_employee_get: { Args: { _id: string }; Returns: Json }
+      hr_employee_list: {
+        Args: { _org: string; _q?: string; _school?: string; _status?: string }
+        Returns: Json
+      }
+      hr_employee_save: {
+        Args: { _id: string; _org: string; _p: Json; _reason?: string }
+        Returns: string
+      }
+      hr_me: { Args: { _org: string }; Returns: Json }
+      hr_my_employment: { Args: { _org: string }; Returns: Json }
+      hr_team: { Args: { _org: string }; Returns: Json }
       hw_family: { Args: { _hw: string; _student: string }; Returns: boolean }
       hw_staff: { Args: { _hw: string }; Returns: boolean }
       hw_state: { Args: { _hw: string; _student: string }; Returns: Json }

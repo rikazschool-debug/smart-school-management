@@ -63,6 +63,7 @@ export type NavKey =
   | "school_home"
   | "finance"
   | "hr"
+  | "my_hr"
   | "operations"
   | "maintenance"
   | "bus_maintenance"

@@ -60,3 +60,4 @@
 - scripts/visits-e2e.ts: class visits (evaluator scope, 1–5 scores, submit/return/approve, teacher blind, isolation; 24 checks).
 - scripts/evaluation-e2e.ts: comprehensive evaluation (guardian ratings/history, monthly, forms/versions/weights, teacher file, visit correction, platform grant; 26 checks). scripts/evaluation-browser-fixture.ts setup|teardown (evb-) + scripts/evaluation-journey.py (18 checks); always run teardown after.
 - scripts/evaluation-perm-e2e.ts: evaluation × permission tree (25 checks; --cron waits for the real reminder run). scripts/evaluation-perm-journey.py: grant/revoke in browser with open session (needs evaluation-browser-fixture).
+- scripts/hr-e2e.ts: HR employee files/assignments/permissions (24 checks). scripts/hr-browser-fixture.ts setup|teardown (hrb-) + scripts/hr-journey.py (14 checks); always run teardown after.
