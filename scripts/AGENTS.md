@@ -43,3 +43,4 @@
 - scripts/vc-e2e.ts: class virtual sessions (schedulers, host/join, enrollment loss, isolation from admin meetings, attendance timings, report scope, cancel/end; 9 checks).
 - scripts/maint-roles-e2e.ts: maintenance/transport role templates, principal base rule, branch scope, operations-area suspension, revocation, isolation (12 checks).
 - scripts/maint-e2e.ts: maintenance lifecycle — school + bus journeys, routing, clarify, reschedule, decline/reassign, concurrent claim, no self-approval, internal notes, reopen/cancel, bus out-of-service/inspection/return, files, isolation, suspension, notification dedupe (26 checks).
+- scripts/maint-need-e2e.ts: maintenance → purchase need (team suggests items only, principal creates one live need, amounts principal/owner only, re-create after cancel, history; 8 checks).
