@@ -379,7 +379,7 @@ Resume point (Nov 4): reopen request + bus docs closed (maint-e2e 30/30, browser
  - [ ] 1.6 Admissions reminder via real cron (evidence from cron run log)
 2. [x browser: scripts/maint-journey.py school 6/6, bus 9/9; open: reopen button for follow-up, live-session withdrawal in browser] [x re-run 2026-11-04: maint 26/26, roles 12/12, need 8/8, alerts 6/6] Maintenance: full multi-org journey, separation of duties, bus return-to-service, procurement link
 3. [x re-run: perm6 20/20 (principal template fixed: admissions), perm7 20/20, staff 23/23, scope 37/37, bounds 8/8, schools 13/13] Users/permissions: wizard tree, supervisor scope, live-session revocation, reset invalidates sessions
-4. School gaps: [x timetable 30/30 x3 today; flaky busy-teacher step fixed earlier, not reproduced]  duties/substitute journeys, class visits/teacher evaluation gap analysis, Excel imports, grade visibility
-5. UI: unified homes, KPI→list match, phone/desktop, regression suite, Excel/PDF checks
-6. Security review one by one, auth redirect/leaked-password settings (owner action in Supabase), docs
+4. [x] School gaps: timetable 30/30; duties/substitutes admin2 45/45 + browser 24/24; class visits gap analysis docs/gap-class-visits.md (module not built — owner decision); imports 23/23 + browser 10/10; grade visibility hw2 25/25, hw-closure 29/29
+5. [x] UI: all dashboards 390/1280 38/38; duties Excel/PDF checked. 7. [x] Invoice attachment optional (owner decision): pc-e2e 32/32, pc2 20/20, pc-closure 11/11. 8. [x] Live-session withdrawal browser 8/8
+6. [x] Security review (scan fix file_cleanup_config, rls-e2e 94/94). [ ] Owner action in Supabase: auth redirect URLs + leaked-password protection
 Out of scope this round: HR, accounting, fees, transport ops, hosting move.

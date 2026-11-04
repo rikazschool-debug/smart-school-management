@@ -486,3 +486,11 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Server: approval no longer records a no-attachment exception; «invoice required» setting forced off (trigger). Custody disbursement/refund proof unchanged.
 - UI: no-attachment reason field and approver reason prompts removed (invoice form, invoice detail, settlement sheet); setting checkbox removed.
 - Evidence: pc-e2e 32/32 (11: wrong type, oversize, other person and after-submit refused, valid file readable by branch approver only, not other org; 17: submit+approve with no file and no reason), pc2-e2e 20/20, pc-closure-e2e 11/11.
+
+## 2026-11-04 (d) — Closure list continued (prompt-124)
+- Live-session withdrawal (browser, pc-revoke-journey 8/8): owner withdraws the approver role while the approver's page is open → stale «اعتماد» refused, invoice stays pending; the same session token loses attachment records and approve capability; direct link shows no data/action. Invoice with no file approved with confirmation only.
+- Duties/substitutes: admin2-e2e 45/45; browser duty+meeting journey 24/24 (journey updated: meetings organized by the principal per scope-e2e 6a, «حفظ مسودة» label, people picker for decision executor); timetable-e2e 30/30 (substitutes included).
+- Class visits / teacher evaluation: gap analysis in docs/gap-class-visits.md — module not built; needs owner go-ahead (new scope).
+- Imports & grades: accounts-e2e 23/23, browser import templates 10/10, homework2-e2e 25/25, hw-closure-e2e 29/29.
+- Screens/phone: all 19 demo dashboards at 390px and 1280px — 38/38 (content, no sideways scroll, menu, no page errors).
+- Security: scan finding «any signed-in user reads file_cleanup_config» fixed (platform admins only); rescan clean except leaked-password protection (owner setting in Supabase). Review: 0 public tables without RLS; all 40 policy-less tables have no client grants (RPC-only by design); 0 SECURITY DEFINER functions callable by anon. rls-e2e 94/94, cleanup-e2e 11/11.

@@ -56,3 +56,4 @@
 - scripts/adm-browser-fixture.ts setup|teardown + scripts/adm-journey.py: admissions roles in the browser (12 checks); always run teardown after.
 - scripts/setup-almalki-org.ts, setup-almalki-admissions.ts: real Al-Malki org setup + server checks (idempotent).
 - scripts/maint-journey.py school /app/maintenance | bus /app/bus-maintenance: browser journey with separate demo accounts (requester, follow-up, manager, transport officer); school 6 checks, bus 9 (incl. separate return-to-service). Test rows use title «بخ-…» / bus code T#####; remove them after.
+- scripts/pc-revoke-journey.py: optional invoice attachment + live-session permission withdrawal in the browser (8 checks; needs pc-browser-fixture `setup --open`, teardown after). scripts/all-dashboards-phone-journey.py: every demo dashboard at 390/1280px (read-only).
