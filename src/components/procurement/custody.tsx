@@ -145,6 +145,18 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   const [busy, setBusy] = useState(false);
   const [key] = useState(() => crypto.randomUUID());
   const inv = useInvalidate();
+  // The org owner creates and approves in one step for a chosen branch + procurement officer (pc_custody_save_approve).
+  const ownerDirect = me.is_owner && !initial;
+  async function saveApprove() {
+    if (!school) { toast.error("اختر الفرع"); return; }
+    if (!holder[0] || holder[0] === me.me) { toast.error("اختر مسؤول المشتريات المستفيد"); return; }
+    setBusy(true);
+    const { data, error } = await db.rpc("pc_custody_save_approve", { _org: orgId, _school: school, _school_ids: extra.filter((x) => x !== school), _holder: holder[0],
+      _purpose: purpose, _amount: Number(amount), _due: due || null, _key: key });
+    setBusy(false);
+    if (error) { toast.error(arabicError(error)); return; }
+    toast.success("حُفظت العهدة واعتُمدت للفرع ومسؤول المشتريات"); inv(); onDone(data as string);
+  }
   async function save(submit: boolean) {
     if (canOthers && !holder[0]) { toast.error("اختر مسؤول المشتريات المنسوب إليه العهدة"); return; }
     setBusy(true);
@@ -160,7 +172,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   }
   if (!createSchools.length) return <EmptyState title="لا تملك طلب عهدة" hint="اطلب من مالك المؤسسة منحك صلاحية الإنشاء." />;
   return (
-    <FormCard title={initial ? `تعديل ${initial.ref}` : canOthers ? "إضافة عهدة" : "طلب عهدة جديدة"} subtitle="تُرسل للاعتماد ثم تُصرف بإثبات؛ الرصيد يبدأ عند الصرف الفعلي.">
+    <FormCard title={initial ? `تعديل ${initial.ref}` : canOthers ? "إضافة عهدة" : "طلب عهدة جديدة"} subtitle={ownerDirect ? "حدّد الفرع ومسؤول المشتريات المستفيد؛ تُعتمد العهدة فور الحفظ ثم تُصرف بإثبات، والرصيد يبدأ عند الصرف الفعلي." : "تُرسل للاعتماد ثم تُصرف بإثبات؛ الرصيد يبدأ عند الصرف الفعلي."}>
       <div className="grid gap-3 sm:grid-cols-2">
         <div><Label>الفرع</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         <div><Label>المبلغ (ريال سعودي)</Label><Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" /></div>
@@ -178,7 +190,8 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
         <PeoplePicker purpose="pc_holder" school={school || null} org={orgId} value={holder} onChange={setHolder} single label="مسؤول المشتريات المنسوب إليه العهدة" compact />
       ) : <p className="text-sm text-muted-foreground">المستلم: أنت (صلاحيتك تشمل عهدك الخاصة فقط).</p>}
       <FormActions>
-        <Button disabled={busy} onClick={() => void save(true)}>حفظ وإرسال للاعتماد</Button>
+        {ownerDirect ? <Button disabled={busy} onClick={() => void saveApprove()}>حفظ واعتماد</Button>
+          : <Button disabled={busy} onClick={() => void save(true)}>حفظ وإرسال للاعتماد</Button>}
         <Button disabled={busy} variant="outline" onClick={() => void save(false)}>حفظ مسودة</Button>
         <Button variant="ghost" onClick={onCancel}>إلغاء</Button>
       </FormActions>
