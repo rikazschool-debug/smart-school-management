@@ -151,7 +151,7 @@ function Shell() {
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
     ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : [])] as NavKey[];
   const opsOnly = ops.opsOnly;
-  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions"].includes(k)));
+  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   let nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   // class visits live under the evaluation sub-menu for roles that have both
