@@ -5178,6 +5178,7 @@ export type Database = {
           gender: string | null
           hire_date: string | null
           id: string
+          import_key: string | null
           job_title: string | null
           national_id: string | null
           nationality: string | null
@@ -5199,6 +5200,7 @@ export type Database = {
           gender?: string | null
           hire_date?: string | null
           id?: string
+          import_key?: string | null
           job_title?: string | null
           national_id?: string | null
           nationality?: string | null
@@ -5220,6 +5222,7 @@ export type Database = {
           gender?: string | null
           hire_date?: string | null
           id?: string
+          import_key?: string | null
           job_title?: string | null
           national_id?: string | null
           nationality?: string | null
