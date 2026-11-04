@@ -27,8 +27,10 @@ import { Route as AuthenticatedAppFinanceRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppGradesRouteImport } from './routes/_authenticated/app/grades'
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
 import { Route as AuthenticatedAppHrRouteImport } from './routes/_authenticated/app/hr'
+import { Route as AuthenticatedAppMaintenanceRouteImport } from './routes/_authenticated/app/maintenance'
 import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authenticated/app/members'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app/notifications'
+import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/app/operations'
 import { Route as AuthenticatedAppPermissionsRouteImport } from './routes/_authenticated/app/permissions'
 import { Route as AuthenticatedAppPickupRouteImport } from './routes/_authenticated/app/pickup'
 import { Route as AuthenticatedAppPlatformRouteImport } from './routes/_authenticated/app/platform'
@@ -43,6 +45,7 @@ import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppSubstitutionsRouteImport } from './routes/_authenticated/app/substitutions'
 import { Route as AuthenticatedAppSupportRouteImport } from './routes/_authenticated/app/support'
 import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
+import { Route as AuthenticatedAppTransportRouteImport } from './routes/_authenticated/app/transport'
 import { Route as AuthenticatedAppAdminIndexRouteImport } from './routes/_authenticated/app/admin.index'
 import { Route as AuthenticatedAppAdminCalendarRouteImport } from './routes/_authenticated/app/admin.calendar'
 import { Route as AuthenticatedAppAdminDutiesRouteImport } from './routes/_authenticated/app/admin.duties'
@@ -157,6 +160,12 @@ const AuthenticatedAppHrRoute = AuthenticatedAppHrRouteImport.update({
   path: '/hr',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
+const AuthenticatedAppMaintenanceRoute =
+  AuthenticatedAppMaintenanceRouteImport.update({
+    id: '/maintenance',
+    path: '/maintenance',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppMembersRoute = AuthenticatedAppMembersRouteImport.update({
   id: '/members',
   path: '/members',
@@ -166,6 +175,12 @@ const AuthenticatedAppNotificationsRoute =
   AuthenticatedAppNotificationsRouteImport.update({
     id: '/notifications',
     path: '/notifications',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppOperationsRoute =
+  AuthenticatedAppOperationsRouteImport.update({
+    id: '/operations',
+    path: '/operations',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppPermissionsRoute =
@@ -245,6 +260,12 @@ const AuthenticatedAppTeachersRoute =
   AuthenticatedAppTeachersRouteImport.update({
     id: '/teachers',
     path: '/teachers',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppTransportRoute =
+  AuthenticatedAppTransportRouteImport.update({
+    id: '/transport',
+    path: '/transport',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppAdminIndexRoute =
@@ -365,8 +386,10 @@ export interface FileRoutesByFullPath {
   '/app/grades': typeof AuthenticatedAppGradesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/hr': typeof AuthenticatedAppHrRoute
+  '/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/operations': typeof AuthenticatedAppOperationsRoute
   '/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
@@ -381,6 +404,7 @@ export interface FileRoutesByFullPath {
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
@@ -416,8 +440,10 @@ export interface FileRoutesByTo {
   '/app/grades': typeof AuthenticatedAppGradesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/hr': typeof AuthenticatedAppHrRoute
+  '/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/app/operations': typeof AuthenticatedAppOperationsRoute
   '/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
@@ -432,6 +458,7 @@ export interface FileRoutesByTo {
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
@@ -470,8 +497,10 @@ export interface FileRoutesById {
   '/_authenticated/app/grades': typeof AuthenticatedAppGradesRoute
   '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/_authenticated/app/hr': typeof AuthenticatedAppHrRoute
+  '/_authenticated/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/_authenticated/app/members': typeof AuthenticatedAppMembersRoute
   '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
+  '/_authenticated/app/operations': typeof AuthenticatedAppOperationsRoute
   '/_authenticated/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/_authenticated/app/pickup': typeof AuthenticatedAppPickupRoute
   '/_authenticated/app/platform': typeof AuthenticatedAppPlatformRoute
@@ -486,6 +515,7 @@ export interface FileRoutesById {
   '/_authenticated/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/_authenticated/app/support': typeof AuthenticatedAppSupportRoute
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/_authenticated/app/transport': typeof AuthenticatedAppTransportRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/_authenticated/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
@@ -524,8 +554,10 @@ export interface FileRouteTypes {
     | '/app/grades'
     | '/app/guardians'
     | '/app/hr'
+    | '/app/maintenance'
     | '/app/members'
     | '/app/notifications'
+    | '/app/operations'
     | '/app/permissions'
     | '/app/pickup'
     | '/app/platform'
@@ -540,6 +572,7 @@ export interface FileRouteTypes {
     | '/app/substitutions'
     | '/app/support'
     | '/app/teachers'
+    | '/app/transport'
     | '/app/'
     | '/app/admin/calendar'
     | '/app/admin/duties'
@@ -575,8 +608,10 @@ export interface FileRouteTypes {
     | '/app/grades'
     | '/app/guardians'
     | '/app/hr'
+    | '/app/maintenance'
     | '/app/members'
     | '/app/notifications'
+    | '/app/operations'
     | '/app/permissions'
     | '/app/pickup'
     | '/app/platform'
@@ -591,6 +626,7 @@ export interface FileRouteTypes {
     | '/app/substitutions'
     | '/app/support'
     | '/app/teachers'
+    | '/app/transport'
     | '/app'
     | '/app/admin/calendar'
     | '/app/admin/duties'
@@ -628,8 +664,10 @@ export interface FileRouteTypes {
     | '/_authenticated/app/grades'
     | '/_authenticated/app/guardians'
     | '/_authenticated/app/hr'
+    | '/_authenticated/app/maintenance'
     | '/_authenticated/app/members'
     | '/_authenticated/app/notifications'
+    | '/_authenticated/app/operations'
     | '/_authenticated/app/permissions'
     | '/_authenticated/app/pickup'
     | '/_authenticated/app/platform'
@@ -644,6 +682,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/substitutions'
     | '/_authenticated/app/support'
     | '/_authenticated/app/teachers'
+    | '/_authenticated/app/transport'
     | '/_authenticated/app/'
     | '/_authenticated/app/admin/calendar'
     | '/_authenticated/app/admin/duties'
@@ -802,6 +841,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHrRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/maintenance': {
+      id: '/_authenticated/app/maintenance'
+      path: '/maintenance'
+      fullPath: '/app/maintenance'
+      preLoaderRoute: typeof AuthenticatedAppMaintenanceRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/members': {
       id: '/_authenticated/app/members'
       path: '/members'
@@ -814,6 +860,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/app/notifications'
       preLoaderRoute: typeof AuthenticatedAppNotificationsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/operations': {
+      id: '/_authenticated/app/operations'
+      path: '/operations'
+      fullPath: '/app/operations'
+      preLoaderRoute: typeof AuthenticatedAppOperationsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/permissions': {
@@ -912,6 +965,13 @@ declare module '@tanstack/react-router' {
       path: '/teachers'
       fullPath: '/app/teachers'
       preLoaderRoute: typeof AuthenticatedAppTeachersRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/transport': {
+      id: '/_authenticated/app/transport'
+      path: '/transport'
+      fullPath: '/app/transport'
+      preLoaderRoute: typeof AuthenticatedAppTransportRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/admin/': {
@@ -1048,8 +1108,10 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppGradesRoute: typeof AuthenticatedAppGradesRoute
   AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
   AuthenticatedAppHrRoute: typeof AuthenticatedAppHrRoute
+  AuthenticatedAppMaintenanceRoute: typeof AuthenticatedAppMaintenanceRoute
   AuthenticatedAppMembersRoute: typeof AuthenticatedAppMembersRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
+  AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
   AuthenticatedAppPermissionsRoute: typeof AuthenticatedAppPermissionsRoute
   AuthenticatedAppPickupRoute: typeof AuthenticatedAppPickupRoute
   AuthenticatedAppPlatformRoute: typeof AuthenticatedAppPlatformRoute
@@ -1064,6 +1126,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppSubstitutionsRoute: typeof AuthenticatedAppSubstitutionsRoute
   AuthenticatedAppSupportRoute: typeof AuthenticatedAppSupportRoute
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
+  AuthenticatedAppTransportRoute: typeof AuthenticatedAppTransportRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppAdminCalendarRoute: typeof AuthenticatedAppAdminCalendarRoute
   AuthenticatedAppAdminDutiesRoute: typeof AuthenticatedAppAdminDutiesRoute
@@ -1095,8 +1158,10 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppGradesRoute: AuthenticatedAppGradesRoute,
   AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,
   AuthenticatedAppHrRoute: AuthenticatedAppHrRoute,
+  AuthenticatedAppMaintenanceRoute: AuthenticatedAppMaintenanceRoute,
   AuthenticatedAppMembersRoute: AuthenticatedAppMembersRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
+  AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
   AuthenticatedAppPermissionsRoute: AuthenticatedAppPermissionsRoute,
   AuthenticatedAppPickupRoute: AuthenticatedAppPickupRoute,
   AuthenticatedAppPlatformRoute: AuthenticatedAppPlatformRoute,
@@ -1111,6 +1176,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppSubstitutionsRoute: AuthenticatedAppSubstitutionsRoute,
   AuthenticatedAppSupportRoute: AuthenticatedAppSupportRoute,
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
+  AuthenticatedAppTransportRoute: AuthenticatedAppTransportRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppAdminCalendarRoute: AuthenticatedAppAdminCalendarRoute,
   AuthenticatedAppAdminDutiesRoute: AuthenticatedAppAdminDutiesRoute,

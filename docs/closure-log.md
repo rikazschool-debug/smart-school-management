@@ -387,3 +387,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Server test: scripts/maint-roles-e2e.ts 12/12; regressions perm5 20/20, perm6 20/20 (principal template updated to mirror new base rule).
 - Bug found by test and fixed: org_sections check constraint rejected the new section.
 - Browser: not tested. Status: done (server); requests/lifecycle not built yet (M2+).
+
+## M2–M6 Maintenance requests and buses (2026-11-04)
+- Server: mt_* tables (RPC-only) and RPCs; reference MS-/MB-YYYY-NNNN; 11 statuses; routing; claim with row lock + rev; decline/clarify/reassign; schedule history; progress; completion approval by someone other than the executor; reopen window (mt_settings.reopen_days); cancel with visible reason; bus status separate; files source 'maint'.
+- Server test: scripts/maint-e2e.ts 26/26, maint-roles-e2e 12/12. Bug found: reference counter name clash (fixed).
+- Browser (demo owner, 1280px): owner home card, request form with urgent warning, detail, list. Found: owner could take a request → fixed (owner never executes). Not yet browser-tested: officer/follow-up/transport accounts, phone width, Excel/PDF opening.
+- Open: M7 procurement link, M8 overdue/next-service alerts, M9 platform counterparts, M10 role homes, M11 full browser journeys.

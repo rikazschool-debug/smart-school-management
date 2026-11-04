@@ -4533,6 +4533,452 @@ export type Database = {
           },
         ]
       }
+      mt_bus_events: {
+        Row: {
+          action: string
+          actor: string
+          after: Json | null
+          at: string
+          before: Json | null
+          bus_id: string
+          id: string
+          note: string | null
+          request_id: string | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          bus_id: string
+          id?: string
+          note?: string | null
+          request_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          bus_id?: string
+          id?: string
+          note?: string | null
+          request_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mt_bus_events_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "mt_buses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mt_buses: {
+        Row: {
+          active: boolean
+          capacity: number | null
+          code: string
+          created_at: string
+          created_by: string
+          id: string
+          model: string | null
+          next_service_date: string | null
+          next_service_km: number | null
+          notes: string | null
+          odometer: number | null
+          op_status: string
+          org_id: string
+          plate: string | null
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          capacity?: number | null
+          code: string
+          created_at?: string
+          created_by: string
+          id?: string
+          model?: string | null
+          next_service_date?: string | null
+          next_service_km?: number | null
+          notes?: string | null
+          odometer?: number | null
+          op_status?: string
+          org_id: string
+          plate?: string | null
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          capacity?: number | null
+          code?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          model?: string | null
+          next_service_date?: string | null
+          next_service_km?: number | null
+          notes?: string | null
+          odometer?: number | null
+          op_status?: string
+          org_id?: string
+          plate?: string | null
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mt_buses_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mt_buses_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mt_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          is_other: boolean
+          kind: string
+          name: string
+          org_id: string | null
+          parent_id: string | null
+          sort: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_other?: boolean
+          kind: string
+          name: string
+          org_id?: string | null
+          parent_id?: string | null
+          sort?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_other?: boolean
+          kind?: string
+          name?: string
+          org_id?: string | null
+          parent_id?: string | null
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mt_categories_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mt_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "mt_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mt_counters: {
+        Row: {
+          kind: string
+          n: number
+          org_id: string
+          yr: number
+        }
+        Insert: {
+          kind: string
+          n?: number
+          org_id: string
+          yr: number
+        }
+        Update: {
+          kind?: string
+          n?: number
+          org_id?: string
+          yr?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mt_counters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mt_events: {
+        Row: {
+          action: string
+          actor: string
+          after: Json | null
+          at: string
+          before: Json | null
+          body: string | null
+          id: string
+          request_id: string
+          visibility: string
+        }
+        Insert: {
+          action: string
+          actor: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          body?: string | null
+          id?: string
+          request_id: string
+          visibility?: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          body?: string | null
+          id?: string
+          request_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mt_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "mt_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mt_requests: {
+        Row: {
+          accepted_at: string | null
+          actual_cost: number | null
+          asset: string | null
+          assignee_id: string | null
+          building: string | null
+          bus_id: string | null
+          bus_location: string | null
+          cancel_reason: string | null
+          category_id: string | null
+          client_key: string | null
+          closed_at: string | null
+          closed_by: string | null
+          completed_by: string | null
+          completion_note: string | null
+          contact: string | null
+          created_at: string
+          description: string
+          est_cost: number | null
+          expected_done: string | null
+          floor: string | null
+          id: string
+          impact: string | null
+          kind: string
+          need_id: string | null
+          odometer: number | null
+          org_id: string
+          other_text: string | null
+          place: string | null
+          place_type: string | null
+          priority: string
+          progress: number
+          ref: string
+          reopen_until: string | null
+          requested_by: string
+          rev: number
+          school_id: string
+          status: string
+          status_before_clarify: string | null
+          subcategory_id: string | null
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          visit_at: string | null
+          visit_window: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          actual_cost?: number | null
+          asset?: string | null
+          assignee_id?: string | null
+          building?: string | null
+          bus_id?: string | null
+          bus_location?: string | null
+          cancel_reason?: string | null
+          category_id?: string | null
+          client_key?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          completed_by?: string | null
+          completion_note?: string | null
+          contact?: string | null
+          created_at?: string
+          description: string
+          est_cost?: number | null
+          expected_done?: string | null
+          floor?: string | null
+          id?: string
+          impact?: string | null
+          kind: string
+          need_id?: string | null
+          odometer?: number | null
+          org_id: string
+          other_text?: string | null
+          place?: string | null
+          place_type?: string | null
+          priority?: string
+          progress?: number
+          ref: string
+          reopen_until?: string | null
+          requested_by: string
+          rev?: number
+          school_id: string
+          status?: string
+          status_before_clarify?: string | null
+          subcategory_id?: string | null
+          submitted_at?: string | null
+          title: string
+          updated_at?: string
+          visit_at?: string | null
+          visit_window?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          actual_cost?: number | null
+          asset?: string | null
+          assignee_id?: string | null
+          building?: string | null
+          bus_id?: string | null
+          bus_location?: string | null
+          cancel_reason?: string | null
+          category_id?: string | null
+          client_key?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          completed_by?: string | null
+          completion_note?: string | null
+          contact?: string | null
+          created_at?: string
+          description?: string
+          est_cost?: number | null
+          expected_done?: string | null
+          floor?: string | null
+          id?: string
+          impact?: string | null
+          kind?: string
+          need_id?: string | null
+          odometer?: number | null
+          org_id?: string
+          other_text?: string | null
+          place?: string | null
+          place_type?: string | null
+          priority?: string
+          progress?: number
+          ref?: string
+          reopen_until?: string | null
+          requested_by?: string
+          rev?: number
+          school_id?: string
+          status?: string
+          status_before_clarify?: string | null
+          subcategory_id?: string | null
+          submitted_at?: string | null
+          title?: string
+          updated_at?: string
+          visit_at?: string | null
+          visit_window?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mt_requests_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "mt_buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mt_requests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "mt_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mt_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mt_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mt_requests_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "mt_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mt_settings: {
+        Row: {
+          org_id: string
+          reopen_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          org_id: string
+          reopen_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          org_id?: string
+          reopen_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mt_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -8160,6 +8606,56 @@ export type Database = {
         }
         Returns: string
       }
+      _mt_can_read: { Args: { _id: string; _uid: string }; Returns: boolean }
+      _mt_ev: {
+        Args: {
+          _action: string
+          _after: Json
+          _before: Json
+          _body: string
+          _req: string
+          _vis: string
+        }
+        Returns: undefined
+      }
+      _mt_note: {
+        Args: {
+          _key: string
+          _user: string
+          _what: string
+          r: Database["public"]["Tables"]["mt_requests"]["Row"]
+        }
+        Returns: undefined
+      }
+      _mt_notify_follow: {
+        Args: {
+          _key: string
+          _what: string
+          r: Database["public"]["Tables"]["mt_requests"]["Row"]
+        }
+        Returns: number
+      }
+      _mt_ok: {
+        Args: { _action: string; _kind: string; _school: string; _uid: string }
+        Returns: boolean
+      }
+      _mt_owners: { Args: { _org: string }; Returns: string[] }
+      _mt_row: {
+        Args: { r: Database["public"]["Tables"]["mt_requests"]["Row"] }
+        Returns: Json
+      }
+      _mt_sec: { Args: { _kind: string }; Returns: string }
+      _mt_team: {
+        Args: {
+          _uid: string
+          r: Database["public"]["Tables"]["mt_requests"]["Row"]
+        }
+        Returns: boolean
+      }
+      _mt_users: {
+        Args: { _action: string; _kind: string; _school: string }
+        Returns: string[]
+      }
       _new_card_code: { Args: never; Returns: string }
       _nid: { Args: { _v: string }; Returns: string }
       _notify: {
@@ -9448,6 +9944,13 @@ export type Database = {
           storage_path: string
         }[]
       }
+      create_mt_file: {
+        Args: { _id: string; _mime: string; _name: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
       create_organization: {
         Args: { _org_name: string; _school_name: string }
         Returns: string
@@ -9884,6 +10387,41 @@ export type Database = {
         Returns: undefined
       }
       mark_notifications_read: { Args: { _ids?: string[] }; Returns: number }
+      mt_action: {
+        Args: { _action: string; _data: Json; _id: string; _rev: number }
+        Returns: Json
+      }
+      mt_bus_log: { Args: { _bus: string }; Returns: Json }
+      mt_bus_save: {
+        Args: { _data: Json; _id: string; _school: string }
+        Returns: string
+      }
+      mt_bus_set_status: {
+        Args: { _bus: string; _note: string; _status: string }
+        Returns: undefined
+      }
+      mt_buses_list: { Args: { _org: string }; Returns: Json }
+      mt_candidates: { Args: { _id: string }; Returns: Json }
+      mt_categories_list: {
+        Args: { _kind: string; _org: string }
+        Returns: Json
+      }
+      mt_category_add: {
+        Args: { _kind: string; _name: string; _org: string; _parent: string }
+        Returns: string
+      }
+      mt_create: {
+        Args: { _data: Json; _key: string; _kind: string; _school: string }
+        Returns: string
+      }
+      mt_file_remove: { Args: { _file: string }; Returns: undefined }
+      mt_get: { Args: { _id: string }; Returns: Json }
+      mt_list: { Args: { _f: Json; _org: string }; Returns: Json }
+      mt_me: { Args: { _org: string }; Returns: Json }
+      mt_settings_save: {
+        Args: { _org: string; _reopen_days: number }
+        Returns: undefined
+      }
       my_class_groups: {
         Args: { _school: string }
         Returns: {
