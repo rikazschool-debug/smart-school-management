@@ -104,4 +104,4 @@ try {
   const m4 = (await admin.from("memberships").select("is_active").eq("id", mid).single()).data as any;
   check("owner suspension removes access", !sus.error && !m4.is_active, sus.error ?? m4);
 } catch (e) { bad++; console.log("FAIL exception", (e as Error).message); }
-finally { if (org) await tr.purgeOrg(org); await tr.cleanup(); console.log(`\n${ok} passed, ${bad} failed`); }
+finally { if (org) await tr.purgeOrg(org); console.log(`\n${ok} passed, ${bad} failed`); }
