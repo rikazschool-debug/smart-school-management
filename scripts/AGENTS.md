@@ -51,3 +51,4 @@
 - scripts/pc-transfer-journey.py: custody handover browser journey (needs pc-browser-fixture setup --open; 8 checks).
 - scripts/pc-carry-form-journey.py: carry-over (no double totals) + custom invoice field with form versions (needs pc-browser-fixture setup --open --carry; 9 checks).
 - scripts/pc-closure-e2e.ts: need correction/refund effect, open-session suspension/withdrawal (RPC, files, export), alert re-arming (11 checks); --cron-setup / --cron-check verify the real hourly pg_cron run.
+- scripts/admissions-e2e.ts: admissions roles, separate grants, isolation, lifecycle, no student on accept, explicit link, open-session withdrawal, alert dedupe (18 checks).

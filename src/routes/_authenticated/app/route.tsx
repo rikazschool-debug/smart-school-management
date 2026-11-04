@@ -14,6 +14,8 @@ import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
+import { UserPlus } from "lucide-react";
+import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +67,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   transport: { to: "/app/transport", label: "النقل المدرسي", icon: Construction },
   maintenance: { to: "/app/maintenance", label: "إدارة صيانة المدارس", icon: Wrench },
   bus_maintenance: { to: "/app/bus-maintenance", label: "إدارة تشغيل وصيانة الباصات", icon: Bus },
+  admissions: { to: "/app/admissions", label: "القبول والتسجيل", icon: UserPlus },
 };
 
 /** Procurement sub-sections shown under its menu entry (the page re-checks each tab). */
@@ -73,7 +76,7 @@ const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتي�
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "profile"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
-  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "procurement", "transport", "maintenance", "bus_maintenance"] },
+  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "procurement", "transport", "maintenance", "bus_maintenance", "admissions"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
@@ -99,6 +102,7 @@ function Shell() {
   const pc = usePcMe(active?.orgId ?? null, pcRole);
   const sp = useSchoolPerms(pcRole ? active?.schoolId : null);
   const mt = useMtMe(active?.orgId ?? null, pcRole);
+  const ad = useAdMe(active?.orgId ?? null, pcRole);
   const ops = useOpsStaff(active ?? null, user.id);
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
@@ -127,11 +131,11 @@ function Shell() {
   lastSection.current = section;
   // Owner home has no side menu; inside a section only that section's menu shows; shared pages (profile…) keep the last section.
   const noSidebar = owner && section === null;
-  const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []),
+  const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
     ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : [])] as NavKey[];
   const opsOnly = ops.opsOnly;
-  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance"].includes(k)));
+  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   const nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);

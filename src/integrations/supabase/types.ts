@@ -244,6 +244,253 @@ export type Database = {
           },
         ]
       }
+      ad_applications: {
+        Row: {
+          assignee: string | null
+          created_by: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision: string | null
+          decision_note: string | null
+          email: string | null
+          first_contact_at: string | null
+          first_taken_at: string | null
+          grade: string | null
+          guardian_name: string | null
+          guardian_phone: string | null
+          id: string
+          linked_at: string | null
+          linked_by: string | null
+          missing: string | null
+          next_follow: string | null
+          notes: string | null
+          org_id: string
+          phone_raw: string | null
+          raw_school: string | null
+          received_at: string
+          ref: string
+          rev: number
+          school_id: string | null
+          source: string
+          source_key: string | null
+          stage: string | null
+          status: string
+          student_id: string | null
+          student_name: string
+          submitted_at: string
+          updated_at: string
+          year_label: string | null
+        }
+        Insert: {
+          assignee?: string | null
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          decision_note?: string | null
+          email?: string | null
+          first_contact_at?: string | null
+          first_taken_at?: string | null
+          grade?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          id?: string
+          linked_at?: string | null
+          linked_by?: string | null
+          missing?: string | null
+          next_follow?: string | null
+          notes?: string | null
+          org_id: string
+          phone_raw?: string | null
+          raw_school?: string | null
+          received_at?: string
+          ref: string
+          rev?: number
+          school_id?: string | null
+          source?: string
+          source_key?: string | null
+          stage?: string | null
+          status?: string
+          student_id?: string | null
+          student_name: string
+          submitted_at?: string
+          updated_at?: string
+          year_label?: string | null
+        }
+        Update: {
+          assignee?: string | null
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          decision_note?: string | null
+          email?: string | null
+          first_contact_at?: string | null
+          first_taken_at?: string | null
+          grade?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          id?: string
+          linked_at?: string | null
+          linked_by?: string | null
+          missing?: string | null
+          next_follow?: string | null
+          notes?: string | null
+          org_id?: string
+          phone_raw?: string | null
+          raw_school?: string | null
+          received_at?: string
+          ref?: string
+          rev?: number
+          school_id?: string | null
+          source?: string
+          source_key?: string | null
+          stage?: string | null
+          status?: string
+          student_id?: string | null
+          student_name?: string
+          submitted_at?: string
+          updated_at?: string
+          year_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_applications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_applications_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_applications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_counters: {
+        Row: {
+          n: number
+          org_id: string
+          yr: number
+        }
+        Insert: {
+          n?: number
+          org_id: string
+          yr: number
+        }
+        Update: {
+          n?: number
+          org_id?: string
+          yr?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_counters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_events: {
+        Row: {
+          action: string
+          actor: string | null
+          after: Json | null
+          app_id: string
+          before: Json | null
+          body: string | null
+          channel: string | null
+          client_key: string | null
+          created_at: string
+          id: string
+          outcome: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after?: Json | null
+          app_id: string
+          before?: Json | null
+          body?: string | null
+          channel?: string | null
+          client_key?: string | null
+          created_at?: string
+          id?: string
+          outcome?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after?: Json | null
+          app_id?: string
+          before?: Json | null
+          body?: string | null
+          channel?: string | null
+          client_key?: string | null
+          created_at?: string
+          id?: string
+          outcome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_events_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "ad_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_settings: {
+        Row: {
+          defaults: Json
+          org_id: string
+          school_map: Json
+          stage_map: Json
+          updated_at: string
+          updated_by: string | null
+          year_label: string | null
+        }
+        Insert: {
+          defaults?: Json
+          org_id: string
+          school_map?: Json
+          stage_map?: Json
+          updated_at?: string
+          updated_by?: string | null
+          year_label?: string | null
+        }
+        Update: {
+          defaults?: Json
+          org_id?: string
+          school_map?: Json
+          stage_map?: Json
+          updated_at?: string
+          updated_by?: string | null
+          year_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       adm_decisions: {
         Row: {
           assignee: string
@@ -8213,6 +8460,47 @@ export type Database = {
         }
         Returns: undefined
       }
+      _ad_ev: {
+        Args: {
+          _action: string
+          _after: Json
+          _app: string
+          _before: Json
+          _body: string
+          _channel?: string
+          _key: string
+          _outcome?: string
+        }
+        Returns: undefined
+      }
+      _ad_label: { Args: { _s: string }; Returns: string }
+      _ad_new_ref: { Args: { _org: string }; Returns: string }
+      _ad_notify: {
+        Args: {
+          _key: string
+          _title: string
+          _user: string
+          a: Database["public"]["Tables"]["ad_applications"]["Row"]
+        }
+        Returns: undefined
+      }
+      _ad_ok: {
+        Args: { _action: string; _school: string; _uid: string }
+        Returns: boolean
+      }
+      _ad_org_level: { Args: { _org: string; _uid: string }; Returns: boolean }
+      _ad_phone: { Args: { _p: string }; Returns: string }
+      _ad_read: {
+        Args: {
+          _uid: string
+          a: Database["public"]["Tables"]["ad_applications"]["Row"]
+        }
+        Returns: boolean
+      }
+      _ad_row: {
+        Args: { a: Database["public"]["Tables"]["ad_applications"]["Row"] }
+        Returns: Json
+      }
       _add_member: {
         Args: {
           _conv: string
@@ -9155,6 +9443,44 @@ export type Database = {
         }[]
       }
       ack_circular: { Args: { _id: string }; Returns: number }
+      ad_act: {
+        Args: {
+          _action: string
+          _id: string
+          _key: string
+          _p: Json
+          _rev: number
+        }
+        Returns: Json
+      }
+      ad_alerts_tick: { Args: never; Returns: number }
+      ad_create: {
+        Args: { _d: Json; _key: string; _org: string; _school: string }
+        Returns: string
+      }
+      ad_get: { Args: { _id: string }; Returns: Json }
+      ad_link_candidates: { Args: { _id: string; _q: string }; Returns: Json }
+      ad_list: {
+        Args: { _f?: Json; _limit?: number; _offset?: number; _org: string }
+        Returns: Json
+      }
+      ad_me: { Args: { _org: string }; Returns: Json }
+      ad_settings_get: { Args: { _org: string }; Returns: Json }
+      ad_settings_save: {
+        Args: {
+          _defaults: Json
+          _org: string
+          _school_map: Json
+          _stage_map: Json
+          _year: string
+        }
+        Returns: undefined
+      }
+      ad_students: {
+        Args: { _f?: Json; _limit?: number; _offset?: number; _org: string }
+        Returns: Json
+      }
+      ad_summary: { Args: { _org: string; _school?: string }; Returns: Json }
       add_authorized_pickup: {
         Args: {
           _name: string

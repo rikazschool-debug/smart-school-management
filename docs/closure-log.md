@@ -444,3 +444,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - B Open sessions: platform finance suspension refuses read, write, attachment signed link, report export, owner list export and new attachments; re-enable restores the same sessions with data intact; withdrawing the officer's role blocks new invoices/submissions immediately.
 - C Alerts: due-soon once per due date, a new due date alerts once more; low balance once, none after top-up above threshold, a new drop alerts again once; nothing while finance is suspended.
 - C1 real run: rikaz-pc-alerts at 07:20 UTC sent the due-soon alert once to the holder of an isolated custody (pc-closure-e2e --cron-check); fixture removed.
+
+## Admissions (القبول والتسجيل) — phase 1 (2026-11-04)
+- Scope: section + area, templates «مسؤول القبول والتسجيل»/«موظف متابعة القبول», applications lifecycle, contact log, follow-ups, decision, assign, transfer, reopen, explicit link, current students (read), summary, settings, daily alerts.
+- Server: scripts/admissions-e2e.ts 18/18. Browser: owner summary/apps/settings render with no errors.
+- Open: WordPress receiver + plugin ZIP (needs reference PHP template + install), officer/phone browser journey.

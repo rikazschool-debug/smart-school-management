@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, CheckCircle2, Construction, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Building2, CheckCircle2, Construction, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, type LucideIcon } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 
-export type SectionKey = "school_admin" | "finance" | "operations" | "hr";
-export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", hr: "الموارد البشرية" };
+export type SectionKey = "school_admin" | "admissions" | "finance" | "operations" | "hr";
+export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", hr: "الموارد البشرية" };
 
 /** Section availability set by the platform owner; read fresh from the server (no cache across sessions). */
 export function useOrgSections(orgId: string | null) {
@@ -68,6 +68,14 @@ const CARDS: Card[] = [
       { icon: PencilLine, label: "تعديل بيانات المدرسة", to: "/app/schools" },
       { icon: PauseCircle, label: "تفعيل فرع أو إيقافه", to: "/app/schools" },
       { icon: Link2, label: "ربط الموظفين بالمدرسة", to: "/app/schools" },
+    ],
+  },
+  {
+    key: "admissions", section: "admissions", title: "القبول والتسجيل", icon: UserPlus, to: "/app/admissions", open: "فتح القبول والتسجيل",
+    desc: "طلبات القبول من الموقع والإضافة اليدوية: المتابعة والتواصل والقرار، دون إنشاء طالب أو حساب تلقائيًا.",
+    features: [
+      { icon: UserPlus, label: "الطلاب المحتملون", to: "/app/admissions", search: { tab: "apps" } },
+      { icon: Building2, label: "الإعدادات والربط", to: "/app/admissions", search: { tab: "settings" } },
     ],
   },
   {
