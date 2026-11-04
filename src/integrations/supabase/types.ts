@@ -10880,6 +10880,10 @@ export type Database = {
         Args: { _action: string; _school: string; _section: string }
         Returns: boolean
       }
+      perm_apply: {
+        Args: { _changes: Json; _org: string; _reason: string; _user: string }
+        Returns: undefined
+      }
       perm_assign: {
         Args: {
           _assign: boolean
@@ -10893,6 +10897,7 @@ export type Database = {
         Returns: undefined
       }
       perm_catalog: { Args: never; Returns: Json }
+      perm_disabled_areas: { Args: { _org: string }; Returns: string[] }
       perm_effective: { Args: { _org: string; _user: string }; Returns: Json }
       perm_log_list: { Args: { _org: string }; Returns: Json }
       perm_my_school: { Args: { _school: string }; Returns: Json }
@@ -10909,6 +10914,10 @@ export type Database = {
         Returns: undefined
       }
       perm_people: { Args: { _org: string }; Returns: Json }
+      perm_preview: {
+        Args: { _changes: Json; _org: string; _user: string }
+        Returns: Json
+      }
       perm_role_archive: {
         Args: { _archive: boolean; _id: string; _org: string; _reason: string }
         Returns: undefined
@@ -10929,6 +10938,7 @@ export type Database = {
         Args: { _action: string; _org: string; _section: string; _user: string }
         Returns: string
       }
+      perm_section_people: { Args: { _org: string }; Returns: Json }
       pickup_arrived: {
         Args: { _confirmed?: boolean; _id: string; _id_last4?: string }
         Returns: Json

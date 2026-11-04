@@ -63,7 +63,7 @@ function Home() {
           {active.role !== "platform_admin" && <WorkToday schoolId={active.schoolId} />}
           {canManage(active.role) || active.role === "student_affairs" || active.role === "dept_head" || active.role === "supervisor" ? (
         <StaffHome ctx={active as AppContext & { schoolId: string }} />
-      ) : ops.loading ? <LoadingState /> : opsOnly ? <OpsHome orgId={active.orgId} me={ops.me} /> : active.role === "teacher" ? (
+      ) : ops.loading ? <LoadingState /> : opsOnly ? <OpsHome orgId={active.orgId} me={ops.me} jobs={ops.jobs} pc={ops.hasPc} /> : active.role === "teacher" ? (
         <TeacherHome schoolId={active.schoolId} />
       ) : active.role === "guardian" ? (
         <GuardianHome schoolId={active.schoolId} />

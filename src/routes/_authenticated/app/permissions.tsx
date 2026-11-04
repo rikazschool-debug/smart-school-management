@@ -12,6 +12,8 @@ import { askText } from "@/components/confirm";
 import { PeoplePicker } from "@/components/people-picker";
 import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { PermTree } from "@/components/perm-tree";
+import { PersonPanel } from "@/components/perm-person";
 import { StaffWizard } from "@/components/staff-wizard";
 import { PasswordInput } from "@/components/password-input";
 import { resetStaffPassword } from "@/lib/accounts.functions";
@@ -26,7 +28,6 @@ export const Route = createFileRoute("/_authenticated/app/permissions")({
 type Sec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean };
 type Catalog = { areas: { key: string; label: string; soon?: boolean }[]; sections: Sec[]; actions: Record<string, string>; scopes: Record<string, string>; locked: string[] };
 type Grant = { section: string; action: string; scope: string };
-const SOURCE: Record<string, string> = { owner: "مالك المؤسسة", role: "من دور مسند", override: "تفويض إضافي", deny: "منع خاص", base: "من دوره الأساسي" };
 const actLabel = (c: Catalog, section: string, a: string) => c.sections.find((s) => s.key === section)?.labels?.[a] ?? c.actions[a];
 const grantText = (c: Catalog, gs: Grant[]) => gs.map((g) => `${actLabel(c, g.section, g.action)} (${c.scopes[g.scope]})`).join("، ");
 
@@ -67,7 +68,7 @@ function Tabs({ org, school }: { org: string; school: string | null }) {
         {T("roles", "الأدوار والصلاحيات", tab === "roles", () => setTab("roles"))}
         {T("log", "سجل التغييرات", tab === "log", () => setTab("log"))}
       </div>
-      {tab === "users" && <People org={org} school={school} />}
+      {tab === "users" && cat.data && <UsersBySection org={org} c={cat.data} />}
       {tab === "roles" && (
         <div className="space-y-4">
           <div role="tablist" className="flex flex-wrap gap-2">
@@ -95,6 +96,10 @@ function Tabs({ org, school }: { org: string; school: string | null }) {
   );
 }
 
+function useDisabled(org: string) {
+  return useQuery({ queryKey: ["perm-disabled", org], queryFn: async () => (await call("perm_disabled_areas", { _org: org })) as string[] });
+}
+
 function useCatalog() {
   return useQuery({ queryKey: ["perm-catalog"], queryFn: async () => (await call("perm_catalog", {})) as Catalog });
 }
@@ -104,6 +109,7 @@ function Roles({ org }: { org: string }) {
   const cat = useCatalog();
   const roles = useQuery({ queryKey: ["perm-roles", org], queryFn: async () => (await call("perm_roles_list", { _org: org })) as Row[] });
   const [edit, setEdit] = useState<{ id: string | null; name: string; description: string; grants: Grant[] } | null>(null);
+  const dis = useDisabled(org);
   if (roles.isLoading || cat.isLoading) return <LoadingState />;
   if (roles.error || cat.error) return <ErrorState message={arabicError(roles.error ?? cat.error)} />;
   const c = cat.data!;
@@ -120,7 +126,6 @@ function Roles({ org }: { org: string }) {
     try { await call("perm_role_archive", { _org: org, _id: r["id"], _archive: on, _reason: reason }); qc.invalidateQueries({ queryKey: ["perm-roles", org] }); qc.invalidateQueries({ queryKey: ["perm-people", org] }); }
     catch (e) { toast.error(arabicError(e)); }
   }
-  const setScope = (section: string, action: string, scope: string) => setEdit((e) => e && ({ ...e, grants: [...e.grants.filter((g) => !(g.section === section && g.action === action)), ...(scope ? [{ section, action, scope }] : [])] }));
   return (
     <Section title="الأدوار والمسميات الوظيفية">
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -153,23 +158,7 @@ function Roles({ org }: { org: string }) {
             <Input placeholder="اسم الدور" value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
             <Input placeholder="الوصف" value={edit.description} onChange={(e) => setEdit({ ...edit, description: e.target.value })} />
           </div>
-          {c.areas.map((ar) => (
-            <fieldset key={ar.key} className="rounded-lg border p-3">
-              <legend className="px-1 text-sm font-bold">{ar.label}</legend>
-              {ar.soon ? <p className="text-xs text-muted-foreground">تحت الإنشاء — لا توجد صلاحيات لهذا القسم بعد.</p> : c.sections.filter((s) => s.parent === ar.key).map((s) => (
-                <div key={s.key} className="mb-3 last:mb-0">
-                  <p className="mb-2 text-sm font-semibold">{s.label}{s.sensitive && <span className="ms-2 text-xs font-normal text-muted-foreground">يتيح الاطلاع على أسماء الطلاب في الفرع</span>}</p>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {s.actions.map((a) => { const cur = edit.grants.find((g) => g.section === s.key && g.action === a)?.scope ?? ""; return (
-                      <label key={a} className="flex items-center gap-2 text-sm"><span className="w-40 shrink-0 text-xs sm:text-sm">{actLabel(c, s.key, a)}</span>
-                        <select className={selectCls("w-full min-w-0", true)} value={cur} onChange={(e) => setScope(s.key, a, e.target.value)}>
-                          <option value="">لا</option>{s.scopes.map((k) => <option key={k} value={k}>{c.scopes[k]}</option>)}
-                        </select></label>); })}
-                  </div>
-                </div>
-              ))}
-            </fieldset>
-          ))}
+          <PermTree c={c} value={edit.grants} onChange={(g) => setEdit({ ...edit, grants: g })} disabledAreas={dis.data ?? []} />
           <p className="text-xs text-muted-foreground">لا تُفوَّض: {c.locked.join("؛ ")}.</p>
           <p className="rounded-lg bg-secondary/50 p-2 text-xs">معاينة ما سيظهر للحساب: {grantText(c, edit.grants) || "لا شيء"}. {edit.id ? "التعديل يسري على جميع حاملي الدور من الطلب التالي؛ الاستثناءات الشخصية تبقى كما هي." : ""}</p>
           <div className="flex gap-2"><Button size="sm" onClick={save}>حفظ</Button><Button size="sm" variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
@@ -276,46 +265,6 @@ function People({ org, school, initialUser = null }: { org: string; school: stri
   );
 }
 
-function PersonPanel({ org, user, name, c, roles }: { org: string; user: string; name: string; c: Catalog; roles: Row[] }) {
-  const qc = useQueryClient();
-  const eff = useQuery({ queryKey: ["perm-eff", org, user], queryFn: async () => (await call("perm_effective", { _org: org, _user: user })) as Row });
-  const [role, setRole] = useState(""); const [limit, setLimit] = useState("");
-  const refresh = () => { for (const k of [["perm-eff", org, user], ["perm-roles", org], ["perm-log", org], ["perm-people", org]]) qc.invalidateQueries({ queryKey: k }); };
-  async function run(fn: string, args: Record<string, unknown>, ask: string) {
-    const reason = await askText(ask, { required: true }); if (!reason) return;
-    try { await call(fn, { ...args, _reason: reason }); toast.success("تم الحفظ"); refresh(); } catch (e) { toast.error(arabicError(e)); }
-  }
-  if (eff.isLoading) return <LoadingState />;
-  if (eff.error) return <ErrorState message={arabicError(eff.error)} />;
-  return (
-    <div className="space-y-4 rounded-xl border bg-card p-4 text-sm">
-      <div>
-        <p className="text-base font-bold">{name}</p>
-        <p className="text-xs text-muted-foreground">الدور الأساسي: {(eff.data!["base_roles"] as Row[]).map((b) => `${ROLE_LABELS[b["role"] as Role] ?? b["role"]}${b["school"] ? ` — ${b["school"]}` : ""}`).join("، ") || "—"}</p>
-      </div>
-      <div>
-        <p className="mb-2 font-bold">الأدوار المسندة</p>
-        {!(eff.data!["roles"] as Row[]).length ? <p className="text-muted-foreground">لا أدوار إضافية.</p> : (
-          <ul className="space-y-1">{(eff.data!["roles"] as Row[]).map((r) => (
-            <li key={r["id"]} className="flex flex-wrap items-center gap-2">{r["name"]}{r["approval_limit"] != null && ` — حد الاعتماد ${r["approval_limit"]} ر.س`}
-              <Button size="sm" variant="ghost" onClick={() => run("perm_assign", { _org: org, _user: user, _role: r["id"], _assign: false, _school_ids: null, _limit: null }, "سبب سحب الدور")}>سحب</Button></li>))}</ul>
-        )}
-        {!eff.data!["is_owner"] && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            <select aria-label="اختر دورًا" className={selectCls("min-w-0 flex-1 sm:flex-none")} value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="">اختر دورًا</option>{roles.filter((r) => !r["archived"]).map((r) => <option key={r["id"]} value={r["id"]}>{r["name"]}</option>)}
-            </select>
-            <Input className="w-full sm:w-40" inputMode="decimal" placeholder="حد الاعتماد (اختياري)" value={limit} onChange={(e) => setLimit(e.target.value)} />
-            <Button size="sm" disabled={!role} onClick={() => run("perm_assign", { _org: org, _user: user, _role: role, _assign: true, _school_ids: null, _limit: limit ? Number(limit) : null }, "سبب إسناد الدور")}>إسناد</Button>
-          </div>
-        )}
-        {role && <p className="mt-1 text-xs text-muted-foreground">سيُحمَّل: {grantText(c, (roles.find((r) => r["id"] === role)?.["grants"] as Grant[] | undefined) ?? []) || "لا شيء"}</p>}
-      </div>
-      <EffectiveList c={c} eff={eff.data!} onOverride={(section, action, effect, scope, ask) => run("perm_override_set", { _org: org, _user: user, _section: section, _action: action, _effect: effect, _scope: scope }, ask)} />
-    </div>
-  );
-}
-
 const ACT: Record<string, string> = { role_create: "إنشاء دور", role_update: "تعديل دور", role_archive: "أرشفة دور", role_restore: "استعادة دور", assign: "إسناد دور", unassign: "سحب دور", override: "استثناء شخصي" };
 function Log({ org }: { org: string }) {
   const q = useQuery({ queryKey: ["perm-log", org], queryFn: async () => (await call("perm_log_list", { _org: org })) as Row[] });
@@ -327,36 +276,6 @@ function Log({ org }: { org: string }) {
         </ul>
       )}
     </Section>
-  );
-}
-
-function EffectiveList({ c, eff, onOverride }: { c: Catalog; eff: Row; onOverride: (section: string, action: string, effect: string | null, scope: string | null, ask: string) => void }) {
-  const list = eff["effective"] as Row[];
-  return (
-    <div className="space-y-3">
-      <p className="font-bold">الصلاحيات الفعلية</p>
-      {c.sections.map((s) => (
-        <div key={s.key}>
-          <p className="mb-1 text-xs font-semibold text-muted-foreground">{c.areas.find((a) => a.key === s.parent)?.label} ← {s.label}</p>
-          <ul className="divide-y rounded-lg border">
-            {list.filter((e) => e["section"] === s.key).map((e) => {
-              const where = s.key === "procurement" ? (e["scope"] ? c.scopes[e["scope"]] : "") : (e["allowed_schools"] as string[]).join("، ");
-              const on = s.key === "procurement" ? !!e["scope"] : (e["allowed_schools"] as string[]).length > 0;
-              return (
-                <li key={e["action"]} className="flex flex-wrap items-center gap-2 p-2">
-                  <span className="w-44 shrink-0">{actLabel(c, s.key, e["action"])}</span>
-                  <span className="min-w-0 flex-1 text-xs">{e["source"] === "deny" ? "ممنوع (منع خاص)" : on ? `${where} — ${SOURCE[e["source"]] ?? ""}` : "غير مسموح"}</span>
-                  {!eff["is_owner"] && (<>
-                    <Button size="sm" variant="ghost" onClick={() => onOverride(s.key, e["action"], "deny", null, "سبب المنع")}>منع</Button>
-                    <Button size="sm" variant="ghost" onClick={() => onOverride(s.key, e["action"], "grant", "branch", s.key === "procurement" ? "سبب التفويض (نطاق: فروعه)" : "سبب التفويض (في الفروع التي يعمل بها)")}>تفويض</Button>
-                    {(e["source"] === "deny" || e["source"] === "override") && <Button size="sm" variant="ghost" onClick={() => onOverride(s.key, e["action"], null, null, "سبب إزالة الاستثناء")}>إزالة الاستثناء</Button>}
-                  </>)}
-                </li>);
-            })}
-          </ul>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -377,6 +296,89 @@ function ResetPassword({ org, user, username }: { org: string; user: string; use
       <div className="flex flex-wrap items-center gap-2">
         <div className="w-full sm:w-64"><PasswordInput aria-label="كلمة مرور مؤقتة جديدة" placeholder="كلمة مرور مؤقتة جديدة" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} /></div>
         <Button size="sm" variant="outline" disabled={busy || pw.length < 8} onClick={go}>إصدار كلمة مرور مؤقتة</Button>
+      </div>
+    </div>
+  );
+}
+
+/** «إدارة المستخدمين»: main areas → sections → the people who actually hold access there (each person once per section). */
+function UsersBySection({ org, c }: { org: string; c: Catalog }) {
+  const people = useQuery({ queryKey: ["perm-people", org], queryFn: async () => (await call("perm_people", { _org: org })) as PermPerson[] });
+  const secs = useQuery({ queryKey: ["perm-sections", org], queryFn: async () => (await call("perm_section_people", { _org: org })) as { user_id: string; sections: string[] }[] });
+  const roles = useQuery({ queryKey: ["perm-roles", org], queryFn: async () => (await call("perm_roles_list", { _org: org })) as Row[] });
+  const logins = useQuery({ queryKey: ["staff-logins", org], queryFn: async () => (await call("staff_logins_list", { _org: org })) as { user_id: string; username: string; pending: boolean }[] });
+  const dis = useDisabled(org);
+  const [area, setArea] = useState("all"); const [sec, setSec] = useState("");
+  const [role, setRole] = useState(""); const [branch, setBranch] = useState(""); const [state, setState] = useState(""); const [q, setQ] = useState("");
+  const [user, setUser] = useState<string | null>(null);
+  if (people.isLoading || secs.isLoading || roles.isLoading) return <LoadingState />;
+  if (people.error || secs.error || roles.error) return <ErrorState message={arabicError(people.error ?? secs.error ?? roles.error)} />;
+  const all = people.data!;
+  const has = new Map(secs.data!.map((x) => [x.user_id, new Set(x.sections)]));
+  const inArea = (p: PermPerson, a: string) => c.sections.some((s) => s.parent === a && has.get(p.user_id)?.has(s.key));
+  const login = (id: string) => logins.data?.find((l) => l.user_id === id);
+  const status = (p: PermPerson) => (login(p.user_id)?.pending ? "pending" : p.base.some((b) => b.active) ? "active" : "stopped");
+  const branches = [...new Set(all.flatMap((p) => p.base.map((b) => b.school).filter(Boolean)))] as string[];
+  const list = all.filter((p) => (area === "all" || inArea(p, area)) && (!sec || has.get(p.user_id)?.has(sec))
+    && (!role || (role.startsWith("base:") ? p.base.some((b) => b.role === role.slice(5)) : p.roles.includes(role)))
+    && (!branch || p.base.some((b) => b.school === branch)) && (!state || status(p) === state)
+    && (!q.trim() || p.name.includes(q.trim()) || (login(p.user_id)?.username ?? "").includes(q.trim().toLowerCase())));
+  const sel = user ? all.find((p) => p.user_id === user) : null;
+  const ST: Record<string, string> = { active: "نشط", pending: "بانتظار أول دخول", stopped: "موقوف" };
+  if (sel) return (
+    <div>
+      <button type="button" onClick={() => setUser(null)} className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />المستخدمون</button>
+      {login(sel.user_id) && <ResetPassword org={org} user={sel.user_id} username={login(sel.user_id)!.username} />}
+      <PersonPanel org={org} user={sel.user_id} name={sel.name} c={c} roles={roles.data!} />
+    </div>
+  );
+  return (
+    <div className="grid gap-4 md:grid-cols-[15rem_minmax(0,1fr)]">
+      <nav aria-label="الأقسام">
+        <ul className="flex gap-2 overflow-x-auto pb-2 md:flex-col md:gap-1 md:overflow-visible">
+          {[{ key: "all", label: "كل المستخدمين", soon: false }, ...c.areas].map((a) => {
+            const n = a.key === "all" ? all.length : all.filter((p) => inArea(p, a.key)).length;
+            const locked = dis.data?.includes(a.key);
+            return (
+              <li key={a.key} className="shrink-0">
+                <button type="button" aria-current={area === a.key ? "true" : undefined} onClick={() => { setArea(a.key); setSec(""); }}
+                  className={"flex w-full items-center justify-between gap-2 whitespace-nowrap rounded-lg border px-3 py-2 text-sm md:border-transparent " + (area === a.key ? "border-primary bg-primary/10 font-semibold text-primary" : "bg-card hover:bg-secondary md:bg-transparent")}>
+                  <span className="truncate">{a.label}</span>
+                  <span className="text-xs text-muted-foreground">{a.soon ? "تحت الإنشاء" : locked ? "معلّق" : n}</span>
+                </button>
+              </li>);
+          })}
+        </ul>
+      </nav>
+      <div className="min-w-0 space-y-3">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
+          <Input aria-label="بحث" placeholder="بحث بالاسم أو اسم المستخدم" className="w-full sm:w-56" value={q} onChange={(e) => setQ(e.target.value)} />
+          {area !== "all" && <select aria-label="القسم الفرعي" className={selectCls("w-44")} value={sec} onChange={(e) => setSec(e.target.value)}>
+            <option value="">كل الأقسام الفرعية</option>{c.sections.filter((s) => s.parent === area).map((s) => <option key={s.key} value={s.key}>{s.label} ({all.filter((p) => has.get(p.user_id)?.has(s.key)).length})</option>)}</select>}
+          <select aria-label="الدور" className={selectCls("w-44")} value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="">كل الأدوار</option>
+            {BASE_TABS.map((r) => <option key={r} value={`base:${r}`}>{ROLE_LABELS[r]}</option>)}
+            {roles.data!.filter((r) => !r["archived"]).map((r) => <option key={r["id"]} value={r["id"]}>{r["name"]}</option>)}
+          </select>
+          {branches.length > 1 && <select aria-label="الفرع" className={selectCls("w-40")} value={branch} onChange={(e) => setBranch(e.target.value)}><option value="">كل الفروع</option>{branches.map((b) => <option key={b}>{b}</option>)}</select>}
+          <select aria-label="حالة الحساب" className={selectCls("w-40")} value={state} onChange={(e) => setState(e.target.value)}><option value="">كل الحالات</option>{Object.entries(ST).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+        </div>
+        <p className="text-xs text-muted-foreground">{list.length} مستخدم — الأعداد من الصلاحيات الفعلية، والشخص يظهر مرة واحدة في كل قسم مخوّل له.</p>
+        {!list.length ? <p className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">لا يوجد مستخدمون مطابقون.</p> : (
+          <ul className="divide-y rounded-xl border bg-card">
+            {list.map((p) => (
+              <li key={p.user_id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold">{p.name}{login(p.user_id) && <span dir="ltr" className="ms-2 font-mono text-xs font-normal text-muted-foreground">{login(p.user_id)!.username}</span>}
+                    <span className={"ms-2 rounded px-1.5 text-xs font-normal " + (status(p) === "active" ? "bg-success/10 text-success" : status(p) === "pending" ? "bg-warning/15" : "bg-muted text-muted-foreground")}>{ST[status(p)]}</span></span>
+                  <span className="block text-xs text-muted-foreground">الفروع: {[...new Set(p.base.map((b) => b.school).filter(Boolean))].join("، ") || "—"}</span>
+                  <span className="block text-xs text-muted-foreground">الأدوار: {[...new Set(p.base.map((b) => ROLE_LABELS[b.role] ?? b.role)), ...p.roles.map((id) => roles.data!.find((r) => r["id"] === id)?.["name"] as string).filter(Boolean)].join("، ")}</span>
+                </span>
+                <Button size="sm" variant="outline" onClick={() => setUser(p.user_id)}>إدارة الحساب والصلاحيات</Button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

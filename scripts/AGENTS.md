@@ -46,3 +46,4 @@
 - scripts/maint-need-e2e.ts: maintenance → purchase need (team suggests items only, principal creates one live need, amounts principal/owner only, re-create after cancel, history; 8 checks).
 - scripts/maint-alerts-e2e.ts: daily maintenance alerts (overdue once per due date, bus date/km, service-only tick, operations switch; 6 checks).
 - scripts/staff-e2e.ts: owner-created staff logins (username uniqueness case-insensitive, forced first change, multi-role on one account, existing-account link without password change, reset re-lock, no password in logs, suspension; 23 checks).
+- scripts/perm7-e2e.ts: permission tree save/preview (preview rolls back, atomic perm_apply, 4 roles on one account, withdrawing one role keeps grants from another, deny wins incl. direct RPC, section people once per section, no self-edit, server first-password gate, reset revokes sessions, no passwords in logs; 20 checks).
