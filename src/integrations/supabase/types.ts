@@ -10998,6 +10998,10 @@ export type Database = {
         Args: { _active: boolean; _id: string; _reason?: string }
         Returns: number
       }
+      org_school_set_gender: {
+        Args: { _gender: string; _id: string }
+        Returns: undefined
+      }
       org_schools_overview: {
         Args: { _org: string }
         Returns: {
