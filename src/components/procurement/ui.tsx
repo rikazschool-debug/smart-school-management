@@ -98,7 +98,7 @@ const toneCls: Record<Tone, string> = {
   warn: "border-warning/50 bg-warning/10",
   bad: "border-destructive/30 bg-destructive/5",
 };
-export function Stat({ label, value, hint, tone = "default", icon: Icon }: { label: string; value: React.ReactNode; hint?: string | undefined; tone?: Tone; icon?: LucideIcon }) {
+export function Stat({ label, value, hint, tone = "default", icon: Icon }: { label: string; value: React.ReactNode; hint?: string | undefined; tone?: Tone | undefined; icon?: LucideIcon | undefined }) {
   return (
     <div className={cn("rounded-2xl border bg-card p-4", toneCls[tone])}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">{Icon && <Icon className="size-4" />}{label}</div>
