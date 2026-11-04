@@ -16,7 +16,7 @@ import { StarPicker, scoreOf, type FormItem } from "@/components/evaluation/star
 
 type Tab = "summary" | "guardians" | "visits" | "monthly" | "forms";
 export const Route = createFileRoute("/_authenticated/app/evaluation")({
-  validateSearch: (s: Record<string, unknown>): { tab?: Tab } => ({ tab: (["summary", "guardians", "visits", "monthly", "forms"] as const).find((t) => t === s["tab"]) }),
+  validateSearch: (s: Record<string, unknown>): { tab?: Tab | undefined } => ({ tab: (["summary", "guardians", "visits", "monthly", "forms"] as const).find((t) => t === s["tab"]) }),
   head: () => ({ meta: [{ title: "نظام التقييم الشامل — ركاز" }, { name: "description", content: "تقييمات أولياء الأمور والزيارات الصفية والتقييم الشهري للكادر." }] }),
   component: Page,
 });
@@ -47,7 +47,7 @@ function GuardianView() {
   const [ans, setAns] = useState<Record<string, number | "na">>({});
   const [comment, setComment] = useState("");
   if (kids.isLoading) return <LoadingState />;
-  if (kids.error) return <ErrorState error={kids.error} />;
+  if (kids.error) return <ErrorState message={arabicError(kids.error as Error)} />;
   if (!kids.data?.length) return (<><PageHeader title="تقييم المعلمين" /><EmptyState title="لا يوجد أبناء مرتبطون بحسابك بعلاقة موثقة" /></>);
   const form = data.data?.form;
   async function save() {
@@ -87,7 +87,7 @@ function GuardianView() {
       <PageHeader title="تقييم المعلمين" desc="قيّم معلمي ابنك الحاليين؛ يمكنك تعديل التقييم ما دام المعلم يدرّسه." />
       <div className="mb-4 max-w-xs"><Label htmlFor="kid">الابن</Label>
         <select id="kid" className={selectCls("w-full")} value={kid} onChange={(e) => setKid(e.target.value)}>{kids.data.map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}</select></div>
-      {data.isLoading ? <LoadingState /> : data.error ? <ErrorState error={data.error} /> : !data.data?.teachers.length ? <EmptyState title="لا يوجد معلمون حاليون لهذا الابن" /> : (
+      {data.isLoading ? <LoadingState /> : data.error ? <ErrorState message={arabicError(data.error as Error)} /> : !data.data?.teachers.length ? <EmptyState title="لا يوجد معلمون حاليون لهذا الابن" /> : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data.data.teachers.map((t) => (
             <div key={t.teacher_id} className="rounded-lg border bg-card p-4">
@@ -128,7 +128,7 @@ function StaffView() {
         </div>)}
       {tab === "visits" ? (<div className="rounded-lg border bg-card p-4"><p className="mb-3 text-sm">الزيارات الصفية قسم واحد مشترك (المحاور الخمسة والبنود الأربعة والعشرون واعتماد المدير). نتائجها تظهر أيضًا في ملف كل معلم.</p><Button asChild><Link to="/app/visits">فتح الزيارات الصفية</Link></Button></div>)
         : tab === "forms" ? (canForms ? <FormsTab orgId={orgId} /> : <ForbiddenState />)
-        : sum.isLoading ? <LoadingState /> : sum.error ? <ErrorState error={sum.error} />
+        : sum.isLoading ? <LoadingState /> : sum.error ? <ErrorState message={arabicError(sum.error as Error)} />
         : tab === "summary" ? <SummaryTab s={sum.data!} orgId={orgId} />
         : tab === "guardians" ? <GuardiansTab s={sum.data!} orgId={orgId} />
         : <MonthlyTab schools={schools} school={school || active!.schoolId || schools[0]?.[0] || ""} month={month} canEdit={active!.role === "principal" || active!.role === "org_owner"} />}
@@ -193,7 +193,7 @@ function TeacherFile({ id, onBack }: { id: string; onBack: () => void }) {
   const f = useQuery({ queryKey: ["ev-tf", id], queryFn: () => rpc<TFile>("ev_teacher_file", { _teacher: id }) });
   const [t, setT] = useState<"g" | "v" | "p">("g");
   if (f.isLoading) return <LoadingState />;
-  if (f.error) return <ErrorState error={f.error} />;
+  if (f.error) return <ErrorState message={arabicError(f.error as Error)} />;
   const d = f.data!;
   const pct = (sc: Record<string, number>) => { const v = Object.values(sc); return v.length ? Math.round((v.reduce((a, b) => a + b, 0) / (v.length * 5)) * 100) : null; };
   return (
@@ -268,7 +268,7 @@ function MonthlyTab({ schools, school, month, canEdit }: { schools: [string, str
     <>
       {schools.length > 1 && <div className="mb-3 max-w-xs"><Label htmlFor="ev-ms">فرع التقييم</Label><select id="ev-ms" className={selectCls("w-full")} value={sch} onChange={(e) => setSch(e.target.value)}>{schools.map(([id, n]) => <option key={id} value={id}>{n}</option>)}</select></div>}
       <p className="mb-3 text-sm text-muted-foreground">سجل واحد لكل موظف ودور وفرع وشهر. الموظف متعدد الأدوار يُقيَّم بنموذج مستقل لكل دور. لا يوجد نموذج شهري للمعلم ما لم ينشئه المالك.</p>
-      {staff.isLoading ? <LoadingState /> : staff.error ? <ErrorState error={staff.error} /> : !staff.data?.length ? <EmptyState title="لا يوجد موظفون مطلوب تقييمهم في هذا الفرع" /> : (
+      {staff.isLoading ? <LoadingState /> : staff.error ? <ErrorState message={arabicError(staff.error as Error)} /> : !staff.data?.length ? <EmptyState title="لا يوجد موظفون مطلوب تقييمهم في هذا الفرع" /> : (
         <div className="overflow-x-auto rounded-lg border bg-card"><table className="w-full text-sm"><thead><tr className="border-b text-muted-foreground"><th className="p-2 text-start">الموظف</th><th className="p-2 text-start">الدور</th><th className="p-2 text-start">الحالة</th><th /></tr></thead>
           <tbody>{staff.data.map((p) => <tr key={p.user_id + p.role_key} className="border-b last:border-0"><td className="p-2">{p.name || "—"}</td><td className="p-2">{ROLE_LABEL[p.role_key]}</td>
             <td className="p-2">{p.status === "approved" ? "معتمد" : p.status === "draft" ? "مسودة" : month < thisMonth() ? "متأخر" : "مطلوب"}</td>
@@ -284,7 +284,7 @@ function FormsTab({ orgId }: { orgId: string }) {
   const forms = useQuery({ queryKey: ["ev-forms", orgId], queryFn: () => rpc<EvForm[]>("ev_forms_list", { _org: orgId }) });
   const [ed, setEd] = useState<{ kind: string; role_key: string; title: string; description: string; items: FormItem[]; preview: boolean } | null>(null);
   if (forms.isLoading) return <LoadingState />;
-  if (forms.error) return <ErrorState error={forms.error} />;
+  if (forms.error) return <ErrorState message={arabicError(forms.error as Error)} />;
   const groups = [...new Map(forms.data!.map((f) => [f.kind + "|" + f.role_key, f])).keys()];
   async function save(publish: boolean) {
     if (!ed) return;
