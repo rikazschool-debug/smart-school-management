@@ -142,7 +142,7 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
 function Diff({ c, p }: { c: PermCatalog; p: { before: Effective; after: Effective } }) {
   const k = (e: Eff) => `${e.section}.${e.action}`;
   const b = new Map(p.before.effective.map((e) => [k(e), e]));
-  const rows = p.after.effective.map((a) => ({ a, b: b.get(k(a))! })).filter(({ a, b: x }) => isOn(a) !== isOn(x) || where(c, a) !== where(c, x) || a.source !== x.source);
+  const rows = p.after.effective.map((a) => ({ a, b: b.get(k(a))! })).filter(({ a, b: x }) => isOn(a) !== isOn(x) || ((isOn(a) || isOn(x)) && (where(c, a) !== where(c, x) || a.source !== x.source)) || (a.source === "deny") !== (x.source === "deny"));
   const sec = (key: string) => c.sections.find((s) => s.key === key)!;
   const act = (e: Eff) => sec(e.section).labels?.[e.action] ?? c.actions[e.action];
   const menu = c.areas.map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key && p.after.effective.some((e) => e.section === s.key && isOn(e))) })).filter((x) => x.secs.length);
@@ -150,6 +150,7 @@ function Diff({ c, p }: { c: PermCatalog; p: { before: Effective; after: Effecti
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
       <div className="rounded-xl border p-3">
         <p className="mb-2 font-bold">المعاينة: ما الذي سيتغير</p>
+        {!p.after.base_roles.length && <p className="mb-2 rounded bg-warning/15 p-2 text-xs">الحساب موقوف أو لم يكمل أول دخول: الصلاحيات تُحفظ الآن وتسري فور تفعيله، لذا قد لا تظهر أقسام الفروع هنا بعد.</p>}
         {!rows.length ? <p className="text-muted-foreground">لا تغيير في الوصول الفعلي (قد يكون المنح موجودًا من دور آخر).</p> : (
           <ul className="space-y-1">
             {rows.map(({ a, b: x }) => { const on = isOn(a), was = isOn(x); return (
