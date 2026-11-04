@@ -107,7 +107,7 @@ function GuardianView() {
               <div className="font-semibold">{t.name}</div>
               <div className="mb-2 text-sm text-muted-foreground">{t.subjects}</div>
               <div className="mb-3 text-sm">{t.rating ? `قيّمته — آخر تعديل ${new Date(t.rating.updated_at).toLocaleDateString("ar-SA")}` : "لم تقيّمه بعد"}</div>
-              {canEdit && <Button size="sm" onClick={() => { setOpen(t); setAns(t.rating?.answers ?? {}); setComment(t.rating?.comment ?? ""); }}>{t.rating ? "تعديل التقييم" : "تقييم"}</Button>
+              <Button size="sm" onClick={() => { setOpen(t); setAns(t.rating?.answers ?? {}); setComment(t.rating?.comment ?? ""); }}>{t.rating ? "تعديل التقييم" : "تقييم"}</Button>
             </div>))}
         </div>)}
     </>
@@ -360,7 +360,7 @@ function FormsTab({ orgId, owner }: { orgId: string; owner: boolean }) {
         return (
           <section key={g} className="mb-3 rounded-lg border bg-card p-3">
             <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{cur.kind === "guardian" ? "تقييم ولي الأمر للمعلم" : `التقييم الشهري — ${ROLE_LABEL[cur.role_key]}`}</h3>
-              <Button size="sm" onClick={() => setEd({ kind: cur.kind, role_key: cur.role_key, title: cur.title, description: cur.description ?? "", items: cur.items, preview: false })}>{cur.status === "draft" ? "متابعة المسودة" : "تعديل (إصدار جديد)"}</Button>}</div>
+              {canEdit && <Button size="sm" onClick={() => setEd({ kind: cur.kind, role_key: cur.role_key, title: cur.title, description: cur.description ?? "", items: cur.items, preview: false })}>{cur.status === "draft" ? "متابعة المسودة" : "تعديل (إصدار جديد)"}</Button>}</div>
             <ul className="mt-2 text-sm">{vs.map((f) => <li key={f.id}>الإصدار {f.version} · {f.items.length} بند · {f.status === "published" ? "منشور" : f.status === "draft" ? "مسودة" : "مؤرشف"}</li>)}</ul>
           </section>); })}
     </>
