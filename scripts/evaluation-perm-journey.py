@@ -19,7 +19,10 @@ async def save(o):
     await o.screenshot(path=SH + "preview.png")
     txt = await o.locator("body").inner_text()
     await o.get_by_role("button", name="حفظ التغييرات").click(); await o.wait_for_timeout(2500)
-    if await o.get_by_role("alertdialog").count(): await o.get_by_role("alertdialog").get_by_role("button").last.click(); await o.wait_for_timeout(2500)
+    if await o.get_by_role("alertdialog").count():
+        d = o.get_by_role("alertdialog")
+        if await d.locator("textarea, input").count(): await d.locator("textarea, input").first.fill("تكليف بالتقييم الشهري")
+        await d.get_by_role("button").last.click(); await o.wait_for_timeout(2500)
     return txt
 async def main():
     async with async_playwright() as pw:
