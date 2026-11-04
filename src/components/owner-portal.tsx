@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, CheckCircle2, Construction, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Building2, CheckCircle2, Construction, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, type LucideIcon } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -68,6 +68,14 @@ const CARDS: Card[] = [
       { icon: PencilLine, label: "تعديل بيانات المدرسة", to: "/app/schools" },
       { icon: PauseCircle, label: "تفعيل فرع أو إيقافه", to: "/app/schools" },
       { icon: Link2, label: "ربط الموظفين بالمدرسة", to: "/app/schools" },
+    ],
+  },
+  {
+    key: "operations", section: "operations", title: "النقل المدرسي والصيانة", icon: Bus, to: "/app/operations", open: "فتح القسم",
+    desc: "صيانة المدارس والباصات من الطلب حتى اعتماد الإنجاز، وبيانات الباصات الأساسية. تشغيل النقل مؤجل.",
+    features: [
+      { icon: Wrench, label: "صيانة المدارس", to: "/app/maintenance", search: { tab: "school" } },
+      { icon: Bus, label: "صيانة الباصات", to: "/app/maintenance", search: { tab: "bus" } },
     ],
   },
   {
