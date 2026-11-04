@@ -151,8 +151,8 @@ export function OwnerPortal({ orgId }: { orgId: string | null }) {
             <div className="flex items-start gap-3 p-4 pb-3">
               <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">{locked ? <Lock className="size-5" /> : <c.icon className="size-5" />}</span>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 id={`card-${c.key}`} className="truncate font-display text-base">{c.title}</h2>
+                <div className="flex items-start justify-between gap-2">
+                  <h2 id={`card-${c.key}`} className="font-display text-base leading-tight">{c.title}</h2>
                   {locked ? <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px]">غير مفعّل</span>
                     : c.note ? <span className="shrink-0 rounded-full bg-warning/15 px-2 py-0.5 text-[11px]">{c.note}</span>
                     : <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] text-success"><CheckCircle2 className="size-3" />متاح</span>}
