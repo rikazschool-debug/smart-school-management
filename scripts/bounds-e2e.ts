@@ -20,6 +20,7 @@ async function user(tag: string) {
   tr.addUser(s.data.user!.id); return { c, id: s.data.user!.id };
 }
 const orgs: string[] = [];
+const DUE = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
 try {
   const owner = await user("owner"), owner2 = await user("owner2"), off = await user("off"), t = await user("teacher"), idle = await user("idle");
   const { data: org } = await owner.c.rpc("create_organization", { _org_name: "مؤسسة حدود", _school_name: "فرع أ" }); orgs.push(org);
@@ -33,17 +34,18 @@ try {
     { user_id: idle.id, org_id: org, school_id: B, role: "teacher", is_active: false }]);
 
   // Owner limits
-  const selfA = await owner.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: owner.id, _purpose: "عهدة لنفسي", _amount: 100, _due: null, _key: crypto.randomUUID() });
-  const selfD = await owner.c.rpc("pc_custody_save", { _org: org, _id: null, _school: A, _school_ids: [A], _holder: owner.id, _purpose: "عهدة لنفسي", _amount: 100, _due: null, _rev: null, _key: crypto.randomUUID() });
+  const selfA = await owner.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: owner.id, _purpose: "عهدة لنفسي", _amount: 100, _due: DUE, _key: crypto.randomUUID() });
+  const selfD = await owner.c.rpc("pc_custody_save", { _org: org, _id: null, _school: A, _school_ids: [A], _holder: owner.id, _purpose: "عهدة لنفسي", _amount: 100, _due: DUE, _rev: null, _key: crypto.randomUUID() });
+  console.log("self errors:", selfA.error?.message, "/", selfD.error?.message);
   check("1 owner cannot open a custody for himself (no self-approve/self-disburse)", !!selfA.error && !!selfD.error, [selfA.error?.message, selfD.error?.message]);
-  const okC = await owner.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: off.id, _purpose: "عهدة تشغيل", _amount: 100, _due: null, _key: crypto.randomUUID() });
+  const okC = await owner.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: off.id, _purpose: "عهدة تشغيل", _amount: 100, _due: DUE, _key: crypto.randomUUID() });
   check("2 owner can open and approve a custody for staff", !okC.error, okC.error?.message);
   const x1 = await owner2.c.rpc("pc_custody_list", { _org: org, _status: null, _q: null, _school: null, _mine: false, _limit: 20, _offset: 0, _from: null, _to: null });
   const x2 = await owner2.c.rpc("mt_list", { _org: org, _f: {} });
-  const x3 = await owner2.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: off.id, _purpose: "من خارج المؤسسة", _amount: 50, _due: null, _key: crypto.randomUUID() });
+  const x3 = await owner2.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: off.id, _purpose: "من خارج المؤسسة", _amount: 50, _due: DUE, _key: crypto.randomUUID() });
   check("3 another org's owner cannot read or write this org (isolation)", (!!x1.error || !(x1.data as any)?.rows?.length) && (!!x2.error || !(x2.data as any)?.rows?.length) && !!x3.error, [x1.error, x2.error, x3.error]);
   await admin.from("org_sections").upsert([{ org_id: org, section: "finance", enabled: false, reason: "اختبار" }, { org_id: org, section: "operations", enabled: false, reason: "اختبار" }]);
-  const s1 = await owner.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: off.id, _purpose: "أثناء التعليق", _amount: 50, _due: null, _key: crypto.randomUUID() });
+  const s1 = await owner.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: off.id, _purpose: "أثناء التعليق", _amount: 50, _due: DUE, _key: crypto.randomUUID() });
   const s2 = await owner.c.rpc("mt_create", { _school: A, _kind: "school", _data: { title: "عطل", description: "وصف العطل", category_id: null, place: "فصل" }, _key: null });
   check("4 platform suspension binds the owner too (finance + operations)", !!s1.error && !!s2.error, [s1.error?.message, s2.error?.message]);
   await admin.from("org_sections").delete().eq("org_id", org);
