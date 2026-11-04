@@ -36,6 +36,7 @@
 - Attendance: all writes via RPCs on the server clock (Asia/Riyadh); details in src/components/attendance/AGENTS.md.
 - School administration (adm_*: forms/requests/tasks, duties, meetings incl. Agora virtual rooms): writes only via adm_* RPCs; details in src/components/admin/AGENTS.md.
 - Auto logins (fixed role per record): src/lib/accounts.functions.ts → service-only _provision_link/_complete_account_setup; account_setup blocks access until first login. Import rules: src/lib/people-import.ts. Tests: scripts/accounts-e2e.ts.
+- Owner-created staff logins: username → <name>@staff.rikaz.app via createStaffAccount → service-only _staff_provision (one transaction: memberships, perm roles, staff_logins, account_setup kind staff); resets via _staff_reset; passwords live only in Supabase Auth. Tests: scripts/staff-e2e.ts.
 - Grades (term gradebooks) are a read-only administrative archive: all gb_* write RPCs are revoked; grading lives in homework/tests. Never re-enable approval stages. Details in src/components/grades/AGENTS.md.
 - Support tickets: RPC-only access (support_*), identity from the session; see src/components/support/AGENTS.md.
 - Section availability: platform admin toggles per-org sections via platform_set_section (logged); missing row = enabled; section RPCs check section_enabled() server-side.

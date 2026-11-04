@@ -224,3 +224,6 @@ Request access: owner (all, no execution), requester, current assignee (lost on 
 | Maintenance → purchase need | maintenance executor/follow-up: suggest items only · principal: create need (own branch) · owner: view amounts · others: no access |
 
 | Platform overview | platform admin: platform-wide counts per section only (no org records) · everyone else: refused |
+
+- Staff login creation/reset: org owner only (server + _staff_provision/_staff_reset owner check); staff cannot change own roles; students/guardians cannot receive staff roles.
+- Custody holders: procurement officers and maintenance managers (school/bus templates carry own-scope procurement).

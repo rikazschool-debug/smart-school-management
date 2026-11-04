@@ -45,3 +45,4 @@
 - scripts/maint-e2e.ts: maintenance lifecycle — school + bus journeys, routing, clarify, reschedule, decline/reassign, concurrent claim, no self-approval, internal notes, reopen/cancel, bus out-of-service/inspection/return, files, isolation, suspension, notification dedupe (26 checks).
 - scripts/maint-need-e2e.ts: maintenance → purchase need (team suggests items only, principal creates one live need, amounts principal/owner only, re-create after cancel, history; 8 checks).
 - scripts/maint-alerts-e2e.ts: daily maintenance alerts (overdue once per due date, bus date/km, service-only tick, operations switch; 6 checks).
+- scripts/staff-e2e.ts: owner-created staff logins (username uniqueness case-insensitive, forced first change, multi-role on one account, existing-account link without password change, reset re-lock, no password in logs, suspension; 23 checks).
