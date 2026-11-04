@@ -402,3 +402,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-04 M9 platform overview
 - platform_overview() (is_platform_admin only): counts per section (schools, finance, operations, users), HR under construction, on/off per section; no org names or records. Browser-checked as demo platform admin, no page errors.
+
+## 2026-11-04 M10 step 1 — «عملي اليوم»
+- home_work(_school): caller-own counts (notifications, tasks, admin requests, support, maintenance per kind, procurement tasks); cards link to filtered lists. Browser: principal 1280px, teacher and nurse 390px, no page errors.
