@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/app/visits")({
 
 type Visit = { id: string; teacher_id: string; teacher: string; visit_date: string; lesson: string | null; status: string; scores: Record<string, number>; notes: Record<string, string>; summary: string | null; return_reason: string | null; evaluator: string; mine: boolean; can_decide: boolean; can_correct?: boolean; version?: number; subject?: string | null; section?: string | null; visit_type?: string | null; improvement_plan?: string | null; follow_up?: string | null };
 const STATUS: Record<string, string> = { draft: "مسودة", submitted: "بانتظار اعتماد المدير", approved: "معتمدة", returned: "معادة للتعديل" };
-const ALLOWED = ["org_owner", "principal", "supervisor", "platform_admin"];
+const ALLOWED = ["org_owner", "principal", "supervisor", "platform_admin", "vice_principal", "dept_head", "student_affairs", "counselor", "teacher", "nurse", "security"]; // server (cv_list/cv_teachers) decides what each person sees
 const today = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
 
 function Page() {

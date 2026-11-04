@@ -200,7 +200,7 @@ function GuardiansTab({ s, orgId, compact, exportKey }: { s: Summary; orgId: str
   );
 }
 
-type TFile = { teacher: { name: string }; guardian: { ratings: number; raters: number; students: number; comments: { comment: string; at: string }[]; by_version: { version: number; title: string; n: number; avg: number | null; stars: Record<string, number>; items: { code: string; text: string; avg: number | null; n: number; na: number; weight: number }[] }[] };
+type TFile = { teacher: { name: string }; can?: { guardian: boolean; visits: boolean }; guardian: { ratings: number; raters: number; students: number; comments: { comment: string; at: string }[]; by_version: { version: number; title: string; n: number; avg: number | null; stars: Record<string, number>; items: { code: string; text: string; avg: number | null; n: number; na: number; weight: number }[] }[] };
   visits: { id: string; date: string; evaluator: string; status: string; version: number; scores: Record<string, number>; summary: string | null; plan: string | null; follow_up: string | null; subject: string | null; type: string | null }[] };
 function TeacherFile({ id, onBack }: { id: string; onBack: () => void }) {
   const f = useQuery({ queryKey: ["ev-tf", id], queryFn: () => rpc<TFile>("ev_teacher_file", { _teacher: id }) });
@@ -392,12 +392,15 @@ function TeacherOverview({ d }: { d: TFile }) {
   const hasPlan = d.visits.some((v) => v.plan);
   return (
     <div className="mb-5 space-y-3">
-      <ProcessFlow title="كيف يُقيَّم المعلم؟ (مصادر منفصلة لا تُدمج في درجة واحدة)" steps={[
-        { title: "تقييم أولياء الأمور", desc: "ولي الأمر يقيّم معلمي ابنه الحاليين بالنجوم، ويمكنه التعديل.", icon: Users, state: d.guardian.ratings ? "done" : "current", meta: `${d.guardian.ratings} تقييم` },
-        { title: "الزيارة الصفية", desc: "المشرف أو المدير يزور الحصة ويقيّم 5 محاور و24 بندًا.", icon: ClipboardCheck, state: d.visits.length ? "done" : d.guardian.ratings ? "current" : "todo", meta: `${d.visits.length} زيارة` },
-        { title: "اعتماد المدير", desc: "يعتمد المدير الزيارة أو يعيدها بسبب؛ التصحيح بعد الاعتماد إصدار جديد.", icon: ShieldCheck, state: approved.length ? "done" : d.visits.length ? "current" : "todo", meta: `${approved.length} معتمدة` },
-        { title: "خطة التحسين والمتابعة", desc: "نقاط التطوير وموعد المتابعة تُسجَّل مع الزيارة.", icon: Target, state: hasPlan ? "done" : approved.length ? "current" : "todo", meta: hasPlan ? "مسجّلة" : "لا توجد" },
-      ]} />
+      <section aria-label="مصادر التقييم" className="rounded-xl border bg-gradient-to-l from-secondary/70 via-card to-card p-4">
+        <h4 className="text-sm font-bold text-primary">مصادر التقييم — مستقلة، بلا ترتيب بينها، ولا تُدمج درجاتها</h4>
+        <p className="mb-3 text-xs text-muted-foreground">كل مصدر يُقرأ وحده؛ لا يشترط أحدها الآخر ولا تُحسب منها درجة شاملة.</p>
+        <div className="grid gap-3 md:grid-cols-3">
+          <SourceCard icon={Users} title="تقييم أولياء الأمور" desc="ولي الأمر يقيّم معلمي ابنه الحاليين بالنجوم، ويمكنه التعديل." meta={d.can?.guardian === false ? "خارج صلاحيتك" : `${d.guardian.ratings} تقييم`} on={!!d.guardian.ratings} />
+          <SourceCard icon={ClipboardCheck} title="الزيارات الصفية" desc="زيارة بخمسة محاور، ثم اعتماد المدير، ثم خطة تحسين عند الحاجة — هذا الترتيب داخل الزيارة فقط." meta={d.can?.visits === false ? "خارج صلاحيتك" : `${d.visits.length} زيارة · ${approved.length} معتمدة${hasPlan ? " · خطة تحسين" : ""}`} on={!!d.visits.length} />
+          <SourceCard icon={Star} title="التقييم الشهري" desc="للأدوار التي لها نموذج شهري يحدده المالك؛ يُعرض في قسم التقييم الشهري." meta="مصدر منفصل" on={false} />
+        </div>
+      </section>
       <div className="grid gap-3 sm:grid-cols-2">
         <ScoreRing label="متوسط أولياء الأمور (أحدث إصدار)" pct={pctOf5(latest?.avg ?? null)} sub={latest ? `${fmt(latest.avg)} من 5 · ${latest.n} تقييم${latest.n < 5 ? " · عينة صغيرة" : ""}` : "لا توجد تقييمات"} />
         <ScoreRing label={approved.length ? "آخر زيارة صفية معتمدة" : "آخر زيارة صفية"} pct={lastVisit ? visitPercent(lastVisit.scores) : null} sub={lastVisit ? lastVisit.date : "لا توجد زيارات"} />
@@ -453,5 +456,15 @@ function CycleSettings({ orgId, owner }: { orgId: string; owner: boolean }) {
         {!owner && <span className="text-xs text-muted-foreground">يضبطها المالك</span>}
       </div>
     </section>
+  );
+}
+
+function SourceCard({ icon: I, title, desc, meta, on }: { icon: typeof Users; title: string; desc: string; meta: string; on: boolean }) {
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="mb-1 flex items-center gap-2"><span className={"grid size-8 place-items-center rounded-full " + (on ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}><I className="size-4" /></span><span className="text-sm font-semibold">{title}</span></div>
+      <p className="text-xs leading-5 text-muted-foreground">{desc}</p>
+      <p className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{meta}</p>
+    </div>
   );
 }
