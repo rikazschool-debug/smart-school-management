@@ -12,6 +12,8 @@ import { askText } from "@/components/confirm";
 import { PeoplePicker } from "@/components/people-picker";
 import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { PermTree } from "@/components/perm-tree";
+import { PersonPanel } from "@/components/perm-person";
 import { StaffWizard } from "@/components/staff-wizard";
 import { PasswordInput } from "@/components/password-input";
 import { resetStaffPassword } from "@/lib/accounts.functions";
@@ -95,6 +97,10 @@ function Tabs({ org, school }: { org: string; school: string | null }) {
   );
 }
 
+function useDisabled(org: string) {
+  return useQuery({ queryKey: ["perm-disabled", org], queryFn: async () => (await call("perm_disabled_areas", { _org: org })) as string[] });
+}
+
 function useCatalog() {
   return useQuery({ queryKey: ["perm-catalog"], queryFn: async () => (await call("perm_catalog", {})) as Catalog });
 }
@@ -104,6 +110,7 @@ function Roles({ org }: { org: string }) {
   const cat = useCatalog();
   const roles = useQuery({ queryKey: ["perm-roles", org], queryFn: async () => (await call("perm_roles_list", { _org: org })) as Row[] });
   const [edit, setEdit] = useState<{ id: string | null; name: string; description: string; grants: Grant[] } | null>(null);
+  const dis = useDisabled(org);
   if (roles.isLoading || cat.isLoading) return <LoadingState />;
   if (roles.error || cat.error) return <ErrorState message={arabicError(roles.error ?? cat.error)} />;
   const c = cat.data!;
@@ -120,7 +127,6 @@ function Roles({ org }: { org: string }) {
     try { await call("perm_role_archive", { _org: org, _id: r["id"], _archive: on, _reason: reason }); qc.invalidateQueries({ queryKey: ["perm-roles", org] }); qc.invalidateQueries({ queryKey: ["perm-people", org] }); }
     catch (e) { toast.error(arabicError(e)); }
   }
-  const setScope = (section: string, action: string, scope: string) => setEdit((e) => e && ({ ...e, grants: [...e.grants.filter((g) => !(g.section === section && g.action === action)), ...(scope ? [{ section, action, scope }] : [])] }));
   return (
     <Section title="الأدوار والمسميات الوظيفية">
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -153,23 +159,7 @@ function Roles({ org }: { org: string }) {
             <Input placeholder="اسم الدور" value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
             <Input placeholder="الوصف" value={edit.description} onChange={(e) => setEdit({ ...edit, description: e.target.value })} />
           </div>
-          {c.areas.map((ar) => (
-            <fieldset key={ar.key} className="rounded-lg border p-3">
-              <legend className="px-1 text-sm font-bold">{ar.label}</legend>
-              {ar.soon ? <p className="text-xs text-muted-foreground">تحت الإنشاء — لا توجد صلاحيات لهذا القسم بعد.</p> : c.sections.filter((s) => s.parent === ar.key).map((s) => (
-                <div key={s.key} className="mb-3 last:mb-0">
-                  <p className="mb-2 text-sm font-semibold">{s.label}{s.sensitive && <span className="ms-2 text-xs font-normal text-muted-foreground">يتيح الاطلاع على أسماء الطلاب في الفرع</span>}</p>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {s.actions.map((a) => { const cur = edit.grants.find((g) => g.section === s.key && g.action === a)?.scope ?? ""; return (
-                      <label key={a} className="flex items-center gap-2 text-sm"><span className="w-40 shrink-0 text-xs sm:text-sm">{actLabel(c, s.key, a)}</span>
-                        <select className={selectCls("w-full min-w-0", true)} value={cur} onChange={(e) => setScope(s.key, a, e.target.value)}>
-                          <option value="">لا</option>{s.scopes.map((k) => <option key={k} value={k}>{c.scopes[k]}</option>)}
-                        </select></label>); })}
-                  </div>
-                </div>
-              ))}
-            </fieldset>
-          ))}
+          <PermTree c={c} value={edit.grants} onChange={(g) => setEdit({ ...edit, grants: g })} disabledAreas={dis.data ?? []} />
           <p className="text-xs text-muted-foreground">لا تُفوَّض: {c.locked.join("؛ ")}.</p>
           <p className="rounded-lg bg-secondary/50 p-2 text-xs">معاينة ما سيظهر للحساب: {grantText(c, edit.grants) || "لا شيء"}. {edit.id ? "التعديل يسري على جميع حاملي الدور من الطلب التالي؛ الاستثناءات الشخصية تبقى كما هي." : ""}</p>
           <div className="flex gap-2"><Button size="sm" onClick={save}>حفظ</Button><Button size="sm" variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
@@ -276,46 +266,6 @@ function People({ org, school, initialUser = null }: { org: string; school: stri
   );
 }
 
-function PersonPanel({ org, user, name, c, roles }: { org: string; user: string; name: string; c: Catalog; roles: Row[] }) {
-  const qc = useQueryClient();
-  const eff = useQuery({ queryKey: ["perm-eff", org, user], queryFn: async () => (await call("perm_effective", { _org: org, _user: user })) as Row });
-  const [role, setRole] = useState(""); const [limit, setLimit] = useState("");
-  const refresh = () => { for (const k of [["perm-eff", org, user], ["perm-roles", org], ["perm-log", org], ["perm-people", org]]) qc.invalidateQueries({ queryKey: k }); };
-  async function run(fn: string, args: Record<string, unknown>, ask: string) {
-    const reason = await askText(ask, { required: true }); if (!reason) return;
-    try { await call(fn, { ...args, _reason: reason }); toast.success("تم الحفظ"); refresh(); } catch (e) { toast.error(arabicError(e)); }
-  }
-  if (eff.isLoading) return <LoadingState />;
-  if (eff.error) return <ErrorState message={arabicError(eff.error)} />;
-  return (
-    <div className="space-y-4 rounded-xl border bg-card p-4 text-sm">
-      <div>
-        <p className="text-base font-bold">{name}</p>
-        <p className="text-xs text-muted-foreground">الدور الأساسي: {(eff.data!["base_roles"] as Row[]).map((b) => `${ROLE_LABELS[b["role"] as Role] ?? b["role"]}${b["school"] ? ` — ${b["school"]}` : ""}`).join("، ") || "—"}</p>
-      </div>
-      <div>
-        <p className="mb-2 font-bold">الأدوار المسندة</p>
-        {!(eff.data!["roles"] as Row[]).length ? <p className="text-muted-foreground">لا أدوار إضافية.</p> : (
-          <ul className="space-y-1">{(eff.data!["roles"] as Row[]).map((r) => (
-            <li key={r["id"]} className="flex flex-wrap items-center gap-2">{r["name"]}{r["approval_limit"] != null && ` — حد الاعتماد ${r["approval_limit"]} ر.س`}
-              <Button size="sm" variant="ghost" onClick={() => run("perm_assign", { _org: org, _user: user, _role: r["id"], _assign: false, _school_ids: null, _limit: null }, "سبب سحب الدور")}>سحب</Button></li>))}</ul>
-        )}
-        {!eff.data!["is_owner"] && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            <select aria-label="اختر دورًا" className={selectCls("min-w-0 flex-1 sm:flex-none")} value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="">اختر دورًا</option>{roles.filter((r) => !r["archived"]).map((r) => <option key={r["id"]} value={r["id"]}>{r["name"]}</option>)}
-            </select>
-            <Input className="w-full sm:w-40" inputMode="decimal" placeholder="حد الاعتماد (اختياري)" value={limit} onChange={(e) => setLimit(e.target.value)} />
-            <Button size="sm" disabled={!role} onClick={() => run("perm_assign", { _org: org, _user: user, _role: role, _assign: true, _school_ids: null, _limit: limit ? Number(limit) : null }, "سبب إسناد الدور")}>إسناد</Button>
-          </div>
-        )}
-        {role && <p className="mt-1 text-xs text-muted-foreground">سيُحمَّل: {grantText(c, (roles.find((r) => r["id"] === role)?.["grants"] as Grant[] | undefined) ?? []) || "لا شيء"}</p>}
-      </div>
-      <EffectiveList c={c} eff={eff.data!} onOverride={(section, action, effect, scope, ask) => run("perm_override_set", { _org: org, _user: user, _section: section, _action: action, _effect: effect, _scope: scope }, ask)} />
-    </div>
-  );
-}
-
 const ACT: Record<string, string> = { role_create: "إنشاء دور", role_update: "تعديل دور", role_archive: "أرشفة دور", role_restore: "استعادة دور", assign: "إسناد دور", unassign: "سحب دور", override: "استثناء شخصي" };
 function Log({ org }: { org: string }) {
   const q = useQuery({ queryKey: ["perm-log", org], queryFn: async () => (await call("perm_log_list", { _org: org })) as Row[] });
@@ -327,36 +277,6 @@ function Log({ org }: { org: string }) {
         </ul>
       )}
     </Section>
-  );
-}
-
-function EffectiveList({ c, eff, onOverride }: { c: Catalog; eff: Row; onOverride: (section: string, action: string, effect: string | null, scope: string | null, ask: string) => void }) {
-  const list = eff["effective"] as Row[];
-  return (
-    <div className="space-y-3">
-      <p className="font-bold">الصلاحيات الفعلية</p>
-      {c.sections.map((s) => (
-        <div key={s.key}>
-          <p className="mb-1 text-xs font-semibold text-muted-foreground">{c.areas.find((a) => a.key === s.parent)?.label} ← {s.label}</p>
-          <ul className="divide-y rounded-lg border">
-            {list.filter((e) => e["section"] === s.key).map((e) => {
-              const where = s.key === "procurement" ? (e["scope"] ? c.scopes[e["scope"]] : "") : (e["allowed_schools"] as string[]).join("، ");
-              const on = s.key === "procurement" ? !!e["scope"] : (e["allowed_schools"] as string[]).length > 0;
-              return (
-                <li key={e["action"]} className="flex flex-wrap items-center gap-2 p-2">
-                  <span className="w-44 shrink-0">{actLabel(c, s.key, e["action"])}</span>
-                  <span className="min-w-0 flex-1 text-xs">{e["source"] === "deny" ? "ممنوع (منع خاص)" : on ? `${where} — ${SOURCE[e["source"]] ?? ""}` : "غير مسموح"}</span>
-                  {!eff["is_owner"] && (<>
-                    <Button size="sm" variant="ghost" onClick={() => onOverride(s.key, e["action"], "deny", null, "سبب المنع")}>منع</Button>
-                    <Button size="sm" variant="ghost" onClick={() => onOverride(s.key, e["action"], "grant", "branch", s.key === "procurement" ? "سبب التفويض (نطاق: فروعه)" : "سبب التفويض (في الفروع التي يعمل بها)")}>تفويض</Button>
-                    {(e["source"] === "deny" || e["source"] === "override") && <Button size="sm" variant="ghost" onClick={() => onOverride(s.key, e["action"], null, null, "سبب إزالة الاستثناء")}>إزالة الاستثناء</Button>}
-                  </>)}
-                </li>);
-            })}
-          </ul>
-        </div>
-      ))}
-    </div>
   );
 }
 
