@@ -9419,6 +9419,7 @@ export type Database = {
           year_id: string
         }[]
       }
+      _ev_g_version: { Args: { _teacher: string; _ver: number }; Returns: Json }
       _ev_org_read: { Args: { _org: string }; Returns: boolean }
       _ev_school_read: { Args: { _school: string }; Returns: boolean }
       _ev_score: { Args: { _answers: Json; _items: Json }; Returns: Json }
