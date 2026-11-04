@@ -4,7 +4,7 @@ Status ladder (§12.4): مخطط → عقوده جاهزة → قيد التنف
 
 | Package | Content | Status | Blocked by | Evidence |
 |---|---|---|---|---|
-| P0 | Inventory, reuse map, HRMS reality, decisions | Inventory done; awaiting owner approval (gate §12.2) | D1–D5 | docs/hr/p0-inventory.md |
+| P0 | Inventory, reuse map, HRMS reality, decisions | مقبول (owner decisions D1, D2, D5 on 2026-11-04) | D4 open for P7 | docs/hr/p0-inventory.md |
 | P1 | Flags, HR perm sections, nav, tasks page | مخطط | P0 approval | — |
 | P2 | Employee ↔ user/teacher, assignments, import | مخطط | P1, D1, D2 | — |
 | P3 | Contracts, documents | مخطط | P2 | — |
@@ -18,3 +18,4 @@ Status ladder (§12.4): مخطط → عقوده جاهزة → قيد التنف
 
 ## Entries
 - 2026-11-04 P0: no HRMS/ERPNext connection in code, secrets or database; no HR tables. Reuse map and live data counts recorded. No HR schema created (P0 gate: owner approves ownership map first).
+- 2026-11-04 P0 accepted: Rikaz = single source (D1), one employer per org (D2), policies entered by owner/HR, never guessed (D5).

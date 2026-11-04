@@ -44,3 +44,9 @@ hr settings/flags per org, employee, dated assignments, contract versions, docum
 - D3 Who holds HR / payroll preparer / finance reviewer / general approver in the real org.
 - D4 Ledger for posting and payment: none today (finance deferred).
 - D5 Policies: leave types & entitlements, working days, overtime, GOSI, end-of-service, rounding — dated and approved; never guessed.
+
+## 6. Owner decisions (2026-11-04)
+- D1: **Rikaz is the single source of truth** for employees, contracts, leave balances, advances and payroll, in the project's own database. No HRMS/ERPNext now; an external link may be added later through a connector, never as a parallel editable copy. No fake connection is shown.
+- D2: **One employer per organization** for all its branches (one CR, GOSI and bank). School = operational branch.
+- D5: Policies follow the document: nothing is guessed. Leave types, entitlements, working days and financial rules are entered and dated by the authorised owner/HR in settings; features that need a missing policy stay blocked with a visible reason.
+- D3 (who holds HR/finance/approver roles) is assigned by the owner through the permission tree; D4 (ledger for posting/payment) stays open until P7.
