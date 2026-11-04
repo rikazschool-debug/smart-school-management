@@ -351,3 +351,4 @@
 - [ ] M9 Platform-admin counterparts (schools, finance, HR, users & permissions, transport & maintenance): availability + aggregate stats only, HR «تحت الإنشاء», no cross-org data without explicit logged access
 - [ ] M10 Role homes redesign for all roles (real scoped KPIs, clickable cards → filtered lists, last-updated, empty/error states, phone)
 - [ ] M11 Tests: maint-e2e (2 orgs/2 branches, full school + bus journeys, decline/reassign, concurrent accept, self-approval block, procurement link, isolation, revocation, suspension, alerts) + browser journeys + docs (permissions matrix, closure log)
+- [x] prompt-90: split «إدارة صيانة المدارس» (/app/maintenance) from «إدارة تشغيل وصيانة الباصات» (/app/bus-maintenance: requests + buses/status) as separate menu entries and portal cards
