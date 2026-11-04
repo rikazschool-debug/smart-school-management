@@ -381,3 +381,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Server: scripts/pc-need-e2e.ts 12/12 (principal-only create, estimate, awaiting assignment + owner notice, no assigning approver/unauthorized, self-claim only, generic RPC refused, only assignee links, over-quantity/duplicate refused, no self-approval, partial remaining, partial close needs reason, auto done, org isolation, auto-assign with one officer). Regression pc-e2e 32/32, pc2-e2e 20/20.
 - Browser (isolated pcb- fixture, torn down): principal at 390px creates 2-line need and approves → «بانتظار الإسناد»; officer claims, records invoice prefilled from remaining lines, detail shows remaining 4/0 and linked invoice. 6/6, no page errors. Status: done.
 - 2026-11-04 Procurement UI unified (ui.tsx primitives across all tabs/details/forms); pc_request_get hides cancel after approval (matches server rule). pc2-e2e 20/20, pc-journey-e2e 8/8; desktop screenshots as demo owner.
+
+## M1 Maintenance roles (2026-11-04)
+- Scope: permission sections maint_school/maint_bus under area operations; 6 templates; principal base; platform switch.
+- Server test: scripts/maint-roles-e2e.ts 12/12; regressions perm5 20/20, perm6 20/20 (principal template updated to mirror new base rule).
+- Bug found by test and fixed: org_sections check constraint rejected the new section.
+- Browser: not tested. Status: done (server); requests/lifecycle not built yet (M2+).

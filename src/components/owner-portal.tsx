@@ -5,8 +5,8 @@ import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 
-export type SectionKey = "school_admin" | "finance" | "hr";
-export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", finance: "المالية والمحاسبة", hr: "الموارد البشرية" };
+export type SectionKey = "school_admin" | "finance" | "operations" | "hr";
+export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", finance: "المالية والمحاسبة", operations: "النقل المدرسي والصيانة", hr: "الموارد البشرية" };
 
 /** Section availability set by the platform owner; read fresh from the server (no cache across sessions). */
 export function useOrgSections(orgId: string | null) {

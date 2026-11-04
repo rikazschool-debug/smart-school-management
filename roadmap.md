@@ -340,7 +340,7 @@
 - [x] One visual language for every procurement screen (src/components/procurement/ui.tsx): tab intro, filter toolbar, table cards with totals, pager, record header, panels, forms; approved requests no longer show «إلغاء»
 
 ## Package 12 — Role homes + school & bus maintenance (prompt-88)
-- [ ] M1 Roles: school maintenance, bus maintenance, maintenance follow-up (school/bus/both), transport movement officer — assignable via existing users/perm_* (role → people → person permissions), per-branch scope, templates, change log; procurement role reused
+- [x] M1 (server+permissions UI via catalog; maint-roles-e2e 12/12; perm5 20/20, perm6 20/20) Roles: school maintenance, bus maintenance, maintenance follow-up (school/bus/both), transport movement officer — assignable via existing users/perm_* (role → people → person permissions), per-branch scope, templates, change log; procurement role reused
 - [ ] M2 Owner portal gate «النقل المدرسي والصيانة» → «النقل المدرسي» (deferred placeholder) + «الصيانة والطلبات» (tabs: schools / buses); principal & movement-officer shortcuts to the same screens
 - [ ] M3 Basic bus records per branch + operating status (available / stopped / awaiting inspection), next service date/odometer alerts
 - [ ] M4 Maintenance requests: server ref/time/identity, categories+subcategories (managed), location, attachments, urgent warning, «أخرى» needs description
