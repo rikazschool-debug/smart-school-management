@@ -110,3 +110,16 @@ describe("owner shared pages keep the current section", () => {
     expect(ownerSection("/app/hr", "school_admin")).toBe("hr");
   });
 });
+
+describe("owner evaluation section", () => {
+  it("evaluation and class visits open the evaluation section with only its menu", async () => {
+    const { ownerSection, ownerSectionNav, NAV_BY_ROLE } = await import("@/lib/roles");
+    expect(ownerSection("/app/evaluation", "school_admin")).toBe("evaluation");
+    expect(ownerSection("/app/visits", null)).toBe("evaluation");
+    const nav = ownerSectionNav("evaluation", NAV_BY_ROLE.org_owner);
+    expect(nav).toContain("evaluation");
+    expect(nav).not.toContain("academic");
+    expect(nav).not.toContain("teachers");
+    expect(ownerSectionNav("school_admin", NAV_BY_ROLE.org_owner)).not.toContain("evaluation");
+  });
+});
