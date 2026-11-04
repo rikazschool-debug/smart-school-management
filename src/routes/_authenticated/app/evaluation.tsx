@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp, ClipboardCheck, FileSpreadsheet, FileText, History, ListChecks, Plus, ShieldCheck, Star, Target, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,13 +28,24 @@ const thisMonth = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0,
 const ROLE_LABEL: Record<string, string> = { vice: "وكيل المدرسة", supervisor: "المشرف التربوي", admin: "الكادر الإداري", teacher: "المعلم", "": "ولي الأمر" };
 const fmt = (n: unknown) => (n == null ? "—" : Number(n).toFixed(2));
 
+/** What the signed-in person may do here (ev_me → permission tree); every RPC re-checks. */
+type Me = { owner: boolean; org_read: boolean; due_day: number; caps: Record<string, boolean> };
+const CapsCtx = createContext<(k: string) => boolean>(() => false);
+const useCan = () => useContext(CapsCtx);
+
 function Page() {
   const { active } = useSession();
+  const me = useQuery({ queryKey: ["ev-me", active?.schoolId], enabled: !!active?.schoolId && active?.role !== "guardian", refetchOnWindowFocus: true, queryFn: () => rpc<Me>("ev_me", { _school: active!.schoolId }) });
   if (!active) return null;
   if (active.role === "guardian") return <GuardianView />;
-  if (active.role === "supervisor") return (<><PageHeader title="نظام التقييم الشامل" /><p className="mb-3 text-sm">دورك في التقييم هو الزيارات الصفية لمعلميك المسندين.</p><Button asChild><Link to="/app/visits">فتح الزيارات الصفية</Link></Button></>);
-  if (!["org_owner", "principal", "platform_admin"].includes(active.role)) return <ForbiddenState />;
-  return <StaffView />;
+  if (me.isLoading) return <LoadingState />;
+  const ownerLike = active.role === "org_owner" || !!me.data?.owner || !!me.data?.org_read;
+  const can = (k: string) => (active.role === "org_owner" || !!me.data?.owner) ? true : !!me.data?.caps?.[k] || (!!me.data?.org_read && k.endsWith(".view"));
+  const any = ownerLike || Object.values(me.data?.caps ?? {}).some(Boolean);
+  if (!any) return <ForbiddenState />;
+  const onlyVisits = !["ev_summary.view", "ev_guardian.view", "ev_monthly.view", "ev_forms.view", "ev_forms.edit"].some(can);
+  if (onlyVisits) return (<><PageHeader title="نظام التقييم الشامل" /><p className="mb-3 text-sm">صلاحيتك في التقييم هي الزيارات الصفية ضمن نطاقك.</p><Button asChild><Link to="/app/visits">فتح الزيارات الصفية</Link></Button></>);
+  return <CapsCtx.Provider value={can}><StaffView dueDay={me.data?.due_day ?? 25} /></CapsCtx.Provider>;
 }
 
 /* ===================== guardian ===================== */
@@ -105,17 +116,19 @@ function GuardianView() {
 
 /* ===================== staff (owner / principal / granted platform) ===================== */
 type Summary = { month: string; teachers: { id: string; name: string; school: string; school_id: string; ratings: number; raters: number; students: number; g_avg: number | null; visits: number }[]; monthly: { school_id: string; school: string; required: number; done: number; drafts: number }[] };
-function StaffView() {
+function StaffView({ dueDay }: { dueDay: number }) {
   const { active } = useSession();
-  const tab = Route.useSearch().tab ?? "summary";
+  const can = useCan();
+  const firstTab: Tab = can("ev_summary.view") ? "summary" : can("ev_guardian.view") ? "guardians" : can("ev_monthly.view") ? "monthly" : "forms";
+  const tab = Route.useSearch().tab ?? firstTab;
   const orgId = active!.orgId!;
   const isOwner = active!.role === "org_owner" || active!.role === "platform_admin";
   const [school, setSchool] = useState<string>(isOwner ? "" : active!.schoolId ?? "");
   const [month, setMonth] = useState(thisMonth());
   const sum = useQuery({ queryKey: ["ev-sum", orgId, school, month], queryFn: () => rpc<Summary>("ev_summary", { _org: orgId, _school: school || null, _month: month + "-01" }) });
-  const me = useQuery({ queryKey: ["ev-me", active!.schoolId], enabled: !!active!.schoolId, queryFn: () => rpc<{ forms: boolean }>("ev_me", { _school: active!.schoolId }) });
-  const canForms = isOwner || !!me.data?.forms;
-  const tabs: [Tab, string][] = [["summary", "الملخص والمؤشرات"], ["guardians", "تقييمات أولياء الأمور"], ["visits", "الزيارات الصفية"], ["monthly", "التقييم الشهري"], ...(canForms ? [["forms", "النماذج والإعدادات"] as [Tab, string]] : [])];
+  const canForms = can("ev_forms.view") || can("ev_forms.edit");
+  const allowed: Record<Tab, boolean> = { summary: can("ev_summary.view"), guardians: can("ev_guardian.view"), visits: can("ev_visits.view") || can("ev_visits.execute"), monthly: can("ev_monthly.view"), forms: canForms };
+  const tabs: [Tab, string][] = ([["summary", "الملخص والمؤشرات"], ["guardians", "تقييمات أولياء الأمور"], ["visits", "الزيارات الصفية"], ["monthly", "التقييم الشهري"], ["forms", "النماذج والإعدادات"]] as [Tab, string][]).filter(([k]) => allowed[k]);
   const schools = sum.data ? [...new Map(sum.data.monthly.map((m) => [m.school_id, m.school])).entries()] : [];
   return (
     <>
@@ -125,12 +138,12 @@ function StaffView() {
           {isOwner && <div><Label htmlFor="ev-s">الفرع</Label><select id="ev-s" className={selectCls("min-w-48")} value={school} onChange={(e) => setSchool(e.target.value)}><option value="">كل الفروع</option>{(sum.data?.monthly ?? []).map((m) => <option key={m.school_id} value={m.school_id}>{m.school}</option>)}</select></div>}
           <div><Label htmlFor="ev-m">الشهر</Label><Input id="ev-m" type="month" value={month} max={thisMonth()} onChange={(e) => setMonth(e.target.value || thisMonth())} /></div>
         </div>)}
-      {tab === "visits" ? (<div className="rounded-lg border bg-card p-4"><p className="mb-3 text-sm">الزيارات الصفية قسم واحد مشترك (المحاور الخمسة والبنود الأربعة والعشرون واعتماد المدير). نتائجها تظهر أيضًا في ملف كل معلم.</p><Button asChild><Link to="/app/visits">فتح الزيارات الصفية</Link></Button></div>)
-        : tab === "forms" ? (canForms ? <FormsTab orgId={orgId} /> : <ForbiddenState />)
+      {!allowed[tab] ? <ForbiddenState /> : tab === "visits" ? (<div className="rounded-lg border bg-card p-4"><p className="mb-3 text-sm">الزيارات الصفية قسم واحد مشترك (المحاور الخمسة والبنود الأربعة والعشرون واعتماد المدير). نتائجها تظهر أيضًا في ملف كل معلم.</p><Button asChild><Link to="/app/visits">فتح الزيارات الصفية</Link></Button></div>)
+        : tab === "forms" ? <FormsTab orgId={orgId} owner={active!.role === "org_owner"} />
         : sum.isLoading ? <LoadingState /> : sum.error ? <ErrorState message={arabicError(sum.error as Error)} />
         : tab === "summary" ? <SummaryTab s={sum.data!} orgId={orgId} />
-        : tab === "guardians" ? <GuardiansTab s={sum.data!} orgId={orgId} />
-        : <MonthlyTab schools={schools} school={school || active!.schoolId || schools[0]?.[0] || ""} month={month} canEdit={active!.role === "principal" || active!.role === "org_owner"} />}
+        : tab === "guardians" ? <GuardiansTab s={sum.data!} orgId={orgId} exportKey="ev_guardian.export" />
+        : <MonthlyTab schools={schools} school={school || active!.schoolId || schools[0]?.[0] || ""} month={month} dueDay={dueDay} orgId={orgId} />}
     </>
   );
 }
@@ -155,26 +168,27 @@ function SummaryTab({ s, orgId }: { s: Summary; orgId: string }) {
       <h3 className="mb-2 font-semibold">التقييم الشهري حسب الفرع</h3>
       <div className="mb-4 overflow-x-auto rounded-lg border bg-card"><table className="w-full text-sm"><thead><tr className="border-b text-muted-foreground"><th className="p-2 text-start">الفرع</th><th className="p-2 text-start">المطلوب</th><th className="p-2 text-start">المعتمد</th><th className="p-2 text-start">مسودات</th></tr></thead>
         <tbody>{s.monthly.map((m) => <tr key={m.school_id} className="border-b last:border-0"><td className="p-2">{m.school}</td><td className="p-2">{m.required}</td><td className="p-2">{m.done}</td><td className="p-2">{m.drafts}</td></tr>)}</tbody></table></div>
-      <GuardiansTab s={s} orgId={orgId} compact />
+      {useCan()("ev_guardian.view") && <GuardiansTab s={s} orgId={orgId} compact exportKey="ev_summary.export" />}
     </>
   );
 }
 
-function GuardiansTab({ s, orgId, compact }: { s: Summary; orgId: string; compact?: boolean }) {
+function GuardiansTab({ s, orgId, compact, exportKey }: { s: Summary; orgId: string; compact?: boolean; exportKey: string }) {
+  const canExp = useCan()(exportKey);
   const [q, setQ] = useState(""); const [open, setOpen] = useState<string | null>(null);
   const rows = s.teachers.filter((t) => !q || t.name.includes(q));
   const headers = ["المعلم", "الفرع", "تقييمات حالية", "المقيّمون", "الطلاب", "متوسط أولياء الأمور /5", "زيارات معتمدة"];
   const data = rows.map((t) => [t.name, t.school, t.ratings, t.raters, t.students, t.g_avg == null ? "—" : Number(t.g_avg).toFixed(2), t.visits]);
   const meta = { title: "تقييمات المعلمين — المصادر منفصلة", filters: [`الشهر ${s.month.slice(0, 7)}`, q ? `بحث: ${q}` : "كل المعلمين"], note: "متوسط أولياء الأمور لأحدث نسخة من كل تقييم؛ «لا أستطيع التقييم» غير محسوب. يجمع إصدارات النموذج — راجع ملف المعلم للتفصيل حسب الإصدار." };
-  const exp = async (k: "x" | "p") => { await supabase.rpc("ev_export_log" as never, { _org: orgId, _what: "teachers-" + k } as never); if (k === "x") exportXlsx(meta, headers, data); else await exportPdf(meta, headers, data); };
+  const exp = async (k: "x" | "p") => { const l = await supabase.rpc("ev_export_log" as never, { _org: orgId, _what: (compact ? "summary-" : "teachers-") + k } as never); if (l.error) { toast.error(arabicError(l.error)); return; } if (k === "x") exportXlsx(meta, headers, data); else await exportPdf(meta, headers, data); };
   if (open) return <TeacherFile id={open} onBack={() => setOpen(null)} />;
   return (
     <>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <h3 className="font-semibold">{compact ? "المعلمون" : "تقييمات أولياء الأمور حسب المعلم"}</h3>
         <Input className="max-w-56" placeholder="بحث باسم المعلم" value={q} onChange={(e) => setQ(e.target.value)} aria-label="بحث باسم المعلم" />
-        <Button size="sm" variant="outline" onClick={() => exp("x")}><FileSpreadsheet className="size-4" />Excel</Button>
-        <Button size="sm" variant="outline" onClick={() => exp("p")}><FileText className="size-4" />PDF</Button>
+        {canExp && <><Button size="sm" variant="outline" onClick={() => exp("x")}><FileSpreadsheet className="size-4" />Excel</Button>
+        <Button size="sm" variant="outline" onClick={() => exp("p")}><FileText className="size-4" />PDF</Button></>}
       </div>
       {!rows.length ? <EmptyState title="لا يوجد معلمون" /> : (
         <div className="overflow-x-auto rounded-lg border bg-card"><table className="w-full text-sm"><thead><tr className="border-b text-muted-foreground">{headers.map((h) => <th key={h} className="p-2 text-start">{h}</th>)}<th /></tr></thead>
@@ -221,8 +235,11 @@ function TeacherFile({ id, onBack }: { id: string; onBack: () => void }) {
 
 /* ---------- monthly ---------- */
 type MStaff = { user_id: string; name: string; role_key: string; status: string | null; id: string | null; avg: number | null; pct: number | null; version: number | null };
-function MonthlyTab({ schools, school, month, canEdit }: { schools: [string, string][]; school: string; month: string; canEdit: boolean }) {
+function MonthlyTab({ schools, school, month, dueDay, orgId }: { schools: [string, string][]; school: string; month: string; dueDay: number; orgId: string }) {
   const qc = useQueryClient();
+  const can = useCan();
+  const canEdit = can("ev_monthly.execute"), canApprove = can("ev_monthly.approve"), canFix = can("ev_monthly.edit");
+  const overdue = month < thisMonth() || (month === thisMonth() && Number(new Date(Date.now() + 3 * 3600e3).toISOString().slice(8, 10)) > dueDay);
   const [sch, setSch] = useState(school);
   useEffect(() => setSch(school), [school]);
   const staff = useQuery({ queryKey: ["ev-ms", sch, month], enabled: !!sch, queryFn: () => rpc<MStaff[]>("ev_m_staff", { _school: sch, _month: month + "-01" }) });
@@ -234,6 +251,13 @@ function MonthlyTab({ schools, school, month, canEdit }: { schools: [string, str
       else { const f = await rpc<{ items: FormItem[]; title: string; version: number } | null>("ev_m_form", { _school: sch, _role: p.role_key }); if (!f) { toast.error("لا يوجد نموذج منشور لهذا الدور"); return; }
         setEd({ p, form: f, ans: {}, na: {}, notes: "", approved: false, version: 1, history: [] }); }
     } catch (e) { toast.error(arabicError(e as Error)); }
+  }
+  async function mexp(k: "x" | "p") {
+    const l = await supabase.rpc("ev_export_log" as never, { _org: orgId, _what: "monthly-" + k } as never); if (l.error) { toast.error(arabicError(l.error)); return; }
+    const headers = ["الموظف", "الدور", "الحالة", "الدرجة /5", "النسبة"];
+    const rows = (staff.data ?? []).map((p) => [p.name || "—", ROLE_LABEL[p.role_key] ?? p.role_key, p.status === "approved" ? "معتمد" : p.status === "draft" ? "مسودة" : overdue ? "متأخر" : "مطلوب", p.status === "approved" && p.avg != null ? Number(p.avg).toFixed(2) : "—", p.status === "approved" && p.pct != null ? `${p.pct}%` : "—"]);
+    const meta = { title: "التقييم الشهري", filters: [`الشهر ${month}`, `الاستحقاق يوم ${dueDay}`], note: "الدرجة والنسبة للتقييمات المعتمدة فقط." };
+    if (k === "x") exportXlsx(meta, headers, rows); else await exportPdf(meta, headers, rows);
   }
   async function save(approve: boolean) {
     if (!ed) return;
@@ -261,18 +285,20 @@ function MonthlyTab({ schools, school, month, canEdit }: { schools: [string, str
         <Label htmlFor="ev-n">ملاحظات</Label>
         <textarea id="ev-n" disabled={!canEdit} className="mb-3 min-h-20 w-full rounded-md border bg-background p-2 text-sm" value={ed.notes} onChange={(e) => setEd({ ...ed, notes: e.target.value })} />
         <p className="mb-3 text-sm">أُجيب {sc.answered} من {sc.total} · المتوسط {sc.avg ?? "—"} من 5{sc.avg != null && ` (${pctOf5(sc.avg)}٪)`}{ed.history.length > 0 && ` · إصدارات سابقة: ${ed.history.length}`}</p>
-        <div className="flex flex-wrap gap-2">{canEdit && (ed.approved ? <Button onClick={() => save(true)}>حفظ التصحيح بسبب</Button> : <><Button onClick={() => save(true)}>اعتماد</Button><Button variant="outline" onClick={() => save(false)}>حفظ مسودة</Button></>)}<Button variant="ghost" onClick={() => setEd(null)}>رجوع</Button></div>
+        <div className="flex flex-wrap gap-2">{canEdit && (ed.approved ? (canFix && <Button onClick={() => save(true)}>حفظ التصحيح بسبب</Button>) : <>{canApprove && <Button onClick={() => save(true)}>اعتماد</Button>}<Button variant="outline" onClick={() => save(false)}>حفظ مسودة</Button></>)}<Button variant="ghost" onClick={() => setEd(null)}>رجوع</Button></div>
       </>
     );
   }
   return (
     <>
       {schools.length > 1 && <div className="mb-3 max-w-xs"><Label htmlFor="ev-ms">فرع التقييم</Label><select id="ev-ms" className={selectCls("w-full")} value={sch} onChange={(e) => setSch(e.target.value)}>{schools.map(([id, n]) => <option key={id} value={id}>{n}</option>)}</select></div>}
+      <div className="mb-2 flex flex-wrap items-center gap-2"><span className="rounded-full bg-secondary px-3 py-1 text-xs">الاستحقاق: يوم {dueDay} من الشهر</span>
+        {can("ev_monthly.export") && !!staff.data?.length && <><Button size="sm" variant="outline" onClick={() => mexp("x")}><FileSpreadsheet className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => mexp("p")}><FileText className="size-4" />PDF</Button></>}</div>
       <p className="mb-3 text-sm text-muted-foreground">سجل واحد لكل موظف ودور وفرع وشهر. الموظف متعدد الأدوار يُقيَّم بنموذج مستقل لكل دور. لا يوجد نموذج شهري للمعلم ما لم ينشئه المالك.</p>
       {staff.isLoading ? <LoadingState /> : staff.error ? <ErrorState message={arabicError(staff.error as Error)} /> : !staff.data?.length ? <EmptyState title="لا يوجد موظفون مطلوب تقييمهم في هذا الفرع" /> : (
         <div className="overflow-x-auto rounded-lg border bg-card"><table className="w-full text-sm"><thead><tr className="border-b text-muted-foreground"><th className="p-2 text-start">الموظف</th><th className="p-2 text-start">الدور</th><th className="p-2 text-start">الحالة</th><th className="p-2 text-start">الدرجة والنسبة</th><th /></tr></thead>
           <tbody>{staff.data.map((p) => <tr key={p.user_id + p.role_key} className="border-b last:border-0"><td className="p-2">{p.name || "—"}</td><td className="p-2">{ROLE_LABEL[p.role_key]}</td>
-            <td className="p-2">{p.status === "approved" ? "معتمد" : p.status === "draft" ? "مسودة" : month < thisMonth() ? "متأخر" : "مطلوب"}</td>
+            <td className="p-2">{p.status === "approved" ? "معتمد" : p.status === "draft" ? "مسودة" : overdue ? "متأخر" : "مطلوب"}</td>
             <td className="p-2" data-score>{p.status && p.avg != null ? <ScoreCell avg={Number(p.avg)} pct={Number(p.pct)} draft={p.status !== "approved"} /> : <span className="text-muted-foreground">—</span>}</td>
             <td className="p-2 text-end"><Button size="sm" variant="outline" onClick={() => open(p)}>{p.status ? (canEdit ? "فتح" : "عرض") : canEdit ? "تقييم" : "—"}</Button></td></tr>)}</tbody></table></div>)}
     </>
