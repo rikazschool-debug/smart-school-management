@@ -187,7 +187,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
         )}
       </div>
       {canOthers ? (
-        <PeoplePicker purpose="pc_holder" school={school || null} org={orgId} value={holder} onChange={setHolder} single label="مسؤول المشتريات المنسوب إليه العهدة" compact />
+        <PeoplePicker purpose="pc_holder" school={school || null} org={orgId} value={holder} onChange={setHolder} single label="مستلم العهدة (مسؤول مشتريات أو مدير صيانة)" compact />
       ) : <p className="text-sm text-muted-foreground">المستلم: أنت (صلاحيتك تشمل عهدك الخاصة فقط).</p>}
       <FormActions>
         {ownerDirect ? <Button disabled={busy} onClick={() => void saveApprove()}>حفظ واعتماد</Button>

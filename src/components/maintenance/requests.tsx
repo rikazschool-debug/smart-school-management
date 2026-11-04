@@ -37,16 +37,18 @@ async function run<T>(p: PromiseLike<{ data: T; error: unknown }>, ok?: string):
 
 // ---------------- list ----------------
 /** Request log views: new arrivals vs completed, each shown grouped per branch so branches never mix. */
-const LOGS: [string, string, string][] = [["", "كل الطلبات", ""], ["new", "الطلبات الجديدة", "new,awaiting_assign,assigned"], ["work", "قيد المعالجة", "in_progress,scheduled,clarify,waiting_parts,returned"], ["review", "بانتظار تأكيد المتابعة", "awaiting_approval"], ["done", "الطلبات المكتملة", "closed"]];
+const FOLLOW_LOGS: [string, string, string][] = [["current", "الطلبات الحالية", "new,awaiting_assign,assigned,in_progress,scheduled,clarify,waiting_parts,returned,awaiting_approval"], ["review", "بانتظار تأكيدي", "awaiting_approval"], ["past", "الطلبات السابقة", "closed,cancelled"]];
+const MGR_LOGS: [string, string, string][] = [["", "كل الطلبات", ""], ["new", "الطلبات الجديدة", "new,awaiting_assign,assigned"], ["work", "قيد المعالجة", "in_progress,scheduled,clarify,waiting_parts,returned"], ["review", "بانتظار تأكيد المتابعة", "awaiting_approval"], ["done", "الطلبات المكتملة", "closed"]];
 const byBranch = (rows: Row[]) => [...rows].sort((a, b) => String(a.school).localeCompare(String(b.school), "ar"));
 export function RequestList({ orgId, orgName, kind, me, open, onNew, preset }: {
   orgId: string; orgName: string; kind: Kind; me: MtMe; open: (id: string) => void; onNew?: (() => void) | undefined; preset?: Record<string, string> | undefined;
 }) {
+  const followOnly = !me.owner && !me.caps![kind].execute.length; const LOGS = followOnly ? FOLLOW_LOGS : MGR_LOGS;
   const [q, setQ] = useState(""); const presetLog = LOGS.find((l) => l[2] && l[2] === preset?.["status"])?.[0];
   const [status, setStatus] = useState(presetLog ? "" : (preset?.["status"] ?? "")); const [priority, setPriority] = useState("");
   const [school, setSchool] = useState(""); const [mine, setMine] = useState(preset?.["mine"] ?? ""); const [overdue, setOverdue] = useState(preset?.["overdue"] === "1");
   const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [page, setPage] = useState(0);
-  const [log, setLog] = useState(presetLog ?? "");
+  const [log, setLog] = useState(presetLog ?? (followOnly ? "current" : ""));
   const f = { kind, q, status: status || (LOGS.find((l) => l[0] === log)?.[2] ?? ""), priority, school, mine, overdue, from, to };
   const list = useQuery({
     queryKey: ["mt-list", orgId, f, page],
@@ -81,13 +83,13 @@ export function RequestList({ orgId, orgName, kind, me, open, onNew, preset }: {
         <SearchBox value={q} onChange={(v) => reset(() => setQ(v))} placeholder="رقم، عنوان أو مكان" />
         <Field label="الحالة"><select className={selectCls("w-48", true)} value={status} onChange={(e) => reset(() => setStatus(e.target.value))}>
           <option value="">الكل</option>{Object.entries(STATUS).filter(([k]) => k !== "new").map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
-        <Field label="الأولوية"><select className={selectCls("w-28", true)} value={priority} onChange={(e) => reset(() => setPriority(e.target.value))}>
+        {!followOnly && <><Field label="الأولوية"><select className={selectCls("w-28", true)} value={priority} onChange={(e) => reset(() => setPriority(e.target.value))}>
           <option value="">الكل</option>{Object.entries(PRIORITY).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
         {schools.length > 1 && <Field label="الفرع"><select className={selectCls("w-36", true)} value={school} onChange={(e) => reset(() => setSchool(e.target.value))}>
           <option value="">كل الفروع</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>}
         <Field label="عرض"><select className={selectCls("w-32", true)} value={mine} onChange={(e) => reset(() => setMine(e.target.value))}>
           <option value="">الكل</option><option value="assigned">المسند إليّ</option><option value="requested">طلباتي</option></select></Field>
-        <label className="flex h-9 items-center gap-2 text-sm"><input type="checkbox" checked={overdue} onChange={(e) => reset(() => setOverdue(e.target.checked))} />المتأخرة فقط</label>
+        <label className="flex h-9 items-center gap-2 text-sm"><input type="checkbox" checked={overdue} onChange={(e) => reset(() => setOverdue(e.target.checked))} />المتأخرة فقط</label></>}
         <DateRange from={from} to={to} setFrom={(v) => reset(() => setFrom(v))} setTo={(v) => reset(() => setTo(v))} />
       </Toolbar>
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? (
