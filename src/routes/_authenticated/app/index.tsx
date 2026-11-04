@@ -44,11 +44,18 @@ const QUICK: Partial<Record<NavKey, { label: string; hint: string; to: string; i
 };
 
 function Home() {
-  const { active } = useSession();
+  const { active, user } = useSession();
+  // Staff with a teacher-type membership but no teacher record (e.g. maintenance) get a work-only home.
+  const teachRow = useQuery({
+    enabled: active?.role === "teacher" && !!active?.schoolId && !!user, staleTime: 60_000,
+    queryKey: ["my-teacher-row", active?.schoolId, user?.id],
+    queryFn: async () => { const { count: n } = await db.from("teachers").select("id", { count: "exact", head: true }).eq("school_id", active!.schoolId!).eq("user_id", user!.id); return (n ?? 0) > 0; },
+  });
+  const opsOnly = active?.role === "teacher" && teachRow.data === false;
   if (!active) return null;
   return (
     <>
-      <PageHeader eyebrow={today()} title={`لوحة ${ROLE_LABELS[active.role]}`} desc={`${active.schoolName}${active.orgName ? ` — ${active.orgName}` : ""}`} />
+      <PageHeader eyebrow={today()} title={opsOnly ? "لوحة أعمالي" : `لوحة ${ROLE_LABELS[active.role]}`} desc={`${active.schoolName}${active.orgName ? ` — ${active.orgName}` : ""}`} />
       {!active.schoolId ? (
         <EmptyState title="اختر مدرسة من شريط السياق" hint={active.role === "platform_admin" ? "أو افتح صفحة المؤسسات." : "أو أضف مدرسة من صفحة المدارس."} />
       ) : active.role === "org_owner" ? (
@@ -58,7 +65,7 @@ function Home() {
           {active.role !== "platform_admin" && <WorkToday schoolId={active.schoolId} />}
           {canManage(active.role) || active.role === "student_affairs" || active.role === "dept_head" || active.role === "supervisor" ? (
         <StaffHome ctx={active as AppContext & { schoolId: string }} />
-      ) : active.role === "teacher" ? (
+      ) : opsOnly ? null : active.role === "teacher" ? (
         <TeacherHome schoolId={active.schoolId} />
       ) : active.role === "guardian" ? (
         <GuardianHome schoolId={active.schoolId} />
