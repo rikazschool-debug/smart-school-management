@@ -207,3 +207,15 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 ## Flexible school permissions (2026-11-03)
 - Each person keeps exactly their role's rule. The org owner may add (role template, custom title or personal grant, branch or whole-org scope) or deny (deny wins) these actions: organize meetings, publish school circulars, create school groups, approve attendance, counselor follow-up, operate gate/pickup/calls, scan attendance cards.
 - Owners cannot be restricted; students/guardians cannot receive grants; nobody edits their own permissions; suspended branches grant nothing; every change is logged with a reason.
+
+## Transport & maintenance area (operations) — step M1
+| Role (template) | maint_school | maint_bus |
+|---|---|---|
+| مدير مدرسة (base) | request, view (own branch) | view (own branch) |
+| مسؤول صيانة مدارس | execute | — |
+| مسؤول صيانة باصات | — | execute |
+| مسؤول متابعة صيانة المدارس | follow, view | — |
+| مسؤول متابعة صيانة الباصات | — | follow, view |
+| مسؤول متابعة الصيانة | follow, view | follow, view |
+| مسؤول حركة النقل بالمدرسة | — | request, view, fleet |
+All scopes are per assigned branches; the platform switch «النقل المدرسي والصيانة» (operations) disables every action. Owner-only assignment, logged; no self-assignment; students/guardians excluded.
