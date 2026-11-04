@@ -27,7 +27,7 @@ try {
   await admin.from("memberships").insert({ user_id: emp.id, org_id: org, school_id: S, role: "teacher" });
   const roles = (await owner.c.rpc("perm_roles_list", { _org: org })).data as any[];
   const R = (n: string) => roles.find((r) => r.name === n)?.id;
-  const PC = R("مسؤول مشتريات"), MS = R("مسؤول صيانة مدارس"), FS = R("مسؤول متابعة صيانة المدارس");
+  const PC = R("مسؤول مشتريات"), MS = R("مسؤول صيانة مدارس"), FS = R("مسؤول متابعة صيانة المدارس"), FA = R("مسؤول متابعة الصيانة");
   const eff = async () => (await owner.c.rpc("perm_effective", { _org: org, _user: emp.id })).data as any;
 
   // preview never writes
@@ -43,17 +43,19 @@ try {
   check("failed apply left nothing half-saved", !(await admin.from("perm_assignments").select("id").eq("user_id", emp.id)).data!.length);
 
   // two roles at once, both school maintenance roles grant view
-  const ap = await owner.c.rpc("perm_apply", { _org: org, _user: emp.id, _changes: { assign: [{ role_id: PC }, { role_id: MS }, { role_id: FS }] }, _reason: "ثلاثة أدوار" });
+  const ap = await owner.c.rpc("perm_apply", { _org: org, _user: emp.id, _changes: { assign: [{ role_id: PC }, { role_id: MS }, { role_id: FS }, { role_id: FA }] }, _reason: "أربعة أدوار" });
   let e1 = await eff();
-  check("three roles saved together", !ap.error && e1.roles.length === 3, ap.error);
+  check("four roles saved together", !ap.error && e1.roles.length === 4, ap.error);
   check("multi-role: procurement + execute + follow", on(e1, "procurement", "view") && on(e1, "maint_school", "execute") && on(e1, "maint_school", "follow"), e1.effective.filter((x: any) => x.section !== "attendance"));
 
   // removing one role keeps grants that another role still gives
-  const viewBefore = on(e1, "maint_school", "view");
   await owner.c.rpc("perm_apply", { _org: org, _user: emp.id, _changes: { unassign: [FS] }, _reason: "سحب المتابعة" });
   e1 = await eff();
-  check("unassign removes only that role's grant", !on(e1, "maint_school", "follow") && on(e1, "maint_school", "execute"), e1.roles);
-  check("view still granted by the other role", viewBefore === on(e1, "maint_school", "view") || on(e1, "maint_school", "view"));
+  check("withdrawn role is gone", !e1.roles.some((r: any) => r.id === FS) && e1.roles.length === 3, e1.roles);
+  check("follow + view kept from the other follow-up role", on(e1, "maint_school", "follow") && on(e1, "maint_school", "view"));
+  await owner.c.rpc("perm_apply", { _org: org, _user: emp.id, _changes: { unassign: [FA] }, _reason: "سحب الثاني" });
+  e1 = await eff();
+  check("after withdrawing both, follow is gone but execute stays", !on(e1, "maint_school", "follow") && on(e1, "maint_school", "execute"));
 
   // deny wins over role
   await owner.c.rpc("perm_apply", { _org: org, _user: emp.id, _changes: { overrides: [{ section: "procurement", action: "create", effect: "deny", scope: null }] }, _reason: "منع إنشاء" });
