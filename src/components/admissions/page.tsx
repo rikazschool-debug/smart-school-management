@@ -76,7 +76,7 @@ function Summary({ orgId, me, go }: { orgId: string; me: AdMe; go: (s: AdSearch)
   const d = q.data!;
   const open = (s: AdSearch) => go({ tab: "apps", ...s });
   const K = ({ l, v, s, t }: { l: string; v: unknown; s: AdSearch; t?: "warn" | "danger" }) => (
-    <button className="text-start" onClick={() => open(s)}><Stat label={l} value={Number(v ?? 0)} tone={t === "danger" ? "danger" : t === "warn" ? "warn" : "default"} /></button>);
+    <button className="text-start" onClick={() => open(s)}><Stat label={l} value={Number(v ?? 0)} tone={t === "danger" ? "bad" : t === "warn" ? "warn" : "default"} /></button>);
   const st = d["students"] as Row | null;
   return (
     <div className="space-y-4">

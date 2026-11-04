@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { db } from "@/components/crud-page";
 import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe, type MtMe } from "@/components/maintenance/shared";
+import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
 import type { AppContext } from "@/lib/session";
 
 /**
@@ -22,7 +23,7 @@ export function opsTitle(me: MtMe | undefined): string {
 }
 
 /** Every operations job the account holds (from server capabilities), without repeats. */
-export function opsTitles(me: MtMe | undefined, pc: boolean): string[] {
+export function opsTitles(me: MtMe | undefined, pc: boolean, ad = false): string[] {
   const c = me?.caps; const out: string[] = [];
   if (c?.school.execute.length) out.push("مدير صيانة المدارس");
   if (c?.bus.execute.length) out.push("مدير صيانة الباصات");
@@ -30,6 +31,7 @@ export function opsTitles(me: MtMe | undefined, pc: boolean): string[] {
   if (c?.bus.follow.length && !c.bus.execute.length) out.push("مسؤول متابعة صيانة الباصات");
   if (c?.bus.fleet.length && !c.bus.execute.length) out.push("مسؤول حركة النقل");
   if (pc) out.push("مسؤول المشتريات");
+  if (ad) out.push("مسؤول القبول والتسجيل");
   return out;
 }
 
@@ -45,13 +47,15 @@ export function useOpsStaff(active: AppContext | null, userId: string | undefine
   });
   const mt = useMtMe(active?.orgId ?? null, isTeacherType);
   const pc = usePcMe(active?.orgId ?? null, isTeacherType);
-  const loading = isTeacherType && (teachRow.isLoading || mt.isLoading || pc.isLoading);
+  const ad = useAdMe(active?.orgId ?? null, isTeacherType);
+  const loading = isTeacherType && (teachRow.isLoading || mt.isLoading || pc.isLoading || ad.isLoading);
   const hasMt = hasKind(mt.data, "school") || hasKind(mt.data, "bus") || canFleet(mt.data);
   const hasPc = !!pc.data?.enabled && !!pc.data.caps?.view;
-  const hasOps = hasMt || hasPc;
+  const hasAd = hasAdmissions(ad.data);
+  const hasOps = hasMt || hasPc || hasAd;
   const opsOnly = isTeacherType && teachRow.data === false && hasOps;
-  const jobs = opsOnly ? opsTitles(mt.data, hasPc) : [];
+  const jobs = opsOnly ? opsTitles(mt.data, hasPc, hasAd) : [];
   // several jobs on one account → one neutral «لوحة عملي», never one role's name over the others
-  const title = !opsOnly ? null : jobs.length > 1 ? "عملي" : hasMt ? opsTitle(mt.data) : "مسؤول المشتريات";
+  const title = !opsOnly ? null : jobs.length > 1 ? "عملي" : hasMt ? opsTitle(mt.data) : hasPc ? "مسؤول المشتريات" : "مسؤول القبول والتسجيل";
   return { loading, opsOnly, title, jobs, hasPc, me: mt.data };
 }
