@@ -311,12 +311,12 @@
 - [~] C5 Settlement close: unconfirmed paid amounts now block close (pc2 8b); pending invoices/drafts/refunds/open requests already blocked; correction/refund concurrency review open
 - [x] C6 Browser closure: transfer + acceptance + old holder loses access (pc-transfer-journey.py 8/8; server fix: transfer-born custody owned by recipient); carry-over two moves + no double total and custom invoice field with old invoice keeping its version (pc-carry-form-journey.py 9/9)
 - [~] C7 Requests list as phone cards done; open-session revocation + finance suspension (direct RPC, files, export); phone tests for section availability/roles/permissions; requests table as phone cards
-- [ ] C8 Alerts via real cron run; new due date / new low after top-up still alerts
+- [x] C8 new due date / new low after top-up re-alert once; none while finance suspended (pc-closure-e2e C2–C4); real pg_cron run checked by --cron-check
 - [ ] C9 Restore docs (student ID login + forced change, teacher/guardian WhatsApp code, grade visibility) in dedicated files linked from main scope; requirements matrix + closure log
 
 ## prompt-72 C4 verification
 - [x] Reservation at submission (drafts reserve nothing; released on reject/cancel; pending ≠ approved/spent), concurrent submissions serialized, concurrent claims → one winner, partial close → closed_partial, net spent incl. corrections − collected refunds, corrections cannot carry need quantities, pc_need_lines RLS+no grants verified (anon/teacher/officer refused). pc-need-e2e 18/18
-- [ ] Explicit test of correction/refund effect on a need (needs a custody-based need invoice)
+- [x] Correction/refund effect on a custody-based need: net spent 200→180→130, quantities untouched, custody balance restored (pc-closure-e2e A1–A4)
 
 ## prompt-71 closure (C4 + remaining)
 - [x] C4 purchase needs (see above)
@@ -324,7 +324,7 @@
 - [x] Owner exception (bounds-e2e 8/8): owner bound by platform section suspension, org isolation, no self-approve/self-disburse — explicit tests
 - [x] Branch suspension (bounds-e2e): blocks branch data/ops, not other active branch links; open session + reactivation; previously-suspended stays suspended
 - [ ] Browser journeys on isolated data: assign/grant/deny/withdraw on the new permissions page, staff link invitation, login after branch suspension
-- [~] C6 done (see above); open: finance suspension + permission withdrawal in open session; alerts via real cron (C8)
+- [x] C6 done; finance suspension + permission withdrawal in open session (direct RPC, attachment links, export) — pc-closure-e2e B0–B3; alerts via real cron (C8)
 - [ ] C9 restore docs (login documents, grade visibility) + requirements matrix with evidence; review new security warnings by actual permission
 
 ## Owner feedback 2026-11-03
