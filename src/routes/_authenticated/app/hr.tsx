@@ -2,7 +2,7 @@ import type React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Download, FileText, IdCard, Plus, UserCheck, X } from "lucide-react";
+import { ArrowRight, Download, FileText, IdCard, Plus, Upload, UserCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";
@@ -13,12 +13,14 @@ import { selectCls } from "@/components/ui/native-select";
 import { askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
+import { HrImport } from "@/components/hr/import";
 import { GENDER, STATUS, rpc, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
   validateSearch: (s: Record<string, unknown>): { emp?: string; add?: string } => ({
     ...(typeof s["emp"] === "string" ? { emp: s["emp"] as string } : {}),
     ...(s["add"] ? { add: "1" } : {}),
+    ...(s["imp"] ? { imp: "1" } : {}),
   }),
   head: () => ({ meta: [{ title: "الموارد البشرية — ركاز" }, { name: "description", content: "ملفات الموظفين وتعييناتهم في مدارس المؤسسة." }] }),
   component: Page,
@@ -42,7 +44,9 @@ function Page() {
 }
 
 function Workspace({ org, m }: { org: string; m: HrMe }) {
-  const { emp, add } = Route.useSearch();
+  const { emp, add, imp } = Route.useSearch();
+  const qc = useQueryClient();
+  const all = useQuery({ enabled: !!imp, queryKey: ["hr-list-all", org], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: null, _q: null, _status: null }) });
   const nav = useNavigate({ from: "/app/hr" });
   const [q, setQ] = useState(""), [school, setSchool] = useState(""), [status, setStatus] = useState("active");
   const list = useQuery({ queryKey: ["hr-list", org, school, q, status], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: school || null, _q: q || null, _status: status || null }) });
@@ -70,8 +74,10 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
           <Button variant="outline" size="sm" onClick={() => exp("pdf")}><FileText className="size-4" />PDF</Button>
         </>}
         {m.caps.create && <Button size="sm" onClick={() => nav({ search: { add: "1" } })}><Plus className="size-4" />إضافة موظف</Button>}
+        {m.caps.create && <Button size="sm" variant="outline" onClick={() => nav({ search: { imp: "1" } })}><Upload className="size-4" />استيراد Excel</Button>}
       </div>
       {add && m.caps.create && <AddEmployee org={org} m={m} onClose={() => nav({ search: {} })} onDone={(id) => nav({ search: { emp: id } })} />}
+      {imp && m.caps.create && all.data && <HrImport org={org} m={m} existing={all.data} onClose={() => nav({ search: {} })} onDone={() => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-list-all"] }); }} />}
       {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} />}
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !rows.length ? (
         <EmptyState title="لا يوجد موظفون مطابقون" hint={m.caps.create ? "أضف الموظفين من حساباتهم أو سجلات المعلمين الموجودة." : "لا توجد ملفات موظفين في نطاقك."} />
