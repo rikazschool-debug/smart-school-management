@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "cleanup config read" ON public.file_cleanup_config;
+CREATE POLICY "cleanup config read by platform admins" ON public.file_cleanup_config FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.platform_admins p WHERE p.user_id = auth.uid()));

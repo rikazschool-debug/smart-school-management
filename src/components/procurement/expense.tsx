@@ -227,7 +227,7 @@ export function ExpenseForm({ orgId, me, custodyId, needId, initial, corrects, o
           </div>
         )}
         {!corrects && threshold && !(purchases.data?.length) && <p className="text-xs text-muted-foreground sm:col-span-2">المصروف فوق {sar(threshold)} يحتاج طلب شراء مسبق معتمد.</p>}
-        <div className="sm:col-span-2"><Label>سبب عدم وجود مرفق (عند تعذّر الفاتورة)</Label><Textarea rows={2} value={d.no_attachment_reason} onChange={(e) => set("no_attachment_reason", e.target.value)} placeholder="يُعتمد استثناءً من شخص آخر" /></div>
+        <p className="text-xs text-muted-foreground sm:col-span-2">مرفق الفاتورة اختياري؛ يمكنك رفعه بعد الحفظ من قسم المرفقات.</p>
       </div>
       <FormActions><Button disabled={busy || (!own && !custody)} onClick={() => void save()}>حفظ</Button><Button variant="ghost" onClick={onCancel}>إلغاء</Button></FormActions>
     </FormCard>
@@ -262,7 +262,6 @@ export function ExpenseDetail({ id, me, back, openCustody, openExpense }: { id: 
     if (await run(db.rpc("pc_expense_action", { _id: e.id, _action: action, _rev: e.rev, _reason: reason }), msg)) inv();
   };
   async function approve() {
-    if (e.no_files || e.no_attachment_reason) { await act("approve", "اعتُمد المصروف", `المصروف بلا مرفق («${e.no_attachment_reason ?? ""}»). اكتب سبب موافقتك على الاستثناء:`); return; }
     if (await ask(`اعتماد ${sar(e.total)}؟ سيُخصم من رصيد العهدة مرة واحدة.`)) await act("approve", "اعتُمد المصروف");
   }
   return (
@@ -289,7 +288,7 @@ export function ExpenseDetail({ id, me, back, openCustody, openExpense }: { id: 
           {e.corrects_id && <p><button className="text-primary" onClick={() => openExpense(e.corrects_id)}>المصروف الأصلي</button></p>}
           {e.notes && <p>ملاحظات: {e.notes}</p>}
           <CustomValues e={e} />
-          {e.no_attachment_reason && <p className="rounded-lg bg-warning/10 px-3 py-2">بلا مرفق: {e.no_attachment_reason}</p>}
+          {e.no_attachment_reason && <p className="text-muted-foreground">ملاحظة سابقة عن المرفق: {e.no_attachment_reason}</p>}
           {e.decision_reason && <p className="text-muted-foreground">سبب القرار: {e.decision_reason}</p>}
           {e.dup_ref && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">تنبيه: المورد ورقم الفاتورة يطابقان {e.dup_ref} — لا يُعتمد مكرر.</p>}
         </div>

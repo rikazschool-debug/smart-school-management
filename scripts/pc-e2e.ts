@@ -103,11 +103,18 @@ try {
   const nonTax = await ex({ description: "نقل", supplier: "سائق", tax_invoice: false, lines: [{ description: "توصيل", amount: 33.33, taxable: true }] });
   const ng = (await off.c.rpc("pc_expense_get", { _id: nonTax.data })).data as any;
   check("10 inclusive VAT extracted (115 → 100 + 15); non-tax invoice carries no VAT", Number(ig.net) === 100 && Number(ig.vat) === 15 && Number(ng.vat) === 0 && Number(ng.total) === 33.33, [ig, ng]);
-  const s0 = await off.c.rpc("pc_expense_action", { _id: E1, _action: "submit", _rev: eg.rev, _reason: null });
-  await off.c.rpc("create_pc_file", { _entity: "expense", _id: E1, _name: "فاتورة.pdf", _mime: "application/pdf", _size: 2000 });
+  // attachment is optional: type/size/owner are still validated when one is added
+  const fBad = await off.c.rpc("create_pc_file", { _entity: "expense", _id: E1, _name: "x.exe", _mime: "application/x-msdownload", _size: 2000 });
+  const fBig = await off.c.rpc("create_pc_file", { _entity: "expense", _id: E1, _name: "كبير.pdf", _mime: "application/pdf", _size: 500 * 1024 * 1024 });
+  const fOther = await rev.c.rpc("create_pc_file", { _entity: "expense", _id: E1, _name: "غيري.pdf", _mime: "application/pdf", _size: 2000 });
+  const fOk = await off.c.rpc("create_pc_file", { _entity: "expense", _id: E1, _name: "فاتورة.pdf", _mime: "application/pdf", _size: 2000 });
+  const efid = (fOk.data as any)?.[0]?.id;
   const s1 = await off.c.rpc("pc_expense_action", { _id: E1, _action: "submit", _rev: (await off.c.rpc("pc_expense_get", { _id: E1 })).data.rev, _reason: null });
+  const fLate = await off.c.rpc("create_pc_file", { _entity: "expense", _id: E1, _name: "متأخر.pdf", _mime: "application/pdf", _size: 2000 });
+  const efApr = await apr.c.from("files").select("id").eq("id", efid);
+  const efX = await owner2.c.from("files").select("id").eq("id", efid);
   g = await get(off.c, C1);
-  check("11 attachment required to submit; submitted amount is pending, not deducted", !!s0.error && !s1.error && Number(g.bal.book) === 800 && Number(g.bal.pending) === 165 && Number(g.bal.available) === 635, [s0.error, s1.error, g.bal]);
+  check("11 optional attachment: wrong type, oversize, other person and after-submit refused; valid file accepted and readable by branch approver only; submitted amount is pending", !!fBad.error && !!fBig.error && !!fOther.error && !fOk.error && !!efid && !s1.error && !!fLate.error && efApr.data?.length === 1 && !efX.data?.length && Number(g.bal.book) === 800 && Number(g.bal.pending) === 165 && Number(g.bal.available) === 635, [fBad.error, fBig.error, fOther.error, fOk.error, s1.error, fLate.error, efApr.data, efX.data, g.bal]);
   eg = (await rev.c.rpc("pc_expense_get", { _id: E1 })).data as any;
   await rev.c.rpc("pc_expense_action", { _id: E1, _action: "review", _rev: eg.rev, _reason: null });
   eg = (await rev.c.rpc("pc_expense_get", { _id: E1 })).data as any;
@@ -140,15 +147,13 @@ try {
   const bgx = (await off.c.rpc("pc_expense_get", { _id: big1.data })).data as any;
   const over = await off.c.rpc("pc_expense_action", { _id: big1.data, _action: "submit", _rev: bgx.rev, _reason: null });
   check("16 spending above the available balance is refused", !!over.error && /المتاح/.test(over.error.message), over.error);
-  // no-attachment exception needs independent approval with reason
-  const na = await ex({ description: "بلا مرفق", supplier: "بقالة", lines: [{ description: "ماء", amount: 20 }], no_attachment_reason: "مشتريات نقدية صغيرة" });
+  // invoice without any attachment: submitted and approved with no reason or exception
+  const na = await ex({ description: "بلا مرفق", supplier: "بقالة", lines: [{ description: "ماء", amount: 20 }] });
   let nag = (await off.c.rpc("pc_expense_get", { _id: na.data })).data as any;
   const naS = await off.c.rpc("pc_expense_action", { _id: na.data, _action: "submit", _rev: nag.rev, _reason: null });
-  nag = (await apr.c.rpc("pc_expense_get", { _id: na.data })).data as any;
-  const naA0 = await apr.c.rpc("pc_expense_action", { _id: na.data, _action: "approve", _rev: nag.rev, _reason: null });
-  const naA1 = await apr.c.rpc("pc_expense_action", { _id: na.data, _action: "approve", _rev: (await apr.c.rpc("pc_expense_get", { _id: na.data })).data.rev, _reason: "موافقة على الاستثناء" });
+  const naA = await apr.c.rpc("pc_expense_action", { _id: na.data, _action: "approve", _rev: (await apr.c.rpc("pc_expense_get", { _id: na.data })).data.rev, _reason: null });
   nag = (await off.c.rpc("pc_expense_get", { _id: na.data })).data as any;
-  check("17 missing attachment: submit with reason, approval needs approver's own reason", !naS.error && !!naA0.error && !naA1.error && nag.no_attachment_ok_by === apr.id, [naS.error, naA0.error, naA1.error]);
+  check("17 invoice without attachment: submit and approve need no reason; no exception recorded", !na.error && !naS.error && !naA.error && nag.status === "approved" && !nag.no_attachment_ok_by && !nag.files?.length, [na.error, naS.error, naA.error, nag?.status, nag?.no_attachment_ok_by]);
   // correction linked to the original (−15)
   const cx = await ex({ corrects_id: E1, description: "تصحيح خصم", supplier: "مكتبة النور", notes: "خصم لاحق من المورد", lines: [{ description: "خصم", amount: -15, taxable: false }] });
   let cg = (await off.c.rpc("pc_expense_get", { _id: cx.data })).data as any;

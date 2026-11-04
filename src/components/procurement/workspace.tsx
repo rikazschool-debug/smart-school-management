@@ -144,7 +144,6 @@ export function SettingsTab({ orgId, me }: { orgId: string; me: PcMe }) {
           <div><Label>التنبيه قبل موعد التسوية (أيام)</Label><Input inputMode="numeric" value={f.due_soon} onChange={(e) => setF({ ...f, due_soon: e.target.value })} /></div>
         </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.vat_inclusive} onChange={(e) => setF({ ...f, vat_inclusive: e.target.checked })} /> الإدخال الافتراضي شامل الضريبة</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.require_attachment} onChange={(e) => setF({ ...f, require_attachment: e.target.checked })} /> الفاتورة إلزامية (الاستثناء بسبب واعتماد مستقل)</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.block_overdue} onChange={(e) => setF({ ...f, block_overdue: e.target.checked })} /> منع عهدة جديدة لمن لديه عهدة متأخرة إلا باستثناء</label>
         <p className="text-xs text-muted-foreground">العملة: الريال السعودي. تغيير النسبة لا يغيّر الفواتير المحفوظة.</p>
         <Button onClick={() => void save()}>حفظ</Button>

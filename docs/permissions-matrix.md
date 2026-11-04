@@ -193,6 +193,7 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 | Disburse a top-up, receive returned cash | «disburse» in scope, proof required |
 | Carry balance / close custody | «approve» in scope; close only when every reconciliation check passes |
 | Reports + Excel/PDF export | «export» in scope (server re-checks scope on every export) |
+| Invoice attachment | Optional at create/submit/review/approve (owner decision 2026-11-04) — no reason or exception approval; when added: only the invoice creator, while draft/returned, type/size per file policy; readable by branch approvers, not other orgs. Custody disbursement/refund proof stays mandatory |
 | Invoice form versions (custom fields) | «settings» at org level; protected core fields; old invoices keep their version |
 | Settings (VAT rate, rules, categories) | «settings» (owner by default); changes logged, old records keep their rate |
 | Platform admin, students, guardians, other orgs | No access |
