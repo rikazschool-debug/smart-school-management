@@ -21,5 +21,6 @@ export const DEMO_ACCOUNTS: { role: Role; email: string; name: string; label?: s
   { role: "teacher", email: "demo-maint-school@rikaz.demo", name: "مدير صيانة المدارس", label: "مدير صيانة المدارس", template: "مسؤول صيانة مدارس" },
   { role: "teacher", email: "demo-maint-bus@rikaz.demo", name: "مدير صيانة الباصات", label: "مدير صيانة الباصات", template: "مسؤول صيانة باصات" },
   { role: "teacher", email: "demo-follow-school@rikaz.demo", name: "متابعة صيانة المدارس", label: "متابعة صيانة المدارس", template: "مسؤول متابعة صيانة المدارس" },
+  { role: "teacher", email: "demo-procurement@rikaz.demo", name: "مسؤول المشتريات", label: "مسؤول المشتريات", template: "مسؤول مشتريات" },
   { role: "teacher", email: "demo-follow-bus@rikaz.demo", name: "متابعة صيانة الباصات", label: "متابعة صيانة الباصات", template: "مسؤول متابعة صيانة الباصات" },
 ];

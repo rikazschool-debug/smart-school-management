@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/components/crud-page";
+import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe, type MtMe } from "@/components/maintenance/shared";
 import type { AppContext } from "@/lib/session";
 
@@ -31,8 +32,11 @@ export function useOpsStaff(active: AppContext | null, userId: string | undefine
     },
   });
   const mt = useMtMe(active?.orgId ?? null, isTeacherType);
-  const loading = isTeacherType && (teachRow.isLoading || mt.isLoading);
-  const hasOps = hasKind(mt.data, "school") || hasKind(mt.data, "bus") || canFleet(mt.data);
+  const pc = usePcMe(active?.orgId ?? null, isTeacherType);
+  const loading = isTeacherType && (teachRow.isLoading || mt.isLoading || pc.isLoading);
+  const hasMt = hasKind(mt.data, "school") || hasKind(mt.data, "bus") || canFleet(mt.data);
+  const hasPc = !!pc.data?.enabled && !!pc.data.caps?.view;
+  const hasOps = hasMt || hasPc;
   const opsOnly = isTeacherType && teachRow.data === false && hasOps;
-  return { loading, opsOnly, title: opsOnly ? opsTitle(mt.data) : null, me: mt.data };
+  return { loading, opsOnly, title: opsOnly ? (hasMt ? opsTitle(mt.data) : "مسؤول المشتريات") : null, me: mt.data };
 }

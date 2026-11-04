@@ -146,7 +146,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   const [key] = useState(() => crypto.randomUUID());
   const inv = useInvalidate();
   // The org owner creates and approves in one step for a chosen branch + procurement officer (pc_custody_save_approve).
-  const ownerDirect = !!me.owner && !initial;
+  const ownerDirect = me.is_owner && !initial;
   async function saveApprove() {
     if (!school) { toast.error("اختر الفرع"); return; }
     if (!holder[0] || holder[0] === me.me) { toast.error("اختر مسؤول المشتريات المستفيد"); return; }
