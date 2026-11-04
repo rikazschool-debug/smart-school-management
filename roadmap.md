@@ -387,3 +387,4 @@ Out of scope this round: HR, accounting, fees, transport ops, hosting move.
 Nov 4 (prompt-125): closed — class visits (visits-e2e 24/24), busy-teacher regression (timetable 31/31 ×3), demo platform account banned, isolation (rls 94/94, bounds 8/8). Open (owner): Supabase Site URL/redirects, leaked-password protection, decide on public sign-up; WordPress live test; hosting move deferred.
 
 Nov 4 (prompt-126): comprehensive evaluation built on class visits — done & tested (evaluation-e2e 26/26, journey 18/18). Open: monthly-cycle/overdue reminders (needs a daily job), forms-delegation node in the permission tree UI, cross-period trend charts.
+Nov 4 (prompt-127/128): evaluation side sub-menu (owner sees only evaluation), teacher/staff files with process diagram + charts, monthly score/percentage column — done & tested (journey 26/26, e2e 26/26). Open: monthly-cycle/overdue reminders (needs daily job), forms-delegation node in the permission tree UI.
