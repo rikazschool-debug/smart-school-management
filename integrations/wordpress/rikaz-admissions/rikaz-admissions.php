@@ -148,6 +148,7 @@ add_action( 'admin_post_rikaz_adm_save', function () {
 	$src = sanitize_text_field( wp_unslash( $_POST['source'] ?? '' ) );
 	if ( preg_match( '/^[0-9a-f-]{36}$/i', $src ) ) { $s['source'] = $src; }
 	$sec = trim( (string) wp_unslash( $_POST['secret'] ?? '' ) );
+	$s['year'] = sanitize_text_field( wp_unslash( $_POST['year'] ?? '' ) );
 	if ( $sec !== '' && preg_match( '/^[0-9a-f]{64}$/', $sec ) ) { $s['secret'] = $sec; } // empty field keeps the saved key
 	update_option( RIKAZ_ADM_OPT, $s, false );
 	wp_safe_redirect( admin_url( 'options-general.php?page=rikaz-admissions&saved=1' ) ); exit;
@@ -182,7 +183,8 @@ function rikaz_adm_page() {
 		wp_nonce_field( 'rikaz_adm_save' );
 		echo '<table class="form-table"><tr><th>عنوان الاستقبال في ركاز</th><td><input class="regular-text ltr" dir="ltr" name="endpoint" value="' . esc_attr( $s['endpoint'] ) . '" placeholder="https://…/api/public/admissions/wordpress"></td></tr>';
 		echo '<tr><th>معرّف الربط</th><td><input class="regular-text ltr" dir="ltr" name="source" value="' . esc_attr( $s['source'] ) . '"></td></tr>';
-		echo '<tr><th>المفتاح السري</th><td><input type="password" autocomplete="new-password" class="regular-text ltr" dir="ltr" name="secret" value="" placeholder="' . ( $s['secret'] ? esc_attr( '•••• ' . substr( $s['secret'], -4 ) . ' (محفوظ — اتركه فارغًا للإبقاء)' ) : 'الصقه من ركاز' ) . '"></td></tr></table>';
+		echo '<tr><th>المفتاح السري</th><td><input type="password" autocomplete="new-password" class="regular-text ltr" dir="ltr" name="secret" value="" placeholder="' . ( $s['secret'] ? esc_attr( '•••• ' . substr( $s['secret'], -4 ) . ' (محفوظ — اتركه فارغًا للإبقاء)' ) : 'الصقه من ركاز' ) . '"></td></tr>';
+		echo '<tr><th>عام التقديم</th><td><input class="regular-text" name="year" value="' . esc_attr( $s['year'] ) . '" placeholder="مثال 1448"><p class="description">يُستخدم في القالب المعدّل لمنع التكرار داخل العام نفسه فقط.</p></td></tr></table>';
 		submit_button( 'حفظ' );
 		echo '</form><h2>آخر الطلبات المرسلة</h2>';
 		$q = get_posts( array( 'post_type' => RIKAZ_ADM_PT, 'post_status' => 'any', 'posts_per_page' => 50, 'meta_key' => '_rikaz_status' ) );
