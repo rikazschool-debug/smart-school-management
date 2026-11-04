@@ -174,7 +174,11 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   return (
     <FormCard title={initial ? `تعديل ${initial.ref}` : canOthers ? "إضافة عهدة" : "طلب عهدة جديدة"} subtitle={ownerDirect ? "حدّد الفرع ومسؤول المشتريات المستفيد؛ تُعتمد العهدة فور الحفظ ثم تُصرف بإثبات، والرصيد يبدأ عند الصرف الفعلي." : "تُرسل للاعتماد ثم تُصرف بإثبات؛ الرصيد يبدأ عند الصرف الفعلي."}>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><Label>الفرع</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><Label>الجهة المستفيدة</Label><select className={selectCls()} value={unit === "branch" ? school : unit} onChange={(e) => { const v = e.target.value; setHolder([]); if (v === "mt_bus" || v === "mt_school") setUnit(v); else { setUnit("branch"); setSchool(v); } }}>
+          <optgroup label="الفروع">{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</optgroup>
+          {canOthers && <optgroup label="أقسام الصيانة"><option value="mt_bus">صيانة الباصات</option><option value="mt_school">صيانة المدارس</option></optgroup>}
+        </select></div>
+        {unit !== "branch" && <div><Label>الفرع المقيّدة عليه العهدة</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
         <div><Label>المبلغ (ريال سعودي)</Label><Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" /></div>
         <div className="sm:col-span-2"><Label>الغرض</Label><Textarea value={purpose} onChange={(e) => setPurpose(e.target.value)} rows={2} /></div>
         <div><Label>موعد التسوية</Label><Input type="date" min={todayRiyadh()} value={due} onChange={(e) => setDue(e.target.value)} /></div>
@@ -187,7 +191,8 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
         )}
       </div>
       {canOthers ? (
-        <PeoplePicker purpose="pc_holder" school={school || null} org={orgId} value={holder} onChange={setHolder} single label="مستلم العهدة (مسؤول مشتريات أو مدير صيانة)" compact />
+        <PeoplePicker key={unit + school} purpose={unit === "mt_bus" ? "pc_holder_mt_bus" : unit === "mt_school" ? "pc_holder_mt_school" : "pc_holder"} school={unit === "branch" ? school || null : null} org={orgId} value={holder} onChange={setHolder} single
+          label={unit === "branch" ? "مستلم العهدة (من له صلاحية استلام العهد في الفرع)" : unit === "mt_bus" ? "مستلم العهدة (مدير أو مسؤول صيانة الباصات)" : "مستلم العهدة (مدير أو مسؤول صيانة المدارس)"} compact />
       ) : <p className="text-sm text-muted-foreground">المستلم: أنت (صلاحيتك تشمل عهدك الخاصة فقط).</p>}
       <FormActions>
         {ownerDirect ? <Button disabled={busy} onClick={() => void saveApprove()}>حفظ واعتماد</Button>
