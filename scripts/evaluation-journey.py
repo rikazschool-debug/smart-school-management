@@ -1,0 +1,85 @@
+# Evaluation browser journey (needs: bun scripts/evaluation-browser-fixture.ts setup). Desktop + 390px phone.
+import asyncio, json
+from playwright.async_api import async_playwright
+B = "http://localhost:8080"; F = json.load(open("/tmp/browser/ev/fixture.json")); SH = "/tmp/browser/ev/"
+ok = bad = 0
+def check(n, c, e=""):
+    global ok, bad
+    ok += c; bad += (not c); print("PASS" if c else "FAIL", n, "" if c else e)
+async def login(br, who, w=1280, h=1800):
+    ctx = await br.new_context(viewport={"width": w, "height": h}); p = await ctx.new_page()
+    await p.goto(B + "/auth"); await p.wait_for_timeout(2500); await p.fill("#email", F[who]); await p.fill("#password", F["pw"])
+    await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await p.wait_for_timeout(1500); return p
+async def confirm(p):
+    await p.get_by_role("alertdialog").get_by_role("button").last.click()
+async def main():
+    async with async_playwright() as pw:
+        br = await pw.chromium.launch(headless=True)
+        # guardian on phone
+        g = await login(br, "g", 390, 844)
+        await g.goto(B + "/app/evaluation"); await g.wait_for_timeout(3000)
+        await g.screenshot(path=SH + "1_guardian_list.png")
+        check("1 guardian sees one teacher card with both subjects", await g.get_by_text("معلم التجربة").count() >= 1 and await g.get_by_text("رياضيات").count() >= 1 and await g.get_by_text("علوم").count() >= 1)
+        await g.get_by_role("button", name="تقييم").first.click(); await g.wait_for_timeout(800)
+        groups = g.get_by_role("radiogroup")
+        check("2 ten star questions shown", await groups.count() == 10, await groups.count())
+        await groups.nth(0).get_by_role("radio", name="4 — جيد").click()
+        await groups.nth(1).get_by_role("radio").first.focus(); await g.keyboard.press("ArrowLeft"); await g.keyboard.press("ArrowLeft")
+        check("3 keyboard: ArrowLeft moves to 2 stars (RTL)", await groups.nth(1).get_by_role("radio", name="2 — ضعيف").get_attribute("aria-checked") == "true")
+        await g.get_by_role("button", name="لا أستطيع التقييم").nth(2).click()
+        check("4 completion shows 3 of 10 handled, 2 answered", await g.get_by_text("أُجيب 2 من 10").count() == 1)
+        hs = await g.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+        await g.screenshot(path=SH + "2_guardian_form_phone.png")
+        check("5 phone: no horizontal scroll; privacy note shown", hs and await g.get_by_text("التقييم ليس مجهولًا").count() == 1)
+        await g.get_by_role("button", name="حفظ التقييم").click(); await g.wait_for_timeout(2000)
+        check("6 saved; card shows edit", await g.get_by_role("button", name="تعديل التقييم").count() == 1)
+        await g.get_by_role("button", name="تعديل التقييم").click(); await g.wait_for_timeout(600)
+        check("7 reopening keeps previous answers", await g.get_by_role("radiogroup").nth(0).get_by_role("radio", name="4 — جيد").get_attribute("aria-checked") == "true")
+        await g.get_by_role("radiogroup").nth(4).get_by_role("radio", name="5 — ممتاز").click()
+        await g.get_by_role("button", name="حفظ التقييم").click(); await g.wait_for_timeout(1500)
+        # principal desktop
+        p = await login(br, "pr")
+        await p.goto(B + "/app/evaluation?tab=guardians"); await p.wait_for_timeout(3000)
+        await p.screenshot(path=SH + "3_principal_guardians.png")
+        row = p.get_by_role("row").filter(has_text="معلم التجربة")
+        txt = await row.inner_text() if await row.count() else ""
+        check("8 principal: one current rating after edit (no inflation), avg 3.67", "\t1\t1\t1\t" in txt and "3.67" in txt, txt)
+        await row.get_by_role("button", name="ملف التقييم").click(); await p.wait_for_timeout(2000)
+        check("9 teacher file per-question data with «can't rate» count", await p.get_by_text("1 لا أستطيع").count() >= 1)
+        async with p.expect_download() as dl:
+            await p.get_by_role("button", name="→ رجوع").click(); await p.wait_for_timeout(1000); await p.get_by_role("button", name="Excel").click()
+        d = await dl.value; check("10 Excel downloads", d.suggested_filename.endswith(".xlsx"), d.suggested_filename)
+        async with p.expect_download(timeout=30000) as dl2:
+            await p.get_by_role("button", name="PDF").click()
+        d2 = await dl2.value; check("11 PDF downloads", d2.suggested_filename.endswith(".pdf"), d2.suggested_filename)
+        await p.goto(B + "/app/evaluation?tab=monthly"); await p.wait_for_timeout(3000)
+        vr = p.get_by_role("row").filter(has_text="وكيل التجربة")
+        check("12 monthly list shows vice; principal not listed", await vr.count() == 1 and await p.get_by_role("row").filter(has_text="مدير التجربة").count() == 0)
+        await vr.get_by_role("button").click(); await p.wait_for_timeout(1500)
+        for i in range(5): await p.get_by_role("radiogroup").nth(i).get_by_role("radio", name="4 — جيد").click()
+        await p.get_by_role("button", name="اعتماد").click(); await confirm(p); await p.wait_for_timeout(2000)
+        check("13 monthly approved", await p.get_by_role("row").filter(has_text="وكيل التجربة").filter(has_text="معتمد").count() == 1)
+        await p.screenshot(path=SH + "4_monthly.png")
+        # vice cannot open
+        v = await login(br, "vice")
+        await v.goto(B + "/app/evaluation"); await v.wait_for_timeout(2500)
+        check("14 vice: no access", await v.get_by_text("وكيل التجربة").filter(has_text="معتمد").count() == 0 and await v.get_by_role("tab").count() == 0 and await v.get_by_text("الملخص والمؤشرات").count() == 0)
+        # owner forms
+        o = await login(br, "owner")
+        await o.goto(B + "/app"); await o.wait_for_timeout(2500)
+        check("15 owner home has evaluation card", await o.get_by_text("نظام التقييم الشامل").count() >= 1)
+        await o.goto(B + "/app/evaluation?tab=forms"); await o.wait_for_timeout(2500)
+        sec = o.locator("section").filter(has_text="تقييم ولي الأمر للمعلم")
+        await sec.get_by_role("button").first.click(); await o.wait_for_timeout(800)
+        await o.get_by_role("button", name="حذف").last.click()
+        await o.get_by_role("button", name="معاينة").click(); await o.wait_for_timeout(400)
+        check("16 preview shows 9 questions after deleting one", await o.get_by_role("radiogroup").count() == 9)
+        await o.get_by_role("button", name="رجوع للتحرير").click()
+        await o.get_by_role("button", name="نشر إصدار جديد").click(); await confirm(o); await o.wait_for_timeout(2000)
+        check("17 version 2 published, version 1 archived", await o.get_by_text("الإصدار 2 · 9 بند · منشور").count() == 1 and await o.get_by_text("الإصدار 1 · 10 بند · مؤرشف").count() == 1)
+        await g.reload(); await g.wait_for_timeout(2500); await g.get_by_role("button", name="تعديل التقييم").click(); await g.wait_for_timeout(800)
+        check("18 guardian told the form changed", await g.get_by_text("تغيّر نموذج التقييم").count() == 1)
+        await o.screenshot(path=SH + "5_forms.png")
+        await br.close()
+    print(f"\n{ok} passed, {bad} failed")
+asyncio.run(main())
