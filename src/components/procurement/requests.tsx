@@ -318,7 +318,17 @@ export function CustodyOps({ c, me, newRequest, openRequest }: { c: Row; me: PcM
           </>}
         </ActionBox>
       )}
-      {k.settlement && (c.status === "settling" || c.status === "closed") && (
+      {c.status === "closed" && (k.requests as Row[]).some((x) => x.kind === "transfer" && x.status === "done") && (() => {
+        const t = (k.requests as Row[]).find((x) => x.kind === "transfer" && x.status === "done")!;
+        return (
+          <Panel title="أُغلقت بالنقل لشخص آخر"><div className="space-y-2 text-sm">
+            <p className="text-muted-foreground">نُقل الرصيد كاملًا بحركتين متقابلتين إلى عهدة جديدة للمستلم، فلا تحتاج هذه العهدة طلب تسوية. المصروفات المعتمدة قبل النقل تبقى مسجلة عليها.</p>
+            <button className="text-primary" onClick={() => openRequest(t.id)}>عرض طلب النقل {t.ref}</button>
+            {c.closed_at && <p className="text-muted-foreground">أُغلقت {fmt(c.closed_at)} — {k.closed_by}</p>}
+          </div></Panel>
+        );
+      })()}
+      {k.settlement && (c.status === "settling" || (c.status === "closed" && !(k.requests as Row[]).some((x) => x.kind === "transfer" && x.status === "done"))) && (
         <Panel title={c.status === "closed" ? "التسوية (مغلقة)" : "مطابقة التسوية"}><div className="space-y-2">
           <p className="text-sm text-muted-foreground">المصروفات المعتمدة: {k.settlement.expenses.approved} · قبل الضريبة {sar(k.settlement.expenses.net)} · الضريبة {sar(k.settlement.expenses.vat)} · الإجمالي {sar(k.settlement.expenses.total)} · المعاد {sar(k.settlement.bal.returned)} · المرحّل {sar(k.settlement.bal.carried)} · الفروق المعالجة {sar(k.settlement.bal.adjusted)}</p>
           <ul className="space-y-1 text-sm">{(k.settlement.items as Row[]).map((x) => <li key={x.key} className={x.ok ? "text-primary" : "text-destructive"}>{x.ok ? "✓" : "✗"} {x.label}{!x.ok && x.value != null ? ` (${x.key === "balance" || x.key === "pending" ? sar(x.value) : x.value})` : ""}</li>)}</ul>
