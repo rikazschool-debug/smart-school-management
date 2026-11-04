@@ -348,11 +348,11 @@ export function BusesTab({ orgId, orgName, me }: { orgId: string; orgName: strin
     <div className="space-y-4">
       <TabIntro icon={Bus} title="الباصات" desc="البيانات الأساسية اللازمة لطلبات الصيانة فقط، وحالة كل باص التشغيلية والصيانة القادمة."
         actions={fleetSchools.length > 0 && <Button onClick={() => setEdit({})}><Plus className="size-4" />إضافة باص</Button>} />
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد باصات مسجلة" hint="يضيف مسؤول حركة النقل باصات فرعه." /> : (
-        <TableCard caption={<span className="flex flex-wrap items-center gap-3">{q.data.length} باص<ExportButtons meta={{ title: "الباصات", school: orgName, filters: [] }} headers={["الرقم", "اللوحة", "الفرع", "الحالة", "العداد", "الصيانة القادمة", "طلبات مفتوحة"]}
-          rows={() => q.data.map((b) => [b.code, b.plate, b.school, BUS_STATUS[b.op_status] ?? "", b.odometer, [b.next_service_date && dd(b.next_service_date), b.next_service_km && `${b.next_service_km} كم`].filter(Boolean).join(" / "), b.open_requests])} /></span>}>
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد باصات مسجلة" hint="يضيف مسؤول حركة النقل أو مسؤول متابعة الصيانة باصات فرعه." /> : (
+        <TableCard caption={<span className="flex flex-wrap items-center gap-3">{q.data.length} باص<ExportButtons meta={{ title: "الباصات", school: orgName, filters: [] }} headers={["الرقم", "اللوحة", "الفرع", "الحالة", "العداد", "الصيانة القادمة", "الفحص الدوري", "الترخيص", "طلبات مفتوحة"]}
+          rows={() => q.data.map((b) => [b.code, b.plate, b.school, BUS_STATUS[b.op_status] ?? "", b.odometer, [b.next_service_date && dd(b.next_service_date), b.next_service_km && `${b.next_service_km} كم`].filter(Boolean).join(" / "), b.inspection_date ? `${dd(b.inspection_date)} ${DOC[b.inspection_state] ?? ""}` : "", b.license_expiry ? `${dd(b.license_expiry)} ${DOC[b.license_state] ?? ""}` : "", b.open_requests])} /></span>}>
           <table className="w-full text-sm">
-            <thead className={THEAD}><tr><th className={TH}>الباص</th><th className={TH}>الفرع</th><th className={TH}>الحالة التشغيلية</th><th className={TH}>العداد</th><th className={TH}>الصيانة القادمة</th><th className={TH}>طلبات مفتوحة</th><th className={TH}></th></tr></thead>
+            <thead className={THEAD}><tr><th className={TH}>الباص</th><th className={TH}>الفرع</th><th className={TH}>الحالة التشغيلية</th><th className={TH}>العداد</th><th className={TH}>الصيانة القادمة</th><th className={TH}>الفحص الدوري</th><th className={TH}>الترخيص</th><th className={TH}>طلبات مفتوحة</th><th className={TH}></th></tr></thead>
             <tbody>
               {q.data.map((b) => (
                 <tr key={b.id} className="border-t">
@@ -361,6 +361,8 @@ export function BusesTab({ orgId, orgName, me }: { orgId: string; orgName: strin
                   <td className={TD}><span className={"rounded-full px-2 py-0.5 text-xs " + (b.op_status === "available" ? "bg-success/10 text-success" : b.op_status === "stopped" ? "bg-destructive/10 text-destructive" : "bg-warning/15 text-warning-foreground")}>{BUS_STATUS[b.op_status]}</span></td>
                   <td className={TD + " tabular-nums"}>{b.odometer ?? "—"}</td>
                   <td className={TD}>{[b.next_service_date && dd(b.next_service_date), b.next_service_km && `${b.next_service_km} كم`].filter(Boolean).join(" / ") || "—"}{b.service_due && <span className="mr-1 text-xs font-semibold text-destructive">مستحقة</span>}</td>
+                  <td className={TD}><DocState d={b.inspection_date} s={b.inspection_state} /></td>
+                  <td className={TD}><DocState d={b.license_expiry} s={b.license_state} /></td>
                   <td className={TD + " tabular-nums"}>{b.open_requests}</td>
                   <td className={TD}><div className="flex flex-wrap gap-1">
                     {b.can_fleet && <Button size="sm" variant="ghost" onClick={() => setEdit(b)}>تعديل</Button>}
@@ -379,11 +381,18 @@ export function BusesTab({ orgId, orgName, me }: { orgId: string; orgName: strin
   );
 }
 
+const DOC: Record<string, string> = { valid: "ساري", soon: "قارب على الانتهاء", expired: "منتهٍ" };
+function DocState({ d, s }: { d?: string | null; s?: string | null }) {
+  if (!d) return <span className="text-muted-foreground">—</span>;
+  const c = s === "expired" ? "bg-destructive/10 text-destructive" : s === "soon" ? "bg-warning/15 text-warning-foreground" : "bg-success/10 text-success";
+  return <span className="flex flex-col gap-0.5"><span className="tabular-nums">{dd(d)}</span><span className={"w-fit rounded-full px-2 py-0.5 text-xs " + c}>{DOC[s ?? ""]}</span></span>;
+}
+
 function BusForm({ bus, schools, onDone }: { bus: Row; schools: { id: string; name: string }[]; onDone: () => void }) {
   const [d, setD] = useState<Row>({ school: bus.school_id ?? schools[0]?.id, ...bus });
   const set = (k: string, v: unknown) => setD((x: Row) => ({ ...x, [k]: v }));
   async function save() {
-    const data = { code: d.code, plate: d.plate, model: d.model, capacity: d.capacity ?? "", odometer: d.odometer ?? "", next_service_date: d.next_service_date ?? "", next_service_km: d.next_service_km ?? "", notes: d.notes, active: d.active ?? true };
+    const data = { code: d.code, plate: d.plate, model: d.model, capacity: d.capacity ?? "", odometer: d.odometer ?? "", next_service_date: d.next_service_date ?? "", next_service_km: d.next_service_km ?? "", inspection_date: d.inspection_date ?? "", license_expiry: d.license_expiry ?? "", notes: d.notes, active: d.active ?? true };
     if (await run(db.rpc("mt_bus_save", { _id: bus.id ?? null, _school: d.school, _data: data }), "حُفظ الباص")) onDone();
   }
   return (
@@ -397,6 +406,8 @@ function BusForm({ bus, schools, onDone }: { bus: Row; schools: { id: string; na
         <Field label="قراءة العداد"><Input type="number" min={0} value={d.odometer ?? ""} onChange={(e) => set("odometer", e.target.value)} /></Field>
         <Field label="تاريخ الصيانة القادمة"><Input type="date" value={d.next_service_date ?? ""} onChange={(e) => set("next_service_date", e.target.value)} /></Field>
         <Field label="عداد الصيانة القادمة (كم)"><Input type="number" min={0} value={d.next_service_km ?? ""} onChange={(e) => set("next_service_km", e.target.value)} /></Field>
+        <Field label="تاريخ الفحص الدوري القادم"><Input type="date" value={d.inspection_date ?? ""} onChange={(e) => set("inspection_date", e.target.value)} /></Field>
+        <Field label="تاريخ انتهاء الترخيص"><Input type="date" value={d.license_expiry ?? ""} onChange={(e) => set("license_expiry", e.target.value)} /></Field>
         <Field label="ملاحظات" className="sm:col-span-2"><Input value={d.notes ?? ""} onChange={(e) => set("notes", e.target.value)} /></Field>
       </div>
       <FormActions><Button onClick={() => void save()}>حفظ</Button><Button variant="ghost" onClick={onDone}>إلغاء</Button></FormActions>
