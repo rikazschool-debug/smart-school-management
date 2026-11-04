@@ -427,3 +427,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## 2026-11-04 — «اكمل الكل» batch (prompt-104)
 - Owner limits + branch suspension: scripts/bounds-e2e.ts 8/8 (owner one-step custody for himself refused, own draft can't be self-approved; another org's owner can't read/write; platform suspension of finance/operations blocks the owner; suspending branch B blocks it in an open session while branch A link and other staff stay; reactivation restores only branch-paused links).
 - Role homes (M10): «عملي اليوم» adds teacher submissions awaiting grading, student homework due in 3 days not submitted, guardian children absent/late today (server-scoped via _home_roles). Browser: teacher/guardian/student homes open with no errors; guardian shows today's late child.
+
+- prompt-105: wizard role step shows all base roles as cards, the base role's default dashboard sections (checked, read-only; teacher note: needs a teacher record), and every assignable extra role grouped by area with its sub-sections/actions and scope. Phone journey re-run: 2 roles + deny → login → access = preview.

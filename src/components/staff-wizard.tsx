@@ -171,6 +171,7 @@ export function StaffWizard({ org, school, grantText, onDone, onCancel, catalog 
                   <label key={k} className="flex items-center gap-2 text-xs"><input type="checkbox" checked disabled className="accent-primary" />{NAV_LABELS[k]}</label>
                 ))}
               </div>
+              {base === "teacher" && <p className="mt-2 rounded bg-warning/15 p-2 text-[11px]">تظهر أقسام المعلم بعد ربط الحساب بسجل معلم في «المعلمون» وإسناد مقررات له؛ قبل ذلك يرى أقسام أدواره الإضافية فقط.</p>}
               <p className="mt-2 text-[11px] text-muted-foreground">مرتبطة بالدور نفسه ونطاقه في الفرع (تُضبط في الإعداد الأكاديمي والجدول)، وتُضاف إليها أقسام الأدوار الإضافية أدناه.</p>
             </div>
           </fieldset>
