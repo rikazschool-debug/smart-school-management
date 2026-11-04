@@ -75,7 +75,7 @@ try {
   const tdir = await t1.c.from("ev_guardian").select("id"); const tfile = await t1.c.rpc("ev_teacher_file", { _teacher: te1.id });
   check("7 teacher cannot read ratings (table or file)", (!!tdir.error || !tdir.data?.length) && !!tfile.error);
 
-  const f = (await pr.c.rpc("ev_teacher_file", { _teacher: te1.id })).data as any;
+  const fr = await pr.c.rpc("ev_teacher_file", { _teacher: te1.id }); if (fr.error) console.log("FILE ERR", fr.error.message); const f = fr.data as any;
   const v1 = f?.guardian?.by_version?.[0];
   // ratings: g/st1 avg of 9 answers (g2=5, rest 4) = 4.11; g/st2 = 2; g2/st1 = 5 → mean 3.70
   check("8 principal file: 3 ratings, 2 raters, 2 students; «can't rate» excluded from averages", f?.guardian?.ratings === 3 && f.guardian.raters === 2 && f.guardian.students === 2 && Number(v1?.avg) === 3.7 && v1.items[0].n === 2 && Number(v1.items[0].avg) === 3.5, f?.guardian);
