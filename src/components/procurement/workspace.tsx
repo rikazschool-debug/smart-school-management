@@ -15,7 +15,7 @@ import { ACTION, C_STATUS, E_STATUS, SCOPE_LABEL, TONE, sar, type PcMe, type Row
 import { useInvalidate } from "@/components/procurement/custody";
 import { R_KIND, R_STATUS } from "@/components/procurement/requests";
 import { FormBuilder } from "@/components/procurement/form-builder";
-import { Field, Panel, Stat, StatGrid, TD, TDN, TH, THEAD, THN, TR, TableCard, Toolbar } from "@/components/procurement/ui";
+import { Field, Panel, Stat, StatGrid, TD, TDN, TH, THEAD, THN, TR, Toolbar } from "@/components/procurement/ui";
 import { AlertTriangle, Clock, Coins, FolderOpen, Hourglass, Landmark, Wallet, BadgeCheck } from "lucide-react";
 
 function Item({ r, onClick, extra }: { r: Row; onClick: () => void; extra?: React.ReactNode }) {
