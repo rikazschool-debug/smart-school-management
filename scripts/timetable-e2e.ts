@@ -339,6 +339,14 @@ try {
   check("13 substitute assigned and cancelled without touching the base timetable; a busy teacher is refused; hard last-two and daily cap respected",
     !!as.data && !!badSub.error && baseBefore === baseAfter && (!lastMon || !cand6.some((x) => x.teacher_id === T[5].id)) && (t8mon < 1 || !candCap.some((x) => x.teacher_id === T[7].id)),
     [as.error?.message, badSub.error?.message, baseBefore === baseAfter, cand6.map((x) => x.full_name), t8mon, candCap.map((x) => x.full_name)]);
+  // Regression for the old intermittent «busy teacher» step: the refusal must come from a real, teaching-at-that-period teacher
+  // (not an undefined id), must name the conflict, and every teacher busy at that period must be absent from the suggestions.
+  const busyPick = busyBad.find((x) => x !== T[0].id);
+  const candBad = ((await pr.c.rpc("available_substitutes", { _slot: badSlot.slot_id, _date: absDay })).data ?? []) as any[];
+  const busyRefusals = await Promise.all(busyBad.filter((x) => x !== T[0].id).map((x) => pr.c.rpc("assign_substitute", { _absence: ab, _slot: badSlot.slot_id, _substitute: x, _reason: "x" })));
+  check("13b busy-teacher regression: real busy teacher, every one refused, none suggested",
+    !!busyPick && busyRefusals.length > 0 && busyRefusals.every((r) => !!r.error && !r.data) && !candBad.some((x) => busyBad.includes(x.teacher_id)),
+    [busyPick, busyRefusals.map((r) => r.error?.message), candBad.filter((x) => busyBad.includes(x.teacher_id)).map((x) => x.full_name)]);
 
   // 13b: a hard rule that starts after the absence date does not hide a free teacher for that date; once in effect, it does
   const busyMon = new Set((await admin.from("timetable_slots").select("teacher_id").eq("timetable_id", tt.id).eq("day", 1).eq("period_id", target.period_id)).data!.map((x) => x.teacher_id));
