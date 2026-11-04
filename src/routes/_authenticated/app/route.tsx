@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOpsStaff } from "@/lib/ops-staff";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -197,7 +197,7 @@ function Shell() {
                         <Link key={t} to="/app/visits" onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>
                       ) : (
                         <Link key={t} to="/app/evaluation" search={{ tab: t }} onClick={() => setOpen(false)}
-                          data-status={path.startsWith("/app/evaluation") && evTab === t ? "active" : undefined} className={SUB_CLS}>{label}</Link>
+                          activeOptions={{ includeSearch: true }} className={SUB_CLS + (path.startsWith("/app/evaluation") && evTab === t ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>{label}</Link>
                       ))}
                     </div>
                   )}
