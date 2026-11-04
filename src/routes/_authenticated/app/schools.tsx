@@ -175,7 +175,7 @@ function Page() {
               ))}
               <div className="space-y-1.5">
                 <Label htmlFor="sc-gender">فئة الطلاب</Label>
-                <select id="sc-gender" className={selectCls} value={draft.student_gender} onChange={(e) => setDraft({ ...draft, student_gender: e.target.value })}>
+                <select id="sc-gender" className={selectCls()} value={draft.student_gender} onChange={(e) => setDraft({ ...draft, student_gender: e.target.value })}>
                   <option value="">غير محددة</option>
                   <option value="boys">بنين</option>
                   <option value="girls">بنات</option>
