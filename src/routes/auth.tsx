@@ -149,7 +149,7 @@ function AuthPage() {
               <div className="grid grid-cols-2 gap-2">
                 {DEMO_ACCOUNTS.map((d) => (
                   <Button key={d.email} type="button" size="sm" variant="secondary" disabled={busy} onClick={() => demoLogin(d.email)}>
-                    {ROLE_LABELS[d.role]}
+                    {d.label ?? ROLE_LABELS[d.role]}
                   </Button>
                 ))}
               </div>

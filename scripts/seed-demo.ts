@@ -8,7 +8,7 @@ const must = <T,>(r: { data: T; error: unknown }) => { if (r.error) throw r.erro
 
 const ids: Record<string, string> = {};
 const { data: list } = await a.auth.admin.listUsers({ perPage: 1000 });
-for (const acc of DEMO_ACCOUNTS) {
+for (const acc of DEMO_ACCOUNTS.filter((d) => !d.template)) {
   const ex = list.users.find((u) => u.email === acc.email);
   if (ex) { ids[acc.role] = ex.id; continue; }
   const r = await a.auth.admin.createUser({ email: acc.email, password: DEMO_PASSWORD, email_confirm: true, user_metadata: { full_name: acc.name } });
