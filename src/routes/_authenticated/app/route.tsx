@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
@@ -98,6 +98,12 @@ function Shell() {
   const pc = usePcMe(active?.orgId ?? null, pcRole);
   const sp = useSchoolPerms(pcRole ? active?.schoolId : null);
   const mt = useMtMe(active?.orgId ?? null, pcRole);
+  // Operations staff (e.g. maintenance) hold a staff membership but no teacher record: they must not see teaching pages.
+  const teachRow = useQuery({
+    enabled: active?.role === "teacher" && !!active?.schoolId, staleTime: 60_000,
+    queryKey: ["my-teacher-row", active?.schoolId, user.id],
+    queryFn: async () => { const { count } = await supabase.from("teachers").select("id", { count: "exact", head: true }).eq("school_id", active!.schoolId!).eq("user_id", user.id); return (count ?? 0) > 0; },
+  });
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const lastSection = useRef<OwnerSection | null>(null);
@@ -128,6 +134,8 @@ function Shell() {
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
     ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : [])] as NavKey[];
+  const opsOnly = active.role === "teacher" && teachRow.data === false && (hasKind(mt.data, "school") || hasKind(mt.data, "bus") || canFleet(mt.data) || !!pc.data?.enabled);
+  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   const nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
