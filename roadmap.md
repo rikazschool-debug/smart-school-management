@@ -369,7 +369,7 @@
 - [ ] Next: maintenance multi-org test + bus maintenance browser journey
 
 ## Package 14 — Final closure before HR (prompt: «أغلق الآن جميع البنود المتبقية»)
-Resume point: 1.3 waits on the owner; next = browser live-session permission withdrawal, then 4 (duties/substitute journeys, class visits, imports, grade visibility), 5, 6. Rule: an item closes only with a test as evidence; closed items reopen only with a proven reason.
+Resume point (Nov 4): reopen request + bus docs closed (maint-e2e 30/30, browser bus 14/14, school 10/10); demo platform-admin removed. Next = browser live-session revocation (actions, files, exports, direct links, reassignment), then duties/substitutes, class visits/teacher evaluation, imports/grade visibility, timetable regression tied to the busy-teacher fix, screens/phone/reports, security review. Open: WordPress real link, admissions daily reminder evidence, owner decision on prompt-121 bus workflow. Rule: an item closes only with a test as evidence.
 1. Real org + admissions
  - [x] 1.1 Separate student-category field (student_gender); classification removed from city
  - [x] 1.2 Isolation checked: 4 branches in org, only owner active, 0 outside memberships; girls branch category fixed. Two branches «mixed» need owner confirmation

@@ -8,6 +8,8 @@ async def login(b,label):
     await p.wait_for_url("**/app**",timeout=20000); return ctx,p
 async def openreq(p,path):
     await p.goto(B+path); await p.get_by_placeholder("رقم، عنوان أو مكان").fill(T); await p.wait_for_timeout(1500)
+    if not await p.get_by_text(T).count():
+        await p.get_by_text("الطلبات السابقة",exact=True).click(); await p.wait_for_timeout(800); await p.get_by_placeholder("رقم، عنوان أو مكان").fill(T); await p.wait_for_timeout(1500)
     await p.get_by_text(T).first.click(); await p.wait_for_timeout(1500)
 async def reason(p,txt):
     d=p.get_by_role("alertdialog"); await d.locator("input").first.fill(txt); await d.get_by_role("button").last.click(); await p.wait_for_timeout(1500)
@@ -67,8 +69,6 @@ async def main(kind,path):
     await openreq(f2,path); await f2.get_by_role("button",name="تأكيد: تمت الصيانة").click(); await f2.wait_for_timeout(2000)
     st=await status(f2); await f2.screenshot(path=f"/tmp/browser/{kind}2.png")
     ok(f"{kind}: approved and closed", "مغلق" in st or "أُغلق" in st)
-    if await f2.get_by_role("button",name="إعادة فتح").count():
-        await f2.get_by_role("button",name="إعادة فتح").click(); await reason(f2,"عاد العطل"); ok(f"{kind}: reopened", "مغلق" not in (await f2.locator("main h1, main h2").first.inner_text()))
     if kind=="bus":
         ct,m=await login(b,"مسؤول حركة النقل"); await m.goto(B+path); await m.wait_for_timeout(2000)
         for t in ["الباصات وحالة التشغيل"]:
@@ -81,6 +81,19 @@ async def main(kind,path):
         await m.reload(); await m.wait_for_timeout(2500); await m.get_by_text("الباصات وحالة التشغيل",exact=True).click(); await m.wait_for_timeout(2000)
         await m.screenshot(path="bus4.png"); ok("bus: separate authorised action returned it", "متاح للخدمة" in await m.locator("tbody tr").filter(has_text=BUS).inner_text())
         await m.screenshot(path="/tmp/browser/bus3.png")
+    # reopen request cycle: requester asks, executor cannot decide, follow-up rejects then approves
+    await p.goto(B+path); await p.wait_for_timeout(2000); await p.get_by_text("الطلبات السابقة",exact=True).click(); await p.wait_for_timeout(800); await p.get_by_placeholder("رقم، عنوان أو مكان").fill(T); await p.wait_for_timeout(1500); await p.get_by_text(T).first.click(); await p.wait_for_timeout(1500); await p.get_by_role("button",name="طلب إعادة فتح").click(); await reason(p,"عاد العطل")
+    ok(f"{kind}: requester's reopen request pending, still closed", "بانتظار قرار المتابعة" in await status(p))
+    await openreq(m,path); ok(f"{kind}: executor has no reopen decision", await m.get_by_role("button",name="قبول إعادة الفتح").count()==0)
+    await openreq(f2,path); await f2.get_by_role("button",name="رفض إعادة الفتح").click(); await reason(f2,"عطل مختلف")
+    ok(f"{kind}: follow-up rejected with reason", "رفض إعادة الفتح" in await status(f2))
+    await p.reload(); await p.wait_for_timeout(2500); await p.get_by_role("button",name="طلب إعادة فتح").click(); await reason(p,"العطل نفسه عاد")
+    await openreq(f2,path); await f2.get_by_role("button",name="قبول إعادة الفتح").click(); await reason(f2,"مقبول")
+    st=await status(f2); await f2.screenshot(path=f"/tmp/browser/{kind}_reopen.png")
+    ok(f"{kind}: approved → new cycle, previous closure kept", "دورة المعالجة رقم 2" in st and "قبول إعادة الفتح (دورة جديدة)" in st and "انتهى العمل بالكامل" in st)
+    if kind=="bus":
+        await m.goto(B+path); await m.wait_for_timeout(2000); await m.get_by_text("الباصات وحالة التشغيل",exact=True).click(); await m.wait_for_timeout(2000)
+        ok("bus: reopening left bus in service", "متاح للخدمة" in await m.locator("tbody tr").filter(has_text=BUS).inner_text())
     await b.close()
 kind=sys.argv[1]; asyncio.run(main(kind, sys.argv[2]))
 print(sum(1 for _,c in R if c),"passed",sum(1 for _,c in R if not c),"failed")

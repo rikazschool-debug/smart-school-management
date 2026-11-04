@@ -4,7 +4,6 @@ import type { Role } from "./roles";
 export const DEMO_PASSWORD = "Demo-Rikaz-2026";
 
 export const DEMO_ACCOUNTS: { role: Role; email: string; name: string; label?: string; template?: string }[] = [
-  { role: "platform_admin", email: "demo-admin@rikaz.demo", name: "أدمن المنصة" },
   { role: "org_owner", email: "demo-owner@rikaz.demo", name: "مالك المجموعة" },
   { role: "principal", email: "demo-principal@rikaz.demo", name: "مدير المدرسة" },
   { role: "vice_principal", email: "demo-vice@rikaz.demo", name: "الوكيل" },

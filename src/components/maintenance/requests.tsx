@@ -352,7 +352,7 @@ export function BusesTab({ orgId, orgName, me }: { orgId: string; orgName: strin
     <div className="space-y-4">
       <TabIntro icon={Bus} title="الباصات" desc="البيانات الأساسية اللازمة لطلبات الصيانة فقط، وحالة كل باص التشغيلية والصيانة القادمة."
         actions={fleetSchools.length > 0 && <Button onClick={() => setEdit({})}><Plus className="size-4" />إضافة باص</Button>} />
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد باصات مسجلة" hint="يضيف مسؤول حركة النقل أو مسؤول متابعة الصيانة باصات فرعه." /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد باصات مسجلة" hint="يضيف باصات الفرع من مُنح صلاحية إدارة بيانات الباصات." /> : (
         <TableCard caption={<span className="flex flex-wrap items-center gap-3">{q.data.length} باص<ExportButtons meta={{ title: "الباصات", school: orgName, filters: [] }} headers={["الرقم", "اللوحة", "الفرع", "الحالة", "العداد", "الصيانة القادمة", "الفحص الدوري", "الترخيص", "طلبات مفتوحة"]}
           rows={() => q.data.map((b) => [b.code, b.plate, b.school, BUS_STATUS[b.op_status] ?? "", b.odometer, [b.next_service_date && dd(b.next_service_date), b.next_service_km && `${b.next_service_km} كم`].filter(Boolean).join(" / "), b.inspection_date ? `${dd(b.inspection_date)} ${DOC[b.inspection_state] ?? ""}` : "", b.license_expiry ? `${dd(b.license_expiry)} ${DOC[b.license_state] ?? ""}` : "", b.open_requests])} /></span>}>
           <table className="w-full text-sm">

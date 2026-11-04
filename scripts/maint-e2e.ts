@@ -142,6 +142,18 @@ try {
   await act(tro.c, BR, "reopen", { reason: "الصوت عاد" }); const bro = await act(fol.c, BR, "reopen_decide", { approve: true, reason: "مقبول" });
   check("21b reopening bus repair keeps bus operating status unchanged", !bro.error && (await get(tro.c, BR)).status === "returned" && (await busRow()).op_status === "available", bro.error);
 
+  // inspection / license dates (15-day alert) + bus follow-up cannot add buses
+  const bfol = await user("busfollow"); await admin.from("memberships").insert({ user_id: bfol.id, org_id: org, school_id: A, role: "teacher" }); await as(bfol, "مسؤول متابعة صيانة الباصات");
+  const dIn = (n: number) => new Date(Date.now() + n * 864e5 + 3 * 36e5).toISOString().slice(0, 10);
+  const bfAdd = await bfol.c.rpc("mt_bus_save", { _id: null, _school: A, _data: { code: "B-F" } });
+  const bus3 = await tro.c.rpc("mt_bus_save", { _id: null, _school: A, _data: { code: "B-03", license_expiry: dIn(10), inspection_date: dIn(40) } });
+  const b3 = ((await tro.c.rpc("mt_buses_list", { _org: org })).data as any[]).find((x) => x.id === bus3.data);
+  await admin.rpc("mt_alerts_tick"); await admin.rpc("mt_alerts_tick");
+  const ntL = async (u: string) => (await admin.from("notifications").select("title").eq("user_id", u).like("title", "%الترخيص للباص B-03%")).data!.length;
+  const insp = (await admin.from("notifications").select("id").eq("user_id", tro.id).like("title", "%الفحص الدوري للباص B-03%")).data!.length;
+  check("21c follow-up cannot add bus without the grant; license in 10 days = soon, inspection in 40 = valid; one alert each to transport + follow-up, none for inspection",
+    !!bfAdd.error && !bus3.error && b3?.license_state === "soon" && b3?.inspection_state === "valid" && (await ntL(tro.id)) === 1 && (await ntL(bfol.id)) === 1 && insp === 0, [bus3.error, b3?.license_state]);
+
   // files + isolation + suspension
   const f1 = await prin.c.rpc("create_mt_file", { _id: R, _name: "صورة.jpg", _mime: "image/jpeg", _size: 1000 });
   const f2 = await outsider.c.rpc("create_mt_file", { _id: R, _name: "x.jpg", _mime: "image/jpeg", _size: 1000 });
