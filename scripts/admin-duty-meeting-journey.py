@@ -12,7 +12,7 @@ async def login(br, who, vw=1280):
     await p.goto(B + "/auth"); await p.wait_for_timeout(3000); await p.fill("#email", F["users"][who]["email"]); await p.fill("#password", F["pw"])
     await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith(\"/app\")", timeout=20000); await p.wait_for_timeout(1500); return p
 async def dialog(p, text=None):
-    d = p.get_by_role("alertdialog"); await d.wait_for(timeout=5000)
+    d = p.get_by_role("alertdialog").or_(p.get_by_role("dialog")).first; await d.wait_for(timeout=5000)
     if text is not None: await d.locator("input").fill(text)
     await d.get_by_role("button").last.click()
 async def toast(p, t):
