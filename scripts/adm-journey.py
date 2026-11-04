@@ -11,7 +11,7 @@ async def login(p, tag, mobile=False):
     ctx = await p.new_context(viewport={"width": 390, "height": 844} if mobile else {"width": 1280, "height": 1800}, accept_downloads=True)
     pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
     await pg.goto(B + "/auth"); await pg.wait_for_timeout(2500)
-    await pg.get_by_label("اسم المستخدم أو البريد أو رقم الهوية").fill(F["creds"][tag]); await pg.get_by_label("كلمة المرور").fill(F["pw"])
+    await pg.get_by_label("اسم المستخدم أو البريد أو رقم الهوية").fill(F["creds"][tag]); await pg.locator("#password").fill(F["pw"])
     await pg.get_by_role("button", name="دخول", exact=True).click(); await pg.wait_for_timeout(6000)
     return ctx, pg, errs
 async def answer(pg, text):
