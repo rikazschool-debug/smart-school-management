@@ -132,6 +132,10 @@ try {
   check("18 principal reads branch bus request (read only)", !!(await get(prin.c, BR)) && !(await get(prin.c, BR)).can.cancel);
   await act(bex.c, BR, "accept"); await act(bex.c, BR, "progress", { progress: 60, body: "طلب قطع", waiting: true });
   check("19 waiting for parts status", (await get(tro.c, BR)).status === "waiting_parts");
+  const early = await act(bex.c, BR, "submit_completion", { body: "تبديل الفحمات واختبار الفرامل" });
+  const folAssign = await act(fol.c, BR, "assign", { user: bex.id });
+  const rcv = await act(bex.c, BR, "receive_bus", { body: "استلمت الباص من الساحة" });
+  check("19b bus: hand-over blocked before receiving the bus; follow-up cannot assign bus requests; receive logged", !!early.error && !!folAssign.error && !rcv.error && !!(await get(fol.c, BR)).bus_received_at, [early.error, folAssign.error, rcv.error]);
   await act(bex.c, BR, "submit_completion", { body: "تبديل الفحمات واختبار الفرامل" }); await act(fol.c, BR, "approve");
   check("20 closing bus repair moves bus to «awaiting inspection», not back to service", (await get(tro.c, BR)).status === "closed" && (await busRow()).op_status === "inspection");
   const rs0 = await tro.c.rpc("mt_bus_set_status", { _bus: bus.data, _status: "available", _note: "" });
@@ -140,6 +144,10 @@ try {
   const log = (await tro.c.rpc("mt_bus_log", { _bus: bus.data })).data as any[];
   check("21 return to service is a separate inspected action by the movement officer", !!rs0.error && !!rsP.error && !rs.error && (await busRow()).op_status === "available" && log.some((l) => l.action === "return_to_service"), rs.error);
   await act(tro.c, BR, "reopen", { reason: "الصوت عاد" }); const bro = await act(fol.c, BR, "reopen_decide", { approve: true, reason: "مقبول" });
+  const busB = await tro.c.rpc("mt_bus_save", { _id: null, _school: A, _data: { code: "B-A2" } });
+  const bexBuses = ((await bex.c.rpc("mt_buses_list", { _org: org })).data as any[]);
+  const prBuses = ((await prinB.c.rpc("mt_buses_list", { _org: org })).data as any[]);
+  check("21a bus maintenance officer sees all branches' buses; branch-B principal sees none of branch A", !busB.error && bexBuses.length >= 2 && prBuses.length === 0, [busB.error, bexBuses.length]);
   check("21b reopening bus repair keeps bus operating status unchanged", !bro.error && (await get(tro.c, BR)).status === "returned" && (await busRow()).op_status === "available", bro.error);
 
   // inspection / license dates (15-day alert) + bus follow-up cannot add buses
