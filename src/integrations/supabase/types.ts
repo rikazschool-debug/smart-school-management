@@ -10414,6 +10414,7 @@ export type Database = {
         Args: { _data: Json; _key: string; _kind: string; _school: string }
         Returns: string
       }
+      mt_file_remove: { Args: { _file: string }; Returns: undefined }
       mt_get: { Args: { _id: string }; Returns: Json }
       mt_list: { Args: { _f: Json; _org: string }; Returns: Json }
       mt_me: { Args: { _org: string }; Returns: Json }
