@@ -57,6 +57,7 @@ import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
 import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './routes/_authenticated/app/virtual-classes.index'
+import { Route as ApiPublicAdmissionsWordpressRouteImport } from './routes/api/public/admissions/wordpress'
 import { Route as ApiPublicAuthSendSmsRouteImport } from './routes/api/public/auth/send-sms'
 import { Route as ApiPublicWatiWebhookRouteImport } from './routes/api/public/wati/webhook'
 import { Route as AuthenticatedAppAdminMeetingsIndexRouteImport } from './routes/_authenticated/app/admin.meetings.index'
@@ -336,6 +337,12 @@ const AuthenticatedAppVirtualClassesIndexRoute =
     path: '/virtual-classes/',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const ApiPublicAdmissionsWordpressRoute =
+  ApiPublicAdmissionsWordpressRouteImport.update({
+    id: '/api/public/admissions/wordpress',
+    path: '/api/public/admissions/wordpress',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAuthSendSmsRoute = ApiPublicAuthSendSmsRouteImport.update({
   id: '/api/public/auth/send-sms',
   path: '/api/public/auth/send-sms',
@@ -427,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
@@ -483,6 +491,7 @@ export interface FileRoutesByTo {
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin': typeof AuthenticatedAppAdminIndexRoute
@@ -542,6 +551,7 @@ export interface FileRoutesById {
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/_authenticated/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/_authenticated/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
@@ -601,6 +611,7 @@ export interface FileRouteTypes {
     | '/app/classrooms/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
+    | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/wati/webhook'
     | '/app/admin/'
@@ -657,6 +668,7 @@ export interface FileRouteTypes {
     | '/app/classrooms/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
+    | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/wati/webhook'
     | '/app/admin'
@@ -715,6 +727,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/classrooms/$id'
     | '/_authenticated/app/homework/$id'
     | '/_authenticated/app/homework/new'
+    | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/wati/webhook'
     | '/_authenticated/app/admin/'
@@ -735,6 +748,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  ApiPublicAdmissionsWordpressRoute: typeof ApiPublicAdmissionsWordpressRoute
   ApiPublicAuthSendSmsRoute: typeof ApiPublicAuthSendSmsRoute
   ApiPublicWatiWebhookRoute: typeof ApiPublicWatiWebhookRoute
 }
@@ -1077,6 +1091,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppVirtualClassesIndexRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/api/public/admissions/wordpress': {
+      id: '/api/public/admissions/wordpress'
+      path: '/api/public/admissions/wordpress'
+      fullPath: '/api/public/admissions/wordpress'
+      preLoaderRoute: typeof ApiPublicAdmissionsWordpressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/auth/send-sms': {
       id: '/api/public/auth/send-sms'
       path: '/api/public/auth/send-sms'
@@ -1264,6 +1285,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   InviteTokenRoute: InviteTokenRoute,
+  ApiPublicAdmissionsWordpressRoute: ApiPublicAdmissionsWordpressRoute,
   ApiPublicAuthSendSmsRoute: ApiPublicAuthSendSmsRoute,
   ApiPublicWatiWebhookRoute: ApiPublicWatiWebhookRoute,
 }
