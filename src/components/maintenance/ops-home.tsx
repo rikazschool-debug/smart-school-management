@@ -24,7 +24,7 @@ function KindBlock({ orgId, kind, me }: { orgId: string; kind: Kind; me: MtMe })
   const c = me.caps![kind];
   const GROUPS = c.execute.length ? MGR_GROUPS : FOLLOW_GROUPS;
   const q = useQuery({
-    queryKey: ["ops-home", orgId, kind], refetchInterval: 120_000,
+    queryKey: ["ops-home", orgId, kind, GROUPS.length], refetchInterval: 120_000,
     queryFn: async () => {
       const out: Record<string, number> = {};
       await Promise.all(GROUPS.map(async (g) => {
@@ -35,7 +35,7 @@ function KindBlock({ orgId, kind, me }: { orgId: string; kind: Kind; me: MtMe })
       return out;
     },
   });
-  const role = c.execute.length ? "تستلم الطلبات وتنفّذها ثم ترسلها للمتابعة." : c.follow.length ? "تنشئ الطلبات وتتابعها وتؤكد إنجازها أو تعيدها بملاحظات." : "تطّلع على الطلبات ضمن صلاحياتك.";
+  const role = c.execute.length ? "تستلم الطلبات وتنفّذها ثم ترسلها للمتابعة." : c.follow.length ? "تنشئ الطلبات وتتابع الحالية والسابقة، وتؤكد الإنجاز أو تعيده بملاحظات." : "تطّلع على الطلبات ضمن صلاحياتك.";
   const Icon = kind === "school" ? Wrench : Bus;
   return (
     <section className="rounded-2xl border bg-card p-5 shadow-sm" aria-labelledby={`ops-${kind}`}>
@@ -50,7 +50,7 @@ function KindBlock({ orgId, kind, me }: { orgId: string; kind: Kind; me: MtMe })
         )}
       </div>
       {q.isLoading ? <LoadingState rows={1} /> : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 " + (GROUPS.length > 3 ? "lg:grid-cols-5" : "")}>
+        <ul className={"grid grid-cols-2 gap-3 sm:grid-cols-3 " + (GROUPS.length > 3 ? "lg:grid-cols-5" : "")}>
           {GROUPS.map((g) => {
             const n = q.data?.[g.key] ?? 0;
             const urgent = g.overdue && n > 0;
