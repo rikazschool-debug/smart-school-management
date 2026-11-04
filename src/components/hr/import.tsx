@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { Download, Upload, X } from "lucide-react";
 import { toast } from "sonner";
@@ -49,20 +49,34 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     ws["!cols"] = fields.map(() => ({ wch: 20 })); const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] };
     XLSX.utils.book_append_sheet(wb, ws, "الموظفون"); XLSX.writeFile(wb, "قالب-استيراد-الموظفين.xlsx");
   };
+  const lock = useRef(false);
   const load = async (file: File) => {
-    const wb = XLSX.read(await file.arrayBuffer());
-    const aoa = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[wb.SheetNames[0]!]!, { header: 1, raw: true, defval: "" });
+    if (!/\.(xlsx|xls|csv)$/i.test(file.name)) return toast.error("نوع الملف غير مدعوم؛ استخدم xlsx أو xls أو csv");
+    if (file.size > MAX_BYTES) return toast.error("حجم الملف أكبر من 5 ميغابايت");
+    let wb: XLSX.WorkBook; try { wb = XLSX.read(await file.arrayBuffer()); } catch { return toast.error("تعذّر قراءة الملف؛ قد يكون تالفًا"); }
+    const sh = wb.Sheets[wb.SheetNames[0] ?? ""]; if (!sh) return toast.error("الملف فارغ");
+    const rawA = XLSX.utils.sheet_to_json<unknown[]>(sh, { header: 1, raw: true, defval: "" });
+    const txtA = XLSX.utils.sheet_to_json<unknown[]>(sh, { header: 1, raw: false, defval: "" });
+    // text columns keep the displayed value (leading zeros); dates keep the raw serial
+    const aoa = rawA.map((r, i) => r.map((c, k) => (typeof c === "number" ? (txtA[i]?.[k] ?? c) : c)));
+    const dateCols = new Set<number>();
     const head = (aoa[0] ?? []).map((h) => String(h).trim());
     const data = aoa.slice(1).filter((r) => r.some((c) => String(c).trim() !== ""));
     const mp: Record<string, number> = {};
-    for (const f of fields) { const k = head.findIndex((h) => [f.label, ...f.syn].map(n).includes(n(h))); if (k >= 0) mp[f.key] = k; }
+    for (const f of fields) { const k = head.findIndex((h) => [f.label, ...f.syn].map(n).includes(n(h))); if (k >= 0) { mp[f.key] = k; if (f.key.endsWith("_date")) dateCols.add(k); } }
+    const fixed = data.map((r, i) => r.map((c, k) => (dateCols.has(k) && typeof rawA[i + 1]?.[k] === "number" ? rawA[i + 1]![k] : c)));
+    if (!head.some(Boolean) || data.length === 0) return toast.error("الملف لا يحتوي صفوف بيانات");
+    if (data.length > MAX_ROWS) return toast.error(`الحد الأقصى ${MAX_ROWS} صف في الملف الواحد`);
+    setRaw({ name: file.name, head, data: fixed }); setMap(mp); setRes(null); return;
     setRaw({ name: file.name, head, data }); setMap(mp); setRes(null);
   };
 
   const rows = useMemo<Row[]>(() => {
     if (!raw) return [];
     const exNo = new Set(existing.map((e) => n(e.employee_no)));
-    const exId = new Set(existing.filter((e) => e.sensitive && e.national_id).map((e) => e.national_id!));
+    const byNo = new Map(existing.map((e) => [n(e.employee_no), e.id]));
+    const byId = new Map(existing.filter((e) => e.sensitive && e.national_id).map((e) => [e.national_id!, e.id]));
+    const exId = new Set(byId.keys());
     const seenNo = new Set<string>(), seenId = new Set<string>();
     return raw.data.map((r, i) => {
       const g = (k: string) => (map[k] == null ? "" : r[map[k]!]);
@@ -80,6 +94,8 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
       let dup = "";
       if (p["employee_no"]) { const k = n(p["employee_no"]); if (exNo.has(k)) dup = "الرقم الوظيفي موجود مسبقًا"; else if (seenNo.has(k)) errs.push("الرقم الوظيفي مكرر في الملف"); seenNo.add(k); }
       if (p["national_id"]) { if (exId.has(p["national_id"])) dup = "رقم الهوية مسجل لموظف في المؤسسة"; else if (seenId.has(p["national_id"])) errs.push("رقم الهوية مكرر في الملف"); seenId.add(p["national_id"]); }
+      if (p["employee_no"] && p["national_id"]) { const a = byNo.get(n(p["employee_no"])), b = byId.get(p["national_id"]); if (a && b && a !== b) { errs.push("تعارض: الرقم الوظيفي والهوية يخصان موظفين مختلفين — راجع الصف"); dup = ""; } }
+      p["import_key"] = importKey(p);
       return { i: i + 2, p, errs, state: errs.length ? "bad" : dup ? "dup" : "new", msg: dup || undefined };
     });
   }, [raw, map, existing]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -87,17 +103,22 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   const missing = FIELDS.filter((f) => f.required && map[f.key] == null);
   const ready = rows.filter((r) => r.state === "new");
   const run = async () => {
-    setBusy(true); const out: Row[] = [];
+    if (lock.current) return; lock.current = true; setBusy(true); const out: Row[] = [];
     for (const r of rows) {
       if (r.state !== "new") { out.push(r); continue; }
-      try { await rpc("hr_employee_save", { _org: org, _id: null, _p: r.p, _reason: `استيراد Excel: ${raw!.name} — صف ${r.i}` }); out.push({ ...r, state: "ok" }); }
-      catch (e) { out.push({ ...r, state: "fail", msg: arabicError(e) }); }
+      const call = () => rpc("hr_employee_save", { _org: org, _id: null, _p: r.p, _reason: `استيراد Excel: ${raw!.name} — صف ${r.i}` });
+      let e: unknown = null;
+      for (let t = 0; t < 3; t++) { try { await call(); e = null; break; } catch (x) { e = x; if (!/fetch|network|Failed/i.test(String((x as Error)?.message ?? x))) break; await new Promise((s) => setTimeout(s, 800 * (t + 1))); } }
+      const em = e ? String((e as Error)?.message ?? e) : "";
+      if (!e) out.push({ ...r, state: "ok" });
+      else if (em.includes("IMPORTED:")) out.push({ ...r, state: "dup", msg: "أُضيف سابقًا من الملف نفسه — لم يُكرر" });
+      else out.push({ ...r, state: "fail", msg: arabicError(e) });
     }
-    setRes(out); setBusy(false); onDone();
+    setRes(out); setBusy(false); lock.current = false; onDone();
     const ok = out.filter((x) => x.state === "ok").length; toast.success(`أُضيف ${ok} موظفًا`);
   };
   const report = () => {
-    const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, r.p["full_name"] ?? "", LBL[r.state], [...r.errs, r.msg].filter(Boolean).join("، ")])]);
+    const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, safe(r.p["full_name"] ?? ""), LBL[r.state], safe([...r.errs, r.msg].filter(Boolean).join("، "))])]);
     const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] }; XLSX.utils.book_append_sheet(wb, ws, "النتائج"); XLSX.writeFile(wb, "تقرير-استيراد-الموظفين.xlsx");
   };
   const shown = res ?? rows;
@@ -141,6 +162,15 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
       )}
     </div>
   );
+}
+const MAX_BYTES = 5 * 1024 * 1024, MAX_ROWS = 2000;
+// neutralise spreadsheet formulas in exported text
+export const safe = (v: string) => (/^[=+\-@\t\r]/.test(v) ? "'" + v : v);
+// stable per-row key: re-importing the same row (or retrying after a lost response) never creates a second employee
+export function importKey(p: Record<string, string>) {
+  const s = ["full_name", "school_id", "employee_no", "national_id", "phone", "email"].map((k) => n(p[k])).join("|");
+  let h1 = 0x811c9dc5, h2 = 5381; for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = (Math.imul(h2, 33) + c) | 0; }
+  return "x" + (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
 }
 const LBL: Record<Row["state"], string> = { new: "جاهز", dup: "موجود — يُتخطى", bad: "خطأ", ok: "أُضيف", fail: "رفضه الخادم" };
 const CLS: Record<Row["state"], string> = { new: "bg-secondary", dup: "bg-muted", bad: "bg-destructive/10 text-destructive", ok: "bg-primary/10 text-primary", fail: "bg-destructive/10 text-destructive" };
