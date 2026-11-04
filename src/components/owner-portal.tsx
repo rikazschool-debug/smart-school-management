@@ -74,8 +74,8 @@ const CARDS: Card[] = [
     key: "operations", section: "operations", title: "النقل المدرسي والصيانة", icon: Bus, to: "/app/operations", open: "فتح القسم",
     desc: "صيانة المدارس والباصات من الطلب حتى اعتماد الإنجاز، وبيانات الباصات الأساسية. تشغيل النقل مؤجل.",
     features: [
-      { icon: Wrench, label: "صيانة المدارس", to: "/app/maintenance", search: { tab: "school" } },
-      { icon: Bus, label: "صيانة الباصات", to: "/app/maintenance", search: { tab: "bus" } },
+      { icon: Wrench, label: "إدارة صيانة المدارس", to: "/app/maintenance" },
+      { icon: Bus, label: "إدارة تشغيل وصيانة الباصات", to: "/app/bus-maintenance" },
     ],
   },
   {
