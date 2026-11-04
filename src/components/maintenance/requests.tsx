@@ -218,11 +218,15 @@ export function RequestDetail({ id, back }: { id: string; back: () => void }) {
           {c.accept && <Button onClick={() => void act("accept", {}, "استلمت الطلب")}>استلام</Button>}
           {c.decline && <Button variant="outline" onClick={() => void withReason("decline", "سبب الاعتذار عن الإسناد", "أُعيد الطلب للمتابعة")}>اعتذار</Button>}
           {c.clarify && <Button variant="outline" onClick={() => void withReason("clarify", "ما المطلوب توضيحه من مقدم الطلب؟", "أُرسل طلب التوضيح")}>طلب توضيح</Button>}
-          {c.reopen && <Button variant="outline" onClick={() => void withReason("reopen", "سبب إعادة الفتح", "أُعيد فتح الطلب")}>إعادة فتح</Button>}
+          {c.reopen && <Button variant="outline" onClick={() => void withReason("reopen", "سبب طلب إعادة الفتح", "أُرسل طلب إعادة الفتح للمتابعة")}>طلب إعادة فتح</Button>}
+          {c.reopen_decide && <Button onClick={() => void withReason("reopen_decide", "سبب قبول إعادة الفتح", "أُعيد فتح الطلب", { approve: true })}>قبول إعادة الفتح</Button>}
+          {c.reopen_decide && <Button variant="outline" onClick={() => void withReason("reopen_decide", "سبب رفض إعادة الفتح", "رُفض طلب إعادة الفتح", { approve: false })}>رفض إعادة الفتح</Button>}
           {c.cancel && <Button variant="ghost" className="text-destructive" onClick={() => void withReason("cancel", "سبب الإلغاء (يظهر لمقدم الطلب)", "أُلغي الطلب")}>إلغاء الطلب</Button>}
         </>}>
         {r.overdue && <p className="mt-2 text-sm font-semibold text-destructive">تجاوز تاريخ الإنجاز المتوقع.</p>}
         {r.priority === "urgent" && r.status !== "closed" && <p className="mt-2 flex items-center gap-1 text-sm text-destructive"><AlertTriangle className="size-4" />طلب عاجل — لا يغني عن إجراءات الطوارئ المباشرة.</p>}
+        {r.reopen_pending && <p className="mt-2 rounded-lg bg-warning/15 p-2 text-sm">طلب إعادة فتح من {r.reopen_pending.name} بانتظار قرار المتابعة: {r.reopen_pending.reason}</p>}
+        {r.reopen_cycle > 0 && <p className="mt-2 text-xs text-muted-foreground">دورة المعالجة رقم {r.reopen_cycle + 1} — الإنجاز والإغلاق السابقان محفوظان في السجل.</p>}
         {r.status === "cancelled" && r.cancel_reason && <p className="mt-2 text-sm">سبب الإلغاء: {r.cancel_reason}</p>}
       </DetailHeader>
 
