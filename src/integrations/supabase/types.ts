@@ -200,7 +200,7 @@ export type Database = {
           restore_active: boolean
           restore_ids: string[] | null
           school_id: string
-          subject_id: string
+          subject_id: string | null
           updated_at: string
           user_id: string
         }
@@ -215,7 +215,7 @@ export type Database = {
           restore_active?: boolean
           restore_ids?: string[] | null
           school_id: string
-          subject_id: string
+          subject_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -230,7 +230,7 @@ export type Database = {
           restore_active?: boolean
           restore_ids?: string[] | null
           school_id?: string
-          subject_id?: string
+          subject_id?: string | null
           updated_at?: string
           user_id?: string
         }

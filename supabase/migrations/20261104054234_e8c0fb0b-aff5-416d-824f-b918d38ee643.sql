@@ -1,0 +1,1 @@
+alter table public.account_setup alter column subject_id drop not null;
