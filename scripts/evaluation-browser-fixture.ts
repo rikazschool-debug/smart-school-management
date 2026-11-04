@@ -20,10 +20,14 @@ for (const t of ["owner", "pr", "vice", "t1", "g"]) {
   users[t] = { id: r.data.user!.id, email }; tr.addUser(r.data.user!.id);
   await admin.from("profiles").upsert({ id: r.data.user!.id, full_name: { owner: "مالك التجربة", pr: "مدير التجربة", vice: "وكيل التجربة", t1: "معلم التجربة", g: "ولي أمر التجربة" }[t] });
 }
-const { data: o } = await admin.from("organizations").insert({ name: "مؤسسة تجربة التقييم" }).select().single();
-const { data: sc } = await admin.from("schools").insert({ org_id: o!.id, name: "فرع تجربة التقييم" }).select().single(); tr.addSchool(sc!.id);
-const S = sc!.id;
-for (const [u, r] of [["owner", "org_owner"], ["pr", "principal"], ["vice", "vice_principal"], ["t1", "teacher"], ["g", "guardian"]]) await admin.from("memberships").insert({ user_id: users[u]!.id, org_id: o!.id, school_id: r === "org_owner" ? null : S, role: r });
+const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
+const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const oc = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: ((input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); }) as any } });
+await oc.auth.signInWithPassword({ email: users.owner!.email, password: pw });
+const orgId = (await oc.rpc("create_organization", { _org_name: "مؤسسة تجربة التقييم", _school_name: "فرع تجربة التقييم" })).data as string;
+const o = { id: orgId };
+const S = (await admin.from("schools").select("id").eq("org_id", orgId).single()).data!.id; tr.addSchool(S);
+for (const [u, r] of [["pr", "principal"], ["vice", "vice_principal"], ["t1", "teacher"], ["g", "guardian"]]) await admin.from("memberships").insert({ user_id: users[u]!.id, org_id: o!.id, school_id: S, role: r });
 const ins = async (t: string, v: any) => { const r = await admin.from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data as any; };
 const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
 const stage = await ins("stages", { name: "ثانوي" }); const grade = await ins("grades", { name: "أول", stage_id: stage.id });
