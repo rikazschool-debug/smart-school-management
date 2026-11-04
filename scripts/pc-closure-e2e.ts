@@ -71,7 +71,7 @@ try {
 
   if (mode === "--cron-setup") {
     const C = await openCustody(300, plus(2));
-    writeFileSync(CRON, JSON.stringify({ orgs, users: tr.users, schools, custody: C, officer: off.id, setupAt: Date.now() }));
+    writeFileSync(CRON, JSON.stringify({ orgs, users: [...tr.users], schools, custody: C, officer: off.id, setupAt: Date.now() }));
     console.log("cron fixture kept → run --cron-check after the next :20 UTC run"); process.exit(0);
   }
 
