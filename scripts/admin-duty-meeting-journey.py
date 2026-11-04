@@ -61,7 +61,7 @@ async def main():
         await pr.reload(); await pr.wait_for_timeout(2500)
         await pr.get_by_label("حضر").first.check(); await pr.get_by_role("button", name="حفظ الحضور").click(); chk("U15 actual attendance recorded", await toast(pr, "سُجّل الحضور")); await pr.wait_for_timeout(1500)
         await pr.get_by_role("button", name="كتابة المحضر").click(); await pr.get_by_label("الموضوع 1").fill("الحالة الأولى"); await pr.get_by_label("المناقشة 1").fill("نوقشت وتقرر التواصل")
-        await pr.get_by_role("button", name="حفظ المسودة").click(); await toast(pr, "حُفظت مسودة المحضر"); await pr.wait_for_timeout(1500)
+        await pr.get_by_role("button", name="حفظ المسودة").click(); mt = await toast(pr, "حُفظت مسودة المحضر"); await pr.wait_for_timeout(1500); await pr.screenshot(path=SH + "minutes_saved.png"); print("minutes toast", mt)
         await pr.get_by_role("button", name="تثبيت الإصدار").first.click(); await dialog(vp); chk("U16 minutes confirmed by organizer", await toast(pr, "ثُبّت المحضر")); await pr.wait_for_timeout(1500)
         await pr.fill("#dc-b", "التواصل مع ولي الأمر"); await pr.locator("#dc-a").select_option(value=F["users"]["t3"]["id"])
         await pr.fill("#dc-d", T); await pr.get_by_role("button", name="إضافة القرار").click(); chk("U17 decision creates linked task", await toast(pr, "سُجّل القرار")); await pr.wait_for_timeout(1500)
