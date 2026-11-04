@@ -150,13 +150,13 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   const ownerDirect = me.is_owner && !initial;
   async function saveApprove() {
     if (!school) { toast.error("اختر الفرع"); return; }
-    if (!holder[0] || holder[0] === me.me) { toast.error("اختر مسؤول المشتريات المستفيد"); return; }
+    if (!holder[0] || holder[0] === me.me) { toast.error("اختر مستلم العهدة"); return; }
     setBusy(true);
     const { data, error } = await db.rpc("pc_custody_save_approve", { _org: orgId, _school: school, _school_ids: extra.filter((x) => x !== school), _holder: holder[0],
       _purpose: purpose, _amount: Number(amount), _due: due || null, _key: key });
     setBusy(false);
     if (error) { toast.error(arabicError(error)); return; }
-    toast.success("حُفظت العهدة واعتُمدت للفرع ومسؤول المشتريات"); inv(); onDone(data as string);
+    toast.success("حُفظت العهدة واعتُمدت للمستلم"); inv(); onDone(data as string);
   }
   async function save(submit: boolean) {
     if (canOthers && !holder[0]) { toast.error("اختر مسؤول المشتريات المنسوب إليه العهدة"); return; }
@@ -173,7 +173,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   }
   if (!createSchools.length) return <EmptyState title="لا تملك طلب عهدة" hint="اطلب من مالك المؤسسة منحك صلاحية الإنشاء." />;
   return (
-    <FormCard title={initial ? `تعديل ${initial.ref}` : canOthers ? "إضافة عهدة" : "طلب عهدة جديدة"} subtitle={ownerDirect ? "حدّد الفرع ومسؤول المشتريات المستفيد؛ تُعتمد العهدة فور الحفظ ثم تُصرف بإثبات، والرصيد يبدأ عند الصرف الفعلي." : "تُرسل للاعتماد ثم تُصرف بإثبات؛ الرصيد يبدأ عند الصرف الفعلي."}>
+    <FormCard title={initial ? `تعديل ${initial.ref}` : canOthers ? "إضافة عهدة" : "طلب عهدة جديدة"} subtitle={ownerDirect ? "حدّد الجهة المستفيدة ومستلم العهدة؛ تُعتمد العهدة فور الحفظ ثم تُصرف بإثبات، والرصيد يبدأ عند الصرف الفعلي." : "تُرسل للاعتماد ثم تُصرف بإثبات؛ الرصيد يبدأ عند الصرف الفعلي."}>
       <div className="grid gap-3 sm:grid-cols-2">
         <div><Label>الجهة المستفيدة</Label><select className={selectCls()} value={unit === "branch" ? school : unit} onChange={(e) => { const v = e.target.value; setHolder([]); if (v === "mt_bus" || v === "mt_school") setUnit(v); else { setUnit("branch"); setSchool(v); } }}>
           <optgroup label="الفروع">{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</optgroup>
