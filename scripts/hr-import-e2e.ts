@@ -48,5 +48,5 @@ try {
   const link = (await admin.from("hr_employees").select("user_id").eq("org_id", org)).data!;
   check("no automatic account linking", link.every((x: any) => x.user_id === null), link);
 } catch (e) { bad++; console.log("FAIL crash", e); }
-finally { for (const o of orgs) await tr.purgeOrg(o).catch((e: unknown) => console.log("cleanup", e)); await tr.cleanup?.(); }
+finally { for (const o of orgs) await tr.purgeOrg(o).catch((e: unknown) => console.log("cleanup", e)); for (const u of tr.users) await admin.auth.admin.deleteUser(u); }
 console.log(`\n${ok} passed, ${bad} failed`); process.exit(bad ? 1 : 0);
