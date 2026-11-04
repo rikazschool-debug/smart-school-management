@@ -43,6 +43,7 @@ await o.c.rpc("perm_assign", { _org: org, _user: users.approver!.id, _role: R("�
 await o.c.rpc("perm_assign", { _org: org, _user: users.disburser!.id, _role: R("منفذ صرف"), _assign: true, _school_ids: [A], _limit: null, _reason: "تجربة" });
 await o.c.rpc("perm_assign", { _org: org, _user: users.officer2!.id, _role: R("مسؤول مشتريات"), _assign: true, _school_ids: null, _limit: null, _reason: "تجربة" });
 await o.c.rpc("perm_assign", { _org: org, _user: users.disburser!.id, _role: R("محاسب"), _assign: true, _school_ids: null, _limit: null, _reason: "تجربة" });
+let openCustody: string | null = null;
 if (process.argv.includes("--open")) {
   // A disbursed, acknowledged custody (1,000) with one approved tax invoice — starting point for settlement journeys.
   const off = users.officer!.c, apr = users.approver!.c, dis = users.disburser!.c;
@@ -60,8 +61,9 @@ if (process.argv.includes("--open")) {
   await off.rpc("pc_expense_action", { _id: eid, _action: "submit", _rev: await er(off), _reason: null });
   const ap = await apr.rpc("pc_expense_action", { _id: eid, _action: "approve", _rev: await er(apr), _reason: null });
   if (ap.error) throw ap.error;
+  openCustody = cid;
 }
 mkdirSync("/tmp/browser/pc", { recursive: true });
-writeFileSync(FX, JSON.stringify({ org, schools: [A], userIds: Object.values(users).map((u) => u.id), pw, emails: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, u.email])) }, null, 1));
+writeFileSync(FX, JSON.stringify({ org, custody: openCustody, schools: [A], userIds: Object.values(users).map((u) => u.id), pw, emails: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, u.email])) }, null, 1));
 console.log("fixture ready", FX);
 process.exit(0);
