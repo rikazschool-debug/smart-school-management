@@ -59,3 +59,4 @@
 - scripts/pc-revoke-journey.py: optional invoice attachment + live-session permission withdrawal in the browser (8 checks; needs pc-browser-fixture `setup --open`, teardown after). scripts/all-dashboards-phone-journey.py: every demo dashboard at 390/1280px (read-only).
 - scripts/visits-e2e.ts: class visits (evaluator scope, 1–5 scores, submit/return/approve, teacher blind, isolation; 24 checks).
 - scripts/evaluation-e2e.ts: comprehensive evaluation (guardian ratings/history, monthly, forms/versions/weights, teacher file, visit correction, platform grant; 26 checks). scripts/evaluation-browser-fixture.ts setup|teardown (evb-) + scripts/evaluation-journey.py (18 checks); always run teardown after.
+- scripts/evaluation-perm-e2e.ts: evaluation × permission tree (25 checks; --cron waits for the real reminder run). scripts/evaluation-perm-journey.py: grant/revoke in browser with open session (needs evaluation-browser-fixture).
