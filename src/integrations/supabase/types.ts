@@ -4908,6 +4908,8 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          inspection_date: string | null
+          license_expiry: string | null
           model: string | null
           next_service_date: string | null
           next_service_km: number | null
@@ -4926,6 +4928,8 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          inspection_date?: string | null
+          license_expiry?: string | null
           model?: string | null
           next_service_date?: string | null
           next_service_km?: number | null
@@ -4944,6 +4948,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          inspection_date?: string | null
+          license_expiry?: string | null
           model?: string | null
           next_service_date?: string | null
           next_service_km?: number | null
@@ -9018,6 +9024,7 @@ export type Database = {
         Returns: string
       }
       _mt_can_read: { Args: { _id: string; _uid: string }; Returns: boolean }
+      _mt_doc_state: { Args: { _d: string }; Returns: string }
       _mt_ev: {
         Args: {
           _action: string
