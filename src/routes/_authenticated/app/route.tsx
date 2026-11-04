@@ -120,7 +120,7 @@ function Shell() {
     const k = `rikaz-login-toast:${user.id}`;
     if (sessionStorage.getItem(k)) return;
     sessionStorage.setItem(k, "1");
-    toast.success(`تم تسجيل الدخول إلى حساب ${ROLE_LABELS[active.role]}`, { description: active.schoolName });
+    toast.success("تم تسجيل الدخول", { description: active.schoolName });
   }, [active, user.id]);
   if (loading) return <div className="p-10"><LoadingState /></div>;
   if (!active) return <Onboarding onSignOut={signOut} />;
@@ -188,7 +188,7 @@ function Shell() {
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">{initial}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{ROLE_LABELS[active.role]}</p>
+            <p className="truncate text-sm font-semibold">{opsOnly ? "موظف تشغيل وصيانة" : ROLE_LABELS[active.role]}</p>
             <p className="truncate text-xs text-muted-foreground" dir="ltr">{user.email}</p>
           </div>
           <Button variant="ghost" size="icon" onClick={signOut} aria-label="تسجيل الخروج" title="تسجيل الخروج"><LogOut className="size-4" /></Button>
@@ -226,7 +226,7 @@ function Shell() {
             >
               {contexts.map((c) => (
                 <option key={c.key} value={c.key}>
-                  {ROLE_LABELS[c.role]} · {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
+                  {opsOnly && c.schoolId === active.schoolId && c.role === active.role ? "موظف تشغيل وصيانة" : ROLE_LABELS[c.role]} · {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
                 </option>
               ))}
             </select>
