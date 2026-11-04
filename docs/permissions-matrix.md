@@ -189,7 +189,7 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 | Disburse (proof + reference required) / confirm refunds | «disburse» in scope; never to self |
 | Confirm receipt of disbursed cash | The custody holder only |
 | Request top-up / settlement / pre-purchase / adjustment / transfer | Holder of the custody (or «create» in scope); never decided by the requester |
-| Approve requests | «approve» in scope within limit; transfer also needs the new holder to accept |
+| Approve requests | «approve» in scope within limit; transfer also needs the new holder to accept |; after acceptance the new custody belongs to the new holder only — the previous holder keeps read access to the closed old custody but cannot open the new one
 | Disburse a top-up, receive returned cash | «disburse» in scope, proof required |
 | Carry balance / close custody | «approve» in scope; close only when every reconciliation check passes |
 | Reports + Excel/PDF export | «export» in scope (server re-checks scope on every export) |
