@@ -73,10 +73,12 @@ export type NavKey =
   | "permissions";
 
 /** Owner home is split into four sections; each section shows only its own side menu. */
-export type OwnerSection = "school_admin" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users";
-export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", maintenance: "إدارة صيانة المدارس", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات" };
+export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users";
+export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", maintenance: "إدارة صيانة المدارس", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
-  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "virtual", "homework", "grades", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "visits", "evaluation", "communication", "comm_groups", "circulars", "comm_manage"],
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "virtual", "homework", "grades", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage"],
+  // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
+  evaluation: ["evaluation"],
   admissions: ["admissions"],
   finance: ["finance", "procurement"],
   operations: ["operations", "transport", "bus_maintenance"],
@@ -96,6 +98,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
   if (OWNER_SHARED.some((s) => p === s || p.startsWith(s + "/"))) return prev;
   if (p.startsWith("/app/finance") || p.startsWith("/app/procurement")) return "finance";
   if (p.startsWith("/app/hr")) return "hr";
+  if (p.startsWith("/app/evaluation") || p.startsWith("/app/visits")) return "evaluation";
   if (p.startsWith("/app/admissions")) return "admissions";
   if (p.startsWith("/app/maintenance")) return "maintenance";
   if (p.startsWith("/app/operations") || p.startsWith("/app/bus-maintenance") || p.startsWith("/app/transport")) return "operations";
