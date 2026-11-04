@@ -1,7 +1,8 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useOpsStaff } from "@/lib/ops-staff";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
@@ -98,12 +99,7 @@ function Shell() {
   const pc = usePcMe(active?.orgId ?? null, pcRole);
   const sp = useSchoolPerms(pcRole ? active?.schoolId : null);
   const mt = useMtMe(active?.orgId ?? null, pcRole);
-  // Operations staff (e.g. maintenance) hold a staff membership but no teacher record: they must not see teaching pages.
-  const teachRow = useQuery({
-    enabled: active?.role === "teacher" && !!active?.schoolId, staleTime: 60_000,
-    queryKey: ["my-teacher-row", active?.schoolId, user.id],
-    queryFn: async () => { const { count } = await supabase.from("teachers").select("id", { count: "exact", head: true }).eq("school_id", active!.schoolId!).eq("user_id", user.id); return (count ?? 0) > 0; },
-  });
+  const ops = useOpsStaff(active ?? null, user.id);
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const lastSection = useRef<OwnerSection | null>(null);
@@ -122,7 +118,7 @@ function Shell() {
     sessionStorage.setItem(k, "1");
     toast.success("تم تسجيل الدخول", { description: active.schoolName });
   }, [active, user.id]);
-  if (loading) return <div className="p-10"><LoadingState /></div>;
+  if (loading || ops.loading) return <div className="p-10"><LoadingState /></div>;
   if (!active) return <Onboarding onSignOut={signOut} />;
 
   const ct = commTabs(active.role);
@@ -134,7 +130,7 @@ function Shell() {
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
     ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : [])] as NavKey[];
-  const opsOnly = active.role === "teacher" && teachRow.data === false && (hasKind(mt.data, "school") || hasKind(mt.data, "bus") || canFleet(mt.data) || !!pc.data?.enabled);
+  const opsOnly = ops.opsOnly;
   if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   const nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
@@ -188,7 +184,7 @@ function Shell() {
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">{initial}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{opsOnly ? "موظف تشغيل وصيانة" : ROLE_LABELS[active.role]}</p>
+            <p className="truncate text-sm font-semibold">{ops.title ?? ROLE_LABELS[active.role]}</p>
             <p className="truncate text-xs text-muted-foreground" dir="ltr">{user.email}</p>
           </div>
           <Button variant="ghost" size="icon" onClick={signOut} aria-label="تسجيل الخروج" title="تسجيل الخروج"><LogOut className="size-4" /></Button>
@@ -226,7 +222,7 @@ function Shell() {
             >
               {contexts.map((c) => (
                 <option key={c.key} value={c.key}>
-                  {opsOnly && c.schoolId === active.schoolId && c.role === active.role ? "موظف تشغيل وصيانة" : ROLE_LABELS[c.role]} · {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
+                  {opsOnly && c.schoolId === active.schoolId && c.role === active.role ? ops.title : ROLE_LABELS[c.role]} · {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
                 </option>
               ))}
             </select>
