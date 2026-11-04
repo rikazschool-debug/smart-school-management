@@ -50,7 +50,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     XLSX.utils.book_append_sheet(wb, ws, "الموظفون"); XLSX.writeFile(wb, "قالب-استيراد-الموظفين.xlsx");
   };
   const lock = useRef(false);
-  const load = async (file: File) => {
+  const load = async (file: File): Promise<unknown> => {
     if (!/\.(xlsx|xls|csv)$/i.test(file.name)) return toast.error("نوع الملف غير مدعوم؛ استخدم xlsx أو xls أو csv");
     if (file.size > MAX_BYTES) return toast.error("حجم الملف أكبر من 5 ميغابايت");
     let wb: XLSX.WorkBook; try { wb = XLSX.read(await file.arrayBuffer()); } catch { return toast.error("تعذّر قراءة الملف؛ قد يكون تالفًا"); }
@@ -61,10 +61,11 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     const aoa = rawA.map((r, i) => r.map((c, k) => (typeof c === "number" ? (txtA[i]?.[k] ?? c) : c)));
     const dateCols = new Set<number>();
     const head = (aoa[0] ?? []).map((h) => String(h).trim());
-    const data = aoa.slice(1).filter((r) => r.some((c) => String(c).trim() !== ""));
+    const idx = aoa.slice(1).map((_, i) => i + 1).filter((i) => aoa[i]!.some((c) => String(c).trim() !== ""));
+    const data = idx.map((i) => aoa[i]!);
     const mp: Record<string, number> = {};
     for (const f of fields) { const k = head.findIndex((h) => [f.label, ...f.syn].map(n).includes(n(h))); if (k >= 0) { mp[f.key] = k; if (f.key.endsWith("_date")) dateCols.add(k); } }
-    const fixed = data.map((r, i) => r.map((c, k) => (dateCols.has(k) && typeof rawA[i + 1]?.[k] === "number" ? rawA[i + 1]![k] : c)));
+    const fixed = data.map((r, i) => r.map((c, k) => (dateCols.has(k) && typeof rawA[idx[i]!]?.[k] === "number" ? rawA[idx[i]!]![k] : c)));
     if (!head.some(Boolean) || data.length === 0) return toast.error("الملف لا يحتوي صفوف بيانات");
     if (data.length > MAX_ROWS) return toast.error(`الحد الأقصى ${MAX_ROWS} صف في الملف الواحد`);
     setRaw({ name: file.name, head, data: fixed }); setMap(mp); setRes(null);
