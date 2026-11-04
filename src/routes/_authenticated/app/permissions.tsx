@@ -12,6 +12,10 @@ import { askText } from "@/components/confirm";
 import { PeoplePicker } from "@/components/people-picker";
 import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { StaffWizard } from "@/components/staff-wizard";
+import { PasswordInput } from "@/components/password-input";
+import { resetStaffPassword } from "@/lib/accounts.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { BASE_TABS, peopleForTab, type PermPerson } from "@/lib/perm-tabs";
 
 export const Route = createFileRoute("/_authenticated/app/permissions")({
@@ -40,13 +44,54 @@ function Page() {
     <>
       <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>
       <PageHeader title="إعداد المستخدمين والصلاحيات" desc="الدور الوظيفي يحدد الأقسام والإجراءات والنطاق، وهو منفصل عن القسم الأكاديمي والفرع. المنع الخاص يغلب أي منح." />
-      <p className="mb-6 text-sm"><Link to="/app/members" className="text-primary underline">المستخدمون والدعوات والعضويات</Link> — الأدوار الأساسية الحالية (معلم، وكيل، مشرف...) تبقى كما هي دون توسيع.</p>
-      <div className="space-y-8">
-        <People org={active.orgId} school={active.schoolId} />
-        <Roles org={active.orgId} />
-        <Log org={active.orgId} />
-      </div>
+      <p className="mb-4 text-sm"><Link to="/app/members" className="text-primary underline">الدعوات والعضويات</Link> — الأدوار الأساسية الحالية تبقى كما هي حتى يُحفظ تعديل صريح.</p>
+      <Tabs org={active.orgId} school={active.schoolId} />
     </>
+  );
+}
+
+function Tabs({ org, school }: { org: string; school: string | null }) {
+  const cat = useCatalog();
+  const [tab, setTab] = useState<"users" | "roles" | "log">("users");
+  const [sub, setSub] = useState<"actions" | "templates">("actions");
+  const [wiz, setWiz] = useState(false);
+  const [focus, setFocus] = useState<string | null>(null);
+  const gt = (g: Grant[]) => (cat.data ? grantText(cat.data, g) : "");
+  const T = (k: string, label: string, on: boolean, fn: () => void) => (
+    <button key={k} type="button" role="tab" aria-selected={on} onClick={fn} className={"min-h-9 rounded-lg px-4 text-sm " + (on ? "bg-primary font-semibold text-primary-foreground" : "hover:bg-muted")}>{label}</button>
+  );
+  return (
+    <div className="space-y-5">
+      <div role="tablist" className="flex flex-wrap gap-1 rounded-xl border bg-card p-1">
+        {T("users", "إدارة المستخدمين", tab === "users", () => setTab("users"))}
+        {T("roles", "الأدوار والصلاحيات", tab === "roles", () => setTab("roles"))}
+        {T("log", "سجل التغييرات", tab === "log", () => setTab("log"))}
+      </div>
+      {tab === "users" && <People org={org} school={school} />}
+      {tab === "roles" && (
+        <div className="space-y-4">
+          <div role="tablist" className="flex flex-wrap gap-2">
+            {[["actions", "إضافة وتعديل الموظفين"], ["templates", "قوالب الأدوار والمسميات"]].map(([k, l]) => (
+              <Button key={k} size="sm" role="tab" aria-selected={sub === k} variant={sub === k ? "default" : "outline"} onClick={() => setSub(k as "actions" | "templates")}>{l}</Button>
+            ))}
+          </div>
+          {sub === "templates" ? <Roles org={org} /> : wiz ? (
+            <StaffWizard org={org} school={school} grantText={gt} onCancel={() => setWiz(false)} onDone={(uid) => { setWiz(false); setFocus(uid); }} />
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button type="button" onClick={() => setWiz(true)} className="rounded-xl border bg-card p-4 text-start hover:border-primary/40">
+                  <span className="block font-bold">إضافة موظف جديد</span><span className="text-xs text-muted-foreground">اسم مستخدم وكلمة مرور أولية، الفروع، الدور الأساسي وأدوار إضافية، ثم معاينة قبل الحفظ.</span></button>
+                <a href="#edit-staff" className="rounded-xl border bg-card p-4 text-start hover:border-primary/40">
+                  <span className="block font-bold">تعديل صلاحيات موظف حالي</span><span className="text-xs text-muted-foreground">اختر الموظف من القائمة أدناه لإضافة دور أو سحبه أو استثناء شخصي أو إعادة كلمة المرور.</span></a>
+              </div>
+              <div id="edit-staff"><People key={focus ?? ""} org={org} school={school} initialUser={focus} /></div>
+            </>
+          )}
+        </div>
+      )}
+      {tab === "log" && <Log org={org} />}
+    </div>
   );
 }
 
