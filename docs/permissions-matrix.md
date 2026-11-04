@@ -228,3 +228,13 @@ Request access: owner (all, no execution), requester, current assignee (lost on 
 - Staff login creation/reset: org owner only (server + _staff_provision/_staff_reset owner check); staff cannot change own roles; students/guardians cannot receive staff roles.
 - Custody holders: procurement officers and maintenance managers (school/bus templates carry own-scope procurement).
 - Permission edits per employee: owner only via perm_apply (atomic); perm_preview is read-only (rolled back). Staff cannot edit their own permissions.
+
+## Admissions (admissions.*)
+| Action | Owner | Principal (base) | مسؤول القبول | موظف متابعة القبول |
+|---|---|---|---|---|
+| view (assigned) / view_branch | org | branch | branch | assigned only |
+| create, edit | org | grant | branch | — |
+| contact (log, notes, follow-up) | org | grant | branch | assigned |
+| decide | org | branch | grant | grant |
+| assign, transfer, export, link, students, settings | org | grant | grant | grant |
+Pending-branch applications: owner or settings at org scope only. Platform can pause the section (data kept).
