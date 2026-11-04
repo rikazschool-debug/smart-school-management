@@ -338,3 +338,16 @@
 
 ## Procurement redesign (prompt-86)
 - [x] One visual language for every procurement screen (src/components/procurement/ui.tsx): tab intro, filter toolbar, table cards with totals, pager, record header, panels, forms; approved requests no longer show «إلغاء»
+
+## Package 12 — Role homes + school & bus maintenance (prompt-88)
+- [ ] M1 Roles: school maintenance, bus maintenance, maintenance follow-up (school/bus/both), transport movement officer — assignable via existing users/perm_* (role → people → person permissions), per-branch scope, templates, change log; procurement role reused
+- [ ] M2 Owner portal gate «النقل المدرسي والصيانة» → «النقل المدرسي» (deferred placeholder) + «الصيانة والطلبات» (tabs: schools / buses); principal & movement-officer shortcuts to the same screens
+- [ ] M3 Basic bus records per branch + operating status (available / stopped / awaiting inspection), next service date/odometer alerts
+- [ ] M4 Maintenance requests: server ref/time/identity, categories+subcategories (managed), location, attachments, urgent warning, «أخرى» needs description
+- [ ] M5 Lifecycle RPCs: 11 statuses, routing/auto-assign, accept with lock, decline/clarify, reassign (access revoked), schedule/reschedule with history, progress 0–100, completion request, follow-up approve/return, no self-approval (owner alerted), reopen window, internal notes vs visible replies, cancel/reject with reason
+- [ ] M6 Bus flow: requester = movement officer, odometer, return-to-service as separate inspected action
+- [ ] M7 Link to procurement needs (no financial rights; estimated vs approved actual cost; no duplicate invoices)
+- [ ] M8 Event log, deduped notifications + periodic overdue alerts, search/filters/paging, Excel/PDF
+- [ ] M9 Platform-admin counterparts (schools, finance, HR, users & permissions, transport & maintenance): availability + aggregate stats only, HR «تحت الإنشاء», no cross-org data without explicit logged access
+- [ ] M10 Role homes redesign for all roles (real scoped KPIs, clickable cards → filtered lists, last-updated, empty/error states, phone)
+- [ ] M11 Tests: maint-e2e (2 orgs/2 branches, full school + bus journeys, decline/reassign, concurrent accept, self-approval block, procurement link, isolation, revocation, suspension, alerts) + browser journeys + docs (permissions matrix, closure log)
