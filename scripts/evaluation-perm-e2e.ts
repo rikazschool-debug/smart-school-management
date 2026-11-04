@@ -156,8 +156,11 @@ try {
   }
 } catch (e) { bad++; console.log("ERROR", e); }
 finally {
+  await tr.deleteNotifications().catch(() => {});
+  for (const s of tr.schools) { await admin.from("ev_monthly").delete().eq("school_id", s); await admin.from("cv_visits").delete().eq("school_id", s); }
+  for (const o of orgs) { await admin.from("ev_log").delete().eq("org_id", o); await admin.from("ev_forms").delete().eq("org_id", o); await admin.from("ev_settings").delete().eq("org_id", o); await admin.from("perm_overrides").delete().eq("org_id", o); }
   for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.log("purge", e?.message));
-  await tr.cleanup().catch((e) => console.log("cleanup", e?.message));
+  for (const u of tr.users) await admin.auth.admin.deleteUser(u);
 }
 console.log(`\n${ok} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);
