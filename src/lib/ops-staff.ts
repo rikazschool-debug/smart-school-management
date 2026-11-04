@@ -21,6 +21,18 @@ export function opsTitle(me: MtMe | undefined): string {
   return "موظف تشغيل وصيانة";
 }
 
+/** Every operations job the account holds (from server capabilities), without repeats. */
+export function opsTitles(me: MtMe | undefined, pc: boolean): string[] {
+  const c = me?.caps; const out: string[] = [];
+  if (c?.school.execute.length) out.push("مدير صيانة المدارس");
+  if (c?.bus.execute.length) out.push("مدير صيانة الباصات");
+  if (c?.school.follow.length && !c.school.execute.length) out.push("مسؤول متابعة صيانة المدارس");
+  if (c?.bus.follow.length && !c.bus.execute.length) out.push("مسؤول متابعة صيانة الباصات");
+  if (c?.bus.fleet.length && !c.bus.execute.length) out.push("مسؤول حركة النقل");
+  if (pc) out.push("مسؤول المشتريات");
+  return out;
+}
+
 export function useOpsStaff(active: AppContext | null, userId: string | undefined) {
   const isTeacherType = active?.role === "teacher" && !!active.schoolId && !!userId;
   const teachRow = useQuery({
@@ -38,5 +50,8 @@ export function useOpsStaff(active: AppContext | null, userId: string | undefine
   const hasPc = !!pc.data?.enabled && !!pc.data.caps?.view;
   const hasOps = hasMt || hasPc;
   const opsOnly = isTeacherType && teachRow.data === false && hasOps;
-  return { loading, opsOnly, title: opsOnly ? (hasMt ? opsTitle(mt.data) : "مسؤول المشتريات") : null, me: mt.data };
+  const jobs = opsOnly ? opsTitles(mt.data, hasPc) : [];
+  // several jobs on one account → one neutral «لوحة عملي», never one role's name over the others
+  const title = !opsOnly ? null : jobs.length > 1 ? "عملي" : hasMt ? opsTitle(mt.data) : "مسؤول المشتريات";
+  return { loading, opsOnly, title, jobs, hasPc, me: mt.data };
 }

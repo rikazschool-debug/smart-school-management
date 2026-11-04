@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Bus, CheckCircle2, ClipboardCheck, Hammer, Inbox, Plus, Wrench, type LucideIcon } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Bus, CheckCircle2, ClipboardCheck, Hammer, Inbox, Plus, Wallet, Wrench, type LucideIcon } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { LoadingState } from "@/components/states";
 import { KIND_LABEL, type Kind, type MtMe } from "@/components/maintenance/shared";
@@ -72,8 +72,24 @@ function KindBlock({ orgId, kind, me }: { orgId: string; kind: Kind; me: MtMe })
   );
 }
 
-export function OpsHome({ orgId, me }: { orgId: string | null; me: MtMe | undefined }) {
-  if (!orgId || !me?.caps) return null;
-  const kinds = (["school", "bus"] as Kind[]).filter((k) => Object.values(me.caps![k]).some((s) => s.length));
-  return <div className="space-y-5">{kinds.map((k) => <KindBlock key={k} orgId={orgId} kind={k} me={me} />)}</div>;
+export function OpsHome({ orgId, me, jobs = [], pc = false }: { orgId: string | null; me: MtMe | undefined; jobs?: string[]; pc?: boolean }) {
+  if (!orgId) return null;
+  const kinds = me?.caps ? (["school", "bus"] as Kind[]).filter((k) => Object.values(me.caps![k]).some((s) => s.length)) : [];
+  return (
+    <div className="space-y-5">
+      {jobs.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-4 text-sm">
+          <span className="font-semibold">أدوارك:</span>{jobs.map((j) => <span key={j} className="rounded-full bg-primary/10 px-3 py-1 text-primary">{j}</span>)}
+        </div>
+      )}
+      {kinds.map((k) => <KindBlock key={k} orgId={orgId} kind={k} me={me!} />)}
+      {pc && (
+        <section className="flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-5 shadow-sm">
+          <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary"><Wallet className="size-5" /></span>
+          <div className="min-w-0 flex-1"><h2 className="font-display text-lg">المشتريات والعهد</h2><p className="text-sm text-muted-foreground">عهدك وفواتيرها وطلبات الشراء المسندة إليك.</p></div>
+          <Link to="/app/procurement" className="inline-flex items-center gap-1 text-sm font-semibold text-primary">فتح المشتريات<ArrowLeft className="size-4" /></Link>
+        </section>
+      )}
+    </div>
+  );
 }
