@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bell, Bus, ClipboardCheck, Inbox, LifeBuoy, ReceiptText, RefreshCw, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Bell, BookOpenCheck, Bus, UserX, ClipboardCheck, Inbox, LifeBuoy, ReceiptText, RefreshCw, Wrench, type LucideIcon } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -8,7 +8,7 @@ import { arabicError } from "@/lib/session";
 type MtK = { mine: number; assigned: number; overdue: number; to_approve: number; unassigned: number };
 type Work = {
   notifications: number; tasks: number; tasks_overdue: number; requests_handle: number; requests_mine: number;
-  support_mine: number; support_assigned: number; pc: number | null; mt: { school?: MtK; bus?: MtK }; at: string;
+  support_mine: number; support_assigned: number; pc: number | null; hw_to_grade?: number; hw_due?: number; child_absent?: number; mt: { school?: MtK; bus?: MtK }; at: string;
 };
 type Item = { n: number; label: string; to: string; search?: Record<string, string>; icon: LucideIcon; urgent?: boolean };
 
@@ -34,6 +34,9 @@ export function WorkToday({ schoolId }: { schoolId: string }) {
     ];
   };
   const items: Item[] = [
+    { n: d.child_absent ?? 0, label: "غياب أو تأخر لأبنائي اليوم", to: "/app/attendance", icon: UserX, urgent: true },
+    { n: d.hw_to_grade ?? 0, label: "تسليم واجب أو اختبار بانتظار تصحيحي", to: "/app/homework", icon: BookOpenCheck },
+    { n: d.hw_due ?? 0, label: "واجب يستحق خلال 3 أيام ولم أسلّمه", to: "/app/homework", icon: BookOpenCheck, urgent: true },
     { n: d.tasks_overdue, label: "تكليف متأخر", to: "/app/admin", icon: ClipboardCheck, urgent: true },
     { n: d.tasks, label: "تكليف مفتوح لي", to: "/app/admin", icon: ClipboardCheck },
     { n: d.requests_handle, label: "طلب إداري أعالجه", to: "/app/admin", icon: Inbox },
