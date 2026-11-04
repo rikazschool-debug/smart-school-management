@@ -335,3 +335,6 @@
 ## Virtual class sessions 2026-11-03
 - [x] vc_* scheduling (principal picks class+teacher, teacher own/instant), room reuse, attendance per session, teacher/student report, link from classroom
 - [ ] Browser journey with real microphone (needs a live device test)
+
+## Procurement redesign (prompt-86)
+- [x] One visual language for every procurement screen (src/components/procurement/ui.tsx): tab intro, filter toolbar, table cards with totals, pager, record header, panels, forms; approved requests no longer show «إلغاء»
