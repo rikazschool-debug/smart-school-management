@@ -4,13 +4,13 @@ import { toast } from "sonner";
 import { Download, FileText } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { selectCls } from "@/components/ui/native-select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { fmt } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { C_STATUS, MOVE, day, sar, type PcMe, type Row } from "@/components/procurement/shared";
+import { DateRange, Field, Pager, Panel, TD, TDN, TH, THEAD, THN, TR } from "@/components/procurement/ui";
 
 type Kind = "purchases" | "person" | "person_moves" | "settlements";
 const KINDS: Record<Kind, string> = { purchases: "المشتريات", person: "أرصدة الأشخاص", person_moves: "كشف شخص", settlements: "التسويات" };
@@ -57,18 +57,18 @@ export function ReportsPanel({ orgId, me, orgName }: { orgId: string; me: PcMe; 
     if (type === "xlsx") exportXlsx(meta, cols.h, (data.rows as Row[]).map(cols.row)); else await exportPdf(meta, cols.h, (data.rows as Row[]).map(cols.row));
   }
   return (
-    <section className="space-y-3 rounded-2xl border bg-card p-4">
-      <div className="flex flex-wrap items-end gap-2">
-        <h3 className="me-2 font-semibold">التقارير</h3>
-        <select className={selectCls("w-40")} value={kind} onChange={(e) => { setKind(e.target.value as Kind); setPage(0); }} aria-label="التقرير">{(Object.keys(KINDS) as Kind[]).map((k) => <option key={k} value={k}>{KINDS[k]}</option>)}</select>
-        {kind === "purchases" && <select className={selectCls("w-32")} value={group} onChange={(e) => { setGroup(e.target.value); setPage(0); }} aria-label="التجميع">{Object.entries(GROUPS).map(([k, v]) => <option key={k} value={k}>حسب {v}</option>)}</select>}
+    <Panel title="التقارير" actions={me.caps.export && ready ? <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></> : undefined}>
+      <div className="space-y-3">
+      <div className="flex flex-wrap gap-1 rounded-xl bg-muted/60 p-1">{(Object.keys(KINDS) as Kind[]).map((k) => (
+        <button key={k} type="button" onClick={() => { setKind(k); setPage(0); }} className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${kind === k ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{KINDS[k]}</button>
+      ))}</div>
+      <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+        {kind === "purchases" && <Field label="التجميع"><select className={selectCls("w-32", true)} value={group} onChange={(e) => { setGroup(e.target.value); setPage(0); }}>{Object.entries(GROUPS).map(([k, v]) => <option key={k} value={k}>حسب {v}</option>)}</select></Field>}
         {(kind === "person_moves" || kind === "settlements" || kind === "purchases") && (holders.data?.length ?? 0) > 0 && (
-          <select className={selectCls("w-40")} value={holder} onChange={(e) => { setHolder(e.target.value); setPage(0); }} aria-label="الشخص"><option value="">{kind === "person_moves" ? "— اختر الشخص —" : "كل الأشخاص"}</option>{holders.data!.map((h) => <option key={h.holder_id} value={h.holder_id}>{h.name}</option>)}</select>
+          <Field label="الشخص"><select className={selectCls("w-44", true)} value={holder} onChange={(e) => { setHolder(e.target.value); setPage(0); }}><option value="">{kind === "person_moves" ? "— اختر الشخص —" : "كل الأشخاص"}</option>{holders.data!.map((h) => <option key={h.holder_id} value={h.holder_id}>{h.name}</option>)}</select></Field>
         )}
-        {me.schools.length > 1 && <select className={selectCls("w-36")} value={school} onChange={(e) => { setSchool(e.target.value); setPage(0); }} aria-label="الفرع"><option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
-        <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
-        <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
-        {me.caps.export && ready && <span className="ms-auto flex gap-2"><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></span>}
+        {me.schools.length > 1 && <Field label="الفرع"><select className={selectCls("w-36", true)} value={school} onChange={(e) => { setSchool(e.target.value); setPage(0); }}><option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>}
+        <DateRange from={from} to={to} setFrom={(v) => { setFrom(v); setPage(0); }} setTo={(v) => { setTo(v); setPage(0); }} />
       </div>
       {!ready ? <p className="text-sm text-muted-foreground">اختر الشخص لعرض كشف حركاته عبر كل عهده.</p> : q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.rows.length ? <EmptyState title="لا بيانات ضمن الفلاتر" /> : (
         <>
@@ -77,19 +77,14 @@ export function ReportsPanel({ orgId, me, orgName }: { orgId: string; me: PcMe; 
             : <>المصروف {sar(q.data.sums.disbursed)} · المعتمد {sar(q.data.sums.spent)} · المعلّق {sar(q.data.sums.pending)} · الرصيد {sar(q.data.sums.book)}</>}</p>}
           <div className="overflow-x-auto rounded-xl border">
             <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{cols.h.map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
-              <tbody>{(q.data.rows as Row[]).map((r, i) => <tr key={i} className="border-t">{cols.row(r).map((v, j) => <td key={j} className="px-3 py-2 tabular-nums">{typeof v === "number" && money(cols.h[j]!) ? sar(v) : v}</td>)}</tr>)}</tbody>
+              <thead className={THEAD}><tr>{cols.h.map((h, j) => <th key={h} className={typeof cols.row((q.data.rows as Row[])[0])[j] === "number" ? THN : TH}>{h}</th>)}</tr></thead>
+              <tbody>{(q.data.rows as Row[]).map((r, i) => <tr key={i} className={TR}>{cols.row(r).map((v, j) => <td key={j} className={typeof v === "number" ? TDN : TD}>{typeof v === "number" && money(cols.h[j]!) ? sar(v) : v}</td>)}</tr>)}</tbody>
             </table>
           </div>
-          {q.data.total > 50 && (
-            <div className="flex items-center justify-center gap-2 text-sm">
-              <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>السابق</Button>
-              <span>{page + 1} / {Math.ceil(q.data.total / 50)}</span>
-              <Button size="sm" variant="outline" disabled={(page + 1) * 50 >= q.data.total} onClick={() => setPage(page + 1)}>التالي</Button>
-            </div>
-          )}
+          <Pager page={page} total={q.data.total} size={50} setPage={setPage} />
         </>
       )}
-    </section>
+      </div>
+    </Panel>
   );
 }

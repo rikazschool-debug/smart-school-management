@@ -6,6 +6,7 @@ import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { selectCls } from "@/components/ui/native-select";
 import { askText } from "@/components/confirm";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Pill, fmt } from "@/components/admin/shared";
@@ -14,13 +15,15 @@ import { ACTION, C_STATUS, E_STATUS, SCOPE_LABEL, TONE, sar, type PcMe, type Row
 import { useInvalidate } from "@/components/procurement/custody";
 import { R_KIND, R_STATUS } from "@/components/procurement/requests";
 import { FormBuilder } from "@/components/procurement/form-builder";
+import { Field, Panel, Stat, StatGrid, TD, TDN, TH, THEAD, THN, TR, TableCard, Toolbar } from "@/components/procurement/ui";
+import { AlertTriangle, Clock, Coins, FolderOpen, Hourglass, Landmark, Wallet, BadgeCheck } from "lucide-react";
 
 function Item({ r, onClick, extra }: { r: Row; onClick: () => void; extra?: React.ReactNode }) {
   const isExp = r.entity === "expense" || r.supplier !== undefined;
   return (
-    <li className="flex cursor-pointer flex-wrap items-center gap-2 px-3 py-2 text-sm hover:bg-muted/40" onClick={onClick}>
+    <li className="flex cursor-pointer flex-wrap items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted/40" onClick={onClick}>
       <span className="font-mono text-xs">{r.ref}</span>
-      <span className="min-w-0 truncate">{isExp ? `${r.description} — ${r.supplier}` : r.purpose}</span>
+      <span className="min-w-0 truncate font-medium">{isExp ? `${r.description} — ${r.supplier}` : r.purpose}</span>
       <span className="text-muted-foreground">{isExp ? r.creator : r.holder}</span>
       <span className="ms-auto tabular-nums">{sar(isExp ? r.total : r.amount)}</span>
       <Pill tone={TONE[r.status] ?? "muted"}>{isExp ? E_STATUS[r.status] : C_STATUS[r.status]}</Pill>{extra}
@@ -30,8 +33,8 @@ function Item({ r, onClick, extra }: { r: Row; onClick: () => void; extra?: Reac
 
 function ReqItem({ r, onClick }: { r: Row; onClick: () => void }) {
   return (
-    <li className="flex cursor-pointer flex-wrap items-center gap-2 px-3 py-2 text-sm hover:bg-muted/40" onClick={onClick}>
-      <span className="font-mono text-xs">{r.ref}</span><span>{R_KIND[r.kind]}</span><span className="min-w-0 truncate text-muted-foreground">{r.purpose}{r.custody_ref ? ` · ${r.custody_ref}` : ""}</span>
+    <li className="flex cursor-pointer flex-wrap items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted/40" onClick={onClick}>
+      <span className="font-mono text-xs">{r.ref}</span><span className="font-medium">{R_KIND[r.kind]}</span><span className="min-w-0 truncate text-muted-foreground">{r.purpose}{r.custody_ref ? ` · ${r.custody_ref}` : ""}</span>
       <span className="ms-auto tabular-nums">{r.amount == null ? "" : sar(r.amount)}</span><Pill tone={r.status === "approved" ? "ok" : "warn"}>{R_STATUS[r.status]}</Pill>
     </li>
   );
@@ -39,7 +42,7 @@ function ReqItem({ r, onClick }: { r: Row; onClick: () => void }) {
 
 function Block({ title, rows, children }: { title: string; rows: number; children: React.ReactNode }) {
   if (!rows) return null;
-  return <section className="space-y-2"><h3 className="font-semibold">{title} <span className="text-sm text-muted-foreground">({rows})</span></h3><ul className="divide-y rounded-xl border bg-card">{children}</ul></section>;
+  return <Panel title={title} count={rows} flush><ul className="divide-y">{children}</ul></Panel>;
 }
 
 export function TasksTab({ orgId, openC, openE, openR }: { orgId: string; openC: (id: string) => void; openE: (id: string) => void; openR: (id: string) => void }) {
@@ -51,10 +54,12 @@ export function TasksTab({ orgId, openC, openE, openR }: { orgId: string; openC:
   const n = ["ack", "custody_decide", "custody_disburse", "expense_decide", "refund_decide", "request_decide", "topup_disburse", "transfer_accept", "settle_close", "due_soon", "mine"].reduce((a, k) => a + (t[k]?.length ?? 0), 0);
   if (!n) return <EmptyState title="لا مهام بانتظارك" hint="ستظهر هنا العهد والفواتير التي تحتاج قرارك أو استكمالك." />;
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
+      <h3 className="flex items-center gap-2 text-base font-bold">بانتظارك <span className="rounded-full bg-primary px-2 text-xs text-primary-foreground tabular-nums">{n}</span></h3>
+      <div className="grid gap-3 xl:grid-cols-2">
       <Block title="بانتظار تأكيد استلامك" rows={t.ack.length}>
         {t.ack.map((a: Row) => (
-          <li key={a.move} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
+          <li key={a.move} className="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
             <button className="font-mono text-xs text-primary" onClick={() => openC(a.custody_id)}>{a.ref}</button><span>صُرف لك {sar(a.amount)} · {fmt(a.at)}</span>
             <Button size="sm" className="ms-auto" onClick={async () => { const { error } = await db.rpc("pc_ack", { _move: a.move }); if (error) toast.error(arabicError(error)); else { toast.success("تم تأكيد الاستلام"); inv(); } }}>تأكيد الاستلام</Button>
           </li>
@@ -64,7 +69,7 @@ export function TasksTab({ orgId, openC, openE, openR }: { orgId: string; openC:
       <Block title="عهد معتمدة بانتظار الصرف" rows={t.custody_disburse.length}>{t.custody_disburse.map((r: Row) => <Item key={r.id} r={r} onClick={() => openC(r.id)} />)}</Block>
       <Block title="مصروفات بانتظار المراجعة أو الاعتماد" rows={t.expense_decide.length}>{t.expense_decide.map((r: Row) => <Item key={r.id} r={r} onClick={() => openE(r.id)} extra={r.dup_ref ? <Pill tone="bad">مكرر محتمل</Pill> : null} />)}</Block>
       <Block title="استردادات بانتظار التأكيد" rows={t.refund_decide.length}>
-        {t.refund_decide.map((r: Row) => <li key={r.id} className="flex cursor-pointer gap-2 px-3 py-2 text-sm hover:bg-muted/40" onClick={() => openE(r.expense_id)}><span className="font-mono text-xs">{r.ref}</span><span>{r.reason} — {r.by}</span><span className="ms-auto tabular-nums">{sar(r.amount)}</span></li>)}
+        {t.refund_decide.map((r: Row) => <li key={r.id} className="flex cursor-pointer gap-2 px-4 py-2.5 text-sm hover:bg-muted/40" onClick={() => openE(r.expense_id)}><span className="font-mono text-xs">{r.ref}</span><span>{r.reason} — {r.by}</span><span className="ms-auto tabular-nums">{sar(r.amount)}</span></li>)}
       </Block>
       <Block title="عهد منقولة إليك بانتظار تسلّمك" rows={t.transfer_accept.length}>{t.transfer_accept.map((r: Row) => <ReqItem key={r.id} r={r} onClick={() => openR(r.id)} />)}</Block>
       <Block title="طلبات بانتظار اعتمادك" rows={t.request_decide.length}>{t.request_decide.map((r: Row) => <ReqItem key={r.id} r={r} onClick={() => openR(r.id)} />)}</Block>
@@ -72,6 +77,7 @@ export function TasksTab({ orgId, openC, openE, openR }: { orgId: string; openC:
       <Block title="تسويات جاهزة للمطابقة والإغلاق" rows={t.settle_close.length}>{t.settle_close.map((r: Row) => <Item key={r.id} r={r} onClick={() => openC(r.id)} />)}</Block>
       <Block title="اقترب أو فات موعد تسوية عهدك" rows={t.due_soon.length}>{t.due_soon.map((r: Row) => <Item key={r.id} r={r} onClick={() => openC(r.id)} extra={<span className="text-xs text-muted-foreground">التسوية {r.settle_due}</span>} />)}</Block>
       <Block title="طلباتي المفتوحة" rows={t.mine.length}>{t.mine.map((r: Row) => r.entity === "request" ? <ReqItem key={r.id} r={r} onClick={() => openR(r.id)} /> : <Item key={r.id} r={r} onClick={() => (r.entity === "expense" ? openE(r.id) : openC(r.id))} />)}</Block>
+      </div>
     </div>
   );
 }
@@ -83,25 +89,31 @@ export function SummaryTab({ orgId, me }: { orgId: string; me: PcMe }) {
   if (q.error) return <ErrorState message={arabicError(q.error)} />;
   const s = q.data;
   const cards: [string, string][] = [["عهد مفتوحة", String(s.open)], ["متأخرة التسوية", String(s.overdue)], ["بانتظار اعتماد/صرف", String(s.awaiting)], ["إجمالي المصروف للعهد", sar(s.disbursed)], ["المعتمد صرفه", sar(s.spent)], ["قيد المراجعة", sar(s.pending)], ["الرصيد الدفتري المفتوح", sar(s.book)], ["المتاح للصرف", sar(s.available)]];
+  const icons = [FolderOpen, AlertTriangle, Hourglass, Wallet, BadgeCheck, Clock, Landmark, Coins];
+  const tones = ["default", Number(s.overdue) ? "bad" : "default", Number(s.awaiting) ? "warn" : "default", "default", "ok", Number(s.pending) ? "warn" : "default", "default", "primary"] as const;
   const Table = ({ title, rows }: { title: string; rows: Row[] }) => !rows.length ? null : (
-    <section className="space-y-2"><h3 className="font-semibold">{title}</h3>
-      <div className="overflow-x-auto rounded-xl border bg-card"><table className="w-full text-sm">
-        <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["الاسم", "عدد العهد", "المصروف لها", "المعتمد", "المعلّق", "الرصيد"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
-        <tbody>{rows.map((r, i) => <tr key={i} className="border-t"><td className="px-3 py-2">{r.name}</td><td className="px-3 py-2">{r.count}</td><td className="px-3 py-2 tabular-nums">{sar(r.disbursed)}</td><td className="px-3 py-2 tabular-nums">{sar(r.spent)}</td><td className="px-3 py-2 tabular-nums">{sar(r.pending)}</td><td className="px-3 py-2 tabular-nums">{sar(r.book)}</td></tr>)}</tbody>
+    <Panel title={title} count={rows.length} flush>
+      <div className="overflow-x-auto"><table className="w-full text-sm">
+        <thead className={THEAD}><tr><th className={TH}>الاسم</th>{["عدد العهد", "المصروف لها", "المعتمد", "المعلّق", "الرصيد"].map((h) => <th key={h} className={THN}>{h}</th>)}</tr></thead>
+        <tbody>{rows.map((r, i) => <tr key={i} className={TR}><td className={`${TD} font-medium`}>{r.name}</td><td className={TDN}>{r.count}</td><td className={TDN}>{sar(r.disbursed)}</td><td className={TDN}>{sar(r.spent)}</td><td className={TDN}>{sar(r.pending)}</td><td className={`${TDN} font-semibold`}>{sar(r.book)}</td></tr>)}</tbody>
       </table></div>
-    </section>
+    </Panel>
   );
   return (
-    <div className="space-y-4">
-      {me.schools.length > 1 && <select className="h-9 rounded-md border bg-background px-2 text-sm" value={school} onChange={(e) => setSchool(e.target.value)} aria-label="الفرع"><option value="">كل الفروع ضمن نطاقك</option>{me.schools.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>}
-      <div className="flex justify-end"><ExportButtons meta={{ title: "ملخص العهد والمشتريات", filters: [school && `الفرع: ${me.schools.find((x) => x.id === school)?.name ?? ""}`].filter(Boolean) as string[] }}
+    <div className="space-y-3">
+      <Toolbar actions={<ExportButtons meta={{ title: "ملخص العهد والمشتريات", filters: [school && `الفرع: ${me.schools.find((x) => x.id === school)?.name ?? ""}`].filter(Boolean) as string[] }}
         headers={["البند", "القيمة", "", "", "", ""]}
         rows={() => [...cards.map(([l, v]) => [l, v, "", "", "", ""]), ["", "", "", "", "", ""], ["حسب المستلم / الفرع", "عدد العهد", "المصروف لها", "المعتمد", "المعلّق", "الرصيد"],
-          ...[...(s.by_holder ?? []), ...(s.by_school ?? [])].map((r: Row) => [r.name, Number(r.count), Number(r.disbursed), Number(r.spent), Number(r.pending), Number(r.book)])]} /></div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{cards.map(([l, v]) => <div key={l} className="rounded-xl border bg-card p-3"><p className="text-xs text-muted-foreground">{l}</p><p className="mt-1 text-lg font-bold tabular-nums">{v}</p></div>)}</div>
+          ...[...(s.by_holder ?? []), ...(s.by_school ?? [])].map((r: Row) => [r.name, Number(r.count), Number(r.disbursed), Number(r.spent), Number(r.pending), Number(r.book)])]} />}>
+        <h3 className="self-center text-base font-bold">الأرصدة والمبالغ</h3>
+        {me.schools.length > 1 && <Field label="الفرع"><select className={selectCls("w-48", true)} value={school} onChange={(e) => setSchool(e.target.value)}><option value="">كل الفروع ضمن نطاقك</option>{me.schools.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></Field>}
+      </Toolbar>
+      <StatGrid>{cards.map(([l, v], i) => <Stat key={l} label={l} value={v} icon={icons[i]} tone={tones[i]} />)}</StatGrid>
       <p className="text-xs text-muted-foreground">الأرقام محسوبة من حركات العهد المعتمدة ضمن نطاق صلاحيتك فقط.</p>
-      <Table title="حسب المستلم" rows={s.by_holder} />
-      <Table title="حسب الفرع" rows={s.by_school} />
+      <div className="grid gap-3 xl:grid-cols-2">
+        <Table title="حسب المستلم" rows={s.by_holder} />
+        <Table title="حسب الفرع" rows={s.by_school} />
+      </div>
     </div>
   );
 }
