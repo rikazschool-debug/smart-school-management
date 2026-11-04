@@ -33,8 +33,9 @@ t("single owner, not demo", (chk(await a.from("memberships").select("user_id").e
 const map = chk(await a.from("ad_settings").select("school_map").eq("org_id", ORG).single()).school_map;
 t("form map → 4 own branches", Object.keys(map).length === 4 && Object.values(map).every((v) => ids.includes(v)));
 t("admissions enabled", chk(await a.from("org_sections").select("enabled").eq("org_id", ORG).eq("section", "admissions").single()).enabled === true);
-const eff = chk(await a.rpc("perm_effective", { _org: ORG, _user: uid })) as any;
-t("officer has admissions in all branches", JSON.stringify(eff).includes("admissions"));
+const asg = chk(await a.from("perm_assignments").select("*").eq("org_id", ORG).eq("user_id", uid).eq("role_id", role)) as any[];
+t("officer holds admissions role", asg.length >= 1);
+t("officer member of all 4 branches", (chk(await a.from("memberships").select("school_id").eq("org_id", ORG).eq("user_id", uid)) as any[]).length === 4);
 const setup = chk(await a.from("account_setup").select("need_password,completed_at").eq("user_id", uid).maybeSingle());
 t("officer must change password on first login", !!setup && setup.need_password && !setup.completed_at);
 t("no applications imported", (chk(await a.from("ad_applications").select("id").eq("org_id", ORG)) as any[]).length === 0);
