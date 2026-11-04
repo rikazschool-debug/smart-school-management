@@ -500,3 +500,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Timetable busy-teacher regression: new check 13a (real busy teacher, every busy teacher refused, none suggested). timetable-e2e 31/31 three consecutive runs.
 - Security: retired demo platform account demo-admin@rikaz.demo banned permanently (no memberships, platform_admins empty → no cross-org reach; refresh of old sessions blocked). rls-e2e 94/94, bounds-e2e 8/8.
 - Supabase settings still owner-side: Site URL + redirect URLs, leaked-password protection, public sign-up currently open (disable_signup=false).
+
+## 2026-11-04 (f) — Comprehensive evaluation (on top of class visits)
+- Reused cv_visits (5 axes / 24 items / principal approval, data kept); added subject/section/type, improvement plan + follow-up (cv_plan), correction of approved visits by new version + reason (cv_correct, old scores kept in cv_events).
+- ev_forms (versioned guardian/monthly forms, draft/published/archived, weights, N/A, required; ratings snapshot form text), ev_guardian (one current per guardian–student–teacher–year, edits append ev_guardian_hist), ev_monthly (one per staff–role–branch–month, approved changes need reason → version + ev_monthly_hist), ev_platform_access (explicit per-org grant for platform admins, SQL only), ev_log (form publish, monthly save/approve/correct, exports).
+- Evidence: scripts/evaluation-e2e.ts 26/26; visits-e2e 24/24; browser scripts/evaluation-journey.py 18/18 (guardian on 390px phone incl. keyboard stars, principal file/Excel/PDF/monthly, vice denied, owner card + form v2 publish, guardian told form changed); Vitest stars.test 3/3.
+- Not yet built: in-app reminders for monthly cycle start/overdue (no cron yet), delegated forms permission node in the perm tree UI (server check perm_allows('evaluation','forms') exists), trend charts across periods, feedback publication to staff (off by policy).
