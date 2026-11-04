@@ -11295,7 +11295,10 @@ export type Database = {
       }
       ev_m_staff: { Args: { _month: string; _school: string }; Returns: Json }
       ev_me: { Args: { _school: string }; Returns: Json }
-      ev_monthly_tick: { Args: { _now?: string }; Returns: number }
+      ev_monthly_tick: {
+        Args: { _now?: string; _only_org?: string }
+        Returns: number
+      }
       ev_settings_get: { Args: { _org: string }; Returns: Json }
       ev_settings_save: {
         Args: { _due_day: number; _org: string; _reminders: boolean }
