@@ -62,6 +62,16 @@ try {
   check("11 revoking the role removes access on the next request", !(await can(m.c, A, "maint_school", "execute")));
   const log = (await owner.c.rpc("perm_log_list", { _org: org })).data as any[];
   check("12 every assignment/revocation is logged", log.filter((l) => l.action === "assign" || l.action === "unassign").length >= 5, log.length);
-} catch (e) { bad++; console.log("ERROR", e); }
-finally { for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.log("purge", e)); await tr.cleanup?.(); }
-console.log(`\n${ok} passed, ${bad} failed`);
+} catch (e) { bad++; console.error(e); }
+finally {
+  console.log(`\n${ok} passed, ${bad} failed`);
+  await tr.deleteNotifications();
+  for (const o of orgs) {
+    await admin.from("org_sections").delete().eq("org_id", o);
+    await admin.from("perm_log").delete().eq("org_id", o); await admin.from("perm_overrides").delete().eq("org_id", o); await admin.from("perm_assignments").delete().eq("org_id", o);
+    await admin.from("perm_roles").delete().eq("org_id", o);
+    await admin.from("memberships").delete().eq("org_id", o); await admin.from("schools").delete().eq("org_id", o); await admin.from("organizations").delete().eq("id", o); await tr.purgeOrg(o).catch(() => {});
+  }
+  for (const u of tr.users) await admin.auth.admin.deleteUser(u);
+  process.exit(bad ? 1 : 0);
+}
