@@ -71,11 +71,20 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "operations", section: "operations", title: "النقل المدرسي والصيانة", icon: Bus, to: "/app/operations", open: "فتح القسم",
-    desc: "صيانة المدارس والباصات من الطلب حتى اعتماد الإنجاز، وبيانات الباصات الأساسية. تشغيل النقل مؤجل.",
+    key: "transport", section: "operations", title: "النقل المدرسي وصيانة الباصات", icon: Bus, to: "/app/bus-maintenance", open: "فتح النقل والباصات",
+    desc: "سجلات الباصات وحالة تشغيلها وطلبات صيانتها حتى الفحص والعودة للخدمة. المسارات والتوزيع والتتبع مؤجلة.",
     features: [
-      { icon: Wrench, label: "إدارة صيانة المدارس", to: "/app/maintenance" },
-      { icon: Bus, label: "إدارة تشغيل وصيانة الباصات", to: "/app/bus-maintenance" },
+      { icon: Bus, label: "الباصات وحالة التشغيل", to: "/app/bus-maintenance", search: { tab: "buses" } },
+      { icon: Wrench, label: "طلبات صيانة الباصات", to: "/app/bus-maintenance", search: { tab: "requests" } },
+      { icon: Construction, label: "تشغيل النقل (تحت الإنشاء)", to: "/app/transport" },
+    ],
+  },
+  {
+    key: "school_maint", section: "operations", title: "إدارة صيانة المدارس", icon: Wrench, to: "/app/maintenance", open: "فتح صيانة المدارس",
+    desc: "طلبات صيانة مباني المدارس وفروعها من الطلب حتى اعتماد الإنجاز.",
+    features: [
+      { icon: Plus, label: "طلب صيانة جديد", to: "/app/maintenance", search: { new: "1" } },
+      { icon: Wrench, label: "طلبات صيانة المدارس", to: "/app/maintenance" },
     ],
   },
   {
