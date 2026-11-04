@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AlertTriangle, Bus, CalendarClock, CheckCircle2, MessageSquare, Plus, Wrench } from "lucide-react";
@@ -36,13 +36,17 @@ async function run<T>(p: PromiseLike<{ data: T; error: unknown }>, ok?: string):
 }
 
 // ---------------- list ----------------
+/** Request log views: new arrivals vs completed, each shown grouped per branch so branches never mix. */
+const LOGS: [string, string, string][] = [["", "كل الطلبات", ""], ["new", "الطلبات الجديدة", "new,awaiting_assign,assigned"], ["work", "قيد المعالجة", "in_progress,scheduled,clarify,waiting_parts,returned"], ["review", "بانتظار تأكيد المتابعة", "awaiting_approval"], ["done", "الطلبات المكتملة", "closed"]];
+const byBranch = (rows: Row[]) => [...rows].sort((a, b) => String(a.school).localeCompare(String(b.school), "ar"));
 export function RequestList({ orgId, orgName, kind, me, open, onNew, preset }: {
   orgId: string; orgName: string; kind: Kind; me: MtMe; open: (id: string) => void; onNew?: (() => void) | undefined; preset?: Record<string, string> | undefined;
 }) {
   const [q, setQ] = useState(""); const [status, setStatus] = useState(preset?.["status"] ?? ""); const [priority, setPriority] = useState("");
   const [school, setSchool] = useState(""); const [mine, setMine] = useState(preset?.["mine"] ?? ""); const [overdue, setOverdue] = useState(preset?.["overdue"] === "1");
   const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [page, setPage] = useState(0);
-  const f = { kind, q, status, priority, school, mine, overdue, from, to };
+  const [log, setLog] = useState("");
+  const f = { kind, q, status: status || (LOGS.find((l) => l[0] === log)?.[2] ?? ""), priority, school, mine, overdue, from, to };
   const list = useQuery({
     queryKey: ["mt-list", orgId, f, page],
     queryFn: async () => {
@@ -51,7 +55,7 @@ export function RequestList({ orgId, orgName, kind, me, open, onNew, preset }: {
     },
   });
   const schools = [...new Map(Object.values(me.caps?.[kind] ?? {}).flat().map((s) => [s.id, s])).values()];
-  const filters = [status && `الحالة: ${STATUS[status]}`, priority && `الأولوية: ${PRIORITY[priority]}`, school && `الفرع: ${schools.find((s) => s.id === school)?.name}`, mine && (mine === "assigned" ? "المسند إليّ" : "طلباتي"), overdue && "المتأخرة", from && `من ${from}`, to && `إلى ${to}`, q && `بحث: ${q}`].filter(Boolean) as string[];
+  const filters = [log && `السجل: ${LOGS.find((l) => l[0] === log)?.[1]}`, status && `الحالة: ${STATUS[status]}`, priority && `الأولوية: ${PRIORITY[priority]}`, school && `الفرع: ${schools.find((s) => s.id === school)?.name}`, mine && (mine === "assigned" ? "المسند إليّ" : "طلباتي"), overdue && "المتأخرة", from && `من ${from}`, to && `إلى ${to}`, q && `بحث: ${q}`].filter(Boolean) as string[];
   async function allRows() {
     const { data, error } = await db.rpc("mt_list", { _org: orgId, _f: { ...f, limit: 500, offset: 0 } });
     if (error) { toast.error(arabicError(error)); return []; }
@@ -63,6 +67,11 @@ export function RequestList({ orgId, orgName, kind, me, open, onNew, preset }: {
     <div className="space-y-4">
       <TabIntro icon={kind === "school" ? Wrench : Bus} title={KIND_LABEL[kind]} desc={kind === "school" ? "أعطال المباني والمرافق والأجهزة في الفروع ومتابعتها حتى اعتماد الإنجاز." : "أعطال الباصات وصيانتها الدورية؛ حالة الباص التشغيلية منفصلة عن حالة الطلب."}
         actions={onNew && <Button onClick={onNew}><Plus className="size-4" />طلب صيانة جديد</Button>} />
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="سجل الطلبات">
+        {LOGS.map(([k, label]) => (
+          <Button key={k} size="sm" role="tab" aria-selected={log === k} variant={log === k ? "default" : "outline"} onClick={() => reset(() => { setLog(k); setStatus(""); })}>{label}</Button>
+        ))}
+      </div>
       <Toolbar actions={<>
         <Button size="sm" variant="ghost" onClick={async () => setExp(await allRows())}>تجهيز التصدير</Button>
         {exp && <ExportButtons meta={{ title: `طلبات ${KIND_LABEL[kind]}`, school: orgName, filters }} headers={["المرجع", "العنوان", "الفرع", "التصنيف", "المكان/الباص", "الأولوية", "الحالة", "المسؤول", "مقدم الطلب", "التاريخ", "التقدم %"]}
@@ -88,8 +97,9 @@ export function RequestList({ orgId, orgName, kind, me, open, onNew, preset }: {
             <table className="w-full text-sm">
               <thead className={THEAD}><tr><th className={TH}>المرجع</th><th className={TH}>العنوان</th><th className={TH}>الفرع</th><th className={TH}>{kind === "bus" ? "الباص" : "المكان"}</th><th className={TH}>الأولوية</th><th className={TH}>الحالة</th><th className={TH}>المسؤول</th><th className={TH}>الموعد</th><th className={TH}>التقدم</th></tr></thead>
               <tbody>
-                {list.data.rows.map((r) => (
-                  <tr key={r.id} className={TRC} onClick={() => open(r.id)} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && open(r.id)}>
+                {byBranch(list.data.rows).map((r, i, a) => (<Fragment key={r.id}>
+                  {(i === 0 || a[i - 1]!.school !== r.school) && <tr className="bg-secondary/60"><td colSpan={9} className="px-3 py-1.5 text-xs font-bold text-primary">الفرع: {r.school} ({a.filter((x) => x.school === r.school).length})</td></tr>}
+                  <tr className={TRC} onClick={() => open(r.id)} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && open(r.id)}>
                     <td className={TD + " whitespace-nowrap font-mono text-xs"} dir="ltr">{r.ref}</td>
                     <td className={TD}><span className="font-medium">{r.title}</span><span className="block text-xs text-muted-foreground">{r.category}{r.subcategory ? ` ← ${r.subcategory}` : ""}</span></td>
                     <td className={TD}>{r.school}</td><td className={TD}>{r.place ?? "—"}</td>
@@ -99,7 +109,7 @@ export function RequestList({ orgId, orgName, kind, me, open, onNew, preset }: {
                     <td className={TD + " whitespace-nowrap text-xs"}>{r.visit_at ? dt(r.visit_at) : "—"}</td>
                     <td className={TD + " tabular-nums"}>{r.progress}%</td>
                   </tr>
-                ))}
+                </Fragment>))}
               </tbody>
             </table>
           </TableCard>
