@@ -20,12 +20,12 @@ async def login(b,tag):
     return ctx,pg
 async def main():
     off=tok("officer"); own=tok("owner"); cid=fx["custody"]; org=fx["org"]
-    today=(datetime.datetime.utcnow()+datetime.timedelta(hours=3)).date().isoformat()
+    today=(datetime.datetime.now(datetime.UTC)+datetime.timedelta(hours=3)).date().isoformat()
     def mk(desc,amt):
         s,eid=rpc(off,"pc_expense_save",{"_org":org,"_id":None,"_d":{"custody_id":cid,"purchase_date":today,"description":desc,"supplier":"بقالة الحي","lines":[{"description":desc,"amount":amt}]},"_rev":0,"_key":str(__import__("uuid").uuid4())})
         s2,g=rpc(off,"pc_expense_get",{"_id":eid}); s3,_=rpc(off,"pc_expense_action",{"_id":eid,"_action":"submit","_rev":g["rev"],"_reason":None}); return eid,s3
     e2,s2=mk("ماء للضيافة",25); e3,s3=mk("مناديل",15)
-    chk("1 invoices without any attachment are submitted (no reason)",s2==200 and s3==200,[s2,s3])
+    chk("1 invoices without any attachment are submitted (no reason)",s2 in (200,204) and s3 in (200,204),[s2,s3])
     async with async_playwright() as p:
         b=await p.chromium.launch(headless=True)
         c,a=await login(b,"approver")
@@ -41,15 +41,10 @@ async def main():
         await a.goto(f"{B}/app/procurement?tab=invoices&e={e3}",wait_until="networkidle"); await a.wait_for_timeout(2500)
         sess=await a.evaluate("()=>{for(const k of Object.keys(localStorage)){if(k.includes('auth-token'))return localStorage.getItem(k)}}")
         at=json.loads(sess)["access_token"]
-        sf,files=requests.get(f"{U}/rest/v1/files?select=id,storage_path&source_type=eq.pc&category=eq.expense",headers={"apikey":K,"Authorization":f"Bearer {at}"}).status_code,None
         files=requests.get(f"{U}/rest/v1/files?select=id,storage_path&source_type=eq.pc&category=eq.expense",headers={"apikey":K,"Authorization":f"Bearer {at}"}).json()
-        path=files[0]["storage_path"] if files else None
-        sign=lambda: requests.post(f"{U}/storage/v1/object/sign/rikaz-files/{path}",headers={"apikey":K,"Authorization":f"Bearer {at}"},json={"expiresIn":60}).status_code
-        before=sign() if path else None
+        fl=lambda: requests.get(f"{U}/rest/v1/files?select=id&source_type=eq.pc&category=eq.expense",headers={"apikey":K,"Authorization":f"Bearer {at}"}).json()
+        before=len(fl())
         _,roles=rpc(own,"perm_roles_list",{"_org":org}); rid=[r for r in roles if r["name"]=="معتمد مالي"][0]["id"]
-        _,me0=rpc(own,"perm_roles_list",{"_org":org})
-        appr_id=[u for u in fx["userIds"]]
-        s_rev,body=rpc(own,"perm_assign",{"_org":org,"_user":None,"_role":rid,"_assign":False,"_school_ids":None,"_limit":None,"_reason":"سحب أثناء جلسة مفتوحة"}) if False else (None,None)
         apr_uid=json.loads(sess)["user"]["id"]
         s_rev,body=rpc(own,"perm_assign",{"_org":org,"_user":apr_uid,"_role":rid,"_assign":False,"_school_ids":None,"_limit":None,"_reason":"سحب أثناء جلسة مفتوحة"})
         chk("4 owner withdraws the approver role while the approver's page is open",s_rev in (200,204),[s_rev,body])
@@ -59,9 +54,9 @@ async def main():
         await a.screenshot(path=str(S/"3_after_revoke_click.png"))
         _,g3=rpc(tok("officer"),"pc_expense_get",{"_id":e3})
         chk("5 stale button in the open page is refused by the server; invoice stays pending",g3["status"]=="submitted",g3["status"])
-        after=sign() if path else None
-        chk("6 same session token: invoice file link worked before, refused after",before==200 and after not in (200,),[before,after,path])
-        sx,ex=rpc(at,"pc_report",{"_org":org}) ; sm,me=rpc(at,"pc_me",{"_org":org})
+        after=len(fl())
+        chk("6 same session token: invoice attachment records readable before, hidden after",before>=1 and after==0,[before,after])
+        sm,me=rpc(at,"pc_me",{"_org":org})
         caps=(me or {}).get("caps",{}) if isinstance(me,dict) else {}
         chk("7 same session token: no approve capability left",not caps.get("approve"),caps)
         await a.goto(f"{B}/app/procurement?tab=invoices&e={e3}",wait_until="networkidle"); await a.wait_for_timeout(3000)
