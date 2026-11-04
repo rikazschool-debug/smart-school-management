@@ -152,7 +152,8 @@ try {
   const accWrong = await apr.c.rpc("pc_transfer_accept", { _id: tr1.data });
   const accOk = await off2.c.rpc("pc_transfer_accept", { _id: tr1.data });
   const old = await get(off.c, C2), nw = await get(off2.c, accOk.data);
-  check("10 transfer needs approval and recipient acceptance; balance moves by opposite moves; old closed", !!accEarly.error && !!accWrong.error && !accOk.error && old.status === "closed" && Number(old.bal.book) === 0
+  const oldOnNew = await off.c.rpc("pc_custody_get", { _id: accOk.data });
+  check("10 transfer needs approval and recipient acceptance; balance moves by opposite moves; old closed; old holder cannot open the new custody", !!accEarly.error && !!accWrong.error && !accOk.error && old.status === "closed" && Number(old.bal.book) === 0 && (!!oldOnNew.error || !oldOnNew.data)
     && nw.holder_id === off2.id && Number(nw.bal.book) === 300 && nw.status === "disbursed", [accEarly.error, accWrong.error, accOk.error, old.status, nw?.bal]);
 
   // 15 alerts: due soon + low balance, deduplicated across runs
