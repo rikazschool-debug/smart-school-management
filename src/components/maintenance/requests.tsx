@@ -42,10 +42,11 @@ const byBranch = (rows: Row[]) => [...rows].sort((a, b) => String(a.school).loca
 export function RequestList({ orgId, orgName, kind, me, open, onNew, preset }: {
   orgId: string; orgName: string; kind: Kind; me: MtMe; open: (id: string) => void; onNew?: (() => void) | undefined; preset?: Record<string, string> | undefined;
 }) {
-  const [q, setQ] = useState(""); const [status, setStatus] = useState(preset?.["status"] ?? ""); const [priority, setPriority] = useState("");
+  const [q, setQ] = useState(""); const presetLog = LOGS.find((l) => l[2] && l[2] === preset?.["status"])?.[0];
+  const [status, setStatus] = useState(presetLog ? "" : (preset?.["status"] ?? "")); const [priority, setPriority] = useState("");
   const [school, setSchool] = useState(""); const [mine, setMine] = useState(preset?.["mine"] ?? ""); const [overdue, setOverdue] = useState(preset?.["overdue"] === "1");
   const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [page, setPage] = useState(0);
-  const [log, setLog] = useState("");
+  const [log, setLog] = useState(presetLog ?? "");
   const f = { kind, q, status: status || (LOGS.find((l) => l[0] === log)?.[2] ?? ""), priority, school, mine, overdue, from, to };
   const list = useQuery({
     queryKey: ["mt-list", orgId, f, page],

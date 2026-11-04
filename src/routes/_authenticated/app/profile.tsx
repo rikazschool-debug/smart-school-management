@@ -8,6 +8,7 @@ import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/s
 import { Button } from "@/components/ui/button";
 import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { useOpsStaff } from "@/lib/ops-staff";
 
 export const Route = createFileRoute("/_authenticated/app/profile")({
   head: () => ({ meta: [{ title: "الملف الشخصي — ركاز" }, { name: "robots", content: "noindex" }] }),
@@ -29,6 +30,7 @@ function phone966(v?: string | null) {
 function Page() {
   const { active, user } = useSession();
   const qc = useQueryClient();
+  const ops = useOpsStaff(active ?? null, user?.id);
   const file = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const S = active?.schoolId ?? null;
@@ -65,7 +67,7 @@ function Page() {
   const p = q.data;
   const rows: [string, string | null | undefined][] = p ? [
     ["الاسم", p.full_name],
-    ["الحساب", `${ROLE_LABELS[role]} — ${active.schoolName}`],
+    ["الحساب", `${ops.title ?? ROLE_LABELS[role]} — ${active.schoolName}`],
     ["رقم الهوية", p.national_id],
     ["الجوال", phone966(p.phone)],
     ["البريد", p.email && !p.email.endsWith(".local") ? p.email : null],
@@ -86,7 +88,7 @@ function Page() {
               : <span className="grid size-24 place-items-center rounded-full bg-secondary text-secondary-foreground"><UserCircle className="size-14" /></span>}
             <div>
               <p className="font-display text-xl">{p.full_name ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">{ROLE_LABELS[role]}</p>
+              <p className="text-sm text-muted-foreground">{ops.title ?? ROLE_LABELS[role]}</p>
               <input ref={file} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void upload(f); }} />
               <Button size="sm" variant="outline" className="mt-2" disabled={busy} onClick={() => file.current?.click()}><Camera className="size-4" />{busy ? "جارٍ الرفع…" : p.photo ? "تغيير الصورة" : "إضافة صورة"}</Button>
             </div>

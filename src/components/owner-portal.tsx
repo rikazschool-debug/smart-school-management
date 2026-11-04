@@ -6,7 +6,7 @@ import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 
 export type SectionKey = "school_admin" | "finance" | "operations" | "hr";
-export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", finance: "المالية والمحاسبة", operations: "النقل المدرسي والصيانة", hr: "الموارد البشرية" };
+export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", hr: "الموارد البشرية" };
 
 /** Section availability set by the platform owner; read fresh from the server (no cache across sessions). */
 export function useOrgSections(orgId: string | null) {
@@ -124,12 +124,12 @@ function SchoolsStats({ orgId }: { orgId: string | null }) {
     { v: students, l: "طالب" },
   ];
   return (
-    <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <dl className="grid grid-cols-4 gap-1.5">
       {items.map((i) => (
-        <div key={i.l} className="rounded-xl bg-secondary/50 px-3 py-2">
+        <div key={i.l} className="rounded-lg bg-secondary/50 px-2 py-1.5">
           <dt className="sr-only">{i.l}</dt>
-          <dd className="font-display text-xl leading-none">{i.v}</dd>
-          <p className="mt-1 text-xs text-muted-foreground">{i.l}</p>
+          <dd className="font-display text-lg leading-none tabular-nums">{i.v}</dd>
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{i.l}</p>
         </div>
       ))}
     </dl>
@@ -141,39 +141,40 @@ export function OwnerPortal({ orgId }: { orgId: string | null }) {
   if (q.isLoading) return <LoadingState rows={2} />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   return (
-    <div className="grid gap-5 md:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {CARDS.map((c) => {
         const locked = c.section ? q.data?.[c.section]?.["enabled"] === false : false;
-        const wide = c.key === "schools";
         return (
           <section key={c.key} aria-labelledby={`card-${c.key}`} aria-disabled={locked || undefined}
-            className={"flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:p-6 " + (wide ? "md:col-span-2 " : "") + (locked ? "opacity-60" : "")}>
-            <div className="flex items-start gap-4">
-              <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">{locked ? <Lock className="size-7" /> : <c.icon className="size-7" />}</span>
+            className={"group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow hover:shadow-md " + (locked ? "opacity-60" : "")}>
+            <span aria-hidden className={"absolute inset-x-0 top-0 h-1 " + (locked ? "bg-muted" : c.note ? "bg-warning" : "bg-primary")} />
+            <div className="flex items-start gap-3 p-4 pb-3">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">{locked ? <Lock className="size-5" /> : <c.icon className="size-5" />}</span>
               <div className="min-w-0 flex-1">
-                <h2 id={`card-${c.key}`} className="flex flex-wrap items-center gap-2 font-display text-xl">{c.title}
-                  {locked ? <span className="rounded-full bg-muted px-2 py-0.5 font-sans text-xs font-normal">غير مفعّل لمؤسستك</span>
-                    : c.note ? <span className="rounded-full bg-warning/15 px-2 py-0.5 font-sans text-xs font-normal">{c.note}</span>
-                    : <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 font-sans text-xs font-normal text-success"><CheckCircle2 className="size-3" />متاح</span>}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">{c.desc}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <h2 id={`card-${c.key}`} className="font-display text-base leading-tight">{c.title}</h2>
+                  {locked ? <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px]">غير مفعّل</span>
+                    : c.note ? <span className="shrink-0 rounded-full bg-warning/15 px-2 py-0.5 text-[11px]">{c.note}</span>
+                    : <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] text-success"><CheckCircle2 className="size-3" />متاح</span>}
+                </div>
+                <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{c.desc}</p>
               </div>
             </div>
-            {c.key === "schools" && !locked && <SchoolsStats orgId={orgId} />}
+            {c.key === "schools" && !locked && <div className="px-4 pb-3"><SchoolsStats orgId={orgId} /></div>}
             {!locked && c.features.length > 0 && (
-              <ul className={"grid gap-2 " + (wide ? "sm:grid-cols-2 lg:grid-cols-4" : "")}>
+              <ul className="flex flex-wrap gap-1.5 px-4 pb-3">
                 {c.features.map((f) => (
                   <li key={f.label}>
-                    <Link to={f.to} {...(f.search ? { search: f.search } : {})} className="flex min-h-11 items-center gap-2 rounded-xl border px-3 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                      <f.icon className="size-4 shrink-0 text-primary" /><span className="truncate">{f.label}</span>
+                    <Link to={f.to} {...(f.search ? { search: f.search } : {})} className="inline-flex min-h-8 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs transition-colors hover:border-primary/40 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <f.icon className="size-3.5 shrink-0 text-primary" />{f.label}
                     </Link>
                   </li>
                 ))}
               </ul>
             )}
-            <div className="mt-auto">
+            <div className="mt-auto border-t bg-secondary/30 px-4 py-2.5">
               {locked ? <p className="text-xs text-muted-foreground">علّقه مالك المنصة؛ بياناته محفوظة.</p> : (
-                <Link to={c.to} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Link to={c.to} className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   {c.open}<ArrowLeft className="size-4" />
                 </Link>
               )}
