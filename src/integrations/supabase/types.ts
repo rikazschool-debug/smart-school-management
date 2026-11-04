@@ -10887,6 +10887,7 @@ export type Database = {
         }[]
       }
       pin_message: { Args: { _id: string; _pin: boolean }; Returns: undefined }
+      platform_overview: { Args: never; Returns: Json }
       platform_section_log: { Args: { _org: string }; Returns: Json }
       platform_set_section: {
         Args: {

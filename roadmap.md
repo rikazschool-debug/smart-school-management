@@ -348,7 +348,7 @@
 - [x] M6 (maint-e2e checks 16–21) Bus flow: requester = movement officer, odometer, return-to-service as separate inspected action
 - [x] M7 (mt_parts_suggest/mt_need_create/mt_need_info; maint-need-e2e 8/8) Link to procurement needs (no financial rights; estimated vs approved actual cost; no duplicate invoices)
 - [x] M8 (mt_alerts_tick daily 05:00 UTC via pg_cron; maint-alerts-e2e 6/6; list search/filters/paging/export already in RequestList) Event log, deduped notifications + periodic overdue alerts, search/filters/paging, Excel/PDF
-- [ ] M9 Platform-admin counterparts (schools, finance, HR, users & permissions, transport & maintenance): availability + aggregate stats only, HR «تحت الإنشاء», no cross-org data without explicit logged access
+- [x] M9 (platform_overview: platform-wide counts only, per-section availability; browser-checked as demo platform admin) Platform-admin counterparts (schools, finance, HR, users & permissions, transport & maintenance): availability + aggregate stats only, HR «تحت الإنشاء», no cross-org data without explicit logged access
 - [ ] M10 Role homes redesign for all roles (real scoped KPIs, clickable cards → filtered lists, last-updated, empty/error states, phone)
 - [ ] M11 Tests: maint-e2e (2 orgs/2 branches, full school + bus journeys, decline/reassign, concurrent accept, self-approval block, procurement link, isolation, revocation, suspension, alerts) + browser journeys + docs (permissions matrix, closure log)
 - [x] prompt-90: split «إدارة صيانة المدارس» (/app/maintenance) from «إدارة تشغيل وصيانة الباصات» (/app/bus-maintenance: requests + buses/status) as separate menu entries and portal cards

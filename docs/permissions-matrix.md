@@ -222,3 +222,5 @@ All scopes are per assigned branches; the platform switch «النقل المد�
 Request access: owner (all, no execution), requester, current assignee (lost on reassign), follow/view holders of the branch; executors of the branch see only unassigned requests to claim. Internal notes: assignee, follow-up, owner.
 
 | Maintenance → purchase need | maintenance executor/follow-up: suggest items only · principal: create need (own branch) · owner: view amounts · others: no access |
+
+| Platform overview | platform admin: platform-wide counts per section only (no org records) · everyone else: refused |
