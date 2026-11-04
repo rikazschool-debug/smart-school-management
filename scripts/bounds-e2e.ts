@@ -33,11 +33,21 @@ try {
     { user_id: t.id, org_id: org, school_id: A, role: "teacher", is_active: true }, { user_id: t.id, org_id: org, school_id: B, role: "teacher", is_active: true },
     { user_id: idle.id, org_id: org, school_id: B, role: "teacher", is_active: false }]);
 
+  const roles = (await owner.c.rpc("perm_roles_list", { _org: org })).data as any[];
+  const offRole = roles.find((r) => r.name === "مسؤول مشتريات")?.id;
+  const asg = await owner.c.rpc("perm_assign", { _org: org, _user: off.id, _role: offRole, _assign: true, _school_ids: [A], _limit: null, _reason: "تكليف" }); if (asg.error) console.log("assign", asg.error.message);
   // Owner limits
   const selfA = await owner.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: owner.id, _purpose: "عهدة لنفسي", _amount: 100, _due: DUE, _key: crypto.randomUUID() });
   const selfD = await owner.c.rpc("pc_custody_save", { _org: org, _id: null, _school: A, _school_ids: [A], _holder: owner.id, _purpose: "عهدة لنفسي", _amount: 100, _due: DUE, _rev: null, _key: crypto.randomUUID() });
-  console.log("self errors:", selfA.error?.message, "/", selfD.error?.message);
-  check("1 owner cannot open a custody for himself (no self-approve/self-disburse)", !!selfA.error && !!selfD.error, [selfA.error?.message, selfD.error?.message]);
+  let selfApr: any = { error: "no draft" };
+  if (!selfD.error) {
+    const id = (selfD.data as any)?.id ?? selfD.data; const g = (await owner.c.rpc("pc_custody_get", { _id: id })).data as any;
+    const sub = await owner.c.rpc("pc_custody_action", { _id: id, _action: "submit", _rev: g?.rev ?? g?.custody?.rev, _reason: null, _exception: null });
+    const g2 = (await owner.c.rpc("pc_custody_get", { _id: id })).data as any;
+    selfApr = await owner.c.rpc("pc_custody_action", { _id: id, _action: "approve", _rev: g2?.rev ?? g2?.custody?.rev, _reason: null, _exception: null });
+    console.log("self draft submit:", sub.error?.message ?? "ok", "| self approve:", selfApr.error?.message ?? "ALLOWED");
+  }
+  check("1 owner cannot approve a custody for himself (one-step refused; draft needs another approver)", !!selfA.error && !!selfApr.error, [selfA.error?.message, selfApr.error?.message]);
   const okC = await owner.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [A], _holder: off.id, _purpose: "عهدة تشغيل", _amount: 100, _due: DUE, _key: crypto.randomUUID() });
   check("2 owner can open and approve a custody for staff", !okC.error, okC.error?.message);
   const x1 = await owner2.c.rpc("pc_custody_list", { _org: org, _status: null, _q: null, _school: null, _mine: false, _limit: 20, _offset: 0, _from: null, _to: null });
