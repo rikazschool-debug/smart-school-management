@@ -1,3 +1,4 @@
+import type React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { EmptyState, ErrorState, LoadingState, PageHeader, Section } from "@/components/states";

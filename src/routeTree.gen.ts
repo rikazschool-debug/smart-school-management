@@ -32,6 +32,7 @@ import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppHrRouteImport } from './routes/_authenticated/app/hr'
 import { Route as AuthenticatedAppMaintenanceRouteImport } from './routes/_authenticated/app/maintenance'
 import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authenticated/app/members'
+import { Route as AuthenticatedAppMyEmploymentRouteImport } from './routes/_authenticated/app/my-employment'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app/notifications'
 import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/app/operations'
 import { Route as AuthenticatedAppPermissionsRouteImport } from './routes/_authenticated/app/permissions'
@@ -194,6 +195,12 @@ const AuthenticatedAppMembersRoute = AuthenticatedAppMembersRouteImport.update({
   path: '/members',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
+const AuthenticatedAppMyEmploymentRoute =
+  AuthenticatedAppMyEmploymentRouteImport.update({
+    id: '/my-employment',
+    path: '/my-employment',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppNotificationsRoute =
   AuthenticatedAppNotificationsRouteImport.update({
     id: '/notifications',
@@ -425,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/app/hr': typeof AuthenticatedAppHrRoute
   '/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
+  '/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/operations': typeof AuthenticatedAppOperationsRoute
   '/app/permissions': typeof AuthenticatedAppPermissionsRoute
@@ -484,6 +492,7 @@ export interface FileRoutesByTo {
   '/app/hr': typeof AuthenticatedAppHrRoute
   '/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
+  '/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/operations': typeof AuthenticatedAppOperationsRoute
   '/app/permissions': typeof AuthenticatedAppPermissionsRoute
@@ -546,6 +555,7 @@ export interface FileRoutesById {
   '/_authenticated/app/hr': typeof AuthenticatedAppHrRoute
   '/_authenticated/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/_authenticated/app/members': typeof AuthenticatedAppMembersRoute
+  '/_authenticated/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
   '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/_authenticated/app/operations': typeof AuthenticatedAppOperationsRoute
   '/_authenticated/app/permissions': typeof AuthenticatedAppPermissionsRoute
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/app/hr'
     | '/app/maintenance'
     | '/app/members'
+    | '/app/my-employment'
     | '/app/notifications'
     | '/app/operations'
     | '/app/permissions'
@@ -667,6 +678,7 @@ export interface FileRouteTypes {
     | '/app/hr'
     | '/app/maintenance'
     | '/app/members'
+    | '/app/my-employment'
     | '/app/notifications'
     | '/app/operations'
     | '/app/permissions'
@@ -728,6 +740,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/hr'
     | '/_authenticated/app/maintenance'
     | '/_authenticated/app/members'
+    | '/_authenticated/app/my-employment'
     | '/_authenticated/app/notifications'
     | '/_authenticated/app/operations'
     | '/_authenticated/app/permissions'
@@ -939,6 +952,13 @@ declare module '@tanstack/react-router' {
       path: '/members'
       fullPath: '/app/members'
       preLoaderRoute: typeof AuthenticatedAppMembersRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/my-employment': {
+      id: '/_authenticated/app/my-employment'
+      path: '/my-employment'
+      fullPath: '/app/my-employment'
+      preLoaderRoute: typeof AuthenticatedAppMyEmploymentRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/notifications': {
@@ -1213,6 +1233,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHrRoute: typeof AuthenticatedAppHrRoute
   AuthenticatedAppMaintenanceRoute: typeof AuthenticatedAppMaintenanceRoute
   AuthenticatedAppMembersRoute: typeof AuthenticatedAppMembersRoute
+  AuthenticatedAppMyEmploymentRoute: typeof AuthenticatedAppMyEmploymentRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
   AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
   AuthenticatedAppPermissionsRoute: typeof AuthenticatedAppPermissionsRoute
@@ -1267,6 +1288,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHrRoute: AuthenticatedAppHrRoute,
   AuthenticatedAppMaintenanceRoute: AuthenticatedAppMaintenanceRoute,
   AuthenticatedAppMembersRoute: AuthenticatedAppMembersRoute,
+  AuthenticatedAppMyEmploymentRoute: AuthenticatedAppMyEmploymentRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
   AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
   AuthenticatedAppPermissionsRoute: AuthenticatedAppPermissionsRoute,
