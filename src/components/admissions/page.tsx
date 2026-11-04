@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { askText } from "@/components/confirm";
 import { Field, Pager, Panel, SearchBox, Stat, StatGrid, TableCard, Toolbar, TD, TH, TRC, TR } from "@/components/procurement/ui";
-import { exportXlsx, printReport } from "@/lib/export";
+import { exportPdf, exportXlsx } from "@/lib/export";
 import { arabicError, useSession } from "@/lib/session";
 import { ACTION, CHANNEL, ENR, OUTCOME, STATUS, hasAdmissions, tone, useAdMe, type AdMe, type Sch } from "@/components/admissions/shared";
 
@@ -135,7 +135,7 @@ function AppList({ orgId, orgName, me, sp, go }: { orgId: string; orgName: strin
     if (error) { toast.error(arabicError(error)); return; }
     const rows = (data as { rows: Row[] }).rows.map(rowCells);
     const meta = { title: "طلبات القبول", school: orgName, filters: [status && `الحالة: ${STATUS[status] ?? status}`, school && `الفرع: ${schools.find((s) => s.id === school)?.name}`, q && `بحث: ${q}`, sp.assignee && "حسب المسؤول", sp.due && "المتابعات"].filter(Boolean) as string[] };
-    if (kind === "x") exportXlsx(meta, HEAD, rows); else printReport(meta, HEAD, rows);
+    if (kind === "x") exportXlsx(meta, HEAD, rows); else await exportPdf(meta, HEAD, rows);
   }
   const chips = [sp.assignee === "me" && "المسندة إليّ", sp.assignee === "none" && "غير مسندة", sp.due === "due" && "متابعات مستحقة", sp.due === "overdue" && "متابعات متأخرة", sp.pending && "بانتظار تحديد الفرع", sp.linked === "1" && "مرتبطة بطالب"].filter(Boolean) as string[];
   return (
@@ -304,7 +304,7 @@ function Students({ orgId, orgName, me }: { orgId: string; orgName: string; me: 
     const { data, error } = await db.rpc("ad_students", { _org: orgId, _f: { ...f, export: true }, _limit: 5000, _offset: 0 });
     if (error) { toast.error(arabicError(error)); return; }
     const meta = { title: "الطلاب الحاليون", school: orgName, filters: [q && `بحث: ${q}`, status && `القيد: ${ENR[status]}`].filter(Boolean) as string[] };
-    const rows = (data as { rows: Row[] }).rows.map(cells); if (kind === "x") exportXlsx(meta, H, rows); else printReport(meta, H, rows);
+    const rows = (data as { rows: Row[] }).rows.map(cells); if (kind === "x") exportXlsx(meta, H, rows); else await exportPdf(meta, H, rows);
   }
   const canExp = me.caps!.export.length > 0 || !!me.owner;
   return (
