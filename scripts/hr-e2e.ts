@@ -54,7 +54,7 @@ try {
   const tcount = (await admin.from("teachers").select("id", { count: "exact", head: true }).eq("school_id", A)).count;
   const ucount = (await admin.from("memberships").select("id", { count: "exact", head: true }).eq("user_id", t1.id)).count;
   const g1 = (await owner.c.rpc("hr_employee_get", { _id: e1 })).data as any;
-  check("3 employee linked to existing login+teacher; no new teacher/account; ID keeps leading zero; number generated", !!e1 && tcount === 3 && ucount === 1 && g1.employee.national_id === "0123456789" && g1.employee.employee_no === "E0001" && g1.assignments[0].teacher === "معلم أ", e1r.error ?? g1);
+  check("3 employee linked to existing login+teacher; no new teacher/account; ID keeps leading zero; number generated", !!e1 && tcount === 3 && ucount === 1 && g1.employee.national_id === "0123456789" && g1.employee.employee_no === "E0001" && g1.assignments[0].teacher === "معلم أ", e1r.error ?? [g1.employee.national_id, g1.employee.employee_no, g1.assignments[0]?.teacher, tcount, ucount]);
 
   // 4 duplicates refused
   const d1 = await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "مكرر", user_id: t1.id, school_id: A } });
@@ -73,7 +73,7 @@ try {
   // 7 principal base: own branch only, masked ID, no create
   const la = await list(prA);
   const c7 = await prA.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "x", school_id: A } });
-  check("7 principal A sees branch A only, ID masked, cannot add", la.length === 2 && !la.some((x) => x.id === e2) && la.find((x) => x.id === e1)?.national_id === "••••89" && err(c7).includes("غير مصرح"), [la, err(c7)]);
+  check("7 principal A sees branch A only, ID masked, cannot add", la.length === 2 && !la.some((x) => x.id === e2) && la.find((x) => x.id === e1)?.national_id === "••••89" && err(c7).includes("غير مصرح"), [la.map((x) => [x.full_name, x.national_id]), err(c7), (await prA.c.rpc("hr_me", { _org: org })).data]);
   const g7 = await prA.c.rpc("hr_employee_get", { _id: e2 });
   check("8 principal A cannot open branch B file by id", !!g7.error);
 
