@@ -28,7 +28,6 @@ export const Route = createFileRoute("/_authenticated/app/permissions")({
 type Sec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean };
 type Catalog = { areas: { key: string; label: string; soon?: boolean }[]; sections: Sec[]; actions: Record<string, string>; scopes: Record<string, string>; locked: string[] };
 type Grant = { section: string; action: string; scope: string };
-const SOURCE: Record<string, string> = { owner: "مالك المؤسسة", role: "من دور مسند", override: "تفويض إضافي", deny: "منع خاص", base: "من دوره الأساسي" };
 const actLabel = (c: Catalog, section: string, a: string) => c.sections.find((s) => s.key === section)?.labels?.[a] ?? c.actions[a];
 const grantText = (c: Catalog, gs: Grant[]) => gs.map((g) => `${actLabel(c, g.section, g.action)} (${c.scopes[g.scope]})`).join("، ");
 
