@@ -17,7 +17,7 @@ import { HrImport } from "@/components/hr/import";
 import { GENDER, STATUS, rpc, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
-  validateSearch: (s: Record<string, unknown>): { emp?: string; add?: string } => ({
+  validateSearch: (s: Record<string, unknown>): { emp?: string; add?: string; imp?: string } => ({
     ...(typeof s["emp"] === "string" ? { emp: s["emp"] as string } : {}),
     ...(s["add"] ? { add: "1" } : {}),
     ...(s["imp"] ? { imp: "1" } : {}),
