@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, Bus, CalendarClock, CheckCircle2, ClipboardList, MessageSquare, Plus, Wrench } from "lucide-react";
+import { AlertTriangle, Bus, CalendarClock, CheckCircle2, MessageSquare, Plus, Wrench } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -388,4 +388,3 @@ function BusForm({ bus, schools, onDone }: { bus: Row; schools: { id: string; na
   );
 }
 
-export const MtIcons = { ClipboardList };
