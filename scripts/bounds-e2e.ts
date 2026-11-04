@@ -61,4 +61,10 @@ try {
   const idleM = (await admin.from("memberships").select("is_active").eq("user_id", idle.id).eq("school_id", B).single()).data;
   check("8 reactivation restores branch-paused links; previously inactive stays inactive", !re.error && back.data?.length === 1 && idleM?.is_active === false, [re.error, back.data, idleM]);
 } catch (e) { bad++; console.log("ERROR", e); }
-finally { for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.log("cleanup", e)); await tr.cleanup?.(); console.log(`${ok} passed, ${bad} failed`); }
+finally {
+  console.log(`${ok} passed, ${bad} failed`);
+  await tr.deleteNotifications();
+  for (const o of orgs) { await admin.from("org_sections").delete().eq("org_id", o); await admin.from("access_audit").delete().eq("org_id", o); await tr.purgeOrg(o).catch((e) => console.log("cleanup", e)); }
+  for (const u of tr.users) await admin.auth.admin.deleteUser(u);
+  process.exit(bad ? 1 : 0);
+}
