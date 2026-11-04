@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Archive, ArrowRight, ClipboardList, FileSpreadsheet, LayoutDashboard, ReceiptText, Settings, Wallet, Inbox } from "lucide-react";
+import { Archive, BarChart3, ArrowRight, ClipboardList, FileSpreadsheet, LayoutDashboard, ReceiptText, Settings, Wallet, Inbox } from "lucide-react";
 import { TabIntro } from "@/components/procurement/ui";
 import { ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";
@@ -16,7 +16,7 @@ import { ExpenseGrid } from "@/components/procurement/expense-grid";
 import { NeedDetail, NeedForm, NeedList } from "@/components/procurement/needs";
 import { CapsNote, SettingsTab, SummaryTab, TasksTab } from "@/components/procurement/workspace";
 
-const TABS = { summary: "الملخص", needs: "طلبات الاحتياج", custodies: "العهد", expenses: "تسجيل المشتريات", invoices: "الفواتير المسجلة", requests: "الطلبات", archive: "الأرشيف", settings: "الإعدادات" } as const;
+const TABS = { summary: "الملخص", needs: "طلبات الاحتياج", custodies: "العهد", expenses: "تسجيل المشتريات", invoices: "الفواتير المسجلة", requests: "الطلبات", reports: "التقارير", archive: "الأرشيف", settings: "الإعدادات" } as const;
 type Tab = keyof typeof TABS;
 const INTRO: Record<Tab, [typeof Wallet, string]> = {
   summary: [LayoutDashboard, "مهامك المنتظرة، ومتابعة الفروع، والأرصدة، والتقارير في مكان واحد."],
@@ -25,6 +25,7 @@ const INTRO: Record<Tab, [typeof Wallet, string]> = {
   expenses: [FileSpreadsheet, "أدخل فواتير المشتريات صفًا صفًا ثم أرسلها للمراجعة."],
   invoices: [ReceiptText, "كل الفواتير المسجلة وحالاتها مع الإجماليات والضريبة."],
   requests: [Inbox, "التعزيز والتسوية والشراء المسبق ومعالجة الفروق ونقل العهد."],
+  reports: [BarChart3, "تقارير المشتريات والعهد حسب الفترة والفرع مع التصدير."],
   archive: [Archive, "العهد التي سُوّيت وأُغلقت، مرتبة حسب الفرع وتاريخ التسوية."],
   settings: [Settings, "الضريبة والتنبيهات والتصنيفات ونموذج إدخال الفاتورة."],
 };
@@ -91,7 +92,8 @@ function Page() {
   else if (search.r) body = editing ? <RequestForm orgId={orgId} me={me} initial={editing} onDone={() => { setEditing(null); }} onCancel={() => setEditing(null)} newCustody={() => go({ tab: "custodies", new: "custody" })} />
     : <RequestDetail id={search.r} me={me} back={() => go({ tab: "requests" })} openCustody={openC} openExpense={openE} edit={setEditing} />;
   else if (search.e) body = <ExpenseDetail id={search.e} me={me} back={() => go({ tab: "expenses" })} openCustody={openC} openExpense={openE} />;
-  else if (tab === "summary") body = <div className="space-y-6">{(me.caps.view === "org" || me.caps.view === "branch") && <BranchOverview orgId={orgId} />}<TasksTab orgId={orgId} openC={openC} openE={openE} openR={openR} />{<SummaryTab orgId={orgId} me={me} />}<ReportsPanel orgId={orgId} me={me} orgName={active.orgName} /></div>;
+  else if (tab === "summary") body = <div className="space-y-6">{(me.caps.view === "org" || me.caps.view === "branch") && <BranchOverview orgId={orgId} />}<TasksTab orgId={orgId} openC={openC} openE={openE} openR={openR} />{<SummaryTab orgId={orgId} me={me} />}</div>;
+  else if (tab === "reports") body = <ReportsPanel orgId={orgId} me={me} orgName={active.orgName} />;
   else if (tab === "archive") body = <ArchiveTab orgId={orgId} me={me} orgName={active.orgName} openExpense={openE} openCustody={openC} />;
   else if (tab === "requests") body = <RequestList orgId={orgId} me={me} orgName={active.orgName} open={openR} onNew={canCreate ? () => newReq() : undefined} />;
   else if (tab === "custodies") body = <CustodyList orgId={orgId} me={me} orgName={active.orgName} open={openC} onNew={canCreate ? () => go({ tab: "custodies", new: "custody" }) : undefined} />;
