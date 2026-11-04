@@ -146,6 +146,15 @@ export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   security: ["home", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
 };
 
+/** Menu labels (same as the side menu) for previewing a base role's dashboard. */
+export const NAV_LABELS: Partial<Record<NavKey, string>> = {
+  home: "الرئيسية", academic: "الإعداد الأكاديمي", teachers: "المعلمون", courses: "المقررات والتكليفات", students: "الطلاب والتسكين", guardians: "أولياء الأمور",
+  classrooms: "الفصول الرقمية", virtual: "الحصص الافتراضية", homework: "الواجبات والاختبارات", grades: "أرشيف الدرجات الفصلية", results: "النتائج", schedule: "الجدول المدرسي",
+  attendance: "الحضور والخروج", station: "المسح والبوابة والنداء", pickup: "الخروج والاستئذان", admin: "التكليفات والطلبات", duties: "المناوبات", meetings: "الاجتماعات",
+  calendar: "تقويمي", communication: "التواصل", circulars: "التعاميم", comm_groups: "المجموعات", comm_manage: "إدارة المجموعات", notifications: "الإشعارات", support: "الدعم والمساعدة",
+  procurement: "المشتريات والعهد", school_home: "لوحة المدرسة", maintenance: "إدارة صيانة المدارس", bus_maintenance: "إدارة تشغيل وصيانة الباصات",
+};
+
 /** Roles a caller may invite (mirrors can_invite: organization owner only, never another owner). */
 export function invitableRoles(role: Role): Role[] {
   if (role !== "org_owner") return [];

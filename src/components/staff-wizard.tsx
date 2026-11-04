@@ -13,7 +13,7 @@ import { PasswordInput, passwordScore } from "@/components/password-input";
 import { createStaffAccount } from "@/lib/accounts.functions";
 import { strongEnough } from "@/lib/people-import";
 import { arabicError } from "@/lib/session";
-import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { NAV_BY_ROLE, NAV_LABELS, ROLE_LABELS, type Role } from "@/lib/roles";
 import { PermTree, type PermCatalog, type Grant as TGrant } from "@/components/perm-tree";
 import { Diff, draftOverrides, toGrants, type Effective } from "@/components/perm-person";
 import { LoadingState, ErrorState } from "@/components/states";
@@ -155,40 +155,62 @@ export function StaffWizard({ org, school, grantText, onDone, onCancel, catalog 
       )}
 
       {step === 1 && (
-        <div className="space-y-4">
-          <div className="space-y-1"><Label htmlFor="sw-base">الدور الأساسي</Label>
-            <select id="sw-base" className={selectCls("w-full sm:w-72")} value={base} onChange={(e) => setBase(e.target.value as Role)}>
-              {BASES.map((b) => <option key={b} value={b}>{ROLE_LABELS[b]}</option>)}
-            </select>
-            {BASE_HINT[base] && <p className="text-xs text-muted-foreground">{BASE_HINT[base]}</p>}</div>
-          <div className="space-y-2">
-            <p className="font-semibold">أدوار وصلاحيات إضافية (المسمى الوظيفي)</p>
-            {!rows.length && <p className="text-xs text-muted-foreground">لا أدوار إضافية — يحمل الموظف صلاحيات دوره الأساسي فقط.</p>}
-            {rows.map((r, i) => {
-              const tpl = live.find((x) => x["id"] === r.role_id);
-              const set = (p: Partial<RoleRow>) => setRows(rows.map((x, j) => (j === i ? { ...x, ...p } : x)));
-              return (
-                <div key={i} className="space-y-2 rounded-lg border p-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <select aria-label="الدور" className={selectCls("min-w-0 flex-1")} value={r.role_id} onChange={(e) => set({ role_id: e.target.value })}>
-                      <option value="">اختر دورًا جاهزًا أو مسمى مخصصًا</option>
-                      {live.map((x) => <option key={x["id"]} value={x["id"]}>{x["name"]}{x["system"] ? "" : " (مخصص)"}</option>)}
-                    </select>
-                    <Input className="w-36" inputMode="decimal" placeholder="حد الاعتماد" value={r.limit} onChange={(e) => set({ limit: e.target.value })} aria-label="حد الاعتماد" />
-                    <Button type="button" size="icon" variant="ghost" aria-label="حذف الدور" onClick={() => setRows(rows.filter((_, j) => j !== i))}><Trash2 className="size-4" /></Button>
-                  </div>
-                  {tpl && <p className="text-xs text-muted-foreground">الصلاحيات الافتراضية: {grantText(tpl["grants"] as Grant[]) || "بلا صلاحيات"}</p>}
-                  <div className="flex flex-wrap items-center gap-3 text-xs">
-                    <span className="font-semibold">النطاق:</span>
-                    <label className="flex items-center gap-1"><input type="checkbox" checked={r.all} onChange={(e) => set({ all: e.target.checked })} />فروع الموظف كلها</label>
-                    {!r.all && branches.map((b) => <label key={b} className="flex items-center gap-1"><input type="checkbox" checked={r.school_ids.includes(b)} onChange={() => set({ school_ids: toggle(r.school_ids, b) })} />{sname(b)}</label>)}
-                  </div>
+        <div className="space-y-5">
+          <fieldset className="space-y-2"><legend className="mb-2 font-semibold">الدور الأساسي (يحدد لوحة الموظف)</legend>
+            <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="الدور الأساسي">
+              {BASES.map((b) => (
+                <label key={b} className={"flex cursor-pointer items-center gap-2 rounded-lg border p-2 " + (base === b ? "border-primary bg-primary/10 font-semibold" : "hover:bg-muted")}>
+                  <input type="radio" name="sw-base" className="accent-primary" checked={base === b} onChange={() => setBase(b)} />{ROLE_LABELS[b]}</label>
+              ))}
+            </div>
+            {BASE_HINT[base] && <p className="text-xs text-muted-foreground">{BASE_HINT[base]}</p>}
+            <div className="rounded-lg bg-secondary/40 p-3">
+              <p className="mb-2 text-xs font-semibold">أقسام لوحة «{ROLE_LABELS[base]}» الافتراضية</p>
+              <div className="grid gap-1 sm:grid-cols-3">
+                {NAV_BY_ROLE[base].filter((k) => NAV_LABELS[k]).map((k) => (
+                  <label key={k} className="flex items-center gap-2 text-xs"><input type="checkbox" checked disabled className="accent-primary" />{NAV_LABELS[k]}</label>
+                ))}
+              </div>
+              {base === "teacher" && <p className="mt-2 rounded bg-warning/15 p-2 text-[11px]">تظهر أقسام المعلم بعد ربط الحساب بسجل معلم في «المعلمون» وإسناد مقررات له؛ قبل ذلك يرى أقسام أدواره الإضافية فقط.</p>}
+              <p className="mt-2 text-[11px] text-muted-foreground">مرتبطة بالدور نفسه ونطاقه في الفرع (تُضبط في الإعداد الأكاديمي والجدول)، وتُضاف إليها أقسام الأدوار الإضافية أدناه.</p>
+            </div>
+          </fieldset>
+
+          <fieldset className="space-y-2"><legend className="mb-1 font-semibold">أدوار إضافية يمكن إسنادها له</legend>
+            <p className="text-xs text-muted-foreground">اختر ما يناسب — مثلًا معلم يتولى أيضًا متابعة صيانة المدارس. تظهر تحت كل دور أقسامه الفرعية وإجراءاته، ويمكن تخصيصها في الخطوة التالية.</p>
+            {catalog.areas.filter((ar) => live.some((t) => ((t["grants"] as Grant[]) ?? []).some((g) => catalog.sections.find((x) => x.key === g.section)?.parent === ar.key))).map((ar) => (
+              <div key={ar.key} className="rounded-lg border p-2">
+                <p className="mb-2 text-xs font-bold text-primary">{ar.label}</p>
+                <div className="space-y-2">
+                  {live.filter((t) => { const gs = (t["grants"] as Grant[]) ?? []; return gs.length && catalog.sections.find((x) => x.key === gs[0]!.section)?.parent === ar.key; }).map((t) => {
+                    const i = rows.findIndex((r) => r.role_id === t["id"]); const r = rows[i];
+                    const set = (pp: Partial<RoleRow>) => setRows(rows.map((x, j) => (j === i ? { ...x, ...pp } : x)));
+                    const gs = (t["grants"] as Grant[]) ?? [];
+                    return (
+                      <div key={t["id"]} className={"rounded-lg p-2 " + (r ? "bg-primary/5 ring-1 ring-primary/30" : "")}>
+                        <label className="flex items-center gap-2"><input type="checkbox" className="accent-primary" aria-label={t["name"]} checked={!!r}
+                          onChange={(e) => setRows(e.target.checked ? [...rows, { role_id: t["id"], all: true, school_ids: [], limit: "" }] : rows.filter((x) => x.role_id !== t["id"]))} />
+                          <span className="font-medium">{t["name"]}</span>{!t["system"] && <span className="text-xs text-muted-foreground">(مخصص)</span>}</label>
+                        <div className="ms-6 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                          {gs.map((g) => { const sec = catalog.sections.find((x) => x.key === g.section); return (
+                            <label key={g.section + g.action} className="flex items-center gap-1 text-[11px] text-muted-foreground"><input type="checkbox" disabled checked={!!r} />{sec?.label} ← {sec?.labels?.[g.action] ?? catalog.actions[g.action] ?? g.action} ({catalog.scopes[g.scope] ?? g.scope})</label>); })}
+                        </div>
+                        {r && (
+                          <div className="ms-6 mt-2 flex flex-wrap items-center gap-3 text-xs">
+                            <span className="font-semibold">النطاق:</span>
+                            <label className="flex items-center gap-1"><input type="checkbox" checked={r.all} onChange={(e) => set({ all: e.target.checked })} />فروع الموظف كلها</label>
+                            {!r.all && branches.map((b) => <label key={b} className="flex items-center gap-1"><input type="checkbox" checked={r.school_ids.includes(b)} onChange={() => set({ school_ids: toggle(r.school_ids, b) })} />{sname(b)}</label>)}
+                            {gs.some((g) => g.section === "procurement") && <Input className="h-8 w-32" inputMode="decimal" placeholder="حد الاعتماد" value={r.limit} onChange={(e) => set({ limit: e.target.value })} aria-label="حد الاعتماد" />}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-            <Button type="button" variant="outline" size="sm" onClick={() => setRows([...rows, { role_id: "", all: true, school_ids: [], limit: "" }])}><Plus className="size-4" />إضافة دور آخر</Button>
-            <p className="text-xs text-muted-foreground">في الخطوة التالية تُحمَّل صلاحيات هذه الأدوار في الشجرة ويمكن تخصيصها.</p>
-          </div>
+              </div>
+            ))}
+            {!rows.length && <p className="text-xs text-muted-foreground">لا أدوار إضافية — يحمل الموظف أقسام دوره الأساسي فقط.</p>}
+          </fieldset>
         </div>
       )}
 
