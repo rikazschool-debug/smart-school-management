@@ -122,7 +122,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
     const a = cand.data?.accounts.find((x) => x.user_id === uid);
     const t = (cand.data?.teachers ?? []).find((x) => x.user_id === uid);
     const sch = t?.school_id ?? a?.schools?.find((s) => schools.some((x) => x.id === s.id))?.id ?? f.school_id;
-    setF((x) => ({ ...x, user_id: uid, full_name: a?.name && a.name !== "—" ? a.name : x.full_name, school_id: sch, teacher_id: t && t.school_id === sch ? t.teacher_id : "" }));
+    setF((x) => ({ ...x, user_id: uid, full_name: a?.name && a.name !== "—" ? a.name : x.full_name, school_id: sch, teacher_id: t && t.school_id === sch ? t.teacher_id : "", job_title: x.job_title || (t ? (t.specialization ? `معلم ${t.specialization}` : "معلم") : "") }));
   };
   const pickTeacher = (tid: string) => {
     const t = (cand.data?.teachers ?? []).find((x) => x.teacher_id === tid);
