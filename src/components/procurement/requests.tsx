@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowRight, Download, FileText, Plus } from "lucide-react";
+import { Download, FileText, Plus } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { exportPdf, exportXlsx } from "@/lib/export";
 import { METHOD, day, sar, todayRiyadh, type PcMe, type Row } from "@/components/procurement/shared";
 import { LogList, useInvalidate } from "@/components/procurement/custody";
 import { SettlementSheet } from "@/components/procurement/settlement-sheet";
+import { ActionBox, BackLink, DateRange, DetailHeader, Field, FormActions, FormCard, Pager, Panel, SearchBox, TD, TDN, TH, THEAD, THN, TRC, TableCard, Toolbar } from "@/components/procurement/ui";
 
 export const R_KIND: Record<string, string> = { topup: "تعزيز عهدة", settlement: "تسوية عهدة", purchase: "شراء مسبق", adjust: "معالجة عجز/زيادة", transfer: "نقل عهدة لشخص آخر", need: "طلب احتياج" };
 export const R_STATUS: Record<string, string> = { draft: "مسودة", submitted: "بانتظار القرار", approved: "معتمد", rejected: "مرفوض", cancelled: "ملغى", done: "منفّذ", awaiting_assignment: "بانتظار الإسناد", in_progress: "لدى مسؤول المشتريات", closed_partial: "مغلق بتنفيذ جزئي" };
@@ -55,26 +56,24 @@ export function RequestList({ orgId, me, open, onNew, orgName }: { orgId: string
   const total = list.data?.total ?? 0;
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-end gap-2">
-        <Input className="w-56" placeholder="بحث بالمرجع أو الغرض أو العهدة" value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
-        <select className={selectCls("w-44")} value={kind} onChange={(e) => { setKind(e.target.value); setPage(0); }} aria-label="النوع">
+      <Toolbar actions={<>
+        {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
+        {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />طلب جديد</Button>}
+      </>}>
+        <SearchBox placeholder="المرجع أو الغرض أو العهدة" value={q} onChange={(v) => { setQ(v); setPage(0); }} />
+        <Field label="النوع"><select className={selectCls("w-44", true)} value={kind} onChange={(e) => { setKind(e.target.value); setPage(0); }}>
           <option value="">كل الأنواع</option>{Object.entries(R_KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        <select className={selectCls("w-40")} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} aria-label="الحالة">
+        </select></Field>
+        <Field label="الحالة"><select className={selectCls("w-40", true)} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
           <option value="">كل الحالات</option><option value="open">المفتوحة</option>{Object.entries(R_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
-        <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
-        <span className="ms-auto flex gap-2">
-          {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
-          {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />طلب جديد</Button>}
-        </span>
-      </div>
+        </select></Field>
+        <DateRange from={from} to={to} setFrom={(v) => { setFrom(v); setPage(0); }} setTo={(v) => { setTo(v); setPage(0); }} />
+      </Toolbar>
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? (
         <EmptyState title="لا توجد طلبات" hint="التعزيز والتسوية والشراء المسبق ومعالجة الفروق ونقل العهدة تُطلب من هنا أو من داخل العهدة." />
       ) : (
         <>
-        <ul className="divide-y rounded-xl border bg-card md:hidden">
+        <ul className="divide-y rounded-2xl border bg-card md:hidden">
           {list.data.rows.map((r) => (
             <li key={r.id}>
               <button type="button" className="w-full space-y-1 px-3 py-3 text-start hover:bg-muted/40" onClick={() => open(r.id)}>
@@ -88,27 +87,21 @@ export function RequestList({ orgId, me, open, onNew, orgName }: { orgId: string
             </li>
           ))}
         </ul>
-        <div className="hidden overflow-x-auto rounded-xl border bg-card md:block">
+        <TableCard className="hidden md:block" caption={<span><b className="text-foreground tabular-nums">{total}</b> طلب</span>}>
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "النوع", "الفرع", "العهدة", "مقدّم الطلب", "الغرض", "المبلغ", "الحالة"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+            <thead className={THEAD}><tr>{["المرجع", "النوع", "الفرع", "العهدة", "مقدّم الطلب", "الغرض"].map((h) => <th key={h} className={TH}>{h}</th>)}<th className={THN}>المبلغ</th><th className={TH}>الحالة</th></tr></thead>
             <tbody>{list.data.rows.map((r) => (
-              <tr key={r.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => open(r.id)}>
-                <td className="px-3 py-2 font-mono text-xs">{r.ref}</td><td className="px-3 py-2">{R_KIND[r.kind]}</td><td className="px-3 py-2">{r.school ?? "—"}</td><td className="px-3 py-2 font-mono text-xs">{r.custody_ref ?? "—"}</td>
-                <td className="px-3 py-2">{r.creator}</td><td className="max-w-56 truncate px-3 py-2">{r.purpose}</td><td className="px-3 py-2 tabular-nums">{amountText(r)}</td>
-                <td className="px-3 py-2"><Pill tone={R_TONE[r.status] ?? "muted"}>{R_STATUS[r.status]}</Pill></td>
+              <tr key={r.id} className={TRC} onClick={() => open(r.id)}>
+                <td className={`${TD} font-mono text-xs`}>{r.ref}</td><td className={`${TD} font-medium`}>{R_KIND[r.kind]}</td><td className={TD}>{r.school ?? "—"}</td><td className={`${TD} font-mono text-xs`}>{r.custody_ref ?? "—"}</td>
+                <td className={TD}>{r.creator}</td><td className={`${TD} max-w-56 truncate`}>{r.purpose}</td><td className={TDN}>{amountText(r)}</td>
+                <td className={TD}><Pill tone={R_TONE[r.status] ?? "muted"}>{R_STATUS[r.status]}</Pill></td>
               </tr>
             ))}</tbody>
           </table>
-        </div>
+        </TableCard>
         </>
       )}
-      {total > PAGE && (
-        <div className="flex items-center justify-center gap-2 text-sm">
-          <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>السابق</Button>
-          <span>{page + 1} / {Math.ceil(total / PAGE)}</span>
-          <Button size="sm" variant="outline" disabled={(page + 1) * PAGE >= total} onClick={() => setPage(page + 1)}>التالي</Button>
-        </div>
-      )}
+      <Pager page={page} total={total} size={PAGE} setPage={setPage} />
     </div>
   );
 }
@@ -155,15 +148,13 @@ export function RequestForm({ orgId, me, kind: kind0, custodyId, initial, onDone
     transfer: "يُعتمد ثم يتسلّمها الشخص الجديد؛ تُغلق العهدة الحالية وتُفتح له عهدة بالرصيد نفسه.",
   };
   return (
-    <div className="max-w-2xl space-y-4 rounded-2xl border bg-card p-5">
-      <h2 className="font-bold">{initial ? `تعديل ${initial.ref}` : "طلب جديد"}</h2>
+    <FormCard title={initial ? `تعديل ${initial.ref}` : "طلب جديد"} subtitle={hint[kind]}>
       {!initial && (
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={newCustody}>عهدة جديدة</Button>
           {Object.entries(R_KIND).map(([k, v]) => <Button key={k} size="sm" variant={kind === k ? "default" : "outline"} onClick={() => setKind(k)}>{v}</Button>)}
         </div>
       )}
-      <p className="text-sm text-muted-foreground">{hint[kind]}</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2"><Label>العهدة{kind === "purchase" ? " (اختياري)" : ""}</Label>
           <select className={selectCls()} value={custody} disabled={!!initial} onChange={(e) => setCustody(e.target.value)}>
@@ -187,12 +178,12 @@ export function RequestForm({ orgId, me, kind: kind0, custodyId, initial, onDone
         <div className="sm:col-span-2"><Label>{kind === "adjust" ? "سبب الفرق" : "الغرض"}</Label><Textarea rows={2} value={purpose} onChange={(e) => setPurpose(e.target.value)} /></div>
       </div>
       {kind === "transfer" && <PeoplePicker purpose="pc_transfer" school={sel?.school_id ?? null} org={orgId} value={to} onChange={setTo} single label="المستلم الجديد" compact exclude={sel ? [sel.holder_id] : []} />}
-      <div className="flex flex-wrap gap-2">
+      <FormActions>
         <Button disabled={busy} onClick={() => void save(true)}>حفظ وإرسال</Button>
         <Button disabled={busy} variant="outline" onClick={() => void save(false)}>حفظ مسودة</Button>
         <Button variant="ghost" onClick={onCancel}>إلغاء</Button>
-      </div>
-    </div>
+      </FormActions>
+    </FormCard>
   );
 }
 
@@ -204,8 +195,7 @@ function TopupDisburse({ r, onDone }: { r: Row; onDone: () => void }) {
   const [key] = useState(() => crypto.randomUUID());
   const inv = useInvalidate();
   return (
-    <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
-      <h3 className="font-semibold">صرف التعزيز {sar(r.amount)}</h3>
+    <ActionBox title={`صرف التعزيز ${sar(r.amount)}`}>
       <div className="grid gap-3 sm:grid-cols-3">
         <div><Label>طريقة الصرف</Label><select className={selectCls()} value={method} onChange={(e) => setMethod(e.target.value)}>{Object.entries(METHOD).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
         <div><Label>رقم العملية{method !== "cash" ? " (إلزامي)" : ""}</Label><Input value={ext} onChange={(e) => setExt(e.target.value)} /></div>
@@ -218,7 +208,7 @@ function TopupDisburse({ r, onDone }: { r: Row; onDone: () => void }) {
         if (!(await ask(`تأكيد صرف تعزيز ${sar(r.amount)} إلى ${r.holder}؟`))) return;
         if (await run(db.rpc("pc_topup_disburse", { _id: r.id, _rev: r.rev, _method: method, _external_ref: ext || null, _file: file, _doc_date: doc, _note: null, _key: key }), "سُجّل صرف التعزيز")) { inv(); onDone(); }
       }}>تأكيد الصرف</Button>
-    </div>
+    </ActionBox>
   );
 }
 
@@ -237,45 +227,38 @@ export function RequestDetail({ id, me, back, openCustody, openExpense, edit }: 
   };
   return (
     <div className="space-y-4">
-      <button className="inline-flex items-center gap-1 text-sm text-primary" onClick={back}><ArrowRight className="size-4" />العودة</button>
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border bg-card p-5">
-        <div className="space-y-1">
-          <p className="font-mono text-xs text-muted-foreground">{r.ref} · {R_KIND[r.kind]}</p>
-          <h2 className="text-lg font-bold">{r.purpose}</h2>
-          <p className="text-sm text-muted-foreground">
-            {r.custody_id ? <>العهدة: <button className="text-primary" onClick={() => openCustody(r.custody_id)}>{r.custody_ref}</button> ({r.holder}) · </> : null}الفرع: {r.school} · مقدّم الطلب: {r.creator} · {fmt(r.created_at)}
-          </p>
-          {r.amount != null && <p className="text-sm">المبلغ: <b className={Number(r.amount) < 0 ? "text-destructive" : ""}>{sar(r.amount)}</b>{r.kind === "adjust" ? (Number(r.amount) < 0 ? " (عجز)" : " (زيادة)") : ""}</p>}
-          {r.supplier && <p className="text-sm text-muted-foreground">المورد المتوقع: {r.supplier}{r.category ? ` · ${r.category}` : ""}</p>}
-          {r.to_holder_name && <p className="text-sm">المستلم الجديد: <b>{r.to_holder_name}</b>{r.new_custody_ref ? <> · العهدة الجديدة: <button className="text-primary" onClick={() => openCustody(r.new_custody_id)}>{r.new_custody_ref}</button></> : null}</p>}
-          {r.bal && <p className="text-xs text-muted-foreground">رصيد العهدة الآن {sar(r.bal.book)} · المعلّق {sar(r.bal.pending)} · المتاح {sar(r.bal.available)}</p>}
-          {r.decider && <p className="text-sm text-muted-foreground">القرار: {r.decider} — {fmt(r.decided_at)}{r.decision_reason ? ` «${r.decision_reason}»` : ""}</p>}
-          {r.kind === "purchase" && r.status === "approved" && <p className="text-xs text-muted-foreground">طلب الشراء المعتمد لا يخصم الرصيد؛ اربطه بالفاتورة عند تسجيل المصروف.</p>}
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <Pill tone={R_TONE[r.status] ?? "muted"}>{R_STATUS[r.status]}</Pill>
-          <div className="flex flex-wrap justify-end gap-2">
-            {r.can.edit && <><Button size="sm" variant="outline" onClick={() => edit(r)}>تعديل</Button><Button size="sm" onClick={() => void act("submit", "أُرسل الطلب")}>إرسال</Button></>}
-            {r.can.decide && <><Button size="sm" onClick={() => void act("approve", r.kind === "adjust" ? "اعتُمد ونُفّذ القيد" : "اعتُمد الطلب")}>اعتماد</Button>
-              <Button size="sm" variant="outline" onClick={() => void act("return", "أُعيد للاستكمال", "ما المطلوب استكماله؟")}>إعادة للاستكمال</Button>
-              <Button size="sm" variant="destructive" onClick={() => void act("reject", "رُفض", "سبب الرفض")}>رفض</Button></>}
-            {r.status === "submitted" && !r.can.decide && me.caps.approve && <span className="text-xs text-muted-foreground">لا يمكنك البت فيه (طلبك أو عهدتك، أو يتجاوز حدّك)</span>}
-            {r.can.disburse && !pay && <Button size="sm" onClick={() => setPay(true)}>صرف التعزيز</Button>}
-            {r.can.accept && <><Button size="sm" onClick={async () => { if (await ask(`تسلّم العهدة ${r.custody_ref} برصيد ${sar(r.bal?.book)}؟ ستصبح مسؤولًا عنها.`) && (await run(db.rpc("pc_transfer_accept", { _id: r.id }), "تسلّمت العهدة"))) inv(); }}>تسلّم العهدة</Button>
-              <Button size="sm" variant="outline" onClick={() => void act("decline", "اعتذرت عن التسلّم", "سبب الاعتذار")}>اعتذار</Button></>}
-            {r.can.cancel && <Button size="sm" variant="ghost" onClick={() => void act("cancel", "أُلغي", "سبب الإلغاء")}>إلغاء</Button>}
-          </div>
-        </div>
-      </div>
+      <BackLink onClick={back} label="الطلبات" />
+      <DetailHeader refText={<>{r.ref} · {R_KIND[r.kind]}</>} title={r.purpose} status={<Pill tone={R_TONE[r.status] ?? "muted"}>{R_STATUS[r.status]}</Pill>}
+        facts={[
+          ...(r.custody_id ? [["العهدة", <button key="c" className="text-primary" onClick={() => openCustody(r.custody_id)}>{r.custody_ref} ({r.holder})</button>] as [string, React.ReactNode]] : []),
+          ["الفرع", r.school], ["مقدّم الطلب", r.creator], ["التاريخ", fmt(r.created_at)],
+          ...(r.amount != null ? [["المبلغ", <b key="a" className={`tabular-nums ${Number(r.amount) < 0 ? "text-destructive" : ""}`}>{sar(r.amount)}{r.kind === "adjust" ? (Number(r.amount) < 0 ? " (عجز)" : " (زيادة)") : ""}</b>] as [string, React.ReactNode]] : []),
+          ...(r.supplier ? [["المورد المتوقع", `${r.supplier}${r.category ? ` · ${r.category}` : ""}`] as [string, React.ReactNode]] : []),
+          ...(r.to_holder_name ? [["المستلم الجديد", <span key="t">{r.to_holder_name}{r.new_custody_ref ? <> · <button className="text-primary" onClick={() => openCustody(r.new_custody_id)}>{r.new_custody_ref}</button></> : null}</span>] as [string, React.ReactNode]] : []),
+          ...(r.bal ? [["رصيد العهدة الآن", `${sar(r.bal.book)} · المتاح ${sar(r.bal.available)}`] as [string, React.ReactNode]] : []),
+          ...(r.decider ? [["القرار", `${r.decider} — ${fmt(r.decided_at)}${r.decision_reason ? ` «${r.decision_reason}»` : ""}`] as [string, React.ReactNode]] : []),
+        ]}
+        actions={<>
+          {r.can.edit && <><Button size="sm" variant="outline" onClick={() => edit(r)}>تعديل</Button><Button size="sm" onClick={() => void act("submit", "أُرسل الطلب")}>إرسال</Button></>}
+          {r.can.decide && <><Button size="sm" onClick={() => void act("approve", r.kind === "adjust" ? "اعتُمد ونُفّذ القيد" : "اعتُمد الطلب")}>اعتماد</Button>
+            <Button size="sm" variant="outline" onClick={() => void act("return", "أُعيد للاستكمال", "ما المطلوب استكماله؟")}>إعادة للاستكمال</Button>
+            <Button size="sm" variant="destructive" onClick={() => void act("reject", "رُفض", "سبب الرفض")}>رفض</Button></>}
+          {r.can.disburse && !pay && <Button size="sm" onClick={() => setPay(true)}>صرف التعزيز</Button>}
+          {r.can.accept && <><Button size="sm" onClick={async () => { if (await ask(`تسلّم العهدة ${r.custody_ref} برصيد ${sar(r.bal?.book)}؟ ستصبح مسؤولًا عنها.`) && (await run(db.rpc("pc_transfer_accept", { _id: r.id }), "تسلّمت العهدة"))) inv(); }}>تسلّم العهدة</Button>
+            <Button size="sm" variant="outline" onClick={() => void act("decline", "اعتذرت عن التسلّم", "سبب الاعتذار")}>اعتذار</Button></>}
+          {r.can.cancel && <Button size="sm" variant="ghost" onClick={() => void act("cancel", "أُلغي", "سبب الإلغاء")}>إلغاء</Button>}
+        </>}>
+        {r.status === "submitted" && !r.can.decide && me.caps.approve && <p className="text-xs text-muted-foreground">لا يمكنك البت فيه (طلبك أو عهدتك، أو يتجاوز حدّك)</p>}
+        {r.kind === "purchase" && r.status === "approved" && <p className="text-xs text-muted-foreground">طلب الشراء المعتمد لا يخصم الرصيد؛ اربطه بالفاتورة عند تسجيل المصروف.</p>}
+      </DetailHeader>
       {pay && <TopupDisburse r={r} onDone={() => setPay(false)} />}
       {r.kind === "settlement" && r.custody_id && <SettlementSheet orgId={r.org_id} custodyId={r.custody_id} me={me} open={openExpense} orgName={r.school ?? ""} readOnly={r.status !== "submitted" && r.status !== "approved"} title={`كشف مشتريات العهدة ${r.custody_ref} — ${r.school}`} />}
-      <section className="space-y-2">
-        <h3 className="font-semibold">المرفقات</h3>
+      <Panel title="المرفقات" count={r.files.length}><div className="space-y-2">
         <FileList files={files(r.files)} onRemove={r.can.edit ? async (f) => { if (await run(db.rpc("pc_file_remove", { _file: f["id"] }), "أُزيل الملف")) inv(); } : undefined} />
         {!r.files.length && <p className="text-sm text-muted-foreground">لا مرفقات.</p>}
         {r.can.edit && <Uploader label="إرفاق مستند" create={async (f) => { const { data, error } = await db.rpc("create_pc_file", { _entity: "request", _id: r.id, _name: f.name, _mime: f.type, _size: f.size }); if (error) throw error; return data[0]; }} release={(fid) => db.rpc("pc_file_remove", { _file: fid })} onDone={inv} />}
-      </section>
-      {r.expenses.length > 0 && <section className="space-y-1"><h3 className="font-semibold">الفواتير المرتبطة</h3>{(r.expenses as Row[]).map((e) => <button key={e.id} className="block text-sm text-primary" onClick={() => openExpense(e.id)}>{e.ref} · {sar(e.total)}</button>)}</section>}
+      </div></Panel>
+      {r.expenses.length > 0 && <Panel title="الفواتير المرتبطة" count={r.expenses.length}><div className="space-y-1">{(r.expenses as Row[]).map((e) => <button key={e.id} className="block text-sm text-primary" onClick={() => openExpense(e.id)}>{e.ref} · {sar(e.total)}</button>)}</div></Panel>}
       <LogList log={r.log} />
     </div>
   );
@@ -300,7 +283,8 @@ export function CustodyOps({ c, me, newRequest, openRequest }: { c: Row; me: PcM
   return (
     <div className="space-y-3">
       {(anyReq || k.return_cash || k.carry || k.close) && (
-        <div className="flex flex-wrap gap-2 rounded-xl border bg-card p-3">
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-3">
+          <span className="me-1 text-sm font-semibold">إجراءات العهدة:</span>
           {k.topup && <Button size="sm" variant="outline" onClick={() => newRequest("topup")}>طلب تعزيز</Button>}
           {k.purchase && <Button size="sm" variant="outline" onClick={() => newRequest("purchase")}>طلب شراء مسبق</Button>}
           {k.settle && <Button size="sm" variant="outline" onClick={() => newRequest("settlement")}>تسوية ومراجعة العهدة</Button>}
@@ -311,8 +295,7 @@ export function CustodyOps({ c, me, newRequest, openRequest }: { c: Row; me: PcM
         </div>
       )}
       {mode === "return" && (
-        <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
-          <h3 className="font-semibold">استلام المتبقي من {c.holder} (المتاح {sar(c.bal.available)})</h3>
+        <ActionBox title={`استلام المتبقي من ${c.holder} (المتاح ${sar(c.bal.available)})`}>
           <div className="grid gap-3 sm:grid-cols-3">
             <div><Label>المبلغ</Label><Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
             <div><Label>الطريقة</Label><select className={selectCls()} value={method} onChange={(e) => setMethod(e.target.value)}>{Object.entries(METHOD).map(([x, v]) => <option key={x} value={x}>{v}</option>)}</select></div>
@@ -321,11 +304,10 @@ export function CustodyOps({ c, me, newRequest, openRequest }: { c: Row; me: PcM
           <Uploader label="رفع سند الاستلام" create={async (f) => { const { data, error } = await db.rpc("create_pc_file", { _entity: "custody", _id: c.id, _name: f.name, _mime: f.type, _size: f.size }); if (error) throw error; return data[0]; }} release={(id) => db.rpc("pc_file_remove", { _file: id })} onDone={inv} />
           {fs.length > 0 && <select className={selectCls()} value={file} onChange={(e) => setFile(e.target.value)} aria-label="سند الاستلام"><option value="">— اختر السند —</option>{fs.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select>}
           <Button disabled={!file || !Number(amount)} onClick={async () => { if (await ask(`تأكيد استلام ${sar(amount)} نقدًا/تحويلًا من ${c.holder}؟`) && (await run(db.rpc("pc_return_cash", { _custody: c.id, _amount: Number(amount), _method: method, _file: file, _doc_date: todayRiyadh(), _note: reason || null, _key: key }), "سُجّل الاستلام"))) reset(); }}>تأكيد الاستلام</Button>
-        </div>
+        </ActionBox>
       )}
       {mode === "carry" && (
-        <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
-          <h3 className="font-semibold">ترحيل إلى عهدة أخرى للمستلم نفسه (حركتان متقابلتان)</h3>
+        <ActionBox title="ترحيل إلى عهدة أخرى للمستلم نفسه (حركتان متقابلتان)">
           {!k.carry_targets.length ? <p className="text-sm text-muted-foreground">لا توجد عهدة معتمدة أو مفتوحة أخرى لـ {c.holder}. اطلب له عهدة جديدة أولًا.</p> : <>
             <div className="grid gap-3 sm:grid-cols-3">
               <div><Label>العهدة الجديدة</Label><select className={selectCls()} value={target} onChange={(e) => setTarget(e.target.value)}><option value="">— اختر —</option>{(k.carry_targets as Row[]).map((t) => <option key={t.id} value={t.id}>{t.ref} · {t.purpose}</option>)}</select></div>
@@ -334,27 +316,26 @@ export function CustodyOps({ c, me, newRequest, openRequest }: { c: Row; me: PcM
             </div>
             <Button disabled={!target || !Number(amount) || reason.trim().length < 3} onClick={async () => { if (await ask(`ترحيل ${sar(amount)}؟`) && (await run(db.rpc("pc_carry", { _from: c.id, _to: target, _amount: Number(amount), _reason: reason, _key: key }), "تم الترحيل"))) reset(); }}>اعتماد الترحيل</Button>
           </>}
-        </div>
+        </ActionBox>
       )}
       {k.settlement && (c.status === "settling" || c.status === "closed") && (
-        <section className="space-y-2 rounded-xl border bg-card p-4">
-          <h3 className="font-semibold">{c.status === "closed" ? "التسوية (مغلقة)" : "مطابقة التسوية"}</h3>
+        <Panel title={c.status === "closed" ? "التسوية (مغلقة)" : "مطابقة التسوية"}><div className="space-y-2">
           <p className="text-sm text-muted-foreground">المصروفات المعتمدة: {k.settlement.expenses.approved} · قبل الضريبة {sar(k.settlement.expenses.net)} · الضريبة {sar(k.settlement.expenses.vat)} · الإجمالي {sar(k.settlement.expenses.total)} · المعاد {sar(k.settlement.bal.returned)} · المرحّل {sar(k.settlement.bal.carried)} · الفروق المعالجة {sar(k.settlement.bal.adjusted)}</p>
           <ul className="space-y-1 text-sm">{(k.settlement.items as Row[]).map((x) => <li key={x.key} className={x.ok ? "text-primary" : "text-destructive"}>{x.ok ? "✓" : "✗"} {x.label}{!x.ok && x.value != null ? ` (${x.key === "balance" || x.key === "pending" ? sar(x.value) : x.value})` : ""}</li>)}</ul>
           {c.closed_at && <p className="text-sm text-muted-foreground">أُغلقت {fmt(c.closed_at)} — {k.closed_by}</p>}
           {k.close && <Button size="sm" disabled={!k.settlement.ok} onClick={async () => { const why = await askText("ملاحظة الإغلاق (المطابقة الفعلية)", { required: true }); if (why && (await run(db.rpc("pc_custody_close", { _id: c.id, _rev: c.rev, _reason: why }), "أُغلقت العهدة"))) inv(); }}>إغلاق العهدة</Button>}
           {c.status === "settling" && !k.close && me.caps.approve && <p className="text-xs text-muted-foreground">الإغلاق لمعتمد غير مستلم العهدة ولا مقدّم طلبها.</p>}
-        </section>
+        </div></Panel>
       )}
       {k.requests.length > 0 && (
-        <section className="space-y-2"><h3 className="font-semibold">طلبات العهدة</h3>
-          <ul className="divide-y rounded-xl border bg-card text-sm">{(k.requests as Row[]).map((r) => (
-            <li key={r.id} className="flex cursor-pointer flex-wrap items-center gap-2 px-3 py-2 hover:bg-muted/40" onClick={() => openRequest(r.id)}>
+        <Panel title="طلبات العهدة" count={k.requests.length} flush>
+          <ul className="divide-y text-sm">{(k.requests as Row[]).map((r) => (
+            <li key={r.id} className="flex cursor-pointer flex-wrap items-center gap-2 px-4 py-2.5 hover:bg-muted/40" onClick={() => openRequest(r.id)}>
               <span className="font-mono text-xs">{r.ref}</span><span>{R_KIND[r.kind]}</span><span className="text-muted-foreground">{r.purpose}</span>
               <span className="ms-auto tabular-nums">{amountText(r)}</span><Pill tone={R_TONE[r.status] ?? "muted"}>{R_STATUS[r.status]}</Pill>
             </li>
           ))}</ul>
-        </section>
+        </Panel>
       )}
     </div>
   );
