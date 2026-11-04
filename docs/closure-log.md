@@ -438,3 +438,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## 2026-11-04 — C6 part 2: carry-over + custom invoice field (browser)
 - scripts/pc-carry-form-journey.py 9/9: approver carries 300 from a 770 custody to the same holder's second custody (old 470 «ترحيل خارج», new 300 «ترحيل داخل», no fake disbursement); owner summary keeps disbursed 1,000 and open balance 770 (no double count); owner adds a required field and publishes v1; officer's grid shows it; saved invoice shows «نموذج الإصدار 1» with its value; after v2 renames the field the earlier invoice still shows v1 and the old label; invoices made before any form show no version.
 - Fix: invoice number and date no longer swap places in right-to-left display on the invoice page.
+
+## 2026-11-04 — Procurement closure (pc-closure-e2e 11/11)
+- A Correction/refund on a custody-based purchase need: need done at 200; approved −20 correction → net spent 180, custody +20; correction lines cannot carry need quantities; pending refund changes nothing, collected 50 → net spent 130, custody +50; over-refund refused.
+- B Open sessions: platform finance suspension refuses read, write, attachment signed link, report export, owner list export and new attachments; re-enable restores the same sessions with data intact; withdrawing the officer's role blocks new invoices/submissions immediately.
+- C Alerts: due-soon once per due date, a new due date alerts once more; low balance once, none after top-up above threshold, a new drop alerts again once; nothing while finance is suspended.
+- C1 real run: rikaz-pc-alerts at 07:20 UTC sent the due-soon alert once to the holder of an isolated custody (pc-closure-e2e --cron-check); fixture removed.
