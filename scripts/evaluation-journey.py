@@ -46,7 +46,7 @@ async def main():
         check("8 principal: one current rating after edit (no inflation), avg 3.67", "\t1\t1\t1\t" in txt and "3.67" in txt, txt)
         await row.get_by_role("button", name="ملف التقييم").click(); await p.wait_for_timeout(2000)
         check("9 teacher file per-question data with «can't rate» count", await p.get_by_text("1 لا أستطيع").count() >= 1)
-        check("9b teacher file shows the evaluation process chart and score rings", await p.get_by_text("كيف يُقيَّم المعلم").count() == 1 and await p.get_by_text("متوسط أولياء الأمور (أحدث إصدار)").count() == 1)
+        check("9b teacher file shows independent sources (no numbered order) and score rings", await p.get_by_text("مصادر التقييم — مستقلة").count() == 1 and await p.get_by_text("1. تقييم أولياء الأمور").count() == 0 and await p.get_by_text("متوسط أولياء الأمور (أحدث إصدار)").count() == 1)
         await p.screenshot(path=SH + "3b_teacher_file.png")
         async with p.expect_download() as dl:
             await p.get_by_role("button", name="→ رجوع").click(); await p.wait_for_timeout(1000); await p.get_by_role("button", name="Excel").click()
