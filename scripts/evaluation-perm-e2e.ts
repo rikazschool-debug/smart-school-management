@@ -110,7 +110,7 @@ try {
   const selfV = await t2.c.rpc("cv_save", { _id: null, _teacher: te2.id, _date: month, _lesson: null, _scores: {}, _notes: {}, _summary: null, _submit: false });
   check("16 visits scope: assigned → none for a teacher without assignees; branch → others but never himself", a0?.length === 0 && a1?.length === 1 && a1[0].id === te1.id && !!selfV.error, { a0, a1, selfV: selfV.error });
   const vsAssigned = (await vice.c.rpc("cv_teachers", { _school: S })).data as any[];
-  check("17 vice+supervisor sees only teachers in his scopes (supervised te1)", vsAssigned?.every((t) => t.id === te1.id), vsAssigned);
+  check("17 vice+supervisor sees only teachers in his own scope (vice scope → te2), not the other supervisor's", vsAssigned?.length === 1 && vsAssigned[0].id === te2.id, vsAssigned);
   // deny wins over base, clearing restores
   await deny(pr.id, "ev_monthly", "view");
   const dn = await pr.c.rpc("ev_m_staff", { _school: S, _month: month });
