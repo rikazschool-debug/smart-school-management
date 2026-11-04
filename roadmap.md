@@ -388,3 +388,4 @@ Nov 4 (prompt-125): closed — class visits (visits-e2e 24/24), busy-teacher reg
 
 Nov 4 (prompt-126): comprehensive evaluation built on class visits — done & tested (evaluation-e2e 26/26, journey 18/18). Open: monthly-cycle/overdue reminders (needs a daily job), forms-delegation node in the permission tree UI, cross-period trend charts.
 Nov 4 (prompt-127/128): evaluation side sub-menu (owner sees only evaluation), teacher/staff files with process diagram + charts, monthly score/percentage column — done & tested (journey 26/26, e2e 26/26). Open: monthly-cycle/overdue reminders (needs daily job), forms-delegation node in the permission tree UI.
+Nov 4 (prompt-129): evaluation fully in the permission tree (5 sub-sections, separate actions/scopes, templates, users-by-section), monthly reminders on the existing job (real run proven) — done & tested. Evaluation closed. NEXT = HR (see docs/hr-handoff.md); not started.

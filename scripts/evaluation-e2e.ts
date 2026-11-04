@@ -147,7 +147,7 @@ try {
   const t1row = so?.teachers?.find((x: any) => x.id === te1.id);
   check("23 owner org summary: separate sources, counts", t1row?.ratings === 3 && t1row.visits === 1 && so.monthly[0].done === 1, so);
   const sp = await pr.c.rpc("ev_summary", { _org: org, _school: null, _month: month }), spx = await pr.c.rpc("ev_summary", { _org: org2, _school: SX, _month: month });
-  check("24 principal cannot read org-wide or another org", !!sp.error && !!spx.error);
+  check("24 principal: «all branches» narrows to his own branch; another org refused", !sp.error && (sp.data as any).monthly.every((m: any) => m.school_id === S) && !!spx.error, sp.error);
   await admin.from("platform_admins").insert({ user_id: pa.id }); platformTest = pa.id;
   const pNo = await pa.c.rpc("ev_summary", { _org: org, _school: null, _month: month });
   await admin.from("ev_platform_access").insert({ org_id: org, user_id: pa.id, granted_note: "test" });

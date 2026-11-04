@@ -9,7 +9,7 @@ if (process.argv[2] === "teardown") {
   const f = JSON.parse(readFileSync(FX, "utf8"));
   f.schools.forEach((s: string) => tr.addSchool(s)); f.users.forEach((u: string) => tr.addUser(u));
   for (const s of f.schools) { await admin.from("ev_guardian").delete().eq("school_id", s); await admin.from("ev_monthly").delete().eq("school_id", s); await admin.from("cv_visits").delete().eq("school_id", s); }
-  await admin.from("ev_log").delete().eq("org_id", f.org); await admin.from("ev_forms").delete().eq("org_id", f.org);
+  await admin.from("ev_log").delete().eq("org_id", f.org); await admin.from("ev_forms").delete().eq("org_id", f.org); await admin.from("ev_settings").delete().eq("org_id", f.org); await admin.from("perm_overrides").delete().eq("org_id", f.org);
   await tr.purgeOrg(f.org); for (const u of f.users) await admin.auth.admin.deleteUser(u);
   console.log("teardown ok"); process.exit(0);
 }
