@@ -51,7 +51,7 @@ async def main():
         await v.goto(B + "/app/evaluation?tab=monthly"); await v.wait_for_timeout(3000)
         rows = await v.get_by_role("row").count()
         await v.screenshot(path=SH + "vice_monthly.png")
-        check("6 vice sees the monthly list (self excluded) but cannot rate", rows >= 2 and await v.get_by_role("row").filter(has_text="وكيل التجربة").count() == 0 and await v.get_by_role("button", name="تقييم").count() == 0)
+        check("6 vice opens the monthly list: himself excluded (only staff left), no rate button", await v.get_by_text("لا يوجد موظفون مطلوب تقييمهم").count() == 1 and await v.get_by_role("row").filter(has_text="وكيل التجربة").count() == 0 and await v.get_by_role("button", name="تقييم").count() == 0)
         await v.goto(B + "/app/evaluation?tab=guardians"); await v.wait_for_timeout(2500)
         check("7 guardian ratings tab refused for the vice", await v.get_by_role("table").count() == 0)
         await v.goto(B + "/app/evaluation?tab=forms"); await v.wait_for_timeout(2500)
@@ -68,7 +68,7 @@ async def main():
         await vp.screenshot(path=SH + "phone_menu.png")
         # revoke while the vice stays signed in
         await open_vice(o)
-        await o.get_by_role("checkbox", name="التقييم الشهري", exact=True).click(); await o.wait_for_timeout(300)
+        await o.locator("label").filter(has_text="عرض التقييمات الشهرية").get_by_role("checkbox").uncheck(); await o.wait_for_timeout(300)
         await save(o)
         await v.goto(B + "/app/evaluation?tab=monthly"); await v.wait_for_timeout(3500)
         check("12 after revoke the open session loses the monthly list", await v.get_by_role("table").count() == 0 and await side.get_by_role("link", name="التقييم الشهري").count() == 0)
