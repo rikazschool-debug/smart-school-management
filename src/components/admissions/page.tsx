@@ -326,6 +326,7 @@ function Students({ orgId, orgName, me }: { orgId: string; orgName: string; me: 
   );
 }
 
+const PUBLISHED_ORIGIN = "https://project--45bfe8fb-92a3-482f-bb8a-47942fa599de.lovable.app";
 const FORM_SCHOOLS = ["قناديل الشرق", "أجيال المعالي", "الضاحية (بنات)", "الضاحية (بنين)"];
 function SettingsTab({ orgId }: { orgId: string }) {
   const qc = useQueryClient();
@@ -366,7 +367,10 @@ function SettingsTab({ orgId }: { orgId: string }) {
 function Connections({ orgId }: { orgId: string }) {
   const l = useQuery({ queryKey: ["ad-sources", orgId], queryFn: async () => { const { data, error } = await db.rpc("ad_source_list", { _org: orgId }); if (error) throw error; return data as Row[]; } });
   const [shown, setShown] = useState<{ id: string; secret: string } | null>(null);
-  const endpoint = `${typeof window === "undefined" ? "" : window.location.origin}/api/public/admissions/wordpress`;
+  // WordPress must call the published app (the preview is private), so show the stable published address.
+  const host = typeof window === "undefined" ? "" : window.location.origin;
+  const isPreview = !host || /localhost|id-preview--|lovableproject\.com/.test(host);
+  const endpoint = `${isPreview ? PUBLISHED_ORIGIN : host}/api/public/admissions/wordpress`;
   async function create() {
     const n = await askText("اسم الربط (مثال: موقع المالكي)", { required: true }); if (!n) return;
     const { data, error } = await db.rpc("ad_source_create", { _org: orgId, _name: n }); if (error) { toast.error(arabicError(error)); return; }
@@ -379,7 +383,12 @@ function Connections({ orgId }: { orgId: string }) {
   async function toggle(id: string, on: boolean) { const { error } = await db.rpc("ad_source_set_active", { _id: id, _active: on }); if (error) toast.error(arabicError(error)); void l.refetch(); }
   return (
     <Panel title="اتصال الموقع" actions={<Button size="sm" variant="outline" onClick={() => void create()}><Plus className="size-4" />ربط جديد</Button>}>
-      <p className="mb-2 text-xs text-muted-foreground">عنوان الاستقبال: <bdi dir="ltr" className="font-mono">{endpoint}</bdi> — يُنشر بعد نشر التطبيق على عنوانه المنشور.</p>
+      <div className="mb-3 space-y-1 rounded-xl border bg-muted/40 p-3 text-sm">
+        <p className="font-semibold">عنوان الاستقبال في ركاز (يُلصق في إضافة WordPress):</p>
+        <p className="flex flex-wrap items-center gap-2"><bdi dir="ltr" className="select-all break-all font-mono text-xs">{endpoint}</bdi>
+          <Button size="sm" variant="ghost" onClick={() => void navigator.clipboard.writeText(endpoint).then(() => toast.success("نُسخ العنوان"))}>نسخ</Button></p>
+        <p className="text-xs text-muted-foreground">اضغط «ربط جديد» لإنشاء معرّف الربط والمفتاح السري، ثم الصقهما مع العنوان في صفحة «ربط ركاز (القبول)» بالموقع.</p>
+      </div>
       {shown && (
         <div role="alert" className="mb-3 rounded-xl border border-warning/50 bg-warning/10 p-3 text-sm">
           <p className="font-bold">انسخ القيمتين الآن إلى إعدادات الإضافة — لن يظهر المفتاح مرة أخرى.</p>
