@@ -36,10 +36,10 @@ function Page() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["cv", school] });
 
   async function save(submit: boolean) {
-    if (!edit?.teacher_id) return toast.error("اختر المعلم");
+    if (!edit?.teacher_id) { toast.error("اختر المعلم"); return; }
     if (submit && !(await ask("إرسال الزيارة للمدير لاعتمادها؟ لا يمكن تعديلها بعد الإرسال إلا إذا أعادها."))) return;
     const r = await supabase.rpc("cv_save" as never, { _id: edit.id ?? null, _teacher: edit.teacher_id, _date: edit.visit_date ?? today(), _lesson: edit.lesson ?? null, _scores: edit.scores ?? {}, _notes: edit.notes ?? {}, _summary: edit.summary ?? null, _submit: submit } as never);
-    if (r.error) return toast.error(arabicError(r.error));
+    if (r.error) { toast.error(arabicError(r.error)); return; }
     toast.success(submit ? "أُرسلت للاعتماد" : "حُفظت المسودة"); setEdit(null); refresh();
   }
   async function decide(v: Visit, approve: boolean) {
@@ -47,7 +47,7 @@ function Page() {
     if (approve) { if (!(await ask("اعتماد هذه الزيارة؟"))) return; }
     else { reason = await askText("سبب إعادة الزيارة للمقيّم", { required: true }); if (!reason) return; }
     const r = await supabase.rpc("cv_decide" as never, { _id: v.id, _approve: approve, _reason: reason } as never);
-    if (r.error) return toast.error(arabicError(r.error));
+    if (r.error) { toast.error(arabicError(r.error)); return; }
     toast.success(approve ? "اعتُمدت" : "أعيدت للمقيّم"); setView(null); refresh();
   }
 
