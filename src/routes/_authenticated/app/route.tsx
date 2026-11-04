@@ -113,8 +113,12 @@ function Shell() {
   const mt = useMtMe(active?.orgId ?? null, pcRole);
   const ad = useAdMe(active?.orgId ?? null, pcRole);
   const ops = useOpsStaff(active ?? null, user.id);
-  const evStaff = !!active && ["org_owner", "principal", "platform_admin"].includes(active.role);
-  const evMe = useQuery({ queryKey: ["ev-me", active?.schoolId], enabled: evStaff && active?.role === "principal" && !!active?.schoolId, queryFn: async () => { const r = await supabase.rpc("ev_me" as never, { _school: active!.schoolId } as never); if (r.error) throw r.error; return r.data as unknown as { forms: boolean }; } });
+  // evaluation access: owner/platform always see the section; other staff only through the permission tree (perm_my_school ev_* keys; RPCs re-check)
+  const evGranted = !!sp && Object.entries(sp).some(([k, v]) => k.startsWith("ev_") && !!v);
+  const evOwner = !!active && ["org_owner", "platform_admin"].includes(active.role);
+  const evStaff = evOwner || evGranted;
+  const evMe = useQuery({ queryKey: ["ev-me", active?.schoolId], enabled: !evOwner && evStaff && !!active?.schoolId, queryFn: async () => { const r = await supabase.rpc("ev_me" as never, { _school: active!.schoolId } as never); if (r.error) throw r.error; return r.data as unknown as { forms: boolean; caps: Record<string, boolean> }; } });
+  const evCan = (t: string) => { if (evOwner) return true; const c = evMe.data?.caps ?? {}; return t === "summary" ? !!c["ev_summary.view"] : t === "guardians" ? !!c["ev_guardian.view"] : t === "visits" ? !!(c["ev_visits.view"] || c["ev_visits.execute"]) : t === "monthly" ? !!c["ev_monthly.view"] : !!(c["ev_forms.view"] || c["ev_forms.edit"]); };
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const evTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "summary") });
@@ -145,7 +149,7 @@ function Shell() {
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
-    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : [])] as NavKey[];
+    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : [])] as NavKey[];
   const opsOnly = ops.opsOnly;
   if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
@@ -193,7 +197,7 @@ function Shell() {
                   )}
                   {k === "evaluation" && evStaff && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
-                      {EV_SUB.filter(([t]) => t !== "forms" || active.role !== "principal" || !!evMe.data?.forms).map(([t, label]) => t === "visits" ? (
+                      {EV_SUB.filter(([t]) => evCan(t)).map(([t, label]) => t === "visits" ? (
                         <Link key={t} to="/app/visits" onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>
                       ) : (
                         <Link key={t} to="/app/evaluation" search={{ tab: t }} onClick={() => setOpen(false)}
