@@ -8602,6 +8602,7 @@ export type Database = {
       _gb_total: { Args: { _gb: string; _student: string }; Returns: number }
       _gb_window: { Args: { _gb: string; _student: string }; Returns: boolean }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
+      _home_roles: { Args: { _me: string; _school: string }; Returns: Json }
       _hw_check_score: {
         Args: { _criteria: Json; _score: number; h: Record<string, unknown> }
         Returns: number
