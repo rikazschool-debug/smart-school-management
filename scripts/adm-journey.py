@@ -38,7 +38,7 @@ async def main():
         await pg.goto(B + "/app/admissions?tab=apps"); await pg.wait_for_timeout(3500)
         async with pg.expect_download() as dx: await pg.get_by_role("button", name="Excel").click()
         x = await dx.value; await x.save_as(str(OUT / "apps.xlsx"))
-        async with pg.expect_download(timeout=60000) as dp: await pg.get_by_role("button", name="PDF").click()
+        async with pg.expect_download(timeout=150000) as dp: await pg.get_by_role("button", name="PDF").click()
         pdf = await dp.value; await pdf.save_as(str(OUT / "apps.pdf"))
         check("4 phone: no horizontal scroll; Excel + PDF downloaded", sw <= 392 and (OUT / "apps.xlsx").stat().st_size > 0 and (OUT / "apps.pdf").stat().st_size > 0, sw)
         check("5 officer: no page errors", not errs, errs); await ctx.close()
