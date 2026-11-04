@@ -78,6 +78,10 @@ const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتي�
 /** Admissions sub-sections; "settings" (website connection) only for org-level/settings holders — the page and RPCs re-check. */
 const AD_SUB = [["apps", "الطلاب المحتملون"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
 
+/** Evaluation sub-sections (owner/principal/granted platform); class visits is its own page. "forms" needs owner or evaluation.forms — the page and RPCs re-check. */
+const EV_SUB = [["summary", "الملخص والمؤشرات"], ["guardians", "تقييمات أولياء الأمور"], ["visits", "الزيارات الصفية"], ["monthly", "التقييم الشهري"], ["forms", "النماذج والإعدادات"]] as const;
+const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary";
+
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "profile"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
@@ -109,8 +113,11 @@ function Shell() {
   const mt = useMtMe(active?.orgId ?? null, pcRole);
   const ad = useAdMe(active?.orgId ?? null, pcRole);
   const ops = useOpsStaff(active ?? null, user.id);
+  const evStaff = !!active && ["org_owner", "principal", "platform_admin"].includes(active.role);
+  const evMe = useQuery({ queryKey: ["ev-me", active?.schoolId], enabled: evStaff && active?.role === "principal" && !!active?.schoolId, queryFn: async () => { const r = await supabase.rpc("ev_me" as never, { _school: active!.schoolId } as never); if (r.error) throw r.error; return r.data as unknown as { forms: boolean }; } });
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const evTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "summary") });
   const lastSection = useRef<OwnerSection | null>(null);
 
   async function signOut() {
@@ -142,7 +149,9 @@ function Shell() {
   const opsOnly = ops.opsOnly;
   if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
-  const nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
+  let nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
+  // class visits live under the evaluation sub-menu for roles that have both
+  if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (
@@ -179,6 +188,16 @@ function Shell() {
                       {PC_SUB.filter(([t]) => (pcNeedsOnly ? t === "needs" : t !== "settings" || owner || pc.data?.caps.settings === "org")).map(([t, label]) => (
                         <Link key={t} to="/app/procurement" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)}
                           className="flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary">{label}</Link>
+                      ))}
+                    </div>
+                  )}
+                  {k === "evaluation" && evStaff && (
+                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                      {EV_SUB.filter(([t]) => t !== "forms" || active.role !== "principal" || !!evMe.data?.forms).map(([t, label]) => t === "visits" ? (
+                        <Link key={t} to="/app/visits" onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>
+                      ) : (
+                        <Link key={t} to="/app/evaluation" search={{ tab: t }} onClick={() => setOpen(false)}
+                          data-status={path.startsWith("/app/evaluation") && evTab === t ? "active" : undefined} className={SUB_CLS}>{label}</Link>
                       ))}
                     </div>
                   )}
