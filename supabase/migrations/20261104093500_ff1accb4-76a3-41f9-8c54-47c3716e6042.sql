@@ -1,0 +1,1 @@
+update public.schools set student_gender='girls' where id='aa99cfdf-4a4f-40a9-9eee-7f3d57e7e427' and org_id='a9a4b7e2-ab44-4bcf-a1bf-ebce6489f074';
