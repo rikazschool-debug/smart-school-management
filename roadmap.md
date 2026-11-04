@@ -309,7 +309,7 @@
 - [x] C3 Permissions page: side tab per role (base + assigned roles) → people → person panel (assign/withdraw/grant/deny/remove); phone: chips → list → panel with back (browser desktop+390px, perm-tabs unit 3/3)
 - [x] C4 Purchase needs: principal creates+approves → linked officer (auto if one; else «بانتظار الإسناد» + owner notified; claim/assign); invoice lines linked with qty/category, partial delivery, remaining, no over-quantity/duplicates; need approval separate from invoice approval. scripts/pc-need-e2e.ts 12/12, pc-e2e 32/32, pc2-e2e 20/20; browser 6/6 (principal phone, officer desktop)
 - [~] C5 Settlement close: unconfirmed paid amounts now block close (pc2 8b); pending invoices/drafts/refunds/open requests already blocked; correction/refund concurrency review open
-- [~] C6 Browser closure: transfer + acceptance + old holder loses access DONE (scripts/pc-transfer-journey.py 8/8; server fix: transfer-born custody owned by recipient; pc2 check 10). Open: custom field on invoice (old version kept) and carry-over in browser
+- [x] C6 Browser closure: transfer + acceptance + old holder loses access (pc-transfer-journey.py 8/8; server fix: transfer-born custody owned by recipient); carry-over two moves + no double total and custom invoice field with old invoice keeping its version (pc-carry-form-journey.py 9/9)
 - [~] C7 Requests list as phone cards done; open-session revocation + finance suspension (direct RPC, files, export); phone tests for section availability/roles/permissions; requests table as phone cards
 - [ ] C8 Alerts via real cron run; new due date / new low after top-up still alerts
 - [ ] C9 Restore docs (student ID login + forced change, teacher/guardian WhatsApp code, grade visibility) in dedicated files linked from main scope; requirements matrix + closure log
@@ -324,7 +324,7 @@
 - [x] Owner exception (bounds-e2e 8/8): owner bound by platform section suspension, org isolation, no self-approve/self-disburse — explicit tests
 - [x] Branch suspension (bounds-e2e): blocks branch data/ops, not other active branch links; open session + reactivation; previously-suspended stays suspended
 - [ ] Browser journeys on isolated data: assign/grant/deny/withdraw on the new permissions page, staff link invitation, login after branch suspension
-- [ ] C6 invoice custom field (old version kept), custody transfer acceptance, carry-over; finance suspension + permission withdrawal in open session; alerts via real cron (C8)
+- [~] C6 done (see above); open: finance suspension + permission withdrawal in open session; alerts via real cron (C8)
 - [ ] C9 restore docs (login documents, grade visibility) + requirements matrix with evidence; review new security warnings by actual permission
 
 ## Owner feedback 2026-11-03
