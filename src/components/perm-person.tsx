@@ -12,8 +12,8 @@ import { PermTree, type Grant, type PermCatalog } from "@/components/perm-tree";
 import { arabicError } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
 
-type Eff = { section: string; action: string; scope: string | null; allowed_schools: string[]; base_schools: string[]; source: string | null };
-type Effective = { is_owner: boolean; base_roles: { role: string; school: string | null }[]; roles: { id: string; name: string; school_ids: string[] | null; approval_limit: number | null }[]; overrides: { section: string; action: string; effect: string; scope: string | null }[]; effective: Eff[] };
+export type Eff = { section: string; action: string; scope: string | null; allowed_schools: string[]; base_schools: string[]; source: string | null };
+export type Effective = { is_owner: boolean; base_roles: { role: string; school: string | null }[]; roles: { id: string; name: string; school_ids: string[] | null; approval_limit: number | null }[]; overrides: { section: string; action: string; effect: string; scope: string | null }[]; effective: Eff[] };
 type Changes = { assign: { role_id: string; school_ids: string[] | null; limit: number | null }[]; unassign: string[]; overrides: { section: string; action: string; effect: string | null; scope: string | null }[] };
 export const SOURCE: Record<string, string> = { owner: "مالك المؤسسة", role: "من دور مسند", override: "تفويض إضافي", deny: "منع خاص", base: "من دوره الأساسي" };
 
@@ -25,7 +25,7 @@ async function call(fn: string, args: Record<string, unknown>) {
 /** Is the action actually allowed (deny wins; procurement by scope, school sections by branches)? */
 export const isOn = (e: Eff) => e.source !== "deny" && (e.section === "procurement" ? !!e.scope : e.allowed_schools.length > 0);
 const where = (c: PermCatalog, e: Eff) => (e.section === "procurement" ? (e.scope ? c.scopes[e.scope] : "") : e.allowed_schools.join("، "));
-const toGrants = (eff: Eff[]): Grant[] => eff.filter(isOn).map((e) => ({ section: e.section, action: e.action, scope: e.scope ?? "branch" }));
+export const toGrants = (eff: Eff[]): Grant[] => eff.filter(isOn).map((e) => ({ section: e.section, action: e.action, scope: e.scope ?? "branch" }));
 
 /**
  * One employee: draft role and section changes locally, preview «before / after» on the server (rolled back), then save all at once.
@@ -39,6 +39,7 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
   const [add, setAdd] = useState<Changes["assign"]>([]);
   const [drop, setDrop] = useState<string[]>([]);
   const [tree, setTree] = useState<Grant[] | null>(null);
+  const [undeny, setUndeny] = useState<string[]>([]);
   const [pick, setPick] = useState(""); const [limit, setLimit] = useState(""); const [scopeIds, setScopeIds] = useState<string[]>([]);
   const [preview, setPreview] = useState<{ before: Effective; after: Effective } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -48,20 +49,11 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
   const e = eff.data!;
   const cur = tree ?? orig;
 
-  function overrides(): Changes["overrides"] {
-    const out: Changes["overrides"] = [];
-    const key = (g: { section: string; action: string }) => `${g.section}.${g.action}`;
-    const o = new Map(orig.map((g) => [key(g), g])), n = new Map(cur.map((g) => [key(g), g]));
-    for (const [k, g] of n) { const was = o.get(k); if (!was || was.scope !== g.scope) out.push({ section: g.section, action: g.action, effect: "grant", scope: g.scope }); }
-    for (const [k, g] of o) if (!n.has(k)) {
-      const src = e.effective.find((x) => key(x) === k)?.source;
-      out.push({ section: g.section, action: g.action, effect: src === "override" ? null : "deny", scope: null });
-    }
-    return out;
-  }
-  const changes = (): Changes => ({ assign: add, unassign: drop, overrides: tree ? overrides() : [] });
-  const dirty = add.length > 0 || drop.length > 0 || (tree !== null && overrides().length > 0);
-  const reset = () => { setAdd([]); setDrop([]); setTree(null); setPreview(null); };
+  const draft = draftOverrides(e.effective, orig, cur, undeny);
+  function overrides(): Changes["overrides"] { return draft.overrides; }
+  const changes = (): Changes => ({ assign: add, unassign: drop, overrides: overrides() });
+  const dirty = add.length > 0 || drop.length > 0 || overrides().length > 0;
+  const reset = () => { setAdd([]); setDrop([]); setTree(null); setUndeny([]); setPreview(null); };
 
   async function doPreview() {
     setBusy(true);
@@ -121,10 +113,11 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
         <section>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <p className="font-bold">الأقسام والإجراءات (تخصيص لهذا الموظف)</p>
-            {tree && <Button size="sm" variant="ghost" onClick={() => { setTree(null); setPreview(null); }}><RotateCcw className="size-4" />إلغاء التخصيص</Button>}
+            {(tree || undeny.length > 0) && <Button size="sm" variant="ghost" onClick={() => { setTree(null); setUndeny([]); setPreview(null); }}><RotateCcw className="size-4" />إلغاء التخصيص</Button>}
           </div>
-          <p className="mb-2 text-xs text-muted-foreground">تعكس الشجرة الوصول الفعلي الحالي. الإضافة هنا تفويض شخصي، والإزالة منع خاص يغلب أي دور.</p>
-          <PermTree c={c} value={cur} onChange={(g) => { setTree(g); setPreview(null); }} disabledAreas={dis.data ?? []} />
+          <p className="mb-2 text-xs text-muted-foreground">تعكس الشجرة الوصول الفعلي الحالي. الإضافة هنا تفويض شخصي. إلغاء صلاحية من دور = «منع صريح» ظاهر بالأحمر؛ «رفع المنع» يعيدها لقواعد الدور دون منع خفي.</p>
+          <PermTree c={c} value={cur} onChange={(g) => { setTree(g); setPreview(null); }} disabledAreas={dis.data ?? []} denied={draft.denied} sources={draft.sources}
+            onUndeny={(k) => { const o = orig.find((g) => `${g.section}.${g.action}` === k); if (o && !cur.some((g) => `${g.section}.${g.action}` === k)) setTree([...cur, o]); else setUndeny([...undeny, k]); setPreview(null); }} />
         </section>
         <div className="flex flex-wrap gap-2 border-t pt-3">
           <Button variant="outline" disabled={!dirty || busy} onClick={doPreview}><Eye className="size-4" />معاينة قبل وبعد</Button>
@@ -138,8 +131,27 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
   );
 }
 
+/**
+ * Draft personal changes against the current effective access.
+ * New tick → grant; untick of own grant → back to role rules (no deny); untick of role/base access → explicit deny (shown);
+ * «رفع المنع» on an existing deny → removal of the override.
+ */
+export function draftOverrides(effective: Eff[], orig: Grant[], cur: Grant[], undeny: string[]) {
+  const key = (g: { section: string; action: string }) => `${g.section}.${g.action}`;
+  const src = new Map(effective.map((x) => [key(x), x.source]));
+  const out: Changes["overrides"] = [];
+  const o = new Map(orig.map((g) => [key(g), g])), n = new Map(cur.map((g) => [key(g), g]));
+  for (const [k, g] of n) { const was = o.get(k); if (!was || was.scope !== g.scope) out.push({ section: g.section, action: g.action, effect: "grant", scope: g.scope }); }
+  for (const [k, g] of o) if (!n.has(k)) out.push({ section: g.section, action: g.action, effect: src.get(k) === "override" ? null : "deny", scope: null });
+  for (const k of undeny) if (!n.has(k)) { const [section, action] = k.split("."); out.push({ section: section!, action: action!, effect: null, scope: null }); }
+  const denied = [...effective.filter((x) => x.source === "deny").map(key).filter((k) => !undeny.includes(k) && !n.has(k)), ...out.filter((x) => x.effect === "deny").map(key)];
+  const sources: Record<string, string> = {};
+  for (const [k] of n) sources[k] = o.has(k) ? SOURCE[src.get(k) ?? ""] ?? "" : "تفويض شخصي (جديد)";
+  return { overrides: out, denied, sources };
+}
+
 /** Before/after: additions, removals and scope changes with their source, plus the employee's menu (permissions only, no personal data). */
-function Diff({ c, p }: { c: PermCatalog; p: { before: Effective; after: Effective } }) {
+export function Diff({ c, p }: { c: PermCatalog; p: { before: Effective; after: Effective } }) {
   const k = (e: Eff) => `${e.section}.${e.action}`;
   const b = new Map(p.before.effective.map((e) => [k(e), e]));
   const rows = p.after.effective.map((a) => ({ a, b: b.get(k(a))! })).filter(({ a, b: x }) => isOn(a) !== isOn(x) || ((isOn(a) || isOn(x)) && (where(c, a) !== where(c, x) || a.source !== x.source)) || (a.source === "deny") !== (x.source === "deny"));
@@ -150,7 +162,8 @@ function Diff({ c, p }: { c: PermCatalog; p: { before: Effective; after: Effecti
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
       <div className="rounded-xl border p-3">
         <p className="mb-2 font-bold">المعاينة: ما الذي سيتغير</p>
-        {!p.after.base_roles.length && <p className="mb-2 rounded bg-warning/15 p-2 text-xs">الحساب موقوف أو لم يكمل أول دخول: الصلاحيات تُحفظ الآن وتسري فور تفعيله، لذا قد لا تظهر أقسام الفروع هنا بعد.</p>}
+        {!p.after.base_roles.length && <p className="mb-2 rounded bg-warning/15 p-2 text-xs">الحساب موقوف: الصلاحيات تُحفظ الآن وتسري فور تفعيله، لذا لا تظهر أقسام الفروع هنا.</p>}
+        <p className="mb-2 text-xs text-muted-foreground">تُحسب «بعد» كما ستكون بعد أول دخول للموظف؛ المعاينة لا تفعّل الحساب ولا تحفظ شيئًا.</p>
         {!rows.length ? <p className="text-muted-foreground">لا تغيير في الوصول الفعلي (قد يكون المنح موجودًا من دور آخر).</p> : (
           <ul className="space-y-1">
             {rows.map(({ a, b: x }) => { const on = isOn(a), was = isOn(x); return (

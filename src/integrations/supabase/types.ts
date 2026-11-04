@@ -8968,21 +8968,48 @@ export type Database = {
         Args: { _guardians: boolean; _section: string; _year: string }
         Returns: string[]
       }
-      _staff_provision: {
+      _staff_overrides: {
         Args: {
           _actor: string
-          _base: string
-          _is_new: boolean
-          _name: string
           _org: string
+          _ov: Json
           _reason: string
-          _roles: Json
-          _schools: string[]
           _uid: string
-          _username: string
         }
-        Returns: Json
+        Returns: number
       }
+      _staff_provision:
+        | {
+            Args: {
+              _actor: string
+              _base: string
+              _is_new: boolean
+              _name: string
+              _org: string
+              _reason: string
+              _roles: Json
+              _schools: string[]
+              _uid: string
+              _username: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _actor: string
+              _base: string
+              _is_new: boolean
+              _name: string
+              _org: string
+              _overrides: Json
+              _reason: string
+              _roles: Json
+              _schools: string[]
+              _uid: string
+              _username: string
+            }
+            Returns: Json
+          }
       _staff_reset: {
         Args: { _actor: string; _org: string; _reason: string; _uid: string }
         Returns: undefined
@@ -10916,6 +10943,17 @@ export type Database = {
       perm_people: { Args: { _org: string }; Returns: Json }
       perm_preview: {
         Args: { _changes: Json; _org: string; _user: string }
+        Returns: Json
+      }
+      perm_preview_staff: {
+        Args: {
+          _base: string
+          _org: string
+          _overrides: Json
+          _roles: Json
+          _schools: string[]
+          _uid: string
+        }
         Returns: Json
       }
       perm_role_archive: {

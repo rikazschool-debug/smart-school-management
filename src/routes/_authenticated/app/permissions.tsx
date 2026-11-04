@@ -76,8 +76,8 @@ function Tabs({ org, school }: { org: string; school: string | null }) {
               <Button key={k} size="sm" role="tab" aria-selected={sub === k} variant={sub === k ? "default" : "outline"} onClick={() => setSub(k as "actions" | "templates")}>{l}</Button>
             ))}
           </div>
-          {sub === "templates" ? <Roles org={org} /> : wiz ? (
-            <StaffWizard org={org} school={school} grantText={gt} onCancel={() => setWiz(false)} onDone={(uid) => { setWiz(false); setFocus(uid); }} />
+          {sub === "templates" ? <Roles org={org} /> : wiz && cat.data ? (
+            <StaffWizard org={org} school={school} grantText={gt} catalog={cat.data as never} onCancel={() => setWiz(false)} onDone={(uid) => { setWiz(false); setFocus(uid); }} />
           ) : (
             <>
               <div className="grid gap-3 sm:grid-cols-2">

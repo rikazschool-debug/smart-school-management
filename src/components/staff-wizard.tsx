@@ -14,19 +14,22 @@ import { createStaffAccount } from "@/lib/accounts.functions";
 import { strongEnough } from "@/lib/people-import";
 import { arabicError } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { PermTree, type PermCatalog, type Grant as TGrant } from "@/components/perm-tree";
+import { Diff, draftOverrides, toGrants, type Effective } from "@/components/perm-person";
+import { LoadingState, ErrorState } from "@/components/states";
 
 type Grant = { section: string; action: string; scope: string };
 type RoleRow = { role_id: string; all: boolean; school_ids: string[]; limit: string };
 const BASES: Role[] = ["teacher", "principal", "vice_principal", "dept_head", "supervisor", "student_affairs", "counselor", "nurse", "security"];
 const BASE_HINT: Partial<Record<Role, string>> = { teacher: "«معلم» بلا سجل معلم = موظف تشغيل (صيانة، مشتريات…) — تظهر له أقسام أدواره فقط." };
-const STEPS = ["بيانات الموظف والفروع", "الدور الأساسي والأدوار", "المعاينة والحفظ"];
+const STEPS = ["بيانات الموظف والفروع", "الدور الأساسي والأدوار", "الأقسام والصلاحيات", "المعاينة والحفظ"];
 const USERNAME = /^[a-z0-9][a-z0-9._-]{2,29}$/;
 
 /**
  * «إضافة موظف جديد»: nothing is created while moving between steps; the final save runs one server call
  * (createStaffAccount) that writes memberships, roles and the first-login lock together.
  */
-export function StaffWizard({ org, school, grantText, onDone, onCancel }: { org: string; school: string | null; grantText: (g: Grant[]) => string; onDone: (uid: string) => void; onCancel: () => void }) {
+export function StaffWizard({ org, school, grantText, onDone, onCancel, catalog }: { org: string; school: string | null; grantText: (g: Grant[]) => string; onDone: (uid: string) => void; onCancel: () => void; catalog: PermCatalog }) {
   const qc = useQueryClient();
   const run = useServerFn(createStaffAccount);
   const schools = useQuery({ queryKey: ["org-schools", org], queryFn: async () => { const { data, error } = await db.from("schools").select("id,name,is_active").eq("org_id", org).order("name"); if (error) throw error; return data as Row[]; } });
@@ -41,6 +44,27 @@ export function StaffWizard({ org, school, grantText, onDone, onCancel }: { org:
   const [rows, setRows] = useState<RoleRow[]>([]);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [tree, setTree] = useState<TGrant[] | null>(null);
+  const [undeny, setUndeny] = useState<string[]>([]);
+  const [after, setAfter] = useState<Effective | null>(null);
+  const dis = useQuery({ queryKey: ["perm-disabled", org], queryFn: async () => { const { data, error } = await db.rpc("perm_disabled_areas" as never, { _org: org } as never); if (error) throw error; return data as unknown as string[]; } });
+  const plannedRoles = () => rows.map((x) => ({ role_id: x.role_id, school_ids: x.all ? null : x.school_ids, limit: x.limit ? Number(x.limit) : null }));
+  const planKey = JSON.stringify([mode, existing[0], base, branches, rows]);
+  /** What the planned base role + roles give, computed by the server on a throw-away copy (nothing saved). */
+  const baseline = useQuery({ enabled: step >= 2, queryKey: ["perm-plan", org, planKey], queryFn: async () => {
+    const { data, error } = await db.rpc("perm_preview_staff" as never, { _org: org, _uid: mode === "existing" ? existing[0] : null, _base: base, _schools: branches, _roles: plannedRoles(), _overrides: [] } as never);
+    if (error) throw error; return data as unknown as { before: Effective | null; after: Effective }; } });
+  const effB = baseline.data?.after.effective ?? [];
+  const orig = toGrants(effB);
+  const cur = tree ?? orig;
+  const draft = draftOverrides(effB, orig, cur, undeny);
+  async function runPreview() {
+    setBusy(true);
+    try {
+      const { data, error } = await db.rpc("perm_preview_staff" as never, { _org: org, _uid: mode === "existing" ? existing[0] : null, _base: base, _schools: branches, _roles: plannedRoles(), _overrides: draft.overrides } as never);
+      if (error) throw error; setAfter((data as unknown as { after: Effective }).after);
+    } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
+  }
   const live = (roles.data ?? []).filter((r) => !r["archived"]);
   const sname = (id: string) => schools.data?.find((s) => s["id"] === id)?.["name"] ?? "—";
   const u = username.trim().toLowerCase();
@@ -66,7 +90,9 @@ export function StaffWizard({ org, school, grantText, onDone, onCancel }: { org:
   }
   async function next() {
     if (step === 0) { if (mode === "new") await checkName(); const e = err0(); if (e) return void toast.error(e); }
-    if (step === 1) { const e = err1(); if (e) return void toast.error(e); }
+    if (step === 1) { const e = err1(); if (e) return void toast.error(e); setTree(null); setUndeny([]); }
+    setAfter(null);
+    if (step === 2) { if (!baseline.data) return; await runPreview(); }
     setStep(step + 1);
   }
   async function save() {
@@ -75,8 +101,8 @@ export function StaffWizard({ org, school, grantText, onDone, onCancel }: { org:
     try {
       const r = await run({ data: {
         orgId: org, existingUserId: mode === "existing" ? (existing[0] ?? null) : null, username: u, fullName: name.trim(), password: pw, base, schools: branches,
-        roles: rows.map((x) => ({ role_id: x.role_id, school_ids: x.all ? null : x.school_ids, limit: x.limit ? Number(x.limit) : null })), reason: reason.trim() } });
-      toast.success(r.created ? "أُنشئ الحساب — سيُطلب من الموظف تغيير كلمة المرور عند أول دخول" : "أُضيفت الأدوار إلى الحساب القائم دون تغيير كلمة مروره");
+        roles: plannedRoles(), overrides: draft.overrides, reason: reason.trim() } });
+      toast.success("resumed" in r ? "اكتمل الحساب من المحاولة السابقة دون تكرار" : r.created ? "أُنشئ الحساب — سيُطلب من الموظف تغيير كلمة المرور عند أول دخول" : "أُضيفت الأدوار إلى الحساب القائم دون تغيير كلمة مروره");
       for (const k of ["perm-people", "perm-roles", "perm-log", "staff-logins"]) qc.invalidateQueries({ queryKey: [k, org] });
       onDone(r.userId);
     } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
@@ -161,12 +187,22 @@ export function StaffWizard({ org, school, grantText, onDone, onCancel }: { org:
               );
             })}
             <Button type="button" variant="outline" size="sm" onClick={() => setRows([...rows, { role_id: "", all: true, school_ids: [], limit: "" }])}><Plus className="size-4" />إضافة دور آخر</Button>
-            <p className="text-xs text-muted-foreground">لمنح إجراء محدد دون دور كامل استخدم «استثناء شخصي» من «تعديل صلاحيات موظف حالي» بعد الحفظ.</p>
+            <p className="text-xs text-muted-foreground">في الخطوة التالية تُحمَّل صلاحيات هذه الأدوار في الشجرة ويمكن تخصيصها.</p>
           </div>
         </div>
       )}
 
       {step === 2 && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">الشجرة محمّلة من الدور الأساسي والأدوار المختارة. التحديد = تفويض شخصي؛ إلغاء صلاحية من دور = «منع صريح» ظاهر بالأحمر يمكن رفعه. لا يُحفظ شيء قبل الخطوة الأخيرة.</p>
+          {baseline.isLoading ? <LoadingState /> : baseline.error ? <ErrorState message={arabicError(baseline.error)} /> : (
+            <PermTree c={catalog} value={cur} onChange={setTree} disabledAreas={dis.data ?? []} denied={draft.denied} sources={draft.sources}
+              onUndeny={(k) => { const o = orig.find((g) => `${g.section}.${g.action}` === k); if (o) setTree([...cur, o]); else setUndeny([...undeny, k]); }} />)}
+          {(tree || undeny.length > 0) && <Button size="sm" variant="ghost" onClick={() => { setTree(null); setUndeny([]); }}>إلغاء التخصيص والعودة لصلاحيات الأدوار</Button>}
+        </div>
+      )}
+
+      {step === 3 && (
         <div className="space-y-3">
           <dl className="grid gap-2 sm:grid-cols-[10rem_minmax(0,1fr)]">
             <dt className="text-muted-foreground">الحساب</dt><dd>{mode === "new" ? <>{name} — <span dir="ltr" className="font-mono">{u}</span> (جديد، كلمة مرور أولية تُغيَّر عند أول دخول)</> : "حساب قائم — دون تغيير كلمة المرور"}</dd>
@@ -180,6 +216,8 @@ export function StaffWizard({ org, school, grantText, onDone, onCancel }: { org:
                   <span className="block text-xs">النطاق: {r.all ? "فروع الموظف كلها" : r.school_ids.map(sname).join("، ")}{r.limit && ` • حد الاعتماد ${r.limit} ر.س`}</span>
                   <span className="block text-xs text-muted-foreground">{grantText((t?.["grants"] as Grant[]) ?? []) || "بلا صلاحيات"}</span></li>); })}</ul>
             )}</div>
+          {draft.overrides.length > 0 && <p className="text-xs">تخصيص شخصي: {draft.overrides.filter((o) => o.effect === "grant").length} تفويض، {draft.overrides.filter((o) => o.effect === "deny").length} منع صريح.</p>}
+          {after && <Diff c={catalog} p={{ before: baseline.data?.before ?? { ...after, base_roles: [], roles: [], overrides: [], effective: after.effective.map((x) => ({ ...x, scope: null, allowed_schools: [], base_schools: [], source: null })) }, after }} />}
           <p className="text-xs text-muted-foreground">تُطبَّق قيود المنصة والمنع الخاص وفصل المهام (لا اعتماد لمصروفه أو صرف لنفسه) على الخادم مهما تعددت الأدوار. الحفظ عملية واحدة: إما كل شيء أو لا شيء.</p>
           <div className="space-y-1"><Label htmlFor="sw-reason">سبب الإضافة (يُسجَّل)</Label><Input id="sw-reason" value={reason} onChange={(e) => setReason(e.target.value)} /></div>
         </div>
@@ -187,7 +225,7 @@ export function StaffWizard({ org, school, grantText, onDone, onCancel }: { org:
 
       <div className="flex flex-wrap justify-between gap-2 border-t pt-3">
         <Button type="button" variant="ghost" onClick={step ? () => setStep(step - 1) : onCancel}>{step ? "السابق" : "إلغاء"}</Button>
-        {step < 2 ? <Button type="button" onClick={next}>التالي</Button> : <Button type="button" onClick={save} disabled={busy}>{busy ? "جارٍ الحفظ…" : mode === "new" ? "حفظ وإنشاء الحساب" : "حفظ وإضافة الأدوار"}</Button>}
+        {step < 3 ? <Button type="button" onClick={next} disabled={busy || (step === 2 && !baseline.data)}>{step === 2 ? "معاينة" : "التالي"}</Button> : <Button type="button" onClick={save} disabled={busy}>{busy ? "جارٍ الحفظ…" : mode === "new" ? "حفظ وإنشاء الحساب" : "حفظ وإضافة الأدوار"}</Button>}
       </div>
     </div>
   );

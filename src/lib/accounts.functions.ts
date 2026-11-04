@@ -143,7 +143,7 @@ export const completePhoneSetup = createServerFn({ method: "POST" })
   });
 
 const USERNAME = /^[a-z0-9][a-z0-9._-]{2,29}$/;
-type StaffInput = { orgId: string; existingUserId?: string | null; username?: string; fullName?: string; password?: string; base: string; schools: string[]; roles: { role_id: string; school_ids: string[] | null; limit: number | null }[]; reason: string };
+type StaffInput = { orgId: string; existingUserId?: string | null; username?: string; fullName?: string; password?: string; base: string; schools: string[]; roles: { role_id: string; school_ids: string[] | null; limit: number | null }[]; overrides?: { section: string; action: string; effect: string | null; scope: string | null }[]; reason: string };
 
 /**
  * Owner adds a staff member: a new username/password login (created through Supabase Auth, password never stored by us)
@@ -156,6 +156,7 @@ export const createStaffAccount = createServerFn({ method: "POST" })
     if (!Array.isArray(d.schools) || !d.schools.length || !d.schools.every((x) => UUID.test(x))) throw new Error("اختر فرعًا واحدًا على الأقل");
     if (!Array.isArray(d.roles) || d.roles.length > 20 || !d.roles.every((r) => UUID.test(r.role_id))) throw new Error("أدوار غير صالحة");
     if (!d.reason?.trim()) throw new Error("السبب مطلوب");
+    if (d.overrides && (!Array.isArray(d.overrides) || d.overrides.length > 200)) throw new Error("تخصيص غير صالح");
     if (d.existingUserId) { if (!UUID.test(d.existingUserId)) throw new Error("حساب غير صالح"); return d; }
     const u = (d.username ?? "").trim().toLowerCase();
     if (!USERNAME.test(u)) throw new Error("اسم المستخدم: 3–30 حرفًا إنجليزيًا صغيرًا أو أرقامًا أو . _ -");
@@ -170,18 +171,40 @@ export const createStaffAccount = createServerFn({ method: "POST" })
     let uid = data.existingUserId ?? null;
     let created = false;
     if (!uid) {
-      const { data: free } = await context.supabase.rpc("staff_username_free" as never, { _username: data.username } as never);
-      if (!free) throw new Error("اسم المستخدم مستخدم من قبل؛ اختر اسمًا آخر");
-      const c = await supabaseAdmin.auth.admin.createUser({ email: `${data.username}@${STAFF_DOMAIN}`, password: data.password!, email_confirm: true, user_metadata: { full_name: data.fullName!.trim() } });
-      if (c.error || !c.data.user) throw new Error(/already/i.test(c.error?.message ?? "") ? "اسم المستخدم مستخدم من قبل؛ اختر اسمًا آخر" : "تعذّر إنشاء الحساب");
-      uid = c.data.user.id; created = true;
+      const email = `${data.username}@${STAFF_DOMAIN}`;
+      const { data: login } = await supabaseAdmin.from("staff_logins" as never).select("user_id").eq("username", data.username!).maybeSingle();
+      const prev = login ? null : await supabaseAdmin.rpc("_auth_user_lookup" as never, { _email: email, _phone: null } as never);
+      const orphan = ((prev?.data as { user_id: string }[] | null) ?? [])[0]?.user_id;
+      if (login) {
+        // A previous save finished provisioning but not the final unlock: finish it instead of creating a duplicate.
+        const u = await supabaseAdmin.auth.admin.getUserById((login as { user_id: string }).user_id);
+        const banned = u.data.user?.banned_until && new Date(u.data.user.banned_until) > new Date();
+        const { data: st } = await supabaseAdmin.from("account_setup" as never).select("created_by").eq("user_id", (login as { user_id: string }).user_id).is("completed_at", null).maybeSingle();
+        if (!banned || (st as { created_by: string } | null)?.created_by !== context.userId) throw new Error("اسم المستخدم مستخدم من قبل؛ اختر اسمًا آخر");
+        const ub = await supabaseAdmin.auth.admin.updateUserById((login as { user_id: string }).user_id, { password: data.password!, ban_duration: "none" });
+        if (ub.error) throw new Error("تعذّر إكمال الحساب؛ أعد المحاولة");
+        return { userId: (login as { user_id: string }).user_id, created: true, resumed: true };
+      }
+      if (orphan) { // left from a failed attempt: locked, no roles — reuse it
+        await supabaseAdmin.auth.admin.updateUserById(orphan, { password: data.password!, ban_duration: "876000h", user_metadata: { full_name: data.fullName!.trim() } });
+        uid = orphan;
+      } else {
+        const c = await supabaseAdmin.auth.admin.createUser({ email, password: data.password!, email_confirm: true, ban_duration: "876000h", user_metadata: { full_name: data.fullName!.trim() } });
+        if (c.error || !c.data.user) throw new Error(/already/i.test(c.error?.message ?? "") ? "اسم المستخدم مستخدم من قبل؛ اختر اسمًا آخر" : "تعذّر إنشاء الحساب");
+        uid = c.data.user.id;
+      }
+      created = true;
     }
     const { data: res, error } = await supabaseAdmin.rpc("_staff_provision" as never, {
       _actor: context.userId, _org: data.orgId, _uid: uid, _is_new: created, _username: data.username ?? null, _name: data.fullName ?? null,
-      _base: data.base, _schools: data.schools, _roles: data.roles, _reason: data.reason.trim() } as never);
+      _base: data.base, _schools: data.schools, _roles: data.roles, _reason: data.reason.trim(), _overrides: data.overrides ?? [] } as never);
     if (error) {
-      if (created) await supabaseAdmin.auth.admin.deleteUser(uid!).catch(() => undefined); // nothing half-created
+      if (created) await supabaseAdmin.auth.admin.deleteUser(uid!).catch(() => undefined); // stays locked if delete fails; retry reuses it
       throw new Error(error.message);
+    }
+    if (created) { // login opens only after everything is written
+      const ub = await supabaseAdmin.auth.admin.updateUserById(uid!, { ban_duration: "none" });
+      if (ub.error) throw new Error("حُفظت الصلاحيات لكن تعذّر فتح الدخول؛ أعد الحفظ لإكماله");
     }
     return { userId: uid!, created, ...(res as object) };
   });
