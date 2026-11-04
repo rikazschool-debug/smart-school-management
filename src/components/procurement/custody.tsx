@@ -137,6 +137,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   const createSchools = me.schools.filter((s) => me.create_schools.includes(s.id));
   const canOthers = me.caps.create && me.caps.create !== "own";
   const [school, setSchool] = useState<string>(initial?.school_id ?? createSchools[0]?.id ?? "");
+  const [unit, setUnit] = useState<"branch" | "mt_bus" | "mt_school">("branch");
   const [holder, setHolder] = useState<string[]>(initial?.holder_id ? [initial.holder_id] : canOthers ? [] : [me.me]);
   const [extra, setExtra] = useState<string[]>(initial?.school_ids ?? []);
   const [purpose, setPurpose] = useState(initial?.purpose ?? "");
