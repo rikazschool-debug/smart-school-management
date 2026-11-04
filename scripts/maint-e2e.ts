@@ -144,10 +144,10 @@ try {
   const log = (await tro.c.rpc("mt_bus_log", { _bus: bus.data })).data as any[];
   check("21 return to service is a separate inspected action by the movement officer", !!rs0.error && !!rsP.error && !rs.error && (await busRow()).op_status === "available" && log.some((l) => l.action === "return_to_service"), rs.error);
   await act(tro.c, BR, "reopen", { reason: "الصوت عاد" }); const bro = await act(fol.c, BR, "reopen_decide", { approve: true, reason: "مقبول" });
-  const busB = await tro.c.rpc("mt_bus_save", { _id: null, _school: A, _data: { code: "B-A2" } });
+  const busB = await owner.c.rpc("mt_bus_save", { _id: null, _school: B, _data: { code: "B-B1" } });
   const bexBuses = ((await bex.c.rpc("mt_buses_list", { _org: org })).data as any[]);
   const prBuses = ((await prinB.c.rpc("mt_buses_list", { _org: org })).data as any[]);
-  check("21a bus maintenance officer sees all branches' buses; branch-B principal sees none of branch A", !busB.error && bexBuses.length >= 2 && prBuses.length === 0, [busB.error, bexBuses.length]);
+  check("21a bus maintenance officer sees all branches' buses; branch-B principal sees none of branch A", !busB.error && bexBuses.some((x) => x.id === busB.data) && !prBuses.some((x) => x.school_id === A), [busB.error, bexBuses.length]);
   check("21b reopening bus repair keeps bus operating status unchanged", !bro.error && (await get(tro.c, BR)).status === "returned" && (await busRow()).op_status === "available", bro.error);
 
   // inspection / license dates (15-day alert) + bus follow-up cannot add buses
