@@ -239,3 +239,5 @@ Request access: owner (all, no execution), requester, current assignee (lost on 
 | decide | org | branch | grant | grant |
 | assign, transfer, export, link, students, settings | org | grant | grant | grant |
 Pending-branch applications: owner or settings at org scope only. Platform can pause the section (data kept).
+
+| الزيارات الصفية | المشرف: معلموه المسندون فقط · المدير/المالك: كل معلمي الفرع · الاعتماد/الإعادة بسبب: المدير/المالك · الوكيل ورئيس القسم والمعلم: لا وصول (المعلم لا يطّلع) |

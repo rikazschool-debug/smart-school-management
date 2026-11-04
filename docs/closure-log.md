@@ -494,3 +494,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Imports & grades: accounts-e2e 23/23, browser import templates 10/10, homework2-e2e 25/25, hw-closure-e2e 29/29.
 - Screens/phone: all 19 demo dashboards at 390px and 1280px — 38/38 (content, no sideways scroll, menu, no page errors).
 - Security: scan finding «any signed-in user reads file_cleanup_config» fixed (platform admins only); rescan clean except leaked-password protection (owner setting in Supabase). Review: 0 public tables without RLS; all 40 policy-less tables have no client grants (RPC-only by design); 0 SECURITY DEFINER functions callable by anon. rls-e2e 94/94, cleanup-e2e 11/11.
+
+## 2026-11-04 (e) — class visits, timetable regression, security close-out
+- Class visits & teacher evaluation (owner decisions: evaluators = supervisor for assigned teachers + branch principal/owner; 5-axis/24-item form scored 1–5 with per-item notes; principal approves or returns with reason; teacher never sees visits). cv_visits/cv_events RPC-only (cv_save/cv_decide/cv_list/cv_teachers). Evidence: scripts/visits-e2e.ts 24/24.
+- Timetable busy-teacher regression: new check 13a (real busy teacher, every busy teacher refused, none suggested). timetable-e2e 31/31 three consecutive runs.
+- Security: retired demo platform account demo-admin@rikaz.demo banned permanently (no memberships, platform_admins empty → no cross-org reach; refresh of old sessions blocked). rls-e2e 94/94, bounds-e2e 8/8.
+- Supabase settings still owner-side: Site URL + redirect URLs, leaked-password protection, public sign-up currently open (disable_signup=false).
