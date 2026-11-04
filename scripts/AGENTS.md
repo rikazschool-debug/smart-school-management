@@ -50,3 +50,4 @@
 - scripts/bounds-e2e.ts: owner limits (no self-custody approval, org isolation, bound by platform finance/operations suspension) + branch suspension (open session, other branch intact, reactivation restores only branch-paused; 8 checks).
 - scripts/pc-transfer-journey.py: custody handover browser journey (needs pc-browser-fixture setup --open; 8 checks).
 - scripts/pc-carry-form-journey.py: carry-over (no double totals) + custom invoice field with form versions (needs pc-browser-fixture setup --open --carry; 9 checks).
+- scripts/pc-closure-e2e.ts: need correction/refund effect, open-session suspension/withdrawal (RPC, files, export), alert re-arming (11 checks); --cron-setup / --cron-check verify the real hourly pg_cron run.

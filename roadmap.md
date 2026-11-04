@@ -310,7 +310,7 @@
 - [x] C4 Purchase needs: principal creates+approves → linked officer (auto if one; else «بانتظار الإسناد» + owner notified; claim/assign); invoice lines linked with qty/category, partial delivery, remaining, no over-quantity/duplicates; need approval separate from invoice approval. scripts/pc-need-e2e.ts 12/12, pc-e2e 32/32, pc2-e2e 20/20; browser 6/6 (principal phone, officer desktop)
 - [~] C5 Settlement close: unconfirmed paid amounts now block close (pc2 8b); pending invoices/drafts/refunds/open requests already blocked; correction/refund concurrency review open
 - [x] C6 Browser closure: transfer + acceptance + old holder loses access (pc-transfer-journey.py 8/8; server fix: transfer-born custody owned by recipient); carry-over two moves + no double total and custom invoice field with old invoice keeping its version (pc-carry-form-journey.py 9/9)
-- [~] C7 Requests list as phone cards done; open-session revocation + finance suspension (direct RPC, files, export); phone tests for section availability/roles/permissions; requests table as phone cards
+- [~] C7 Requests list as phone cards done; open-session revocation + finance suspension done (pc-closure-e2e B0–B3). Open: phone tests for section availability/roles/permissions
 - [x] C8 new due date / new low after top-up re-alert once; none while finance suspended (pc-closure-e2e C2–C4); real pg_cron run checked by --cron-check
 - [ ] C9 Restore docs (student ID login + forced change, teacher/guardian WhatsApp code, grade visibility) in dedicated files linked from main scope; requirements matrix + closure log
 
