@@ -6,7 +6,12 @@ import { LoadingState } from "@/components/states";
 import { KIND_LABEL, type Kind, type MtMe } from "@/components/maintenance/shared";
 
 /** Status groups shown on the maintenance staff home; the same groups drive the request-log buttons. */
-const GROUPS: { key: string; label: string; status: string; icon: LucideIcon; overdue?: boolean }[] = [
+const FOLLOW_GROUPS: { key: string; label: string; status: string; icon: LucideIcon; overdue?: boolean }[] = [
+  { key: "current", label: "الطلبات الحالية", status: "new,awaiting_assign,assigned,in_progress,scheduled,clarify,waiting_parts,returned,awaiting_approval", icon: Hammer },
+  { key: "review", label: "بانتظار تأكيدي", status: "awaiting_approval", icon: ClipboardCheck },
+  { key: "past", label: "الطلبات السابقة", status: "closed,cancelled", icon: CheckCircle2 },
+];
+const MGR_GROUPS: { key: string; label: string; status: string; icon: LucideIcon; overdue?: boolean }[] = [
   { key: "new", label: "طلبات جديدة", status: "new,awaiting_assign,assigned", icon: Inbox },
   { key: "work", label: "قيد المعالجة", status: "in_progress,scheduled,clarify,waiting_parts,returned", icon: Hammer },
   { key: "review", label: "بانتظار تأكيد المتابعة", status: "awaiting_approval", icon: ClipboardCheck },
@@ -17,8 +22,9 @@ const GROUPS: { key: string; label: string; status: string; icon: LucideIcon; ov
 function KindBlock({ orgId, kind, me }: { orgId: string; kind: Kind; me: MtMe }) {
   const to = kind === "school" ? "/app/maintenance" : "/app/bus-maintenance";
   const c = me.caps![kind];
+  const GROUPS = c.execute.length ? MGR_GROUPS : FOLLOW_GROUPS;
   const q = useQuery({
-    queryKey: ["ops-home", orgId, kind], refetchInterval: 120_000,
+    queryKey: ["ops-home", orgId, kind, GROUPS.length], refetchInterval: 120_000,
     queryFn: async () => {
       const out: Record<string, number> = {};
       await Promise.all(GROUPS.map(async (g) => {
@@ -29,7 +35,7 @@ function KindBlock({ orgId, kind, me }: { orgId: string; kind: Kind; me: MtMe })
       return out;
     },
   });
-  const role = c.execute.length ? "تستلم الطلبات وتنفّذها ثم ترسلها للمتابعة." : c.follow.length ? "تنشئ الطلبات وتتابعها وتؤكد إنجازها أو تعيدها بملاحظات." : "تطّلع على الطلبات ضمن صلاحياتك.";
+  const role = c.execute.length ? "تستلم الطلبات وتنفّذها ثم ترسلها للمتابعة." : c.follow.length ? "تنشئ الطلبات وتتابع الحالية والسابقة، وتؤكد الإنجاز أو تعيده بملاحظات." : "تطّلع على الطلبات ضمن صلاحياتك.";
   const Icon = kind === "school" ? Wrench : Bus;
   return (
     <section className="rounded-2xl border bg-card p-5 shadow-sm" aria-labelledby={`ops-${kind}`}>
@@ -44,7 +50,7 @@ function KindBlock({ orgId, kind, me }: { orgId: string; kind: Kind; me: MtMe })
         )}
       </div>
       {q.isLoading ? <LoadingState rows={1} /> : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <ul className={"grid grid-cols-2 gap-3 sm:grid-cols-3 " + (GROUPS.length > 3 ? "lg:grid-cols-5" : "")}>
           {GROUPS.map((g) => {
             const n = q.data?.[g.key] ?? 0;
             const urgent = g.overdue && n > 0;
