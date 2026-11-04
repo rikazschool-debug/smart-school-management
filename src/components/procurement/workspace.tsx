@@ -153,6 +153,12 @@ export function SettingsTab({ orgId, me }: { orgId: string; me: PcMe }) {
 
 export function CapsNote({ me }: { me: PcMe }) {
   const labels: Record<string, string> = { view: "عرض", create: "إنشاء", review: "مراجعة", approve: "اعتماد", disburse: "صرف", export: "تصدير", settings: "إعدادات" };
-  const parts = Object.entries(labels).filter(([k]) => me.caps[k as keyof PcMe["caps"]]).map(([k, l]) => `${l} (${SCOPE_LABEL[me.caps[k as keyof PcMe["caps"]]!]})`);
-  return <p className="text-xs text-muted-foreground">صلاحياتك: {parts.join("، ") || "لا شيء"}{me.caps.approve && me.limit != null ? ` · حد الاعتماد ${sar(me.limit)}` : ""}</p>;
+  const parts = Object.entries(labels).filter(([k]) => me.caps[k as keyof PcMe["caps"]]).map(([k, l]) => [l, SCOPE_LABEL[me.caps[k as keyof PcMe["caps"]]!]] as const);
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+      <span className="text-muted-foreground">صلاحياتك:</span>
+      {parts.length ? parts.map(([l, s]) => <span key={l} className="rounded-full border bg-card px-2 py-0.5">{l} <span className="text-muted-foreground">· {s}</span></span>) : <span>لا شيء</span>}
+      {me.caps.approve && me.limit != null && <span className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-primary">حد الاعتماد {sar(me.limit)}</span>}
+    </div>
+  );
 }
