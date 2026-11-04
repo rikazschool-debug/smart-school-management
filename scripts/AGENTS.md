@@ -54,3 +54,4 @@
 - scripts/admissions-e2e.ts: admissions roles, separate grants, isolation, lifecycle, no student on accept, explicit link, open-session withdrawal, alert dedupe (18 checks).
 - scripts/wp-e2e.ts: WordPress plugin (real PHP via scripts/wp/harness.php) → signed receiver: queue, retry, duplicates, concurrency, bad key, stale/replay, paused section, key rotation (14 checks; needs dev server).
 - scripts/adm-browser-fixture.ts setup|teardown + scripts/adm-journey.py: admissions roles in the browser (12 checks); always run teardown after.
+- scripts/setup-almalki-org.ts, setup-almalki-admissions.ts: real Al-Malki org setup + server checks (idempotent).

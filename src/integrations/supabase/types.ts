@@ -6965,6 +6965,7 @@ export type Database = {
           name: string
           org_id: string
           stage_type: string | null
+          student_gender: string | null
           updated_at: string
         }
         Insert: {
@@ -6976,6 +6977,7 @@ export type Database = {
           name: string
           org_id: string
           stage_type?: string | null
+          student_gender?: string | null
           updated_at?: string
         }
         Update: {
@@ -6987,6 +6989,7 @@ export type Database = {
           name?: string
           org_id?: string
           stage_type?: string | null
+          student_gender?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -10994,6 +10997,10 @@ export type Database = {
       org_school_set_active: {
         Args: { _active: boolean; _id: string; _reason?: string }
         Returns: number
+      }
+      org_school_set_gender: {
+        Args: { _gender: string; _id: string }
+        Returns: undefined
       }
       org_schools_overview: {
         Args: { _org: string }

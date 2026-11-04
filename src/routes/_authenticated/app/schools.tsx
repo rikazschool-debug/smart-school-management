@@ -26,7 +26,9 @@ const LINK_ROLES: Role[] = ["principal", "vice_principal", "supervisor", "studen
 
 const ACTIONS: Record<string, string> = { school_create: "إضافة مدرسة", school_update: "تعديل بيانات", school_suspend: "إيقاف فرع", school_activate: "تفعيل فرع" };
 
-type Draft = { id?: string; name: string; code: string; city: string; stage_type: string };
+const GENDER: Record<string, string> = { boys: "بنين", girls: "بنات", mixed: "بنين وبنات" };
+
+type Draft = { id?: string; name: string; code: string; city: string; stage_type: string; student_gender: string };
 
 function Page() {
   const { active, contexts, setActive, refresh } = useSession();
@@ -40,7 +42,7 @@ function Page() {
   const [link, setLink] = useState<Row | null>(null);
 
   useEffect(() => {
-    if (search.new) { setDraft({ name: "", code: "", city: "", stage_type: "" }); navigate({ to: "/app/schools", search: {}, replace: true }); }
+    if (search.new) { setDraft({ name: "", code: "", city: "", stage_type: "", student_gender: "" }); navigate({ to: "/app/schools", search: {}, replace: true }); }
   }, [search.new, navigate]);
 
   const log = useQuery({
@@ -53,12 +55,27 @@ function Page() {
     },
   });
 
-  const done = () => { qc.invalidateQueries({ queryKey: ["schools-overview"] }); qc.invalidateQueries({ queryKey: ["school-log"] }); refresh(); };
+  const done = () => { qc.invalidateQueries({ queryKey: ["schools-overview"] }); qc.invalidateQueries({ queryKey: ["school-log"] }); qc.invalidateQueries({ queryKey: ["school-gender"] }); refresh(); };
+
+  const genders = useQuery({
+    queryKey: ["school-gender", orgId],
+    enabled: allowed && !!orgId,
+    queryFn: async () => {
+      const { data, error } = await db.from("schools").select("id, student_gender").eq("org_id", orgId);
+      if (error) throw error;
+      return Object.fromEntries((data as Row[]).map((x) => [x["id"], x["student_gender"] ?? ""])) as Record<string, string>;
+    },
+  });
 
   const save = useMutation({
     mutationFn: async (d: Draft) => {
       const { error } = await db.rpc("org_school_save", { _org: orgId, _id: d.id ?? null, _name: d.name, _code: d.code, _city: d.city, _stage_type: d.stage_type });
       if (error) throw error;
+      if (d.id) { const g = await db.rpc("org_school_set_gender" as never, { _id: d.id, _gender: d.student_gender || null } as never); if (g.error) throw g.error; }
+      else if (d.student_gender) {
+        const { data: n } = await db.from("schools").select("id").eq("org_id", orgId).eq("name", d.name.trim()).maybeSingle();
+        if (n) { const g = await db.rpc("org_school_set_gender" as never, { _id: (n as Row)["id"], _gender: d.student_gender } as never); if (g.error) throw g.error; }
+      }
     },
     onSuccess: () => { toast.success("تم حفظ بيانات المدرسة"); setDraft(null); done(); },
     onError: (e) => toast.error(arabicError(e)),
@@ -93,7 +110,7 @@ function Page() {
   return (
     <>
       <PageHeader title="المدارس والفروع" desc={active.orgName}
-        action={<Button onClick={() => setDraft({ name: "", code: "", city: "", stage_type: "" })}><Plus className="size-4" /> مدرسة جديدة</Button>} />
+        action={<Button onClick={() => setDraft({ name: "", code: "", city: "", stage_type: "", student_gender: "" })}><Plus className="size-4" /> مدرسة جديدة</Button>} />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد مدارس" hint="أضف أول مدرسة أو فرع للمؤسسة." /> : (
         <div className="grid gap-4 md:grid-cols-2">
           {q.data.map((s) => {
@@ -103,7 +120,7 @@ function Page() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h2 className="font-bold">{s["name"]}</h2>
-                    <p className="text-sm text-muted-foreground">{[s["city"], s["stage_type"], s["code"]].filter(Boolean).join(" · ") || "لا توجد بيانات إضافية"}</p>
+                    <p className="text-sm text-muted-foreground">{[GENDER[genders.data?.[s["id"]] ?? ""], s["city"], s["stage_type"], s["code"]].filter(Boolean).join(" · ") || "لا توجد بيانات إضافية"}</p>
                   </div>
                   <span className={"shrink-0 rounded-full px-2 py-0.5 text-xs " + (s["is_active"] ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>{s["is_active"] ? "نشطة" : "موقوفة"}</span>
                 </div>
@@ -117,7 +134,7 @@ function Page() {
                   <p className="text-xs text-muted-foreground">{staff.map(([r, n]) => `${ROLE_LABELS[r as Role] ?? r}: ${n}`).join(" · ")}</p>
                 )}
                 <div className="mt-auto flex flex-wrap gap-2 pt-1">
-                  <Button size="sm" variant="outline" onClick={() => setDraft({ id: s["id"], name: s["name"] ?? "", code: s["code"] ?? "", city: s["city"] ?? "", stage_type: s["stage_type"] ?? "" })}><PencilLine className="size-4" />تعديل</Button>
+                  <Button size="sm" variant="outline" onClick={() => setDraft({ id: s["id"], name: s["name"] ?? "", code: s["code"] ?? "", city: s["city"] ?? "", stage_type: s["stage_type"] ?? "", student_gender: genders.data?.[s["id"]] ?? "" })}><PencilLine className="size-4" />تعديل</Button>
                   <Button size="sm" variant="outline" disabled={!s["is_active"]} onClick={() => setLink(s)}><Link2 className="size-4" />ربط موظف</Button>
                   <Button size="sm" variant="ghost" disabled={!s["is_active"]} onClick={() => openMembers(s["id"])}><Users className="size-4" />موظفو المدرسة</Button>
                   <Button size="sm" variant={s["is_active"] ? "ghost" : "default"} onClick={() => toggle(s)}>
@@ -156,6 +173,15 @@ function Page() {
                   <Input id={`sc-${k}`} value={draft[k]} required={k === "name"} onChange={(e) => setDraft({ ...draft, [k]: e.target.value })} />
                 </div>
               ))}
+              <div className="space-y-1.5">
+                <Label htmlFor="sc-gender">فئة الطلاب</Label>
+                <select id="sc-gender" className={selectCls()} value={draft.student_gender} onChange={(e) => setDraft({ ...draft, student_gender: e.target.value })}>
+                  <option value="">غير محددة</option>
+                  <option value="boys">بنين</option>
+                  <option value="girls">بنات</option>
+                  <option value="mixed">بنين وبنات</option>
+                </select>
+              </div>
               {!draft.id && <p className="text-xs text-muted-foreground">تُضاف المدرسة نشطة. اربط مديرها وموظفيها بعد الحفظ من «ربط موظف».</p>}
               <div className="flex gap-2 pt-1">
                 <Button disabled={save.isPending}>{save.isPending ? "جارٍ الحفظ…" : "حفظ"}</Button>
