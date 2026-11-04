@@ -53,7 +53,7 @@ async def main():
         await pr.fill("#m-loc", "مكتب الوكيل"); await pr.fill("#m-agenda", "1. حالة خاصة"); await pr.locator("#m-priv").select_option("restricted")
         await pr.wait_for_timeout(1500)
         for n in ["معلم لديه حصة", "معلم المناوبة أ"]: await pr.get_by_label(n).first.check()
-        await pr.get_by_role("button", name="حفظ", exact=True).click(); await pr.wait_for_url("**/admin/meetings/**", timeout=15000); await pr.wait_for_timeout(2500); murl = pr.url
+        await pr.get_by_role("button", name="حفظ مسودة", exact=True).click(); await pr.wait_for_url("**/admin/meetings/**", timeout=15000); await pr.wait_for_timeout(2500); murl = pr.url
         body = await pr.locator("main").inner_text()
         chk("U12 meeting saved as draft with conflict warning (class + duty)", "مسودة" in body and "حصة" in body and "مناوبة" in body, body[:500])
         await pr.get_by_role("button", name="معاينة وإرسال الدعوة").click(); await pr.get_by_role("button", name="إرسال", exact=True).click(); chk("U13 invitations sent", await toast(pr, "أُرسلت الدعوات"))
