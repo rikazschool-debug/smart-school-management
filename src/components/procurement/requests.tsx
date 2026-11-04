@@ -249,6 +249,7 @@ export function RequestDetail({ id, me, back, openCustody, openExpense, edit }: 
           {r.can.cancel && <Button size="sm" variant="ghost" onClick={() => void act("cancel", "أُلغي", "سبب الإلغاء")}>إلغاء</Button>}
         </>}>
         {r.status === "submitted" && !r.can.decide && me.caps.approve && <p className="text-xs text-muted-foreground">لا يمكنك البت فيه (طلبك أو عهدتك، أو يتجاوز حدّك)</p>}
+        {r.kind === "transfer" && r.status === "approved" && !r.can.accept && <p className="text-xs text-muted-foreground">معتمد — بانتظار تسلّم {r.to_holder_name ?? "المستلم الجديد"}. تبقى العهدة لدى حاملها الحالي حتى التسلّم.</p>}
         {r.kind === "purchase" && r.status === "approved" && <p className="text-xs text-muted-foreground">طلب الشراء المعتمد لا يخصم الرصيد؛ اربطه بالفاتورة عند تسجيل المصروف.</p>}
       </DetailHeader>
       {pay && <TopupDisburse r={r} onDone={() => setPay(false)} />}
