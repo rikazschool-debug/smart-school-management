@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowRight, Download, FileText, Plus, Trash2 } from "lucide-react";
+import { Download, FileText, Plus, Trash2 } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { E_STATUS, TONE, calcLine, day, num, sar, todayRiyadh, usePcForms, type PcMe, type Row } from "@/components/procurement/shared";
 import { LogList, useInvalidate } from "@/components/procurement/custody";
+import { BackLink, DateRange, DetailHeader, Field, FormActions, FormCard, Pager, Panel, SearchBox, TD, TDN, TFOOT, TH, THEAD, THN, TR, TRC, TableCard, Toolbar } from "@/components/procurement/ui";
 import { useMyNeeds } from "@/components/procurement/needs";
 
 const files = (fs: Row[]) => (fs ?? []).map((f: Row) => ({ ...f, size_bytes: f.size ?? 0 }));
@@ -53,43 +54,34 @@ export function ExpenseList({ orgId, me, open, orgName, onNew }: { orgId: string
   const total = list.data?.total ?? 0;
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-end gap-2">
-        <Input className="w-56" placeholder="بحث بالمورد أو الفاتورة أو البيان" value={q} onChange={(e) => { setQ(e.target.value); reset(); }} />
-        <select className={selectCls("w-40")} value={status} onChange={(e) => { setStatus(e.target.value); reset(); }} aria-label="الحالة">
+      <Toolbar actions={<>
+        {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
+        {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />تسجيل فاتورة مشتريات</Button>}
+      </>}>
+        <SearchBox placeholder="المورد أو الفاتورة أو البيان" value={q} onChange={(v) => { setQ(v); reset(); }} />
+        <Field label="الحالة"><select className={selectCls("w-40", true)} value={status} onChange={(e) => { setStatus(e.target.value); reset(); }}>
           <option value="">كل الحالات</option><option value="pending">بانتظار القرار</option>{Object.entries(E_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        {me.schools.length > 1 && <select className={selectCls("w-36")} value={school} onChange={(e) => { setSchool(e.target.value); reset(); }} aria-label="الفرع"><option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
-        {me.categories.length > 0 && <select className={selectCls("w-36")} value={cat} onChange={(e) => { setCat(e.target.value); reset(); }} aria-label="التصنيف"><option value="">كل التصنيفات</option>{me.categories.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
-        <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value); reset(); }} /></label>
-        <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value); reset(); }} /></label>
-        <span className="ms-auto flex gap-2">
-          {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
-          {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />تسجيل فاتورة مشتريات</Button>}
-        </span>
-      </div>
-      {list.data && list.data.total > 0 && <p className="text-sm text-muted-foreground">{total} سجل · قبل الضريبة {sar(list.data.sums.net)} · الضريبة {sar(list.data.sums.vat)} · الإجمالي <b className="text-foreground">{sar(list.data.sums.total)}</b></p>}
-      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? <EmptyState title="لا توجد مصروفات" hint={onNew ? "سجّل فاتورة مشتريات من الزر أعلاه، أو من داخل العهدة المصروفة لك." : "الفواتير التي تحفظها من الجدول أعلاه تظهر هنا."} /> : (
-        <div className="overflow-x-auto rounded-xl border bg-card">
+        </select></Field>
+        {me.schools.length > 1 && <Field label="الفرع"><select className={selectCls("w-36", true)} value={school} onChange={(e) => { setSchool(e.target.value); reset(); }}><option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>}
+        {me.categories.length > 0 && <Field label="التصنيف"><select className={selectCls("w-36", true)} value={cat} onChange={(e) => { setCat(e.target.value); reset(); }}><option value="">كل التصنيفات</option>{me.categories.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>}
+        <DateRange from={from} to={to} setFrom={(v) => { setFrom(v); reset(); }} setTo={(v) => { setTo(v); reset(); }} />
+      </Toolbar>
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? <EmptyState title="لا توجد مصروفات" hint={onNew ? "سجّل فاتورة مشتريات من الزر أعلاه، أو من داخل العهدة المصروفة لك." : "الفواتير التي تحفظها من جدول التسجيل تظهر هنا."} /> : (
+        <TableCard caption={<><span><b className="text-foreground tabular-nums">{total}</b> فاتورة</span><span>قبل الضريبة {sar(list.data.sums.net)}</span><span>الضريبة {sar(list.data.sums.vat)}</span><span>الإجمالي <b className="text-foreground">{sar(list.data.sums.total)}</b></span></>}>
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "التاريخ", "الفرع", "العهدة", "المورد", "الفاتورة", "البيان", "الحالة", "الضريبة", "الإجمالي"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+            <thead className={THEAD}><tr>{["المرجع", "التاريخ", "الفرع", "العهدة", "المورد", "الفاتورة", "البيان", "الحالة"].map((h) => <th key={h} className={TH}>{h}</th>)}<th className={THN}>الضريبة</th><th className={THN}>الإجمالي</th></tr></thead>
             <tbody>{list.data.rows.map((e) => (
-              <tr key={e.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => open(e.id)}>
-                <td className="px-3 py-2 font-mono text-xs">{e.ref}</td><td className="px-3 py-2">{day(e.purchase_date)}</td><td className="px-3 py-2">{e.school ?? "—"}</td><td className="px-3 py-2">{e.custody_ref ?? "من مال الموظف"}</td>
-                <td className="px-3 py-2">{e.supplier}</td><td className="px-3 py-2">{e.invoice_no ?? "—"}</td><td className="max-w-48 truncate px-3 py-2">{e.description}</td>
-                <td className="px-3 py-2"><Pill tone={TONE[e.status] ?? "muted"}>{E_STATUS[e.status]}</Pill>{e.dup_ref && <span className="ms-1"><Pill tone="bad">مكرر محتمل</Pill></span>}</td>
-                <td className="px-3 py-2 tabular-nums">{sar(e.vat)}</td><td className="px-3 py-2 tabular-nums">{sar(e.total)}</td>
+              <tr key={e.id} className={TRC} onClick={() => open(e.id)}>
+                <td className={`${TD} font-mono text-xs`}>{e.ref}</td><td className={`${TD} whitespace-nowrap`}>{day(e.purchase_date)}</td><td className={TD}>{e.school ?? "—"}</td><td className={`${TD} font-mono text-xs`}>{e.custody_ref ?? "من مال الموظف"}</td>
+                <td className={`${TD} font-medium`}>{e.supplier}</td><td className={TD}>{e.invoice_no ?? "—"}</td><td className={`${TD} max-w-48 truncate`}>{e.description}</td>
+                <td className={TD}><span className="flex flex-wrap gap-1"><Pill tone={TONE[e.status] ?? "muted"}>{E_STATUS[e.status]}</Pill>{e.dup_ref && <Pill tone="bad">مكرر محتمل</Pill>}</span></td>
+                <td className={TDN}>{sar(e.vat)}</td><td className={`${TDN} font-semibold`}>{sar(e.total)}</td>
               </tr>
             ))}</tbody>
           </table>
-        </div>
+        </TableCard>
       )}
-      {total > PAGE && (
-        <div className="flex items-center justify-center gap-2 text-sm">
-          <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>السابق</Button>
-          <span>{page + 1} / {Math.ceil(total / PAGE)}</span>
-          <Button size="sm" variant="outline" disabled={(page + 1) * PAGE >= total} onClick={() => setPage(page + 1)}>التالي</Button>
-        </div>
-      )}
+      <Pager page={page} total={total} size={PAGE} setPage={setPage} />
     </div>
   );
 }
@@ -193,9 +185,7 @@ export function ExpenseForm({ orgId, me, custodyId, needId, initial, corrects, o
   };
   const threshold = me.settings?.purchase_request_above;
   return (
-    <div className="max-w-3xl space-y-4 rounded-2xl border bg-card p-5">
-      <h2 className="font-bold">{initial ? `تعديل ${initial.ref}` : corrects ? `تصحيح المصروف ${corrects.ref}` : "تسجيل مصروف / فاتورة"}</h2>
-      {form && <p className="text-xs text-muted-foreground">نموذج الإدخال: الإصدار {form.version}</p>}
+    <FormCard wide title={initial ? `تعديل ${initial.ref}` : corrects ? `تصحيح المصروف ${corrects.ref}` : "تسجيل مصروف / فاتورة"} subtitle={form ? `نموذج الإدخال: الإصدار ${form.version}` : undefined}>
       {!corrects && !initial?.corrects_id && (
         <div className="flex flex-wrap gap-4 text-sm">
           <label className="flex items-center gap-1"><input type="radio" checked={!own} onChange={() => setOwn(false)} /> على عهدة</label>
@@ -239,8 +229,8 @@ export function ExpenseForm({ orgId, me, custodyId, needId, initial, corrects, o
         {!corrects && threshold && !(purchases.data?.length) && <p className="text-xs text-muted-foreground sm:col-span-2">المصروف فوق {sar(threshold)} يحتاج طلب شراء مسبق معتمد.</p>}
         <div className="sm:col-span-2"><Label>سبب عدم وجود مرفق (عند تعذّر الفاتورة)</Label><Textarea rows={2} value={d.no_attachment_reason} onChange={(e) => set("no_attachment_reason", e.target.value)} placeholder="يُعتمد استثناءً من شخص آخر" /></div>
       </div>
-      <div className="flex gap-2"><Button disabled={busy || (!own && !custody)} onClick={() => void save()}>حفظ</Button><Button variant="ghost" onClick={onCancel}>إلغاء</Button></div>
-    </div>
+      <FormActions><Button disabled={busy || (!own && !custody)} onClick={() => void save()}>حفظ</Button><Button variant="ghost" onClick={onCancel}>إلغاء</Button></FormActions>
+    </FormCard>
   );
 }
 
@@ -249,7 +239,7 @@ function RefundBox({ e, onChange }: { e: Row; onChange: () => void }) {
   const [reason, setReason] = useState("");
   const [key, setKey] = useState(() => crypto.randomUUID());
   return (
-    <div className="flex flex-wrap items-end gap-2 rounded-xl border bg-card p-3">
+    <div className="flex flex-wrap items-end gap-2 rounded-2xl border border-primary/30 bg-primary/5 p-4">
       <div><Label>مبلغ الاسترداد</Label><Input className="w-28" inputMode="decimal" value={amount} onChange={(x) => setAmount(x.target.value)} /></div>
       <div className="flex-1"><Label>السبب</Label><Input value={reason} onChange={(x) => setReason(x.target.value)} placeholder="إرجاع صنف، خصم لاحق…" /></div>
       <Button size="sm" onClick={async () => { if (await run(db.rpc("pc_refund_create", { _expense: e.id, _amount: Number(amount), _reason: reason, _key: key }), "سُجّل طلب الاسترداد — لا يرفع الرصيد قبل التأكيد")) { setAmount(""); setReason(""); setKey(crypto.randomUUID()); onChange(); } }}>طلب استرداد</Button>
@@ -277,55 +267,53 @@ export function ExpenseDetail({ id, me, back, openCustody, openExpense }: { id: 
   }
   return (
     <div className="space-y-4">
-      <button className="inline-flex items-center gap-1 text-sm text-primary" onClick={back}><ArrowRight className="size-4" />العودة</button>
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border bg-card p-5">
-        <div className="space-y-1">
-          <p className="font-mono text-xs text-muted-foreground">{e.ref}{e.corrects_id ? " · تصحيح" : ""}</p>
-          <h2 className="text-lg font-bold">{e.description}</h2>
-          <p className="text-sm text-muted-foreground">المورد: {e.supplier}{e.invoice_no ? ` · رقم الفاتورة ${e.invoice_no}` : ""}{e.invoice_date ? ` · ${day(e.invoice_date)}` : ""} · الشراء: {day(e.purchase_date)}</p>
-          <p className="text-sm text-muted-foreground">
-            {e.custody_id ? <>العهدة: <button className="text-primary" onClick={() => openCustody(e.custody_id)}>{e.custody_ref}</button> ({e.holder})</> : "من مال الموظف"} · المسجِّل: {e.creator} · الفرع المستفيد: {e.benefit_school}{e.category ? ` · ${e.category}` : ""}
-          </p>
-          {e.corrects_id && <p className="text-sm"><button className="text-primary" onClick={() => openExpense(e.corrects_id)}>المصروف الأصلي</button></p>}
-          {e.notes && <p className="text-sm">ملاحظات: {e.notes}</p>}
+      <BackLink onClick={back} label="الفواتير" />
+      <DetailHeader refText={<>{e.ref}{e.corrects_id ? " · تصحيح" : ""}</>} title={e.description} status={<Pill tone={TONE[e.status] ?? "muted"}>{E_STATUS[e.status]}</Pill>}
+        facts={[
+          ["المورد", e.supplier], ["رقم الفاتورة", e.invoice_no ? `${e.invoice_no}${e.invoice_date ? ` · ${day(e.invoice_date)}` : ""}` : "—"], ["تاريخ الشراء", day(e.purchase_date)],
+          ["الإجمالي", <b key="t" className="tabular-nums">{sar(e.total)}</b>],
+          ["العهدة", e.custody_id ? <button key="c" className="text-primary" onClick={() => openCustody(e.custody_id)}>{e.custody_ref} ({e.holder})</button> : "من مال الموظف"],
+          ["المسجِّل", e.creator], ["الفرع المستفيد", e.benefit_school], ...(e.category ? [["التصنيف", e.category] as [string, React.ReactNode]] : []),
+        ]}
+        actions={<>
+          {e.can.edit && <><Button size="sm" variant="outline" onClick={() => setMode("edit")}>تعديل</Button><Button size="sm" onClick={() => void act("submit", "أُرسل للمراجعة")}>إرسال للمراجعة</Button></>}
+          {e.can.review && <Button size="sm" variant="outline" onClick={() => void act("review", "بدأت المراجعة")}>بدء المراجعة</Button>}
+          {e.can.decide && <Button size="sm" onClick={() => void approve()}>اعتماد</Button>}
+          {e.can.return && <Button size="sm" variant="outline" onClick={() => void act("return", "أُعيد للاستكمال", "ما المطلوب استكماله؟")}>إعادة للاستكمال</Button>}
+          {e.can.decide && <Button size="sm" variant="destructive" onClick={() => void act("reject", "رُفض", "سبب الرفض")}>رفض</Button>}
+          {e.can.edit && <Button size="sm" variant="ghost" onClick={() => void act("cancel", "أُلغي", "سبب الإلغاء")}>إلغاء</Button>}
+          {e.can.correct && <Button size="sm" variant="outline" onClick={() => setMode("correct")}>قيد تصحيح</Button>}
+          {e.can.refund && <Button size="sm" variant="outline" onClick={() => setMode(mode === "refund" ? "" : "refund")}>استرداد</Button>}
+        </>}>
+        <div className="space-y-1 text-sm empty:hidden">
+          {e.corrects_id && <p><button className="text-primary" onClick={() => openExpense(e.corrects_id)}>المصروف الأصلي</button></p>}
+          {e.notes && <p>ملاحظات: {e.notes}</p>}
           <CustomValues e={e} />
-          {e.no_attachment_reason && <p className="text-sm text-warning">بلا مرفق: {e.no_attachment_reason}</p>}
-          {e.decision_reason && <p className="text-sm text-muted-foreground">سبب القرار: {e.decision_reason}</p>}
-          {e.dup_ref && <p className="text-sm text-destructive">تنبيه: المورد ورقم الفاتورة يطابقان {e.dup_ref} — لا يُعتمد مكرر.</p>}
+          {e.no_attachment_reason && <p className="rounded-lg bg-warning/10 px-3 py-2">بلا مرفق: {e.no_attachment_reason}</p>}
+          {e.decision_reason && <p className="text-muted-foreground">سبب القرار: {e.decision_reason}</p>}
+          {e.dup_ref && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">تنبيه: المورد ورقم الفاتورة يطابقان {e.dup_ref} — لا يُعتمد مكرر.</p>}
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <Pill tone={TONE[e.status] ?? "muted"}>{E_STATUS[e.status]}</Pill>
-          <div className="flex flex-wrap justify-end gap-2">
-            {e.can.edit && <><Button size="sm" variant="outline" onClick={() => setMode("edit")}>تعديل</Button><Button size="sm" onClick={() => void act("submit", "أُرسل للمراجعة")}>إرسال للمراجعة</Button></>}
-            {e.can.review && <Button size="sm" variant="outline" onClick={() => void act("review", "بدأت المراجعة")}>بدء المراجعة</Button>}
-            {e.can.decide && <Button size="sm" onClick={() => void approve()}>اعتماد</Button>}
-            {e.can.return && <Button size="sm" variant="outline" onClick={() => void act("return", "أُعيد للاستكمال", "ما المطلوب استكماله؟")}>إعادة للاستكمال</Button>}
-            {e.can.decide && <Button size="sm" variant="destructive" onClick={() => void act("reject", "رُفض", "سبب الرفض")}>رفض</Button>}
-            {e.can.edit && <Button size="sm" variant="ghost" onClick={() => void act("cancel", "أُلغي", "سبب الإلغاء")}>إلغاء</Button>}
-            {e.can.correct && <Button size="sm" variant="outline" onClick={() => setMode("correct")}>قيد تصحيح</Button>}
-            {e.can.refund && <Button size="sm" variant="outline" onClick={() => setMode(mode === "refund" ? "" : "refund")}>استرداد</Button>}
-          </div>
-        </div>
-      </div>
+      </DetailHeader>
       {mode === "refund" && <RefundBox e={e} onChange={() => { setMode(""); inv(); }} />}
-      <div className="overflow-x-auto rounded-xl border bg-card">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["#", "البند", "خاضع", "قبل الضريبة", "الضريبة", "الإجمالي"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+      <Panel title="بنود الفاتورة" count={(e.lines as Row[]).length} flush>
+        <div className="overflow-x-auto"><table className="w-full text-sm">
+          <thead className={THEAD}><tr>{["#", "البند", "خاضع"].map((h) => <th key={h} className={TH}>{h}</th>)}{["قبل الضريبة", "الضريبة", "الإجمالي"].map((h) => <th key={h} className={THN}>{h}</th>)}</tr></thead>
           <tbody>
-            {(e.lines as Row[]).map((l) => <tr key={l.id} className="border-t"><td className="px-3 py-2">{l.ord}</td><td className="px-3 py-2">{l.description}</td><td className="px-3 py-2">{l.taxable && e.tax_invoice ? "نعم" : "لا"}</td><td className="px-3 py-2 tabular-nums">{sar(l.net)}</td><td className="px-3 py-2 tabular-nums">{sar(l.vat)}</td><td className="px-3 py-2 tabular-nums">{sar(l.total)}</td></tr>)}
-            <tr className="border-t bg-muted/30 font-semibold"><td className="px-3 py-2" colSpan={3}>الإجمالي{e.tax_invoice ? ` (ضريبة ${Number(e.vat_rate)}% ${e.vat_inclusive ? "شاملة" : "مضافة"})` : ""}</td><td className="px-3 py-2 tabular-nums">{sar(e.net)}</td><td className="px-3 py-2 tabular-nums">{sar(e.vat)}</td><td className="px-3 py-2 tabular-nums">{sar(e.total)}</td></tr>
+            {(e.lines as Row[]).map((l) => <tr key={l.id} className={TR}><td className={TD}>{l.ord}</td><td className={TD}>{l.description}</td><td className={TD}>{l.taxable && e.tax_invoice ? "نعم" : "لا"}</td><td className={TDN}>{sar(l.net)}</td><td className={TDN}>{sar(l.vat)}</td><td className={TDN}>{sar(l.total)}</td></tr>)}
           </tbody>
-        </table>
-      </div>
-      <section className="space-y-2">
-        <h3 className="font-semibold">الفاتورة والمرفقات</h3>
+          <tfoot className={TFOOT}><tr><td className={TD} colSpan={3}>الإجمالي{e.tax_invoice ? ` (ضريبة ${Number(e.vat_rate)}% ${e.vat_inclusive ? "شاملة" : "مضافة"})` : ""}</td><td className={TDN}>{sar(e.net)}</td><td className={TDN}>{sar(e.vat)}</td><td className={TDN}>{sar(e.total)}</td></tr></tfoot>
+        </table></div>
+      </Panel>
+      <Panel title="الفاتورة والمرفقات" count={(e.files as Row[]).length}>
+        <div className="space-y-2">
         <FileList files={files(e.files)} onRemove={e.can.edit ? async (f) => { if (await run(db.rpc("pc_file_remove", { _file: f["id"] }), "أُزيل الملف")) inv(); } : undefined} />
         {!e.files.length && <p className="text-sm text-muted-foreground">لا مرفقات.</p>}
         {e.can.edit && <Uploader label="إرفاق الفاتورة" create={async (f) => { const { data, error } = await db.rpc("create_pc_file", { _entity: "expense", _id: e.id, _name: f.name, _mime: f.type, _size: f.size }); if (error) throw error; return data[0]; }} release={(fid) => db.rpc("pc_file_remove", { _file: fid })} onDone={inv} />}
-      </section>
-      {e.corrections.length > 0 && <section className="space-y-1"><h3 className="font-semibold">قيود التصحيح</h3>{(e.corrections as Row[]).map((x) => <button key={x.id} className="block text-sm text-primary" onClick={() => openExpense(x.id)}>{x.ref} · {sar(x.total)} · {E_STATUS[x.status]}</button>)}</section>}
+        </div>
+      </Panel>
+      {e.corrections.length > 0 && <Panel title="قيود التصحيح" count={e.corrections.length}><div className="space-y-1">{(e.corrections as Row[]).map((x) => <button key={x.id} className="block text-sm text-primary" onClick={() => openExpense(x.id)}>{x.ref} · {sar(x.total)} · {E_STATUS[x.status]}</button>)}</div></Panel>}
       {e.refunds.length > 0 && (
-        <section className="space-y-2"><h3 className="font-semibold">الاستردادات</h3>
+        <Panel title="الاستردادات" count={e.refunds.length}><div className="space-y-2">
           {(e.refunds as Row[]).map((r) => (
             <div key={r.id} className="space-y-2 rounded-xl border bg-card p-3 text-sm">
               <div className="flex flex-wrap items-center gap-2"><b className="tabular-nums">{sar(r.amount)}</b><span>{r.reason}</span><span className="text-muted-foreground">— {r.by} · {fmt(r.at)}</span>
@@ -338,7 +326,7 @@ export function ExpenseDetail({ id, me, back, openCustody, openExpense }: { id: 
               </div>}
             </div>
           ))}
-        </section>
+        </div></Panel>
       )}
       <LogList log={e.log} />
     </div>

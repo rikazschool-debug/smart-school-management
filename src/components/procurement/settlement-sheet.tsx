@@ -12,6 +12,7 @@ import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { E_STATUS, TONE, day, sar, type PcMe, type Row } from "@/components/procurement/shared";
 import { useInvalidate } from "@/components/procurement/custody";
+import { Panel, TFOOT, THEAD } from "@/components/procurement/ui";
 
 /** Spreadsheet view of every invoice on one custody, for settlement review and the archive.
  *  Row decisions go through pc_expense_action (server re-checks separation of duties, limits, balance).
@@ -77,16 +78,12 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
   }
 
   return (
-    <section className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold">{title}</h3>
-        <span className="text-xs text-muted-foreground">{rows.length} فاتورة{pending.length ? ` · ${pending.length} بانتظار القرار` : ""}</span>
-        {me.caps.export && rows.length > 0 && <span className="ms-auto flex gap-2"><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></span>}
-      </div>
-      {!rows.length ? <p className="text-sm text-muted-foreground">لا فواتير مسجلة على هذه العهدة.</p> : (
-        <div className="overflow-x-auto rounded-xl border bg-card">
+    <Panel title={<>{title} <span className="ms-1 text-xs font-normal text-muted-foreground">{rows.length} فاتورة{pending.length ? ` · ${pending.length} بانتظار القرار` : ""}</span></>} flush
+      actions={me.caps.export && rows.length > 0 ? <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></> : undefined}>
+      {!rows.length ? <p className="p-4 text-sm text-muted-foreground">لا فواتير مسجلة على هذه العهدة.</p> : (
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{[...H, ...(readOnly ? [] : ["القرار"])].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+            <thead className={`${THEAD} text-xs text-muted-foreground`}><tr>{[...H, ...(readOnly ? [] : ["القرار"])].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2 text-start font-medium">{h}</th>)}</tr></thead>
             <tbody>{rows.map((e, i) => (
               <tr key={e.id} className="border-t hover:bg-muted/30">
                 <td className="px-2 py-1.5 text-muted-foreground">{i + 1}</td>
@@ -108,7 +105,7 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
                   </span>) : <span className="text-xs text-muted-foreground">—</span>}</td>}
               </tr>
             ))}</tbody>
-            <tfoot className="border-t-2 bg-muted/40 font-semibold"><tr>
+            <tfoot className={TFOOT}><tr>
               <td className="px-2 py-2" colSpan={8}>إجمالي الكشف ({rows.length} فاتورة)</td>
               <td className="px-2 py-2 tabular-nums">{sar(sum(rows, "net"))}</td><td className="px-2 py-2 tabular-nums">{sar(sum(rows, "vat"))}</td><td className="px-2 py-2 tabular-nums">{sar(sum(rows, "total"))}</td>
               <td colSpan={readOnly ? 1 : 2} />
@@ -120,7 +117,7 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
           </table>
         </div>
       )}
-      {!readOnly && <p className="text-xs text-muted-foreground">«تعديل» يغيّر بيانات الفاتورة مباشرة مع سبب يُحفظ في السجل (القيم قبل وبعد) ويُبلَّغ به مسؤول المشتريات؛ المبلغ يُعدّل للفاتورة ذات البند الواحد. «إعادة للتعديل» ترجعها له ليعدّلها بنفسه. ولا يمكنك البت في فاتورة أنشأتها أو على عهدتك.</p>}
-    </section>
+      {!readOnly && <p className="border-t px-4 py-3 text-xs text-muted-foreground">«تعديل» يغيّر بيانات الفاتورة مباشرة مع سبب يُحفظ في السجل (القيم قبل وبعد) ويُبلَّغ به مسؤول المشتريات؛ المبلغ يُعدّل للفاتورة ذات البند الواحد. «إعادة للتعديل» ترجعها له ليعدّلها بنفسه. ولا يمكنك البت في فاتورة أنشأتها أو على عهدتك.</p>}
+    </Panel>
   );
 }

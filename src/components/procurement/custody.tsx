@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowRight, Download, FileText, Plus } from "lucide-react";
+import { Download, FileText, Plus } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { PeoplePicker } from "@/components/people-picker";
 import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { ACTION, C_STATUS, METHOD, MOVE, TONE, day, sar, todayRiyadh, type PcMe, type Row } from "@/components/procurement/shared";
+import { ActionBox, BackLink, DateRange, DetailHeader, Field, FormActions, FormCard, Pager, Panel, SearchBox, Stat, StatGrid, TD, TDN, TH, THEAD, THN, TR, TRC, TableCard, Toolbar } from "@/components/procurement/ui";
 
 const files = (fs: Row[]) => (fs ?? []).map((f: Row) => ({ ...f, size_bytes: f.size ?? 0 }));
 export const useInvalidate = () => {
@@ -37,28 +38,22 @@ export function Balances({ bal }: { bal: Row }) {
     ["قيد المراجعة", bal.pending, "معلّق ولا يُخصم بعد"], ["الرصيد الدفتري", bal.book], ["المتاح للصرف", bal.available, "الدفتري ناقص المعلّق"],
   ];
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-      {items.map(([l, v, h]) => (
-        <div key={l} className="rounded-xl border bg-card p-3">
-          <p className="text-xs text-muted-foreground">{l}</p>
-          <p className="mt-1 font-bold tabular-nums">{sar(v)}</p>
-          {h && <p className="text-[11px] text-muted-foreground">{h}</p>}
-        </div>
-      ))}
-    </div>
+    <StatGrid cols={6}>
+      {items.map(([l, v, h]) => <Stat key={l} label={l} value={sar(v)} hint={h} tone={l === "المتاح للصرف" ? "primary" : l === "قيد المراجعة" && Number(v) ? "warn" : "default"} />)}
+    </StatGrid>
   );
 }
 
 export function LogList({ log }: { log: Row[] }) {
   if (!log?.length) return null;
   return (
-    <details className="rounded-xl border bg-card p-3">
-      <summary className="cursor-pointer text-sm font-semibold">سجل العمليات ({log.length})</summary>
-      <ul className="mt-2 space-y-1 text-sm">
+    <details className="group rounded-2xl border bg-card">
+      <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 font-semibold">سجل العمليات <span className="rounded-full bg-muted px-2 text-xs tabular-nums text-muted-foreground">{log.length}</span></summary>
+      <ol className="space-y-2 border-t px-4 py-3 text-sm">
         {log.map((l, i) => (
-          <li key={i} className="flex flex-wrap gap-x-2"><span className="text-muted-foreground">{fmt(l.at)}</span><span className="font-medium">{ACTION[l.action] ?? l.action}</span><span>— {l.actor}</span>{l.reason && <span className="text-muted-foreground">«{l.reason}»</span>}</li>
+          <li key={i} className="relative flex flex-wrap gap-x-2 border-s-2 border-primary/20 ps-3"><span className="font-medium">{ACTION[l.action] ?? l.action}</span><span>— {l.actor}</span><span className="text-xs text-muted-foreground">{fmt(l.at)}</span>{l.reason && <span className="w-full text-muted-foreground">«{l.reason}»</span>}</li>
         ))}
-      </ul>
+      </ol>
     </details>
   );
 }
@@ -90,54 +85,50 @@ export function CustodyList({ orgId, me, open, onNew, orgName }: { orgId: string
     if (kind === "xlsx") exportXlsx(meta, h, rows); else await exportPdf(meta, h, rows);
   }
   const total = list.data?.total ?? 0;
+  const sums = (list.data?.rows ?? []).reduce((a, c) => ({ amount: a.amount + Number(c.amount), book: a.book + Number(c.bal.book), avail: a.avail + Number(c.bal.available) }), { amount: 0, book: 0, avail: 0 });
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-end gap-2">
-        <Input className="w-56" placeholder="بحث بالمرجع أو الغرض أو المستلم" value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
-        <select className={selectCls("w-44")} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} aria-label="الحالة">
+      <Toolbar actions={<>
+        {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
+        {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />{me.caps.create && me.caps.create !== "own" ? "إضافة عهدة" : "طلب عهدة"}</Button>}
+      </>}>
+        <SearchBox placeholder="المرجع أو الغرض أو المستلم" value={q} onChange={(v) => { setQ(v); setPage(0); }} />
+        <Field label="الحالة"><select className={selectCls("w-44", true)} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
           <option value="">كل الحالات</option><option value="open">المفتوحة</option><option value="overdue">المتأخرة التسوية</option><option value="past">سجل العهد السابقة</option>
           {Object.entries(C_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
+        </select></Field>
         {me.schools.length > 1 && (
-          <select className={selectCls("w-40")} value={school} onChange={(e) => { setSchool(e.target.value); setPage(0); }} aria-label="الفرع">
+          <Field label="الفرع"><select className={selectCls("w-40", true)} value={school} onChange={(e) => { setSchool(e.target.value); setPage(0); }}>
             <option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+          </select></Field>
         )}
-        <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
-        <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
-        <label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={mine} onChange={(e) => { setMine(e.target.checked); setPage(0); }} /> عهدي فقط</label>
-        <span className="ms-auto flex gap-2">
-          {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
-          {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />{me.caps.create && me.caps.create !== "own" ? "إضافة عهدة" : "طلب عهدة"}</Button>}
-        </span>
-      </div>
+        <DateRange from={from} to={to} setFrom={(v) => { setFrom(v); setPage(0); }} setTo={(v) => { setTo(v); setPage(0); }} />
+        <label className="flex h-9 items-center gap-1.5 text-sm"><input type="checkbox" checked={mine} onChange={(e) => { setMine(e.target.checked); setPage(0); }} /> عهدي فقط</label>
+      </Toolbar>
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? (
         <EmptyState title="لا توجد عهد" hint={onNew ? "اطلب عهدة جديدة لتبدأ." : "لا توجد عهد ضمن نطاقك."} />
       ) : (
-        <div className="overflow-x-auto rounded-xl border bg-card">
+        <TableCard caption={<><span><b className="text-foreground tabular-nums">{total}</b> عهدة</span><span>المبالغ في الصفحة {sar(sums.amount)}</span><span>الرصيد {sar(sums.book)}</span><span>المتاح <b className="text-foreground">{sar(sums.avail)}</b></span></>}>
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "المستلم", "الفرع", "الغرض", "الحالة", "المبلغ", "الرصيد", "المتاح", "التسوية"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+            <thead className={THEAD}><tr>
+              {["المرجع", "المستلم", "الفرع", "الغرض", "الحالة"].map((h) => <th key={h} className={TH}>{h}</th>)}
+              {["المبلغ", "الرصيد", "المتاح"].map((h) => <th key={h} className={THN}>{h}</th>)}<th className={TH}>التسوية</th>
+            </tr></thead>
             <tbody>
               {list.data.rows.map((c) => (
-                <tr key={c.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => open(c.id)}>
-                  <td className="px-3 py-2 font-mono text-xs">{c.ref}</td><td className="px-3 py-2">{c.holder}</td><td className="px-3 py-2">{c.school}</td>
-                  <td className="max-w-56 truncate px-3 py-2">{c.purpose}</td>
-                  <td className="px-3 py-2"><Pill tone={TONE[c.status] ?? "muted"}>{C_STATUS[c.status]}</Pill>{c.overdue && <span className="ms-1"><Pill tone="bad">متأخرة</Pill></span>}</td>
-                  <td className="px-3 py-2 tabular-nums">{sar(c.amount)}</td><td className="px-3 py-2 tabular-nums">{sar(c.bal.book)}</td><td className="px-3 py-2 tabular-nums">{sar(c.bal.available)}</td>
-                  <td className="px-3 py-2">{day(c.settle_due)}</td>
+                <tr key={c.id} className={TRC} onClick={() => open(c.id)}>
+                  <td className={`${TD} font-mono text-xs`}>{c.ref}</td><td className={`${TD} font-medium`}>{c.holder}</td><td className={TD}>{c.school}</td>
+                  <td className={`${TD} max-w-56 truncate`}>{c.purpose}</td>
+                  <td className={TD}><span className="flex flex-wrap gap-1"><Pill tone={TONE[c.status] ?? "muted"}>{C_STATUS[c.status]}</Pill>{c.overdue && <Pill tone="bad">متأخرة</Pill>}</span></td>
+                  <td className={TDN}>{sar(c.amount)}</td><td className={TDN}>{sar(c.bal.book)}</td><td className={`${TDN} font-semibold`}>{sar(c.bal.available)}</td>
+                  <td className={`${TD} whitespace-nowrap`}>{day(c.settle_due)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </TableCard>
       )}
-      {total > PAGE && (
-        <div className="flex items-center justify-center gap-2 text-sm">
-          <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>السابق</Button>
-          <span>{page + 1} / {Math.ceil(total / PAGE)} ({total})</span>
-          <Button size="sm" variant="outline" disabled={(page + 1) * PAGE >= total} onClick={() => setPage(page + 1)}>التالي</Button>
-        </div>
-      )}
+      <Pager page={page} total={total} size={PAGE} setPage={setPage} />
     </div>
   );
 }
@@ -169,8 +160,7 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
   }
   if (!createSchools.length) return <EmptyState title="لا تملك طلب عهدة" hint="اطلب من مالك المؤسسة منحك صلاحية الإنشاء." />;
   return (
-    <div className="max-w-2xl space-y-4 rounded-2xl border bg-card p-5">
-      <h2 className="font-bold">{initial ? `تعديل ${initial.ref}` : canOthers ? "إضافة عهدة" : "طلب عهدة جديدة"}</h2>
+    <FormCard title={initial ? `تعديل ${initial.ref}` : canOthers ? "إضافة عهدة" : "طلب عهدة جديدة"} subtitle="تُرسل للاعتماد ثم تُصرف بإثبات؛ الرصيد يبدأ عند الصرف الفعلي.">
       <div className="grid gap-3 sm:grid-cols-2">
         <div><Label>الفرع</Label><select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>{createSchools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         <div><Label>المبلغ (ريال سعودي)</Label><Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" /></div>
@@ -187,12 +177,12 @@ export function CustodyForm({ orgId, me, initial, onDone, onCancel }: { orgId: s
       {canOthers ? (
         <PeoplePicker purpose="pc_holder" school={school || null} org={orgId} value={holder} onChange={setHolder} single label="مسؤول المشتريات المنسوب إليه العهدة" compact />
       ) : <p className="text-sm text-muted-foreground">المستلم: أنت (صلاحيتك تشمل عهدك الخاصة فقط).</p>}
-      <div className="flex flex-wrap gap-2">
+      <FormActions>
         <Button disabled={busy} onClick={() => void save(true)}>حفظ وإرسال للاعتماد</Button>
         <Button disabled={busy} variant="outline" onClick={() => void save(false)}>حفظ مسودة</Button>
         <Button variant="ghost" onClick={onCancel}>إلغاء</Button>
-      </div>
-    </div>
+      </FormActions>
+    </FormCard>
   );
 }
 
@@ -207,8 +197,7 @@ function DisburseForm({ c, onDone }: { c: Row; onDone: () => void }) {
   const inv = useInvalidate();
   const fs = files(c.files);
   return (
-    <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
-      <h3 className="font-semibold">صرف العهدة {sar(c.amount)}</h3>
+    <ActionBox title={`صرف العهدة ${sar(c.amount)}`}>
       <div className="grid gap-3 sm:grid-cols-3">
         <div><Label>طريقة الصرف</Label><select className={selectCls()} value={method} onChange={(e) => setMethod(e.target.value)}>{Object.entries(METHOD).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
         <div><Label>رقم العملية / المرجع الخارجي{method !== "cash" ? " (إلزامي)" : ""}</Label><Input value={ext} onChange={(e) => setExt(e.target.value)} /></div>
@@ -231,7 +220,7 @@ function DisburseForm({ c, onDone }: { c: Row; onDone: () => void }) {
         const ok = await run(db.rpc("pc_disburse", { _id: c.id, _rev: c.rev, _method: method, _external_ref: ext || null, _file: file, _doc_date: doc, _note: note || null, _key: key }), "سُجّل الصرف");
         setBusy(false); if (ok) { inv(); onDone(); }
       }}>تأكيد الصرف</Button>
-    </div>
+    </ActionBox>
   );
 }
 
@@ -269,31 +258,28 @@ export function CustodyDetail({ id, me, orgName, back, openExpense, newExpense, 
   const ack = (c.moves as Row[]).filter((m) => ["disburse", "topup", "carry_in"].includes(m.kind) && !m.ack_at);
   return (
     <div className="space-y-4">
-      <button className="inline-flex items-center gap-1 text-sm text-primary" onClick={back}><ArrowRight className="size-4" />العودة</button>
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border bg-card p-5">
-        <div className="space-y-1">
-          <p className="font-mono text-xs text-muted-foreground">{c.ref}</p>
-          <h2 className="text-lg font-bold">{c.purpose}</h2>
-          <p className="text-sm text-muted-foreground">المستلم: {c.holder} · الفرع: {c.school}{c.schools?.filter((n: string) => n !== c.school).length ? ` · فروع مستفيدة: ${c.schools.filter((n: string) => n !== c.school).join("، ")}` : ""}</p>
-          <p className="text-sm text-muted-foreground">المبلغ: <b className="text-foreground">{sar(c.amount)}</b> · موعد التسوية: {day(c.settle_due)} · مقدّم الطلب: {c.creator}</p>
-          {c.decider && <p className="text-sm text-muted-foreground">القرار: {c.decider} — {fmt(c.decided_at)}{c.decision_reason ? ` «${c.decision_reason}»` : ""}</p>}
-          {c.overdue_exception && <p className="text-sm text-warning">استثناء عهدة متأخرة: {c.overdue_exception}</p>}
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <span className="flex gap-1"><Pill tone={TONE[c.status] ?? "muted"}>{C_STATUS[c.status]}</Pill>{c.overdue && <Pill tone="bad">متأخرة التسوية</Pill>}</span>
-          <div className="flex flex-wrap justify-end gap-2">
-            {c.can.edit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>تعديل</Button>}
-            {c.can.submit && <Button size="sm" onClick={() => void act("submit", "أُرسلت للاعتماد")}>إرسال للاعتماد</Button>}
-            {c.can.decide && <><Button size="sm" onClick={() => void approve()}>اعتماد</Button><Button size="sm" variant="outline" onClick={() => void act("return", "أُعيدت للاستكمال", true)}>إعادة للاستكمال</Button><Button size="sm" variant="destructive" onClick={() => void act("reject", "رُفضت", true)}>رفض</Button></>}
-            {c.status === "submitted" && !c.can.decide && me.caps.approve && <span className="text-xs text-muted-foreground">لا يمكنك البت فيها (مقدّمها/مستلمها أو تتجاوز حدّك {me.limit != null ? sar(me.limit) : ""})</span>}
-            {c.can.disburse && !disb && <Button size="sm" onClick={() => setDisb(true)}>صرف</Button>}
-            {c.can.cancel && <Button size="sm" variant="ghost" onClick={() => void act("cancel", "أُلغيت", true)}>إلغاء</Button>}
-            {c.can.expense && <Button size="sm" onClick={() => newExpense(c.id)}><Plus className="size-4" />تسجيل مصروف</Button>}
-          </div>
-        </div>
-      </div>
+      <BackLink onClick={back} label="العهد" />
+      <DetailHeader refText={c.ref} title={c.purpose}
+        status={<><Pill tone={TONE[c.status] ?? "muted"}>{C_STATUS[c.status]}</Pill>{c.overdue && <Pill tone="bad">متأخرة التسوية</Pill>}</>}
+        facts={[
+          ["المستلم", c.holder], ["الفرع", c.school], ["المبلغ", <b key="a" className="tabular-nums">{sar(c.amount)}</b>], ["موعد التسوية", day(c.settle_due)],
+          ["مقدّم الطلب", c.creator],
+          ...(c.schools?.filter((n: string) => n !== c.school).length ? [["فروع مستفيدة", c.schools.filter((n: string) => n !== c.school).join("، ")] as [string, React.ReactNode]] : []),
+          ...(c.decider ? [["القرار", `${c.decider} — ${fmt(c.decided_at)}${c.decision_reason ? ` «${c.decision_reason}»` : ""}`] as [string, React.ReactNode]] : []),
+        ]}
+        actions={<>
+          {c.can.edit && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>تعديل</Button>}
+          {c.can.submit && <Button size="sm" onClick={() => void act("submit", "أُرسلت للاعتماد")}>إرسال للاعتماد</Button>}
+          {c.can.decide && <><Button size="sm" onClick={() => void approve()}>اعتماد</Button><Button size="sm" variant="outline" onClick={() => void act("return", "أُعيدت للاستكمال", true)}>إعادة للاستكمال</Button><Button size="sm" variant="destructive" onClick={() => void act("reject", "رُفضت", true)}>رفض</Button></>}
+          {c.can.disburse && !disb && <Button size="sm" onClick={() => setDisb(true)}>صرف</Button>}
+          {c.can.cancel && <Button size="sm" variant="ghost" onClick={() => void act("cancel", "أُلغيت", true)}>إلغاء</Button>}
+          {c.can.expense && <Button size="sm" onClick={() => newExpense(c.id)}><Plus className="size-4" />تسجيل مصروف</Button>}
+        </>}>
+        {c.overdue_exception && <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm">استثناء عهدة متأخرة: {c.overdue_exception}</p>}
+        {c.status === "submitted" && !c.can.decide && me.caps.approve && <p className="text-xs text-muted-foreground">لا يمكنك البت فيها (مقدّمها/مستلمها أو تتجاوز حدّك {me.limit != null ? sar(me.limit) : ""})</p>}
+      </DetailHeader>
       {c.can.ack && ack.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm">
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-warning/50 bg-warning/10 p-4 text-sm">
           <span>صُرف لك {sar(ack.reduce((s, m) => s + Number(m.amount), 0))} — أكّد استلامك للمبلغ.</span>
           {ack.map((m) => <Button key={m.id} size="sm" onClick={async () => { if (await run(db.rpc("pc_ack", { _move: m.id }), "تم تأكيد الاستلام")) inv(); }}>تأكيد استلام {sar(m.amount)}</Button>)}
         </div>
@@ -301,39 +287,37 @@ export function CustodyDetail({ id, me, orgName, back, openExpense, newExpense, 
       {disb && <DisburseForm c={c} onDone={() => setDisb(false)} />}
       {["disbursed", "settling", "closed"].includes(c.status) && <Balances bal={c.bal} />}
       {ops?.(c)}
-      {Number(me.settings?.low_balance ?? 0) > 0 && c.status === "disbursed" && Number(c.bal.available) <= Number(me.settings!.low_balance) && <p className="text-sm text-warning">الرصيد المتاح منخفض (أقل من {sar(me.settings!.low_balance)}).</p>}
-      <section className="space-y-2">
-        <div className="flex items-center justify-between"><h3 className="font-semibold">كشف حساب العهدة</h3>
-          {c.moves.length > 0 && me.caps.export && <span className="flex gap-2"><Button size="sm" variant="outline" onClick={() => void statement("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void statement("pdf")}><FileText className="size-4" />PDF</Button></span>}
-        </div>
-        {!c.moves.length ? <p className="text-sm text-muted-foreground">لا حركات بعد — الرصيد يبدأ عند الصرف الفعلي.</p> : (
-          <div className="overflow-x-auto rounded-xl border bg-card">
+      {Number(me.settings?.low_balance ?? 0) > 0 && c.status === "disbursed" && Number(c.bal.available) <= Number(me.settings!.low_balance) && <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm">الرصيد المتاح منخفض (أقل من {sar(me.settings!.low_balance)}).</p>}
+      <Panel title="كشف حساب العهدة" count={c.moves.length} flush
+        actions={c.moves.length > 0 && me.caps.export ? <><Button size="sm" variant="outline" onClick={() => void statement("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void statement("pdf")}><FileText className="size-4" />PDF</Button></> : undefined}>
+        {!c.moves.length ? <p className="p-4 text-sm text-muted-foreground">لا حركات بعد — الرصيد يبدأ عند الصرف الفعلي.</p> : (
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["التاريخ", "الحركة", "المرجع", "البيان", "بواسطة", "المبلغ", "الرصيد", "الإثبات"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+              <thead className={THEAD}><tr>{["التاريخ", "الحركة", "المرجع", "البيان", "بواسطة"].map((h) => <th key={h} className={TH}>{h}</th>)}<th className={THN}>المبلغ</th><th className={THN}>الرصيد</th><th className={TH}>الإثبات</th></tr></thead>
               <tbody>{(c.moves as Row[]).map((m) => (
-                <tr key={m.id} className="border-t">
-                  <td className="px-3 py-2">{fmt(m.at)}</td><td className="px-3 py-2">{MOVE[m.kind] ?? m.kind}{m.method ? ` (${METHOD[m.method] ?? m.method})` : ""}</td>
-                  <td className="px-3 py-2 font-mono text-xs">{m.expense_id ? <button className="text-primary" onClick={() => openExpense(m.expense_id)}>{m.ref}</button> : m.ref}</td>
-                  <td className="px-3 py-2">{m.note ?? m.external_ref ?? ""}{m.ack_at ? <span className="ms-1 text-xs text-muted-foreground">· استُلم</span> : ""}</td><td className="px-3 py-2">{m.actor}</td>
-                  <td className={`px-3 py-2 tabular-nums ${Number(m.amount) < 0 ? "text-destructive" : ""}`}>{sar(m.amount)}</td><td className="px-3 py-2 tabular-nums">{sar(m.balance)}</td>
-                  <td className="px-3 py-2">{m.file && <button className="text-primary" onClick={() => void openFile(m.file)}>{m.file.name}</button>}</td>
+                <tr key={m.id} className={TR}>
+                  <td className={`${TD} whitespace-nowrap`}>{fmt(m.at)}</td><td className={TD}>{MOVE[m.kind] ?? m.kind}{m.method ? ` (${METHOD[m.method] ?? m.method})` : ""}</td>
+                  <td className={`${TD} font-mono text-xs`}>{m.expense_id ? <button className="text-primary" onClick={() => openExpense(m.expense_id)}>{m.ref}</button> : m.ref}</td>
+                  <td className={TD}>{m.note ?? m.external_ref ?? ""}{m.ack_at ? <span className="ms-1 text-xs text-muted-foreground">· استُلم</span> : ""}</td><td className={TD}>{m.actor}</td>
+                  <td className={`${TDN} ${Number(m.amount) < 0 ? "text-destructive" : ""}`}>{sar(m.amount)}</td><td className={`${TDN} font-semibold`}>{sar(m.balance)}</td>
+                  <td className={TD}>{m.file && <button className="text-primary" onClick={() => void openFile(m.file)}>{m.file.name}</button>}</td>
                 </tr>
               ))}</tbody>
             </table>
           </div>
         )}
-      </section>
+      </Panel>
       {c.expenses.length > 0 && (
-        <section className="space-y-2"><h3 className="font-semibold">المصروفات على العهدة</h3>
-          <ul className="divide-y rounded-xl border bg-card text-sm">{(c.expenses as Row[]).map((e) => (
-            <li key={e.id} className="flex cursor-pointer flex-wrap items-center gap-2 px-3 py-2 hover:bg-muted/40" onClick={() => openExpense(e.id)}>
-              <span className="font-mono text-xs">{e.ref}</span><span>{e.description}</span><span className="text-muted-foreground">{e.supplier}{e.invoice_no ? ` · ${e.invoice_no}` : ""}</span>
+        <Panel title="المصروفات على العهدة" count={c.expenses.length} flush>
+          <ul className="divide-y text-sm">{(c.expenses as Row[]).map((e) => (
+            <li key={e.id} className="flex cursor-pointer flex-wrap items-center gap-2 px-4 py-2.5 hover:bg-muted/40" onClick={() => openExpense(e.id)}>
+              <span className="font-mono text-xs">{e.ref}</span><span className="font-medium">{e.description}</span><span className="text-muted-foreground">{e.supplier}{e.invoice_no ? ` · ${e.invoice_no}` : ""}</span>
               <span className="ms-auto tabular-nums">{sar(e.total)}</span><Pill tone={TONE[e.status] ?? "muted"}>{e.status === "approved" ? "معتمد" : e.status === "draft" ? "مسودة" : e.status === "returned" ? "معاد" : e.status === "rejected" ? "مرفوض" : e.status === "cancelled" ? "ملغى" : "قيد المراجعة"}</Pill>
             </li>
           ))}</ul>
-        </section>
+        </Panel>
       )}
-      {c.files.length > 0 && <section className="space-y-2"><h3 className="font-semibold">المرفقات</h3><FileList files={files(c.files)} /></section>}
+      {c.files.length > 0 && <Panel title="المرفقات" count={c.files.length}><FileList files={files(c.files)} /></Panel>}
       <LogList log={c.log} />
     </div>
   );

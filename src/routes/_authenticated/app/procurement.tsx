@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { Archive, ArrowRight, ClipboardList, FileSpreadsheet, LayoutDashboard, ReceiptText, Settings, Wallet, Inbox } from "lucide-react";
+import { TabIntro } from "@/components/procurement/ui";
 import { ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";
 import { useSession, arabicError } from "@/lib/session";
@@ -17,6 +18,16 @@ import { CapsNote, SettingsTab, SummaryTab, TasksTab } from "@/components/procur
 
 const TABS = { summary: "الملخص", needs: "طلبات الاحتياج", custodies: "العهد", expenses: "تسجيل المشتريات", invoices: "الفواتير المسجلة", requests: "الطلبات", archive: "الأرشيف", settings: "الإعدادات" } as const;
 type Tab = keyof typeof TABS;
+const INTRO: Record<Tab, [typeof Wallet, string]> = {
+  summary: [LayoutDashboard, "مهامك المنتظرة، ومتابعة الفروع، والأرصدة، والتقارير في مكان واحد."],
+  needs: [ClipboardList, "احتياجات المدارس المعتمدة من المدير وتنفيذها بفواتير مرتبطة."],
+  custodies: [Wallet, "العهد النقدية وأرصدتها — الرصيد يُحسب من الحركات المعتمدة فقط."],
+  expenses: [FileSpreadsheet, "أدخل فواتير المشتريات صفًا صفًا ثم أرسلها للمراجعة."],
+  invoices: [ReceiptText, "كل الفواتير المسجلة وحالاتها مع الإجماليات والضريبة."],
+  requests: [Inbox, "التعزيز والتسوية والشراء المسبق ومعالجة الفروق ونقل العهد."],
+  archive: [Archive, "العهد التي سُوّيت وأُغلقت، مرتبة حسب الفرع وتاريخ التسوية."],
+  settings: [Settings, "الضريبة والتنبيهات والتصنيفات ونموذج إدخال الفاتورة."],
+};
 type Search = { tab?: Tab; c?: string; e?: string; r?: string; n?: string; need?: string; new?: "custody" | "expense" | "request" | "need"; for?: string; kind?: string };
 
 export const Route = createFileRoute("/_authenticated/app/procurement")({
@@ -49,7 +60,7 @@ function Page() {
   const header = (
     <>
       {isOwner && <Link to="/app/finance" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />المالية والمحاسبة</Link>}
-      <PageHeader title="المشتريات والعهد المالية" desc="عهد نقدية ومصروفات وفواتير — الرصيد يُحسب من الحركات المعتمدة فقط." />
+      <PageHeader eyebrow="المالية" title="المشتريات والعهد المالية" desc="عهد نقدية واحتياجات وفواتير بضريبة القيمة المضافة، بمسار اعتماد مستقل لكل خطوة." />
     </>
   );
   if (!me.enabled) return <>{header}<SectionLocked /></>;
@@ -89,10 +100,10 @@ function Page() {
   else body = <SettingsTab orgId={orgId} me={me} />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {header}
       {!needsOnly && <CapsNote me={me} />}
-      {!search.c && !search.e && !search.r && !search.n && !search.new && <h2 className="text-lg font-bold">{TABS[tab]}</h2>}
+      {!search.c && !search.e && !search.r && !search.n && !search.new && <TabIntro icon={INTRO[tab][0]} title={TABS[tab]} desc={INTRO[tab][1]} />}
       {body}
     </div>
   );
