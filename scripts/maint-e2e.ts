@@ -100,7 +100,6 @@ try {
   const re0 = await act(fol.c, R2, "assign", { user: loser.id });
   const re = await act(fol.c, R2, "assign", { user: loser.id, reason: "إعادة توزيع" });
   check("14 reassign needs reason; previous officer loses access", !!re0.error && !re.error && !(await get(winner.c, R2)), re.error);
-  const can0 = await act(prin.c, R2, "cancel", { reason: "x" }).then(async () => null);
   await act(loser.c, R2, "accept");
   const cn = await act(prin.c, R2, "cancel", { reason: "لم يعد مطلوبًا" });
   const cn2 = await act(fol.c, R2, "cancel", { reason: "تم حله بطريقة أخرى" });
