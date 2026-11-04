@@ -74,7 +74,7 @@ export function StaffWizard({ org, school, grantText, onDone, onCancel }: { org:
     setBusy(true);
     try {
       const r = await run({ data: {
-        orgId: org, existingUserId: mode === "existing" ? existing[0] : null, username: u, fullName: name.trim(), password: pw, base, schools: branches,
+        orgId: org, existingUserId: mode === "existing" ? (existing[0] ?? null) : null, username: u, fullName: name.trim(), password: pw, base, schools: branches,
         roles: rows.map((x) => ({ role_id: x.role_id, school_ids: x.all ? null : x.school_ids, limit: x.limit ? Number(x.limit) : null })), reason: reason.trim() } });
       toast.success(r.created ? "أُنشئ الحساب — سيُطلب من الموظف تغيير كلمة المرور عند أول دخول" : "أُضيفت الأدوار إلى الحساب القائم دون تغيير كلمة مروره");
       for (const k of ["perm-people", "perm-roles", "perm-log", "staff-logins"]) qc.invalidateQueries({ queryKey: [k, org] });
