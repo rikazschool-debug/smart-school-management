@@ -2859,54 +2859,72 @@ export type Database = {
           decided_at: string | null
           decided_by: string | null
           evaluator_id: string
+          follow_up: string | null
           form_version: number
           id: string
+          improvement_plan: string | null
           lesson: string | null
           notes: Json
           return_reason: string | null
           school_id: string
           scores: Json
+          section: string | null
           status: string
+          subject: string | null
           summary: string | null
           teacher_id: string
           updated_at: string
+          version: number
           visit_date: string
+          visit_type: string | null
         }
         Insert: {
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
           evaluator_id?: string
+          follow_up?: string | null
           form_version?: number
           id?: string
+          improvement_plan?: string | null
           lesson?: string | null
           notes?: Json
           return_reason?: string | null
           school_id: string
           scores?: Json
+          section?: string | null
           status?: string
+          subject?: string | null
           summary?: string | null
           teacher_id: string
           updated_at?: string
+          version?: number
           visit_date: string
+          visit_type?: string | null
         }
         Update: {
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
           evaluator_id?: string
+          follow_up?: string | null
           form_version?: number
           id?: string
+          improvement_plan?: string | null
           lesson?: string | null
           notes?: Json
           return_reason?: string | null
           school_id?: string
           scores?: Json
+          section?: string | null
           status?: string
+          subject?: string | null
           summary?: string | null
           teacher_id?: string
           updated_at?: string
+          version?: number
           visit_date?: string
+          visit_type?: string | null
         }
         Relationships: [
           {
@@ -3021,6 +3039,362 @@ export type Database = {
             columns: ["year_id"]
             isOneToOne: false
             referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ev_forms: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          items: Json
+          kind: string
+          needs_owner_approval: boolean
+          org_id: string
+          published_at: string | null
+          role_key: string
+          status: string
+          title: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          items: Json
+          kind: string
+          needs_owner_approval?: boolean
+          org_id: string
+          published_at?: string | null
+          role_key?: string
+          status?: string
+          title: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          items?: Json
+          kind?: string
+          needs_owner_approval?: boolean
+          org_id?: string
+          published_at?: string | null
+          role_key?: string
+          status?: string
+          title?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ev_forms_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ev_guardian: {
+        Row: {
+          answers: Json
+          comment: string | null
+          created_at: string
+          form_id: string
+          form_snapshot: Json
+          guardian_user: string
+          id: string
+          revision: number
+          school_id: string
+          student_id: string
+          teacher_id: string
+          updated_at: string
+          year_id: string
+        }
+        Insert: {
+          answers: Json
+          comment?: string | null
+          created_at?: string
+          form_id: string
+          form_snapshot: Json
+          guardian_user: string
+          id?: string
+          revision?: number
+          school_id: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string
+          year_id: string
+        }
+        Update: {
+          answers?: Json
+          comment?: string | null
+          created_at?: string
+          form_id?: string
+          form_snapshot?: Json
+          guardian_user?: string
+          id?: string
+          revision?: number
+          school_id?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ev_guardian_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "ev_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ev_guardian_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ev_guardian_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ev_guardian_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ev_guardian_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ev_guardian_hist: {
+        Row: {
+          answers: Json
+          comment: string | null
+          form_id: string
+          id: number
+          rating_id: string
+          revision: number
+          saved_at: string
+        }
+        Insert: {
+          answers: Json
+          comment?: string | null
+          form_id: string
+          id?: number
+          rating_id: string
+          revision: number
+          saved_at: string
+        }
+        Update: {
+          answers?: Json
+          comment?: string | null
+          form_id?: string
+          id?: number
+          rating_id?: string
+          revision?: number
+          saved_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ev_guardian_hist_rating_id_fkey"
+            columns: ["rating_id"]
+            isOneToOne: false
+            referencedRelation: "ev_guardian"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ev_log: {
+        Row: {
+          action: string
+          actor: string | null
+          at: string
+          details: Json | null
+          entity: string | null
+          id: number
+          org_id: string | null
+          school_id: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          at?: string
+          details?: Json | null
+          entity?: string | null
+          id?: number
+          org_id?: string | null
+          school_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          at?: string
+          details?: Json | null
+          entity?: string | null
+          id?: number
+          org_id?: string | null
+          school_id?: string | null
+        }
+        Relationships: []
+      }
+      ev_monthly: {
+        Row: {
+          answers: Json
+          approved_at: string | null
+          created_at: string
+          evaluator: string
+          form_id: string
+          form_snapshot: Json
+          id: string
+          month: string
+          na_reasons: Json
+          notes: string | null
+          role_key: string
+          school_id: string
+          staff_user: string
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          answers: Json
+          approved_at?: string | null
+          created_at?: string
+          evaluator?: string
+          form_id: string
+          form_snapshot: Json
+          id?: string
+          month: string
+          na_reasons?: Json
+          notes?: string | null
+          role_key: string
+          school_id: string
+          staff_user: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          answers?: Json
+          approved_at?: string | null
+          created_at?: string
+          evaluator?: string
+          form_id?: string
+          form_snapshot?: Json
+          id?: string
+          month?: string
+          na_reasons?: Json
+          notes?: string | null
+          role_key?: string
+          school_id?: string
+          staff_user?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ev_monthly_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "ev_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ev_monthly_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ev_monthly_hist: {
+        Row: {
+          actor: string | null
+          answers: Json
+          at: string
+          id: number
+          monthly_id: string
+          na_reasons: Json | null
+          notes: string | null
+          reason: string | null
+          version: number
+        }
+        Insert: {
+          actor?: string | null
+          answers: Json
+          at?: string
+          id?: number
+          monthly_id: string
+          na_reasons?: Json | null
+          notes?: string | null
+          reason?: string | null
+          version: number
+        }
+        Update: {
+          actor?: string | null
+          answers?: Json
+          at?: string
+          id?: number
+          monthly_id?: string
+          na_reasons?: Json | null
+          notes?: string | null
+          reason?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ev_monthly_hist_monthly_id_fkey"
+            columns: ["monthly_id"]
+            isOneToOne: false
+            referencedRelation: "ev_monthly"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ev_platform_access: {
+        Row: {
+          granted_at: string
+          granted_note: string
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_note: string
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_note?: string
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ev_platform_access_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -9006,6 +9380,53 @@ export type Database = {
         Args: { _org: string; _school: string; _user: string }
         Returns: boolean
       }
+      _ev_check: {
+        Args: { _answers: Json; _complete: boolean; _items: Json }
+        Returns: undefined
+      }
+      _ev_form: {
+        Args: { _kind: string; _org: string; _role: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          items: Json
+          kind: string
+          needs_owner_approval: boolean
+          org_id: string
+          published_at: string | null
+          role_key: string
+          status: string
+          title: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ev_forms"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _ev_forms_admin: { Args: { _org: string }; Returns: boolean }
+      _ev_g_teachers: {
+        Args: { _student: string }
+        Returns: {
+          full_name: string
+          school_id: string
+          subjects: string
+          teacher_id: string
+          year_id: string
+        }[]
+      }
+      _ev_org_read: { Args: { _org: string }; Returns: boolean }
+      _ev_school_read: { Args: { _school: string }; Returns: boolean }
+      _ev_score: { Args: { _answers: Json; _items: Json }; Returns: Json }
+      _ev_seed: { Args: { _org: string }; Returns: undefined }
+      _ev_staff_roles: {
+        Args: { _school: string; _user: string }
+        Returns: string[]
+      }
       _family_ok: {
         Args: {
           _guardian: string
@@ -10653,11 +11074,32 @@ export type Database = {
         Args: { _date: string; _school: string }
         Returns: string
       }
+      cv_correct: {
+        Args: {
+          _id: string
+          _notes: Json
+          _reason: string
+          _scores: Json
+          _summary: string
+        }
+        Returns: undefined
+      }
       cv_decide: {
         Args: { _approve: boolean; _id: string; _reason: string }
         Returns: undefined
       }
       cv_list: { Args: { _school: string }; Returns: Json }
+      cv_plan: {
+        Args: {
+          _follow: string
+          _id: string
+          _plan: string
+          _section: string
+          _subject: string
+          _type: string
+        }
+        Returns: undefined
+      }
       cv_save: {
         Args: {
           _date: string
@@ -10731,6 +11173,57 @@ export type Database = {
         Args: { _day: string; _reason: string }
         Returns: undefined
       }
+      ev_export_log: {
+        Args: { _org: string; _what: string }
+        Returns: undefined
+      }
+      ev_form_save: {
+        Args: {
+          _desc: string
+          _items: Json
+          _kind: string
+          _org: string
+          _publish: boolean
+          _role: string
+          _title: string
+        }
+        Returns: string
+      }
+      ev_forms_list: { Args: { _org: string }; Returns: Json }
+      ev_g_children: { Args: never; Returns: Json }
+      ev_g_save: {
+        Args: {
+          _answers: Json
+          _comment: string
+          _student: string
+          _teacher: string
+        }
+        Returns: string
+      }
+      ev_g_teachers: { Args: { _student: string }; Returns: Json }
+      ev_m_form: { Args: { _role: string; _school: string }; Returns: Json }
+      ev_m_get: { Args: { _id: string }; Returns: Json }
+      ev_m_save: {
+        Args: {
+          _answers: Json
+          _approve: boolean
+          _month: string
+          _na: Json
+          _notes: string
+          _reason: string
+          _role: string
+          _school: string
+          _user: string
+        }
+        Returns: string
+      }
+      ev_m_staff: { Args: { _month: string; _school: string }; Returns: Json }
+      ev_me: { Args: { _school: string }; Returns: Json }
+      ev_summary: {
+        Args: { _month: string; _org: string; _school: string }
+        Returns: Json
+      }
+      ev_teacher_file: { Args: { _teacher: string }; Returns: Json }
       extend_homework: {
         Args: { _due: string; _id: string; _reason: string; _student: string }
         Returns: undefined
