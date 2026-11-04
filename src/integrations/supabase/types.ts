@@ -6965,6 +6965,7 @@ export type Database = {
           name: string
           org_id: string
           stage_type: string | null
+          student_gender: string | null
           updated_at: string
         }
         Insert: {
@@ -6976,6 +6977,7 @@ export type Database = {
           name: string
           org_id: string
           stage_type?: string | null
+          student_gender?: string | null
           updated_at?: string
         }
         Update: {
@@ -6987,6 +6989,7 @@ export type Database = {
           name?: string
           org_id?: string
           stage_type?: string | null
+          student_gender?: string | null
           updated_at?: string
         }
         Relationships: [
