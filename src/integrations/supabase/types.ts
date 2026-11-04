@@ -10578,6 +10578,19 @@ export type Database = {
         }
         Returns: string
       }
+      pc_custody_save_approve: {
+        Args: {
+          _amount: number
+          _due: string
+          _holder: string
+          _key: string
+          _org: string
+          _purpose: string
+          _school: string
+          _school_ids: string[]
+        }
+        Returns: string
+      }
       pc_disburse: {
         Args: {
           _doc_date: string
