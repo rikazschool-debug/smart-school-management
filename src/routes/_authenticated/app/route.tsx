@@ -73,6 +73,9 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
 /** Procurement sub-sections shown under its menu entry (the page re-checks each tab). */
 const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "تسجيل المشتريات"], ["invoices", "الفواتير المسجلة"], ["requests", "الطلبات"], ["reports", "التقارير"], ["archive", "الأرشيف"], ["settings", "الإعدادات"]] as const;
 
+/** Admissions sub-sections; "settings" (website connection) only for org-level/settings holders — the page and RPCs re-check. */
+const AD_SUB = [["apps", "الطلاب المحتملون"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
+
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "profile"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
@@ -173,6 +176,14 @@ function Shell() {
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {PC_SUB.filter(([t]) => (pcNeedsOnly ? t === "needs" : t !== "settings" || owner || pc.data?.caps.settings === "org")).map(([t, label]) => (
                         <Link key={t} to="/app/procurement" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)}
+                          className="flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary">{label}</Link>
+                      ))}
+                    </div>
+                  )}
+                  {k === "admissions" && (
+                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                      {AD_SUB.filter(([t]) => t !== "settings" || !!ad.data?.org_level || !!ad.data?.caps?.settings.length).map(([t, label]) => (
+                        <Link key={t} to="/app/admissions" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)}
                           className="flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary">{label}</Link>
                       ))}
                     </div>
