@@ -33,6 +33,7 @@ function Page() {
   return (
     <>
       <PageHeader title="المؤسسات المشتركة" desc="عرض كل المؤسسات على المنصة وعدد مدارسها." />
+      <PlatformOverview />
       <CleanupHealth />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد مؤسسات بعد" /> : (
         <div className="rounded-xl border bg-card">
@@ -53,6 +54,40 @@ function Page() {
         </div>
       )}
     </>
+  );
+}
+
+type Ov = Record<string, Record<string, any>>;
+/** Platform-wide counts per section (no organization names or records). */
+function PlatformOverview() {
+  const q = useQuery({ queryKey: ["platform-overview"], queryFn: async () => { const { data, error } = await db.rpc("platform_overview"); if (error) throw error; return data as Ov; } });
+  if (q.isLoading) return <LoadingState rows={2} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
+  const d = q.data!; const av = d["availability"] ?? {};
+  const cards: { key: string; title: string; note?: string; items: [string, unknown][] }[] = [
+    { key: "school_admin", title: "إدارة المدارس", items: [["مؤسسة", d["schools"]?.["orgs"]], ["فرع نشط", d["schools"]?.["active"]], ["فرع موقوف", d["schools"]?.["paused"]]] },
+    { key: "finance", title: "المالية والمحاسبة", items: [["عهدة مفتوحة", d["finance"]?.["open_custodies"]], ["طلب بانتظار قرار", d["finance"]?.["pending_requests"]]] },
+    { key: "operations", title: "النقل المدرسي والصيانة", items: [["طلب صيانة مدارس مفتوح", d["operations"]?.["school_open"]], ["طلب صيانة باصات مفتوح", d["operations"]?.["bus_open"]], ["طلب متأخر", d["operations"]?.["overdue"]], ["باص", d["operations"]?.["buses"]], ["باص متوقف أو بانتظار فحص", d["operations"]?.["buses_stopped"]]] },
+    { key: "hr", title: "الموارد البشرية", note: "تحت الإنشاء", items: [] },
+    { key: "users", title: "المستخدمون والصلاحيات", items: [["موظف نشط", d["users"]?.["staff"]], ["ولي أمر", d["users"]?.["guardians"]], ["طالب", d["users"]?.["students"]], ["دعوة معلّقة", d["users"]?.["pending_invites"]]] },
+  ];
+  return (
+    <section className="mb-6" aria-label="ملخص المنصة">
+      <div className="mb-2 flex items-baseline justify-between"><h2 className="font-bold">ملخص الأقسام على المنصة</h2><span className="text-xs text-muted-foreground">أرقام إجمالية فقط • آخر تحديث {t(d["at"])}</span></div>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {cards.map((c) => (
+          <div key={c.key} className="rounded-xl border bg-card p-4 text-sm">
+            <p className="font-semibold">{c.title} {c.note && <span className="text-xs font-normal text-muted-foreground">({c.note})</span>}</p>
+            {av[c.key] && <p className="mt-0.5 text-xs text-muted-foreground">مفعّل لدى {av[c.key]["on"]} • معلّق لدى {av[c.key]["off"]}</p>}
+            {c.items.length ? (
+              <dl className="mt-3 grid grid-cols-2 gap-2">
+                {c.items.map(([l, v]) => <div key={l} className="rounded-lg bg-secondary/50 px-3 py-2"><dd className="font-display text-lg leading-none">{String(v ?? 0)}</dd><dt className="mt-1 text-xs text-muted-foreground">{l}</dt></div>)}
+              </dl>
+            ) : <p className="mt-3 text-muted-foreground">لم تُنفّذ وظائفه بعد، ولا تُعرض فيه بيانات.</p>}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
