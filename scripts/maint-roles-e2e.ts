@@ -55,7 +55,7 @@ try {
   const esc = await m.c.rpc("perm_assign", { _org: org, _user: m.id, _role: tpl("مسؤول متابعة الصيانة").id, _assign: true, _school_ids: null, _limit: null, _reason: "x" });
   check("8 a maintenance officer cannot grant himself follow-up", !!esc.error);
   check("9 other organization's branch is never allowed", !(await can(m.c, X, "maint_school", "execute")) && !(await can(f.c, X, "maint_bus", "follow")));
-  await admin.from("org_sections").upsert({ org_id: org, section: "operations", enabled: false, reason: "اختبار" });
+  const up = await admin.from("org_sections").upsert({ org_id: org, section: "operations", enabled: false, reason: "اختبار", changed_by: owner.id }); if (up.error) console.log("upsert", up.error.message);
   check("10 suspending «النقل المدرسي والصيانة» removes all maintenance access, principal too", !(await can(m.c, A, "maint_school", "execute")) && !(await can(prin.c, A, "maint_school", "request")) && !(await can(tro.c, A, "maint_bus", "fleet")));
   await admin.from("org_sections").delete().eq("org_id", org).eq("section", "operations");
   await owner.c.rpc("perm_assign", { _org: org, _user: m.id, _role: tpl("مسؤول صيانة مدارس").id, _assign: false, _school_ids: null, _limit: null, _reason: "سحب" });
