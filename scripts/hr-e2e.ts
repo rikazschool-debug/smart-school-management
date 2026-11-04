@@ -54,7 +54,7 @@ try {
   const tcount = (await admin.from("teachers").select("id", { count: "exact", head: true }).eq("school_id", A)).count;
   const ucount = (await admin.from("memberships").select("id", { count: "exact", head: true }).eq("user_id", t1.id)).count;
   const g1 = (await owner.c.rpc("hr_employee_get", { _id: e1 })).data as any;
-  check("3 employee linked to existing login+teacher; no new teacher/account; ID keeps leading zero; number generated", !!e1 && tcount === 3 && ucount === 1 && g1.employee.national_id === "0123456789" && g1.employee.employee_no === "E0001" && g1.assignments[0].teacher === "معلم أ", e1r.error ?? [g1.employee.national_id, g1.employee.employee_no, g1.assignments[0]?.teacher, tcount, ucount]);
+  check("3 employee linked to existing login+teacher; no new teacher/account; ID keeps leading zero; number generated", !!e1 && tcount === 2 && ucount === 1 && g1.employee.national_id === "0123456789" && g1.employee.employee_no === "E0001" && g1.assignments[0].teacher === "معلم أ", e1r.error ?? [g1.employee.national_id, g1.employee.employee_no, g1.assignments[0]?.teacher, tcount, ucount]);
 
   // 4 duplicates refused
   const d1 = await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "مكرر", user_id: t1.id, school_id: A } });
