@@ -11204,6 +11204,10 @@ export type Database = {
       ev_g_teachers: { Args: { _student: string }; Returns: Json }
       ev_m_form: { Args: { _role: string; _school: string }; Returns: Json }
       ev_m_get: { Args: { _id: string }; Returns: Json }
+      ev_m_person: {
+        Args: { _role: string; _school: string; _user: string }
+        Returns: Json
+      }
       ev_m_save: {
         Args: {
           _answers: Json
