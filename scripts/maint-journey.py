@@ -80,7 +80,7 @@ async def main(kind,path):
         await m.screenshot(path="bus4.png"); ok("bus: separate authorised action returned it", "متاح للخدمة" in await m.locator("tbody tr").filter(has_text=BUS).inner_text())
         await m.screenshot(path="/tmp/browser/bus3.png")
     # reopen request cycle: requester asks, executor cannot decide, follow-up rejects then approves
-    await p.goto(B+path); await p.wait_for_timeout(2000); await p.get_by_role("button",name="الطلبات السابقة").click(); await p.wait_for_timeout(800); await p.get_by_placeholder("رقم، عنوان أو مكان").fill(T); await p.wait_for_timeout(1500); await p.get_by_text(T).first.click(); await p.wait_for_timeout(1500); await p.get_by_role("button",name="طلب إعادة فتح").click(); await reason(p,"عاد العطل")
+    await p.goto(B+path); await p.wait_for_timeout(2000); await p.get_by_text("الطلبات السابقة",exact=True).click(); await p.wait_for_timeout(800); await p.get_by_placeholder("رقم، عنوان أو مكان").fill(T); await p.wait_for_timeout(1500); await p.get_by_text(T).first.click(); await p.wait_for_timeout(1500); await p.get_by_role("button",name="طلب إعادة فتح").click(); await reason(p,"عاد العطل")
     ok(f"{kind}: requester's reopen request pending, still closed", "بانتظار قرار المتابعة" in await status(p))
     await openreq(m,path); ok(f"{kind}: executor has no reopen decision", await m.get_by_role("button",name="قبول إعادة الفتح").count()==0)
     await openreq(f2,path); await f2.get_by_role("button",name="رفض إعادة الفتح").click(); await reason(f2,"عطل مختلف")
