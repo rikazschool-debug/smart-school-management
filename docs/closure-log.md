@@ -456,3 +456,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Template patch: duplicate = name+phone+school+year; server check of school/stage.
 - Tests: wp-e2e 14/14 (real plugin PHP), admissions-e2e 18/18, adm-journey.py 12/12 (Excel opened: 2 rows Arabic; PDF 1 page "صفحة 1 من 1").
 - Open: live trial from the real site (needs publish + install); real cron run of rikaz-ad-alerts (first scheduled run 05:10 UTC tomorrow).
+
+## 2026-11-04 — Al-Malki branch categories (owner-stated)
+- الضاحية للبنين = بنين؛ الضاحية للبنات، أجيال المعالي، قناديل الشرق = بنين وبنات.
+- Correction: الضاحية للبنات was briefly set to «بنات» by inference from its name; restored to «بنين وبنات» per the owner's explicit data. Rule: never infer category from a name.
+- Automated re-runs accepted: maint 26/26, maint-roles 12/12, maint-need 8/8, maint-alerts 6/6, perm6 20/20 (principal template now includes admissions view/view_branch/decide), perm7 20/20, staff 23/23, scope 37/37, bounds 8/8, schools 13/13. Browser journeys remain separate items.
