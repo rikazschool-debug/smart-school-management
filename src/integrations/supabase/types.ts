@@ -3399,6 +3399,56 @@ export type Database = {
           },
         ]
       }
+      ev_settings: {
+        Row: {
+          due_day: number
+          org_id: string
+          reminders: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          due_day?: number
+          org_id: string
+          reminders?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          due_day?: number
+          org_id?: string
+          reminders?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ev_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ev_tick_runs: {
+        Row: {
+          day: string
+          ran_at: string
+          sent: number
+        }
+        Insert: {
+          day: string
+          ran_at?: string
+          sent?: number
+        }
+        Update: {
+          day?: string
+          ran_at?: string
+          sent?: number
+        }
+        Relationships: []
+      }
       file_cleanup_config: {
         Row: {
           id: boolean
@@ -9293,6 +9343,13 @@ export type Database = {
         }[]
       }
       _course_title: { Args: { _course: string }; Returns: string }
+      _cv_can: {
+        Args: {
+          _action: string
+          v: Database["public"]["Tables"]["cv_visits"]["Row"]
+        }
+        Returns: boolean
+      }
       _cv_can_eval: { Args: { _teacher: string }; Returns: boolean }
       _cv_can_read: {
         Args: { v: Database["public"]["Tables"]["cv_visits"]["Row"] }
@@ -9380,10 +9437,12 @@ export type Database = {
         Args: { _org: string; _school: string; _user: string }
         Returns: boolean
       }
+      _ev_assigned: { Args: { _teacher: string }; Returns: boolean }
       _ev_check: {
         Args: { _answers: Json; _complete: boolean; _items: Json }
         Returns: undefined
       }
+      _ev_due_day: { Args: { _org: string }; Returns: number }
       _ev_form: {
         Args: { _kind: string; _org: string; _role: string }
         Returns: {
@@ -9409,6 +9468,10 @@ export type Database = {
         }
       }
       _ev_forms_admin: { Args: { _org: string }; Returns: boolean }
+      _ev_forms_can: {
+        Args: { _action: string; _org: string }
+        Returns: boolean
+      }
       _ev_g_teachers: {
         Args: { _student: string }
         Returns: {
@@ -9420,6 +9483,10 @@ export type Database = {
         }[]
       }
       _ev_g_version: { Args: { _teacher: string; _ver: number }; Returns: Json }
+      _ev_ok: {
+        Args: { _action: string; _school: string; _section: string }
+        Returns: boolean
+      }
       _ev_org_read: { Args: { _org: string }; Returns: boolean }
       _ev_school_read: { Args: { _school: string }; Returns: boolean }
       _ev_score: { Args: { _answers: Json; _items: Json }; Returns: Json }
@@ -9427,6 +9494,10 @@ export type Database = {
       _ev_staff_roles: {
         Args: { _school: string; _user: string }
         Returns: string[]
+      }
+      _ev_wide: {
+        Args: { _action: string; _school: string; _section: string }
+        Returns: boolean
       }
       _family_ok: {
         Args: {
@@ -11224,6 +11295,12 @@ export type Database = {
       }
       ev_m_staff: { Args: { _month: string; _school: string }; Returns: Json }
       ev_me: { Args: { _school: string }; Returns: Json }
+      ev_monthly_tick: { Args: { _now?: string }; Returns: number }
+      ev_settings_get: { Args: { _org: string }; Returns: Json }
+      ev_settings_save: {
+        Args: { _due_day: number; _org: string; _reminders: boolean }
+        Returns: undefined
+      }
       ev_summary: {
         Args: { _month: string; _org: string; _school: string }
         Returns: Json
