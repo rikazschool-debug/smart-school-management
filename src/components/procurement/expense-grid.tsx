@@ -85,11 +85,12 @@ export function ExpenseGrid({ orgId, me, onDone, onCancel }: { orgId: string; me
   const td = "border-b border-l p-0";
   return (
     <div className="space-y-4 rounded-2xl border bg-card p-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-bold">تسجيل فواتير المشتريات</h2>
-        {form && <span className="text-xs text-muted-foreground">النموذج: الإصدار {form.version}</span>}
+      <div className="flex flex-wrap items-center gap-2 border-b pb-3">
+        <h3 className="font-bold">كشف الإدخال</h3>
+        {form && <span className="rounded-full bg-muted px-2 text-xs text-muted-foreground">النموذج: الإصدار {form.version}</span>}
+        {filled.length > 0 && <span className="ms-auto text-sm text-muted-foreground">{filled.length} فاتورة · <b className="tabular-nums text-foreground">{sar(tot.total)}</b></span>}
       </div>
-      <div className="flex flex-wrap items-end gap-4 text-sm">
+      <div className="flex flex-wrap items-end gap-4 rounded-xl bg-muted/40 p-3 text-sm">
         <label className="flex items-center gap-1"><input type="radio" checked={!own} onChange={() => setOwn(false)} /> على عهدة</label>
         <label className="flex items-center gap-1"><input type="radio" checked={own} onChange={() => setOwn(true)} /> من مال الموظف</label>
         {!own ? (
@@ -145,7 +146,7 @@ export function ExpenseGrid({ orgId, me, onDone, onCancel }: { orgId: string; me
         </table>
       </div>
       {rows.some((r) => r.err) && <ul className="space-y-0.5 text-xs text-destructive">{rows.map((r, i) => r.err && <li key={r.k}>الصف {i + 1}: {r.err}</li>)}</ul>}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 border-t pt-4">
         {rows.length < 50 && <Button variant="outline" onClick={() => setRows([...rows, blank()])}><Plus className="size-4" />صف</Button>}
         <Button variant="outline" disabled={busy} onClick={() => void saveAll()}>{busy ? "جارٍ الحفظ…" : "حفظ"}</Button>
         <Button disabled={busy} onClick={() => void finish()}>إنهاء وإرسال للمراجعة</Button>
