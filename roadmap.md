@@ -369,7 +369,7 @@
 - [ ] Next: maintenance multi-org test + bus maintenance browser journey
 
 ## Package 14 — Final closure before HR (prompt: «أغلق الآن جميع البنود المتبقية»)
-Resume point: 1.3 waits on the owner; next independent work = 4 (timetable flaky test), then 5, 6. Rule: an item closes only with a test as evidence; closed items reopen only with a proven reason.
+Resume point: 1.3 waits on the owner; next = browser live-session permission withdrawal, then 4 (duties/substitute journeys, class visits, imports, grade visibility), 5, 6. Rule: an item closes only with a test as evidence; closed items reopen only with a proven reason.
 1. Real org + admissions
  - [x] 1.1 Separate student-category field (student_gender); classification removed from city
  - [x] 1.2 Isolation checked: 4 branches in org, only owner active, 0 outside memberships; girls branch category fixed. Two branches «mixed» need owner confirmation
@@ -377,9 +377,9 @@ Resume point: 1.3 waits on the owner; next independent work = 4 (timetable flaky
  - [ ] 1.4 Synthetic request → correct branch; resend without duplicates
  - [ ] 1.5 Disable demo connection after 1.4 passes
  - [ ] 1.6 Admissions reminder via real cron (evidence from cron run log)
-2. [x re-run 2026-11-04: maint 26/26, roles 12/12, need 8/8, alerts 6/6] Maintenance: full multi-org journey, separation of duties, bus return-to-service, procurement link
+2. [x browser: scripts/maint-journey.py school 6/6, bus 9/9; open: reopen button for follow-up, live-session withdrawal in browser] [x re-run 2026-11-04: maint 26/26, roles 12/12, need 8/8, alerts 6/6] Maintenance: full multi-org journey, separation of duties, bus return-to-service, procurement link
 3. [x re-run: perm6 20/20 (principal template fixed: admissions), perm7 20/20, staff 23/23, scope 37/37, bounds 8/8, schools 13/13] Users/permissions: wizard tree, supervisor scope, live-session revocation, reset invalidates sessions
-4. School gaps: flaky timetable test root cause, duties/substitute journeys, class visits/teacher evaluation gap analysis, Excel imports, grade visibility
+4. School gaps: [x timetable 30/30 x3 today; flaky busy-teacher step fixed earlier, not reproduced]  duties/substitute journeys, class visits/teacher evaluation gap analysis, Excel imports, grade visibility
 5. UI: unified homes, KPI→list match, phone/desktop, regression suite, Excel/PDF checks
 6. Security review one by one, auth redirect/leaked-password settings (owner action in Supabase), docs
 Out of scope this round: HR, accounting, fees, transport ops, hosting move.
