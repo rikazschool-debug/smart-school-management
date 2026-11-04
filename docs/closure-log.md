@@ -461,3 +461,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - الضاحية للبنين = بنين؛ الضاحية للبنات، أجيال المعالي، قناديل الشرق = بنين وبنات.
 - Correction: الضاحية للبنات was briefly set to «بنات» by inference from its name; restored to «بنين وبنات» per the owner's explicit data. Rule: never infer category from a name.
 - Automated re-runs accepted: maint 26/26, maint-roles 12/12, maint-need 8/8, maint-alerts 6/6, perm6 20/20 (principal template now includes admissions view/view_branch/decide), perm7 20/20, staff 23/23, scope 37/37, bounds 8/8, schools 13/13. Browser journeys remain separate items.
+- Browser journeys (scripts/maint-journey.py, separate accounts): school 6/6 (create → auto-assign → schedule + reschedule keeps previous → progress → executor cannot approve → return with notes → resubmit → follow-up approves → closed); bus 9/9 (transport officer adds bus → request with stop → same cycle → closed repair leaves bus «بانتظار فحص» → transport officer returns it with inspection note → «متاح للخدمة»).
+- Fixed: adding a bus with an empty odometer failed with a technical error (mt_bus_save). Added demo account «مسؤول حركة النقل» (template مسؤول حركة النقل بالمدرسة).
+- Open: reopen after close not offered to follow-up in UI (decide if intended); live-session permission withdrawal in browser not yet run.
