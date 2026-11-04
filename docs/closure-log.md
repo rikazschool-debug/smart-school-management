@@ -396,3 +396,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-04 M7 maintenance → purchase need
 - Team suggests items (mt_parts_suggest), principal converts to one live need (mt_need_create → pc_need_save), amounts visible to principal/owner only (mt_need_info). Evidence: scripts/maint-need-e2e.ts 8/8. UI panel not browser-tested.
+
+## 2026-11-04 M8 maintenance alerts
+- mt_alerts_tick (cron rikaz-mt-alerts, 08:00 Riyadh): overdue requests per due date, unassigned >24h, bus service date due/overdue and km reached; deduped keys; paused by operations switch. Evidence: maint-alerts-e2e 6/6. Real cron run not yet observed.

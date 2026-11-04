@@ -10394,6 +10394,7 @@ export type Database = {
         Args: { _action: string; _data: Json; _id: string; _rev: number }
         Returns: Json
       }
+      mt_alerts_tick: { Args: never; Returns: number }
       mt_bus_log: { Args: { _bus: string }; Returns: Json }
       mt_bus_save: {
         Args: { _data: Json; _id: string; _school: string }
