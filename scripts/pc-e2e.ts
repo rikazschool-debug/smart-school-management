@@ -146,7 +146,7 @@ try {
   const naS = await off.c.rpc("pc_expense_action", { _id: na.data, _action: "submit", _rev: nag.rev, _reason: null });
   nag = (await apr.c.rpc("pc_expense_get", { _id: na.data })).data as any;
   const naA0 = await apr.c.rpc("pc_expense_action", { _id: na.data, _action: "approve", _rev: nag.rev, _reason: null });
-  const naA1 = await apr.c.rpc("pc_expense_action", { _id: na.data, _action: "approve", _rev: nag.rev, _reason: "موافقة على الاستثناء" });
+  const naA1 = await apr.c.rpc("pc_expense_action", { _id: na.data, _action: "approve", _rev: (await apr.c.rpc("pc_expense_get", { _id: na.data })).data.rev, _reason: "موافقة على الاستثناء" });
   nag = (await off.c.rpc("pc_expense_get", { _id: na.data })).data as any;
   check("17 missing attachment: submit with reason, approval needs approver's own reason", !naS.error && !!naA0.error && !naA1.error && nag.no_attachment_ok_by === apr.id, [naS.error, naA0.error, naA1.error]);
   // correction linked to the original (−15)
