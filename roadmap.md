@@ -355,3 +355,11 @@
 - [x] prompt-100: maintenance managers can hold custodies; follow-up officers see current/awaiting/past + new request only
 - [x] prompt-101: owner-created staff logins (username + initial password, forced change, reset, multi-role, existing-account link) — staff-e2e 23/23 + browser journey
 - [x] Users & permissions redesign (pasted brief) — prompt-102 closed tree/preview/menu preview/users-by-section/«لوحة عملي» (perm7-e2e 20/20). Earlier done = page split (users / roles & permissions / log), add-staff wizard with «إضافة دور آخر», per-role scope, preview, atomic save, user filters (branch/status/username). Remaining: section tree with tri-state checkboxes + search, before/after diff + permission source in preview, «view as employee» menu preview, people grouped by main section, mobile journey
+
+## Package 13 — Admissions (القبول والتسجيل) — prompt-110 + brief
+- [ ] A Section + permissions area «القبول والتسجيل», templates «مسؤول القبول والتسجيل» / «موظف متابعة القبول», separate actions (decide/assign/transfer/export/link/students/settings)
+- [ ] B Applications lifecycle (statuses, contact log, follow-ups, decision, assign, transfer, reopen, link to existing student) — RPC-only
+- [ ] C UI: 4 tabs (summary, prospects, current students, settings) + owner card + menu + officer home card
+- [ ] D Follow-up alerts in daily tick
+- [ ] E WordPress receiver (HMAC, idempotent) + plugin ZIP + template fix — needs the reference PHP template and site install by the user
+- [ ] F Tests: admissions-e2e (two orgs/branches), browser + phone
