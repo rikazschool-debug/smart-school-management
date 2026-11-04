@@ -399,3 +399,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-04 M8 maintenance alerts
 - mt_alerts_tick (cron rikaz-mt-alerts, 08:00 Riyadh): overdue requests per due date, unassigned >24h, bus service date due/overdue and km reached; deduped keys; paused by operations switch. Evidence: maint-alerts-e2e 6/6. Real cron run not yet observed.
+
+## 2026-11-04 M9 platform overview
+- platform_overview() (is_platform_admin only): counts per section (schools, finance, operations, users), HR under construction, on/off per section; no org names or records. Browser-checked as demo platform admin, no page errors.
