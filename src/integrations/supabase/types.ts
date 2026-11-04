@@ -5111,6 +5111,7 @@ export type Database = {
           building: string | null
           bus_id: string | null
           bus_location: string | null
+          bus_received_at: string | null
           cancel_reason: string | null
           category_id: string | null
           client_key: string | null
@@ -5160,6 +5161,7 @@ export type Database = {
           building?: string | null
           bus_id?: string | null
           bus_location?: string | null
+          bus_received_at?: string | null
           cancel_reason?: string | null
           category_id?: string | null
           client_key?: string | null
@@ -5209,6 +5211,7 @@ export type Database = {
           building?: string | null
           bus_id?: string | null
           bus_location?: string | null
+          bus_received_at?: string | null
           cancel_reason?: string | null
           category_id?: string | null
           client_key?: string | null
