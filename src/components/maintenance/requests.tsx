@@ -242,8 +242,8 @@ export function RequestDetail({ id, back }: { id: string; back: () => void }) {
               <p className="text-sm text-muted-foreground">راجع الأعمال والإثباتات. الإعادة للاستكمال تحتاج ملاحظات.</p>
               <div className="flex flex-wrap items-end gap-2">
                 <Field label="التكلفة الفعلية المعتمدة (اختياري)"><Input type="number" min={0} className="w-40" value={pr.est} onChange={(e) => setPr({ ...pr, est: e.target.value })} /></Field>
-                <Button onClick={() => void act("approve", { actual_cost: pr.est || null }, "اعتُمد الإنجاز وأُغلق الطلب")}><CheckCircle2 className="size-4" />اعتماد وإغلاق</Button>
-                <Button variant="outline" onClick={() => void withReason("return", "ملاحظات الإعادة للاستكمال", "أُعيد للاستكمال")}>إعادة للاستكمال</Button>
+                <Button onClick={() => void act("approve", { actual_cost: pr.est || null }, "اعتُمد الإنجاز وأُغلق الطلب")}><CheckCircle2 className="size-4" />تأكيد: تمت الصيانة</Button>
+                <Button variant="outline" onClick={() => void withReason("return", "ملاحظات الإعادة للاستكمال", "أُعيد للاستكمال")}>إعادة بملاحظات</Button>
               </div>
             </ActionBox>
           )}
@@ -267,7 +267,7 @@ export function RequestDetail({ id, back }: { id: string; back: () => void }) {
               <Textarea rows={2} placeholder="الأعمال المنفذة أو العوائق" value={txt} onChange={(e) => setTxt(e.target.value)} />
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" disabled={!pr.progress || !txt.trim()} onClick={() => void act("progress", { progress: Number(pr.progress), body: txt, waiting: pr.waiting, est_cost: pr.est || null }, "سُجل التحديث")}>تسجيل التحديث</Button>
-                {c.submit && <Button disabled={txt.trim().length < 5} onClick={() => void act("submit_completion", { body: txt }, "أُرسل طلب اعتماد الإنجاز")}>طلب اعتماد الإنجاز</Button>}
+                {c.submit && <Button disabled={txt.trim().length < 5} onClick={() => void act("submit_completion", { body: txt }, "أُرسل طلب اعتماد الإنجاز")}>إنهاء وإرسال للمتابعة</Button>}
               </div>
               <p className="text-xs text-muted-foreground">نسبة 100% لا تغلق الطلب؛ الإغلاق باعتماد مسؤول المتابعة فقط.</p>
             </ActionBox>

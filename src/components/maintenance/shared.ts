@@ -28,7 +28,7 @@ export const canFleet = (me: MtMe | undefined) => !!me?.caps?.bus.fleet.length;
 export const KIND_LABEL: Record<Kind, string> = { school: "صيانة المدارس", bus: "صيانة الباصات" };
 export const STATUS: Record<string, string> = {
   new: "جديد", awaiting_assign: "بانتظار الإسناد", assigned: "مسند وبانتظار الاستلام", clarify: "مطلوب توضيح", scheduled: "زيارة مجدولة",
-  in_progress: "قيد التنفيذ", waiting_parts: "بانتظار قطع أو جهة خارجية", awaiting_approval: "بانتظار اعتماد الإنجاز", closed: "مغلق بإنجاز معتمد",
+  in_progress: "قيد التنفيذ", waiting_parts: "بانتظار قطع أو جهة خارجية", awaiting_approval: "بانتظار تأكيد المتابعة", closed: "مغلق بإنجاز معتمد",
   returned: "معاد للاستكمال", cancelled: "ملغى بسبب",
 };
 export const STATUS_TONE: Record<string, string> = {
