@@ -10275,6 +10275,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      home_work: { Args: { _school: string }; Returns: Json }
       homework_list: {
         Args: {
           _course: string
