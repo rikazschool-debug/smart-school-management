@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { STAFF_DOMAIN } from "@/lib/guardian-login";
 import { normPhone, studentLoginEmail, strongEnough } from "@/lib/people-import";
 
 type Kind = "student" | "teacher" | "guardian";
@@ -141,7 +142,6 @@ export const completePhoneSetup = createServerFn({ method: "POST" })
     return { state: String(data) };
   });
 
-export const STAFF_DOMAIN = "staff.rikaz.app";
 const USERNAME = /^[a-z0-9][a-z0-9._-]{2,29}$/;
 type StaffInput = { orgId: string; existingUserId?: string | null; username?: string; fullName?: string; password?: string; base: string; schools: string[]; roles: { role_id: string; school_ids: string[] | null; limit: number | null }[]; reason: string };
 
