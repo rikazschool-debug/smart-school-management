@@ -2,7 +2,8 @@ import { useState } from "react";
 import { ExportButtons } from "@/components/procurement/export-buttons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowRight, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { BackLink, DateRange, DetailHeader, Field, FormActions, FormCard, Panel, SearchBox, Toolbar } from "@/components/procurement/ui";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,35 +44,33 @@ export function NeedList({ orgId, open, onNew }: { orgId: string; open: (id: str
   const groups = [...new Set(rows.map((r) => r.school ?? "—"))].map((b) => [b, rows.filter((r) => (r.school ?? "—") === b)] as const);
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Input className="w-56" placeholder="بحث بالمرجع أو الغرض" value={term} onChange={(e) => setTerm(e.target.value)} />
-        <select aria-label="الحالة" className={selectCls("min-w-0")} value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">كل الحالات</option>{Object.entries(N_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        {branches.length > 1 && <select aria-label="الفرع" className={selectCls("min-w-0")} value={branch} onChange={(e) => setBranch(e.target.value)}><option value="">كل الفروع</option>{branches.map((b) => <option key={b} value={b}>{b}</option>)}</select>}
-        <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value);  }} /></label>
-        <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value);  }} /></label>
-        <span className="ms-auto" /><ExportButtons meta={{ title: "طلبات الاحتياج", filters: [status && `الحالة: ${N_STATUS[status] ?? status}`, branch && `الفرع: ${branch}`, term && `بحث: ${term}`, from && `من ${from}`, to && `إلى ${to}`].filter(Boolean) as string[] }}
+      <Toolbar actions={<><ExportButtons meta={{ title: "طلبات الاحتياج", filters: [status && `الحالة: ${N_STATUS[status] ?? status}`, branch && `الفرع: ${branch}`, term && `بحث: ${term}`, from && `من ${from}`, to && `إلى ${to}`].filter(Boolean) as string[] }}
           headers={["المرجع", "الفرع", "الغرض", "التاريخ", "مقدّم الطلب", "المستلم", "المبلغ التقديري", "الحالة"]}
           rows={() => rows.map((r) => [r.ref, r.school ?? "—", r.purpose, day(r.created_at), r.creator ?? "", r.assigned_name ?? "لم يُستلم", r.amount == null ? null : Number(r.amount), N_STATUS[r.status] ?? r.status])} />
-        {q.data.can_create && <Button size="sm" onClick={onNew}><Plus className="size-4" />طلب احتياج</Button>}
-      </div>
+        {q.data.can_create && <Button size="sm" onClick={onNew}><Plus className="size-4" />طلب احتياج</Button>}</>}>
+        <SearchBox placeholder="المرجع أو الغرض" value={term} onChange={setTerm} />
+        <Field label="الحالة"><select className={selectCls("w-44", true)} value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="">كل الحالات</option>{Object.entries(N_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select></Field>
+        {branches.length > 1 && <Field label="الفرع"><select className={selectCls("w-40", true)} value={branch} onChange={(e) => setBranch(e.target.value)}><option value="">كل الفروع</option>{branches.map((b) => <option key={b} value={b}>{b}</option>)}</select></Field>}
+        <DateRange from={from} to={to} setFrom={setFrom} setTo={setTo} />
+      </Toolbar>
       <p className="text-xs text-muted-foreground">مدير المدرسة يكتب الاحتياج ويعتمده، فيصل إلى مسؤول المشتريات المرتبط بالمدرسة. اعتماد الفاتورة والصرف خطوة مستقلة لدى معتمد آخر.</p>
       {!rows.length ? <EmptyState title="لا توجد طلبات احتياج" hint="ستظهر هنا طلبات مدرستك أو المسندة إليك." /> : (
         <div className="space-y-4">{groups.map(([b, rs]) => (
-        <section key={b} className="space-y-1"><h3 className="text-sm font-semibold">{b} <span className="text-xs font-normal text-muted-foreground">({rs.length})</span></h3>
-        <ul className="divide-y rounded-xl border bg-card">
+        <Panel key={b} title={b} count={rs.length} flush>
+        <ul className="divide-y">
           {rs.map((r) => (
             <li key={r.id}>
-              <button type="button" onClick={() => open(r.id)} className="flex min-h-12 w-full flex-wrap items-center gap-2 px-3 py-2 text-start text-sm hover:bg-muted/40">
+              <button type="button" onClick={() => open(r.id)} className="flex min-h-12 w-full flex-wrap items-center gap-3 px-4 py-2.5 text-start text-sm hover:bg-muted/40">
                 <span className="font-mono text-xs">{r.ref}</span>
-                <span className="min-w-0 flex-1 truncate">{r.purpose}<span className="block text-xs text-muted-foreground">{day(r.created_at)} · {r.creator ?? ""}{r.assigned_name ? ` · استلمه: ${r.assigned_name}` : " · لم يُستلم بعد"}</span></span>
+                <span className="min-w-0 flex-1 truncate font-medium">{r.purpose}<span className="block text-xs font-normal text-muted-foreground">{day(r.created_at)} · {r.creator ?? ""}{r.assigned_name ? ` · استلمه: ${r.assigned_name}` : " · لم يُستلم بعد"}</span></span>
                 <span className="tabular-nums">{r.amount == null ? "" : sar(r.amount)}</span>
                 <Pill tone={N_TONE[r.status] ?? "muted"}>{N_STATUS[r.status] ?? r.status}</Pill>
               </button>
             </li>
           ))}
-        </ul></section>))}</div>
+        </ul></Panel>))}</div>
       )}
     </div>
   );
@@ -100,8 +99,7 @@ export function NeedForm({ orgId, me, initial, onDone, onCancel }: { orgId: stri
   }
   if (meta.isLoading) return <LoadingState />;
   return (
-    <div className="max-w-3xl space-y-4 rounded-2xl border bg-card p-5">
-      <h2 className="font-bold">{initial ? `تعديل ${initial.ref}` : "طلب احتياج جديد"}</h2>
+    <FormCard wide title={initial ? `تعديل ${initial.ref}` : "طلب احتياج جديد"} subtitle="بعد الحفظ راجع الطلب واعتمده ليصل إلى مسؤول المشتريات.">
       <div className="grid gap-3 sm:grid-cols-2">
         {!initial && <div><Label>المدرسة</Label><select className={selectCls()} value={sch} onChange={(e) => setSchool(e.target.value)}>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
         <div className={initial ? "sm:col-span-2" : ""}><Label htmlFor="need-purpose">الغرض</Label><Input id="need-purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="مثل: قرطاسية الفصل الثاني" /></div>
@@ -120,8 +118,8 @@ export function NeedForm({ orgId, me, initial, onDone, onCancel }: { orgId: stri
         {lines.length < 50 && <Button size="sm" variant="outline" onClick={() => setLines([...lines, { description: "", qty: "1", unit_price: "", category_id: "" }])}><Plus className="size-4" />بند</Button>}
         <p className="rounded-lg bg-muted/50 p-2 text-sm">التقدير: <b className="tabular-nums">{sar(est)}</b> <span className="text-xs text-muted-foreground">(للاسترشاد — المبلغ الفعلي من الفواتير)</span></p>
       </div>
-      <div className="flex gap-2"><Button disabled={busy || !sch} onClick={() => void save()}>حفظ</Button><Button variant="ghost" onClick={onCancel}>إلغاء</Button></div>
-    </div>
+      <FormActions><Button disabled={busy || !sch} onClick={() => void save()}>حفظ</Button><Button variant="ghost" onClick={onCancel}>إلغاء</Button></FormActions>
+    </FormCard>
   );
 }
 
@@ -142,26 +140,23 @@ export function NeedDetail({ id, me, back, edit, openExpense, newInvoice }: { id
   const partial = (r.lines as Row[]).some((l) => Number(l.approved) < Number(l.qty));
   return (
     <div className="space-y-4">
-      <button type="button" onClick={back} className="inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />طلبات الاحتياج</button>
-      <div className="space-y-2 rounded-2xl border bg-card p-4">
-        <div className="flex flex-wrap items-center gap-2"><span className="font-mono text-xs">{r.ref}</span><h2 className="font-bold">{r.purpose}</h2><Pill tone={N_TONE[r.status] ?? "muted"}>{N_STATUS[r.status] ?? r.status}</Pill></div>
-        <dl className="grid gap-1 text-sm sm:grid-cols-2">
-          <div><dt className="inline text-muted-foreground">المدرسة: </dt><dd className="inline">{r.school}</dd></div>
-          <div><dt className="inline text-muted-foreground">طلبه: </dt><dd className="inline">{r.creator}</dd></div>
-          <div><dt className="inline text-muted-foreground">اعتمد الاحتياج: </dt><dd className="inline">{r.approver_name ?? "—"}</dd></div>
-          <div><dt className="inline text-muted-foreground">مسؤول المشتريات: </dt><dd className="inline">{r.assigned_name ?? (r.status === "awaiting_assignment" ? (r.officers_count ? "لم يُسند بعد" : "لا يوجد مسؤول مخوّل للفرع") : "—")}</dd></div>
-          <div><dt className="inline text-muted-foreground">التقدير: </dt><dd className="inline tabular-nums">{r.amount == null ? "—" : sar(r.amount)}</dd></div>
-          {r.close_note && <div className="sm:col-span-2"><dt className="inline text-muted-foreground">سبب الإغلاق: </dt><dd className="inline">{r.close_note}</dd></div>}
-        </dl>
-        {r.status === "awaiting_assignment" && <p className="rounded-lg bg-secondary/60 p-2 text-xs">بانتظار الإسناد: أُخطر مالك المؤسسة{r.officers_count ? "، ويمكن لمسؤول مشتريات مخوّل للفرع استلامه" : "؛ امنح شخصًا دور «مسؤول مشتريات» لهذا الفرع من صفحة الصلاحيات"}.</p>}
-        <div className="flex flex-wrap gap-2 pt-1">
+      <BackLink onClick={back} label="طلبات الاحتياج" />
+      <DetailHeader refText={r.ref} title={r.purpose} status={<Pill tone={N_TONE[r.status] ?? "muted"}>{N_STATUS[r.status] ?? r.status}</Pill>}
+        facts={[
+          ["المدرسة", r.school], ["طلبه", r.creator], ["اعتمد الاحتياج", r.approver_name ?? "—"],
+          ["مسؤول المشتريات", r.assigned_name ?? (r.status === "awaiting_assignment" ? (r.officers_count ? "لم يُسند بعد" : "لا يوجد مسؤول مخوّل للفرع") : "—")],
+          ["التقدير", <span key="e" className="tabular-nums">{r.amount == null ? "—" : sar(r.amount)}</span>],
+          ...(r.close_note ? [["سبب الإغلاق", r.close_note] as [string, React.ReactNode]] : []),
+        ]}
+        actions={<>
           {can.edit && <Button size="sm" variant="outline" onClick={() => edit(r)}>تعديل</Button>}
           {can.approve && <Button size="sm" onClick={() => void act("approve", "ملاحظة الاعتماد (اختياري)", false)}>اعتماد الاحتياج وإرساله</Button>}
           {can.claim && <Button size="sm" onClick={() => void act("assign", null, false, me.me)}>استلام الطلب</Button>}
           {can.invoice && <Button size="sm" onClick={() => newInvoice(id)}>تسجيل فاتورة شراء</Button>}
           {can.close && <Button size="sm" variant="outline" onClick={() => void act("close", partial ? "تنفيذ جزئي — سبب الإغلاق" : "ملاحظة الإغلاق (اختياري)", partial)}>إغلاق الطلب</Button>}
           {can.cancel && <Button size="sm" variant="ghost" onClick={() => void act("cancel", "سبب الإلغاء", true)}>إلغاء</Button>}
-        </div>
+        </>}>
+        {r.status === "awaiting_assignment" && <p className="rounded-lg bg-secondary/60 p-2 text-xs">بانتظار الإسناد: أُخطر مالك المؤسسة{r.officers_count ? "، ويمكن لمسؤول مشتريات مخوّل للفرع استلامه" : "؛ امنح شخصًا دور «مسؤول مشتريات» لهذا الفرع من صفحة الصلاحيات"}.</p>}
         {can.assign && (r.officers as Row[]).length > 0 && (
           <div className="flex flex-wrap items-end gap-2 border-t pt-3">
             <div className="min-w-0 flex-1"><Label>إسناد إلى مسؤول مشتريات</Label>
@@ -169,12 +164,11 @@ export function NeedDetail({ id, me, back, edit, openExpense, newInvoice }: { id
             <Button size="sm" disabled={!to} onClick={() => void act("assign", r.assigned_to ? "سبب إعادة الإسناد" : "ملاحظة (اختياري)", !!r.assigned_to, to)}>إسناد</Button>
           </div>
         )}
-      </div>
-      <section className="space-y-2">
-        <h3 className="font-semibold">البنود والمتبقي</h3>
-        <ul className="divide-y rounded-xl border bg-card text-sm">
+      </DetailHeader>
+      <Panel title="البنود والمتبقي" count={(r.lines as Row[]).length} flush>
+        <ul className="divide-y text-sm">
           {(r.lines as Row[]).map((l) => (
-            <li key={l.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-3">
+            <li key={l.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
               <span className="min-w-0 flex-1 font-semibold">{l.description}{l.category && <span className="ms-2 text-xs font-normal text-muted-foreground">{l.category}</span>}</span>
               <span className="text-xs">المطلوب {qn(l.qty)}</span>
               <span className="text-xs">في فواتير {qn(l.committed)}</span>
@@ -184,19 +178,18 @@ export function NeedDetail({ id, me, back, edit, openExpense, newInvoice }: { id
             </li>
           ))}
         </ul>
-      </section>
-      <section className="space-y-2">
-        <h3 className="font-semibold">فواتير الشراء المرتبطة</h3>
-        {!(r.expenses as Row[]).length ? <p className="text-sm text-muted-foreground">لا فواتير بعد.</p> : (
-          <ul className="divide-y rounded-xl border bg-card text-sm">
+      </Panel>
+      <Panel title="فواتير الشراء المرتبطة" count={(r.expenses as Row[]).length} flush>
+        {!(r.expenses as Row[]).length ? <p className="p-4 text-sm text-muted-foreground">لا فواتير بعد.</p> : (
+          <ul className="divide-y text-sm">
             {(r.expenses as Row[]).map((e) => (
-              <li key={e.id}><button type="button" onClick={() => openExpense(e.id)} className="flex w-full items-center gap-2 p-3 text-start hover:bg-muted/40" disabled={!me.caps.view}>
+              <li key={e.id}><button type="button" onClick={() => openExpense(e.id)} className="flex w-full items-center gap-2 px-4 py-3 text-start hover:bg-muted/40" disabled={!me.caps.view}>
                 <span className="font-mono text-xs">{e.ref}</span><span className="min-w-0 flex-1 truncate">{e.supplier}</span><span className="tabular-nums">{sar(e.total)}</span><Pill tone={e.status === "approved" ? "ok" : "warn"}>{E_STATUS[e.status] ?? e.status}</Pill>
               </button></li>
             ))}
           </ul>
         )}
-      </section>
+      </Panel>
     </div>
   );
 }
