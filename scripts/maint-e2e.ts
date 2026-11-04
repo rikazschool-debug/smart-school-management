@@ -83,7 +83,19 @@ try {
   const ap = await act(fol.c, R, "approve", { actual_cost: 150 }); g = await get(prin.c, R);
   check("9 follow-up approves → closed with reopen window", !ap.error && g.status === "closed" && !!g.reopen_until && g.can.reopen, ap.error);
   const ro = await act(prin.c, R, "reopen", { reason: "عاد العطل" });
-  check("10 requester reopens with reason → back to follow-up", !ro.error && (await get(fol.c, R)).status === "returned");
+  g = await get(fol.c, R);
+  check("10a requester asks to reopen → stays closed, pending for follow-up", !ro.error && g.status === "closed" && !!g.reopen_pending && g.can.reopen_decide && !(await get(prin.c, R)).can.reopen, ro.error);
+  const selfRo = await act(ex1.c, R, "reopen_decide", { approve: true, reason: "أوافق" });
+  const noReason = await act(fol.c, R, "reopen_decide", { approve: false });
+  const rej = await act(fol.c, R, "reopen_decide", { approve: false, reason: "العطل جديد، افتح طلبًا" });
+  g = await get(prin.c, R);
+  check("10b executor cannot decide; reason required; reject keeps closure", !!selfRo.error && !!noReason.error && !rej.error && g.status === "closed" && !g.reopen_pending && g.closed_at, [selfRo.error, rej.error]);
+  await act(prin.c, R, "reopen", { reason: "عاد العطل مرة أخرى" });
+  const acc = await act(fol.c, R, "reopen_decide", { approve: true, reason: "مقبول" });
+  g = await get(fol.c, R);
+  const ev = g.events.find((e: any) => e.action === "reopen");
+  check("10c approve → new cycle, previous completion/closure kept in history", !acc.error && g.status === "returned" && g.reopen_cycle === 1 && !!ev?.before?.closed_at && !!ev?.before?.completion_note
+    && g.events.some((e: any) => e.action === "reopen_reject") && g.events.some((e: any) => e.action === "approve"), acc.error);
 
   // decline / reassign / concurrent claim (two executors now)
   await as(ex2, "مسؤول صيانة مدارس");
