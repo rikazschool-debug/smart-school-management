@@ -40,8 +40,7 @@ export function SettlementSheet({ orgId, custodyId, title, me, open, readOnly, o
   async function act(e: Row, action: "approve" | "return" | "reject") {
     let reason: string | null = null;
     if (action === "approve") {
-      if (!Number(e.files_count)) { reason = await askText(`الفاتورة ${e.ref} بلا مرفق. اكتب سبب موافقتك:`, { required: true }); if (!reason) return; }
-      else if (!(await ask(`اعتماد ${e.ref} بمبلغ ${sar(e.total)}؟`))) return;
+      if (!(await ask(`اعتماد ${e.ref} بمبلغ ${sar(e.total)}؟`))) return;
     } else {
       reason = await askText(action === "return" ? "ما المطلوب تعديله في الفاتورة؟" : "سبب الرفض", { required: true });
       if (!reason) return;
