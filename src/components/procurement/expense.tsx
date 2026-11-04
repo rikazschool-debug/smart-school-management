@@ -270,7 +270,7 @@ export function ExpenseDetail({ id, me, back, openCustody, openExpense }: { id: 
       <BackLink onClick={back} label="الفواتير" />
       <DetailHeader refText={<>{e.ref}{e.corrects_id ? " · تصحيح" : ""}</>} title={e.description} status={<Pill tone={TONE[e.status] ?? "muted"}>{E_STATUS[e.status]}</Pill>}
         facts={[
-          ["المورد", e.supplier], ["رقم الفاتورة", e.invoice_no ? `${e.invoice_no}${e.invoice_date ? ` · ${day(e.invoice_date)}` : ""}` : "—"], ["تاريخ الشراء", day(e.purchase_date)],
+          ["المورد", e.supplier], ["رقم الفاتورة", e.invoice_no ? <span key="inv"><bdi dir="ltr">{e.invoice_no}</bdi>{e.invoice_date ? <> · <bdi>{day(e.invoice_date)}</bdi></> : null}</span> : "—"], ["تاريخ الشراء", day(e.purchase_date)],
           ["الإجمالي", <b key="t" className="tabular-nums">{sar(e.total)}</b>],
           ["العهدة", e.custody_id ? <button key="c" className="text-primary" onClick={() => openCustody(e.custody_id)}>{e.custody_ref} ({e.holder})</button> : "من مال الموظف"],
           ["المسجِّل", e.creator], ["الفرع المستفيد", e.benefit_school], ...(e.category ? [["التصنيف", e.category] as [string, React.ReactNode]] : []),

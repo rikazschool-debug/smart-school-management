@@ -49,3 +49,4 @@
 - scripts/perm7-e2e.ts: permission tree save/preview (preview rolls back, atomic perm_apply, 4 roles on one account, withdrawing one role keeps grants from another, deny wins incl. direct RPC, section people once per section, no self-edit, server first-password gate, reset revokes sessions, no passwords in logs; 20 checks).
 - scripts/bounds-e2e.ts: owner limits (no self-custody approval, org isolation, bound by platform finance/operations suspension) + branch suspension (open session, other branch intact, reactivation restores only branch-paused; 8 checks).
 - scripts/pc-transfer-journey.py: custody handover browser journey (needs pc-browser-fixture setup --open; 8 checks).
+- scripts/pc-carry-form-journey.py: carry-over (no double totals) + custom invoice field with form versions (needs pc-browser-fixture setup --open --carry; 9 checks).

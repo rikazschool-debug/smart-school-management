@@ -434,3 +434,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Found: after a handover, the previous holder could still open the recipient's new custody (it was recorded as created by them). Fixed in pc_transfer_accept (new custody owned by recipient) + existing rows corrected.
 - UI: approved handover shows «بانتظار تسلّم …»; a custody closed by handover shows «أُغلقت بالنقل لشخص آخر» instead of a failing settlement checklist.
 - Evidence: scripts/pc-transfer-journey.py 8/8 (holder request → approver → recipient accepts → new custody 770 for recipient → old closed at 0, no actions → old holder refused on new custody); pc2-e2e 20/20 (check 10 extended).
+
+## 2026-11-04 — C6 part 2: carry-over + custom invoice field (browser)
+- scripts/pc-carry-form-journey.py 9/9: approver carries 300 from a 770 custody to the same holder's second custody (old 470 «ترحيل خارج», new 300 «ترحيل داخل», no fake disbursement); owner summary keeps disbursed 1,000 and open balance 770 (no double count); owner adds a required field and publishes v1; officer's grid shows it; saved invoice shows «نموذج الإصدار 1» with its value; after v2 renames the field the earlier invoice still shows v1 and the old label; invoices made before any form show no version.
+- Fix: invoice number and date no longer swap places in right-to-left display on the invoice page.

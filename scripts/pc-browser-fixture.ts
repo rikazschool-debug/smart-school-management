@@ -63,7 +63,13 @@ if (process.argv.includes("--open")) {
   if (ap.error) throw ap.error;
   openCustody = cid;
 }
+let carryTarget: string | null = null;
+if (process.argv.includes("--carry")) {
+  // A second, owner-approved custody for the same officer — target for carry-over journeys.
+  const r = await o.c.rpc("pc_custody_save_approve", { _org: org, _school: A, _school_ids: [], _holder: users.officer!.id, _purpose: "مشتريات الفصل الثاني", _amount: 100, _due: new Date(Date.now() + 60 * 864e5).toISOString().slice(0, 10), _key: crypto.randomUUID() });
+  if (r.error) throw r.error; carryTarget = r.data as string;
+}
 mkdirSync("/tmp/browser/pc", { recursive: true });
-writeFileSync(FX, JSON.stringify({ org, custody: openCustody, schools: [A], userIds: Object.values(users).map((u) => u.id), pw, emails: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, u.email])) }, null, 1));
+writeFileSync(FX, JSON.stringify({ org, custody: openCustody, carryTarget, schools: [A], userIds: Object.values(users).map((u) => u.id), pw, emails: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, u.email])) }, null, 1));
 console.log("fixture ready", FX);
 process.exit(0);
