@@ -90,54 +90,50 @@ export function CustodyList({ orgId, me, open, onNew, orgName }: { orgId: string
     if (kind === "xlsx") exportXlsx(meta, h, rows); else await exportPdf(meta, h, rows);
   }
   const total = list.data?.total ?? 0;
+  const sums = (list.data?.rows ?? []).reduce((a, c) => ({ amount: a.amount + Number(c.amount), book: a.book + Number(c.bal.book), avail: a.avail + Number(c.bal.available) }), { amount: 0, book: 0, avail: 0 });
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-end gap-2">
-        <Input className="w-56" placeholder="بحث بالمرجع أو الغرض أو المستلم" value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
-        <select className={selectCls("w-44")} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} aria-label="الحالة">
+      <Toolbar actions={<>
+        {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
+        {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />{me.caps.create && me.caps.create !== "own" ? "إضافة عهدة" : "طلب عهدة"}</Button>}
+      </>}>
+        <SearchBox placeholder="المرجع أو الغرض أو المستلم" value={q} onChange={(v) => { setQ(v); setPage(0); }} />
+        <Field label="الحالة"><select className={selectCls("w-44", true)} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
           <option value="">كل الحالات</option><option value="open">المفتوحة</option><option value="overdue">المتأخرة التسوية</option><option value="past">سجل العهد السابقة</option>
           {Object.entries(C_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
+        </select></Field>
         {me.schools.length > 1 && (
-          <select className={selectCls("w-40")} value={school} onChange={(e) => { setSchool(e.target.value); setPage(0); }} aria-label="الفرع">
+          <Field label="الفرع"><select className={selectCls("w-40", true)} value={school} onChange={(e) => { setSchool(e.target.value); setPage(0); }}>
             <option value="">كل الفروع</option>{me.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+          </select></Field>
         )}
-        <label className="text-xs">من<Input type="date" className="w-36" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
-        <label className="text-xs">إلى<Input type="date" className="w-36" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
-        <label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={mine} onChange={(e) => { setMine(e.target.checked); setPage(0); }} /> عهدي فقط</label>
-        <span className="ms-auto flex gap-2">
-          {me.caps.export && <><Button size="sm" variant="outline" onClick={() => void exp("xlsx")}><Download className="size-4" />Excel</Button><Button size="sm" variant="outline" onClick={() => void exp("pdf")}><FileText className="size-4" />PDF</Button></>}
-          {onNew && <Button size="sm" onClick={onNew}><Plus className="size-4" />{me.caps.create && me.caps.create !== "own" ? "إضافة عهدة" : "طلب عهدة"}</Button>}
-        </span>
-      </div>
+        <DateRange from={from} to={to} setFrom={(v) => { setFrom(v); setPage(0); }} setTo={(v) => { setTo(v); setPage(0); }} />
+        <label className="flex h-9 items-center gap-1.5 text-sm"><input type="checkbox" checked={mine} onChange={(e) => { setMine(e.target.checked); setPage(0); }} /> عهدي فقط</label>
+      </Toolbar>
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => void list.refetch()} /> : !list.data?.rows.length ? (
         <EmptyState title="لا توجد عهد" hint={onNew ? "اطلب عهدة جديدة لتبدأ." : "لا توجد عهد ضمن نطاقك."} />
       ) : (
-        <div className="overflow-x-auto rounded-xl border bg-card">
+        <TableCard caption={<><span><b className="text-foreground tabular-nums">{total}</b> عهدة</span><span>المبالغ في الصفحة {sar(sums.amount)}</span><span>الرصيد {sar(sums.book)}</span><span>المتاح <b className="text-foreground">{sar(sums.avail)}</b></span></>}>
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs text-muted-foreground"><tr>{["المرجع", "المستلم", "الفرع", "الغرض", "الحالة", "المبلغ", "الرصيد", "المتاح", "التسوية"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+            <thead className={THEAD}><tr>
+              {["المرجع", "المستلم", "الفرع", "الغرض", "الحالة"].map((h) => <th key={h} className={TH}>{h}</th>)}
+              {["المبلغ", "الرصيد", "المتاح"].map((h) => <th key={h} className={THN}>{h}</th>)}<th className={TH}>التسوية</th>
+            </tr></thead>
             <tbody>
               {list.data.rows.map((c) => (
-                <tr key={c.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => open(c.id)}>
-                  <td className="px-3 py-2 font-mono text-xs">{c.ref}</td><td className="px-3 py-2">{c.holder}</td><td className="px-3 py-2">{c.school}</td>
-                  <td className="max-w-56 truncate px-3 py-2">{c.purpose}</td>
-                  <td className="px-3 py-2"><Pill tone={TONE[c.status] ?? "muted"}>{C_STATUS[c.status]}</Pill>{c.overdue && <span className="ms-1"><Pill tone="bad">متأخرة</Pill></span>}</td>
-                  <td className="px-3 py-2 tabular-nums">{sar(c.amount)}</td><td className="px-3 py-2 tabular-nums">{sar(c.bal.book)}</td><td className="px-3 py-2 tabular-nums">{sar(c.bal.available)}</td>
-                  <td className="px-3 py-2">{day(c.settle_due)}</td>
+                <tr key={c.id} className={TRC} onClick={() => open(c.id)}>
+                  <td className={`${TD} font-mono text-xs`}>{c.ref}</td><td className={`${TD} font-medium`}>{c.holder}</td><td className={TD}>{c.school}</td>
+                  <td className={`${TD} max-w-56 truncate`}>{c.purpose}</td>
+                  <td className={TD}><span className="flex flex-wrap gap-1"><Pill tone={TONE[c.status] ?? "muted"}>{C_STATUS[c.status]}</Pill>{c.overdue && <Pill tone="bad">متأخرة</Pill>}</span></td>
+                  <td className={TDN}>{sar(c.amount)}</td><td className={TDN}>{sar(c.bal.book)}</td><td className={`${TDN} font-semibold`}>{sar(c.bal.available)}</td>
+                  <td className={`${TD} whitespace-nowrap`}>{day(c.settle_due)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </TableCard>
       )}
-      {total > PAGE && (
-        <div className="flex items-center justify-center gap-2 text-sm">
-          <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>السابق</Button>
-          <span>{page + 1} / {Math.ceil(total / PAGE)} ({total})</span>
-          <Button size="sm" variant="outline" disabled={(page + 1) * PAGE >= total} onClick={() => setPage(page + 1)}>التالي</Button>
-        </div>
-      )}
+      <Pager page={page} total={total} size={PAGE} setPage={setPage} />
     </div>
   );
 }
