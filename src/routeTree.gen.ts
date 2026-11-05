@@ -69,6 +69,7 @@ import { Route as AuthenticatedAppHrInsuranceRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppHrLeaveRouteImport } from './routes/_authenticated/app/hr_.leave'
 import { Route as AuthenticatedAppHrLettersRouteImport } from './routes/_authenticated/app/hr_.letters'
 import { Route as AuthenticatedAppHrPayrollRouteImport } from './routes/_authenticated/app/hr_.payroll'
+import { Route as AuthenticatedAppHrPerformanceRouteImport } from './routes/_authenticated/app/hr_.performance'
 import { Route as AuthenticatedAppHrRecruitRouteImport } from './routes/_authenticated/app/hr_.recruit'
 import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './routes/_authenticated/app/virtual-classes.index'
 import { Route as ApiPublicAdmissionsWordpressRouteImport } from './routes/api/public/admissions/wordpress'
@@ -422,6 +423,12 @@ const AuthenticatedAppHrPayrollRoute =
     path: '/hr/payroll',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHrPerformanceRoute =
+  AuthenticatedAppHrPerformanceRouteImport.update({
+    id: '/hr_/performance',
+    path: '/hr/performance',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppHrRecruitRoute =
   AuthenticatedAppHrRecruitRouteImport.update({
     id: '/hr_/recruit',
@@ -549,6 +556,7 @@ export interface FileRoutesByFullPath {
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/app/hr/payroll': typeof AuthenticatedAppHrPayrollRoute
+  '/app/hr/performance': typeof AuthenticatedAppHrPerformanceRoute
   '/app/hr/recruit': typeof AuthenticatedAppHrRecruitRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
@@ -621,6 +629,7 @@ export interface FileRoutesByTo {
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/app/hr/payroll': typeof AuthenticatedAppHrPayrollRoute
+  '/app/hr/performance': typeof AuthenticatedAppHrPerformanceRoute
   '/app/hr/recruit': typeof AuthenticatedAppHrRecruitRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
@@ -696,6 +705,7 @@ export interface FileRoutesById {
   '/_authenticated/app/hr_/leave': typeof AuthenticatedAppHrLeaveRoute
   '/_authenticated/app/hr_/letters': typeof AuthenticatedAppHrLettersRoute
   '/_authenticated/app/hr_/payroll': typeof AuthenticatedAppHrPayrollRoute
+  '/_authenticated/app/hr_/performance': typeof AuthenticatedAppHrPerformanceRoute
   '/_authenticated/app/hr_/recruit': typeof AuthenticatedAppHrRecruitRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
@@ -771,6 +781,7 @@ export interface FileRouteTypes {
     | '/app/hr/leave'
     | '/app/hr/letters'
     | '/app/hr/payroll'
+    | '/app/hr/performance'
     | '/app/hr/recruit'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
@@ -843,6 +854,7 @@ export interface FileRouteTypes {
     | '/app/hr/leave'
     | '/app/hr/letters'
     | '/app/hr/payroll'
+    | '/app/hr/performance'
     | '/app/hr/recruit'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
@@ -917,6 +929,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/hr_/leave'
     | '/_authenticated/app/hr_/letters'
     | '/_authenticated/app/hr_/payroll'
+    | '/_authenticated/app/hr_/performance'
     | '/_authenticated/app/hr_/recruit'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
@@ -1368,6 +1381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHrPayrollRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/hr_/performance': {
+      id: '/_authenticated/app/hr_/performance'
+      path: '/hr/performance'
+      fullPath: '/app/hr/performance'
+      preLoaderRoute: typeof AuthenticatedAppHrPerformanceRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/hr_/recruit': {
       id: '/_authenticated/app/hr_/recruit'
       path: '/hr/recruit'
@@ -1507,6 +1527,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHrLeaveRoute: typeof AuthenticatedAppHrLeaveRoute
   AuthenticatedAppHrLettersRoute: typeof AuthenticatedAppHrLettersRoute
   AuthenticatedAppHrPayrollRoute: typeof AuthenticatedAppHrPayrollRoute
+  AuthenticatedAppHrPerformanceRoute: typeof AuthenticatedAppHrPerformanceRoute
   AuthenticatedAppHrRecruitRoute: typeof AuthenticatedAppHrRecruitRoute
   AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
@@ -1573,6 +1594,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHrLeaveRoute: AuthenticatedAppHrLeaveRoute,
   AuthenticatedAppHrLettersRoute: AuthenticatedAppHrLettersRoute,
   AuthenticatedAppHrPayrollRoute: AuthenticatedAppHrPayrollRoute,
+  AuthenticatedAppHrPerformanceRoute: AuthenticatedAppHrPerformanceRoute,
   AuthenticatedAppHrRecruitRoute: AuthenticatedAppHrRecruitRoute,
   AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,

@@ -49,6 +49,10 @@ function Page() {
         <Link to="/app/hr/payroll" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الرواتب والسلف</Link>
         <Link to="/app/hr/recruit" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التوظيف</Link>
         <Link to="/app/hr/assets" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">العهد العينية</Link>
+        <Link to="/app/hr/performance" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الأداء</Link>
+        <Link to="/app/hr/insurance" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التأمين الطبي</Link>
+        <Link to="/app/hr/housing" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">السكن</Link>
+        <Link to="/app/hr/reports" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التقارير</Link>
       </nav>}
       {!m.enabled ? <SectionLocked /> : !m.caps.view ? <ForbiddenState /> : <Workspace org={org!} m={m} />}
     </>
