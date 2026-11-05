@@ -29,7 +29,7 @@ export const SRC_L: Record<string, string> = { contract: "العقد", decision:
 export const sar = (n: number | string | null | undefined, cur = "SAR") => `${Number(n ?? 0).toLocaleString("ar-SA-u-nu-latn", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur === "SAR" ? "ر.س" : cur}`;
 export const CAT_L: Record<string, string> = { general: "عام", bonus: "مكافأة", penalty: "جزاء", promotion: "ترقية", comp_change: "تعديل تعويض", overtime: "عمل إضافي (ساعات)", settlement: "تسوية نهاية خدمة" };
 export { AR_MONTHS, mon, thisMonth, nextMonth } from "@/lib/month";
-import { mon } from "@/lib/month";
+import { mon, nextMonth } from "@/lib/month";
 
 export function Pill({ tone, children }: { tone: "ok" | "wait" | "bad" | "muted"; children: React.ReactNode }) {
   const c = tone === "ok" ? "bg-success/10 text-success" : tone === "wait" ? "bg-warning/10 text-warning" : tone === "bad" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground";

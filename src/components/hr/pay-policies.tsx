@@ -17,6 +17,7 @@ export type Topic = "proration" | "gosi" | "overtime" | "eos" | "unpaid_leave";
 export type Pol = { version: number; status: "set" | "not_applicable"; params: Record<string, unknown>; effective_from: string; reason: string; by: string; at: string } | null;
 type List = { current: Record<Topic, Pol>; history: (NonNullable<Pol> & { topic: Topic })[]; can_edit: boolean; allow_partial_exception: boolean; exc_by: string | null; exc_at: string | null; exc_reason: string | null; is_owner: boolean; leave_types: { id: string; name: string }[] };
 
+type PolParams = { method?: string; divisor?: number; base?: string; employee_rate?: number; employer_rate?: number; cap?: number | null; nationalities?: string[]; month_days?: number; day_hours?: number; multiplier?: number; basis?: string; types?: string[] };
 export const TOPIC_L: Record<Topic, string> = { proration: "الاحتساب الجزئي للشهر", gosi: "التأمينات الاجتماعية", overtime: "العمل الإضافي", eos: "نهاية الخدمة والتسوية", unpaid_leave: "الإجازة غير المدفوعة" };
 const HOLD_L: Record<Topic, string> = {
   proration: "يُعلّق راتب من بدأ أو انتهت خدمته داخل الشهر",
@@ -29,7 +30,7 @@ const HOLD_L: Record<Topic, string> = {
 export function policySummary(t: Topic, p: Pol, leaveTypes: { id: string; name: string }[] = []) {
   if (!p) return "غير مضبوطة";
   if (p.status === "not_applicable") return "لا تنطبق (قرار موثق)";
-  const x = p.params as Record<string, any>;
+  const x = p.params as PolParams;
   if (t === "proration") return x.method === "calendar" ? "أيام الشهر الفعلية" : `شهر ثابت ${x.divisor} يومًا`;
   if (t === "gosi") return `حصة الموظف ${x.employee_rate}% · صاحب العمل ${x.employer_rate}% من ${x.base === "basic" ? "الأساسي" : "كل البنود الشهرية"}${x.cap ? ` · حد ${x.cap}` : ""}${x.nationalities?.length ? ` · للجنسيات: ${x.nationalities.join("، ")}` : ""}`;
   if (t === "overtime") return `أجر الساعة = ${x.base === "basic" ? "الأساسي" : "البنود الشهرية"} ÷ (${x.month_days} × ${x.day_hours}) × ${x.multiplier}`;

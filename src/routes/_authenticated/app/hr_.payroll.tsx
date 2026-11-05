@@ -138,7 +138,7 @@ function RunPanel({ id, k, onClose }: { id: string; k: Caps; onClose: () => void
     if (mode !== "clear" && !t) return;
     act.mutate({ fn: "hr_pay_line_resolve", args: { _run: r.id, _rev: r.rev, _emp: emp, _mode: mode, _reason: t || null }, msg: "حُدّث المسير" });
   };
-  const inc = r.lines.filter((l) => l.status === "included"), exc = r.lines.filter((l) => l.status === "excluded");
+  const inc = r.lines.filter((l) => l.status === "included");
   const exp = (kind: "xlsx" | "pdf") => {
     const h = ["الموظف", "الرقم الوظيفي", "المدرسة", "الإجمالي", "الاستقطاعات", "الصافي", "موانع"];
     const d = inc.map((l) => [l.employee, l.employee_no, l.school ?? "", Number(l.gross), Number(l.deductions), Number(l.net), l.blockers.map((b) => b.msg).join("؛ ")]);
