@@ -13,7 +13,7 @@ async def login(br, who, w=1280, h=1800):
     await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await p.wait_for_timeout(1500)
     await p.goto(B + "/app/hr/recruit"); await p.wait_for_timeout(3500); return p
 async def dialog(p, text=None):
-    d = p.get_by_role("dialog")
+    d = p.get_by_role("alertdialog")
     if text is not None: await d.locator("textarea, input").first.fill(text)
     await d.get_by_role("button").filter(has_text="تأكيد").or_(d.get_by_role("button").filter(has_text="موافق")).first.click(); await p.wait_for_timeout(2500)
 async def main():
