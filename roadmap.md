@@ -441,7 +441,7 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [x] Contract alerts: inherited (migration) vs explicit decision shown; last automatic run shown separately (contracts 05:15 UTC ok, documents 05:20 UTC ok)
 - [x] Fixed: hr_settings fallback broke for orgs without a settings row after new column
 - [x] Device intake accepted separately from a real device (no device connected)
-- [ ] Letters: private PDF per issued letter — next
+- [x] Letters: PDF file per issued letter (direct download, built in the browser from the server-permitted frozen text, never stored; multi-page A4, cancelled/superseded stamp, LTR dates) — hrl-journey 15/15
 - [ ] Import browser journey with add-but-no-sensitive account — next
 - [ ] P6 decisions / earnings & deductions / advances / custody link — not started
 - [ ] P7 payroll (HR prepares → finance reviews → management approves), payslips; ledger/payment link waits for finance setup (D4 open) — not started
