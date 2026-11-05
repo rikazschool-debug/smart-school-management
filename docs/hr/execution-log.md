@@ -133,3 +133,11 @@ P4 leave done (see above). Next: P5 attendance link / P7 payroll per the bluepri
 - UI: /app/hr/attendance (day board + close, Excel import, corrections, period report + Excel/PDF, shifts/assignments/holidays/devices), «حضوري» tab, «حضور فريقي» on team page (minimal fields).
 - Evidence: hr-att-e2e 49/49; hra-journey 12/12 (owner desktop, employee 390px, HR, manager, colleague); regression hr-leave-e2e 54/54.
 - Not done: real device test (no device connected — only intake verified), geolocation for mobile punch, financial effect (deferred to payroll), letters PDF, import journey without sensitive permission, inherited-vs-explicit alert activation review.
+
+## Remaining fixes — 2026-11-05 (prompt «P6/P7»)
+- Duplicate punches: only same source+device within 2 min (hr-att-e2e check). Mobile punch: UI notice that location is not verified; require_location switch blocks mobile punch server-side.
+- Contract alerts: alerts_source migrated|explicit; settings page shows inherited vs explicit and last automatic runs from cron (contracts 2026-11-05 05:15 UTC succeeded, documents 05:20 UTC succeeded). No manual run recorded separately.
+- Bug fixed: _hr_settings default row (column count) — hr_settings_get failed for orgs with no settings row.
+- Evidence: hr-att-e2e 53/53, hr-contracts-e2e 31/31 (flaky timestamp match fixed), hr-docs-e2e 38/38.
+- Device acceptance: intake tested only; real device pending.
+- Resume point: letters PDF → import journey → P6 → P7.

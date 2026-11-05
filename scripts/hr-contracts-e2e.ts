@@ -70,7 +70,7 @@ try {
   check("amendment draft with effective date", !am.error, am.error);
   const noComp = await approver.c.rpc("hr_contract_get", { _id: C });
   const prVer = await pr.c.rpc("hr_contract_get", { _id: C });
-  check("principal still sees no amounts in any version", !JSON.stringify(prVer.data).includes("9000") && !JSON.stringify(prVer.data).includes("8000"), prVer.data);
+  check("principal still sees no amounts in any version", !JSON.stringify(prVer.data).replace(/"[a-z_]*at":"[^"]*"/g, "").includes("9000") && !JSON.stringify(prVer.data).replace(/"[a-z_]*at":"[^"]*"/g, "").includes("8000"), prVer.data);
   await approver.c.rpc("hr_contract_issue", { _id: C, _version: 2, _reason: "مراجعة" });
   await emp.c.rpc("hr_contract_ack", { _id: C, _version: 2, _decision: "accept" });
   const after = (await admin.from("hr_contract_versions").select("version,status,effective_from,data").eq("contract_id", C).order("version")).data!;

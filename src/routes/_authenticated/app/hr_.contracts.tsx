@@ -176,7 +176,7 @@ function ContractsReport({ org, k, onPick }: { org: string; k: CCaps; onPick: (p
 }
 
 type HrSet = { contract_alert_days: number[]; reviewed: boolean; notify_employee: boolean; updated_at: string | null; updated_by: string | null; can_edit: boolean; job_time: string;
-  active: boolean; decided_at: string | null; decided_by: string | null; decision_reason: string | null;
+  active: boolean; decided_at: string | null; decided_by: string | null; decision_reason: string | null; source: "migrated" | "explicit" | null; auto_runs: { job: string; at: string; status: string; message: string | null }[];
   history: { action: string; at: string; by: string | null; reason: string | null }[] };
 function AlertSettings({ org }: { org: string }) {
   const qc = useQueryClient();
@@ -204,7 +204,8 @@ function AlertSettings({ org }: { org: string }) {
     <div className={"mb-3 rounded-xl border p-3 text-sm " + (s.active ? "bg-card" : "border-warning/50 bg-warning/10")}>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <span className={"rounded px-2 py-0.5 text-xs font-semibold " + (s.active ? "bg-success/10 text-success" : "bg-warning/15 text-warning")}>{s.active ? "التنبيهات مفعّلة" : "التنبيهات غير مفعّلة — لا يُرسل شيء"}</span>
-        {s.decided_at && <span className="text-xs text-muted-foreground">آخر قرار: {s.decided_by ?? "—"} · <bdi dir="ltr">{s.decided_at.slice(0, 16).replace("T", " ")}</bdi>{s.decision_reason ? ` · ${s.decision_reason}` : ""}</span>}
+        {s.decided_at && <span className="text-xs text-muted-foreground">{s.source === "migrated" ? "تفعيل موروث من الترحيل (لم يقرره المالك صراحة بعد): " : "قرار صريح: "}{s.decided_by ?? "—"} · <bdi dir="ltr">{s.decided_at.slice(0, 16).replace("T", " ")}</bdi>{s.decision_reason ? ` · ${s.decision_reason}` : ""}</span>}
+        {(s.auto_runs ?? []).length > 0 && <span className="block w-full text-xs text-muted-foreground">آخر تشغيل تلقائي: {s.auto_runs.map((r) => `${r.job.includes("doc") ? "المستندات" : "العقود"} ${new Date(r.at).toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "short", timeStyle: "short" })} — ${r.status === "succeeded" ? "نجح" : "فشل"}`).join(" · ")}</span>}
         {s.can_edit && <Button size="sm" variant={s.active ? "outline" : "default"} disabled={toggle.isPending || (!s.active && !s.reviewed)} onClick={decide}>{s.active ? "إيقاف التنبيهات" : "تفعيل التنبيهات"}</Button>}
         {s.history.length > 0 && <Button size="sm" variant="ghost" onClick={() => setShowLog((v) => !v)}>{showLog ? "إخفاء سجل القرارات" : "سجل القرارات"}</Button>}
       </div>

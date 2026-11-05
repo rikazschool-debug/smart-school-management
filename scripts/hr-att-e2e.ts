@@ -140,6 +140,21 @@ try {
   const sp2 = await emp.c.rpc("hr_att_self_punch", { _org: org, _key: "m1" }); const sp3 = await emp.c.rpc("hr_att_self_punch", { _org: org, _key: "m1" });
   check("mobile punch once per key", sp2.data?.duplicate === false && sp3.data?.duplicate === true, [sp2, sp3]);
 
+  // two-minute rule: only same-source repeats are duplicates; a real in/out from different sources stays
+  await P(M, T("2026-11-03", "07:00"), "m1");
+  await admin.rpc("_hr_att_ingest", { _dev: dev.id, _rows: [{ employee_no: (await admin.from("hr_employees").select("employee_no").eq("id", M).single()).data!.employee_no, at: T("2026-11-03", "07:01"), ref: "m-dev" }] });
+  const md = (await rec.c.rpc("hr_att_emp_days", { _emp: M, _from: "2026-11-03", _to: "2026-11-03" })).data;
+  check("punches from different sources within 2 min are both kept", day(md, "2026-11-03")?.punches === 2 && day(md, "2026-11-03")?.duplicates === 0, day(md, "2026-11-03"));
+  // location requirement blocks mobile punch
+  await owner.c.rpc("hr_att_settings_save", { _org: org, _self: true, _require_location: true });
+  const loc = await emp.c.rpc("hr_att_self_punch", { _org: org, _key: "m2" }); check("required location blocks mobile punch", has(loc, "الموقع"), loc.error);
+  const lm = (await emp.c.rpc("hr_att_my", { _org: org, _from: "2026-11-01", _to: "2026-11-01" })).data; check("self punch button hidden when location required", lm.allow_self_punch === false, lm.allow_self_punch);
+  await owner.c.rpc("hr_att_settings_save", { _org: org, _self: true, _require_location: false });
+  // contract alerts: explicit decision recorded as explicit
+  await owner.c.rpc("hr_settings_save", { _org: org, _days: [30, 7], _notify_employee: false });
+  const sa = await owner.c.rpc("hr_settings_set_alerts", { _org: org, _active: true, _reason: "قرار المالك" }); if (sa.error) console.log("sa err", sa.error);
+  const hsr = await owner.c.rpc("hr_settings_get", { _org: org }); if (hsr.error) console.log("hs err", hsr.error); const hs = hsr.data ?? {}; check("owner alert decision marked explicit + auto runs listed", hs.source === "explicit" && Array.isArray(hs.auto_runs), [hs.source, hs.auto_runs]);
+
   // views & isolation
   const mine = (await emp.c.rpc("hr_att_my", { _org: org, _from: "2026-11-01", _to: "2026-11-04" })).data;
   check("employee sees own days and corrections", mine.employee && mine.days.length === 4 && mine.corrections.length >= 2, mine);

@@ -20,7 +20,7 @@ import { AT_STATUS, AttStatus, DayRow, SOURCE, addDays, dtm, mins, riyadhToday, 
 type CapKey = "view" | "record" | "correct" | "settings" | "close" | "export";
 type Caps = { enabled: boolean; settings_admin: boolean; team: boolean; caps: Record<CapKey, boolean> };
 type Shift = { id: string; name: string; school_id: string | null; school: string | null; start_time: string; end_time: string; night: boolean; grace_in_min: number; grace_out_min: number; break_min: number; is_active: boolean; used: boolean; assigned: number };
-type Setup = { can_edit: boolean; work_days: number[] | null; allow_self_punch: boolean; schools: { id: string; name: string }[]; shifts: Shift[]; holidays: { id: string; date: string; name: string; school: string | null }[]; devices: { id: string; name: string; school: string | null; is_active: boolean; last_seen: string | null }[] };
+type Setup = { can_edit: boolean; work_days: number[] | null; allow_self_punch: boolean; require_location: boolean; schools: { id: string; name: string }[]; shifts: Shift[]; holidays: { id: string; date: string; name: string; school: string | null }[]; devices: { id: string; name: string; school: string | null; is_active: boolean; last_seen: string | null }[] };
 type Emp = { employee_id: string; employee: string; employee_no: string; school: string | null };
 type BoardRow = Emp & AttDay & { can_record: boolean };
 type Board = { date: string; closed: { school_id: string; school: string; closed: boolean; can_close: boolean; log: { action: string; reason: string | null; at: string; by: string | null }[] }[]; rows: BoardRow[] };
@@ -246,7 +246,7 @@ function Shifts({ org, k }: { org: string; k: Caps }) {
   const [hf, setHf] = useState({ date: "", name: "", school: "" });
   const hol = useMutation({ mutationFn: () => rpc("hr_att_holiday_save", { _org: org, _school: hf.school || null, _date: hf.date, _name: hf.name }), onSuccess: () => { toast.success("أُضيفت العطلة"); setHf({ date: "", name: "", school: "" }); inv(); }, onError: err });
   const holDel = useMutation({ mutationFn: (id: string) => rpc("hr_att_holiday_delete", { _id: id }), onSuccess: () => { toast.success("حُذفت العطلة"); inv(); }, onError: err });
-  const selfSet = useMutation({ mutationFn: (v: boolean) => rpc("hr_att_settings_save", { _org: org, _self: v }), onSuccess: () => { toast.success("حُفظ الإعداد"); inv(); }, onError: err });
+  const selfSet = useMutation({ mutationFn: (v: { self: boolean; loc: boolean }) => rpc("hr_att_settings_save", { _org: org, _self: v.self, _require_location: v.loc }), onSuccess: () => { toast.success("حُفظ الإعداد"); inv(); }, onError: err });
   const [dname, setDname] = useState("");
   const [secret, setSecret] = useState<{ id: string; secret: string } | null>(null);
   const dev = useMutation({ mutationFn: () => rpc<{ id: string; secret: string }>("hr_att_device_save", { _org: org, _school: null, _name: dname }), onSuccess: (r) => { setSecret(r); setDname(""); inv(); }, onError: err });
@@ -319,7 +319,9 @@ function Shifts({ org, k }: { org: string; k: Caps }) {
       </Section>
       {can && (
         <Section title="مصادر التسجيل" desc="الجوال معطّل افتراضيًا. الأجهزة ترسل بصماتها برابط موقّع بسر الجهاز.">
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.allow_self_punch} disabled={selfSet.isPending} onChange={(e) => selfSet.mutate(e.target.checked)} />السماح للموظف بتسجيل بصمته من «حضوري» (بدون تحقق من الموقع)</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.allow_self_punch} disabled={selfSet.isPending} onChange={(e) => selfSet.mutate({ self: e.target.checked, loc: d.require_location })} />السماح للموظف بتسجيل بصمته من «حضوري»</label>
+          <p className="ms-6 text-xs text-warning">تنبيه: موقع الموظف غير متحقق منه حاليًا عند التسجيل من الجوال.</p>
+          <label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={d.require_location} disabled={selfSet.isPending} onChange={(e) => selfSet.mutate({ self: d.allow_self_punch, loc: e.target.checked })} />اشتراط التحقق من الموقع (يوقف بصمة الجوال حتى يتوفر التحقق)</label>
           <form className="mt-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (dname.trim() && !dev.isPending) dev.mutate(); }}>
             <Input aria-label="اسم الجهاز" placeholder="اسم جهاز جديد" className="w-full sm:w-56" value={dname} onChange={(e) => setDname(e.target.value)} />
             <Button size="sm" type="submit" disabled={dev.isPending}><Plus className="size-4" />إضافة جهاز</Button>
