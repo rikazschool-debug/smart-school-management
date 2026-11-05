@@ -46,8 +46,5 @@
 - Operations staff (teacher-type membership + perm template, no teachers row) are detected by useOpsStaff (src/lib/ops-staff.ts): own title, ops-only menu and OpsHome — never the teacher dashboard; capabilities still come from mt_me. Demo accounts: scripts/seed-maint-demo.ts.
 - Admissions (ad_*): RPC-only; access via _ad_ok over the 'admissions' perm section (own area, platform-switchable); accepting never creates a student/account/seat; linking to a student is explicit (ad_act link). Website intake only via signed /api/public/admissions/wordpress → service-only _ad_ingest. Tests: admissions-e2e, wp-e2e.
 - Evaluation (cv_*/ev_*): RPC-only; visit-form.ts matches _cv_codes(); ratings keep form snapshots.
-- HR (hr_*): RPC-only, Rikaz = single source; docs/hr/execution-log.md.
+- HR (hr_*): RPC-only, Rikaz = single source; rules in src/components/hr/AGENTS.md.
 
-- HR attendance (hr_att_*): RPC-only; raw punches append-only and separate from computed hr_att_days; closed days change only after dated reopen; devices via signed /api/public/hr/attendance → service-only _hr_att_ingest; money effect only via payroll. Tests: hr-att-e2e, hra-journey.
-- HR pay (hr_decisions/hr_advances/hr_pay_*): RPC-only; dated hr_pay_policies, unset = held. Tests: hr-pay-e2e, hrp-journey.
-- HR extensions: owner switch (hr_ext_settings); recruitment hr_rc_*, convert once. Tests: hr-recruit-e2e, hrr-journey.
