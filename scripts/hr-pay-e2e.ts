@@ -99,13 +99,52 @@ try {
   const le2 = r.lines.find((x: any) => x.employee_id === E);
   check("after disbursement: installment 333.33 deducted → net 7566.67", Number(le2.net) === 7566.67 && le2.items.some((i: any) => i.source === "advance"), le2);
 
+  // ---- dated pay policies (P6/P7 acceptance)
+  const gl = (x: any, e: string) => x.lines.find((l: any) => l.employee_id === e);
+  const reGet = async () => { r = (await hr.c.rpc("hr_pay_run_get", { _id: R })).data; await hr.c.rpc("hr_pay_run_act", { _id: R, _rev: r.rev, _action: "prepare", _reason: null, _ref: null }); r = (await hr.c.rpc("hr_pay_run_get", { _id: R })).data; };
+  check("without GOSI policy every included employee is held", gl(r, E).blockers.some((b: any) => b.code === "gosi_policy") && r.totals.pending_policies.includes("gosi"), gl(r, E).blockers);
+  const hp = await hr.c.rpc("hr_pay_policy_save", { _org: org, _topic: "gosi", _p: { status: "not_applicable", effective_from: M0, reason: "سياسة اختبار", params: {} } }); check("policies need owner or the policies permission", has(hp, "المالك أو المفوض"), hp.error);
+  const g1 = await owner.c.rpc("hr_pay_policy_save", { _org: org, _topic: "gosi", _p: { status: "set", effective_from: M0, reason: "سياسة اختبار", params: { base: "basic", employee_rate: 10, employer_rate: 12 } } }); check("owner sets GOSI policy v1", !g1.error, g1.error);
+  await reGet();
+  check("GOSI v1: employee share 10% of basic 6000 = 600 deducted; employer 720 shown as cost only", gl(r, E).items.some((i: any) => i.source === "gosi" && Number(i.amount) === 600) && Number(r.totals.employer_gosi) >= 720, [gl(r, E).items, r.totals]);
+  const g2 = await owner.c.rpc("hr_pay_policy_save", { _org: org, _topic: "gosi", _p: { status: "not_applicable", effective_from: M0, reason: "لا تنطبق على المؤسسة التجريبية", params: {} } }); check("GOSI v2 not applicable (new version, history kept)", !g2.error, g2.error);
+  const lockPol = await admin.from("hr_pay_policies").update({ reason: "x" }).eq("org_id", org); check("policy versions cannot be edited", !!lockPol.error, lockPol.error);
+  const ph = (await owner.c.rpc("hr_pay_policies_list", { _org: org })).data; check("policy history keeps both versions", ph.history.filter((h: any) => h.topic === "gosi").length === 2, ph.history);
+  await owner.c.rpc("hr_pay_policy_save", { _org: org, _topic: "eos", _p: { status: "not_applicable", effective_from: M0, reason: "سياسة اختبار", params: {} } });
+  await owner.c.rpc("hr_pay_policy_save", { _org: org, _topic: "unpaid_leave", _p: { status: "not_applicable", effective_from: M0, reason: "سياسة اختبار", params: {} } });
+  await reGet();
+  check("after v2 GOSI no longer held and not deducted → net back to 7566.67", !gl(r, E).blockers.length && Number(gl(r, E).net) === 7566.67, gl(r, E));
+
   // partial-month blocker: mate's contract ended mid-month
   await admin.from("hr_contracts").update({ ended_on: M0 + "-15" }).eq("employee_id", MT);
   await hr.c.rpc("hr_pay_run_act", { _id: R, _rev: r.rev, _action: "prepare", _reason: null, _ref: null });
   r = (await hr.c.rpc("hr_pay_run_get", { _id: R })).data;
   const sb = await hr.c.rpc("hr_pay_run_act", { _id: R, _rev: r.rev, _action: "submit", _reason: null, _ref: null }); check("partial month blocks submission (no guessed proration)", has(sb, "موانع"), sb.error);
+  check("partial month without policy: held for review with service days", gl(r, MT).blockers.some((b: any) => b.code === "partial" && b.msg.includes("15 يوم")), gl(r, MT).blockers);
+  const cf0 = await hr.c.rpc("hr_pay_line_resolve", { _run: R, _rev: r.rev, _emp: MT, _mode: "confirm", _reason: "صرف كامل" }); check("documented exception refused when the organisation does not allow it", has(cf0, "لا تسمح"), cf0.error);
+  const exN = await hr.c.rpc("hr_pay_exception_set", { _org: org, _on: true, _reason: "x y z" }); check("only the owner allows partial-month exceptions", !!exN.error, exN.error);
+  const exO = await owner.c.rpc("hr_pay_exception_set", { _org: org, _on: true, _reason: "قرار المالك للاختبار" }); check("owner allows documented exceptions", !exO.error, exO.error);
+  r = (await hr.c.rpc("hr_pay_run_get", { _id: R })).data;
+  const cf1 = await hr.c.rpc("hr_pay_line_resolve", { _run: R, _rev: r.rev, _emp: MT, _mode: "confirm", _reason: "استثناء موثق بمذكرة 12" }); r = (await hr.c.rpc("hr_pay_run_get", { _id: R })).data;
+  const xm = gl(r, MT);
+  check("exception recorded with reason and effect, no blocker, counted", !cf1.error && xm.status === "included" && xm.exception?.kind === "partial" && xm.exception.reason.includes("مذكرة") && xm.exception.effect.includes("15 يوم") && !xm.blockers.length && r.totals.exceptions >= 2, [cf1.error, xm]);
+  await hr.c.rpc("hr_pay_line_resolve", { _run: R, _rev: r.rev, _emp: MT, _mode: "clear", _reason: null });
+  const pr1 = await owner.c.rpc("hr_pay_policy_save", { _org: org, _topic: "proration", _p: { status: "set", effective_from: M0, reason: "أيام تقويمية", params: { method: "calendar" } } });
+  await reGet();
+  const dim = new Date(Date.UTC(+M0.slice(0, 4), +M0.slice(5, 7), 0)).getUTCDate();
+  check("proration policy: basic 5000 × 15/" + dim, !pr1.error && gl(r, MT).items.some((i: any) => i.source === "contract" && Number(i.amount) === Math.round(5000 * 15 / dim * 100) / 100) && !gl(r, MT).blockers.length, [pr1.error, gl(r, MT)]);
+  const IO = (await mn.c.rpc("hr_pay_item_save", { _org: org, _id: null, _name: "عمل إضافي", _kind: "earning", _active: true })).data;
+  const OT = (await mn.c.rpc("hr_decision_save", { _org: org, _p: { employee_id: MT, item_id: IO, category: "overtime", hours: 10, mode: "once", from_month: M0, reason: "ساعات معتمدة من الحضور" } })).data;
+  const pen = await mn.c.rpc("hr_decision_save", { _org: org, _p: { employee_id: MT, item_id: IO, category: "penalty", amount: 50, mode: "once", from_month: M0, reason: "جزاء" } }); check("penalty must use a deduction item", has(pen, "استقطاع"), pen.error);
+  await mapr.c.rpc("hr_decision_act", { _id: OT, _rev: 1, _action: "approve", _reason: null });
+  await reGet();
+  check("approved overtime hours held without overtime policy", gl(r, MT).blockers.some((b: any) => b.code === "overtime_policy"), gl(r, MT).blockers);
+  await owner.c.rpc("hr_pay_policy_save", { _org: org, _topic: "overtime", _p: { status: "set", effective_from: M0, reason: "سياسة اختبار", params: { base: "basic", month_days: 30, day_hours: 8, multiplier: 1.5 } } });
+  await reGet();
+  check("overtime = 10h × 5000/(30×8) × 1.5 = 312.50", gl(r, MT).items.some((i: any) => i.source === "overtime" && Number(i.amount) === 312.5), gl(r, MT).items);
   const rs = await hr.c.rpc("hr_pay_line_resolve", { _run: R, _rev: r.rev, _emp: MT, _mode: "exclude", _reason: "تسوية نهاية الخدمة منفصلة" }); check("HR excludes with reason", !rs.error, rs.error);
   r = (await hr.c.rpc("hr_pay_run_get", { _id: R })).data;
+  check("excluded employee stays in the exceptions sheet with its computed amount", gl(r, MT).status === "excluded" && gl(r, MT).exception?.kind === "excluded" && gl(r, MT).exception.effect.includes("للمتابعة"), gl(r, MT));
   const s1 = await hr.c.rpc("hr_pay_run_act", { _id: R, _rev: r.rev, _action: "submit", _reason: null, _ref: null }); check("HR submits to finance", !s1.error, s1.error);
   r = (await fin.c.rpc("hr_pay_run_get", { _id: R })).data;
   check("status: under finance review, version 1 snapshot", r.status === "finance_review" && r.version === 1 && r.versions.length === 1, r);
