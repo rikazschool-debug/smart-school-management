@@ -73,7 +73,7 @@ try {
   const xc = (await stranger.c.rpc("hr_report_catalog", { _org: org })).data as any[]; check("other organisation gets an empty catalog", Array.isArray(xc) && xc.length === 0, xc);
 
   // every available report runs (extensions switched on) and its totals are computed from the returned rows
-  for (const k of ["housing", "insurance", "performance"]) await owner.c.rpc("hr_ext_set", { _org: org, _key: k, _on: true });
+  for (const k of ["housing", "insurance", "performance"]) await { const x = await owner.c.rpc("hr_ext_set", { _org: org, _ext: k, _on: true, _reason: "تجربة التقارير" }); if (x.error) throw x.error; };
   const all = (await owner.c.rpc("hr_report_catalog", { _org: org })).data as any[];
   const errs: string[] = [];
   for (const c of all.filter((c) => c.status === "ready")) { const r = await owner.c.rpc("hr_report", { _org: org, _key: c.key, _f: { from: "2020-01-01", to: "2030-12-31" }, _mode: "view" }); if (r.error || !Array.isArray(r.data?.rows) || r.data.columns.length !== (r.data.rows[0]?.length ?? r.data.columns.length)) errs.push(`${c.key}: ${r.error?.message ?? "shape"}`); }
