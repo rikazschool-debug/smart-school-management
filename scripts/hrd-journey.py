@@ -38,7 +38,7 @@ async def main():
         await e.get_by_role("button", name="رفع نسخة جديدة").click(); await e.wait_for_timeout(500)
         await e.set_input_files("#df", SH + "id.pdf"); await e.get_by_role("button", name="رفع وإرسال للمراجعة").click(); await e.wait_for_timeout(4000)
         check("7 employee reuploads version 2", await e.get_by_text("النسخة 2").count() >= 1)
-        await r.reload(); await r.wait_for_timeout(3500)
+        await r.reload(); await r.wait_for_timeout(3500); await r.screenshot(path=SH + "3b_before_accept.png")
         await r.get_by_role("button", name="قبول النسخة 2").click(); await r.wait_for_timeout(500)
         await r.locator("[role=alertdialog],[role=dialog]").get_by_role("button", name="قبول", exact=True).click(); await r.wait_for_timeout(3000)
         await r.screenshot(path=SH + "4_accepted.png")
