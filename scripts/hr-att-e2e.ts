@@ -151,7 +151,8 @@ try {
   const lm = (await emp.c.rpc("hr_att_my", { _org: org, _from: "2026-11-01", _to: "2026-11-01" })).data; check("self punch button hidden when location required", lm.allow_self_punch === false, lm.allow_self_punch);
   await owner.c.rpc("hr_att_settings_save", { _org: org, _self: true, _require_location: false });
   // contract alerts: explicit decision recorded as explicit
-  await owner.c.rpc("hr_settings_set_alerts", { _org: org, _active: true, _reason: "قرار المالك" });
+  await owner.c.rpc("hr_settings_save", { _org: org, _days: [30, 7], _notify_employee: false });
+  const sa = await owner.c.rpc("hr_settings_set_alerts", { _org: org, _active: true, _reason: "قرار المالك" }); if (sa.error) console.log("sa err", sa.error);
   const hsr = await owner.c.rpc("hr_settings_get", { _org: org }); if (hsr.error) console.log("hs err", hsr.error); const hs = hsr.data ?? {}; check("owner alert decision marked explicit + auto runs listed", hs.source === "explicit" && Array.isArray(hs.auto_runs), [hs.source, hs.auto_runs]);
 
   // views & isolation
