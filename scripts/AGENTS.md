@@ -63,4 +63,4 @@
 - scripts/hr-e2e.ts: HR employee files/assignments/permissions (24 checks). scripts/hr-browser-fixture.ts setup|teardown (hrb-) + scripts/hr-journey.py (14 checks); always run teardown after.
 - scripts/hr-import-e2e.ts: HR Excel import server checks (idempotent retry, conflict, scope, sensitive, audit; 11 checks).
 - scripts/hr-contracts-e2e.ts: contracts lifecycle/permissions (31 checks). scripts/hrc-browser-fixture.ts setup|teardown + scripts/hrc-journey.py (11 checks); always run teardown after.
-- scripts/hrc-alerts-e2e.ts: HR contract expiry alerts (stages, recipients, dedupe, renewal, HR switch; 11 checks).
+- scripts/hrc-alerts-e2e.ts: HR contract alerts + settings + separation of duties (24 checks; direct job call only).
