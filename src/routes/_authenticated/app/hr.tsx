@@ -41,6 +41,7 @@ function Page() {
       {m.enabled && <nav aria-label="أقسام الموارد البشرية" className="mb-4 flex flex-wrap gap-2 text-sm">
         <span className="rounded-lg bg-primary px-3 py-1.5 text-primary-foreground">ملفات الموظفين</span>
         <Link to="/app/hr/contracts" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">العقود</Link>
+        <Link to="/app/hr/documents" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">المستندات</Link>
       </nav>}
       {!m.enabled ? <SectionLocked /> : !m.caps.view ? <ForbiddenState /> : <Workspace org={org!} m={m} />}
     </>
