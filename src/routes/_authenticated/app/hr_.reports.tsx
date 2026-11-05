@@ -74,7 +74,7 @@ function Runner({ org, c, school }: { org: string; c: Cat; school: { id: string;
   const has = (k: string) => c.filters.includes(k);
   const r = q.data;
   return (
-    <Section title={`${c.key} — ${c.title}`} desc={c.rule}>
+    <Section title={`${c.key} — ${c.title}`} desc={c.rule ?? ""}>
       {c.filters.length > 0 && <form aria-label="فلاتر التقرير" className="mb-3 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); setApplied({ ...f }); }}>
         {has("school") && school.length > 0 && <div><Label htmlFor="r-s">المدرسة</Label><select id="r-s" className={selectCls("w-44")} value={f["school"] ?? ""} onChange={(e) => setF({ ...f, school: e.target.value })}><option value="">كل المدارس المصرح بها</option>{school.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
         {has("status") && <div><Label htmlFor="r-st">الحالة</Label><Input id="r-st" className="w-36" placeholder="مثل approved" dir="ltr" value={f["status"] ?? ""} onChange={(e) => setF({ ...f, status: e.target.value })} /></div>}
