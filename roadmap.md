@@ -460,3 +460,12 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [ ] 3 P9 report catalog (R01–R29 mapping, totals = details = export, view/print/export perms, server masking)
 - [ ] 3 P9 security notes review + regression (contracts, leave, attendance, evaluation, timetable, substitutes)
 - [ ] 4 Role journeys desktop/phone (id tampering, branch switch, revoke after open); execution log; P10 list
+
+## Package 20 — prompt «واصل التنفيذ داخل ركاز من آخر نقطة» (P5 location/device, asset custody, P8 rest, P9, P10)
+- [ ] 1 P5 location check-in (school point + radius + accuracy, server distance/freshness check, assignment/school check; phone tests)
+- [ ] 2 P5 real fingerprint device (brand/model/connection from the device; employee number mapping; unmatched review; dedupe) — device test waits on device access
+- [ ] 3 Asset custody register (separate from cash custody; handover/ack/return/condition/transfer/loss; one holder at a time; open items at end of service; self view)
+- [ ] 4 P8 performance (reuse evaluation), insurance (companies/policies/classes/coverage/dependants), housing (property/unit/capacity/occupancy); switch on after journeys
+- [ ] 5 P9 report catalog R01–R29, totals = rows = export, «غير محتسب» instead of zero, view/print/export perms, tamper/branch/revoke browser tests, old security notes
+- [ ] 6 P10 migration/acceptance/launch list; execution log per evidence type
+- Note: principal sees «الموارد البشرية» by the P1 base rule (view own-branch employee files only); kept unless the owner removes it.
