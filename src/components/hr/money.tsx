@@ -37,7 +37,7 @@ export function Pill({ tone, children }: { tone: "ok" | "wait" | "bad" | "muted"
 }
 export const advTone = (s: string) => (s === "approved" || s === "closed" ? "ok" : s === "requested" ? "wait" : s === "rejected" ? "bad" : "muted") as "ok" | "wait" | "bad" | "muted";
 
-export function AdvanceCard({ a, self, onAct }: { a: Advance; self?: boolean; onAct?: (action: string) => void }) {
+export function AdvanceCard({ a, self, onAct }: { a: Advance; self?: boolean; onAct?: ((action: string) => void) | undefined }) {
   return (
     <div className="space-y-2 rounded-xl border bg-card p-3 text-sm">
       <div className="flex flex-wrap items-center gap-2">

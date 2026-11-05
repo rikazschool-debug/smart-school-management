@@ -199,7 +199,7 @@ function RunPanel({ id, k, onClose }: { id: string; k: Caps; onClose: () => void
   );
 }
 
-function useEmps(org: string) { return useQuery({ queryKey: ["hr-emp-pick", org], queryFn: async () => ((await rpc<{ rows?: Emp[] } | Emp[]>("hr_employee_list", { _org: org, _f: {} })) as any)?.rows ?? [] }); }
+function useEmps(org: string) { return useQuery({ queryKey: ["hr-money-people", org], queryFn: () => rpc<Emp[]>("hr_money_people", { _org: org }) }); }
 function useSetup(org: string) { return useQuery({ queryKey: ["hr-pay-setup", org], queryFn: () => rpc<Setup>("hr_pay_setup", { _org: org }) }); }
 
 function Decisions({ org, k }: { org: string; k: Caps }) {
