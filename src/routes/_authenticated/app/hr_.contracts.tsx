@@ -144,7 +144,8 @@ function ContractsReport({ org, k, onPick }: { org: string; k: CCaps; onPick: (p
   const meta = { title: "تقرير العقود", filters: ["كل المدارس المصرح بها"] };
   if (all.isLoading || all.error || !rows.length) return null;
   return (
-    <Section title="ملخص العقود" desc="محسوب من العقود التي تملك صلاحية عرضها. اضغط على رقم لعرض العقود المقصودة. يصل تنبيه لمعدّي العقود ومعتمديها والمالك قبل الانتهاء بشهرين، ثم بشهر، ثم بأسبوع، ثم عند الانتهاء.">
+    <Section title="ملخص العقود" desc="محسوب من العقود التي تملك صلاحية عرضها. اضغط على رقم لعرض العقود المقصودة.">
+      <AlertSettings org={org} />
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {kpi.map((x) => (
           <button key={x.label} type="button" onClick={() => onPick(x.pick)} className={"rounded-xl border bg-card p-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (x.warn && x.n ? "border-warning/50" : "")}>
@@ -171,6 +172,42 @@ function ContractsReport({ org, k, onPick }: { org: string; k: CCaps; onPick: (p
         </div>
       )}
     </Section>
+  );
+}
+
+type HrSet = { contract_alert_days: number[]; reviewed: boolean; notify_employee: boolean; updated_at: string | null; updated_by: string | null; can_edit: boolean; job_time: string };
+function AlertSettings({ org }: { org: string }) {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["hr-settings", org], queryFn: () => rpc<HrSet>("hr_settings_get", { _org: org }) });
+  const [edit, setEdit] = useState<{ days: string; emp: boolean } | null>(null);
+  const save = useMutation({
+    mutationFn: (v: { days: number[]; emp: boolean }) => rpc("hr_settings_save", { _org: org, _days: v.days, _notify_employee: v.emp }),
+    onSuccess: () => { toast.success("حُفظت إعدادات التنبيه"); setEdit(null); qc.invalidateQueries({ queryKey: ["hr-settings", org] }); },
+    onError: (e) => toast.error(arabicError(e)),
+  });
+  if (!q.data) return null;
+  const s = q.data;
+  const days = s.contract_alert_days.join("، ");
+  return (
+    <div className={"mb-3 rounded-xl border p-3 text-sm " + (s.reviewed ? "bg-card" : "border-warning/50 bg-warning/10")}>
+      {!edit ? (
+        <div className="flex flex-wrap items-start gap-2">
+          <div className="min-w-0 flex-1 space-y-1">
+            <p><b>تنبيه انتهاء العقود:</b> قبل الانتهاء بـ <bdi>{days}</bdi> يومًا، ثم عند الانتهاء دون تجديد ساري. يصل لمعدّي العقود ومعتمديها في المدرسة والمالك{s.notify_employee ? "، وللموظف نفسه" : "، ولا يصل للموظف"}. لا يتضمن التنبيه أي مبالغ.</p>
+            {!s.reviewed ? <p className="text-warning">هذه مواعيد مقترحة لم يراجعها المالك بعد، وليست لائحة معتمدة.</p>
+              : <p className="text-xs text-muted-foreground">آخر تعديل: {s.updated_by ?? "—"} · <bdi dir="ltr">{s.updated_at?.slice(0, 16).replace("T", " ")}</bdi></p>}
+            <p className="text-xs text-muted-foreground">موعد تشغيل الفحص التقني: {s.job_time} — منفصل عن مهلات التنبيه.</p>
+          </div>
+          {s.can_edit && <Button size="sm" variant="outline" onClick={() => setEdit({ days: s.contract_alert_days.join(", "), emp: s.notify_employee })}>{s.reviewed ? "تعديل" : "مراجعة واعتماد المواعيد"}</Button>}
+        </div>
+      ) : (
+        <form className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-end" onSubmit={(e) => { e.preventDefault(); const d = edit.days.split(/[,،\s]+/).filter(Boolean).map(Number); if (d.some((x) => !Number.isInteger(x))) { toast.error("أدخل أرقامًا صحيحة"); return; } save.mutate({ days: d, emp: edit.emp }); }}>
+          <div><Label htmlFor="hr-alert-days">أيام التنبيه قبل الانتهاء (مفصولة بفاصلة، من 1 إلى 365)</Label><Input id="hr-alert-days" dir="ltr" value={edit.days} onChange={(e) => setEdit({ ...edit, days: e.target.value })} /></div>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={edit.emp} onChange={(e) => setEdit({ ...edit, emp: e.target.checked })} />تنبيه الموظف نفسه بانتهاء عقده</label>
+          <div className="flex gap-2"><Button size="sm" type="submit" disabled={save.isPending}>حفظ</Button><Button size="sm" type="button" variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
+        </form>
+      )}
+    </div>
   );
 }
 
