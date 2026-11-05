@@ -29,7 +29,7 @@ async def main():
         await e.get_by_role("button", name="تسجيل بصمة الآن").click(); await e.wait_for_timeout(3000)
         check("2 no school site → clear reason + retry", "لم يُضبط موقع المدرسة" in await e.get_by_role("alert").inner_text() and await e.get_by_role("button", name="إعادة المحاولة").count() == 1)
         # owner sets the site
-        _, o = await login(br, "owner", "/app/hr/attendance?tab=setup")
+        _, o = await login(br, "owner", "/app/hr/attendance?tab=shifts")
         if await o.get_by_role("button", name="ضبط الموقع").count() == 0:
             for t in ["الإعداد", "الإعدادات"]:
                 if await o.get_by_role("link", name=t).count(): await o.get_by_role("link", name=t).first.click(); await o.wait_for_timeout(2500); break
