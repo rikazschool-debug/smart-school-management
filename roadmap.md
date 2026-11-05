@@ -428,3 +428,9 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [x] Role UIs: my services, team requests, HR, owner
 - [x] Absence/substitute linkage (idempotent source id, vice follow-up)
 - [x] Permissions/security tests, responsive + E2E, execution-log update (hr-leave-e2e 54/54, hrv-leave-journey 18/18)
+
+## Package 17 — HR P5 attendance (prompt-138 «تابع P4 وP5»)
+- [x] P4 leave (done earlier, regression 54/54)
+- [x] P5 shifts, assignments, holidays, punches, computed days, corrections, close/reopen, device intake, self/team/HR screens (hr-att-e2e 49/49, hra-journey 12/12)
+- [ ] Real attendance device test — blocked: no device connected
+- [ ] Letters PDF per issued letter; import journey without sensitive permission; inherited alert activation review — next

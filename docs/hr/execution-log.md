@@ -9,7 +9,7 @@ Status ladder (§12.4): مخطط → عقوده جاهزة → قيد التنف
 | P2 | Employee ↔ user/teacher, assignments, import | اختبارات الأدوار ناجحة for linking, directory, file, multi-school dated assignments, self file, manager team, audit. Open: spreadsheet import, reference lists | — | hr-e2e 2–9,11–13,15–21,23; hr-journey 1–5,7–12 |
 | P3 | Contracts, documents | مخطط | P2 | — |
 | P4 | Requests engine, leave → manager → HR → vice cover | منفذ ومختبر (غير منشور) | P2, D5 (owner enters types/policies) | hr-leave-e2e 54/54; hrv-leave-journey 18/18 |
-| P5 | Attendance, shifts, devices | مخطط | P2, device source | — |
+| P5 | Attendance, shifts, devices | منفذ ومختبر (غير منشور)؛ جهاز فعلي غير متصل — اختُبر الاستقبال فقط | P2, P4 | hr-att-e2e 49/49; hra-journey 12/12 |
 | P6 | Financial movements, advances | مخطط | P3–P5, D4, D5 | — |
 | P7 | Payroll: HR prepares, finance reviews, management approves; posting ≠ payment | مخطط | P6, D4, D5 | — |
 | P8 | Extensions (recruiting, insurance, housing…) | مخطط | P2/P3 | — |
@@ -127,3 +127,9 @@ Status: implemented · server-tested · browser-tested (desktop + 390px) · NOT 
 
 ## Resume point (exact)
 P4 leave done (see above). Next: P5 attendance link / P7 payroll per the blueprint (D4 ledger decision still open).
+
+## P5 Attendance — 2026-11-05
+- Built: shifts (owner-entered grace/break, no defaults; used shift times frozen), dated group assignments (overlap refused), holidays (org/school), raw punches append-only (manual/import/device/mobile/correction, idempotent keys), computed day (hr_att_days) separate from raw log: duplicates <2 min ignored, single punch = incomplete, night shift belongs to start day, approved leave/holiday/off/excuse override absence. Corrections: employee requests → hr_attendance.correct applies (no self-decision). Close/reopen per school+day with dated log; closed day refuses manual punches/corrections; late device punches stored but don't change the closed result. Signed device intake /api/public/hr/attendance → service-only _hr_att_ingest. Self punch off by default.
+- UI: /app/hr/attendance (day board + close, Excel import, corrections, period report + Excel/PDF, shifts/assignments/holidays/devices), «حضوري» tab, «حضور فريقي» on team page (minimal fields).
+- Evidence: hr-att-e2e 49/49; hra-journey 12/12 (owner desktop, employee 390px, HR, manager, colleague); regression hr-leave-e2e 54/54.
+- Not done: real device test (no device connected — only intake verified), geolocation for mobile punch, financial effect (deferred to payroll), letters PDF, import journey without sensitive permission, inherited-vs-explicit alert activation review.

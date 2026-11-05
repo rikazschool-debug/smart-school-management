@@ -47,3 +47,5 @@
 - Admissions (ad_*): RPC-only; access via _ad_ok over the 'admissions' perm section (own area, platform-switchable); accepting never creates a student/account/seat; linking to a student is explicit (ad_act link). Website intake only via signed /api/public/admissions/wordpress → service-only _ad_ingest. Tests: admissions-e2e, wp-e2e.
 - Evaluation (cv_*/ev_*): RPC-only; visit-form.ts matches _cv_codes(); ratings keep form snapshots.
 - HR (hr_*): RPC-only, Rikaz = single source; docs/hr/execution-log.md.
+
+- HR attendance (hr_att_*): RPC-only; raw punches append-only and separate from computed hr_att_days; closed days change only after dated reopen; devices via signed /api/public/hr/attendance → service-only _hr_att_ingest; money effect only via payroll. Tests: hr-att-e2e, hra-journey.
