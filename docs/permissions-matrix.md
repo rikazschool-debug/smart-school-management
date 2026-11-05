@@ -317,3 +317,11 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 ## HR attendance (hr_attendance)
 - view: day board/report/employee days in scope · record: manual/import punches (not own) · correct: apply/reject correction requests (not own) · settings (org): shifts, assignments, holidays, devices, mobile switch · close: close/reopen day per school · export.
 - Employee: own days/punches/corrections only; direct manager: team day summary (status/times) only.
+
+## HR money & payroll (2026-11-05)
+| Section | Action | Who | Notes |
+|---|---|---|---|
+| hr_money | view / draft / approve / items / export | owner + granted (branch/org) | approver ≠ drafter/requester/employee |
+| hr_payroll | view / prepare / finance_review / approve / post / pay / export | owner + granted (org only) | preparer, reviewer, approver must be different people; post/pay need finance link + reference |
+| Payroll policies & finance link | — | owner only | unpaid-leave types, day divisor, link |
+| Self («سلفي وعهدي وقسائمي») | own advances, installments, custodies, published payslips | the employee only | |

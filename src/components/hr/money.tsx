@@ -27,7 +27,7 @@ export const DEC_STATUS: Record<string, string> = { draft: "مسودة بانت�
 export const KIND_L: Record<string, string> = { earning: "استحقاق", deduction: "استقطاع" };
 export const SRC_L: Record<string, string> = { contract: "العقد", decision: "قرار", advance: "قسط سلفة", leave: "إجازة" };
 export const sar = (n: number | string | null | undefined, cur = "SAR") => `${Number(n ?? 0).toLocaleString("ar-SA-u-nu-latn", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur === "SAR" ? "ر.س" : cur}`;
-export const mon = (m: string | null | undefined) => (m ? m.slice(0, 7) : "—");
+export const mon = (m: string | null | undefined) => (m ? "\u2066" + m.slice(0, 7) + "\u2069" : "—");
 export const nextMonth = () => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().slice(0, 7); };
 export const thisMonth = () => new Date().toISOString().slice(0, 7);
 
