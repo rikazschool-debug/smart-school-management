@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { selectCls } from "@/components/ui/native-select";
 import { MyLetters } from "@/components/hr/letters";
+import { MyLeave } from "@/components/hr/leave";
 import { DocDetailPanel, DocStatus, DocUploadForm, type DocRow, type DocType } from "@/components/hr/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -23,10 +24,7 @@ export const Route = createFileRoute("/_authenticated/app/my-employment")({
 type Mine = { employee: HrEmp; assignments: HrAssign[] } | null;
 type TeamRow = { id: string; employee_no: string; full_name: string; job_title: string | null; school: string; status: string };
 
-// Feature flag: leave journey is not connected yet — shown only in dev/review builds.
-const LEAVE_ENABLED = import.meta.env.DEV;
-const ALL_TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"]] as const;
-const TABS = ALL_TABS.filter(([k]) => k !== "leave" || LEAVE_ENABLED);
+const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"]] as const;
 
 function Page() {
   const { active } = useSession();
@@ -37,7 +35,7 @@ function Page() {
   if (!active) return null;
   return (
     <>
-      <PageHeader title="خدماتي الوظيفية" desc="بياناتك وعقودك ومستنداتك كما سجّلتها الموارد البشرية. لتصحيح أي بيان تواصل مع الموارد البشرية." />
+      <PageHeader title="خدماتي الوظيفية" desc="بياناتك وعقودك ومستنداتك وخطاباتك وإجازاتك كما سجّلتها الموارد البشرية. لتصحيح أي بيان تواصل مع الموارد البشرية." />
       {mine.isLoading ? <LoadingState /> : mine.error ? <ErrorState message={arabicError(mine.error)} /> : !mine.data ? (
         <EmptyState title="لا يوجد ملف وظيفي لك في هذه المؤسسة" hint="تنشئه الموارد البشرية وتربطه بحسابك." />
       ) : <>
@@ -48,10 +46,10 @@ function Page() {
         {tab === "contracts" && <MyContracts org={org!} empty />}
         {tab === "docs" && <MyDocuments org={org!} />}
         {tab === "letters" && <MyLetters org={org!} />}
-        {tab === "leave" && LEAVE_ENABLED && <EmptyState title="الإجازات والأرصدة قيد البناء" hint="تظهر هنا رصيد إجازاتك وطلباتك بعد ضبط سياسات الإجازات من الموارد البشرية." />}
+        {tab === "leave" && <MyLeave org={org!} />}
       </>}
       {(team.data?.length ?? 0) > 0 && (
-        <Section title="فريقي المباشر" desc="بيانات أساسية فقط لمن أنت مديره المباشر في تعيين حالي." className="mt-6">
+        <Section title="فريقي المباشر" desc="بيانات أساسية فقط لمن أنت مديره المباشر في تعيين حالي." className="mt-6" action={<Link to="/app/team-leave" className="rounded-lg border bg-card px-3 py-1.5 text-sm hover:border-primary">طلبات إجازة فريقي</Link>}>
           <ul className="grid gap-2 md:grid-cols-2">
             {team.data!.map((t) => <li key={t.id + t.school} className="rounded-xl border bg-card p-3 text-sm"><span className="block font-semibold">{t.full_name}</span><span className="text-xs text-muted-foreground"><bdi dir="ltr">{t.employee_no}</bdi> · {t.job_title ?? "—"} · {t.school} · {STATUS[t.status]}</span></li>)}
           </ul>
