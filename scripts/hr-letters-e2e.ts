@@ -35,7 +35,7 @@ try {
   await grant(view, "hr_letters", "view", "branch");
   await grant(brB, "hr_letters", "view", "branch");
   for (const a of ["view", "approve", "comp_view"]) await grant(capr, "hr_contracts", a, "org");
-  const mk = async (u: any, s: string, n: string) => (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: s, user_id: u?.id ?? null, job_title: "معلمة", hire_date: "2024-09-01" } })).data;
+  const mk = async (u: any, s: string, n: string) => { const id = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: s, user_id: u?.id ?? null, job_title: "معلمة", hire_date: "2024-09-01" } })).data; if (id) await owner.c.rpc("hr_self_access_set", { _emp: id, _active: true }); return id; };
   const E = await mk(emp, A, "موظفة الخطابات"), M = await mk(mate, A, "زميلة"), N = await mk(null, A, "بلا عقد");
   // active contract with pay for E
   const comp = [{ kind: "basic", label: "الراتب الأساسي", amount: "8000", currency: "SAR", period: "monthly" }];

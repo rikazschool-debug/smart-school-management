@@ -38,7 +38,7 @@ for (const a of ["view", "draft", "items", "export"]) await g("hr", "hr_money", 
 for (const a of ["view", "finance_review", "post", "pay"]) await g("fin", "hr_payroll", a, "org");
 for (const a of ["view", "approve"]) await g("gm", "hr_payroll", a, "org");
 for (const a of ["view", "approve"]) await g("mapr", "hr_money", a, "org");
-const mk = async (t: string) => (await o.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: NAMES[t], school_id: A, user_id: users[t]!.id, job_title: "معلمة", hire_date: "2024-09-01" } })).data as string;
+const mk = async (t: string) => { const id = (await o.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: NAMES[t], school_id: A, user_id: users[t]!.id, job_title: "معلمة", hire_date: "2024-09-01" } })).data as string; if (id) await o.rpc("hr_self_access_set", { _emp: id, _active: true }); return id; };
 const E = await mk("emp"), M = await mk("mate");
 for (const [emp, basic] of [[E, "6000"], [M, "5000"]] as const) {
   const c = await admin.from("hr_contracts").insert({ org_id: org, employee_id: emp, school_id: A, contract_no: "PB-" + Math.random().toString(36).slice(2, 7), status: "active", in_force: 1, start_date: "2024-09-01" }).select().single();

@@ -44,7 +44,7 @@ try {
   for (const a of ["view", "draft", "items"]) await g(mn, "hr_money", a, "branch");
   for (const a of ["view", "approve"]) await g(mapr, "hr_money", a, "branch");
   const bs = await g(fin, "hr_payroll", "view", "branch"); check("payroll is organisation-wide only (branch scope refused)", !!bs.error, bs.error);
-  const mk = async (u: any, n: string) => (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: A, user_id: u?.id ?? null, job_title: "معلمة", hire_date: "2024-09-01" } })).data;
+  const mk = async (u: any, n: string) => { const id = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: A, user_id: u?.id ?? null, job_title: "معلمة", hire_date: "2024-09-01" } })).data; if (id) await owner.c.rpc("hr_self_access_set", { _emp: id, _active: true }); return id; };
   const E = await mk(emp, "موظفة الرواتب"), MT = await mk(mate, "زميلة"), N = await mk(null, "بلا عقد");
   await contract(org, A, E, "2024-09-01", [{ kind: "basic", label: "الأجر الأساسي", amount: "6000", currency: "SAR", period: "monthly" }, { kind: "allowance", label: "بدل سكن", amount: "1500", currency: "SAR", period: "monthly" }, { kind: "benefit", label: "تذاكر", amount: "2000", currency: "SAR", period: "annual" }]);
   await contract(org, A, MT, "2024-09-01", [{ kind: "basic", label: "الأجر الأساسي", amount: "5000", currency: "SAR", period: "monthly" }]);
