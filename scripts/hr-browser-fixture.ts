@@ -17,7 +17,7 @@ const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\
 const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); };
 const run = Date.now(), pw = "Test-pass-" + run; const users: Record<string, { id: string; email: string }> = {};
-const NAMES: Record<string, string> = { owner: "مالك التجربة", pr: "مدير التجربة", t1: "معلم التجربة", hr: "موظف الموارد", st: "طالب التجربة" };
+const NAMES: Record<string, string> = { owner: "مالك التجربة", pr: "مدير التجربة", t1: "معلم التجربة", hr: "موظف الموارد", add: "مدخل البيانات", st: "طالب التجربة" };
 for (const t of Object.keys(NAMES)) {
   const email = `hrb-${t}-${run}@rikaz.test`;
   const r = await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: NAMES[t] } });
@@ -29,10 +29,15 @@ await oc.auth.signInWithPassword({ email: users.owner!.email, password: pw });
 const org = (await oc.rpc("create_organization", { _org_name: "مؤسسة تجربة الموارد", _school_name: "فرع الموارد أ" })).data as string;
 const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(A);
 const B = (await admin.from("schools").insert({ org_id: org, name: "فرع الموارد ب" }).select().single()).data!.id; tr.addSchool(B);
-for (const [u, r] of [["pr", "principal"], ["t1", "teacher"], ["hr", "student_affairs"], ["st", "student"]]) await admin.from("memberships").insert({ user_id: users[u]!.id, org_id: org, school_id: A, role: r });
+for (const [u, r] of [["pr", "principal"], ["t1", "teacher"], ["hr", "student_affairs"], ["add", "student_affairs"], ["st", "student"]]) await admin.from("memberships").insert({ user_id: users[u]!.id, org_id: org, school_id: A, role: r });
 await admin.from("teachers").insert({ school_id: A, full_name: NAMES.t1, user_id: users.t1!.id, specialization: "رياضيات" });
 for (const a of ["view", "sensitive", "create", "edit", "export"]) {
   const r = await oc.rpc("perm_override_set", { _org: org, _user: users.hr!.id, _section: "hr_employees", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة" });
+  if (r.error) console.log(r.error);
+}
+// data-entry: may view + add employees in branch A, but has no sensitive-data permission
+for (const a of ["view", "create"]) {
+  const r = await oc.rpc("perm_override_set", { _org: org, _user: users.add!.id, _section: "hr_employees", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة إدخال بلا بيانات حساسة" });
   if (r.error) console.log(r.error);
 }
 mkdirSync("/tmp/browser/hr", { recursive: true });
