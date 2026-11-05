@@ -22,7 +22,7 @@ async def main():
         await h.get_by_label("شهر المسير").fill(F["month"]); await h.get_by_role("button", name="إنشاء مسير").click(); await h.wait_for_timeout(4000)
         sec = h.get_by_role("region", name="مسير " + F["month"])
         t = await sec.inner_text()
-        check("1 HR creates run: draft, posting & payment separate states", "المسير: مسودة" in t and "القيد: بانتظار إعداد الربط المالي" not in t or "القيد:" in t, t[:500])
+        check("1 HR creates run: draft, posting & payment separate states", "المسير: مسودة" in t and "القيد: بانتظار إعداد الربط المالي" in t and "الدفع: بانتظار إعداد الربط المالي" in t, t[:500])
         check("2 totals: 2 employees, net 14200 (7500+500−300 + 6500)", "14,200.00" in t, t[:600])
         await h.screenshot(path=SH + "1_hr_draft.png")
         await sec.get_by_role("button", name="إرسال للمراجعة المالية").click(); await h.wait_for_timeout(3500)
