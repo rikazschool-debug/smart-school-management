@@ -62,7 +62,7 @@ async def main():
         await r.get_by_role("button").filter(has_text="معلمة علوم —").click(); await r.wait_for_timeout(2500)
         await r.get_by_role("button").filter(has_text="سارة المرشحة").click(); await r.wait_for_timeout(2500)
         panel = r.get_by_role("region", name="ملف المرشح سارة المرشحة")
-        await panel.get_by_role("button", name="تسجيل القبول").click(); await r.wait_for_timeout(800); await dialog(r, "OFR-SIGN-77")
+        await panel.get_by_role("button", name="تسجيل القبول").click(); await r.wait_for_timeout(800); await dialog(r, "OFR-SIGN-77"); await r.wait_for_timeout(2500)
         check("9 acceptance recorded with reference", "قبل العرض" in await r.locator("main").inner_text())
         await r.screenshot(path=SH + "1_officer.png")
         await a.reload(); await a.wait_for_timeout(3500)
