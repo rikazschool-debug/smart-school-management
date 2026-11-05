@@ -18,7 +18,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { mode?: Mode; invite?: string } => {
     const out: { mode?: Mode; invite?: string } = {};
-    if (s["mode"] === "signup" || s["mode"] === "forgot") out.mode = s["mode"];
+    if (s["mode"] === "forgot" || (s["mode"] === "signup" && typeof s["invite"] === "string")) out.mode = s["mode"];
     if (typeof s["invite"] === "string" && UUID_RE.test(s["invite"])) out.invite = s["invite"];
     return out;
   },
@@ -137,14 +137,14 @@ function AuthPage() {
             {mode !== "signin" ? (
               <button type="button" className="text-primary" onClick={() => { setMode("signin"); setSent(null); }}>لدي حساب</button>
             ) : (
-              <button type="button" className="text-primary" onClick={() => setMode("signup")}>حساب جديد</button>
+              search.invite ? <button type="button" className="text-primary" onClick={() => setMode("signup")}>إنشاء حساب للدعوة</button> : <span />
             )}
             {mode === "signin" && (
               <button type="button" className="text-muted-foreground" onClick={() => setMode("forgot")}>نسيت كلمة المرور؟</button>
             )}
           </div>
           {mode === "signin" && !sent && <PhoneLogin onDone={go} />}
-          {import.meta.env.DEV && (
+          {mode === "signin" && (
             <div className="space-y-2 rounded-xl border bg-card p-3">
               <p className="text-sm font-semibold">دخول سريع بالحسابات التجريبية</p>
               <div className="grid grid-cols-2 gap-2">
@@ -154,10 +154,9 @@ function AuthPage() {
                   </Button>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">تظهر في المعاينة فقط، وتُخفى في النسخة المنشورة.</p>
-            </div>
+                          </div>
           )}
-          <p className="text-xs text-muted-foreground">إن دُعيت من مدرستك، أنشئ حسابًا بنفس البريد الذي دُعيت به وستظهر لك عضويتك تلقائيًا.</p>
+          {search.invite && <p className="text-xs text-muted-foreground">أنشئ حسابًا بنفس البريد الذي دُعيت به وستظهر لك عضويتك تلقائيًا.</p>}
         </form>
       </div>
     </div>
