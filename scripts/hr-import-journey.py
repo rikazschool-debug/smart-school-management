@@ -114,6 +114,27 @@ async def main():
         check("16 principal has no import button", await p.get_by_role("button", name="استيراد Excel").count() == 0)
         await p.goto(B + "/app/hr?imp=1"); await p.wait_for_timeout(3000)
         check("17 principal direct link shows no import panel", await p.get_by_text("استيراد موظفين من Excel").count() == 0)
+
+        # data-entry account: add employees, NO sensitive permission — desktop then phone
+        make(SH + "nosens.xlsx", [H, ["هند المطيري", A, "E0300", "0077700004", "0533333333", "2026-10-01"]])
+        for i, (w, hh) in enumerate([(1280, 1800), (390, 844)]):
+            d = await login(br, "add", w, hh)
+            await open_import(d)
+            if i == 0:
+                await d.set_input_files('input[aria-label="ملف الاستيراد"]', SH + "nosens.xlsx"); await d.wait_for_timeout(1500)
+                body = await d.locator("table").inner_text()
+                check("18 no-sensitive account: import open, ID column not offered", await d.get_by_label("عمود رقم الهوية").count() == 0 and await d.get_by_label("عمود الاسم الكامل").count() == 1)
+                check("19 no-sensitive preview hides the ID value from the file", "0077700004" not in body and "هند المطيري" in body, body)
+                await d.get_by_role("button", name="حفظ 1 صفًا صالحًا").click(); await d.wait_for_timeout(5000)
+                r = next((x for x in db("") if x["employee_no"] == "E0300"), None)
+                check("20 row saved without the ID (server never receives sensitive data)", r is not None and not r.get("national_id"), r)
+                await d.screenshot(path=SH + "3_nosens_desktop.png")
+            else:
+                await d.goto(B + "/app/hr"); await d.wait_for_timeout(3000)
+                t = await d.locator("body").inner_text()
+                check("21 phone: employee list without IDs (no 0012300001)", "هند المطيري" in t and "0012300001" not in t, t[:400])
+                sw = await d.evaluate("document.documentElement.scrollWidth"); check("22 phone: no horizontal overflow", sw <= 392, sw)
+                await d.screenshot(path=SH + "4_nosens_phone.png")
         await br.close()
     print(f"\n{ok} passed, {bad} failed")
 asyncio.run(main())
