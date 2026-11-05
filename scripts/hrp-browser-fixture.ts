@@ -51,9 +51,10 @@ await users.mapr!.c.rpc("hr_decision_act", { _id: D, _rev: 1, _action: "approve"
 const AV = (await users.emp!.c.rpc("hr_advance_request", { _org: org, _p: { amount: 900, installments: 3, start_month: M0, reason: "ظرف طارئ" } })).data;
 await users.mapr!.c.rpc("hr_advance_act", { _id: AV, _rev: 1, _action: "approve", _reason: null, _ref: null });
 await o.rpc("hr_pay_settings_save", { _org: org, _p: { finance_link: "ربط تجريبي — بيانات مصطنعة", unpaid_leave_types: [], day_divisor: null } });
+for (const t of ["gosi", "eos", "unpaid_leave"]) { const pr = await o.rpc("hr_pay_policy_save", { _org: org, _topic: t, _p: { status: "not_applicable", effective_from: M0, reason: "بيانات اختبار مصطنعة", params: {} } }); if (pr.error) throw pr.error; }
 const pay = await users.fin!.c.rpc("hr_advance_act", { _id: AV, _rev: 2, _action: "pay", _reason: null, _ref: "ADV-T-1" }); if (pay.error) console.log(pay.error);
 await g("emp", "procurement", "create", "branch");
 const cu = await admin.from("pc_custodies").insert({ org_id: org, ref: "CU-TEST-1", holder_id: users.emp!.id, school_id: A, purpose: "عهدة أدوات تجريبية", amount: 1000, currency: "SAR", settle_due: "2027-01-31", status: "disbursed", created_by: users.owner!.id }); if (cu.error) console.log("custody", cu.error.message);
 mkdirSync("/tmp/browser/hrp", { recursive: true });
-writeFileSync(FX, JSON.stringify({ org, schools: [A], users: Object.values(users).map((u) => u.id), pw, month: M0, ...Object.fromEntries(Object.entries(users).map(([k, v]) => [k, v.email])) }));
+writeFileSync(FX, JSON.stringify({ org, schools: [A], users: Object.values(users).map((u) => u.id), pw, month: M0, mlabel: ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"][Number(M0.slice(5, 7)) - 1] + " " + M0.slice(0, 4), ...Object.fromEntries(Object.entries(users).map(([k, v]) => [k, v.email])) }));
 console.log("setup ok"); process.exit(0);
