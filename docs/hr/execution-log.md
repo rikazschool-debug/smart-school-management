@@ -77,3 +77,11 @@ Status: implemented · server-tested · browser-tested · NOT operationally acce
 1. Letters: templates with whitelisted variables (no pay variables unless comp_view), preview + missing-variable check, immutable issued copy with reference, RTL multi-page PDF, employee request → review → issue. Not started.
 2. Track A Excel import browser journey. Not started.
 3. P4 leave: policies (versioned/scoped), balance ledger, requests employee→manager→HR, «طلبات فريقي», teacher absence → record_absence/substitutions + vice task. Not started.
+
+## Review fixes A/B/D (prompt «واصل من نقطة الاستئناف» + «ابدأ») — 2026-11-05
+Status: implemented · server-tested · not browser-tested · NOT published.
+- A Renewal: alerts stop only when an accepted renewal (active + in_force) starts no later than the day after the original ends (`_hrc_renewed_ok`). Accepted renewal with a gap keeps alerting and the notice names the gap; cancelled renewal resumes alerts. List shows «تجديد مقبول متصل» / «تجديد مقبول بفجوة N يومًا» / «تجديد قيد الإعداد/الإقرار».
+- B Alerts: saving days ≠ activation. `hr_settings.alerts_active` (default off) + decided_by/at/reason; `hr_settings_set_alerts` (hr_contracts.settings only; activation requires reviewed days; stop requires reason; logged in hr_events contract_alerts_on/off). Tick sends nothing while inactive. Orgs that had already reviewed days were migrated as active with a recorded migration reason.
+- D Leave tab hidden outside dev builds (LEAVE_ENABLED flag).
+- Evidence (server): hrc-alerts-e2e 32/32, hr-contracts-e2e 31/31, hr-docs-e2e 35/35. Scheduled run still NOT proven (direct calls only).
+- Open from this prompt: C documents re-check beyond existing 35 checks, E scheduler evidence, Excel import browser journey, letters (P3), leave P4 + substitutes.
