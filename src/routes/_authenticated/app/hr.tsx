@@ -203,8 +203,59 @@ function EmpFields({ f, set, sensitive, withStatus }: { f: Record<string, string
   );
 }
 
+// HR links the file to an existing account, then switches personal access on/off as a separate, audited step.
+function SelfAccessCard({ e, org, canEdit, onDone }: { e: HrEmp; org: string; canEdit: boolean; onDone: () => void }) {
+  const [uid, setUid] = useState("");
+  const cand = useQuery({ queryKey: ["hr-cand", org], enabled: canEdit && !e.has_login, retry: false, queryFn: () => rpc<Cand>("hr_candidates", { _org: org }) });
+  const link = useMutation({
+    mutationFn: () => rpc("hr_employee_save", { _org: org, _id: e.id, _p: { full_name: e.full_name, job_title: e.job_title ?? "", hire_date: e.hire_date ?? "", phone: e.phone ?? "", email: e.email ?? "", gender: e.gender ?? "", status: e.status, end_date: e.end_date ?? "", notes: e.notes ?? "", user_id: uid } }),
+    onSuccess: () => { toast.success("رُبط الملف بالحساب. الوصول ما زال غير مفعّل."); setUid(""); onDone(); },
+    onError: (x) => toast.error(arabicError(x)),
+  });
+  const toggle = useMutation({
+    mutationFn: async (on: boolean) => {
+      const reason = on ? null : await askText("سبب إيقاف وصول الموظف إلى ملفه", { required: true, ok: "إيقاف" });
+      if (!on && !reason) throw new Error("أُلغي");
+      return rpc("hr_self_access_set", { _emp: e.id, _active: on, _reason: reason });
+    },
+    onSuccess: (_d, on) => { toast.success(on ? "فُعّل وصول الموظف إلى ملفه" : "أُوقف وصول الموظف إلى ملفه"); onDone(); },
+    onError: (x) => { if ((x as Error).message !== "أُلغي") toast.error(arabicError(x)); },
+  });
+  const when = (t?: string | null) => (t ? new Date(t).toLocaleString("ar-SA", { dateStyle: "medium", timeStyle: "short" }) : "");
+  return (
+    <div className="rounded-lg border bg-secondary/30 p-3 text-sm" aria-label="الوصول إلى الملف الوظيفي">
+      <p className="mb-1 font-bold">وصول الموظف إلى «ملفي الوظيفي»</p>
+      {!e.has_login ? (
+        <div className="space-y-2">
+          <p className="text-muted-foreground">الملف غير مرتبط بحساب. اربطه بحساب الموظف الحالي، ثم فعّل الوصول في خطوة منفصلة.</p>
+          {canEdit && (cand.data ? (
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="min-w-56 flex-1"><span className="text-xs text-muted-foreground">الحساب</span>
+                <select className={selectCls("mt-1 w-full")} value={uid} onChange={(x) => setUid(x.target.value)} aria-label="اختر حساب الموظف">
+                  <option value="">اختر الحساب…</option>{cand.data.accounts.map((a) => <option key={a.user_id} value={a.user_id}>{a.name} — {(a.schools ?? []).map((s) => s.name).join("، ")}</option>)}
+                </select></label>
+              <Button size="sm" disabled={!uid || link.isPending} onClick={() => link.mutate()}>{link.isPending ? "…" : "ربط بالحساب"}</Button>
+            </div>
+          ) : cand.isError ? <p className="text-xs text-muted-foreground">ربط الحسابات يحتاج صلاحية إنشاء ملفات الموظفين.</p> : null)}
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={"rounded px-2 py-0.5 text-xs font-semibold " + (e.self_access ? "bg-success/15 text-success" : "bg-warning/15 text-warning-foreground")}>{e.self_access ? "مفعّل" : "مرتبط — غير مفعّل"}</span>
+          <span className="flex-1 text-xs text-muted-foreground">
+            {e.self_linked_at && <>رُبط {when(e.self_linked_at)}. </>}
+            {e.self_access_at && <>{e.self_access ? "فُعّل" : "آخر تغيير"} {when(e.self_access_at)}{e.self_access_by ? ` بواسطة ${e.self_access_by}` : ""}.</>}
+          </span>
+          {canEdit && (e.self_access
+            ? <Button size="sm" variant="outline" disabled={toggle.isPending} onClick={() => toggle.mutate(false)}>إيقاف الوصول</Button>
+            : <Button size="sm" disabled={toggle.isPending || e.status === "ended"} onClick={() => toggle.mutate(true)}>تفعيل الوصول</Button>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 type Detail = { view: "hr" | "self" | "manager"; employee: HrEmp; assignments: HrAssign[]; can_edit: boolean; events?: { at: string; action: string; reason: string | null; by: string; entity: string }[] };
-const ACT: Record<string, string> = { create: "إنشاء", update: "تعديل", end: "إنهاء تعيين", "status:ended": "إنهاء الخدمة", "status:suspended": "إيقاف مؤقت", "status:active": "إعادة للعمل" };
+const ACT: Record<string, string> = { self_link: "ربط بحساب", self_unlink: "فك الربط بالحساب", self_on: "تفعيل الوصول للملف", self_off: "إيقاف الوصول للملف", create: "إنشاء", update: "تعديل", end: "إنهاء تعيين", "status:ended": "إنهاء الخدمة", "status:suspended": "إيقاف مؤقت", "status:active": "إعادة للعمل" };
 
 function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: HrMe; onClose: () => void }) {
   const qc = useQueryClient();
@@ -249,6 +300,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
         {can_edit && !edit && <Button size="sm" variant="outline" onClick={startEdit}>تعديل الملف</Button>}
         <Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق الملف"><X className="size-4" /></Button>
       </div>
+      {d.data!.view === "hr" && <SelfAccessCard e={e} org={org} canEdit={can_edit} onDone={refresh} />}
       <EmpOpenAssets emp={id} />
       {edit ? (
         <div className="space-y-3">
@@ -259,7 +311,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
       ) : (
         <dl className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
           {row("المسمى الوظيفي", e.job_title)}{row("تاريخ المباشرة", e.hire_date)}{row("الجوال", e.phone && <bdi dir="ltr">{e.phone}</bdi>)}{row("البريد", e.email && <bdi dir="ltr">{e.email}</bdi>)}
-          {row("الجنس", e.gender ? GENDER[e.gender] : null)}{row("حساب الدخول", e.has_login ? "مرتبط" : "بلا حساب")}
+          {row("الجنس", e.gender ? GENDER[e.gender] : null)}{row("حساب الدخول", e.has_login ? (e.self_access ? "مرتبط ومفعّل" : "مرتبط — غير مفعّل") : "بلا حساب")}
           {row("رقم الهوية", e.national_id && <bdi dir="ltr">{e.national_id}</bdi>)}
           {e.sensitive && <>{row("الجنسية", e.nationality)}{row("تاريخ الميلاد", e.birth_date)}</>}
           {e.status === "ended" && row("انتهاء الخدمة", e.end_date)}
