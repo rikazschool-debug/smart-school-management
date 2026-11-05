@@ -109,6 +109,7 @@ const CARDS: Card[] = [
     features: [
       { icon: IdCard, label: "ملفات الموظفين", to: "/app/hr" },
       { icon: Plus, label: "إضافة موظف", to: "/app/hr", search: { add: "1" } },
+      { icon: IdCard, label: "الخطابات", to: "/app/hr/letters" },
     ],
   },
   {
