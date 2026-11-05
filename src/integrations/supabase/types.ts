@@ -6312,6 +6312,41 @@ export type Database = {
           },
         ]
       }
+      hr_ext_settings: {
+        Row: {
+          at: string
+          by_user: string | null
+          enabled: boolean
+          ext: string
+          org_id: string
+          reason: string | null
+        }
+        Insert: {
+          at?: string
+          by_user?: string | null
+          enabled?: boolean
+          ext: string
+          org_id: string
+          reason?: string | null
+        }
+        Update: {
+          at?: string
+          by_user?: string | null
+          enabled?: boolean
+          ext?: string
+          org_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_ext_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_leave_absences: {
         Row: {
           absence_id: string
@@ -7341,6 +7376,315 @@ export type Database = {
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "hr_pay_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_rc_candidates: {
+        Row: {
+          converted_at: string | null
+          converted_by: string | null
+          created_at: string
+          created_by: string
+          education: string | null
+          email: string | null
+          employee_id: string | null
+          experience: string | null
+          full_name: string
+          id: string
+          languages: string | null
+          national_id: string | null
+          notes: string | null
+          org_id: string
+          phone: string | null
+          rev: number
+          stage: string
+          stage_reason: string | null
+          updated_at: string
+          vacancy_id: string
+        }
+        Insert: {
+          converted_at?: string | null
+          converted_by?: string | null
+          created_at?: string
+          created_by: string
+          education?: string | null
+          email?: string | null
+          employee_id?: string | null
+          experience?: string | null
+          full_name: string
+          id?: string
+          languages?: string | null
+          national_id?: string | null
+          notes?: string | null
+          org_id: string
+          phone?: string | null
+          rev?: number
+          stage?: string
+          stage_reason?: string | null
+          updated_at?: string
+          vacancy_id: string
+        }
+        Update: {
+          converted_at?: string | null
+          converted_by?: string | null
+          created_at?: string
+          created_by?: string
+          education?: string | null
+          email?: string | null
+          employee_id?: string | null
+          experience?: string | null
+          full_name?: string
+          id?: string
+          languages?: string | null
+          national_id?: string | null
+          notes?: string | null
+          org_id?: string
+          phone?: string | null
+          rev?: number
+          stage?: string
+          stage_reason?: string | null
+          updated_at?: string
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_rc_candidates_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_rc_candidates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_rc_candidates_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "hr_rc_vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_rc_counters: {
+        Row: {
+          n: number
+          org_id: string
+        }
+        Insert: {
+          n?: number
+          org_id: string
+        }
+        Update: {
+          n?: number
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_rc_counters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_rc_interviews: {
+        Row: {
+          at: string
+          by_user: string
+          candidate_id: string
+          criteria: Json
+          held_on: string
+          id: string
+          notes: string | null
+          org_id: string
+          panel: string
+          result: string
+        }
+        Insert: {
+          at?: string
+          by_user: string
+          candidate_id: string
+          criteria?: Json
+          held_on: string
+          id?: string
+          notes?: string | null
+          org_id: string
+          panel: string
+          result: string
+        }
+        Update: {
+          at?: string
+          by_user?: string
+          candidate_id?: string
+          criteria?: Json
+          held_on?: string
+          id?: string
+          notes?: string | null
+          org_id?: string
+          panel?: string
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_rc_interviews_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "hr_rc_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_rc_interviews_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_rc_offers: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          candidate_id: string
+          created_at: string
+          created_by: string
+          id: string
+          org_id: string
+          responded_at: string | null
+          responded_by: string | null
+          response_reason: string | null
+          response_ref: string | null
+          status: string
+          terms: Json
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          candidate_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          org_id: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response_reason?: string | null
+          response_ref?: string | null
+          status?: string
+          terms: Json
+          version: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          candidate_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          org_id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response_reason?: string | null
+          response_ref?: string | null
+          status?: string
+          terms?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_rc_offers_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "hr_rc_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_rc_offers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_rc_vacancies: {
+        Row: {
+          created_at: string
+          created_by: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          id: string
+          job_title: string
+          org_id: string
+          reason: string
+          ref: string
+          rev: number
+          school_id: string
+          seats: number
+          stage: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          job_title: string
+          org_id: string
+          reason: string
+          ref: string
+          rev?: number
+          school_id: string
+          seats?: number
+          stage?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          job_title?: string
+          org_id?: string
+          reason?: string
+          ref?: string
+          rev?: number
+          school_id?: string
+          seats?: number
+          stage?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_rc_vacancies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_rc_vacancies_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -12182,6 +12526,7 @@ export type Database = {
       }
       _hr_emp_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
       _hr_emp_school: { Args: { _emp: string }; Returns: string }
+      _hr_ext_on: { Args: { _ext: string; _org: string }; Returns: boolean }
       _hr_l_any: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_l_new: {
         Args: {
@@ -12388,6 +12733,22 @@ export type Database = {
         Returns: undefined
       }
       _hr_py_ok: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_rc_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_rc_cand_row: {
+        Args: {
+          _full: boolean
+          c: Database["public"]["Tables"]["hr_rc_candidates"]["Row"]
+        }
+        Returns: Json
+      }
+      _hr_rc_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
+      }
+      _hr_rc_vac_row: {
+        Args: { v: Database["public"]["Tables"]["hr_rc_vacancies"]["Row"] }
+        Returns: Json
+      }
       _hr_run_row: {
         Args: { r: Database["public"]["Tables"]["hr_pay_runs"]["Row"] }
         Returns: Json
@@ -14576,6 +14937,11 @@ export type Database = {
         Args: { _id: string; _org: string; _p: Json; _reason?: string }
         Returns: string
       }
+      hr_ext_list: { Args: { _org: string }; Returns: Json }
+      hr_ext_set: {
+        Args: { _ext: string; _on: boolean; _org: string; _reason: string }
+        Returns: undefined
+      }
       hr_leave_adjust: {
         Args: {
           _days: number
@@ -14765,6 +15131,38 @@ export type Database = {
         Returns: undefined
       }
       hr_pay_setup: { Args: { _org: string }; Returns: Json }
+      hr_rc_candidate_get: { Args: { _id: string }; Returns: Json }
+      hr_rc_candidate_save: {
+        Args: { _p: Json; _vac: string }
+        Returns: string
+      }
+      hr_rc_candidate_stage: {
+        Args: { _id: string; _reason: string; _rev: number; _stage: string }
+        Returns: undefined
+      }
+      hr_rc_candidates: { Args: { _f: Json; _org: string }; Returns: Json }
+      hr_rc_convert: {
+        Args: { _cand: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      hr_rc_interview_add: {
+        Args: { _cand: string; _p: Json }
+        Returns: string
+      }
+      hr_rc_offer_act: {
+        Args: { _action: string; _offer: string; _reason: string; _ref: string }
+        Returns: undefined
+      }
+      hr_rc_offer_save: {
+        Args: { _cand: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      hr_rc_vacancies: { Args: { _f: Json; _org: string }; Returns: Json }
+      hr_rc_vacancy_act: {
+        Args: { _action: string; _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      hr_rc_vacancy_save: { Args: { _org: string; _p: Json }; Returns: string }
       hr_settings_get: { Args: { _org: string }; Returns: Json }
       hr_settings_save: {
         Args: { _days: number[]; _notify_employee: boolean; _org: string }
