@@ -449,11 +449,11 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [ ] GOSI, end-of-service, overtime, proration — blocked: owner policies not provided
 
 ## Package 19 — prompt «واصل العمل… إصلاحات P6/P7 ثم P8 وP9»
-- [ ] 1a Month display unified (cards, filters, slips, export; Dec/Jan; LTR isolation)
-- [ ] 1b Partial month: held without policy; documented exception (org switch) → finance + management see reason/effect; excluded → exceptions sheet
-- [ ] 1c Dated policies (GOSI, end of service, overtime, proration, unpaid leave) with hold reasons; attendance as review input only
-- [ ] 1d P6 match (comp change, promotion, penalty, termination, settlement; procurement custody cycle) — gaps closed or documented
-- [ ] 2 P8 recruitment (need → vacancy → candidate → interviews → versioned offer → accept → convert once)
+- [x] 1a Month display unified (cards, filters, slips, export; Dec/Jan; LTR isolation)
+- [x] 1b Partial month: held without policy; documented exception (org switch) → finance + management see reason/effect; excluded → exceptions sheet
+- [x] 1c Dated policies (GOSI, end of service, overtime, proration, unpaid leave) with hold reasons; attendance as review input only
+- [x] 1d P6 match (comp change, promotion, penalty, termination, settlement; procurement custody cycle) — asset custody register gap documented (needs owner decision)
+- [x] 2 P8 recruitment (need → vacancy → candidate → interviews → versioned offer → accept → convert once)
 - [ ] 2 P8 performance (reuse evaluation; versioned forms, cycle, review, publish, objection)
 - [ ] 2 P8 insurance (policies, classes, coverage periods incl. dependants; sensitive perm)
 - [ ] 2 P8 housing (property, unit, capacity, assign/transfer/vacate); extension switches

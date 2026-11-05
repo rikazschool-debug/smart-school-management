@@ -10,9 +10,9 @@ Status ladder (§12.4): مخطط → عقوده جاهزة → قيد التنف
 | P3 | Contracts, documents | مخطط | P2 | — |
 | P4 | Requests engine, leave → manager → HR → vice cover | منفذ ومختبر (غير منشور) | P2, D5 (owner enters types/policies) | hr-leave-e2e 54/54; hrv-leave-journey 18/18 |
 | P5 | Attendance, shifts, devices | منفذ ومختبر (غير منشور)؛ جهاز فعلي غير متصل — اختُبر الاستقبال فقط | P2, P4 | hr-att-e2e 49/49; hra-journey 12/12 |
-| P6 | Financial movements, advances | مخطط | P3–P5, D4, D5 | — |
-| P7 | Payroll: HR prepares, finance reviews, management approves; posting ≠ payment | مخطط | P6, D4, D5 | — |
-| P8 | Extensions (recruiting, insurance, housing…) | مخطط | P2/P3 | — |
+| P6 | Financial movements, advances | منفذ ومختبر (غير منشور) | سياسات المالك | hr-pay-e2e 74/74 |
+| P7 | Payroll: HR prepares, finance reviews, management approves; posting ≠ payment | منفذ ومختبر (غير منشور)؛ القيد والصرف بانتظار الربط المالي | الربط المالي | hr-pay-e2e 74/74; hrp-journey 22/22 |
+| P8 | Extensions (recruiting, insurance, housing…) | P8.1 التوظيف منفذ ومختبر (غير منشور)؛ الأداء والتأمين والسكن مخططة (مفاتيحها موقوفة) | — | hr-recruit-e2e 35/35; hrr-journey 12/12 |
 | P9 | Reports, cross-role review | مخطط | all | — |
 | P10 | Migration, launch | مخطط | all | — |
 
@@ -155,4 +155,17 @@ P4 leave done (see above). Next: P5 attendance link / P7 payroll per the bluepri
 - P7: hr_pay_runs per org+month from in-force accepted contract monthly lines + approved decisions + installments (+ unpaid leave only when the owner set types and day divisor). Blockers: partial month (no guessed proration → confirm/exclude with reason), unpaid-leave rule missing, negative net, mixed currency. HR submits (snapshot version) → finance reviews/returns → management approves the reviewed version only (three different people). Approved run frozen; installments posted to the ledger; HR publishes payslips; posting/payment need owner-recorded link + reference.
 - Not computed (no policy): GOSI, end of service, overtime, proration, annual/one-time contract items (added via decision). Attendance has no money effect yet.
 - Evidence: hr-pay-e2e 56/56; hrp-journey 21/21 (7 accounts; HR desktop, management phone, employee phone+desktop, colleague phone); payslip PDF. Synthetic finance link used only in isolated test orgs; all test data removed.
+- Not published.
+
+## 2026-11-05 — P6/P7 acceptance fixes + P8.1 recruitment (prompt «واصل العمل… P6/P7 ثم P8 وP9»)
+Status: implemented · server-tested · browser-tested · NOT published.
+- Month label: one format «ديسمبر 2026» (src/lib/month.ts) on cards, filters, slips, PDF/Excel; Riyadh month for defaults. month.test 2/2 (Dec, Jan); hrp-journey checks December on desktop.
+- Partial month: without a proration policy the employee line is held with service days. A documented exception exists only if the owner switches it on (hr_pay_exception_set); it carries reason + effect and is shown to finance and management. Excluded employees, no-contract and no-basic lines stay in «كشف الاستثناءات» (screen + Excel/PDF) with their computed amount.
+- Dated policies hr_pay_policies (append-only versions, effective month, reason; owner or hr_payroll `policies`): GOSI (rates, base, cap, nationalities; employer share = cost only), end of service (basis; settlement by separate decision), overtime (hours decision × hourly base × multiplier), proration (calendar/fixed), unpaid leave (types + divisor). Unset → affected lines held: GOSI all included lines; EOS employees ending in the month and settlement decisions; overtime hour decisions; proration partial months; unpaid leave days. «Not applicable» is an explicit recorded decision. Policies cannot change approved months or runs under finance review.
+- Attendance results appear only as review notes on the line (absent/late/incomplete) — no money effect except via an approved decision under policy.
+- P6 match: compensation change and promotion = contract amendment (new dated version) + assignment; decision categories bonus/penalty/promotion/comp_change/overtime/settlement (penalty only on a deduction item, bonus/overtime/promotion on an earning item); termination = existing employee end of service + contract termination; settlement = decision held until EOS policy. Custody: cash custody cycle (request → approve → disburse → settle → refund → close) is the procurement module (pc-e2e 32/32), shown read-only to the employee. Gap (needs owner decision): no physical asset/consumable custody register exists in Rikaz — not built.
+- Posting/payment unchanged: three separate states; real posting/payment pending an approved finance link and a confirmed reference.
+- P8.1 Recruitment (owner switch `recruit`; perm hr_recruit view/manage/approve/sensitive/convert/export): school need → vacancy approved by another person → candidates (education, experience, languages; ID/contact only with sensitive) → screening/shortlist → interviews with 1–5 criteria → offer versions (approved by someone other than the preparer, frozen after approval) → candidate response with reference → hr_rc_convert once: retry returns the same employee, same national ID requires explicit link to the existing file, no login, no academic assignment, dated HR assignment at the vacancy school; vacancy filled when seats are used.
+- Evidence: hr-pay-e2e 74/74; hrp-journey 22/22; hr-recruit-e2e 35/35; hrr-journey 12/12 (owner, officer desktop, approver 390px, viewer); regression perm5 20/20, hr-e2e 24/24, hr-leave-e2e 54/54, hr-att-e2e 53/53, pc-e2e 32/32, hr-contracts-e2e 31/31. Fixtures torn down.
+- Not done this round: P8.2 performance (reuse of evaluation), insurance, P8.3 housing (switches exist and refuse activation until built); P9 report catalog and cross-role review; id-tampering / branch-switch / revoke-after-open browser tests for the new screens.
 - Not published.
