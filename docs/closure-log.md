@@ -546,3 +546,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## Nov 5 2026 — Principal personal file (Package 21 item 1)
 - Separate link and activation (hr_self_access_set), audited self_link/self_on/self_off/self_unlink with actor; suspension hides open page within 30 s; school dashboard unaffected.
 - Evidence: hr-self-e2e 31/31; hse-journey 12/12 (desktop + 390px); regression hr-e2e, hr-leave, hr-docs, hr-letters, hr-contracts, hr-pay, hr-att, hrc-alerts, hr-loc-assets, hr-recruit, hr-import all passing.
+
+- Nov 5 2026 — HR P9 report catalog (R01–R29): hr-reports-e2e 26/26, hr-pay-e2e 81/81; owner browser check of /app/hr/reports.

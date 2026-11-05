@@ -322,6 +322,7 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | Section | Action | Who | Notes |
 |---|---|---|---|
 | hr_money | view / draft / approve / items / export | owner + granted (branch/org) | approver ≠ drafter/requester/employee |
+| hr_reports | print | owner + granted (branch/org) | printing a report needs view of its module + print; export needs the module export; both logged |
 | hr_payroll | view / prepare / finance_review / approve / post / pay / export | owner + granted (org only) | preparer, reviewer, approver must be different people; post/pay need finance link + reference |
 | Payroll policies & finance link | — | owner only | finance link, legacy unpaid-leave fields, partial-month exception switch |
 | Dated pay policies (hr_payroll `policies`) | GOSI / end of service / overtime / proration / unpaid leave | owner + granted (org) | versioned, append-only; refused for approved or under-review months |
