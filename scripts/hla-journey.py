@@ -44,7 +44,7 @@ async def main():
         check("4 phone: check-in inside range recorded", await e.get_by_role("alert").count() == 0 and "جوال" in t, t[:500])
         sw = await e.evaluate("document.documentElement.scrollWidth"); check("5 phone: no horizontal overflow", sw <= 392, sw)
         # outside range
-        await ectx.set_geolocation(FAR); await e.wait_for_timeout(61000)
+        await e.wait_for_timeout(61000); await ectx.set_geolocation(FAR)
         await e.get_by_role("button", name="تسجيل بصمة الآن").click(); await e.wait_for_timeout(3500)
         al = await e.get_by_role("alert").all_inner_texts(); check("6 outside range refused with distance", any("خارج نطاق المدرسة" in x for x in al), al)
         # weak accuracy
