@@ -5361,6 +5361,199 @@ export type Database = {
           },
         ]
       }
+      hr_doc_types: {
+        Row: {
+          alert_days: number[]
+          confidential: boolean
+          created_at: string
+          employee_upload: boolean
+          id: string
+          is_active: boolean
+          name: string
+          needs_expiry: boolean
+          needs_number: boolean
+          org_id: string
+          required_all: boolean
+          required_kinds: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          alert_days?: number[]
+          confidential?: boolean
+          created_at?: string
+          employee_upload?: boolean
+          id?: string
+          is_active?: boolean
+          name: string
+          needs_expiry?: boolean
+          needs_number?: boolean
+          org_id: string
+          required_all?: boolean
+          required_kinds?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          alert_days?: number[]
+          confidential?: boolean
+          created_at?: string
+          employee_upload?: boolean
+          id?: string
+          is_active?: boolean
+          name?: string
+          needs_expiry?: boolean
+          needs_number?: boolean
+          org_id?: string
+          required_all?: boolean
+          required_kinds?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_doc_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_document_versions: {
+        Row: {
+          doc_no: string | null
+          document_id: string
+          expires_on: string | null
+          file_id: string | null
+          id: string
+          issued_on: string | null
+          issuer: string | null
+          review_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string | null
+          uploaded_at: string
+          uploaded_by: string
+          version: number
+        }
+        Insert: {
+          doc_no?: string | null
+          document_id: string
+          expires_on?: string | null
+          file_id?: string | null
+          id?: string
+          issued_on?: string | null
+          issuer?: string | null
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string | null
+          uploaded_at?: string
+          uploaded_by: string
+          version: number
+        }
+        Update: {
+          doc_no?: string | null
+          document_id?: string
+          expires_on?: string | null
+          file_id?: string | null
+          id?: string
+          issued_on?: string | null
+          issuer?: string | null
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string | null
+          uploaded_at?: string
+          uploaded_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "hr_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_document_versions_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_documents: {
+        Row: {
+          accepted_version: number | null
+          contract_id: string | null
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          id: string
+          org_id: string
+          type_id: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_version?: number | null
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          org_id: string
+          type_id: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_version?: number | null
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          org_id?: string
+          type_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_documents_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "hr_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_documents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_documents_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_doc_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_employees: {
         Row: {
           birth_date: string | null
@@ -10060,6 +10253,49 @@ export type Database = {
         }
         Returns: undefined
       }
+      _hr_d_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
+      _hr_d_required: {
+        Args: { _emp: string }
+        Returns: {
+          alert_days: number[]
+          confidential: boolean
+          created_at: string
+          employee_upload: boolean
+          id: string
+          is_active: boolean
+          name: string
+          needs_expiry: boolean
+          needs_number: boolean
+          org_id: string
+          required_all: boolean
+          required_kinds: string[]
+          updated_at: string
+          updated_by: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "hr_doc_types"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      _hr_d_row: {
+        Args: {
+          _full: boolean
+          d: Database["public"]["Tables"]["hr_documents"]["Row"]
+        }
+        Returns: Json
+      }
+      _hr_d_see: { Args: { _action: string; _doc: string }; Returns: boolean }
+      _hr_d_self: { Args: { _emp: string }; Returns: boolean }
+      _hr_d_status: {
+        Args: { d: Database["public"]["Tables"]["hr_documents"]["Row"] }
+        Returns: string
+      }
+      _hr_dv_json: {
+        Args: { v: Database["public"]["Tables"]["hr_document_versions"]["Row"] }
+        Returns: Json
+      }
       _hr_emp_json: {
         Args: {
           _sensitive: boolean
@@ -10068,6 +10304,7 @@ export type Database = {
         Returns: Json
       }
       _hr_emp_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
+      _hr_emp_school: { Args: { _emp: string }; Returns: string }
       _hr_log: {
         Args: {
           _action: string
@@ -12115,6 +12352,31 @@ export type Database = {
         Args: { _id: string; _reason: string; _version: number }
         Returns: undefined
       }
+      hr_doc_alerts_tick: { Args: never; Returns: number }
+      hr_doc_caps: { Args: { _org: string }; Returns: Json }
+      hr_doc_file: { Args: { _version: string }; Returns: Json }
+      hr_doc_get: { Args: { _id: string }; Returns: Json }
+      hr_doc_list: { Args: { _f?: Json; _org: string }; Returns: Json }
+      hr_doc_review: {
+        Args: { _decision: string; _reason?: string; _version: string }
+        Returns: undefined
+      }
+      hr_doc_type_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: string
+      }
+      hr_doc_types_list: { Args: { _org: string }; Returns: Json }
+      hr_doc_upload_done: { Args: { _version: string }; Returns: undefined }
+      hr_doc_upload_start: {
+        Args: {
+          _mime: string
+          _name: string
+          _org: string
+          _p: Json
+          _size: number
+        }
+        Returns: Json
+      }
       hr_employee_get: { Args: { _id: string }; Returns: Json }
       hr_employee_list: {
         Args: { _org: string; _q?: string; _school?: string; _status?: string }
@@ -12127,6 +12389,7 @@ export type Database = {
       hr_me: { Args: { _org: string }; Returns: Json }
       hr_my_contract: { Args: { _id: string }; Returns: Json }
       hr_my_contracts: { Args: { _org: string }; Returns: Json }
+      hr_my_documents: { Args: { _org: string }; Returns: Json }
       hr_my_employment: { Args: { _org: string }; Returns: Json }
       hr_settings_get: { Args: { _org: string }; Returns: Json }
       hr_settings_save: {

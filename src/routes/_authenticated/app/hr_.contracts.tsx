@@ -126,7 +126,7 @@ function ContractsReport({ org, k, onPick }: { org: string; k: CCaps; onPick: (p
     { label: "سارية", n: rows.filter(live).length, pick: { status: "active", expiring: "" } },
     { label: "تنتهي خلال 30 يومًا", n: rows.filter((r) => live(r) && r.days_left !== null && r.days_left <= 30).length, pick: { status: "", expiring: "30" }, warn: true },
     { label: "تنتهي خلال 60 يومًا", n: rows.filter((r) => live(r) && r.days_left !== null && r.days_left <= 60).length, pick: { status: "", expiring: "60" } },
-    { label: "انتهت مدتها ولم تُجدَّد أو تُنهَ", n: rows.filter((r) => r.expired).length, pick: { status: "active", expiring: "" }, warn: true },
+    { label: "انتهت مدتها ولم تُجدَّد أو تُنهَ", n: rows.filter((r) => r.expired && !r.renewed).length, pick: { status: "active", expiring: "" }, warn: true },
     { label: "بانتظار إقرار الموظف", n: rows.filter((r) => r.status === "pending" || (r.in_force !== null && r.pending_version)).length, pick: { status: "pending", expiring: "" } },
     { label: "مسودات", n: rows.filter((r) => r.status === "draft" || r.draft_version).length, pick: { status: "draft", expiring: "" } },
   ];
@@ -194,7 +194,7 @@ function AlertSettings({ org }: { org: string }) {
         <div className="flex flex-wrap items-start gap-2">
           <div className="min-w-0 flex-1 space-y-1">
             <p><b>تنبيه انتهاء العقود:</b> قبل الانتهاء بـ <bdi>{days}</bdi> يومًا، ثم عند الانتهاء دون تجديد ساري. يصل لمعدّي العقود ومعتمديها في المدرسة والمالك{s.notify_employee ? "، وللموظف نفسه" : "، ولا يصل للموظف"}. لا يتضمن التنبيه أي مبالغ.</p>
-            {!s.reviewed ? <p className="text-warning">هذه مواعيد مقترحة لم يراجعها المالك بعد، وليست لائحة معتمدة.</p>
+            {!s.reviewed ? <p className="text-warning">التنبيهات تعمل الآن بهذه المواعيد المقترحة، لكنها لم تُراجع ولم تُعتمد بعد كسياسة للمؤسسة. يعتمدها من يملك صلاحية «إعدادات تنبيه العقود».</p>
               : <p className="text-xs text-muted-foreground">آخر تعديل: {s.updated_by ?? "—"} · <bdi dir="ltr">{s.updated_at?.slice(0, 16).replace("T", " ")}</bdi></p>}
             <p className="text-xs text-muted-foreground">موعد تشغيل الفحص التقني: {s.job_time} — منفصل عن مهلات التنبيه.</p>
           </div>
@@ -214,7 +214,7 @@ function AlertSettings({ org }: { org: string }) {
 function StatusChips({ r }: { r: CRow }) {
   return (
     <span className="flex flex-wrap gap-1 text-xs">
-      <span className={"rounded px-1.5 " + (r.status === "active" && !r.expired ? "bg-success/10 text-success" : r.status === "pending" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground")}>{r.expired ? "منتهي المدة" : C_STATUS[r.status] ?? r.status}</span>
+      <span className={"rounded px-1.5 " + (r.status === "active" && !r.expired ? "bg-success/10 text-success" : r.status === "pending" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground")}>{r.expired ? (r.renewed ? "انتهت مدته — مُجدَّد" : "منتهي المدة دون تجديد") : C_STATUS[r.status] ?? r.status}</span>{r.renewed && !r.expired && <span className="rounded bg-success/10 px-1.5 text-success">له تجديد مقبول</span>}
       {r.status === "active" && !r.expired && r.days_left !== null && r.days_left <= 60 && <span className="rounded bg-warning/10 px-1.5 text-warning">ينتهي بعد {r.days_left} يومًا</span>}
       {r.in_force !== null && r.pending_version && <span className="rounded bg-secondary px-1.5">تعديل بانتظار الإقرار</span>}
       {r.draft_version && r.in_force !== null && <span className="rounded bg-secondary px-1.5">مسودة تعديل</span>}

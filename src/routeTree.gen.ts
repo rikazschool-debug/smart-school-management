@@ -60,6 +60,7 @@ import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
 import { Route as AuthenticatedAppHrContractsRouteImport } from './routes/_authenticated/app/hr_.contracts'
+import { Route as AuthenticatedAppHrDocumentsRouteImport } from './routes/_authenticated/app/hr_.documents'
 import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './routes/_authenticated/app/virtual-classes.index'
 import { Route as ApiPublicAdmissionsWordpressRouteImport } from './routes/api/public/admissions/wordpress'
 import { Route as ApiPublicAuthSendSmsRouteImport } from './routes/api/public/auth/send-sms'
@@ -358,6 +359,12 @@ const AuthenticatedAppHrContractsRoute =
     path: '/hr/contracts',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHrDocumentsRoute =
+  AuthenticatedAppHrDocumentsRouteImport.update({
+    id: '/hr_/documents',
+    path: '/hr/documents',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppVirtualClassesIndexRoute =
   AuthenticatedAppVirtualClassesIndexRouteImport.update({
     id: '/virtual-classes/',
@@ -465,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
+  '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
@@ -526,6 +534,7 @@ export interface FileRoutesByTo {
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
+  '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
@@ -590,6 +599,7 @@ export interface FileRoutesById {
   '/_authenticated/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/_authenticated/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/_authenticated/app/hr_/contracts': typeof AuthenticatedAppHrContractsRoute
+  '/_authenticated/app/hr_/documents': typeof AuthenticatedAppHrDocumentsRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
@@ -654,6 +664,7 @@ export interface FileRouteTypes {
     | '/app/homework/$id'
     | '/app/homework/new'
     | '/app/hr/contracts'
+    | '/app/hr/documents'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/wati/webhook'
@@ -715,6 +726,7 @@ export interface FileRouteTypes {
     | '/app/homework/$id'
     | '/app/homework/new'
     | '/app/hr/contracts'
+    | '/app/hr/documents'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/wati/webhook'
@@ -778,6 +790,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/homework/$id'
     | '/_authenticated/app/homework/new'
     | '/_authenticated/app/hr_/contracts'
+    | '/_authenticated/app/hr_/documents'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/wati/webhook'
@@ -1163,6 +1176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHrContractsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/hr_/documents': {
+      id: '/_authenticated/app/hr_/documents'
+      path: '/hr/documents'
+      fullPath: '/app/hr/documents'
+      preLoaderRoute: typeof AuthenticatedAppHrDocumentsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/virtual-classes/': {
       id: '/_authenticated/app/virtual-classes/'
       path: '/virtual-classes'
@@ -1279,6 +1299,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHomeworkIdRoute: typeof AuthenticatedAppHomeworkIdRoute
   AuthenticatedAppHomeworkNewRoute: typeof AuthenticatedAppHomeworkNewRoute
   AuthenticatedAppHrContractsRoute: typeof AuthenticatedAppHrContractsRoute
+  AuthenticatedAppHrDocumentsRoute: typeof AuthenticatedAppHrDocumentsRoute
   AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
   AuthenticatedAppHomeworkIndexRoute: typeof AuthenticatedAppHomeworkIndexRoute
@@ -1335,6 +1356,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHomeworkIdRoute: AuthenticatedAppHomeworkIdRoute,
   AuthenticatedAppHomeworkNewRoute: AuthenticatedAppHomeworkNewRoute,
   AuthenticatedAppHrContractsRoute: AuthenticatedAppHrContractsRoute,
+  AuthenticatedAppHrDocumentsRoute: AuthenticatedAppHrDocumentsRoute,
   AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
   AuthenticatedAppHomeworkIndexRoute: AuthenticatedAppHomeworkIndexRoute,

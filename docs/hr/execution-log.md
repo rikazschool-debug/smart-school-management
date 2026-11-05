@@ -61,3 +61,19 @@ Status: implemented + server-tested + browser-tested (contracts page). Not publi
 2. P3 documents & letters center (hr_documents/versions/requirements, letter templates + immutable issued letters, request→review→issue) — not started.
 3. «خدماتي الوظيفية» self-service hub (rename/extend my-employment) — not started.
 4. P4 work/leave policies, balance ledger, leave requests (employee→manager→HR), teacher absence link to substitutions, vice view — not started.
+
+## P3 documents center + self-service hub (prompt «إصلاحات العقود موثقة… انتقل إلى البناء») — 2026-11-05
+Status: implemented · server-tested · browser-tested · NOT operationally accepted · NOT published.
+- Contract follow-ups: alert settings now need their own action `hr_contracts.settings` (approve alone no longer edits org settings); UI states unreviewed days ARE active but not approved policy. Renewal stops alerts once the renewal is accepted (status active + in_force), even if it starts later; list shows «مُجدَّد» vs «دون تجديد».
+- New perm section `hr_documents` (view / sensitive / upload / review / download / export / settings; branch via current assignments or org).
+- Data: hr_doc_types (owner-defined requirements: all employees or by contract kind, confidential, number/expiry, employee upload, per-type alert days — no defaults), hr_documents (employee+type, optional contract), hr_document_versions (immutable after decision, never deleted). Files: source_type 'hr', private rikaz-files, can_read_file = owner of document or download holder (+sensitive for confidential); `hr_doc_file` logs every open.
+- Flow: upload_start (validates perm/type/size/required fields) → storage upload → upload_done (refused until object exists) → review by someone who is neither the uploader nor the employee; reject needs reason; new version never replaces the accepted one until accepted. Missing = required type without accepted/under-review version.
+- Alerts: `hr_doc_alerts_tick` daily 05:20 UTC (08:20 Riyadh): reviewers + owner + the employee, once per stage, no document content.
+- Screens: /app/hr/documents (filters, missing/review/rejected/expired counters, detail with versions + change log, types editor, upload, Excel/PDF); «خدماتي الوظيفية» (/app/my-employment tabs: بياناتي، عقودي، مستنداتي (ما ينقصني + رفع + سبب الرفض)، إجازاتي = honest «قيد البناء»).
+- Evidence (server): hr-docs-e2e 35/35, hrc-alerts-e2e 24/24, hr-contracts-e2e 31/31, hr-e2e 24/24, perm6 20/20, perm7 20/20. Evidence (browser): hrd-journey.py 10/10 (employee 390px upload → reviewer reject → reupload → accept → signed link; colleague direct link blocked). Defect found & fixed: re-upload form ignored required number/expiry.
+- Jobs proven only by direct calls, not by a scheduled run.
+
+## Resume point (exact)
+1. Letters: templates with whitelisted variables (no pay variables unless comp_view), preview + missing-variable check, immutable issued copy with reference, RTL multi-page PDF, employee request → review → issue. Not started.
+2. Track A Excel import browser journey. Not started.
+3. P4 leave: policies (versioned/scoped), balance ledger, requests employee→manager→HR, «طلبات فريقي», teacher absence → record_absence/substitutions + vice task. Not started.

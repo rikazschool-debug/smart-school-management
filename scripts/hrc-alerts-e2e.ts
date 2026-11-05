@@ -70,9 +70,9 @@ try {
   await approver.c.rpc("hr_contract_issue", { _id: rn.data, _version: 1 });
   await setEnd(day(15)); before = (await notes(drafter)).length; await tick();
   check("renewal issued but not accepted still alerts", (await notes(drafter)).length === before + 1, await notes(drafter));
-  await admin.from("hr_contracts").update({ status: "active", start_date: day(4) }).eq("id", rn.data);
+  await admin.from("hr_contracts").update({ status: "active", in_force: 1, start_date: day(40) }).eq("id", rn.data);
   await setEnd(day(3)); before = (await notes(drafter)).length; await tick();
-  check("active renewal starting right after stops alerts", (await notes(drafter)).length === before, await notes(drafter));
+  check("accepted renewal (even starting later) stops alerts", (await notes(drafter)).length === before, await notes(drafter));
   await admin.from("hr_contracts").update({ status: "cancelled" }).eq("id", rn.data);
   await tick();
   check("cancelled renewal: original alerts resume", (await notes(drafter)).length === before + 1, await notes(drafter));
