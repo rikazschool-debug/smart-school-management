@@ -147,7 +147,7 @@ function Detail({ id, org, onClose }: { id: string; org: string; onClose: () => 
   const paper = async (v: CVersion, decision: "accept" | "reject") => { const r = await askText(decision === "accept" ? "مرجع الإقرار الورقي بالقبول (رقم النسخة الموقعة ومكان حفظها)" : "سبب الرفض ومرجعه", { required: true, ok: "تسجيل" }); if (r) act.mutate(() => rpc("hr_contract_ack", { _id: id, _version: v.version, _decision: decision, _reason: r, _paper: true })); };
   const end = async (action: "cancel" | "terminate") => {
     let date: string | null = null;
-    if (action === "terminate") { date = await askText("تاريخ الإنهاء (YYYY-MM-DD)", { required: true, ok: "متابعة" }); if (!date) return; if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return toast.error("صيغة التاريخ غير صحيحة"); }
+    if (action === "terminate") { date = await askText("تاريخ الإنهاء (YYYY-MM-DD)", { required: true, ok: "متابعة" }); if (!date) return; if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast.error("صيغة التاريخ غير صحيحة"); return; } }
     const r = await askText(action === "cancel" ? "سبب إلغاء العقد (لا يُحذف، يبقى في السجل)" : "سبب إنهاء العقد", { required: true, ok: action === "cancel" ? "إلغاء العقد" : "إنهاء العقد" });
     if (r) act.mutate(() => rpc("hr_contract_end", { _id: id, _action: action, _date: date, _reason: r }));
   };
