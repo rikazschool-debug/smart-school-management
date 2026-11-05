@@ -5166,6 +5166,201 @@ export type Database = {
           },
         ]
       }
+      hr_contract_templates: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_contract_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_contract_versions: {
+        Row: {
+          ack_at: string | null
+          ack_by: string | null
+          ack_reason: string | null
+          ack_source: string | null
+          contract_id: string
+          created_at: string
+          created_by: string | null
+          data: Json
+          effective_from: string
+          id: string
+          issued_at: string | null
+          issued_by: string | null
+          reason: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          ack_at?: string | null
+          ack_by?: string | null
+          ack_reason?: string | null
+          ack_source?: string | null
+          contract_id: string
+          created_at?: string
+          created_by?: string | null
+          data: Json
+          effective_from: string
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          version: number
+        }
+        Update: {
+          ack_at?: string | null
+          ack_by?: string | null
+          ack_reason?: string | null
+          ack_source?: string | null
+          contract_id?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          effective_from?: string
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_contract_versions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "hr_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_contracts: {
+        Row: {
+          contract_no: string
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          end_date: string | null
+          end_reason: string | null
+          ended_on: string | null
+          id: string
+          in_force: number | null
+          org_id: string
+          parent_id: string | null
+          school_id: string
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contract_no: string
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          end_date?: string | null
+          end_reason?: string | null
+          ended_on?: string | null
+          id?: string
+          in_force?: number | null
+          org_id: string
+          parent_id?: string | null
+          school_id: string
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contract_no?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          end_date?: string | null
+          end_reason?: string | null
+          ended_on?: string | null
+          id?: string
+          in_force?: number | null
+          org_id?: string
+          parent_id?: string | null
+          school_id?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_contracts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_contracts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_contracts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "hr_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_contracts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_employees: {
         Row: {
           birth_date: string | null
@@ -9808,6 +10003,19 @@ export type Database = {
         Args: { _emp: string; _only_active: boolean }
         Returns: Json
       }
+      _hr_basic: { Args: { _d: Json }; Returns: Json }
+      _hr_c_data: {
+        Args: { _comp_edit: boolean; _keep: Json; _p: Json }
+        Returns: Json
+      }
+      _hr_c_ok: { Args: { _action: string; _c: string }; Returns: boolean }
+      _hr_c_render: {
+        Args: {
+          _c: Database["public"]["Tables"]["hr_contracts"]["Row"]
+          _d: Json
+        }
+        Returns: Json
+      }
       _hr_check_teacher: {
         Args: {
           _assign: string
@@ -9844,6 +10052,21 @@ export type Database = {
         Returns: boolean
       }
       _hr_today: { Args: never; Returns: string }
+      _hr_v_json: {
+        Args: {
+          _comp: boolean
+          v: Database["public"]["Tables"]["hr_contract_versions"]["Row"]
+        }
+        Returns: Json
+      }
+      _hrs_org: {
+        Args: { _action: string; _org: string; _sec: string }
+        Returns: boolean
+      }
+      _hrs_school: {
+        Args: { _action: string; _school: string; _sec: string }
+        Returns: boolean
+      }
       _hw_check_score: {
         Args: { _criteria: Json; _score: number; h: Record<string, unknown> }
         Returns: number
@@ -11808,6 +12031,35 @@ export type Database = {
         Returns: string
       }
       hr_candidates: { Args: { _org: string }; Returns: Json }
+      hr_contract_ack: {
+        Args: {
+          _decision: string
+          _id: string
+          _paper?: boolean
+          _reason?: string
+          _version: number
+        }
+        Returns: undefined
+      }
+      hr_contract_caps: { Args: { _org: string }; Returns: Json }
+      hr_contract_end: {
+        Args: { _action: string; _date: string; _id: string; _reason: string }
+        Returns: undefined
+      }
+      hr_contract_get: { Args: { _id: string }; Returns: Json }
+      hr_contract_issue: {
+        Args: { _id: string; _reason?: string; _version: number }
+        Returns: undefined
+      }
+      hr_contract_list: { Args: { _f?: Json; _org: string }; Returns: Json }
+      hr_contract_save: {
+        Args: { _id: string; _org: string; _p: Json; _reason?: string }
+        Returns: string
+      }
+      hr_contract_withdraw: {
+        Args: { _id: string; _reason: string; _version: number }
+        Returns: undefined
+      }
       hr_employee_get: { Args: { _id: string }; Returns: Json }
       hr_employee_list: {
         Args: { _org: string; _q?: string; _school?: string; _status?: string }
@@ -11818,8 +12070,21 @@ export type Database = {
         Returns: string
       }
       hr_me: { Args: { _org: string }; Returns: Json }
+      hr_my_contract: { Args: { _id: string }; Returns: Json }
+      hr_my_contracts: { Args: { _org: string }; Returns: Json }
       hr_my_employment: { Args: { _org: string }; Returns: Json }
       hr_team: { Args: { _org: string }; Returns: Json }
+      hr_template_list: { Args: { _org: string }; Returns: Json }
+      hr_template_save: {
+        Args: {
+          _active?: boolean
+          _body: string
+          _id: string
+          _name: string
+          _org: string
+        }
+        Returns: string
+      }
       hw_family: { Args: { _hw: string; _student: string }; Returns: boolean }
       hw_staff: { Args: { _hw: string }; Returns: boolean }
       hw_state: { Args: { _hw: string; _student: string }; Returns: Json }
