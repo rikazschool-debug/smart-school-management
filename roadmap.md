@@ -470,3 +470,11 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [ ] 6 P10 migration/acceptance/launch list; execution log per evidence type
 - [x] Principal: HR section removed by default; own file kept (owner decision)
 - [ ] Field: real phone near a school (location acceptance)
+
+## Package 21 (Nov 5 2026 request)
+- [ ] Principal self-service file: HR links file to account + separate activate/suspend (audited); server checks on docs/payslips/downloads; suspension hides open screen; tests before link / linked-not-active / active / suspended, desktop + phone
+- [ ] P8 performance: reuse teacher evaluation, versioned forms, period, evaluator, review, publish, acknowledge/object; separate permissions
+- [ ] P8 insurance: companies, policies, classes, coverage, dependents, dates/renewal/alerts; sensitive masking; separate from payroll GOSI
+- [ ] P8 housing: properties, units, capacity, assign/transfer/vacate with dates; no over-capacity
+- [ ] P9 report catalog R01–R29: source/filters/columns/perms/test status; same filters for counts/details/Excel/PDF; view/print/export split; tamper + branch switch + revoke tests
+- [ ] Acceptance: journeys, execution log, P10 entry checklist; open items: real-phone check-in, real fingerprint device
