@@ -65,10 +65,31 @@ try {
   const rn = await drafter.c.rpc("hr_contract_save", { _org: org, _id: null, _p: { ...p, start_date: day(26), end_date: day(400), parent_id: C } });
   const rnRow = rn.data ? (await admin.from("hr_contracts").select("parent_id").eq("id", rn.data).single()).data : null;
   if (rnRow?.parent_id !== C && rn.data) await admin.from("hr_contracts").update({ parent_id: C }).eq("id", rn.data);
-  const before = (await notes(drafter)).length; await tick();
-  check("renewal draft stops alerts", !rn.error && (await notes(drafter)).length === before, rn.error ?? (await notes(drafter)));
-
+  let before = (await notes(drafter)).length; await tick();
+  check("renewal draft does NOT stop alerts", !rn.error && (await notes(drafter)).length === before + 1, rn.error ?? (await notes(drafter)));
+  await approver.c.rpc("hr_contract_issue", { _id: rn.data, _version: 1 });
+  await setEnd(day(15)); before = (await notes(drafter)).length; await tick();
+  check("renewal issued but not accepted still alerts", (await notes(drafter)).length === before + 1, await notes(drafter));
+  await admin.from("hr_contracts").update({ status: "active" }).eq("id", rn.data);
+  await setEnd(day(3)); before = (await notes(drafter)).length; await tick();
+  check("active renewal starting right after stops alerts", (await notes(drafter)).length === before, await notes(drafter));
   await admin.from("hr_contracts").update({ status: "cancelled" }).eq("id", rn.data);
+  await tick();
+  check("cancelled renewal: original alerts resume", (await notes(drafter)).length === before + 1, await notes(drafter));
+
+  // settings: suggested defaults, owner edits, employee option
+  const s0 = await viewer.c.rpc("hr_settings_get", { _org: org });
+  check("defaults shown as unreviewed suggestion", !s0.error && s0.data.reviewed === false && JSON.stringify(s0.data.contract_alert_days) === "[60,30,7]" && s0.data.can_edit === false, s0.error ?? s0.data);
+  const vs = await viewer.c.rpc("hr_settings_save", { _org: org, _days: [10], _notify_employee: true }); check("view-only cannot change settings", !!vs.error, vs);
+  const bd = await owner.c.rpc("hr_settings_save", { _org: org, _days: [0], _notify_employee: true }); check("invalid days refused", !!bd.error, bd);
+  const os = await owner.c.rpc("hr_settings_save", { _org: org, _days: [90, 10], _notify_employee: true }); check("owner saves days + employee option", !os.error, os.error);
+  const s1 = (await owner.c.rpc("hr_settings_get", { _org: org })).data;
+  check("settings record who/when", s1.reviewed && s1.updated_by && s1.updated_at, s1);
+  await setEnd(day(9)); await tick();
+  const me = (await admin.from("notifications").select("dedupe_key,body").eq("user_id", emp.id).like("dedupe_key", `hrc-exp-me:${C}:%`)).data!;
+  check("employee notified when enabled, stage from settings, no amounts", me.length === 1 && me[0].dedupe_key.endsWith(":d10") && !/SAR|ريال/.test(me[0].body), me);
+  check("custom stage used for staff", (await notes(drafter)).some((x) => x.dedupe_key.endsWith(":d10")), await notes(drafter));
+  before = (await notes(drafter)).length;
   await admin.from("org_sections").upsert({ org_id: org, section: "hr", enabled: false }, { onConflict: "org_id,section" });
   await tick();
   check("HR switched off: no alerts", (await notes(drafter)).length === before, await notes(drafter));
