@@ -31,7 +31,7 @@ try {
   for (const [u, r, s] of [[drafter, "teacher", A], [approver, "teacher", A], [pr, "principal", A], [emp, "teacher", A], [other, "teacher", B]] as any)
     await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: s, role: r });
   const grant = (u: any, action: string, scope = "org") => owner.c.rpc("perm_override_set", { _org: org, _user: u.id, _section: "hr_contracts", _action: action, _effect: "grant", _scope: scope, _reason: "اختبار" });
-  for (const a of ["view", "draft", "comp_view", "comp_edit"]) await grant(drafter, a);
+  for (const a of ["view", "draft", "approve", "comp_view", "comp_edit"]) await grant(drafter, a);
   for (const a of ["view", "approve", "comp_view"]) await grant(approver, a);
   await grant(pr, "view", "branch");
   const mk = async (u: any, s: string) => (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "موظف " + u.id.slice(0, 4), school_id: s, user_id: u.id } })).data;
