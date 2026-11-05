@@ -320,8 +320,8 @@ function Shifts({ org, k }: { org: string; k: Caps }) {
       {can && (
         <Section title="مصادر التسجيل" desc="الجوال معطّل افتراضيًا. الأجهزة ترسل بصماتها برابط موقّع بسر الجهاز.">
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.allow_self_punch} disabled={selfSet.isPending} onChange={(e) => selfSet.mutate({ self: e.target.checked, loc: d.require_location })} />السماح للموظف بتسجيل بصمته من «حضوري»</label>
-          <p className="ms-6 text-xs text-warning">تنبيه: موقع الموظف غير متحقق منه حاليًا عند التسجيل من الجوال.</p>
-          <label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={d.require_location} disabled={selfSet.isPending} onChange={(e) => selfSet.mutate({ self: d.allow_self_punch, loc: e.target.checked })} />اشتراط التحقق من الموقع (يوقف بصمة الجوال حتى يتوفر التحقق)</label>
+          <p className="ms-6 text-xs text-muted-foreground">كل بصمة جوال تتطلب قراءة موقع حديثة ودقيقة داخل نطاق مدرسة الموظف؛ المدرسة بلا موقع معتمد ترفض التسجيل.</p>
+          <SchoolSites org={org} />
           <form className="mt-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (dname.trim() && !dev.isPending) dev.mutate(); }}>
             <Input aria-label="اسم الجهاز" placeholder="اسم جهاز جديد" className="w-full sm:w-56" value={dname} onChange={(e) => setDname(e.target.value)} />
             <Button size="sm" type="submit" disabled={dev.isPending}><Plus className="size-4" />إضافة جهاز</Button>
@@ -332,6 +332,37 @@ function Shifts({ org, k }: { org: string; k: Caps }) {
               <Button size="sm" variant="ghost" onClick={() => devT.mutate({ id: x.id, on: !x.is_active })}>{x.is_active ? "إيقاف" : "تفعيل"}</Button></li>))}</ul>}
         </Section>
       )}
+    </div>
+  );
+}
+
+type Site = { school_id: string; school: string; lat: number | null; lng: number | null; radius_m: number | null; max_accuracy_m: number | null };
+/** Approved location per school (owner or hr_attendance.settings). */
+function SchoolSites({ org }: { org: string }) {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["hr-att-sites", org], queryFn: () => rpc<Site[]>("hr_att_sites_list", { _org: org }) });
+  const [ed, setEd] = useState<{ id: string; lat: string; lng: string; r: string; a: string } | null>(null);
+  const save = useMutation({ mutationFn: () => rpc("hr_att_site_save", { _school: ed!.id, _lat: Number(ed!.lat), _lng: Number(ed!.lng), _radius: Number(ed!.r), _accuracy: Number(ed!.a) }), onSuccess: () => { toast.success("حُفظ موقع المدرسة"); setEd(null); qc.invalidateQueries({ queryKey: ["hr-att-sites"] }); }, onError: (e) => toast.error(arabicError(e)) });
+  const here = () => navigator.geolocation?.getCurrentPosition((p) => setEd((x) => x && { ...x, lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }), () => toast.error("تعذّر قراءة موقعك"), { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+  if (q.isLoading) return <LoadingState />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
+  return (
+    <div className="mt-3 rounded-xl border p-3">
+      <h3 className="text-sm font-bold">مواقع المدارس المعتمدة</h3>
+      <ul className="mt-2 space-y-2 text-sm">{(q.data ?? []).map((s) => (
+        <li key={s.school_id} className="rounded-lg bg-secondary/40 p-2">
+          <div className="flex flex-wrap items-center gap-2"><span className="flex-1 font-semibold">{s.school}</span>
+            <span className="text-xs text-muted-foreground">{s.lat == null ? "لم يُضبط — بصمة الجوال مرفوضة" : <>نطاق {s.radius_m} م · دقة ≤ {s.max_accuracy_m} م · <bdi dir="ltr">{s.lat.toFixed(5)}, {s.lng!.toFixed(5)}</bdi></>}</span>
+            <Button size="sm" variant="outline" onClick={() => setEd({ id: s.school_id, lat: s.lat?.toString() ?? "", lng: s.lng?.toString() ?? "", r: String(s.radius_m ?? 150), a: String(s.max_accuracy_m ?? 50) })}>{s.lat == null ? "ضبط الموقع" : "تعديل"}</Button></div>
+          {ed?.id === s.school_id && (
+            <form className="mt-2 grid gap-2 sm:grid-cols-5 sm:items-end" onSubmit={(e) => { e.preventDefault(); if (!save.isPending) save.mutate(); }}>
+              <div><Label htmlFor="st-lat">خط العرض</Label><Input id="st-lat" dir="ltr" inputMode="decimal" value={ed.lat} onChange={(e) => setEd({ ...ed, lat: e.target.value })} /></div>
+              <div><Label htmlFor="st-lng">خط الطول</Label><Input id="st-lng" dir="ltr" inputMode="decimal" value={ed.lng} onChange={(e) => setEd({ ...ed, lng: e.target.value })} /></div>
+              <div><Label htmlFor="st-r">النطاق (متر)</Label><Input id="st-r" dir="ltr" inputMode="numeric" value={ed.r} onChange={(e) => setEd({ ...ed, r: e.target.value })} /></div>
+              <div><Label htmlFor="st-a">حد الدقة (متر)</Label><Input id="st-a" dir="ltr" inputMode="numeric" value={ed.a} onChange={(e) => setEd({ ...ed, a: e.target.value })} /></div>
+              <div className="flex gap-2"><Button size="sm" type="submit" disabled={save.isPending}>حفظ الموقع</Button><Button size="sm" type="button" variant="ghost" onClick={here}>موقعي الحالي</Button></div>
+            </form>)}
+        </li>))}</ul>
     </div>
   );
 }
