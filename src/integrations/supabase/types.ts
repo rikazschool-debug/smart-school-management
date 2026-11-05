@@ -5485,6 +5485,41 @@ export type Database = {
           },
         ]
       }
+      hr_settings: {
+        Row: {
+          alert_days_reviewed: boolean
+          contract_alert_days: number[]
+          notify_employee_expiry: boolean
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          alert_days_reviewed?: boolean
+          contract_alert_days?: number[]
+          notify_employee_expiry?: boolean
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          alert_days_reviewed?: boolean
+          contract_alert_days?: number[]
+          notify_employee_expiry?: boolean
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -10052,6 +10087,23 @@ export type Database = {
         Args: { _action: string; _school: string }
         Returns: boolean
       }
+      _hr_settings: {
+        Args: { _org: string }
+        Returns: {
+          alert_days_reviewed: boolean
+          contract_alert_days: number[]
+          notify_employee_expiry: boolean
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "hr_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _hr_today: { Args: never; Returns: string }
       _hr_v_json: {
         Args: {
@@ -12043,6 +12095,7 @@ export type Database = {
         Returns: undefined
       }
       hr_contract_alerts_tick: { Args: never; Returns: number }
+      hr_contract_approver_check: { Args: { _id: string }; Returns: Json }
       hr_contract_caps: { Args: { _org: string }; Returns: Json }
       hr_contract_end: {
         Args: { _action: string; _date: string; _id: string; _reason: string }
@@ -12075,6 +12128,11 @@ export type Database = {
       hr_my_contract: { Args: { _id: string }; Returns: Json }
       hr_my_contracts: { Args: { _org: string }; Returns: Json }
       hr_my_employment: { Args: { _org: string }; Returns: Json }
+      hr_settings_get: { Args: { _org: string }; Returns: Json }
+      hr_settings_save: {
+        Args: { _days: number[]; _notify_employee: boolean; _org: string }
+        Returns: undefined
+      }
       hr_team: { Args: { _org: string }; Returns: Json }
       hr_template_list: { Args: { _org: string }; Returns: Json }
       hr_template_save: {
