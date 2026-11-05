@@ -530,3 +530,4 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 - 2026-11-05 HR contracts: expiry alerts (60/30/7 days + expired, drafters/approvers of the branch + owner, deduped, stop on renewal/HR off) and contracts summary with per-school breakdown. Evidence: hrc-alerts-e2e 11/11, hrc-journey 11/11, desktop+phone screenshots.
 - 2026-11-05 HR contract fixes: owner self-approval removed, alert days as org setting, renewal counts only when active, optional employee notice. hrc-alerts-e2e 24/24, hr-contracts-e2e 31/31, hrc-journey 11/11.
+- 2026-11-05 HR documents center + «خدماتي الوظيفية»: hr-docs-e2e 35/35, hrd-journey 10/10; contract settings own permission, accepted future renewal stops alerts.

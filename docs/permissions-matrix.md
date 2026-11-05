@@ -279,3 +279,13 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | principal / direct manager / student / guardian | nothing by default | |
 | expiry alerts | draft or approve holders of the branch (or org), owner; employee only if setting on | org-set days (unreviewed suggestion 60/30/7) + expired, once per stage; no amounts |
 | issue | never the drafter/last editor (owner included), never own contract | waiting-for-approver shown if none |
+
+## HR documents (hr_documents) — 2026-11-05
+| Action | Who | Notes |
+|---|---|---|
+| view / export | granted (branch via current assignment, or org), owner | confidential types need `sensitive` |
+| upload | granted, owner; employee for own docs when type allows | never for a colleague |
+| review | granted, owner | never the uploader of that version, never the employee |
+| download | granted, owner; employee for own | through hr_doc_file + storage RLS, logged |
+| settings (types/requirements) | granted at org scope, owner | |
+| contract alert settings | `hr_contracts.settings` at org scope, owner | approve alone does not allow |
