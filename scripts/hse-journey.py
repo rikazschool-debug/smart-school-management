@@ -11,6 +11,11 @@ async def login(br, who, path, w=1280, h=1800):
     await p.goto(B + "/auth"); await p.wait_for_timeout(2500); await p.fill("#email", F[who]); await p.fill("#password", F["pw"])
     await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await p.wait_for_timeout(1500)
     await p.goto(B + path); await p.wait_for_timeout(3500); return ctx, p
+async def settle(p):
+    for _ in range(30):
+        if "جارٍ التحميل" not in await p.locator("main").inner_text(): break
+        await p.wait_for_timeout(1000)
+    await p.wait_for_timeout(800)
 async def nav_text(p): return await p.locator("aside, nav").first.inner_text()
 async def open_emp(h, name):
     await h.goto(B + "/app/hr"); await h.wait_for_timeout(3500)
@@ -33,15 +38,15 @@ async def main():
         await card.get_by_label("اختر حساب الموظف").select_option(label=[o for o in await card.locator("option").all_inner_texts() if "مديرة المدرسة" in o][0])
         await card.get_by_role("button", name="ربط بالحساب").click(); await h.wait_for_timeout(3000)
         check("4 HR links file; status «مرتبط — غير مفعّل»", "مرتبط — غير مفعّل" in await card.inner_text(), await card.inner_text())
-        await pr.reload(); await pr.wait_for_timeout(3500)
+        await pr.reload(); await pr.wait_for_timeout(2500); await settle(pr)
         check("5 linked not active: page says not activated, no menu item", "غير مفعّل" in await pr.locator("main").inner_text() and await pr.get_by_role("link", name="ملفي الوظيفي").count() == 0)
         await card.get_by_role("button", name="تفعيل الوصول").click(); await h.wait_for_timeout(3000)
         check("6 HR activates; shows who/when", "مفعّل" in await card.inner_text() and "مسؤولة الموارد البشرية" in await card.inner_text(), await card.inner_text())
         await h.screenshot(path=SH + "hr_active.png")
-        await pr.reload(); await pr.wait_for_timeout(3500); t = await pr.locator("main").inner_text()
+        await pr.reload(); await pr.wait_for_timeout(2500); await settle(pr); t = await pr.locator("main").inner_text()
         check("7 active: own file + menu item", "مديرة مدرسة" in t and await pr.get_by_role("link", name="ملفي الوظيفي").count() > 0, t[:300])
         check("8 active: still no HR menu", "الموارد البشرية" not in await nav_text(pr))
-        _, m = await login(br, "pr", "/app/my-employment", 390, 844)
+        _, m = await login(br, "pr", "/app/my-employment", 390, 844); await settle(m)
         t = await m.locator("main").inner_text(); sw = await m.evaluate("document.documentElement.scrollWidth")
         check("9 phone: own file visible, no overflow", "مديرة مدرسة" in t and sw <= 392, (sw, t[:200]))
         await m.screenshot(path=SH + "phone_active.png")
