@@ -44,6 +44,20 @@ try {
   const tick = async () => { const r = await admin.rpc("hr_contract_alerts_tick"); if (r.error) throw r.error; return r.data; };
   const setEnd = (d: string) => admin.from("hr_contracts").update({ end_date: d }).eq("id", C);
 
+  // suggested days are not policy: nothing is sent until saved + explicitly activated
+  const s0 = await viewer.c.rpc("hr_settings_get", { _org: org });
+  check("defaults shown as unreviewed, inactive suggestion", !s0.error && s0.data.reviewed === false && s0.data.active === false && JSON.stringify(s0.data.contract_alert_days) === "[60,30,7]" && s0.data.can_edit === false, s0.error ?? s0.data);
+  await setEnd(day(45)); await tick();
+  check("inactive alerts: nothing sent", (await notes(drafter)).length === 0, await notes(drafter));
+  const pre = await owner.c.rpc("hr_settings_set_alerts", { _org: org, _active: true, _reason: null });
+  check("activation refused before days are reviewed", !!pre.error, pre.error);
+  await owner.c.rpc("hr_settings_save", { _org: org, _days: [60, 30, 7], _notify_employee: false });
+  const vOn = await viewer.c.rpc("hr_settings_set_alerts", { _org: org, _active: true, _reason: null });
+  check("view-only cannot activate", !!vOn.error, vOn.error);
+  const on = await owner.c.rpc("hr_settings_set_alerts", { _org: org, _active: true, _reason: null });
+  const s0b = (await owner.c.rpc("hr_settings_get", { _org: org })).data;
+  check("owner activates; decision logged with who/when", !on.error && s0b.active === true && !!s0b.decided_by && s0b.history.some((h: { action: string }) => h.action === "contract_alerts_on"), on.error ?? s0b);
+  await setEnd(day(400));
   await tick();
   check("far end date: no alert", (await notes(drafter)).length === 0, await notes(drafter));
   await setEnd(day(45)); await tick(); await tick();
@@ -72,7 +86,12 @@ try {
   check("renewal issued but not accepted still alerts", (await notes(drafter)).length === before + 1, await notes(drafter));
   await admin.from("hr_contracts").update({ status: "active", in_force: 1, start_date: day(40) }).eq("id", rn.data);
   await setEnd(day(3)); before = (await notes(drafter)).length; await tick();
-  check("accepted renewal (even starting later) stops alerts", (await notes(drafter)).length === before, await notes(drafter));
+  check("accepted renewal with a gap keeps alerts", (await notes(drafter)).length === before + 1, await notes(drafter));
+  const lr = ((await drafter.c.rpc("hr_contract_list", { _org: org, _f: {} })).data as { id: string; renewed: boolean; renewal_gap: number | null }[]).find((x) => x.id === C);
+  check("list shows renewal gap, not 'renewed'", lr?.renewed === false && lr?.renewal_gap === 36, lr);
+  await admin.from("hr_contracts").update({ start_date: day(4) }).eq("id", rn.data);
+  await setEnd(day(2)); before = (await notes(drafter)).length; await tick();
+  check("continuous accepted renewal stops alerts", (await notes(drafter)).length === before, await notes(drafter));
   await admin.from("hr_contracts").update({ status: "cancelled" }).eq("id", rn.data);
   await tick();
   check("cancelled renewal: original alerts resume", (await notes(drafter)).length === before + 1, await notes(drafter));
@@ -90,8 +109,6 @@ try {
   check("approver cannot issue own employment contract", String(ownI.error?.message ?? "").includes("عقده"), ownI.error);
 
   // settings: suggested defaults, owner edits, employee option
-  const s0 = await viewer.c.rpc("hr_settings_get", { _org: org });
-  check("defaults shown as unreviewed suggestion", !s0.error && s0.data.reviewed === false && JSON.stringify(s0.data.contract_alert_days) === "[60,30,7]" && s0.data.can_edit === false, s0.error ?? s0.data);
   const vs = await viewer.c.rpc("hr_settings_save", { _org: org, _days: [10], _notify_employee: true }); check("view-only cannot change settings", !!vs.error, vs);
   const bd = await owner.c.rpc("hr_settings_save", { _org: org, _days: [0], _notify_employee: true }); check("invalid days refused", !!bd.error, bd);
   const os = await owner.c.rpc("hr_settings_save", { _org: org, _days: [90, 10], _notify_employee: true }); check("owner saves days + employee option", !os.error, os.error);
@@ -105,6 +122,12 @@ try {
   await admin.from("org_sections").upsert({ org_id: org, section: "hr", enabled: false }, { onConflict: "org_id,section" });
   await tick();
   check("HR switched off: no alerts", (await notes(drafter)).length === before, await notes(drafter));
+  await admin.from("org_sections").upsert({ org_id: org, section: "hr", enabled: true }, { onConflict: "org_id,section" });
+  const offNo = await owner.c.rpc("hr_settings_set_alerts", { _org: org, _active: false, _reason: "" });
+  check("stopping alerts needs a reason", !!offNo.error, offNo.error);
+  const off = await owner.c.rpc("hr_settings_set_alerts", { _org: org, _active: false, _reason: "مراجعة السياسة" });
+  await setEnd(day(1)); before = (await notes(drafter)).length; await admin.from("hr_contracts").update({ status: "cancelled" }).eq("id", rn.data); await tick();
+  check("stopped alerts: nothing sent, reason kept", !off.error && (await notes(drafter)).length === before && (await owner.c.rpc("hr_settings_get", { _org: org })).data.decision_reason === "مراجعة السياسة", off.error);
 } catch (e) { bad++; console.log("FAIL crash", e); }
 finally { for (const o of orgs) await tr.purgeOrg(o).catch((e: unknown) => console.log("cleanup", e)); for (const u of tr.users) await admin.auth.admin.deleteUser(u); }
 console.log(`\n${ok} passed, ${bad} failed`); process.exit(bad ? 1 : 0);
