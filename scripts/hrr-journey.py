@@ -45,7 +45,7 @@ async def main():
         check("6 officer with sensitive sees full ID", "1098765432" in await panel.inner_text())
         await panel.get_by_role("button", name="بدء الفرز").click(); await r.wait_for_timeout(2500)
         await panel.get_by_role("button", name="تسجيل مقابلة").click()
-        await r.fill("#i-p", "المديرة والمشرفة"); await r.get_by_label("المعيار 1").fill("التمكن العلمي")
+        await r.fill("#i-p", "المديرة والمشرفة"); await r.get_by_label("المعيار 1", exact=True).fill("التمكن العلمي")
         await r.get_by_role("button", name="حفظ المقابلة").click(); await r.wait_for_timeout(3000)
         await panel.get_by_role("button", name="إعداد عرض").click()
         await r.fill("#o-s", "2027-01-10"); await r.fill("#o-b", "7000")
