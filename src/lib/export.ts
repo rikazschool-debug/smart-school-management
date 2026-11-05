@@ -108,8 +108,8 @@ export async function exportLetterPdf(l: LetterPdf) {
   host.style.cssText = `position:fixed;left:-20000px;top:0;width:${W}px;${CSS}`;
   document.body.appendChild(host);
   try {
-    host.innerHTML = `<div style="padding:${PT}px ${PX}px 0">${head}<div>${paras.map((p) => `<p style="${P}">${esc(p)}</p>`).join("")}</div></div>`;
-    const headH = (host.querySelector("div > div:last-child") as HTMLElement).offsetTop;
+    host.innerHTML = `<div style="padding:${PT}px ${PX}px 0">${head}<div data-lb>${paras.map((p) => `<p style="${P}">${esc(p)}</p>`).join("")}</div></div>`;
+    const headH = (host.querySelector("[data-lb]") as HTMLElement).offsetTop + PT;
     const hs = [...host.querySelectorAll("p")].map((p) => (p as HTMLElement).offsetHeight);
     const pages: number[][] = []; let cur: number[] = [], used = headH;
     hs.forEach((h, i) => { if (cur.length && used + h > H - FOOT) { pages.push(cur); cur = []; used = PT + 30; } cur.push(i); used += h; });

@@ -2,7 +2,8 @@
 // All data comes from hr_letter_* RPCs; the server decides what text (incl. pay) is sent.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { Printer, X } from "lucide-react";
+import { FileDown, Printer, X } from "lucide-react";
+import { exportLetterPdf } from "@/lib/export";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,16 @@ export function LetterPanel({ id, onClose, self }: { id: string; onClose: () => 
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["hr-l", id], queryFn: () => rpc<LetterRow>("hr_letter_get", { _id: id }) });
   const [edit, setEdit] = useState<{ purpose: string; addressee: string } | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const downloadPdf = async (x: LetterRow) => {
+    if (!x.body || !x.ref_no) return;
+    setPdfBusy(true);
+    try {
+      const v = x.status === "cancelled" ? "خطاب ملغى" : x.status === "superseded" ? "خطاب مستبدل بتصحيح" : null;
+      const n = await exportLetterPdf({ org: x.org_name, title: x.template, ref: x.ref_no, issued: (x.issued_at ?? "").slice(0, 10), body: x.body, void: v });
+      toast.success(`نُزّل الخطاب (${n} صفحة)`);
+    } catch (e) { toast.error(arabicError(e)); } finally { setPdfBusy(false); }
+  };
   const done = (msg: string) => { toast.success(msg); setEdit(null); qc.invalidateQueries({ queryKey: ["hr-l"] }); qc.invalidateQueries({ queryKey: ["hr-letters"] }); qc.invalidateQueries({ queryKey: ["hr-l-mine"] }); };
   const act = useMutation({
     mutationFn: async (a: { fn: string; args: Record<string, unknown>; msg: string }) => { await rpc(a.fn, a.args); return a.msg; },
