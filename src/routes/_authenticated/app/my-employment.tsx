@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ask, askText } from "@/components/confirm";
-import { VersionCard } from "@/routes/_authenticated/app/hr_.contracts";
+import { VersionCard } from "@/components/hr/version-card";
 import { C_STATUS, type CDetail, type CVersion } from "@/components/hr/contracts-shared";
 import { EmptyState, ErrorState, LoadingState, PageHeader, Section } from "@/components/states";
 import { arabicError, useSession } from "@/lib/session";
