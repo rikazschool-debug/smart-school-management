@@ -19,6 +19,8 @@ async function user(tag: string) {
   const c = createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
   const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw s.error;
   tr.addUser(s.data.user!.id); return { c, id: s.data.user!.id };
+}
+// metres → degrees latitude
 const orgs: string[] = [];
 try {
   const owner = await user("owner"), hr = await user("hr"), view = await user("view"), pr = await user("pr"), mate = await user("mate"), stranger = await user("x");
