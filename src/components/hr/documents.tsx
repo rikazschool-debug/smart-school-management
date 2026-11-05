@@ -39,7 +39,7 @@ export async function openDocFile(versionId: string) {
 }
 
 /** Upload a new version: server validates permission/type/size and creates the private file row; then storage upload; then confirm. */
-export function DocUploadForm({ org, type, employeeId, documentId, contracts, onDone, onCancel }: {
+export function DocUploadForm({ org, type, employeeId, documentId, contracts, onDone, onCancel, initial }: {
   org: string; type: Pick<DocType, "id" | "name" | "needs_number" | "needs_expiry">; employeeId: string; documentId?: string | null;
   contracts?: { id: string; contract_no: string }[]; onDone: () => void; onCancel: () => void; initial?: DocVersion | null | undefined;
 }) {
