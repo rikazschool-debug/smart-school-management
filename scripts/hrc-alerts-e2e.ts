@@ -35,6 +35,7 @@ try {
   await grant(viewer, "view", "branch");
   await grant(drB, "view", "branch"); await grant(drB, "draft", "branch");
   const E = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "موظفة العقد", school_id: A, user_id: emp.id } })).data;
+  await owner.c.rpc("hr_self_access_set", { _emp: E, _active: true });
   const p = { employee_id: E, school_id: A, kind: "fixed", job_title: "معلمة", start_date: day(-300), end_date: day(400) };
   const C = (await drafter.c.rpc("hr_contract_save", { _org: org, _id: null, _p: p })).data;
   await approver.c.rpc("hr_contract_issue", { _id: C, _version: 1 });
@@ -104,6 +105,7 @@ try {
   const chk = (await owner.c.rpc("hr_contract_approver_check", { _id: oc })).data;
   check("approver check: me blocked, another approver exists", chk?.me_blocked === true && chk?.other_approver === true, chk);
   const ownE = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "المعتمد نفسه", school_id: A, user_id: approver.id } })).data;
+  await owner.c.rpc("hr_self_access_set", { _emp: ownE, _active: true });
   const own = (await drafter.c.rpc("hr_contract_save", { _org: org, _id: null, _p: { ...p, employee_id: ownE } })).data;
   const ownI = await approver.c.rpc("hr_contract_issue", { _id: own, _version: 1 });
   check("approver cannot issue own employment contract", String(ownI.error?.message ?? "").includes("عقده"), ownI.error);

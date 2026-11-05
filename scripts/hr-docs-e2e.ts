@@ -36,7 +36,7 @@ try {
   for (const a of ["view", "review", "download", "sensitive"]) await grant(rev, "hr_documents", a, "org");
   await grant(view, "hr_documents", "view", "branch");
   await grant(brB, "hr_documents", "view", "branch"); await grant(brB, "hr_documents", "download", "branch");
-  const mk = async (u: any, s: string, n: string) => (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: s, user_id: u.id } })).data;
+  const mk = async (u: any, s: string, n: string) => { const id = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: s, user_id: u.id } })).data; if (id) await owner.c.rpc("hr_self_access_set", { _emp: id, _active: true }); return id; };
   const E = await mk(emp, A, "موظفة المستندات"), M = await mk(mate, A, "زميلة");
 
   const tNo = await hr.c.rpc("hr_doc_type_save", { _org: org, _id: null, _p: { name: "x" } }); check("types need settings permission", !!tNo.error, tNo);

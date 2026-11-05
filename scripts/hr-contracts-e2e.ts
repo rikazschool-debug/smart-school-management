@@ -34,7 +34,7 @@ try {
   for (const a of ["view", "draft", "approve", "comp_view", "comp_edit"]) await grant(drafter, a);
   for (const a of ["view", "approve", "comp_view"]) await grant(approver, a);
   await grant(pr, "view", "branch");
-  const mk = async (u: any, s: string) => (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "موظف " + u.id.slice(0, 4), school_id: s, user_id: u.id } })).data;
+  const mk = async (u: any, s: string) => { const id = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "موظف " + u.id.slice(0, 4), school_id: s, user_id: u.id } })).data; if (id) await owner.c.rpc("hr_self_access_set", { _emp: id, _active: true }); return id; };
   const E = await mk(emp, A), O = await mk(other, B);
   const NL = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "بلا حساب", school_id: A } })).data;
 

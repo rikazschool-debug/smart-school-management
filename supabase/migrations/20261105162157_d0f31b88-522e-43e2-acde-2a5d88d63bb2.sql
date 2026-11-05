@@ -1,0 +1,1 @@
+revoke all on function public._hr_self_live(uuid) from authenticated;

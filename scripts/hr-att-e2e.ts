@@ -35,7 +35,7 @@ try {
   for (const a of ["view", "record"]) await grant(rec, a, "branch");
   for (const a of ["view", "correct", "close"]) await grant(cor, a, "branch");
   await grant(brB, "view", "branch");
-  const mk = async (u: any, s: string, n: string) => (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: s, user_id: u?.id ?? null, job_title: "موظف", hire_date: "2024-09-01" } })).data;
+  const mk = async (u: any, s: string, n: string) => { const id = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: s, user_id: u?.id ?? null, job_title: "موظف", hire_date: "2024-09-01" } })).data; if (id) await owner.c.rpc("hr_self_access_set", { _emp: id, _active: true }); return id; };
   const MG = await mk(mgr, A, "المدير"), E = await mk(emp, A, "موظف النهار"), N = await mk(night, A, "حارس ليلي"), M = await mk(mate, A, "زميل");
   const empNo = (await admin.from("hr_employees").select("employee_no").eq("id", E).single()).data!.employee_no;
   await admin.from("hr_assignments").update({ manager_id: MG }).in("employee_id", [E, N]);

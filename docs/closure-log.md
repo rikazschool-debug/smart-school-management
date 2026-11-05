@@ -542,3 +542,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - 2026-11-05 HR P6/P7 acceptance fixes: month label «month year», dated pay policies (GOSI/EOS/overtime/proration/unpaid leave; unset = held), owner partial-month exception switch, exceptions sheet, decision categories + overtime hours. Evidence: hr-pay-e2e 74/74, hrp-journey 22/22, month.test 2/2.
 - 2026-11-05 HR P8.1 recruitment + extension switches. Evidence: hr-recruit-e2e 35/35, hrr-journey 12/12 (desktop + 390px). Regression: perm5 20, hr-e2e 24, hr-leave 54, hr-att 53, pc-e2e 32, hr-contracts 31.
 - 2026-11-05 HR P5 location punch + asset custody + principal HR removal. Evidence: hr-loc-assets-e2e 44/44, hla-journey 14/14 (simulated geolocation, 390px + desktop), hr-att-e2e 52/52, hr-e2e 25/25, perm6 20/20. Field test near a school on a real phone and real fingerprint device: open.
+
+## Nov 5 2026 — Principal personal file (Package 21 item 1)
+- Separate link and activation (hr_self_access_set), audited self_link/self_on/self_off/self_unlink with actor; suspension hides open page within 30 s; school dashboard unaffected.
+- Evidence: hr-self-e2e 31/31; hse-journey 12/12 (desktop + 390px); regression hr-e2e, hr-leave, hr-docs, hr-letters, hr-contracts, hr-pay, hr-att, hrc-alerts, hr-loc-assets, hr-recruit, hr-import all passing.

@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/app/my-employment")({
   component: Page,
 });
 
-type Mine = { employee: HrEmp; assignments: HrAssign[] } | null;
+type Mine = { employee: HrEmp; assignments: HrAssign[]; pending?: undefined } | { pending: true; employee?: undefined; assignments?: undefined } | null;
 type TeamRow = { id: string; employee_no: string; full_name: string; job_title: string | null; school: string; status: string };
 
 const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"], ["attendance", "حضوري"], ["money", "سلفي وعهدي وقسائمي"]] as const;
@@ -33,7 +33,7 @@ function Page() {
   const { active } = useSession();
   const tab = Route.useSearch().tab ?? "me";
   const org = active?.orgId ?? null;
-  const mine = useQuery({ queryKey: ["hr-mine-page", org], enabled: !!org, queryFn: () => rpc<Mine>("hr_my_employment", { _org: org }) });
+  const mine = useQuery({ queryKey: ["hr-mine-page", org], enabled: !!org, refetchInterval: 30_000, refetchOnWindowFocus: true, queryFn: () => rpc<Mine>("hr_my_employment", { _org: org }) });
   const team = useQuery({ queryKey: ["hr-team", org], enabled: !!org, queryFn: () => rpc<TeamRow[]>("hr_team", { _org: org }) });
   if (!active) return null;
   return (
@@ -41,11 +41,13 @@ function Page() {
       <PageHeader title="خدماتي الوظيفية" desc="بياناتك وعقودك ومستنداتك وخطاباتك وإجازاتك كما سجّلتها الموارد البشرية. لتصحيح أي بيان تواصل مع الموارد البشرية." />
       {mine.isLoading ? <LoadingState /> : mine.error ? <ErrorState message={arabicError(mine.error)} /> : !mine.data ? (
         <EmptyState title="لا يوجد ملف وظيفي لك في هذه المؤسسة" hint="تنشئه الموارد البشرية وتربطه بحسابك." />
+      ) : mine.data.pending ? (
+        <EmptyState title="ملفك الوظيفي غير مفعّل" hint="ملفك مرتبط بحسابك، وتفعّل الموارد البشرية الوصول إليه. راجعها إن احتجت إلى بياناتك." />
       ) : <>
         <nav aria-label="خدماتي" className="mb-4 flex flex-wrap gap-2 text-sm">
           {TABS.map(([k, l]) => <Link key={k} to="/app/my-employment" search={k === "me" ? {} : { tab: k }} className={"rounded-lg px-3 py-1.5 " + (tab === k ? "bg-primary text-primary-foreground" : "border bg-card hover:border-primary")} aria-current={tab === k ? "page" : undefined}>{l}</Link>)}
         </nav>
-        {tab === "me" && <MyFile d={mine.data} />}
+        {tab === "me" && <MyFile d={mine.data as { employee: HrEmp; assignments: HrAssign[] }} />}
         {tab === "contracts" && <MyContracts org={org!} empty />}
         {tab === "docs" && <MyDocuments org={org!} />}
         {tab === "letters" && <MyLetters org={org!} />}
@@ -140,7 +142,7 @@ function MyContracts({ org, empty }: { org: string; empty?: boolean }) {
   );
 }
 
-function MyFile({ d }: { d: NonNullable<Mine> }) {
+function MyFile({ d }: { d: { employee: HrEmp; assignments: HrAssign[] } }) {
   const e = d.employee;
   const row = (k: string, v: React.ReactNode) => <div className="rounded-lg bg-secondary/40 p-3"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>;
   return (

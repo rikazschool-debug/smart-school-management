@@ -32,7 +32,7 @@ const A = (await admin.from("schools").select("id").eq("org_id", org).single()).
 for (const u of ["hr", "mgr", "emp", "mate"]) await admin.from("memberships").insert({ user_id: users[u]!.id, org_id: org, school_id: A, role: "teacher" });
 await admin.from("memberships").insert({ user_id: users.vice!.id, org_id: org, school_id: A, role: "vice_principal" });
 for (const a of ["view", "approve", "export"]) await oc.rpc("perm_override_set", { _org: org, _user: users.hr!.id, _section: "hr_leave", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة" });
-const mk = async (u: string) => (await oc.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: NAMES[u], school_id: A, user_id: users[u]!.id, job_title: "معلمة", hire_date: "2023-09-01" } })).data as string;
+const mk = async (u: string) => { const id = (await oc.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: NAMES[u], school_id: A, user_id: users[u]!.id, job_title: "معلمة", hire_date: "2023-09-01" } })).data as string; if (id) await oc.rpc("hr_self_access_set", { _emp: id, _active: true }); return id; };
 const MG = await mk("mgr"), E = await mk("emp"); await mk("mate"); await mk("hr");
 const T = (await admin.from("teachers").insert({ school_id: A, full_name: NAMES.emp, user_id: users.emp!.id }).select().single()).data!.id;
 await admin.from("hr_assignments").update({ manager_id: MG, teacher_id: T }).eq("employee_id", E);

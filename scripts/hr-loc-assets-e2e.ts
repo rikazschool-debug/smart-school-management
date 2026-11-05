@@ -34,7 +34,7 @@ try {
   await admin.from("memberships").insert({ user_id: pr.id, org_id: org, school_id: A, role: "principal" });
   const emp = async (u: any, no: string, name: string, school: string) => {
     const id = (await admin.from("hr_employees").insert({ org_id: org, employee_no: no, user_id: u.id, full_name: name }).select("id").single()).data!.id;
-    await admin.from("hr_assignments").insert({ org_id: org, employee_id: id, school_id: school, start_date: "2026-01-01", is_primary: true }); return id;
+    await admin.from("hr_assignments").insert({ org_id: org, employee_id: id, school_id: school, start_date: "2026-01-01", is_primary: true }); await owner.c.rpc("hr_self_access_set", { _emp: id, _active: true }); return id;
   };
   const E1 = await emp(e1, "L1", "موظفة أولى", A), E2 = await emp(e2, "L2", "موظفة ثانية", A);
   const PR = await emp(pr, "L3", "مديرة المدرسة", A);
