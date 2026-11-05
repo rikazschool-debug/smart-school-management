@@ -62,3 +62,4 @@
 - scripts/evaluation-perm-e2e.ts: evaluation × permission tree (25 checks; --cron waits for the real reminder run). scripts/evaluation-perm-journey.py: grant/revoke in browser with open session (needs evaluation-browser-fixture).
 - scripts/hr-e2e.ts: HR employee files/assignments/permissions (24 checks). scripts/hr-browser-fixture.ts setup|teardown (hrb-) + scripts/hr-journey.py (14 checks); always run teardown after.
 - scripts/hr-import-e2e.ts: HR Excel import server checks (idempotent retry, conflict, scope, sensitive, audit; 11 checks).
+- scripts/hr-contracts-e2e.ts: contracts lifecycle/permissions (31 checks). scripts/hrc-browser-fixture.ts setup|teardown + scripts/hrc-journey.py (11 checks); always run teardown after.

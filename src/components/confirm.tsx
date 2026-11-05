@@ -29,7 +29,7 @@ export function ConfirmHost() {
       <AlertDialogContent dir="rtl" className="max-w-[calc(100vw-2rem)] sm:max-w-md">
         <AlertDialogHeader className="text-start sm:text-start">
           <AlertDialogTitle>{req?.input ? "مطلوب توضيح" : "تأكيد الإجراء"}</AlertDialogTitle>
-          <AlertDialogDescription>{req?.message}</AlertDialogDescription>
+          <AlertDialogDescription className="whitespace-pre-line">{req?.message}</AlertDialogDescription>
         </AlertDialogHeader>
         {req?.input && (
           <div className="space-y-1">

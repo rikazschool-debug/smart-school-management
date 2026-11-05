@@ -61,6 +61,7 @@ export class TestRun {
       await this.admin.from("pc_requests").update({ new_custody_id: null }).eq("org_id", orgId);
       for (const t of ["pc_requests", "pc_forms", "pc_expenses", "pc_custodies", "pc_log", "pc_counters", "pc_categories", "pc_settings"]) await this.admin.from(t).delete().eq("org_id", orgId);
       await this.admin.from("memberships").delete().eq("org_id", orgId);
+      await this.admin.rpc("_hr_purge_org", { _org: orgId });
       const r = await this.admin.from("schools").delete().eq("org_id", orgId);
       const o = r.error ? r : await this.admin.from("organizations").delete().eq("id", orgId);
       if (!o.error) { last = ""; break; }

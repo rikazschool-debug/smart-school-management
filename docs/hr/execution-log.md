@@ -34,3 +34,11 @@ Status ladder (§12.4): مخطط → عقوده جاهزة → قيد التنف
 - UI: file type/size (5MB)/row (2000) limits, corrupt/empty file messages, leading zeros kept from text cells, conflict shown in preview, double-click lock, network retry ×3, report cells neutralised against Excel formulas; no automatic account/teacher linking.
 - Evidence: `scripts/hr-import-e2e.ts` 11/11 (idempotent retry, one row only, leading zeros, conflict, out-of-branch direct call, replayed key from other branch, sensitive without grant, audit masks ID, no auto-link); fixtures purged.
 - Not yet done: browser journey desktop/phone with a real XLSX; contracts & documents package not started.
+
+## P3a contracts & compensation (prompt-132) — 2026-11-04
+- Permission section `hr_contracts` (view / draft / approve / comp_view / comp_edit / export; branch or org). No base grant: principals and direct managers see nothing until granted.
+- Data: hr_contracts (one per employee+work place, no physical delete), hr_contract_versions (data + comp lines snapshot, effective_from; frozen after issue by trigger), hr_contract_templates (text with variables, version bumps on edit; text is copied into the version, so template edits never change issued contracts). RPC-only.
+- Flow: draft → reviewer (approve, never the drafter/last editor, never the employee; org owner exempt) issues → employee accepts/rejects (reason) in «ملفي الوظيفي»; employees without login: paper acknowledgement with reference. Amendments = new version with effective date + reason; previous accepted version becomes "superseded" and keeps its pay. Renewal = new contract linked to the parent. Overlapping pending/active contracts of one employee are refused. Cancel (never in force) / terminate (date) need a reason.
+- Compensation is stripped server-side from get/list for people without comp_view (employee sees own). Export shows pay only when the server sent it.
+- Evidence: scripts/hr-contracts-e2e.ts 31/31; scripts/hrc-journey.py 11/11 (drafter, approver, view-only principal, employee on 390px; amendment) with scripts/hrc-browser-fixture.ts; fixtures torn down. TypeScript passed.
+- Not yet: import browser journey (track A), documents/letters (C), work & leave settings (D), leave (E/F), expiring-contract alerts, contracts report beyond list export.

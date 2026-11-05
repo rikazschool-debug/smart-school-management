@@ -1,0 +1,1 @@
+alter function public._hr_basic(jsonb) set search_path = public;
