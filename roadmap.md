@@ -412,3 +412,18 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [ ] Leave requests employee→manager→HR with returns/cancel/extend/early return
 - [ ] Teacher leave → existing absences/substitutions (vice coverage task, no medical/pay data)
 - [ ] Permission tree sections, E2E per track, desktop/phone journeys, docs
+
+## Package 16 — HR P3 letters + P4 leave (prompt: «واصل من نقطة الاستئناف الحالية»)
+- [x] D: leave tab hidden in production behind LEAVE_ENABLED (dev only)
+- [ ] A: renewal gap / cancelled renewal must keep original contract alerts
+- [ ] B: separate alert schedule from activation/approval with decision log
+- [ ] C: documents — new version data isolated until accepted; per-type number/expiry requirement; protection in export/PDF/links; type changes keep history
+- [ ] E: scheduler review — distinguish manual vs scheduled run evidence
+- [ ] Excel import browser test (desktop + mobile), logged separately
+- [ ] P3 letters: templates (versioned, vars, preview, injection-safe), request, review→issue, immutable issued copy + PDF, reissue/cancel, comp privacy
+- [ ] P4 leave settings: dated versioned policies, scope priority, no guessed values
+- [ ] Leave balances ledger (idempotent moves, concurrency)
+- [ ] Leave request cycle: employee → manager → HR, edit/extend/cancel/early return
+- [ ] Role UIs: my services, team requests, HR, owner
+- [ ] Absence/substitute linkage (idempotent source id, vice follow-up)
+- [ ] Permissions/security tests, responsive + E2E, execution-log update

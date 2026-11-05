@@ -22,7 +22,10 @@ export const Route = createFileRoute("/_authenticated/app/my-employment")({
 type Mine = { employee: HrEmp; assignments: HrAssign[] } | null;
 type TeamRow = { id: string; employee_no: string; full_name: string; job_title: string | null; school: string; status: string };
 
-const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["leave", "إجازاتي"]] as const;
+// Feature flag: leave journey is not connected yet — shown only in dev/review builds.
+const LEAVE_ENABLED = import.meta.env.DEV;
+const ALL_TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["leave", "إجازاتي"]] as const;
+const TABS = ALL_TABS.filter(([k]) => k !== "leave" || LEAVE_ENABLED);
 
 function Page() {
   const { active } = useSession();
@@ -43,7 +46,7 @@ function Page() {
         {tab === "me" && <MyFile d={mine.data} />}
         {tab === "contracts" && <MyContracts org={org!} empty />}
         {tab === "docs" && <MyDocuments org={org!} />}
-        {tab === "leave" && <EmptyState title="الإجازات والأرصدة قيد البناء" hint="تظهر هنا رصيد إجازاتك وطلباتك بعد ضبط سياسات الإجازات من الموارد البشرية." />}
+        {tab === "leave" && LEAVE_ENABLED && <EmptyState title="الإجازات والأرصدة قيد البناء" hint="تظهر هنا رصيد إجازاتك وطلباتك بعد ضبط سياسات الإجازات من الموارد البشرية." />}
       </>}
       {(team.data?.length ?? 0) > 0 && (
         <Section title="فريقي المباشر" desc="بيانات أساسية فقط لمن أنت مديره المباشر في تعيين حالي." className="mt-6">
