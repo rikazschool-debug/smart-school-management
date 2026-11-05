@@ -64,6 +64,7 @@ import { Route as AuthenticatedAppHrAssetsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppHrAttendanceRouteImport } from './routes/_authenticated/app/hr_.attendance'
 import { Route as AuthenticatedAppHrContractsRouteImport } from './routes/_authenticated/app/hr_.contracts'
 import { Route as AuthenticatedAppHrDocumentsRouteImport } from './routes/_authenticated/app/hr_.documents'
+import { Route as AuthenticatedAppHrHousingRouteImport } from './routes/_authenticated/app/hr_.housing'
 import { Route as AuthenticatedAppHrLeaveRouteImport } from './routes/_authenticated/app/hr_.leave'
 import { Route as AuthenticatedAppHrLettersRouteImport } from './routes/_authenticated/app/hr_.letters'
 import { Route as AuthenticatedAppHrPayrollRouteImport } from './routes/_authenticated/app/hr_.payroll'
@@ -391,6 +392,12 @@ const AuthenticatedAppHrDocumentsRoute =
     path: '/hr/documents',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHrHousingRoute =
+  AuthenticatedAppHrHousingRouteImport.update({
+    id: '/hr_/housing',
+    path: '/hr/housing',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppHrLeaveRoute = AuthenticatedAppHrLeaveRouteImport.update({
   id: '/hr_/leave',
   path: '/hr/leave',
@@ -530,6 +537,7 @@ export interface FileRoutesByFullPath {
   '/app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
+  '/app/hr/housing': typeof AuthenticatedAppHrHousingRoute
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/app/hr/payroll': typeof AuthenticatedAppHrPayrollRoute
@@ -600,6 +608,7 @@ export interface FileRoutesByTo {
   '/app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
+  '/app/hr/housing': typeof AuthenticatedAppHrHousingRoute
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/app/hr/payroll': typeof AuthenticatedAppHrPayrollRoute
@@ -673,6 +682,7 @@ export interface FileRoutesById {
   '/_authenticated/app/hr_/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/_authenticated/app/hr_/contracts': typeof AuthenticatedAppHrContractsRoute
   '/_authenticated/app/hr_/documents': typeof AuthenticatedAppHrDocumentsRoute
+  '/_authenticated/app/hr_/housing': typeof AuthenticatedAppHrHousingRoute
   '/_authenticated/app/hr_/leave': typeof AuthenticatedAppHrLeaveRoute
   '/_authenticated/app/hr_/letters': typeof AuthenticatedAppHrLettersRoute
   '/_authenticated/app/hr_/payroll': typeof AuthenticatedAppHrPayrollRoute
@@ -746,6 +756,7 @@ export interface FileRouteTypes {
     | '/app/hr/attendance'
     | '/app/hr/contracts'
     | '/app/hr/documents'
+    | '/app/hr/housing'
     | '/app/hr/leave'
     | '/app/hr/letters'
     | '/app/hr/payroll'
@@ -816,6 +827,7 @@ export interface FileRouteTypes {
     | '/app/hr/attendance'
     | '/app/hr/contracts'
     | '/app/hr/documents'
+    | '/app/hr/housing'
     | '/app/hr/leave'
     | '/app/hr/letters'
     | '/app/hr/payroll'
@@ -888,6 +900,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/hr_/attendance'
     | '/_authenticated/app/hr_/contracts'
     | '/_authenticated/app/hr_/documents'
+    | '/_authenticated/app/hr_/housing'
     | '/_authenticated/app/hr_/leave'
     | '/_authenticated/app/hr_/letters'
     | '/_authenticated/app/hr_/payroll'
@@ -1307,6 +1320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHrDocumentsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/hr_/housing': {
+      id: '/_authenticated/app/hr_/housing'
+      path: '/hr/housing'
+      fullPath: '/app/hr/housing'
+      preLoaderRoute: typeof AuthenticatedAppHrHousingRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/hr_/leave': {
       id: '/_authenticated/app/hr_/leave'
       path: '/hr/leave'
@@ -1462,6 +1482,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
   AuthenticatedAppHrContractsRoute: typeof AuthenticatedAppHrContractsRoute
   AuthenticatedAppHrDocumentsRoute: typeof AuthenticatedAppHrDocumentsRoute
+  AuthenticatedAppHrHousingRoute: typeof AuthenticatedAppHrHousingRoute
   AuthenticatedAppHrLeaveRoute: typeof AuthenticatedAppHrLeaveRoute
   AuthenticatedAppHrLettersRoute: typeof AuthenticatedAppHrLettersRoute
   AuthenticatedAppHrPayrollRoute: typeof AuthenticatedAppHrPayrollRoute
@@ -1526,6 +1547,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
   AuthenticatedAppHrContractsRoute: AuthenticatedAppHrContractsRoute,
   AuthenticatedAppHrDocumentsRoute: AuthenticatedAppHrDocumentsRoute,
+  AuthenticatedAppHrHousingRoute: AuthenticatedAppHrHousingRoute,
   AuthenticatedAppHrLeaveRoute: AuthenticatedAppHrLeaveRoute,
   AuthenticatedAppHrLettersRoute: AuthenticatedAppHrLettersRoute,
   AuthenticatedAppHrPayrollRoute: AuthenticatedAppHrPayrollRoute,
