@@ -104,11 +104,13 @@ export async function exportLetterPdf(l: LetterPdf) {
     ${l.void ? `<div style="color:#b00;font-weight:700;border:2px solid #b00;padding:4px 10px;display:inline-block;margin-bottom:12px">${esc(l.void)} — غير صالح للاستخدام</div>` : ""}`;
   const P = `font-size:15px;line-height:2.1;white-space:pre-wrap;word-break:break-word;margin:0;min-height:1em`;
   const paras = l.body.replace(/\r/g, "").split("\n");
+  // escaped text; Latin dates/codes isolated LTR so RTL does not reverse them (e.g. 2023-09-01)
+  const para = (t: string | undefined) => esc(t).replace(/[A-Za-z0-9][A-Za-z0-9\-\/.:]*[A-Za-z0-9]/g, (m) => `<bdi dir="ltr">${m}</bdi>`);
   const host = document.createElement("div");
   host.style.cssText = `position:fixed;left:-20000px;top:0;width:${W}px;${CSS}`;
   document.body.appendChild(host);
   try {
-    host.innerHTML = `<div style="padding:${PT}px ${PX}px 0">${head}<div data-lb>${paras.map((p) => `<p style="${P}">${esc(p)}</p>`).join("")}</div></div>`;
+    host.innerHTML = `<div style="padding:${PT}px ${PX}px 0">${head}<div data-lb>${paras.map((p) => `<p style="${P}">${para(p)}</p>`).join("")}</div></div>`;
     const headH = (host.querySelector("[data-lb]") as HTMLElement).offsetTop;
     const hs = [...host.querySelectorAll("p")].map((p) => (p as HTMLElement).offsetHeight);
     const pages: number[][] = []; let cur: number[] = [], used = headH;
@@ -116,7 +118,7 @@ export async function exportLetterPdf(l: LetterPdf) {
     pages.push(cur);
     const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [W, H], hotfixes: ["px_scaling"] });
     for (let p = 0; p < pages.length; p++) {
-      const body = pages[p]!.map((i) => `<p style="${P}">${esc(paras[i])}</p>`).join("");
+      const body = pages[p]!.map((i) => `<p style="${P}">${para(paras[i])}</p>`).join("");
       host.innerHTML = `<div style="width:${W}px;height:${H}px;box-sizing:border-box;padding:${PT}px ${PX}px 0;position:relative;${CSS}">
         ${p === 0 ? head : `<div style="font-size:11px;color:#444;margin-bottom:12px">${esc(l.title)} — <bdi dir="ltr">${esc(l.ref)}</bdi> — تابع</div>`}
         <div>${body}</div>
