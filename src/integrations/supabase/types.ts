@@ -12042,6 +12042,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      hr_contract_alerts_tick: { Args: never; Returns: number }
       hr_contract_caps: { Args: { _org: string }; Returns: Json }
       hr_contract_end: {
         Args: { _action: string; _date: string; _id: string; _reason: string }
