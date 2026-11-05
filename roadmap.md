@@ -434,3 +434,14 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [x] P5 shifts, assignments, holidays, punches, computed days, corrections, close/reopen, device intake, self/team/HR screens (hr-att-e2e 49/49, hra-journey 12/12)
 - [ ] Real attendance device test — blocked: no device connected
 - [ ] Letters PDF per issued letter; import journey without sensitive permission; inherited alert activation review — next
+
+## Package 18 — prompt «واصل بناء الموارد البشرية… P6 وP7»
+- [x] Two-minute duplicate rule: same source/device only (test: different sources within 2 min both kept)
+- [x] Mobile punch: "location not verified" notice + org switch "require location" blocks mobile punch
+- [x] Contract alerts: inherited (migration) vs explicit decision shown; last automatic run shown separately (contracts 05:15 UTC ok, documents 05:20 UTC ok)
+- [x] Fixed: hr_settings fallback broke for orgs without a settings row after new column
+- [x] Device intake accepted separately from a real device (no device connected)
+- [ ] Letters: private PDF per issued letter — next
+- [ ] Import browser journey with add-but-no-sensitive account — next
+- [ ] P6 decisions / earnings & deductions / advances / custody link — not started
+- [ ] P7 payroll (HR prepares → finance reviews → management approves), payslips; ledger/payment link waits for finance setup (D4 open) — not started
