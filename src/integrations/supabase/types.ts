@@ -8000,6 +8000,274 @@ export type Database = {
           },
         ]
       }
+      hr_pf_cycles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          org_id: string
+          period_end: string
+          period_start: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          org_id: string
+          period_end: string
+          period_start: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pf_cycles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pf_form_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          form_id: string
+          id: string
+          org_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          criteria: Json
+          form_id: string
+          id?: string
+          org_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          form_id?: string
+          id?: string
+          org_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pf_form_versions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pf_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_form_versions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pf_forms: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          created_by: string | null
+          current_version: number
+          id: string
+          name: string
+          org_id: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          id?: string
+          name: string
+          org_id: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          id?: string
+          name?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pf_forms_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pf_reviews: {
+        Row: {
+          comments: string | null
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          cycle_id: string
+          employee_id: string
+          evaluator: string
+          evidence: Json
+          final_total: number | null
+          form_version_id: string
+          id: string
+          objection: string | null
+          org_id: string
+          published_at: string | null
+          published_comments: string | null
+          published_scores: Json | null
+          published_total: number | null
+          publisher: string | null
+          resolution: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          responded_at: string | null
+          rev: number
+          review_note: string | null
+          reviewed_at: string | null
+          reviewer: string | null
+          school_id: string
+          scores: Json
+          status: string
+          total: number | null
+          updated_at: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria: Json
+          cycle_id: string
+          employee_id: string
+          evaluator: string
+          evidence?: Json
+          final_total?: number | null
+          form_version_id: string
+          id?: string
+          objection?: string | null
+          org_id: string
+          published_at?: string | null
+          published_comments?: string | null
+          published_scores?: Json | null
+          published_total?: number | null
+          publisher?: string | null
+          resolution?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responded_at?: string | null
+          rev?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer?: string | null
+          school_id: string
+          scores?: Json
+          status?: string
+          total?: number | null
+          updated_at?: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          cycle_id?: string
+          employee_id?: string
+          evaluator?: string
+          evidence?: Json
+          final_total?: number | null
+          form_version_id?: string
+          id?: string
+          objection?: string | null
+          org_id?: string
+          published_at?: string | null
+          published_comments?: string | null
+          published_scores?: Json | null
+          published_total?: number | null
+          publisher?: string | null
+          resolution?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responded_at?: string | null
+          rev?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer?: string | null
+          school_id?: string
+          scores?: Json
+          status?: string
+          total?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pf_reviews_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pf_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_reviews_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_reviews_form_version_id_fkey"
+            columns: ["form_version_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pf_form_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_reviews_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_reviews_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_rc_candidates: {
         Row: {
           converted_at: string | null
@@ -13363,6 +13631,15 @@ export type Database = {
       _hr_name: { Args: { _u: string }; Returns: string }
       _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_pay_build: { Args: { _run: string }; Returns: undefined }
+      _hr_pf_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_pf_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
+      }
+      _hr_pf_user_can: {
+        Args: { _action: string; _school: string; _uid: string }
+        Returns: boolean
+      }
       _hr_pol: {
         Args: { _month: string; _org: string; _topic: string }
         Returns: {
