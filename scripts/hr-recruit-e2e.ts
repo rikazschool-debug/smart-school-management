@@ -94,6 +94,8 @@ try {
   await apr.c.rpc("hr_rc_vacancy_act", { _id: V2, _rev: 1, _action: "approve", _reason: null });
   const C2 = (await rc.c.rpc("hr_rc_candidate_save", { _vac: V2, _p: { full_name: "نفس الموظفة", national_id: NID } })).data;
   let c2 = (await rc.c.rpc("hr_rc_candidate_get", { _id: C2 })).data;
+  const ivApplied = await rc.c.rpc("hr_rc_interview_add", { _cand: C2, _p: { panel: "لجنة", result: "pass", criteria: [] } }); check("no interview before screening", has(ivApplied, "الفرز"), ivApplied.error);
+  await rc.c.rpc("hr_rc_candidate_stage", { _id: C2, _rev: c2.rev, _stage: "screening", _reason: null });
   await rc.c.rpc("hr_rc_interview_add", { _cand: C2, _p: { panel: "لجنة", result: "pass", criteria: [] } });
   c2 = (await rc.c.rpc("hr_rc_candidate_get", { _id: C2 })).data;
   const O3 = (await rc.c.rpc("hr_rc_offer_save", { _cand: C2, _rev: c2.rev, _p: { start_date: "2027-02-01", basic: 9000 } })).data;
