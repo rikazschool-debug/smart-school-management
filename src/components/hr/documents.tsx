@@ -41,7 +41,7 @@ export async function openDocFile(versionId: string) {
 /** Upload a new version: server validates permission/type/size and creates the private file row; then storage upload; then confirm. */
 export function DocUploadForm({ org, type, employeeId, documentId, contracts, onDone, onCancel }: {
   org: string; type: Pick<DocType, "id" | "name" | "needs_number" | "needs_expiry">; employeeId: string; documentId?: string | null;
-  contracts?: { id: string; contract_no: string }[]; onDone: () => void; onCancel: () => void; initial?: DocVersion | null;
+  contracts?: { id: string; contract_no: string }[]; onDone: () => void; onCancel: () => void; initial?: DocVersion | null | undefined;
 }) {
   const i = initial;
   const [v, setV] = useState({ title: i?.title ?? "", doc_no: i?.doc_no ?? "", issuer: i?.issuer ?? "", issued_on: i?.issued_on ?? "", expires_on: "", contract_id: "" });
@@ -120,7 +120,7 @@ export function DocDetailPanel({ id, org, onClose }: { id: string; org: string; 
         {x.can.upload && !pending && !up && <Button size="sm" variant="outline" onClick={() => setUp(true)}><Upload className="size-4" />رفع نسخة جديدة</Button>}
       </div>
       {pending && !x.can.review && <p className="text-sm text-muted-foreground">النسخة {pending.version} تنتظر مراجعة شخص آخر.</p>}
-      {up && <DocUploadForm org={org} type={{ id: x.type_id, name: x.type, needs_number: !!x.needs_number, needs_expiry: !!x.needs_expiry }} initial={x.latest} employeeId={x.employee_id} documentId={x.id} onDone={() => { setUp(false); refresh(); }} onCancel={() => setUp(false)} />}
+      {up && <DocUploadForm org={org} type={{ id: x.type_id, name: x.type, needs_number: !!x.needs_number, needs_expiry: !!x.needs_expiry }} initial={x.latest ?? null} employeeId={x.employee_id} documentId={x.id} onDone={() => { setUp(false); refresh(); }} onCancel={() => setUp(false)} />}
       <VersionList versions={x.versions} canOpen={x.can.download} />
       {x.events && x.events.length > 0 && <details className="text-sm"><summary className="cursor-pointer text-muted-foreground">سجل التغييرات</summary><ul className="mt-2 space-y-1">{x.events.map((e, i) => <li key={i} className="text-xs"><bdi dir="ltr">{e.at.slice(0, 16).replace("T", " ")}</bdi> · {D_EVENT[e.action] ?? e.action} · {e.by}{e.reason ? ` — ${e.reason}` : ""}</li>)}</ul></details>}
     </section>
