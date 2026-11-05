@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { selectCls } from "@/components/ui/native-select";
-import { askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportXlsx } from "@/lib/export";
 import { rpc } from "@/components/hr/shared";
@@ -90,16 +89,11 @@ function PropertyCard({ p, props, done }: { p: Prop; props: Prop[]; done: (m: st
   const people = usePeople(assign ? p.school_id : "", "housing");
   const saveU = useMutation({ mutationFn: () => rpc("hr_hs_unit_save", { _property: p.id, _id: null, _p: nu }), onSuccess: () => { setNu(null); done("أُضيفت الوحدة"); }, onError: (e) => toast.error(arabicError(e)) });
   const doAssign = useMutation({ mutationFn: () => rpc("hr_hs_assign", { _unit: assign!.unit, _emp: assign!.emp, _start: assign!.start }), onSuccess: () => { setAssign(null); done("سُجّل التسكين"); }, onError: (e) => toast.error(arabicError(e)) });
+  const [pend, setPend] = useState<{ kind: "move" | "vacate"; o: Occ; unit: string; date: string; reason: string } | null>(null);
   const act = useMutation({
-    mutationFn: async (a: { kind: "move" | "vacate"; o: Occ; unit?: string }) => {
-      const date = await askText(a.kind === "move" ? "تاريخ سريان النقل (YYYY-MM-DD)" : "تاريخ الإخلاء (YYYY-MM-DD)", { required: true, initial: today() } as never);
-      if (!date) throw new Error("أُلغي");
-      const reason = await askText(a.kind === "move" ? "سبب النقل" : "سبب الإخلاء", { required: true });
-      if (!reason) throw new Error("أُلغي");
-      return a.kind === "move" ? rpc("hr_hs_move", { _stay: a.o.stay_id, _unit: a.unit, _date: date, _reason: reason }) : rpc("hr_hs_vacate", { _stay: a.o.stay_id, _date: date, _reason: reason });
-    },
-    onSuccess: (_d, a) => done(a.kind === "move" ? "نُقل الموظف" : "سُجّل الإخلاء"),
-    onError: (e) => { if ((e as Error).message !== "أُلغي") toast.error(arabicError(e)); },
+    mutationFn: () => pend!.kind === "move" ? rpc("hr_hs_move", { _stay: pend!.o.stay_id, _unit: pend!.unit, _date: pend!.date, _reason: pend!.reason }) : rpc("hr_hs_vacate", { _stay: pend!.o.stay_id, _date: pend!.date, _reason: pend!.reason }),
+    onSuccess: () => { done(pend!.kind === "move" ? "نُقل الموظف" : "سُجّل الإخلاء"); setPend(null); },
+    onError: (e) => toast.error(arabicError(e)),
   });
   const targets = props.filter((x) => x.can_manage && x.active).flatMap((x) => x.units.filter((u) => u.active && u.occupants.length < u.capacity).map((u) => ({ id: u.id, label: `${x.name} — ${u.label} (${u.occupants.length}/${u.capacity})` })));
   return (
@@ -118,11 +112,17 @@ function PropertyCard({ p, props, done }: { p: Prop; props: Prop[]; done: (m: st
             {u.occupants.map((o) => <div key={o.stay_id} className="flex flex-wrap items-center gap-2 rounded-lg bg-secondary/40 p-2">
               <span className="flex-1">{o.employee} <span className="text-xs text-muted-foreground">· منذ {o.start_date}</span></span>
               {p.can_manage && <>
-                <select aria-label={`نقل ${o.employee}`} className={selectCls("w-44")} value="" onChange={(e) => e.target.value && act.mutate({ kind: "move", o, unit: e.target.value })}>
+                <select aria-label={`نقل ${o.employee}`} className={selectCls("w-44")} value="" onChange={(e) => e.target.value && setPend({ kind: "move", o, unit: e.target.value, date: today(), reason: "" })}>
                   <option value="">نقل إلى…</option>{targets.filter((t) => t.id !== u.id).map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
                 </select>
-                <Button size="sm" variant="ghost" onClick={() => act.mutate({ kind: "vacate", o })}>إخلاء</Button>
+                <Button size="sm" variant="ghost" onClick={() => setPend({ kind: "vacate", o, unit: "", date: today(), reason: "" })}>إخلاء</Button>
               </>}
+              {pend?.o.stay_id === o.stay_id && <form aria-label={pend.kind === "move" ? "تأكيد النقل" : "تأكيد الإخلاء"} className="flex w-full flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (!act.isPending) act.mutate(); }}>
+                <span className="w-full text-xs font-semibold">{pend.kind === "move" ? `نقل إلى ${targets.find((t) => t.id === pend.unit)?.label ?? ""}` : "إخلاء الوحدة"}</span>
+                <Input aria-label="تاريخ السريان" type="date" className="w-40" value={pend.date} onChange={(e) => setPend({ ...pend, date: e.target.value })} />
+                <Input aria-label="السبب" placeholder="السبب" className="min-w-40 flex-1" value={pend.reason} onChange={(e) => setPend({ ...pend, reason: e.target.value })} />
+                <Button size="sm" type="submit" disabled={act.isPending}>تأكيد</Button><Button size="sm" type="button" variant="ghost" onClick={() => setPend(null)}>إلغاء</Button>
+              </form>}
             </div>)}
             {p.can_manage && u.active && !full && (assign?.unit === u.id ? (
               <form aria-label="تسكين موظف" className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (assign.emp && !doAssign.isPending) doAssign.mutate(); }}>
