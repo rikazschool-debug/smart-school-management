@@ -142,7 +142,7 @@ function MyContracts({ org, empty }: { org: string; empty?: boolean }) {
   );
 }
 
-function MyFile({ d }: { d: NonNullable<Mine> }) {
+function MyFile({ d }: { d: { employee: HrEmp; assignments: HrAssign[] } }) {
   const e = d.employee;
   const row = (k: string, v: React.ReactNode) => <div className="rounded-lg bg-secondary/40 p-3"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>;
   return (
