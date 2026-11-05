@@ -14618,6 +14618,7 @@ export type Database = {
       hr_letter_vars: { Args: never; Returns: Json }
       hr_me: { Args: { _org: string }; Returns: Json }
       hr_money_caps: { Args: { _org: string }; Returns: Json }
+      hr_money_people: { Args: { _org: string }; Returns: Json }
       hr_my_contract: { Args: { _id: string }; Returns: Json }
       hr_my_contracts: { Args: { _org: string }; Returns: Json }
       hr_my_documents: { Args: { _org: string }; Returns: Json }
