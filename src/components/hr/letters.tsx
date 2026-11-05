@@ -89,7 +89,9 @@ export function LetterPanel({ id, onClose, self }: { id: string; onClose: () => 
       {l.decision_reason && <p className={l.status === "returned" || l.status === "rejected" ? "rounded-lg bg-destructive/10 p-2 text-destructive" : "text-muted-foreground"}>سبب القرار: {l.decision_reason}</p>}
       {l.cancel_reason && <p className="rounded-lg bg-muted p-2">سبب الإلغاء: {l.cancel_reason}</p>}
       {l.body && <div className="space-y-2"><div className="max-h-96 overflow-auto whitespace-pre-wrap rounded-lg border bg-background p-3 leading-8">{l.body}</div>
-        <Button size="sm" variant="outline" onClick={() => printLetter(l)}><Printer className="size-4" />طباعة / PDF</Button></div>}
+        <div className="flex flex-wrap gap-2">
+          {l.ref_no && <Button size="sm" disabled={pdfBusy} onClick={() => void downloadPdf(l)}><FileDown className="size-4" />{pdfBusy ? "جارٍ تجهيز الملف…" : "تنزيل PDF"}</Button>}
+          <Button size="sm" variant="outline" onClick={() => printLetter(l)}><Printer className="size-4" />طباعة</Button></div></div>}
       {l.body_hidden && <p className="rounded-lg bg-muted p-2 text-muted-foreground">نص هذا الخطاب يتضمن الراتب ولا تملك صلاحية عرضه.</p>}
       {edit ? (
         <form className="grid gap-2 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); run("hr_letter_update", { _rev: l.rev, _purpose: edit.purpose, _addressee: edit.addressee }, "أُعيد إرسال الطلب"); }}>
