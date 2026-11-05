@@ -90,3 +90,10 @@ Status: implemented · server-tested · not browser-tested · NOT published.
 - C Documents: re-checked server paths. New version's number/expiry stay on that version; accepted data shown as `current` until the new one is accepted (test). Defect fixed: re-upload with a contract link re-linked an already-accepted document before acceptance — now only unaccepted documents are re-linked. Number/expiry required only when the type says so (test with a plain type). Type requirement changes keep prior versions and log before/after (test). Confidential documents are filtered server-side in list/get/file, so exports and PDFs (built from the list) inherit it.
 - E Scheduler: jobs rikaz-hr-contract-alerts (05:15 UTC = 08:15 Riyadh) and rikaz-hr-doc-alerts (05:20 UTC) are active; cron.job_run_details shows 0 runs as of 04:50 UTC 2026-11-05 (first window not reached). Only direct calls are proven; scheduled success/failure must be read from cron.job_run_details after the first window.
 - Evidence: hr-docs-e2e 38/38, hrc-alerts-e2e 32/32.
+
+## Track A closure: Excel import browser journey — 2026-11-05
+Status: implemented · server-tested · browser-tested (desktop + 390px) · NOT published.
+- Browser (separate from server): scripts/hr-import-journey.py 17/17 with hr-browser-fixture (synthetic XLSX): template download; upload + Arabic header auto-mapping; Arabic names; missing name / unknown school / in-file duplicate / impossible date flagged in preview; first save request dropped by the network + double click → each valid row saved exactly once (DB-checked); leading zeros kept in ID and phone; dd/mm/yyyy parsed; results report downloads; re-import marks rows existing; employee-no/ID conflict flagged; branch-A officer on phone: branch-B row refused, ID column visible with sensitive perm, no page overflow; principal: no button, direct ?imp=1 shows nothing. Fixture torn down.
+- Defect found & fixed: impossible calendar dates (e.g. 2026-13-45, 31 Feb) were accepted by the preview; now rejected as «تاريخ … غير صحيح».
+- Server: hr-import-e2e 11/11 rerun.
+- Not covered in browser: a user with create but without sensitive (covered by server test only).
