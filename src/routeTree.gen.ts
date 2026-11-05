@@ -49,6 +49,7 @@ import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppSubstitutionsRouteImport } from './routes/_authenticated/app/substitutions'
 import { Route as AuthenticatedAppSupportRouteImport } from './routes/_authenticated/app/support'
 import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
+import { Route as AuthenticatedAppTeamLeaveRouteImport } from './routes/_authenticated/app/team-leave'
 import { Route as AuthenticatedAppTransportRouteImport } from './routes/_authenticated/app/transport'
 import { Route as AuthenticatedAppVisitsRouteImport } from './routes/_authenticated/app/visits'
 import { Route as AuthenticatedAppAdminIndexRouteImport } from './routes/_authenticated/app/admin.index'
@@ -61,6 +62,7 @@ import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
 import { Route as AuthenticatedAppHrContractsRouteImport } from './routes/_authenticated/app/hr_.contracts'
 import { Route as AuthenticatedAppHrDocumentsRouteImport } from './routes/_authenticated/app/hr_.documents'
+import { Route as AuthenticatedAppHrLeaveRouteImport } from './routes/_authenticated/app/hr_.leave'
 import { Route as AuthenticatedAppHrLettersRouteImport } from './routes/_authenticated/app/hr_.letters'
 import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './routes/_authenticated/app/virtual-classes.index'
 import { Route as ApiPublicAdmissionsWordpressRouteImport } from './routes/api/public/admissions/wordpress'
@@ -295,6 +297,12 @@ const AuthenticatedAppTeachersRoute =
     path: '/teachers',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppTeamLeaveRoute =
+  AuthenticatedAppTeamLeaveRouteImport.update({
+    id: '/team-leave',
+    path: '/team-leave',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppTransportRoute =
   AuthenticatedAppTransportRouteImport.update({
     id: '/transport',
@@ -366,6 +374,11 @@ const AuthenticatedAppHrDocumentsRoute =
     path: '/hr/documents',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHrLeaveRoute = AuthenticatedAppHrLeaveRouteImport.update({
+  id: '/hr_/leave',
+  path: '/hr/leave',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
 const AuthenticatedAppHrLettersRoute =
   AuthenticatedAppHrLettersRouteImport.update({
     id: '/hr_/letters',
@@ -470,6 +483,7 @@ export interface FileRoutesByFullPath {
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app/visits': typeof AuthenticatedAppVisitsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -480,6 +494,7 @@ export interface FileRoutesByFullPath {
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
+  '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
@@ -533,6 +548,7 @@ export interface FileRoutesByTo {
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app/visits': typeof AuthenticatedAppVisitsRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -543,6 +559,7 @@ export interface FileRoutesByTo {
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
+  '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
@@ -599,6 +616,7 @@ export interface FileRoutesById {
   '/_authenticated/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/_authenticated/app/support': typeof AuthenticatedAppSupportRoute
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
+  '/_authenticated/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
   '/_authenticated/app/transport': typeof AuthenticatedAppTransportRoute
   '/_authenticated/app/visits': typeof AuthenticatedAppVisitsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -609,6 +627,7 @@ export interface FileRoutesById {
   '/_authenticated/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/_authenticated/app/hr_/contracts': typeof AuthenticatedAppHrContractsRoute
   '/_authenticated/app/hr_/documents': typeof AuthenticatedAppHrDocumentsRoute
+  '/_authenticated/app/hr_/leave': typeof AuthenticatedAppHrLeaveRoute
   '/_authenticated/app/hr_/letters': typeof AuthenticatedAppHrLettersRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
@@ -665,6 +684,7 @@ export interface FileRouteTypes {
     | '/app/substitutions'
     | '/app/support'
     | '/app/teachers'
+    | '/app/team-leave'
     | '/app/transport'
     | '/app/visits'
     | '/app/'
@@ -675,6 +695,7 @@ export interface FileRouteTypes {
     | '/app/homework/new'
     | '/app/hr/contracts'
     | '/app/hr/documents'
+    | '/app/hr/leave'
     | '/app/hr/letters'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
@@ -728,6 +749,7 @@ export interface FileRouteTypes {
     | '/app/substitutions'
     | '/app/support'
     | '/app/teachers'
+    | '/app/team-leave'
     | '/app/transport'
     | '/app/visits'
     | '/app'
@@ -738,6 +760,7 @@ export interface FileRouteTypes {
     | '/app/homework/new'
     | '/app/hr/contracts'
     | '/app/hr/documents'
+    | '/app/hr/leave'
     | '/app/hr/letters'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
@@ -793,6 +816,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/substitutions'
     | '/_authenticated/app/support'
     | '/_authenticated/app/teachers'
+    | '/_authenticated/app/team-leave'
     | '/_authenticated/app/transport'
     | '/_authenticated/app/visits'
     | '/_authenticated/app/'
@@ -803,6 +827,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/homework/new'
     | '/_authenticated/app/hr_/contracts'
     | '/_authenticated/app/hr_/documents'
+    | '/_authenticated/app/hr_/leave'
     | '/_authenticated/app/hr_/letters'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
@@ -1112,6 +1137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppTeachersRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/team-leave': {
+      id: '/_authenticated/app/team-leave'
+      path: '/team-leave'
+      fullPath: '/app/team-leave'
+      preLoaderRoute: typeof AuthenticatedAppTeamLeaveRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/transport': {
       id: '/_authenticated/app/transport'
       path: '/transport'
@@ -1194,6 +1226,13 @@ declare module '@tanstack/react-router' {
       path: '/hr/documents'
       fullPath: '/app/hr/documents'
       preLoaderRoute: typeof AuthenticatedAppHrDocumentsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/hr_/leave': {
+      id: '/_authenticated/app/hr_/leave'
+      path: '/hr/leave'
+      fullPath: '/app/hr/leave'
+      preLoaderRoute: typeof AuthenticatedAppHrLeaveRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/hr_/letters': {
@@ -1310,6 +1349,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppSubstitutionsRoute: typeof AuthenticatedAppSubstitutionsRoute
   AuthenticatedAppSupportRoute: typeof AuthenticatedAppSupportRoute
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
+  AuthenticatedAppTeamLeaveRoute: typeof AuthenticatedAppTeamLeaveRoute
   AuthenticatedAppTransportRoute: typeof AuthenticatedAppTransportRoute
   AuthenticatedAppVisitsRoute: typeof AuthenticatedAppVisitsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
@@ -1320,6 +1360,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHomeworkNewRoute: typeof AuthenticatedAppHomeworkNewRoute
   AuthenticatedAppHrContractsRoute: typeof AuthenticatedAppHrContractsRoute
   AuthenticatedAppHrDocumentsRoute: typeof AuthenticatedAppHrDocumentsRoute
+  AuthenticatedAppHrLeaveRoute: typeof AuthenticatedAppHrLeaveRoute
   AuthenticatedAppHrLettersRoute: typeof AuthenticatedAppHrLettersRoute
   AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
@@ -1368,6 +1409,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppSubstitutionsRoute: AuthenticatedAppSubstitutionsRoute,
   AuthenticatedAppSupportRoute: AuthenticatedAppSupportRoute,
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
+  AuthenticatedAppTeamLeaveRoute: AuthenticatedAppTeamLeaveRoute,
   AuthenticatedAppTransportRoute: AuthenticatedAppTransportRoute,
   AuthenticatedAppVisitsRoute: AuthenticatedAppVisitsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
@@ -1378,6 +1420,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHomeworkNewRoute: AuthenticatedAppHomeworkNewRoute,
   AuthenticatedAppHrContractsRoute: AuthenticatedAppHrContractsRoute,
   AuthenticatedAppHrDocumentsRoute: AuthenticatedAppHrDocumentsRoute,
+  AuthenticatedAppHrLeaveRoute: AuthenticatedAppHrLeaveRoute,
   AuthenticatedAppHrLettersRoute: AuthenticatedAppHrLettersRoute,
   AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
