@@ -49,4 +49,4 @@
 - HR (hr_*): RPC-only, Rikaz = single source; docs/hr/execution-log.md.
 
 - HR attendance (hr_att_*): RPC-only; raw punches append-only and separate from computed hr_att_days; closed days change only after dated reopen; devices via signed /api/public/hr/attendance → service-only _hr_att_ingest; money effect only via payroll. Tests: hr-att-e2e, hra-journey.
-- HR money & payroll (hr_decisions/hr_advances/hr_pay_*): RPC-only; run states (draft→finance_review→approved), posting and payment are three separate states; management approves only the finance-reviewed version; posting/payment need an owner-recorded finance link + reference; advance balances = sum of hr_advance_moves; policies (unpaid-leave rule, day divisor) owner-entered, never guessed. Tests: hr-pay-e2e, hrp-journey.
+- HR money/payroll (hr_decisions/hr_advances/hr_pay_*): RPC-only; see docs/hr/execution-log.md. Tests: hr-pay-e2e, hrp-journey.
