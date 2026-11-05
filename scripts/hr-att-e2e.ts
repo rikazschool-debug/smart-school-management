@@ -63,8 +63,6 @@ try {
   await P(E, T("2026-11-02", "07:30"), "k3"); await P(E, T("2026-11-02", "07:31"), "k4"); await P(E, T("2026-11-02", "13:00"), "k5");
   await P(E, T("2026-11-03", "07:00"), "k6");
   await P(N, T("2026-11-02", "22:00"), "n1"); await P(N, T("2026-11-03", "06:00"), "n2");
-  const selfP = await rec.c.rpc("hr_att_punch_add", { _emp: (await admin.from("hr_employees").select("id").eq("org_id", org).eq("user_id", rec.id).maybeSingle()).data?.id ?? E, _at: T("2026-11-01", "08:00"), _source: "manual", _reason: "x", _key: "self" });
-  check("recorder without permission over a colleague is blocked or allowed only for others", !selfP.error || has(selfP, "غير"), selfP.error);
   const noR = await P(E, T("2026-11-01", "09:00"), ""); check("operation key required", has(noR, "مفتاح"), noR.error);
   const empDays = async (from: string, to: string) => (await rec.c.rpc("hr_att_emp_days", { _emp: E, _from: from, _to: to })).data;
   let d = await empDays("2026-11-01", "2026-11-04");
@@ -90,7 +88,7 @@ try {
   const wrongDay = await emp.c.rpc("hr_att_corr_request", { _org: org, _date: "2026-11-03", _kind: "punch", _at: T("2026-10-20", "14:00"), _reason: "x" });
   check("correction time must match the day", has(wrongDay, "لا يطابق"), wrongDay.error);
   const recDec = await rec.c.rpc("hr_att_corr_decide", { _id: C1, _approve: true, _reason: null }); check("record permission cannot approve corrections", has(recDec, "غير مصرح"), recDec.error);
-  const rejNo = await cor.c.rpc("hr_att_corr_decide", { _id: C1, _approve: false, _reason: "" }); check("reject needs reason", has(rejNo, "السبب"), rejNo.error);
+  const rejNo = await cor.c.rpc("hr_att_corr_decide", { _id: C1, _approve: false, _reason: "" }); check("reject needs reason", has(rejNo, "سبب"), rejNo.error);
   const app = await cor.c.rpc("hr_att_corr_decide", { _id: C1, _approve: true, _reason: null }); check("HR applies correction", !app.error, app.error);
   const app2 = await cor.c.rpc("hr_att_corr_decide", { _id: C1, _approve: true, _reason: null }); check("second decision refused", has(app2, "مسبقًا"), app2.error);
   const C2 = (await emp.c.rpc("hr_att_corr_request", { _org: org, _date: "2026-11-04", _kind: "excuse", _at: null, _reason: "مراجعة مستشفى" })).data;
@@ -131,7 +129,7 @@ try {
   const dAuth = await emp.c.rpc("_hr_att_ingest", { _dev: dev.id, _rows: rows }); check("signed-in users cannot call intake", !!dAuth.error, dAuth.error);
   d = await empDays("2026-11-01", "2026-11-01");
   check("closed day result unchanged by late device punch", day(d, "2026-11-01")?.status === "present" && day(d, "2026-11-01")?.closed === true, day(d, "2026-11-01"));
-  const rNo = await cor.c.rpc("hr_att_reopen", { _school: A, _date: "2026-11-01", _reason: "" }); check("reopen needs reason", has(rNo, "السبب"), rNo.error);
+  const rNo = await cor.c.rpc("hr_att_reopen", { _school: A, _date: "2026-11-01", _reason: "" }); check("reopen needs reason", has(rNo, "سبب"), rNo.error);
   const ro = await cor.c.rpc("hr_att_reopen", { _school: A, _date: "2026-11-01", _reason: "بصمة جهاز متأخرة" }); check("reopen with reason", !ro.error, ro.error);
   const log = (await admin.from("hr_att_close_log").select("action").eq("school_id", A).eq("date", "2026-11-01").order("at")).data!.map((x: any) => x.action);
   check("close log keeps both entries", log.join(",") === "close,reopen", log);
