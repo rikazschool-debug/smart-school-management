@@ -25,11 +25,26 @@ export const PAY_STATUS: Record<string, string> = { pending_link: "بانتظا�
 export const ADV_STATUS: Record<string, string> = { requested: "بانتظار الاعتماد", approved: "معتمدة", rejected: "مرفوضة", cancelled: "ملغاة", closed: "مسددة بالكامل" };
 export const DEC_STATUS: Record<string, string> = { draft: "مسودة بانتظار الاعتماد", approved: "معتمد", cancelled: "ملغى" };
 export const KIND_L: Record<string, string> = { earning: "استحقاق", deduction: "استقطاع" };
-export const SRC_L: Record<string, string> = { contract: "العقد", decision: "قرار", advance: "قسط سلفة", leave: "إجازة" };
+export const SRC_L: Record<string, string> = { contract: "العقد", decision: "قرار", advance: "قسط سلفة", leave: "إجازة", overtime: "عمل إضافي", gosi: "التأمينات" };
 export const sar = (n: number | string | null | undefined, cur = "SAR") => `${Number(n ?? 0).toLocaleString("ar-SA-u-nu-latn", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur === "SAR" ? "ر.س" : cur}`;
-export const mon = (m: string | null | undefined) => (m ? m.slice(0, 7) : "—");
-export const nextMonth = () => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().slice(0, 7); };
-export const thisMonth = () => new Date().toISOString().slice(0, 7);
+export const CAT_L: Record<string, string> = { general: "عام", bonus: "مكافأة", penalty: "جزاء", promotion: "ترقية", comp_change: "تعديل تعويض", overtime: "عمل إضافي (ساعات)", settlement: "تسوية نهاية خدمة" };
+export const AR_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+/** One month label everywhere (cards, filters, slips, PDF/Excel): "ديسمبر 2026". Month name first, Latin year — never "2026-12" which flips in RTL. */
+export const mon = (m: string | null | undefined) => {
+  const x = /^(\d{4})-(\d{2})/.exec(m ?? "");
+  if (!x) return "—";
+  const i = Number(x[2]) - 1;
+  return i >= 0 && i < 12 ? `${AR_MONTHS[i]} ${x[1]}` : "—";
+};
+/** Calendar month in Riyadh (school clock), as YYYY-MM for <input type="month">. */
+const riyadhYm = (offset: number) => {
+  const p = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit" }).formatToParts(new Date());
+  const y = Number(p.find((q) => q.type === "year")!.value), mo = Number(p.find((q) => q.type === "month")!.value) - 1 + offset;
+  const d = new Date(Date.UTC(y, mo, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+};
+export const thisMonth = () => riyadhYm(0);
+export const nextMonth = () => riyadhYm(1);
 
 export function Pill({ tone, children }: { tone: "ok" | "wait" | "bad" | "muted"; children: React.ReactNode }) {
   const c = tone === "ok" ? "bg-success/10 text-success" : tone === "wait" ? "bg-warning/10 text-warning" : tone === "bad" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground";
