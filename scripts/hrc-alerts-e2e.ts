@@ -70,12 +70,24 @@ try {
   await approver.c.rpc("hr_contract_issue", { _id: rn.data, _version: 1 });
   await setEnd(day(15)); before = (await notes(drafter)).length; await tick();
   check("renewal issued but not accepted still alerts", (await notes(drafter)).length === before + 1, await notes(drafter));
-  await admin.from("hr_contracts").update({ status: "active" }).eq("id", rn.data);
+  await admin.from("hr_contracts").update({ status: "active", start_date: day(4) }).eq("id", rn.data);
   await setEnd(day(3)); before = (await notes(drafter)).length; await tick();
   check("active renewal starting right after stops alerts", (await notes(drafter)).length === before, await notes(drafter));
   await admin.from("hr_contracts").update({ status: "cancelled" }).eq("id", rn.data);
   await tick();
   check("cancelled renewal: original alerts resume", (await notes(drafter)).length === before + 1, await notes(drafter));
+
+  // separation of duties: owner cannot approve own draft; waiting-for-approver signal
+  const E2 = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "موظف ثان", school_id: B } })).data;
+  const oc = (await owner.c.rpc("hr_contract_save", { _org: org, _id: null, _p: { ...p, employee_id: E2, school_id: B } })).data;
+  const oi = await owner.c.rpc("hr_contract_issue", { _id: oc, _version: 1 });
+  check("owner cannot issue a draft they prepared", String(oi.error?.message ?? "").includes("مراجع آخر"), oi.error);
+  const chk = (await owner.c.rpc("hr_contract_approver_check", { _id: oc })).data;
+  check("approver check: me blocked, another approver exists", chk?.me_blocked === true && chk?.other_approver === true, chk);
+  const ownE = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "المعتمد نفسه", school_id: A, user_id: approver.id } })).data;
+  const own = (await drafter.c.rpc("hr_contract_save", { _org: org, _id: null, _p: { ...p, employee_id: ownE } })).data;
+  const ownI = await approver.c.rpc("hr_contract_issue", { _id: own, _version: 1 });
+  check("approver cannot issue own employment contract", String(ownI.error?.message ?? "").includes("عقده"), ownI.error);
 
   // settings: suggested defaults, owner edits, employee option
   const s0 = await viewer.c.rpc("hr_settings_get", { _org: org });
