@@ -194,7 +194,7 @@ function AlertSettings({ org }: { org: string }) {
         <div className="flex flex-wrap items-start gap-2">
           <div className="min-w-0 flex-1 space-y-1">
             <p><b>تنبيه انتهاء العقود:</b> قبل الانتهاء بـ <bdi>{days}</bdi> يومًا، ثم عند الانتهاء دون تجديد ساري. يصل لمعدّي العقود ومعتمديها في المدرسة والمالك{s.notify_employee ? "، وللموظف نفسه" : "، ولا يصل للموظف"}. لا يتضمن التنبيه أي مبالغ.</p>
-            {!s.reviewed ? <p className="text-warning">هذه مواعيد مقترحة لم يراجعها المالك بعد، وليست لائحة معتمدة.</p>
+            {!s.reviewed ? <p className="text-warning">التنبيهات تعمل الآن بهذه المواعيد المقترحة، لكنها لم تُراجع ولم تُعتمد بعد كسياسة للمؤسسة. يعتمدها من يملك صلاحية «إعدادات تنبيه العقود».</p>
               : <p className="text-xs text-muted-foreground">آخر تعديل: {s.updated_by ?? "—"} · <bdi dir="ltr">{s.updated_at?.slice(0, 16).replace("T", " ")}</bdi></p>}
             <p className="text-xs text-muted-foreground">موعد تشغيل الفحص التقني: {s.job_time} — منفصل عن مهلات التنبيه.</p>
           </div>
