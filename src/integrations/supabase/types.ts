@@ -13702,6 +13702,15 @@ export type Database = {
         Args: { v: Database["public"]["Tables"]["hr_rc_vacancies"]["Row"] }
         Returns: Json
       }
+      _hr_rep_meta: { Args: never; Returns: Json }
+      _hr_rep_rows: {
+        Args: { _f: Json; _key: string; _org: string }
+        Returns: Json
+      }
+      _hr_rep_sec: {
+        Args: { _action: string; _org: string; _sec: string }
+        Returns: boolean
+      }
       _hr_run_row: {
         Args: { r: Database["public"]["Tables"]["hr_pay_runs"]["Row"] }
         Returns: Json
@@ -16270,6 +16279,11 @@ export type Database = {
         Returns: undefined
       }
       hr_rc_vacancy_save: { Args: { _org: string; _p: Json }; Returns: string }
+      hr_report: {
+        Args: { _f: Json; _key: string; _mode?: string; _org: string }
+        Returns: Json
+      }
+      hr_report_catalog: { Args: { _org: string }; Returns: Json }
       hr_self_access_set: {
         Args: { _active: boolean; _emp: string; _reason?: string }
         Returns: Json
