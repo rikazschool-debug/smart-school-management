@@ -420,7 +420,7 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [x] C: documents (hr-docs 38/38; re-link defect fixed) — — new version data isolated until accepted; per-type number/expiry requirement; protection in export/PDF/links; type changes keep history
 - [ ] E: scheduler — reviewed; waiting for first scheduled run (05:15/05:20 UTC) to read cron.job_run_details
 - [x] Excel import browser test (hr-import-journey 17/17; date defect fixed)
-- [ ] P3 letters: templates (versioned, vars, preview, injection-safe), request, review→issue, immutable issued copy + PDF, reissue/cancel, comp privacy
+- [x] P3 letters (hr-letters-e2e 51/51, hrl-journey 14/14): templates (versioned, vars, preview, injection-safe), request, review→issue, immutable issued copy + PDF, reissue/cancel, comp privacy
 - [ ] P4 leave settings: dated versioned policies, scope priority, no guessed values
 - [ ] Leave balances ledger (idempotent moves, concurrency)
 - [ ] Leave request cycle: employee → manager → HR, edit/extend/cancel/early return
