@@ -12354,6 +12354,7 @@ export type Database = {
       }
       hr_doc_alerts_tick: { Args: never; Returns: number }
       hr_doc_caps: { Args: { _org: string }; Returns: Json }
+      hr_doc_file: { Args: { _version: string }; Returns: Json }
       hr_doc_get: { Args: { _id: string }; Returns: Json }
       hr_doc_list: { Args: { _f?: Json; _org: string }; Returns: Json }
       hr_doc_review: {
