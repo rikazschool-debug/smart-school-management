@@ -105,7 +105,7 @@ export async function exportLetterPdf(l: LetterPdf) {
   const P = `font-size:15px;line-height:2.1;white-space:pre-wrap;word-break:break-word;margin:0;min-height:1em`;
   const paras = l.body.replace(/\r/g, "").split("\n");
   // escaped text; Latin dates/codes isolated LTR so RTL does not reverse them (e.g. 2023-09-01)
-  const para = (t: string | undefined) => esc(t).replace(/[A-Za-z0-9][A-Za-z0-9\-\/.:]*[A-Za-z0-9]/g, (m) => `<bdi dir="ltr">${m}</bdi>`);
+  const para = (t: string | undefined) => String(t ?? "").split(/([A-Za-z0-9][A-Za-z0-9\-\/.:]*[A-Za-z0-9])/).map((x, i) => (i % 2 ? `<bdi dir="ltr">${esc(x)}</bdi>` : esc(x))).join("");
   const host = document.createElement("div");
   host.style.cssText = `position:fixed;left:-20000px;top:0;width:${W}px;${CSS}`;
   document.body.appendChild(host);
