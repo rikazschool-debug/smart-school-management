@@ -289,3 +289,15 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | download | granted, owner; employee for own | through hr_doc_file + storage RLS, logged |
 | settings (types/requirements) | granted at org scope, owner | |
 | contract alert settings | `hr_contracts.settings` at org scope, owner | approve alone does not allow |
+
+## HR letters (hr_letters) — 2026-11-05
+| Action | Who (default) | Notes |
+|---|---|---|
+| view | org owner; granted users (branch/org) | register list never contains letter text |
+| create | granted | request a letter for an employee in scope (not for self) |
+| review | granted | never own request, never as the employee; pay letters also need comp |
+| issue | granted | never own letter; after approval when the type needs review; pay letters need comp |
+| comp | granted | pay variable in templates, preview values, reading pay letter text |
+| templates | org scope only | create/edit templates (versioned); pay templates also need comp |
+| export | granted | register export (no text) |
+| employee | own file | request requestable types, edit/resubmit returned, withdraw before issue, read/print own letters incl. pay |

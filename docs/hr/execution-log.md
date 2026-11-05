@@ -97,3 +97,18 @@ Status: implemented · server-tested · browser-tested (desktop + 390px) · NOT 
 - Defect found & fixed: impossible calendar dates (e.g. 2026-13-45, 31 Feb) were accepted by the preview; now rejected as «تاريخ … غير صحيح».
 - Server: hr-import-e2e 11/11 rerun.
 - Not covered in browser: a user with create but without sensitive (covered by server test only).
+
+## P3b Letters — 2026-11-05
+Status: implemented · server-tested · browser-tested (desktop + 390px) · NOT operationally accepted · NOT published.
+- Perm section `hr_letters` (view / create / review / issue / comp / templates / export; branch via current assignments or org). Pay is its own action: template editing, preview values, review, issue and reading text of pay letters all need `comp` (the employee always reads own letters).
+- Data (RPC-only): hr_letter_templates (+ immutable hr_letter_template_versions), hr_letters (request → requested/approved/returned/rejected → issued; cancelled; superseded), hr_letter_counters (ref L-YYYY-NNNN per org). Trigger locks issued text/ref/vars and forbids deletes.
+- Templates: plain Arabic text with whitelisted variables (hr_letter_vars); unknown variables and HTML tags refused; edit with stale version refused; each text change = new version. Preview fills values the viewer may see (pay masked) and lists missing data.
+- Flow: employee requests from «خدماتي الوظيفية ← خطاباتي» (only active employee-requestable types; one open request per type, serialised); staff with `create` may request for an employee in scope. Review (if the type needs it) by someone who is neither the employee nor the requester; return/reject need a reason; requester edits and resubmits. Issue by `issue` holder (never the employee), only after approval when required; missing data blocks issue naming the fields. Every decision carries the row revision → stale/double decisions refused.
+- Issued copy: frozen text + used variable values + ref + issuer/time; template edits never change it. Correction = new letter linked to parent; issuing it marks the parent superseded (text kept). Cancel needs reason and keeps the record. Print/PDF = escaped text in a print window (browser «حفظ كملف PDF», multi-page, Cairo); footer states there is no externally verified signature/seal. No stored PDF file is generated.
+- Screens: /app/hr/letters (KPIs, filters, list without text, detail with actions + history, create for employee, templates editor with variable chips + live preview, Excel/PDF of the register — never letter text); «خطاباتي» tab; HR nav tab; owner HR card link.
+- Defects found & fixed during tests: template edit failed (ambiguous column); HR switch-off did not block the requester; double tap created two requests (server row lock + client lock).
+- Evidence (server): hr-letters-e2e 51/51. Evidence (browser): hrl-journey.py 14/14 (owner template + HTML refusal + preview, employee 390px request with double tap, reviewer return → employee resubmit → approve, issuer issue, employee read + print view, colleague isolation). Fixtures torn down.
+- Not yet: letter request alerts beyond in-app notifications; English letters (lang) not offered — Arabic only.
+
+## Resume point (exact)
+P4 leave: dated/scoped policies (no guessed values), balance ledger with idempotent moves + concurrency, request employee → manager (from assignment) → HR, edit/extend/cancel/early return with reversal entries, «طلبات فريقي», teacher absence → record_absence/substitutions + vice follow-up. Not started.
