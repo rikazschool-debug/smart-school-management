@@ -152,7 +152,7 @@ try {
   await owner.c.rpc("hr_att_settings_save", { _org: org, _self: true, _require_location: false });
   // contract alerts: explicit decision recorded as explicit
   await owner.c.rpc("hr_settings_set_alerts", { _org: org, _active: true, _reason: "قرار المالك" });
-  const hs = (await owner.c.rpc("hr_settings_get", { _org: org })).data; check("owner alert decision marked explicit + auto runs listed", hs.source === "explicit" && Array.isArray(hs.auto_runs), [hs.source, hs.auto_runs]);
+  const hsr = await owner.c.rpc("hr_settings_get", { _org: org }); if (hsr.error) console.log("hs err", hsr.error); const hs = hsr.data ?? {}; check("owner alert decision marked explicit + auto runs listed", hs.source === "explicit" && Array.isArray(hs.auto_runs), [hs.source, hs.auto_runs]);
 
   // views & isolation
   const mine = (await emp.c.rpc("hr_att_my", { _org: org, _from: "2026-11-01", _to: "2026-11-04" })).data;
