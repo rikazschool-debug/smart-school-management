@@ -25,11 +25,11 @@ export const PAY_STATUS: Record<string, string> = { pending_link: "بانتظا�
 export const ADV_STATUS: Record<string, string> = { requested: "بانتظار الاعتماد", approved: "معتمدة", rejected: "مرفوضة", cancelled: "ملغاة", closed: "مسددة بالكامل" };
 export const DEC_STATUS: Record<string, string> = { draft: "مسودة بانتظار الاعتماد", approved: "معتمد", cancelled: "ملغى" };
 export const KIND_L: Record<string, string> = { earning: "استحقاق", deduction: "استقطاع" };
-export const SRC_L: Record<string, string> = { contract: "العقد", decision: "قرار", advance: "قسط سلفة", leave: "إجازة" };
+export const SRC_L: Record<string, string> = { contract: "العقد", decision: "قرار", advance: "قسط سلفة", leave: "إجازة", overtime: "عمل إضافي", gosi: "التأمينات" };
 export const sar = (n: number | string | null | undefined, cur = "SAR") => `${Number(n ?? 0).toLocaleString("ar-SA-u-nu-latn", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur === "SAR" ? "ر.س" : cur}`;
-export const mon = (m: string | null | undefined) => (m ? m.slice(0, 7) : "—");
-export const nextMonth = () => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().slice(0, 7); };
-export const thisMonth = () => new Date().toISOString().slice(0, 7);
+export const CAT_L: Record<string, string> = { general: "عام", bonus: "مكافأة", penalty: "جزاء", promotion: "ترقية", comp_change: "تعديل تعويض", overtime: "عمل إضافي (ساعات)", settlement: "تسوية نهاية خدمة" };
+export { AR_MONTHS, mon, thisMonth, nextMonth } from "@/lib/month";
+import { mon, nextMonth } from "@/lib/month";
 
 export function Pill({ tone, children }: { tone: "ok" | "wait" | "bad" | "muted"; children: React.ReactNode }) {
   const c = tone === "ok" ? "bg-success/10 text-success" : tone === "wait" ? "bg-warning/10 text-warning" : tone === "bad" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground";

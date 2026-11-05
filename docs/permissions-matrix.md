@@ -323,5 +323,8 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 |---|---|---|---|
 | hr_money | view / draft / approve / items / export | owner + granted (branch/org) | approver ≠ drafter/requester/employee |
 | hr_payroll | view / prepare / finance_review / approve / post / pay / export | owner + granted (org only) | preparer, reviewer, approver must be different people; post/pay need finance link + reference |
-| Payroll policies & finance link | — | owner only | unpaid-leave types, day divisor, link |
+| Payroll policies & finance link | — | owner only | finance link, legacy unpaid-leave fields, partial-month exception switch |
+| Dated pay policies (hr_payroll `policies`) | GOSI / end of service / overtime / proration / unpaid leave | owner + granted (org) | versioned, append-only; refused for approved or under-review months |
+| hr_recruit | view / manage / approve / sensitive / convert / export | owner + granted (branch/org), only while the owner switch is on | vacancy & offer approver ≠ creator; ID/contact only with sensitive |
+| HR extensions | recruit / performance / insurance / housing switches | owner only | unbuilt extensions cannot be switched on |
 | Self («سلفي وعهدي وقسائمي») | own advances, installments, custodies, published payslips | the employee only | |
