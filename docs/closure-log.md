@@ -526,3 +526,4 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Not offered: «own records» scope for evaluation — owner decision stands that staff never see their own evaluations.
 - 2026-11-04 HR P0: inventory and execution log in docs/hr/; no HRMS connection exists; no schema created pending owner decisions.
 - 2026-11-04 HR P1+P2 first part: see docs/hr/execution-log.md (hr-e2e 24/24, hr-journey 14/14).
+- 2026-11-04 HR contracts P3a: hr-contracts-e2e 31/31, hrc-journey 11/11 (see docs/hr/execution-log.md).

@@ -266,3 +266,14 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | التصدير | الفرع، المؤسسة | المالك فقط |
 
 الموظف يرى ملفه كاملًا ولا يعدّله. المدير المباشر يرى الاسم والرقم والوظيفة والحالة لفريقه فقط. الطالب وولي الأمر: لا وصول. إنهاء الخدمة لا يغيّر الحساب؛ يُبلَّغ المالك.
+
+## HR contracts (hr_contracts) — 2026-11-04
+| Action | Who | Notes |
+|---|---|---|
+| view | granted (branch/org), owner | no amounts unless comp_view |
+| draft | granted, owner | never own contract |
+| approve (issue/withdraw/cancel/terminate/paper ack, templates at org scope) | granted, owner | not the drafter/last editor (owner exempt), not the employee |
+| comp_view / comp_edit | granted, owner | stripped server-side otherwise |
+| export | granted, owner | pay column only for comp_view rows |
+| employee | own contract only: read issued versions with own pay, accept/reject with reason | |
+| principal / direct manager / student / guardian | nothing by default | |
