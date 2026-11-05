@@ -96,7 +96,9 @@ try {
   const del = await admin.from("hr_letters").delete().eq("id", L1); check("letters never deleted", !!del.error, del);
 
   // pay letters
-  const L2 = (await emp.c.rpc("hr_letter_request", { _org: org, _template: T2, _purpose: "سفارة", _addressee: "السفارة" })).data;
+  const par = await Promise.all([1, 2, 3].map(() => emp.c.rpc("hr_letter_request", { _org: org, _template: T2, _purpose: "سفارة", _addressee: "السفارة" })));
+  check("concurrent identical requests create one letter", par.filter((r) => !r.error).length === 1, par.map((r) => r.error?.message));
+  const L2 = par.find((r) => !r.error)!.data;
   const hrList = (await hr.c.rpc("hr_letter_list", { _org: org, _f: {} })).data as any[];
   check("list never carries letter text", hrList.length === 2 && hrList.every((x) => x.body == null), hrList.length);
   const g3 = (await rev.c.rpc("hr_letter_get", { _id: L2 })).data;
