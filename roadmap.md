@@ -400,3 +400,15 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [ ] F Teacher leave → existing absences/substitutions (no parallel system)
 - [ ] G Role screens, permission tree, reports
 - [ ] H Security review, E2E per track, docs/hr/execution-log.md
+
+## Package 16 — HR P3 completion + P4 (prompt «واصل البناء داخل مشروع ركاز»)
+- [x] Contract fixes: no owner self-approval, own contract, waiting-for-approver signal, alert days as org setting, renewal only when active, employee notice option (hrc-alerts-e2e 24/24)
+- [ ] A Excel import browser journey (desktop/phone, roles)
+- [ ] Documents center (requirements, versions, review, confidentiality, private files, alerts/report)
+- [ ] Letters (safe templates, preview, missing vars, immutable issued copy, RTL PDF, request→review→issue)
+- [ ] «خدماتي الوظيفية» self-service hub; «طلبات فريقي» for direct manager
+- [ ] Work & leave policies (versioned, scoped, owner-entered only)
+- [ ] Leave balance ledger (movements, idempotent, concurrency)
+- [ ] Leave requests employee→manager→HR with returns/cancel/extend/early return
+- [ ] Teacher leave → existing absences/substitutions (vice coverage task, no medical/pay data)
+- [ ] Permission tree sections, E2E per track, desktop/phone journeys, docs

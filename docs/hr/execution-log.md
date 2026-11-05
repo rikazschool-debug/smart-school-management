@@ -47,3 +47,17 @@ Status ladder (§12.4): مخطط → عقوده جاهزة → قيد التنف
 - `hr_contract_alerts_tick()` (service-only, cron `rikaz-hr-contract-alerts` daily 05:15 UTC = 08:15 Riyadh): active contracts ending within 60 / 30 / 7 days and expired-but-still-active ones notify holders of hr_contracts `draft` or `approve` for that branch (or org scope) plus the org owner; never view-only holders or the employee. One notice per contract + end date + stage (dedupe key), none when a renewal (draft/pending/active child) exists or HR is switched off.
 - Contracts screen «ملخص العقود»: active, ending in 30/60 days, expired without renewal/termination, awaiting acknowledgement, drafts — each clickable to filter the list; per-school breakdown with Excel/PDF for export holders. Computed only from contracts the user may view (same server list).
 - Evidence: scripts/hrc-alerts-e2e.ts 11/11; hrc-journey.py 11/11 rerun; summary checked desktop + 390px; fixtures torn down.
+
+## Contract fixes (prompt «واصل البناء… P3/P4») — 2026-11-05
+Status: implemented + server-tested + browser-tested (contracts page). Not published.
+- Separation of duties: owner exemption removed in hr_contract_issue (server); nobody issues a version they drafted/edited, nobody issues their own employment contract. `hr_contract_approver_check` shows «تنتظر تعيين معتمد» when no other eligible approver exists — no automatic bypass.
+- Alert days are an org setting (`hr_settings`: days, reviewed flag, notify_employee, updated_by/at; `hr_settings_get/save`, edit = owner or org-scope hr_contracts approve, logged in hr_events). Unreviewed defaults 60/30/7 shown as a suggestion, not policy. Job time 08:15 Riyadh is a separate technical schedule.
+- Renewal stops alerts only when the renewal contract is `active` and starts no later than the day after the original end; drafts/issued/cancelled renewals keep alerts.
+- Recipients are evaluated at send time (active membership + current perm); the employee is excluded from staff alerts and gets an own notice only when the setting is on. Notices carry no amounts. Templates have no pay variables, so generated text cannot leak pay.
+- Evidence: hrc-alerts-e2e 24/24 (direct job call only — real scheduled run NOT proven), hr-contracts-e2e 31/31, hrc-journey 11/11, contracts page desktop + 390px.
+
+## Resume point (next in order)
+1. Track A: Excel import browser journey (desktop/phone, roles) — not started.
+2. P3 documents & letters center (hr_documents/versions/requirements, letter templates + immutable issued letters, request→review→issue) — not started.
+3. «خدماتي الوظيفية» self-service hub (rename/extend my-employment) — not started.
+4. P4 work/leave policies, balance ledger, leave requests (employee→manager→HR), teacher absence link to substitutions, vice view — not started.

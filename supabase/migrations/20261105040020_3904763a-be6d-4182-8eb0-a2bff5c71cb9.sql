@@ -1,0 +1,2 @@
+revoke all on function public.hr_settings_get(uuid), public.hr_settings_save(uuid,int[],boolean), public.hr_contract_approver_check(uuid) from public, anon;
+grant execute on function public.hr_settings_get(uuid), public.hr_settings_save(uuid,int[],boolean), public.hr_contract_approver_check(uuid) to authenticated;
