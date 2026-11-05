@@ -535,3 +535,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-05 HR P5 attendance
 - Server hr-att-e2e 49/49; browser hra-journey 12/12 (desktop + 390px phone, 5 accounts); hr-leave-e2e 54/54 regression. Test data removed. Not published. Real device not tested (none connected).
+
+- 2026-11-05 HR letters: downloadable PDF per issued letter (browser-built, not stored). Evidence: hrl-journey 15/15, 1/7-page render check.

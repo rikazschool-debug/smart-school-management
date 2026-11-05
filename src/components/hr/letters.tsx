@@ -2,7 +2,8 @@
 // All data comes from hr_letter_* RPCs; the server decides what text (incl. pay) is sent.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { Printer, X } from "lucide-react";
+import { FileDown, Printer, X } from "lucide-react";
+import { exportLetterPdf } from "@/lib/export";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,16 @@ export function LetterPanel({ id, onClose, self }: { id: string; onClose: () => 
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["hr-l", id], queryFn: () => rpc<LetterRow>("hr_letter_get", { _id: id }) });
   const [edit, setEdit] = useState<{ purpose: string; addressee: string } | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const downloadPdf = async (x: LetterRow) => {
+    if (!x.body || !x.ref_no) return;
+    setPdfBusy(true);
+    try {
+      const v = x.status === "cancelled" ? "خطاب ملغى" : x.status === "superseded" ? "خطاب مستبدل بتصحيح" : null;
+      const n = await exportLetterPdf({ org: x.org_name, title: x.template, ref: x.ref_no, issued: (x.issued_at ?? "").slice(0, 10), body: x.body, void: v });
+      toast.success(`نُزّل الخطاب (${n} صفحة)`);
+    } catch (e) { toast.error(arabicError(e)); } finally { setPdfBusy(false); }
+  };
   const done = (msg: string) => { toast.success(msg); setEdit(null); qc.invalidateQueries({ queryKey: ["hr-l"] }); qc.invalidateQueries({ queryKey: ["hr-letters"] }); qc.invalidateQueries({ queryKey: ["hr-l-mine"] }); };
   const act = useMutation({
     mutationFn: async (a: { fn: string; args: Record<string, unknown>; msg: string }) => { await rpc(a.fn, a.args); return a.msg; },
@@ -89,7 +100,9 @@ export function LetterPanel({ id, onClose, self }: { id: string; onClose: () => 
       {l.decision_reason && <p className={l.status === "returned" || l.status === "rejected" ? "rounded-lg bg-destructive/10 p-2 text-destructive" : "text-muted-foreground"}>سبب القرار: {l.decision_reason}</p>}
       {l.cancel_reason && <p className="rounded-lg bg-muted p-2">سبب الإلغاء: {l.cancel_reason}</p>}
       {l.body && <div className="space-y-2"><div className="max-h-96 overflow-auto whitespace-pre-wrap rounded-lg border bg-background p-3 leading-8">{l.body}</div>
-        <Button size="sm" variant="outline" onClick={() => printLetter(l)}><Printer className="size-4" />طباعة / PDF</Button></div>}
+        <div className="flex flex-wrap gap-2">
+          {l.ref_no && <Button size="sm" disabled={pdfBusy} onClick={() => void downloadPdf(l)}><FileDown className="size-4" />{pdfBusy ? "جارٍ تجهيز الملف…" : "تنزيل PDF"}</Button>}
+          <Button size="sm" variant="outline" onClick={() => printLetter(l)}><Printer className="size-4" />طباعة</Button></div></div>}
       {l.body_hidden && <p className="rounded-lg bg-muted p-2 text-muted-foreground">نص هذا الخطاب يتضمن الراتب ولا تملك صلاحية عرضه.</p>}
       {edit ? (
         <form className="grid gap-2 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); run("hr_letter_update", { _rev: l.rev, _purpose: edit.purpose, _addressee: edit.addressee }, "أُعيد إرسال الطلب"); }}>
