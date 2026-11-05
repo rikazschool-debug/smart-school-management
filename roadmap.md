@@ -417,8 +417,8 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [x] D: leave tab hidden in production behind LEAVE_ENABLED (dev only)
 - [x] A: renewal gap / cancelled renewal keep original contract alerts (hrc-alerts 32/32)
 - [x] B: alert activation separate from days, with decision log
-- [ ] C: documents — new version data isolated until accepted; per-type number/expiry requirement; protection in export/PDF/links; type changes keep history
-- [ ] E: scheduler review — distinguish manual vs scheduled run evidence
+- [x] C: documents (hr-docs 38/38; re-link defect fixed) — — new version data isolated until accepted; per-type number/expiry requirement; protection in export/PDF/links; type changes keep history
+- [ ] E: scheduler — reviewed; waiting for first scheduled run (05:15/05:20 UTC) to read cron.job_run_details
 - [ ] Excel import browser test (desktop + mobile), logged separately
 - [ ] P3 letters: templates (versioned, vars, preview, injection-safe), request, review→issue, immutable issued copy + PDF, reissue/cancel, comp privacy
 - [ ] P4 leave settings: dated versioned policies, scope priority, no guessed values
