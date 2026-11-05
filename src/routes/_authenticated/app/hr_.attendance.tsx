@@ -239,7 +239,7 @@ function Shifts({ org, k }: { org: string; k: Caps }) {
   const inv = () => ["hr-att-setup", "hr-att-assign", "hr-att-free", "hr-att-board"].forEach((x) => qc.invalidateQueries({ queryKey: [x] }));
   const blank = { name: "", start_time: "", end_time: "", grace_in_min: "", grace_out_min: "", break_min: "", school_id: "" };
   const [sf, setSf] = useState(blank);
-  const saveShift = useMutation({ mutationFn: (p: Record<string, unknown>) => rpc("hr_att_shift_save", { _org: org, _id: (p.id as string) ?? null, _p: p }), onSuccess: () => { toast.success("حُفظت الوردية"); setSf(blank); inv(); }, onError: err });
+  const saveShift = useMutation({ mutationFn: (p: Record<string, unknown>) => rpc("hr_att_shift_save", { _org: org, _id: (p["id"] as string) ?? null, _p: p }), onSuccess: () => { toast.success("حُفظت الوردية"); setSf(blank); inv(); }, onError: err });
   const [af, setAf] = useState({ shift: "", from: riyadhToday(), to: "", emps: [] as string[] });
   const assign = useMutation({ mutationFn: () => rpc<{ assigned: number }>("hr_att_assign", { _org: org, _emps: af.emps, _shift: af.shift, _from: af.from, _to: af.to || null }), onSuccess: (r) => { toast.success(`عُيّنت الوردية لـ ${r.assigned}`); setAf({ ...af, emps: [] }); inv(); }, onError: err });
   const endA = useMutation({ mutationFn: (a: { id: string; end: string; reason: string }) => rpc("hr_att_assign_end", { _id: a.id, _end: a.end, _reason: a.reason }), onSuccess: () => { toast.success("أُنهي التعيين"); inv(); }, onError: err });
