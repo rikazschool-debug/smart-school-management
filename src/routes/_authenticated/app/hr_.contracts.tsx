@@ -144,7 +144,7 @@ function ContractsReport({ org, k, onPick }: { org: string; k: CCaps; onPick: (p
   const meta = { title: "تقرير العقود", filters: ["كل المدارس المصرح بها"] };
   if (all.isLoading || all.error || !rows.length) return null;
   return (
-    <Section title="ملخص العقود" desc="محسوب من العقود التي تملك صلاحية عرضها. اضغط على رقم لعرض العقود المقصودة. يصل تنبيه لمعدّي العقود ومعتمديها والمالك قبل الانتهاء بـ60 و30 و7 أيام وعند الانتهاء.">
+    <Section title="ملخص العقود" desc="محسوب من العقود التي تملك صلاحية عرضها. اضغط على رقم لعرض العقود المقصودة. يصل تنبيه لمعدّي العقود ومعتمديها والمالك قبل الانتهاء بشهرين، ثم بشهر، ثم بأسبوع، ثم عند الانتهاء.">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {kpi.map((x) => (
           <button key={x.label} type="button" onClick={() => onPick(x.pick)} className={"rounded-xl border bg-card p-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (x.warn && x.n ? "border-warning/50" : "")}>
