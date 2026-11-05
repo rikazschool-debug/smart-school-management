@@ -111,6 +111,7 @@ const CARDS: Card[] = [
       { icon: Plus, label: "إضافة موظف", to: "/app/hr", search: { add: "1" } },
       { icon: IdCard, label: "الخطابات", to: "/app/hr/letters" },
       { icon: IdCard, label: "الإجازات", to: "/app/hr/leave" },
+      { icon: IdCard, label: "الحضور والانصراف", to: "/app/hr/attendance" },
     ],
   },
   {

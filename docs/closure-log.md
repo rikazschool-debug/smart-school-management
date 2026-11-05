@@ -532,3 +532,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - 2026-11-05 HR contract fixes: owner self-approval removed, alert days as org setting, renewal counts only when active, optional employee notice. hrc-alerts-e2e 24/24, hr-contracts-e2e 31/31, hrc-journey 11/11.
 - 2026-11-05 HR documents center + «خدماتي الوظيفية»: hr-docs-e2e 35/35, hrd-journey 10/10; contract settings own permission, accepted future renewal stops alerts.
 - 2026-11-05 HR leave P4: owner-entered work days/types/dated policies, ledger balances, employee → manager → HR, change/early return/cancel with reversal moves, teacher leave → teacher_absences + vice notice. Evidence: hr-leave-e2e 54/54, hrv-leave-journey 18/18 (desktop + 390px); regression hr-letters 51/51, hr-e2e 24/24, perm5 20/20. Not published.
+
+## 2026-11-05 HR P5 attendance
+- Server hr-att-e2e 49/49; browser hra-journey 12/12 (desktop + 390px phone, 5 accounts); hr-leave-e2e 54/54 regression. Test data removed. Not published. Real device not tested (none connected).

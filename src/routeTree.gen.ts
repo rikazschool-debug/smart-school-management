@@ -60,6 +60,7 @@ import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_authenticated/app/homework.index'
 import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
+import { Route as AuthenticatedAppHrAttendanceRouteImport } from './routes/_authenticated/app/hr_.attendance'
 import { Route as AuthenticatedAppHrContractsRouteImport } from './routes/_authenticated/app/hr_.contracts'
 import { Route as AuthenticatedAppHrDocumentsRouteImport } from './routes/_authenticated/app/hr_.documents'
 import { Route as AuthenticatedAppHrLeaveRouteImport } from './routes/_authenticated/app/hr_.leave'
@@ -67,6 +68,7 @@ import { Route as AuthenticatedAppHrLettersRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './routes/_authenticated/app/virtual-classes.index'
 import { Route as ApiPublicAdmissionsWordpressRouteImport } from './routes/api/public/admissions/wordpress'
 import { Route as ApiPublicAuthSendSmsRouteImport } from './routes/api/public/auth/send-sms'
+import { Route as ApiPublicHrAttendanceRouteImport } from './routes/api/public/hr/attendance'
 import { Route as ApiPublicWatiWebhookRouteImport } from './routes/api/public/wati/webhook'
 import { Route as AuthenticatedAppAdminMeetingsIndexRouteImport } from './routes/_authenticated/app/admin.meetings.index'
 import { Route as AuthenticatedAppAdminMeetingsIdRouteImport } from './routes/_authenticated/app/admin.meetings.$id'
@@ -362,6 +364,12 @@ const AuthenticatedAppHomeworkNewRoute =
     path: '/homework/new',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHrAttendanceRoute =
+  AuthenticatedAppHrAttendanceRouteImport.update({
+    id: '/hr_/attendance',
+    path: '/hr/attendance',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppHrContractsRoute =
   AuthenticatedAppHrContractsRouteImport.update({
     id: '/hr_/contracts',
@@ -400,6 +408,11 @@ const ApiPublicAdmissionsWordpressRoute =
 const ApiPublicAuthSendSmsRoute = ApiPublicAuthSendSmsRouteImport.update({
   id: '/api/public/auth/send-sms',
   path: '/api/public/auth/send-sms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHrAttendanceRoute = ApiPublicHrAttendanceRouteImport.update({
+  id: '/api/public/hr/attendance',
+  path: '/api/public/hr/attendance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicWatiWebhookRoute = ApiPublicWatiWebhookRouteImport.update({
@@ -492,12 +505,14 @@ export interface FileRoutesByFullPath {
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
+  '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
@@ -557,12 +572,14 @@ export interface FileRoutesByTo {
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
+  '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
@@ -625,12 +642,14 @@ export interface FileRoutesById {
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/_authenticated/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/_authenticated/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/_authenticated/app/hr_/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/_authenticated/app/hr_/contracts': typeof AuthenticatedAppHrContractsRoute
   '/_authenticated/app/hr_/documents': typeof AuthenticatedAppHrDocumentsRoute
   '/_authenticated/app/hr_/leave': typeof AuthenticatedAppHrLeaveRoute
   '/_authenticated/app/hr_/letters': typeof AuthenticatedAppHrLettersRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
+  '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
@@ -693,12 +712,14 @@ export interface FileRouteTypes {
     | '/app/classrooms/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
+    | '/app/hr/attendance'
     | '/app/hr/contracts'
     | '/app/hr/documents'
     | '/app/hr/leave'
     | '/app/hr/letters'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
+    | '/api/public/hr/attendance'
     | '/api/public/wati/webhook'
     | '/app/admin/'
     | '/app/classrooms/'
@@ -758,12 +779,14 @@ export interface FileRouteTypes {
     | '/app/classrooms/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
+    | '/app/hr/attendance'
     | '/app/hr/contracts'
     | '/app/hr/documents'
     | '/app/hr/leave'
     | '/app/hr/letters'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
+    | '/api/public/hr/attendance'
     | '/api/public/wati/webhook'
     | '/app/admin'
     | '/app/classrooms'
@@ -825,12 +848,14 @@ export interface FileRouteTypes {
     | '/_authenticated/app/classrooms/$id'
     | '/_authenticated/app/homework/$id'
     | '/_authenticated/app/homework/new'
+    | '/_authenticated/app/hr_/attendance'
     | '/_authenticated/app/hr_/contracts'
     | '/_authenticated/app/hr_/documents'
     | '/_authenticated/app/hr_/leave'
     | '/_authenticated/app/hr_/letters'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
+    | '/api/public/hr/attendance'
     | '/api/public/wati/webhook'
     | '/_authenticated/app/admin/'
     | '/_authenticated/app/classrooms/'
@@ -852,6 +877,7 @@ export interface RootRouteChildren {
   InviteTokenRoute: typeof InviteTokenRoute
   ApiPublicAdmissionsWordpressRoute: typeof ApiPublicAdmissionsWordpressRoute
   ApiPublicAuthSendSmsRoute: typeof ApiPublicAuthSendSmsRoute
+  ApiPublicHrAttendanceRoute: typeof ApiPublicHrAttendanceRoute
   ApiPublicWatiWebhookRoute: typeof ApiPublicWatiWebhookRoute
 }
 
@@ -1214,6 +1240,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHomeworkNewRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/hr_/attendance': {
+      id: '/_authenticated/app/hr_/attendance'
+      path: '/hr/attendance'
+      fullPath: '/app/hr/attendance'
+      preLoaderRoute: typeof AuthenticatedAppHrAttendanceRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/hr_/contracts': {
       id: '/_authenticated/app/hr_/contracts'
       path: '/hr/contracts'
@@ -1261,6 +1294,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/auth/send-sms'
       fullPath: '/api/public/auth/send-sms'
       preLoaderRoute: typeof ApiPublicAuthSendSmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hr/attendance': {
+      id: '/api/public/hr/attendance'
+      path: '/api/public/hr/attendance'
+      fullPath: '/api/public/hr/attendance'
+      preLoaderRoute: typeof ApiPublicHrAttendanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/wati/webhook': {
@@ -1358,6 +1398,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppClassroomsIdRoute: typeof AuthenticatedAppClassroomsIdRoute
   AuthenticatedAppHomeworkIdRoute: typeof AuthenticatedAppHomeworkIdRoute
   AuthenticatedAppHomeworkNewRoute: typeof AuthenticatedAppHomeworkNewRoute
+  AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
   AuthenticatedAppHrContractsRoute: typeof AuthenticatedAppHrContractsRoute
   AuthenticatedAppHrDocumentsRoute: typeof AuthenticatedAppHrDocumentsRoute
   AuthenticatedAppHrLeaveRoute: typeof AuthenticatedAppHrLeaveRoute
@@ -1418,6 +1459,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppClassroomsIdRoute: AuthenticatedAppClassroomsIdRoute,
   AuthenticatedAppHomeworkIdRoute: AuthenticatedAppHomeworkIdRoute,
   AuthenticatedAppHomeworkNewRoute: AuthenticatedAppHomeworkNewRoute,
+  AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
   AuthenticatedAppHrContractsRoute: AuthenticatedAppHrContractsRoute,
   AuthenticatedAppHrDocumentsRoute: AuthenticatedAppHrDocumentsRoute,
   AuthenticatedAppHrLeaveRoute: AuthenticatedAppHrLeaveRoute,
@@ -1461,6 +1503,7 @@ const rootRouteChildren: RootRouteChildren = {
   InviteTokenRoute: InviteTokenRoute,
   ApiPublicAdmissionsWordpressRoute: ApiPublicAdmissionsWordpressRoute,
   ApiPublicAuthSendSmsRoute: ApiPublicAuthSendSmsRoute,
+  ApiPublicHrAttendanceRoute: ApiPublicHrAttendanceRoute,
   ApiPublicWatiWebhookRoute: ApiPublicWatiWebhookRoute,
 }
 export const routeTree = rootRouteImport

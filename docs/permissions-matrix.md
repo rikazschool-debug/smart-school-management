@@ -313,3 +313,7 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | settings | org scope only, owner | work days, types, dated policy versions (school overrides org); no default values |
 | export | granted | register / balances Excel+PDF |
 | vice / principal | school membership | notified to assign cover for approved teacher leave; cover itself stays in substitutions (assign_substitute) |
+
+## HR attendance (hr_attendance)
+- view: day board/report/employee days in scope · record: manual/import punches (not own) · correct: apply/reject correction requests (not own) · settings (org): shifts, assignments, holidays, devices, mobile switch · close: close/reopen day per school · export.
+- Employee: own days/punches/corrections only; direct manager: team day summary (status/times) only.

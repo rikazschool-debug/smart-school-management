@@ -68,3 +68,4 @@
 - scripts/hr-import-journey.py: HR Excel import browser journey (17 checks; needs hr-browser-fixture setup, run teardown after).
 - scripts/hr-letters-e2e.ts: HR letters (templates, request/review/issue, pay privacy, frozen text, reissue/cancel, concurrency, isolation; 51 checks). scripts/hrl-browser-fixture.ts setup|teardown + scripts/hrl-journey.py (14 checks); always run teardown after.
 - scripts/hr-leave-e2e.ts: HR leave P4 (settings, ledger, manager→HR, change/return/cancel, teacher absences, isolation; 54 checks). scripts/hrv-browser-fixture.ts setup|teardown: isolated hrvb- data; scripts/hrv-leave-journey.py (18 checks); always run teardown after.
+- scripts/hr-att-e2e.ts: HR attendance P5 (shifts, night shift, duplicates, corrections, close/reopen, device intake, isolation; 49 checks). scripts/hra-browser-fixture.ts setup|teardown + hra-journey.py (12 checks); always run teardown after.
