@@ -2,6 +2,7 @@ import type React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { selectCls } from "@/components/ui/native-select";
+import { MyLetters } from "@/components/hr/letters";
 import { DocDetailPanel, DocStatus, DocUploadForm, type DocRow, type DocType } from "@/components/hr/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -24,7 +25,7 @@ type TeamRow = { id: string; employee_no: string; full_name: string; job_title: 
 
 // Feature flag: leave journey is not connected yet — shown only in dev/review builds.
 const LEAVE_ENABLED = import.meta.env.DEV;
-const ALL_TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["leave", "إجازاتي"]] as const;
+const ALL_TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"]] as const;
 const TABS = ALL_TABS.filter(([k]) => k !== "leave" || LEAVE_ENABLED);
 
 function Page() {
@@ -46,6 +47,7 @@ function Page() {
         {tab === "me" && <MyFile d={mine.data} />}
         {tab === "contracts" && <MyContracts org={org!} empty />}
         {tab === "docs" && <MyDocuments org={org!} />}
+        {tab === "letters" && <MyLetters org={org!} />}
         {tab === "leave" && LEAVE_ENABLED && <EmptyState title="الإجازات والأرصدة قيد البناء" hint="تظهر هنا رصيد إجازاتك وطلباتك بعد ضبط سياسات الإجازات من الموارد البشرية." />}
       </>}
       {(team.data?.length ?? 0) > 0 && (
