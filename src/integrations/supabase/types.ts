@@ -5900,16 +5900,18 @@ export type Database = {
       }
       hr_decisions: {
         Row: {
-          amount: number
+          amount: number | null
           approved_at: string | null
           approved_by: string | null
           cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          category: string
           created_at: string
           created_by: string
           employee_id: string
           from_month: string
+          hours: number | null
           id: string
           item_id: string
           kind: string
@@ -5922,16 +5924,18 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          amount: number
+          amount?: number | null
           approved_at?: string | null
           approved_by?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          category?: string
           created_at?: string
           created_by: string
           employee_id: string
           from_month: string
+          hours?: number | null
           id?: string
           item_id: string
           kind: string
@@ -5944,16 +5948,18 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          amount?: number
+          amount?: number | null
           approved_at?: string | null
           approved_by?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          category?: string
           created_at?: string
           created_by?: string
           employee_id?: string
           from_month?: string
+          hours?: number | null
           id?: string
           item_id?: string
           kind?: string
@@ -6982,6 +6988,7 @@ export type Database = {
           currency: string | null
           deductions: number
           employee_id: string
+          exception: Json | null
           exclude_reason: string | null
           gross: number
           id: string
@@ -6997,6 +7004,7 @@ export type Database = {
           currency?: string | null
           deductions?: number
           employee_id: string
+          exception?: Json | null
           exclude_reason?: string | null
           gross?: number
           id?: string
@@ -7012,6 +7020,7 @@ export type Database = {
           currency?: string | null
           deductions?: number
           employee_id?: string
+          exception?: Json | null
           exclude_reason?: string | null
           gross?: number
           id?: string
@@ -7042,6 +7051,53 @@ export type Database = {
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "hr_pay_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pay_policies: {
+        Row: {
+          effective_from: string
+          id: string
+          org_id: string
+          params: Json
+          reason: string
+          set_at: string
+          set_by: string
+          status: string
+          topic: string
+          version: number
+        }
+        Insert: {
+          effective_from: string
+          id?: string
+          org_id: string
+          params?: Json
+          reason: string
+          set_at?: string
+          set_by: string
+          status: string
+          topic: string
+          version: number
+        }
+        Update: {
+          effective_from?: string
+          id?: string
+          org_id?: string
+          params?: Json
+          reason?: string
+          set_at?: string
+          set_by?: string
+          status?: string
+          topic?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pay_policies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -7203,7 +7259,11 @@ export type Database = {
       }
       hr_pay_settings: {
         Row: {
+          allow_partial_exception: boolean
           day_divisor: number | null
+          exc_at: string | null
+          exc_by: string | null
+          exc_reason: string | null
           finance_link: string | null
           link_at: string | null
           link_by: string | null
@@ -7213,7 +7273,11 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          allow_partial_exception?: boolean
           day_divisor?: number | null
+          exc_at?: string | null
+          exc_by?: string | null
+          exc_reason?: string | null
           finance_link?: string | null
           link_at?: string | null
           link_by?: string | null
@@ -7223,7 +7287,11 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          allow_partial_exception?: boolean
           day_divisor?: number | null
+          exc_at?: string | null
+          exc_by?: string | null
+          exc_reason?: string | null
           finance_link?: string | null
           link_at?: string | null
           link_by?: string | null
@@ -12284,6 +12352,28 @@ export type Database = {
       _hr_name: { Args: { _u: string }; Returns: string }
       _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_pay_build: { Args: { _run: string }; Returns: undefined }
+      _hr_pol: {
+        Args: { _month: string; _org: string; _topic: string }
+        Returns: {
+          effective_from: string
+          id: string
+          org_id: string
+          params: Json
+          reason: string
+          set_at: string
+          set_by: string
+          status: string
+          topic: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "hr_pay_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _hr_pol_json: { Args: { _month: string; _org: string }; Returns: Json }
       _hr_purge_org: { Args: { _org: string }; Returns: undefined }
       _hr_py_notify: {
         Args: {
@@ -14625,6 +14715,10 @@ export type Database = {
       hr_my_employment: { Args: { _org: string }; Returns: Json }
       hr_my_money: { Args: { _org: string }; Returns: Json }
       hr_my_payslip: { Args: { _id: string }; Returns: Json }
+      hr_pay_exception_set: {
+        Args: { _on: boolean; _org: string; _reason: string }
+        Returns: undefined
+      }
       hr_pay_item_save: {
         Args: {
           _active: boolean
@@ -14644,6 +14738,11 @@ export type Database = {
           _run: string
         }
         Returns: undefined
+      }
+      hr_pay_policies_list: { Args: { _org: string }; Returns: Json }
+      hr_pay_policy_save: {
+        Args: { _org: string; _p: Json; _topic: string }
+        Returns: string
       }
       hr_pay_run_act: {
         Args: {
@@ -15473,6 +15572,7 @@ export type Database = {
       }
       school_org: { Args: { _school: string }; Returns: string }
       school_today: { Args: never; Returns: string }
+      school_today_org: { Args: { _org: string }; Returns: string }
       search_messages: {
         Args: { _q: string; _school?: string }
         Returns: {
