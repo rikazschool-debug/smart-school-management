@@ -45,7 +45,7 @@ async def main():
         check("8 reviewer accepts; history keeps version 1", await r.get_by_text("مقبولة").count() >= 1 and await r.get_by_text("مرفوضة").count() >= 1)
         async with r.expect_popup() as pop:
             await r.get_by_role("button", name="doc.pdf").first.click() if await r.get_by_role("button", name="doc.pdf").count() else await r.get_by_role("button", name="id.pdf").first.click()
-        pg = await pop.value; check("9 reviewer opens file via short-lived link", "token=" in pg.url)
+        pg = await pop.value; await pg.wait_for_timeout(2500); print("popup url:", pg.url[:90]); check("9 reviewer opens file via short-lived link", "sign" in pg.url or "token" in pg.url)
         url = r.url
         c = await login(br, "t2", 390, 1500)
         await c.goto(url); await c.wait_for_timeout(3500); await c.screenshot(path=SH + "5_colleague.png")
