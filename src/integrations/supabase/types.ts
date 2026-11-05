@@ -5681,6 +5681,10 @@ export type Database = {
       hr_settings: {
         Row: {
           alert_days_reviewed: boolean
+          alerts_active: boolean
+          alerts_decided_at: string | null
+          alerts_decided_by: string | null
+          alerts_decision_reason: string | null
           contract_alert_days: number[]
           notify_employee_expiry: boolean
           org_id: string
@@ -5689,6 +5693,10 @@ export type Database = {
         }
         Insert: {
           alert_days_reviewed?: boolean
+          alerts_active?: boolean
+          alerts_decided_at?: string | null
+          alerts_decided_by?: string | null
+          alerts_decision_reason?: string | null
           contract_alert_days?: number[]
           notify_employee_expiry?: boolean
           org_id: string
@@ -5697,6 +5705,10 @@ export type Database = {
         }
         Update: {
           alert_days_reviewed?: boolean
+          alerts_active?: boolean
+          alerts_decided_at?: string | null
+          alerts_decided_by?: string | null
+          alerts_decision_reason?: string | null
           contract_alert_days?: number[]
           notify_employee_expiry?: boolean
           org_id?: string
@@ -10328,6 +10340,10 @@ export type Database = {
         Args: { _org: string }
         Returns: {
           alert_days_reviewed: boolean
+          alerts_active: boolean
+          alerts_decided_at: string | null
+          alerts_decided_by: string | null
+          alerts_decision_reason: string | null
           contract_alert_days: number[]
           notify_employee_expiry: boolean
           org_id: string
@@ -10349,6 +10365,8 @@ export type Database = {
         }
         Returns: Json
       }
+      _hrc_renewal_gap: { Args: { _c: string }; Returns: number }
+      _hrc_renewed_ok: { Args: { _c: string }; Returns: boolean }
       _hrs_org: {
         Args: { _action: string; _org: string; _sec: string }
         Returns: boolean
@@ -12394,6 +12412,10 @@ export type Database = {
       hr_settings_get: { Args: { _org: string }; Returns: Json }
       hr_settings_save: {
         Args: { _days: number[]; _notify_employee: boolean; _org: string }
+        Returns: undefined
+      }
+      hr_settings_set_alerts: {
+        Args: { _active: boolean; _org: string; _reason?: string }
         Returns: undefined
       }
       hr_team: { Args: { _org: string }; Returns: Json }
