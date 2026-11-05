@@ -95,7 +95,7 @@ export type LetterPdf = { org: string; title: string; ref: string; issued: strin
 /** Direct A4 PDF of one frozen letter (multi-page, RTL, Cairo). Built in the browser from text the server already allowed —
  *  never uploaded or stored, so nothing outside the session can read it. Paragraphs are measured and split across pages. */
 export async function exportLetterPdf(l: LetterPdf) {
-  const [{ toPng }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
+  const [{ toJpeg }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
   await ensureCairo();
   const W = 794, H = 1123, PX = 68, PT = 72, FOOT = 70;
   const head = `<div style="display:flex;justify-content:space-between;border-bottom:2px solid #1f2a44;padding-bottom:8px;margin-bottom:22px">
@@ -122,9 +122,9 @@ export async function exportLetterPdf(l: LetterPdf) {
         <div>${body}</div>
         <div style="position:absolute;bottom:22px;left:${PX}px;right:${PX}px;border-top:1px solid #ccc;padding-top:6px;font-size:10px;color:#555;display:flex;justify-content:space-between">
           <span>صادر من نظام ركاز. لا يتضمن توقيعًا أو ختمًا إلكترونيًا موثقًا من جهة خارجية.</span><span>صفحة ${p + 1} من ${pages.length}</span></div></div>`;
-      const png = await toPng(host.firstElementChild as HTMLElement, { pixelRatio: 2, backgroundColor: "#ffffff", width: W, height: H });
+      const img = await toJpeg(host.firstElementChild as HTMLElement, { quality: 0.9, pixelRatio: 2, backgroundColor: "#ffffff", width: W, height: H });
       if (p > 0) pdf.addPage([W, H], "portrait");
-      pdf.addImage(png, "PNG", 0, 0, W, H);
+      pdf.addImage(img, "JPEG", 0, 0, W, H, undefined, "FAST");
     }
     pdf.setProperties({ title: `${l.title} ${l.ref}` });
     pdf.save(`${`${l.title}-${l.ref}`.replace(/[\\/:*?"<>|\s]+/g, "-")}.pdf`);
