@@ -96,7 +96,7 @@ try {
   const bd = await owner.c.rpc("hr_settings_save", { _org: org, _days: [0], _notify_employee: true }); check("invalid days refused", !!bd.error, bd);
   const os = await owner.c.rpc("hr_settings_save", { _org: org, _days: [90, 10], _notify_employee: true }); check("owner saves days + employee option", !os.error, os.error);
   const s1 = (await owner.c.rpc("hr_settings_get", { _org: org })).data;
-  check("settings record who/when", s1.reviewed && s1.updated_by && s1.updated_at, s1);
+  check("settings record who/when", s1.reviewed && typeof s1.updated_by === "string" && !!s1.updated_at, s1);
   await setEnd(day(9)); await tick();
   const me = (await admin.from("notifications").select("dedupe_key,body").eq("user_id", emp.id).like("dedupe_key", `hrc-exp-me:${C}:%`)).data!;
   check("employee notified when enabled, stage from settings, no amounts", me.length === 1 && me[0].dedupe_key.endsWith(":d10") && !/SAR|ريال/.test(me[0].body), me);
