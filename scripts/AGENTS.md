@@ -65,3 +65,4 @@
 - scripts/hr-contracts-e2e.ts: contracts lifecycle/permissions (31 checks). scripts/hrc-browser-fixture.ts setup|teardown + scripts/hrc-journey.py (11 checks); always run teardown after.
 - scripts/hrc-alerts-e2e.ts: HR contract alerts + settings + separation of duties (24 checks; direct job call only).
 - scripts/hr-docs-e2e.ts: HR documents (35 checks). scripts/hrd-browser-fixture.ts setup|teardown + scripts/hrd-journey.py (10 checks); always run teardown after.
+- scripts/hr-import-journey.py: HR Excel import browser journey (17 checks; needs hr-browser-fixture setup, run teardown after).
