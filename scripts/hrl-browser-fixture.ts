@@ -32,7 +32,7 @@ for (const u of ["rev", "iss", "emp", "mate"]) await admin.from("memberships").i
 const g = (u: string, s: string, a: string, scope = "branch") => oc.rpc("perm_override_set", { _org: org, _user: users[u]!.id, _section: s, _action: a, _effect: "grant", _scope: scope, _reason: "تجربة" });
 for (const a of ["view", "review"]) await g("rev", "hr_letters", a, "org");
 for (const a of ["view", "issue"]) await g("iss", "hr_letters", a);
-for (const [u, n] of [["emp", NAMES.emp], ["mate", NAMES.mate]]) await oc.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: A, user_id: users[u!]!.id, job_title: "معلمة رياضيات", hire_date: "2023-09-01" } });
+for (const [u, n] of [["emp", NAMES.emp], ["mate", NAMES.mate]]) await oc.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: A, user_id: users[u!]!.id, job_title: "معلمة رياضيات", hire_date: "2023-09-01" } }).then(async (r) => { if (r.data) await oc.rpc("hr_self_access_set", { _emp: r.data, _active: true }); });
 mkdirSync("/tmp/browser/hrl", { recursive: true });
 writeFileSync(FX, JSON.stringify({ org, schools: [A], users: Object.values(users).map((u) => u.id), pw, ...Object.fromEntries(Object.entries(users).map(([k, v]) => [k, v.email])) }));
 console.log("setup ok");

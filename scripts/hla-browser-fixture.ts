@@ -32,6 +32,7 @@ await admin.from("memberships").insert([{ user_id: users.mgr!.id, org_id: org, s
 for (const t of ["emp", "pr"]) {
   const id = (await admin.from("hr_employees").insert({ org_id: org, employee_no: t.toUpperCase() + "1", user_id: users[t]!.id, full_name: names[t] }).select("id").single()).data!.id;
   await admin.from("hr_assignments").insert({ org_id: org, employee_id: id, school_id: A, start_date: "2026-01-01", is_primary: true });
+  await o.rpc("hr_self_access_set", { _emp: id, _active: true });
 }
 for (const a of ["view", "manage", "export"]) await o.rpc("perm_override_set", { _org: org, _user: users.mgr!.id, _section: "hr_assets", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة" });
 await o.rpc("hr_att_settings_save", { _org: org, _self: true });

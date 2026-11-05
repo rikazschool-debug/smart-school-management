@@ -34,7 +34,7 @@ const org = (await oc.rpc("create_organization", { _org_name: "مؤسسة تجر
 const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(A);
 for (const [u, r] of [["rev", "student_affairs"], ["t1", "teacher"], ["t2", "teacher"]]) await admin.from("memberships").insert({ user_id: users[u]!.id, org_id: org, school_id: A, role: r });
 for (const a of ["view", "review", "download", "sensitive"]) await oc.rpc("perm_override_set", { _org: org, _user: users.rev!.id, _section: "hr_documents", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة" });
-for (const t of ["t1", "t2"]) await oc.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: NAMES[t], school_id: A, user_id: users[t]!.id, job_title: "معلمة" } });
+for (const t of ["t1", "t2"]) await oc.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: NAMES[t], school_id: A, user_id: users[t]!.id, job_title: "معلمة" } }).then(async (r) => { if (r.data) await oc.rpc("hr_self_access_set", { _emp: r.data, _active: true }); });
 await oc.rpc("hr_doc_type_save", { _org: org, _id: null, _p: { name: "الهوية الوطنية", needs_number: true, needs_expiry: true, employee_upload: true, required_all: true, alert_days: [30] } });
 mkdirSync("/tmp/browser/hrd", { recursive: true });
 writeFileSync("/tmp/browser/hrd/id.pdf", "%PDF-1.4\n% synthetic test file\n");

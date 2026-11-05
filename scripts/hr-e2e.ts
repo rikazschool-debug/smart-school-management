@@ -51,6 +51,7 @@ try {
   // 3 owner creates employee from existing teacher + login
   const e1r = await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "معلم أ", user_id: t1.id, school_id: A, teacher_id: te1.id, national_id: "0123456789", job_title: "معلم رياضيات", hire_date: "2026-08-20" } });
   const e1 = e1r.data as string;
+  await owner.c.rpc("hr_self_access_set", { _emp: e1, _active: true });
   const tcount = (await admin.from("teachers").select("id", { count: "exact", head: true }).eq("school_id", A)).count;
   const ucount = (await admin.from("memberships").select("id", { count: "exact", head: true }).eq("user_id", t1.id)).count;
   const g1 = (await owner.c.rpc("hr_employee_get", { _id: e1 })).data as any;
@@ -67,6 +68,7 @@ try {
   const d5 = await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "معلم ب", school_id: A, teacher_id: te2.id, user_id: t2.id } });
   check("5 teacher login mismatch / wrong school refused", err(d4).includes("حساب دخول") && err(d5).includes("لا يتبع"), [err(d4), err(d5)]);
   const e2 = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "معلم ب", school_id: B, teacher_id: te2.id, user_id: t2.id, national_id: "1111111111" } })).data as string;
+  await owner.c.rpc("hr_self_access_set", { _emp: e2, _active: true });
   const e3 = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "موظف بلا دخول", school_id: A, teacher_id: teNo.id } })).data as string;
   check("6 employee without login + teacher record without login allowed", !!e2 && !!e3);
 

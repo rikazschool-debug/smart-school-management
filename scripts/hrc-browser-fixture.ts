@@ -35,7 +35,7 @@ for (const a of ["view", "draft", "comp_view", "comp_edit"]) await g("hrd", "hr_
 for (const a of ["view", "approve", "comp_view"]) await g("hra", "hr_contracts", a);
 await g("pr", "hr_contracts", "view");
 const e = await oc.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: NAMES.t1, school_id: A, user_id: users.t1!.id, job_title: "معلمة" } });
-if (e.error) console.log(e.error);
+if (e.error) console.log(e.error); else await oc.rpc("hr_self_access_set", { _emp: e.data, _active: true });
 mkdirSync("/tmp/browser/hrc", { recursive: true });
 writeFileSync(FX, JSON.stringify({ org, schools: [A], users: Object.values(users).map((u) => u.id), pw, ...Object.fromEntries(Object.entries(users).map(([k, v]) => [k, v.email])) }));
 console.log("setup ok"); process.exit(0);
