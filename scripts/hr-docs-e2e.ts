@@ -70,9 +70,18 @@ try {
   const dbl = await rev.c.rpc("hr_doc_review", { _version: V1, _decision: "accept" }); check("second decision on same version refused", has(dbl, "سابقًا"), dbl.error);
   const r2 = await up(emp, { document_id: D, doc_no: "0012345", expires_on: day(400) }); check("reupload as version 2", !r2.error && r2.data.version === 2, r2.error);
   await rev.c.rpc("hr_doc_review", { _version: r2.data.version_id, _decision: "accept" });
-  const r3 = await up(emp, { document_id: D, doc_no: "0012345", expires_on: day(20) });
+  const r3 = await up(emp, { document_id: D, doc_no: "0099999", expires_on: day(20) });
   const g = (await rev.c.rpc("hr_doc_get", { _id: D })).data;
   check("new version does not silently replace accepted", g.accepted_version === 2 && g.status === "under_review" && g.versions.length === 3, g);
+  check("pending version's number/expiry do not replace accepted data", g.current?.version === 2 && g.current?.doc_no === "0012345" && g.latest?.doc_no === "0099999", { c: g.current, l: g.latest });
+  // per-type requirements: a type without number/expiry accepts uploads without them; changing requirements keeps history
+  const T3 = (await owner.c.rpc("hr_doc_type_save", { _org: org, _id: null, _p: { name: "شهادة خبرة", employee_upload: true } })).data;
+  const plain = await up(emp, { type_id: T3, employee_id: E });
+  check("type without number/expiry: upload allowed without them", !plain.error, plain.error);
+  await owner.c.rpc("hr_doc_type_save", { _org: org, _id: T3, _p: { name: "شهادة خبرة", employee_upload: true, needs_number: true } });
+  const keep = (await admin.from("hr_document_versions").select("id,status").eq("id", plain.data?.version_id ?? "").maybeSingle()).data;
+  const tlog = (await admin.from("hr_events").select("action").eq("entity", "doc_type").eq("entity_id", T3)).data!.map((x: any) => x.action);
+  check("changing type requirements keeps prior versions and logs the change", !!keep && tlog.includes("update"), { keep, tlog });
   const hrUp = await up(hr, { type_id: T1, employee_id: M, doc_no: "777", expires_on: day(500) });
   const hrSelf = await hr.c.rpc("hr_doc_review", { _version: hrUp.data.version_id, _decision: "accept" }); check("uploader cannot review own upload", !!hrSelf.error, hrSelf.error);
   await rev.c.rpc("hr_doc_review", { _version: r3.data.version_id, _decision: "accept" });

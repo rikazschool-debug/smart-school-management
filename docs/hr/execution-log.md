@@ -85,3 +85,8 @@ Status: implemented · server-tested · not browser-tested · NOT published.
 - D Leave tab hidden outside dev builds (LEAVE_ENABLED flag).
 - Evidence (server): hrc-alerts-e2e 32/32, hr-contracts-e2e 31/31, hr-docs-e2e 35/35. Scheduled run still NOT proven (direct calls only).
 - Open from this prompt: C documents re-check beyond existing 35 checks, E scheduler evidence, Excel import browser journey, letters (P3), leave P4 + substitutes.
+
+## Review fixes C/E — 2026-11-05
+- C Documents: re-checked server paths. New version's number/expiry stay on that version; accepted data shown as `current` until the new one is accepted (test). Defect fixed: re-upload with a contract link re-linked an already-accepted document before acceptance — now only unaccepted documents are re-linked. Number/expiry required only when the type says so (test with a plain type). Type requirement changes keep prior versions and log before/after (test). Confidential documents are filtered server-side in list/get/file, so exports and PDFs (built from the list) inherit it.
+- E Scheduler: jobs rikaz-hr-contract-alerts (05:15 UTC = 08:15 Riyadh) and rikaz-hr-doc-alerts (05:20 UTC) are active; cron.job_run_details shows 0 runs as of 04:50 UTC 2026-11-05 (first window not reached). Only direct calls are proven; scheduled success/failure must be read from cron.job_run_details after the first window.
+- Evidence: hr-docs-e2e 38/38, hrc-alerts-e2e 32/32.
