@@ -472,7 +472,7 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [ ] Field: real phone near a school (location acceptance)
 
 ## Package 21 (Nov 5 2026 request)
-- [ ] Principal self-service file: HR links file to account + separate activate/suspend (audited); server checks on docs/payslips/downloads; suspension hides open screen; tests before link / linked-not-active / active / suspended, desktop + phone
+- [x] Principal self-service file: HR links file to account + separate activate/suspend (audited); server checks on docs/payslips/downloads; suspension hides open screen; tests before link / linked-not-active / active / suspended, desktop + phone
 - [ ] P8 performance: reuse teacher evaluation, versioned forms, period, evaluator, review, publish, acknowledge/object; separate permissions
 - [ ] P8 insurance: companies, policies, classes, coverage, dependents, dates/renewal/alerts; sensitive masking; separate from payroll GOSI
 - [ ] P8 housing: properties, units, capacity, assign/transfer/vacate with dates; no over-capacity

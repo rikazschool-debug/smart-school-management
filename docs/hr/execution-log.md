@@ -179,3 +179,8 @@ Status: implemented · server-tested · browser-tested with simulated location �
 - Evidence (browser, simulated geolocation): hla-journey 14/14 — principal menu, owner site setup, phone check-in in range, outside, weak accuracy, permission denied, asset hand/ack/return, principal blocked.
 - Open (field): real phone near the school; real fingerprint device (needs brand, model, connection and access) — software intake tests remain hr-att-e2e.
 - Not published.
+
+## Package 21.1 — Principal / employee personal file activation (Nov 5 2026)
+- Done: link ≠ activation; HR-only toggle with reason on suspend; server checks on every self path incl. payslips and document downloads; existing links kept active.
+- Tests: hr-self-e2e 31/31, hse-journey 12/12; full HR regression green.
+- Remaining in package 21: P8 performance, insurance, housing; P9 report catalog; acceptance + P10 entry list. Open field items: real-phone check-in, real fingerprint device.

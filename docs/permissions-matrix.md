@@ -332,3 +332,5 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | hr_assets | view / manage / export | owner + granted (branch/org) | employee sees and acknowledges own items only; loss/damage has no automatic money effect |
 | School site for mobile punch | location, radius, accuracy limit | owner + hr_attendance `settings` | |
 | Principal and HR | — | no default access since 2026-11-05 | own file via «ملفي الوظيفي»; HR screens only by explicit grant |
+
+| Personal HR file access (self_access) | HR with hr_employees.edit in scope (or owner) links + activates/suspends; the employee/principal cannot change own access; linked-but-inactive sees nothing of own file |

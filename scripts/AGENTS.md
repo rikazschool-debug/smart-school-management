@@ -72,3 +72,4 @@
 - scripts/hr-pay-e2e.ts: HR P6/P7 (items, decisions maker≠approver, advances + ledger, pay only after finance link + ref, run HR→finance→management on reviewed version, partial-month blocker, publish, self-only payslips, isolation; 56 checks). scripts/hrp-browser-fixture.ts setup|teardown + hrp-journey.py (21 checks, desktop+phone, 7 accounts); always run teardown after.
 
 - scripts/hr-loc-assets-e2e.ts: location punch + asset custody (44 checks). scripts/hla-browser-fixture.ts setup|teardown + hla-journey.py (14 checks, simulated geolocation); always run teardown after.
+- scripts/hr-self-e2e.ts: personal file link/activate/suspend (31 checks). scripts/hse-browser-fixture.ts setup|teardown + scripts/hse-journey.py (12 checks, desktop+phone); always run teardown after. HR tests activate linked employees via hr_self_access_set after hr_employee_save.

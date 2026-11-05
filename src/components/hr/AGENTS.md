@@ -5,3 +5,4 @@
 - HR extensions: owner switch (hr_ext_settings); recruitment hr_rc_*, convert once. Tests: hr-recruit-e2e, hrr-journey.
 - Mobile punch: hr_att_self_punch always needs a fresh (≤60 s), accurate reading inside the school site (hr_att_sites) of a live assignment; only school/distance/accuracy are stored. Asset custody (hr_assets/hr_asset_custodies): one open custody per asset (unique index), never touches money. Tests: hr-loc-assets-e2e, hla-journey.
 - Principals get no HR section by default (no _perm_base/template grant); access only by explicit grant.
+- Personal file access: hr_employees.self_access is switched only via hr_self_access_set (HR edit perm, never by the person; owner excepted); linking/import/relink always leaves it off; every self path (_hr_*_self, hr_my_*, payslips, docs) requires it. Tests: hr-self-e2e, hse-journey.
