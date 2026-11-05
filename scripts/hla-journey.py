@@ -23,7 +23,7 @@ async def main():
         # principal: no HR menu, own file available
         _, pr = await login(br, "pr", "/app")
         nav = await pr.locator("aside, nav").first.inner_text()
-        check("1 principal menu has no «الموارد البشرية» but has own file", "الموارد البشرية" not in nav and await pr.get_by_role("link", name="خدماتي الوظيفية").count() > 0, nav[:400])
+        check("1 principal menu has no «الموارد البشرية» but has own file", "الموارد البشرية" not in nav and await pr.get_by_role("link", name="ملفي الوظيفي").count() > 0, nav[:400])
         # employee before site set
         ectx, e = await login(br, "emp", "/app/my-employment?tab=attendance", 390, 844, geo=IN)
         await e.get_by_role("button", name="تسجيل بصمة الآن").click(); await e.wait_for_timeout(3000)
