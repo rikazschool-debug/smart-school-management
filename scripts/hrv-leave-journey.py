@@ -8,8 +8,14 @@ ok = bad = 0
 def check(n, c, e=""):
     global ok, bad
     ok += bool(c); bad += (not c); print("PASS" if c else "FAIL", n, "" if c else str(e)[:400])
-def db(sql):
-    r = subprocess.run(["bash", "-lc", f"psql \"$SUPABASE_DB_URL\" -Atc \"{sql}\""], capture_output=True, text=True); return r.stdout.strip()
+def cnt(table, filters):
+    q = "".join(f".eq('{k}','{v}')" for k, v in filters.items())
+    r = subprocess.run(["bun", "-e", f"""
+import {{ createClient }} from '@supabase/supabase-js';
+const a = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {{ auth: {{ persistSession: false }} }});
+const r = await a.from('{table}').select('*', {{ count: 'exact', head: true }}){q};
+console.log(String(r.count));"""], capture_output=True, text=True, cwd="/dev-server", env={**os.environ, "NODE_PATH": "node_modules"})
+    return r.stdout.strip()
 async def login(br, who, w=1280, h=1800):
     ctx = await br.new_context(viewport={"width": w, "height": h}, accept_downloads=True); p = await ctx.new_page()
     await p.goto(B + "/auth"); await p.wait_for_timeout(2500); await p.fill("#email", F[who]); await p.fill("#password", F["pw"])
@@ -45,7 +51,7 @@ async def main():
         await e.get_by_label("من").fill("2026-11-15"); await e.get_by_label("إلى").fill("2026-11-21"); await e.wait_for_timeout(2500)
         check("7 live count: 5 work days, routed via manager", await e.get_by_text("المدة 5 يوم").count() == 1 and await e.get_by_text("المديرة المباشرة").count() >= 1)
         await e.get_by_role("button", name="إرسال الطلب").dblclick(); await e.wait_for_timeout(3500)
-        n = db(f"select count(*) from hr_leave_requests where employee_id='{F['employee']}'")
+        n = cnt("hr_leave_requests", {"employee_id": F["employee"]})
         check("8 double tap → exactly one request", n == "1", n)
         sw = await e.evaluate("document.documentElement.scrollWidth")
         check("9 phone: no horizontal overflow", sw <= 392, sw)
@@ -71,8 +77,8 @@ async def main():
         await h.get_by_role("button", name="اعتماد نهائي").click(); await h.wait_for_timeout(3500)
         check("13 HR final approval; 4 days recorded for cover", await h.locator("section").get_by_text("معتمدة").count() >= 1 and await h.get_by_text("أيام غياب مسجلة للبدلاء: 4").count() == 1)
         await h.screenshot(path=SH + "3_hr_approved.png")
-        ab = db(f"select count(*) from teacher_absences where teacher_id='{F['teacher']}'")
-        vn = db(f"select count(*) from notifications where user_id='{F['users'][5]}' and kind='substitution'")
+        ab = cnt("teacher_absences", {"teacher_id": F["teacher"]})
+        vn = cnt("notifications", {"user_id": F["users"][5], "kind": "substitution"})
         check("14 teacher absences in substitutions source + vice notified", ab == "4" and vn == "1", [ab, vn])
         async with h.expect_download() as dl:
             await h.get_by_role("button", name="Excel").click()
@@ -86,7 +92,7 @@ async def main():
         check("17 colleague: no HR access, no team requests", c1 == 0 and await mt.get_by_text("لا توجد طلبات من فريقك").count() == 1)
         await h.reload(); await h.wait_for_timeout(3000)
         await h.get_by_role("button", name="إلغاء الإجازة").click(); await reason(h, "إعادة جدولة بطلب الإدارة")
-        ab2 = db(f"select count(*) from teacher_absences where teacher_id='{F['teacher']}'")
+        ab2 = cnt("teacher_absences", {"teacher_id": F["teacher"]})
         await e.reload(); await e.wait_for_timeout(3000)
         check("18 HR cancel: absences released, employee balance back to 30", ab2 == "0" and await e.get_by_text("ملغاة").count() >= 1 and await e.get_by_text("30").count() >= 1, ab2)
         await e.screenshot(path=SH + "4_employee_after_cancel.png")
