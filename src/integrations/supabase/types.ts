@@ -5518,18 +5518,21 @@ export type Database = {
         Row: {
           allow_self_punch: boolean
           org_id: string
+          require_location: boolean
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           allow_self_punch?: boolean
           org_id: string
+          require_location?: boolean
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           allow_self_punch?: boolean
           org_id?: string
+          require_location?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -6691,6 +6694,7 @@ export type Database = {
           alerts_decided_at: string | null
           alerts_decided_by: string | null
           alerts_decision_reason: string | null
+          alerts_source: string | null
           contract_alert_days: number[]
           notify_employee_expiry: boolean
           org_id: string
@@ -6703,6 +6707,7 @@ export type Database = {
           alerts_decided_at?: string | null
           alerts_decided_by?: string | null
           alerts_decision_reason?: string | null
+          alerts_source?: string | null
           contract_alert_days?: number[]
           notify_employee_expiry?: boolean
           org_id: string
@@ -6715,6 +6720,7 @@ export type Database = {
           alerts_decided_at?: string | null
           alerts_decided_by?: string | null
           alerts_decision_reason?: string | null
+          alerts_source?: string | null
           contract_alert_days?: number[]
           notify_employee_expiry?: boolean
           org_id?: string
@@ -11363,6 +11369,7 @@ export type Database = {
       _gb_window: { Args: { _gb: string; _student: string }; Returns: boolean }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
       _home_roles: { Args: { _me: string; _school: string }; Returns: Json }
+      _hr_alert_last_runs: { Args: never; Returns: Json }
       _hr_assign_json: {
         Args: { _emp: string; _only_active: boolean }
         Returns: Json
@@ -11679,6 +11686,7 @@ export type Database = {
           alerts_decided_at: string | null
           alerts_decided_by: string | null
           alerts_decision_reason: string | null
+          alerts_source: string | null
           contract_alert_days: number[]
           notify_employee_expiry: boolean
           org_id: string
@@ -13754,7 +13762,7 @@ export type Database = {
       }
       hr_att_self_punch: { Args: { _key: string; _org: string }; Returns: Json }
       hr_att_settings_save: {
-        Args: { _org: string; _self: boolean }
+        Args: { _org: string; _require_location?: boolean; _self: boolean }
         Returns: undefined
       }
       hr_att_setup: { Args: { _org: string }; Returns: Json }
