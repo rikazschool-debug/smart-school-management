@@ -184,3 +184,11 @@ Status: implemented · server-tested · browser-tested with simulated location �
 - Done: link ≠ activation; HR-only toggle with reason on suspend; server checks on every self path incl. payslips and document downloads; existing links kept active.
 - Tests: hr-self-e2e 31/31, hse-journey 12/12; full HR regression green.
 - Remaining in package 21: P8 performance, insurance, housing; P9 report catalog; acceptance + P10 entry list. Open field items: real-phone check-in, real fingerprint device.
+
+## Package 21.2 — P8 extensions + P9 report catalog (Nov 5 2026)
+- P8: performance, insurance, housing (owner switch per extension, off by default); personal tabs «أدائي/تأميني/سكني» read own-only RPCs; links in HR and owner menus.
+- P9: hr_report_catalog / hr_report — one server catalog R01–R29; rows filtered per branch and permission; sensitive fields masked server-side; totals computed from the same filtered rows; view / print (new hr_reports.print) / export (module export) separated; every print/export logged in hr_events (key, filters, row count).
+- Honestly unavailable with reasons: R04 addresses (no field), R14 hourly permissions (not in Rikaz), R25 bank sheet and R26 cash (waiting for finance link).
+- Tests: hr-reports-e2e 26/26 (catalog per permission, branch filter tamper, masking, print≠export, logging, extension switch, tampered key/mode, other org, revoke mid-session, all 25 available reports run); hr-pay-e2e 81/81 incl. payroll report totals (R24 = sum of included rows, R22 = R24, R21 items = net, export log); hr-hs-in-e2e 52/52, hr-perf-e2e 39/39.
+- Browser: owner opens /app/hr/reports, catalog + R01 rendered with print/Excel/PDF.
+- Open: P10 entry checklist; field items (real-phone check-in, real fingerprint device).
