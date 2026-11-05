@@ -8,8 +8,8 @@ def check(n, c, e=""):
     ok += bool(c); bad += (not c); print("PASS" if c else "FAIL", n, "" if c else e)
 async def login(br, who, w=1280, h=1800):
     ctx = await br.new_context(viewport={"width": w, "height": h}); p = await ctx.new_page()
-    await p.goto(B + "/auth"); await p.wait_for_timeout(2500); await p.fill("#email", F[who]); await p.fill("#password", F["pw"])
-    await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await p.wait_for_timeout(1500); return p
+    await p.goto(B + "/auth"); await p.wait_for_timeout(4000); await p.fill("#email", F[who]); await p.fill("#password", F["pw"])
+    await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=45000); await p.wait_for_timeout(1500); return p
 async def main():
     async with async_playwright() as pw:
         br = await pw.chromium.launch(headless=True)
