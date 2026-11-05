@@ -447,3 +447,16 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [x] P7 payroll HR→finance→management (reviewed version), payslips, run/posting/payment separate; posting/payment «بانتظار إعداد الربط المالي» (hr-pay-e2e 56/56, hrp-journey 21/21)
 - [ ] Real posting/payment — blocked: needs an approved finance link and confirmation by the competent party
 - [ ] GOSI, end-of-service, overtime, proration — blocked: owner policies not provided
+
+## Package 19 — prompt «واصل العمل… إصلاحات P6/P7 ثم P8 وP9»
+- [ ] 1a Month display unified (cards, filters, slips, export; Dec/Jan; LTR isolation)
+- [ ] 1b Partial month: held without policy; documented exception (org switch) → finance + management see reason/effect; excluded → exceptions sheet
+- [ ] 1c Dated policies (GOSI, end of service, overtime, proration, unpaid leave) with hold reasons; attendance as review input only
+- [ ] 1d P6 match (comp change, promotion, penalty, termination, settlement; procurement custody cycle) — gaps closed or documented
+- [ ] 2 P8 recruitment (need → vacancy → candidate → interviews → versioned offer → accept → convert once)
+- [ ] 2 P8 performance (reuse evaluation; versioned forms, cycle, review, publish, objection)
+- [ ] 2 P8 insurance (policies, classes, coverage periods incl. dependants; sensitive perm)
+- [ ] 2 P8 housing (property, unit, capacity, assign/transfer/vacate); extension switches
+- [ ] 3 P9 report catalog (R01–R29 mapping, totals = details = export, view/print/export perms, server masking)
+- [ ] 3 P9 security notes review + regression (contracts, leave, attendance, evaluation, timetable, substitutes)
+- [ ] 4 Role journeys desktop/phone (id tampering, branch switch, revoke after open); execution log; P10 list
