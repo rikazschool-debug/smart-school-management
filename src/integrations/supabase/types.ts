@@ -5678,6 +5678,396 @@ export type Database = {
           },
         ]
       }
+      hr_leave_absences: {
+        Row: {
+          absence_id: string
+          created: boolean
+          date: string
+          employee_id: string
+          request_id: string
+        }
+        Insert: {
+          absence_id: string
+          created: boolean
+          date: string
+          employee_id: string
+          request_id: string
+        }
+        Update: {
+          absence_id?: string
+          created?: boolean
+          date?: string
+          employee_id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_absences_absence_id_fkey"
+            columns: ["absence_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_absences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_absences_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_absences_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_leave_moves: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          days: number
+          employee_id: string
+          id: string
+          key: string
+          kind: string
+          org_id: string
+          reason: string | null
+          request_id: string | null
+          type_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          days: number
+          employee_id: string
+          id?: string
+          key: string
+          kind: string
+          org_id: string
+          reason?: string | null
+          request_id?: string | null
+          type_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          days?: number
+          employee_id?: string
+          id?: string
+          key?: string
+          kind?: string
+          org_id?: string
+          reason?: string | null
+          request_id?: string | null
+          type_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_moves_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_moves_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_moves_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_moves_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_leave_policies: {
+        Row: {
+          allow_negative: boolean
+          annual_days: number | null
+          count_mode: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          max_days: number | null
+          org_id: string
+          school_id: string | null
+          type_id: string
+          uses_balance: boolean
+          version: number
+        }
+        Insert: {
+          allow_negative?: boolean
+          annual_days?: number | null
+          count_mode: string
+          created_at?: string
+          created_by?: string | null
+          effective_from: string
+          effective_to?: string | null
+          id?: string
+          max_days?: number | null
+          org_id: string
+          school_id?: string | null
+          type_id: string
+          uses_balance: boolean
+          version: number
+        }
+        Update: {
+          allow_negative?: boolean
+          annual_days?: number | null
+          count_mode?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          max_days?: number | null
+          org_id?: string
+          school_id?: string | null
+          type_id?: string
+          uses_balance?: boolean
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_policies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_policies_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_policies_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_leave_requests: {
+        Row: {
+          actual_end: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          days: number
+          decision_reason: string | null
+          employee_id: string
+          end_date: string
+          hr_at: string | null
+          hr_by: string | null
+          id: string
+          manager_at: string | null
+          manager_by: string | null
+          manager_emp: string | null
+          note: string | null
+          org_id: string
+          parent_id: string | null
+          policy_id: string | null
+          requested_at: string
+          requested_by: string
+          rev: number
+          start_date: string
+          status: string
+          type_id: string
+          updated_at: string
+        }
+        Insert: {
+          actual_end?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          days: number
+          decision_reason?: string | null
+          employee_id: string
+          end_date: string
+          hr_at?: string | null
+          hr_by?: string | null
+          id?: string
+          manager_at?: string | null
+          manager_by?: string | null
+          manager_emp?: string | null
+          note?: string | null
+          org_id: string
+          parent_id?: string | null
+          policy_id?: string | null
+          requested_at?: string
+          requested_by: string
+          rev?: number
+          start_date: string
+          status: string
+          type_id: string
+          updated_at?: string
+        }
+        Update: {
+          actual_end?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          days?: number
+          decision_reason?: string | null
+          employee_id?: string
+          end_date?: string
+          hr_at?: string | null
+          hr_by?: string | null
+          id?: string
+          manager_at?: string | null
+          manager_by?: string | null
+          manager_emp?: string | null
+          note?: string | null
+          org_id?: string
+          parent_id?: string | null
+          policy_id?: string | null
+          requested_at?: string
+          requested_by?: string
+          rev?: number
+          start_date?: string
+          status?: string
+          type_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_requests_manager_emp_fkey"
+            columns: ["manager_emp"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_requests_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_requests_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_requests_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_leave_settings: {
+        Row: {
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+          work_days: number[] | null
+        }
+        Insert: {
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+          work_days?: number[] | null
+        }
+        Update: {
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          work_days?: number[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_leave_types: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_letter_counters: {
         Row: {
           n: number
@@ -10612,6 +11002,113 @@ export type Database = {
         }
         Returns: undefined
       }
+      _hr_lv_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_lv_balance: {
+        Args: { _emp: string; _type: string; _year: number }
+        Returns: number
+      }
+      _hr_lv_check: {
+        Args: {
+          _emp: string
+          _final: boolean
+          _from: string
+          _parent: string
+          _self: string
+          _to: string
+          _type: string
+        }
+        Returns: Json
+      }
+      _hr_lv_days: {
+        Args: { _from: string; _mode: string; _org: string; _to: string }
+        Returns: number
+      }
+      _hr_lv_manager: { Args: { _emp: string }; Returns: string }
+      _hr_lv_notify_emp: {
+        Args: {
+          _key: string
+          _title: string
+          r: Database["public"]["Tables"]["hr_leave_requests"]["Row"]
+        }
+        Returns: undefined
+      }
+      _hr_lv_notify_hr: {
+        Args: {
+          _key: string
+          _title: string
+          r: Database["public"]["Tables"]["hr_leave_requests"]["Row"]
+        }
+        Returns: undefined
+      }
+      _hr_lv_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
+      _hr_lv_pending: {
+        Args: { _emp: string; _except: string; _type: string; _year: number }
+        Returns: number
+      }
+      _hr_lv_pol_json: {
+        Args: { p: Database["public"]["Tables"]["hr_leave_policies"]["Row"] }
+        Returns: Json
+      }
+      _hr_lv_policy: {
+        Args: { _date: string; _emp: string; _type: string }
+        Returns: {
+          allow_negative: boolean
+          annual_days: number | null
+          count_mode: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          max_days: number | null
+          org_id: string
+          school_id: string | null
+          type_id: string
+          uses_balance: boolean
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "hr_leave_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _hr_lv_route: {
+        Args: {
+          _key: string
+          r: Database["public"]["Tables"]["hr_leave_requests"]["Row"]
+        }
+        Returns: undefined
+      }
+      _hr_lv_row: {
+        Args: {
+          _full: boolean
+          r: Database["public"]["Tables"]["hr_leave_requests"]["Row"]
+        }
+        Returns: Json
+      }
+      _hr_lv_self: { Args: { _emp: string }; Returns: boolean }
+      _hr_lv_settle: {
+        Args: {
+          _key: string
+          _reason: string
+          _target: number
+          r: Database["public"]["Tables"]["hr_leave_requests"]["Row"]
+        }
+        Returns: undefined
+      }
+      _hr_lv_sync: {
+        Args: {
+          _emp: string
+          _from: string
+          _new: string
+          _old: string
+          _to: string
+        }
+        Returns: undefined
+      }
+      _hr_lv_taken: { Args: { _req: string }; Returns: number }
       _hr_me_emp: { Args: { _org: string }; Returns: string }
       _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_purge_org: { Args: { _org: string }; Returns: undefined }
@@ -12686,6 +13183,81 @@ export type Database = {
       hr_employee_save: {
         Args: { _id: string; _org: string; _p: Json; _reason?: string }
         Returns: string
+      }
+      hr_leave_adjust: {
+        Args: {
+          _days: number
+          _emp: string
+          _key: string
+          _reason: string
+          _type: string
+          _year: number
+        }
+        Returns: undefined
+      }
+      hr_leave_balances: { Args: { _f?: Json; _org: string }; Returns: Json }
+      hr_leave_cancel: {
+        Args: { _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      hr_leave_caps: { Args: { _org: string }; Returns: Json }
+      hr_leave_change: {
+        Args: { _id: string; _reason: string; _to: string }
+        Returns: string
+      }
+      hr_leave_decide: {
+        Args: { _decision: string; _id: string; _reason?: string; _rev: number }
+        Returns: undefined
+      }
+      hr_leave_get: { Args: { _id: string }; Returns: Json }
+      hr_leave_grant: {
+        Args: { _org: string; _school?: string; _type: string; _year: number }
+        Returns: Json
+      }
+      hr_leave_ledger: { Args: { _emp: string; _year: number }; Returns: Json }
+      hr_leave_list: { Args: { _f?: Json; _org: string }; Returns: Json }
+      hr_leave_my: { Args: { _org: string }; Returns: Json }
+      hr_leave_policy_save: {
+        Args: { _org: string; _p: Json; _type: string }
+        Returns: string
+      }
+      hr_leave_preview: {
+        Args: { _from: string; _org: string; _to: string; _type: string }
+        Returns: Json
+      }
+      hr_leave_request: {
+        Args: {
+          _from: string
+          _note: string
+          _org: string
+          _to: string
+          _type: string
+        }
+        Returns: string
+      }
+      hr_leave_return: {
+        Args: { _back: string; _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      hr_leave_setup: { Args: { _org: string }; Returns: Json }
+      hr_leave_team: { Args: { _org: string }; Returns: Json }
+      hr_leave_type_save: {
+        Args: { _active: boolean; _id: string; _name: string; _org: string }
+        Returns: string
+      }
+      hr_leave_update: {
+        Args: {
+          _from: string
+          _id: string
+          _note: string
+          _rev: number
+          _to: string
+        }
+        Returns: undefined
+      }
+      hr_leave_workdays_save: {
+        Args: { _days: number[]; _org: string }
+        Returns: undefined
       }
       hr_letter_cancel: {
         Args: { _id: string; _reason: string; _rev: number }
