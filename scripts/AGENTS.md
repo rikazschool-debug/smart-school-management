@@ -70,3 +70,5 @@
 - scripts/hr-leave-e2e.ts: HR leave P4 (settings, ledger, manager→HR, change/return/cancel, teacher absences, isolation; 54 checks). scripts/hrv-browser-fixture.ts setup|teardown: isolated hrvb- data; scripts/hrv-leave-journey.py (18 checks); always run teardown after.
 - scripts/hr-att-e2e.ts: HR attendance P5 (shifts, night shift, duplicates, corrections, close/reopen, device intake, isolation; 49 checks). scripts/hra-browser-fixture.ts setup|teardown + hra-journey.py (12 checks); always run teardown after.
 - scripts/hr-pay-e2e.ts: HR P6/P7 (items, decisions maker≠approver, advances + ledger, pay only after finance link + ref, run HR→finance→management on reviewed version, partial-month blocker, publish, self-only payslips, isolation; 56 checks). scripts/hrp-browser-fixture.ts setup|teardown + hrp-journey.py (21 checks, desktop+phone, 7 accounts); always run teardown after.
+
+- scripts/hr-loc-assets-e2e.ts: location punch + asset custody (44 checks). scripts/hla-browser-fixture.ts setup|teardown + hla-journey.py (14 checks, simulated geolocation); always run teardown after.

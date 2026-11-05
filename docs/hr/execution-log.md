@@ -169,3 +169,13 @@ Status: implemented · server-tested · browser-tested · NOT published.
 - Evidence: hr-pay-e2e 74/74; hrp-journey 22/22; hr-recruit-e2e 35/35; hrr-journey 12/12 (owner, officer desktop, approver 390px, viewer); regression perm5 20/20, hr-e2e 24/24, hr-leave-e2e 54/54, hr-att-e2e 53/53, pc-e2e 32/32, hr-contracts-e2e 31/31. Fixtures torn down.
 - Not done this round: P8.2 performance (reuse of evaluation), insurance, P8.3 housing (switches exist and refuse activation until built); P9 report catalog and cross-role review; id-tampering / branch-switch / revoke-after-open browser tests for the new screens.
 - Not published.
+
+## 2026-11-05 — P5 location punch + asset custody (prompt-143)
+Status: implemented · server-tested · browser-tested with simulated location · NOT published.
+- Principal: no default HR section (base rule and principal template removed); principals keep «ملفي الوظيفي» like any employee; HR access only via explicit owner grant.
+- Location: per-school approved site (lat/lng, radius 20–2000 m, accuracy limit 5–500 m) set by owner or hr_attendance `settings`. Every mobile punch: live assignment at the chosen school, site configured, reading ≤60 s old and not in the future, accuracy within limit, distance within radius — else refused with the reason and a retry button. Location read once at the moment of punching; only school, distance and accuracy are stored. The old «require location» switch is superseded (location is always required).
+- Asset custody (devices, keys, …), separate from procurement cash custody (no existing asset register to reuse): item, category, serial (unique per org), branch; hand → employee acknowledgement → transfer / return / loss / damage with condition and note; one open custody per asset (DB unique index); open items shown in the employee file for end of service; employee sees own items only in «ملفي الوظيفي»; no automatic money effect.
+- Evidence (server): hr-loc-assets-e2e 44/44 (inside, 95 m boundary, outside, weak accuracy, stale/future reading, no location, unassigned school, duplicate key; hand/ack/transfer/return/loss, double hand, other employee ack, own-only views, branch scope, other org, logging). Regression: hr-att-e2e 52/52, hr-e2e 25/25, perm6 20/20.
+- Evidence (browser, simulated geolocation): hla-journey 14/14 — principal menu, owner site setup, phone check-in in range, outside, weak accuracy, permission denied, asset hand/ack/return, principal blocked.
+- Open (field): real phone near the school; real fingerprint device (needs brand, model, connection and access) — software intake tests remain hr-att-e2e.
+- Not published.

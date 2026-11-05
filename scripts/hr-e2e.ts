@@ -70,7 +70,10 @@ try {
   const e3 = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "موظف بلا دخول", school_id: A, teacher_id: teNo.id } })).data as string;
   check("6 employee without login + teacher record without login allowed", !!e2 && !!e3);
 
-  // 7 principal base: own branch only, masked ID, no create
+  // 7 principal: no default HR access (owner decision 2026-11-05); an explicit branch grant gives own branch only, masked ID, no create
+  const la0 = await list(prA);
+  check("7a principal sees no employee files by default", la0.length === 0, la0.length);
+  for (const p of [prA, prB]) await owner.c.rpc("perm_override_set", { _org: org, _user: p.id, _section: "hr_employees", _action: "view", _effect: "grant", _scope: "branch", _reason: "اختبار" });
   const la = await list(prA);
   const c7 = await prA.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "x", school_id: A } });
   check("7 principal A sees branch A only, ID masked, cannot add", la.length === 2 && !la.some((x) => x.id === e2) && la.find((x) => x.id === e1)?.national_id === "••••89" && err(c7).includes("غير مصرح"), [la.map((x) => [x.full_name, x.national_id]), err(c7), (await prA.c.rpc("hr_me", { _org: org })).data]);
@@ -151,10 +154,10 @@ try {
   const n1 = await admin.from("notifications").select("id").eq("user_id", t1.id).eq("dedupe_key", "hr-file:" + e1);
   check("23 linked employee got one «file created» notice", n1.data?.length === 1, n1);
 
-  // 24 template mirror: base_principal template carries hr view
+  // 24 template mirror: base_principal template carries no HR grant
   const tpl = await admin.from("perm_roles").select("id").eq("key", "base_principal").is("org_id", null).single();
   const tg = await admin.from("perm_role_grants").select("action").eq("role_id", tpl.data!.id).eq("section", "hr_employees");
-  check("24 principal template mirrors base (hr view only)", JSON.stringify(tg.data?.map((x) => x.action)) === '["view"]', tg.data);
+  check("24 principal template mirrors base (no HR grant)", (tg.data ?? []).length === 0, tg.data);
   void a1;
 } catch (e) { bad++; console.log("CRASH", e); }
 finally {

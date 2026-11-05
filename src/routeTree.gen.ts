@@ -60,6 +60,7 @@ import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_authenticated/app/homework.index'
 import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
+import { Route as AuthenticatedAppHrAssetsRouteImport } from './routes/_authenticated/app/hr_.assets'
 import { Route as AuthenticatedAppHrAttendanceRouteImport } from './routes/_authenticated/app/hr_.attendance'
 import { Route as AuthenticatedAppHrContractsRouteImport } from './routes/_authenticated/app/hr_.contracts'
 import { Route as AuthenticatedAppHrDocumentsRouteImport } from './routes/_authenticated/app/hr_.documents'
@@ -366,6 +367,12 @@ const AuthenticatedAppHomeworkNewRoute =
     path: '/homework/new',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHrAssetsRoute =
+  AuthenticatedAppHrAssetsRouteImport.update({
+    id: '/hr_/assets',
+    path: '/hr/assets',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppHrAttendanceRoute =
   AuthenticatedAppHrAttendanceRouteImport.update({
     id: '/hr_/attendance',
@@ -519,6 +526,7 @@ export interface FileRoutesByFullPath {
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/app/hr/assets': typeof AuthenticatedAppHrAssetsRoute
   '/app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
@@ -588,6 +596,7 @@ export interface FileRoutesByTo {
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/app/hr/assets': typeof AuthenticatedAppHrAssetsRoute
   '/app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
@@ -660,6 +669,7 @@ export interface FileRoutesById {
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/_authenticated/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/_authenticated/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
+  '/_authenticated/app/hr_/assets': typeof AuthenticatedAppHrAssetsRoute
   '/_authenticated/app/hr_/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/_authenticated/app/hr_/contracts': typeof AuthenticatedAppHrContractsRoute
   '/_authenticated/app/hr_/documents': typeof AuthenticatedAppHrDocumentsRoute
@@ -732,6 +742,7 @@ export interface FileRouteTypes {
     | '/app/classrooms/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
+    | '/app/hr/assets'
     | '/app/hr/attendance'
     | '/app/hr/contracts'
     | '/app/hr/documents'
@@ -801,6 +812,7 @@ export interface FileRouteTypes {
     | '/app/classrooms/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
+    | '/app/hr/assets'
     | '/app/hr/attendance'
     | '/app/hr/contracts'
     | '/app/hr/documents'
@@ -872,6 +884,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/classrooms/$id'
     | '/_authenticated/app/homework/$id'
     | '/_authenticated/app/homework/new'
+    | '/_authenticated/app/hr_/assets'
     | '/_authenticated/app/hr_/attendance'
     | '/_authenticated/app/hr_/contracts'
     | '/_authenticated/app/hr_/documents'
@@ -1266,6 +1279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHomeworkNewRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/hr_/assets': {
+      id: '/_authenticated/app/hr_/assets'
+      path: '/hr/assets'
+      fullPath: '/app/hr/assets'
+      preLoaderRoute: typeof AuthenticatedAppHrAssetsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/hr_/attendance': {
       id: '/_authenticated/app/hr_/attendance'
       path: '/hr/attendance'
@@ -1438,6 +1458,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppClassroomsIdRoute: typeof AuthenticatedAppClassroomsIdRoute
   AuthenticatedAppHomeworkIdRoute: typeof AuthenticatedAppHomeworkIdRoute
   AuthenticatedAppHomeworkNewRoute: typeof AuthenticatedAppHomeworkNewRoute
+  AuthenticatedAppHrAssetsRoute: typeof AuthenticatedAppHrAssetsRoute
   AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
   AuthenticatedAppHrContractsRoute: typeof AuthenticatedAppHrContractsRoute
   AuthenticatedAppHrDocumentsRoute: typeof AuthenticatedAppHrDocumentsRoute
@@ -1501,6 +1522,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppClassroomsIdRoute: AuthenticatedAppClassroomsIdRoute,
   AuthenticatedAppHomeworkIdRoute: AuthenticatedAppHomeworkIdRoute,
   AuthenticatedAppHomeworkNewRoute: AuthenticatedAppHomeworkNewRoute,
+  AuthenticatedAppHrAssetsRoute: AuthenticatedAppHrAssetsRoute,
   AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
   AuthenticatedAppHrContractsRoute: AuthenticatedAppHrContractsRoute,
   AuthenticatedAppHrDocumentsRoute: AuthenticatedAppHrDocumentsRoute,

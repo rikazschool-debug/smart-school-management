@@ -328,3 +328,7 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | hr_recruit | view / manage / approve / sensitive / convert / export | owner + granted (branch/org), only while the owner switch is on | vacancy & offer approver ≠ creator; ID/contact only with sensitive |
 | HR extensions | recruit / performance / insurance / housing switches | owner only | unbuilt extensions cannot be switched on |
 | Self («سلفي وعهدي وقسائمي») | own advances, installments, custodies, published payslips | the employee only | |
+
+| hr_assets | view / manage / export | owner + granted (branch/org) | employee sees and acknowledges own items only; loss/damage has no automatic money effect |
+| School site for mobile punch | location, radius, accuracy limit | owner + hr_attendance `settings` | |
+| Principal and HR | — | no default access since 2026-11-05 | own file via «ملفي الوظيفي»; HR screens only by explicit grant |

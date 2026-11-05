@@ -1,4 +1,5 @@
 import type React from "react";
+import { EmpOpenAssets } from "@/components/hr/assets";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -47,6 +48,7 @@ function Page() {
         <Link to="/app/hr/attendance" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الحضور والانصراف</Link>
         <Link to="/app/hr/payroll" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الرواتب والسلف</Link>
         <Link to="/app/hr/recruit" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التوظيف</Link>
+        <Link to="/app/hr/assets" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">العهد العينية</Link>
       </nav>}
       {!m.enabled ? <SectionLocked /> : !m.caps.view ? <ForbiddenState /> : <Workspace org={org!} m={m} />}
     </>
@@ -247,6 +249,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
         {can_edit && !edit && <Button size="sm" variant="outline" onClick={startEdit}>تعديل الملف</Button>}
         <Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق الملف"><X className="size-4" /></Button>
       </div>
+      <EmpOpenAssets emp={id} />
       {edit ? (
         <div className="space-y-3">
           <EmpFields f={edit} set={((k: string, v: string) => setEdit((x) => ({ ...x!, [k]: v }))) as never} sensitive={!!e.sensitive} withStatus />

@@ -40,12 +40,20 @@ export function DayRow({ d, name }: { d: AttDay; name?: string }) {
   );
 }
 
+/** One fresh high-accuracy reading, taken only at the moment of punching. */
+function readPosition(): Promise<GeolocationPosition> {
+  return new Promise((res, rej) => {
+    if (!("geolocation" in navigator)) { rej(new Error("جهازك لا يدعم تحديد الموقع")); return; }
+    navigator.geolocation.getCurrentPosition(res, (e) => rej(new Error(e.code === 1 ? "رُفض إذن الموقع؛ اسمح للمتصفح بالوصول لموقعك ثم أعد المحاولة" : e.code === 3 ? "انتهت مهلة تحديد الموقع؛ أعد المحاولة" : "تعذّر الحصول على موقعك؛ أعد المحاولة")), { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  });
+}
+
 /** Employee self-service: own days, shifts, raw punches, correction requests. */
 export function MyAttendance({ org }: { org: string }) {
   const qc = useQueryClient();
   const today = riyadhToday();
   const [from, setFrom] = useState(addDays(today, -13));
-  const q = useQuery({ queryKey: ["hr-att-mine", org, from, today], queryFn: () => rpc<EmpDays & { employee: false | EmpDays["employee"]; allow_self_punch: boolean }>("hr_att_my", { _org: org, _from: from, _to: today }) });
+  const q = useQuery({ queryKey: ["hr-att-mine", org, from, today], queryFn: () => rpc<EmpDays & { employee: false | EmpDays["employee"]; allow_self_punch: boolean; punch_schools: { id: string; name: string; configured: boolean }[] }>("hr_att_my", { _org: org, _from: from, _to: today }) });
   const [f, setF] = useState({ date: "", kind: "punch", time: "", reason: "" });
   const inv = () => qc.invalidateQueries({ queryKey: ["hr-att-mine"] });
   const req = useMutation({
@@ -54,7 +62,17 @@ export function MyAttendance({ org }: { org: string }) {
   });
   const withdraw = useMutation({ mutationFn: (id: string) => rpc("hr_att_corr_withdraw", { _id: id }), onSuccess: () => { toast.success("سُحب الطلب"); inv(); }, onError: (e) => toast.error(arabicError(e)) });
   const [pkey] = useState(() => crypto.randomUUID());
-  const punch = useMutation({ mutationFn: () => rpc<{ duplicate: boolean }>("hr_att_self_punch", { _org: org, _key: pkey + ":" + Math.floor(Date.now() / 60000) }), onSuccess: () => { toast.success("سُجلت بصمتك"); inv(); }, onError: (e) => toast.error(arabicError(e)) });
+  const [school, setSchool] = useState("");
+  const [locErr, setLocErr] = useState<string | null>(null);
+  const punch = useMutation({
+    mutationFn: async (sid: string) => {
+      setLocErr(null);
+      const pos = await readPosition();
+      return rpc<{ duplicate: boolean; distance_m: number }>("hr_att_self_punch", { _org: org, _key: pkey + ":" + Math.floor(Date.now() / 60000), _school: sid, _lat: pos.coords.latitude, _lng: pos.coords.longitude, _accuracy: pos.coords.accuracy, _read_at: new Date(pos.timestamp).toISOString() });
+    },
+    onSuccess: (r) => { toast.success(r.duplicate ? "بصمتك مسجلة مسبقًا لهذه الدقيقة" : `سُجلت بصمتك (على بعد ${r.distance_m} م)`); inv(); },
+    onError: (e) => { const m = arabicError(e); setLocErr(m); toast.error(m); },
+  });
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const d = q.data!;
@@ -63,7 +81,13 @@ export function MyAttendance({ org }: { org: string }) {
   return (
     <div className="space-y-4">
       <Section title="ورديتي" desc={live ? `${live.shift} من ${live.start_time} إلى ${live.end_time}` : "لا توجد وردية سارية لك اليوم؛ لن يُحتسب حضورك حتى تُعيّن."}
-        action={d.allow_self_punch ? <Button size="sm" disabled={punch.isPending} onClick={() => punch.mutate()}>تسجيل بصمة الآن</Button> : undefined}>
+        action={d.allow_self_punch && d.punch_schools.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {d.punch_schools.length > 1 && <select aria-label="مدرسة التسجيل" className={selectCls("w-44")} value={school} onChange={(e) => setSchool(e.target.value)}><option value="">اختر المدرسة</option>{d.punch_schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
+            <Button size="sm" disabled={punch.isPending} onClick={() => { const sid = d.punch_schools.length === 1 ? d.punch_schools[0]!.id : school; if (!sid) { toast.error("اختر المدرسة"); return; } punch.mutate(sid); }}>{punch.isPending ? "جارٍ تحديد موقعك…" : "تسجيل بصمة الآن"}</Button>
+          </div>) : undefined}>
+        {d.allow_self_punch && <p className="mb-2 text-xs text-muted-foreground">يُطلب موقعك لحظة التسجيل فقط للتحقق من وجودك داخل نطاق المدرسة، ولا يُتتبّع بعدها.</p>}
+        {locErr && <div role="alert" className="mb-2 flex flex-wrap items-center gap-2 rounded-lg bg-destructive/10 p-2 text-sm text-destructive"><span className="flex-1">{locErr}</span><Button size="sm" variant="outline" disabled={punch.isPending} onClick={() => { const sid = d.punch_schools.length === 1 ? d.punch_schools[0]!.id : school; if (sid) punch.mutate(sid); }}>إعادة المحاولة</Button></div>}
         <label className="text-xs text-muted-foreground">عرض من<Input type="date" dir="ltr" className="w-full sm:w-44" max={today} value={from} onChange={(e) => e.target.value && setFrom(e.target.value)} /></label>
       </Section>
       <Section title="أيامي">

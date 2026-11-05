@@ -5,6 +5,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { MyLetters } from "@/components/hr/letters";
 import { MyLeave } from "@/components/hr/leave";
 import { MyAttendance } from "@/components/hr/attendance";
+import { MyAssets } from "@/components/hr/assets";
 import { MyMoney } from "@/components/hr/money";
 import { DocDetailPanel, DocStatus, DocUploadForm, type DocRow, type DocType } from "@/components/hr/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -50,6 +51,7 @@ function Page() {
         {tab === "letters" && <MyLetters org={org!} />}
         {tab === "leave" && <MyLeave org={org!} />}
         {tab === "attendance" && <MyAttendance org={org!} />}
+        {tab === "me" && <MyAssets org={org!} />}
         {tab === "money" && <MyMoney org={org!} />}
       </>}
       {(team.data?.length ?? 0) > 0 && (
