@@ -30,9 +30,13 @@ function toDate(v: unknown): string | null {
   if (v == null || v === "") return "";
   if (typeof v === "number") { const d = XLSX.SSF.parse_date_code(v); return d ? `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}` : null; }
   const s = digits(String(v)).replace(/\//g, "-");
-  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); if (m) return `${m[1]}-${m[2]!.padStart(2, "0")}-${m[3]!.padStart(2, "0")}`;
-  m = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/); if (m) return `${m[3]}-${m[2]!.padStart(2, "0")}-${m[1]!.padStart(2, "0")}`;
-  return null;
+  let y = "", mo = "", d = "";
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); if (m) [y, mo, d] = [m[1]!, m[2]!, m[3]!];
+  else { m = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/); if (m) [y, mo, d] = [m[3]!, m[2]!, m[1]!]; else return null; }
+  // reject impossible calendar dates (e.g. month 13, 31 Feb)
+  const dt = new Date(Date.UTC(+y, +mo - 1, +d));
+  if (dt.getUTCFullYear() !== +y || dt.getUTCMonth() !== +mo - 1 || dt.getUTCDate() !== +d) return null;
+  return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
 }
 type Row = { i: number; p: Record<string, string>; errs: string[]; state: "new" | "dup" | "bad" | "ok" | "fail"; msg?: string | undefined };
 

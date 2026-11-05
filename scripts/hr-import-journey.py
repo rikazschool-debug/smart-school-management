@@ -70,7 +70,7 @@ async def main():
             else: await route.continue_()
         await o.route("**/rest/v1/rpc/hr_employee_save", flaky)
         btn = o.get_by_role("button", name="حفظ 3 صفًا صالحًا")
-        await btn.click(); await btn.click(force=True, timeout=2000) if await btn.count() else None
+        await btn.dblclick()
         await o.wait_for_timeout(8000)
         await o.unroute("**/rest/v1/rpc/hr_employee_save")
         body = await o.locator("table").inner_text()
