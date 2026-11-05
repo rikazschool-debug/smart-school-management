@@ -181,6 +181,22 @@ try {
   const lnk = await owner.c.rpc("hr_pay_settings_save", { _org: org, _p: { finance_link: "", unpaid_leave_types: [], day_divisor: null } });
   const R2 = (await hr.c.rpc("hr_pay_run_create", { _org: org, _month: ym(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 2, 1))) })).data;
   check("next month: monthly deduction continues", !lnk.error && !!R2);
+  // P9 payroll reports: totals equal the sum of the same filtered rows; aggregates never break down per person
+  const sum = (rows: any[][], i: number, pred: (r: any[]) => boolean = () => true) => Math.round(rows.filter(pred).reduce((a, x) => a + Number(x[i] ?? 0), 0) * 100) / 100;
+  const runMonth = (await admin.from("hr_pay_runs").select("month").eq("id", R).single()).data!.month;
+  const r24 = (await owner.c.rpc("hr_report", { _org: org, _key: "R24", _f: { month: runMonth }, _mode: "view" })).data;
+  check("R24 register totals = sum of included rows; excluded rows listed but not summed", r24 && Number(r24.totals.net) === sum(r24.rows, 5, (x) => x[2] === "included") && Number(r24.totals.gross) === sum(r24.rows, 3, (x) => x[2] === "included") && r24.totals.run_status === "approved", r24?.totals);
+  const r22 = (await owner.c.rpc("hr_report", { _org: org, _key: "R22", _f: {}, _mode: "view" })).data;
+  check("R22 statistics: aggregate only (no names) and equal to the register", r22 && !r22.columns.includes("الموظف") && Number(r22.totals.net) === Number(r24.totals.net), [r22?.columns, r22?.totals]);
+  const r21 = (await owner.c.rpc("hr_report", { _org: org, _key: "R21", _f: { month: runMonth }, _mode: "view" })).data;
+  check("R21 items: earnings − deductions = register net", r21 && Math.round((Number(r21.totals.earning) - Number(r21.totals.deduction)) * 100) / 100 === Number(r24.totals.net), [r21?.totals, r24?.totals]);
+  const r15 = (await owner.c.rpc("hr_report", { _org: org, _key: "R15", _f: {}, _mode: "view" })).data;
+  check("R15 shows approval separately from payment status", r15 && r15.rows.some((x: any[]) => x[2] === "approved" && x[9] === "paid"), r15?.rows);
+  const mnRep = await mn.c.rpc("hr_report", { _org: org, _key: "R24", _f: {}, _mode: "view" }); check("money clerk without payroll view cannot open the payroll register", has(mnRep, "غير مصرح"), mnRep.error);
+  const r25 = await owner.c.rpc("hr_report", { _org: org, _key: "R25", _f: {}, _mode: "view" }); check("bank sheet honestly unavailable until finance link", has(r25, "الربط المالي"), r25.error);
+  const ex = await owner.c.rpc("hr_report", { _org: org, _key: "R24", _f: { month: runMonth }, _mode: "export" });
+  const exLog = (await admin.from("hr_events").select("action, after").eq("org_id", org).eq("entity", "report").order("created_at", { ascending: false }).limit(1)).data?.[0] as any;
+  check("export logged with key, filters and row count", !ex.error && exLog?.action === "export" && exLog.after.key === "R24" && exLog.after.rows === r24.count && exLog.after.filters.month === runMonth, exLog);
   // isolation
   const xo = await stranger.c.rpc("hr_pay_run_get", { _id: R }); check("other organisation cannot read runs", has(xo, "غير مصرح"), xo.error);
   const xe = await mate.c.rpc("hr_pay_runs", { _org: org }); check("ordinary employee cannot list runs", has(xe, "غير مصرح"), xe.error);

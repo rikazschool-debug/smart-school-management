@@ -6553,6 +6553,420 @@ export type Database = {
           },
         ]
       }
+      hr_hs_properties: {
+        Row: {
+          active: boolean
+          address: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          name: string
+          notes: string | null
+          org_id: string
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          name: string
+          notes?: string | null
+          org_id: string
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          name?: string
+          notes?: string | null
+          org_id?: string
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_hs_properties_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_hs_properties_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_hs_stays: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          end_date: string | null
+          end_kind: string | null
+          end_reason: string | null
+          id: string
+          next_stay: string | null
+          note: string | null
+          org_id: string
+          start_date: string
+          unit_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          end_date?: string | null
+          end_kind?: string | null
+          end_reason?: string | null
+          id?: string
+          next_stay?: string | null
+          note?: string | null
+          org_id: string
+          start_date: string
+          unit_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          end_date?: string | null
+          end_kind?: string | null
+          end_reason?: string | null
+          id?: string
+          next_stay?: string | null
+          note?: string | null
+          org_id?: string
+          start_date?: string
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_hs_stays_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_hs_stays_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_hs_stays_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "hr_hs_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_hs_units: {
+        Row: {
+          active: boolean
+          capacity: number
+          created_at: string
+          id: string
+          label: string
+          org_id: string
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          capacity: number
+          created_at?: string
+          id?: string
+          label: string
+          org_id: string
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          id?: string
+          label?: string
+          org_id?: string
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_hs_units_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_hs_units_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "hr_hs_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_in_classes: {
+        Row: {
+          annual_limit: number | null
+          coverage: string | null
+          id: string
+          name: string
+          org_id: string
+          policy_id: string
+        }
+        Insert: {
+          annual_limit?: number | null
+          coverage?: string | null
+          id?: string
+          name: string
+          org_id: string
+          policy_id: string
+        }
+        Update: {
+          annual_limit?: number | null
+          coverage?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+          policy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_in_classes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_in_classes_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "hr_in_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_in_companies: {
+        Row: {
+          active: boolean
+          contact: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          org_id: string
+        }
+        Insert: {
+          active?: boolean
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          org_id: string
+        }
+        Update: {
+          active?: boolean
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_in_companies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_in_members: {
+        Row: {
+          class_id: string
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          created_by: string | null
+          dep_birth: string | null
+          dep_name: string | null
+          dep_national_id: string | null
+          dep_relation: string | null
+          employee_id: string
+          end_date: string | null
+          end_reason: string | null
+          id: string
+          kind: string
+          member_no: string | null
+          org_id: string
+          policy_id: string
+          start_date: string
+        }
+        Insert: {
+          class_id: string
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          dep_birth?: string | null
+          dep_name?: string | null
+          dep_national_id?: string | null
+          dep_relation?: string | null
+          employee_id: string
+          end_date?: string | null
+          end_reason?: string | null
+          id?: string
+          kind: string
+          member_no?: string | null
+          org_id: string
+          policy_id: string
+          start_date: string
+        }
+        Update: {
+          class_id?: string
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          dep_birth?: string | null
+          dep_name?: string | null
+          dep_national_id?: string | null
+          dep_relation?: string | null
+          employee_id?: string
+          end_date?: string | null
+          end_reason?: string | null
+          id?: string
+          kind?: string
+          member_no?: string | null
+          org_id?: string
+          policy_id?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_in_members_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "hr_in_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_in_members_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_in_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_in_members_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "hr_in_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_in_policies: {
+        Row: {
+          alert_days: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          end_date: string
+          id: string
+          notes: string | null
+          org_id: string
+          policy_no: string
+          renewal_of: string | null
+          start_date: string
+        }
+        Insert: {
+          alert_days?: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          id?: string
+          notes?: string | null
+          org_id: string
+          policy_no: string
+          renewal_of?: string | null
+          start_date: string
+        }
+        Update: {
+          alert_days?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          id?: string
+          notes?: string | null
+          org_id?: string
+          policy_no?: string
+          renewal_of?: string | null
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_in_policies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "hr_in_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_in_policies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_in_policies_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "hr_in_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_leave_absences: {
         Row: {
           absence_id: string
@@ -7582,6 +7996,274 @@ export type Database = {
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "hr_pay_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pf_cycles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          org_id: string
+          period_end: string
+          period_start: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          org_id: string
+          period_end: string
+          period_start: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pf_cycles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pf_form_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          form_id: string
+          id: string
+          org_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          criteria: Json
+          form_id: string
+          id?: string
+          org_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          form_id?: string
+          id?: string
+          org_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pf_form_versions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pf_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_form_versions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pf_forms: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          created_by: string | null
+          current_version: number
+          id: string
+          name: string
+          org_id: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          id?: string
+          name: string
+          org_id: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          id?: string
+          name?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pf_forms_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pf_reviews: {
+        Row: {
+          comments: string | null
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          cycle_id: string
+          employee_id: string
+          evaluator: string
+          evidence: Json
+          final_total: number | null
+          form_version_id: string
+          id: string
+          objection: string | null
+          org_id: string
+          published_at: string | null
+          published_comments: string | null
+          published_scores: Json | null
+          published_total: number | null
+          publisher: string | null
+          resolution: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          responded_at: string | null
+          rev: number
+          review_note: string | null
+          reviewed_at: string | null
+          reviewer: string | null
+          school_id: string
+          scores: Json
+          status: string
+          total: number | null
+          updated_at: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria: Json
+          cycle_id: string
+          employee_id: string
+          evaluator: string
+          evidence?: Json
+          final_total?: number | null
+          form_version_id: string
+          id?: string
+          objection?: string | null
+          org_id: string
+          published_at?: string | null
+          published_comments?: string | null
+          published_scores?: Json | null
+          published_total?: number | null
+          publisher?: string | null
+          resolution?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responded_at?: string | null
+          rev?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer?: string | null
+          school_id: string
+          scores?: Json
+          status?: string
+          total?: number | null
+          updated_at?: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          cycle_id?: string
+          employee_id?: string
+          evaluator?: string
+          evidence?: Json
+          final_total?: number | null
+          form_version_id?: string
+          id?: string
+          objection?: string | null
+          org_id?: string
+          published_at?: string | null
+          published_comments?: string | null
+          published_scores?: Json | null
+          published_total?: number | null
+          publisher?: string | null
+          resolution?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responded_at?: string | null
+          rev?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer?: string | null
+          school_id?: string
+          scores?: Json
+          status?: string
+          total?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pf_reviews_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pf_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_reviews_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_reviews_form_version_id_fkey"
+            columns: ["form_version_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pf_form_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_reviews_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pf_reviews_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -12753,6 +13435,32 @@ export type Database = {
         Args: { a1: number; a2: number; o1: number; o2: number }
         Returns: number
       }
+      _hr_hs_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_hs_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
+      }
+      _hr_hs_place: {
+        Args: { _emp: string; _start: string; _unit: string }
+        Returns: string
+      }
+      _hr_in_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_in_member_json: {
+        Args: {
+          _sens: boolean
+          m: Database["public"]["Tables"]["hr_in_members"]["Row"]
+        }
+        Returns: Json
+      }
+      _hr_in_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
+      }
+      _hr_in_org: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_in_status: {
+        Args: { m: Database["public"]["Tables"]["hr_in_members"]["Row"] }
+        Returns: string
+      }
       _hr_l_any: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_l_new: {
         Args: {
@@ -12923,6 +13631,25 @@ export type Database = {
       _hr_name: { Args: { _u: string }; Returns: string }
       _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_pay_build: { Args: { _run: string }; Returns: undefined }
+      _hr_pf_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_pf_check_criteria: { Args: { _c: Json }; Returns: Json }
+      _hr_pf_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
+      }
+      _hr_pf_row: {
+        Args: {
+          _full: boolean
+          r: Database["public"]["Tables"]["hr_pf_reviews"]["Row"]
+        }
+        Returns: Json
+      }
+      _hr_pf_sources: { Args: { _emp: string }; Returns: Json }
+      _hr_pf_total: { Args: { _c: Json; _s: Json }; Returns: number }
+      _hr_pf_user_can: {
+        Args: { _action: string; _school: string; _uid: string }
+        Returns: boolean
+      }
       _hr_pol: {
         Args: { _month: string; _org: string; _topic: string }
         Returns: {
@@ -12974,6 +13701,15 @@ export type Database = {
       _hr_rc_vac_row: {
         Args: { v: Database["public"]["Tables"]["hr_rc_vacancies"]["Row"] }
         Returns: Json
+      }
+      _hr_rep_meta: { Args: never; Returns: Json }
+      _hr_rep_rows: {
+        Args: { _f: Json; _key: string; _org: string }
+        Returns: Json
+      }
+      _hr_rep_sec: {
+        Args: { _action: string; _org: string; _sec: string }
+        Returns: boolean
       }
       _hr_run_row: {
         Args: { r: Database["public"]["Tables"]["hr_pay_runs"]["Row"] }
@@ -15226,9 +15962,61 @@ export type Database = {
         Returns: string
       }
       hr_ext_list: { Args: { _org: string }; Returns: Json }
+      hr_ext_people: { Args: { _ext: string; _school: string }; Returns: Json }
       hr_ext_set: {
         Args: { _ext: string; _on: boolean; _org: string; _reason: string }
         Returns: undefined
+      }
+      hr_hs_assign: {
+        Args: { _emp: string; _note?: string; _start: string; _unit: string }
+        Returns: string
+      }
+      hr_hs_history: { Args: { _f: Json; _org: string }; Returns: Json }
+      hr_hs_list: { Args: { _org: string }; Returns: Json }
+      hr_hs_move: {
+        Args: { _date: string; _reason: string; _stay: string; _unit: string }
+        Returns: string
+      }
+      hr_hs_my: { Args: { _org: string }; Returns: Json }
+      hr_hs_property_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: string
+      }
+      hr_hs_unit_save: {
+        Args: { _id: string; _p: Json; _property: string }
+        Returns: string
+      }
+      hr_hs_vacate: {
+        Args: { _date: string; _reason: string; _stay: string }
+        Returns: undefined
+      }
+      hr_in_alerts_tick: { Args: never; Returns: number }
+      hr_in_class_save: {
+        Args: { _id: string; _p: Json; _policy: string }
+        Returns: string
+      }
+      hr_in_company_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: string
+      }
+      hr_in_member_add: {
+        Args: { _class: string; _emp: string; _p: Json }
+        Returns: string
+      }
+      hr_in_member_end: {
+        Args: { _date: string; _id: string; _reason: string }
+        Returns: number
+      }
+      hr_in_members: { Args: { _f: Json; _org: string }; Returns: Json }
+      hr_in_my: { Args: { _org: string }; Returns: Json }
+      hr_in_overview: { Args: { _org: string }; Returns: Json }
+      hr_in_policy_renew: {
+        Args: { _carry?: boolean; _p: Json; _policy: string }
+        Returns: string
+      }
+      hr_in_policy_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: string
       }
       hr_leave_adjust: {
         Args: {
@@ -15419,6 +16207,46 @@ export type Database = {
         Returns: undefined
       }
       hr_pay_setup: { Args: { _org: string }; Returns: Json }
+      hr_pf_assign: {
+        Args: {
+          _cycle: string
+          _emp: string
+          _evaluator: string
+          _form: string
+        }
+        Returns: string
+      }
+      hr_pf_cycle_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: string
+      }
+      hr_pf_evaluators: { Args: { _school: string }; Returns: Json }
+      hr_pf_form_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: string
+      }
+      hr_pf_get: { Args: { _id: string }; Returns: Json }
+      hr_pf_list: { Args: { _f: Json; _org: string }; Returns: Json }
+      hr_pf_my: { Args: { _org: string }; Returns: Json }
+      hr_pf_people: { Args: { _school: string }; Returns: Json }
+      hr_pf_publish: { Args: { _id: string }; Returns: undefined }
+      hr_pf_resolve: {
+        Args: { _amend: boolean; _id: string; _note: string; _total?: number }
+        Returns: undefined
+      }
+      hr_pf_respond: {
+        Args: { _ack: boolean; _id: string; _text: string }
+        Returns: undefined
+      }
+      hr_pf_review: {
+        Args: { _approve: boolean; _id: string; _note: string }
+        Returns: undefined
+      }
+      hr_pf_save: {
+        Args: { _id: string; _p: Json; _submit?: boolean }
+        Returns: Json
+      }
+      hr_pf_setup: { Args: { _org: string }; Returns: Json }
       hr_rc_candidate_get: { Args: { _id: string }; Returns: Json }
       hr_rc_candidate_save: {
         Args: { _p: Json; _vac: string }
@@ -15451,6 +16279,11 @@ export type Database = {
         Returns: undefined
       }
       hr_rc_vacancy_save: { Args: { _org: string; _p: Json }; Returns: string }
+      hr_report: {
+        Args: { _f: Json; _key: string; _mode?: string; _org: string }
+        Returns: Json
+      }
+      hr_report_catalog: { Args: { _org: string }; Returns: Json }
       hr_self_access_set: {
         Args: { _active: boolean; _emp: string; _reason?: string }
         Returns: Json

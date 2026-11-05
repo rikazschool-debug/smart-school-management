@@ -115,6 +115,10 @@ const CARDS: Card[] = [
       { icon: IdCard, label: "الرواتب والسلف", to: "/app/hr/payroll" },
       { icon: IdCard, label: "التوظيف", to: "/app/hr/recruit" },
       { icon: IdCard, label: "العهد العينية", to: "/app/hr/assets" },
+      { icon: IdCard, label: "الأداء الوظيفي", to: "/app/hr/performance" },
+      { icon: IdCard, label: "التأمين الطبي", to: "/app/hr/insurance" },
+      { icon: IdCard, label: "السكن", to: "/app/hr/housing" },
+      { icon: IdCard, label: "تقارير الموارد البشرية", to: "/app/hr/reports" },
     ],
   },
   {

@@ -14,8 +14,8 @@ import { arabicError, useSession } from "@/lib/session";
 import { exportXlsx } from "@/lib/export";
 import { rpc } from "@/components/hr/shared";
 import { Pill, sar } from "@/components/hr/money";
+import { Extensions, type Ext } from "@/components/hr/extensions";
 
-type Ext = { owner: boolean; hr: boolean; items: { ext: string; enabled: boolean; reason: string | null; by: string | null; at: string }[]; recruit: Record<"view" | "manage" | "approve" | "convert" | "export", boolean>; recruit_schools: { id: string; name: string }[] };
 type Vac = { id: string; ref: string; school: string; job_title: string; subject: string | null; stage: string | null; seats: number; reason: string; status: string; rev: number; created_by: string; decided_by: string | null; decision_reason: string | null; candidates: number; hired: number; can: { decide: boolean; add: boolean; close: boolean } };
 type Cand = { id: string; vacancy_id: string; vacancy: string; vacancy_ref: string; school: string; full_name: string; email: string | null; phone: string | null; national_id: string | null; sensitive: boolean; education: string | null; experience: string | null; languages: string | null; stage: string; stage_reason: string | null; rev: number; employee_id: string | null; converted_by: string | null };
 type Offer = { id: string; version: number; terms: { job_title: string; start_date: string; basic: number; allowances: string | null; notes: string | null }; status: string; created_by: string; approved_by: string | null; response_ref: string | null; response_reason: string | null; can_approve: boolean };
@@ -30,7 +30,6 @@ const VS: Record<string, string> = { requested: "احتياج بانتظار ا�
 const CS: Record<string, string> = { applied: "متقدم", screening: "قيد الفرز", shortlisted: "قائمة مختصرة", interview: "مقابلة", offer: "عرض", accepted: "قبل العرض", rejected: "مستبعد", withdrawn: "منسحب", converted: "حُوّل إلى موظف" };
 const OS: Record<string, string> = { draft: "مسودة بانتظار الاعتماد", approved: "معتمد — بانتظار رد المرشح", accepted: "مقبول", declined: "اعتذر", superseded: "مستبدل بإصدار أحدث", withdrawn: "مسحوب" };
 const RES: Record<string, string> = { pass: "ناجح", hold: "معلّق", fail: "غير ناجح" };
-const EXT_L: Record<string, string> = { recruit: "التوظيف", performance: "الأداء الوظيفي", insurance: "التأمين", housing: "السكن" };
 
 function Page() {
   const { active } = useSession();
@@ -49,22 +48,6 @@ function Page() {
           {!on ? <EmptyState title="امتداد التوظيف غير مفعّل" hint={d!.owner ? "فعّله أعلاه بقرار موثق." : "يفعّله مالك المؤسسة."} /> : !d!.recruit.view ? <ForbiddenState /> : <Workspace org={org!} d={d!} />}
         </div>)}
     </>
-  );
-}
-
-function Extensions({ org, d }: { org: string; d: Ext }) {
-  const qc = useQueryClient();
-  const m = useMutation({ mutationFn: (a: { ext: string; on: boolean; reason: string }) => rpc("hr_ext_set", { _org: org, _ext: a.ext, _on: a.on, _reason: a.reason }), onSuccess: () => { toast.success("حُفظ القرار"); qc.invalidateQueries({ queryKey: ["hr-ext"] }); }, onError: (e) => toast.error(arabicError(e)) });
-  return (
-    <Section title="امتدادات الموارد البشرية" desc="لكل امتداد علم تفعيل مستقل بقرار المالك. الامتدادات غير المبنية تبقى موقوفة ولا تظهر في القوائم التشغيلية.">
-      <ul className="grid gap-2 sm:grid-cols-2">{d.items.map((i) => {
-        const built = i.ext === "recruit";
-        return <li key={i.ext} className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3 text-sm"><span className="flex-1 font-bold">{EXT_L[i.ext]}</span>
-          <Pill tone={i.enabled ? "ok" : "muted"}>{i.enabled ? "مفعّل" : built ? "موقوف" : "لم يُبنَ بعد"}</Pill>
-          {built && <Button size="sm" variant="outline" disabled={m.isPending} onClick={async () => { const r = await askText(i.enabled ? "سبب الإيقاف" : "سبب التفعيل", { required: true }); if (r) m.mutate({ ext: i.ext, on: !i.enabled, reason: r }); }}>{i.enabled ? "إيقاف" : "تفعيل"}</Button>}
-          {i.reason && <p className="w-full text-xs text-muted-foreground">آخر قرار: {i.by} — {i.reason}</p>}</li>;
-      })}</ul>
-    </Section>
   );
 }
 

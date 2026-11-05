@@ -7,6 +7,7 @@ import { MyLeave } from "@/components/hr/leave";
 import { MyAttendance } from "@/components/hr/attendance";
 import { MyAssets } from "@/components/hr/assets";
 import { MyMoney } from "@/components/hr/money";
+import { MyHousing, MyInsurance, MyPerformance } from "@/components/hr/p8-self";
 import { DocDetailPanel, DocStatus, DocUploadForm, type DocRow, type DocType } from "@/components/hr/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/app/my-employment")({
 type Mine = { employee: HrEmp; assignments: HrAssign[]; pending?: undefined } | { pending: true; employee?: undefined; assignments?: undefined } | null;
 type TeamRow = { id: string; employee_no: string; full_name: string; job_title: string | null; school: string; status: string };
 
-const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"], ["attendance", "حضوري"], ["money", "سلفي وعهدي وقسائمي"]] as const;
+const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"], ["attendance", "حضوري"], ["money", "سلفي وعهدي وقسائمي"], ["performance", "أدائي"], ["insurance", "تأميني"], ["housing", "سكني"]] as const;
 
 function Page() {
   const { active } = useSession();
@@ -55,6 +56,9 @@ function Page() {
         {tab === "attendance" && <MyAttendance org={org!} />}
         {tab === "me" && <MyAssets org={org!} />}
         {tab === "money" && <MyMoney org={org!} />}
+        {tab === "performance" && <MyPerformance org={org!} />}
+        {tab === "insurance" && <MyInsurance org={org!} />}
+        {tab === "housing" && <MyHousing org={org!} />}
       </>}
       {(team.data?.length ?? 0) > 0 && (
         <Section title="فريقي المباشر" desc="بيانات أساسية فقط لمن أنت مديره المباشر في تعيين حالي." className="mt-6" action={<Link to="/app/team-leave" className="rounded-lg border bg-card px-3 py-1.5 text-sm hover:border-primary">طلبات إجازة فريقي</Link>}>

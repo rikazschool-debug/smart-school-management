@@ -64,10 +64,14 @@ import { Route as AuthenticatedAppHrAssetsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppHrAttendanceRouteImport } from './routes/_authenticated/app/hr_.attendance'
 import { Route as AuthenticatedAppHrContractsRouteImport } from './routes/_authenticated/app/hr_.contracts'
 import { Route as AuthenticatedAppHrDocumentsRouteImport } from './routes/_authenticated/app/hr_.documents'
+import { Route as AuthenticatedAppHrHousingRouteImport } from './routes/_authenticated/app/hr_.housing'
+import { Route as AuthenticatedAppHrInsuranceRouteImport } from './routes/_authenticated/app/hr_.insurance'
 import { Route as AuthenticatedAppHrLeaveRouteImport } from './routes/_authenticated/app/hr_.leave'
 import { Route as AuthenticatedAppHrLettersRouteImport } from './routes/_authenticated/app/hr_.letters'
 import { Route as AuthenticatedAppHrPayrollRouteImport } from './routes/_authenticated/app/hr_.payroll'
+import { Route as AuthenticatedAppHrPerformanceRouteImport } from './routes/_authenticated/app/hr_.performance'
 import { Route as AuthenticatedAppHrRecruitRouteImport } from './routes/_authenticated/app/hr_.recruit'
+import { Route as AuthenticatedAppHrReportsRouteImport } from './routes/_authenticated/app/hr_.reports'
 import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './routes/_authenticated/app/virtual-classes.index'
 import { Route as ApiPublicAdmissionsWordpressRouteImport } from './routes/api/public/admissions/wordpress'
 import { Route as ApiPublicAuthSendSmsRouteImport } from './routes/api/public/auth/send-sms'
@@ -391,6 +395,18 @@ const AuthenticatedAppHrDocumentsRoute =
     path: '/hr/documents',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHrHousingRoute =
+  AuthenticatedAppHrHousingRouteImport.update({
+    id: '/hr_/housing',
+    path: '/hr/housing',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppHrInsuranceRoute =
+  AuthenticatedAppHrInsuranceRouteImport.update({
+    id: '/hr_/insurance',
+    path: '/hr/insurance',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppHrLeaveRoute = AuthenticatedAppHrLeaveRouteImport.update({
   id: '/hr_/leave',
   path: '/hr/leave',
@@ -408,10 +424,22 @@ const AuthenticatedAppHrPayrollRoute =
     path: '/hr/payroll',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHrPerformanceRoute =
+  AuthenticatedAppHrPerformanceRouteImport.update({
+    id: '/hr_/performance',
+    path: '/hr/performance',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppHrRecruitRoute =
   AuthenticatedAppHrRecruitRouteImport.update({
     id: '/hr_/recruit',
     path: '/hr/recruit',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppHrReportsRoute =
+  AuthenticatedAppHrReportsRouteImport.update({
+    id: '/hr_/reports',
+    path: '/hr/reports',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppVirtualClassesIndexRoute =
@@ -530,10 +558,14 @@ export interface FileRoutesByFullPath {
   '/app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
+  '/app/hr/housing': typeof AuthenticatedAppHrHousingRoute
+  '/app/hr/insurance': typeof AuthenticatedAppHrInsuranceRoute
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/app/hr/payroll': typeof AuthenticatedAppHrPayrollRoute
+  '/app/hr/performance': typeof AuthenticatedAppHrPerformanceRoute
   '/app/hr/recruit': typeof AuthenticatedAppHrRecruitRoute
+  '/app/hr/reports': typeof AuthenticatedAppHrReportsRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
@@ -600,10 +632,14 @@ export interface FileRoutesByTo {
   '/app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/app/hr/contracts': typeof AuthenticatedAppHrContractsRoute
   '/app/hr/documents': typeof AuthenticatedAppHrDocumentsRoute
+  '/app/hr/housing': typeof AuthenticatedAppHrHousingRoute
+  '/app/hr/insurance': typeof AuthenticatedAppHrInsuranceRoute
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
   '/app/hr/payroll': typeof AuthenticatedAppHrPayrollRoute
+  '/app/hr/performance': typeof AuthenticatedAppHrPerformanceRoute
   '/app/hr/recruit': typeof AuthenticatedAppHrRecruitRoute
+  '/app/hr/reports': typeof AuthenticatedAppHrReportsRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
@@ -673,10 +709,14 @@ export interface FileRoutesById {
   '/_authenticated/app/hr_/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/_authenticated/app/hr_/contracts': typeof AuthenticatedAppHrContractsRoute
   '/_authenticated/app/hr_/documents': typeof AuthenticatedAppHrDocumentsRoute
+  '/_authenticated/app/hr_/housing': typeof AuthenticatedAppHrHousingRoute
+  '/_authenticated/app/hr_/insurance': typeof AuthenticatedAppHrInsuranceRoute
   '/_authenticated/app/hr_/leave': typeof AuthenticatedAppHrLeaveRoute
   '/_authenticated/app/hr_/letters': typeof AuthenticatedAppHrLettersRoute
   '/_authenticated/app/hr_/payroll': typeof AuthenticatedAppHrPayrollRoute
+  '/_authenticated/app/hr_/performance': typeof AuthenticatedAppHrPerformanceRoute
   '/_authenticated/app/hr_/recruit': typeof AuthenticatedAppHrRecruitRoute
+  '/_authenticated/app/hr_/reports': typeof AuthenticatedAppHrReportsRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
@@ -746,10 +786,14 @@ export interface FileRouteTypes {
     | '/app/hr/attendance'
     | '/app/hr/contracts'
     | '/app/hr/documents'
+    | '/app/hr/housing'
+    | '/app/hr/insurance'
     | '/app/hr/leave'
     | '/app/hr/letters'
     | '/app/hr/payroll'
+    | '/app/hr/performance'
     | '/app/hr/recruit'
+    | '/app/hr/reports'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/hr/attendance'
@@ -816,10 +860,14 @@ export interface FileRouteTypes {
     | '/app/hr/attendance'
     | '/app/hr/contracts'
     | '/app/hr/documents'
+    | '/app/hr/housing'
+    | '/app/hr/insurance'
     | '/app/hr/leave'
     | '/app/hr/letters'
     | '/app/hr/payroll'
+    | '/app/hr/performance'
     | '/app/hr/recruit'
+    | '/app/hr/reports'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/hr/attendance'
@@ -888,10 +936,14 @@ export interface FileRouteTypes {
     | '/_authenticated/app/hr_/attendance'
     | '/_authenticated/app/hr_/contracts'
     | '/_authenticated/app/hr_/documents'
+    | '/_authenticated/app/hr_/housing'
+    | '/_authenticated/app/hr_/insurance'
     | '/_authenticated/app/hr_/leave'
     | '/_authenticated/app/hr_/letters'
     | '/_authenticated/app/hr_/payroll'
+    | '/_authenticated/app/hr_/performance'
     | '/_authenticated/app/hr_/recruit'
+    | '/_authenticated/app/hr_/reports'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/hr/attendance'
@@ -1307,6 +1359,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHrDocumentsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/hr_/housing': {
+      id: '/_authenticated/app/hr_/housing'
+      path: '/hr/housing'
+      fullPath: '/app/hr/housing'
+      preLoaderRoute: typeof AuthenticatedAppHrHousingRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/hr_/insurance': {
+      id: '/_authenticated/app/hr_/insurance'
+      path: '/hr/insurance'
+      fullPath: '/app/hr/insurance'
+      preLoaderRoute: typeof AuthenticatedAppHrInsuranceRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/hr_/leave': {
       id: '/_authenticated/app/hr_/leave'
       path: '/hr/leave'
@@ -1328,11 +1394,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHrPayrollRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/hr_/performance': {
+      id: '/_authenticated/app/hr_/performance'
+      path: '/hr/performance'
+      fullPath: '/app/hr/performance'
+      preLoaderRoute: typeof AuthenticatedAppHrPerformanceRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/hr_/recruit': {
       id: '/_authenticated/app/hr_/recruit'
       path: '/hr/recruit'
       fullPath: '/app/hr/recruit'
       preLoaderRoute: typeof AuthenticatedAppHrRecruitRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/hr_/reports': {
+      id: '/_authenticated/app/hr_/reports'
+      path: '/hr/reports'
+      fullPath: '/app/hr/reports'
+      preLoaderRoute: typeof AuthenticatedAppHrReportsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/virtual-classes/': {
@@ -1462,10 +1542,14 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
   AuthenticatedAppHrContractsRoute: typeof AuthenticatedAppHrContractsRoute
   AuthenticatedAppHrDocumentsRoute: typeof AuthenticatedAppHrDocumentsRoute
+  AuthenticatedAppHrHousingRoute: typeof AuthenticatedAppHrHousingRoute
+  AuthenticatedAppHrInsuranceRoute: typeof AuthenticatedAppHrInsuranceRoute
   AuthenticatedAppHrLeaveRoute: typeof AuthenticatedAppHrLeaveRoute
   AuthenticatedAppHrLettersRoute: typeof AuthenticatedAppHrLettersRoute
   AuthenticatedAppHrPayrollRoute: typeof AuthenticatedAppHrPayrollRoute
+  AuthenticatedAppHrPerformanceRoute: typeof AuthenticatedAppHrPerformanceRoute
   AuthenticatedAppHrRecruitRoute: typeof AuthenticatedAppHrRecruitRoute
+  AuthenticatedAppHrReportsRoute: typeof AuthenticatedAppHrReportsRoute
   AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
   AuthenticatedAppHomeworkIndexRoute: typeof AuthenticatedAppHomeworkIndexRoute
@@ -1526,10 +1610,14 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
   AuthenticatedAppHrContractsRoute: AuthenticatedAppHrContractsRoute,
   AuthenticatedAppHrDocumentsRoute: AuthenticatedAppHrDocumentsRoute,
+  AuthenticatedAppHrHousingRoute: AuthenticatedAppHrHousingRoute,
+  AuthenticatedAppHrInsuranceRoute: AuthenticatedAppHrInsuranceRoute,
   AuthenticatedAppHrLeaveRoute: AuthenticatedAppHrLeaveRoute,
   AuthenticatedAppHrLettersRoute: AuthenticatedAppHrLettersRoute,
   AuthenticatedAppHrPayrollRoute: AuthenticatedAppHrPayrollRoute,
+  AuthenticatedAppHrPerformanceRoute: AuthenticatedAppHrPerformanceRoute,
   AuthenticatedAppHrRecruitRoute: AuthenticatedAppHrRecruitRoute,
+  AuthenticatedAppHrReportsRoute: AuthenticatedAppHrReportsRoute,
   AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
   AuthenticatedAppHomeworkIndexRoute: AuthenticatedAppHomeworkIndexRoute,
