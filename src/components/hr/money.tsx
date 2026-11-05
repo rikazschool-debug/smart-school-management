@@ -1,5 +1,6 @@
 // HR money (P6 decisions/advances/custody link) + payroll (P7) shared labels and the employee's own «مالياتي» tab.
 // Every figure comes from hr_* RPCs; the server decides scope and separation of duties.
+import type React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FileDown, Plus, X } from "lucide-react";
