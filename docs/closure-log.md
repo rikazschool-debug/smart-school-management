@@ -538,3 +538,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 - 2026-11-05 HR letters: downloadable PDF per issued letter (browser-built, not stored). Evidence: hrl-journey 15/15, 1/7-page render check.
 - 2026-11-05 HR import (no-sensitive account) 22/22; P6 decisions/advances/custody link + P7 payroll (HR→finance→management, separate posting/payment states, payslips): hr-pay-e2e 56/56, hrp-journey 21/21. Real posting/payment pending finance link.
+
+- 2026-11-05 HR P6/P7 acceptance fixes: month label «month year», dated pay policies (GOSI/EOS/overtime/proration/unpaid leave; unset = held), owner partial-month exception switch, exceptions sheet, decision categories + overtime hours. Evidence: hr-pay-e2e 74/74, hrp-journey 22/22, month.test 2/2.
+- 2026-11-05 HR P8.1 recruitment + extension switches. Evidence: hr-recruit-e2e 35/35, hrr-journey 12/12 (desktop + 390px). Regression: perm5 20, hr-e2e 24, hr-leave 54, hr-att 53, pc-e2e 32, hr-contracts 31.
