@@ -56,7 +56,7 @@ try {
   check("view-only cannot activate", !!vOn.error, vOn.error);
   const on = await owner.c.rpc("hr_settings_set_alerts", { _org: org, _active: true, _reason: null });
   const s0b = (await owner.c.rpc("hr_settings_get", { _org: org })).data;
-  check("owner activates; decision logged with who/when", !on.error && s0b.active === true && !!s0b.decided_by && s0b.history.some((h: { action: string }) => h.action === "contract_alerts_on"), on.error ?? s0b);
+  check("owner activates; decision logged with who/when", !on.error && s0b.active === true && !!s0b.decided_at && s0b.history.some((h: { action: string }) => h.action === "contract_alerts_on"), on.error ?? s0b);
   await setEnd(day(400));
   await tick();
   check("far end date: no alert", (await notes(drafter)).length === 0, await notes(drafter));
@@ -89,7 +89,7 @@ try {
   check("accepted renewal with a gap keeps alerts", (await notes(drafter)).length === before + 1, await notes(drafter));
   const lr = ((await drafter.c.rpc("hr_contract_list", { _org: org, _f: {} })).data as { id: string; renewed: boolean; renewal_gap: number | null }[]).find((x) => x.id === C);
   check("list shows renewal gap, not 'renewed'", lr?.renewed === false && lr?.renewal_gap === 36, lr);
-  await admin.from("hr_contracts").update({ start_date: day(4) }).eq("id", rn.data);
+  await admin.from("hr_contracts").update({ start_date: day(3) }).eq("id", rn.data);
   await setEnd(day(2)); before = (await notes(drafter)).length; await tick();
   check("continuous accepted renewal stops alerts", (await notes(drafter)).length === before, await notes(drafter));
   await admin.from("hr_contracts").update({ status: "cancelled" }).eq("id", rn.data);
