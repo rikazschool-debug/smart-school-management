@@ -189,6 +189,7 @@ function Detail({ id, org, onClose }: { id: string; org: string; onClose: () => 
   const qc = useQueryClient();
   const nav = useNavigate({ from: "/app/hr/contracts" });
   const d = useQuery({ queryKey: ["hr-c", id], queryFn: () => rpc<CDetail>("hr_contract_get", { _id: id }) });
+  const ap = useQuery({ queryKey: ["hr-c", id, "approver"], queryFn: () => rpc<{ draft: boolean; version?: number; other_approver?: boolean; me_blocked?: boolean }>("hr_contract_approver_check", { _id: id }) });
   const refresh = () => { qc.invalidateQueries({ queryKey: ["hr-c", id] }); qc.invalidateQueries({ queryKey: ["hr-c-list"] }); };
   const act = useMutation({ mutationFn: (f: () => Promise<unknown>) => f(), onSuccess: () => { toast.success("تم"); refresh(); }, onError: (e) => { toast.error(arabicError(e)); refresh(); } });
   if (d.isLoading) return <LoadingState rows={2} />;
@@ -222,7 +223,9 @@ function Detail({ id, org, onClose }: { id: string; org: string; onClose: () => 
       </div>
       <div className="flex flex-wrap gap-2">
         {can.draft && !["terminated", "cancelled"].includes(c.status) && !issued && <Button size="sm" variant="outline" disabled={busy} onClick={() => nav({ search: { edit: id } })}>{draft ? "تعديل المسودة" : c.in_force ? "تعديل العقد (إصدار جديد)" : "مسودة جديدة"}</Button>}
-        {can.approve && draft && <Button size="sm" disabled={busy} onClick={() => issue(draft)}><FileSignature className="size-4" />مراجعة واعتماد الإصدار {draft.version}</Button>}
+        {draft && ap.data?.draft && ap.data.other_approver === false && <p role="status" className="w-full rounded-lg border border-warning/50 bg-warning/10 p-2 text-sm">المسودة تنتظر تعيين معتمد: لا يوجد من يملك صلاحية الاعتماد غير معدّ المسودة أو الموظف نفسه. امنح صلاحية «مراجعة العقود واعتماد إصدارها» لشخص آخر من الصلاحيات.</p>}
+        {draft && ap.data?.me_blocked && ap.data.other_approver && <p className="w-full text-sm text-muted-foreground">أنت أعددت هذه المسودة أو عدّلتها، فيعتمدها شخص آخر.</p>}
+        {can.approve && draft && !ap.data?.me_blocked && <Button size="sm" disabled={busy} onClick={() => issue(draft)}><FileSignature className="size-4" />مراجعة واعتماد الإصدار {draft.version}</Button>}
         {can.approve && draft && <Button size="sm" variant="ghost" disabled={busy} onClick={() => withdraw(draft)}>تجاهل المسودة</Button>}
         {can.approve && issued && <Button size="sm" variant="outline" disabled={busy} onClick={() => withdraw(issued)}>سحب الإصدار {issued.version}</Button>}
         {can.approve && issued && !c.has_login && <><Button size="sm" disabled={busy} onClick={() => paper(issued, "accept")}>تسجيل قبول ورقي</Button><Button size="sm" variant="outline" disabled={busy} onClick={() => paper(issued, "reject")}>تسجيل رفض ورقي</Button></>}
