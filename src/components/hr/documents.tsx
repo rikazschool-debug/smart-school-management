@@ -15,7 +15,7 @@ import { arabicError } from "@/lib/session";
 import { rpc } from "@/components/hr/shared";
 
 export type DocVersion = { id: string; version: number; status: string; title: string | null; doc_no: string | null; issuer: string | null; issued_on: string | null; expires_on: string | null; has_file: boolean; file_name: string | null; uploaded_at: string; uploaded_by: string | null; reviewed_at: string | null; reviewed_by: string | null; review_reason: string | null };
-export type DocRow = { id: string | null; employee_id: string; employee: string; employee_no: string; school: string | null; type_id: string; type: string; confidential: boolean; contract_id?: string | null; contract_no?: string | null; status: string; accepted_version?: number | null; current?: DocVersion | null; latest?: DocVersion | null };
+export type DocRow = { id: string | null; employee_id: string; employee: string; employee_no: string; school: string | null; type_id: string; type: string; confidential: boolean; needs_number?: boolean; needs_expiry?: boolean; contract_id?: string | null; contract_no?: string | null; status: string; accepted_version?: number | null; current?: DocVersion | null; latest?: DocVersion | null };
 export type DocDetail = DocRow & { versions: DocVersion[]; self: boolean; can: { review: boolean; download: boolean; upload: boolean }; events: { at: string; action: string; reason: string | null; by: string }[] | null };
 export type DocType = { id: string; name: string; confidential?: boolean; needs_number: boolean; needs_expiry: boolean; employee_upload?: boolean; required_all?: boolean; required_kinds?: string[]; alert_days?: number[]; is_active?: boolean };
 
@@ -41,9 +41,10 @@ export async function openDocFile(versionId: string) {
 /** Upload a new version: server validates permission/type/size and creates the private file row; then storage upload; then confirm. */
 export function DocUploadForm({ org, type, employeeId, documentId, contracts, onDone, onCancel }: {
   org: string; type: Pick<DocType, "id" | "name" | "needs_number" | "needs_expiry">; employeeId: string; documentId?: string | null;
-  contracts?: { id: string; contract_no: string }[]; onDone: () => void; onCancel: () => void;
+  contracts?: { id: string; contract_no: string }[]; onDone: () => void; onCancel: () => void; initial?: DocVersion | null;
 }) {
-  const [v, setV] = useState({ title: "", doc_no: "", issuer: "", issued_on: "", expires_on: "", contract_id: "" });
+  const i = initial;
+  const [v, setV] = useState({ title: i?.title ?? "", doc_no: i?.doc_no ?? "", issuer: i?.issuer ?? "", issued_on: i?.issued_on ?? "", expires_on: "", contract_id: "" });
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof v, x: string) => setV((o) => ({ ...o, [k]: x }));
@@ -119,7 +120,7 @@ export function DocDetailPanel({ id, org, onClose }: { id: string; org: string; 
         {x.can.upload && !pending && !up && <Button size="sm" variant="outline" onClick={() => setUp(true)}><Upload className="size-4" />رفع نسخة جديدة</Button>}
       </div>
       {pending && !x.can.review && <p className="text-sm text-muted-foreground">النسخة {pending.version} تنتظر مراجعة شخص آخر.</p>}
-      {up && <DocUploadForm org={org} type={{ id: x.type_id, name: x.type, needs_number: false, needs_expiry: false }} employeeId={x.employee_id} documentId={x.id} onDone={() => { setUp(false); refresh(); }} onCancel={() => setUp(false)} />}
+      {up && <DocUploadForm org={org} type={{ id: x.type_id, name: x.type, needs_number: !!x.needs_number, needs_expiry: !!x.needs_expiry }} initial={x.latest} employeeId={x.employee_id} documentId={x.id} onDone={() => { setUp(false); refresh(); }} onCancel={() => setUp(false)} />}
       <VersionList versions={x.versions} canOpen={x.can.download} />
       {x.events && x.events.length > 0 && <details className="text-sm"><summary className="cursor-pointer text-muted-foreground">سجل التغييرات</summary><ul className="mt-2 space-y-1">{x.events.map((e, i) => <li key={i} className="text-xs"><bdi dir="ltr">{e.at.slice(0, 16).replace("T", " ")}</bdi> · {D_EVENT[e.action] ?? e.action} · {e.by}{e.reason ? ` — ${e.reason}` : ""}</li>)}</ul></details>}
     </section>
