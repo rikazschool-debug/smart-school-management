@@ -5,6 +5,7 @@ import { EmptyState, ErrorState, LoadingState, PageHeader, Section } from "@/com
 import { arabicError, useSession } from "@/lib/session";
 import { rpc } from "@/components/hr/shared";
 import { LeaveCard, LeavePanel, type LeaveRow } from "@/components/hr/leave";
+import { TeamAttendance } from "@/components/hr/attendance";
 
 export const Route = createFileRoute("/_authenticated/app/team-leave")({
   validateSearch: (s: Record<string, unknown>): { r?: string } => (typeof s["r"] === "string" ? { r: s["r"] as string } : {}),
@@ -26,6 +27,7 @@ function Page() {
     <>
       <Link to="/app/my-employment" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />خدماتي الوظيفية</Link>
       <PageHeader title="طلبات فريقي" desc="أنت المدير المباشر لهؤلاء في تعيين حالي. موافقتك تحيل الطلب إلى الموارد البشرية للاعتماد النهائي." />
+      {org && <div className="mb-5"><TeamAttendance org={org} /></div>}
       {r && <div className="mb-4"><LeavePanel id={r} onClose={() => nav({ search: {} })} /></div>}
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : rows.length === 0 ? (
         <EmptyState title="لا توجد طلبات من فريقك" hint="تظهر هنا طلبات الإجازة لمن أنت مديرهم المباشر." />
