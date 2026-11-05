@@ -5236,6 +5236,133 @@ export type Database = {
           },
         ]
       }
+      hr_asset_custodies: {
+        Row: {
+          ack_at: string | null
+          asset_id: string
+          close_note: string | null
+          closed_at: string | null
+          closed_by: string | null
+          condition_in: string | null
+          condition_out: string
+          employee_id: string
+          handed_at: string
+          handed_by: string | null
+          id: string
+          org_id: string
+          outcome: string | null
+        }
+        Insert: {
+          ack_at?: string | null
+          asset_id: string
+          close_note?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          condition_in?: string | null
+          condition_out: string
+          employee_id: string
+          handed_at?: string
+          handed_by?: string | null
+          id?: string
+          org_id: string
+          outcome?: string | null
+        }
+        Update: {
+          ack_at?: string | null
+          asset_id?: string
+          close_note?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          condition_in?: string | null
+          condition_out?: string
+          employee_id?: string
+          handed_at?: string
+          handed_by?: string | null
+          id?: string
+          org_id?: string
+          outcome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_asset_custodies_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "hr_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_asset_custodies_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_asset_custodies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_assets: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          notes: string | null
+          org_id: string
+          school_id: string
+          serial: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          org_id: string
+          school_id: string
+          serial?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          org_id?: string
+          school_id?: string
+          serial?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_assets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_assets_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_assignments: {
         Row: {
           created_at: string
@@ -5612,39 +5739,48 @@ export type Database = {
       }
       hr_att_punches: {
         Row: {
+          accuracy_m: number | null
           at: string
           created_at: string
           created_by: string | null
           device_id: string | null
+          distance_m: number | null
           employee_id: string
           id: string
           key: string
           org_id: string
           reason: string | null
+          school_id: string | null
           source: string
         }
         Insert: {
+          accuracy_m?: number | null
           at: string
           created_at?: string
           created_by?: string | null
           device_id?: string | null
+          distance_m?: number | null
           employee_id: string
           id?: string
           key: string
           org_id: string
           reason?: string | null
+          school_id?: string | null
           source: string
         }
         Update: {
+          accuracy_m?: number | null
           at?: string
           created_at?: string
           created_by?: string | null
           device_id?: string | null
+          distance_m?: number | null
           employee_id?: string
           id?: string
           key?: string
           org_id?: string
           reason?: string | null
+          school_id?: string | null
           source?: string
         }
         Relationships: [
@@ -5667,6 +5803,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_att_punches_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -5699,6 +5842,54 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: true
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_att_sites: {
+        Row: {
+          lat: number
+          lng: number
+          max_accuracy_m: number
+          org_id: string
+          radius_m: number
+          school_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          lat: number
+          lng: number
+          max_accuracy_m: number
+          org_id: string
+          radius_m: number
+          school_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          lat?: number
+          lng?: number
+          max_accuracy_m?: number
+          org_id?: string
+          radius_m?: number
+          school_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_att_sites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_att_sites_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -12384,6 +12575,14 @@ export type Database = {
         Returns: Json
       }
       _hr_alert_last_runs: { Args: never; Returns: Json }
+      _hr_as_json: {
+        Args: { c: Database["public"]["Tables"]["hr_asset_custodies"]["Row"] }
+        Returns: Json
+      }
+      _hr_as_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
+      }
       _hr_assign_json: {
         Args: { _emp: string; _only_active: boolean }
         Returns: Json
@@ -12448,6 +12647,14 @@ export type Database = {
       }
       _hr_att_dev_auth: { Args: { _id: string }; Returns: Json }
       _hr_att_ingest: { Args: { _dev: string; _rows: Json }; Returns: Json }
+      _hr_att_my_schools: {
+        Args: { _emp: string }
+        Returns: {
+          configured: boolean
+          name: string
+          school_id: string
+        }[]
+      }
       _hr_basic: { Args: { _d: Json }; Returns: Json }
       _hr_c_data: {
         Args: { _comp_edit: boolean; _keep: Json; _p: Json }
@@ -12527,6 +12734,10 @@ export type Database = {
       _hr_emp_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
       _hr_emp_school: { Args: { _emp: string }; Returns: string }
       _hr_ext_on: { Args: { _ext: string; _org: string }; Returns: boolean }
+      _hr_geo_m: {
+        Args: { a1: number; a2: number; o1: number; o2: number }
+        Returns: number
+      }
       _hr_l_any: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_l_new: {
         Args: {
@@ -14769,6 +14980,43 @@ export type Database = {
       hr_advance_list: { Args: { _f: Json; _org: string }; Returns: Json }
       hr_advance_request: { Args: { _org: string; _p: Json }; Returns: string }
       hr_advance_save: { Args: { _org: string; _p: Json }; Returns: string }
+      hr_asset_ack: { Args: { _custody: string }; Returns: undefined }
+      hr_asset_close: {
+        Args: {
+          _condition: string
+          _custody: string
+          _note: string
+          _outcome: string
+          _to_emp?: string
+        }
+        Returns: string
+      }
+      hr_asset_emp_open: { Args: { _emp: string }; Returns: Json }
+      hr_asset_hand: {
+        Args: { _asset: string; _condition: string; _emp: string }
+        Returns: string
+      }
+      hr_asset_list: {
+        Args: { _org: string; _q?: string; _school?: string; _status?: string }
+        Returns: Json
+      }
+      hr_asset_my: { Args: { _org: string }; Returns: Json }
+      hr_asset_save: {
+        Args: {
+          _category: string
+          _id: string
+          _name: string
+          _notes: string
+          _org: string
+          _school: string
+          _serial: string
+        }
+        Returns: string
+      }
+      hr_asset_set_status: {
+        Args: { _asset: string; _reason: string; _status: string }
+        Returns: undefined
+      }
       hr_assignment_save: {
         Args: { _employee: string; _id: string; _p: Json; _reason?: string }
         Returns: string
@@ -14852,7 +15100,18 @@ export type Database = {
         Args: { _f?: Json; _from: string; _org: string; _to: string }
         Returns: Json
       }
-      hr_att_self_punch: { Args: { _key: string; _org: string }; Returns: Json }
+      hr_att_self_punch: {
+        Args: {
+          _accuracy: number
+          _key: string
+          _lat: number
+          _lng: number
+          _org: string
+          _read_at: string
+          _school: string
+        }
+        Returns: Json
+      }
       hr_att_settings_save: {
         Args: { _org: string; _require_location?: boolean; _self: boolean }
         Returns: undefined
@@ -14862,6 +15121,17 @@ export type Database = {
         Args: { _id: string; _org: string; _p: Json }
         Returns: string
       }
+      hr_att_site_save: {
+        Args: {
+          _accuracy: number
+          _lat: number
+          _lng: number
+          _radius: number
+          _school: string
+        }
+        Returns: undefined
+      }
+      hr_att_sites_list: { Args: { _org: string }; Returns: Json }
       hr_att_team: { Args: { _date: string; _org: string }; Returns: Json }
       hr_att_unassigned: { Args: { _org: string }; Returns: Json }
       hr_candidates: { Args: { _org: string }; Returns: Json }
