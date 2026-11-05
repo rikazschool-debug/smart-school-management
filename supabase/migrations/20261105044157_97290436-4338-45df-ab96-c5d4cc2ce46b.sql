@@ -1,0 +1,1 @@
+revoke execute on function public._hrc_renewed_ok(uuid), public._hrc_renewal_gap(uuid), public._hr_settings(uuid) from authenticated, anon, public;

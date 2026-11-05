@@ -175,7 +175,9 @@ function ContractsReport({ org, k, onPick }: { org: string; k: CCaps; onPick: (p
   );
 }
 
-type HrSet = { contract_alert_days: number[]; reviewed: boolean; notify_employee: boolean; updated_at: string | null; updated_by: string | null; can_edit: boolean; job_time: string };
+type HrSet = { contract_alert_days: number[]; reviewed: boolean; notify_employee: boolean; updated_at: string | null; updated_by: string | null; can_edit: boolean; job_time: string;
+  active: boolean; decided_at: string | null; decided_by: string | null; decision_reason: string | null;
+  history: { action: string; at: string; by: string | null; reason: string | null }[] };
 function AlertSettings({ org }: { org: string }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["hr-settings", org], queryFn: () => rpc<HrSet>("hr_settings_get", { _org: org }) });
@@ -185,16 +187,33 @@ function AlertSettings({ org }: { org: string }) {
     onSuccess: () => { toast.success("حُفظت إعدادات التنبيه"); setEdit(null); qc.invalidateQueries({ queryKey: ["hr-settings", org] }); },
     onError: (e) => toast.error(arabicError(e)),
   });
+  const toggle = useMutation({
+    mutationFn: (v: { active: boolean; reason: string | null }) => rpc("hr_settings_set_alerts", { _org: org, _active: v.active, _reason: v.reason }),
+    onSuccess: () => { toast.success("سُجّل القرار"); qc.invalidateQueries({ queryKey: ["hr-settings", org] }); },
+    onError: (e) => toast.error(arabicError(e)),
+  });
+  const [showLog, setShowLog] = useState(false);
   if (!q.data) return null;
   const s = q.data;
   const days = s.contract_alert_days.join("، ");
+  const decide = async () => {
+    if (s.active) { const r = await askText("سبب إيقاف تنبيهات انتهاء العقود", { required: true, ok: "إيقاف" }); if (r) toggle.mutate({ active: false, reason: r }); }
+    else if (await ask(`تفعيل تنبيهات انتهاء العقود بالمواعيد ${days} يومًا؟`)) toggle.mutate({ active: true, reason: null });
+  };
   return (
-    <div className={"mb-3 rounded-xl border p-3 text-sm " + (s.reviewed ? "bg-card" : "border-warning/50 bg-warning/10")}>
+    <div className={"mb-3 rounded-xl border p-3 text-sm " + (s.active ? "bg-card" : "border-warning/50 bg-warning/10")}>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <span className={"rounded px-2 py-0.5 text-xs font-semibold " + (s.active ? "bg-success/10 text-success" : "bg-warning/15 text-warning")}>{s.active ? "التنبيهات مفعّلة" : "التنبيهات غير مفعّلة — لا يُرسل شيء"}</span>
+        {s.decided_at && <span className="text-xs text-muted-foreground">آخر قرار: {s.decided_by ?? "—"} · <bdi dir="ltr">{s.decided_at.slice(0, 16).replace("T", " ")}</bdi>{s.decision_reason ? ` · ${s.decision_reason}` : ""}</span>}
+        {s.can_edit && <Button size="sm" variant={s.active ? "outline" : "default"} disabled={toggle.isPending || (!s.active && !s.reviewed)} onClick={decide}>{s.active ? "إيقاف التنبيهات" : "تفعيل التنبيهات"}</Button>}
+        {s.history.length > 0 && <Button size="sm" variant="ghost" onClick={() => setShowLog((v) => !v)}>{showLog ? "إخفاء سجل القرارات" : "سجل القرارات"}</Button>}
+      </div>
+      {showLog && <ul className="mb-2 space-y-1 rounded-lg border bg-background p-2 text-xs">{s.history.map((h, i) => <li key={i}><bdi dir="ltr">{h.at.slice(0, 16).replace("T", " ")}</bdi> · {h.by ?? "—"} · {h.action === "contract_alerts_on" ? "تفعيل" : h.action === "contract_alerts_off" ? "إيقاف" : "تعديل المواعيد"}{h.reason ? ` — ${h.reason}` : ""}</li>)}</ul>}
       {!edit ? (
         <div className="flex flex-wrap items-start gap-2">
           <div className="min-w-0 flex-1 space-y-1">
             <p><b>تنبيه انتهاء العقود:</b> قبل الانتهاء بـ <bdi>{days}</bdi> يومًا، ثم عند الانتهاء دون تجديد ساري. يصل لمعدّي العقود ومعتمديها في المدرسة والمالك{s.notify_employee ? "، وللموظف نفسه" : "، ولا يصل للموظف"}. لا يتضمن التنبيه أي مبالغ.</p>
-            {!s.reviewed ? <p className="text-warning">التنبيهات تعمل الآن بهذه المواعيد المقترحة، لكنها لم تُراجع ولم تُعتمد بعد كسياسة للمؤسسة. يعتمدها من يملك صلاحية «إعدادات تنبيه العقود».</p>
+            {!s.reviewed ? <p className="text-warning">هذه مواعيد مقترحة فقط وليست سياسة معتمدة. راجعها واحفظها أولًا، ثم فعّل التنبيهات بقرار مستقل.</p>
               : <p className="text-xs text-muted-foreground">آخر تعديل: {s.updated_by ?? "—"} · <bdi dir="ltr">{s.updated_at?.slice(0, 16).replace("T", " ")}</bdi></p>}
             <p className="text-xs text-muted-foreground">موعد تشغيل الفحص التقني: {s.job_time} — منفصل عن مهلات التنبيه.</p>
           </div>
@@ -214,7 +233,9 @@ function AlertSettings({ org }: { org: string }) {
 function StatusChips({ r }: { r: CRow }) {
   return (
     <span className="flex flex-wrap gap-1 text-xs">
-      <span className={"rounded px-1.5 " + (r.status === "active" && !r.expired ? "bg-success/10 text-success" : r.status === "pending" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground")}>{r.expired ? (r.renewed ? "انتهت مدته — مُجدَّد" : "منتهي المدة دون تجديد") : C_STATUS[r.status] ?? r.status}</span>{r.renewed && !r.expired && <span className="rounded bg-success/10 px-1.5 text-success">له تجديد مقبول</span>}
+      <span className={"rounded px-1.5 " + (r.status === "active" && !r.expired ? "bg-success/10 text-success" : r.status === "pending" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground")}>{r.expired ? (r.renewed ? "انتهت مدته — مُجدَّد" : "منتهي المدة دون تجديد") : C_STATUS[r.status] ?? r.status}</span>{r.renewed && !r.expired && <span className="rounded bg-success/10 px-1.5 text-success">له تجديد مقبول متصل</span>}
+      {r.renewal_gap != null && <span className="rounded bg-warning/10 px-1.5 text-warning">تجديد مقبول بفجوة {r.renewal_gap} يومًا</span>}
+      {r.renewal_pending && !r.renewed && <span className="rounded bg-secondary px-1.5">تجديد قيد الإعداد/الإقرار</span>}
       {r.status === "active" && !r.expired && r.days_left !== null && r.days_left <= 60 && <span className="rounded bg-warning/10 px-1.5 text-warning">ينتهي بعد {r.days_left} يومًا</span>}
       {r.in_force !== null && r.pending_version && <span className="rounded bg-secondary px-1.5">تعديل بانتظار الإقرار</span>}
       {r.draft_version && r.in_force !== null && <span className="rounded bg-secondary px-1.5">مسودة تعديل</span>}

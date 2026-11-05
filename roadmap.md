@@ -415,8 +415,8 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 
 ## Package 16 — HR P3 letters + P4 leave (prompt: «واصل من نقطة الاستئناف الحالية»)
 - [x] D: leave tab hidden in production behind LEAVE_ENABLED (dev only)
-- [ ] A: renewal gap / cancelled renewal must keep original contract alerts
-- [ ] B: separate alert schedule from activation/approval with decision log
+- [x] A: renewal gap / cancelled renewal keep original contract alerts (hrc-alerts 32/32)
+- [x] B: alert activation separate from days, with decision log
 - [ ] C: documents — new version data isolated until accepted; per-type number/expiry requirement; protection in export/PDF/links; type changes keep history
 - [ ] E: scheduler review — distinguish manual vs scheduled run evidence
 - [ ] Excel import browser test (desktop + mobile), logged separately
