@@ -22,7 +22,7 @@ async def main():
         r0 = await login(br, "rc")
         check("1 before the owner switch: officer sees «not enabled»", "امتداد التوظيف غير مفعّل" in await r0.locator("main").inner_text())
         o = await login(br, "owner")
-        await o.get_by_role("region", name="امتدادات الموارد البشرية").get_by_role("button", name="تفعيل").click(); await o.wait_for_timeout(800); await dialog(o, "قرار المالك للتجربة")
+        await o.get_by_role("button", name="تفعيل", exact=True).click(); await o.wait_for_timeout(800); await dialog(o, "قرار المالك للتجربة")
         t = await o.locator("main").inner_text()
         check("2 owner switches recruitment on; housing/insurance/performance «not built yet»", "مفعّل" in t and t.count("لم يُبنَ بعد") == 3, t[:600])
         r = await login(br, "rc")
