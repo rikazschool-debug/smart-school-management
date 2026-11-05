@@ -10047,6 +10047,7 @@ export type Database = {
       }
       _hr_me_emp: { Args: { _org: string }; Returns: string }
       _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_purge_org: { Args: { _org: string }; Returns: undefined }
       _hr_school_ok: {
         Args: { _action: string; _school: string }
         Returns: boolean
