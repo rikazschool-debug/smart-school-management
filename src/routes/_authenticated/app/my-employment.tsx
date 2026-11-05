@@ -1,5 +1,8 @@
 import type React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { selectCls } from "@/components/ui/native-select";
+import { DocDetailPanel, DocStatus, DocUploadForm, type DocRow, type DocType } from "@/components/hr/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,25 +14,37 @@ import { arabicError, useSession } from "@/lib/session";
 import { GENDER, STATUS, rpc, type HrAssign, type HrEmp } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/my-employment")({
-  head: () => ({ meta: [{ title: "ملفي الوظيفي — ركاز" }, { name: "description", content: "بياناتك الوظيفية وتعييناتك وفريقك المباشر." }] }),
+  validateSearch: (s: Record<string, unknown>): { tab?: string } => (typeof s["tab"] === "string" ? { tab: s["tab"] as string } : {}),
+  head: () => ({ meta: [{ title: "خدماتي الوظيفية — ركاز" }, { name: "description", content: "بياناتك الوظيفية وعقودك ومستنداتك داخل حسابك." }, { property: "og:title", content: "خدماتي الوظيفية — ركاز" }, { property: "og:description", content: "بياناتك الوظيفية وعقودك ومستنداتك." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Page,
 });
 
 type Mine = { employee: HrEmp; assignments: HrAssign[] } | null;
 type TeamRow = { id: string; employee_no: string; full_name: string; job_title: string | null; school: string; status: string };
 
+const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["leave", "إجازاتي"]] as const;
+
 function Page() {
   const { active } = useSession();
+  const tab = Route.useSearch().tab ?? "me";
   const org = active?.orgId ?? null;
   const mine = useQuery({ queryKey: ["hr-mine-page", org], enabled: !!org, queryFn: () => rpc<Mine>("hr_my_employment", { _org: org }) });
   const team = useQuery({ queryKey: ["hr-team", org], enabled: !!org, queryFn: () => rpc<TeamRow[]>("hr_team", { _org: org }) });
   if (!active) return null;
   return (
     <>
-      <PageHeader title="ملفي الوظيفي" desc="بياناتك كما سجّلتها الموارد البشرية. لتصحيح أي بيان تواصل مع الموارد البشرية؛ طلبات التحديث الذاتي تُضاف مع حزمة الطلبات." />
+      <PageHeader title="خدماتي الوظيفية" desc="بياناتك وعقودك ومستنداتك كما سجّلتها الموارد البشرية. لتصحيح أي بيان تواصل مع الموارد البشرية." />
       {mine.isLoading ? <LoadingState /> : mine.error ? <ErrorState message={arabicError(mine.error)} /> : !mine.data ? (
         <EmptyState title="لا يوجد ملف وظيفي لك في هذه المؤسسة" hint="تنشئه الموارد البشرية وتربطه بحسابك." />
-      ) : <><MyFile d={mine.data} /><MyContracts org={org!} /></>}
+      ) : <>
+        <nav aria-label="خدماتي" className="mb-4 flex flex-wrap gap-2 text-sm">
+          {TABS.map(([k, l]) => <Link key={k} to="/app/my-employment" search={k === "me" ? {} : { tab: k }} className={"rounded-lg px-3 py-1.5 " + (tab === k ? "bg-primary text-primary-foreground" : "border bg-card hover:border-primary")} aria-current={tab === k ? "page" : undefined}>{l}</Link>)}
+        </nav>
+        {tab === "me" && <MyFile d={mine.data} />}
+        {tab === "contracts" && <MyContracts org={org!} empty />}
+        {tab === "docs" && <MyDocuments org={org!} />}
+        {tab === "leave" && <EmptyState title="الإجازات والأرصدة قيد البناء" hint="تظهر هنا رصيد إجازاتك وطلباتك بعد ضبط سياسات الإجازات من الموارد البشرية." />}
+      </>}
       {(team.data?.length ?? 0) > 0 && (
         <Section title="فريقي المباشر" desc="بيانات أساسية فقط لمن أنت مديره المباشر في تعيين حالي." className="mt-6">
           <ul className="grid gap-2 md:grid-cols-2">
@@ -41,7 +56,43 @@ function Page() {
   );
 }
 
-function MyContracts({ org }: { org: string }) {
+type MyDocs = { employee: boolean; employee_id?: string; documents?: DocRow[]; missing?: { type_id: string; type: string; employee_upload: boolean; needs_number: boolean; needs_expiry: boolean }[]; types?: DocType[] };
+function MyDocuments({ org }: { org: string }) {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["hr-my-docs", org], queryFn: () => rpc<MyDocs>("hr_my_documents", { _org: org }) });
+  const [open, setOpen] = useState<string | null>(null);
+  const [up, setUp] = useState<{ id: string; name: string; needs_number: boolean; needs_expiry: boolean } | null>(null);
+  if (q.isLoading) return <LoadingState rows={2} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
+  const d = q.data!;
+  if (!d.employee) return <EmptyState title="لا يوجد ملف وظيفي نشط لك" />;
+  const done = () => { setUp(null); qc.invalidateQueries({ queryKey: ["hr-my-docs"] }); };
+  return (
+    <div className="space-y-5">
+      {up && <DocUploadForm org={org} type={up} employeeId={d.employee_id!} onDone={done} onCancel={() => setUp(null)} />}
+      {(d.missing?.length ?? 0) > 0 && (
+        <Section title="ما ينقصني" desc="مستندات مطلوبة منك لم تُرفع أو لم تُقبل بعد.">
+          <ul className="grid gap-2 md:grid-cols-2">{d.missing!.map((m) => (
+            <li key={m.type_id} className="flex items-center gap-2 rounded-xl border border-warning/50 bg-warning/10 p-3 text-sm"><span className="flex-1 font-semibold">{m.type}</span>
+              {m.employee_upload ? <Button size="sm" onClick={() => setUp({ id: m.type_id, name: m.type, needs_number: m.needs_number, needs_expiry: m.needs_expiry })}>رفع</Button> : <span className="text-xs text-muted-foreground">ترفعه الموارد البشرية</span>}</li>))}</ul>
+        </Section>
+      )}
+      <Section title="مستنداتي" desc="مستنداتك فقط. لا يقبل أحد مستندك إلا مراجع من الموارد البشرية." action={(d.types?.length ?? 0) > 0 ? <select aria-label="رفع مستند آخر" className={selectCls("w-44")} value="" onChange={(e) => { const t = d.types!.find((x) => x.id === e.target.value); if (t) setUp(t); }}><option value="">رفع مستند آخر…</option>{d.types!.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select> : undefined}>
+        {!d.documents!.length ? <EmptyState title="لا توجد مستندات بعد" /> : (
+          <ul className="space-y-2">{d.documents!.map((x) => (
+            <li key={x.id!} className="rounded-xl border bg-card p-3 text-sm">
+              <span className="flex flex-wrap items-center gap-2"><b className="flex-1">{x.type}</b><DocStatus s={x.status} /><Button size="sm" variant="ghost" onClick={() => setOpen(open === x.id ? null : x.id)}>{open === x.id ? "إخفاء" : "التفاصيل"}</Button></span>
+              {x.latest?.status === "rejected" && x.latest.review_reason && <span className="mt-1 block text-xs text-destructive">سبب الرفض: {x.latest.review_reason}</span>}
+              {x.current?.expires_on && <span className="block text-xs text-muted-foreground">ينتهي <bdi dir="ltr">{x.current.expires_on}</bdi></span>}
+              {open === x.id && <div className="mt-2"><DocDetailPanel id={x.id!} org={org} onClose={() => setOpen(null)} /></div>}
+            </li>))}</ul>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+function MyContracts({ org, empty }: { org: string; empty?: boolean }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["hr-my-contracts", org], queryFn: () => rpc<CDetail[]>("hr_my_contracts", { _org: org }) });
   const ack = useMutation({
@@ -55,7 +106,7 @@ function MyContracts({ org }: { org: string }) {
   };
   if (q.isLoading) return <LoadingState rows={1} />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
-  if (!q.data!.length) return null;
+  if (!q.data!.length) return empty ? <EmptyState title="لا توجد عقود صادرة لك" /> : null;
   return (
     <Section title="عقدي" desc="عقودك فقط. الإقرار هنا إقرار داخلي في ركاز، وليس توقيعًا إلكترونيًا موثقًا من جهة خارجية." className="mt-6">
       <ul className="space-y-3">

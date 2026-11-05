@@ -121,7 +121,7 @@ function UploadMissing({ org, r, types }: { org: string; r: DocRow; types: DocTy
 function NewUpload({ org, types, onClose }: { org: string; types: DocType[]; onClose: () => void }) {
   const qc = useQueryClient();
   const [emp, setEmp] = useState(""); const [type, setType] = useState("");
-  const emps = useQuery({ queryKey: ["hr-emps-docs", org], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _f: {} }) });
+  const emps = useQuery({ queryKey: ["hr-emps-docs", org], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org }) });
   const t = types.find((x) => x.id === type);
   return (
     <Section title="رفع مستند لموظف">
