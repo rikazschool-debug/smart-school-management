@@ -15953,6 +15953,7 @@ export type Database = {
         Returns: string
       }
       hr_ext_list: { Args: { _org: string }; Returns: Json }
+      hr_ext_people: { Args: { _ext: string; _school: string }; Returns: Json }
       hr_ext_set: {
         Args: { _ext: string; _on: boolean; _org: string; _reason: string }
         Returns: undefined
