@@ -31,7 +31,7 @@ def db(sql):
     r = subprocess.run(["bun", "-e", f"""
 import {{ createClient }} from '@supabase/supabase-js';
 const a = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {{ auth: {{ persistSession: false }} }});
-const r = await a.from('hr_employees').select('full_name,employee_no,national_id,phone,hire_date,school_id').eq('org_id','{F['org']}');
+const r = await a.from('hr_employees').select('full_name,employee_no,national_id,phone,hire_date').eq('org_id','{F['org']}');
 console.log(JSON.stringify(r.data));"""], capture_output=True, text=True, cwd="/dev-server")
     return json.loads(r.stdout.strip() or "[]")
 
