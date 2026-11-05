@@ -46,7 +46,7 @@ async def main():
         # outside range
         await ectx.set_geolocation(FAR); await e.wait_for_timeout(61000)
         await e.get_by_role("button", name="تسجيل بصمة الآن").click(); await e.wait_for_timeout(3500)
-        check("6 outside range refused with distance", "خارج نطاق المدرسة" in await e.get_by_role("alert").inner_text())
+        al = await e.get_by_role("alert").all_inner_texts(); check("6 outside range refused with distance", any("خارج نطاق المدرسة" in x for x in al), al)
         # weak accuracy
         await ectx.set_geolocation({**IN, "accuracy": 90})
         await e.get_by_role("button", name="إعادة المحاولة").click(); await e.wait_for_timeout(3500)
