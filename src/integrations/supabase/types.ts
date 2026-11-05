@@ -14981,6 +14981,7 @@ export type Database = {
       hr_advance_request: { Args: { _org: string; _p: Json }; Returns: string }
       hr_advance_save: { Args: { _org: string; _p: Json }; Returns: string }
       hr_asset_ack: { Args: { _custody: string }; Returns: undefined }
+      hr_asset_caps: { Args: { _org: string }; Returns: Json }
       hr_asset_close: {
         Args: {
           _condition: string
@@ -15001,6 +15002,7 @@ export type Database = {
         Returns: Json
       }
       hr_asset_my: { Args: { _org: string }; Returns: Json }
+      hr_asset_people: { Args: { _school: string }; Returns: Json }
       hr_asset_save: {
         Args: {
           _category: string
