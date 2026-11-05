@@ -392,14 +392,15 @@ Nov 4 (prompt-129): evaluation fully in the permission tree (5 sub-sections, sep
 Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md, docs/hr/execution-log.md). Decisions D1/D2/D5 taken. P1 + P2 first part done & tested (employee files, assignments, self file, manager team). NEXT: P2 import, P3 contracts/documents, P4 leave (needs owner-entered leave types). D4 (ledger) open for P7.
 
 ## Package 15 — HR expansion (prompt: «واصل بناء قسم الموارد البشرية»)
-- [ ] A Close employee-import acceptance (real synthetic XLSX, desktop+phone browser journey)
+- [x] A Close employee-import acceptance (real synthetic XLSX, desktop+phone browser journey)
 - [x] B Contracts + compensation lines — done & tested (hr-contracts-e2e 31/31, hrc-journey 11/11, expiry alerts hrc-alerts-e2e 11/11, contracts summary)
-- [ ] C Documents & letters center (on existing files/rikaz-files)
-- [ ] D Work & leave settings (owner-entered only, never guessed)
-- [ ] E Leave balances + approval engine + leave cycle (manager→HR→vice cover)
-- [ ] F Teacher leave → existing absences/substitutions (no parallel system)
-- [ ] G Role screens, permission tree, reports
-- [ ] H Security review, E2E per track, docs/hr/execution-log.md
+- [x] C Documents & letters center (on existing files/rikaz-files)
+- [x] D Work & leave settings (owner-entered only, never guessed)
+- [x] E Leave balances + approval engine + leave cycle (manager→HR→vice cover)
+- [x] F Teacher leave → existing absences/substitutions (no parallel system)
+- [x] G Role screens, permission tree, reports
+- [x] H Security review, E2E per track, docs/hr/execution-log.md
+  (all closed by Package 16: import journey 17/17, documents 38/38, letters 51/51 + 14/14, leave 54/54 + 18/18)
 
 ## Package 16 — HR P3 completion + P4 (prompt «واصل البناء داخل مشروع ركاز»)
 - [x] Contract fixes: no owner self-approval, own contract, waiting-for-approver signal, alert days as org setting, renewal only when active, employee notice option (hrc-alerts-e2e 24/24)
