@@ -49,5 +49,5 @@
 - HR (hr_*): RPC-only, Rikaz = single source; docs/hr/execution-log.md.
 
 - HR attendance (hr_att_*): RPC-only; raw punches append-only and separate from computed hr_att_days; closed days change only after dated reopen; devices via signed /api/public/hr/attendance → service-only _hr_att_ingest; money effect only via payroll. Tests: hr-att-e2e, hra-journey.
-- HR money/payroll (hr_decisions/hr_advances/hr_pay_*): RPC-only; pay effects read dated append-only hr_pay_policies (unset = affected lines held, never guessed); see docs/hr/execution-log.md. Tests: hr-pay-e2e, hrp-journey.
-- HR extensions (hr_ext_settings, owner switch per extension) gate P8 RPCs; recruitment (hr_rc_*) converts a candidate to an employee once via hr_rc_convert (never a login or academic link). Tests: hr-recruit-e2e, hrr-journey.
+- HR pay (hr_decisions/hr_advances/hr_pay_*): RPC-only; dated hr_pay_policies, unset = held. Tests: hr-pay-e2e, hrp-journey.
+- HR extensions: owner switch (hr_ext_settings); recruitment hr_rc_*, convert once. Tests: hr-recruit-e2e, hrr-journey.
