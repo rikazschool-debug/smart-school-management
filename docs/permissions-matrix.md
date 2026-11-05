@@ -301,3 +301,15 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | templates | org scope only | create/edit templates (versioned); pay templates also need comp |
 | export | granted | register export (no text) |
 | employee | own file | request requestable types, edit/resubmit returned, withdraw before issue, read/print own letters incl. pay |
+
+## HR leave (hr_leave) — 2026-11-05
+| Action | Who (default) | Notes |
+|---|---|---|
+| employee | own active file | request (live day count), edit/resubmit while with manager or returned, cancel before decision or before start, extend/shorten approved leave (new request through the same chain), read own balances + ledger |
+| direct manager | manager_id of the employee's current assignment | first decision (approve → HR, return/reject need reason); sees «طلبات فريقي» only; no balances/settings |
+| view | org owner; granted (branch/org) | request register + balances report in scope |
+| approve | granted | final HR approval, cancel approved leave, record early return; never own leave; not the same person who approved as manager |
+| balances | granted | annual grant (once per employee/type/year), adjustments with reason (idempotent key, never below zero); never own balance |
+| settings | org scope only, owner | work days, types, dated policy versions (school overrides org); no default values |
+| export | granted | register / balances Excel+PDF |
+| vice / principal | school membership | notified to assign cover for approved teacher leave; cover itself stays in substitutions (assign_substitute) |

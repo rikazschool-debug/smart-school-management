@@ -8,7 +8,7 @@ Status ladder (§12.4): مخطط → عقوده جاهزة → قيد التنف
 | P1 | Flags, HR perm sections, nav, tasks page | اختبارات الأدوار ناجحة (part: platform switch, hr_employees section, nav, caps). Tasks page waits for P4 (no requests yet) | — | hr-e2e 1,10,14,22,24; hr-journey 6,10,13,14 |
 | P2 | Employee ↔ user/teacher, assignments, import | اختبارات الأدوار ناجحة for linking, directory, file, multi-school dated assignments, self file, manager team, audit. Open: spreadsheet import, reference lists | — | hr-e2e 2–9,11–13,15–21,23; hr-journey 1–5,7–12 |
 | P3 | Contracts, documents | مخطط | P2 | — |
-| P4 | Requests engine, leave → manager → HR → vice cover | مخطط | P2, D5 (leave types) | — |
+| P4 | Requests engine, leave → manager → HR → vice cover | منفذ ومختبر (غير منشور) | P2, D5 (owner enters types/policies) | hr-leave-e2e 54/54; hrv-leave-journey 18/18 |
 | P5 | Attendance, shifts, devices | مخطط | P2, device source | — |
 | P6 | Financial movements, advances | مخطط | P3–P5, D4, D5 | — |
 | P7 | Payroll: HR prepares, finance reviews, management approves; posting ≠ payment | مخطط | P6, D4, D5 | — |
@@ -73,6 +73,18 @@ Status: implemented · server-tested · browser-tested · NOT operationally acce
 - Evidence (server): hr-docs-e2e 35/35, hrc-alerts-e2e 24/24, hr-contracts-e2e 31/31, hr-e2e 24/24, perm6 20/20, perm7 20/20. Evidence (browser): hrd-journey.py 10/10 (employee 390px upload → reviewer reject → reupload → accept → signed link; colleague direct link blocked). Defect found & fixed: re-upload form ignored required number/expiry.
 - Jobs proven only by direct calls, not by a scheduled run.
 
+## P4 Leave — 2026-11-05
+Status: implemented · server-tested · browser-tested (desktop + 390px) · NOT operationally accepted · NOT published.
+- Perm section `hr_leave` (view / approve / balances / settings / export; branch via current assignments or org). Settings are org-scope only.
+- Settings (no guessed values): work days per org (none by default — work-day policies blocked until set); leave types; policy versions per type and scope (org or one school; school wins) with effective_from, uses_balance, annual_days (required when balance is used), count_mode (work/calendar, required), optional max per request, allow_negative. A new version closes the previous one the day before and may not start on/before it, nor rewrite a past period that already has requests. Policy rows are append-only (trigger).
+- Ledger: hr_leave_moves (grant / adjust / take / reverse) unique per key, append-only; balance = sum. Annual grant once per employee/type/year (idempotent, no automatic proration — HR adjusts with reason). Adjust needs reason + idempotency key, never below zero, never own balance.
+- Requests: employee only for self → direct manager (current assignment; none → straight to HR) → HR. Checks on submit and again at final approval on the locked employee row: active policy at start date, day count, max, same calendar year (else split), overlap, balance minus other pending requests. Every decision carries the row revision; double submit/decide refused.
+- Change: extend/shorten approved leave = linked request through manager → HR; original stays in force until approved, then is superseded and its moves are reversed. Early return (HR, date ≤ today) gives back unused days. Cancel: employee before decision or before start; HR for approved leave with reason → reversal move.
+- Teacher leave: on HR approval, work days of the leave become rows in teacher_absences (existing substitution source) linked in hr_leave_absences; principal/vice get one notice to assign cover (no leave type or note in it). Shortening/cancel removes only absences the leave created and that have no active substitute; otherwise the vice is told to review the cover.
+- Screens: /app/hr/leave (requests with KPIs, filters, detail + history, Excel/PDF; balances with grant/adjust/export; types & policies), «طلبات فريقي» /app/team-leave, «إجازاتي» tab in «خدماتي الوظيفية» (balances, live day count, own requests, extend/shorten), HR nav + owner HR card.
+- Evidence (server): hr-leave-e2e 54/54. Evidence (browser): hrv-leave-journey 18/18 (owner settings incl. refused missing rule, grant, employee 390px request with double tap, manager return → employee edit → manager approve → HR approve, absences + vice notice, export, colleague isolation, HR cancel restores balance). Fixture torn down.
+- Not covered: absence kept when a substitute is already assigned is checked by code review only (no timetable fixture in this test); cross-year leave must be split; no attachment (e.g. medical report) on leave requests; payroll effect of unpaid leave waits for P7.
+
 ## Resume point (exact)
 1. Letters: templates with whitelisted variables (no pay variables unless comp_view), preview + missing-variable check, immutable issued copy with reference, RTL multi-page PDF, employee request → review → issue. Not started.
 2. Track A Excel import browser journey. Not started.
@@ -111,4 +123,4 @@ Status: implemented · server-tested · browser-tested (desktop + 390px) · NOT 
 - Not yet: letter request alerts beyond in-app notifications; English letters (lang) not offered — Arabic only.
 
 ## Resume point (exact)
-P4 leave: dated/scoped policies (no guessed values), balance ledger with idempotent moves + concurrency, request employee → manager (from assignment) → HR, edit/extend/cancel/early return with reversal entries, «طلبات فريقي», teacher absence → record_absence/substitutions + vice follow-up. Not started.
+P4 leave done (see above). Next: P5 attendance link / P7 payroll per the blueprint (D4 ledger decision still open).

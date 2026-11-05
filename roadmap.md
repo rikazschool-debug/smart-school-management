@@ -421,9 +421,9 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [ ] E: scheduler — reviewed; waiting for first scheduled run (05:15/05:20 UTC) to read cron.job_run_details
 - [x] Excel import browser test (hr-import-journey 17/17; date defect fixed)
 - [x] P3 letters (hr-letters-e2e 51/51, hrl-journey 14/14): templates (versioned, vars, preview, injection-safe), request, review→issue, immutable issued copy + PDF, reissue/cancel, comp privacy
-- [ ] P4 leave settings: dated versioned policies, scope priority, no guessed values
-- [ ] Leave balances ledger (idempotent moves, concurrency)
-- [ ] Leave request cycle: employee → manager → HR, edit/extend/cancel/early return
-- [ ] Role UIs: my services, team requests, HR, owner
-- [ ] Absence/substitute linkage (idempotent source id, vice follow-up)
-- [ ] Permissions/security tests, responsive + E2E, execution-log update
+- [x] P4 leave settings: dated versioned policies, scope priority, no guessed values
+- [x] Leave balances ledger (idempotent moves, concurrency)
+- [x] Leave request cycle: employee → manager → HR, edit/extend/cancel/early return
+- [x] Role UIs: my services, team requests, HR, owner
+- [x] Absence/substitute linkage (idempotent source id, vice follow-up)
+- [x] Permissions/security tests, responsive + E2E, execution-log update (hr-leave-e2e 54/54, hrv-leave-journey 18/18)
