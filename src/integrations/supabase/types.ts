@@ -5678,6 +5678,245 @@ export type Database = {
           },
         ]
       }
+      hr_letter_counters: {
+        Row: {
+          n: number
+          org_id: string
+          year: number
+        }
+        Insert: {
+          n?: number
+          org_id: string
+          year: number
+        }
+        Update: {
+          n?: number
+          org_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_letter_counters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_letter_template_versions: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          has_comp: boolean
+          id: string
+          name: string
+          template_id: string
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          has_comp: boolean
+          id?: string
+          name: string
+          template_id: string
+          version: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          has_comp?: boolean
+          id?: string
+          name?: string
+          template_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_letter_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "hr_letter_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_letter_templates: {
+        Row: {
+          body: string
+          created_at: string
+          employee_request: boolean
+          has_comp: boolean
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          needs_review: boolean
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          employee_request?: boolean
+          has_comp?: boolean
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+          needs_review?: boolean
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          employee_request?: boolean
+          has_comp?: boolean
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          needs_review?: boolean
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_letter_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_letters: {
+        Row: {
+          addressee: string | null
+          body_snapshot: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          decision_reason: string | null
+          employee_id: string
+          has_comp: boolean
+          id: string
+          issued_at: string | null
+          issued_by: string | null
+          org_id: string
+          parent_id: string | null
+          purpose: string | null
+          ref_no: string | null
+          requested_at: string
+          requested_by: string
+          rev: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          template_id: string
+          template_version: number
+          updated_at: string
+          vars_snapshot: Json | null
+        }
+        Insert: {
+          addressee?: string | null
+          body_snapshot?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          decision_reason?: string | null
+          employee_id: string
+          has_comp?: boolean
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          org_id: string
+          parent_id?: string | null
+          purpose?: string | null
+          ref_no?: string | null
+          requested_at?: string
+          requested_by: string
+          rev?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          template_id: string
+          template_version: number
+          updated_at?: string
+          vars_snapshot?: Json | null
+        }
+        Update: {
+          addressee?: string | null
+          body_snapshot?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          decision_reason?: string | null
+          employee_id?: string
+          has_comp?: boolean
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          org_id?: string
+          parent_id?: string | null
+          purpose?: string | null
+          ref_no?: string | null
+          requested_at?: string
+          requested_by?: string
+          rev?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          template_id?: string
+          template_version?: number
+          updated_at?: string
+          vars_snapshot?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_letters_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_letters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_letters_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "hr_letters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_letters_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "hr_letter_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_settings: {
         Row: {
           alert_days_reviewed: boolean
@@ -10317,6 +10556,50 @@ export type Database = {
       }
       _hr_emp_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
       _hr_emp_school: { Args: { _emp: string }; Returns: string }
+      _hr_l_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_l_new: {
+        Args: {
+          _addr: string
+          _emp: string
+          _org: string
+          _parent: string
+          _purpose: string
+          _tpl: string
+        }
+        Returns: string
+      }
+      _hr_l_notify: {
+        Args: {
+          _key: string
+          _title: string
+          _who: string
+          l: Database["public"]["Tables"]["hr_letters"]["Row"]
+        }
+        Returns: undefined
+      }
+      _hr_l_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
+      _hr_l_render: {
+        Args: { _body: string; _mask: boolean; _vals: Json }
+        Returns: Json
+      }
+      _hr_l_row: {
+        Args: {
+          _full: boolean
+          l: Database["public"]["Tables"]["hr_letters"]["Row"]
+        }
+        Returns: Json
+      }
+      _hr_l_self: { Args: { _emp: string }; Returns: boolean }
+      _hr_l_unknown: { Args: { _body: string }; Returns: string[] }
+      _hr_l_values: {
+        Args: {
+          _addressee: string
+          _emp: string
+          _purpose: string
+          _ref: string
+        }
+        Returns: Json
+      }
       _hr_log: {
         Args: {
           _action: string
@@ -12404,6 +12687,61 @@ export type Database = {
         Args: { _id: string; _org: string; _p: Json; _reason?: string }
         Returns: string
       }
+      hr_letter_cancel: {
+        Args: { _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      hr_letter_caps: { Args: { _org: string }; Returns: Json }
+      hr_letter_create: {
+        Args: {
+          _addressee: string
+          _employee: string
+          _org: string
+          _purpose: string
+          _template: string
+        }
+        Returns: string
+      }
+      hr_letter_decide: {
+        Args: { _decision: string; _id: string; _reason?: string; _rev: number }
+        Returns: undefined
+      }
+      hr_letter_get: { Args: { _id: string }; Returns: Json }
+      hr_letter_issue: { Args: { _id: string; _rev: number }; Returns: Json }
+      hr_letter_list: { Args: { _f?: Json; _org: string }; Returns: Json }
+      hr_letter_mine: { Args: { _org: string }; Returns: Json }
+      hr_letter_preview: {
+        Args: { _body: string; _employee: string; _org: string }
+        Returns: Json
+      }
+      hr_letter_reissue: {
+        Args: { _id: string; _reason: string }
+        Returns: string
+      }
+      hr_letter_request: {
+        Args: {
+          _addressee: string
+          _org: string
+          _purpose: string
+          _template: string
+        }
+        Returns: string
+      }
+      hr_letter_template_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: string
+      }
+      hr_letter_templates: { Args: { _org: string }; Returns: Json }
+      hr_letter_update: {
+        Args: {
+          _addressee: string
+          _id: string
+          _purpose: string
+          _rev: number
+        }
+        Returns: undefined
+      }
+      hr_letter_vars: { Args: never; Returns: Json }
       hr_me: { Args: { _org: string }; Returns: Json }
       hr_my_contract: { Args: { _id: string }; Returns: Json }
       hr_my_contracts: { Args: { _org: string }; Returns: Json }
