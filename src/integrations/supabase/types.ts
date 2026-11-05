@@ -6398,6 +6398,11 @@ export type Database = {
           notes: string | null
           org_id: string
           phone: string | null
+          self_access: boolean
+          self_access_at: string | null
+          self_access_by: string | null
+          self_linked_at: string | null
+          self_linked_by: string | null
           status: string
           updated_at: string
           user_id: string | null
@@ -6420,6 +6425,11 @@ export type Database = {
           notes?: string | null
           org_id: string
           phone?: string | null
+          self_access?: boolean
+          self_access_at?: string | null
+          self_access_by?: string | null
+          self_linked_at?: string | null
+          self_linked_by?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -6442,6 +6452,11 @@ export type Database = {
           notes?: string | null
           org_id?: string
           phone?: string | null
+          self_access?: boolean
+          self_access_at?: string | null
+          self_access_by?: string | null
+          self_linked_at?: string | null
+          self_linked_by?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -12968,6 +12983,7 @@ export type Database = {
         Args: { _action: string; _school: string }
         Returns: boolean
       }
+      _hr_self_live: { Args: { _emp: string }; Returns: boolean }
       _hr_settings: {
         Args: { _org: string }
         Returns: {
@@ -15435,6 +15451,10 @@ export type Database = {
         Returns: undefined
       }
       hr_rc_vacancy_save: { Args: { _org: string; _p: Json }; Returns: string }
+      hr_self_access_set: {
+        Args: { _active: boolean; _emp: string; _reason?: string }
+        Returns: Json
+      }
       hr_settings_get: { Args: { _org: string }; Returns: Json }
       hr_settings_save: {
         Args: { _days: number[]; _notify_employee: boolean; _org: string }
