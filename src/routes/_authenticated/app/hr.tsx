@@ -46,6 +46,7 @@ function Page() {
         <Link to="/app/hr/leave" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الإجازات</Link>
         <Link to="/app/hr/attendance" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الحضور والانصراف</Link>
         <Link to="/app/hr/payroll" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الرواتب والسلف</Link>
+        <Link to="/app/hr/recruit" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التوظيف</Link>
       </nav>}
       {!m.enabled ? <SectionLocked /> : !m.caps.view ? <ForbiddenState /> : <Workspace org={org!} m={m} />}
     </>

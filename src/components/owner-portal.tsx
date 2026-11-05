@@ -113,6 +113,7 @@ const CARDS: Card[] = [
       { icon: IdCard, label: "الإجازات", to: "/app/hr/leave" },
       { icon: IdCard, label: "الحضور والانصراف", to: "/app/hr/attendance" },
       { icon: IdCard, label: "الرواتب والسلف", to: "/app/hr/payroll" },
+      { icon: IdCard, label: "التوظيف", to: "/app/hr/recruit" },
     ],
   },
   {

@@ -113,11 +113,9 @@ function Workspace({ org, d }: { org: string; d: Ext }) {
 }
 
 function Candidates({ vac, open, onOpen, done }: { vac: Vac | undefined; open: string | null; onOpen: (id: string | null) => void; done: (m: string) => void }) {
-  const cq = useQuery({ queryKey: ["hr-rc-cands", vac?.id], enabled: !!vac, queryFn: () => rpc<Cand[]>("hr_rc_candidates", { _org: null, _f: { vacancy: vac!.id } }).catch(() => [] as Cand[]) });
   const { active } = useSession();
   const org = active!.orgId;
   const lq = useQuery({ queryKey: ["hr-rc-cands", vac?.id, org], enabled: !!vac, queryFn: () => rpc<Cand[]>("hr_rc_candidates", { _org: org, _f: { vacancy: vac!.id } }) });
-  void cq;
   const [nc, setNc] = useState<{ full_name: string; national_id: string; email: string; phone: string; education: string; experience: string; languages: string } | null>(null);
   const save = useMutation({ mutationFn: () => rpc("hr_rc_candidate_save", { _vac: vac!.id, _p: nc }), onSuccess: () => { setNc(null); done("أُضيف المرشح"); }, onError: (e) => toast.error(arabicError(e)) });
   if (!vac) return null;
