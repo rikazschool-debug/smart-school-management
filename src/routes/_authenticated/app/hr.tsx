@@ -38,6 +38,10 @@ function Page() {
     <>
       {m.owner && <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>}
       <PageHeader title="الموارد البشرية" desc="ملفات الموظفين وتعييناتهم. الموظف سجل واحد في المؤسسة يرتبط بحساب دخوله وسجل المعلم إن وُجد، ولا يُنشأ حساب أو معلم جديد من هنا." />
+      {m.enabled && <nav aria-label="أقسام الموارد البشرية" className="mb-4 flex flex-wrap gap-2 text-sm">
+        <span className="rounded-lg bg-primary px-3 py-1.5 text-primary-foreground">ملفات الموظفين</span>
+        <Link to="/app/hr/contracts" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">العقود</Link>
+      </nav>}
       {!m.enabled ? <SectionLocked /> : !m.caps.view ? <ForbiddenState /> : <Workspace org={org!} m={m} />}
     </>
   );
