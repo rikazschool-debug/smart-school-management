@@ -39,7 +39,10 @@ async def main():
             if any("مديرة المدرسة" in o for o in await card.locator("option").all_inner_texts()): break
             await h.wait_for_timeout(1000)
         await card.get_by_label("اختر حساب الموظف").select_option(label=[o for o in await card.locator("option").all_inner_texts() if "مديرة المدرسة" in o][0])
-        await card.get_by_role("button", name="ربط بالحساب").click(); await h.wait_for_timeout(3000)
+        await card.get_by_role("button", name="ربط بالحساب").click()
+        for _ in range(15):
+            if "مرتبط — غير مفعّل" in await card.inner_text(): break
+            await h.wait_for_timeout(1000)
         check("4 HR links file; status «مرتبط — غير مفعّل»", "مرتبط — غير مفعّل" in await card.inner_text(), await card.inner_text())
         await pr.reload(); await pr.wait_for_timeout(2500); await settle(pr)
         check("5 linked not active: page says not activated, no menu item", "غير مفعّل" in await pr.locator("main").inner_text() and await pr.get_by_role("link", name="ملفي الوظيفي").count() == 0)
