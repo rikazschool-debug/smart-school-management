@@ -45,7 +45,7 @@ async def main():
         check("9 HR publishes payslips", "نُشرت القسائم" in await sec.inner_text())
         for i, (w, hh) in enumerate([(390, 844), (1280, 1800)]):
             e = await login(br, "emp", w, hh)
-            await e.goto(B + "/app/my-employment?tab=money"); await e.wait_for_timeout(4000)
+            await e.goto(B + "/app/my-employment?tab=money"); await e.get_by_text("قسائم راتبي").wait_for(timeout=30000); await e.wait_for_timeout(2500)
             et = await e.locator("main").inner_text()
             tag = "phone" if i == 0 else "desktop"
             check(f"10{tag} employee sees own advance (repaid 300, remaining 600)", "سلفة 900.00" in et and "600.00" in et and "300.00" in et, et[:800])
@@ -60,7 +60,7 @@ async def main():
                 sw = await e.evaluate("document.documentElement.scrollWidth"); check("15 phone: no horizontal overflow", sw <= 392, sw)
                 await e.screenshot(path=SH + "3_emp_phone.png")
         m = await login(br, "mate", 390, 844)
-        await m.goto(B + "/app/my-employment?tab=money"); await m.wait_for_timeout(4000)
+        await m.goto(B + "/app/my-employment?tab=money"); await m.get_by_text("قسائم راتبي").wait_for(timeout=30000); await m.wait_for_timeout(2500)
         mt = await m.locator("main").inner_text()
         check("16 colleague sees only own payslip (6500) and no advance/custody of others", "6,500.00" in mt and "CU-TEST-1" not in mt and "سلفة 900" not in mt, mt[:600])
         await m.goto(B + "/app/hr/payroll"); await m.wait_for_timeout(3000)
