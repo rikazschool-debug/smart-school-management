@@ -393,7 +393,7 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 
 ## Package 15 — HR expansion (prompt: «واصل بناء قسم الموارد البشرية»)
 - [ ] A Close employee-import acceptance (real synthetic XLSX, desktop+phone browser journey)
-- [~] B Contracts + compensation lines — core done & tested (hr-contracts-e2e 31/31, hrc-journey 11/11); open: expiry alerts, contracts report
+- [x] B Contracts + compensation lines — done & tested (hr-contracts-e2e 31/31, hrc-journey 11/11, expiry alerts hrc-alerts-e2e 11/11, contracts summary)
 - [ ] C Documents & letters center (on existing files/rikaz-files)
 - [ ] D Work & leave settings (owner-entered only, never guessed)
 - [ ] E Leave balances + approval engine + leave cycle (manager→HR→vice cover)

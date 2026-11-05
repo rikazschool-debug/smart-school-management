@@ -42,3 +42,8 @@ Status ladder (§12.4): مخطط → عقوده جاهزة → قيد التنف
 - Compensation is stripped server-side from get/list for people without comp_view (employee sees own). Export shows pay only when the server sent it.
 - Evidence: scripts/hr-contracts-e2e.ts 31/31; scripts/hrc-journey.py 11/11 (drafter, approver, view-only principal, employee on 390px; amendment) with scripts/hrc-browser-fixture.ts; fixtures torn down. TypeScript passed.
 - Not yet: import browser journey (track A), documents/letters (C), work & leave settings (D), leave (E/F), expiring-contract alerts, contracts report beyond list export.
+
+## P3a closure: expiry alerts + contracts summary (prompt-133) — 2026-11-05
+- `hr_contract_alerts_tick()` (service-only, cron `rikaz-hr-contract-alerts` daily 05:15 UTC = 08:15 Riyadh): active contracts ending within 60 / 30 / 7 days and expired-but-still-active ones notify holders of hr_contracts `draft` or `approve` for that branch (or org scope) plus the org owner; never view-only holders or the employee. One notice per contract + end date + stage (dedupe key), none when a renewal (draft/pending/active child) exists or HR is switched off.
+- Contracts screen «ملخص العقود»: active, ending in 30/60 days, expired without renewal/termination, awaiting acknowledgement, drafts — each clickable to filter the list; per-school breakdown with Excel/PDF for export holders. Computed only from contracts the user may view (same server list).
+- Evidence: scripts/hrc-alerts-e2e.ts 11/11; hrc-journey.py 11/11 rerun; summary checked desktop + 390px; fixtures torn down.

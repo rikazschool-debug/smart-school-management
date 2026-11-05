@@ -277,3 +277,4 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | export | granted, owner | pay column only for comp_view rows |
 | employee | own contract only: read issued versions with own pay, accept/reject with reason | |
 | principal / direct manager / student / guardian | nothing by default | |
+| expiry alerts | draft or approve holders of the branch (or org), owner | 60/30/7 days + expired, once per stage; never view-only or the employee |

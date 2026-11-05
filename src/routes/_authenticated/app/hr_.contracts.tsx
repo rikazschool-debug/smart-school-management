@@ -75,6 +75,7 @@ function Workspace({ org, k }: { org: string; k: CCaps }) {
           {k.caps.draft && <Button size="sm" onClick={() => nav({ search: { new: "1" } })}><Plus className="size-4" />عقد جديد</Button>}
         </div>
       </div>
+      <ContractsReport org={org} k={k} onPick={(patch) => setF((x) => ({ ...x, ...patch }))} />
       {s.tpl && <Templates org={org} admin={k.templates_admin} onClose={() => nav({ search: {} })} />}
       {(s.new || s.renew) && k.caps.draft && <ContractForm org={org} k={k} renewOf={s.renew ?? null} onClose={() => nav({ search: {} })} onDone={(id) => nav({ search: { c: id } })} />}
       {s.edit && <EditLoader org={org} k={k} id={s.edit} onClose={() => nav({ search: { c: s.edit! } })} />}
@@ -113,6 +114,63 @@ function Workspace({ org, k }: { org: string; k: CCaps }) {
         </>
       )}
     </div>
+  );
+}
+
+function ContractsReport({ org, k, onPick }: { org: string; k: CCaps; onPick: (p: { status?: string; expiring?: string; school?: string }) => void }) {
+  const [open, setOpen] = useState(false);
+  const all = useQuery({ queryKey: ["hr-c-list", org, "report"], queryFn: () => rpc<CRow[]>("hr_contract_list", { _org: org, _f: {} }) });
+  const rows = all.data ?? [];
+  const live = (r: CRow) => r.status === "active" && !r.expired;
+  const kpi = [
+    { label: "سارية", n: rows.filter(live).length, pick: { status: "active", expiring: "" } },
+    { label: "تنتهي خلال 30 يومًا", n: rows.filter((r) => live(r) && r.days_left !== null && r.days_left <= 30).length, pick: { status: "", expiring: "30" }, warn: true },
+    { label: "تنتهي خلال 60 يومًا", n: rows.filter((r) => live(r) && r.days_left !== null && r.days_left <= 60).length, pick: { status: "", expiring: "60" } },
+    { label: "انتهت مدتها ولم تُجدَّد أو تُنهَ", n: rows.filter((r) => r.expired).length, pick: { status: "active", expiring: "" }, warn: true },
+    { label: "بانتظار إقرار الموظف", n: rows.filter((r) => r.status === "pending" || (r.in_force !== null && r.pending_version)).length, pick: { status: "pending", expiring: "" } },
+    { label: "مسودات", n: rows.filter((r) => r.status === "draft" || r.draft_version).length, pick: { status: "draft", expiring: "" } },
+  ];
+  const bySchool = Object.values(rows.reduce<Record<string, { id: string; name: string; active: number; soon: number; expired: number; pending: number; ended: number }>>((m, r) => {
+    const x = (m[r.school_id] ??= { id: r.school_id, name: r.school, active: 0, soon: 0, expired: 0, pending: 0, ended: 0 });
+    if (live(r)) x.active++;
+    if (live(r) && r.days_left !== null && r.days_left <= 60) x.soon++;
+    if (r.expired) x.expired++;
+    if (r.status === "pending" || r.status === "draft") x.pending++;
+    if (r.status === "terminated" || r.status === "cancelled") x.ended++;
+    return m;
+  }, {})).sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  const headers = ["المدرسة", "سارية", "تنتهي خلال 60 يومًا", "انتهت مدتها", "مسودة/بانتظار الإقرار", "منتهية/ملغاة"];
+  const data = bySchool.map((x) => [x.name, x.active, x.soon, x.expired, x.pending, x.ended]);
+  const meta = { title: "تقرير العقود", filters: ["كل المدارس المصرح بها"] };
+  if (all.isLoading || all.error || !rows.length) return null;
+  return (
+    <Section title="ملخص العقود" desc="محسوب من العقود التي تملك صلاحية عرضها. اضغط على رقم لعرض العقود المقصودة. يصل تنبيه لمعدّي العقود ومعتمديها والمالك قبل الانتهاء بشهرين، ثم بشهر، ثم بأسبوع، ثم عند الانتهاء.">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        {kpi.map((x) => (
+          <button key={x.label} type="button" onClick={() => onPick(x.pick)} className={"rounded-xl border bg-card p-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (x.warn && x.n ? "border-warning/50" : "")}>
+            <span className={"block text-2xl font-bold " + (x.warn && x.n ? "text-warning" : "")}>{x.n}</span>
+            <span className="block text-xs text-muted-foreground">{x.label}</span>
+          </button>
+        ))}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Button variant="outline" size="sm" onClick={() => setOpen((v) => !v)}>{open ? "إخفاء التوزيع حسب المدرسة" : "التوزيع حسب المدرسة"}</Button>
+        {open && k.caps.export && <><Button variant="outline" size="sm" onClick={() => exportXlsx(meta, headers, data)}><Download className="size-4" />Excel</Button><Button variant="outline" size="sm" onClick={() => exportPdf(meta, headers, data)}><FileText className="size-4" />PDF</Button></>}
+      </div>
+      {open && (
+        <div className="mt-2 overflow-x-auto rounded-xl border bg-card">
+          <table className="w-full text-sm">
+            <thead className="bg-secondary/50 text-xs text-muted-foreground"><tr>{headers.map((h) => <th key={h} className="p-2 text-start font-medium">{h}</th>)}</tr></thead>
+            <tbody>{bySchool.map((x) => (
+              <tr key={x.id} className="border-t">
+                <td className="p-2"><button type="button" className="text-primary" onClick={() => onPick({ school: x.id, status: "", expiring: "" })}>{x.name}</button></td>
+                <td className="p-2">{x.active}</td><td className={"p-2 " + (x.soon ? "text-warning" : "")}>{x.soon}</td><td className={"p-2 " + (x.expired ? "text-warning" : "")}>{x.expired}</td><td className="p-2">{x.pending}</td><td className="p-2">{x.ended}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      )}
+    </Section>
   );
 }
 
