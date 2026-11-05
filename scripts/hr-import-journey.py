@@ -7,7 +7,7 @@ os.makedirs(SH, exist_ok=True)
 ok = bad = 0
 def check(n, c, e=""):
     global ok, bad
-    ok += bool(c); bad += (not c); print("PASS" if c else "FAIL", n, "" if c else str(e)[:300])
+    ok += bool(c); bad += (not c); print("PASS" if c else "FAIL", n, "" if c else str(e)[:900])
 
 def make(path, rows):
     wb = xlsxwriter.Workbook(path); ws = wb.add_worksheet("الموظفون"); ws.right_to_left()
