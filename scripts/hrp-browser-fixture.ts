@@ -53,7 +53,7 @@ await users.mapr!.c.rpc("hr_advance_act", { _id: AV, _rev: 1, _action: "approve"
 await o.rpc("hr_pay_settings_save", { _org: org, _p: { finance_link: "ربط تجريبي — بيانات مصطنعة", unpaid_leave_types: [], day_divisor: null } });
 const pay = await users.fin!.c.rpc("hr_advance_act", { _id: AV, _rev: 2, _action: "pay", _reason: null, _ref: "ADV-T-1" }); if (pay.error) console.log(pay.error);
 await g("emp", "procurement", "create", "branch");
-const cu = await admin.from("pc_custodies").insert({ org_id: org, ref: "CU-TEST-1", holder_id: users.emp!.id, school_id: A, purpose: "عهدة أدوات تجريبية", amount: 1000, currency: "SAR", status: "disbursed", created_by: users.owner!.id }); if (cu.error) console.log("custody", cu.error.message);
+const cu = await admin.from("pc_custodies").insert({ org_id: org, ref: "CU-TEST-1", holder_id: users.emp!.id, school_id: A, purpose: "عهدة أدوات تجريبية", amount: 1000, currency: "SAR", settle_due: "2027-01-31", status: "disbursed", created_by: users.owner!.id }); if (cu.error) console.log("custody", cu.error.message);
 mkdirSync("/tmp/browser/hrp", { recursive: true });
 writeFileSync(FX, JSON.stringify({ org, schools: [A], users: Object.values(users).map((u) => u.id), pw, month: M0, ...Object.fromEntries(Object.entries(users).map(([k, v]) => [k, v.email])) }));
 console.log("setup ok"); process.exit(0);
