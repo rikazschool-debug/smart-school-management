@@ -1,35 +1,39 @@
 // P9 HR reports: catalog visibility by permission, branch scope, sensitive masking, view/print/export separation,
 // logging, extension switch, revocation mid-session, tampered keys and org isolation.
+// Synthetic data only. Run: NODE_PATH=node_modules bun scripts/hr-reports-e2e.ts
 import { createClient } from "@supabase/supabase-js";
+import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
-
-const URL = process.env.SUPABASE_URL!, SR = process.env.SUPABASE_SERVICE_ROLE_KEY!, PK = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
-const shim = (k: string) => (u: RequestInfo | globalThis.URL, i: RequestInit = {}) => { const h = new Headers(i.headers); h.set("apikey", k); if (h.get("Authorization") === `Bearer ${k}`) h.delete("Authorization"); return fetch(u, { ...i, headers: h }); };
-const admin = createClient(URL, SR, { auth: { persistSession: false }, global: { fetch: shim(SR) as any } });
-const run = new TestRun(admin, "hrrep");
+const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
+const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
+const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+const tr = new TestRun(admin, "hrp9");
+const runId = Date.now(), pw = "Test-pass-" + runId;
 let ok = 0, bad = 0;
-const check = (n: string, c: boolean, d?: unknown) => { if (c) { ok++; console.log("PASS", n); } else { bad++; console.log("FAIL", n, JSON.stringify(d ?? null)?.slice(0, 400)); } };
-const has = (r: { error: any }, s: string) => !!r.error && String(r.error.message).includes(s);
-
-let org = "";
+const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)?.slice(0, 500)); };
+const has = (r: any, s: string) => String(r?.error?.message ?? "").includes(s);
+async function user(tag: string) {
+  const email = `hrp9-${tag}-${runId}@rikaz.test`;
+  await admin.auth.admin.createUser({ email, password: pw, email_confirm: true });
+  const c = createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
+  const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw s.error;
+  tr.addUser(s.data.user!.id); return { c, id: s.data.user!.id };
+}
+const orgs: string[] = [];
 try {
-  const { org: o, schools } = await run.org("تقارير", 2); org = o; const [A, B] = schools;
-  const user = async (tag: string) => { const u = await run.user(tag); const c = createClient(URL, PK, { auth: { persistSession: false }, global: { fetch: shim(PK) as any } }); await c.auth.signInWithPassword({ email: u.email, password: u.password }); return { id: u.id, c }; };
   const owner = await user("owner"), br = await user("br"), pr = await user("pr"), stranger = await user("x");
-  await run.member(owner.id, org, null, "org_owner");
-  await run.member(br.id, org, A, "teacher"); await run.member(pr.id, org, A, "teacher");
-  const sOrg = await run.org("غريبة", 1); await run.member(stranger.id, sOrg.org, null, "org_owner");
-  // branch HR viewer in school A: employees + leave view, no sensitive/export/print
-  const grant = async (uid: string, school: string, sec: string, action: string) => {
-    const r = await owner.c.rpc("perm_apply", { _org: org, _user: uid, _changes: [{ op: "grant", section: sec, action, scope: "branch", school_id: school }] });
-    if (r.error) throw r.error;
-  };
-  await grant(br.id, A, "hr_employees", "view"); await grant(br.id, A, "hr_leave", "view");
-  await grant(pr.id, A, "hr_employees", "view"); await grant(pr.id, A, "hr_reports", "print");
-  // employees: one per school
+  const org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة التقارير", _school_name: "فرع أ" })).data; orgs.push(org);
+  const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(A);
+  const B = (await admin.from("schools").insert({ org_id: org, name: "فرع ب" }).select("id").single()).data!.id; tr.addSchool(B);
+  const org2 = (await stranger.c.rpc("create_organization", { _org_name: "أخرى", _school_name: "س" })).data; orgs.push(org2);
+  tr.addSchool((await admin.from("schools").select("id").eq("org_id", org2).single()).data!.id);
+  for (const u of [br, pr]) await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: A, role: "teacher" });
+  const g = (u: any, sec: string, a: string, eff: string | null = "grant") => owner.c.rpc("perm_override_set", { _org: org, _user: u.id, _section: sec, _action: a, _effect: eff, _scope: eff ? "branch" : null, _reason: "تجربة" });
+  for (const r of [await g(br, "hr_employees", "view"), await g(br, "hr_leave", "view"), await g(pr, "hr_employees", "view"), await g(pr, "hr_reports", "print")]) if (r.error) throw r.error;
   const mk = async (name: string, school: string, nid: string) => {
-    const e = (await admin.from("hr_employees").insert({ org_id: org, employee_no: "E" + Math.random().toString(36).slice(2, 7), full_name: name, national_id: nid, nationality: "سعودي", gender: "male", status: "active" }).select().single()).data!;
-    await admin.from("hr_assignments").insert({ org_id: org, employee_id: e.id, school_id: school, start_date: "2020-01-01", is_primary: true }); return e.id as string;
+    const id = (await owner.c.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: name, school_id: school, job_title: "معلم", hire_date: "2024-09-01", national_id: nid, nationality: "سعودي", gender: "male" } }));
+    if (id.error) throw id.error; return id.data as string;
   };
   await mk("موظف أ", A, "1234567890"); await mk("موظف ب", B, "1987654321");
 
@@ -69,11 +73,12 @@ try {
   const xc = (await stranger.c.rpc("hr_report_catalog", { _org: org })).data as any[]; check("other organisation gets an empty catalog", Array.isArray(xc) && xc.length === 0, xc);
 
   // revocation mid-session: same signed-in client, next call refused
-  const rv = await owner.c.rpc("perm_apply", { _org: org, _user: br.id, _changes: [{ op: "revoke", section: "hr_employees", action: "view", scope: "branch", school_id: A }] });
+  const rv = await g(br, "hr_employees", "view", null);
   const after = await br.c.rpc("hr_report", { _org: org, _key: "R01", _f: {}, _mode: "view" });
   check("revoked permission takes effect on the next request", !rv.error && has(after, "غير مصرح"), [rv.error, after.error]);
   const anon = createClient(URL, PK, { auth: { persistSession: false }, global: { fetch: shim(PK) as any } });
   const an = await anon.rpc("hr_report", { _org: org, _key: "R01", _f: {}, _mode: "view" }); check("anonymous cannot call", !!an.error, an.error);
 } catch (e) { bad++; console.log("FAIL crash", e); }
-finally { if (org) await run.purgeOrg(org).catch((e) => console.log("purge", e)); await run.cleanup().catch(() => {}); }
-console.log(`\n${ok} passed, ${bad} failed`); process.exit(bad ? 1 : 0);
+finally { for (const o of orgs) await tr.purgeOrg(o).catch((e: unknown) => console.log("cleanup", e)); for (const u of tr.users) await admin.auth.admin.deleteUser(u); }
+console.log(`\n${ok} passed, ${bad} failed`);
+process.exit(bad ? 1 : 0);
