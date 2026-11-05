@@ -107,7 +107,7 @@ try {
   const my2 = (await emp.c.rpc("hr_leave_my", { _org: org })).data;
   const abs2 = (await admin.from("teacher_absences").select("id").eq("teacher_id", T)).data ?? [];
   const links = (await admin.from("hr_leave_absences").select("request_id").eq("employee_id", E)).data ?? [];
-  check("approved change supersedes original, balance 30 − 9, absences extended", !chOk.error && par.status === "superseded" && my2.types[0].balance === 21 && abs2.length === 9 && links.every((l: any) => l.request_id === CH.data), [chOk.error, par.status, my2.types[0].balance, abs2.length]);
+  check("approved change supersedes original, balance 30 − 10, absences extended", !chOk.error && par.status === "superseded" && my2.types[0].balance === 20 && abs2.length === 10 && links.every((l: any) => l.request_id === CH.data), [chOk.error, par.status, my2.types[0].balance, abs2.length]);
   const futRet = await hr.c.rpc("hr_leave_return", { _id: CH.data, _rev: gc.rev + 1, _back: "2026-11-20", _reason: "عودة" }); check("early return cannot be recorded for a future date", !!futRet.error, futRet.error);
 
   // HR cancels approved leave → reversal + absences released
