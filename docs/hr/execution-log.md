@@ -73,6 +73,9 @@ Status: implemented · server-tested · browser-tested · NOT operationally acce
 - Evidence (server): hr-docs-e2e 35/35, hrc-alerts-e2e 24/24, hr-contracts-e2e 31/31, hr-e2e 24/24, perm6 20/20, perm7 20/20. Evidence (browser): hrd-journey.py 10/10 (employee 390px upload → reviewer reject → reupload → accept → signed link; colleague direct link blocked). Defect found & fixed: re-upload form ignored required number/expiry.
 - Jobs proven only by direct calls, not by a scheduled run.
 
+## Scheduler evidence — 2026-11-05
+- cron.job_run_details: rikaz-hr-contract-alerts succeeded 05:15:00 UTC, rikaz-hr-doc-alerts succeeded 05:20:00 UTC (first scheduled windows). E closed.
+
 ## P4 Leave — 2026-11-05
 Status: implemented · server-tested · browser-tested (desktop + 390px) · NOT operationally accepted · NOT published.
 - Perm section `hr_leave` (view / approve / balances / settings / export; branch via current assignments or org). Settings are org-scope only.

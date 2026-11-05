@@ -403,22 +403,22 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 
 ## Package 16 — HR P3 completion + P4 (prompt «واصل البناء داخل مشروع ركاز»)
 - [x] Contract fixes: no owner self-approval, own contract, waiting-for-approver signal, alert days as org setting, renewal only when active, employee notice option (hrc-alerts-e2e 24/24)
-- [ ] A Excel import browser journey (desktop/phone, roles)
+- [x] A Excel import browser journey (desktop/phone, roles)
 - [x] Documents center — server 35/35, browser 10/10 (alerts proven by direct call only)
-- [ ] Letters (safe templates, preview, missing vars, immutable issued copy, RTL PDF, request→review→issue)
-- [~] «خدماتي الوظيفية» hub (data, contracts, documents done; leave tab waits for P4); «طلبات فريقي» waits for P4
-- [ ] Work & leave policies (versioned, scoped, owner-entered only)
-- [ ] Leave balance ledger (movements, idempotent, concurrency)
-- [ ] Leave requests employee→manager→HR with returns/cancel/extend/early return
-- [ ] Teacher leave → existing absences/substitutions (vice coverage task, no medical/pay data)
-- [ ] Permission tree sections, E2E per track, desktop/phone journeys, docs
+- [x] Letters (safe templates, preview, missing vars, immutable issued copy, RTL PDF, request→review→issue)
+- [x] «خدماتي الوظيفية» hub (data, contracts, documents, letters, leave) + «طلبات فريقي»
+- [x] Work & leave policies (versioned, scoped, owner-entered only)
+- [x] Leave balance ledger (movements, idempotent, concurrency)
+- [x] Leave requests employee→manager→HR with returns/cancel/extend/early return
+- [x] Teacher leave → existing absences/substitutions (vice coverage task, no medical/pay data)
+- [x] Permission tree sections, E2E per track, desktop/phone journeys, docs
 
 ## Package 16 — HR P3 letters + P4 leave (prompt: «واصل من نقطة الاستئناف الحالية»)
 - [x] D: leave tab hidden in production behind LEAVE_ENABLED (dev only)
 - [x] A: renewal gap / cancelled renewal keep original contract alerts (hrc-alerts 32/32)
 - [x] B: alert activation separate from days, with decision log
 - [x] C: documents (hr-docs 38/38; re-link defect fixed) — — new version data isolated until accepted; per-type number/expiry requirement; protection in export/PDF/links; type changes keep history
-- [ ] E: scheduler — reviewed; waiting for first scheduled run (05:15/05:20 UTC) to read cron.job_run_details
+- [x] E: scheduler — first scheduled runs succeeded 2026-11-05 05:15 (contracts) and 05:20 UTC (documents) per cron.job_run_details
 - [x] Excel import browser test (hr-import-journey 17/17; date defect fixed)
 - [x] P3 letters (hr-letters-e2e 51/51, hrl-journey 14/14): templates (versioned, vars, preview, injection-safe), request, review→issue, immutable issued copy + PDF, reissue/cancel, comp privacy
 - [x] P4 leave settings: dated versioned policies, scope priority, no guessed values
