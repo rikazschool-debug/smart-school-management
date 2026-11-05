@@ -8,7 +8,7 @@ import { arabicError } from "@/lib/session";
 import { rpc } from "@/components/hr/shared";
 import { Pill } from "@/components/hr/money";
 
-type Caps = Record<string, boolean>;
+type Caps = Record<"view" | "manage" | "approve" | "convert" | "export" | "org" | "sensitive" | "assign" | "review" | "publish" | "evaluator" | "evidence", boolean>;
 export type Ext = {
   owner: boolean; hr: boolean;
   items: { ext: string; enabled: boolean; reason: string | null; by: string | null; at: string }[];
