@@ -1,7 +1,7 @@
 // HR letters: shared types, status labels, detail panel (staff + self) and print/PDF.
 // All data comes from hr_letter_* RPCs; the server decides what text (incl. pay) is sent.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Printer, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -121,10 +121,12 @@ export function MyLetters({ org }: { org: string }) {
   const mine = useQuery({ queryKey: ["hr-l-mine", org], queryFn: () => rpc<LetterRow[]>("hr_letter_mine", { _org: org }) });
   const [form, setForm] = useState<{ template: string; purpose: string; addressee: string } | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const lock = useRef(false);
   const req = useMutation({
     mutationFn: (f: { template: string; purpose: string; addressee: string }) => rpc<string>("hr_letter_request", { _org: org, _template: f.template, _purpose: f.purpose, _addressee: f.addressee }),
     onSuccess: (id) => { toast.success("أُرسل طلب الخطاب"); setForm(null); setOpen(id); qc.invalidateQueries({ queryKey: ["hr-l-mine", org] }); },
     onError: (e) => toast.error(arabicError(e)),
+    onSettled: () => { lock.current = false; },
   });
   const types = (tpl.data ?? []).filter((t) => t.is_active && t.employee_request);
   if (mine.isLoading || tpl.isLoading) return <LoadingState />;
@@ -133,7 +135,7 @@ export function MyLetters({ org }: { org: string }) {
     <div className="space-y-3">
       {!form ? (types.length ? <Button size="sm" onClick={() => setForm({ template: types[0]!.id, purpose: "", addressee: "" })}>طلب خطاب</Button>
         : <p className="rounded-xl border bg-card p-3 text-sm text-muted-foreground">لا توجد أنواع خطابات متاحة للطلب حاليًا؛ تضيفها الموارد البشرية.</p>) : (
-        <form className="grid gap-2 rounded-xl border bg-card p-3 text-sm sm:grid-cols-3" onSubmit={(e) => { e.preventDefault(); if (!req.isPending) req.mutate(form); }}>
+        <form className="grid gap-2 rounded-xl border bg-card p-3 text-sm sm:grid-cols-3" onSubmit={(e) => { e.preventDefault(); if (lock.current) return; lock.current = true; req.mutate(form); }}>
           <div><Label htmlFor="ml-t">نوع الخطاب</Label><select id="ml-t" className="mt-1 h-9 w-full rounded-md border bg-background px-2" value={form.template} onChange={(e) => setForm({ ...form, template: e.target.value })}>{types.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
           <div><Label htmlFor="ml-a">الجهة الموجه إليها</Label><Input id="ml-a" value={form.addressee} onChange={(e) => setForm({ ...form, addressee: e.target.value })} placeholder="مثال: إلى من يهمه الأمر" /></div>
           <div><Label htmlFor="ml-p">الغرض</Label><Input id="ml-p" value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} /></div>
