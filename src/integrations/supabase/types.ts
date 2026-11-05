@@ -13632,10 +13632,20 @@ export type Database = {
       _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_pay_build: { Args: { _run: string }; Returns: undefined }
       _hr_pf_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_pf_check_criteria: { Args: { _c: Json }; Returns: Json }
       _hr_pf_ok: {
         Args: { _action: string; _school: string }
         Returns: boolean
       }
+      _hr_pf_row: {
+        Args: {
+          _full: boolean
+          r: Database["public"]["Tables"]["hr_pf_reviews"]["Row"]
+        }
+        Returns: Json
+      }
+      _hr_pf_sources: { Args: { _emp: string }; Returns: Json }
+      _hr_pf_total: { Args: { _c: Json; _s: Json }; Returns: number }
       _hr_pf_user_can: {
         Args: { _action: string; _school: string; _uid: string }
         Returns: boolean
@@ -16187,6 +16197,46 @@ export type Database = {
         Returns: undefined
       }
       hr_pay_setup: { Args: { _org: string }; Returns: Json }
+      hr_pf_assign: {
+        Args: {
+          _cycle: string
+          _emp: string
+          _evaluator: string
+          _form: string
+        }
+        Returns: string
+      }
+      hr_pf_cycle_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: string
+      }
+      hr_pf_evaluators: { Args: { _school: string }; Returns: Json }
+      hr_pf_form_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: string
+      }
+      hr_pf_get: { Args: { _id: string }; Returns: Json }
+      hr_pf_list: { Args: { _f: Json; _org: string }; Returns: Json }
+      hr_pf_my: { Args: { _org: string }; Returns: Json }
+      hr_pf_people: { Args: { _school: string }; Returns: Json }
+      hr_pf_publish: { Args: { _id: string }; Returns: undefined }
+      hr_pf_resolve: {
+        Args: { _amend: boolean; _id: string; _note: string; _total?: number }
+        Returns: undefined
+      }
+      hr_pf_respond: {
+        Args: { _ack: boolean; _id: string; _text: string }
+        Returns: undefined
+      }
+      hr_pf_review: {
+        Args: { _approve: boolean; _id: string; _note: string }
+        Returns: undefined
+      }
+      hr_pf_save: {
+        Args: { _id: string; _p: Json; _submit?: boolean }
+        Returns: Json
+      }
+      hr_pf_setup: { Args: { _org: string }; Returns: Json }
       hr_rc_candidate_get: { Args: { _id: string }; Returns: Json }
       hr_rc_candidate_save: {
         Args: { _p: Json; _vac: string }
