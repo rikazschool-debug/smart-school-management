@@ -8,7 +8,7 @@ def check(n, c, e=""):
     global ok, bad
     ok += bool(c); bad += (not c); print("PASS" if c else "FAIL", n, "" if c else str(e)[:400])
 async def login(br, who, w=1280, h=1800):
-    ctx = await br.new_context(viewport={"width": w, "height": h}); p = await ctx.new_page()
+    ctx = await br.new_context(accept_downloads=True, viewport={"width": w, "height": h}); p = await ctx.new_page()
     await p.goto(B + "/auth"); await p.wait_for_timeout(2500); await p.fill("#email", F[who]); await p.fill("#password", F["pw"])
     await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await p.wait_for_timeout(1500); return p
 async def reason(p, text):
@@ -61,9 +61,13 @@ async def main():
         await i.screenshot(path=SH + "2_issued.png")
         await e.goto(B + "/app/my-employment?tab=letters"); await e.wait_for_timeout(3000)
         await e.locator("li button").filter(has_text="تعريف بالعمل").first.click(); await e.wait_for_timeout(2500)
-        check("10 employee reads issued letter on phone with print button", await e.get_by_text("تعمل لدينا بوظيفة معلمة رياضيات").count() == 1 and await e.get_by_role("button", name="طباعة / PDF").count() == 1)
+        check("10 employee reads issued letter on phone with PDF + print buttons", await e.get_by_text("تعمل لدينا بوظيفة معلمة رياضيات").count() == 1 and await e.get_by_role("button", name="تنزيل PDF").count() == 1 and await e.get_by_role("button", name="طباعة").count() == 1)
+        async with e.expect_download(timeout=60000) as dd:
+            await e.get_by_role("button", name="تنزيل PDF").click()
+        dl = await dd.value; pdf = SH + "letter.pdf"; await dl.save_as(pdf); raw = open(pdf, "rb").read()
+        check("10b employee downloads the letter as a PDF file named by its reference", raw[:5] == b"%PDF-" and "L-20" in dl.suggested_filename and len(raw) < 3_000_000, (dl.suggested_filename, len(raw)))
         async with e.context.expect_page() as pp:
-            await e.get_by_role("button", name="طباعة / PDF").click()
+            await e.get_by_role("button", name="طباعة").click()
         pr = await pp.value; await pr.wait_for_load_state(); t = await pr.content()
         check("11 print view: escaped text, ref, no fake signature claim", "L-20" in t and "لا يتضمن هذا الخطاب توقيعًا" in t, t[:300])
         await e.screenshot(path=SH + "3_employee_phone.png")
