@@ -29,7 +29,7 @@ async def main():
         await r.goto(B + "/app/hr/documents"); await r.wait_for_timeout(3500)
         await r.get_by_role("button", name="عرض التفاصيل").first.click(); await r.wait_for_timeout(2500)
         await r.get_by_role("button", name="رفض").click(); await r.wait_for_timeout(500)
-        await r.locator("[role=dialog] textarea, [role=dialog] input").first.fill("الصورة غير واضحة"); await r.locator("[role=dialog]").get_by_role("button", name="رفض").click(); await r.wait_for_timeout(3000)
+        await r.get_by_label("سبب الرفض (يظهر للموظف)").fill("الصورة غير واضحة"); await r.locator("[role=alertdialog],[role=dialog]").get_by_role("button", name="رفض", exact=True).click(); await r.wait_for_timeout(3000)
         await r.screenshot(path=SH + "3_rejected.png")
         check("5 reviewer rejects with reason", await r.get_by_text("سبب الرفض: الصورة غير واضحة").count() >= 1)
         await e.reload(); await e.wait_for_timeout(3500)
@@ -40,7 +40,7 @@ async def main():
         check("7 employee reuploads version 2", await e.get_by_text("النسخة 2").count() >= 1)
         await r.reload(); await r.wait_for_timeout(3500)
         await r.get_by_role("button", name="قبول النسخة 2").click(); await r.wait_for_timeout(500)
-        await r.locator("[role=dialog]").get_by_role("button", name="قبول").click(); await r.wait_for_timeout(3000)
+        await r.locator("[role=alertdialog],[role=dialog]").get_by_role("button", name="قبول", exact=True).click(); await r.wait_for_timeout(3000)
         await r.screenshot(path=SH + "4_accepted.png")
         check("8 reviewer accepts; history keeps version 1", await r.get_by_text("مقبولة").count() >= 1 and await r.get_by_text("مرفوضة").count() >= 1)
         async with r.expect_popup() as pop:
