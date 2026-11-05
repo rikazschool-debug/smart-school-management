@@ -147,3 +147,12 @@ P4 leave done (see above). Next: P5 attendance link / P7 payroll per the bluepri
 - exportLetterPdf (src/lib/export.ts): paragraph-measured pagination, header with org/ref/issue date, cancelled/superseded stamp, page numbers, no-signature footer, escaped text, Latin dates/codes isolated LTR, JPEG pages (~65 KB per page).
 - Evidence: hrl-journey 15/15 (employee on phone downloads a %PDF file named by the reference); direct test: 1-page and 7-page letters, HTML text stays literal.
 - Resume point: import journey without sensitive permission → P6 → P7.
+
+## 2026-11-05 — Import closure + P6 + P7 (prompt-141)
+- Owner decision: run / posting / payment are three separate states; without a link posting/payment show «بانتظار إعداد الربط المالي».
+- Import: account with view+create but no sensitive permission — ID column not offered, ID hidden in preview, row saved without ID; server refuses sensitive fields (hr_employee_save). hr-import-journey 22/22 (desktop + phone).
+- P6: hr_pay_items (owner/authorised), hr_decisions (once/monthly, maker≠approver, cancel kept; used-in-run once decisions cannot be cancelled, monthly ones stop), hr_advances (self or HR request, approver≠requester/holder, repayment ledger hr_advance_moves append-only, installments deducted only after confirmed disbursement), custody link = pc_custodies held by the employee's login (read-only).
+- P7: hr_pay_runs per org+month from in-force accepted contract monthly lines + approved decisions + installments (+ unpaid leave only when the owner set types and day divisor). Blockers: partial month (no guessed proration → confirm/exclude with reason), unpaid-leave rule missing, negative net, mixed currency. HR submits (snapshot version) → finance reviews/returns → management approves the reviewed version only (three different people). Approved run frozen; installments posted to the ledger; HR publishes payslips; posting/payment need owner-recorded link + reference.
+- Not computed (no policy): GOSI, end of service, overtime, proration, annual/one-time contract items (added via decision). Attendance has no money effect yet.
+- Evidence: hr-pay-e2e 56/56; hrp-journey 21/21 (7 accounts; HR desktop, management phone, employee phone+desktop, colleague phone); payslip PDF. Synthetic finance link used only in isolated test orgs; all test data removed.
+- Not published.

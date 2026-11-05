@@ -442,6 +442,8 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [x] Fixed: hr_settings fallback broke for orgs without a settings row after new column
 - [x] Device intake accepted separately from a real device (no device connected)
 - [x] Letters: PDF file per issued letter (direct download, built in the browser from the server-permitted frozen text, never stored; multi-page A4, cancelled/superseded stamp, LTR dates) — hrl-journey 15/15
-- [ ] Import browser journey with add-but-no-sensitive account — next
-- [ ] P6 decisions / earnings & deductions / advances / custody link — not started
-- [ ] P7 payroll (HR prepares → finance reviews → management approves), payslips; ledger/payment link waits for finance setup (D4 open) — not started
+- [x] Import browser journey with add-but-no-sensitive account (hr-import-journey 22/22, desktop+phone; server also refuses sensitive fields)
+- [x] P6 pay items, decisions (maker≠approver), advances + repayment ledger, custody link (hr-pay-e2e)
+- [x] P7 payroll HR→finance→management (reviewed version), payslips, run/posting/payment separate; posting/payment «بانتظار إعداد الربط المالي» (hr-pay-e2e 56/56, hrp-journey 21/21)
+- [ ] Real posting/payment — blocked: needs an approved finance link and confirmation by the competent party
+- [ ] GOSI, end-of-service, overtime, proration — blocked: owner policies not provided

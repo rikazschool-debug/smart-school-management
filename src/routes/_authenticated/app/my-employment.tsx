@@ -5,6 +5,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { MyLetters } from "@/components/hr/letters";
 import { MyLeave } from "@/components/hr/leave";
 import { MyAttendance } from "@/components/hr/attendance";
+import { MyMoney } from "@/components/hr/money";
 import { DocDetailPanel, DocStatus, DocUploadForm, type DocRow, type DocType } from "@/components/hr/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/app/my-employment")({
 type Mine = { employee: HrEmp; assignments: HrAssign[] } | null;
 type TeamRow = { id: string; employee_no: string; full_name: string; job_title: string | null; school: string; status: string };
 
-const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"], ["attendance", "حضوري"]] as const;
+const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"], ["attendance", "حضوري"], ["money", "سلفي وعهدي وقسائمي"]] as const;
 
 function Page() {
   const { active } = useSession();
@@ -49,6 +50,7 @@ function Page() {
         {tab === "letters" && <MyLetters org={org!} />}
         {tab === "leave" && <MyLeave org={org!} />}
         {tab === "attendance" && <MyAttendance org={org!} />}
+        {tab === "money" && <MyMoney org={org!} />}
       </>}
       {(team.data?.length ?? 0) > 0 && (
         <Section title="فريقي المباشر" desc="بيانات أساسية فقط لمن أنت مديره المباشر في تعيين حالي." className="mt-6" action={<Link to="/app/team-leave" className="rounded-lg border bg-card px-3 py-1.5 text-sm hover:border-primary">طلبات إجازة فريقي</Link>}>

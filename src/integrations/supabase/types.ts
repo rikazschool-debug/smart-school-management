@@ -5079,6 +5079,163 @@ export type Database = {
           },
         ]
       }
+      hr_advance_moves: {
+        Row: {
+          advance_id: string
+          amount: number
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          id: string
+          key: string
+          kind: string
+          month: string | null
+          org_id: string
+          reason: string | null
+          run_id: string | null
+        }
+        Insert: {
+          advance_id: string
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          key: string
+          kind: string
+          month?: string | null
+          org_id: string
+          reason?: string | null
+          run_id?: string | null
+        }
+        Update: {
+          advance_id?: string
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          key?: string
+          kind?: string
+          month?: string | null
+          org_id?: string
+          reason?: string | null
+          run_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_advance_moves_advance_id_fkey"
+            columns: ["advance_id"]
+            isOneToOne: false
+            referencedRelation: "hr_advances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_advance_moves_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_advance_moves_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_advances: {
+        Row: {
+          amount: number
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          employee_id: string
+          id: string
+          installment_amount: number
+          installments: number
+          org_id: string
+          paid_at: string | null
+          paid_by: string | null
+          payment_ref: string | null
+          payment_status: string
+          reason: string
+          requested_at: string
+          requested_by: string
+          rev: number
+          self_request: boolean
+          start_month: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          employee_id: string
+          id?: string
+          installment_amount: number
+          installments: number
+          org_id: string
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_ref?: string | null
+          payment_status?: string
+          reason: string
+          requested_at?: string
+          requested_by: string
+          rev?: number
+          self_request?: boolean
+          start_month: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          employee_id?: string
+          id?: string
+          installment_amount?: number
+          installments?: number
+          org_id?: string
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_ref?: string | null
+          payment_status?: string
+          reason?: string
+          requested_at?: string
+          requested_by?: string
+          rev?: number
+          self_request?: boolean
+          start_month?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_advances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_advances_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_assignments: {
         Row: {
           created_at: string
@@ -5737,6 +5894,97 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_decisions: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          created_by: string
+          employee_id: string
+          from_month: string
+          id: string
+          item_id: string
+          kind: string
+          mode: string
+          org_id: string
+          reason: string
+          rev: number
+          status: string
+          to_month: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by: string
+          employee_id: string
+          from_month: string
+          id?: string
+          item_id: string
+          kind: string
+          mode: string
+          org_id: string
+          reason: string
+          rev?: number
+          status?: string
+          to_month?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string
+          employee_id?: string
+          from_month?: string
+          id?: string
+          item_id?: string
+          kind?: string
+          mode?: string
+          org_id?: string
+          reason?: string
+          rev?: number
+          status?: string
+          to_month?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_decisions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_decisions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pay_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_decisions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -6683,6 +6931,348 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "hr_letter_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pay_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind: string
+          name: string
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pay_items_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pay_lines: {
+        Row: {
+          blockers: Json
+          currency: string | null
+          deductions: number
+          employee_id: string
+          exclude_reason: string | null
+          gross: number
+          id: string
+          items: Json
+          net: number
+          notes: Json
+          org_id: string
+          run_id: string
+          status: string
+        }
+        Insert: {
+          blockers?: Json
+          currency?: string | null
+          deductions?: number
+          employee_id: string
+          exclude_reason?: string | null
+          gross?: number
+          id?: string
+          items?: Json
+          net?: number
+          notes?: Json
+          org_id: string
+          run_id: string
+          status: string
+        }
+        Update: {
+          blockers?: Json
+          currency?: string | null
+          deductions?: number
+          employee_id?: string
+          exclude_reason?: string | null
+          gross?: number
+          id?: string
+          items?: Json
+          net?: number
+          notes?: Json
+          org_id?: string
+          run_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pay_lines_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pay_lines_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pay_lines_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pay_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pay_resolutions: {
+        Row: {
+          at: string
+          by_user: string
+          employee_id: string
+          mode: string
+          reason: string
+          run_id: string
+        }
+        Insert: {
+          at?: string
+          by_user: string
+          employee_id: string
+          mode: string
+          reason: string
+          run_id: string
+        }
+        Update: {
+          at?: string
+          by_user?: string
+          employee_id?: string
+          mode?: string
+          reason?: string
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pay_resolutions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_pay_resolutions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pay_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pay_runs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approved_version: number | null
+          created_at: string
+          created_by: string
+          id: string
+          month: string
+          notes: Json
+          org_id: string
+          paid_at: string | null
+          paid_by: string | null
+          payment_ref: string | null
+          payment_status: string
+          posted_at: string | null
+          posted_by: string | null
+          posting_ref: string | null
+          posting_status: string
+          prepared_at: string | null
+          prepared_by: string | null
+          published_at: string | null
+          published_by: string | null
+          return_reason: string | null
+          rev: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewed_version: number | null
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+          totals: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_version?: number | null
+          created_at?: string
+          created_by: string
+          id?: string
+          month: string
+          notes?: Json
+          org_id: string
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_ref?: string | null
+          payment_status?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          posting_ref?: string | null
+          posting_status?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          return_reason?: string | null
+          rev?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_version?: number | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          totals?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_version?: number | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          month?: string
+          notes?: Json
+          org_id?: string
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_ref?: string | null
+          payment_status?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          posting_ref?: string | null
+          posting_status?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          return_reason?: string | null
+          rev?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_version?: number | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          totals?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pay_runs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pay_settings: {
+        Row: {
+          day_divisor: number | null
+          finance_link: string | null
+          link_at: string | null
+          link_by: string | null
+          org_id: string
+          unpaid_leave_types: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          day_divisor?: number | null
+          finance_link?: string | null
+          link_at?: string | null
+          link_by?: string | null
+          org_id: string
+          unpaid_leave_types?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          day_divisor?: number | null
+          finance_link?: string | null
+          link_at?: string | null
+          link_by?: string | null
+          org_id?: string
+          unpaid_leave_types?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pay_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_pay_snapshots: {
+        Row: {
+          at: string
+          by_user: string
+          lines: Json
+          run_id: string
+          totals: Json
+          version: number
+        }
+        Insert: {
+          at?: string
+          by_user: string
+          lines: Json
+          run_id: string
+          totals: Json
+          version: number
+        }
+        Update: {
+          at?: string
+          by_user?: string
+          lines?: Json
+          run_id?: string
+          totals?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_pay_snapshots_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "hr_pay_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -11369,6 +11959,18 @@ export type Database = {
       _gb_window: { Args: { _gb: string; _student: string }; Returns: boolean }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
       _home_roles: { Args: { _me: string; _school: string }; Returns: Json }
+      _hr_adv_left: { Args: { _adv: string }; Returns: number }
+      _hr_adv_new: {
+        Args: { _emp: string; _org: string; _p: Json; _self: boolean }
+        Returns: string
+      }
+      _hr_adv_row: {
+        Args: {
+          _self: boolean
+          a: Database["public"]["Tables"]["hr_advances"]["Row"]
+        }
+        Returns: Json
+      }
       _hr_alert_last_runs: { Args: never; Returns: Json }
       _hr_assign_json: {
         Args: { _emp: string; _only_active: boolean }
@@ -11494,6 +12096,10 @@ export type Database = {
       _hr_d_status: {
         Args: { d: Database["public"]["Tables"]["hr_documents"]["Row"] }
         Returns: string
+      }
+      _hr_dec_row: {
+        Args: { d: Database["public"]["Tables"]["hr_decisions"]["Row"] }
+        Returns: Json
       }
       _hr_dv_json: {
         Args: { v: Database["public"]["Tables"]["hr_document_versions"]["Row"] }
@@ -11672,8 +12278,30 @@ export type Database = {
       }
       _hr_lv_taken: { Args: { _req: string }; Returns: number }
       _hr_me_emp: { Args: { _org: string }; Returns: string }
+      _hr_mn_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_mn_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
+      _hr_month: { Args: { _m: string }; Returns: string }
+      _hr_name: { Args: { _u: string }; Returns: string }
       _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_pay_build: { Args: { _run: string }; Returns: undefined }
       _hr_purge_org: { Args: { _org: string }; Returns: undefined }
+      _hr_py_notify: {
+        Args: {
+          _action: string
+          _body: string
+          _key: string
+          _link: string
+          _org: string
+          _skip: string
+          _title: string
+        }
+        Returns: undefined
+      }
+      _hr_py_ok: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_run_row: {
+        Args: { r: Database["public"]["Tables"]["hr_pay_runs"]["Row"] }
+        Returns: Json
+      }
       _hr_school_ok: {
         Args: { _action: string; _school: string }
         Returns: boolean
@@ -13677,6 +14305,19 @@ export type Database = {
         Args: { _course: string; _kind: string }
         Returns: Json
       }
+      hr_advance_act: {
+        Args: {
+          _action: string
+          _id: string
+          _reason: string
+          _ref: string
+          _rev: number
+        }
+        Returns: undefined
+      }
+      hr_advance_list: { Args: { _f: Json; _org: string }; Returns: Json }
+      hr_advance_request: { Args: { _org: string; _p: Json }; Returns: string }
+      hr_advance_save: { Args: { _org: string; _p: Json }; Returns: string }
       hr_assignment_save: {
         Args: { _employee: string; _id: string; _p: Json; _reason?: string }
         Returns: string
@@ -13804,6 +14445,12 @@ export type Database = {
         Args: { _id: string; _reason: string; _version: number }
         Returns: undefined
       }
+      hr_decision_act: {
+        Args: { _action: string; _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      hr_decision_list: { Args: { _f: Json; _org: string }; Returns: Json }
+      hr_decision_save: { Args: { _org: string; _p: Json }; Returns: string }
       hr_doc_alerts_tick: { Args: never; Returns: number }
       hr_doc_caps: { Args: { _org: string }; Returns: Json }
       hr_doc_file: { Args: { _version: string }; Returns: Json }
@@ -13829,6 +14476,7 @@ export type Database = {
         }
         Returns: Json
       }
+      hr_emp_money: { Args: { _emp: string }; Returns: Json }
       hr_employee_get: { Args: { _id: string }; Returns: Json }
       hr_employee_list: {
         Args: { _org: string; _q?: string; _school?: string; _status?: string }
@@ -13969,10 +14617,55 @@ export type Database = {
       }
       hr_letter_vars: { Args: never; Returns: Json }
       hr_me: { Args: { _org: string }; Returns: Json }
+      hr_money_caps: { Args: { _org: string }; Returns: Json }
+      hr_money_people: { Args: { _org: string }; Returns: Json }
       hr_my_contract: { Args: { _id: string }; Returns: Json }
       hr_my_contracts: { Args: { _org: string }; Returns: Json }
       hr_my_documents: { Args: { _org: string }; Returns: Json }
       hr_my_employment: { Args: { _org: string }; Returns: Json }
+      hr_my_money: { Args: { _org: string }; Returns: Json }
+      hr_my_payslip: { Args: { _id: string }; Returns: Json }
+      hr_pay_item_save: {
+        Args: {
+          _active: boolean
+          _id: string
+          _kind: string
+          _name: string
+          _org: string
+        }
+        Returns: string
+      }
+      hr_pay_line_resolve: {
+        Args: {
+          _emp: string
+          _mode: string
+          _reason: string
+          _rev: number
+          _run: string
+        }
+        Returns: undefined
+      }
+      hr_pay_run_act: {
+        Args: {
+          _action: string
+          _id: string
+          _reason: string
+          _ref: string
+          _rev: number
+        }
+        Returns: undefined
+      }
+      hr_pay_run_create: {
+        Args: { _month: string; _org: string }
+        Returns: string
+      }
+      hr_pay_run_get: { Args: { _id: string }; Returns: Json }
+      hr_pay_runs: { Args: { _org: string }; Returns: Json }
+      hr_pay_settings_save: {
+        Args: { _org: string; _p: Json }
+        Returns: undefined
+      }
+      hr_pay_setup: { Args: { _org: string }; Returns: Json }
       hr_settings_get: { Args: { _org: string }; Returns: Json }
       hr_settings_save: {
         Args: { _days: number[]; _notify_employee: boolean; _org: string }
