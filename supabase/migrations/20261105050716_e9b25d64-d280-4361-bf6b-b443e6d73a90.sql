@@ -1,0 +1,22 @@
+do $do$ declare d text; begin
+  d := pg_get_functiondef('public.hr_letter_template_save(uuid,uuid,jsonb)'::regprocedure);
+  d := replace(d, 'body text := coalesce(_p->>''body'','''');', 'b_txt text := coalesce(_p->>''body'','''');');
+  d := replace(d, 'length(btrim(body))', 'length(btrim(b_txt))');
+  d := replace(d, 'length(body) > 20000', 'length(b_txt) > 20000');
+  d := replace(d, 'if body ~ ', 'if b_txt ~ ');
+  d := replace(d, 'unk := _hr_l_unknown(body);', 'unk := _hr_l_unknown(b_txt);');
+  d := replace(d, 'comp := body ~ ', 'comp := b_txt ~ ');
+  d := replace(d, 'values(_org,nm,coalesce(nullif(_p->>''kind'',''''),''other''),body,', 'values(_org,nm,coalesce(nullif(_p->>''kind'',''''),''other''),b_txt,');
+  d := replace(d, 'values(t.id,1,nm,body,comp,auth.uid())', 'values(t.id,1,nm,b_txt,comp,auth.uid())');
+  d := replace(d, 'if body <> t.body or nm <> t.name then', 'if b_txt <> t.body or nm <> t.name then');
+  d := replace(d, 'values(_id,t.version,nm,body,comp,auth.uid())', 'values(_id,t.version,nm,b_txt,comp,auth.uid())');
+  d := replace(d, 'body=body, has_comp=comp', 'body=b_txt, has_comp=comp');
+  if d ~ '[^_]body[ ,;)]' and d ~ '\mbody <>' then raise exception 'rename incomplete'; end if;
+  execute d;
+  d := pg_get_functiondef('public.hr_letter_get(uuid)'::regprocedure);
+  d := replace(d, 'if not found or not (', 'if not found or not section_enabled(l.org_id,''hr'') or not (');
+  execute d;
+  d := pg_get_functiondef('public.hr_letter_mine(uuid)'::regprocedure);
+  d := replace(d, 'if emp is null or not _hr_l_self(emp)', 'if emp is null or not section_enabled(_org,''hr'') or not _hr_l_self(emp)');
+  execute d;
+end $do$;
