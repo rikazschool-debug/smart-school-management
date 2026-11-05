@@ -104,6 +104,6 @@ try {
   const ev = (await admin.from("hr_events").select("action").eq("org_id", org).eq("entity", "asset_custody")).data!.map((x: any) => x.action);
   check("custody actions logged", ["hand", "ack", "transferred", "returned", "lost"].every((a) => ev.includes(a)), ev);
 } catch (e) { bad++; console.log("FAIL crash", e); }
-finally { for (const o of orgs) await tr.purgeOrg(o); await tr.cleanup?.(); }
+finally { for (const o of orgs) await tr.purgeOrg(o).catch((e: unknown) => console.log("cleanup", e)); for (const u of tr.users) await admin.auth.admin.deleteUser(u); }
 console.log(`\n${ok} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);
