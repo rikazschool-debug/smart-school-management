@@ -49,7 +49,6 @@ try {
     { school_id: A, student_id: s1, guardian_id: G1, verified: true, relationship: "أم" }, { school_id: A, student_id: s2, guardian_id: G1, verified: true, relationship: "أم" },
     { school_id: B, student_id: s3, guardian_id: G1b, verified: true, relationship: "أم" }, { school_id: A, student_id: s4, guardian_id: G2, verified: false, relationship: "أب" }]).then((r) => { if (r.error) console.log("sg", r.error.message); });
   for (const a of ["view", "draft"]) await owner.c.rpc("perm_override_set", { _org: org, _user: staffA.id, _section: "notices", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة" }).then((r: any) => { if (r.error) console.log("perm", r.error.message); });
-  console.log("gm", JSON.stringify((await admin.from("memberships").select("role,school_id").eq("user_id", g1.id))));
 
   const cat = (await owner.c.rpc("perm_catalog")).data as any;
   check("permission tree has the hub with both tabs", cat.areas.some((a: any) => a.key === "comm_hub") && ["notices", "hub_meetings"].every((k) => cat.sections.some((s: any) => s.key === k)));
@@ -121,6 +120,31 @@ try {
   const cpd = (await owner.c.rpc("bc_get", { _id: cp })).data as any;
   check("copy makes a new draft and keeps the original", cpd.status === "draft" && cpd.copied_from === (snd.data as any).ref && ((await owner.c.rpc("bc_get", { _id: d1.id })).data as any).status === "sent");
   check("sent notice cannot be edited", has(await owner.c.rpc("bc_save", { _org: org, _id: d1.id, _p: { title: "تعديل", body: "تعديل", target: T1 }, _rev: 2 }), "المسودة"));
+  // attachments: type/size on server, upload gate on send, recipient + scoped viewer only
+  const dF = (await owner.c.rpc("bc_save", { _org: org, _id: null, _p: { title: "تعميم بمرفق", body: "مرفق التقويم", target: T1 }, _client: crypto.randomUUID() })).data as any;
+  check("bad type rejected", has(await owner.c.rpc("bc_add_file", { _id: dF.id, _name: "x.exe", _mime: "application/x-msdownload", _size: 10 }), "نوع الملف"));
+  check("oversize rejected", has(await owner.c.rpc("bc_add_file", { _id: dF.id, _name: "big.pdf", _mime: "application/pdf", _size: 999999999 }), "حجم الملف"));
+  check("non-editor cannot attach", has(await x.c.rpc("bc_add_file", { _id: dF.id, _name: "a.pdf", _mime: "application/pdf", _size: 10 }), "غير مصرح"));
+  const fr = (await owner.c.rpc("bc_add_file", { _id: dF.id, _name: "تقويم.pdf", _mime: "application/pdf", _size: 9 })).data as any[];
+  const fpath = fr[0].storage_path;
+  const pF = (await owner.c.rpc("bc_preview", { _org: org, _t: T1 })).data as any;
+  const dF2 = (await owner.c.rpc("bc_get", { _id: dF.id })).data as any;
+  check("send blocked while file not uploaded", has(await owner.c.rpc("bc_send", { _id: dF.id, _rev: dF2.rev, _fingerprint: pF.fingerprint }), "لم يكتمل"));
+  const up = await owner.c.storage.from("rikaz-files").upload(fpath, new Blob(["%PDF-1.4\n"], { type: "application/pdf" }), { contentType: "application/pdf" });
+  check("owner uploads to the reserved path", !up.error, up.error);
+  check("send with attachment ok", !(await owner.c.rpc("bc_send", { _id: dF.id, _rev: dF2.rev, _fingerprint: pF.fingerprint })).error);
+  const my = await g1.c.rpc("bc_my", { _id: dF.id });
+  check("recipient sees notice + file", !my.error && (my.data as any).files.length === 1 && (my.data as any).files[0].uploaded, my);
+  check("recipient can download", !(await g1.c.storage.from("rikaz-files").download(fpath)).error);
+  const gnl = (await g1.c.from("notifications").select("link").eq("dedupe_key", "bc:" + dF.id)).data!;
+  check("notification opens the notice page", gnl[0]?.link === "/app/notice/" + dF.id, gnl);
+  check("non-recipient in same org: no direct file", !!(await t1.c.storage.from("rikaz-files").download(fpath)).error);
+  check("non-recipient: bc_my denied", has(await t1.c.rpc("bc_my", { _id: dF.id }), "غير مصرح"));
+  check("other org: no direct file", !!(await x.c.storage.from("rikaz-files").download(fpath)).error);
+  check("other org: signed URL refused", !!(await x.c.storage.from("rikaz-files").createSignedUrl(fpath, 60)).error);
+  check("scoped coordinator of A can open it", !(await staffA.c.storage.from("rikaz-files").download(fpath)).error);
+  check("files of a sent notice cannot be removed", has(await owner.c.rpc("bc_remove_file", { _file: fr[0].id }), "غير مصرح"));
+  await admin.storage.from("rikaz-files").remove([fpath]);
 } catch (e) { bad++; console.log("FAIL crash", e); }
 finally { await tr.deleteNotifications().catch(() => {}); for (const o of orgs) { await admin.from("perm_overrides").delete().eq("org_id", o); await tr.purgeOrg(o).catch((e: unknown) => console.log("cleanup", e)); } for (const u of tr.users) await admin.auth.admin.deleteUser(u); }
 console.log(`\n${ok} passed, ${bad} failed`);

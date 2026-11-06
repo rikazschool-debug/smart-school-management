@@ -13362,6 +13362,7 @@ export type Database = {
       }
       _bc_can_all: { Args: { _action: string; _t: Json }; Returns: boolean }
       _bc_cat_label: { Args: { _c: string }; Returns: string }
+      _bc_file_ok: { Args: { _notice: string }; Returns: boolean }
       _bc_fp: { Args: { _t: Json }; Returns: string }
       _bc_ok: { Args: { _action: string; _school: string }; Returns: boolean }
       _bc_pool: {
@@ -15500,15 +15501,25 @@ export type Database = {
           teacher_id: string
         }[]
       }
+      bc_add_file: {
+        Args: { _id: string; _mime: string; _name: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
       bc_copy: { Args: { _id: string }; Returns: string }
       bc_discard: { Args: { _id: string; _rev: number }; Returns: undefined }
+      bc_files: { Args: { _id: string }; Returns: Json }
       bc_get: { Args: { _id: string }; Returns: Json }
       bc_list: { Args: { _f?: Json; _org: string }; Returns: Json }
+      bc_my: { Args: { _id: string }; Returns: Json }
       bc_people: {
         Args: { _ids?: string[]; _org: string; _q: string; _t: Json }
         Returns: Json
       }
       bc_preview: { Args: { _org: string; _t: Json }; Returns: Json }
+      bc_remove_file: { Args: { _file: string }; Returns: undefined }
       bc_save: {
         Args: {
           _client?: string

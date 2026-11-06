@@ -13,6 +13,7 @@ import { ask } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { rpc } from "@/components/hr/shared";
 import { MeetingList } from "@/components/admin/meeting-list";
+import { NoticeFiles } from "@/components/comm/notice-files";
 
 // Notifications & meetings hub. Targeting, eligibility, scope and the recipient list are decided by bc_* RPCs on the server.
 type Search = { tab?: "meetings"; n?: string };
@@ -132,6 +133,7 @@ function Composer({ org, k, id, onClose }: { org: string; k: Scope; id: string |
       <div className="space-y-4">
         <div><Label htmlFor="bc-title">العنوان</Label><Input id="bc-title" className="mt-1" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
         <div><Label htmlFor="bc-body">النص</Label><Textarea id="bc-body" rows={4} className="mt-1" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} /></div>
+        {form.id ? <NoticeFiles id={form.id} editable /> : <p className="text-xs text-muted-foreground">احفظ المسودة أولًا لإرفاق الملفات.</p>}
         <fieldset className="rounded-lg border p-3"><legend className="px-1 text-sm font-semibold">الفروع</legend>
           <div className="flex flex-wrap gap-3 text-sm">
             <label className="flex items-center gap-1"><input type="checkbox" checked={draftSchools.length > 0 && form.t.schools.length === draftSchools.length} onChange={(e) => setT({ schools: e.target.checked ? draftSchools.map((s) => s.id) : [], departments: [] })} />جميع الفروع المتاحة</label>
@@ -189,6 +191,7 @@ function NoticeDetail({ id, onClose, onEdit, onCopied }: { id: string; onClose: 
   return (
     <Section title={n.title} desc={`${n.ref ?? "مسودة"} · ${n.sender} · ${dt(n.sent_at)}${n.copied_from ? ` · منسوخ من ${n.copied_from}` : ""}`} action={<Button size="sm" variant="ghost" onClick={onClose} aria-label="إغلاق"><X className="size-4" /></Button>}>
       <p className="whitespace-pre-wrap text-sm">{n.body}</p>
+      <div className="mt-3"><NoticeFiles id={n.id} editable={false} /></div>
       <div className="mt-3 flex flex-wrap gap-2">
         {n.can.edit && <Button size="sm" onClick={() => onEdit(n.id)}>متابعة المسودة</Button>}
         {n.can.edit && <Button size="sm" variant="outline" onClick={async () => { if (await ask("إلغاء المسودة؟", { ok: "إلغاء المسودة", destructive: true })) discard.mutate(); }}>إلغاء المسودة</Button>}

@@ -1,0 +1,1 @@
+revoke execute on function public._bc_files_ready_trg() from public, anon, authenticated;
