@@ -51,7 +51,7 @@ check("13 view in S1 does not open S2 tickets", !!(await a1.rpc("support_route_d
 await g(id.a1, "assign");
 const ra = await a1.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.p1 });
 check("14 with support.assign a1 reassigns within the branch", !ra.error, ra.error);
-check("15 assign still refuses a person from another branch", !!(await a1.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.t2 })).error);
+check("15 assign still refuses a guardian or someone from another organization", !!(await a1.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.g1 })).error && !!(await a1.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.other })).error);
 check("16 no transfer without support.transfer", !!(await a1.rpc("support_action", { _ticket: T, _action: "transfer", _rev: await rev(T), _value: S2, _reason: "تجربة" })).error);
 check("17 settings refused without support.settings", !!(await a1.rpc("support_save_category", { _org: org, _id: null, _name: "تصنيف a1", _active: true })).error);
 // explicit deny of view for the principal
