@@ -30,6 +30,7 @@ import { Route as AuthenticatedAppFinanceRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppGradesRouteImport } from './routes/_authenticated/app/grades'
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
 import { Route as AuthenticatedAppHrRouteImport } from './routes/_authenticated/app/hr'
+import { Route as AuthenticatedAppHubRouteImport } from './routes/_authenticated/app/hub'
 import { Route as AuthenticatedAppMaintenanceRouteImport } from './routes/_authenticated/app/maintenance'
 import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authenticated/app/members'
 import { Route as AuthenticatedAppMyEmploymentRouteImport } from './routes/_authenticated/app/my-employment'
@@ -197,6 +198,11 @@ const AuthenticatedAppGuardiansRoute =
 const AuthenticatedAppHrRoute = AuthenticatedAppHrRouteImport.update({
   id: '/hr',
   path: '/hr',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppHubRoute = AuthenticatedAppHubRouteImport.update({
+  id: '/hub',
+  path: '/hub',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
 const AuthenticatedAppMaintenanceRoute =
@@ -533,6 +539,7 @@ export interface FileRoutesByFullPath {
   '/app/grades': typeof AuthenticatedAppGradesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/hr': typeof AuthenticatedAppHrRoute
+  '/app/hub': typeof AuthenticatedAppHubRoute
   '/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
@@ -608,6 +615,7 @@ export interface FileRoutesByTo {
   '/app/grades': typeof AuthenticatedAppGradesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/hr': typeof AuthenticatedAppHrRoute
+  '/app/hub': typeof AuthenticatedAppHubRoute
   '/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
@@ -686,6 +694,7 @@ export interface FileRoutesById {
   '/_authenticated/app/grades': typeof AuthenticatedAppGradesRoute
   '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/_authenticated/app/hr': typeof AuthenticatedAppHrRoute
+  '/_authenticated/app/hub': typeof AuthenticatedAppHubRoute
   '/_authenticated/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/_authenticated/app/members': typeof AuthenticatedAppMembersRoute
   '/_authenticated/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
@@ -764,6 +773,7 @@ export interface FileRouteTypes {
     | '/app/grades'
     | '/app/guardians'
     | '/app/hr'
+    | '/app/hub'
     | '/app/maintenance'
     | '/app/members'
     | '/app/my-employment'
@@ -839,6 +849,7 @@ export interface FileRouteTypes {
     | '/app/grades'
     | '/app/guardians'
     | '/app/hr'
+    | '/app/hub'
     | '/app/maintenance'
     | '/app/members'
     | '/app/my-employment'
@@ -916,6 +927,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/grades'
     | '/_authenticated/app/guardians'
     | '/_authenticated/app/hr'
+    | '/_authenticated/app/hub'
     | '/_authenticated/app/maintenance'
     | '/_authenticated/app/members'
     | '/_authenticated/app/my-employment'
@@ -1132,6 +1144,13 @@ declare module '@tanstack/react-router' {
       path: '/hr'
       fullPath: '/app/hr'
       preLoaderRoute: typeof AuthenticatedAppHrRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/hub': {
+      id: '/_authenticated/app/hub'
+      path: '/hub'
+      fullPath: '/app/hub'
+      preLoaderRoute: typeof AuthenticatedAppHubRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/maintenance': {
@@ -1530,6 +1549,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppGradesRoute: typeof AuthenticatedAppGradesRoute
   AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
   AuthenticatedAppHrRoute: typeof AuthenticatedAppHrRoute
+  AuthenticatedAppHubRoute: typeof AuthenticatedAppHubRoute
   AuthenticatedAppMaintenanceRoute: typeof AuthenticatedAppMaintenanceRoute
   AuthenticatedAppMembersRoute: typeof AuthenticatedAppMembersRoute
   AuthenticatedAppMyEmploymentRoute: typeof AuthenticatedAppMyEmploymentRoute
@@ -1599,6 +1619,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppGradesRoute: AuthenticatedAppGradesRoute,
   AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,
   AuthenticatedAppHrRoute: AuthenticatedAppHrRoute,
+  AuthenticatedAppHubRoute: AuthenticatedAppHubRoute,
   AuthenticatedAppMaintenanceRoute: AuthenticatedAppMaintenanceRoute,
   AuthenticatedAppMembersRoute: AuthenticatedAppMembersRoute,
   AuthenticatedAppMyEmploymentRoute: AuthenticatedAppMyEmploymentRoute,
