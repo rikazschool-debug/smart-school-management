@@ -135,3 +135,10 @@ describe("hidden nav (batch 1)", () => {
     }
   });
 });
+
+describe("admissions under school administration", () => {
+  it("admissions pages belong to the school administration section", async () => {
+    const { ownerSection } = await import("@/lib/roles");
+    expect(ownerSection("/app/admissions")).toBe("school_admin");
+  });
+});

@@ -68,14 +68,7 @@ const CARDS: Card[] = [
       { icon: PencilLine, label: "تعديل بيانات المدرسة", to: "/app/schools" },
       { icon: PauseCircle, label: "تفعيل فرع أو إيقافه", to: "/app/schools" },
       { icon: Link2, label: "ربط الموظفين بالمدرسة", to: "/app/schools" },
-    ],
-  },
-  {
-    key: "admissions", section: "admissions", title: "القبول والتسجيل", icon: UserPlus, to: "/app/admissions", open: "فتح القبول والتسجيل",
-    desc: "طلبات القبول من الموقع والإضافة اليدوية: المتابعة والتواصل والقرار، دون إنشاء طالب أو حساب تلقائيًا.",
-    features: [
-      { icon: UserPlus, label: "الطلاب المحتملون", to: "/app/admissions", search: { tab: "apps" } },
-      { icon: Building2, label: "الإعدادات والربط", to: "/app/admissions", search: { tab: "settings" } },
+      { icon: UserPlus, label: "القبول والتسجيل", to: "/app/admissions", search: { tab: "apps" } },
     ],
   },
   {
