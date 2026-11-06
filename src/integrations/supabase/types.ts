@@ -2031,6 +2031,152 @@ export type Database = {
           },
         ]
       }
+      bc_notice_log: {
+        Row: {
+          action: string
+          actor: string | null
+          at: string
+          details: Json
+          id: string
+          notice_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          at?: string
+          details?: Json
+          id?: string
+          notice_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          at?: string
+          details?: Json
+          id?: string
+          notice_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bc_notice_log_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "bc_notices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bc_notice_recipients: {
+        Row: {
+          category: string
+          notice_id: string
+          notified: boolean
+          school_id: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          notice_id: string
+          notified?: boolean
+          school_id: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          notice_id?: string
+          notified?: boolean
+          school_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bc_notice_recipients_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "bc_notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bc_notice_recipients_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bc_notices: {
+        Row: {
+          body: string
+          client_id: string | null
+          copied_from: string | null
+          created_at: string
+          created_by: string
+          id: string
+          org_id: string
+          recipient_count: number | null
+          ref: string | null
+          rev: number
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          target: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          client_id?: string | null
+          copied_from?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          org_id: string
+          recipient_count?: number | null
+          ref?: string | null
+          rev?: number
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          target?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          client_id?: string | null
+          copied_from?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          org_id?: string
+          recipient_count?: number | null
+          ref?: string | null
+          rev?: number
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          target?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bc_notices_copied_from_fkey"
+            columns: ["copied_from"]
+            isOneToOne: false
+            referencedRelation: "bc_notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bc_notices_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_queue: {
         Row: {
           announce: string
@@ -13206,6 +13352,38 @@ export type Database = {
         }[]
       }
       _auto_card: { Args: { _student: string }; Returns: undefined }
+      _bc_audience: {
+        Args: { _t: Json }
+        Returns: {
+          category: string
+          school_id: string
+          user_id: string
+        }[]
+      }
+      _bc_can_all: { Args: { _action: string; _t: Json }; Returns: boolean }
+      _bc_cat_label: { Args: { _c: string }; Returns: string }
+      _bc_fp: { Args: { _t: Json }; Returns: string }
+      _bc_ok: { Args: { _action: string; _school: string }; Returns: boolean }
+      _bc_pool: {
+        Args: { _t: Json }
+        Returns: {
+          category: string
+          school_id: string
+          user_id: string
+        }[]
+      }
+      _bc_schools: {
+        Args: { _action: string; _org: string }
+        Returns: string[]
+      }
+      _bc_target: {
+        Args: { _action: string; _org: string; _t: Json }
+        Returns: Json
+      }
+      _bc_visible: {
+        Args: { n: Database["public"]["Tables"]["bc_notices"]["Row"] }
+        Returns: boolean
+      }
       _can_circ_scope: {
         Args: { _home: string; _org: string; _scope: string }
         Returns: boolean
@@ -14381,6 +14559,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      _perm_catalog_base: { Args: never; Returns: Json }
       _perm_denied: {
         Args: { _action: string; _org: string; _section: string; _uid: string }
         Returns: boolean
@@ -15316,6 +15495,30 @@ export type Database = {
           same_department: boolean
           teacher_id: string
         }[]
+      }
+      bc_copy: { Args: { _id: string }; Returns: string }
+      bc_discard: { Args: { _id: string; _rev: number }; Returns: undefined }
+      bc_get: { Args: { _id: string }; Returns: Json }
+      bc_list: { Args: { _f?: Json; _org: string }; Returns: Json }
+      bc_people: {
+        Args: { _ids?: string[]; _org: string; _q: string; _t: Json }
+        Returns: Json
+      }
+      bc_preview: { Args: { _org: string; _t: Json }; Returns: Json }
+      bc_save: {
+        Args: {
+          _client?: string
+          _id: string
+          _org: string
+          _p: Json
+          _rev?: number
+        }
+        Returns: Json
+      }
+      bc_scope: { Args: { _org: string }; Returns: Json }
+      bc_send: {
+        Args: { _fingerprint: string; _id: string; _rev: number }
+        Returns: Json
       }
       build_absence_review: {
         Args: { _date: string; _school: string }
