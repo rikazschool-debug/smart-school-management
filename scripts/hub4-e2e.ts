@@ -16,16 +16,17 @@ const owner = await as("owner"), p1 = await as("p1"), other = await as("other");
 const rcp = async (c: string) => new Set(((await admin.from("circular_recipients").select("user_id, school_id").eq("circular_id", c)).data ?? []).map((r) => r.user_id));
 
 // 1. org-wide circular to teachers of all four schools; saved with S4 as home (last visited school must not narrow)
+const T1title = "تعميم المدارس الأربع " + Date.now();
 const aud = { roles: ["teacher"], departments: [], groups: [], users: [] };
 const pv = await owner.rpc("preview_circular_audience", { _school: S4, _aud: aud, _scope: "org", _schools: null });
 const inc = ((pv.data ?? []) as any[]).filter((r) => r.included);
 check("1 preview covers 4 schools", new Set(inc.map((r) => r.school_id)).size === 4 && inc.length === 6, [pv.error, inc.length]);
-const c1 = await owner.rpc("save_circular", { _id: null, _school: S4, _title: "تعميم المدارس الأربع", _body: "نص", _publisher: null, _priority: "normal", _requires_ack: false, _ack_due: null, _aud: aud, _scope: "org", _schools: null });
+const c1 = await owner.rpc("save_circular", { _id: null, _school: S4, _title: T1title, _body: "نص", _publisher: null, _priority: "normal", _requires_ack: false, _ack_due: null, _aud: aud, _scope: "org", _schools: null });
 const pb1 = await owner.rpc("publish_circular", { _id: c1.data });
 const r1 = await rcp(c1.data as string);
 check("2 published to a sample teacher in each school", ["t1", "t2", "t3", "t4"].every((k) => r1.has(id[k])), [c1.error, pb1.error, r1.size]);
 check("3 non-teachers excluded (guardian, admin staff)", !r1.has(id.g1) && !r1.has(id.a1));
-check("4 one operation logged as one circular", ((await admin.from("circulars").select("id", { count: "exact", head: true }).eq("org_id", org).eq("title", "تعميم المدارس الأربع")).count) === 1);
+check("4 one operation logged as one circular", ((await admin.from("circulars").select("id", { count: "exact", head: true }).eq("org_id", org).eq("title", T1title)).count) === 1);
 
 // 2. two same-titled groups from two branches
 const aud2 = { roles: [], departments: [], groups: f.groups, users: [id.t1] }; // t1 also in group 1 → counted once
