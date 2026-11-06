@@ -1117,6 +1117,7 @@ export type Database = {
           ban_rule: string | null
           banned: boolean
           can_share: boolean
+          category: string | null
           hand_at: string | null
           host_muted: boolean
           marked_at: string | null
@@ -1130,6 +1131,7 @@ export type Database = {
           school_id: string | null
           share_req_at: string | null
           user_id: string
+          via: string
         }
         Insert: {
           attendance_note?: string | null
@@ -1137,6 +1139,7 @@ export type Database = {
           ban_rule?: string | null
           banned?: boolean
           can_share?: boolean
+          category?: string | null
           hand_at?: string | null
           host_muted?: boolean
           marked_at?: string | null
@@ -1150,6 +1153,7 @@ export type Database = {
           school_id?: string | null
           share_req_at?: string | null
           user_id: string
+          via?: string
         }
         Update: {
           attendance_note?: string | null
@@ -1157,6 +1161,7 @@ export type Database = {
           ban_rule?: string | null
           banned?: boolean
           can_share?: boolean
+          category?: string | null
           hand_at?: string | null
           host_muted?: boolean
           marked_at?: string | null
@@ -1170,6 +1175,7 @@ export type Database = {
           school_id?: string | null
           share_req_at?: string | null
           user_id?: string
+          via?: string
         }
         Relationships: [
           {
@@ -1276,6 +1282,8 @@ export type Database = {
       adm_meetings: {
         Row: {
           agenda: string | null
+          audience: Json | null
+          audience_fp: string | null
           cancel_reason: string | null
           client_id: string | null
           course_id: string | null
@@ -1308,6 +1316,8 @@ export type Database = {
         }
         Insert: {
           agenda?: string | null
+          audience?: Json | null
+          audience_fp?: string | null
           cancel_reason?: string | null
           client_id?: string | null
           course_id?: string | null
@@ -1340,6 +1350,8 @@ export type Database = {
         }
         Update: {
           agenda?: string | null
+          audience?: Json | null
+          audience_fp?: string | null
           cancel_reason?: string | null
           client_id?: string | null
           course_id?: string | null
@@ -13224,6 +13236,30 @@ export type Database = {
         }
         Returns: undefined
       }
+      _adm_meet_fp: { Args: { _picks: string[]; _t: Json }; Returns: string }
+      _adm_meet_resolve: {
+        Args: { _picks: string[]; _t: Json }
+        Returns: {
+          cat: string
+          school_id: string
+          user_id: string
+        }[]
+      }
+      _adm_meet_summary: { Args: { _picks: string[]; _t: Json }; Returns: Json }
+      _adm_meet_target: {
+        Args: { _org: string; _school: string; _scope: string; _t: Json }
+        Returns: Json
+      }
+      _adm_member_ok: {
+        Args: {
+          _cat: string
+          _org: string
+          _school: string
+          _scope: string
+          _user: string
+        }
+        Returns: boolean
+      }
       _adm_name: { Args: { _user: string }; Returns: string }
       _adm_principal: { Args: { _school: string }; Returns: boolean }
       _adm_staff: { Args: { _school: string; _user: string }; Returns: boolean }
@@ -15083,6 +15119,11 @@ export type Database = {
         Args: { _id: string; _marks: Json }
         Returns: undefined
       }
+      adm_meeting_audience_get: { Args: { _id: string }; Returns: Json }
+      adm_meeting_audience_preview: {
+        Args: { _picks: string[]; _school: string; _scope: string; _t: Json }
+        Returns: Json
+      }
       adm_meeting_cancel: {
         Args: { _id: string; _reason: string; _rev: number }
         Returns: number
@@ -15160,6 +15201,10 @@ export type Database = {
         Returns: Json
       }
       adm_meeting_send: { Args: { _id: string; _rev: number }; Returns: number }
+      adm_meeting_set_audience: {
+        Args: { _id: string; _rev: number; _t: Json }
+        Returns: Json
+      }
       adm_minutes_confirm: {
         Args: { _id: string; _rev: number }
         Returns: undefined
