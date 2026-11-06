@@ -1,0 +1,1 @@
+grant execute on function public._perm_catalog_base() to authenticated;
