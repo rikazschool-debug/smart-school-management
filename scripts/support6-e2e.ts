@@ -17,6 +17,7 @@ const owner = await as("owner"), p1 = await as("p1"), t1 = await as("t1"), other
 const rev = async (t: string) => (await admin.from("support_tickets").select("rev").eq("id", t).single()).data!.rev;
 
 // departments: «الرياضيات» with t1 in S1, an empty one in S1, one in S2
+for (const n of ["الرياضيات h4x", "قسم فارغ h4x", "العلوم h4x"]) await admin.from("departments").delete().eq("name", n).in("school_id", f.schools);
 const mk = async (school: string, name: string) => (await admin.from("departments").insert({ school_id: school, name }).select("id").single()).data!.id as string;
 const MATH = await mk(S1, "الرياضيات h4x"), EMPTY = await mk(S1, "قسم فارغ h4x"), D2 = await mk(S2, "العلوم h4x");
 await admin.from("memberships").update({ department_id: MATH }).eq("user_id", id.t1).eq("school_id", S1);
