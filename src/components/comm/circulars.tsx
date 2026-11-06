@@ -4,7 +4,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, Paperclip } from "lucide-react";
-import { db, useOptions, type Row } from "@/components/crud-page";
+import { db, type Row } from "@/components/crud-page";
 import { ExportButtons } from "@/components/list-tools";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/button";
