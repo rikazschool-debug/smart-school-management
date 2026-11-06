@@ -17,6 +17,8 @@ import { ROLE_LABELS, type Role, type SupportTab } from "@/lib/roles";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { InternalPanel, ManagePanel } from "@/components/support/handling";
 import { InternalTicket } from "@/components/support/internal-ticket";
+import { FollowersPanel } from "@/components/support/followers";
+import type { Branch, SupportCaps } from "@/components/support/caps";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -32,12 +34,12 @@ const ACT: Record<string, string> = {
   waiting_internal: "بانتظار جهة داخلية", priority: "تغيير الأولوية", category: "تغيير التصنيف", resolve: "حل", confirm: "تأكيد الحل وإغلاق", close: "إغلاق",
   reopen: "إعادة فتح", cancel: "إلغاء", file_added: "إرفاق ملف",
   assign: "إسناد المعالجة", department: "تغيير القسم الموجّه إليه", transfer: "تحويل إلى فرع آخر", escalated: "تصعيد إلى دعم المنصة", note_private: "ملاحظة خاصة", note_team: "ملاحظة الفريق",
-  info_requested: "طلب إفادة", info_answered: "وصول إفادة", info_cancelled: "إلغاء طلب إفادة", sla_breach: "تنبيه تأخير",
+  info_requested: "طلب إفادة", info_answered: "وصول إفادة", info_cancelled: "إلغاء طلب إفادة", follower_added: "إضافة متابع", follower_removed: "إزالة متابع", sla_breach: "تنبيه تأخير",
 };
 export const DEFAULT_SLA: Record<string, { response: number; resolve: number }> = { urgent: { response: 2, resolve: 8 }, high: { response: 4, resolve: 24 }, normal: { response: 8, resolve: 40 }, low: { response: 24, resolve: 80 } };
 const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 export const isOverdue = (t: Row) => !["resolved", "closed", "cancelled", "waiting_requester"].includes(t.status) && ((!t.first_response_at && t.response_due && new Date(t.response_due) < new Date()) || (t.resolve_due && new Date(t.resolve_due) < new Date()));
-export const TAB_LABEL: Record<SupportTab, string> = { summary: "الملخص", mine: "تذاكري", assigned: "المسندة إليّ", info: "طلبات الإفادة", manage: "التذاكر", reports: "التقارير" };
+export const TAB_LABEL: Record<SupportTab, string> = { summary: "الملخص", mine: "تذاكري", assigned: "المسندة إليّ", following: "أتابعها", info: "طلبات الإفادة", manage: "التذاكر", reports: "التقارير" };
 const roleLabel = (r: string) => ROLE_LABELS[r as Role] ?? r;
 const PAGE = 20;
 
@@ -82,7 +84,7 @@ export function HoursNote({ orgId }: { orgId: string | null }) {
 /* ---------------- list ---------------- */
 export { InfoInbox } from "@/components/support/handling";
 
-export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box: SupportTab; onOpen: (id: string) => void; initialStatus?: string | undefined }) {
+export function TicketList({ ctx, box, onOpen, initialStatus, caps }: { ctx: Ctx; box: SupportTab; onOpen: (id: string) => void; initialStatus?: string | undefined; caps?: SupportCaps }) {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState(initialStatus ?? "");
   const [prio, setPrio] = useState("");
@@ -93,13 +95,14 @@ export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box:
   const [assignee, setAssignee] = useState("");
   const [dept, setDept] = useState("");
   const [page, setPage] = useState(0);
-  const owner = ctx.role === "org_owner" && box === "manage";
-  const scopeSchool = ctx.role === "principal" && box === "manage" ? ctx.schoolId : null;
-  const branches = useQuery({
-    enabled: owner && !!ctx.orgId,
-    queryKey: ["support-branches", ctx.orgId],
-    queryFn: async () => ((await db.from("schools").select("id, name").eq("org_id", ctx.orgId).order("name")).data ?? []) as Row[],
-  });
+  const platform = ctx.role === "platform_admin";
+  // branches come from support.view (support_caps); one branch → fixed, several → a branch filter
+  const viewBranches = caps?.view ?? [];
+  const owner = box === "manage" && !platform && viewBranches.length > 1;
+  const scopeSchool = box === "manage" && !platform && !owner ? (viewBranches[0]?.id ?? ctx.schoolId) : null;
+  const branches = { data: viewBranches as Row[] };
+  const exportNames = new Set((caps?.export ?? []).map((b) => b.name));
+  const canExport = box === "manage" && (platform || exportNames.size > 0);
   const cats = useCategories(ctx.role === "platform_admin" ? "platform" : "school", ctx.orgId);
   const assignees = useQuery({
     enabled: box === "manage",
@@ -129,7 +132,7 @@ export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box:
 
   async function doExport(kind: "xlsx" | "pdf") {
     try {
-      const all = await fetchAllRows((o) => db.rpc("support_list", args(o, 100)));
+      const all = (await fetchAllRows((o) => db.rpc("support_list", args(o, 100)))).filter((r) => platform || caps?.owner || exportNames.has(r.school_name));
       const headers = ["الرقم", "العنوان", "الحالة", "الأولوية", "التصنيف", "الفرع", "القسم", "مقدم الطلب", "الصفة", "المسؤول", "الإنشاء", "آخر تحديث", "موعد الحل", "متأخرة"];
       const data = all.map((r) => [r.ref, r.title, STATUS[r.status], PRIO[r.priority], r.category, r.school_name, r.department_name ?? "", r.requester_name, roleLabel(r.requester_role), r.assignee_name, fmt(r.created_at), fmt(r.updated_at), r.resolve_due ? fmt(r.resolve_due) : "", r.overdue ? "نعم" : ""]);
       const filters = [q && `بحث: ${q}`, status && `الحالة: ${STATUS[status] ?? "مفتوحة"}`, prio && `الأولوية: ${PRIO[prio]}`, from && `من ${from}`, to && `إلى ${to}`].filter(Boolean) as string[];
@@ -173,7 +176,7 @@ export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box:
         <Input type="date" aria-label="من تاريخ" value={from} onChange={(e) => setFrom(e.target.value)} />
         <Input type="date" aria-label="إلى تاريخ" value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
-      {box === "manage" && (
+      {canExport && (
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => doExport("xlsx")}><Download className="size-4" /> Excel</Button>
           <Button variant="outline" size="sm" onClick={() => doExport("pdf")}><FileText className="size-4" /> PDF</Button>
@@ -217,9 +220,9 @@ export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box:
 }
 
 /* ---------------- create ---------------- */
-export function NewTicket({ ctx, onDone, onCancel, internal = false }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void; internal?: boolean }) {
+export function NewTicket({ ctx, onDone, onCancel, internal = false, branches = [] }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void; internal?: boolean; branches?: Branch[] }) {
   const [mode, setMode] = useState<"internal" | "own">(internal ? "internal" : "own");
-  if (mode === "internal") return <InternalTicket ctx={ctx} onDone={onDone} onCancel={onCancel} onOwn={() => setMode("own")} />;
+  if (mode === "internal") return <InternalTicket ctx={ctx} branches={branches} onDone={onDone} onCancel={onCancel} onOwn={() => setMode("own")} />;
   return <OwnTicket ctx={ctx} onDone={onDone} onCancel={onCancel} onInternal={internal ? () => setMode("internal") : undefined} />;
 }
 
@@ -372,7 +375,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
 
       {/* actions */}
       <div className="flex flex-wrap gap-2">
-        {can.manage && ["new", "waiting_internal", "in_progress"].includes(t.status) && t.assignee !== userId && <Button size="sm" onClick={() => act("claim")}>استلام التذكرة</Button>}
+        {can.assign && ["new", "waiting_internal", "in_progress"].includes(t.status) && t.assignee !== userId && <Button size="sm" onClick={() => act("claim")}>استلام التذكرة</Button>}
         {can.handle && open && t.status !== "resolved" && <>
           <Button size="sm" variant="outline" onClick={() => act("waiting_requester", { confirm: "تحويل الحالة إلى «بانتظار مقدم الطلب»؟ اكتب سؤالك في الرد." })}>طلب معلومات</Button>
           <Button size="sm" variant="outline" onClick={() => act("waiting_internal")}>بانتظار جهة داخلية</Button>
@@ -397,7 +400,8 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
         </div>
       )}
 
-      {can.manage && <ManagePanel d={d} onChange={refresh} />}
+      {(can.assign || can.transfer || can.escalate) && <ManagePanel d={d} onChange={refresh} />}
+      <FollowersPanel d={d} userId={userId} onChange={refresh} />
 
       {/* conversation */}
       <div className="space-y-2">
@@ -416,7 +420,9 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
             </div>
           </div>
         ))}
-        {open ? (
+        {open && !can.reply ? (
+          <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">أنت {can.following ? "متابع لهذه التذكرة" : "مطّلع على هذه التذكرة"}: يمكنك قراءة الردود العلنية والمرفقات فقط، دون رد أو تغيير.</p>
+        ) : open ? (
           <div className="space-y-2 rounded-xl border bg-card p-3">
             <Label htmlFor="sp-reply">رد علني <span className="text-xs font-normal text-muted-foreground">— يراه مقدم الطلب ومن يتابع التذكرة</span></Label>
             <Textarea id="sp-reply" rows={3} value={reply} onChange={(e) => setReply(e.target.value)} />
@@ -431,7 +437,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
         <p className="font-semibold">المرفقات</p>
         {!files.data?.length && <p className="text-sm text-muted-foreground">لا توجد مرفقات.</p>}
         <FileList files={files.data ?? []} />
-        {open && <Uploader create={async (f) => { const { data, error } = await db.rpc("create_support_file", { _ticket: id, _name: f.name, _mime: f.type || "application/octet-stream", _size: f.size }); if (error) throw error; return (data as { id: string; storage_path: string }[])[0]!; }}
+        {open && can.attach && <Uploader create={async (f) => { const { data, error } = await db.rpc("create_support_file", { _ticket: id, _name: f.name, _mime: f.type || "application/octet-stream", _size: f.size }); if (error) throw error; return (data as { id: string; storage_path: string }[])[0]!; }}
           release={(fid) => db.rpc("support_release_file", { _file: fid })} onDone={refresh} />}
       </div>
 
