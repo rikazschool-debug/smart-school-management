@@ -98,7 +98,7 @@ try {
 
   // scope: branch coordinator
   check("coordinator cannot target branch B", has(await staffA.c.rpc("bc_preview", { _org: org, _t: { schools: [B], categories: ["teacher"], mode: "all" } }), "خارج نطاق"));
-  const dA = (await staffA.c.rpc("bc_save", { _org: org, _id: null, _p: { title: "مسودة المنسقة", body: "نص", target: { schools: [A], categories: ["teacher"], mode: "all" } } })).data as any;
+  const dA = (await staffA.c.rpc("bc_save", { _org: org, _id: null, _p: { title: "مسودة المنسقة", body: "نص المسودة", target: { schools: [A], categories: ["teacher"], mode: "all" } } })).data as any;
   const pA = (await staffA.c.rpc("bc_preview", { _org: org, _t: { schools: [A], categories: ["teacher"], mode: "all" } })).data as any;
   check("coordinator cannot send (no send grant)", has(await staffA.c.rpc("bc_send", { _id: dA.id, _rev: dA.rev, _fingerprint: pA.fingerprint }), "صلاحية الإرسال"));
   const lA = (await staffA.c.rpc("bc_list", { _org: org, _f: {} })).data as any[];
