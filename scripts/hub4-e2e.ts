@@ -49,7 +49,7 @@ check("9 notice sent once to S1 teachers only", !ns.error && (ns.data as any)?.c
 const mp = await owner.rpc("adm_meeting_audience_preview", { _school: S1, _scope: "org", _t: { mode: "all", schools: [S1, S2], categories: ["teacher"] }, _picks: [id.a1, id.t1] });
 check("10 meeting preview: 4 teachers + 1 picked admin (picked teacher once) = 5", (mp.data as any)?.count === 5, [mp.error, mp.data]);
 const soon = new Date(Date.now() + 864e5).toISOString();
-const ms = await owner.rpc("adm_meeting_save", { _id: null, _school: S1, _d: { title: "اجتماع مدرستين", starts_at: soon, duration_min: 30, mode: "virtual", privacy: "normal", scope: "org", members: [{ user_id: id.a1, role: "member" }] }, _rev: null, _client: null });
+const ms = await owner.rpc("adm_meeting_save", { _id: null, _school: S1, _d: { title: "اجتماع مدرستين", starts_at: soon, duration_min: 30, mode: "virtual", privacy: "normal", scope: "org", members: [id.a1] }, _rev: null, _client: null });
 const M = (ms.data as any)?.id;
 const sa = await owner.rpc("adm_meeting_set_audience", { _id: M, _rev: (ms.data as any)?.rev, _t: { mode: "all", schools: [S1, S2], categories: ["teacher"] } });
 const sd = await owner.rpc("adm_meeting_send", { _id: M, _rev: (ms.data as any)?.rev });
