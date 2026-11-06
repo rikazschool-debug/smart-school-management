@@ -48,4 +48,4 @@
 - Evaluation (cv_*/ev_*): RPC-only; visit-form.ts matches _cv_codes(); ratings keep form snapshots.
 - HR (hr_*): RPC-only, single source; see src/components/hr/AGENTS.md.
 
-- Notifications hub (bc_*): owner-portal «الإشعارات والاجتماعات»; notices are RPC-only (bc_scope/people/preview/save/send/list/get/copy/discard), audience resolved on the server by _bc_audience (branch × category × department, all or picked, verified guardian links, distinct per account) with a preview fingerprint that must match at send; delivery via _notify key bc:<id>. Permissions: perm sections notices/hub_meetings (area comm_hub, owner always). Meetings tab reuses adm_* meetings (MeetingList at org level). Tests: scripts/bc-e2e.ts, bc-journey.py.
+- Notifications hub (bc_*): RPC-only; server audience _bc_audience + preview fingerprint checked at send; perms notices/hub_meetings (area comm_hub). Tests: bc-e2e, bc-journey.
