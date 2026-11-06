@@ -1,4 +1,4 @@
-# Support followers journey (needs hub4-fixture setup + a ticket from /tmp/browser/h4/mk7.ts → t7.json):
+# Support followers journey (needs hub4-fixture setup + a ticket from scripts/support7-prep.ts → t7.json):
 # owner (desktop) adds a staff follower by name; follower (phone) sees it in «أتابعها» read-only without notes;
 # principal sees the followers; owner removes the follower and the follower is refused at once. Usage: python3 scripts/support7-journey.py [base]
 import asyncio, json, sys
