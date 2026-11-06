@@ -19,7 +19,7 @@ export function validateMtSearch(s: Record<string, unknown>): MtSearch {
 }
 
 const TITLES = {
-  school: { title: "إدارة صيانة المدارس", desc: "طلبات صيانة مباني المدارس ومتابعتها حتى اعتماد الإنجاز؛ ما تراه محدد بصلاحياتك وفروعك." },
+  school: { title: "إدارة صيانة المباني", desc: "طلبات صيانة مباني المدارس ومتابعتها حتى اعتماد الإنجاز؛ ما تراه محدد بصلاحياتك وفروعك." },
   bus: { title: "إدارة تشغيل وصيانة الباصات", desc: "سجلات الباصات وحالة تشغيلها وطلبات صيانتها حتى الفحص والعودة للخدمة." },
 };
 
@@ -45,7 +45,7 @@ export function MaintenancePage({ kind, sp, go }: { kind: "school" | "bus"; sp: 
   const tabs: ["requests" | "buses", string, typeof Wrench][] = [...(can ? [["requests", "طلبات صيانة الباصات", Wrench] as ["requests", string, typeof Wrench]] : []), ["buses", "الباصات وحالة التشغيل", Bus]];
   return (
     <div className="space-y-5">
-      <PageHeader eyebrow={kind === "school" ? "إدارة صيانة المدارس" : "النقل المدرسي وصيانة الباصات"} title={t.title} desc={t.desc} />
+      <PageHeader eyebrow={kind === "school" ? "إدارة صيانة المباني" : "النقل المدرسي وصيانة المركبات"} title={t.title} desc={t.desc} />
       {kind === "bus" && !sp.r && !sp.new && (
         <div role="tablist" className="flex flex-wrap gap-1 rounded-xl border bg-card p-1">
           {tabs.map(([k, label, Icon]) => (

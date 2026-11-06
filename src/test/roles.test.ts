@@ -126,3 +126,12 @@ describe("owner evaluation section", () => {
     expect(ownerSectionNav("school_admin", NAV_BY_ROLE.org_owner)).not.toContain("evaluation");
   });
 });
+
+describe("hidden nav (batch 1)", () => {
+  it("virtual classes and grades archive are hidden for every role", () => {
+    for (const r of Object.keys(NAV_BY_ROLE) as Role[]) {
+      expect(NAV_BY_ROLE[r]).not.toContain("virtual");
+      expect(NAV_BY_ROLE[r]).not.toContain("grades");
+    }
+  });
+});
