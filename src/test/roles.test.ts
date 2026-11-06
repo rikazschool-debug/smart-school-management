@@ -108,6 +108,9 @@ describe("owner shared pages keep the current section", () => {
     expect(ownerSection("/app/notifications", "finance")).toBe("finance");
     expect(ownerSection("/app/profile", null)).toBeNull();
     expect(ownerSection("/app/hr", "school_admin")).toBe("hr");
+    // support is its own section with its own sub-menu, whatever section the owner came from
+    expect(ownerSection("/app/support", "hr")).toBe("support");
+    expect(ownerSection("/app/support", null)).toBe("support");
   });
 });
 

@@ -223,8 +223,8 @@ function Shell() {
                   )}
                   {k === "support" && inSupport && (active.role === "platform_admin" || sCaps.data) && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
-                      {[...supportTabs(active.role, (sCaps.data?.view.length ?? 0) > 0), ...(active.role === "platform_admin" || sCaps.data?.settings ? (["settings"] as const) : [])].map((t) => (
-                        <Link key={t} to="/app/support" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS + (supTab === t ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>
+                      {[...supportTabs(active.role, (sCaps.data?.view.length ?? 0) > 0), ...(active.role === "platform_admin" || sCaps.data?.settings ? (["settings"] as const) : [])].map((t, i) => (
+                        <Link key={t} to="/app/support" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS + (supTab === t || (!supTab && i === 0) ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>
                           {t === "settings" ? "الإعدادات والتصنيفات" : SUPPORT_TAB_LABELS[t]}
                         </Link>
                       ))}
