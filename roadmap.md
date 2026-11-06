@@ -495,3 +495,10 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [ ] hub_meetings granular actions enforced in meeting RPCs (today: organizer/owner/principal rules); restricted to existing behaviour
 - [ ] Meeting journeys for this package (direct/scheduled/in-person across branches, RSVP, reschedule/cancel, audio/screen, revoke mid-session) — existing meetings-live-e2e 33/33 only
 - [ ] Support package (second attached file)
+
+## Hub package (Nov 6)
+- [x] Hub sidebar section (notices / meetings / circulars)
+- [x] Notice attachments browser check (upload, recipient phone open/download)
+- [x] hub_meetings perms on server + instant meeting
+- [ ] Agora audio/screen-share multi-account rerun (stalled at mic step this run)
+- [ ] Support package (after hub closes)
