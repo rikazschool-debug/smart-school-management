@@ -13,18 +13,19 @@ import { askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { rpc } from "@/components/hr/shared";
+import { PermQueue } from "@/components/hr/p10";
 import { LV_STATUS, LeaveCard, LeavePanel, PolicyForm, WEEKDAYS, daysTxt, policyTxt, type LeaveRow, type LeaveType } from "@/components/hr/leave";
 
 type Caps = { enabled: boolean; settings_admin: boolean; team: boolean; caps: Record<"view" | "approve" | "balances" | "settings" | "export", boolean> };
 type Setup = { work_days: number[] | null; updated_at: string | null; can_edit: boolean; schools: { id: string; name: string }[]; types: LeaveType[] };
-type BalRow = { employee_id: string; employee: string; employee_no: string; school: string | null; type_id: string; type: string; year: number; granted: number; adjusted: number; taken: number; balance: number; pending: number };
-type Search = { r?: string; tab?: "requests" | "balances" | "settings" };
+type BalRow = { employee_id: string; employee: string; employee_no: string; school: string | null; type_id: string; type: string; year: number; opening?: number; granted: number; adjusted: number; taken: number; balance: number; pending: number };
+type Search = { r?: string; tab?: "requests" | "permissions" | "balances" | "settings" };
 
 export const Route = createFileRoute("/_authenticated/app/hr_/leave")({
   validateSearch: (s: Record<string, unknown>): Search => {
     const o: Search = {};
     if (typeof s["r"] === "string") o.r = s["r"] as string;
-    if (s["tab"] === "balances" || s["tab"] === "settings") o.tab = s["tab"];
+    if (s["tab"] === "balances" || s["tab"] === "settings" || s["tab"] === "permissions") o.tab = s["tab"];
     return o;
   },
   head: () => ({ meta: [{ title: "الإجازات — الموارد البشرية — ركاز" }, { name: "description", content: "سياسات الإجازات وأرصدة الموظفين وطلباتهم من المدير المباشر حتى اعتماد الموارد البشرية." }, { property: "og:title", content: "الإجازات — ركاز" }, { property: "og:description", content: "إدارة إجازات الموظفين في ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -52,7 +53,7 @@ function Workspace({ org, k }: { org: string; k: Caps }) {
   const s = Route.useSearch();
   const nav = useNavigate({ from: "/app/hr/leave" });
   const tab = s.tab ?? (k.caps.view ? "requests" : k.caps.balances ? "balances" : "settings");
-  const tabs = ([["requests", "الطلبات", k.caps.view], ["balances", "الأرصدة", k.caps.view || k.caps.balances], ["settings", "الأنواع والسياسات", true]] as const).filter((t) => t[2]);
+  const tabs = ([["requests", "الطلبات", k.caps.view], ["permissions", "الاستئذان", k.caps.view], ["balances", "الأرصدة", k.caps.view || k.caps.balances], ["settings", "الأنواع والسياسات", true]] as const).filter((t) => t[2]);
   return (
     <div className="space-y-4">
       <nav aria-label="أقسام الإجازات" className="flex flex-wrap gap-2 text-sm">
@@ -61,6 +62,7 @@ function Workspace({ org, k }: { org: string; k: Caps }) {
       </nav>
       {s.r && <LeavePanel id={s.r} onClose={() => nav({ search: tab === "requests" ? {} : { tab } })} />}
       {tab === "requests" && k.caps.view && <Requests org={org} k={k} onOpen={(id) => nav({ search: { r: id } })} />}
+      {tab === "permissions" && k.caps.view && <PermQueue org={org} />}
       {tab === "balances" && <Balances org={org} k={k} />}
       {tab === "settings" && <Settings org={org} />}
     </div>
@@ -129,8 +131,8 @@ function Balances({ org, k }: { org: string; k: Caps }) {
   const rows = list.data ?? [];
   const types = (setup.data?.types ?? []).filter((t) => t.is_active);
   const exp = (kind: "xlsx" | "pdf") => {
-    const headers = ["الموظف", "الرقم الوظيفي", "المدرسة", "النوع", "السنة", "الاستحقاق", "التسويات", "المأخوذ", "المعلّق", "الرصيد"];
-    const data = rows.map((r) => [r.employee, r.employee_no, r.school ?? "", r.type, r.year, Number(r.granted), Number(r.adjusted), Number(r.taken), Number(r.pending), Number(r.balance)]);
+    const headers = ["الموظف", "الرقم الوظيفي", "المدرسة", "النوع", "السنة", "افتتاحي", "الاستحقاق", "التسويات", "المأخوذ", "المعلّق", "الرصيد"];
+    const data = rows.map((r) => [r.employee, r.employee_no, r.school ?? "", r.type, r.year, Number(r.opening ?? 0), Number(r.granted), Number(r.adjusted), Number(r.taken), Number(r.pending), Number(r.balance)]);
     const meta = { title: `أرصدة الإجازات ${f.year}`, filters: [f.q ? `بحث: ${f.q}` : ""].filter(Boolean) };
     return kind === "xlsx" ? exportXlsx(meta, headers, data) : exportPdf(meta, headers, data);
   };
@@ -157,7 +159,7 @@ function Balances({ org, k }: { org: string; k: Caps }) {
           <ul className="grid gap-2 md:grid-cols-2">{rows.map((r) => (
             <li key={r.employee_id + r.type_id} className="rounded-xl border bg-card p-3 text-sm">
               <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold">{r.employee}</span><span className="text-lg font-bold">{Number(r.balance)}</span><span className="text-xs text-muted-foreground">يوم</span></div>
-              <p className="text-xs text-muted-foreground">{r.type} · {r.school ?? ""} · استحقاق {Number(r.granted)} · تسويات {Number(r.adjusted)} · مأخوذ {Number(r.taken)}{Number(r.pending) ? ` · معلّق ${daysTxt(r.pending)}` : ""}</p>
+              <p className="text-xs text-muted-foreground">{r.type} · {r.school ?? ""} {Number(r.opening ?? 0) ? ` · افتتاحي ${Number(r.opening)}` : ""} · استحقاق {Number(r.granted)} · تسويات {Number(r.adjusted)} · مأخوذ {Number(r.taken)}{Number(r.pending) ? ` · معلّق ${daysTxt(r.pending)}` : ""}</p>
               {k.caps.balances && <Button size="sm" variant="ghost" className="mt-1" disabled={adjust.isPending} onClick={() => doAdjust(r)}>تسوية</Button>}
             </li>))}</ul>
         )}
