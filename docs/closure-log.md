@@ -557,3 +557,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Owner hub is its own section (sidebar: notices, meetings, circulars). Circulars reuse CircularsTab (school/branches/org + roles/people).
 - hub_meetings create/start/attend enforced server-side (_adm_hub); instant online meeting preset in the form.
 - Evidence: hub-meet-e2e 13/13, meetings-live-e2e 33/33, admin-rpc-scope-e2e 13/13, bc-e2e 46/46, bc-journey 14/14 (desktop + 390px guardian). meet-room3-journey: host connected to Agora, 3 accounts joined, uninvited refused; audio/screen-share steps stalled this run (open).
+
+## Support 6 — routing by department + attachments at create (Nov 6 2026)
+- support6-e2e 29/29; support6-journey 8/8 (preview); support5-journey 6/6; support/2/3/4/5-e2e 17/17/14/10/24 passed.
+- Open: support permissions tree section + followers (phase 2); publish.

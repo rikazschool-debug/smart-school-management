@@ -33,6 +33,7 @@
 - scripts/support3-e2e.ts: support phase 3 (working-hour targets, overdue filter/alerts once, designated alert person, assignee filter, scoped KPIs; 14 checks).
 - scripts/support4-e2e.ts: support closure (pause/resume, re-armed alerts, cross-branch info, private-note leaks, helper lockout; `--cron` waits for the real job). scripts/support-browser-fixture.ts setup|teardown: isolated sbx- data; support-journey.py (12 checks, 8 accounts) and support-export-journey.py (12 checks); always run teardown after.
 - scripts/support-phone-journey.py: support screens at 390px for 6 roles (needs support-browser-fixture).
+- scripts/support6-e2e.ts: ticket routing by branch/department/person + create-form attachments (29 checks, hub4 fixture). support6-journey.py: owner routes+attaches, teacher on phone (8 checks).
 - scripts/perm5-e2e.ts: section availability + flexible permissions (templates, custom roles, deny wins, multi-role, no self-escalation, students excluded, suspension wins, isolation; 20 checks).
 - scripts/pc-e2e.ts: procurement & custody (lifecycle, VAT, derived balances, separation of duties, limits, duplicates, corrections, refunds, parallel disbursement, suspension, isolation; 31 checks). scripts/pc-browser-fixture.ts setup|teardown: isolated pcb- data; always run teardown after.
 - scripts/pc2-e2e.ts: procurement phase 4 (requests, top-ups, settlement/close, carry-over, transfers, form versions, alerts, reports/export scope; 19 checks). pc-browser-fixture.ts `setup --open` also creates a disbursed custody with one approved invoice.
