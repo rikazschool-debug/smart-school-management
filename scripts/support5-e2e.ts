@@ -12,7 +12,7 @@ async function as(k: string) { const c = createClient(env.VITE_SUPABASE_URL, PK,
 let pass = 0, fail = 0;
 const check = (n: string, ok: boolean, d?: unknown) => { ok ? pass++ : fail++; console.log(ok ? "PASS" : "FAIL", n, ok ? "" : JSON.stringify(d)); };
 const [S1, S2, S3] = f.schools; const id = f.ids;
-const owner = await as("owner"), p1 = await as("p1"), t1 = await as("t1"), t2 = await as("t2"), other = await as("other");
+const owner = await as("owner"), p1 = await as("p1"), t1 = await as("t1"), t2 = await as("t2"), a1 = await as("a1"), other = await as("other");
 const get = async (c: any, t: string) => c.rpc("support_get", { _ticket: t });
 const rev = async (t: string) => (await admin.from("support_tickets").select("rev").eq("id", t).single()).data!.rev;
 
