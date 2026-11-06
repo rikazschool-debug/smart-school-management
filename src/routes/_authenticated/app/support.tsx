@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ForbiddenState, PageHeader } from "@/components/states";
+import { ForbiddenState, LoadingState, PageHeader } from "@/components/states";
+import { NO_CAPS, useSupportCaps } from "@/components/support/caps";
 import { useSession } from "@/lib/session";
 import { supportTabs, type SupportTab } from "@/lib/roles";
 import { SupportSummary } from "@/components/support/summary";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/app/support")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     ...(typeof s["t"] === "string" ? { t: s["t"] } : {}),
     ...(typeof s["st"] === "string" ? { st: s["st"] } : {}),
-    ...(["summary", "mine", "assigned", "info", "manage", "reports", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
+    ...(["summary", "mine", "assigned", "following", "info", "manage", "reports", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
   }),
   head: () => ({ meta: [{ title: "الدعم والمساعدة — ركاز" }, { name: "description", content: "تذاكر الدعم والمساعدة في ركاز." }, { name: "robots", content: "noindex" }] }),
   component: Page,
@@ -25,12 +26,15 @@ function Page() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/app/support" });
   const [creating, setCreating] = useState(false);
+  const caps = useSupportCaps(active && active.role !== "platform_admin" ? active.orgId : null);
   if (!active) return <ForbiddenState />;
-  const tabs = supportTabs(active.role);
-  const settings = active.role === "org_owner" || active.role === "platform_admin";
+  if (active.role !== "platform_admin" && caps.isLoading) return <LoadingState />;
+  const c = caps.data ?? NO_CAPS;
+  const tabs = supportTabs(active.role, c.view.length > 0);
+  const settings = active.role === "platform_admin" || c.settings;
   const tab = search.tab && (search.tab === "settings" ? settings : tabs.includes(search.tab)) ? search.tab : tabs[0]!;
   const canCreate = tabs.includes("mine");
-  const internal = active.role === "org_owner" || active.role === "principal";
+  const internal = c.create.length > 0;
   const ctx = { ...active };
   const go = (s: Search) => navigate({ search: s });
 
@@ -45,7 +49,7 @@ function Page() {
       {search.t ? (
         <TicketDetail id={search.t} ctx={ctx} userId={user.id} onBack={() => go({ tab })} />
       ) : creating ? (
-        <NewTicket internal={internal} ctx={ctx} onCancel={() => setCreating(false)} onDone={(id) => { setCreating(false); go({ t: id }); }} />
+        <NewTicket internal={internal} branches={c.create} ctx={ctx} onCancel={() => setCreating(false)} onDone={(id) => { setCreating(false); go({ t: id }); }} />
       ) : (
         <>
           {(tabs.length > 1 || settings) && (
@@ -58,7 +62,7 @@ function Page() {
               ))}
             </div>
           )}
-          {tab === "settings" ? <SupportSettings ctx={ctx} /> : tab === "summary" ? <SupportSummary ctx={ctx} onPick={(k, st) => go({ tab: k, ...(st ? { st } : {}) })} /> : tab === "info" ? <InfoInbox /> : tab === "reports" ? <SupportReports ctx={ctx} /> : <TicketList key={tab + (search.st ?? "")} initialStatus={search.st} ctx={ctx} box={tab} onOpen={(id) => go({ t: id, tab, ...(search.st ? { st: search.st } : {}) })} />}
+          {tab === "settings" ? <SupportSettings ctx={ctx} /> : tab === "summary" ? <SupportSummary ctx={ctx} onPick={(k, st) => go({ tab: k, ...(st ? { st } : {}) })} /> : tab === "info" ? <InfoInbox /> : tab === "reports" ? <SupportReports ctx={ctx} /> : <TicketList key={tab + (search.st ?? "")} initialStatus={search.st} ctx={ctx} caps={c} box={tab} onOpen={(id) => go({ t: id, tab, ...(search.st ? { st: search.st } : {}) })} />}
         </>
       )}
     </div>
