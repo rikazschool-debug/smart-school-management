@@ -14,7 +14,6 @@ import { selectCls } from "@/components/ui/native-select";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { MeetingForm } from "@/components/admin/meeting-form";
 import { MeetingList } from "@/components/admin/meeting-list";
-export { liveLabel } from "@/components/admin/meeting-list";
 import { ADM_PAGE, MEETING_STATUS, PRIORITY, PagerBar, Pill, RSVP, TASK_STATUS, fetchAllRows, riyadhDate, riyadhTime } from "@/components/admin/shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin/meetings/")({
