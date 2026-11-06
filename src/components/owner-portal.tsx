@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Star, ArrowLeft, Building2, CheckCircle2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, type LucideIcon } from "lucide-react";
+import { Star, ArrowLeft, Building2, CheckCircle2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -126,6 +126,14 @@ const CARDS: Card[] = [
     desc: "المشتريات والعهد المالية: طلب العهدة وصرفها، والفواتير والضريبة، والطلبات والتسوية والتقارير.",
     features: [
       { icon: Wallet, label: "المشتريات والعهد", to: "/app/procurement" },
+    ],
+  },
+  {
+    key: "hub", title: "الإشعارات والاجتماعات", icon: Megaphone, to: "/app/hub", open: "فتح البوابة",
+    desc: "إشعارات موجّهة لفروع وفئات وأشخاص محددين مع معاينة وسجل، واجتماعات حضورية وأونلاين بين الفروع مع الدعوات والردود والحضور.",
+    features: [
+      { icon: Megaphone, label: "الإشعارات وسجلها", to: "/app/hub" },
+      { icon: CalendarDays, label: "الاجتماعات وسجلها", to: "/app/hub", search: { tab: "meetings" } },
     ],
   },
   {

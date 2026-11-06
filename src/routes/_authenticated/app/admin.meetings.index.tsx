@@ -46,7 +46,7 @@ function Meetings({ ctx }: { ctx: Ctx }) {
   );
 }
 
-function MeetingList({ ctx }: { ctx: Ctx }) {
+export function MeetingList({ ctx }: { ctx: Ctx }) {
   const { user } = useSession();
   const nav = useNavigate();
   const canOrganize = ORGANIZERS.includes(ctx.role);
