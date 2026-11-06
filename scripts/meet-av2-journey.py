@@ -7,8 +7,8 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 D = Path("/tmp/browser/meet"); SH = D / "av2"; SH.mkdir(parents=True, exist_ok=True)
 F = json.loads((D / "fixture.json").read_text()); U = F["users"]; M = F["M"]
-BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
-ROOM = f"{BASE}/app/admin/room/{M}"
+BASE = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1].startswith("http") else "http://localhost:8080"
+ROOM = f"{BASE}/app/admin/room/{M}" + ("?proxy=1" if "--proxy" in sys.argv else "")
 ARGS = ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream", "--auto-select-desktop-capture-source=Entire screen", "--enable-usermedia-screen-capturing", "--autoplay-policy=no-user-gesture-required"]
 ok = bad = 0
 def check(n, c, e=""):
@@ -41,6 +41,7 @@ async def main():
         check("1 host and invited participant joined from two separate browsers", True)
         for p in (host, t): await p.get_by_role("button", name="تشغيل الميكروفون").first.click(timeout=20000)
         await host.wait_for_timeout(10000)
+        await host.screenshot(path=str(SH / "host_mic.png")); await t.screenshot(path=str(SH / "t_mic.png"))
         a1 = await host.evaluate(STATS); await host.wait_for_timeout(3000); a2 = await host.evaluate(STATS)
         b1 = await t.evaluate(STATS); await t.wait_for_timeout(3000); b2 = await t.evaluate(STATS)
         print("host audio", a1, a2, "participant audio", b1, b2, flush=True)
