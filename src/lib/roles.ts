@@ -89,7 +89,7 @@ const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   maintenance: ["maintenance"],
   hr: ["hr"],
   users: ["members", "permissions"],
-  hub: ["hub_notices", "hub_meetings", "hub_circulars"],
+  hub: ["hub_notices", "hub_circulars"],
   support: ["support"],
 };
 const OWNER_COMMON: NavKey[] = ["home", "profile", "notifications", "support"];
