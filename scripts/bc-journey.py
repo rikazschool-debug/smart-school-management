@@ -42,7 +42,10 @@ async def main():
         check("4a guardian opens the notice page with its attachment", "/app/notice/" in g.url and await g.get_by_label("تنزيل agenda.pdf").count() == 1, g.url)
         async with g.context.expect_page() as np:
             await g.get_by_label("تنزيل agenda.pdf").click()
-        nu = (await np.value).url
+        pg = await np.value
+        try: await pg.wait_for_url("**/storage/**", timeout=10000)
+        except Exception: pass
+        nu = pg.url
         check("4b download opens a short-lived signed link", "token=" in nu and "rikaz-files" in nu, nu[:120])
         await g.screenshot(path=SH + "2b_guardian_notice.png")
         o2 = await login(br, "owner", 1280, 1800)
