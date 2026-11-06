@@ -29,13 +29,15 @@ function scopeText(c: Row, schools: Row[] | undefined) {
   return c["scope"] === "school" ? `مدرسة${names[0] ? `: ${names[0]}` : ""}` : `${SCOPE[c["scope"]]} (${names.length} فرع)`;
 }
 
-export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { schoolId: string }; focus: string | undefined; onFocus: (id: string | undefined) => void }) {
+// orgWide (hub, opened from the owner home): list and target the whole organization; the last visited school is only a default, never a limit.
+export function CircularsTab({ ctx, focus, onFocus, orgWide = false }: { ctx: AppContext & { schoolId: string }; focus: string | undefined; onFocus: (id: string | undefined) => void; orgWide?: boolean }) {
   const manager = canPublishCircularWith(ctx.role, useSchoolPerms(ctx.schoolId));
   const [editing, setEditing] = useState<Row | null>(null);
   const q = useQuery({
-    queryKey: ["circulars", ctx.schoolId],
+    queryKey: ["circulars", orgWide ? `org:${ctx.orgId}` : ctx.schoolId],
     queryFn: async () => {
-      const { data, error } = await db.from("circulars").select("*, circular_recipients(user_id, opened_at, ack_required_version, first_version), circular_acks(user_id, version)").or(`school_id.eq.${ctx.schoolId},target_schools.cs.{${ctx.schoolId}}`).order("created_at", { ascending: false });
+      const base = db.from("circulars").select("*, circular_recipients(user_id, opened_at, ack_required_version, first_version), circular_acks(user_id, version)");
+      const { data, error } = await (orgWide && ctx.orgId ? base.eq("org_id", ctx.orgId) : base.or(`school_id.eq.${ctx.schoolId},target_schools.cs.{${ctx.schoolId}}`)).order("created_at", { ascending: false });
       if (error) throw error;
       return data as Row[];
     },
@@ -46,7 +48,7 @@ export function CircularsTab({ ctx, focus, onFocus }: { ctx: AppContext & { scho
   const [f, setF] = useState({ q: "", status: "", scope: "", branch: "", from: "", to: "" });
   const list = (q.data ?? []).filter((c) => (!f.q || `${c["title"]} ${c["publisher_label"]}`.includes(f.q)) && (!f.status || c["status"] === f.status) && (!f.scope || c["scope"] === f.scope)
     && (!f.branch || (c["target_schools"] as string[] ?? []).includes(f.branch)) && (!f.from || (c["published_at"] ?? c["created_at"]) >= f.from) && (!f.to || (c["published_at"] ?? c["created_at"]).slice(0, 10) <= f.to));
-  if (editing) return <CircularEditor ctx={ctx} initial={editing} onDone={() => { setEditing(null); q.refetch(); }} />;
+  if (editing) return <CircularEditor ctx={ctx} orgWide={orgWide} initial={editing} onDone={() => { setEditing(null); q.refetch(); }} />;
   const current = focus ? q.data?.find((c) => c["id"] === focus) : undefined;
   if (current) return <CircularView c={current} me={me} manager={manager} onBack={() => onFocus(undefined)} onChanged={() => q.refetch()} onEdit={() => setEditing(current)} />;
   return (
@@ -253,7 +255,7 @@ function Versions({ id }: { id: string }) {
   );
 }
 
-function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId: string }; initial: Row; onDone: () => void }) {
+function CircularEditor({ ctx, initial, onDone, orgWide = false }: { ctx: AppContext & { schoolId: string }; initial: Row; onDone: () => void; orgWide?: boolean }) {
   const a = (initial["audience"] ?? {}) as Row;
   const [v, setV] = useState({ title: initial["title"] ?? "", body: initial["body"] ?? "", priority: initial["priority"] ?? "normal", requires_ack: !!initial["requires_ack"], ack_due: initial["ack_due"] ?? "" });
   const [roles, setRoles] = useState<string[]>(a["roles"] ?? []);
@@ -263,16 +265,23 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
   const [id, setId] = useState<string | null>(initial["id"] ?? null);
   const [preview, setPreview] = useState<Row[] | null>(null);
   const isOwner = ctx.role === "org_owner";
-  const [scope, setScope] = useState<string>(initial["scope"] ?? "school");
+  const [scope, setScope] = useState<string>(initial["scope"] ?? (orgWide && isOwner ? "org" : "school"));
+  const [home, setHome] = useState<string>(initial["school_id"] ?? ctx.schoolId);
   const [targets, setTargets] = useState<string[]>(initial["scope"] === "branches" ? initial["target_schools"] ?? [] : []);
   const schools = useSchools(ctx.orgId ?? undefined);
-  const deptSchools = scope === "school" ? [ctx.schoolId] : scope === "branches" ? targets : (schools.data ?? []).map((x) => x["id"] as string);
-  const groupOpts = useQuery({ queryKey: ["circ-groups", ctx.schoolId], queryFn: async () => ((await db.from("conversations").select("id, title").eq("kind", "group").eq("school_id", ctx.schoolId).eq("status", "active")).data ?? []) as Row[] });
+  const deptSchools = scope === "school" ? [home] : scope === "branches" ? targets : (schools.data ?? []).map((x) => x["id"] as string);
+  // Groups of every selected branch; membership eligibility is still decided by _circular_audience on the server.
+  const groupOpts = useQuery({ queryKey: ["circ-groups", deptSchools], enabled: deptSchools.length > 0, queryFn: async () => ((await db.from("conversations").select("id, title, school_id, group_type").eq("kind", "group").in("school_id", deptSchools).eq("status", "active").order("title")).data ?? []) as Row[] });
+  const schoolName = (sid: string) => (schools.data ?? []).find((x) => x["id"] === sid)?.["name"] ?? (sid === ctx.schoolId ? ctx.schoolName : "فرع");
+  const titleCount = new Map<string, number>();
+  for (const g of groupOpts.data ?? []) titleCount.set(g["title"], (titleCount.get(g["title"]) ?? 0) + 1);
+  const groupsBySchool = deptSchools.map((sid) => [sid, (groupOpts.data ?? []).filter((g) => g["school_id"] === sid)] as const).filter(([, l]) => l.length);
+  const staleGroups = groups.filter((g) => groupOpts.data && !groupOpts.data.some((x) => x["id"] === g));
   const files = useFiles(id ?? "none");
   const audience = { roles, departments: depts, groups, users };
   const toggle = (arr: string[], set: (x: string[]) => void, x: string) => set(arr.includes(x) ? arr.filter((y) => y !== x) : [...arr, x]);
   async function save() {
-    const { data, error } = await db.rpc("save_circular", { _id: id, _school: ctx.schoolId, _title: v.title, _body: v.body, _publisher: null, _priority: v.priority, _requires_ack: v.requires_ack, _ack_due: v.ack_due || null, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
+    const { data, error } = await db.rpc("save_circular", { _id: id, _school: home, _title: v.title, _body: v.body, _publisher: null, _priority: v.priority, _requires_ack: v.requires_ack, _ack_due: v.ack_due || null, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
     if (error) { toast.error(arabicError(error)); return null; }
     setId(data); return data as string;
   }
@@ -282,7 +291,7 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="space-y-1 sm:col-span-2"><Label htmlFor="ct">العنوان</Label><Input id="ct" value={v.title} onChange={(e) => setV({ ...v, title: e.target.value })} /></div>
         <div className="space-y-1 sm:col-span-2"><Label htmlFor="cb">المحتوى</Label><Textarea id="cb" rows={6} value={v.body} onChange={(e) => setV({ ...v, body: e.target.value })} /></div>
-        <div className="space-y-1"><Label htmlFor="cp">الجهة الناشرة</Label><Input id="cp" readOnly value={scope === "school" ? `إدارة المدرسة — ${ctx.schoolName}` : `إدارة المؤسسة — ${ctx.orgName}`} /><p className="text-xs text-muted-foreground">تُحدَّد تلقائيًا من النطاق، ولا يمكن النشر باسم جهة أخرى.</p></div>
+        <div className="space-y-1"><Label htmlFor="cp">الجهة الناشرة</Label><Input id="cp" readOnly value={scope === "school" ? `إدارة المدرسة — ${schoolName(home)}` : `إدارة المؤسسة — ${ctx.orgName}`} /><p className="text-xs text-muted-foreground">تُحدَّد تلقائيًا من النطاق، ولا يمكن النشر باسم جهة أخرى.</p></div>
         <div className="space-y-1"><Label htmlFor="cpr">الأولوية</Label><select id="cpr" className={sel} value={v.priority} onChange={(e) => setV({ ...v, priority: e.target.value })}>{Object.entries(PRIORITY_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
         <label className="flex items-center gap-2"><input type="checkbox" checked={v.requires_ack} onChange={(e) => setV({ ...v, requires_ack: e.target.checked })} /> يتطلب إقرار اطلاع</label>
         {v.requires_ack && <div className="space-y-1"><Label htmlFor="cd">موعد الإقرار</Label><Input id="cd" type="date" value={v.ack_due} onChange={(e) => setV({ ...v, ack_due: e.target.value })} /></div>}
@@ -290,22 +299,25 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
       <fieldset className="space-y-2 rounded-lg border p-3">
         <legend className="px-1 font-semibold">النطاق والفروع</legend>
         {isOwner ? (
-          <div className="flex flex-wrap gap-3">{Object.entries(SCOPE).map(([k, l]) => <label key={k} className="flex items-center gap-1"><input type="radio" name="scope" checked={scope === k} onChange={() => setScope(k)} />{k === "school" ? "هذه المدرسة فقط" : k === "org" ? "كل فروع المؤسسة" : l}</label>)}</div>
+          <div className="flex flex-wrap gap-3">{Object.entries(SCOPE).map(([k, l]) => <label key={k} className="flex items-center gap-1"><input type="radio" name="scope" checked={scope === k} onChange={() => { setScope(k); setPreview(null); }} />{k === "school" ? (orgWide ? "مدرسة واحدة" : "هذه المدرسة فقط") : k === "org" ? "جميع الفروع" : "عدة مدارس وفروع"}</label>)}</div>
         ) : <p className="text-muted-foreground">النشر داخل مدرستك فقط. النشر على عدة فروع لمالك المؤسسة.</p>}
+        {scope === "school" && isOwner && orgWide && <select aria-label="المدرسة" className={sel} value={home} onChange={(e) => { setHome(e.target.value); setGroups([]); setPreview(null); }}>{(schools.data ?? []).map((s) => <option key={s["id"]} value={s["id"]}>{s["name"]}</option>)}</select>}
         {scope === "branches" && <div className="flex flex-wrap gap-3">{(schools.data ?? []).map((s) => <label key={s["id"]} className="flex items-center gap-1"><input type="checkbox" checked={targets.includes(s["id"])} onChange={() => toggle(targets, setTargets, s["id"])} />{s["name"]}</label>)}</div>}
       </fieldset>
       <fieldset className="space-y-2 rounded-lg border p-3">
         <legend className="px-1 font-semibold">الجمهور (يُتحقق منه في الخادم ويُحفظ عند النشر)</legend>
-        <p className="text-xs text-muted-foreground">كيف يُجمع الجمهور: يُختار الفرع أولًا، ثم داخل كل فرع يُضم كل من يطابق أيًّا من الاختيارات (دور أو قسم أو مجموعة أو فرد). من يملك أكثر من عضوية يُحسب مرة واحدة، والعضويات غير المفعّلة تُستبعد.{scope !== "school" ? " الأقسام والأفراد من كل الفروع المختارة؛ المجموعات من مدرستك الحالية." : ""}</p>
+        <p className="text-xs text-muted-foreground">كيف يُجمع الجمهور: يُختار الفرع أولًا، ثم داخل كل فرع يُضم كل من يطابق أيًّا من الاختيارات (دور أو قسم أو مجموعة أو فرد). من يملك أكثر من عضوية يُحسب مرة واحدة، والعضويات غير المفعّلة تُستبعد.{scope !== "school" ? " الأقسام والمجموعات والأفراد من كل الفروع المختارة." : ""}</p>
         <div className="flex flex-wrap gap-3">{["teacher", "dept_head", "supervisor", "vice_principal", "student_affairs", "counselor", "nurse", "security", "guardian", "student"].map((r) => (
           <label key={r} className="flex items-center gap-1"><input type="checkbox" checked={roles.includes(r)} onChange={() => toggle(roles, setRoles, r)} />{ROLE_AR[r]}</label>
         ))}</div>
         <div className="space-y-1"><span className="text-muted-foreground">الأقسام والأشخاص المرتبطون بها:</span>
           <DeptPicker org={ctx.orgId ?? null} schools={deptSchools} value={depts} onChange={setDepts} /></div>
-        {!!groupOpts.data?.length && <div className="flex flex-wrap gap-3"><span className="text-muted-foreground">مجموعات:</span>{groupOpts.data.map((g) => <label key={g["id"]} className="flex items-center gap-1"><input type="checkbox" checked={groups.includes(g["id"])} onChange={() => toggle(groups, setGroups, g["id"])} />{g["title"]}</label>)}</div>}
-        <details><summary className="cursor-pointer text-muted-foreground">أفراد محددون ({users.length})</summary><MemberPicker schoolId={scope === "school" ? ctx.schoolId : null} orgId={ctx.orgId} value={users} onChange={setUsers} /></details>
+        {groupsBySchool.length > 0 && <div className="space-y-1"><span className="text-muted-foreground">المجموعات (الطلاب لا يستلمون التعاميم الإدارية):</span>
+          {groupsBySchool.map(([sid, list]) => <div key={sid} className="rounded border p-2"><p className="mb-1 text-xs font-semibold">{schoolName(sid)}</p><div className="flex flex-wrap gap-3">{list.map((g) => <label key={g["id"]} className="flex items-center gap-1"><input type="checkbox" checked={groups.includes(g["id"])} onChange={() => { toggle(groups, setGroups, g["id"]); setPreview(null); }} />{g["title"]}{(titleCount.get(g["title"]) ?? 0) > 1 && <span className="text-xs text-muted-foreground">({schoolName(sid)})</span>}{g["group_type"] === "course" && <span className="text-xs text-muted-foreground">· مادة</span>}</label>)}</div></div>)}
+          {staleGroups.length > 0 && <p className="text-xs text-warning">{staleGroups.length} مجموعة مختارة خارج الفروع الحالية ولن تُحتسب.</p>}</div>}
+        <details><summary className="cursor-pointer text-muted-foreground">أفراد محددون ({users.length})</summary><MemberPicker schoolId={scope === "school" ? home : null} orgId={ctx.orgId} value={users} onChange={setUsers} /></details>
         <Button size="sm" variant="outline" type="button" onClick={async () => {
-          const { data, error } = await db.rpc("preview_circular_audience", { _school: ctx.schoolId, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
+          const { data, error } = await db.rpc("preview_circular_audience", { _school: home, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
           if (error) return void toast.error(arabicError(error));
           setPreview(data as Row[]);
         }}>معاينة المستلمين</Button>
