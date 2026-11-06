@@ -1,4 +1,5 @@
 import type React from "react";
+import { AddressCard } from "@/components/hr/p10";
 import { EmpOpenAssets } from "@/components/hr/assets";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
