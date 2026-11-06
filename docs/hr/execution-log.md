@@ -192,3 +192,9 @@ Status: implemented · server-tested · browser-tested with simulated location �
 - Tests: hr-reports-e2e 26/26 (catalog per permission, branch filter tamper, masking, print≠export, logging, extension switch, tampered key/mode, other org, revoke mid-session, all 25 available reports run); hr-pay-e2e 81/81 incl. payroll report totals (R24 = sum of included rows, R22 = R24, R21 items = net, export log); hr-hs-in-e2e 52/52, hr-perf-e2e 39/39.
 - Browser: owner opens /app/hr/reports, catalog + R01 rendered with print/Excel/PDF.
 - Open: P10 entry checklist; field items (real-phone check-in, real fingerprint device).
+
+## Package 22 — P9 completion + P10 migration (Nov 6 2026)
+- Added: employee address (R04 now ready), hourly permissions with five kinds (R14 now ready), opening balances for leave and existing advances, R28 paid/remaining derived from the ledger incl. opening amounts, opening column in leave balances.
+- Server: scripts/hr-p10-e2e.ts 75/75. Regression: hr-reports 26/26, hr-pay 81/81, hr-leave 54/54, hr-self 31/31, hr-e2e 25/25, hr-import 11/11.
+- Browser: scripts/hp10-journey.py 12/12 (employee phone 390px request → manager → HR; own address; opening file with errors blocked, clean file saved, approved by a second person, re-upload skipped, balances show opening).
+- Still blocked: R25/R26 (finance link). Real-device phone/fingerprint tests are not done in this sandbox.

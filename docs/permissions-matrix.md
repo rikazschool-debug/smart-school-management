@@ -335,3 +335,6 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | Principal and HR | — | no default access since 2026-11-05 | own file via «ملفي الوظيفي»; HR screens only by explicit grant |
 
 | Personal HR file access (self_access) | HR with hr_employees.edit in scope (or owner) links + activates/suspends; the employee/principal cannot change own access; linked-but-inactive sees nothing of own file |
+| HR address (full) | hr_employees.sensitive (+ edit to change); view = city only; employee reads own |
+| HR hourly permission | employee requests; direct manager then hr_leave.approve decide; hr_leave.view lists |
+| HR opening balances | leave: hr_leave.balances prepares/approves; advances: hr_money.draft prepares, hr_money.approve approves; preparer ≠ approver |

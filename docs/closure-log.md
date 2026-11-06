@@ -548,3 +548,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Evidence: hr-self-e2e 31/31; hse-journey 12/12 (desktop + 390px); regression hr-e2e, hr-leave, hr-docs, hr-letters, hr-contracts, hr-pay, hr-att, hrc-alerts, hr-loc-assets, hr-recruit, hr-import all passing.
 
 - Nov 5 2026 — HR P9 report catalog (R01–R29): hr-reports-e2e 26/26, hr-pay-e2e 81/81; owner browser check of /app/hr/reports.
+
+- 2026-11-06 HR P10: addresses/hourly permissions/opening balances — hr-p10-e2e 75/75, hp10-journey 12/12, HR regression suites green (reports 26, pay 81, leave 54, self 31, core 25, import 11).
