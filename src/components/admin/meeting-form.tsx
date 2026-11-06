@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, type AppContext } from "@/lib/session";
 import { riyadhDate, riyadhTime } from "@/components/admin/shared";
+import { DeptPicker } from "@/components/comm/dept-picker";
 import { PeoplePicker, usePeopleByIds, type Person } from "@/components/people-picker";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -43,11 +44,7 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
   const canAud = !meeting || meeting.status === "draft";
   const target = aud.on && canAud ? { mode: "all", all_schools: aud.all_schools, schools: d.scope === "school" ? [host] : aud.schools, categories: aud.categories, departments: aud.departments } : null;
   const audSchools = d.scope === "school" ? [host] : aud.all_schools ? (schools.data ?? []).map((x) => x.id as string) : aud.schools;
-  const deps = useQuery({
-    enabled: !!target && audSchools.length > 0,
-    queryKey: ["meet-aud-deps", audSchools],
-    queryFn: async () => ((await db.from("departments").select("id, name, school_id").in("school_id", audSchools).order("name")).data ?? []) as Row[],
-  });
+
   const preview = useQuery({
     enabled: !!target && !!host && aud.categories.length > 0 && audSchools.length > 0,
     queryKey: ["meet-aud-preview", host, d.scope, target, d.members],
@@ -158,11 +155,8 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
               <div className="flex flex-wrap gap-3 text-sm" aria-label="فئات الدعوة">
                 {[["guardian", "أولياء الأمور"], ["teacher", "المعلمون"], ["staff", "الإداريون"]].map(([k, l]) => <label key={k} className="flex items-center gap-1"><input type="checkbox" checked={aud.categories.includes(k!)} onChange={() => setAud({ ...aud, categories: toggle(aud.categories, k!) })} />{l}</label>)}
               </div>
-              {(deps.data ?? []).length > 0 && (
-                <div className="flex flex-wrap gap-3 text-xs" aria-label="أقسام الدعوة"><span className="text-muted-foreground">الأقسام (اختياري):</span>
-                  {(deps.data ?? []).map((x) => <label key={x.id} className="flex items-center gap-1"><input type="checkbox" checked={aud.departments.includes(x.id)} onChange={() => setAud({ ...aud, departments: toggle(aud.departments, x.id) })} />{x.name}</label>)}
-                </div>
-              )}
+              <div className="space-y-1 text-xs"><span className="text-muted-foreground">الأقسام والأشخاص المرتبطون بها (اختياري):</span>
+                <DeptPicker org={ctx?.orgId ?? null} schools={audSchools} value={aud.departments} onChange={(v) => setAud({ ...aud, departments: v })} /></div>
               <p className="rounded-lg bg-accent p-2 text-sm" data-testid="aud-count">
                 {preview.isFetching ? "جارٍ حساب المدعوين…" : preview.error ? arabicError(preview.error) : preview.data
                   ? <>عدد المدعوين الفريدين: <b>{preview.data.count}</b>{Object.entries(preview.data.by_school ?? {}).map(([n, k]) => ` — ${n}: ${k}`).join("")}</>
