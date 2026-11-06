@@ -68,6 +68,12 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
             </label>
           ))}
         </div>
+        {!meeting && (
+          <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => {
+            const now = new Date(Date.now() + 3 * 3600e3); const t = now.toISOString().slice(11, 16);
+            setD({ ...d, mode: "virtual", date: now.toISOString().slice(0, 10), time: t, end: addMin(t, 30) });
+          }}>اجتماع أونلاين فوري (يبدأ الآن)</Button>
+        )}
       </fieldset>
       {owner && (
         <>
