@@ -28,7 +28,7 @@ export function NoticeFiles({ id, editable }: { id: string; editable: boolean })
   const del = useMutation({ mutationFn: (f: string) => rpc("bc_remove_file", { _file: f }), onSuccess: () => qc.invalidateQueries({ queryKey: ["bc-files", id] }), onError: (e) => toast.error(arabicError(e)) });
   const open = async (f: NoticeFile) => {
     const { data, error } = await supabase.storage.from("rikaz-files").createSignedUrl(f.path, 120, { download: f.name });
-    if (error || !data) return toast.error("تعذّر فتح الملف");
+    if (error || !data) { toast.error("تعذّر فتح الملف"); return; }
     window.open(data.signedUrl, "_blank", "noopener");
   };
   const list = files.data ?? [];
