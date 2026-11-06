@@ -91,6 +91,7 @@ export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box:
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [assignee, setAssignee] = useState("");
+  const [dept, setDept] = useState("");
   const [page, setPage] = useState(0);
   const owner = ctx.role === "org_owner" && box === "manage";
   const scopeSchool = ctx.role === "principal" && box === "manage" ? ctx.schoolId : null;
@@ -105,13 +106,18 @@ export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box:
     queryKey: ["support-assignees", ctx.key, scopeSchool],
     queryFn: async () => ((await db.rpc("support_assignees", { _school: scopeSchool })).data ?? []) as Row[],
   });
-  useEffect(() => setPage(0), [q, status, prio, cat, school, from, to, box, assignee]);
+  const depts = useQuery({
+    enabled: box === "manage",
+    queryKey: ["support-dept-options", ctx.key, school || scopeSchool],
+    queryFn: async () => ((await db.rpc("support_dept_options" as never, { _school: school || scopeSchool || null } as never)).data ?? []) as unknown as Row[],
+  });
+  useEffect(() => setPage(0), [q, status, prio, cat, school, from, to, box, assignee, dept]);
   const args = (offset: number, limit = PAGE) => ({
     _box: box, _school: school || scopeSchool || null, _q: q.trim() || null, _status: status || null, _priority: prio || null,
-    _category: cat || null, _from: from || null, _to: to || null, _limit: limit, _offset: offset, _assignee: assignee || null,
+    _category: cat || null, _from: from || null, _to: to || null, _limit: limit, _offset: offset, _assignee: assignee || null, _dept: dept || null,
   });
   const list = useQuery({
-    queryKey: ["support-list", box, ctx.key, q, status, prio, cat, school, from, to, assignee, page],
+    queryKey: ["support-list", box, ctx.key, q, status, prio, cat, school, from, to, assignee, dept, page],
     queryFn: async () => {
       const { data, error } = await db.rpc("support_list", args(page * PAGE));
       if (error) throw error;
@@ -124,8 +130,8 @@ export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box:
   async function doExport(kind: "xlsx" | "pdf") {
     try {
       const all = await fetchAllRows((o) => db.rpc("support_list", args(o, 100)));
-      const headers = ["الرقم", "العنوان", "الحالة", "الأولوية", "التصنيف", "الفرع", "مقدم الطلب", "الصفة", "المسؤول", "الإنشاء", "آخر تحديث", "موعد الحل", "متأخرة"];
-      const data = all.map((r) => [r.ref, r.title, STATUS[r.status], PRIO[r.priority], r.category, r.school_name, r.requester_name, roleLabel(r.requester_role), r.assignee_name, fmt(r.created_at), fmt(r.updated_at), r.resolve_due ? fmt(r.resolve_due) : "", r.overdue ? "نعم" : ""]);
+      const headers = ["الرقم", "العنوان", "الحالة", "الأولوية", "التصنيف", "الفرع", "القسم", "مقدم الطلب", "الصفة", "المسؤول", "الإنشاء", "آخر تحديث", "موعد الحل", "متأخرة"];
+      const data = all.map((r) => [r.ref, r.title, STATUS[r.status], PRIO[r.priority], r.category, r.school_name, r.department_name ?? "", r.requester_name, roleLabel(r.requester_role), r.assignee_name, fmt(r.created_at), fmt(r.updated_at), r.resolve_due ? fmt(r.resolve_due) : "", r.overdue ? "نعم" : ""]);
       const filters = [q && `بحث: ${q}`, status && `الحالة: ${STATUS[status] ?? "مفتوحة"}`, prio && `الأولوية: ${PRIO[prio]}`, from && `من ${from}`, to && `إلى ${to}`].filter(Boolean) as string[];
       const meta = { title: `تذاكر الدعم — ${TAB_LABEL[box]}`, school: ctx.schoolName, filters };
       if (kind === "xlsx") exportXlsx(meta, headers, data); else await exportPdf(meta, headers, data);
@@ -150,13 +156,18 @@ export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box:
           <option value="">كل التصنيفات</option>{(cats.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         {owner && (
-          <select aria-label="الفرع" className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)}>
+          <select aria-label="الفرع" className={selectCls()} value={school} onChange={(e) => { setSchool(e.target.value); setDept(""); }}>
             <option value="">كل الفروع</option>{(branches.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         )}
         {box === "manage" && (
           <select aria-label="المسؤول" className={selectCls()} value={assignee} onChange={(e) => setAssignee(e.target.value)}>
             <option value="">كل المسؤولين</option>{(assignees.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.name ?? "—"}</option>)}
+          </select>
+        )}
+        {box === "manage" && (
+          <select aria-label="القسم" className={selectCls()} value={dept} onChange={(e) => setDept(e.target.value)}>
+            <option value="">كل الأقسام</option>{(depts.data ?? []).map((d) => <option key={d.id} value={d.id}>{d.name}{owner && !school ? ` — ${d.school_name}` : ""}</option>)}
           </select>
         )}
         <Input type="date" aria-label="من تاريخ" value={from} onChange={(e) => setFrom(e.target.value)} />
@@ -185,7 +196,7 @@ export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box:
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {box !== "mine" && <>{r.requester_name ?? "—"} ({roleLabel(r.requester_role)}) · {r.school_name} · </>}
-                  {r.category ?? "بلا تصنيف"} · المسؤول: {r.assignee_name ?? "لم يُستلم بعد"} · آخر تحديث {fmt(r.updated_at)}
+                  {r.department_name ? <>القسم: {r.department_name} · </> : null}{r.category ?? "بلا تصنيف"} · المسؤول: {r.assignee_name ?? "لم يُستلم بعد"} · آخر تحديث {fmt(r.updated_at)}
                 </p>
               </button>
             </li>
