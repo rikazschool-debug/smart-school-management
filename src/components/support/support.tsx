@@ -455,7 +455,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
               {e.details?.name && <p className="mt-0.5 text-muted-foreground">{e.details.name}</p>}
               {e.action === "transfer" && <p className="mt-0.5 text-muted-foreground">{e.details.from_school} ← {e.details.to_school}</p>}
               {e.action === "department" && <p className="mt-0.5 text-muted-foreground">{e.details.from ?? "بدون قسم"} ← {e.details.to ?? "بدون قسم"}</p>}
-              {e.action === "assign" && <p className="mt-0.5 text-muted-foreground">{e.details.from ?? "بلا مسؤول"} ← {e.details.to ?? "بلا مسؤول"}</p>}
+              {e.action === "assign" && <p className="mt-0.5 text-muted-foreground">{e.details.from ?? "بلا مسؤول"} ← {e.details.to ?? "بلا مسؤول"}{e.details.cross_branch ? ` — إسناد لمختص من فرع آخر (${e.details.to_school ?? "—"})` : ""}</p>}
               {e.action === "info_requested" && e.details?.to && <p className="mt-0.5 text-muted-foreground">إلى {e.details.to}</p>}
               {e.action === "sla_breach" && <p className="mt-0.5 text-muted-foreground">{e.details.kind === "response" ? "تجاوز موعد الرد الأول" : "تجاوز موعد الحل"}{e.details.to ? ` — نُبّه ${e.details.to}` : " — نُبّه مديرو التذكرة"}</p>}
               {e.action === "escalated" && <p className="mt-0.5 font-mono text-muted-foreground" dir="ltr">{e.details.ref}</p>}
