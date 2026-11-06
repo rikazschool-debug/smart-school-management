@@ -79,3 +79,4 @@
 - scripts/hub-aud-e2e.ts: whole-category meeting invites (unique count, send-time list check, guardian room access, isolation) + comm_hub platform switch (22 checks). scripts/meet-av2-journey.py [url] [--proxy]: two-browser Agora audio/screen check (needs meet-browser-fixture); media bytes stay 0 in the sandbox network.
 - scripts/dept-people-e2e.ts: hub_dept_people (departments + linked people per selected branch, scope/isolation) and multi-branch circular departments, plus the hub-aud checks (27 checks).
 - scripts/hub4-fixture.ts setup|teardown: isolated 4-school org (h4x-) + other org; scripts/hub4-e2e.ts (19 checks: org-wide/group circulars, one-school notice, two-school meeting, principal/other-org refusals); scripts/hub4-journey.py [url] (17 browser checks, incl. after visiting another school). Always run teardown after.
+- scripts/support5-e2e.ts (24 checks) and support5-journey.py (6 browser checks) run on hub4-fixture.ts; always run teardown after.
