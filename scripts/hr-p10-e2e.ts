@@ -121,7 +121,7 @@ try {
     { i: 6, employee_no: "E-101", type: "سنوية", year: yr, days: 3 },
     { i: 7, employee_no: "E-100", type: "مرضية", year: yr, days: 5 },
   ];
-  const pv = (await hr.c.rpc("hr_open_preview", { _org: org, _kind: "leave", _rows: leaveRows })).data as any;
+  const pvr = await hr.c.rpc("hr_open_preview", { _org: org, _kind: "leave", _rows: leaveRows }); if (pvr.error) console.log("preview error", pvr.error.message); const pv = pvr.data as any;
   check("preview: 3 ok, 3 errors (unknown no, duplicate in file, unknown type)", pv.ok === 3 && pv.errors === 3 && pv.input_rows === 6, pv);
   check("preview total = 63.5 and split by branch", Number(pv.total) === 63.5 && pv.by_school["فرع أ"].rows === 1 && pv.by_school["فرع ب"].rows === 2 && Number(pv.by_school["فرع ب"].total) === 42.5, pv.by_school);
   check("save refused while errors remain", has(await hr.c.rpc("hr_open_save", { _org: org, _kind: "leave", _p: { title: "أرصدة 2026", source_ref: "نظام سابق.xlsx", source_rows: 6, source_total: 63.5, rows: leaveRows } }), "صحّح"));
