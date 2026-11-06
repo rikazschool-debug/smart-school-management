@@ -73,3 +73,4 @@
 
 - scripts/hr-loc-assets-e2e.ts: location punch + asset custody (44 checks). scripts/hla-browser-fixture.ts setup|teardown + hla-journey.py (14 checks, simulated geolocation); always run teardown after.
 - scripts/hr-self-e2e.ts: personal file link/activate/suspend (31 checks). scripts/hse-browser-fixture.ts setup|teardown + scripts/hse-journey.py (12 checks, desktop+phone); always run teardown after. HR tests activate linked employees via hr_self_access_set after hr_employee_save.
+- scripts/hr-p10-e2e.ts: addresses, hourly permissions, opening balances, R04/R14/R28 (75 checks). scripts/hrp10-browser-fixture.ts setup|teardown (hpb-) + scripts/hp10-journey.py (12 checks); always run teardown after.

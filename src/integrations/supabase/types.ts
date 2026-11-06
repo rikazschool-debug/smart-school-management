@@ -6379,6 +6379,63 @@ export type Database = {
           },
         ]
       }
+      hr_employee_addresses: {
+        Row: {
+          building: string | null
+          city: string | null
+          created_at: string
+          details: string | null
+          district: string | null
+          employee_id: string
+          org_id: string
+          postal_code: string | null
+          street: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          building?: string | null
+          city?: string | null
+          created_at?: string
+          details?: string | null
+          district?: string | null
+          employee_id: string
+          org_id: string
+          postal_code?: string | null
+          street?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          building?: string | null
+          city?: string | null
+          created_at?: string
+          details?: string | null
+          district?: string | null
+          employee_id?: string
+          org_id?: string
+          postal_code?: string | null
+          street?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_employee_addresses_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_addresses_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_employees: {
         Row: {
           birth_date: string | null
@@ -7596,6 +7653,92 @@ export type Database = {
           },
         ]
       }
+      hr_open_batches: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          by_school: Json
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          id: string
+          kind: string
+          org_id: string
+          prepared_at: string
+          prepared_by: string
+          rev: number
+          row_count: number
+          rows: Json
+          skipped: number
+          source_ref: string
+          source_rows: number
+          source_total: number
+          status: string
+          title: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          by_school?: Json
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          org_id: string
+          prepared_at?: string
+          prepared_by: string
+          rev?: number
+          row_count: number
+          rows: Json
+          skipped?: number
+          source_ref: string
+          source_rows: number
+          source_total: number
+          status?: string
+          title: string
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          by_school?: Json
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          org_id?: string
+          prepared_at?: string
+          prepared_by?: string
+          rev?: number
+          row_count?: number
+          rows?: Json
+          skipped?: number
+          source_ref?: string
+          source_rows?: number
+          source_total?: number
+          status?: string
+          title?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_open_batches_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_pay_items: {
         Row: {
           created_at: string
@@ -7996,6 +8139,109 @@ export type Database = {
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "hr_pay_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_perm_requests: {
+        Row: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          date_from: string
+          date_to: string
+          decision_reason: string | null
+          employee_id: string
+          hr_at: string | null
+          hr_by: string | null
+          id: string
+          kind: string
+          manager_at: string | null
+          manager_by: string | null
+          manager_emp: string | null
+          minutes: number | null
+          org_id: string
+          reason: string
+          requested_at: string
+          requested_by: string
+          rev: number
+          status: string
+          time_from: string | null
+          time_to: string | null
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          date_from: string
+          date_to: string
+          decision_reason?: string | null
+          employee_id: string
+          hr_at?: string | null
+          hr_by?: string | null
+          id?: string
+          kind: string
+          manager_at?: string | null
+          manager_by?: string | null
+          manager_emp?: string | null
+          minutes?: number | null
+          org_id: string
+          reason: string
+          requested_at?: string
+          requested_by: string
+          rev?: number
+          status: string
+          time_from?: string | null
+          time_to?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          date_from?: string
+          date_to?: string
+          decision_reason?: string | null
+          employee_id?: string
+          hr_at?: string | null
+          hr_by?: string | null
+          id?: string
+          kind?: string
+          manager_at?: string | null
+          manager_by?: string | null
+          manager_emp?: string | null
+          minutes?: number | null
+          org_id?: string
+          reason?: string
+          requested_at?: string
+          requested_by?: string
+          rev?: number
+          status?: string
+          time_from?: string | null
+          time_to?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_perm_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_perm_requests_manager_emp_fkey"
+            columns: ["manager_emp"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_perm_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -13259,6 +13505,13 @@ export type Database = {
       _gb_window: { Args: { _gb: string; _student: string }; Returns: boolean }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
       _home_roles: { Args: { _me: string; _school: string }; Returns: Json }
+      _hr_addr_json: {
+        Args: {
+          _full: boolean
+          a: Database["public"]["Tables"]["hr_employee_addresses"]["Row"]
+        }
+        Returns: Json
+      }
       _hr_adv_left: { Args: { _adv: string }; Returns: number }
       _hr_adv_new: {
         Args: { _emp: string; _org: string; _p: Json; _self: boolean }
@@ -13629,6 +13882,22 @@ export type Database = {
       _hr_mn_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
       _hr_month: { Args: { _m: string }; Returns: string }
       _hr_name: { Args: { _u: string }; Returns: string }
+      _hr_open_check: {
+        Args: { _kind: string; _org: string; _rows: Json; _stage?: string }
+        Returns: Json
+      }
+      _hr_open_gate: {
+        Args: { _action: string; _kind: string; _org: string }
+        Returns: boolean
+      }
+      _hr_open_json: {
+        Args: { b: Database["public"]["Tables"]["hr_open_batches"]["Row"] }
+        Returns: Json
+      }
+      _hr_open_row_ok: {
+        Args: { _emp: string; _kind: string; _stage: string }
+        Returns: boolean
+      }
       _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_pay_build: { Args: { _run: string }; Returns: undefined }
       _hr_pf_any: { Args: { _action: string; _org: string }; Returns: boolean }
@@ -13649,6 +13918,36 @@ export type Database = {
       _hr_pf_user_can: {
         Args: { _action: string; _school: string; _uid: string }
         Returns: boolean
+      }
+      _hr_pm_can_decide: {
+        Args: { r: Database["public"]["Tables"]["hr_perm_requests"]["Row"] }
+        Returns: boolean
+      }
+      _hr_pm_check: {
+        Args: { _emp: string; _except: string; _p: Json }
+        Returns: Json
+      }
+      _hr_pm_label: { Args: { _kind: string }; Returns: string }
+      _hr_pm_notify: {
+        Args: {
+          _key: string
+          r: Database["public"]["Tables"]["hr_perm_requests"]["Row"]
+        }
+        Returns: undefined
+      }
+      _hr_pm_range: {
+        Args: {
+          _df: string
+          _dt: string
+          _kind: string
+          _tf: string
+          _tt: string
+        }
+        Returns: unknown
+      }
+      _hr_pm_row: {
+        Args: { r: Database["public"]["Tables"]["hr_perm_requests"]["Row"] }
+        Returns: Json
       }
       _hr_pol: {
         Args: { _month: string; _org: string; _topic: string }
@@ -13703,7 +14002,12 @@ export type Database = {
         Returns: Json
       }
       _hr_rep_meta: { Args: never; Returns: Json }
+      _hr_rep_meta_v1: { Args: never; Returns: Json }
       _hr_rep_rows: {
+        Args: { _f: Json; _key: string; _org: string }
+        Returns: Json
+      }
+      _hr_rep_rows_x: {
         Args: { _f: Json; _key: string; _org: string }
         Returns: Json
       }
@@ -15719,6 +16023,11 @@ export type Database = {
         Args: { _course: string; _kind: string }
         Returns: Json
       }
+      hr_address_get: { Args: { _emp: string }; Returns: Json }
+      hr_address_save: {
+        Args: { _emp: string; _p: Json; _reason?: string }
+        Returns: Json
+      }
       hr_advance_act: {
         Args: {
           _action: string
@@ -16157,6 +16466,20 @@ export type Database = {
       hr_my_employment: { Args: { _org: string }; Returns: Json }
       hr_my_money: { Args: { _org: string }; Returns: Json }
       hr_my_payslip: { Args: { _id: string }; Returns: Json }
+      hr_open_approve: { Args: { _id: string; _rev: number }; Returns: Json }
+      hr_open_cancel: {
+        Args: { _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      hr_open_list: { Args: { _kind: string; _org: string }; Returns: Json }
+      hr_open_preview: {
+        Args: { _kind: string; _org: string; _rows: Json }
+        Returns: Json
+      }
+      hr_open_save: {
+        Args: { _kind: string; _org: string; _p: Json }
+        Returns: string
+      }
       hr_pay_exception_set: {
         Args: { _on: boolean; _org: string; _reason: string }
         Returns: undefined
@@ -16207,6 +16530,17 @@ export type Database = {
         Returns: undefined
       }
       hr_pay_setup: { Args: { _org: string }; Returns: Json }
+      hr_perm_cancel: {
+        Args: { _id: string; _rev: number }
+        Returns: undefined
+      }
+      hr_perm_decide: {
+        Args: { _decision: string; _id: string; _reason?: string; _rev: number }
+        Returns: undefined
+      }
+      hr_perm_list: { Args: { _f?: Json; _org: string }; Returns: Json }
+      hr_perm_my: { Args: { _org: string }; Returns: Json }
+      hr_perm_request: { Args: { _org: string; _p: Json }; Returns: string }
       hr_pf_assign: {
         Args: {
           _cycle: string

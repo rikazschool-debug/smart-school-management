@@ -8,6 +8,7 @@ import { MyAttendance } from "@/components/hr/attendance";
 import { MyAssets } from "@/components/hr/assets";
 import { MyMoney } from "@/components/hr/money";
 import { MyHousing, MyInsurance, MyPerformance } from "@/components/hr/p8-self";
+import { AddressCard, MyPermissions } from "@/components/hr/p10";
 import { DocDetailPanel, DocStatus, DocUploadForm, type DocRow, type DocType } from "@/components/hr/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/app/my-employment")({
 type Mine = { employee: HrEmp; assignments: HrAssign[]; pending?: undefined } | { pending: true; employee?: undefined; assignments?: undefined } | null;
 type TeamRow = { id: string; employee_no: string; full_name: string; job_title: string | null; school: string; status: string };
 
-const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"], ["attendance", "حضوري"], ["money", "سلفي وعهدي وقسائمي"], ["performance", "أدائي"], ["insurance", "تأميني"], ["housing", "سكني"]] as const;
+const TABS = [["me", "بياناتي وتعييناتي"], ["contracts", "عقودي وإقراراتي"], ["docs", "مستنداتي"], ["letters", "خطاباتي"], ["leave", "إجازاتي"], ["permissions", "استئذاناتي"], ["attendance", "حضوري"], ["money", "سلفي وعهدي وقسائمي"], ["performance", "أدائي"], ["insurance", "تأميني"], ["housing", "سكني"]] as const;
 
 function Page() {
   const { active } = useSession();
@@ -53,6 +54,7 @@ function Page() {
         {tab === "docs" && <MyDocuments org={org!} />}
         {tab === "letters" && <MyLetters org={org!} />}
         {tab === "leave" && <MyLeave org={org!} />}
+        {tab === "permissions" && <MyPermissions org={org!} />}
         {tab === "attendance" && <MyAttendance org={org!} />}
         {tab === "me" && <MyAssets org={org!} />}
         {tab === "money" && <MyMoney org={org!} />}
@@ -156,6 +158,7 @@ function MyFile({ d }: { d: { employee: HrEmp; assignments: HrAssign[] } }) {
         {row("تاريخ المباشرة", e.hire_date)}{row("الجوال", e.phone && <bdi dir="ltr">{e.phone}</bdi>)}{row("البريد الوظيفي", e.email && <bdi dir="ltr">{e.email}</bdi>)}{row("الجنس", e.gender ? GENDER[e.gender] : null)}
         {row("رقم الهوية", e.national_id && <bdi dir="ltr">{e.national_id}</bdi>)}{row("الجنسية", e.nationality)}{row("تاريخ الميلاد", e.birth_date)}
       </dl>
+      <AddressCard emp={e.id} />
       <Section title="تعييناتي">
         <ul className="space-y-2">
           {d.assignments.map((a) => (

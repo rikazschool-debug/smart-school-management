@@ -68,6 +68,7 @@ import { Route as AuthenticatedAppHrHousingRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppHrInsuranceRouteImport } from './routes/_authenticated/app/hr_.insurance'
 import { Route as AuthenticatedAppHrLeaveRouteImport } from './routes/_authenticated/app/hr_.leave'
 import { Route as AuthenticatedAppHrLettersRouteImport } from './routes/_authenticated/app/hr_.letters'
+import { Route as AuthenticatedAppHrOpeningRouteImport } from './routes/_authenticated/app/hr_.opening'
 import { Route as AuthenticatedAppHrPayrollRouteImport } from './routes/_authenticated/app/hr_.payroll'
 import { Route as AuthenticatedAppHrPerformanceRouteImport } from './routes/_authenticated/app/hr_.performance'
 import { Route as AuthenticatedAppHrRecruitRouteImport } from './routes/_authenticated/app/hr_.recruit'
@@ -418,6 +419,12 @@ const AuthenticatedAppHrLettersRoute =
     path: '/hr/letters',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHrOpeningRoute =
+  AuthenticatedAppHrOpeningRouteImport.update({
+    id: '/hr_/opening',
+    path: '/hr/opening',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppHrPayrollRoute =
   AuthenticatedAppHrPayrollRouteImport.update({
     id: '/hr_/payroll',
@@ -562,6 +569,7 @@ export interface FileRoutesByFullPath {
   '/app/hr/insurance': typeof AuthenticatedAppHrInsuranceRoute
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
+  '/app/hr/opening': typeof AuthenticatedAppHrOpeningRoute
   '/app/hr/payroll': typeof AuthenticatedAppHrPayrollRoute
   '/app/hr/performance': typeof AuthenticatedAppHrPerformanceRoute
   '/app/hr/recruit': typeof AuthenticatedAppHrRecruitRoute
@@ -636,6 +644,7 @@ export interface FileRoutesByTo {
   '/app/hr/insurance': typeof AuthenticatedAppHrInsuranceRoute
   '/app/hr/leave': typeof AuthenticatedAppHrLeaveRoute
   '/app/hr/letters': typeof AuthenticatedAppHrLettersRoute
+  '/app/hr/opening': typeof AuthenticatedAppHrOpeningRoute
   '/app/hr/payroll': typeof AuthenticatedAppHrPayrollRoute
   '/app/hr/performance': typeof AuthenticatedAppHrPerformanceRoute
   '/app/hr/recruit': typeof AuthenticatedAppHrRecruitRoute
@@ -713,6 +722,7 @@ export interface FileRoutesById {
   '/_authenticated/app/hr_/insurance': typeof AuthenticatedAppHrInsuranceRoute
   '/_authenticated/app/hr_/leave': typeof AuthenticatedAppHrLeaveRoute
   '/_authenticated/app/hr_/letters': typeof AuthenticatedAppHrLettersRoute
+  '/_authenticated/app/hr_/opening': typeof AuthenticatedAppHrOpeningRoute
   '/_authenticated/app/hr_/payroll': typeof AuthenticatedAppHrPayrollRoute
   '/_authenticated/app/hr_/performance': typeof AuthenticatedAppHrPerformanceRoute
   '/_authenticated/app/hr_/recruit': typeof AuthenticatedAppHrRecruitRoute
@@ -790,6 +800,7 @@ export interface FileRouteTypes {
     | '/app/hr/insurance'
     | '/app/hr/leave'
     | '/app/hr/letters'
+    | '/app/hr/opening'
     | '/app/hr/payroll'
     | '/app/hr/performance'
     | '/app/hr/recruit'
@@ -864,6 +875,7 @@ export interface FileRouteTypes {
     | '/app/hr/insurance'
     | '/app/hr/leave'
     | '/app/hr/letters'
+    | '/app/hr/opening'
     | '/app/hr/payroll'
     | '/app/hr/performance'
     | '/app/hr/recruit'
@@ -940,6 +952,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/hr_/insurance'
     | '/_authenticated/app/hr_/leave'
     | '/_authenticated/app/hr_/letters'
+    | '/_authenticated/app/hr_/opening'
     | '/_authenticated/app/hr_/payroll'
     | '/_authenticated/app/hr_/performance'
     | '/_authenticated/app/hr_/recruit'
@@ -1387,6 +1400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppHrLettersRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/hr_/opening': {
+      id: '/_authenticated/app/hr_/opening'
+      path: '/hr/opening'
+      fullPath: '/app/hr/opening'
+      preLoaderRoute: typeof AuthenticatedAppHrOpeningRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/hr_/payroll': {
       id: '/_authenticated/app/hr_/payroll'
       path: '/hr/payroll'
@@ -1546,6 +1566,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHrInsuranceRoute: typeof AuthenticatedAppHrInsuranceRoute
   AuthenticatedAppHrLeaveRoute: typeof AuthenticatedAppHrLeaveRoute
   AuthenticatedAppHrLettersRoute: typeof AuthenticatedAppHrLettersRoute
+  AuthenticatedAppHrOpeningRoute: typeof AuthenticatedAppHrOpeningRoute
   AuthenticatedAppHrPayrollRoute: typeof AuthenticatedAppHrPayrollRoute
   AuthenticatedAppHrPerformanceRoute: typeof AuthenticatedAppHrPerformanceRoute
   AuthenticatedAppHrRecruitRoute: typeof AuthenticatedAppHrRecruitRoute
@@ -1614,6 +1635,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHrInsuranceRoute: AuthenticatedAppHrInsuranceRoute,
   AuthenticatedAppHrLeaveRoute: AuthenticatedAppHrLeaveRoute,
   AuthenticatedAppHrLettersRoute: AuthenticatedAppHrLettersRoute,
+  AuthenticatedAppHrOpeningRoute: AuthenticatedAppHrOpeningRoute,
   AuthenticatedAppHrPayrollRoute: AuthenticatedAppHrPayrollRoute,
   AuthenticatedAppHrPerformanceRoute: AuthenticatedAppHrPerformanceRoute,
   AuthenticatedAppHrRecruitRoute: AuthenticatedAppHrRecruitRoute,

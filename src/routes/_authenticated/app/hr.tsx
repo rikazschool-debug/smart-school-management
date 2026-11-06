@@ -1,4 +1,5 @@
 import type React from "react";
+import { AddressCard } from "@/components/hr/p10";
 import { EmpOpenAssets } from "@/components/hr/assets";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -53,6 +54,7 @@ function Page() {
         <Link to="/app/hr/insurance" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التأمين الطبي</Link>
         <Link to="/app/hr/housing" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">السكن</Link>
         <Link to="/app/hr/reports" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التقارير</Link>
+        <Link to="/app/hr/opening" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الأرصدة الافتتاحية</Link>
       </nav>}
       {!m.enabled ? <SectionLocked /> : !m.caps.view ? <ForbiddenState /> : <Workspace org={org!} m={m} />}
     </>
@@ -306,6 +308,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
       </div>
       {d.data!.view === "hr" && <SelfAccessCard e={e} org={org} canEdit={can_edit} onDone={refresh} />}
       <EmpOpenAssets emp={id} />
+      {d.data!.view === "hr" && <AddressCard emp={id} />}
       {edit ? (
         <div className="space-y-3">
           <EmpFields f={edit} set={((k: string, v: string) => setEdit((x) => ({ ...x!, [k]: v }))) as never} sensitive={!!e.sensitive} withStatus />
