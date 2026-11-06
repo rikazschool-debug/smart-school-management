@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
@@ -12,12 +11,15 @@ import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { PRIO, useCategories } from "@/components/support/support";
 import { RoutePicker, useRouteDepts, type RouteCand } from "@/components/support/route-picker";
 import { DraftFiles, type DraftFile } from "@/components/support/draft-files";
+import type { Branch } from "@/components/support/caps";
 
 // Internal ticket opened by the org owner / principal for one branch: branch → department (optional) → person (optional) + attachments.
 // support_open re-checks branch/department/assignee/files and is idempotent by client key.
-export function InternalTicket({ ctx, onDone, onCancel, onOwn }: { ctx: AppContext; onDone: (id: string) => void; onCancel: () => void; onOwn: () => void }) {
+export function InternalTicket({ ctx, branches: allowed, onDone, onCancel, onOwn }: { ctx: AppContext; branches: Branch[]; onDone: (id: string) => void; onCancel: () => void; onOwn: () => void }) {
   const owner = ctx.role === "org_owner";
-  const [school, setSchool] = useState<string>(owner ? "" : ctx.schoolId ?? "");
+  // branches where the person holds support.create (support_caps); support_open re-checks
+  const pick = allowed.length > 1;
+  const [school, setSchool] = useState<string>(pick ? "" : allowed[0]?.id ?? "");
   const [title, setTitle] = useState(""); const [body, setBody] = useState("");
   const [prio, setPrio] = useState("normal"); const [cat, setCat] = useState("");
   const [dept, setDept] = useState(""); const [who, setWho] = useState<RouteCand | null>(null);
@@ -26,8 +28,7 @@ export function InternalTicket({ ctx, onDone, onCancel, onOwn }: { ctx: AppConte
   const key = useMemo(() => crypto.randomUUID(), []);
   const cats = useCategories("school", ctx.orgId);
   const depts = useRouteDepts(school);
-  const branches = useQuery({ enabled: owner && !!ctx.orgId, queryKey: ["support-branches", ctx.orgId], queryFn: async () => ((await db.from("schools").select("id, name").eq("org_id", ctx.orgId!).eq("is_active", true).order("name")).data ?? []) as { id: string; name: string }[] });
-  const schoolName = owner ? branches.data?.find((s) => s.id === school)?.name : ctx.schoolName;
+  const schoolName = allowed.find((s) => s.id === school)?.name;
   const uploading = files.some((f) => f.state === "uploading"), failed = files.some((f) => f.state === "failed");
 
   async function changeSchool(v: string) {
@@ -54,8 +55,8 @@ export function InternalTicket({ ctx, onDone, onCancel, onOwn }: { ctx: AppConte
     <div className="space-y-4 rounded-xl border bg-card p-4">
       <div className="flex flex-wrap items-center gap-2"><p className="flex-1 font-semibold">تذكرة داخلية لفرع</p><Button size="sm" variant="ghost" onClick={onOwn}>{owner ? "تذكرة لدعم المنصة" : "تذكرة أخرى"}</Button></div>
       <div className="space-y-1"><Label htmlFor="it-school">المدرسة / الفرع</Label>
-        {owner ? <select id="it-school" className={selectCls()} value={school} disabled={review} onChange={(e) => void changeSchool(e.target.value)}><option value="">اختر</option>{(branches.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-          : <Input id="it-school" readOnly value={ctx.schoolName} />}
+        {pick ? <select id="it-school" className={selectCls()} value={school} disabled={review} onChange={(e) => void changeSchool(e.target.value)}><option value="">اختر</option>{allowed.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+          : <Input id="it-school" readOnly value={schoolName ?? ""} />}
       </div>
       <fieldset disabled={review} className="space-y-4">
         <div className="space-y-1"><Label htmlFor="it-title">العنوان</Label><Input id="it-title" value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} /></div>
