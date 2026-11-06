@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { arabicError, type AppContext } from "@/lib/session";
 import { canPublishCircularWith } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
+import { DeptPicker } from "@/components/comm/dept-picker";
 import { BUCKET, PRIORITY_LABEL, ROLE_AR, SafeText, openFile } from "@/lib/comm";
 import { MemberPicker } from "@/components/comm/member-picker";
 
@@ -265,7 +266,7 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
   const [scope, setScope] = useState<string>(initial["scope"] ?? "school");
   const [targets, setTargets] = useState<string[]>(initial["scope"] === "branches" ? initial["target_schools"] ?? [] : []);
   const schools = useSchools(ctx.orgId ?? undefined);
-  const deptOpts = useOptions("departments", "name", ctx.schoolId);
+  const deptSchools = scope === "school" ? [ctx.schoolId] : scope === "branches" ? targets : (schools.data ?? []).map((x) => x["id"] as string);
   const groupOpts = useQuery({ queryKey: ["circ-groups", ctx.schoolId], queryFn: async () => ((await db.from("conversations").select("id, title").eq("kind", "group").eq("school_id", ctx.schoolId).eq("status", "active")).data ?? []) as Row[] });
   const files = useFiles(id ?? "none");
   const audience = { roles, departments: depts, groups, users };
@@ -295,13 +296,14 @@ function CircularEditor({ ctx, initial, onDone }: { ctx: AppContext & { schoolId
       </fieldset>
       <fieldset className="space-y-2 rounded-lg border p-3">
         <legend className="px-1 font-semibold">الجمهور (يُتحقق منه في الخادم ويُحفظ عند النشر)</legend>
-        <p className="text-xs text-muted-foreground">كيف يُجمع الجمهور: يُختار الفرع أولًا، ثم داخل كل فرع يُضم كل من يطابق أيًّا من الاختيارات (دور أو قسم أو مجموعة أو فرد). من يملك أكثر من عضوية يُحسب مرة واحدة، والعضويات غير المفعّلة تُستبعد.{scope !== "school" ? " الأقسام والمجموعات والأفراد المعروضون هنا من مدرستك الحالية؛ الأدوار تُطبق على كل الفروع المختارة." : ""}</p>
+        <p className="text-xs text-muted-foreground">كيف يُجمع الجمهور: يُختار الفرع أولًا، ثم داخل كل فرع يُضم كل من يطابق أيًّا من الاختيارات (دور أو قسم أو مجموعة أو فرد). من يملك أكثر من عضوية يُحسب مرة واحدة، والعضويات غير المفعّلة تُستبعد.{scope !== "school" ? " الأقسام والأفراد من كل الفروع المختارة؛ المجموعات من مدرستك الحالية." : ""}</p>
         <div className="flex flex-wrap gap-3">{["teacher", "dept_head", "supervisor", "vice_principal", "student_affairs", "counselor", "nurse", "security", "guardian", "student"].map((r) => (
           <label key={r} className="flex items-center gap-1"><input type="checkbox" checked={roles.includes(r)} onChange={() => toggle(roles, setRoles, r)} />{ROLE_AR[r]}</label>
         ))}</div>
-        {!!deptOpts.data?.length && <div className="flex flex-wrap gap-3"><span className="text-muted-foreground">أقسام:</span>{deptOpts.data.map((d) => <label key={d.value} className="flex items-center gap-1"><input type="checkbox" checked={depts.includes(d.value)} onChange={() => toggle(depts, setDepts, d.value)} />{d.label}</label>)}</div>}
+        <div className="space-y-1"><span className="text-muted-foreground">الأقسام والأشخاص المرتبطون بها:</span>
+          <DeptPicker org={ctx.orgId ?? null} schools={deptSchools} value={depts} onChange={setDepts} /></div>
         {!!groupOpts.data?.length && <div className="flex flex-wrap gap-3"><span className="text-muted-foreground">مجموعات:</span>{groupOpts.data.map((g) => <label key={g["id"]} className="flex items-center gap-1"><input type="checkbox" checked={groups.includes(g["id"])} onChange={() => toggle(groups, setGroups, g["id"])} />{g["title"]}</label>)}</div>}
-        <details><summary className="cursor-pointer text-muted-foreground">أفراد محددون ({users.length})</summary><MemberPicker schoolId={ctx.schoolId} orgId={ctx.orgId} value={users} onChange={setUsers} /></details>
+        <details><summary className="cursor-pointer text-muted-foreground">أفراد محددون ({users.length})</summary><MemberPicker schoolId={scope === "school" ? ctx.schoolId : null} orgId={ctx.orgId} value={users} onChange={setUsers} /></details>
         <Button size="sm" variant="outline" type="button" onClick={async () => {
           const { data, error } = await db.rpc("preview_circular_audience", { _school: ctx.schoolId, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
           if (error) return void toast.error(arabicError(error));

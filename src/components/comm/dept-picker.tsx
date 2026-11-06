@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/components/crud-page";
-import { ROLE_AR } from "@/lib/roles";
+import { ROLE_AR } from "@/lib/comm";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -37,7 +37,7 @@ export function DeptPicker({ org, schools, value, onChange }: { org: string | nu
                   </summary>
                   <ul className="ms-6 mt-1 flex flex-wrap gap-1">
                     {!d.people.length ? <li className="text-xs text-muted-foreground">لا يوجد أشخاص مرتبطون بالقسم</li>
-                      : d.people.map((p: Row) => <li key={p.user_id} className="rounded-full bg-muted px-2 py-0.5 text-xs">{p.name} · {ROLE_AR[p.role as keyof typeof ROLE_AR] ?? p.role}</li>)}
+                      : d.people.map((p: Row) => <li key={p.user_id} className="rounded-full bg-muted px-2 py-0.5 text-xs">{p.name} · {ROLE_AR[p.role] ?? p.role}</li>)}
                   </ul>
                 </details>
               </li>

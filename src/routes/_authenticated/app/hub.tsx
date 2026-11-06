@@ -15,6 +15,7 @@ import { rpc } from "@/components/hr/shared";
 import { MeetingList } from "@/components/admin/meeting-list";
 import { NoticeFiles } from "@/components/comm/notice-files";
 import { CircularsTab } from "@/components/comm/circulars";
+import { DeptPicker } from "@/components/comm/dept-picker";
 import { SectionLocked, useOrgSections } from "@/components/owner-portal";
 
 // Notifications & meetings hub. Targeting, eligibility, scope and the recipient list are decided by bc_* RPCs on the server.
@@ -149,8 +150,8 @@ function Composer({ org, k, id, onClose }: { org: string; k: Scope; id: string |
           </div></fieldset>
         <fieldset className="rounded-lg border p-3"><legend className="px-1 text-sm font-semibold">الفئات</legend>
           <div className="flex flex-wrap gap-3 text-sm">{CATS.map(([v, l]) => <label key={v} className="flex items-center gap-1"><input type="checkbox" checked={form.t.categories.includes(v)} onChange={() => setT({ categories: toggle(form.t.categories, v) })} />{l}</label>)}</div></fieldset>
-        {deps.length > 0 && <fieldset className="rounded-lg border p-3"><legend className="px-1 text-sm font-semibold">الأقسام (اختياري)</legend>
-          <div className="flex flex-wrap gap-3 text-sm">{deps.map((d) => <label key={d.id} className="flex items-center gap-1"><input type="checkbox" checked={form.t.departments.includes(d.id)} onChange={() => setT({ departments: toggle(form.t.departments, d.id) })} />{d.name} <span className="text-xs text-muted-foreground">({k.schools.find((s) => s.id === d.school_id)?.name})</span></label>)}</div>
+        {form.t.schools.length > 0 && <fieldset className="rounded-lg border p-3"><legend className="px-1 text-sm font-semibold">الأقسام والأشخاص المرتبطون بها (اختياري)</legend>
+          <DeptPicker org={org} schools={form.t.schools} value={form.t.departments} onChange={(v) => setT({ departments: v })} />
           <p className="mt-1 text-xs text-muted-foreground">للطلاب وأولياء الأمور: حسب التسجيل الحالي في شعب تدرس مواد هذه الأقسام.</p></fieldset>}
         <fieldset className="rounded-lg border p-3"><legend className="px-1 text-sm font-semibold">طريقة الاختيار</legend>
           <div className="flex gap-4 text-sm">
