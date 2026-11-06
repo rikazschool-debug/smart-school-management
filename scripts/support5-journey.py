@@ -24,7 +24,7 @@ async def main():
         await o.fill("#it-title", T); await o.fill("#it-body", "جهاز العرض في القاعة لا يعمل")
         await o.fill("#it-who", "معلم الرابعة"); await o.wait_for_timeout(2500)
         await o.get_by_role("button", name="معلم الرابعة").first.click()
-        check("2 picked assignee shows role and branch", await o.get_by_text("معلم الرابعة · معلم · مدرسة الرابعة").count() == 1)
+        check("2 picked assignee shows role and branch", await o.get_by_role("button", name="إزالة المسؤول").count() == 1 and "مدرسة الرابعة" in await o.get_by_role("button", name="إزالة المسؤول").locator("..").inner_text())
         await o.get_by_role("button", name="إنشاء التذكرة").click(); await o.wait_for_timeout(4000)
         check("3 ticket created and opened", "t=" in o.url and await o.get_by_text(T).count() >= 1, o.url)
         await o.goto(B + "/app/support?tab=summary"); await o.wait_for_timeout(3500)
