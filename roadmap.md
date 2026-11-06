@@ -487,3 +487,11 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [x] 3c Two report-function warnings + old security notes on these paths (direct calls by unauthorised account)
 - [ ] 4 P10 (done: opening leave/advances + rollout plan docs/hr/rollout-plan.md; open: import before/after counts on screen, independent trial-payroll sheet with real data): import preview (counts before/after, duplicates, conflicts, branch split, re-import); opening balances (leave, advances) as documented moves with totals check; trial payroll end-to-end with independent calc; staged rollout plan; field items separate
 - [ ] 5 Status report per item (implemented/tested/ready/published) + cleanup of own test data
+
+## Package 23 — بوابة «الإشعارات والاجتماعات» (then: تطوير الدعم الفني)
+- [x] Notices: targeting (branches/categories/departments, all/pick, name search), draft, preview, send once, history/filters/read counts, copy
+- [x] Permission tree entries (notices, hub_meetings) + owner portal card; meetings tab reuses existing org-level meetings
+- [ ] Notice attachments (type/size checked, protected by notice access)
+- [ ] hub_meetings granular actions enforced in meeting RPCs (today: organizer/owner/principal rules); restricted to existing behaviour
+- [ ] Meeting journeys for this package (direct/scheduled/in-person across branches, RSVP, reschedule/cancel, audio/screen, revoke mid-session) — existing meetings-live-e2e 33/33 only
+- [ ] Support package (second attached file)

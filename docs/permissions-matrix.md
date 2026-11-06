@@ -338,3 +338,5 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | HR address (full) | hr_employees.sensitive (+ edit to change); view = city only; employee reads own |
 | HR hourly permission | employee requests; direct manager then hr_leave.approve decide; hr_leave.view lists |
 | HR opening balances | leave: hr_leave.balances prepares/approves; advances: hr_money.draft prepares, hr_money.approve approves; preparer ≠ approver |
+| Hub notices | notices.view (history), notices.draft (drafts/preview), notices.send — per branch/org; owner always |
+| Hub meetings | hub_meetings.* in the tree; meetings themselves still enforced by meetings.organize + organizer/invitee rules |
