@@ -33,7 +33,7 @@ type Person = { user_id: string; name: string; category_label?: string; school?:
 type Preview = { count: number; fingerprint: string; by_school: Record<string, number>; by_category: Record<string, number>; people: Person[] | null; dropped: Person[] };
 type Item = { id: string; ref: string | null; title: string; status: string; rev: number; sent_at: string | null; created_at: string; sender: string; mine: boolean; recipients: number | null; read: number; failed: number; schools: string[] | null; categories: string[] | null; mode: string };
 type Detail = { id: string; ref: string | null; title: string; body: string; status: string; rev: number; target: Target; sent_at: string | null; sender: string; copied_from: string | null; can: { edit: boolean; send: boolean; copy: boolean }; recipients: { name: string; school: string; category_label: string; notified: boolean; read_at: string | null }[] | null; log: { action: string; at: string; by: string }[] };
-const CATS: [string, string][] = [["guardian", "أولياء الأمور"], ["student", "الطلاب"], ["teacher", "المعلمون"], ["staff", "الإداريون"]];
+const CATS: [string, string][] = [["guardian", "أولياء الأمور"], ["student", "الطلاب"], ["teacher", "المعلمون"], ["staff", "الإداريون"], ["maint_school", "مسؤولو صيانة المدارس"], ["maint_bus", "مسؤولو صيانة الباصات"]];
 const LOG: Record<string, string> = { draft: "إنشاء مسودة", edit: "تعديل", send: "إرسال", copy: "نسخ من إشعار سابق", discard: "إلغاء المسودة" };
 const dt = (s: string | null) => (s ? new Date(s).toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }) : "—");
 
