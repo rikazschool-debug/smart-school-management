@@ -16,6 +16,7 @@ import { arabicError, type AppContext } from "@/lib/session";
 import { ROLE_LABELS, type Role, type SupportTab } from "@/lib/roles";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { InternalPanel, ManagePanel } from "@/components/support/handling";
+import { InternalTicket } from "@/components/support/internal-ticket";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -36,13 +37,13 @@ const ACT: Record<string, string> = {
 export const DEFAULT_SLA: Record<string, { response: number; resolve: number }> = { urgent: { response: 2, resolve: 8 }, high: { response: 4, resolve: 24 }, normal: { response: 8, resolve: 40 }, low: { response: 24, resolve: 80 } };
 const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 export const isOverdue = (t: Row) => !["resolved", "closed", "cancelled", "waiting_requester"].includes(t.status) && ((!t.first_response_at && t.response_due && new Date(t.response_due) < new Date()) || (t.resolve_due && new Date(t.resolve_due) < new Date()));
-export const TAB_LABEL: Record<SupportTab, string> = { mine: "تذاكري", assigned: "المسندة إليّ", info: "طلبات الإفادة", manage: "إدارة التذاكر", reports: "التقارير" };
+export const TAB_LABEL: Record<SupportTab, string> = { summary: "الملخص", mine: "تذاكري", assigned: "المسندة إليّ", info: "طلبات الإفادة", manage: "التذاكر", reports: "التقارير" };
 const roleLabel = (r: string) => ROLE_LABELS[r as Role] ?? r;
 const PAGE = 20;
 
 type Ctx = AppContext;
 
-function useCategories(scope: "school" | "platform", orgId: string | null) {
+export function useCategories(scope: "school" | "platform", orgId: string | null) {
   return useQuery({
     queryKey: ["support-cats", scope, orgId],
     queryFn: async () => {
@@ -81,9 +82,9 @@ export function HoursNote({ orgId }: { orgId: string | null }) {
 /* ---------------- list ---------------- */
 export { InfoInbox } from "@/components/support/handling";
 
-export function TicketList({ ctx, box, onOpen }: { ctx: Ctx; box: SupportTab; onOpen: (id: string) => void }) {
+export function TicketList({ ctx, box, onOpen, initialStatus }: { ctx: Ctx; box: SupportTab; onOpen: (id: string) => void; initialStatus?: string | undefined }) {
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(initialStatus ?? "");
   const [prio, setPrio] = useState("");
   const [cat, setCat] = useState("");
   const [school, setSchool] = useState("");
@@ -139,7 +140,7 @@ export function TicketList({ ctx, box, onOpen }: { ctx: Ctx; box: SupportTab; on
           <Input aria-label="بحث" className="pr-9" placeholder="ابحث برقم التذكرة أو العنوان" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <select aria-label="الحالة" className={selectCls()} value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">كل الحالات</option><option value="open">المفتوحة فقط</option>{box !== "mine" && <option value="overdue">المتأخرة فقط</option>}
+          <option value="">كل الحالات</option><option value="open">المفتوحة فقط</option>{box !== "mine" && <><option value="overdue">المتأخرة فقط</option><option value="unassigned">بلا مسؤول</option><option value="waiting">بانتظار رد</option><option value="done">المحلولة والمغلقة</option></>}
           {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         <select aria-label="الأولوية" className={selectCls()} value={prio} onChange={(e) => setPrio(e.target.value)}>
@@ -205,7 +206,13 @@ export function TicketList({ ctx, box, onOpen }: { ctx: Ctx; box: SupportTab; on
 }
 
 /* ---------------- create ---------------- */
-export function NewTicket({ ctx, onDone, onCancel }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void }) {
+export function NewTicket({ ctx, onDone, onCancel, internal = false }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void; internal?: boolean }) {
+  const [mode, setMode] = useState<"internal" | "own">(internal ? "internal" : "own");
+  if (mode === "internal") return <InternalTicket ctx={ctx} onDone={onDone} onCancel={onCancel} onOwn={() => setMode("own")} />;
+  return <OwnTicket ctx={ctx} onDone={onDone} onCancel={onCancel} onInternal={internal ? () => setMode("internal") : undefined} />;
+}
+
+function OwnTicket({ ctx, onDone, onCancel, onInternal }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void; onInternal?: (() => void) | undefined }) {
   const canPlatform = ctx.role === "org_owner" || ctx.role === "principal";
   const [scope, setScope] = useState<"school" | "platform">(ctx.role === "org_owner" ? "platform" : "school");
   const [title, setTitle] = useState("");
@@ -232,7 +239,7 @@ export function NewTicket({ ctx, onDone, onCancel }: { ctx: Ctx; onDone: (id: st
   }
   return (
     <div className="space-y-4 rounded-xl border bg-card p-4">
-      <p className="font-semibold">تذكرة جديدة</p>
+      <div className="flex flex-wrap items-center gap-2"><p className="flex-1 font-semibold">تذكرة جديدة</p>{onInternal && <Button size="sm" variant="outline" onClick={onInternal}>تذكرة داخلية لفرع</Button>}</div>
       {canPlatform && (
         <div className="space-y-1">
           <Label htmlFor="sp-scope">الجهة</Label>
