@@ -80,7 +80,7 @@ export type NavKey =
 export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support";
 export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
-  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "virtual", "homework", "grades", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage"],
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
   admissions: ["admissions"],
@@ -144,7 +144,10 @@ const MANAGE: NavKey[] = [
   "notifications",
 ];
 
-export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
+/** Hidden from navigation (pages and data kept, can be shown again by emptying this list). */
+export const HIDDEN_NAV: NavKey[] = ["virtual", "grades"];
+
+const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
   platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && !ADMIN_KEYS.includes(k))],
   // owner: branch counts on the admin page + own (multi-branch) meetings and calendar — no duties
   org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k !== "duties"), "visits", "evaluation"],
@@ -162,6 +165,8 @@ export const NAV_BY_ROLE: Record<Role, NavKey[]> = {
   nurse: ["home", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
   security: ["home", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications"],
 };
+
+export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).map(([r, ks]) => [r, ks.filter((k) => !HIDDEN_NAV.includes(k))])) as Record<Role, NavKey[]>;
 
 /** Menu labels (same as the side menu) for previewing a base role's dashboard. */
 export const NAV_LABELS: Partial<Record<NavKey, string>> = {
