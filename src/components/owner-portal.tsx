@@ -5,8 +5,8 @@ import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 
-export type SectionKey = "school_admin" | "admissions" | "finance" | "operations" | "hr";
-export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", hr: "الموارد البشرية" };
+export type SectionKey = "school_admin" | "admissions" | "finance" | "operations" | "hr" | "comm_hub";
+export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", hr: "الموارد البشرية", comm_hub: "الإشعارات والاجتماعات والتعاميم" };
 
 /** Section availability set by the platform owner; read fresh from the server (no cache across sessions). */
 export function useOrgSections(orgId: string | null) {
@@ -129,7 +129,7 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "hub", title: "الإشعارات والاجتماعات", icon: Megaphone, to: "/app/hub", open: "فتح البوابة",
+    key: "hub", section: "comm_hub", title: "الإشعارات والاجتماعات", icon: Megaphone, to: "/app/hub", open: "فتح البوابة",
     desc: "إشعارات موجّهة لفروع وفئات وأشخاص محددين مع معاينة وسجل، واجتماعات حضورية وأونلاين بين الفروع مع الدعوات والردود والحضور.",
     features: [
       { icon: Megaphone, label: "الإشعارات وسجلها", to: "/app/hub" },

@@ -15,6 +15,7 @@ import { rpc } from "@/components/hr/shared";
 import { MeetingList } from "@/components/admin/meeting-list";
 import { NoticeFiles } from "@/components/comm/notice-files";
 import { CircularsTab } from "@/components/comm/circulars";
+import { SectionLocked, useOrgSections } from "@/components/owner-portal";
 
 // Notifications & meetings hub. Targeting, eligibility, scope and the recipient list are decided by bc_* RPCs on the server.
 type HubTab = "notices" | "meetings" | "circulars";
@@ -39,7 +40,9 @@ function Page() {
   const { active } = useSession();
   const s = Route.useSearch();
   const nav = useNavigate({ from: "/app/hub" });
+  const secs = useOrgSections(active?.orgId ?? null);
   if (!active?.orgId) return null;
+  if (secs.data?.comm_hub?.["enabled"] === false) return <><PageHeader title="الإشعارات والاجتماعات والتعاميم" /><SectionLocked /></>;
   const tab = s.tab ?? "notices";
   return (
     <>

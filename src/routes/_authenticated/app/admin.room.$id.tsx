@@ -14,7 +14,7 @@ function Room() {
   const { active } = useSession();
   const nav = useNavigate();
   // staff only; the database decides whether this person is invited
-  if (!active || !NAV_BY_ROLE[active.role].includes("meetings")) return <ForbiddenState />;
+  if (!active || (active.role !== "guardian" && !NAV_BY_ROLE[active.role].includes("meetings"))) return <ForbiddenState />;
   return (
     <div className="space-y-3">
       <Link to="/app/admin/meetings/$id" params={{ id }} className="text-sm text-primary">← تفاصيل الاجتماع</Link>
