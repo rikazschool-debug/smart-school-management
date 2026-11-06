@@ -30,6 +30,9 @@ const oc = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: fal
 await oc.auth.signInWithPassword({ email: users.owner!.email, password: pw });
 const org = (await oc.rpc("create_organization", { _org_name: "مؤسسة تجربة الترحيل", _school_name: "فرع الترحيل" })).data as string;
 const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(A);
+mkdirSync(DIR, { recursive: true });
+const saveFx = () => writeFileSync(FX, JSON.stringify({ org, schools: [A], users: Object.values(users).map((u) => u.id), pw, ...Object.fromEntries(Object.entries(users).map(([k, v]) => [k, v.email])) }));
+saveFx();
 for (const u of ["hr2", "mgr", "emp"]) await admin.from("memberships").insert({ user_id: users[u]!.id, org_id: org, school_id: A, role: "teacher" });
 for (const a of ["view", "approve", "balances"]) await oc.rpc("perm_override_set", { _org: org, _user: users.hr2!.id, _section: "hr_leave", _action: a, _effect: "grant", _scope: "org", _reason: "تجربة" });
 const mk = async (u: string | null, n: string, no: string) => { const r = await oc.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: n, school_id: A, user_id: u ? users[u]!.id : null, job_title: "معلمة", hire_date: "2023-09-01", employee_no: no } }); if (r.error) throw r.error; if (u) await oc.rpc("hr_self_access_set", { _emp: r.data, _active: true }); return r.data as string; };
@@ -40,9 +43,9 @@ await oc.rpc("hr_leave_type_save", { _org: org, _id: null, _name: "سنوية", 
 mkdirSync(DIR, { recursive: true });
 const yr = new Date().getFullYear();
 const ws = XLSX.utils.aoa_to_sheet([["الرقم الوظيفي", "نوع الإجازة", "السنة", "الرصيد الافتتاحي (أيام)"], ["P-101", "سنوية", yr, 18], ["P-102", "سنوية", yr, 9.5], ["P-999", "سنوية", yr, 4]]);
-const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "الأرصدة"); XLSX.writeFile(wb, DIR + "/opening-bad.xlsx");
+const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "الأرصدة"); writeFileSync(DIR + "/opening-bad.xlsx", XLSX.write(wb, { type: "buffer", bookType: "xlsx" }));
 const ws2 = XLSX.utils.aoa_to_sheet([["الرقم الوظيفي", "نوع الإجازة", "السنة", "الرصيد الافتتاحي (أيام)"], ["P-101", "سنوية", yr, 18], ["P-102", "سنوية", yr, 9.5]]);
-const wb2 = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb2, ws2, "الأرصدة"); XLSX.writeFile(wb2, DIR + "/opening.xlsx");
+const wb2 = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb2, ws2, "الأرصدة"); writeFileSync(DIR + "/opening.xlsx", XLSX.write(wb2, { type: "buffer", bookType: "xlsx" }));
 writeFileSync(FX, JSON.stringify({ org, schools: [A], users: Object.values(users).map((u) => u.id), pw, ...Object.fromEntries(Object.entries(users).map(([k, v]) => [k, v.email])) }));
 console.log("setup ok");
 process.exit(0);
