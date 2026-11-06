@@ -143,7 +143,7 @@ try {
   check("balances show opening and balance", bal.find((b: any) => b.employee_no === "E-101")?.opening === 21 && bal.find((b: any) => b.employee_no === "E-101")?.balance === 21, bal);
   const re = (await hr.c.rpc("hr_open_preview", { _org: org, _kind: "leave", _rows: good })).data as any;
   check("re-import: all 3 rows already recorded (skipped)", re.duplicates === 3 && re.ok === 0, re);
-  const rs = await hr.c.rpc("hr_open_save", { _org: org, _kind: "leave", _p: { title: "تكرار", source_ref: "x", source_rows: 3, source_total: 0, rows: good } }); check("re-import save refused (nothing new)", !!rs.error && (rs.data == null), rs.error) || has(await hr.c.rpc("hr_open_save", { _org: org, _kind: "leave", _p: { title: "تكرار", source_ref: "x", source_rows: 3, source_total: 0, rows: good } }), "لا صفوف جديدة"));
+  const rs = await hr.c.rpc("hr_open_save", { _org: org, _kind: "leave", _p: { title: "تكرار", source_ref: "x", source_rows: 3, source_total: 0, rows: good } }); check("re-import save refused (nothing new)", has(rs, "لا صفوف جديدة"), rs);
   const tamper = await admin.from("hr_leave_moves").update({ days: 99 }).eq("org_id", org).eq("kind", "opening");
   check("opening moves are append-only", !!tamper.error, tamper.error);
 
