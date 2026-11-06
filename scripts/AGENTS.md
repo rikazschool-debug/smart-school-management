@@ -83,3 +83,4 @@
 - scripts/support5-e2e.ts (24 checks) and support5-journey.py (6 browser checks) run on hub4-fixture.ts; always run teardown after.
 - scripts/support7-e2e.ts: support permission section + followers (50 checks, hub4 fixture). support7-journey.py: follower add/read-only phone/removal (12 checks).
 - scripts/support8-e2e.ts: cross-branch assignment (refused without referral right, owner/granted allowed, logged, ticket stays; 10 checks, hub4 fixture).
+- scripts/support-cleanup-e2e.ts: support form attachment cleanup (abandoned removed, uploading/saved kept; hub4 fixture).
