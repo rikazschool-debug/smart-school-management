@@ -16907,6 +16907,10 @@ export type Database = {
         }
         Returns: string
       }
+      hub_dept_people: {
+        Args: { _org: string; _schools: string[] }
+        Returns: Json
+      }
       hw_family: { Args: { _hw: string; _student: string }; Returns: boolean }
       hw_staff: { Args: { _hw: string }; Returns: boolean }
       hw_state: { Args: { _hw: string; _student: string }; Returns: Json }
