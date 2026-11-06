@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
 });
 
-const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: "groups" | "manage" }> = {
+const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: "groups" | "manage" | "notices" | "meetings" | "circulars" }> = {
   home: { to: "/app", label: "الرئيسية", icon: Home },
   platform: { to: "/app/platform", label: "المؤسسات", icon: ShieldCheck },
   schools: { to: "/app/schools", label: "المدارس والفروع", icon: Building2 },
@@ -71,6 +71,9 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   admissions: { to: "/app/admissions", label: "القبول والتسجيل", icon: UserPlus },
   visits: { to: "/app/visits", label: "الزيارات الصفية", icon: ClipboardList },
   evaluation: { to: "/app/evaluation", label: "نظام التقييم الشامل", icon: Award },
+  hub_notices: { to: "/app/hub", tab: "notices", label: "الإشعارات", icon: Megaphone },
+  hub_meetings: { to: "/app/hub", tab: "meetings", label: "الاجتماعات", icon: CalendarDays },
+  hub_circulars: { to: "/app/hub", tab: "circulars", label: "التعاميم", icon: Megaphone },
 };
 
 /** Procurement sub-sections shown under its menu entry (the page re-checks each tab). */
@@ -91,6 +94,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
   { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage"] },
+  { label: "الإشعارات والاجتماعات والتعاميم", keys: ["hub_notices", "hub_meetings", "hub_circulars"] },
   { label: "التنبيهات والدعم", keys: ["notifications", "support"] },
 ];
 

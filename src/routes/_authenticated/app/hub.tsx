@@ -14,12 +14,14 @@ import { arabicError, useSession } from "@/lib/session";
 import { rpc } from "@/components/hr/shared";
 import { MeetingList } from "@/components/admin/meeting-list";
 import { NoticeFiles } from "@/components/comm/notice-files";
+import { CircularsTab } from "@/components/comm/circulars";
 
 // Notifications & meetings hub. Targeting, eligibility, scope and the recipient list are decided by bc_* RPCs on the server.
-type Search = { tab?: "meetings"; n?: string };
+type HubTab = "notices" | "meetings" | "circulars";
+type Search = { tab?: HubTab; n?: string; circular?: string };
 export const Route = createFileRoute("/_authenticated/app/hub")({
-  validateSearch: (s: Record<string, unknown>): Search => ({ ...(s["tab"] === "meetings" ? { tab: "meetings" as const } : {}), ...(typeof s["n"] === "string" ? { n: s["n"] as string } : {}) }),
-  head: () => ({ meta: [{ title: "الإشعارات والاجتماعات — ركاز" }, { name: "description", content: "إرسال إشعارات موجّهة للفروع والفئات والأشخاص مع معاينة وسجل، وتنظيم الاجتماعات بين الفروع." }, { property: "og:title", content: "الإشعارات والاجتماعات — ركاز" }, { property: "og:description", content: "إشعارات موجّهة واجتماعات بين الفروع." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  validateSearch: (s: Record<string, unknown>): Search => ({ ...(s["tab"] === "meetings" || s["tab"] === "circulars" || s["tab"] === "notices" ? { tab: s["tab"] as HubTab } : {}), ...(typeof s["n"] === "string" ? { n: s["n"] as string } : {}), ...(typeof s["circular"] === "string" ? { circular: s["circular"] as string } : {}) }),
+  head: () => ({ meta: [{ title: "الإشعارات والاجتماعات والتعاميم — ركاز" }, { name: "description", content: "تعاميم لكل الفروع أو فروع وفئات وأشخاص محددين، وإرسال إشعارات موجّهة للفروع والفئات والأشخاص مع معاينة وسجل، وتنظيم الاجتماعات بين الفروع." }, { property: "og:title", content: "الإشعارات والاجتماعات — ركاز" }, { property: "og:description", content: "إشعارات موجّهة واجتماعات بين الفروع." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Page,
 });
 
@@ -41,13 +43,16 @@ function Page() {
   const tab = s.tab ?? "notices";
   return (
     <>
-      <PageHeader eyebrow={active.orgName} title="الإشعارات والاجتماعات" desc="إشعارات داخل ركاز لفروع وفئات وأشخاص محددين، واجتماعات حضورية وأونلاين بين الفروع. المعاينة تطابق المستلمين الفعليين وقت الإرسال." />
-      <div role="tablist" className="mb-4 flex gap-2 border-b pb-2">
-        {([["notices", "الإشعارات"], ["meetings", "الاجتماعات"]] as const).map(([k, l]) => (
-          <button key={k} role="tab" aria-selected={tab === k} onClick={() => nav({ search: k === "notices" ? {} : { tab: k } })} className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${tab === k ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{l}</button>
+      <PageHeader eyebrow={active.orgName} title={tab === "circulars" ? "التعاميم" : tab === "meetings" ? "الاجتماعات" : "الإشعارات"} desc="إشعارات داخل ركاز لفروع وفئات وأشخاص محددين، واجتماعات حضورية وأونلاين بين الفروع. المعاينة تطابق المستلمين الفعليين وقت الإرسال." />
+      <div role="tablist" className="mb-4 flex gap-2 border-b pb-2 lg:hidden">
+        {([["notices", "الإشعارات"], ["meetings", "الاجتماعات"], ["circulars", "التعاميم"]] as const).map(([k, l]) => (
+          <button key={k} role="tab" aria-selected={tab === k} onClick={() => nav({ search: { tab: k } })} className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${tab === k ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{l}</button>
         ))}
       </div>
-      {tab === "notices" ? <Notices org={active.orgId} open={s.n} setOpen={(n) => nav({ search: n ? { n } : {} })} /> : <MeetingList ctx={{ ...active, schoolId: null }} />}
+      {tab === "notices" ? <Notices org={active.orgId} open={s.n} setOpen={(n) => nav({ search: n ? { tab: "notices", n } : { tab: "notices" } })} />
+        : tab === "meetings" ? <MeetingList ctx={{ ...active, schoolId: null }} />
+        : active.schoolId ? <CircularsTab ctx={{ ...active, schoolId: active.schoolId }} focus={s.circular} onFocus={(id) => nav({ search: id ? { tab: "circulars", circular: id } : { tab: "circulars" } })} />
+        : <EmptyState title="لا توجد مدرسة مفعّلة" hint="أضف مدرسة أولًا لإصدار التعاميم." />}
     </>
   );
 }
