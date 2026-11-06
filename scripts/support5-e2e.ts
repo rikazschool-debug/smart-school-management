@@ -33,8 +33,10 @@ check("5 owner's own internal ticket listed in the org box", ((own.data ?? []) a
 const rp = await t1.rpc("support_reply", { _ticket: T, _body: "سأتابع مع الصيانة", _client_key: crypto.randomUUID() });
 const st = (await admin.from("support_tickets").select("status").eq("id", T).single()).data!.status;
 check("6 reply does not close the ticket", !rp.error && !["resolved", "closed"].includes(st), [rp.error, st]);
-const pn = await t1.rpc("support_add_note", { _ticket: T, _kind: "private", _recipient: id.owner, _body: "ملاحظة خاصة للمالك", _client_key: crypto.randomUUID() });
-check("7 private note added", !pn.error, pn.error);
+const pn = await owner.rpc("support_add_note", { _ticket: T, _kind: "private", _recipient: id.t1, _body: "ملاحظة خاصة للمعلم", _client_key: crypto.randomUUID() });
+check("7 private note to the assignee added", !pn.error, pn.error);
+const seen = JSON.stringify((await get(p1, T)).data ?? {});
+check("7b principal of the branch does not see the private note", !seen.includes("ملاحظة خاصة للمعلم"));
 const ra = await owner.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.t2 });
 const lost = await get(t1, T);
 check("8 reassign: previous assignee loses access immediately", !ra.error && !!lost.error, [ra.error, lost.error]);
