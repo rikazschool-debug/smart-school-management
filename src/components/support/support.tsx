@@ -13,7 +13,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { FileList, Uploader } from "@/components/homework/files";
 import { Pill, fmt, fetchAllRows } from "@/components/admin/shared";
 import { arabicError, type AppContext } from "@/lib/session";
-import { ROLE_LABELS, type Role, type SupportTab } from "@/lib/roles";
+import { ROLE_LABELS, SUPPORT_TAB_LABELS, type Role, type SupportTab } from "@/lib/roles";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { InternalPanel, ManagePanel } from "@/components/support/handling";
 import { InternalTicket } from "@/components/support/internal-ticket";
@@ -39,7 +39,7 @@ const ACT: Record<string, string> = {
 export const DEFAULT_SLA: Record<string, { response: number; resolve: number }> = { urgent: { response: 2, resolve: 8 }, high: { response: 4, resolve: 24 }, normal: { response: 8, resolve: 40 }, low: { response: 24, resolve: 80 } };
 const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 export const isOverdue = (t: Row) => !["resolved", "closed", "cancelled", "waiting_requester"].includes(t.status) && ((!t.first_response_at && t.response_due && new Date(t.response_due) < new Date()) || (t.resolve_due && new Date(t.resolve_due) < new Date()));
-export const TAB_LABEL: Record<SupportTab, string> = { summary: "الملخص", mine: "تذاكري", assigned: "المسندة إليّ", following: "أتابعها", info: "طلبات الإفادة", manage: "التذاكر", reports: "التقارير" };
+export const TAB_LABEL: Record<SupportTab, string> = SUPPORT_TAB_LABELS;
 const roleLabel = (r: string) => ROLE_LABELS[r as Role] ?? r;
 const PAGE = 20;
 

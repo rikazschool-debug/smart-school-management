@@ -77,8 +77,8 @@ export type NavKey =
   | "hub_circulars";
 
 /** Owner home is split into four sections; each section shows only its own side menu. */
-export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub";
-export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", maintenance: "إدارة صيانة المدارس", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "الإشعارات والاجتماعات والتعاميم" };
+export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support";
+export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", maintenance: "إدارة صيانة المدارس", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "الإشعارات والاجتماعات والتعاميم", support: "الدعم الفني والمساعدة" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "virtual", "homework", "grades", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
@@ -90,11 +90,12 @@ const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   hr: ["hr"],
   users: ["members", "permissions"],
   hub: ["hub_notices", "hub_meetings", "hub_circulars"],
+  support: ["support"],
 };
 const OWNER_COMMON: NavKey[] = ["home", "profile", "notifications", "support"];
 
-/** Pages shared by every section (profile, notifications, support) — they keep the section the owner came from. */
-const OWNER_SHARED = ["/app/profile", "/app/notifications", "/app/support"];
+/** Pages shared by every section (profile, notifications) — they keep the section the owner came from. Support is its own section (sub-menu of its tabs). */
+const OWNER_SHARED = ["/app/profile", "/app/notifications"];
 
 /** Which owner section a path belongs to; null = the owner home (no side menu). `prev` = section shown before. */
 export function ownerSection(path: string, prev: OwnerSection | null = null): OwnerSection | null {
@@ -104,6 +105,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
   if (p.startsWith("/app/finance") || p.startsWith("/app/procurement")) return "finance";
   if (p.startsWith("/app/hr")) return "hr";
   if (p === "/app/hub" || p.startsWith("/app/notice/")) return "hub";
+  if (p === "/app/support" || p.startsWith("/app/support/")) return "support";
   if (p.startsWith("/app/evaluation") || p.startsWith("/app/visits")) return "evaluation";
   if (p.startsWith("/app/admissions")) return "admissions";
   if (p.startsWith("/app/maintenance")) return "maintenance";
@@ -115,7 +117,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
 /** Side-menu keys an owner sees inside a section (filtered further by what the role may open). */
 export function ownerSectionNav(section: OwnerSection, allowed: NavKey[]): NavKey[] {
   const own = OWNER_SECTION_KEYS[section].filter((k) => allowed.includes(k) || k === "school_home" || k === "finance" || k === "hr" || k === "permissions" || k === "procurement" || k === "operations" || k === "transport" || k === "maintenance" || k === "bus_maintenance" || k === "admissions" || section === "hub");
-  return [...own, ...OWNER_COMMON];
+  return [...new Set([...own, ...OWNER_COMMON])];
 }
 
 /** School administration sub-sections (duties, meetings, personal calendar) for every staff role. */
@@ -278,6 +280,7 @@ export function attTabs(role: Role): AttTab[] {
 }
 
 export type SupportTab = "summary" | "mine" | "assigned" | "following" | "info" | "manage" | "reports";
+export const SUPPORT_TAB_LABELS: Record<SupportTab, string> = { summary: "الملخص", mine: "تذاكري", assigned: "المسندة إليّ", following: "أتابعها", info: "طلبات الإفادة", manage: "التذاكر", reports: "التقارير" };
 /** «الدعم والمساعدة» tabs. `canView` = the person holds support.view in at least one branch (support_caps; owner/principal by default).
  *  Mirror only — support_manager/support_can_read decide on the server. Platform admin manages platform tickets only. */
 export function supportTabs(role: Role, canView = role === "org_owner" || role === "principal"): SupportTab[] {

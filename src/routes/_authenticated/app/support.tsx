@@ -53,7 +53,7 @@ function Page() {
       ) : (
         <>
           {(tabs.length > 1 || settings) && (
-            <div role="tablist" className="flex flex-wrap gap-1 border-b">
+            <div role="tablist" className="flex flex-wrap gap-1 border-b lg:hidden">
               {[...tabs, ...(settings ? (["settings"] as const) : [])].map((k) => (
                 <button key={k} role="tab" aria-selected={tab === k} onClick={() => go({ tab: k })}
                   className={`-mb-px border-b-2 px-3 py-2 text-sm ${tab === k ? "border-primary font-semibold text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
