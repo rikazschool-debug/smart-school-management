@@ -37,13 +37,14 @@ const pn = await owner.rpc("support_add_note", { _ticket: T, _kind: "private", _
 check("7 private note to the assignee added", !pn.error, pn.error);
 const seen = JSON.stringify((await get(p1, T)).data ?? {});
 check("7b principal of the branch does not see the private note", !seen.includes("ملاحظة خاصة للمعلم"));
-const ra = await owner.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.t2 });
+const ra = await owner.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.a1 });
 const lost = await get(t1, T);
 check("8 reassign: previous assignee loses access immediately", !ra.error && !!lost.error, [ra.error, lost.error]);
-check("9 new assignee reads it", !(await get(t2, T)).error);
+check("9 new assignee (same branch) reads it", !(await get(a1, T)).error);
+check("9b reassigning to another branch's staff is refused (use transfer)", !!(await owner.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.t2 })).error);
 const tr = await owner.rpc("support_action", { _ticket: T, _action: "transfer", _rev: await rev(T), _reason: "تخص الفرع الثاني", _value: S2 });
 check("10 owner transfers to another branch with reason", !tr.error && (await admin.from("support_tickets").select("school_id").eq("id", T).single()).data!.school_id === S2, tr.error);
-check("11 transfer drops the old assignment", !!(await get(t2, T)).error);
+check("11 transfer drops the old assignment", !!(await get(a1, T)).error);
 const p1r = await get(p1, T);
 check("12 principal of the old branch loses access after transfer", !!p1r.error);
 await owner.rpc("support_action", { _ticket: T, _action: "claim", _rev: await rev(T) });
