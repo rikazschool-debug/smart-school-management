@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Star, ArrowLeft, Building2, CheckCircle2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon } from "lucide-react";
+import { Star, ArrowLeft, Building2, CheckCircle2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -134,6 +134,14 @@ const CARDS: Card[] = [
     features: [
       { icon: Megaphone, label: "الإشعارات وسجلها", to: "/app/hub" },
       { icon: CalendarDays, label: "الاجتماعات وسجلها", to: "/app/hub", search: { tab: "meetings" } },
+    ],
+  },
+  {
+    key: "support", title: "الدعم الفني والمساعدة", icon: LifeBuoy, to: "/app/support", open: "فتح الدعم",
+    desc: "صندوق واحد لتذاكر كل مدارس المجموعة: إنشاء وإسناد وتحويل بين الفروع، ومتابعة المهل والتقارير.",
+    features: [
+      { icon: LifeBuoy, label: "ملخص الدعم", to: "/app/support", search: { tab: "summary" } },
+      { icon: LifeBuoy, label: "كل التذاكر", to: "/app/support", search: { tab: "manage" } },
     ],
   },
   {

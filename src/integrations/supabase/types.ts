@@ -18019,6 +18019,27 @@ export type Database = {
           id: string
         }[]
       }
+      support_new_candidates: {
+        Args: { _q?: string; _school: string }
+        Returns: {
+          name: string
+          role: string
+          school_name: string
+          user_id: string
+        }[]
+      }
+      support_open: {
+        Args: {
+          _assignee?: string
+          _body: string
+          _category?: string
+          _client_key?: string
+          _priority?: string
+          _school: string
+          _title: string
+        }
+        Returns: string
+      }
       support_release_file: { Args: { _file: string }; Returns: undefined }
       support_reply: {
         Args: { _body: string; _client_key?: string; _ticket: string }
@@ -18055,6 +18076,7 @@ export type Database = {
         Args: { _from?: string; _school?: string; _to?: string }
         Returns: Json
       }
+      support_summary: { Args: { _school?: string }; Returns: Json }
       sync_course_group: { Args: { _course: string }; Returns: string }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
       sync_section_group: { Args: { _section: string }; Returns: string }

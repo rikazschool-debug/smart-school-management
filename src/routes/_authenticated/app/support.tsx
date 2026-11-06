@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { ForbiddenState, PageHeader } from "@/components/states";
 import { useSession } from "@/lib/session";
 import { supportTabs, type SupportTab } from "@/lib/roles";
+import { SupportSummary } from "@/components/support/summary";
 import { HoursNote, InfoInbox, NewTicket, SupportReports, SupportSettings, TAB_LABEL, TicketDetail, TicketList } from "@/components/support/support";
 
-type Search = { t?: string; tab?: SupportTab | "settings" };
+type Search = { t?: string; tab?: SupportTab | "settings"; st?: string };
 
 export const Route = createFileRoute("/_authenticated/app/support")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     ...(typeof s["t"] === "string" ? { t: s["t"] } : {}),
-    ...(["mine", "assigned", "info", "manage", "reports", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
+    ...(typeof s["st"] === "string" ? { st: s["st"] } : {}),
+    ...(["summary", "mine", "assigned", "info", "manage", "reports", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
   }),
   head: () => ({ meta: [{ title: "الدعم والمساعدة — ركاز" }, { name: "description", content: "تذاكر الدعم والمساعدة في ركاز." }, { name: "robots", content: "noindex" }] }),
   component: Page,
@@ -28,6 +30,7 @@ function Page() {
   const settings = active.role === "org_owner" || active.role === "platform_admin";
   const tab = search.tab && (search.tab === "settings" ? settings : tabs.includes(search.tab)) ? search.tab : tabs[0]!;
   const canCreate = tabs.includes("mine");
+  const internal = active.role === "org_owner" || active.role === "principal";
   const ctx = { ...active };
   const go = (s: Search) => navigate({ search: s });
 
@@ -42,7 +45,7 @@ function Page() {
       {search.t ? (
         <TicketDetail id={search.t} ctx={ctx} userId={user.id} onBack={() => go({ tab })} />
       ) : creating ? (
-        <NewTicket ctx={ctx} onCancel={() => setCreating(false)} onDone={(id) => { setCreating(false); go({ t: id }); }} />
+        <NewTicket internal={internal} ctx={ctx} onCancel={() => setCreating(false)} onDone={(id) => { setCreating(false); go({ t: id }); }} />
       ) : (
         <>
           {(tabs.length > 1 || settings) && (
@@ -55,7 +58,7 @@ function Page() {
               ))}
             </div>
           )}
-          {tab === "settings" ? <SupportSettings ctx={ctx} /> : tab === "info" ? <InfoInbox /> : tab === "reports" ? <SupportReports ctx={ctx} /> : <TicketList key={tab} ctx={ctx} box={tab} onOpen={(id) => go({ t: id, tab })} />}
+          {tab === "settings" ? <SupportSettings ctx={ctx} /> : tab === "summary" ? <SupportSummary ctx={ctx} onPick={(k, st) => go({ tab: k, ...(st ? { st } : {}) })} /> : tab === "info" ? <InfoInbox /> : tab === "reports" ? <SupportReports ctx={ctx} /> : <TicketList key={tab + (search.st ?? "")} initialStatus={search.st} ctx={ctx} box={tab} onOpen={(id) => go({ t: id, tab, ...(search.st ? { st: search.st } : {}) })} />}
         </>
       )}
     </div>

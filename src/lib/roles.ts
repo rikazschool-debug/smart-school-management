@@ -277,12 +277,13 @@ export function attTabs(role: Role): AttTab[] {
   return [];
 }
 
-export type SupportTab = "mine" | "assigned" | "info" | "manage" | "reports";
+export type SupportTab = "summary" | "mine" | "assigned" | "info" | "manage" | "reports";
 /** «الدعم والمساعدة» tabs (mirrors support_manager in SQL): owner/principal manage their scope; platform admin manages platform tickets only. */
 export function supportTabs(role: Role): SupportTab[] {
   if (role === "platform_admin") return ["manage", "reports"];
   const staff = !["student", "guardian"].includes(role);
-  return [ "mine", ...(staff ? (["assigned"] as SupportTab[]) : []), "info", ...(role === "org_owner" || role === "principal" ? (["manage", "reports"] as SupportTab[]) : []) ];
+  if (role === "org_owner" || role === "principal") return ["summary", "manage", "assigned", "mine", "info", "reports"];
+  return [ "mine", ...(staff ? (["assigned"] as SupportTab[]) : []), "info" ];
 }
 
 /** Flexible school permissions of the signed-in person in the active branch (perm_my_school; keys like "gate.operate").
