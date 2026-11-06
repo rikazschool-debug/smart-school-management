@@ -96,7 +96,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
   { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage"] },
-  { label: "الإشعارات والاجتماعات والتعاميم", keys: ["hub_notices", "hub_meetings", "hub_circulars"] },
+  { label: "إدارة الإشعارات", keys: ["hub_notices", "hub_circulars"] },
   { label: "التنبيهات والدعم", keys: ["notifications", "support"] },
 ];
 

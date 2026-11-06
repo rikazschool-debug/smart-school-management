@@ -133,7 +133,7 @@ const CARDS: Card[] = [
     desc: "إشعارات موجّهة لفروع وفئات وأشخاص محددين مع معاينة وسجل، واجتماعات حضورية وأونلاين بين الفروع مع الدعوات والردود والحضور.",
     features: [
       { icon: Megaphone, label: "الإشعارات وسجلها", to: "/app/hub" },
-      { icon: CalendarDays, label: "الاجتماعات وسجلها", to: "/app/hub", search: { tab: "meetings" } },
+      { icon: CalendarDays, label: "الاجتماعات وسجلها", to: "/app/admin/meetings" },
     ],
   },
   {

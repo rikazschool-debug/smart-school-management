@@ -1,6 +1,6 @@
 # Batch 1 (staging)
 - [x] 3. Rename transport/maintenance; hide virtual classes & grades archive from nav
-- [~] 4. Hub renamed «إدارة الإشعارات» (targeting already exists); move meetings entry under school sections
+- [x] 4. Hub = «إدارة الإشعارات»; meetings entry moved to school sections (/app/admin/meetings)
 - [ ] 1a. Admissions as sub-tab of إدارة المدارس + old-link redirect
 - [ ] 1b. Documents & contracts (facility docs, contractors) — new tables, perms, private files
 - [ ] 2. HR: evaluation admin entry + training & development; principal own-file only
