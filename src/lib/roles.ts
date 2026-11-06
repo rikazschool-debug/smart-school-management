@@ -80,7 +80,7 @@ export type NavKey =
 export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support";
 export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
-  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage"],
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage", "admissions"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
   admissions: ["admissions"],
@@ -107,7 +107,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
   if (p === "/app/hub" || p.startsWith("/app/notice/")) return "hub";
   if (p === "/app/support" || p.startsWith("/app/support/")) return "support";
   if (p.startsWith("/app/evaluation") || p.startsWith("/app/visits")) return "evaluation";
-  if (p.startsWith("/app/admissions")) return "admissions";
+  if (p.startsWith("/app/admissions")) return "school_admin"; // admissions is a sub-tab of school administration
   if (p.startsWith("/app/maintenance")) return "maintenance";
   if (p.startsWith("/app/operations") || p.startsWith("/app/bus-maintenance") || p.startsWith("/app/transport")) return "operations";
   if (p.startsWith("/app/permissions") || p.startsWith("/app/members")) return "users";
