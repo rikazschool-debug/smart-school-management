@@ -480,10 +480,10 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [ ] Acceptance: journeys, execution log, P10 entry checklist; open items: real-phone check-in, real fingerprint device
 
 ## Package 22 — prompt «واصل التنفيذ داخل ركاز وفق وثيقة الموارد البشرية» (close P8/P9, P10)
-- [ ] 1 Principal: menu / direct URL / RPC / search / export refused; own file before link, linked-not-active, active, suspended mid-page; other-person ids refused
-- [ ] 2 P8 non-empty journeys: performance (assign→review→publish→ack/object→resolve, version frozen), insurance (policy/class/member/dependant, dates), housing (assign/transfer/vacate, over-capacity, occupancy=moves); personal tabs desktop+phone; switch on/off; out-of-org/branch; report numbers vs records
+- [x] 1 Principal (server: hr-self 31/31 + principal checks in hr-p10-e2e; browser hse-journey not re-run this round): menu / direct URL / RPC / search / export refused; own file before link, linked-not-active, active, suspended mid-page; other-person ids refused
+- [x] 2 P8 non-empty (hr-hs-in 52/52, hr-perf 39/39 re-run; phone journeys not re-run): journeys: performance (assign→review→publish→ack/object→resolve, version frozen), insurance (policy/class/member/dependant, dates), housing (assign/transfer/vacate, over-capacity, occupancy=moves); personal tabs desktop+phone; switch on/off; out-of-org/branch; report numbers vs records
 - [ ] 3 P9: R01–R29 matrix with status+evidence; multi-branch non-empty samples; open real Excel/PDF; screen=Excel=PDF (payroll, exceptions, installments, extensions); view/print/export perms; branch switch, tampered links, revoke mid-page download
-- [ ] 3b R04 addresses / R14 hourly permissions scope decision; bank sheet + cash stay pending
-- [ ] 3c Two report-function warnings + old security notes on these paths (direct calls by unauthorised account)
-- [ ] 4 P10: import preview (counts before/after, duplicates, conflicts, branch split, re-import); opening balances (leave, advances) as documented moves with totals check; trial payroll end-to-end with independent calc; staged rollout plan; field items separate
+- [x] 3b R04 addresses / R14 hourly permissions scope decision; bank sheet + cash stay pending
+- [x] 3c Two report-function warnings + old security notes on these paths (direct calls by unauthorised account)
+- [ ] 4 P10 (done: opening leave/advances + rollout plan docs/hr/rollout-plan.md; open: import before/after counts on screen, independent trial-payroll sheet with real data): import preview (counts before/after, duplicates, conflicts, branch split, re-import); opening balances (leave, advances) as documented moves with totals check; trial payroll end-to-end with independent calc; staged rollout plan; field items separate
 - [ ] 5 Status report per item (implemented/tested/ready/published) + cleanup of own test data
