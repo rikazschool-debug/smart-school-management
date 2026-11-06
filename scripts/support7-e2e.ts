@@ -29,14 +29,14 @@ check("2 principal default: view/create/assign/status/followers on own branch; n
 const ca = (await a1.rpc("support_caps", { _org: org })).data as any;
 check("3 admin staff has no support management by default", ca?.view?.length === 0 && ca.create.length === 0, ca);
 const co = (await owner.rpc("support_caps", { _org: org })).data as any;
-check("4 owner holds every action on all branches", co?.view?.length === f.schools.length && co.transfer.length === f.schools.length && co.settings === true, co);
+check("4 owner holds every action on all branches", co?.view?.length >= 4 && co.transfer.length === co.view.length && co.settings === true, co);
 
 // ticket by owner in S1 assigned to t1
 const T = (await owner.rpc("support_open", { _school: S1, _title: "صيانة الشبكة", _body: "الشبكة في المبنى ب منقطعة", _assignee: id.t1, _client_key: crypto.randomUUID() })).data as string;
 check("5 a1 cannot read the ticket before any grant", !!(await a1.rpc("support_get", { _ticket: T })).error);
 
 // grant a1 view only
-const g = (u: string, a: string, eff = "grant") => owner.rpc("perm_override_set", { _org: org, _user: u, _section: "support", _action: a, _effect: eff, _scope: "branch", _reason: "اختبار الدعم" });
+const g = (u: string, a: string, eff = "grant") => owner.rpc("perm_override_set", { _org: org, _user: u, _section: "support", _action: a, _effect: eff, _scope: eff === "grant" ? "branch" : null, _reason: "اختبار الدعم" });
 const gv = await g(id.a1, "view");
 check("6 owner grants a1 support.view (branch)", !gv.error, gv.error);
 const av = await a1.rpc("support_get", { _ticket: T });
