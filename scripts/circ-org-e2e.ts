@@ -27,7 +27,7 @@ try {
   const { data: org } = await owner.c.rpc("create_organization", { _org_name: "مؤسسة فروع", _school_name: "فرع أ" }); orgs.push(org);
   const { data: org2 } = await other.c.rpc("create_organization", { _org_name: "مؤسسة أخرى", _school_name: "فرع خ" }); orgs.push(org2);
   const A = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id;
-  const bIns = await owner.c.from("schools").insert({ org_id: org, name: "فرع ب" }).select("id").single();
+  const bIns = await admin.from("schools").insert({ org_id: org, name: "فرع ب" }).select("id").single();
   const B = bIns.data!.id;
   const X = (await other.c.from("schools").select("id").eq("org_id", org2).single()).data!.id;
   [A, B, X].forEach((s) => tr.addSchool(s));
