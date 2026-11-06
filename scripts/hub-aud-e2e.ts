@@ -31,6 +31,7 @@ try {
   const mem = async (u: any, s: string, r: string, o = org) => { const x = await admin.from("memberships").insert({ user_id: u.id, org_id: o, school_id: s, role: r }); if (x.error) throw x.error; };
   await mem(g1, A, "guardian"); await mem(g1, B, "guardian"); await mem(g2, A, "guardian"); await mem(gB, B, "guardian"); await mem(gX, C, "guardian", org2);
   await mem(tA, A, "teacher"); await mem(tB, B, "teacher"); await mem(sB, B, "student_affairs");
+  await admin.from("teachers").insert([{ school_id: A, full_name: "معلم أ", user_id: tA.id, status: "active" }, { school_id: B, full_name: "معلم ب", user_id: tB.id, status: "active" }]);
   // g1 has children in both branches; gB only in B; gX in another org
   const st = async (s: string, n: string) => (await admin.from("students").insert({ school_id: s, full_name: n, status: "active" }).select("id").single()).data!.id;
   const gd = async (s: string, u: string, n: string) => (await admin.from("guardians").insert({ school_id: s, user_id: u, full_name: n }).select("id").single()).data!.id;
