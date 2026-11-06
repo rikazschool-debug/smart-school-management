@@ -11,6 +11,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { ask } from "@/components/confirm";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { PeoplePicker } from "@/components/people-picker";
+import { RoutePicker, useRouteDepts, type RouteCand } from "@/components/support/route-picker";
 import { Pill, fmt } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
 
@@ -22,7 +23,10 @@ const INFO_STATUS: Record<string, string> = { open: "بانتظار الإفاد
 export function ManagePanel({ d, onChange }: { d: Row; onChange: () => void }) {
   const t = d.ticket, can = d.can;
   const open = !["closed", "cancelled"].includes(t.status);
-  const [who, setWho] = useState<string[]>([]);
+  const [who, setWho] = useState<RouteCand | null>(null);
+  const [dept, setDept] = useState<string>(t.department_id ?? "");
+  const depts = useRouteDepts(can.assign ? t.school_id : "", t.id);
+  const curDept = depts.data?.find((x) => x.id === t.department_id)?.name;
   const [branch, setBranch] = useState("");
   const [reason, setReason] = useState("");
   const [esc, setEsc] = useState<{ title: string; body: string } | null>(null);
@@ -35,7 +39,7 @@ export function ManagePanel({ d, onChange }: { d: Row; onChange: () => void }) {
   async function action(a: string, value: string | null, r: string | null) {
     const { error } = await db.rpc("support_action", { _ticket: t.id, _action: a, _rev: t.rev, _reason: r, _value: value });
     if (error) return void toast.error(arabicError(error));
-    toast.success("تم"); setWho([]); setBranch(""); setReason(""); onChange();
+    toast.success("تم"); setWho(null); setBranch(""); setReason(""); onChange();
   }
   async function escalate() {
     if (!esc) return;
@@ -51,9 +55,15 @@ export function ManagePanel({ d, onChange }: { d: Row; onChange: () => void }) {
       {can.assign && (
         <div className="space-y-2">
           <Label>إسناد المعالجة لشخص <span className="text-xs font-normal text-muted-foreground">— يرى هذه التذكرة فقط، وتُسحب صلاحيته فور تغيير المسؤول</span></Label>
-          <PeoplePicker purpose="support_assign" school={t.school_id} post={t.id} single compact label="مسؤول المعالجة" value={who} onChange={setWho} showBranch />
+          <p className="text-xs text-muted-foreground">القسم الموجّه إليه حاليًا: <b>{curDept ?? "بدون قسم"}</b> — اختيار القسم لا يمنح أفراده الاطلاع على التذكرة.</p>
+          <RoutePicker school={t.school_id} ticket={t.id} dept={dept} onDept={setDept} who={who} onWho={setWho} />
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" disabled={!who[0]} onClick={() => action("assign", who[0]!, null)}>إسناد</Button>
+            <Button size="sm" disabled={!who} onClick={() => action("assign", who!.user_id, null)}>إسناد</Button>
+            {(dept || null) !== (t.department_id ?? null) && <Button size="sm" variant="outline" onClick={async () => {
+              const { error } = await db.rpc("support_set_department" as never, { _ticket: t.id, _dept: dept || null, _rev: t.rev } as never);
+              if (error) return void toast.error(arabicError(error));
+              toast.success("حُدّث القسم"); onChange();
+            }}>حفظ القسم الموجّه إليه</Button>}
             {t.assignee && <Button size="sm" variant="outline" onClick={async () => { if (await ask("سحب الإسناد من المسؤول الحالي؟")) action("assign", "", null); }}>سحب الإسناد</Button>}
           </div>
         </div>

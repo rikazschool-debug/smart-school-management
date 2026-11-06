@@ -31,7 +31,7 @@ const ACT: Record<string, string> = {
   created: "أُنشئت التذكرة", reply: "رد", reply_edited: "تصحيح رد", claim: "استلام", in_progress: "قيد المعالجة", waiting_requester: "طلب معلومات من مقدم الطلب",
   waiting_internal: "بانتظار جهة داخلية", priority: "تغيير الأولوية", category: "تغيير التصنيف", resolve: "حل", confirm: "تأكيد الحل وإغلاق", close: "إغلاق",
   reopen: "إعادة فتح", cancel: "إلغاء", file_added: "إرفاق ملف",
-  assign: "إسناد المعالجة", transfer: "تحويل إلى فرع آخر", escalated: "تصعيد إلى دعم المنصة", note_private: "ملاحظة خاصة", note_team: "ملاحظة الفريق",
+  assign: "إسناد المعالجة", department: "تغيير القسم الموجّه إليه", transfer: "تحويل إلى فرع آخر", escalated: "تصعيد إلى دعم المنصة", note_private: "ملاحظة خاصة", note_team: "ملاحظة الفريق",
   info_requested: "طلب إفادة", info_answered: "وصول إفادة", info_cancelled: "إلغاء طلب إفادة", sla_breach: "تنبيه تأخير",
 };
 export const DEFAULT_SLA: Record<string, { response: number; resolve: number }> = { urgent: { response: 2, resolve: 8 }, high: { response: 4, resolve: 24 }, normal: { response: 8, resolve: 40 }, low: { response: 24, resolve: 80 } };
@@ -448,6 +448,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
               {e.action === "priority" && <p className="mt-0.5 text-muted-foreground">{PRIO[e.details.from]} ← {PRIO[e.details.to]}</p>}
               {e.details?.name && <p className="mt-0.5 text-muted-foreground">{e.details.name}</p>}
               {e.action === "transfer" && <p className="mt-0.5 text-muted-foreground">{e.details.from_school} ← {e.details.to_school}</p>}
+              {e.action === "department" && <p className="mt-0.5 text-muted-foreground">{e.details.from ?? "بدون قسم"} ← {e.details.to ?? "بدون قسم"}</p>}
               {e.action === "assign" && <p className="mt-0.5 text-muted-foreground">{e.details.from ?? "بلا مسؤول"} ← {e.details.to ?? "بلا مسؤول"}</p>}
               {e.action === "info_requested" && e.details?.to && <p className="mt-0.5 text-muted-foreground">إلى {e.details.to}</p>}
               {e.action === "sla_breach" && <p className="mt-0.5 text-muted-foreground">{e.details.kind === "response" ? "تجاوز موعد الرد الأول" : "تجاوز موعد الحل"}{e.details.to ? ` — نُبّه ${e.details.to}` : " — نُبّه مديرو التذكرة"}</p>}
