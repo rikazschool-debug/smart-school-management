@@ -40,12 +40,9 @@ async def main():
         await g.screenshot(path=SH + "2_guardian_phone.png")
         await g.get_by_text("اجتماع أولياء الأمور").first.click(); await g.wait_for_timeout(3500)
         check("4a guardian opens the notice page with its attachment", "/app/notice/" in g.url and await g.get_by_label("تنزيل agenda.pdf").count() == 1, g.url)
-        async with g.context.expect_page() as np:
-            await g.get_by_label("تنزيل agenda.pdf").click()
-        pg = await np.value
-        try: await pg.wait_for_url("**/storage/**", timeout=10000)
-        except Exception: pass
-        nu = pg.url
+        reqs = []; g.context.on("request", lambda r: reqs.append(r.url))
+        await g.get_by_label("تنزيل agenda.pdf").click(); await g.wait_for_timeout(5000)
+        nu = next((u for u in reqs if "rikaz-files" in u and "token=" in u), "")
         check("4b download opens a short-lived signed link", "token=" in nu and "rikaz-files" in nu, nu[:120])
         await g.screenshot(path=SH + "2b_guardian_notice.png")
         o2 = await login(br, "owner", 1280, 1800)
