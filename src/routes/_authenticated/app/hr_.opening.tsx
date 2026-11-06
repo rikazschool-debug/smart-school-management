@@ -23,7 +23,7 @@ function Page() {
       <nav aria-label="نوع الرصيد" className="mb-4 flex gap-2 text-sm">
         {([["leave", "أرصدة الإجازات"], ["advance", "السلف القائمة"]] as const).map(([v, l]) => <button key={v} type="button" onClick={() => nav({ search: v === "leave" ? {} : { k: v } })} className={"rounded-lg px-3 py-1.5 " + (k === v ? "bg-primary text-primary-foreground" : "border bg-card hover:border-primary")} aria-current={k === v ? "page" : undefined}>{l}</button>)}
       </nav>
-      <OpeningBalances key={k} org={active.orgId} kind={k} />
+      {active.orgId && <OpeningBalances key={k} org={active.orgId} kind={k} />}
     </>
   );
 }

@@ -189,7 +189,7 @@ export function OpeningBalances({ org, kind }: { org: string; kind: "leave" | "a
     if (idx.some((i) => i < 0)) return toast.error("أعمدة الملف لا تطابق القالب؛ نزّل القالب واستخدمه");
     const r = a.slice(1).filter((row) => row.some((c) => String(c).trim() !== "")).map((row, n) => Object.fromEntries([["i", n + 2], ...cols.map(([k], j) => [k, k === "employee_no" || k === "type" || k === "start_month" ? String(row[idx[j]!] ?? "").trim() : num(row[idx[j]!])])]));
     if (!r.length) return toast.error("الملف بلا صفوف");
-    setRows(r); setPv(null); setMeta({ title: "", source_ref: f.name, source_rows: String(r.length), source_total: "" }); preview.mutate(r);
+    setRows(r); setPv(null); setMeta({ title: "", source_ref: f.name, source_rows: String(r.length), source_total: "" }); preview.mutate(r); return undefined;
   };
   const save = useMutation({
     mutationFn: () => rpc<string>("hr_open_save", { _org: org, _kind: kind, _p: { title: meta.title, source_ref: meta.source_ref, source_rows: Number(meta.source_rows), source_total: Number(num(meta.source_total)), rows } }),
