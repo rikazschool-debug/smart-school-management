@@ -13,7 +13,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { FileList, Uploader } from "@/components/homework/files";
 import { Pill, fmt, fetchAllRows } from "@/components/admin/shared";
 import { arabicError, type AppContext } from "@/lib/session";
-import { ROLE_LABELS, type Role, type SupportTab } from "@/lib/roles";
+import { ROLE_LABELS, SUPPORT_TAB_LABELS, type Role, type SupportTab } from "@/lib/roles";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { InternalPanel, ManagePanel } from "@/components/support/handling";
 import { InternalTicket } from "@/components/support/internal-ticket";

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useCanGoBack, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,12 +16,14 @@ import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { IdCard, UserPlus } from "lucide-react";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
-import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
+import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingState, ErrorState } from "@/components/states";
 import { NotificationBell } from "@/components/notification-bell";
+import { useSupportCaps } from "@/components/support/caps";
+import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "لوحة ركاز" }, { name: "robots", content: "noindex" }] }),
@@ -129,8 +131,14 @@ function Shell() {
   const evCan = (t: string) => { if (evOwner) return true; const c = evMe.data?.caps ?? {}; return t === "summary" ? !!c["ev_summary.view"] : t === "guardians" ? !!c["ev_guardian.view"] : t === "visits" ? !!(c["ev_visits.view"] || c["ev_visits.execute"]) : t === "monthly" ? !!c["ev_monthly.view"] : !!(c["ev_forms.view"] || c["ev_forms.edit"]); };
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const supTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "") });
   const evTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "summary") });
   const lastSection = useRef<OwnerSection | null>(null);
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
+  // support sub-menu mirrors the page's own tabs (supportTabs + support_caps); the page and support_* RPCs re-check
+  const inSupport = path === "/app/support" || path.startsWith("/app/support/");
+  const sCaps = useSupportCaps(inSupport && active && active.role !== "platform_admin" ? active.orgId : null);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -213,6 +221,15 @@ function Shell() {
                       ))}
                     </div>
                   )}
+                  {k === "support" && inSupport && (active.role === "platform_admin" || sCaps.data) && (
+                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                      {[...supportTabs(active.role, (sCaps.data?.view.length ?? 0) > 0), ...(active.role === "platform_admin" || sCaps.data?.settings ? (["settings"] as const) : [])].map((t) => (
+                        <Link key={t} to="/app/support" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS + (supTab === t ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>
+                          {t === "settings" ? "الإعدادات والتصنيفات" : SUPPORT_TAB_LABELS[t]}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                   {k === "admissions" && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {AD_SUB.filter(([t]) => t !== "settings" || !!ad.data?.org_level || !!ad.data?.caps?.settings.length).map(([t, label]) => (
@@ -256,6 +273,12 @@ function Shell() {
           ) : (
             <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" aria-label="القائمة" onClick={() => setOpen(true)}>
               <Menu className="size-5" />
+            </Button>
+          )}
+          {path.replace(/\/+$/, "") !== "/app" && (
+            <Button variant="outline" size="sm" className="shrink-0 gap-1 rounded-full" aria-label="رجوع" title="رجوع للصفحة السابقة"
+              onClick={() => (canGoBack ? router.history.back() : navigate({ to: "/app" }))}>
+              <ArrowRight className="size-4" /><span className="hidden sm:inline">رجوع</span>
             </Button>
           )}
           <div className="relative flex min-w-0 flex-1 items-center sm:flex-none">
