@@ -47,9 +47,11 @@ try {
   check("1 can't assign to a student, a suspended account, someone outside the org; requester can't assign", !!toStu.error && !!toOff.error && !!toOther.error && !!byTch.error, [toStu.error?.message, toOff.error?.message, toOther.error?.message, byTch.error?.message]);
 
   // 2 principal assigns to a teacher in the other branch; gains nothing in that branch
-  const as1 = await act(pr1, T, "assign", tchB.id);
+  const noRight = await act(pr1, T, "assign", tchB.id);
+  check("2a principal without the referral right cannot assign to another branch", !!noRight.error, noRight.error);
+  const as1 = await act(owner, T, "assign", tchB.id);
   const [bAssigned, bGet, pr2Get, pr1TB] = await Promise.all([list(tchB, "assigned"), get(tchB, T), get(pr2, T), get(pr1, TB)]);
-  check("2 principal assigns to a teacher in another branch: the assignee sees only this ticket; branch B principal doesn't; principal A still can't read branch B tickets",
+  check("2 owner assigns to a teacher in another branch: the assignee sees only this ticket; branch B principal doesn't; principal A still can't read branch B tickets",
     !as1.error && ids(bAssigned).includes(T) && !bGet.error && !!pr2Get.error && !!pr1TB.error, [as1.error, bGet.error?.message, pr2Get.error, pr1TB.error]);
   check("3 assignee gets a handling role only (no manage), assignment notified", bGet.data?.can?.handle === true && bGet.data?.can?.manage === false && (await notifs(tchB.id, T)).some((n) => n.title.includes("أُسندت")), bGet.data?.can);
 
