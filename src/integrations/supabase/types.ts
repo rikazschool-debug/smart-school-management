@@ -12148,6 +12148,35 @@ export type Database = {
           },
         ]
       }
+      support_followers: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_followers_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_info_requests: {
         Row: {
           answer: string | null
@@ -14607,7 +14636,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      _perm_base_v2: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
       _perm_catalog_base: { Args: never; Returns: Json }
+      _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_denied: {
         Args: { _action: string; _org: string; _section: string; _uid: string }
         Returns: boolean
@@ -14741,6 +14780,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _support_is_follower: {
+        Args: { _t: Database["public"]["Tables"]["support_tickets"]["Row"] }
+        Returns: boolean
+      }
       _support_notify: {
         Args: {
           _key: string
@@ -14760,6 +14803,10 @@ export type Database = {
           _u: string
         }
         Returns: undefined
+      }
+      _support_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
       }
       _support_policy: {
         Args: { _org: string; _scope: string }
@@ -14785,6 +14832,21 @@ export type Database = {
       }
       _support_route_ok: {
         Args: { _school: string; _ticket: string }
+        Returns: boolean
+      }
+      _support_settings_ok: { Args: { _org: string }; Returns: boolean }
+      _support_staff_live: {
+        Args: {
+          _t: Database["public"]["Tables"]["support_tickets"]["Row"]
+          _u: string
+        }
+        Returns: boolean
+      }
+      _support_tcan: {
+        Args: {
+          _action: string
+          _t: Database["public"]["Tables"]["support_tickets"]["Row"]
+        }
         Returns: boolean
       }
       _support_user_school: {
@@ -17916,6 +17978,7 @@ export type Database = {
         }[]
       }
       support_can_read: { Args: { _ticket: string }; Returns: boolean }
+      support_caps: { Args: { _org: string }; Returns: Json }
       support_create: {
         Args: {
           _body: string
@@ -17969,6 +18032,16 @@ export type Database = {
           storage_path: string
           uploaded_by: string
           uploader: string
+        }[]
+      }
+      support_follower_candidates: {
+        Args: { _q?: string; _ticket: string }
+        Returns: {
+          dept_name: string
+          name: string
+          role: string
+          school_name: string
+          user_id: string
         }[]
       }
       support_get: { Args: { _ticket: string }; Returns: Json }
@@ -18124,6 +18197,10 @@ export type Database = {
       }
       support_set_department: {
         Args: { _dept: string; _rev: number; _ticket: string }
+        Returns: undefined
+      }
+      support_set_follower: {
+        Args: { _on: boolean; _ticket: string; _user: string }
         Returns: undefined
       }
       support_sla_tick: { Args: { _only?: string[] }; Returns: number }
