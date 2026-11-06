@@ -55,7 +55,7 @@ function Page() {
       </div>
       {tab === "notices" ? <Notices org={active.orgId} open={s.n} setOpen={(n) => nav({ search: n ? { tab: "notices", n } : { tab: "notices" } })} />
         : tab === "meetings" ? <MeetingList ctx={{ ...active, schoolId: null }} />
-        : active.schoolId ? <CircularsTab ctx={{ ...active, schoolId: active.schoolId }} focus={s.circular} onFocus={(id) => nav({ search: id ? { tab: "circulars", circular: id } : { tab: "circulars" } })} />
+        : active.schoolId ? <CircularsTab orgWide={active.role === "org_owner"} ctx={{ ...active, schoolId: active.schoolId }} focus={s.circular} onFocus={(id) => nav({ search: id ? { tab: "circulars", circular: id } : { tab: "circulars" } })} />
         : <EmptyState title="لا توجد مدرسة مفعّلة" hint="أضف مدرسة أولًا لإصدار التعاميم." />}
     </>
   );
