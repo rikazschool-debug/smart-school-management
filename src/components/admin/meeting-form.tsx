@@ -28,6 +28,8 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
     privacy: meeting?.privacy ?? "normal", needs_rsvp: meeting?.needs_rsvp ?? true, minutes_writer: meeting?.minutes_writer ?? "", members: members ?? ([] as string[]),
     mode: meeting?.mode ?? "in_person", scope: meeting?.scope ?? "school", host: meeting?.school_id ?? school ?? "", change_reason: "",
   });
+  const a0 = meeting?.audience as Row | null | undefined;
+  const [aud, setAud] = useState({ on: !!a0, all_schools: !!a0?.all_schools, schools: (a0?.schools ?? []) as string[], categories: (a0?.categories ?? []) as string[], departments: (a0?.departments ?? []) as string[] });
   const [busy, setBusy] = useState(false);
   const schools = useQuery({
     enabled: owner && !!ctx?.orgId,
@@ -38,18 +40,38 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
   const pickScope = { purpose: "meeting" as const, school: host || null, org: d.scope === "org" ? (ctx?.orgId ?? null) : null };
   const chosen = usePeopleByIds(pickScope, d.members);
   const byId: Map<string, Person> = chosen.data ?? new Map();
+  const canAud = !meeting || meeting.status === "draft";
+  const target = aud.on && canAud ? { mode: "all", all_schools: aud.all_schools, schools: d.scope === "school" ? [host] : aud.schools, categories: aud.categories, departments: aud.departments } : null;
+  const audSchools = d.scope === "school" ? [host] : aud.all_schools ? (schools.data ?? []).map((x) => x.id as string) : aud.schools;
+  const deps = useQuery({
+    enabled: !!target && audSchools.length > 0,
+    queryKey: ["meet-aud-deps", audSchools],
+    queryFn: async () => ((await db.from("departments").select("id, name, school_id").in("school_id", audSchools).order("name")).data ?? []) as Row[],
+  });
+  const preview = useQuery({
+    enabled: !!target && !!host && aud.categories.length > 0 && audSchools.length > 0,
+    queryKey: ["meet-aud-preview", host, d.scope, target, d.members],
+    queryFn: async () => { const { data, error } = await db.rpc("adm_meeting_audience_preview" as never, { _school: host, _scope: d.scope, _t: target, _picks: d.members } as never); if (error) throw error; return data as Row; },
+  });
+  const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
   async function save() {
     if (!d.title.trim() || !d.date || !d.time || !d.end) return void toast.error("أكمل العنوان والتاريخ ووقتي البداية والنهاية");
     if (diffMin(d.time, d.end) < 5) return void toast.error("وقت النهاية يجب أن يكون بعد البداية");
     if (d.mode === "in_person" && !d.location.trim()) return void toast.error("حدد القاعة أو المكان للاجتماع الحضوري");
     if (!host) return void toast.error("اختر الفرع المستضيف");
+    if (target && (!aud.categories.length || !audSchools.length)) return void toast.error("اختر الفروع والفئات للدعوة الجماعية");
     if (meeting?.status === "scheduled" && !d.change_reason.trim()) return void toast.error("اكتب سبب التعديل؛ سيُبلغ به المدعوون");
     setBusy(true);
     const payload = { ...d, starts_at: `${d.date}T${d.time}:00+03:00`, ends_at: `${d.date}T${d.end}:00+03:00`, link: d.mode === "virtual" ? "" : d.link };
     const { data, error } = await db.rpc("adm_meeting_save" as never, { _id: meeting?.id ?? null, _school: meeting ? (owner ? host : null) : host, _d: payload, _rev: meeting?.rev ?? null, _client: meeting ? null : clientId } as never);
+    if (error) { setBusy(false); return void toast.error(arabicError(error)); }
+    if (canAud && (target || meeting?.audience)) {
+      const r = data as Row;
+      const { error: e2 } = await db.rpc("adm_meeting_set_audience" as never, { _id: r.id, _rev: r.rev, _t: target } as never);
+      if (e2) { setBusy(false); toast.error(arabicError(e2)); return onDone(r.id); }
+    }
     setBusy(false);
-    if (error) return void toast.error(arabicError(error));
     toast.success(meeting ? (meeting.status === "scheduled" ? "حُفظ التعديل وأُبلغ المدعوون بالسبب" : "حُفظ التعديل") : "حُفظت المسودة — لم تُرسل أي دعوة بعد");
     onDone((data as Row).id);
   }
@@ -114,6 +136,44 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
         <Label>المدعوون</Label>
         <PeoplePicker {...pickScope} label="المدعوون" exclude={[me]} value={d.members} onChange={(v) => setD({ ...d, members: v, minutes_writer: v.includes(d.minutes_writer) ? d.minutes_writer : "" })} />
         <p className="text-xs text-muted-foreground">كل شخص يُدعى مرة واحدة ولو تعددت أدواره. اختيار الفئة يعرض أسماءها فقط، ولا يُدعى أحد حتى تختاره.</p>
+      </div>
+      {canAud && (
+        <fieldset className="space-y-2 rounded-lg border p-3 md:col-span-2">
+          <legend className="px-1 text-sm font-medium">دعوة فئة كاملة</legend>
+          <div className="flex flex-wrap gap-2">
+            {([[false, "اختيار أشخاص بالاسم فقط"], [true, "جميع المطابقين"]] as const).map(([v, l]) => (
+              <label key={String(v)} className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm ${aud.on === v ? "border-primary bg-accent" : ""}`}>
+                <input type="radio" name="m-aud" checked={aud.on === v} onChange={() => setAud({ ...aud, on: v })} />{l}
+              </label>
+            ))}
+          </div>
+          {aud.on && (
+            <>
+              {d.scope === "org" && (
+                <div className="flex flex-wrap gap-2 text-sm" aria-label="فروع الدعوة">
+                  <label className="flex items-center gap-1"><input type="checkbox" checked={aud.all_schools} onChange={(e) => setAud({ ...aud, all_schools: e.target.checked, departments: [] })} />جميع الفروع</label>
+                  {!aud.all_schools && (schools.data ?? []).map((x) => <label key={x.id} className="flex items-center gap-1"><input type="checkbox" checked={aud.schools.includes(x.id)} onChange={() => setAud({ ...aud, schools: toggle(aud.schools, x.id), departments: [] })} />{x.name}</label>)}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-3 text-sm" aria-label="فئات الدعوة">
+                {[["guardian", "أولياء الأمور"], ["teacher", "المعلمون"], ["staff", "الإداريون"]].map(([k, l]) => <label key={k} className="flex items-center gap-1"><input type="checkbox" checked={aud.categories.includes(k!)} onChange={() => setAud({ ...aud, categories: toggle(aud.categories, k!) })} />{l}</label>)}
+              </div>
+              {(deps.data ?? []).length > 0 && (
+                <div className="flex flex-wrap gap-3 text-xs" aria-label="أقسام الدعوة"><span className="text-muted-foreground">الأقسام (اختياري):</span>
+                  {(deps.data ?? []).map((x) => <label key={x.id} className="flex items-center gap-1"><input type="checkbox" checked={aud.departments.includes(x.id)} onChange={() => setAud({ ...aud, departments: toggle(aud.departments, x.id) })} />{x.name}</label>)}
+                </div>
+              )}
+              <p className="rounded-lg bg-accent p-2 text-sm" data-testid="aud-count">
+                {preview.isFetching ? "جارٍ حساب المدعوين…" : preview.error ? arabicError(preview.error) : preview.data
+                  ? <>عدد المدعوين الفريدين: <b>{preview.data.count}</b>{Object.entries(preview.data.by_school ?? {}).map(([n, k]) => ` — ${n}: ${k}`).join("")}</>
+                  : "اختر الفروع والفئات لعرض العدد."}
+              </p>
+              <p className="text-xs text-muted-foreground">يتحقق الخادم من القائمة عند إرسال الدعوات، ويرفض الإرسال إذا تغيّرت بعد الحفظ. الطلاب لا يُدعون.</p>
+            </>
+          )}
+        </fieldset>
+      )}
+      <div className="md:col-span-2">
         <p className="text-xs text-muted-foreground">لا يُدرج الطلاب وأولياء الأمور والحسابات الموقوفة. لا تُنشأ مجموعة تواصل يدوية.</p>
       </div>
       <label className="flex items-center gap-2 text-sm md:col-span-2"><input type="checkbox" checked={d.needs_rsvp} onChange={(e) => setD({ ...d, needs_rsvp: e.target.checked })} />يُطلب من المدعوين القبول أو الاعتذار</label>

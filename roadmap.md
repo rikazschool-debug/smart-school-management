@@ -500,5 +500,7 @@ Nov 4 (prompt-130): HR now requested. P0 inventory done (docs/hr/p0-inventory.md
 - [x] Hub sidebar section (notices / meetings / circulars)
 - [x] Notice attachments browser check (upload, recipient phone open/download)
 - [x] hub_meetings perms on server + instant meeting
-- [ ] Agora audio/screen-share multi-account rerun (stalled at mic step this run)
+- [x] Whole-category meeting invites (hub-aud-e2e 22/22)
+- [x] comm_hub platform switch with reason + audit (hub-aud-e2e)
+- [ ] Agora audio/screen-share: two browsers join, but sandbox network sends 0 media bytes (also via proxy) — needs a manual check on real devices
 - [ ] Support package (after hub closes)

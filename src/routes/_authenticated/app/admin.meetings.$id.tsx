@@ -27,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/app/admin/meetings/$id")({
 function Page() {
   const { active } = useSession();
   if (active?.role === "org_owner" && !active.schoolId) return <Meeting school={null} ctx={active} />;
+  // invited guardians (category invitations) open the invite; the database decides what they can read
+  if (active?.role === "guardian") return <Meeting school={active.schoolId} ctx={active} />;
   return <RequireSchool nav="meetings">{(ctx) => <Meeting school={ctx.schoolId} ctx={ctx} />}</RequireSchool>;
 }
 

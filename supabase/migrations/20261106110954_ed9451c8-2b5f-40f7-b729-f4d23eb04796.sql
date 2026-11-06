@@ -1,0 +1,2 @@
+alter table public.org_sections drop constraint org_sections_section_check;
+alter table public.org_sections add constraint org_sections_section_check check (section = any (array['school_admin','finance','hr','operations','admissions','comm_hub']));
