@@ -8,7 +8,7 @@ import { arabicError } from "@/lib/session";
 
 // Attachments chosen in the create form. create_support_draft_file validates type/size/permission and makes a pending row;
 // support_open links only fully uploaded files (it re-checks the stored object).
-export type DraftFile = { key: string; file: File; id?: string; state: "uploading" | "ok" | "failed"; error?: string };
+export type DraftFile = { key: string; file: File; id?: string | undefined; state: "uploading" | "ok" | "failed"; error?: string | undefined };
 
 export function DraftFiles({ school, files, setFiles }: { school: string; files: DraftFile[]; setFiles: (f: (p: DraftFile[]) => DraftFile[]) => void }) {
   const aborts = useRef(new Map<string, AbortController>());
