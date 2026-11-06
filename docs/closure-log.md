@@ -568,3 +568,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Fixed: owner permissions screen (perm_section_people) timed out on the 4-branch org — now short-circuits per section and checks only each person's branches (~3s); restored execute on the catalog chain.
 - Evidence: support7-e2e 50/50; support7-journey 12/12 (owner desktop, follower on 390px phone, principal; removal mid-session); support/2/3/4/5/6-e2e 17/17/14/10/24/29; perm7-e2e 20/20; permissions screen shows «الدعم الفني والمساعدة».
 - Open: Agora audio/screen-share on two real devices (field test).
+
+- 2026-11-06: Owner «الدعم الفني والمساعدة» is its own section with its tabs as a side sub-menu (support_caps-filtered; RPCs unchanged). Global «رجوع» button in the top bar of every /app page (history back, fallback /app). Test: src/test/roles.test.ts 21/21; browser owner journey OK.
