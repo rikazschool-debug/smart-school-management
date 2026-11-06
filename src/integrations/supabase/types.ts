@@ -12370,6 +12370,7 @@ export type Database = {
           client_key: string | null
           closed_at: string | null
           created_at: string
+          department_id: string | null
           first_response_at: string | null
           id: string
           linked_ticket: string | null
@@ -12401,6 +12402,7 @@ export type Database = {
           client_key?: string | null
           closed_at?: string | null
           created_at?: string
+          department_id?: string | null
           first_response_at?: string | null
           id?: string
           linked_ticket?: string | null
@@ -12432,6 +12434,7 @@ export type Database = {
           client_key?: string | null
           closed_at?: string | null
           created_at?: string
+          department_id?: string | null
           first_response_at?: string | null
           id?: string
           linked_ticket?: string | null
@@ -12462,6 +12465,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "support_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
             referencedColumns: ["id"]
           },
           {
@@ -14773,6 +14783,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _support_route_ok: {
+        Args: { _school: string; _ticket: string }
+        Returns: boolean
+      }
       _support_user_school: {
         Args: { _fallback: string; _org: string; _u: string }
         Returns: string
@@ -15865,6 +15879,13 @@ export type Database = {
       }
       create_submission_file: {
         Args: { _hw: string; _mime: string; _name: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
+      create_support_draft_file: {
+        Args: { _mime: string; _name: string; _school: string; _size: number }
         Returns: {
           id: string
           storage_path: string
@@ -17908,6 +17929,14 @@ export type Database = {
         }
         Returns: string
       }
+      support_dept_options: {
+        Args: { _school?: string }
+        Returns: {
+          id: string
+          name: string
+          school_name: string
+        }[]
+      }
       support_edit_message: {
         Args: { _body: string; _message: string; _reason: string }
         Returns: undefined
@@ -17971,6 +18000,7 @@ export type Database = {
           _assignee?: string
           _box: string
           _category?: string
+          _dept?: string
           _from?: string
           _limit?: number
           _offset?: number
@@ -17984,6 +18014,7 @@ export type Database = {
           assignee_name: string
           category: string
           created_at: string
+          department_name: string
           id: string
           overdue: boolean
           priority: string
@@ -18034,6 +18065,8 @@ export type Database = {
           _body: string
           _category?: string
           _client_key?: string
+          _dept?: string
+          _files?: string[]
           _priority?: string
           _school: string
           _title: string
@@ -18054,6 +18087,24 @@ export type Database = {
         }
         Returns: string
       }
+      support_route_candidates: {
+        Args: { _dept?: string; _q?: string; _school: string; _ticket?: string }
+        Returns: {
+          dept_name: string
+          name: string
+          role: string
+          school_name: string
+          user_id: string
+        }[]
+      }
+      support_route_departments: {
+        Args: { _school: string; _ticket?: string }
+        Returns: {
+          eligible: number
+          id: string
+          name: string
+        }[]
+      }
       support_save_category: {
         Args: { _active: boolean; _id: string; _name: string; _org: string }
         Returns: string
@@ -18069,6 +18120,10 @@ export type Database = {
           _sla: Json
           _start: string
         }
+        Returns: undefined
+      }
+      support_set_department: {
+        Args: { _dept: string; _rev: number; _ticket: string }
         Returns: undefined
       }
       support_sla_tick: { Args: { _only?: string[] }; Returns: number }
