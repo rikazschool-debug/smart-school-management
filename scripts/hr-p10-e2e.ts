@@ -129,7 +129,7 @@ try {
   const good = leaveRows.slice(0, 3);
   const LB = (await hr.c.rpc("hr_open_save", { _org: org, _kind: "leave", _p: { title: "أرصدة 2026", source_ref: "نظام سابق.xlsx", source_rows: 3, source_total: 60, rows: good } })).data as string;
   check("draft saved with a wrong source total", !!LB);
-  check("same rows in another draft refused", has(await hr.c.rpc("hr_open_save", { _org: org, _kind: "leave", _p: { title: "نسخة", source_ref: "x.xlsx", source_rows: 3, source_total: 63.5, rows: good } }), "دفعة أخرى"));
+  check("same rows in another draft refused", has(await hr.c.rpc("hr_open_save", { _org: org, _kind: "leave", _p: { title: "نسخة", source_ref: "x.xlsx", source_rows: 3, source_total: 63.5, rows: good } }), "صحّح"));
   check("preparer cannot approve", has(await hr.c.rpc("hr_open_approve", { _id: LB, _rev: 1 }), "غير من أعدّها"));
   check("approval refused when total ≠ source (63.5 vs 60)", has(await hr2.c.rpc("hr_open_approve", { _id: LB, _rev: 1 }), "لا يطابق"));
   check("no moves written before approval", (await admin.from("hr_leave_moves").select("id").eq("org_id", org)).data!.length === 0);
