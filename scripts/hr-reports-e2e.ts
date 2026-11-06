@@ -39,7 +39,7 @@ try {
 
   const cat = (await owner.c.rpc("hr_report_catalog", { _org: org })).data as any[];
   check("owner sees the full catalog R01–R29", cat?.length === 29, cat?.length);
-  check("unavailable reports say why (R04/R14/R25/R26)", ["R04", "R14", "R25", "R26"].every((k) => cat.find((c) => c.key === k)?.status === "unavailable" && !!cat.find((c) => c.key === k)?.unavailable), null);
+  check("unavailable reports say why (R25/R26 finance link); R04/R14 ready", ["R25", "R26"].every((k) => cat.find((c) => c.key === k)?.status === "unavailable" && !!cat.find((c) => c.key === k)?.unavailable) && ["R04", "R14"].every((k) => cat.find((c) => c.key === k)?.status === "ready"), cat.map((c) => [c.key, c.status]));
   check("extension reports are switched off by default", ["R07", "R08", "R09", "R10", "R29"].every((k) => cat.find((c) => c.key === k)?.status === "ext_off"), cat.filter((c) => c.ext).map((c) => [c.key, c.status]));
   const bcat = (await br.c.rpc("hr_report_catalog", { _org: org })).data as any[];
   check("branch viewer catalog lists only reports they can view", bcat.every((c) => ["hr_employees", "hr_leave"].includes(c.sec)) && !bcat.some((c) => c.key === "R24") && !bcat.some((c) => c.key === "R27"), bcat.map((c) => c.key));
@@ -68,7 +68,7 @@ try {
   const ext = await owner.c.rpc("hr_report", { _org: org, _key: "R08", _f: {}, _mode: "view" }); check("extension report refused while switched off", has(ext, "الامتداد"), ext.error);
   const bogus = await owner.c.rpc("hr_report", { _org: org, _key: "R99; drop", _f: {}, _mode: "view" }); check("tampered report key refused", has(bogus, "غير معروف"), bogus.error);
   const mode = await owner.c.rpc("hr_report", { _org: org, _key: "R01", _f: {}, _mode: "admin" }); check("unknown mode refused", has(mode, "وضع"), mode.error);
-  const una = await owner.c.rpc("hr_report", { _org: org, _key: "R04", _f: {}, _mode: "view" }); check("unavailable report cannot be forced", has(una, "عنوان"), una.error);
+  const una = await owner.c.rpc("hr_report", { _org: org, _key: "R25", _f: {}, _mode: "view" }); check("unavailable report cannot be forced", !!una.error, una.error);
   const xs = await stranger.c.rpc("hr_report", { _org: org, _key: "R01", _f: {}, _mode: "view" }); check("other organisation refused", has(xs, "غير مصرح"), xs.error);
   const xc = (await stranger.c.rpc("hr_report_catalog", { _org: org })).data as any[]; check("other organisation gets an empty catalog", Array.isArray(xc) && xc.length === 0, xc);
 
@@ -77,7 +77,7 @@ try {
   const all = (await owner.c.rpc("hr_report_catalog", { _org: org })).data as any[];
   const errs: string[] = [];
   for (const c of all.filter((c) => c.status === "ready")) { const r = await owner.c.rpc("hr_report", { _org: org, _key: c.key, _f: { from: "2020-01-01", to: "2030-12-31" }, _mode: "view" }); if (r.error || !Array.isArray(r.data?.rows) || r.data.columns.length !== (r.data.rows[0]?.length ?? r.data.columns.length)) errs.push(`${c.key}: ${r.error?.message ?? "shape"}`); }
-  check("all 25 available reports run with consistent columns once extensions are on", errs.length === 0 && all.filter((c) => c.status === "ready").length === 25, errs);
+  check("all 27 available reports run with consistent columns once extensions are on", errs.length === 0 && all.filter((c) => c.status === "ready").length === 27, [errs, all.filter((c) => c.status === "ready").length]);
   // revocation mid-session: same signed-in client, next call refused
   const rv = await g(br, "hr_employees", "view", null);
   const after = await br.c.rpc("hr_report", { _org: org, _key: "R01", _f: {}, _mode: "view" });
