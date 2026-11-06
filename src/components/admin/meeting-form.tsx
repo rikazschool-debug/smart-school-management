@@ -153,7 +153,7 @@ export function MeetingForm({ school, ctx, me, meeting, members, onDone, onCance
                 </div>
               )}
               <div className="flex flex-wrap gap-3 text-sm" aria-label="فئات الدعوة">
-                {[["guardian", "أولياء الأمور"], ["teacher", "المعلمون"], ["staff", "الإداريون"]].map(([k, l]) => <label key={k} className="flex items-center gap-1"><input type="checkbox" checked={aud.categories.includes(k!)} onChange={() => setAud({ ...aud, categories: toggle(aud.categories, k!) })} />{l}</label>)}
+                {[["guardian", "أولياء الأمور"], ["teacher", "المعلمون"], ["staff", "الإداريون"], ["maint_school", "صيانة المدارس"], ["maint_bus", "صيانة الباصات"]].map(([k, l]) => <label key={k} className="flex items-center gap-1"><input type="checkbox" checked={aud.categories.includes(k!)} onChange={() => setAud({ ...aud, categories: toggle(aud.categories, k!) })} />{l}</label>)}
               </div>
               <div className="space-y-1 text-xs"><span className="text-muted-foreground">الأقسام والأشخاص المرتبطون بها (اختياري):</span>
                 <DeptPicker org={ctx?.orgId ?? null} schools={audSchools} value={aud.departments} onChange={(v) => setAud({ ...aud, departments: v })} /></div>
