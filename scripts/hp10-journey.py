@@ -1,7 +1,7 @@
 # P10 browser journey (needs: bun scripts/hrp10-browser-fixture.ts setup). Employee (phone) requests late arrival → manager approves
 # → owner (HR) approves; employee sees own address; owner uploads opening leave file (errors shown, then clean file) → second person
 # approves → balance shows opening.
-import asyncio, json, datetime
+import asyncio, json, datetime, re
 from playwright.async_api import async_playwright
 B = "http://localhost:8080"; F = json.load(open("/tmp/browser/hp10/fixture.json")); SH = "/tmp/browser/hp10/"
 ok = bad = 0
@@ -14,7 +14,7 @@ async def login(br, who, w=1280, h=1800):
     await p.goto(B + "/auth"); await p.wait_for_timeout(2500); await p.fill("#email", F[who]); await p.fill("#password", F["pw"])
     await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await p.wait_for_timeout(1500); return p
 async def confirm(p):
-    await p.get_by_role("alertdialog").get_by_role("button").filter(has_text="موافقة|اعتماد|تأكيد").first.click(); await p.wait_for_timeout(2500)
+    await p.get_by_role("alertdialog").get_by_role("button").filter(has_text=re.compile("موافقة|اعتماد|تأكيد")).first.click(); await p.wait_for_timeout(2500)
 async def main():
     async with async_playwright() as pw:
         br = await pw.chromium.launch(headless=True)
