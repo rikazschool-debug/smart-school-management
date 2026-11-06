@@ -28,6 +28,10 @@ export function ManagePanel({ d, onChange }: { d: Row; onChange: () => void }) {
   const depts = useRouteDepts(can.assign ? t.school_id : "", t.id);
   const curDept = depts.data?.find((x) => x.id === t.department_id)?.name;
   const [branch, setBranch] = useState("");
+  const [xOn, setXOn] = useState(false);
+  const [xBranch, setXBranch] = useState("");
+  const [xDept, setXDept] = useState("");
+  const [xWho, setXWho] = useState<RouteCand | null>(null);
   const [reason, setReason] = useState("");
   const [esc, setEsc] = useState<{ title: string; body: string } | null>(null);
   const escKey = useMemo(() => crypto.randomUUID(), [esc === null]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -39,7 +43,7 @@ export function ManagePanel({ d, onChange }: { d: Row; onChange: () => void }) {
   async function action(a: string, value: string | null, r: string | null) {
     const { error } = await db.rpc("support_action", { _ticket: t.id, _action: a, _rev: t.rev, _reason: r, _value: value });
     if (error) return void toast.error(arabicError(error));
-    toast.success("تم"); setWho(null); setBranch(""); setReason(""); onChange();
+    toast.success("تم"); setWho(null); setXWho(null); setXOn(false); setBranch(""); setReason(""); onChange();
   }
   async function escalate() {
     if (!esc) return;
@@ -66,6 +70,25 @@ export function ManagePanel({ d, onChange }: { d: Row; onChange: () => void }) {
             }}>حفظ القسم الموجّه إليه</Button>}
             {t.assignee && <Button size="sm" variant="outline" onClick={async () => { if (await ask("سحب الإسناد من المسؤول الحالي؟")) action("assign", "", null); }}>سحب الإسناد</Button>}
           </div>
+          {can.transfer && (
+            <div className="space-y-2 rounded-lg border border-dashed p-3">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input type="checkbox" checked={xOn} onChange={(e) => { setXOn(e.target.checked); setXBranch(""); setXWho(null); setXDept(""); }} />
+                إسناد لمختص من فرع آخر
+              </label>
+              {xOn && (
+                <>
+                  <p className="text-xs text-muted-foreground">تبقى التذكرة في فرعها الحالي، ويُسجَّل الإسناد بين الفروع في سجل التذكرة. الخادم يتحقق من صلاحيتك للإحالة إلى الفرع المختار.</p>
+                  <select aria-label="فرع المختص" className={selectCls()} value={xBranch} onChange={(e) => { setXBranch(e.target.value); setXWho(null); setXDept(""); }}>
+                    <option value="">اختر الفرع</option>
+                    {(branches.data ?? []).filter((s) => s.id !== t.school_id).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                  {xBranch && <RoutePicker school={xBranch} ticket={t.id} dept={xDept} onDept={setXDept} who={xWho} onWho={setXWho} />}
+                  <Button size="sm" disabled={!xWho} onClick={() => action("assign", xWho!.user_id, null)}>إسناد للمختص من الفرع الآخر</Button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
       {can.transfer && (
