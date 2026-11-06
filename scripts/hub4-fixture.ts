@@ -50,7 +50,7 @@ const ins = await admin.from("memberships").insert([mem("p1", S[0]!, "principal"
   mem("x1", S[0]!, "teacher"), mem("x2", S[1]!, "teacher"), mem("a1", S[0]!, "student_affairs"), mem("a2", S[1]!, "student_affairs")]);
 if (ins.error) throw ins.error;
 for (const [i, members] of [[0, ["t1", "a1"]], [1, ["t2", "a2"]]] as const) {
-  const g = await admin.from("conversations").insert({ org_id: org, school_id: S[i]!, kind: "group", group_type: "manual", title: "لجنة الأنشطة", created_by: users.owner!.id, status: "active" }).select("id").single();
+  const g = await admin.from("conversations").insert({ org_id: org, school_id: S[i]!, kind: "group", group_type: "committee", title: "لجنة الأنشطة", created_by: users.owner!.id, status: "active" }).select("id").single();
   if (g.error) throw g.error;
   groups.push(g.data.id);
   const m = await admin.from("conversation_members").insert(members.map((u) => ({ conversation_id: g.data.id, user_id: users[u]!.id, role: "member", source: "manual" })));
