@@ -8,3 +8,4 @@
 - Report review rights come from comm_settings.report_reviewer_roles via _report_reviewer (org owner only for cross-branch groups); never widen to all managers or platform admins.
 - Manual groups: created/filled only by org owner (any branch/cross-branch), principal (own school) or an owner-granted groups.create holder, via _can_create_group (perm_allows); derived class groups are untouched.
 - Server test: scripts/comm-e2e.ts (see scripts/AGENTS.md).
+- Hub circulars (orgWide for the org owner) list and target the whole org; the last visited school is only the default home school. Groups come from every selected branch, grouped by branch.
