@@ -1,0 +1,2 @@
+alter table public.files drop constraint files_source_type_check;
+alter table public.files add constraint files_source_type_check check (source_type = any (array['post','message','message_pending','circular','cleanup_due','homework','submission','feedback','pickup','admin','support','support_pending','pc','maint','hr','notice']));
