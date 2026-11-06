@@ -14774,6 +14774,13 @@ export type Database = {
         }
         Returns: string
       }
+      _support_assign_target: {
+        Args: {
+          _uid: string
+          t: Database["public"]["Tables"]["support_tickets"]["Row"]
+        }
+        Returns: string
+      }
       _support_event: {
         Args: {
           _action: string
