@@ -1,4 +1,4 @@
-// Hub meetings permissions: hub_meetings.create/start/attend on the server, revoke mid-session, section switch, org isolation.
+// Hub meetings permissions: hub_meetings.create/start/attend on the server, revoke mid-session, revoke create, org isolation.
 // Run: NODE_PATH=node_modules bun scripts/hub-meet-e2e.ts
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
@@ -62,10 +62,10 @@ try {
   await grant("start", null);
   const att0 = await tB.c.rpc("adm_meeting_attendance", { _id: M, _marks: [{ user_id: tA.id, attended: true }] });
   check("10 non-organizer without attend permission cannot record attendance", !!att0.error);
-  await admin.from("org_sections").upsert({ org_id: org, section: "comm_hub", enabled: false }, { onConflict: "org_id,section" });
-  const off = await save(coord, A, { ...base, title: "بعد الإيقاف" });
-  check("11 platform switch off for comm_hub removes the extra organize right", !!off.error);
-  await admin.from("org_sections").delete().eq("org_id", org);
+  await grant("create", "deny");
+  const off = await save(coord, A, { ...base, title: "بعد السحب" });
+  check("11 owner revoking hub_meetings.create stops new meetings", !!off.error);
+  await grant("create", "grant");
   const ob = await save(coord, B, { ...base, members: [tB.id] });
   check("12 branch-scoped grant does not reach branch B", !!ob.error);
   const oc = await save(coord, C, { ...base, members: [out.id] });
