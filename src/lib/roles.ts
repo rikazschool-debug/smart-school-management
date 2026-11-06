@@ -283,7 +283,7 @@ export function supportTabs(role: Role): SupportTab[] {
   if (role === "platform_admin") return ["manage", "reports"];
   const staff = !["student", "guardian"].includes(role);
   if (role === "org_owner" || role === "principal") return ["summary", "manage", "assigned", "mine", "info", "reports"];
-  return [ "mine", ...(staff ? (["assigned"] as SupportTab[]) : []), "info", ...(role === "org_owner" || role === "principal" ? (["manage", "reports"] as SupportTab[]) : []) ];
+  return [ "mine", ...(staff ? (["assigned"] as SupportTab[]) : []), "info" ];
 }
 
 /** Flexible school permissions of the signed-in person in the active branch (perm_my_school; keys like "gate.operate").
