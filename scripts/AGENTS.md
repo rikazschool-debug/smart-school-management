@@ -84,3 +84,4 @@
 - scripts/support7-e2e.ts: support permission section + followers (50 checks, hub4 fixture). support7-journey.py: follower add/read-only phone/removal (12 checks).
 - scripts/support8-e2e.ts: cross-branch assignment (refused without referral right, owner/granted allowed, logged, ticket stays; 10 checks, hub4 fixture).
 - scripts/support-cleanup-e2e.ts: support form attachment cleanup (abandoned removed, uploading/saved kept; hub4 fixture).
+- Published-site check (hub4 fixture): pub-verify-prep.ts (real teacher record + maintenance follow-up staff) and pub-verify-ticket.ts (ticket with attachment) feed /tmp/browser/pub notices/ticket browser runs; always run hub4 teardown after.
