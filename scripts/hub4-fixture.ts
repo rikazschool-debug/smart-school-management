@@ -11,6 +11,16 @@ if (process.argv[2] === "teardown") {
   const f = JSON.parse(readFileSync(FX, "utf8"));
   f.schools.forEach((s: string) => tr.addSchool(s)); f.users.forEach((u: string) => tr.addUser(u));
   await tr.deleteNotifications().catch((e) => console.log("notif cleanup:", e.message));
+  // support tickets of the run's own schools (tickets are never deleted in the app; test data only)
+  const tk = ((await admin.from("support_tickets").select("id").in("school_id", f.schools)).data ?? []).map((r: any) => r.id);
+  if (tk.length) {
+    await admin.from("support_tickets").update({ linked_ticket: null }).in("id", tk);
+    for (const t of ["support_message_revisions", "support_messages", "support_events", "support_info_requests", "support_notes", "support_followers", "support_alerts"]) {
+      const r = t === "support_message_revisions" ? null : await admin.from(t).delete().in("ticket_id", tk);
+      if (r?.error && !/does not exist|schema cache/.test(r.error.message)) console.log("support cleanup", t, r.error.message);
+    }
+    const d = await admin.from("support_tickets").delete().in("id", tk); if (d.error) console.log("support tickets cleanup:", d.error.message);
+  }
   for (const o of f.orgs) await tr.purgeOrg(o);
   for (const u of f.users) await admin.auth.admin.deleteUser(u);
   console.log("teardown ok"); process.exit(0);

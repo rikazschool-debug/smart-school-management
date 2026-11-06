@@ -81,3 +81,4 @@
 - scripts/dept-people-e2e.ts: hub_dept_people (departments + linked people per selected branch, scope/isolation) and multi-branch circular departments, plus the hub-aud checks (27 checks).
 - scripts/hub4-fixture.ts setup|teardown: isolated 4-school org (h4x-) + other org; scripts/hub4-e2e.ts (19 checks: org-wide/group circulars, one-school notice, two-school meeting, principal/other-org refusals); scripts/hub4-journey.py [url] (17 browser checks, incl. after visiting another school). Always run teardown after.
 - scripts/support5-e2e.ts (24 checks) and support5-journey.py (6 browser checks) run on hub4-fixture.ts; always run teardown after.
+- scripts/support7-e2e.ts: support permission section + followers (50 checks, hub4 fixture). support7-journey.py: follower add/read-only phone/removal (12 checks).

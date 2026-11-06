@@ -277,13 +277,15 @@ export function attTabs(role: Role): AttTab[] {
   return [];
 }
 
-export type SupportTab = "summary" | "mine" | "assigned" | "info" | "manage" | "reports";
-/** «الدعم والمساعدة» tabs (mirrors support_manager in SQL): owner/principal manage their scope; platform admin manages platform tickets only. */
-export function supportTabs(role: Role): SupportTab[] {
+export type SupportTab = "summary" | "mine" | "assigned" | "following" | "info" | "manage" | "reports";
+/** «الدعم والمساعدة» tabs. `canView` = the person holds support.view in at least one branch (support_caps; owner/principal by default).
+ *  Mirror only — support_manager/support_can_read decide on the server. Platform admin manages platform tickets only. */
+export function supportTabs(role: Role, canView = role === "org_owner" || role === "principal"): SupportTab[] {
   if (role === "platform_admin") return ["manage", "reports"];
   const staff = !["student", "guardian"].includes(role);
-  if (role === "org_owner" || role === "principal") return ["summary", "manage", "assigned", "mine", "info", "reports"];
-  return [ "mine", ...(staff ? (["assigned"] as SupportTab[]) : []), "info" ];
+  if (!staff) return ["mine", "info"];
+  if (canView) return ["summary", "manage", "assigned", "following", "mine", "info", "reports"];
+  return ["mine", "assigned", "following", "info"];
 }
 
 /** Flexible school permissions of the signed-in person in the active branch (perm_my_school; keys like "gate.operate").

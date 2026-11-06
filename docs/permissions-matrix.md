@@ -171,6 +171,20 @@ Closure (2026-11-03): info requests may go to any active staff member of the org
 | Re-armed alerts (priority change, reopen) from the real scheduled job | done, tested | support4 --cron #2, #5 |
 | Phone width (390px) for all support roles | done, tested | support-phone-journey 6/6 |
 
+### Support 7 — permission section «الدعم الفني والمساعدة» + followers (Nov 6 2026)
+| Action (perm section `support`, branch/org scope) | Default holder | Notes |
+|---|---|---|
+| view (branch box: read tickets + public replies + files) | owner (all), principal (own branch) | read-only: no reply, attach, notes or changes |
+| create directed ticket | owner, principal | branch must be in the holder's create scope |
+| assign / reassign | owner, principal | to active org staff (cross-branch help); never students, guardians, suspended, other org |
+| transfer between branches | owner only by default | grantable; followers outside the new branch are removed |
+| status / priority / category / resolve / close | owner, principal | |
+| follow (self) | owner, principal | grantable to any staff |
+| manage followers | owner, principal | candidates = active staff of the ticket's branch only |
+| export | owner, principal | lists export only rows of export-scoped branches |
+| settings (targets, hours, categories) | owner only | grantable |
+Followers: read ticket, status, public replies and attachments; get alerts on add/remove, replies, status, assignment and transfer; never reply, attach, change, read team/private notes, or export. Removal, membership suspension or a branch transfer cuts access at the next request. Explicit deny beats defaults.
+
 ## Section availability & flexible permissions
 | Capability | Who |
 |---|---|

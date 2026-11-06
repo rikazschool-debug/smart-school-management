@@ -560,4 +560,11 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## Support 6 — routing by department + attachments at create (Nov 6 2026)
 - support6-e2e 29/29; support6-journey 8/8 (preview); support5-journey 6/6; support/2/3/4/5-e2e 17/17/14/10/24 passed.
-- Open: support permissions tree section + followers (phase 2); publish.
+- Phase 2 closed in Support 7 below.
+
+## Support 7 — permissions tree section + followers (Nov 6 2026)
+- Perm section `support` (view/create/assign/transfer/status/follow/followers/export/settings) via _perm_base (principal defaults) + grants − deny; support_caps feeds the UI; every support_* RPC re-checks.
+- support_followers (RPC-only): support_set_follower / support_follower_candidates; alerts deduped per event; transfer trigger drops out-of-branch followers.
+- Fixed: owner permissions screen (perm_section_people) timed out on the 4-branch org — now short-circuits per section and checks only each person's branches (~3s); restored execute on the catalog chain.
+- Evidence: support7-e2e 50/50; support7-journey 12/12 (owner desktop, follower on 390px phone, principal; removal mid-session); support/2/3/4/5/6-e2e 17/17/14/10/24/29; perm7-e2e 20/20; permissions screen shows «الدعم الفني والمساعدة».
+- Open: Agora audio/screen-share on two real devices (field test).

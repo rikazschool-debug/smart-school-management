@@ -12,7 +12,7 @@ async function as(k: string) { const c = createClient(env.VITE_SUPABASE_URL, PK,
 let pass = 0, fail = 0;
 const check = (n: string, ok: boolean, d?: unknown) => { ok ? pass++ : fail++; console.log(ok ? "PASS" : "FAIL", n, ok ? "" : JSON.stringify(d)); };
 const [S1, S2, S3] = f.schools; const id = f.ids;
-const owner = await as("owner"), p1 = await as("p1"), t1 = await as("t1"), t2 = await as("t2"), other = await as("other");
+const owner = await as("owner"), p1 = await as("p1"), t1 = await as("t1"), t2 = await as("t2"), a1 = await as("a1"), other = await as("other");
 const get = async (c: any, t: string) => c.rpc("support_get", { _ticket: t });
 const rev = async (t: string) => (await admin.from("support_tickets").select("rev").eq("id", t).single()).data!.rev;
 
@@ -37,13 +37,13 @@ const pn = await owner.rpc("support_add_note", { _ticket: T, _kind: "private", _
 check("7 private note to the assignee added", !pn.error, pn.error);
 const seen = JSON.stringify((await get(p1, T)).data ?? {});
 check("7b principal of the branch does not see the private note", !seen.includes("ملاحظة خاصة للمعلم"));
-const ra = await owner.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.t2 });
+const ra = await owner.rpc("support_action", { _ticket: T, _action: "assign", _rev: await rev(T), _value: id.a1 });
 const lost = await get(t1, T);
 check("8 reassign: previous assignee loses access immediately", !ra.error && !!lost.error, [ra.error, lost.error]);
-check("9 new assignee reads it", !(await get(t2, T)).error);
+check("9 new assignee (same branch) reads it", !(await get(a1, T)).error);
 const tr = await owner.rpc("support_action", { _ticket: T, _action: "transfer", _rev: await rev(T), _reason: "تخص الفرع الثاني", _value: S2 });
 check("10 owner transfers to another branch with reason", !tr.error && (await admin.from("support_tickets").select("school_id").eq("id", T).single()).data!.school_id === S2, tr.error);
-check("11 transfer drops the old assignment", !!(await get(t2, T)).error);
+check("11 transfer drops the old assignment", !!(await get(a1, T)).error);
 const p1r = await get(p1, T);
 check("12 principal of the old branch loses access after transfer", !!p1r.error);
 await owner.rpc("support_action", { _ticket: T, _action: "claim", _rev: await rev(T) });
