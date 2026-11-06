@@ -47,8 +47,9 @@ try {
   const G2 = (await admin.from("guardians").insert({ school_id: A, user_id: g2.id, full_name: "سعيد ولي أمر" }).select("id").single()).data!.id;
   await admin.from("student_guardians").insert([
     { school_id: A, student_id: s1, guardian_id: G1, verified: true }, { school_id: A, student_id: s2, guardian_id: G1, verified: true },
-    { school_id: B, student_id: s3, guardian_id: G1b, verified: true }, { school_id: A, student_id: s4, guardian_id: G2, verified: false }]);
-  for (const a of ["view", "draft"]) await owner.c.rpc("perm_override_set", { _org: org, _user: staffA.id, _section: "notices", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة" });
+    { school_id: B, student_id: s3, guardian_id: G1b, verified: true }, { school_id: A, student_id: s4, guardian_id: G2, verified: false }]).then((r) => { if (r.error) console.log("sg", r.error.message); });
+  for (const a of ["view", "draft"]) await owner.c.rpc("perm_override_set", { _org: org, _user: staffA.id, _section: "notices", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة" }).then((r: any) => { if (r.error) console.log("perm", r.error.message); });
+  console.log("gm", JSON.stringify((await admin.from("memberships").select("role,school_id").eq("user_id", g1.id))));
 
   const cat = (await owner.c.rpc("perm_catalog")).data as any;
   check("permission tree has the hub with both tabs", cat.areas.some((a: any) => a.key === "comm_hub") && ["notices", "hub_meetings"].every((k) => cat.sections.some((s: any) => s.key === k)));
