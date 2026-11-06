@@ -340,3 +340,5 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | HR opening balances | leave: hr_leave.balances prepares/approves; advances: hr_money.draft prepares, hr_money.approve approves; preparer ≠ approver |
 | Hub notices | notices.view (history), notices.draft (drafts/preview), notices.send — per branch/org; owner always |
 | Hub meetings | hub_meetings.* in the tree; meetings themselves still enforced by meetings.organize + organizer/invitee rules |
+
+| hub_meetings.create / start / attend | org owner; principal (organize via meetings.organize); others only if granted (branch or org scope) | server: _adm_can_organize, _adm_live_role, adm_meeting_attendance |

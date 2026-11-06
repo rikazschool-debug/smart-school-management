@@ -1,0 +1,1 @@
+revoke execute on function public._adm_hub(uuid,text) from authenticated, public, anon;

@@ -13207,6 +13207,7 @@ export type Database = {
       }
       _adm_check_fields: { Args: { _f: Json }; Returns: Json }
       _adm_dept: { Args: { _dept: string; _school: string }; Returns: boolean }
+      _adm_hub: { Args: { _action: string; _school: string }; Returns: boolean }
       _adm_invitee_school: {
         Args: { _org: string; _school: string; _scope: string; _user: string }
         Returns: string

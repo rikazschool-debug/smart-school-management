@@ -552,3 +552,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - 2026-11-06 HR P10: addresses/hourly permissions/opening balances — hr-p10-e2e 75/75, hp10-journey 12/12, HR regression suites green (reports 26, pay 81, leave 54, self 31, core 25, import 11).
 
 - 2026-11-06 Notifications & meetings hub (notices): bc-e2e 31/31, bc-journey 12-step browser (8/8, owner desktop + guardian phone); regression perm5 20/20, perm7 20/20, meetings-live 33/33.
+
+## 2026-11-06 — Hub meetings permissions + hub sidebar
+- Owner hub is its own section (sidebar: notices, meetings, circulars). Circulars reuse CircularsTab (school/branches/org + roles/people).
+- hub_meetings create/start/attend enforced server-side (_adm_hub); instant online meeting preset in the form.
+- Evidence: hub-meet-e2e 13/13, meetings-live-e2e 33/33, admin-rpc-scope-e2e 13/13, bc-e2e 46/46, bc-journey 14/14 (desktop + 390px guardian). meet-room3-journey: host connected to Agora, 3 accounts joined, uninvited refused; audio/screen-share steps stalled this run (open).
