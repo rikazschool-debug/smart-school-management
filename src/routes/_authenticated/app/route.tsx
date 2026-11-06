@@ -68,7 +68,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   permissions: { to: "/app/permissions", label: "الأدوار والصلاحيات", icon: KeyRound },
   operations: { to: "/app/operations", label: "بوابة النقل والصيانة", icon: Bus },
   transport: { to: "/app/transport", label: "النقل المدرسي", icon: Construction },
-  maintenance: { to: "/app/maintenance", label: "إدارة صيانة المدارس", icon: Wrench },
+  maintenance: { to: "/app/maintenance", label: "إدارة صيانة المباني", icon: Wrench },
   bus_maintenance: { to: "/app/bus-maintenance", label: "إدارة تشغيل وصيانة الباصات", icon: Bus },
   admissions: { to: "/app/admissions", label: "القبول والتسجيل", icon: UserPlus },
   visits: { to: "/app/visits", label: "الزيارات الصفية", icon: ClipboardList },

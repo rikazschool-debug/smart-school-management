@@ -6,7 +6,7 @@ import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 
 export type SectionKey = "school_admin" | "admissions" | "finance" | "operations" | "hr" | "comm_hub";
-export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة الباصات", hr: "الموارد البشرية", comm_hub: "الإشعارات والاجتماعات والتعاميم" };
+export const SECTION_LABELS: Record<SectionKey, string> = { school_admin: "إدارة المدارس", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", hr: "الموارد البشرية", comm_hub: "إدارة الإشعارات" };
 
 /** Section availability set by the platform owner; read fresh from the server (no cache across sessions). */
 export function useOrgSections(orgId: string | null) {
@@ -87,7 +87,7 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "transport", section: "operations", title: "النقل المدرسي وصيانة الباصات", icon: Bus, to: "/app/bus-maintenance", open: "فتح النقل والباصات",
+    key: "transport", section: "operations", title: "النقل المدرسي وصيانة المركبات", icon: Bus, to: "/app/bus-maintenance", open: "فتح النقل والباصات",
     desc: "سجلات الباصات وحالة تشغيلها وطلبات صيانتها حتى الفحص والعودة للخدمة. المسارات والتوزيع والتتبع مؤجلة.",
     features: [
       { icon: Bus, label: "الباصات وحالة التشغيل", to: "/app/bus-maintenance", search: { tab: "buses" } },
@@ -96,7 +96,7 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "school_maint", section: "operations", title: "إدارة صيانة المدارس", icon: Wrench, to: "/app/maintenance", open: "فتح صيانة المدارس",
+    key: "school_maint", section: "operations", title: "إدارة صيانة المباني", icon: Wrench, to: "/app/maintenance", open: "فتح صيانة المدارس",
     desc: "طلبات صيانة مباني المدارس وفروعها من الطلب حتى اعتماد الإنجاز.",
     features: [
       { icon: Plus, label: "طلب صيانة جديد", to: "/app/maintenance", search: { new: "1" } },

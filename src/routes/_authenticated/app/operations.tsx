@@ -27,7 +27,7 @@ function Page() {
           </Link>
           <Link to="/app/maintenance" className="flex items-start gap-4 rounded-2xl border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-muted/30">
             <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><Wrench className="size-6" /></span>
-            <span><span className="block font-bold">إدارة صيانة المدارس</span>
+            <span><span className="block font-bold">إدارة صيانة المباني</span>
               <span className="mt-1 block text-sm text-muted-foreground">طلبات صيانة مباني المدارس من الطلب حتى اعتماد الإنجاز.</span></span>
           </Link>
           <Link to="/app/bus-maintenance" className="flex items-start gap-4 rounded-2xl border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-muted/30">
