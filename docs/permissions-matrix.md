@@ -376,7 +376,7 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 
 ## Sign-in by ID/iqama
 - Staff, teachers, guardians: ID → code to the school-record mobile (WhatsApp); refused generically when the record is missing, has no mobile, or has conflicting accounts/mobiles.
-- Students: ID + C-Smart number of the same student record; no code/PIN; 5 wrong tries lock 15 min. Student sees only own data (existing RLS).
+- Students: ID + C-Smart number of the same student record, matched exactly as stored (Arabic digits/spaces normalised; letter case NOT ignored — a case-only difference is refused as a conflict until C-Smart specs are known); no code/PIN; 5 wrong tries lock 15 min. Student sees only own data (existing RLS).
 - Signing in never grants HR self-services; those still need manual HR activation.
 
 ## Family overview & payment methods (Nov 7 2026)
