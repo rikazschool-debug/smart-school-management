@@ -3,6 +3,7 @@
 # Usage: python3 scripts/gv-journey.py [base_url]
 import asyncio, json, sys
 from playwright.async_api import async_playwright
+import sys as _s, os as _o; _s.path.insert(0, _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), 'lib')); from session_login import sign_in
 B = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"; F = json.load(open("/tmp/browser/gv/fixture.json")); SH = "/tmp/browser/gv/shots/"
 ok = bad = 0
 def check(n, c, e=""):
@@ -11,8 +12,7 @@ def check(n, c, e=""):
 async def login(br, who, phone=False):
     ctx = await br.new_context(viewport={"width": 390, "height": 844} if phone else {"width": 1280, "height": 1800}); o = await ctx.new_page()
     o.errs = []; o.on("pageerror", lambda e: o.errs.append(str(e)))
-    await o.goto(B + "/auth"); await o.wait_for_timeout(2500); await o.fill("#email", F[who]); await o.fill("#password", F["pw"])
-    await o.press("#password", "Enter"); await o.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await o.wait_for_timeout(2000)
+    await sign_in(o, B, F[who], F["pw"]); await o.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await o.wait_for_timeout(2000)
     return o
 async def main():
     async with async_playwright() as pw:
@@ -30,6 +30,8 @@ async def main():
         det = g.get_by_label("تفاصيل الزيارة")
         check("2 request sent and awaits the school", await det.count() == 1 and "بانتظار رد المدرسة" in await det.inner_text(), await g.content())
         p = await login(br, "p1")
+        try: await p.get_by_role("link", name="الزيارات", exact=True).first.wait_for(timeout=15000)
+        except Exception: pass
         nav = await p.get_by_role("link", name="الزيارات", exact=True).count()
         check("3 principal has «الزيارات» in the menu", nav >= 1)
         await p.goto(B + "/app/family-visits?tab=school"); await p.wait_for_timeout(3500)
@@ -48,8 +50,9 @@ async def main():
         await r.goto(B + "/app/family-visits?tab=reception"); await r.wait_for_timeout(3500)
         rt = await r.locator("main").inner_text()
         check("6 reception list hides reason details", "أرغب بمناقشة" not in rt and "ملاحظات سلوكية" not in rt, rt[:400])
-        if "ولي أمر له ابنان" in rt and picked in rt:
-            row = r.locator("li", has_text=picked).filter(has=r.get_by_role("button", name="تسجيل الوصول")).first
+        await r.screenshot(path=SH + "4a_reception_list.png")
+        row = r.locator("li", has_text=picked).filter(has_text="ولي أمر له ابنان").filter(has=r.get_by_role("button", name="تسجيل الوصول")).first
+        if await row.count():
             await row.get_by_role("button", name="تسجيل الوصول").click(); await r.wait_for_timeout(3000)
             await r.screenshot(path=SH + "4_reception_arrived.png")
             check("7 reception records arrival", "تسجيل المغادرة" in await r.locator("main").inner_text())
