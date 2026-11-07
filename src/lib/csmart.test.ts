@@ -65,3 +65,14 @@ describe("guardian import rows", () => {
     expect(rs[2]!.errors.some((e) => e.includes("ليست المدرسة الحالية"))).toBe(true);
   });
 });
+
+describe("C‑Smart letter case (until C‑Smart specs are known)", () => {
+  it("rejects a number that matches a stored one only after ignoring letter case", () => {
+    const [r] = validate("students", [row({ csmart_no: "ab-7" })], lk({ existingCsmart: new Map([["AB-7", "s9"]]), rowCsmart: new Map([["s9", "AB-7"]]) }));
+    expect(r!.errors.some((e) => e.includes("حالة الحروف"))).toBe(true);
+  });
+  it("rejects two rows in one file differing only in letter case", () => {
+    const rs = validate("students", [row({ csmart_no: "ab-7" }), row({ csmart_no: "AB-7", national_id: "1012345679" }, 3)], lk());
+    expect(rs[1]!.errors.some((e) => e.includes("حالة الحروف"))).toBe(true);
+  });
+});
