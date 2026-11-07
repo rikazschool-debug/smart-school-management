@@ -49,4 +49,4 @@
 - HR (hr_*): RPC-only, single source; see src/components/hr/AGENTS.md.
 
 - Notifications hub (bc_*): RPC-only; server audience _bc_audience + preview fingerprint checked at send; perms notices/hub_meetings (area comm_hub). Tests: bc-e2e, bc-journey.
-- Documents & contracts (org_docs, org_contractors): RPC-only (od_*); access via _od_ok over perm section org_docs (view/create/edit/download, parent school_admin) — owner always, group-wide items need the right on every active branch, multi-school contractors need edit on all linked schools; files via od_draft_file → org_doc_pending, claimed on save only when the object exists, read through can_read_file → _od_file_ok (download). Test: scripts/od-e2e.ts.
+- Documents & contracts (org_docs/org_contractors): RPC-only od_*, access via _od_ok (perm section org_docs); files read via _od_file_ok. Test: scripts/od-e2e.ts.
