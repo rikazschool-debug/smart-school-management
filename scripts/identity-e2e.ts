@@ -43,7 +43,7 @@ try {
   const PR = await as("pr"), VP = await as("vp"), HR = await as("hr");
   check("6 principal (base) reads teacher IDs", !(await PR.rpc("teacher_id_status", { _school: S })).error);
   check("7 vice principal without grant refused", !!(await VP.rpc("teacher_id_status", { _school: S })).error);
-  must(await oc.rpc("perm_override_set", { _org: org, _user: users.hr, _section: "people_identity", _action: "view", _effect: "grant", _scope: null, _reason: "موظف موارد بشرية مخول" }));
+  must(await oc.rpc("perm_override_set", { _org: org, _user: users.hr, _section: "people_identity", _action: "view", _effect: "grant", _scope: "branch", _reason: "موظف موارد بشرية مخول" }));
   check("8 HR staff granted view reads teacher IDs", !(await HR.rpc("teacher_id_status", { _school: S })).error);
   check("9 view-only grant cannot save IDs", !!(await HR.rpc("teacher_nid_save", { _teacher: t1, _nid: nid(9) })).error);
   check("10 direct table write of the ID refused without edit", !!(await HR.from("teachers").update({ national_id: nid(9) }).eq("id", t1)).error || (must(await admin.from("teachers").select("national_id").eq("id", t1).single()) as any).national_id === nid(1));
