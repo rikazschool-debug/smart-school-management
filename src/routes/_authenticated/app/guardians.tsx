@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { ask } from "@/components/confirm";
+import { arabicError } from "@/lib/session";
 import { useState } from "react";
 import { BadgeCheck } from "lucide-react";
 import { CrudTable, db, type Row } from "@/components/crud-page";
@@ -76,6 +81,16 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
 }
 
 function GuardianDetail({ g, canManage }: { g: Row; canManage: boolean }) {
+  const qc = useQueryClient();
+  async function approve(id: string) {
+    const { error } = await supabase.rpc("verify_guardian_link", { _id: id });
+    if (error) toast.error(arabicError(error)); else { toast.success("وُثّقت العلاقة — يرى ولي الأمر ابنه وفصله الآن"); qc.invalidateQueries(); }
+  }
+  async function reject(id: string) {
+    if (!(await ask({ title: "رفض العلاقة؟", body: "تُحذف العلاقة ولا يرى ولي الأمر بيانات هذا الابن.", confirm: "رفض" }))) return;
+    const { error } = await db.from("student_guardians").delete().eq("id", id);
+    if (error) toast.error(arabicError(error)); else { toast.success("رُفضت العلاقة"); qc.invalidateQueries(); }
+  }
   const kids = useQuery({
     queryKey: ["guardian-kids", g["id"]],
     queryFn: async () => {
@@ -104,9 +119,15 @@ function GuardianDetail({ g, canManage }: { g: Row; canManage: boolean }) {
             <span className="text-muted-foreground">({REL[k["relationship"]] ?? k["relationship"]})</span>
             <span className="text-xs text-muted-foreground" dir="ltr">C‑Smart: {k["students"]?.csmart_no ?? "—"}</span>
             <span className={`ms-auto text-xs ${k["verified"] ? "text-primary" : "text-muted-foreground"}`}>{k["verified"] ? "علاقة موثّقة" : "بانتظار التوثيق"}</span>
+            {canManage && !k["verified"] && (
+              <span className="flex gap-1">
+                <Button size="sm" onClick={() => void approve(k["id"])}>توثيق</Button>
+                <Button size="sm" variant="ghost" onClick={() => void reject(k["id"])}>رفض</Button>
+              </span>
+            )}
           </div>
         ))}
-        <p className="text-xs text-muted-foreground">لا يرى ولي الأمر بيانات الابن إلا بعد توثيق العلاقة من شاشة الطلاب.</p>
+        <p className="text-xs text-muted-foreground">لا يرى ولي الأمر بيانات الابن ولا فصله إلا بعد توثيق العلاقة. راجع الاسم والهوية قبل التوثيق.</p>
       </div>
       {canManage && (
         <div>
