@@ -158,7 +158,7 @@ const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
   // class visits: principal-level (all branch teachers) and supervisor (assigned teachers) only — mirrors _cv_can_eval
   principal: [...MANAGE, "visits", "evaluation", "family_visits"],
   // vice: no academic setup (principal only) and no scanning station (gate account only); timetable view limited to the vice's scope
-  vice_principal: MANAGE.filter((k) => k !== "academic"),
+  vice_principal: [...MANAGE.filter((k) => k !== "academic"), "family_visits"],
   student_affairs: ["home", "students", "guardians", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
   dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
   supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "visits", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
