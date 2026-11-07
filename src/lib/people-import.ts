@@ -247,6 +247,8 @@ export type Lookups = {
   sectionChoice?: Map<string, string>;
   /** teacher row id → national ID (to detect a mobile that belongs to someone with another ID) */
   rowNid?: Map<string, string>;
+  /** caller lacks people_identity.view: ID numbers in the file are not saved */
+  nidLocked?: boolean;
   /** students: C‑Smart number → row id, and row id → stored C‑Smart number */
   existingCsmart?: Map<string, string>;
   rowCsmart?: Map<string, string>;

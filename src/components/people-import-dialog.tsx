@@ -47,7 +47,8 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { s
   ]);
   if (ex.error) throw ex.error;
   const { normPhone } = await import("@/lib/people-import");
-  if (ids.error) throw ids.error;
+  // no people_identity.view → no ID lookups; IDs from the file are then skipped (server trigger refuses them anyway)
+  const nidLocked = !!ids.error;
   const nidOf = new Map(((ids.data ?? []) as Row[]).map((x) => [x["teacher_id"], x["national_id"]]));
   const rows: Record<string, any>[] = ((ex.data ?? []) as Record<string, any>[]).map((x) => Object.assign({}, x, { national_id: nidOf.get(x["id"]) ?? null }));
   return {
@@ -55,6 +56,7 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { s
     existingPhones: new Map(rows.map((x) => [normPhone(x["phone"]) ?? "", x["id"]] as [string, string]).filter(([p]) => p)),
     departments: new Map(((deps.data ?? []) as Row[]).map((x) => [norm(x["name"]), x["id"]])), sections: new Map(),
     rowNid: new Map(rows.filter((x) => x["national_id"]).map((x) => [x["id"], String(x["national_id"])])), secList: [],
+    nidLocked,
   };
 }
 
@@ -122,7 +124,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
       if (!id) {
         const payload: Row = kind === "students"
           ? { school_id: schoolId, full_name: d["full_name"], national_id: d["national_id"], csmart_no: d["csmart_no"] ?? null, birth_date: d["birth_date"], gender: d["gender"], status: "active" }
-          : { school_id: schoolId, full_name: d["full_name"], national_id: d["national_id"], phone: d["phone"], email: d["email"], specialization: d["specialization"], department_id: r.department_id ?? null, status: "active" };
+          : { school_id: schoolId, full_name: d["full_name"], national_id: (lookups as { nidLocked?: boolean } | undefined)?.nidLocked ? null : d["national_id"], phone: d["phone"], email: d["email"], specialization: d["specialization"], department_id: r.department_id ?? null, status: "active" };
         const ins = await db.from(kind).insert(payload).select("id").single();
         if (ins.error) {
           // a previous attempt may have saved it: look it up instead of duplicating
@@ -137,7 +139,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
         const up = await db.from("students").update({ csmart_no: d["csmart_no"] }).eq("id", id).is("csmart_no", null);
         res.academic = up.error ? { ok: false, msg: arabicError(up.error) } : { ok: true, msg: "موجود مسبقًا" };
         if (up.error) continue;
-      } else if (kind === "teachers" && d["national_id"] && !lookups?.rowNid?.get(id)) {
+      } else if (kind === "teachers" && d["national_id"] && !lookups?.rowNid?.get(id) && !(lookups as { nidLocked?: boolean } | undefined)?.nidLocked) {
         // existing teacher without an ID: record it through the checked server path (refuses an ID owned by someone else)
         const up = await db.rpc("teacher_nid_save", { _teacher: id, _nid: d["national_id"] });
         res.academic = up.error ? { ok: false, msg: arabicError(up.error) } : { ok: true, msg: "موجود مسبقًا — أُضيفت الهوية" };

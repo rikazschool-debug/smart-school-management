@@ -393,3 +393,11 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | Open section room | if assigned (live) to ≥1 subject there; sees only own subjects | own active section | children's sections (via child card) | all rooms in school |
 | Post in a subject | own live assignment only | no | no | no (moderate via existing rules) |
 | Run regroup | no | no | no | principal of that school only |
+
+## Login IDs (people_identity)
+| Capability | Owner | Principal | Others (vice, HR staff, …) |
+|---|---|---|---|
+| View teacher IDs + sign-in readiness | ✓ | ✓ (base) | only by grant in the permission tree |
+| Add/change/approve teacher IDs (screen, import, direct write) | ✓ | ✓ (base) | only by `edit` grant |
+| HR non-teacher readiness list | HR view scope | HR view scope | HR view scope; ID shown with HR sensitive or `people_identity.view` |
+A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, identity-journey.py.

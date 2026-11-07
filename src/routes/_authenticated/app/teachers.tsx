@@ -1,3 +1,4 @@
+import { useSchoolPerms } from "@/lib/school-perms";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/app/teachers")({
   head: () => ({ meta: [{ title: "المعلمون — ركاز" }, { name: "description", content: "سجلات المعلمين وجاهزية دخولهم بالهوية" }] }),
 });
 
-// national_id is not selectable directly; principals read it through teacher_id_status
+// national_id is not selectable directly; read through teacher_id_status (people_identity.view)
 const COLS = "id, school_id, user_id, full_name, email, phone, specialization, department_id, status, created_at, departments(name)";
 type IdState = { teacher_id: string; national_id: string | null; hr_national_id: string | null; state: "ready" | "missing" | "conflict"; problem: string | null };
 
@@ -32,9 +33,12 @@ function Page() {
 
 function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeof canManageAcademic>[0] }) {
   const w = canManageAcademic(role);
+  // ID view/edit follow the permission tree (people_identity), not a role name; the server re-checks.
+  const perms = useSchoolPerms(schoolId);
+  const idView = !!perms?.["people_identity.view"], idEdit = !!perms?.["people_identity.edit"];
   const [editing, setEditing] = useState<Row | null>(null);
   const ids = useQuery({
-    enabled: w,
+    enabled: idView,
     queryKey: ["teacher-id-status", schoolId],
     queryFn: async () => {
       const { data, error } = await db.rpc("teacher_id_status", { _school: schoolId });
@@ -65,21 +69,21 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
         defaults={{ status: "active" }}
         columns={[
           { label: "الاسم", render: (r) => r["full_name"] },
-          ...(w ? [{ label: "الهوية / الإقامة", text: (r: Row) => st(r)?.national_id ?? "", render: (r: Row) => <span dir="ltr">{st(r)?.national_id ?? "—"}</span> }] : []),
+          ...(idView ? [{ label: "الهوية / الإقامة", text: (r: Row) => st(r)?.national_id ?? "", render: (r: Row) => <span dir="ltr">{st(r)?.national_id ?? "—"}</span> }] : []),
           { label: "التخصص", render: (r) => r["specialization"] ?? "—" },
           { label: "القسم", render: (r) => r["departments"]?.name ?? "—" },
           { label: "الجوال", render: (r) => <span dir="ltr">{localPhone(r["phone"]) || "—"}</span> },
-          ...(w ? [{ label: "الدخول بالهوية", text: (r: Row) => { const s = st(r); return !s ? "" : s.state === "ready" ? "جاهز" : s.problem ?? ""; }, render: (r: Row) => {
+          ...(idView ? [{ label: "الدخول بالهوية", text: (r: Row) => { const s = st(r); return !s ? "" : s.state === "ready" ? "جاهز" : s.problem ?? ""; }, render: (r: Row) => {
             const s = st(r); if (!s) return <span className="text-muted-foreground">…</span>;
             if (s.state === "ready") return <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز للدخول بالهوية</span>;
             return <span className={`text-xs ${s.state === "conflict" ? "text-destructive" : "text-muted-foreground"}`}>{s.state === "conflict" ? "تعارض: " : "ينقص: "}{s.problem}</span>;
           } }] : []),
           { label: "الحساب", render: (r) => <AccountPanel kind="teacher" id={r["id"]} canWrite={w} /> },
         ]}
-        extraActions={(r) => w ? (
+        extraActions={(r) => w || idEdit ? (
           <>
-            <Button variant="ghost" size="sm" onClick={() => setEditing(r)}><IdCard className="size-4" /> الهوية</Button>
-            {!r["user_id"] && r["email"] ? <AccountButton role={role} kind="teacher" recordId={r["id"]} email={r["email"]} schoolId={schoolId} /> : null}
+            {idEdit && <Button variant="ghost" size="sm" onClick={() => setEditing(r)}><IdCard className="size-4" /> الهوية</Button>}
+            {w && !r["user_id"] && r["email"] ? <AccountButton role={role} kind="teacher" recordId={r["id"]} email={r["email"]} schoolId={schoolId} /> : null}
           </>
         ) : null} />
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>

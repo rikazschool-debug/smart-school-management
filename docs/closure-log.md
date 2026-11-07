@@ -605,3 +605,11 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Login page: three entries; demo buttons only on review hosts (review-host.test.ts).
 - Teachers: national_id column no longer selectable by authenticated; principals use teacher_id_status/teacher_nid_save (conflicts, HR reuse). teacher-id-e2e 9/9; regression idl-e2e 22/22, accounts-e2e 23/23, rls-e2e 94/94. Browser: principal teachers/students/guardians desktop+390px, no console errors.
 - Pending: real WhatsApp send on a consenting number; HR-conflict check not exercised by test (hr_employees fixture); other older scripts inserting teachers via user client with select() must list columns.
+
+## 2026-11-07 B3.7 — identity closure (prompt-178)
+- C‑Smart: stored as written (leading zeros, dash, letters); one matching key `_csmart_key` (Arabic→Latin digits, no spaces, case-insensitive) for the unique index, guardian import and student sign-in. A number without its dash does not match.
+- New permission-tree section `people_identity` (view/edit, branch/org). Base: owner + principal; anyone else (e.g. HR staff) only by grant; deny wins. teacher_id_status/teacher_nid_save and a trigger on teachers.national_id enforce it; teacher import skips IDs for callers without view.
+- HR: `hr_id_readiness` lists non-teacher staff with missing ID/phone/account or conflict; ID shown only with HR sensitive or people_identity view.
+- Role templates (principal/vice/security) re-aligned with base rules (support, guardian_visits, people_identity) — perm6 check 3 was failing before this batch.
+- Evidence: identity-e2e 20/20 (incl. teacher↔HR ID and phone conflicts, refusal keeps link, fix clears conflict); identity-journey 13/13 (owner desktop: add, edit Arabic digits, conflict refusal, Excel import, HR readiness; vice phone unauthorized; vice+view grant phone read-only). Regression: teacher-id 9/9, idl 22/22, guardian-import 17/17, family-access 16/16, accounts 23/23, perm5 20/20, perm6 20/20, perm7 20/20, rls 94/94, Vitest 107/107. Fixture torn down.
+- Separate, still open: real WhatsApp delivery test (needs a consenting number); publishing (not published in this batch).
