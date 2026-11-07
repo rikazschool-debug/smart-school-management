@@ -16,7 +16,7 @@ const p1 = await listen("p1"), p2 = await listen("p2");
 await new Promise((r) => setTimeout(r, 1500));
 await admin.from("gv_visits").update({ updated_at: new Date().toISOString() }).eq("id", v!.id);
 await new Promise((r) => setTimeout(r, 5000));
-const { count: c1 } = await (await as("p1")).from("gv_signals").select("*", { count: "exact", head: true }).eq("visit_id", v!.id); console.log("p1 readable", c1);
+const r1 = await (await as("p1")).from("gv_signals").select("id").eq("visit_id", v!.id); console.log("p1 readable", JSON.stringify(r1.error ?? r1.data?.length));
 check("S1 principal receives live change", p1.includes(v!.id));
 check("other school principal receives nothing", p2.length === 0);
 const { count } = await (await as("p2")).from("gv_signals").select("*", { count: "exact", head: true }).eq("school_id", S1);
