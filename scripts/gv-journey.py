@@ -33,7 +33,7 @@ async def main():
         nav = await p.get_by_role("link", name="الزيارات", exact=True).count()
         check("3 principal has «الزيارات» in the menu", nav >= 1)
         await p.goto(B + "/app/family-visits?tab=school"); await p.wait_for_timeout(3500)
-        await p.get_by_role("button").filter(has_text="بانتظار ردك").first.click(); await p.wait_for_timeout(2500)
+        await p.get_by_role("button").filter(has_text="بانتظار ردك").filter(has_text="سالم الزائر").filter(has_text=picked).first.click(); await p.wait_for_timeout(2500)
         await p.get_by_label("تفاصيل الزيارة").get_by_role("button", name="تأكيد الموعد").click(); await p.wait_for_timeout(2500)
         await p.get_by_role("radio", name="المعلم المستقبِل").check()
         await p.get_by_label("تفاصيل الزيارة").get_by_role("button", name="تأكيد الموعد").last.click(); await p.wait_for_timeout(3500)
