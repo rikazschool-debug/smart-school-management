@@ -14,7 +14,7 @@ import { AccountButton } from "@/components/account-button";
 import { PeopleImport } from "@/components/people-import-dialog";
 import { AccountPanel } from "@/components/account-panel";
 import { GuardianQuickAdd } from "@/components/guardian-quick-add";
-import { normCsmart, studentReadiness } from "@/lib/people-import";
+import { studentReadiness } from "@/lib/people-import";
 import { arabicError, type AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/students")({ component: Page });
@@ -101,11 +101,6 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             return m.length ? <span className="text-xs text-destructive">ينقص: {m.join("، ")}</span> : <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز</span>;
           } },
         ]}
-        beforeSave={(v) => {
-          const cs = normCsmart(v["csmart_no"]);
-          if (cs === "") throw new Error("رقم C‑Smart: أرقام أو حروف لاتينية فقط (حتى 20)");
-          return { ...v, csmart_no: cs };
-        }}
         extraActions={(r) => w ? (
           <>
             <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>
