@@ -48,7 +48,7 @@
 - Evaluation (cv_*/ev_*): RPC-only; visit-form.ts matches _cv_codes(); ratings keep form snapshots.
 - HR (hr_*): RPC-only, single source; see src/components/hr/AGENTS.md.
 
-- Notifications hub (bc_*): RPC-only; server audience _bc_audience + preview fingerprint checked at send; perms notices/hub_meetings (area comm_hub). Tests: bc-e2e, bc-journey.
+- Notifications hub (bc_*): RPC-only; audience _bc_audience + fingerprint checked at send; perms notices/hub_meetings. Tests: bc-e2e.
 - Guardian visits (gv_*): RPC-only over perm section guardian_visits; partial unique index = one active visit per slot; changes bump rev + append gv_events. Tests: gv-e2e.
-- ID sign-in: id-login.functions.ts → service-only _idl_* SQL; returns a token for an existing account only, generic errors. Test: idl-e2e.
-- Family/student home: only via family_children/family_child RPCs; fin_* tables RPC-only (fin_pay_save owner-only).
+- ID sign-in: id-login.functions.ts → service-only _idl_* SQL; existing accounts only, generic errors. Test: idl-e2e.
+- Family/student home + fin_*: see src/components/family/AGENTS.md.
