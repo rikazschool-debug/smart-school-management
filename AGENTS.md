@@ -49,4 +49,3 @@
 - HR (hr_*): RPC-only, single source; see src/components/hr/AGENTS.md.
 
 - Notifications hub (bc_*): RPC-only; server audience _bc_audience + preview fingerprint checked at send; perms notices/hub_meetings (area comm_hub). Tests: bc-e2e, bc-journey.
-- Documents & contracts (org_docs/org_contractors): RPC-only od_*, access via _od_ok (perm section org_docs); files read via _od_file_ok. Test: scripts/od-e2e.ts.
