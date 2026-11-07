@@ -5,7 +5,8 @@ import * as XLSX from "xlsx";
 export type PKind = "students" | "teachers";
 export type Field = { key: string; label: string; required?: boolean; hint: string; syn: string[] };
 
-export const FIELDS: Record<PKind, Field[]> = {
+export type IKind = PKind | "guardians";
+export const FIELDS: Record<IKind, Field[]> = {
   students: [
     { key: "full_name", label: "اسم الطالب", required: true, hint: "مطلوب — الاسم بالعربية", syn: ["اسم الطالب", "الاسم الكامل", "الاسم", "الإسم", "اسم الطالبة"] },
     { key: "national_id", label: "رقم الهوية", required: true, hint: "مطلوب — 10 أرقام، يُكتب نصًا", syn: ["رقم الهوية", "رقمها", "الهوية", "السجل المدني", "رقم السجل المدني", "رقم الهوية/الإقامة"] },
@@ -18,6 +19,16 @@ export const FIELDS: Record<PKind, Field[]> = {
     { key: "guardian_id", label: "هوية ولي الأمر", hint: "اختياري — 10 أرقام", syn: ["هوية ولي الأمر", "رقم هوية ولي الأمر", "هوية ولي الامر"] },
     { key: "guardian_phone", label: "جوال ولي الأمر", hint: "05XXXXXXXX — يدخل به ولي الأمر برمز واتساب", syn: ["جوال ولي الأمر", "رقم جوال ولي الأمر", "جوال ولي الامر"] },
     { key: "relationship", label: "صلة القرابة", hint: "أب / أم / أخ / أخت / أخرى", syn: ["صلة القرابة", "القرابة", "صلة ولي الأمر"] },
+  ],
+  guardians: [
+    { key: "full_name", label: "اسم ولي الأمر", required: true, hint: "مطلوب", syn: ["اسم ولي الأمر", "ولي الأمر", "اسم ولي الامر", "الاسم"] },
+    { key: "national_id", label: "هوية ولي الأمر أو إقامته", required: true, hint: "مطلوب — 10 أرقام، يُكتب نصًا", syn: ["هوية ولي الأمر أو إقامته", "هوية ولي الأمر", "رقم هوية ولي الأمر", "هوية ولي الامر", "رقم الهوية"] },
+    { key: "phone", label: "الجوال المعتمد", required: true, hint: "مطلوب — 05XXXXXXXX، يُرسل إليه رمز الدخول", syn: ["الجوال المعتمد", "جوال ولي الأمر", "الجوال", "رقم الجوال", "جوال ولي الامر"] },
+    { key: "email", label: "البريد (اختياري)", hint: "اختياري", syn: ["البريد (اختياري)", "البريد", "البريد الإلكتروني"] },
+    { key: "relationship", label: "صلة القرابة", hint: "أب / أم / أخ / أخت / أخرى", syn: ["صلة القرابة", "القرابة", "صلة ولي الأمر"] },
+    { key: "student_nid", label: "هوية الابن", hint: "هوية الابن أو رقمه في C‑Smart (أحدهما على الأقل)", syn: ["هوية الابن", "هوية الطالب", "رقم هوية الطالب"] },
+    { key: "student_csmart", label: "رقم الابن في C‑Smart", hint: "يُكتب نصًا وتُحفظ الأصفار الأولى", syn: ["رقم الابن في C‑Smart", "رقم الطالب الداخلي", "رقم C-Smart", "C-Smart"] },
+    { key: "school", label: "مدرسة الابن", hint: "اسم المدرسة كما في ركاز — يجب أن تطابق المدرسة الحالية", syn: ["مدرسة الابن", "المدرسة", "مدرسة الطالب"] },
   ],
   teachers: [
     { key: "full_name", label: "الإسم", required: true, hint: "مطلوب", syn: ["الإسم", "الاسم", "الاسم الكامل", "اسم المعلم", "اسم المعلمة"] },
@@ -177,7 +188,7 @@ function sheetContext(g: Grid, before: number, keys: Record<string, string>): Re
 const HAS_AR = /[\u0600-\u06FF]/;
 
 /** Reads every sheet without evaluating formulas. Rows without Arabic in the name (English duplicate lines, footers) are skipped. */
-export function parseWorkbook(buf: ArrayBuffer, kind: PKind, override?: Record<string, number>): Parsed {
+export function parseWorkbook(buf: ArrayBuffer, kind: IKind, override?: Record<string, number>): Parsed {
   const wb = XLSX.read(buf, { type: "array", cellFormula: true, cellHTML: false, cellDates: false, bookVBA: false, sheetStubs: false });
   const fields = FIELDS[kind];
   const rows: RawRow[] = []; const problems: string[] = [];
@@ -199,7 +210,7 @@ export function parseWorkbook(buf: ArrayBuffer, kind: PKind, override?: Record<s
       for (const [k, v] of Object.entries(ctx)) if (!values[k]) values[k] = v;
       // English duplicate lines in ministry reports carry no ID/phone: skip them. A row with an ID or phone but no Arabic
       // name is kept so validation reports it instead of dropping it silently.
-      const keyed = !!(values["national_id"] || values["phone"] || values["guardian_phone"]);
+      const keyed = !!(values["national_id"] || values["phone"] || values["guardian_phone"] || values["student_nid"]);
       const prev = rows[rows.length - 1]?.values;
       const echo = !!prev && !!values["national_id"] && prev["national_id"] === values["national_id"];
       if (!values["full_name"] || !HAS_AR.test(values["full_name"])) { if (!keyed || echo) continue; values["full_name"] = HAS_AR.test(values["full_name"] ?? "") ? values["full_name"]! : ""; }
@@ -213,7 +224,7 @@ export function parseWorkbook(buf: ArrayBuffer, kind: PKind, override?: Record<s
 }
 
 /** Blank template: column names only, text format so IDs and phones keep leading zeros. No personal data. */
-export function templateBook(kind: PKind): XLSX.WorkBook {
+export function templateBook(kind: IKind): XLSX.WorkBook {
   const f = FIELDS[kind];
   const ws = XLSX.utils.aoa_to_sheet([f.map((c) => c.label)]);
   for (let r = 1; r <= 1000; r++) f.forEach((_, c) => { const a = XLSX.utils.encode_cell({ r, c }); ws[a] = { t: "s", v: "", z: "@" }; });
@@ -254,6 +265,36 @@ export type CheckedRow = RawRow & {
 
 const LETTERS = ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح", "ط", "ي", "ك", "ل"];
 const REL: Record<string, string> = { [norm("أب")]: "father", [norm("الأب")]: "father", [norm("والد")]: "father", [norm("أم")]: "mother", [norm("الأم")]: "mother", [norm("والدة")]: "mother", [norm("أخ")]: "brother", [norm("أخت")]: "sister", [norm("أخرى")]: "other" };
+
+/** Arabic relationship label → code; "" when unknown, "father" when empty. */
+export function relCode(s: unknown): string { const r = norm(s); return r ? REL[r] ?? "" : "father"; }
+
+export type GuardianCheck = { errors: string[]; payload: Record<string, string> };
+/** Client-side checks for the guardians template; the server re-checks everything and decides create/link/conflict. */
+export function checkGuardianRows(rows: RawRow[], schoolName: string): GuardianCheck[] {
+  const pairs = new Set<string>(), phoneOf = new Map<string, string>();
+  return rows.map((r) => {
+    const v = r.values; const e: string[] = [];
+    if (r.formulas.length) e.push(`خلايا صيغ مرفوضة: ${r.formulas.join("، ")}`);
+    const nid = latinDigits(v["national_id"]).replace(/\D/g, "");
+    const ph = normPhone(v["phone"]);
+    const snid = latinDigits(v["student_nid"]).replace(/\D/g, "");
+    const scs = normCsmart(v["student_csmart"]);
+    const rel = relCode(v["relationship"]);
+    if (!(v["full_name"] ?? "").trim()) e.push("اسم ولي الأمر مطلوب");
+    if (!isNationalId(nid)) e.push("هوية ولي الأمر 10 أرقام تبدأ بـ1 أو 2");
+    if (!ph) e.push("الجوال المعتمد غير صالح (05XXXXXXXX)");
+    if (!rel) e.push("صلة القرابة: أب / أم / أخ / أخت / أخرى");
+    if (snid && !isNationalId(snid)) e.push("هوية الابن 10 أرقام");
+    if (scs === "") e.push("رقم C‑Smart غير صالح");
+    if (!snid && !scs) e.push("أدخل هوية الابن أو رقمه في C‑Smart");
+    if ((v["school"] ?? "").trim() && norm(v["school"]) !== norm(schoolName)) e.push(`المدرسة «${v["school"]}» ليست المدرسة الحالية — استورد صفوفها من مدرستها`);
+    if (nid && ph) { const p = phoneOf.get(nid); if (p && p !== ph) e.push("ولي الأمر نفسه بجوالين مختلفين في الملف"); phoneOf.set(nid, ph); }
+    const pair = `${nid}|${snid || scs}`;
+    if (nid && (snid || scs)) { if (pairs.has(pair)) e.push("العلاقة نفسها مكررة في الملف"); pairs.add(pair); }
+    return { errors: e, payload: { full_name: (v["full_name"] ?? "").replace(/\s+/g, " ").trim(), national_id: nid, phone: ph ?? "", email: (v["email"] ?? "").trim(), relationship: rel, student_nid: snid, student_csmart: scs ?? "" } };
+  });
+}
 
 /** Same rules for import rows and the single-add form. */
 export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[] {
