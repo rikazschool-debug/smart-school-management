@@ -87,7 +87,7 @@ function GuardianDetail({ g, canManage }: { g: Row; canManage: boolean }) {
     if (error) toast.error(arabicError(error)); else { toast.success("وُثّقت العلاقة — يرى ولي الأمر ابنه وفصله الآن"); qc.invalidateQueries(); }
   }
   async function reject(id: string) {
-    if (!(await ask({ title: "رفض العلاقة؟", body: "تُحذف العلاقة ولا يرى ولي الأمر بيانات هذا الابن.", confirm: "رفض" }))) return;
+    if (!(await ask("رفض العلاقة؟ تُحذف ولا يرى ولي الأمر بيانات هذا الابن.", { destructive: true, ok: "رفض" }))) return;
     const { error } = await db.from("student_guardians").delete().eq("id", id);
     if (error) toast.error(arabicError(error)); else { toast.success("رُفضت العلاقة"); qc.invalidateQueries(); }
   }
