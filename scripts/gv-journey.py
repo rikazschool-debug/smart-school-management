@@ -48,8 +48,9 @@ async def main():
         await r.goto(B + "/app/family-visits?tab=reception"); await r.wait_for_timeout(3500)
         rt = await r.locator("main").inner_text()
         check("6 reception list hides reason details", "أرغب بمناقشة" not in rt and "ملاحظات سلوكية" not in rt, rt[:400])
-        if "ولي أمر له ابنان" in rt and picked in rt:
-            row = r.locator("li", has_text=picked).filter(has=r.get_by_role("button", name="تسجيل الوصول")).first
+        await r.screenshot(path=SH + "4a_reception_list.png")
+        row = r.locator("li", has_text=picked).filter(has_text="ولي أمر له ابنان").filter(has=r.get_by_role("button", name="تسجيل الوصول")).first
+        if await row.count():
             await row.get_by_role("button", name="تسجيل الوصول").click(); await r.wait_for_timeout(3000)
             await r.screenshot(path=SH + "4_reception_arrived.png")
             check("7 reception records arrival", "تسجيل المغادرة" in await r.locator("main").inner_text())

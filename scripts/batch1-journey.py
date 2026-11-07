@@ -45,7 +45,10 @@ async def main():
         tp = await login(br, "t1", phone=True); await go(tp, "/app"); await tp.screenshot(path=SH + "5_teacher_phone.png")
         body = await tp.locator("body").inner_text()
         check("9 teacher on phone: no virtual classes / grades archive", not any(x in body for x in HIDDEN), body[:400])
-        op = await login(br, "owner", phone=True); t = await go(op, "/app"); await op.screenshot(path=SH + "6_owner_phone.png")
+        op = await login(br, "owner", phone=True); t = await go(op, "/app")
+        try: await op.get_by_text("إدارة الإشعارات").first.wait_for(timeout=15000); t = " ".join((await op.locator("body").inner_text()).split())
+        except Exception: pass
+        await op.screenshot(path=SH + "6_owner_phone.png")
         check("10 owner on phone sees renamed sections", "إدارة صيانة المباني" in t and "إدارة الإشعارات" in t, t[:400])
         t = await go(op, "/app/org-docs"); await op.screenshot(path=SH + "7_owner_phone_docs.png")
         check("11 documents page works on phone", "وثائق المنشأة" in t and "المتعهدون" in t, t[:400])
