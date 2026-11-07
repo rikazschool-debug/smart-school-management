@@ -91,3 +91,4 @@
 - scripts/gv-live-e2e.ts: live visit updates over gv_signals + owner two-school scope + hours settings (8 checks; run after gv-fixture + gv-e2e, before teardown).
 - scripts/idl-e2e.ts: ID/iqama sign-in codes, limits, conflicts, student C-Smart match/lockout, one-time token, lockdown (22 checks).
 - scripts/family-e2e.ts: guardian/student overview + branch payment settings (24 checks; `--keep` writes /tmp/browser/fam/fixture.json, `--teardown` removes it). scripts/family-journey.py: guardian (desktop+phone), student, owner screens (22 checks).
+- scripts/classroom-room-e2e.ts: section rooms (regroup report/re-run, teacher subject scope, student/guardian access, transfer, teacher change; 29 checks).

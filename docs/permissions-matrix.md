@@ -386,3 +386,10 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | Child overview (timetable, classroom, homework, visits) | verified + can_follow only | own record only (no visits) | — | — |
 | Child financial data | read (own verified children) | never | — | — |
 | Branch bank accounts / payment links | read via child's school | never | edit (logged) | no |
+
+## Section rooms (Nov 7 2026)
+| Capability | Teacher | Student | Guardian | Principal / staff_view |
+|---|---|---|---|---|
+| Open section room | if assigned (live) to ≥1 subject there; sees only own subjects | own active section | children's sections (via child card) | all rooms in school |
+| Post in a subject | own live assignment only | no | no | no (moderate via existing rules) |
+| Run regroup | no | no | no | principal of that school only |

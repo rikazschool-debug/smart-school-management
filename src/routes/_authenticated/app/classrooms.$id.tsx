@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
@@ -29,6 +29,8 @@ function Page() {
   if (room.isLoading) return <LoadingState />;
   if (room.error) return <ErrorState message={arabicError(room.error)} onRetry={() => room.refetch()} />;
   if (!room.data) return <EmptyState title="الفصل غير موجود أو ليس ضمن صلاحياتك" />;
+  // subject classrooms now open inside their section room (old links keep working)
+  if (room.data["section_room_id"]) return <Navigate to="/app/classrooms/section/$id" params={{ id: room.data["section_room_id"] }} search={{ subject: id }} replace />;
   const teachers = members.data?.filter((m) => m["member_type"] === "teacher") ?? [];
   const students = members.data?.filter((m) => m["member_type"] === "student") ?? [];
   return (

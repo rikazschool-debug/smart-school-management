@@ -51,4 +51,4 @@
 - Notifications hub (bc_*): RPC-only; audience _bc_audience + fingerprint checked at send; perms notices/hub_meetings. Tests: bc-e2e.
 - Guardian visits (gv_*): RPC-only over perm section guardian_visits; unique index = one active visit per slot; changes bump rev + gv_events. Tests: gv-e2e.
 - ID sign-in: id-login.functions.ts → service-only _idl_* SQL; existing accounts only, generic errors. Test: idl-e2e.
-- Family/student home + fin_*: see src/components/family/AGENTS.md.
+- Family home, fin_*, section rooms: src/components/family/AGENTS.md.

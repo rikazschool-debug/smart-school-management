@@ -2526,12 +2526,45 @@ export type Database = {
           },
         ]
       }
+      classroom_regroup_runs: {
+        Row: {
+          actor: string | null
+          created_at: string
+          id: string
+          report: Json
+          school_id: string | null
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          id?: string
+          report: Json
+          school_id?: string | null
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          id?: string
+          report?: Json
+          school_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_regroup_runs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classrooms: {
         Row: {
           course_id: string
           created_at: string
           id: string
           school_id: string
+          section_room_id: string | null
           status: string
           title: string
           updated_at: string
@@ -2541,6 +2574,7 @@ export type Database = {
           created_at?: string
           id?: string
           school_id: string
+          section_room_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -2550,6 +2584,7 @@ export type Database = {
           created_at?: string
           id?: string
           school_id?: string
+          section_room_id?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -2567,6 +2602,13 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classrooms_section_room_id_fkey"
+            columns: ["section_room_id"]
+            isOneToOne: false
+            referencedRelation: "section_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -12246,6 +12288,58 @@ export type Database = {
           },
         ]
       }
+      section_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          school_id: string
+          section_id: string
+          title: string
+          updated_at: string
+          year_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          school_id: string
+          section_id: string
+          title: string
+          updated_at?: string
+          year_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          school_id?: string
+          section_id?: string
+          title?: string
+          updated_at?: string
+          year_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "section_rooms_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_rooms_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: true
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_rooms_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sections: {
         Row: {
           capacity: number
@@ -15039,6 +15133,7 @@ export type Database = {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
         Returns: boolean
       }
+      _link_section_room: { Args: { _classroom: string }; Returns: string }
       _meet_busy: {
         Args: {
           _date: string
@@ -15400,6 +15495,7 @@ export type Database = {
         }
         Returns: string
       }
+      _regroup_counts: { Args: { _school: string }; Returns: Json }
       _report_reviewer: {
         Args: { _org: string; _school: string }
         Returns: boolean
@@ -16429,6 +16525,7 @@ export type Database = {
         Args: { _course: string; _school: string }
         Returns: boolean
       }
+      can_view_section_room: { Args: { _room: string }; Returns: boolean }
       can_view_slot: { Args: { _slot: string }; Returns: boolean }
       can_view_student: {
         Args: { _school: string; _student: string }
@@ -16494,6 +16591,7 @@ export type Database = {
           ref_id: string
         }[]
       }
+      classroom_regroup: { Args: { _school?: string }; Returns: Json }
       cleanup_health: { Args: never; Returns: Json }
       conv_access_ok: { Args: { _conv: string }; Returns: boolean }
       conv_send_block: { Args: { _conv: string }; Returns: string }
@@ -18589,6 +18687,8 @@ export type Database = {
         Args: { _org: string; _section: string }
         Returns: boolean
       }
+      section_room_get: { Args: { _room: string }; Returns: Json }
+      section_rooms_list: { Args: { _school: string }; Returns: Json }
       send_message: {
         Args: {
           _body: string
