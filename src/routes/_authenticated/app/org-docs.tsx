@@ -80,10 +80,10 @@ function Filters({ caps, q, setQ, school, setSchool, status, setStatus }: { caps
   return (
     <div className="mb-3 flex flex-wrap gap-2">
       <div className="relative min-w-56 flex-1"><Search className="absolute end-2 top-2.5 size-4 text-muted-foreground" /><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم أو النوع أو الرقم" /></div>
-      <select className={selectCls} value={school} onChange={(e) => setSchool(e.target.value)} aria-label="المدرسة">
+      <select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)} aria-label="المدرسة">
         <option value="">كل المدارس</option>{caps.schools.filter((s) => s.view).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
       </select>
-      <select className={selectCls} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
+      <select className={selectCls()} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
         <option value="">كل الحالات</option>{Object.entries(STATUS).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}
       </select>
     </div>
@@ -144,7 +144,7 @@ function DocForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
         <div><Label>جهة الإصدار</Label><Input value={f.issuer} onChange={set("issuer")} /></div>
         <div><Label>تاريخ الإصدار</Label><Input type="date" value={f.issued_on} onChange={set("issued_on")} /></div>
         <div><Label>تاريخ الانتهاء</Label><Input type="date" value={f.expires_on} onChange={set("expires_on")} /></div>
-        <div><Label>النطاق</Label><select className={selectCls} value={f.school_id} onChange={set("school_id")}>{scopes.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+        <div><Label>النطاق</Label><select className={selectCls()} value={f.school_id} onChange={set("school_id")}>{scopes.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
         <div><Label>ملف PDF</Label><Input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />{init.file_name && !file && <p className="mt-1 text-xs text-muted-foreground"><FileText className="inline size-3" /> {init.file_name}</p>}</div>
       </div>
       <div className="mt-3 flex justify-end"><Button disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? "جارٍ الحفظ…" : "حفظ"}</Button></div>
