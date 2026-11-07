@@ -19147,6 +19147,22 @@ export type Database = {
       sync_course_group: { Args: { _course: string }; Returns: string }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
       sync_section_group: { Args: { _section: string }; Returns: string }
+      teacher_id_status: {
+        Args: { _school: string }
+        Returns: {
+          has_account: boolean
+          has_phone: boolean
+          hr_national_id: string
+          national_id: string
+          problem: string
+          state: string
+          teacher_id: string
+        }[]
+      }
+      teacher_nid_save: {
+        Args: { _nid: string; _teacher: string }
+        Returns: string
+      }
       teacher_students: {
         Args: { _school: string }
         Returns: {
