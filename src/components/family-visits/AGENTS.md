@@ -1,0 +1,1 @@
+- Guardian visits (gv_*): RPC-only over perm section guardian_visits; unique index = one active visit per slot; changes bump rev + gv_events. Tests: gv-e2e.
