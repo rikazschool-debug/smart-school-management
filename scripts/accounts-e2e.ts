@@ -28,7 +28,7 @@ try {
   org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة الحسابات", _school_name: "فرع الحسابات" })).data;
   const S = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(S);
   for (const [u, r] of [[pr, "principal"], [sa, "student_affairs"], [tch, "teacher"]] as any[]) await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: r });
-  const ins = async (tb: string, v: any, c = admin) => { const r = await c.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
+  const ins = async (tb: string, v: any, c = admin) => { const r = await c.from(tb).insert({ school_id: S, ...v }).select(tb === "teachers" ? "id, school_id, user_id, full_name, email, phone, status" : "*").single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
   const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-30", is_current: true });
   const stage = await ins("stages", { name: "ابتدائي" }), grade = await ins("grades", { name: "الأول", stage_id: stage.id });
   const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });
