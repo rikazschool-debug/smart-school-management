@@ -51,6 +51,10 @@ export function latinDigits(s: unknown): string {
   return String(s ?? "").replace(/[\u0660-\u0669]/g, (c) => String(c.charCodeAt(0) - 0x0660)).replace(/[\u06F0-\u06F9]/g, (c) => String(c.charCodeAt(0) - 0x06F0));
 }
 /** C‑Smart internal number: text, digits/letters only, leading zeros kept; null when empty; "" when invalid. */
+/** Comparison key used only to DETECT near-duplicates (case-insensitive). Matching always requires the exact value. */
+export function csmartKey(s: string): string {
+  return s.toUpperCase();
+}
 export function normCsmart(s: unknown): string | null {
   const t = latinDigits(s).replace(/[\s\u200f\u200e]/g, "").trim();
   if (!t) return null;
@@ -300,7 +304,7 @@ export function checkGuardianRows(rows: RawRow[], schoolName: string): GuardianC
 
 /** Same rules for import rows and the single-add form. */
 export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[] {
-  const seenId = new Set<string>(), seenPhone = new Set<string>(), seenCs = new Set<string>();
+  const seenId = new Set<string>(), seenPhone = new Set<string>(), seenCs = new Map<string, string>();
   const planned = new Map<string, number>();
   return rows.map((r) => {
     const v = r.values; const e: string[] = []; const notes: string[] = [];
@@ -317,11 +321,18 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
       const cs = normCsmart(v["csmart_no"]);
       if (cs === "") e.push("رقم C‑Smart: أرقام أو حروف لاتينية أو شرطة فقط");
       data["csmart_no"] = cs || null;
-      if (cs) { if (seenCs.has(cs)) e.push("رقم C‑Smart مكرر في الملف"); seenCs.add(cs); }
-      const byNid = nid ? lk.existingIds.get(nid) : undefined, byCs = cs ? lk.existingCsmart?.get(cs) : undefined;
+      if (cs) {
+        const prev = seenCs.get(csmartKey(cs));
+        if (prev === cs) e.push("رقم C‑Smart مكرر في الملف");
+        else if (prev) e.push(`تعارض: رقم C‑Smart «${cs}» يختلف عن «${prev}» في الملف بحالة الحروف فقط — لا يُعدّان رقمًا واحدًا ولا رقمين مختلفين حتى تُعتمد مواصفات C‑Smart`);
+        else seenCs.set(csmartKey(cs), cs);
+      }
+      const byNid = nid ? lk.existingIds.get(nid) : undefined, byCs = cs ? lk.existingCsmart?.get(csmartKey(cs)) : undefined;
       const stored = byNid ? lk.rowCsmart?.get(byNid) : undefined;
+      const byCsStored = byCs ? lk.rowCsmart?.get(byCs) : undefined;
       // never re-point an existing link or merge two students: any mismatch is a conflict for manual review
-      if (byCs && byCs !== byNid) e.push(byNid ? "تعارض: رقم C‑Smart مسجل لطالب آخر غير صاحب الهوية — راجع السجلين يدويًا" : "تعارض: رقم C‑Smart مسجل لطالب آخر بهوية مختلفة — راجع يدويًا");
+      if (byCs && cs && byCsStored && byCsStored !== cs) e.push(`تعارض: رقم C‑Smart «${cs}» يطابق الرقم المسجل «${byCsStored}» بعد تجاهل حالة الحروف فقط — يُرفض حتى تُعتمد مواصفات C‑Smart، صحّح الرقم ليطابق المسجل حرفيًا`);
+      else if (byCs && byCs !== byNid) e.push(byNid ? "تعارض: رقم C‑Smart مسجل لطالب آخر غير صاحب الهوية — راجع السجلين يدويًا" : "تعارض: رقم C‑Smart مسجل لطالب آخر بهوية مختلفة — راجع يدويًا");
       else if (byNid && cs && stored && stored !== cs) e.push(`تعارض: الطالب مسجل برقم C‑Smart مختلف (${stored}) — لن يُستبدل تلقائيًا`);
       if (byNid) { out.existingId = byNid; notes.push(cs && !stored ? "الطالب موجود مسبقًا — سيُضاف رقم C‑Smart لسجله" : "الطالب موجود مسبقًا — لن يُكرر، تُستكمل بقية الخطوات"); }
       if (!cs) notes.push("ينقص رقم C‑Smart — لن يتمكن الطالب من الدخول حتى يُضاف");
