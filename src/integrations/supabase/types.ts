@@ -9962,6 +9962,30 @@ export type Database = {
           },
         ]
       }
+      live_signals: {
+        Row: {
+          at: string
+          id: number
+          school_id: string | null
+          topic: string
+          user_id: string | null
+        }
+        Insert: {
+          at?: string
+          id?: number
+          school_id?: string | null
+          topic: string
+          user_id?: string | null
+        }
+        Update: {
+          at?: string
+          id?: number
+          school_id?: string | null
+          topic?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       memberships: {
         Row: {
           branch_suspended: boolean
@@ -15341,6 +15365,7 @@ export type Database = {
       _la_read: { Args: { _id: string }; Returns: boolean }
       _la_taker: { Args: { _date: string; _slot: string }; Returns: string }
       _link_section_room: { Args: { _classroom: string }; Returns: string }
+      _live_staff: { Args: { _school: string }; Returns: boolean }
       _meet_busy: {
         Args: {
           _date: string

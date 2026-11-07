@@ -2,8 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { db } from "@/components/crud-page";
+import { useLiveSignals } from "@/lib/live-signals";
 
 export function NotificationBell() {
+  useLiveSignals(); // mounted once in the app layout
   const q = useQuery({
     queryKey: ["notif-unread"],
     refetchInterval: 60_000,

@@ -98,3 +98,4 @@
 - scripts/teacher-id-e2e.ts: teacher ID for ID sign-in (hidden column, principal-only status/save, conflicts, sign-in resolve; 9 checks). Inserting teachers with a user client must list columns in .select() (national_id is not selectable).
 - scripts/identity-e2e.ts: one C‑Smart rule (_csmart_key) across entry/import/sign-in, people_identity perm (base owner/principal, grant/deny), teacher↔HR ID/phone conflicts keep the link, hr_id_readiness (20 checks). scripts/identity-browser-fixture.ts setup|teardown (idb-) + identity-journey.py (13 checks); always run teardown after.
 - scripts/lesson-att-e2e.ts: lesson attendance draft→approve→reasoned correction, taker/substitute, staff/guardian read scope (26 checks).
+- scripts/live-signals-e2e.ts: live refresh signal scope (own notification, school staff/owner, guardian own pickup only, other org none, Realtime receipt; 11 checks). scripts/live-bell-journey.py needs admin2-browser-fixture.

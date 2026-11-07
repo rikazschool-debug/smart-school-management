@@ -1,0 +1,1 @@
+- Live refresh: tables that need instant screens add a _live_signal_trg('<topic>') trigger writing topic-only rows to live_signals (own user or school staff via RLS); src/lib/live-signals.ts (one subscription, mounted by NotificationBell) maps topic → query keys and refetches — never put record data in a signal. Tests: scripts/live-signals-e2e.ts.
