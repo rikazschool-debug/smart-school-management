@@ -401,3 +401,8 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | Add/change/approve teacher IDs (screen, import, direct write) | ✓ | ✓ (base) | only by `edit` grant |
 | HR non-teacher readiness list | HR view scope | HR view scope | HR view scope; ID shown with HR sensitive or `people_identity.view` |
 A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, identity-journey.py.
+
+## حضور الحصة (lesson attendance)
+- الرصد والاعتماد والتعديل بسبب: معلم الحصة المسند أو البديل في يومه فقط.
+- عرض حصص اليوم: المالك، المدير، الوكيل، شؤون الطلاب.
+- ولي الأمر/الطالب: سجلات الابن/الطالب نفسه فقط.

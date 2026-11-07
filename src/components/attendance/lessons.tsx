@@ -41,7 +41,7 @@ export function LessonsTab() {
     onError: (e) => toast.error(arabicError(e)),
   });
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState error={q.error} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const rows = q.data ?? [];
   return (
     <div className="space-y-4">
@@ -81,7 +81,7 @@ export function LessonsSchoolTab({ schoolId }: { schoolId: string }) {
         <label className="text-sm">التاريخ<Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1 w-44" /></label>
         {!!rows.length && <p className="text-sm text-muted-foreground">الحصص {sum.total} · معتمدة {sum.approved} · مسودات {sum.draft} · لم تُرصد {sum.total - sum.approved - sum.draft} · غياب {sum.absent}</p>}
       </div>
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState error={q.error} /> : !rows.length ? <EmptyState title="لا حصص في الجدول المنشور لهذا اليوم" /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !rows.length ? <EmptyState title="لا حصص في الجدول المنشور لهذا اليوم" /> : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-muted-foreground"><tr><th className="p-2 text-start">الحصة</th><th className="p-2 text-start">المادة</th><th className="p-2 text-start">الشعبة</th><th className="p-2 text-start">المعلم</th><th className="p-2 text-start">الحالة</th><th className="p-2 text-start">غائب/متأخر</th><th /></tr></thead>
@@ -129,7 +129,7 @@ function Session({ id, onClose }: { id: string; onClose: () => void }) {
   const counts = useMemo(() => { const c = { present: 0, absent: 0, late: 0, excused: 0 } as Record<Status, number>; Object.values(marks).forEach((s) => c[s]++); return c; }, [marks]);
   return (
     <section className="rounded-xl border-2 border-primary/30 bg-card p-4" aria-label="رصد حضور الحصة">
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState error={q.error} /> : d && (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : d && (
         <>
           <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
             <div>
