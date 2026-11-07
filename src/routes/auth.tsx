@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicError } from "@/lib/session";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts";
+import { isReviewHost } from "@/lib/review-host";
 import { ROLE_LABELS } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +23,6 @@ const ENTRIES: { key: Entry; title: string; desc: string }[] = [
   { key: "guardian", title: "الدخول إلى حساب ولي الأمر", desc: "برقم الهوية أو الإقامة ورمز يصل إلى جوالك المسجل في المدرسة" },
   { key: "staff", title: "الدخول إلى حساب الإدارة والموظفين", desc: "برقم الهوية ورمز التحقق، أو باسم المستخدم وكلمة المرور" },
 ];
-/** Demo buttons only in the review (preview / local) environment, never on the published site. */
-const isReviewHost = (h: string) => h === "localhost" || h.startsWith("127.") || h.startsWith("id-preview--") || h.endsWith(".lovableproject.com") || h.includes("preview--");
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const Route = createFileRoute("/auth")({
