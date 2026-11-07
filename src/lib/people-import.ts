@@ -54,6 +54,16 @@ export function studentReadiness(r: { national_id?: string | null; csmart_no?: s
   return m;
 }
 
+/** A guardian receives a sign-in code only with an ID and an approved mobile. */
+export function guardianReadiness(r: { national_id?: string | null; phone?: string | null }): string[] {
+  const m: string[] = [];
+  if (!r.national_id) m.push("رقم الهوية");
+  if (!r.phone) m.push("الجوال المعتمد");
+  return m;
+}
+/** Hide all but the last 3 characters. */
+export const maskTail = (s: string) => (s.length <= 3 ? s : "•".repeat(s.length - 3) + s.slice(-3));
+
 /** Saudi mobile → 9665XXXXXXXX; null when invalid. Same rule as SQL norm_phone. */
 export function normPhone(p: unknown): string | null {
   let d = latinDigits(p).replace(/\D/g, "");
