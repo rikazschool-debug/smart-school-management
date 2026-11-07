@@ -92,7 +92,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
   );
 }
 
-function NidForm({ teacherId, state, onDone }: { teacherId: string; state?: IdState; onDone: () => void }) {
+function NidForm({ teacherId, state, onDone }: { teacherId: string; state: IdState | undefined; onDone: () => void }) {
   const qc = useQueryClient();
   const [v, setV] = useState(state?.national_id ?? "");
   const [busy, setBusy] = useState(false);
