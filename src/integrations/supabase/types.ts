@@ -9397,6 +9397,69 @@ export type Database = {
           },
         ]
       }
+      id_login_challenges: {
+        Row: {
+          attempts: number
+          channel: string
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          nid_hash: string
+          phone: string
+          send_status: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          channel?: string
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          nid_hash: string
+          phone: string
+          send_status?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nid_hash?: string
+          phone?: string
+          send_status?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      id_login_failures: {
+        Row: {
+          created_at: string
+          id: number
+          key_hash: string
+          kind: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          key_hash: string
+          kind: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          key_hash?: string
+          kind?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -12254,6 +12317,7 @@ export type Database = {
         Row: {
           birth_date: string | null
           created_at: string
+          csmart_no: string | null
           email: string | null
           full_name: string
           gender: string | null
@@ -12267,6 +12331,7 @@ export type Database = {
         Insert: {
           birth_date?: string | null
           created_at?: string
+          csmart_no?: string | null
           email?: string | null
           full_name: string
           gender?: string | null
@@ -12280,6 +12345,7 @@ export type Database = {
         Update: {
           birth_date?: string | null
           created_at?: string
+          csmart_no?: string | null
           email?: string | null
           full_name?: string
           gender?: string | null
@@ -14768,6 +14834,27 @@ export type Database = {
       _identity_conflict: {
         Args: { _kind: string; _subject: string; _uid: string }
         Returns: boolean
+      }
+      _idl_hash: { Args: { _s: string }; Returns: string }
+      _idl_issue: { Args: { _code: string; _nid: string }; Returns: Json }
+      _idl_mark_sent: {
+        Args: { _challenge: string; _channel: string; _status: string }
+        Returns: undefined
+      }
+      _idl_nid: { Args: { _s: string }; Returns: string }
+      _idl_phone: { Args: { _s: string }; Returns: string }
+      _idl_resolve: {
+        Args: { _nid: string }
+        Returns: {
+          phone: string
+          problem: string
+          user_id: string
+        }[]
+      }
+      _idl_student: { Args: { _csmart: string; _nid: string }; Returns: Json }
+      _idl_verify: {
+        Args: { _challenge: string; _code: string }
+        Returns: Json
       }
       _invite_valid: {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
