@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
-import { db, type Row } from "@/components/crud-page";
+import { db } from "@/components/crud-page";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Row = any; // RPC jsonb rows
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
