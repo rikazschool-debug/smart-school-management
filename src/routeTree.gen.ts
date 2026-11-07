@@ -26,6 +26,7 @@ import { Route as AuthenticatedAppCircularsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppCommunicationRouteImport } from './routes/_authenticated/app/communication'
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
 import { Route as AuthenticatedAppEvaluationRouteImport } from './routes/_authenticated/app/evaluation'
+import { Route as AuthenticatedAppFamilyVisitsRouteImport } from './routes/_authenticated/app/family-visits'
 import { Route as AuthenticatedAppFinanceRouteImport } from './routes/_authenticated/app/finance'
 import { Route as AuthenticatedAppGradesRouteImport } from './routes/_authenticated/app/grades'
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
@@ -180,6 +181,12 @@ const AuthenticatedAppEvaluationRoute =
   AuthenticatedAppEvaluationRouteImport.update({
     id: '/evaluation',
     path: '/evaluation',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppFamilyVisitsRoute =
+  AuthenticatedAppFamilyVisitsRouteImport.update({
+    id: '/family-visits',
+    path: '/family-visits',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppFinanceRoute = AuthenticatedAppFinanceRouteImport.update({
@@ -555,6 +562,7 @@ export interface FileRoutesByFullPath {
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/evaluation': typeof AuthenticatedAppEvaluationRoute
+  '/app/family-visits': typeof AuthenticatedAppFamilyVisitsRoute
   '/app/finance': typeof AuthenticatedAppFinanceRoute
   '/app/grades': typeof AuthenticatedAppGradesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -634,6 +642,7 @@ export interface FileRoutesByTo {
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/evaluation': typeof AuthenticatedAppEvaluationRoute
+  '/app/family-visits': typeof AuthenticatedAppFamilyVisitsRoute
   '/app/finance': typeof AuthenticatedAppFinanceRoute
   '/app/grades': typeof AuthenticatedAppGradesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -716,6 +725,7 @@ export interface FileRoutesById {
   '/_authenticated/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/evaluation': typeof AuthenticatedAppEvaluationRoute
+  '/_authenticated/app/family-visits': typeof AuthenticatedAppFamilyVisitsRoute
   '/_authenticated/app/finance': typeof AuthenticatedAppFinanceRoute
   '/_authenticated/app/grades': typeof AuthenticatedAppGradesRoute
   '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
@@ -798,6 +808,7 @@ export interface FileRouteTypes {
     | '/app/communication'
     | '/app/courses'
     | '/app/evaluation'
+    | '/app/family-visits'
     | '/app/finance'
     | '/app/grades'
     | '/app/guardians'
@@ -877,6 +888,7 @@ export interface FileRouteTypes {
     | '/app/communication'
     | '/app/courses'
     | '/app/evaluation'
+    | '/app/family-visits'
     | '/app/finance'
     | '/app/grades'
     | '/app/guardians'
@@ -958,6 +970,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/communication'
     | '/_authenticated/app/courses'
     | '/_authenticated/app/evaluation'
+    | '/_authenticated/app/family-visits'
     | '/_authenticated/app/finance'
     | '/_authenticated/app/grades'
     | '/_authenticated/app/guardians'
@@ -1154,6 +1167,13 @@ declare module '@tanstack/react-router' {
       path: '/evaluation'
       fullPath: '/app/evaluation'
       preLoaderRoute: typeof AuthenticatedAppEvaluationRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/family-visits': {
+      id: '/_authenticated/app/family-visits'
+      path: '/family-visits'
+      fullPath: '/app/family-visits'
+      preLoaderRoute: typeof AuthenticatedAppFamilyVisitsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/finance': {
@@ -1604,6 +1624,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppCommunicationRoute: typeof AuthenticatedAppCommunicationRoute
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppEvaluationRoute: typeof AuthenticatedAppEvaluationRoute
+  AuthenticatedAppFamilyVisitsRoute: typeof AuthenticatedAppFamilyVisitsRoute
   AuthenticatedAppFinanceRoute: typeof AuthenticatedAppFinanceRoute
   AuthenticatedAppGradesRoute: typeof AuthenticatedAppGradesRoute
   AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
@@ -1677,6 +1698,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppCommunicationRoute: AuthenticatedAppCommunicationRoute,
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppEvaluationRoute: AuthenticatedAppEvaluationRoute,
+  AuthenticatedAppFamilyVisitsRoute: AuthenticatedAppFamilyVisitsRoute,
   AuthenticatedAppFinanceRoute: AuthenticatedAppFinanceRoute,
   AuthenticatedAppGradesRoute: AuthenticatedAppGradesRoute,
   AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,

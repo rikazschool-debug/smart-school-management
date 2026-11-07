@@ -14,7 +14,7 @@ import { rpc } from "@/components/hr/shared";
 import { addDays, dayName, riyadhToday, weekStartOf } from "@/components/admin/shared";
 import { askText } from "@/components/confirm";
 import { PeoplePicker } from "@/components/people-picker";
-import { DAYS, EVENT, REASONS, SOURCE, SlotPicker, StatusPill, awaitingText, type Caps, type Visit, type VisitDetail } from "@/components/family-visits/shared";
+import { DAYS, EVENT, REASONS, SOURCE, STATUS, SlotPicker, StatusPill, awaitingText, type Caps, type Visit, type VisitDetail } from "@/components/family-visits/shared";
 
 type Tab = "calendar" | "mine" | "school" | "reception" | "settings";
 const TABS: Tab[] = ["calendar", "mine", "school", "reception", "settings"];
@@ -106,7 +106,7 @@ function ListTab({ view, school, open }: { view: "mine" | "school"; school: stri
           <div className="relative"><Search className="absolute end-2 top-2.5 size-4 text-muted-foreground" /><Input className="h-9 w-56" placeholder="اسم الطالب أو ولي الأمر" aria-label="بحث" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <select aria-label="الحالة" className={sm} value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">كل الحالات</option><option value="awaiting_school">بانتظار رد المدرسة</option>
-            {["pending", "proposed", "confirmed", "rejected", "cancelled", "arrived", "no_show", "completed"].map((s) => <option key={s} value={s}><StatusLabel s={s} /></option>)}
+            {["pending", "proposed", "confirmed", "rejected", "cancelled", "arrived", "no_show", "completed"].map((s) => <option key={s} value={s}>{STATUS_TXT[s]}</option>)}
           </select>
         </div>
       )}
@@ -117,10 +117,7 @@ function ListTab({ view, school, open }: { view: "mine" | "school"; school: stri
   );
 }
 
-function StatusLabel({ s }: { s: string }) {
-  const l: Record<string, string> = { pending: "بانتظار التأكيد", proposed: "مقترح تعديل", confirmed: "مؤكدة", rejected: "مرفوضة", cancelled: "ملغاة", arrived: "حضر", no_show: "لم يحضر", completed: "مكتملة" };
-  return <>{l[s] ?? s}</>;
-}
+const STATUS_TXT = Object.fromEntries(Object.entries(STATUS).map(([k, v]) => [k, v[0]])) as Record<string, string>;
 
 function CalendarTab({ open }: { open: (id: string) => void }) {
   const today = riyadhToday();
@@ -234,7 +231,6 @@ function Detail({ id, onClose }: { id: string; onClose: () => void }) {
         {awaitingMe && v.status === "proposed" && v.conf_date && <Button size="sm" variant="outline" disabled={act.isPending} onClick={() => act.mutate({ a: "keep" })}>رفض التعديل والإبقاء على الموعد المؤكد</Button>}
         {awaitingMe && <Button size="sm" variant="outline" disabled={act.isPending} onClick={() => withReason("decline", side === "guardian" ? "سبب الاعتذار عن الزيارة" : "سبب رفض طلب الزيارة")}>{side === "guardian" ? "اعتذار" : "رفض الطلب"}</Button>}
         {side && active && !awaitingMe && <Button size="sm" variant="outline" disabled={act.isPending} onClick={() => withReason("cancel", "سبب إلغاء الزيارة")}>إلغاء الزيارة</Button>}
-        {side && v.status === "confirmed" && awaitingMe === false && null}
         {side === "school" && active && <Button size="sm" variant="ghost" onClick={() => setMode(mode === "host" ? "" : "host")}>تغيير المسؤول</Button>}
         {v.reception && today && v.status === "confirmed" && <Button size="sm" disabled={act.isPending} onClick={() => act.mutate({ a: "arrive" })}>تسجيل الوصول</Button>}
         {v.reception && today && v.status === "confirmed" && <Button size="sm" variant="outline" disabled={act.isPending} onClick={() => act.mutate({ a: "no_show" })}>لم يحضر</Button>}
