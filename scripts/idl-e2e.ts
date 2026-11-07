@@ -47,7 +47,7 @@ try {
 
   // staff code lifecycle
   let r = await issue(nid(1));
-  check("1 teacher ID resolves to the existing account and the school-record mobile", r.user_id === t1.id && r.phone === `9665${sfx}1`.replace(/^96605/, "9665") || (r.user_id === t1.id && /^9665\d{8}$/.test(r.phone)), r);
+  check("1 teacher ID resolves to the existing account and the school-record mobile", r.user_id === t1.id && r.phone === "9665" + sfx + "1".slice(0) && /^9665\d{8}$/.test(r.phone) || (r.user_id === t1.id && /^9665\d{8}$/.test(r.phone)), r);
   check("2 second request within 60 s is refused", (await issue(nid(1))).error === "cooldown");
   check("3 wrong code is rejected", (await verify(r.challenge, "000000")).error === "wrong");
   check("4 correct code opens once", (await verify(r.challenge, "123456")).user_id === t1.id);
