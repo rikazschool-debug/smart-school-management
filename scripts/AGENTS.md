@@ -100,3 +100,4 @@
 - scripts/lesson-att-e2e.ts: lesson attendance draft→approve→reasoned correction, taker/substitute, staff/guardian read scope (26 checks).
 - scripts/live-signals-e2e.ts: live refresh signal scope (own notification, school staff/owner, guardian own pickup only, other org none, Realtime receipt; 11 checks). scripts/live-bell-journey.py needs admin2-browser-fixture.
 - scripts/support9-e2e.ts: support holidays, branch/department hours, pause reason (19 checks). Failed fixture setups leave sbx-/prefixed data the fixture's teardown cannot see — clean by email prefix through TestRun.
+- Browser journeys sign in via scripts/lib/session_login.py sign_in() (password grant → app-origin localStorage); the login page has no email/password form.
