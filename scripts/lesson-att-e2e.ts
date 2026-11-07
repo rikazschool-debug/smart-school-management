@@ -111,7 +111,7 @@ async function main() {
   const tday = await t1.c.rpc("la_school_day", { _school: S, _date: today });
   ok("21 teacher cannot read school day", !!tday.error);
   const gm = await g.c.from("lesson_attendance_marks").select("student_id,status").eq("session_id", id);
-  ok("22 guardian reads only own child's mark", !gm.error && gm.data!.length === 1 && gm.data![0].student_id === studs[0].id);
+  ok("22 guardian reads only own child's mark", !gm.error && gm.data!.length === 1 && gm.data![0].student_id === studs[0].id, JSON.stringify(gm.error ?? gm.data) + " sg=" + JSON.stringify((await admin.from("student_guardians").select("verified,can_follow").eq("guardian_id", gd.id)).data));
 
   // substitute takes over the lesson for the day
   const ab = await pr.c.rpc("record_absence", { _teacher: tch.id, _date: today, _note: null });
