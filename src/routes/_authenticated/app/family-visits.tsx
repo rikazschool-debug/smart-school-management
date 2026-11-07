@@ -20,7 +20,7 @@ type Tab = "calendar" | "mine" | "school" | "reception" | "settings";
 const TABS: Tab[] = ["calendar", "mine", "school", "reception", "settings"];
 export const Route = createFileRoute("/_authenticated/app/family-visits")({
   head: () => ({ meta: [{ title: "زيارات أولياء الأمور — ركاز" }, { name: "description", content: "استدعاء أولياء الأمور وطلبات الزيارة والتقويم والاستقبال وسجل الزيارات." }, { name: "robots", content: "noindex" }] }),
-  validateSearch: (s: Record<string, unknown>): { tab?: Tab; v?: string } => ({
+  validateSearch: (s: Record<string, unknown>): { tab?: Tab | undefined; v?: string | undefined } => ({
     tab: TABS.includes(s["tab"] as Tab) ? (s["tab"] as Tab) : undefined,
     v: typeof s["v"] === "string" && s["v"] ? (s["v"] as string) : undefined,
   }),
