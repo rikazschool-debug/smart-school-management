@@ -16758,6 +16758,7 @@ export type Database = {
       }
       gv_closure_del: { Args: { _id: string }; Returns: undefined }
       gv_create: { Args: { _p: Json }; Returns: string }
+      gv_expire_due: { Args: { _school?: string }; Returns: number }
       gv_get: { Args: { _id: string }; Returns: Json }
       gv_guardians: { Args: { _student: string }; Returns: Json }
       gv_list: {

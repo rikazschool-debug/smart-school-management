@@ -10,7 +10,7 @@
 - [x] Publish (requested Nov 7)
 
 # Batch 2 (staging) — from uploaded plan
-- [ ] B2.1 Close batch 1 acceptance: verify published build; configurable visit hours/slot per school; «انقضى الموعد» status + block confirming past slots; realtime visits; visibility/permissions doc; owner two-school scope test
+- [ ] B2.1 (done: «انقضى الموعد» on page load, past confirm blocked, hours/slot already configurable) remaining: verify published build; configurable visit hours/slot per school; «انقضى الموعد» status + block confirming past slots; realtime visits; visibility/permissions doc; owner two-school scope test
 - [ ] B2.2 Phase 3 login: national ID/iqama → existing account, OTP via WATI (SMS fallback documented), server-side single-use codes + limits, role-context chooser, HR activation gate for staff services
 - [ ] B2.3 Student entry (C-Smart number + ID; PIN decision open) and guest temporary invitations
 - [ ] B2.4 Phase 4 guardian: children list, per-child school/class/timetable/classroom/homework, financial view placeholder, per-branch bank/payment links
