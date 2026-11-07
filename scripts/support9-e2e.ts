@@ -49,6 +49,8 @@ try {
   check("2 another org's owner cannot read or add holidays here", !!lO2.error && !!hol2.error);
   const holBad = await owner.c.rpc("support_holiday_save", { _org: org, _school: null, _from: "2026-12-05", _to: "2026-12-01", _name: "خطأ" });
   check("3 holiday end before start rejected", !!holBad.error);
+  const hDup1 = await owner.c.rpc("support_holiday_save", { _org: org, _school: null, _from: "2027-01-10", _to: "2027-01-10", _name: "مكررة" }), hDup2 = await owner.c.rpc("support_holiday_save", { _org: org, _school: null, _from: "2027-01-10", _to: "2027-01-10", _name: "مكررة" });
+  check("3b same holiday cannot be added twice", !hDup1.error && !!hDup2.error && /مسبق/.test(hDup2.error.message), [hDup1.error, hDup2.error]);
 
   const add = (start: string, hours: number, days: number[], s: string, e: string, school: string) =>
     admin.rpc("_support_add_work_h", { _start: at(start), _hours: hours, _days: days, _s: s, _e: e, _org: org, _school: school });
@@ -77,7 +79,7 @@ try {
   const h = (new Date(t.response_due).getTime() - new Date(t.created_at).getTime()) / 3600e3;
   check("9 branch with all-day hours: urgent response due ≈2 clock hours (unless today is a test holiday)", Math.abs(h - 2) < 0.05, [t.created_at, t.response_due]);
   const list = await owner.c.rpc("support_hours_list", { _org: org });
-  check("10 settings list shows branch/department rows and holidays", list.data?.hours?.length === 2 && list.data?.holidays?.length === 2 && list.data.hours.some((r: any) => r.department === "تقنية المعلومات"), list.data);
+  check("10 settings list shows branch/department rows and holidays", list.data?.hours?.length === 2 && list.data?.holidays?.length === 3 && list.data.hours.some((r: any) => r.department === "تقنية المعلومات"), list.data);
 
   // 11-14 pause reason
   await act(pr, T, "claim", null);
