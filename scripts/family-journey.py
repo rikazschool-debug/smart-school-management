@@ -4,6 +4,7 @@
 # Usage: python3 scripts/family-journey.py [base_url]
 import asyncio, json, sys, os
 from playwright.async_api import async_playwright
+import sys as _s, os as _o; _s.path.insert(0, _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), 'lib')); from session_login import sign_in
 B = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"; F = json.load(open("/tmp/browser/fam/fixture.json")); SH = "/tmp/browser/fam/shots/"
 os.makedirs(SH, exist_ok=True)
 ok = bad = 0
@@ -13,8 +14,7 @@ def check(n, c, e=""):
 async def login(br, who, phone=False):
     ctx = await br.new_context(viewport={"width": 390, "height": 844} if phone else {"width": 1280, "height": 1800}); o = await ctx.new_page()
     o.errs = []; o.on("pageerror", lambda e: o.errs.append(str(e)))
-    await o.goto(B + "/auth"); await o.wait_for_timeout(2500); await o.fill("#email", F["emails"][who]); await o.fill("#password", F["pw"])
-    await o.press("#password", "Enter"); await o.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await o.wait_for_timeout(3000)
+    await sign_in(o, B, F["emails"][who], F["pw"]); await o.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await o.wait_for_timeout(3000)
     return o
 async def text(o): return " ".join((await o.locator("body").inner_text()).split())
 async def go(o, path):

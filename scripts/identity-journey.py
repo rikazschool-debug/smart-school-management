@@ -2,6 +2,7 @@
 # HR staff readiness; unauthorized vice (phone) sees no IDs; vice with view grant (phone) sees IDs but cannot edit.
 import asyncio, json, sys
 from playwright.async_api import async_playwright
+import sys as _s, os as _o; _s.path.insert(0, _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), 'lib')); from session_login import sign_in
 import xlsxwriter
 B = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"; F = json.load(open("/tmp/browser/idb/fixture.json")); SH = "/tmp/browser/idb/"
 ok = bad = 0
@@ -13,11 +14,7 @@ for i, h in enumerate(["الإسم", "رقم الهوية أو الإقامة", 
 ws.write_string(1, 0, "معلم مستورد"); ws.write_string(1, 1, F["nidImp"]); ws.write_string(1, 2, "05" + F["sfx"] + "55"); wb.close()
 async def login(br, who, w=1280, h=1800):
     ctx = await br.new_context(viewport={"width": w, "height": h}); p = await ctx.new_page(); p.errs = []; p.on("pageerror", lambda e: p.errs.append(str(e)))
-    await p.goto(B + "/auth"); await p.wait_for_timeout(2500)
-    await p.get_by_text("الدخول إلى حساب الإدارة والموظفين").first.click(); await p.wait_for_timeout(800)
-    if not await p.locator("#email").is_visible(): await p.get_by_text("أو باسم المستخدم وكلمة المرور").first.click(); await p.wait_for_timeout(500)
-    await p.fill("#email", F[who]); await p.fill("#password", F["pw"])
-    await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await p.wait_for_timeout(2000); return p
+    await sign_in(p, B, F[who], F["pw"]); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await p.wait_for_timeout(2000); return p
 async def main():
     async with async_playwright() as pw:
         br = await pw.chromium.launch(headless=True)

@@ -4,6 +4,7 @@
 # Usage: python3 scripts/batch1-journey.py [base_url]
 import asyncio, json, sys
 from playwright.async_api import async_playwright
+import sys as _s, os as _o; _s.path.insert(0, _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), 'lib')); from session_login import sign_in
 B = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"; F = json.load(open("/tmp/browser/h4/fixture.json")); SH = "/tmp/browser/b1/shots/"
 ok = bad = 0
 def check(n, c, e=""):
@@ -12,8 +13,7 @@ def check(n, c, e=""):
 async def login(br, who, phone=False):
     ctx = await br.new_context(viewport={"width": 390, "height": 844} if phone else {"width": 1280, "height": 1800}); o = await ctx.new_page()
     o.errs = []; o.on("pageerror", lambda e: o.errs.append(str(e)))
-    await o.goto(B + "/auth"); await o.wait_for_timeout(2500); await o.fill("#email", F[who]); await o.fill("#password", F["pw"])
-    await o.press("#password", "Enter"); await o.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await o.wait_for_timeout(2500)
+    await sign_in(o, B, F[who], F["pw"]); await o.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await o.wait_for_timeout(2500)
     return o
 async def go(o, path):
     await o.goto(B + path); await o.wait_for_timeout(3500)

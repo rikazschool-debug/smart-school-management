@@ -2,6 +2,7 @@
 import asyncio, re
 from pathlib import Path
 from playwright.async_api import async_playwright
+import sys as _s, os as _o; _s.path.insert(0, _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), 'lib')); from session_login import sign_in
 S=Path("/tmp/browser/ph"); S.mkdir(parents=True, exist_ok=True); B="http://localhost:8080"; PW="Demo-Rikaz-2026"
 src=open("/dev-server/src/lib/demo-accounts.ts").read(); ACC=re.findall(r'email: "([^"]+)"', src)
 res=[]
@@ -9,7 +10,7 @@ def chk(n,ok,info=""): res.append(ok); print(("PASS" if ok else "FAIL"),n,"" if 
 async def one(b,email,w):
     ctx=await b.new_context(viewport={"width":w,"height":1800 if w>400 else 844},locale="ar"); pg=await ctx.new_page(); errs=[]
     pg.on("pageerror",lambda e:errs.append(str(e)))
-    await pg.goto(B+"/auth",wait_until="networkidle"); await pg.locator("#email").fill(email); await pg.locator("#password").fill(PW); await pg.locator("#password").press("Enter")
+    await sign_in(pg, B, email, PW)
     try: await pg.wait_for_url(re.compile(r"/app"),timeout=25000)
     except Exception: await pg.screenshot(path=str(S/f"{email}-{w}-login.png")); chk(f"{email} @{w} signs in",False,pg.url); await ctx.close(); return
     await pg.wait_for_timeout(3500)
