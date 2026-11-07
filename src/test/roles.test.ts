@@ -153,3 +153,13 @@ describe("evaluation under HR for the owner", () => {
     expect(N.principal).toContain("evaluation");
   });
 });
+
+describe("guardian visits menu", () => {
+  it("visits sit inside school administration for the owner and are open to staff and guardians, never students", async () => {
+    const { ownerSection, ownerSectionNav, NAV_BY_ROLE: N } = await import("@/lib/roles");
+    expect(ownerSection("/app/family-visits")).toBe("school_admin");
+    expect(ownerSectionNav("school_admin", N.org_owner)).toContain("family_visits");
+    for (const r of ["guardian", "principal", "vice_principal", "security", "teacher"] as const) expect(N[r]).toContain("family_visits");
+    expect(N.student).not.toContain("family_visits");
+  });
+});
