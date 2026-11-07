@@ -89,7 +89,7 @@ try {
 
   // 9 no alert while waiting for the requester
   const T3 = await mk(tch, A, "urgent", "ثالثة");
-  await act(pr1, T3, "waiting_requester", null);
+  await act(pr1, T3, "waiting_requester", "نحتاج صورة الخطأ");
   await admin.from("support_tickets").update({ response_due: past(1), resolve_due: past(1) }).eq("id", T3);
   const k9 = await admin.rpc("support_sla_tick", { _only: [T3] });
   check("9 no overdue alert while waiting for the requester", k9.data === 0, k9);
