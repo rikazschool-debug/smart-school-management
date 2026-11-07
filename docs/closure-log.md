@@ -572,3 +572,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - 2026-11-06: Owner «الدعم الفني والمساعدة» is its own section with its tabs as a side sub-menu (support_caps-filtered; RPCs unchanged). Global «رجوع» button in the top bar of every /app page (history back, fallback /app). Test: src/test/roles.test.ts 21/21; browser owner journey OK.
 
 - 2026-11-07: Guardian visits (batch 1 phase 2): «الزيارات» inside school administration + guardian tab; settings/closures; school call and guardian request; confirm/propose/keep/decline/cancel; concurrency-safe slots; «تقويمي»; reception check-in/out/no-show; history; 15s auto-refresh. Evidence: gv-e2e 45/45, gv-journey 8/8 (guardian 390px, principal desktop, reception 390px), roles.test 25/25.
+
+## 2026-11-07 — Batch 1 acceptance
+- Abandoned document draft files (org_doc_pending) now removed by run_file_cleanup after 24h: od-cleanup-e2e 6/6.
+- Owner notifications card renamed «إدارة الإشعارات», meetings link moved to «إدارة المدارس»; old /app/hub?tab=meetings opens /app/admin/meetings.
+- Acceptance: batch1-journey 13/13 (owner/principal/teacher, desktop+phone), gv-journey 8/8, gv-e2e 45/45, od-e2e 20/20, support-cleanup-e2e 7/7, vitest 92/92.

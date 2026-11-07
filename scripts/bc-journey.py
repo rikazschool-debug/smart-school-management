@@ -17,7 +17,7 @@ async def main():
         br = await pw.chromium.launch(headless=True)
         o = await login(br, "owner")
         await o.goto(B + "/app"); await o.wait_for_timeout(3000)
-        check("1 portal shows the hub card", await o.get_by_text("الإشعارات والاجتماعات").count() >= 1)
+        check("1 portal shows the hub card", await o.get_by_text("إدارة الإشعارات").count() >= 1)
         await o.goto(B + "/app/hub"); await o.wait_for_timeout(3000)
         await o.get_by_role("button", name="إشعار جديد").click()
         await o.get_by_label("العنوان").fill("اجتماع أولياء الأمور"); await o.get_by_label("النص").fill("ندعوكم لاجتماع يوم الأحد")

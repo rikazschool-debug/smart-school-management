@@ -71,6 +71,7 @@ const CARDS: Card[] = [
       { icon: UserPlus, label: "القبول والتسجيل", to: "/app/admissions", search: { tab: "apps" } },
       { icon: Link2, label: "الوثائق والعقود", to: "/app/org-docs", search: { tab: "docs" } },
       { icon: Link2, label: "زيارات أولياء الأمور", to: "/app/family-visits", search: {} },
+      { icon: CalendarDays, label: "الاجتماعات", to: "/app/admin/meetings" },
     ],
   },
   {
@@ -83,11 +84,11 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "school_maint", section: "operations", title: "إدارة صيانة المباني", icon: Wrench, to: "/app/maintenance", open: "فتح صيانة المدارس",
+    key: "school_maint", section: "operations", title: "إدارة صيانة المباني", icon: Wrench, to: "/app/maintenance", open: "فتح صيانة المباني",
     desc: "طلبات صيانة مباني المدارس وفروعها من الطلب حتى اعتماد الإنجاز.",
     features: [
       { icon: Plus, label: "طلب صيانة جديد", to: "/app/maintenance", search: { new: "1" } },
-      { icon: Wrench, label: "طلبات صيانة المدارس", to: "/app/maintenance" },
+      { icon: Wrench, label: "طلبات صيانة المباني", to: "/app/maintenance" },
     ],
   },
   {
@@ -118,11 +119,11 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "hub", section: "comm_hub", title: "الإشعارات والاجتماعات", icon: Megaphone, to: "/app/hub", open: "فتح البوابة",
-    desc: "إشعارات موجّهة لفروع وفئات وأشخاص محددين مع معاينة وسجل، واجتماعات حضورية وأونلاين بين الفروع مع الدعوات والردود والحضور.",
+    key: "hub", section: "comm_hub", title: "إدارة الإشعارات", icon: Megaphone, to: "/app/hub", open: "فتح إدارة الإشعارات",
+    desc: "إشعارات موجّهة لفروع وفئات وأشخاص محددين مع معاينة وسجل، وتعاميم لكل الفروع أو مدارس محددة.",
     features: [
       { icon: Megaphone, label: "الإشعارات وسجلها", to: "/app/hub" },
-      { icon: CalendarDays, label: "الاجتماعات وسجلها", to: "/app/admin/meetings" },
+      { icon: Megaphone, label: "التعاميم", to: "/app/hub", search: { tab: "circulars" } },
     ],
   },
   {
