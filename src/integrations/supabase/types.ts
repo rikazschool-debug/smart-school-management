@@ -4740,6 +4740,27 @@ export type Database = {
           },
         ]
       }
+      gv_signals: {
+        Row: {
+          at: string
+          id: number
+          school_id: string
+          visit_id: string
+        }
+        Insert: {
+          at?: string
+          id?: number
+          school_id: string
+          visit_id: string
+        }
+        Update: {
+          at?: string
+          id?: number
+          school_id?: string
+          visit_id?: string
+        }
+        Relationships: []
+      }
       gv_visits: {
         Row: {
           arrived_at: string | null
@@ -16777,6 +16798,10 @@ export type Database = {
       gv_settings_save: {
         Args: { _p: Json; _school: string }
         Returns: undefined
+      }
+      gv_signal_visible: {
+        Args: { _school: string; _visit: string }
+        Returns: boolean
       }
       gv_slots: {
         Args: { _exclude?: string; _from: string; _school: string; _to: string }
