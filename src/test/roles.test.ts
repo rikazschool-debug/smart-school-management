@@ -13,7 +13,7 @@ describe("attendance roles", () => {
     expect(attTabs("counselor")).toEqual(["today", "records", "followup"]);
   });
   it("teachers only see preparation requests; families use the exit page, never the gate", () => {
-    expect(attTabs("teacher")).toEqual(["pickups"]);
+    expect(attTabs("teacher")).toEqual(["lessons", "pickups"]);
     expect(NAV_BY_ROLE.guardian).toContain("pickup");
     expect(NAV_BY_ROLE.guardian).not.toContain("attendance");
     expect(NAV_BY_ROLE.student).not.toContain("attendance");

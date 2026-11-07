@@ -1,0 +1,1 @@
+revoke execute on function public._la_read(uuid) from public, anon; grant execute on function public._la_read(uuid) to authenticated;

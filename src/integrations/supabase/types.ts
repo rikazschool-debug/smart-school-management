@@ -9798,6 +9798,170 @@ export type Database = {
           },
         ]
       }
+      lesson_attendance: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          course_id: string
+          created_at: string
+          created_by: string
+          date: string
+          id: string
+          period_id: string
+          rev: number
+          school_id: string
+          section_id: string
+          slot_id: string
+          status: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          course_id: string
+          created_at?: string
+          created_by?: string
+          date: string
+          id?: string
+          period_id: string
+          rev?: number
+          school_id: string
+          section_id: string
+          slot_id: string
+          status?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          date?: string
+          id?: string
+          period_id?: string
+          rev?: number
+          school_id?: string
+          section_id?: string
+          slot_id?: string
+          status?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_attendance_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_attendance_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_attendance_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_attendance_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "timetable_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_attendance_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_attendance_events: {
+        Row: {
+          action: string
+          actor: string | null
+          changes: Json
+          created_at: string
+          id: string
+          reason: string | null
+          session_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          changes?: Json
+          created_at?: string
+          id?: string
+          reason?: string | null
+          session_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          changes?: Json
+          created_at?: string
+          id?: string
+          reason?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_attendance_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_attendance"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_attendance_marks: {
+        Row: {
+          note: string | null
+          session_id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          note?: string | null
+          session_id: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          note?: string | null
+          session_id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_attendance_marks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_attendance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_attendance_marks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           branch_suspended: boolean
@@ -15173,6 +15337,9 @@ export type Database = {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
         Returns: boolean
       }
+      _la_mine: { Args: { _date: string; _slot: string }; Returns: boolean }
+      _la_read: { Args: { _id: string }; Returns: boolean }
+      _la_taker: { Args: { _date: string; _slot: string }; Returns: string }
       _link_section_room: { Args: { _classroom: string }; Returns: string }
       _meet_busy: {
         Args: {
@@ -17951,6 +18118,18 @@ export type Database = {
       issue_student_card: {
         Args: { _reason?: string; _student: string }
         Returns: string
+      }
+      la_approve: { Args: { _id: string; _rev: number }; Returns: undefined }
+      la_get: { Args: { _id: string }; Returns: Json }
+      la_my_lessons: { Args: { _date?: string }; Returns: Json }
+      la_open: { Args: { _date: string; _slot: string }; Returns: string }
+      la_save: {
+        Args: { _id: string; _marks: Json; _reason?: string; _rev: number }
+        Returns: number
+      }
+      la_school_day: {
+        Args: { _date?: string; _school: string }
+        Returns: Json
       }
       late_joiners: {
         Args: { _hw: string }
