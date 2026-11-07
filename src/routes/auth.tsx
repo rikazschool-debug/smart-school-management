@@ -145,7 +145,8 @@ function AuthPage() {
             <>
               {mode === "signin" && <BackToEntries onClick={() => setEntry(null)} />}
               {mode === "signin" && !sent && <IdLogin title="الدخول برقم الهوية أو الإقامة" onDone={() => (search.invite ? go() : navigate({ to: "/app/choose-role" }))} />}
-              <form onSubmit={submit} className="space-y-5">
+              {/* sign-in is by ID only (user request); the password form stays for invitation signup and reset */}
+              {(mode !== "signin" || !!search.invite) && <form onSubmit={submit} className="space-y-5">
                 <h2 className="font-display text-xl">
                   {mode === "signin" ? "أو باسم المستخدم وكلمة المرور" : mode === "signup" ? "إنشاء حساب" : "استعادة كلمة المرور"}
                 </h2>
