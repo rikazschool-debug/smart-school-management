@@ -52,6 +52,8 @@ try {
 
   // "old" content: subject classroom + post created before rooms existed
   const oldRoom = (await ins("classrooms", { school_id: s0, course_id: cAm, title: "رياضيات الأول أ (قديم)" })).id;
+  // simulate pre-regroup data: detach and drop the room the insert trigger just made
+  must(await admin.from("classrooms").update({ section_room_id: null }).eq("id", oldRoom)); must(await admin.from("section_rooms").delete().eq("section_id", A));
   const oldPost = (await ins("classroom_posts", { school_id: s0, classroom_id: oldRoom, author_user_id: users.t1, title: "مشاركة قديمة", body: "محتوى قديم", status: "published" })).id;
   check("old classroom starts without a section room", !(must(await admin.from("classrooms").select("section_room_id").eq("id", oldRoom).single()) as any).section_room_id);
   const sciRoom = must(await admin.rpc("ensure_classroom", { _course: cAs })) as string;
