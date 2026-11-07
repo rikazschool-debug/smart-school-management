@@ -99,3 +99,4 @@
 - scripts/identity-e2e.ts: one C‑Smart rule (_csmart_key) across entry/import/sign-in, people_identity perm (base owner/principal, grant/deny), teacher↔HR ID/phone conflicts keep the link, hr_id_readiness (20 checks). scripts/identity-browser-fixture.ts setup|teardown (idb-) + identity-journey.py (13 checks); always run teardown after.
 - scripts/lesson-att-e2e.ts: lesson attendance draft→approve→reasoned correction, taker/substitute, staff/guardian read scope (26 checks).
 - scripts/live-signals-e2e.ts: live refresh signal scope (own notification, school staff/owner, guardian own pickup only, other org none, Realtime receipt; 11 checks). scripts/live-bell-journey.py needs admin2-browser-fixture.
+- scripts/support9-e2e.ts: support holidays, branch/department hours, pause reason (19 checks). Failed fixture setups leave sbx-/prefixed data the fixture's teardown cannot see — clean by email prefix through TestRun.

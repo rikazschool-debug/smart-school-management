@@ -89,13 +89,13 @@ try {
 
   // 9 no alert while waiting for the requester
   const T3 = await mk(tch, A, "urgent", "ثالثة");
-  await act(pr1, T3, "waiting_requester", null);
+  await act(pr1, T3, "waiting_requester", null, "نحتاج صورة الخطأ");
   await admin.from("support_tickets").update({ response_due: past(1), resolve_due: past(1) }).eq("id", T3);
   const k9 = await admin.rpc("support_sla_tick", { _only: [T3] });
   check("9 no overdue alert while waiting for the requester", k9.data === 0, k9);
 
   // 10 assignee filter
-  await act(pr1, T2, "assign", tchB.id);
+  await act(owner, T2, "assign", tchB.id); // cross-branch assignment needs the owner (support8 rule)
   const fa = await list(owner, "manage", { _assignee: tchB.id }), opts = await pr1.c.rpc("support_assignees", { _school: A });
   check("10 filter by person in charge", ids(fa).length === 1 && ids(fa)[0] === T2 && ((opts.data ?? []) as any[]).some((x) => x.id === tchB.id), [ids(fa), opts.data]);
 

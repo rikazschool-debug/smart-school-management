@@ -57,7 +57,7 @@ try {
   // 1 pause/resume
   const T1 = await mk("انتظار");
   await pr1.c.rpc("support_reply", { _ticket: T1, _body: "نحتاج صورة الشاشة", _client_key: null });
-  await act(pr1, T1, "waiting_requester", null);
+  await act(pr1, T1, "waiting_requester", null, "نحتاج صورة الخطأ");
   const due0 = (await get(pr1, T1)).data.ticket.resolve_due;
   await admin.from("support_tickets").update({ paused_at: past(1.5) }).eq("id", T1);
   const odW = await list(pr1, "manage", { _status: "overdue" });

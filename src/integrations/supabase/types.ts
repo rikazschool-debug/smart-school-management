@@ -13128,6 +13128,112 @@ export type Database = {
           },
         ]
       }
+      support_holidays: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_from: string
+          date_to: string
+          id: string
+          name: string
+          org_id: string
+          school_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_from: string
+          date_to: string
+          id?: string
+          name: string
+          org_id: string
+          school_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_from?: string
+          date_to?: string
+          id?: string
+          name?: string
+          org_id?: string
+          school_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_holidays_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_holidays_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_hours: {
+        Row: {
+          department_id: string | null
+          id: string
+          org_id: string
+          school_id: string
+          updated_at: string
+          updated_by: string | null
+          work_days: number[]
+          work_end: string
+          work_start: string
+        }
+        Insert: {
+          department_id?: string | null
+          id?: string
+          org_id: string
+          school_id: string
+          updated_at?: string
+          updated_by?: string | null
+          work_days: number[]
+          work_end: string
+          work_start: string
+        }
+        Update: {
+          department_id?: string | null
+          id?: string
+          org_id?: string
+          school_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          work_days?: number[]
+          work_end?: string
+          work_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_hours_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_hours_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_hours_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_info_requests: {
         Row: {
           answer: string | null
@@ -13355,6 +13461,7 @@ export type Database = {
           id: string
           linked_ticket: string | null
           org_id: string
+          pause_reason: string | null
           paused_at: string | null
           priority: string
           rating: number | null
@@ -13387,6 +13494,7 @@ export type Database = {
           id?: string
           linked_ticket?: string | null
           org_id: string
+          pause_reason?: string | null
           paused_at?: string | null
           priority?: string
           rating?: number | null
@@ -13419,6 +13527,7 @@ export type Database = {
           id?: string
           linked_ticket?: string | null
           org_id?: string
+          pause_reason?: string | null
           paused_at?: string | null
           priority?: string
           rating?: number | null
@@ -15800,12 +15909,34 @@ export type Database = {
         Args: { _student: string; _teacher: string }
         Returns: boolean
       }
+      _support_action_core: {
+        Args: {
+          _action: string
+          _reason?: string
+          _rev: number
+          _ticket: string
+          _value?: string
+        }
+        Returns: undefined
+      }
       _support_add_work: {
         Args: {
           _days: number[]
           _e: string
           _hours: number
           _s: string
+          _start: string
+        }
+        Returns: string
+      }
+      _support_add_work_h: {
+        Args: {
+          _days: number[]
+          _e: string
+          _hours: number
+          _org: string
+          _s: string
+          _school: string
           _start: string
         }
         Returns: string
@@ -15826,6 +15957,14 @@ export type Database = {
           _to: string
         }
         Returns: undefined
+      }
+      _support_hours_for: {
+        Args: { _dept: string; _org: string; _school: string; _scope: string }
+        Returns: {
+          days: number[]
+          e: string
+          s: string
+        }[]
       }
       _support_is_follower: {
         Args: { _t: Database["public"]["Tables"]["support_tickets"]["Row"] }
@@ -19193,6 +19332,30 @@ export type Database = {
       support_handler: {
         Args: { _t: Database["public"]["Tables"]["support_tickets"]["Row"] }
         Returns: boolean
+      }
+      support_holiday_delete: { Args: { _id: string }; Returns: undefined }
+      support_holiday_save: {
+        Args: {
+          _from: string
+          _name: string
+          _org: string
+          _school: string
+          _to: string
+        }
+        Returns: string
+      }
+      support_hours_delete: { Args: { _id: string }; Returns: undefined }
+      support_hours_list: { Args: { _org: string }; Returns: Json }
+      support_hours_save: {
+        Args: {
+          _days: number[]
+          _dept: string
+          _end: string
+          _org: string
+          _school: string
+          _start: string
+        }
+        Returns: string
       }
       support_info_answer: {
         Args: { _answer: string; _req: string }
