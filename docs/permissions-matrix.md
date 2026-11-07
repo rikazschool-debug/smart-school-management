@@ -356,3 +356,6 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 | Hub meetings | hub_meetings.* in the tree; meetings themselves still enforced by meetings.organize + organizer/invitee rules |
 
 | hub_meetings.create / start / attend | org owner; principal (organize via meetings.organize); others only if granted (branch or org scope) | server: _adm_can_organize, _adm_live_role, adm_meeting_attendance |
+
+## org_docs (الوثائق والعقود)
+- مالك المجموعة: كل الإجراءات. غيره: يُمنح عرض/إضافة/تعديل/تنزيل لكل مدرسة أو للمجموعة من شجرة الصلاحيات؛ الوثائق على مستوى المجموعة تتطلب الحق على كل الفروع.

@@ -85,3 +85,4 @@
 - scripts/support8-e2e.ts: cross-branch assignment (refused without referral right, owner/granted allowed, logged, ticket stays; 10 checks, hub4 fixture).
 - scripts/support-cleanup-e2e.ts: support form attachment cleanup (abandoned removed, uploading/saved kept; hub4 fixture).
 - Published-site check (hub4 fixture): pub-verify-prep.ts (real teacher record + maintenance follow-up staff) and pub-verify-ticket.ts (ticket with attachment) feed /tmp/browser/pub notices/ticket browser runs; always run hub4 teardown after.
+- scripts/od-e2e.ts: documents & contracts (scopes, separate view/download/edit, group-wide, multi-school contractors, private files; 20 checks, hub4 fixture).
