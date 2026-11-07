@@ -190,7 +190,7 @@ function IdLogin({ onDone }: { onDone: () => void }) {
     try {
       const r = await reqFn({ data: { nid } });
       if ("error" in r && r.error) setMsg(r.error);
-      else if ("challenge" in r) { setCh({ id: r.challenge, masked: r.masked }); setCode(""); }
+      else if ("challenge" in r && r.challenge) { setCh({ id: r.challenge, masked: r.masked ?? "" }); setCode(""); }
     } catch { setMsg(idLoginMessage("server")); } finally { setBusy(false); }
   }
   async function verify() {
