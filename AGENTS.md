@@ -50,3 +50,4 @@
 
 - Notifications hub (bc_*): RPC-only; server audience _bc_audience + preview fingerprint checked at send; perms notices/hub_meetings (area comm_hub). Tests: bc-e2e, bc-journey.
 - Guardian visits (gv_*): RPC-only over perm section guardian_visits; partial unique index = one active visit per slot; changes bump rev + append gv_events. Tests: gv-e2e.
+- ID sign-in: id-login.functions.ts → service-only _idl_* SQL; returns a token for an existing account only, generic errors. Test: idl-e2e.

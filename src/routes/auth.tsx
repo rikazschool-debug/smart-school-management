@@ -3,6 +3,9 @@ import { toLoginEmail } from "@/lib/guardian-login";
 import { normPhone, studentLoginEmail } from "@/lib/people-import";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { requestIdCode, studentSignIn, verifyIdCode } from "@/lib/id-login.functions";
+import { idLoginMessage } from "@/lib/id-login";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicError } from "@/lib/session";
@@ -143,6 +146,8 @@ function AuthPage() {
               <button type="button" className="text-muted-foreground" onClick={() => setMode("forgot")}>نسيت كلمة المرور؟</button>
             )}
           </div>
+          {mode === "signin" && !sent && <IdLogin onDone={() => (search.invite ? go() : navigate({ to: "/app/choose-role" }))} />}
+          {mode === "signin" && !sent && <StudentLogin onDone={() => navigate({ to: "/app" })} />}
           {mode === "signin" && !sent && <PhoneLogin onDone={go} />}
           {mode === "signin" && (
             <div className="space-y-2 rounded-xl border bg-card p-3">
@@ -159,6 +164,88 @@ function AuthPage() {
           {search.invite && <p className="text-xs text-muted-foreground">أنشئ حسابًا بنفس البريد الذي دُعيت به وستظهر لك عضويتك تلقائيًا.</p>}
         </form>
       </div>
+    </div>
+  );
+}
+
+async function openWithToken(token: string) {
+  await supabase.auth.signOut();
+  localStorage.removeItem("rikaz.activeContext");
+  const { error } = await supabase.auth.verifyOtp({ token_hash: token, type: "magiclink" });
+  if (error) throw error;
+}
+
+/** Staff, teachers and guardians: ID/iqama → 6-digit code on WhatsApp to the mobile in the school record (all checks server-side). */
+function IdLogin({ onDone }: { onDone: () => void }) {
+  const reqFn = useServerFn(requestIdCode);
+  const verFn = useServerFn(verifyIdCode);
+  const [open, setOpen] = useState(false);
+  const [nid, setNid] = useState("");
+  const [code, setCode] = useState("");
+  const [ch, setCh] = useState<{ id: string; masked: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  async function send() {
+    setBusy(true); setMsg(null);
+    try {
+      const r = await reqFn({ data: { nid } });
+      if ("error" in r && r.error) setMsg(r.error);
+      else if ("challenge" in r && r.challenge) { setCh({ id: r.challenge, masked: r.masked ?? "" }); setCode(""); }
+    } catch { setMsg(idLoginMessage("server")); } finally { setBusy(false); }
+  }
+  async function verify() {
+    if (!ch) return;
+    setBusy(true); setMsg(null);
+    try {
+      const r = await verFn({ data: { challenge: ch.id, code } });
+      if (r.error || !r.token) { setMsg(r.error ?? idLoginMessage("server")); return; }
+      await openWithToken(r.token);
+      onDone();
+    } catch { setMsg(idLoginMessage("server")); } finally { setBusy(false); }
+  }
+  if (!open) return <Button type="button" variant="outline" className="w-full" onClick={() => setOpen(true)}>الدخول برقم الهوية أو الإقامة</Button>;
+  return (
+    <div className="space-y-3 rounded-xl border bg-card p-3">
+      <p className="text-sm font-semibold">الدخول برقم الهوية أو الإقامة</p>
+      <div className="space-y-1.5"><Label htmlFor="idl-nid">رقم الهوية أو الإقامة</Label><Input id="idl-nid" dir="ltr" inputMode="numeric" maxLength={10} value={nid} disabled={!!ch} onChange={(e) => setNid(e.target.value)} /></div>
+      {ch && <div className="space-y-1.5"><Label htmlFor="idl-code">الرمز المرسل على واتساب إلى {ch.masked}</Label><Input id="idl-code" dir="ltr" inputMode="numeric" maxLength={6} autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} /></div>}
+      {msg && <p role="alert" className="text-sm text-destructive">{msg}</p>}
+      {!ch ? <Button type="button" className="w-full" disabled={busy} onClick={send}>إرسال الرمز</Button> : (
+        <div className="flex gap-2">
+          <Button type="button" className="flex-1" disabled={busy || code.length !== 6} onClick={verify}>تأكيد الدخول</Button>
+          <Button type="button" variant="ghost" disabled={busy} onClick={send}>إعادة الإرسال</Button>
+          <Button type="button" variant="ghost" onClick={() => { setCh(null); setMsg(null); }}>تغيير</Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Students: ID/iqama + C-Smart student number; a match opens the student's own account (no code, no PIN). */
+function StudentLogin({ onDone }: { onDone: () => void }) {
+  const fn = useServerFn(studentSignIn);
+  const [open, setOpen] = useState(false);
+  const [nid, setNid] = useState("");
+  const [no, setNo] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  async function go() {
+    setBusy(true); setMsg(null);
+    try {
+      const r = await fn({ data: { nid, csmart: no } });
+      if (r.error || !r.token) { setMsg(r.error ?? idLoginMessage("server")); return; }
+      await openWithToken(r.token);
+      onDone();
+    } catch { setMsg(idLoginMessage("server")); } finally { setBusy(false); }
+  }
+  if (!open) return <Button type="button" variant="outline" className="w-full" onClick={() => setOpen(true)}>الدخول إلى حساب الطالب</Button>;
+  return (
+    <div className="space-y-3 rounded-xl border bg-card p-3">
+      <p className="text-sm font-semibold">الدخول إلى حساب الطالب</p>
+      <div className="space-y-1.5"><Label htmlFor="st-nid">رقم الهوية أو الإقامة</Label><Input id="st-nid" dir="ltr" inputMode="numeric" maxLength={10} value={nid} onChange={(e) => setNid(e.target.value)} /></div>
+      <div className="space-y-1.5"><Label htmlFor="st-no">رقم الطالب (C‑Smart)</Label><Input id="st-no" dir="ltr" value={no} onChange={(e) => setNo(e.target.value)} /></div>
+      {msg && <p role="alert" className="text-sm text-destructive">{msg}</p>}
+      <Button type="button" className="w-full" disabled={busy || !nid || !no} onClick={go}>دخول</Button>
     </div>
   );
 }

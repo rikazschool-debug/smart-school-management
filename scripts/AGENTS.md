@@ -89,3 +89,4 @@
 - scripts/gv-fixture.ts setup|teardown: isolated gvx- data (2 schools, principals, reception, host, guardian with two children). scripts/gv-e2e.ts: guardian visits (45 checks). scripts/gv-journey.py: guardian phone → principal desktop → reception phone (8 checks); always run teardown after.
 - scripts/od-cleanup-e2e.ts: abandoned «الوثائق والعقود» draft files (org_doc_pending >24h) removed by run_file_cleanup, fresh/saved kept (6 checks). scripts/batch1-journey.py: batch-1 menus/renames/hidden pages for owner, principal, teacher on desktop+phone (13 checks, needs hub4-fixture).
 - scripts/gv-live-e2e.ts: live visit updates over gv_signals + owner two-school scope + hours settings (8 checks; run after gv-fixture + gv-e2e, before teardown).
+- scripts/idl-e2e.ts: ID/iqama sign-in codes, limits, conflicts, student C-Smart match/lockout, one-time token, lockdown (22 checks).
