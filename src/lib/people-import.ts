@@ -32,7 +32,7 @@ export const FIELDS: Record<IKind, Field[]> = {
   ],
   teachers: [
     { key: "full_name", label: "الإسم", required: true, hint: "مطلوب", syn: ["الإسم", "الاسم", "الاسم الكامل", "اسم المعلم", "اسم المعلمة"] },
-    { key: "national_id", label: "رقم الهوية", hint: "اختياري — 10 أرقام، لمنع التكرار", syn: ["رقم الهوية", "الهوية", "السجل المدني"] },
+    { key: "national_id", label: "رقم الهوية أو الإقامة", hint: "10 أرقام يُكتب نصًا — يلزم للدخول بالهوية ثم رمز التحقق", syn: ["رقم الهوية أو الإقامة", "رقم الهوية", "الهوية", "السجل المدني", "رقم الإقامة"] },
     { key: "phone", label: "الجوال", required: true, hint: "مطلوب — 05XXXXXXXX، يدخل به المعلم برمز واتساب", syn: ["الجوال", "رقم الجوال", "جوال"] },
     { key: "email", label: "البريد الإلكتروني", hint: "اختياري", syn: ["البريد الإلكتروني", "البريد", "البريد الالكتروني"] },
     { key: "specialization", label: "التخصص", hint: "اختياري", syn: ["التخصص"] },
@@ -52,9 +52,9 @@ export function latinDigits(s: unknown): string {
 }
 /** C‑Smart internal number: text, digits/letters only, leading zeros kept; null when empty; "" when invalid. */
 export function normCsmart(s: unknown): string | null {
-  const t = latinDigits(s).replace(/[\s\u200f\u200e-]/g, "").trim();
+  const t = latinDigits(s).replace(/[\s\u200f\u200e]/g, "").trim();
   if (!t) return null;
-  return /^[A-Za-z0-9]{1,20}$/.test(t) ? t : "";
+  return /^[A-Za-z0-9-]{1,30}$/.test(t) ? t : "";
 }
 /** A student can sign in only with an ID, a C‑Smart number and an active status. Missing items in Arabic. */
 export function studentReadiness(r: { national_id?: string | null; csmart_no?: string | null; status?: string | null }): string[] {
@@ -313,7 +313,7 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
     if (kind === "students") {
       if (!nid) e.push("رقم الهوية مطلوب (يدخل به الطالب)");
       const cs = normCsmart(v["csmart_no"]);
-      if (cs === "") e.push("رقم C‑Smart: أرقام أو حروف لاتينية فقط (حتى 20)");
+      if (cs === "") e.push("رقم C‑Smart: أرقام أو حروف لاتينية أو شرطة فقط");
       data["csmart_no"] = cs || null;
       if (cs) { if (seenCs.has(cs)) e.push("رقم C‑Smart مكرر في الملف"); seenCs.add(cs); }
       const byNid = nid ? lk.existingIds.get(nid) : undefined, byCs = cs ? lk.existingCsmart?.get(cs) : undefined;

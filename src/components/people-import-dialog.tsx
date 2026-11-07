@@ -40,13 +40,16 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { s
       secList: ((secs.data ?? []) as Row[]).map((x) => ({ id: x["id"], label: `${x["grades"]?.["name"] ?? ""} / ${x["name"]}` })).sort((a, b) => a.label.localeCompare(b.label, "ar")),
     };
   }
-  const [ex, deps] = await Promise.all([
-    db.from("teachers").select("id, national_id, phone").eq("school_id", schoolId).limit(20000),
+  const [ex, ids, deps] = await Promise.all([
+    db.from("teachers").select("id, phone").eq("school_id", schoolId).limit(20000),
+    db.rpc("teacher_id_status", { _school: schoolId }),
     db.from("departments").select("id, name").eq("school_id", schoolId),
   ]);
   if (ex.error) throw ex.error;
   const { normPhone } = await import("@/lib/people-import");
-  const rows = (ex.data ?? []) as Row[];
+  if (ids.error) throw ids.error;
+  const nidOf = new Map(((ids.data ?? []) as Row[]).map((x) => [x["teacher_id"], x["national_id"]]));
+  const rows: Record<string, any>[] = ((ex.data ?? []) as Record<string, any>[]).map((x) => Object.assign({}, x, { national_id: nidOf.get(x["id"]) ?? null }));
   return {
     existingIds: new Map(rows.filter((x) => x["national_id"]).map((x) => [String(x["national_id"]), x["id"]])),
     existingPhones: new Map(rows.map((x) => [normPhone(x["phone"]) ?? "", x["id"]] as [string, string]).filter(([p]) => p)),
@@ -133,6 +136,11 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
         // fill a missing C‑Smart number only; a stored different number was already rejected as a conflict
         const up = await db.from("students").update({ csmart_no: d["csmart_no"] }).eq("id", id).is("csmart_no", null);
         res.academic = up.error ? { ok: false, msg: arabicError(up.error) } : { ok: true, msg: "موجود مسبقًا" };
+        if (up.error) continue;
+      } else if (kind === "teachers" && d["national_id"] && !lookups?.rowNid?.get(id)) {
+        // existing teacher without an ID: record it through the checked server path (refuses an ID owned by someone else)
+        const up = await db.rpc("teacher_nid_save", { _teacher: id, _nid: d["national_id"] });
+        res.academic = up.error ? { ok: false, msg: arabicError(up.error) } : { ok: true, msg: "موجود مسبقًا — أُضيفت الهوية" };
         if (up.error) continue;
       } else res.academic = { ok: true, msg: "موجود مسبقًا" };
       (r as CheckedRow & { savedId?: string }).savedId = id!;
@@ -228,8 +236,8 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
           <DialogHeader><DialogTitle>{open === "single" ? `إضافة ${kind === "students" ? "طالب" : "معلم"}` : `استيراد ${TITLE[kind]} من Excel`}</DialogTitle></DialogHeader>
           <p className="text-xs text-muted-foreground">
             {kind === "students"
-              ? "يُنشأ للطالب حساب يدخل به برقم هويته وكلمة مرور أولية تُصدرها من صفحته، ويُلزم بتغييرها قبل الوصول. يُنشأ لولي الأمر حساب واحد لكل أبنائه يدخل به بجواله ورمز واتساب، ولا يرى شيئًا قبل تأكيد جواله. الحسابات الموجودة تُربط دون تغيير كلمة مرورها أو صلاحياتها."
-              : "يُنشأ للمعلم حساب بدور معلم فقط يدخل به بجواله ورمز واتساب، ولا يصل لشيء قبل أول دخول. الحسابات الموجودة تُربط دون تغيير كلمة مرورها أو صلاحياتها."}
+              ? "يدخل الطالب برقم هويته أو إقامته ورقمه الداخلي في C‑Smart. يُنشأ لولي الأمر حساب واحد لكل أبنائه يدخل به بالهوية أو الإقامة ثم رمز تحقق على جواله المعتمد. الحسابات الموجودة تُربط دون تغيير كلمة مرورها أو صلاحياتها."
+              : "يُنشأ للمعلم حساب بدور معلم فقط يدخل به بالهوية أو الإقامة ثم رمز تحقق على جواله المعتمد، ولا يصل لشيء قبل أول دخول. الحسابات الموجودة تُربط دون تغيير كلمة مرورها أو صلاحياتها."}
           </p>
           {open === "single" && !results && (
             <form onSubmit={addSingle} className="grid gap-3 sm:grid-cols-2">

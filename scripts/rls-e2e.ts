@@ -29,7 +29,7 @@ check("create org", !oe, oe);
 const { data: sch } = await owner.c.from("schools").select("id").eq("org_id", orgId).single();
 const S = sch!.id;
 tr.addSchool(S);
-const ins = async (t: string, v: any) => { const r = await owner.c.from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data; };
+const ins = async (t: string, v: any) => { const r = await owner.c.from(t).insert({ ...v, school_id: S }).select(t === "teachers" ? "id, school_id, user_id, full_name, email, phone, status" : "*").single(); if (r.error) console.log(t, r.error); return r.data; };
 // Dates derive from the run's Riyadh "today" so tests never age out (past/present/future boundaries stay covered).
 const riyToday = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Riyadh" }));
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

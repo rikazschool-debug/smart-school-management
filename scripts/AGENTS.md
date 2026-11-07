@@ -94,3 +94,4 @@
 - scripts/classroom-room-e2e.ts: section rooms (regroup report/re-run, teacher subject scope, student/guardian access, transfer, teacher change; 29 checks).
 - scripts/guardian-import-e2e.ts: guardians template import (import_guardian_row dry-run/write, create/link/exists/conflict, unverified links, C‑Smart zeros, phone log; 17 checks).
 - scripts/family-access-e2e.ts: guardian access = verified link + active enrollment (import unverified → none, verify → classroom/posts/files, transfer moves, revoke removes; 16 checks).
+- scripts/teacher-id-e2e.ts: teacher ID for ID sign-in (hidden column, principal-only status/save, conflicts, sign-in resolve; 9 checks). Inserting teachers with a user client must list columns in .select() (national_id is not selectable).

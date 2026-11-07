@@ -14,7 +14,7 @@ import { arabicError } from "@/lib/session";
 
 export const ACCOUNT_STATE: Record<string, string> = {
   linked: "الحساب جاهز ومربوط",
-  pending_phone: "بانتظار أول دخول بالجوال ورمز واتساب",
+  pending_phone: "بانتظار أول دخول بالهوية ورمز التحقق",
   pending_password: "بانتظار تغيير كلمة المرور الأولية",
   none: "بلا حساب",
   review: "يحتاج مراجعة: الجوال/الهوية لحساب شخص آخر — لم يُربط",
@@ -59,7 +59,7 @@ export function GuardianQuickAdd({ studentId, studentName, onDone }: { studentId
       if (g.has_account) setResult(`ولي الأمر لديه حساب مسبقًا، وأُضيف ${studentName ?? "الطالب"} إلى أبنائه في الحساب نفسه.`);
       else {
         const [r] = await run({ data: { kind: "guardian", ids: [g.guardian_id] } });
-        setResult(r?.state === "error" ? `حُفظ ولي الأمر، وتعذّر إنشاء الحساب: ${r.msg}` : `${ACCOUNT_STATE[r?.state ?? "none"]}. يدخل ولي الأمر بجواله ويصله الرمز على واتساب، ولا يرى بيانات أبنائه قبل ذلك.`);
+        setResult(r?.state === "error" ? `حُفظ ولي الأمر، وتعذّر إنشاء الحساب: ${r.msg}` : `${ACCOUNT_STATE[r?.state ?? "none"]}. يدخل ولي الأمر بهويته ويصله رمز التحقق على جواله، ولا يرى بيانات أبنائه قبل ذلك.`);
       }
       qc.invalidateQueries();
     } catch (err) { toast.error(arabicError(err)); } finally { setBusy(false); }

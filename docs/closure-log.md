@@ -597,3 +597,11 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Live run report: before 0 rooms / 0 linked → after 24 rooms / 33 linked; posts 1→1, comments 1→1, post files 1→1, homework 0→0 (content_unchanged = true).
 - Tested: classroom-room-e2e 29/29 (old + new content, teacher posts only in own subjects, student/guardian access, transfer A→B, teacher change revokes access), family-e2e 24/24, family-journey 24/24 (desktop + 390px), rls-e2e 94/94. Test data removed.
 - Unchanged: teacher↔student messaging from the teaching context (communication rules), manual groups for staff.
+
+## 2026-11-07 — B3 data, import templates, login entries (preview)
+- Students: C‑Smart number (text, zeros kept, unique per school), login readiness, import conflicts. Vitest csmart.test.ts.
+- Guardians: ID/approved mobile normalized, phone change log, masked for non-managers, approve/reject links. guardian-import-e2e 17/17.
+- Guardians + relations template via import_guardian_row (dry-run preview, unverified links). family-access-e2e 16/16 (verify/transfer/revoke incl. files).
+- Login page: three entries; demo buttons only on review hosts (review-host.test.ts).
+- Teachers: national_id column no longer selectable by authenticated; principals use teacher_id_status/teacher_nid_save (conflicts, HR reuse). teacher-id-e2e 9/9; regression idl-e2e 22/22, accounts-e2e 23/23, rls-e2e 94/94. Browser: principal teachers/students/guardians desktop+390px, no console errors.
+- Pending: real WhatsApp send on a consenting number; HR-conflict check not exercised by test (hr_employees fixture); other older scripts inserting teachers via user client with select() must list columns.
