@@ -17,7 +17,7 @@ async def login(br, who, phone=False):
     return o
 async def go(o, path):
     await o.goto(B + path); await o.wait_for_timeout(3500)
-    return await o.locator("body").inner_text()
+    return " ".join((await o.locator("body").inner_text()).split())
 async def links(o):
     return [t.strip() for t in await o.locator("a").all_inner_texts()]
 HIDDEN = ["الحصص الافتراضية", "أرشيف الدرجات الفصلية"]
@@ -26,12 +26,13 @@ async def main():
         br = await pw.chromium.launch(headless=True)
         o = await login(br, "owner")
         t = await go(o, "/app"); await o.screenshot(path=SH + "1_owner_home.png")
-        check("1 owner home shows renamed sections", all(x in t for x in ["النقل المدرسي وصيانة المركبات", "إدارة صيانة المباني", "إدارة الإشعارات"]) and "النقل المدرسي وصيانة الباصات" not in t, t[:600])
+        check("1 owner home shows renamed sections", all(x in t for x in ["النقل المدرسي وصيانة المركبات", "إدارة صيانة المباني", "إدارة الإشعارات"]) and "النقل المدرسي وصيانة الباصات" not in t and "الإشعارات والاجتماعات" not in t, t[:600])
         check("2 owner home: no separate admissions / evaluation cards, links sit inside schools & HR", all(x in t for x in ["القبول والتسجيل", "الوثائق والعقود", "التدريب والتطوير"]), t[:600])
         await go(o, "/app/org-docs"); L = await links(o); await o.screenshot(path=SH + "2_owner_school_admin.png")
         check("3 school administration menu holds admissions, documents, meetings, visits", all(x in L for x in ["القبول والتسجيل", "الوثائق والعقود", "الاجتماعات", "الزيارات"]), L)
         await go(o, "/app/hub"); L = await links(o)
         check("4 notifications menu no longer holds meetings", "الاجتماعات" not in L, L)
+        await go(o, "/app/hub?tab=meetings"); check("4b old meetings link opens the school meetings page", "/app/admin/meetings" in o.url, o.url)
         t = await go(o, "/app/hr/training"); L = await links(o); await o.screenshot(path=SH + "3_owner_hr_training.png")
         check("5 HR menu holds evaluation + training, training page opens", "التدريب والتطوير" in L and "نظام التقييم الشامل" in L and "التدريب" in t, L)
         hid = []
