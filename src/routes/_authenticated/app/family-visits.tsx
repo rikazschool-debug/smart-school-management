@@ -96,7 +96,7 @@ function ListTab({ view, school, open }: { view: "mine" | "school"; school: stri
   const { active } = useSession();
   const list = useQuery({
     queryKey: ["gv-list", view, school, dq, status], refetchInterval: POLL,
-    queryFn: async () => { await rpc("gv_expire_due", { _school: view === "mine" ? null : school }).catch(() => null); return rpc<Visit[]>("gv_list", { _school: school, _view: view, _q: dq || null, _status: status || null, _from: null, _to: null }),
+    queryFn: async () => { await rpc("gv_expire_due", { _school: view === "mine" ? null : school }).catch(() => null); return rpc<Visit[]>("gv_list", { _school: school, _view: view, _q: dq || null, _status: status || null, _from: null, _to: null }); },
   });
   const side = view === "school" ? "school" : active?.role === "guardian" ? "guardian" : null;
   return (
