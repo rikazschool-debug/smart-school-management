@@ -73,14 +73,6 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "evaluation", title: "نظام التقييم الشامل", icon: Star, to: "/app/evaluation", open: "فتح نظام التقييم",
-    desc: "تقييمات أولياء الأمور للمعلمين، والزيارات الصفية، والتقييم الشهري للكادر — مصادر منفصلة لكل فرع.",
-    features: [
-      { icon: Star, label: "الملخص والمؤشرات", to: "/app/evaluation", search: { tab: "summary" } },
-      { icon: PencilLine, label: "النماذج والإعدادات", to: "/app/evaluation", search: { tab: "forms" } },
-    ],
-  },
-  {
     key: "transport", section: "operations", title: "النقل المدرسي وصيانة المركبات", icon: Bus, to: "/app/bus-maintenance", open: "فتح النقل والباصات",
     desc: "سجلات الباصات وحالة تشغيلها وطلبات صيانتها حتى الفحص والعودة للخدمة. المسارات والتوزيع والتتبع مؤجلة.",
     features: [
@@ -102,6 +94,8 @@ const CARDS: Card[] = [
     desc: "ملفات الموظفين وتعييناتهم في المدارس، مربوطة بحساباتهم وسجلات المعلمين دون تكرار. مع العقود والمستندات والخطابات والإجازات؛ الرواتب تُضاف لاحقًا.",
     features: [
       { icon: IdCard, label: "ملفات الموظفين", to: "/app/hr" },
+      { icon: Star, label: "نظام التقييم الشامل", to: "/app/evaluation", search: { tab: "summary" } },
+      { icon: IdCard, label: "التدريب والتطوير", to: "/app/hr/training" },
       { icon: Plus, label: "إضافة موظف", to: "/app/hr", search: { add: "1" } },
       { icon: IdCard, label: "الخطابات", to: "/app/hr/letters" },
       { icon: IdCard, label: "الإجازات", to: "/app/hr/leave" },

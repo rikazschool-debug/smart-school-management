@@ -72,6 +72,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   bus_maintenance: { to: "/app/bus-maintenance", label: "إدارة تشغيل وصيانة الباصات", icon: Bus },
   admissions: { to: "/app/admissions", label: "القبول والتسجيل", icon: UserPlus },
   org_docs: { to: "/app/org-docs", label: "الوثائق والعقود", icon: FileText },
+  hr_training: { to: "/app/hr/training", label: "التدريب والتطوير", icon: GraduationCap },
   visits: { to: "/app/visits", label: "الزيارات الصفية", icon: ClipboardList },
   evaluation: { to: "/app/evaluation", label: "نظام التقييم الشامل", icon: Award },
   hub_notices: { to: "/app/hub", tab: "notices", label: "الإشعارات", icon: Megaphone },
@@ -90,7 +91,7 @@ const EV_SUB = [["summary", "الملخص والمؤشرات"], ["guardians", "�
 const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary";
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
-  { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "profile", "my_hr"] },
+  { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
   { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
@@ -166,7 +167,7 @@ function Shell() {
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
-    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : [])] as NavKey[];
+    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : [])] as NavKey[];
   const opsOnly = ops.opsOnly;
   if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
