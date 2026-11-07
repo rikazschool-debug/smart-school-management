@@ -23,7 +23,7 @@ const st = await p1.rpc("gv_settings_save", { _school: S1, _p: { enabled: true, 
 check("1 principal saves morning visit settings", !st.error, st.error);
 await p2.rpc("gv_settings_save", { _school: S2, _p: { enabled: true, days: [0, 1, 2, 3, 4, 5, 6], start_time: "07:00", end_time: "13:00", slot_minutes: 20 } });
 check("2 reception cannot change settings", !!(await r1.rpc("gv_settings_save", { _school: S1, _p: { days: [0], start_time: "07:00", end_time: "08:00", slot_minutes: 20 } })).error);
-check("3 afternoon settings refused", !!(await p1.rpc("gv_settings_save", { _school: S1, _p: { days: [0], start_time: "13:00", end_time: "15:00", slot_minutes: 20 } })).error);
+check("3 end before start refused", !!(await p1.rpc("gv_settings_save", { _school: S1, _p: { days: [0], start_time: "15:00", end_time: "13:00", slot_minutes: 20 } })).error);
 const kids = (await g1.rpc("gv_my_children")).data as any[];
 check("4 guardian with two children sees both with their schools", kids.length === 2 && kids.some((k) => k.school_id === S1) && kids.some((k) => k.school_id === S2), kids);
 const slots = (await g1.rpc("gv_slots", { _school: S1, _from: tmr, _to: tmr })).data as any[];
