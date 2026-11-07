@@ -70,6 +70,7 @@ const CARDS: Card[] = [
       { icon: Link2, label: "ربط الموظفين بالمدرسة", to: "/app/schools" },
       { icon: UserPlus, label: "القبول والتسجيل", to: "/app/admissions", search: { tab: "apps" } },
       { icon: Link2, label: "الوثائق والعقود", to: "/app/org-docs", search: { tab: "docs" } },
+      { icon: Link2, label: "زيارات أولياء الأمور", to: "/app/family-visits", search: {} },
     ],
   },
   {

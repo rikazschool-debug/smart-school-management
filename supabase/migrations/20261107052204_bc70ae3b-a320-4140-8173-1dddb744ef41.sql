@@ -1,0 +1,1 @@
+revoke all on function public._people_pool(text, uuid, uuid, uuid) from authenticated;

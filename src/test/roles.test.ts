@@ -38,10 +38,10 @@ describe("role rules", () => {
   it("teachers cannot invite anyone", () => {
     expect(invitableRoles("teacher")).toEqual([]);
   });
-  it("counselor, nurse and security dashboards expose only communication and notifications", () => {
-    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications"]);
-    expect(NAV_BY_ROLE.nurse).toEqual(["home", "admin", "duties", "meetings", "calendar", "communication", "notifications"]);
-    expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications"]);
+  it("counselor, nurse and security dashboards expose only communication, notifications and visits", () => {
+    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"]);
+    expect(NAV_BY_ROLE.nurse).toEqual(["home", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"]);
+    expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"]);
   });
   it("students get subject groups and teacher chats only — no circulars, groups or management", () => {
     expect(commTabs("student")).toEqual(["classes", "inbox", "archive"]);
@@ -151,5 +151,15 @@ describe("evaluation under HR for the owner", () => {
     expect(ownerSection("/app/visits")).toBe("hr");
     expect(N.principal).not.toContain("hr");
     expect(N.principal).toContain("evaluation");
+  });
+});
+
+describe("guardian visits menu", () => {
+  it("visits sit inside school administration for the owner and are open to staff and guardians, never students", async () => {
+    const { ownerSection, ownerSectionNav, NAV_BY_ROLE: N } = await import("@/lib/roles");
+    expect(ownerSection("/app/family-visits")).toBe("school_admin");
+    expect(ownerSectionNav("school_admin", N.org_owner)).toContain("family_visits");
+    for (const r of ["guardian", "principal", "vice_principal", "security", "teacher"] as const) expect(N[r]).toContain("family_visits");
+    expect(N.student).not.toContain("family_visits");
   });
 });

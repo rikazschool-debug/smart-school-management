@@ -49,3 +49,4 @@
 - HR (hr_*): RPC-only, single source; see src/components/hr/AGENTS.md.
 
 - Notifications hub (bc_*): RPC-only; server audience _bc_audience + preview fingerprint checked at send; perms notices/hub_meetings (area comm_hub). Tests: bc-e2e, bc-journey.
+- Guardian visits (gv_*): RPC-only over perm section guardian_visits; partial unique index = one active visit per slot; changes bump rev + append gv_events. Tests: gv-e2e.

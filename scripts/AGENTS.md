@@ -86,3 +86,4 @@
 - scripts/support-cleanup-e2e.ts: support form attachment cleanup (abandoned removed, uploading/saved kept; hub4 fixture).
 - Published-site check (hub4 fixture): pub-verify-prep.ts (real teacher record + maintenance follow-up staff) and pub-verify-ticket.ts (ticket with attachment) feed /tmp/browser/pub notices/ticket browser runs; always run hub4 teardown after.
 - scripts/od-e2e.ts: documents & contracts — od_* RPC-only, _od_ok over perm section org_docs, files via _od_file_ok (scopes, separate view/download/edit, group-wide, multi-school contractors, private files; 20 checks, hub4 fixture).
+- scripts/gv-fixture.ts setup|teardown: isolated gvx- data (2 schools, principals, reception, host, guardian with two children). scripts/gv-e2e.ts: guardian visits (45 checks). scripts/gv-journey.py: guardian phone → principal desktop → reception phone (8 checks); always run teardown after.
