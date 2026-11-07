@@ -16,6 +16,7 @@ export type ChildData = {
   viewer: "guardian" | "student";
   timetable: { day: number; period: string; sort: number; start: string | null; end: string | null; subject: string; teacher: string | null }[];
   classrooms: { id: string; title: string; subject: string }[];
+  room: { id: string; title: string } | null;
   visits?: { id: string; status: string; date: string; time: string; source: string }[] | null;
   finance?: {
     linked: boolean; balance: number | null; currency: string | null; synced_at: string | null;
@@ -72,13 +73,15 @@ export function ChildOverview({ studentId }: { studentId: string }) {
         ))}
       </div>
       {tab === "schedule" && <Timetable rows={d.timetable} />}
-      {tab === "classrooms" && (!d.classrooms.length ? <EmptyState title="لا توجد فصول رقمية لشعبته بعد" /> : (
-        <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {d.classrooms.map((c) => (
-            <li key={c.id}><Link to="/app/classrooms/$id" params={{ id: c.id }} className="block rounded-xl border bg-card p-4 hover:border-primary/40">
-              <p className="font-semibold">{c.subject}</p><p className="text-sm text-muted-foreground">{c.title}</p></Link></li>
-          ))}
-        </ul>
+      {tab === "classrooms" && (!d.room || !d.classrooms.length ? <EmptyState title="لا يوجد فصل رقمي لشعبته بعد" /> : (
+        <div className="rounded-xl border bg-card p-4">
+          <Link to="/app/classrooms/section/$id" params={{ id: d.room.id }} className="font-semibold text-primary">فصل {d.room.title} ←</Link>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {d.classrooms.map((c) => (
+              <li key={c.id}><Link to="/app/classrooms/section/$id" params={{ id: d.room!.id }} search={{ subject: c.id }} className="inline-block rounded-full border px-3 py-1.5 text-sm hover:border-primary/40">{c.subject}</Link></li>
+            ))}
+          </ul>
+        </div>
       ))}
       {tab === "homework" && <StudentHomework studentId={d.student.id} guardian={guardian} />}
       {tab === "visits" && guardian && (
