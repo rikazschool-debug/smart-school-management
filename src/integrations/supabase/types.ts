@@ -9968,6 +9968,144 @@ export type Database = {
           },
         ]
       }
+      org_contractors: {
+        Row: {
+          contact_name: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          ends_on: string | null
+          file_ids: string[]
+          id: string
+          name: string
+          notes: string | null
+          org_id: string
+          phone: string | null
+          school_ids: string[]
+          service: string
+          starts_on: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          ends_on?: string | null
+          file_ids?: string[]
+          id?: string
+          name: string
+          notes?: string | null
+          org_id: string
+          phone?: string | null
+          school_ids?: string[]
+          service: string
+          starts_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          ends_on?: string | null
+          file_ids?: string[]
+          id?: string
+          name?: string
+          notes?: string | null
+          org_id?: string
+          phone?: string | null
+          school_ids?: string[]
+          service?: string
+          starts_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_contractors_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_docs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          doc_no: string | null
+          expires_on: string | null
+          file_id: string | null
+          id: string
+          issued_on: string | null
+          issuer: string | null
+          kind: string
+          name: string
+          org_id: string
+          school_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          doc_no?: string | null
+          expires_on?: string | null
+          file_id?: string | null
+          id?: string
+          issued_on?: string | null
+          issuer?: string | null
+          kind: string
+          name: string
+          org_id: string
+          school_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          doc_no?: string | null
+          expires_on?: string | null
+          file_id?: string | null
+          id?: string
+          issued_on?: string | null
+          issuer?: string | null
+          kind?: string
+          name?: string
+          org_id?: string
+          school_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_docs_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_docs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_docs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_section_log: {
         Row: {
           actor: string
@@ -14434,6 +14572,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      _od_claim: { Args: { _file: string; _org: string }; Returns: undefined }
+      _od_file_ok: { Args: { _file: string }; Returns: boolean }
+      _od_ok: {
+        Args: {
+          _action: string
+          _all: boolean
+          _org: string
+          _schools: string[]
+        }
+        Returns: boolean
+      }
+      _od_status: { Args: { _exp: string }; Returns: string }
       _otp_may_send: { Args: { _phone: string; _uid: string }; Returns: string }
       _pc_bal: {
         Args: { _custody: string; _exclude?: string }
@@ -14647,6 +14797,7 @@ export type Database = {
       }
       _perm_catalog_base: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
+      _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_denied: {
         Args: { _action: string; _org: string; _section: string; _uid: string }
         Returns: boolean
@@ -17166,6 +17317,32 @@ export type Database = {
       my_profile: { Args: { _school: string }; Returns: Json }
       my_teacher_ids: { Args: never; Returns: string[] }
       norm_phone: { Args: { _p: string }; Returns: string }
+      od_caps: { Args: { _org: string }; Returns: Json }
+      od_draft_file: {
+        Args: {
+          _mime: string
+          _name: string
+          _org: string
+          _school: string
+          _size: number
+        }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
+      od_list: {
+        Args: {
+          _org: string
+          _q?: string
+          _school?: string
+          _status?: string
+          _what: string
+        }
+        Returns: Json
+      }
+      od_save_contractor: { Args: { _org: string; _p: Json }; Returns: string }
+      od_save_doc: { Args: { _org: string; _p: Json }; Returns: string }
       open_circular: { Args: { _id: string }; Returns: undefined }
       org_school_save: {
         Args: {

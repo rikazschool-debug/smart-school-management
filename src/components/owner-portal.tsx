@@ -69,6 +69,7 @@ const CARDS: Card[] = [
       { icon: PauseCircle, label: "تفعيل فرع أو إيقافه", to: "/app/schools" },
       { icon: Link2, label: "ربط الموظفين بالمدرسة", to: "/app/schools" },
       { icon: UserPlus, label: "القبول والتسجيل", to: "/app/admissions", search: { tab: "apps" } },
+      { icon: Link2, label: "الوثائق والعقود", to: "/app/org-docs", search: { tab: "docs" } },
     ],
   },
   {

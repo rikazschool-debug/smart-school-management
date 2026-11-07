@@ -36,6 +36,7 @@ import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppMyEmploymentRouteImport } from './routes/_authenticated/app/my-employment'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated/app/notifications'
 import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/app/operations'
+import { Route as AuthenticatedAppOrgDocsRouteImport } from './routes/_authenticated/app/org-docs'
 import { Route as AuthenticatedAppPermissionsRouteImport } from './routes/_authenticated/app/permissions'
 import { Route as AuthenticatedAppPickupRouteImport } from './routes/_authenticated/app/pickup'
 import { Route as AuthenticatedAppPlatformRouteImport } from './routes/_authenticated/app/platform'
@@ -235,6 +236,11 @@ const AuthenticatedAppOperationsRoute =
     path: '/operations',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppOrgDocsRoute = AuthenticatedAppOrgDocsRouteImport.update({
+  id: '/org-docs',
+  path: '/org-docs',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
 const AuthenticatedAppPermissionsRoute =
   AuthenticatedAppPermissionsRouteImport.update({
     id: '/permissions',
@@ -552,6 +558,7 @@ export interface FileRoutesByFullPath {
   '/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/operations': typeof AuthenticatedAppOperationsRoute
+  '/app/org-docs': typeof AuthenticatedAppOrgDocsRoute
   '/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
@@ -629,6 +636,7 @@ export interface FileRoutesByTo {
   '/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
   '/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/app/operations': typeof AuthenticatedAppOperationsRoute
+  '/app/org-docs': typeof AuthenticatedAppOrgDocsRoute
   '/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
@@ -709,6 +717,7 @@ export interface FileRoutesById {
   '/_authenticated/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
   '/_authenticated/app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/_authenticated/app/operations': typeof AuthenticatedAppOperationsRoute
+  '/_authenticated/app/org-docs': typeof AuthenticatedAppOrgDocsRoute
   '/_authenticated/app/permissions': typeof AuthenticatedAppPermissionsRoute
   '/_authenticated/app/pickup': typeof AuthenticatedAppPickupRoute
   '/_authenticated/app/platform': typeof AuthenticatedAppPlatformRoute
@@ -789,6 +798,7 @@ export interface FileRouteTypes {
     | '/app/my-employment'
     | '/app/notifications'
     | '/app/operations'
+    | '/app/org-docs'
     | '/app/permissions'
     | '/app/pickup'
     | '/app/platform'
@@ -866,6 +876,7 @@ export interface FileRouteTypes {
     | '/app/my-employment'
     | '/app/notifications'
     | '/app/operations'
+    | '/app/org-docs'
     | '/app/permissions'
     | '/app/pickup'
     | '/app/platform'
@@ -945,6 +956,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/my-employment'
     | '/_authenticated/app/notifications'
     | '/_authenticated/app/operations'
+    | '/_authenticated/app/org-docs'
     | '/_authenticated/app/permissions'
     | '/_authenticated/app/pickup'
     | '/_authenticated/app/platform'
@@ -1199,6 +1211,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/app/operations'
       preLoaderRoute: typeof AuthenticatedAppOperationsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/org-docs': {
+      id: '/_authenticated/app/org-docs'
+      path: '/org-docs'
+      fullPath: '/app/org-docs'
+      preLoaderRoute: typeof AuthenticatedAppOrgDocsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/permissions': {
@@ -1575,6 +1594,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppMyEmploymentRoute: typeof AuthenticatedAppMyEmploymentRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
   AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
+  AuthenticatedAppOrgDocsRoute: typeof AuthenticatedAppOrgDocsRoute
   AuthenticatedAppPermissionsRoute: typeof AuthenticatedAppPermissionsRoute
   AuthenticatedAppPickupRoute: typeof AuthenticatedAppPickupRoute
   AuthenticatedAppPlatformRoute: typeof AuthenticatedAppPlatformRoute
@@ -1646,6 +1666,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppMyEmploymentRoute: AuthenticatedAppMyEmploymentRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
   AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
+  AuthenticatedAppOrgDocsRoute: AuthenticatedAppOrgDocsRoute,
   AuthenticatedAppPermissionsRoute: AuthenticatedAppPermissionsRoute,
   AuthenticatedAppPickupRoute: AuthenticatedAppPickupRoute,
   AuthenticatedAppPlatformRoute: AuthenticatedAppPlatformRoute,
