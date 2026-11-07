@@ -14273,6 +14273,7 @@ export type Database = {
         }[]
       }
       _course_title: { Args: { _course: string }; Returns: string }
+      _csmart_exact: { Args: { _s: string }; Returns: string }
       _csmart_key: { Args: { _s: string }; Returns: string }
       _cv_can: {
         Args: {
