@@ -64,6 +64,7 @@ try {
 finally {
   await tr.deleteNotifications().catch(() => {});
   if (org) await tr.purgeOrg(org).catch((e) => console.log("cleanup:", e.message));
-  await tr.deleteUsers?.().catch?.(() => {});
+  const { data: us } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  for (const u of us.users.filter((x) => x.email?.startsWith("gix-") && x.email.includes(`-${run}@`))) await admin.auth.admin.deleteUser(u.id);
 }
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);
