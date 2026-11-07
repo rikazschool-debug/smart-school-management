@@ -557,7 +557,8 @@ export function SupportSettings({ ctx }: { ctx: Ctx }) {
           ))}
         </ul>
         <div className="flex gap-2"><Input aria-label="تصنيف جديد" placeholder="تصنيف جديد" value={name} onChange={(e) => setName(e.target.value)} /><Button variant="outline" disabled={name.trim().length < 2} onClick={() => saveCat(null, name, true)}><Plus className="size-4" /> إضافة</Button></div>
-      </div>      {orgId && <SupportHoursPanel orgId={orgId} />}
+      </div>
+      {orgId && <SupportHoursPanel orgId={orgId} />}
     </div>
   );
 }
