@@ -18,6 +18,7 @@ import { exportPdf, exportXlsx } from "@/lib/export";
 import { InternalPanel, ManagePanel } from "@/components/support/handling";
 import { InternalTicket } from "@/components/support/internal-ticket";
 import { FollowersPanel } from "@/components/support/followers";
+import { SupportHoursPanel } from "@/components/support/hours";
 import type { Branch, SupportCaps } from "@/components/support/caps";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -369,6 +370,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
           {can.handle && t.resolve_due && !["resolved", "closed", "cancelled"].includes(t.status) && <div><dt className="inline text-muted-foreground">موعد الحل المستهدف: </dt><dd className="inline">{fmt(t.resolve_due)}</dd></div>}
           {t.rating && <div><dt className="inline text-muted-foreground">التقييم: </dt><dd className="inline">{t.rating} / 5</dd></div>}
         </dl>
+        {t.status === "waiting_requester" && <p className="rounded-lg border border-accent bg-accent/40 p-3 text-sm" data-testid="pause-reason"><span className="font-semibold">المهلة متوقفة بانتظار مقدم الطلب{t.paused_at ? ` منذ ${fmt(t.paused_at)}` : ""}: </span>{t.pause_reason ?? "—"}</p>}
         <p className="whitespace-pre-wrap rounded-lg bg-muted/40 p-3 text-sm">{t.body}</p>
         {t.resolution && <p className="rounded-lg border border-primary/30 p-3 text-sm"><span className="font-semibold">طريقة الحل: </span>{t.resolution}</p>}
       </div>
@@ -377,7 +379,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
       <div className="flex flex-wrap gap-2">
         {can.assign && ["new", "waiting_internal", "in_progress"].includes(t.status) && t.assignee !== userId && <Button size="sm" onClick={() => act("claim")}>استلام التذكرة</Button>}
         {can.handle && open && t.status !== "resolved" && <>
-          <Button size="sm" variant="outline" onClick={() => act("waiting_requester", { confirm: "تحويل الحالة إلى «بانتظار مقدم الطلب»؟ اكتب سؤالك في الرد." })}>طلب معلومات</Button>
+          <Button size="sm" variant="outline" onClick={() => act("waiting_requester", { reasonPrompt: "سبب إيقاف المهلة: ما المطلوب من مقدم الطلب؟ (يظهر في التذكرة، واكتب سؤالك التفصيلي في الرد)" })}>طلب معلومات</Button>
           <Button size="sm" variant="outline" onClick={() => act("waiting_internal")}>بانتظار جهة داخلية</Button>
           <Button size="sm" onClick={() => act("resolve", { reasonPrompt: "اكتب طريقة الحل" })}>حل التذكرة</Button>
         </>}
@@ -555,7 +557,7 @@ export function SupportSettings({ ctx }: { ctx: Ctx }) {
           ))}
         </ul>
         <div className="flex gap-2"><Input aria-label="تصنيف جديد" placeholder="تصنيف جديد" value={name} onChange={(e) => setName(e.target.value)} /><Button variant="outline" disabled={name.trim().length < 2} onClick={() => saveCat(null, name, true)}><Plus className="size-4" /> إضافة</Button></div>
-      </div>
+      </div>      {orgId && <SupportHoursPanel orgId={orgId} />}
     </div>
   );
 }
