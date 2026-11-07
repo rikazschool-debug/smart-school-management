@@ -4803,6 +4803,44 @@ export type Database = {
           },
         ]
       }
+      guardian_phone_log: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          guardian_id: string
+          id: string
+          new_phone: string | null
+          old_phone: string | null
+          school_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          guardian_id: string
+          id?: string
+          new_phone?: string | null
+          old_phone?: string | null
+          school_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          guardian_id?: string
+          id?: string
+          new_phone?: string | null
+          old_phone?: string | null
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_phone_log_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guardians: {
         Row: {
           created_at: string
