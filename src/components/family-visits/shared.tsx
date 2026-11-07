@@ -17,13 +17,13 @@ export type Caps = { view: boolean; manage: boolean; settings: boolean; receptio
 
 export const STATUS: Record<string, [string, "muted" | "warn" | "ok" | "bad"]> = {
   pending: ["بانتظار التأكيد", "warn"], proposed: ["مقترح تعديل", "warn"], confirmed: ["مؤكدة", "ok"], rejected: ["مرفوضة", "bad"],
-  cancelled: ["ملغاة", "bad"], arrived: ["حضر", "ok"], no_show: ["لم يحضر", "bad"], completed: ["مكتملة", "muted"],
+  cancelled: ["ملغاة", "bad"], arrived: ["حضر", "ok"], no_show: ["لم يحضر", "bad"], completed: ["مكتملة", "muted"], expired: ["انقضى الموعد", "muted"],
 };
 export const REASONS: Record<string, string> = { academic: "أكاديمي", behavior: "سلوكي", attendance: "الحضور والغياب", health: "صحي", admin: "إداري", other: "أخرى" };
 export const SOURCE: Record<string, string> = { school: "استدعاء من المدرسة", guardian: "طلب من ولي الأمر" };
 export const EVENT: Record<string, string> = {
   create: "أُنشئت الزيارة", confirm: "تأكيد الموعد", propose: "اقتراح موعد بديل", keep: "رفض التعديل والإبقاء على الموعد المؤكد", decline: "رفض / اعتذار",
-  cancel: "إلغاء", arrive: "تسجيل الوصول", no_show: "لم يحضر", depart: "تسجيل المغادرة", note: "ملاحظة داخلية", host: "تغيير المسؤول",
+  cancel: "إلغاء", arrive: "تسجيل الوصول", no_show: "لم يحضر", depart: "تسجيل المغادرة", note: "ملاحظة داخلية", host: "تغيير المسؤول", expired: "انقضى الموعد دون تأكيد", proposal_expired: "انقضى الموعد المقترح وبقي الموعد المؤكد",
 };
 export const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 

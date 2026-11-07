@@ -96,7 +96,7 @@ function ListTab({ view, school, open }: { view: "mine" | "school"; school: stri
   const { active } = useSession();
   const list = useQuery({
     queryKey: ["gv-list", view, school, dq, status], refetchInterval: POLL,
-    queryFn: () => rpc<Visit[]>("gv_list", { _school: school, _view: view, _q: dq || null, _status: status || null, _from: null, _to: null }),
+    queryFn: async () => { await rpc("gv_expire_due", { _school: view === "mine" ? null : school }).catch(() => null); return rpc<Visit[]>("gv_list", { _school: school, _view: view, _q: dq || null, _status: status || null, _from: null, _to: null }),
   });
   const side = view === "school" ? "school" : active?.role === "guardian" ? "guardian" : null;
   return (
@@ -106,7 +106,7 @@ function ListTab({ view, school, open }: { view: "mine" | "school"; school: stri
           <div className="relative"><Search className="absolute end-2 top-2.5 size-4 text-muted-foreground" /><Input className="h-9 w-56" placeholder="اسم الطالب أو ولي الأمر" aria-label="بحث" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <select aria-label="الحالة" className={sm} value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">كل الحالات</option><option value="awaiting_school">بانتظار رد المدرسة</option>
-            {["pending", "proposed", "confirmed", "rejected", "cancelled", "arrived", "no_show", "completed"].map((s) => <option key={s} value={s}>{STATUS_TXT[s]}</option>)}
+            {["pending", "proposed", "confirmed", "rejected", "cancelled", "arrived", "no_show", "completed", "expired"].map((s) => <option key={s} value={s}>{STATUS_TXT[s]}</option>)}
           </select>
         </div>
       )}
