@@ -13,6 +13,7 @@ import { arabicError, useSession } from "@/lib/session";
 import { rpc } from "@/components/hr/shared";
 import { addDays, dayName, riyadhToday, weekStartOf } from "@/components/admin/shared";
 import { askText } from "@/components/confirm";
+import { supabase } from "@/integrations/supabase/client";
 import { PeoplePicker } from "@/components/people-picker";
 import { DAYS, EVENT, REASONS, SOURCE, STATUS, SlotPicker, StatusPill, awaitingText, type Caps, type Visit, type VisitDetail } from "@/components/family-visits/shared";
 
@@ -30,6 +31,19 @@ export const Route = createFileRoute("/_authenticated/app/family-visits")({
 const POLL = 15_000;
 const sm = selectCls("", true);
 
+// Live updates: gv_signals rows (RLS-scoped) tell us a visit changed; we refetch through the RPCs.
+function useVisitsLive(enabled: boolean) {
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!enabled) return;
+    const refresh = () => qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0] ?? "").startsWith("gv-") });
+    const ch = supabase.channel(`gv-live-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "gv_signals" }, refresh)
+      .subscribe((st) => { if (st === "SUBSCRIBED") refresh(); });
+    return () => { supabase.removeChannel(ch); };
+  }, [enabled, qc]);
+}
+
 function Page() {
   const { tab = "calendar", v } = Route.useSearch();
   const nav = useNavigate({ from: "/app/family-visits" });
@@ -38,6 +52,7 @@ function Page() {
   const isGuardian = active?.role === "guardian";
   const caps = useQuery({ queryKey: ["gv-caps", school], enabled: !!active, refetchInterval: 60_000, queryFn: () => rpc<Caps>("gv_caps", { _school: school }) });
   const [form, setForm] = useState<"" | "call" | "request">("");
+  useVisitsLive(!!active && active.role !== "student");
   if (!active || active.role === "student") return <ForbiddenState />;
   if (caps.isLoading) return <LoadingState />;
   if (caps.error || !caps.data) return <ErrorState message={arabicError(caps.error)} />;
