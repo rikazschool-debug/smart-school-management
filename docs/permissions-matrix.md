@@ -378,3 +378,11 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 - Staff, teachers, guardians: ID → code to the school-record mobile (WhatsApp); refused generically when the record is missing, has no mobile, or has conflicting accounts/mobiles.
 - Students: ID + C-Smart number of the same student record; no code/PIN; 5 wrong tries lock 15 min. Student sees only own data (existing RLS).
 - Signing in never grants HR self-services; those still need manual HR activation.
+
+## Family overview & payment methods (Nov 7 2026)
+| Capability | Guardian | Student | Owner | Principal / staff |
+|---|---|---|---|---|
+| List own linked children (all schools) | yes (unverified link: name hidden) | — | — | — |
+| Child overview (timetable, classroom, homework, visits) | verified + can_follow only | own record only (no visits) | — | — |
+| Child financial data | read (own verified children) | never | — | — |
+| Branch bank accounts / payment links | read via child's school | never | edit (logged) | no |
