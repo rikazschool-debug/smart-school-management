@@ -36,13 +36,13 @@ try {
   const gr = must(await admin.from("grades").insert({ school_id: S[0], stage_id: st, name: "الرابع" }).select("id").single())!.id;
   const sec = must(await admin.from("sections").insert({ school_id: S[0], grade_id: gr, year_id: y, name: "أ" }).select("id").single())!.id;
   const sj = must(await admin.from("subjects").insert({ school_id: S[0], name: "الرياضيات" }).select("id").single())!.id;
-  const co = must(await admin.from("courses").insert({ school_id: S[0], year_id: y, subject_id: sj, section_id: sec }).select("id").single())!.id;
+  const co = must(await admin.from("courses").insert({ school_id: S[0], year_id: y, subject_id: sj, section_id: sec, weekly_periods: 1 }).select("id").single())!.id;
   const te = must(await admin.from("teachers").insert({ school_id: S[0], full_name: "معلم الرياضيات" }).select("id").single())!.id;
   must(await admin.from("teacher_assignments").insert({ school_id: S[0], course_id: co, teacher_id: te, start_date: "2026-08-01", status: "approved" }));
   const pe = must(await admin.from("periods").insert({ school_id: S[0], sort_order: 1, name: "الأولى", start_time: "07:00", end_time: "07:45" }).select("id").single())!.id;
   const tt = must(await admin.from("timetables").insert({ school_id: S[0], year_id: y, name: "جدول", status: "draft", version: 1, created_by: users.owner }).select("id").single())!.id;
   must(await admin.from("timetable_slots").insert({ school_id: S[0], timetable_id: tt, day: 0, period_id: pe, course_id: co, section_id: sec, teacher_id: te }));
-  must(await admin.from("timetables").update({ status: "published", published_at: new Date().toISOString() }).eq("id", tt));
+  must(await oc.rpc("publish_timetable", { _id: tt, _effective_from: "2026-08-01" }));
   const room = must(await admin.from("classrooms").upsert({ school_id: S[0], course_id: co, title: "رياضيات الرابع أ" }, { onConflict: "course_id" }).select("id").single())!.id;
   const kid = async (school: string, name: string, extra: Record<string, unknown> = {}) => must(await admin.from("students").insert({ school_id: school, full_name: name, ...extra }).select("id").single())!.id as string;
   const k1 = await kid(S[0]!, "سالم الأسرة", { csmart_no: "CS-" + run, user_id: users.s1 });
