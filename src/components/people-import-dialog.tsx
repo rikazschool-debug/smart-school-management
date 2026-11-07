@@ -25,14 +25,16 @@ type SecOpt = { id: string; label: string };
 async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { secList: SecOpt[] }> {
   if (kind === "students") {
     const [ex, secs, enr] = await Promise.all([
-      db.from("students").select("id, national_id").eq("school_id", schoolId).not("national_id", "is", null).limit(20000),
+      db.from("students").select("id, national_id, csmart_no").eq("school_id", schoolId).limit(20000),
       db.from("sections").select("id, name, capacity, year_id, grades(name), academic_years!inner(is_current)").eq("school_id", schoolId).eq("academic_years.is_current", true),
       db.from("enrollments").select("section_id").eq("school_id", schoolId).eq("status", "active").limit(50000),
     ]);
     if (ex.error) throw ex.error; if (secs.error) throw secs.error;
     const used = new Map<string, number>(); for (const e of (enr.data ?? []) as Row[]) used.set(e["section_id"], (used.get(e["section_id"]) ?? 0) + 1);
     return {
-      existingIds: new Map(((ex.data ?? []) as Row[]).map((x) => [String(x["national_id"]).replace(/\D/g, ""), x["id"]])),
+      existingIds: new Map(((ex.data ?? []) as Row[]).filter((x) => x["national_id"]).map((x) => [String(x["national_id"]).replace(/\D/g, ""), x["id"]])),
+      existingCsmart: new Map(((ex.data ?? []) as Row[]).filter((x) => x["csmart_no"]).map((x) => [String(x["csmart_no"]), x["id"]])),
+      rowCsmart: new Map(((ex.data ?? []) as Row[]).filter((x) => x["csmart_no"]).map((x) => [x["id"], String(x["csmart_no"])])),
       existingPhones: new Map(), departments: new Map(),
       sections: new Map(((secs.data ?? []) as Row[]).map((x) => [`${norm(x["grades"]?.["name"])}|${norm(x["name"])}`, { id: x["id"], year_id: x["year_id"], capacity: x["capacity"], used: used.get(x["id"]) ?? 0 }])),
       secList: ((secs.data ?? []) as Row[]).map((x) => ({ id: x["id"], label: `${x["grades"]?.["name"] ?? ""} / ${x["name"]}` })).sort((a, b) => a.label.localeCompare(b.label, "ar")),
@@ -116,7 +118,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
       let id = r.existingId ?? null;
       if (!id) {
         const payload: Row = kind === "students"
-          ? { school_id: schoolId, full_name: d["full_name"], national_id: d["national_id"], birth_date: d["birth_date"], gender: d["gender"], status: "active" }
+          ? { school_id: schoolId, full_name: d["full_name"], national_id: d["national_id"], csmart_no: d["csmart_no"] ?? null, birth_date: d["birth_date"], gender: d["gender"], status: "active" }
           : { school_id: schoolId, full_name: d["full_name"], national_id: d["national_id"], phone: d["phone"], email: d["email"], specialization: d["specialization"], department_id: r.department_id ?? null, status: "active" };
         const ins = await db.from(kind).insert(payload).select("id").single();
         if (ins.error) {
@@ -127,6 +129,11 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
           id = again.data["id"];
         } else id = ins.data["id"];
         res.academic = { ok: true, msg: "أُضيف" };
+      } else if (kind === "students" && d["csmart_no"]) {
+        // fill a missing C‑Smart number only; a stored different number was already rejected as a conflict
+        const up = await db.from("students").update({ csmart_no: d["csmart_no"] }).eq("id", id).is("csmart_no", null);
+        res.academic = up.error ? { ok: false, msg: arabicError(up.error) } : { ok: true, msg: "موجود مسبقًا" };
+        if (up.error) continue;
       } else res.academic = { ok: true, msg: "موجود مسبقًا" };
       (r as CheckedRow & { savedId?: string }).savedId = id!;
       if (kind === "students") {
@@ -229,7 +236,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
               {fields.map((f) => (
                 <div key={f.key} className="space-y-1">
                   <Label htmlFor={`ps-${f.key}`}>{f.label}{f.required ? " *" : ""}</Label>
-                  <Input id={`ps-${f.key}`} dir={/phone|national_id|guardian_id|birth_date|email/.test(f.key) ? "ltr" : undefined} placeholder={f.hint} value={single[f.key] ?? ""} onChange={(e) => setSingle({ ...single, [f.key]: e.target.value })} />
+                  <Input id={`ps-${f.key}`} dir={/phone|national_id|csmart_no|guardian_id|birth_date|email/.test(f.key) ? "ltr" : undefined} placeholder={f.hint} value={single[f.key] ?? ""} onChange={(e) => setSingle({ ...single, [f.key]: e.target.value })} />
                 </div>
               ))}
               <div className="sm:col-span-2"><Button type="submit" disabled={busy}>{busy ? "جارٍ الحفظ…" : "حفظ"}</Button></div>
@@ -283,7 +290,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
                       <tbody>{rows.map((r) => (
                         <tr key={`${r.sheet}:${r.line}`} className={`border-t ${r.errors.length ? "bg-destructive/5" : ""}`}>
                           <td className="whitespace-nowrap p-1.5">{r.sheet} · {r.line}</td>
-                          {fields.map((c) => <td key={c.key} className="p-1.5" dir={/phone|national_id|guardian_id/.test(c.key) ? "ltr" : undefined}>{shown(c.key, r.data[c.key] ?? r.values[c.key])}</td>)}
+                          {fields.map((c) => <td key={c.key} className="p-1.5" dir={/phone|national_id|csmart_no|guardian_id/.test(c.key) ? "ltr" : undefined}>{shown(c.key, r.data[c.key] ?? r.values[c.key])}</td>)}
                           <td className="p-1.5">{r.errors.length ? <span className="text-destructive">{r.errors.join("، ")}</span> : r.notes.length ? <span>{r.notes.join("، ")}</span> : "صالح"}</td>
                         </tr>))}</tbody></table>
                   </div>

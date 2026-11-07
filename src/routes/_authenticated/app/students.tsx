@@ -14,6 +14,7 @@ import { AccountButton } from "@/components/account-button";
 import { PeopleImport } from "@/components/people-import-dialog";
 import { AccountPanel } from "@/components/account-panel";
 import { GuardianQuickAdd } from "@/components/guardian-quick-add";
+import { normCsmart, studentReadiness } from "@/lib/people-import";
 import { arabicError, type AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/students")({ component: Page });
@@ -66,7 +67,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <PageHeader title="الطلاب والتسكين" desc="ملف الطالب، ربط ولي الأمر، والتسكين في الشعبة. لا يلزم أن يكون للطالب حساب دخول." />
       <CrudTable title="الطلاب" table="students" schoolId={ctx.schoolId} canWrite={w} order="full_name"
         select="*, enrollments(status, sections(name, grades(name))), student_guardians(id)"
-        searchKeys={["full_name", "national_id"]}
+        searchKeys={["full_name", "national_id", "csmart_no"]}
         filters={[
           { key: "status", label: "الحالة", options: STATUS },
           { key: "gender", label: "الجنس", options: [{ value: "male", label: "ذكر" }, { value: "female", label: "أنثى" }] },
@@ -76,7 +77,8 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         toolbar={w ? <PeopleImport kind="students" schoolId={ctx.schoolId} /> : undefined}
         fields={[
           { key: "full_name", label: "الاسم الكامل", required: true },
-          { key: "national_id", label: "رقم الهوية" },
+          { key: "national_id", label: "رقم هوية الطالب أو إقامته" },
+          { key: "csmart_no", label: "رقم الطالب الداخلي — C‑Smart" },
           { key: "birth_date", label: "تاريخ الميلاد", type: "date" },
           { key: "gender", label: "الجنس", type: "select", options: [{ value: "male", label: "ذكر" }, { value: "female", label: "أنثى" }] },
           { key: "email", label: "بريد الطالب (اختياري)", type: "email" },
@@ -86,14 +88,24 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         onCreated={w ? (r) => setGuarding(r) : undefined}
         columns={[
           { label: "الاسم", text: (r) => r["full_name"], render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["full_name"]}</button> },
-          { label: "الهوية", render: (r) => r["national_id"] ?? "—" },
+          { label: "الهوية", render: (r) => <span dir="ltr">{r["national_id"] ?? "—"}</span> },
+          { label: "رقم C‑Smart", text: (r) => r["csmart_no"] ?? "", render: (r) => r["csmart_no"] ? <span dir="ltr">{r["csmart_no"]}</span> : <span className="text-muted-foreground">غير مسجّل</span> },
           { label: "الشعبة", text: (r) => { const e = (r["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active"); return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : "غير مسكّن"; }, render: (r) => {
             const e = (r["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active");
             return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : <span className="text-muted-foreground">غير مسكّن</span>;
           } },
           { label: "أولياء الأمور", render: (r) => r["student_guardians"]?.length ?? 0 },
           { label: "الحالة", render: (r) => STATUS.find((s) => s.value === r["status"])?.label },
+          { label: "جاهزية الدخول", text: (r) => { const m = studentReadiness(r); return m.length ? `ينقص: ${m.join("، ")}` : "جاهز"; }, render: (r) => {
+            const m = studentReadiness(r);
+            return m.length ? <span className="text-xs text-destructive">ينقص: {m.join("، ")}</span> : <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز</span>;
+          } },
         ]}
+        beforeSave={(v) => {
+          const cs = normCsmart(v["csmart_no"]);
+          if (cs === "") throw new Error("رقم C‑Smart: أرقام أو حروف لاتينية فقط (حتى 20)");
+          return { ...v, csmart_no: cs };
+        }}
         extraActions={(r) => w ? (
           <>
             <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>

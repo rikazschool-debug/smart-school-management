@@ -9,6 +9,7 @@ export const FIELDS: Record<PKind, Field[]> = {
   students: [
     { key: "full_name", label: "اسم الطالب", required: true, hint: "مطلوب — الاسم بالعربية", syn: ["اسم الطالب", "الاسم الكامل", "الاسم", "الإسم", "اسم الطالبة"] },
     { key: "national_id", label: "رقم الهوية", required: true, hint: "مطلوب — 10 أرقام، يُكتب نصًا", syn: ["رقم الهوية", "رقمها", "الهوية", "السجل المدني", "رقم السجل المدني", "رقم الهوية/الإقامة"] },
+    { key: "csmart_no", label: "رقم الطالب الداخلي — C‑Smart", hint: "يُكتب نصًا وتُحفظ الأصفار الأولى — مطلوب لدخول الطالب", syn: ["رقم الطالب الداخلي — C‑Smart", "رقم الطالب الداخلي", "رقم الطالب", "رقم C-Smart", "رقم سي سمارت", "C-Smart", "csmart"] },
     { key: "birth_date", label: "تاريخ الميلاد", hint: "ميلادي YYYY-MM-DD أو DD/MM/YYYY", syn: ["تاريخ الميلاد", "تاريخ الولادة", "date of birth"] },
     { key: "gender", label: "الجنس", hint: "ذكر / أنثى", syn: ["الجنس", "النوع"] },
     { key: "grade", label: "الصف", hint: "اسم الصف كما في ركاز", syn: ["الصف"] },
@@ -34,9 +35,28 @@ export function norm(s: unknown): string {
   return String(s ?? "").replace(DIAC, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[:：]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
+/** Arabic-Indic / Persian digits → Latin, so «٠١٢» and «012» are the same value. */
+export function latinDigits(s: unknown): string {
+  return String(s ?? "").replace(/[\u0660-\u0669]/g, (c) => String(c.charCodeAt(0) - 0x0660)).replace(/[\u06F0-\u06F9]/g, (c) => String(c.charCodeAt(0) - 0x06F0));
+}
+/** C‑Smart internal number: text, digits/letters only, leading zeros kept; null when empty; "" when invalid. */
+export function normCsmart(s: unknown): string | null {
+  const t = latinDigits(s).replace(/[\s\u200f\u200e-]/g, "").trim();
+  if (!t) return null;
+  return /^[A-Za-z0-9]{1,20}$/.test(t) ? t : "";
+}
+/** A student can sign in only with an ID, a C‑Smart number and an active status. Missing items in Arabic. */
+export function studentReadiness(r: { national_id?: string | null; csmart_no?: string | null; status?: string | null }): string[] {
+  const m: string[] = [];
+  if (!r.national_id) m.push("رقم الهوية");
+  if (!r.csmart_no) m.push("رقم C‑Smart");
+  if (r.status && r.status !== "active") m.push("الحالة غير منتظمة");
+  return m;
+}
+
 /** Saudi mobile → 9665XXXXXXXX; null when invalid. Same rule as SQL norm_phone. */
 export function normPhone(p: unknown): string | null {
-  let d = String(p ?? "").replace(/\D/g, "");
+  let d = latinDigits(p).replace(/\D/g, "");
   if (d.startsWith("00")) d = d.slice(2);
   if (/^9665\d{8}$/.test(d)) return d;
   if (/^05\d{8}$/.test(d)) return "966" + d.slice(1);
@@ -206,6 +226,9 @@ export type Lookups = {
   sectionChoice?: Map<string, string>;
   /** teacher row id → national ID (to detect a mobile that belongs to someone with another ID) */
   rowNid?: Map<string, string>;
+  /** students: C‑Smart number → row id, and row id → stored C‑Smart number */
+  existingCsmart?: Map<string, string>;
+  rowCsmart?: Map<string, string>;
 };
 /** Rikaz sections for a file label that did not match exactly — the user must pick one; a numeric label only gets a *suggestion*. */
 export function sectionSuggestion(label: string): string | null {
@@ -224,7 +247,7 @@ const REL: Record<string, string> = { [norm("أب")]: "father", [norm("الأب"
 
 /** Same rules for import rows and the single-add form. */
 export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[] {
-  const seenId = new Set<string>(), seenPhone = new Set<string>();
+  const seenId = new Set<string>(), seenPhone = new Set<string>(), seenCs = new Set<string>();
   const planned = new Map<string, number>();
   return rows.map((r) => {
     const v = r.values; const e: string[] = []; const notes: string[] = [];
@@ -232,13 +255,23 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
     if (r.formulas.length) e.push(`خلايا صيغ مرفوضة: ${r.formulas.join("، ")}`);
     if (!data["full_name"]) e.push("الاسم مطلوب");
     const out: CheckedRow = { ...r, data, errors: e, notes };
-    const nid = (v["national_id"] ?? "").replace(/\D/g, "");
+    const nid = latinDigits(v["national_id"]).replace(/\D/g, "");
     if (nid && !isNationalId(nid)) e.push("رقم الهوية 10 أرقام يبدأ بـ1 أو 2");
     data["national_id"] = nid || null;
     if (nid) { if (seenId.has(nid)) e.push("رقم الهوية مكرر في الملف"); seenId.add(nid); }
     if (kind === "students") {
       if (!nid) e.push("رقم الهوية مطلوب (يدخل به الطالب)");
-      if (nid && lk.existingIds.has(nid)) { out.existingId = lk.existingIds.get(nid)!; notes.push("الطالب موجود مسبقًا — لن يُكرر، تُستكمل بقية الخطوات"); }
+      const cs = normCsmart(v["csmart_no"]);
+      if (cs === "") e.push("رقم C‑Smart: أرقام أو حروف لاتينية فقط (حتى 20)");
+      data["csmart_no"] = cs || null;
+      if (cs) { if (seenCs.has(cs)) e.push("رقم C‑Smart مكرر في الملف"); seenCs.add(cs); }
+      const byNid = nid ? lk.existingIds.get(nid) : undefined, byCs = cs ? lk.existingCsmart?.get(cs) : undefined;
+      const stored = byNid ? lk.rowCsmart?.get(byNid) : undefined;
+      // never re-point an existing link or merge two students: any mismatch is a conflict for manual review
+      if (byCs && byCs !== byNid) e.push(byNid ? "تعارض: رقم C‑Smart مسجل لطالب آخر غير صاحب الهوية — راجع السجلين يدويًا" : "تعارض: رقم C‑Smart مسجل لطالب آخر بهوية مختلفة — راجع يدويًا");
+      else if (byNid && cs && stored && stored !== cs) e.push(`تعارض: الطالب مسجل برقم C‑Smart مختلف (${stored}) — لن يُستبدل تلقائيًا`);
+      if (byNid) { out.existingId = byNid; notes.push(cs && !stored ? "الطالب موجود مسبقًا — سيُضاف رقم C‑Smart لسجله" : "الطالب موجود مسبقًا — لن يُكرر، تُستكمل بقية الخطوات"); }
+      if (!cs) notes.push("ينقص رقم C‑Smart — لن يتمكن الطالب من الدخول حتى يُضاف");
       const bd = parseDate(v["birth_date"] ?? ""); if (bd.err) e.push(`تاريخ الميلاد: ${bd.err}`); data["birth_date"] = bd.v;
       if (bd.hijri) notes.push(`تاريخ الميلاد هجري «${(v["birth_date"] ?? "").trim()}» حُوّل إلى ${bd.v} (تقويم أم القرى)`);
       const gn = norm(v["gender"]); data["gender"] = !gn ? null : ["ذكر", "male", "m"].map(norm).includes(gn) ? "male" : ["انثي", "أنثى", "female", "f"].map(norm).includes(gn) ? "female" : null;
@@ -257,7 +290,7 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
           out.section = { id: sec.id, year_id: sec.year_id };
         } else out.section = { id: sec.id, year_id: sec.year_id };
       }
-      const gName = (v["guardian_name"] ?? "").trim(), gPhoneRaw = v["guardian_phone"] ?? "", gId = (v["guardian_id"] ?? "").replace(/\D/g, "");
+      const gName = (v["guardian_name"] ?? "").trim(), gPhoneRaw = v["guardian_phone"] ?? "", gId = latinDigits(v["guardian_id"]).replace(/\D/g, "");
       if (gName || gPhoneRaw || gId) {
         const gp = normPhone(gPhoneRaw);
         if (!gName) e.push("اسم ولي الأمر مطلوب");
