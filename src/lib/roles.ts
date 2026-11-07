@@ -222,7 +222,7 @@ export type ScheduleTab = "timetable" | "subs" | "settings";
  *  everyone else sees only «جدولي» (their scoped view). */
 export function scheduleTabs(role: Role): ScheduleTab[] {
   if (canEditSchedule(role)) return ["timetable", "subs", "settings"];
-  if (role === "vice_principal") return ["timetable", "subs"];
+  if (role === "vice_principal") return ["timetable", "subs", "lessons"];
   return [];
 }
 export function scheduleLabel(role: Role) {
@@ -277,16 +277,16 @@ export function canAuthorHomework(role: Role) {
   return role === "teacher";
 }
 
-export type AttTab = "today" | "gate" | "pickups" | "calls" | "cards" | "records" | "followup" | "settings" | "compare";
+export type AttTab = "lessons" | "today" | "gate" | "pickups" | "calls" | "cards" | "records" | "followup" | "settings" | "compare";
 /** Attendance tabs per role (mirrors att_gate / att_approver / att_counselor in SQL). Security runs the gate, never approvals or settings;
  *  teachers only see preparation requests of their own students; the counselor reads records and follow-ups only. */
 export function attTabs(role: Role): AttTab[] {
   if (role === "security") return ["gate", "pickups", "calls", "today"];
-  if (role === "teacher") return ["pickups"];
+  if (role === "teacher") return ["lessons", "pickups"];
   if (role === "counselor") return ["today", "records", "followup"];
-  if (role === "student_affairs") return ["today", "gate", "pickups", "calls", "cards", "records", "followup"];
-  if (role === "org_owner") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls", "compare"];
-  if (role === "principal") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls"];
+  if (role === "student_affairs") return ["today", "gate", "pickups", "calls", "cards", "records", "followup", "lessons"];
+  if (role === "org_owner") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls", "compare", "lessons"];
+  if (role === "principal") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls", "lessons"];
   if (role === "vice_principal") return ["today", "pickups", "records", "followup", "cards", "gate", "calls"];
   return [];
 }
