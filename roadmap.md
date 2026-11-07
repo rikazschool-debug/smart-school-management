@@ -28,3 +28,11 @@
 - [ ] 6. Live updates for requests/notifications/visits/decisions; reconnect recovery; stop on role/school switch; guardian pickup request seen live at reception
 - [ ] 7. Support working hours: org days/hours/holidays with branch/department override, SLA in working time, stop reason, separate settings permission
 - [ ] 8. C-Smart id link (no duplicates), multi-account desktop/mobile acceptance, cleanup, closure log, publish status separate
+
+## B3 — ضبط البيانات والاستيراد والدخول
+- [ ] B3.1 حقول الطالب: الرقم الداخلي C‑Smart (نص)، الجاهزية، تعارضات التفرد
+- [ ] B3.2 سجل ولي الأمر: هوية، جوال معتمد مع سجل تغيير، حالة الربط والحساب، إخفاء حسب الصلاحية
+- [ ] B3.3 قالبا استيراد (طلاب / أولياء أمور وعلاقات) مع ربط أعمدة ومعاينة وتقرير وعدم تكرار
+- [ ] B3.4 صفحة دخول بثلاثة مداخل (طالب / ولي أمر / إدارة وموظفون)، التجريبي للمراجعة فقط
+- [ ] B3.5 وصول ولي الأمر لفصول الأبناء عبر علاقة معتمدة + تسكين حالي، واعتماد العلاقات المستوردة
+- [ ] B3.6 اختبارات قبول كمبيوتر وجوال بحسابات منفصلة
