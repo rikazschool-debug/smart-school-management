@@ -142,3 +142,13 @@ describe("admissions under school administration", () => {
     expect(ownerSection("/app/admissions")).toBe("school_admin");
   });
 });
+
+describe("evaluation under HR for the owner", () => {
+  it("evaluation and visits pages belong to the HR section", async () => {
+    const { ownerSection, NAV_BY_ROLE: N } = await import("@/lib/roles");
+    expect(ownerSection("/app/evaluation")).toBe("hr");
+    expect(ownerSection("/app/visits")).toBe("hr");
+    expect(N.principal).not.toContain("hr");
+    expect(N.principal).toContain("evaluation");
+  });
+});

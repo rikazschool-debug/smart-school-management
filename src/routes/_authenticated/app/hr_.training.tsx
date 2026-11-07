@@ -22,7 +22,7 @@ function Page() {
       <PageHeader eyebrow="الموارد البشرية" title="التدريب والتطوير" desc="مكان البرامج التدريبية وإدارة المدربين الضيوف. المتاح الآن مرتبط بأدناه، والباقي في المرحلة التالية." />
       <Section title="المتاح الآن">
         <div className="grid gap-3 md:grid-cols-2">
-          <Link to="/app/evaluation" search={{ tab: "summary" } as never} className="flex items-start gap-3 rounded-xl border bg-card p-4 hover:border-primary">
+          <Link to="/app/evaluation" search={{ tab: "summary" }} className="flex items-start gap-3 rounded-xl border bg-card p-4 hover:border-primary">
             <Star className="mt-0.5 size-5 text-primary" /><span><span className="block font-bold">نظام التقييم الشامل</span><span className="text-sm text-muted-foreground">نتائج التقييم والزيارات الصفية تحدد احتياجات التطوير.</span></span>
           </Link>
           <Link to="/app/hr/performance" className="flex items-start gap-3 rounded-xl border bg-card p-4 hover:border-primary">
