@@ -93,3 +93,4 @@
 - scripts/family-e2e.ts: guardian/student overview + branch payment settings (24 checks; `--keep` writes /tmp/browser/fam/fixture.json, `--teardown` removes it). scripts/family-journey.py: guardian (desktop+phone), student, owner screens (22 checks).
 - scripts/classroom-room-e2e.ts: section rooms (regroup report/re-run, teacher subject scope, student/guardian access, transfer, teacher change; 29 checks).
 - scripts/guardian-import-e2e.ts: guardians template import (import_guardian_row dry-run/write, create/link/exists/conflict, unverified links, C‑Smart zeros, phone log; 17 checks).
+- scripts/family-access-e2e.ts: guardian access = verified link + active enrollment (import unverified → none, verify → classroom/posts/files, transfer moves, revoke removes; 16 checks).
