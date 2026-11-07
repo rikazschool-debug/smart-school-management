@@ -3761,6 +3761,185 @@ export type Database = {
           },
         ]
       }
+      fin_branch_pay: {
+        Row: {
+          banks: Json
+          created_at: string
+          links: Json
+          note: string | null
+          org_id: string
+          school_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          banks?: Json
+          created_at?: string
+          links?: Json
+          note?: string | null
+          org_id: string
+          school_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          banks?: Json
+          created_at?: string
+          links?: Json
+          note?: string | null
+          org_id?: string
+          school_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fin_branch_pay_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fin_branch_pay_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fin_pay_log: {
+        Row: {
+          actor: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          id: string
+          school_id: string
+        }
+        Insert: {
+          actor?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+          school_id: string
+        }
+        Update: {
+          actor?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fin_pay_log_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fin_student_accounts: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          school_id: string
+          source: string
+          student_id: string
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          school_id: string
+          source: string
+          student_id: string
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          school_id?: string
+          source?: string
+          student_id?: string
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fin_student_accounts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fin_student_accounts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fin_student_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string
+          ref: string | null
+          school_id: string
+          source: string
+          student_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          paid_at: string
+          ref?: string | null
+          school_id: string
+          source: string
+          student_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string
+          ref?: string | null
+          school_id?: string
+          source?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fin_student_payments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fin_student_payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gate_movements: {
         Row: {
           at: string
@@ -16671,6 +16850,8 @@ export type Database = {
         Args: { _due: string; _id: string; _reason: string; _student: string }
         Returns: undefined
       }
+      family_child: { Args: { _student: string }; Returns: Json }
+      family_children: { Args: never; Returns: Json }
       family_contacts: {
         Args: { _student: string }
         Returns: {
@@ -16679,6 +16860,8 @@ export type Database = {
           relationship: string
         }[]
       }
+      fin_pay_get: { Args: { _school: string }; Returns: Json }
+      fin_pay_save: { Args: { _p: Json; _school: string }; Returns: Json }
       gb_approve: {
         Args: {
           _accept: boolean

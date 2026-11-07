@@ -584,3 +584,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Browser (desktop + 390px): 7/7 — generic message for unknown ID, student mismatch refused, student opens own account, role chooser shows teacher + guardian.
 - Real WhatsApp send: NOT tested this round (needs a consenting real number; scripts/otp-live-test.ts). SMS fallback: no SMS provider configured — external requirement.
 - C-Smart: students.csmart_no filled manually/import; real sync = external dependency.
+
+## 2026-11-07 — Guardian & student overview, branch payment settings (batch 3, item 2–3a)
+- Built: guardian home = all linked children across the group's schools (family_children); per-child page /app/child/$id (family_child: timetable from latest published schedule, section classrooms, homework, own visits, finance). Student home reuses the same overview without finance/visits.
+- Finance: fin_student_accounts / fin_student_payments (service-only writes, empty until the financial link) → «بانتظار الربط المالي»; fin_branch_pay per branch (owner-only fin_pay_save, IBAN SA+22 digits, https links, logged in fin_pay_log). Opening a payment link never confirms a payment.
+- Tested: family-e2e 24/24 (server), family-journey 22/22 (browser, desktop + 390px). Test data removed.
+- Open: payment confirmation source (external financial system); real C-Smart sync.

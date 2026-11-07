@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CalendarDays, ClipboardList, GraduationCap, Layers, MessagesSquare, School, UserPlus, UsersRound, type LucideIcon } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader, Section } from "@/components/states";
-import { ClassroomGrid, useClassrooms } from "./classrooms.index";
+import { ChildOverview } from "@/components/family/child-overview";
 import { NAV_BY_ROLE, ROLE_LABELS, canManage, type NavKey } from "@/lib/roles";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { OwnerPortal } from "@/components/owner-portal";
@@ -66,7 +66,7 @@ function Home() {
       ) : ops.loading ? <LoadingState /> : opsOnly ? <OpsHome orgId={active.orgId} me={ops.me} jobs={ops.jobs} pc={ops.hasPc} /> : active.role === "teacher" ? (
         <TeacherHome schoolId={active.schoolId} />
       ) : active.role === "guardian" ? (
-        <GuardianHome schoolId={active.schoolId} />
+        <GuardianHome />
       ) : active.role === "student" ? (
         <StudentHome schoolId={active.schoolId} />
       ) : (
@@ -199,47 +199,44 @@ function TeacherHome({ schoolId }: { schoolId: string }) {
   );
 }
 
-function GuardianHome({ schoolId }: { schoolId: string }) {
+function GuardianHome() {
+  // first screen: every child linked to this account in all schools of the group (server: family_children)
   const kids = useQuery({
-    queryKey: ["my-children", schoolId],
+    queryKey: ["family-children"],
     queryFn: async () => {
-      const { data: auth } = await db.auth.getUser();
-      const { data, error } = await db
-        .from("student_guardians")
-        .select("id, relationship, can_follow, can_pickup, verified, guardians!inner(user_id), students(id, full_name, enrollments(status, sections(name, grades(name))))")
-        .eq("school_id", schoolId)
-        .eq("guardians.user_id", auth.user.id);
+      const { data, error } = await db.rpc("family_children");
       if (error) throw error;
       return data as Row[];
     },
   });
-  const rooms = useClassrooms(schoolId);
   if (kids.isLoading) return <LoadingState />;
   if (kids.error) return <ErrorState message={arabicError(kids.error)} onRetry={() => kids.refetch()} />;
   return (
-    <div className="space-y-8">
-      <section>
-        <h2 className="mb-3 text-lg font-bold">أبنائي</h2>
-        {!kids.data?.length ? <EmptyState title="لا يوجد أبناء مرتبطون بحسابك" /> : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {kids.data.map((k) => {
-              const e = (k["students"]?.enrollments as Row[] | undefined)?.find((x) => x["status"] === "active");
-              return (
-                <div key={k["id"]} className="rounded-xl border bg-card p-4">
-                  <p className="font-bold">{k["students"]?.full_name ?? "بانتظار توثيق العلاقة"}</p>
-                  {e && <p className="text-sm text-muted-foreground">{e["sections"]?.grades?.name} / شعبة {e["sections"]?.name}</p>}
-                  <p className="mt-2 text-xs">{k["verified"] ? "علاقة موثقة" : "العلاقة لم توثق بعد — ستظهر البيانات بعد التوثيق"}{k["can_pickup"] ? " · مفوض بالاستلام" : ""}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-      <section>
-        <h2 className="mb-3 text-lg font-bold">فصول أبنائي</h2>
-        {rooms.data?.length ? <ClassroomGrid rows={rooms.data} /> : <EmptyState title="لا توجد فصول رقمية بعد" />}
-      </section>
-    </div>
+    <section>
+      <h2 className="mb-3 text-lg font-bold">أبنائي</h2>
+      {!kids.data?.length ? <EmptyState title="لا يوجد أبناء مرتبطون بحسابك" hint="تواصل مع المدرسة لربط أبنائك بحسابك." /> : (
+        <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {kids.data.map((k) => {
+            const open = k["verified"] && k["can_follow"];
+            const body = (
+              <>
+                <p className="font-bold">{k["student"] ?? "بانتظار توثيق العلاقة"}</p>
+                <p className="text-sm text-muted-foreground">{k["school"]}</p>
+                {open && <p className="text-sm">{k["grade"] ? `${k["grade"]} / شعبة ${k["section"]}` : "لم يُسكَّن في شعبة بعد"}</p>}
+                {open && <p className="mt-1 text-xs text-muted-foreground">رقم C‑Smart: {k["csmart_no"] ?? "غير مسجّل"}</p>}
+                <p className="mt-2 text-xs">{open ? "الجدول · الفصل الرقمي · الواجبات · الزيارات · البيانات المالية ←" : "ستظهر البيانات بعد توثيق المدرسة للعلاقة"}</p>
+              </>
+            );
+            return (
+              <li key={k["student_id"]}>
+                {open ? <Link to="/app/child/$id" params={{ id: k["student_id"] }} className="block h-full rounded-xl border bg-card p-4 transition-colors hover:border-primary/40">{body}</Link>
+                  : <div className="h-full rounded-xl border bg-card p-4 opacity-80">{body}</div>}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -248,24 +245,12 @@ function StudentHome({ schoolId }: { schoolId: string }) {
     queryKey: ["me-student", schoolId],
     queryFn: async () => {
       const { data: auth } = await db.auth.getUser();
-      const { data, error } = await db.from("students").select("full_name, status, enrollments(status, sections(name, grades(name)))").eq("school_id", schoolId).eq("user_id", auth.user.id).maybeSingle();
+      const { data, error } = await db.from("students").select("id").eq("school_id", schoolId).eq("user_id", auth.user!.id).maybeSingle();
       if (error) throw error;
       return data as Row | null;
     },
   });
-  const rooms = useClassrooms(schoolId);
   if (me.isLoading) return <LoadingState />;
-  const e = (me.data?.["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active");
-  return (
-    <div className="space-y-8">
-      <div className="rounded-xl border bg-card p-5">
-        <p className="font-bold">{me.data?.["full_name"] ?? "لم يُربط ملفك بعد"}</p>
-        {e && <p className="text-sm text-muted-foreground">{e["sections"]?.grades?.name} / شعبة {e["sections"]?.name}</p>}
-      </div>
-      <section>
-        <h2 className="mb-3 text-lg font-bold">فصولي</h2>
-        {rooms.data?.length ? <ClassroomGrid rows={rooms.data} /> : <EmptyState title="لا توجد فصول رقمية بعد" />}
-      </section>
-    </div>
-  );
+  if (!me.data) return <EmptyState title="لم يُربط ملفك بعد" hint="تواصل مع إدارة المدرسة." />;
+  return <ChildOverview studentId={me.data["id"]} />;
 }
