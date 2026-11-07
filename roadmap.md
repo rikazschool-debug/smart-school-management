@@ -7,4 +7,4 @@
 - [x] 5–8. Guardian visits (gv-e2e 45/45, gv-journey 8/8)
 - [x] Acceptance tests with separate accounts, desktop + mobile (batch1-journey 13/13, gv-journey 8/8, od-e2e 20/20, gv-e2e 45/45, od-cleanup-e2e 6/6)
 - [x] Abandoned document draft files removed after 24h
-- [ ] Publish
+- [x] Publish (requested Nov 7)
