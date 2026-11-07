@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { db } from "@/components/crud-page";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -117,7 +117,7 @@ function EventDetails({ item, onClose }: { item: Row; onClose: () => void }) {
     },
   });
   const x = d.data ?? {};
-  const rows: [string, React.ReactNode][] = [
+  const rows: [string, ReactNode][] = [
     ["النوع", KIND[item.kind]!.label], ["التاريخ", `${dayName(item.day)} ${item.day}`],
     ...(item.start_time ? [["الوقت", `${hm(item.start_time)} – ${hm(item.end_time)}`] as [string, string]] : []),
     ["الحالة", statusLabel(item) ?? item.status],
