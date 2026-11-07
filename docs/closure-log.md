@@ -621,3 +621,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Role templates vs approved matrix: principal support = view/create/assign/status/follow/followers/export (no transfer/settings); principal & vice visits = view/manage/settings/reception; security = reception only; all branch-scoped. View-only holder of guardian_visits reads its branch only and cannot confirm/decline/call/change settings or open another school; removing the grant cuts access at once. Evidence: gv-viewonly-e2e 14/14 (support view-only already covered by support7-e2e 7–13).
 - Audit of earlier open items (proven not done): period attendance draft→teacher approval (no tables/RPCs yet); live updates exist only for messages, meetings and visits (not requests, notifications, decisions, pickup at reception); support working hours exist org-wide (days/start/end, SLA in working time, pause while waiting) but no holidays, no branch/department override, no stop-reason.
 - Still separate: real WhatsApp delivery (needs a consenting number; simulation results are not counted as delivery); publishing — not published.
+
+## B3.9 — حضور الحصة (prompt-183)
+- مسودة لكل حصة في يومها (الكل حاضر) → المعلم يحدد الغائب/المتأخر/بعذر → يعتمد. البديل في يومه هو من يرصد، والمعلم الغائب لا يعدّل.
+- التعديل بعد الاعتماد خلال 7 أيام بسبب إلزامي، ويُسجّل من/إلى والمنفّذ والوقت.
+- الإدارة (مالك/مدير/وكيل/شؤون الطلاب) ترى حالة كل حصص اليوم؛ ولي الأمر يرى سجل ابنه فقط.
+- lesson-att-e2e 26/26؛ رحلة المتصفح: معلم على 390px (رصد، اعتماد، تعديل بسبب، السجل) ومدير على الكمبيوتر — بلا أخطاء. Vitest roles 29/29.
