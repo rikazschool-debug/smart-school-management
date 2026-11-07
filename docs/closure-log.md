@@ -590,3 +590,10 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Finance: fin_student_accounts / fin_student_payments (service-only writes, empty until the financial link) → «بانتظار الربط المالي»; fin_branch_pay per branch (owner-only fin_pay_save, IBAN SA+22 digits, https links, logged in fin_pay_log). Opening a payment link never confirms a payment.
 - Tested: family-e2e 24/24 (server), family-journey 22/22 (browser, desktop + 390px). Test data removed.
 - Open: payment confirmation source (external financial system); real C-Smart sync.
+
+## 2026-11-07 — One digital classroom per class+section (batch 3, item 4)
+- Survey: 33 subject classrooms (one per course) in 24 sections, 1 post, 1 comment, 1 post file, 0 homework on course classrooms.
+- Built: section_rooms (unique per section) + classrooms.section_room_id; subject classrooms stay as channels, so posts/files/comments/homework keep their links and per-course permissions. classroom_regroup (principal of the school, or service) is re-runnable and logs a before/after report in classroom_regroup_runs; insert trigger + ensure_classroom link new classrooms. UI: /app/classrooms lists section rooms; /app/classrooms/section/$id has subject tabs, teachers, students; old /app/classrooms/$id links redirect; child card opens the child's room.
+- Live run report: before 0 rooms / 0 linked → after 24 rooms / 33 linked; posts 1→1, comments 1→1, post files 1→1, homework 0→0 (content_unchanged = true).
+- Tested: classroom-room-e2e 29/29 (old + new content, teacher posts only in own subjects, student/guardian access, transfer A→B, teacher change revokes access), family-e2e 24/24, family-journey 24/24 (desktop + 390px), rls-e2e 94/94. Test data removed.
+- Unchanged: teacher↔student messaging from the teaching context (communication rules), manual groups for staff.

@@ -23,7 +23,7 @@
 - [x] 2. Guardian UI: children first, per-child sections, foreign child blocked, finance placeholder, branch payment settings (owner)
 - [x] 3a. Student home = schedule / classroom / homework; finance & child pages blocked
 - [ ] 3b. Student scope audit: files, search, notifications by student relations
-- [ ] 4. Digital classroom per class+section (survey, re-runnable migration with before/after report, teacher scope, transfer/assignment change tests)
+- [x] 4. Digital classroom per class+section (section rooms; regroup run on live data 33 subject classrooms → 24 rooms, content unchanged; classroom-room-e2e 29/29, family-journey 24/24, rls-e2e 94/94)
 - [ ] 5. Guardian homework per child (done via child page); attendance per period: draft all-present → teacher marks absent → approve with assignment check, edit log
 - [ ] 6. Live updates for requests/notifications/visits/decisions; reconnect recovery; stop on role/school switch; guardian pickup request seen live at reception
 - [ ] 7. Support working hours: org days/hours/holidays with branch/department override, SLA in working time, stop reason, separate settings permission
