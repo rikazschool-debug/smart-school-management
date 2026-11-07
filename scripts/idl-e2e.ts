@@ -82,7 +82,9 @@ try {
   check("15 token cannot be used twice", !!(await client().auth.verifyOtp({ token_hash: link.data.properties!.hashed_token, type: "magiclink" })).error);
 
   // students
-  check("16 student ID + matching C-Smart number opens the student's account", (await admin.rpc("_idl_student", { _nid: nid(6), _csmart: "cs-" + sfx })).data?.user_id === st.id);
+  check("16 student ID + matching C-Smart number opens the student's account", (await admin.rpc("_idl_student", { _nid: nid(6), _csmart: "CS-" + sfx })).data?.user_id === st.id);
+  check("16b a number differing only in letter case does not sign in", (await admin.rpc("_idl_student", { _nid: nid(6), _csmart: "cs-" + sfx })).data?.error === "mismatch");
+  await admin.from("id_login_failures").delete().eq("kind", "student").eq("key_hash", (await admin.rpc("_idl_hash", { _s: nid(6) })).data ?? "-");
   check("17 own ID with another student's number is refused", (await admin.rpc("_idl_student", { _nid: nid(6), _csmart: "CS2-" + sfx })).data?.error === "mismatch");
   for (let i = 0; i < 4; i++) await admin.rpc("_idl_student", { _nid: nid(7), _csmart: "nope" });
   const lk = (await admin.rpc("_idl_student", { _nid: nid(7), _csmart: "nope" })).data;
