@@ -60,7 +60,7 @@ async function main() {
   const studs = [] as any[];
   for (const n of ["أحمد", "خالد", "سعد"]) { const s = await ins("students", { full_name: n + " الاختبار" }); studs.push(s); await ins("enrollments", { student_id: s.id, section_id: sec.id, year_id: year.id }); }
   const gd = await ins("guardians", { full_name: "ولي أمر", user_id: g.id });
-  await admin.from("student_guardians").insert({ school_id: S, student_id: studs[0].id, guardian_id: gd.id, verified: true, can_follow: true, verified_at: new Date().toISOString() });
+  await ins("student_guardians", { student_id: studs[0].id, guardian_id: gd.id, verified: true, can_follow: true, verified_at: new Date().toISOString() });
   const tt = await ins("timetables", { year_id: year.id, name: "الجدول", created_by: pr.id });
   const sl = await pr.c.from("timetable_slots").insert({ timetable_id: tt.id, school_id: S, day: dow, period_id: P.id, course_id: c.id, section_id: sec.id, teacher_id: tch.id }).select().single(); if (sl.error) throw sl.error;
   const pb = await pr.c.rpc("publish_timetable", { _id: tt.id, _effective_from: today }); if (pb.error) throw pb.error;
