@@ -16,6 +16,7 @@ import { askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { HrImport } from "@/components/hr/import";
+import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { GENDER, STATUS, rpc, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
@@ -96,6 +97,7 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
       </div>
       {add && m.caps.create && <AddEmployee org={org} m={m} onClose={() => nav({ search: {} })} onDone={(id) => nav({ search: { emp: id } })} />}
       {imp && m.caps.create && all.data && <HrImport org={org} m={m} existing={all.data} onClose={() => nav({ search: {} })} onDone={() => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-list-all"] }); }} />}
+      <HrIdReadiness org={org} school={school} onOpen={(id) => nav({ search: { emp: id } })} />
       {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} />}
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !rows.length ? (
         <EmptyState title="لا يوجد موظفون مطابقون" hint={m.caps.create ? "أضف الموظفين من حساباتهم أو سجلات المعلمين الموجودة." : "لا توجد ملفات موظفين في نطاقك."} />
