@@ -14,6 +14,8 @@ async def one(b,email,w):
     try: await pg.wait_for_url(re.compile(r"/app"),timeout=25000)
     except Exception: await pg.screenshot(path=str(S/f"{email}-{w}-login.png")); chk(f"{email} @{w} signs in",False,pg.url); await ctx.close(); return
     await pg.wait_for_timeout(3500)
+    try: await pg.wait_for_function("(document.querySelector('main')?.innerText||'').trim().length>20",timeout=15000)
+    except Exception: pass
     sw=await pg.evaluate("document.documentElement.scrollWidth"); main=(await pg.locator("main").inner_text()) if await pg.locator("main").count() else ""
     await pg.screenshot(path=str(S/f"{email.split('@')[0]}-{w}.png"))
     menu_ok=True
