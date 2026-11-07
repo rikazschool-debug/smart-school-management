@@ -92,7 +92,7 @@ const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-side
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "profile", "my_hr"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
-  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions"] },
+  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
