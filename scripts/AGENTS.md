@@ -89,6 +89,7 @@
 - scripts/gv-fixture.ts setup|teardown: isolated gvx- data (2 schools, principals, reception, host, guardian with two children). scripts/gv-e2e.ts: guardian visits (45 checks). scripts/gv-journey.py: guardian phone → principal desktop → reception phone (8 checks); always run teardown after.
 - scripts/od-cleanup-e2e.ts: abandoned «الوثائق والعقود» draft files (org_doc_pending >24h) removed by run_file_cleanup, fresh/saved kept (6 checks). scripts/batch1-journey.py: batch-1 menus/renames/hidden pages for owner, principal, teacher on desktop+phone (13 checks, needs hub4-fixture).
 - scripts/gv-live-e2e.ts: live visit updates over gv_signals + owner two-school scope + hours settings (8 checks; run after gv-fixture + gv-e2e, before teardown).
+- scripts/gv-viewonly-e2e.ts: role templates (visits/support) vs approved matrix + guardian_visits view-only holder (14 checks; needs gv-fixture, then teardown). Suites share one test database: run them one after another; many in parallel hit the 8 s statement limit.
 - scripts/idl-e2e.ts: ID/iqama sign-in codes, limits, conflicts, student C-Smart match/lockout, one-time token, lockdown (22 checks).
 - scripts/family-e2e.ts: guardian/student overview + branch payment settings (24 checks; `--keep` writes /tmp/browser/fam/fixture.json, `--teardown` removes it). scripts/family-journey.py: guardian (desktop+phone), student, owner screens (22 checks).
 - scripts/classroom-room-e2e.ts: section rooms (regroup report/re-run, teacher subject scope, student/guardian access, transfer, teacher change; 29 checks).
