@@ -33,3 +33,14 @@ describe("C‑Smart number", () => {
     expect(studentReadiness({ national_id: "1", csmart_no: null, status: "active" })).toEqual(["رقم C‑Smart"]);
   });
 });
+
+import { guardianReadiness, maskTail } from "./people-import";
+describe("guardian record", () => {
+  it("needs ID and approved mobile to sign in", () => {
+    expect(guardianReadiness({ national_id: "1012345678", phone: "966500000000" })).toEqual([]);
+    expect(guardianReadiness({ national_id: null, phone: "966500000000" })).toEqual(["رقم الهوية"]);
+  });
+  it("masks all but last 3 characters", () => {
+    expect(maskTail("1012345678")).toBe("•••••••678");
+  });
+});
