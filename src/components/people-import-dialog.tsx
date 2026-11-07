@@ -14,7 +14,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { arabicError } from "@/lib/session";
 import { provisionAccounts } from "@/lib/accounts.functions";
-import { FIELDS, norm, parseWorkbook, sectionSuggestion, templateBook, validate, type CheckedRow, type Lookups, type PKind, type RawRow } from "@/lib/people-import";
+import { FIELDS, csmartKey, norm, parseWorkbook, sectionSuggestion, templateBook, validate, type CheckedRow, type Lookups, type PKind, type RawRow } from "@/lib/people-import";
 import { ACCOUNT_STATE } from "@/components/guardian-quick-add";
 
 type Stage = { ok: boolean; msg: string } | null;
@@ -33,7 +33,7 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { s
     const used = new Map<string, number>(); for (const e of (enr.data ?? []) as Row[]) used.set(e["section_id"], (used.get(e["section_id"]) ?? 0) + 1);
     return {
       existingIds: new Map(((ex.data ?? []) as Row[]).filter((x) => x["national_id"]).map((x) => [String(x["national_id"]).replace(/\D/g, ""), x["id"]])),
-      existingCsmart: new Map(((ex.data ?? []) as Row[]).filter((x) => x["csmart_no"]).map((x) => [String(x["csmart_no"]), x["id"]])),
+      existingCsmart: new Map(((ex.data ?? []) as Row[]).filter((x) => x["csmart_no"]).map((x) => [csmartKey(String(x["csmart_no"])), x["id"]])),
       rowCsmart: new Map(((ex.data ?? []) as Row[]).filter((x) => x["csmart_no"]).map((x) => [x["id"], String(x["csmart_no"])])),
       existingPhones: new Map(), departments: new Map(),
       sections: new Map(((secs.data ?? []) as Row[]).map((x) => [`${norm(x["grades"]?.["name"])}|${norm(x["name"])}`, { id: x["id"], year_id: x["year_id"], capacity: x["capacity"], used: used.get(x["id"]) ?? 0 }])),
