@@ -172,7 +172,7 @@ function GuardianList({ schoolId }: { schoolId: string }) {
   );
 }
 
-function StudentHomework({ studentId, guardian }: { studentId: string; guardian?: boolean }) {
+export function StudentHomework({ studentId, guardian }: { studentId: string; guardian?: boolean }) {
   const [tab, setTab] = useState<"due" | "late" | "done" | "returned" | "all">("due");
   const list = useQuery({
     queryKey: ["hw-student", studentId],
