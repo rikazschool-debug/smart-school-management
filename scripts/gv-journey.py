@@ -30,6 +30,8 @@ async def main():
         det = g.get_by_label("تفاصيل الزيارة")
         check("2 request sent and awaits the school", await det.count() == 1 and "بانتظار رد المدرسة" in await det.inner_text(), await g.content())
         p = await login(br, "p1")
+        try: await p.get_by_role("link", name="الزيارات", exact=True).first.wait_for(timeout=15000)
+        except Exception: pass
         nav = await p.get_by_role("link", name="الزيارات", exact=True).count()
         check("3 principal has «الزيارات» in the menu", nav >= 1)
         await p.goto(B + "/app/family-visits?tab=school"); await p.wait_for_timeout(3500)
