@@ -40,13 +40,16 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { s
       secList: ((secs.data ?? []) as Row[]).map((x) => ({ id: x["id"], label: `${x["grades"]?.["name"] ?? ""} / ${x["name"]}` })).sort((a, b) => a.label.localeCompare(b.label, "ar")),
     };
   }
-  const [ex, deps] = await Promise.all([
-    db.from("teachers").select("id, national_id, phone").eq("school_id", schoolId).limit(20000),
+  const [ex, ids, deps] = await Promise.all([
+    db.from("teachers").select("id, phone").eq("school_id", schoolId).limit(20000),
+    db.rpc("teacher_id_status", { _school: schoolId }),
     db.from("departments").select("id, name").eq("school_id", schoolId),
   ]);
   if (ex.error) throw ex.error;
   const { normPhone } = await import("@/lib/people-import");
-  const rows = (ex.data ?? []) as Row[];
+  if (ids.error) throw ids.error;
+  const nidOf = new Map(((ids.data ?? []) as Row[]).map((x) => [x["teacher_id"], x["national_id"]]));
+  const rows = ((ex.data ?? []) as Row[]).map((x) => ({ ...x, national_id: nidOf.get(x["id"]) ?? null }));
   return {
     existingIds: new Map(rows.filter((x) => x["national_id"]).map((x) => [String(x["national_id"]), x["id"]])),
     existingPhones: new Map(rows.map((x) => [normPhone(x["phone"]) ?? "", x["id"]] as [string, string]).filter(([p]) => p)),

@@ -28,7 +28,7 @@ export const provisionAccounts = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const table = data.kind === "student" ? "students" : data.kind === "teacher" ? "teachers" : "guardians";
-    const { data: rows, error } = await context.supabase.from(table).select("*").in("id", data.ids);
+    const { data: rows, error } = await context.supabase.from(table).select(data.kind === "teacher" ? "id, school_id, user_id, phone, email, full_name" : "*").in("id", data.ids); // teachers.national_id is not readable directly
     if (error) throw new Error("تعذّرت قراءة السجلات");
     const out: { id: string; state: string; msg?: string }[] = [];
     const allowed = new Map<string, boolean>();
