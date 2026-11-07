@@ -14,7 +14,7 @@ import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
-import { IdCard, UserPlus } from "lucide-react";
+import { FileText, IdCard, UserPlus } from "lucide-react";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
