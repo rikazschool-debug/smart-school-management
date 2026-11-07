@@ -40,8 +40,9 @@ check("10 view-only cannot decline", !!(await h1.rpc("gv_act", { _id: V, _action
 check("11 view-only cannot change settings", !!(await h1.rpc("gv_settings_save", { _school: S1, _p: { days: [0], start_time: "07:00", end_time: "08:00", slot_minutes: 20 } })).error);
 check("12 view-only cannot open the other school", !!(await h1.rpc("gv_list", { _school: S2, _view: "school" })).error);
 check("13 view-only cannot create a school call", !!(await h1.rpc("gv_create", { _p: { source: "school", student_id: K.k3, reason_cat: "behavior", details: "استدعاء", slot_date: tmr, slot_time: "10:00" } })).error);
-await owner.rpc("perm_override_set", { _org: f.org, _user: id.h1, _section: "guardian_visits", _action: "view", _effect: null as never, _scope: null as never, _reason: "إنهاء الاختبار" });
-check("14 removing the grant cuts access at the next request", !!(await h1.rpc("gv_list", { _school: S1, _view: "school" })).error);
+const clr = await owner.rpc("perm_override_set", { _org: f.org, _user: id.h1, _section: "guardian_visits", _action: "view", _effect: null as never, _scope: null as never, _reason: "إنهاء الاختبار" });
+const after = await h1.rpc("gv_list", { _school: S1, _view: "school" });
+check("14 removing the grant cuts access at the next request", !clr.error && !!after.error, { clr: clr.error, rows: (after.data as any[] | null)?.length });
 
 await admin.from("gv_visits").delete().eq("id", V);
 console.log(`\n${pass} passed, ${fail} failed`);
