@@ -137,6 +137,11 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
         const up = await db.from("students").update({ csmart_no: d["csmart_no"] }).eq("id", id).is("csmart_no", null);
         res.academic = up.error ? { ok: false, msg: arabicError(up.error) } : { ok: true, msg: "موجود مسبقًا" };
         if (up.error) continue;
+      } else if (kind === "teachers" && d["national_id"] && !lookups?.rowNid?.get(id)) {
+        // existing teacher without an ID: record it through the checked server path (refuses an ID owned by someone else)
+        const up = await db.rpc("teacher_nid_save", { _teacher: id, _nid: d["national_id"] });
+        res.academic = up.error ? { ok: false, msg: arabicError(up.error) } : { ok: true, msg: "موجود مسبقًا — أُضيفت الهوية" };
+        if (up.error) continue;
       } else res.academic = { ok: true, msg: "موجود مسبقًا" };
       (r as CheckedRow & { savedId?: string }).savedId = id!;
       if (kind === "students") {
