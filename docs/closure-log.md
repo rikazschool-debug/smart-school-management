@@ -578,3 +578,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Owner notifications card renamed «إدارة الإشعارات», meetings link moved to «إدارة المدارس»; old /app/hub?tab=meetings opens /app/admin/meetings.
 - Acceptance: batch1-journey 13/13 (owner/principal/teacher, desktop+phone), gv-journey 8/8, gv-e2e 45/45, od-e2e 20/20, support-cleanup-e2e 7/7, vitest 92/92.
 - 2026-11-07 زيارات أولياء الأمور: انقضاء المواعيد، ساعات قابلة للضبط بلا حد 1 ظهرًا، تحديث فوري؛ gv-e2e 45/45، gv-live-e2e 8/8 (مالك عبر مدرستين، عزل المدير).
+
+## B2.2 ID sign-in (Nov 7 2026, staging)
+- Server (scripts/idl-e2e.ts): 22/22 — code wrong/expired/reused/locked, cooldown, 3-per-15-min, missing/conflicting mobile, unknown ID, staff+guardian one account, existing-account token (no new user, single use), student match/mismatch/lockout, other-student read blocked, anon/auth lockdown.
+- Browser (desktop + 390px): 7/7 — generic message for unknown ID, student mismatch refused, student opens own account, role chooser shows teacher + guardian.
+- Real WhatsApp send: NOT tested this round (needs a consenting real number; scripts/otp-live-test.ts). SMS fallback: no SMS provider configured — external requirement.
+- C-Smart: students.csmart_no filled manually/import; real sync = external dependency.

@@ -50,3 +50,4 @@
 
 - Notifications hub (bc_*): RPC-only; server audience _bc_audience + preview fingerprint checked at send; perms notices/hub_meetings (area comm_hub). Tests: bc-e2e, bc-journey.
 - Guardian visits (gv_*): RPC-only over perm section guardian_visits; partial unique index = one active visit per slot; changes bump rev + append gv_events. Tests: gv-e2e.
+- ID sign-in: src/lib/id-login.functions.ts (public server fns) → service-only _idl_* SQL (resolve ID→one account+school-record mobile, codes hashed/5 min/single use/5 tries, student ID+students.csmart_no with lockout); success returns a magic-link token hash for an existing account only — never creates accounts; errors stay generic. Tests: scripts/idl-e2e.ts.
