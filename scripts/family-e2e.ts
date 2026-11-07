@@ -3,13 +3,23 @@
 // guardian g2 with one child, an unverified link, and a student login. Cleans up through TestRun at the end.
 // Run: NODE_PATH=node_modules bun scripts/family-e2e.ts
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { TestRun } from "./lib/test-run";
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "fmx");
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); };
+const KEEP = process.argv.includes("--keep"), FX = "/tmp/browser/fam/fixture.json";
+if (process.argv.includes("--teardown")) {
+  const f = JSON.parse(readFileSync(FX, "utf8"));
+  f.schools.forEach((x: string) => tr.addSchool(x)); Object.values(f.users).forEach((u) => tr.addUser(u as string));
+  for (const x of f.schools) { await admin.from("fin_student_payments").delete().eq("school_id", x); await admin.from("fin_student_accounts").delete().eq("school_id", x); }
+  await tr.deleteNotifications().catch((e) => console.log("notif cleanup:", e.message));
+  await tr.purgeOrg(f.org);
+  for (const u of Object.values(f.users)) await admin.auth.admin.deleteUser(u as string);
+  console.log("teardown ok"); process.exit(0);
+}
 const run = Date.now(), pw = "Test-pass-" + run;
 let pass = 0, fail = 0; const check = (n: string, ok: boolean, extra?: unknown) => { ok ? pass++ : fail++; console.log(ok ? "PASS" : "FAIL", n, ok ? "" : JSON.stringify(extra ?? "")); };
 const users: Record<string, string> = {}; const emails: Record<string, string> = {};
@@ -100,11 +110,12 @@ try {
 } catch (e) {
   fail++; console.log("ERROR", (e as Error).message ?? e);
 } finally {
-  if (org) {
+  if (KEEP) { mkdirSync("/tmp/browser/fam", { recursive: true }); writeFileSync(FX, JSON.stringify({ org, schools: S, users, emails, pw })); console.log("kept fixture", FX); }
+  else if (org) {
     for (const s of S) { await admin.from("fin_student_payments").delete().eq("school_id", s); await admin.from("fin_student_accounts").delete().eq("school_id", s); }
     await tr.deleteNotifications().catch((e) => console.log("notif cleanup:", e.message));
     await tr.purgeOrg(org).catch((e) => console.log("purge:", e.message));
   }
-  for (const u of Object.values(users)) await admin.auth.admin.deleteUser(u);
+  if (!KEEP) for (const u of Object.values(users)) await admin.auth.admin.deleteUser(u);
 }
 console.log(`${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);
