@@ -4626,6 +4626,233 @@ export type Database = {
           },
         ]
       }
+      gv_closures: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          on_date: string
+          reason: string | null
+          school_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          on_date: string
+          reason?: string | null
+          school_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          on_date?: string
+          reason?: string | null
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gv_closures_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gv_events: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          details: Json
+          id: string
+          internal: boolean
+          visit_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          internal?: boolean
+          visit_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          internal?: boolean
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gv_events_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "gv_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gv_settings: {
+        Row: {
+          days: number[]
+          enabled: boolean
+          end_time: string
+          school_id: string
+          slot_minutes: number
+          start_time: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          days?: number[]
+          enabled?: boolean
+          end_time?: string
+          school_id: string
+          slot_minutes?: number
+          start_time?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          days?: number[]
+          enabled?: boolean
+          end_time?: string
+          school_id?: string
+          slot_minutes?: number
+          start_time?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gv_settings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gv_visits: {
+        Row: {
+          arrived_at: string | null
+          awaiting: string | null
+          conf_date: string | null
+          conf_time: string | null
+          created_at: string
+          created_by: string
+          decision_reason: string | null
+          details: string | null
+          guardian_id: string
+          guardian_user: string
+          host_id: string | null
+          id: string
+          internal_note: string | null
+          left_at: string | null
+          org_id: string
+          proposed_by: string | null
+          reason_cat: string
+          rev: number
+          school_id: string
+          slot_date: string
+          slot_time: string
+          source: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          arrived_at?: string | null
+          awaiting?: string | null
+          conf_date?: string | null
+          conf_time?: string | null
+          created_at?: string
+          created_by: string
+          decision_reason?: string | null
+          details?: string | null
+          guardian_id: string
+          guardian_user: string
+          host_id?: string | null
+          id?: string
+          internal_note?: string | null
+          left_at?: string | null
+          org_id: string
+          proposed_by?: string | null
+          reason_cat: string
+          rev?: number
+          school_id: string
+          slot_date: string
+          slot_time: string
+          source: string
+          status: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          arrived_at?: string | null
+          awaiting?: string | null
+          conf_date?: string | null
+          conf_time?: string | null
+          created_at?: string
+          created_by?: string
+          decision_reason?: string | null
+          details?: string | null
+          guardian_id?: string
+          guardian_user?: string
+          host_id?: string | null
+          id?: string
+          internal_note?: string | null
+          left_at?: string | null
+          org_id?: string
+          proposed_by?: string | null
+          reason_cat?: string
+          rev?: number
+          school_id?: string
+          slot_date?: string
+          slot_time?: string
+          source?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gv_visits_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gv_visits_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gv_visits_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gv_visits_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homework: {
         Row: {
           allow_resubmit: boolean
@@ -13897,6 +14124,40 @@ export type Database = {
       _gb_total: { Args: { _gb: string; _student: string }; Returns: number }
       _gb_window: { Args: { _gb: string; _student: string }; Returns: boolean }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
+      _gv_host_ok: { Args: { _school: string; _uid: string }; Returns: boolean }
+      _gv_level: {
+        Args: { v: Database["public"]["Tables"]["gv_visits"]["Row"] }
+        Returns: string
+      }
+      _gv_log: {
+        Args: {
+          _action: string
+          _details: Json
+          _internal?: boolean
+          _v: string
+        }
+        Returns: undefined
+      }
+      _gv_ok: { Args: { _action: string; _school: string }; Returns: boolean }
+      _gv_row: {
+        Args: {
+          _level: string
+          v: Database["public"]["Tables"]["gv_visits"]["Row"]
+        }
+        Returns: Json
+      }
+      _gv_slot_err: {
+        Args: { _d: string; _school: string; _t: string }
+        Returns: string
+      }
+      _gv_tell: {
+        Args: {
+          _title: string
+          _to_school: boolean
+          v: Database["public"]["Tables"]["gv_visits"]["Row"]
+        }
+        Returns: undefined
+      }
       _home_roles: { Args: { _me: string; _school: string }; Returns: Json }
       _hr_addr_json: {
         Args: {
@@ -14767,6 +15028,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      _people_pool_v6: {
+        Args: { _org: string; _post: string; _purpose: string; _school: string }
+        Returns: {
+          role: string
+          school_id: string
+          user_id: string
+        }[]
+      }
       _perm_allows_user: {
         Args: {
           _action: string
@@ -14798,6 +15067,7 @@ export type Database = {
       _perm_catalog_base: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
+      _perm_catalog_v4: { Args: never; Returns: Json }
       _perm_denied: {
         Args: { _action: string; _org: string; _section: string; _uid: string }
         Returns: boolean
@@ -16477,6 +16747,45 @@ export type Database = {
           user_id: string
         }[]
       }
+      gv_act: {
+        Args: { _action: string; _id: string; _p?: Json; _rev: number }
+        Returns: Json
+      }
+      gv_caps: { Args: { _school: string }; Returns: Json }
+      gv_closure_add: {
+        Args: { _date: string; _reason: string; _school: string }
+        Returns: undefined
+      }
+      gv_closure_del: { Args: { _id: string }; Returns: undefined }
+      gv_create: { Args: { _p: Json }; Returns: string }
+      gv_get: { Args: { _id: string }; Returns: Json }
+      gv_guardians: { Args: { _student: string }; Returns: Json }
+      gv_list: {
+        Args: {
+          _from?: string
+          _q?: string
+          _school: string
+          _status?: string
+          _to?: string
+          _view: string
+        }
+        Returns: Json
+      }
+      gv_my_children: { Args: never; Returns: Json }
+      gv_settings_get: { Args: { _school: string }; Returns: Json }
+      gv_settings_save: {
+        Args: { _p: Json; _school: string }
+        Returns: undefined
+      }
+      gv_slots: {
+        Args: { _exclude?: string; _from: string; _school: string; _to: string }
+        Returns: {
+          at: string
+          day: string
+          free: boolean
+        }[]
+      }
+      gv_students: { Args: { _q: string; _school: string }; Returns: Json }
       handover_pickup: { Args: { _id: string }; Returns: undefined }
       has_school_role: {
         Args: {
