@@ -134,7 +134,7 @@ export function GuardianImport({ schoolId }: { schoolId: string }) {
                   {fields.map((f) => (
                     <label key={f.key} className="space-y-1 text-xs">
                       <span>{f.label}{f.required ? " *" : ""}</span>
-                      <select className={selectCls()} value={map[f.key] ?? ""} disabled={busy || done} onChange={(e) => void remap(f.key, e.target.value)}>
+                      <select aria-label={`عمود ${f.label}`} className={selectCls("w-full", true)} value={map[f.key] ?? ""} disabled={busy || done} onChange={(e) => void remap(f.key, e.target.value)}>
                         <option value="">— بدون —</option>
                         {Array.from({ length: cols }, (_, c) => <option key={c} value={c}>{colName(c)}</option>)}
                       </select>
