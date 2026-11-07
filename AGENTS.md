@@ -52,3 +52,4 @@
 - Guardian visits (gv_*): RPC-only over perm section guardian_visits; unique index = one active visit per slot; changes bump rev + gv_events. Tests: gv-e2e.
 - ID sign-in: id-login.functions.ts → service-only _idl_* SQL; existing accounts only, generic errors. Test: idl-e2e.
 - Family home, fin_*, section rooms: src/components/family/AGENTS.md.
+- Live refresh: tables that need instant screens add a _live_signal_trg('<topic>') trigger writing topic-only rows to live_signals (own user or school staff via RLS); src/lib/live-signals.ts (one subscription, mounted by NotificationBell) maps topic → query keys and refetches — never put record data in a signal. Tests: scripts/live-signals-e2e.ts.
