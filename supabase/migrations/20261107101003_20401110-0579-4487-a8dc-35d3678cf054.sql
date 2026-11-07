@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public._students_csmart_guard() FROM PUBLIC, anon, authenticated;
