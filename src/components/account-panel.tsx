@@ -29,7 +29,7 @@ export function AccountPanel({ kind, id, canWrite }: { kind: "student" | "teache
   return (
     <div className="space-y-2 rounded-lg border p-3 text-sm">
       <p><span className="font-semibold">حساب الدخول: </span>{st.isLoading ? "…" : ACCOUNT_STATE[state] ?? state}</p>
-      <p className="text-xs text-muted-foreground">{kind === "student" ? "يدخل الطالب برقم هويته وكلمة مرور أولية، ويُلزم بتغييرها قبل الوصول لأي بيانات." : "يدخل المعلم بجواله ورمز يصله على واتساب."}</p>
+      <p className="text-xs text-muted-foreground">{kind === "student" ? "يدخل الطالب برقم هويته أو إقامته ورقمه الداخلي في C‑Smart." : "الدخول بالهوية أو الإقامة ثم رمز تحقق يصل إلى الجوال المعتمد."}</p>
       {canWrite && state === "none" && (
         <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
           setBusy(true);
