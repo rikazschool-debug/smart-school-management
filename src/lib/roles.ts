@@ -31,6 +31,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 export type NavKey =
   | "home"
+  | "hr_training"
   | "org_docs"
   | "platform"
   | "schools"
@@ -88,7 +89,8 @@ const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   finance: ["finance", "procurement"],
   operations: ["operations", "transport", "bus_maintenance"],
   maintenance: ["maintenance"],
-  hr: ["hr"],
+  // evaluation admin entry and training live inside HR for the owner
+  hr: ["hr", "evaluation", "hr_training"],
   users: ["members", "permissions"],
   hub: ["hub_notices", "hub_circulars"],
   support: ["support"],
@@ -107,7 +109,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
   if (p.startsWith("/app/hr")) return "hr";
   if (p === "/app/hub" || p.startsWith("/app/notice/")) return "hub";
   if (p === "/app/support" || p.startsWith("/app/support/")) return "support";
-  if (p.startsWith("/app/evaluation") || p.startsWith("/app/visits")) return "evaluation";
+  if (p.startsWith("/app/evaluation") || p.startsWith("/app/visits")) return "hr";
   if (p.startsWith("/app/admissions")) return "school_admin"; // admissions is a sub-tab of school administration
   if (p.startsWith("/app/maintenance")) return "maintenance";
   if (p.startsWith("/app/operations") || p.startsWith("/app/bus-maintenance") || p.startsWith("/app/transport")) return "operations";
@@ -117,7 +119,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
 
 /** Side-menu keys an owner sees inside a section (filtered further by what the role may open). */
 export function ownerSectionNav(section: OwnerSection, allowed: NavKey[]): NavKey[] {
-  const own = OWNER_SECTION_KEYS[section].filter((k) => allowed.includes(k) || k === "school_home" || k === "finance" || k === "hr" || k === "permissions" || k === "procurement" || k === "operations" || k === "transport" || k === "maintenance" || k === "bus_maintenance" || k === "admissions" || k === "org_docs" || section === "hub");
+  const own = OWNER_SECTION_KEYS[section].filter((k) => allowed.includes(k) || k === "school_home" || k === "finance" || k === "hr" || k === "permissions" || k === "procurement" || k === "operations" || k === "transport" || k === "maintenance" || k === "bus_maintenance" || k === "admissions" || k === "org_docs" || k === "evaluation" || k === "hr_training" || section === "hub");
   return [...new Set([...own, ...OWNER_COMMON])];
 }
 
@@ -172,6 +174,7 @@ export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).ma
 /** Menu labels (same as the side menu) for previewing a base role's dashboard. */
 export const NAV_LABELS: Partial<Record<NavKey, string>> = {
   org_docs: "الوثائق والعقود",
+  hr_training: "التدريب والتطوير",
   home: "الرئيسية", academic: "الإعداد الأكاديمي", teachers: "المعلمون", courses: "المقررات والتكليفات", students: "الطلاب والتسكين", guardians: "أولياء الأمور",
   classrooms: "الفصول الرقمية", virtual: "الحصص الافتراضية", homework: "الواجبات والاختبارات", grades: "أرشيف الدرجات الفصلية", results: "النتائج", schedule: "الجدول المدرسي",
   attendance: "الحضور والخروج", station: "المسح والبوابة والنداء", pickup: "الخروج والاستئذان", admin: "التكليفات والطلبات", duties: "المناوبات", meetings: "الاجتماعات",

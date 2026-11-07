@@ -115,11 +115,12 @@ describe("owner shared pages keep the current section", () => {
 });
 
 describe("owner evaluation section", () => {
-  it("evaluation and class visits open the evaluation section with only its menu", async () => {
+  it("evaluation and class visits open inside HR with HR's menu", async () => {
     const { ownerSection, ownerSectionNav, NAV_BY_ROLE } = await import("@/lib/roles");
-    expect(ownerSection("/app/evaluation", "school_admin")).toBe("evaluation");
-    expect(ownerSection("/app/visits", null)).toBe("evaluation");
-    const nav = ownerSectionNav("evaluation", NAV_BY_ROLE.org_owner);
+    expect(ownerSection("/app/evaluation", "school_admin")).toBe("hr");
+    expect(ownerSection("/app/visits", null)).toBe("hr");
+    const nav = ownerSectionNav("hr", NAV_BY_ROLE.org_owner);
+    expect(nav).toContain("hr_training");
     expect(nav).toContain("evaluation");
     expect(nav).not.toContain("academic");
     expect(nav).not.toContain("teachers");
@@ -140,5 +141,15 @@ describe("admissions under school administration", () => {
   it("admissions pages belong to the school administration section", async () => {
     const { ownerSection } = await import("@/lib/roles");
     expect(ownerSection("/app/admissions")).toBe("school_admin");
+  });
+});
+
+describe("evaluation under HR for the owner", () => {
+  it("evaluation and visits pages belong to the HR section", async () => {
+    const { ownerSection, NAV_BY_ROLE: N } = await import("@/lib/roles");
+    expect(ownerSection("/app/evaluation")).toBe("hr");
+    expect(ownerSection("/app/visits")).toBe("hr");
+    expect(N.principal).not.toContain("hr");
+    expect(N.principal).toContain("evaluation");
   });
 });
