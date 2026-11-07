@@ -570,3 +570,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Open: Agora audio/screen-share on two real devices (field test).
 
 - 2026-11-06: Owner «الدعم الفني والمساعدة» is its own section with its tabs as a side sub-menu (support_caps-filtered; RPCs unchanged). Global «رجوع» button in the top bar of every /app page (history back, fallback /app). Test: src/test/roles.test.ts 21/21; browser owner journey OK.
+
+- 2026-11-07: Guardian visits (batch 1 phase 2): «الزيارات» inside school administration + guardian tab; settings/closures; school call and guardian request; confirm/propose/keep/decline/cancel; concurrency-safe slots; «تقويمي»; reception check-in/out/no-show; history; 15s auto-refresh. Evidence: gv-e2e 45/45, gv-journey 8/8 (guardian 390px, principal desktop, reception 390px), roles.test 25/25.

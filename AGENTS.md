@@ -49,3 +49,4 @@
 - HR (hr_*): RPC-only, single source; see src/components/hr/AGENTS.md.
 
 - Notifications hub (bc_*): RPC-only; server audience _bc_audience + preview fingerprint checked at send; perms notices/hub_meetings (area comm_hub). Tests: bc-e2e, bc-journey.
+- Guardian visits (gv_*): RPC-only over perm section guardian_visits (view/manage/settings/reception); one active visit per school slot via a partial unique index (concurrency-safe); every change bumps rev and appends gv_events; reception sees today's confirmed visits without reason/details; guardians never see internal notes. Tests: gv-e2e, gv-journey.
