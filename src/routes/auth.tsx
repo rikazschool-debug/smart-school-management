@@ -185,7 +185,7 @@ function AuthPage() {
                     <button type="button" className="text-muted-foreground" onClick={() => setMode("forgot")}>نسيت كلمة المرور؟</button>
                   )}
                 </div>
-              </form>
+              </form>}
             </>
           )}
           {mode === "signin" && review && (
