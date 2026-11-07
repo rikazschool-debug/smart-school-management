@@ -10,6 +10,7 @@ import { canManageStudents } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
 import { guardianReadiness, localPhone, maskTail } from "@/lib/people-import";
 import { CreateAccountButton } from "@/components/guardian-quick-add";
+import { GuardianImport } from "@/components/guardian-import-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/guardians")({
   component: Page,
@@ -36,6 +37,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
     <>
       <PageHeader title="أولياء الأمور" desc="سجل واحد لكل ولي أمر يجمع أبناءه. الجوال المعتمد هنا هو الذي يُرسل إليه رمز الدخول، وكل تغيير عليه يُسجّل." />
       <CrudTable title="أولياء الأمور" table="guardians" schoolId={schoolId} canWrite={w} order="full_name"
+        toolbar={w ? <GuardianImport schoolId={schoolId} /> : undefined}
         select="*, student_guardians(id, verified)" searchKeys={["full_name", "phone", "email", "national_id"]}
         fields={[
           { key: "full_name", label: "الاسم الكامل", required: true },

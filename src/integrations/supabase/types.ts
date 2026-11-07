@@ -17902,6 +17902,10 @@ export type Database = {
       hw_state: { Args: { _hw: string; _student: string }; Returns: Json }
       hw_teacher: { Args: { _hw: string }; Returns: boolean }
       hw_tick: { Args: never; Returns: Json }
+      import_guardian_row: {
+        Args: { _dry?: boolean; _row: Json; _school: string }
+        Returns: Json
+      }
       in_section: {
         Args: { _section: string; _year: string }
         Returns: boolean

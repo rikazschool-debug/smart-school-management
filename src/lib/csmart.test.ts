@@ -44,3 +44,24 @@ describe("guardian record", () => {
     expect(maskTail("1012345678")).toBe("•••••••678");
   });
 });
+
+import { checkGuardianRows } from "./people-import";
+describe("guardian import rows", () => {
+  const g = (v: Record<string, string>, line = 2) => ({ sheet: "s", line, formulas: [], values: { full_name: "ولي", national_id: "1012345678", phone: "0501234567", relationship: "أب", student_csmart: "0007", school: "", ...v } });
+  it("keeps the child's C‑Smart leading zeros and normalizes mobile", () => {
+    const [r] = checkGuardianRows([g({})], "مدرسة");
+    expect(r!.errors).toEqual([]);
+    expect(r!.payload["student_csmart"]).toBe("0007");
+    expect(r!.payload["phone"]).toBe("966501234567");
+  });
+  it("one guardian may repeat for two children, but not the same pair", () => {
+    const rs = checkGuardianRows([g({}), g({ student_csmart: "0008" }, 3), g({}, 4)], "مدرسة");
+    expect(rs[1]!.errors).toEqual([]);
+    expect(rs[2]!.errors).toContain("العلاقة نفسها مكررة في الملف");
+  });
+  it("rejects the same guardian with two mobiles and another school", () => {
+    const rs = checkGuardianRows([g({}), g({ phone: "0559999999", student_csmart: "9" }, 3), g({ school: "أخرى", student_csmart: "10" }, 4)], "مدرسة");
+    expect(rs[1]!.errors).toContain("ولي الأمر نفسه بجوالين مختلفين في الملف");
+    expect(rs[2]!.errors.some((e) => e.includes("ليست المدرسة الحالية"))).toBe(true);
+  });
+});
