@@ -27,7 +27,7 @@ function Page() {
             <span className="mt-1 block text-sm text-muted-foreground">العهد النقدية، صرفها بإثبات، المصروفات والفواتير بضريبة القيمة المضافة، الاستردادات وكشف الحساب.</span>
           </span>
         </Link>
-        <FinPaySettings orgId={active.orgId} />
+        {active.orgId && <FinPaySettings orgId={active.orgId} />}
       </div>)}
     </>
   );
