@@ -14,7 +14,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { arabicError } from "@/lib/session";
 import { provisionAccounts } from "@/lib/accounts.functions";
-import { FIELDS, norm, parseWorkbook, sectionSuggestion, templateBook, validate, type CheckedRow, type Lookups, type PKind, type RawRow } from "@/lib/people-import";
+import { FIELDS, csmartKey, norm, parseWorkbook, sectionSuggestion, templateBook, validate, type CheckedRow, type Lookups, type PKind, type RawRow } from "@/lib/people-import";
 import { ACCOUNT_STATE } from "@/components/guardian-quick-add";
 
 type Stage = { ok: boolean; msg: string } | null;
