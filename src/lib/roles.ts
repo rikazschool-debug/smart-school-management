@@ -222,7 +222,7 @@ export type ScheduleTab = "timetable" | "subs" | "settings";
  *  everyone else sees only «جدولي» (their scoped view). */
 export function scheduleTabs(role: Role): ScheduleTab[] {
   if (canEditSchedule(role)) return ["timetable", "subs", "settings"];
-  if (role === "vice_principal") return ["timetable", "subs", "lessons"];
+  if (role === "vice_principal") return ["timetable", "subs"];
   return [];
 }
 export function scheduleLabel(role: Role) {
@@ -287,7 +287,7 @@ export function attTabs(role: Role): AttTab[] {
   if (role === "student_affairs") return ["today", "gate", "pickups", "calls", "cards", "records", "followup", "lessons"];
   if (role === "org_owner") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls", "compare", "lessons"];
   if (role === "principal") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls", "lessons"];
-  if (role === "vice_principal") return ["today", "pickups", "records", "followup", "cards", "gate", "calls"];
+  if (role === "vice_principal") return ["today", "pickups", "records", "followup", "cards", "gate", "calls", "lessons"];
   return [];
 }
 
