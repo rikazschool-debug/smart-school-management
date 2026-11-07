@@ -4740,6 +4740,27 @@ export type Database = {
           },
         ]
       }
+      gv_signals: {
+        Row: {
+          at: string
+          id: number
+          school_id: string
+          visit_id: string
+        }
+        Insert: {
+          at?: string
+          id?: number
+          school_id: string
+          visit_id: string
+        }
+        Update: {
+          at?: string
+          id?: number
+          school_id?: string
+          visit_id?: string
+        }
+        Relationships: []
+      }
       gv_visits: {
         Row: {
           arrived_at: string | null
