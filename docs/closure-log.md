@@ -577,3 +577,4 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Abandoned document draft files (org_doc_pending) now removed by run_file_cleanup after 24h: od-cleanup-e2e 6/6.
 - Owner notifications card renamed «إدارة الإشعارات», meetings link moved to «إدارة المدارس»; old /app/hub?tab=meetings opens /app/admin/meetings.
 - Acceptance: batch1-journey 13/13 (owner/principal/teacher, desktop+phone), gv-journey 8/8, gv-e2e 45/45, od-e2e 20/20, support-cleanup-e2e 7/7, vitest 92/92.
+- 2026-11-07 زيارات أولياء الأمور: انقضاء المواعيد، ساعات قابلة للضبط بلا حد 1 ظهرًا، تحديث فوري؛ gv-e2e 45/45، gv-live-e2e 8/8 (مالك عبر مدرستين، عزل المدير).

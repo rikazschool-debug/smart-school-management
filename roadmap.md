@@ -10,7 +10,7 @@
 - [x] Publish (requested Nov 7)
 
 # Batch 2 (staging) — from uploaded plan
-- [ ] B2.1 done: expiry, past-confirm block, configurable hours, live updates (gv-live-e2e). Remaining: visibility doc, owner two-school check, published-site check
+- [ ] B2.1 done: expiry, past-confirm block, configurable hours (no 13:00 cap), live updates, visibility doc, owner two-school test. Remaining: published-site check (needs publish)
 - [ ] B2.2 Phase 3 login: national ID/iqama → existing account, OTP via WATI (SMS fallback documented), server-side single-use codes + limits, role-context chooser, HR activation gate for staff services
 - [ ] B2.3 Student entry (C-Smart number + ID; PIN decision open) and guest temporary invitations
 - [ ] B2.4 Phase 4 guardian: children list, per-child school/class/timetable/classroom/homework, financial view placeholder, per-branch bank/payment links
