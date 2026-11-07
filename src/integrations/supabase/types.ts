@@ -14273,6 +14273,7 @@ export type Database = {
         }[]
       }
       _course_title: { Args: { _course: string }; Returns: string }
+      _csmart_key: { Args: { _s: string }; Returns: string }
       _cv_can: {
         Args: {
           _action: string
@@ -17548,6 +17549,10 @@ export type Database = {
       hr_hs_vacate: {
         Args: { _date: string; _reason: string; _stay: string }
         Returns: undefined
+      }
+      hr_id_readiness: {
+        Args: { _org: string; _school?: string }
+        Returns: Json
       }
       hr_in_alerts_tick: { Args: never; Returns: number }
       hr_in_class_save: {
