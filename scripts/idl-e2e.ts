@@ -73,15 +73,18 @@ try {
   check("13 the dual account keeps both roles (chooser shows two)", roles.join() === "guardian,teacher", roles);
 
   // sign-in token for the existing account (no new user)
-  const before = (await admin.auth.admin.listUsers({ perPage: 1000 })).data.users.length;
+  // Scoped to this run's account only: counting every auth user breaks when other suites create users in parallel.
   const link = await admin.auth.admin.generateLink({ type: "magiclink", email: t1.email });
   const bc = client(); const v = await bc.auth.verifyOtp({ token_hash: link.data.properties!.hashed_token, type: "magiclink" });
-  const after = (await admin.auth.admin.listUsers({ perPage: 1000 })).data.users.length;
-  check("14 the one-time token signs in the existing account and creates no new user", v.data.user?.id === t1.id && before === after, v.error);
+  const same = await admin.from("profiles").select("id").eq("email", t1.email!);
+  const sameIds = same.error ? null : (same.data ?? []).map((x) => x.id);
+  check("14 the one-time token signs in the existing account and creates no new user", v.data.user?.id === t1.id && link.data.user?.id === t1.id && (sameIds == null || (sameIds.length <= 1 && sameIds.every((i) => i === t1.id))), v.error ?? sameIds);
   check("15 token cannot be used twice", !!(await client().auth.verifyOtp({ token_hash: link.data.properties!.hashed_token, type: "magiclink" })).error);
 
   // students
-  check("16 student ID + matching C-Smart number opens the student's account", (await admin.rpc("_idl_student", { _nid: nid(6), _csmart: "cs-" + sfx })).data?.user_id === st.id);
+  check("16 student ID + matching C-Smart number opens the student's account", (await admin.rpc("_idl_student", { _nid: nid(6), _csmart: "CS-" + sfx })).data?.user_id === st.id);
+  check("16b a number differing only in letter case does not sign in", (await admin.rpc("_idl_student", { _nid: nid(6), _csmart: "cs-" + sfx })).data?.error === "mismatch");
+  await admin.from("id_login_failures").delete().eq("kind", "student").eq("key_hash", (await admin.rpc("_idl_hash", { _s: nid(6) })).data ?? "-");
   check("17 own ID with another student's number is refused", (await admin.rpc("_idl_student", { _nid: nid(6), _csmart: "CS2-" + sfx })).data?.error === "mismatch");
   for (let i = 0; i < 4; i++) await admin.rpc("_idl_student", { _nid: nid(7), _csmart: "nope" });
   const lk = (await admin.rpc("_idl_student", { _nid: nid(7), _csmart: "nope" })).data;

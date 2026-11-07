@@ -32,11 +32,17 @@ try {
   // --- C-Smart: stored as written, one matching rule
   const kid = must(await admin.from("students").insert({ school_id: S, full_name: "طالب الرقم", national_id: "11" + sfx + "01", csmart_no: "00-12a" + sfx, user_id: users.st, status: "active" }).select("id, csmart_no").single())!;
   check("1 C-Smart kept as written (leading zeros + dash)", kid.csmart_no === "00-12a" + sfx, kid);
-  check("2 same number in other letter case refused as duplicate", !!(await admin.from("students").insert({ school_id: S, full_name: "مكرر", national_id: "11" + sfx + "02", csmart_no: "00-12A" + sfx, status: "active" })).error);
-  check("3 sign-in matches regardless of case/Arabic digits", (await admin.rpc("_idl_student", { _nid: "11" + sfx + "01", _csmart: "٠٠-12A" + sfx })).data?.user_id === users.st);
+  const dupCase = await admin.from("students").insert({ school_id: S, full_name: "مكرر", national_id: "11" + sfx + "02", csmart_no: "00-12A" + sfx, status: "active" });
+  check("2 number differing only in letter case refused with an explanation", !!dupCase.error && /حالة الحروف/.test(dupCase.error.message), dupCase.error?.message);
+  const dupExact = await admin.from("students").insert({ school_id: S, full_name: "مكرر", national_id: "11" + sfx + "03", csmart_no: "00-12a" + sfx, status: "active" });
+  check("2b exact duplicate refused with a clear message", !!dupExact.error && /مسجل لطالب آخر/.test(dupExact.error.message), dupExact.error?.message);
+  check("3 sign-in matches the exact number (Arabic digits/spaces normalised)", (await admin.rpc("_idl_student", { _nid: "11" + sfx + "01", _csmart: "٠٠-12a " + sfx })).data?.user_id === users.st);
+  check("3b sign-in with other letter case does not match", (await admin.rpc("_idl_student", { _nid: "11" + sfx + "01", _csmart: "00-12A" + sfx })).data?.user_id == null);
   check("4 sign-in without the dash does not match", (await admin.rpc("_idl_student", { _nid: "11" + sfx + "01", _csmart: "0012a" + sfx })).data?.user_id == null);
-  const gi = must(await oc.rpc("import_guardian_row", { _school: S, _row: { full_name: "ولي", national_id: "12" + sfx + "01", phone: "9665011" + sfx.slice(0, 5), relationship: "father", student_csmart: "00-12A" + sfx }, _dry: true })) as any;
-  check("5 guardian import finds the child by the same rule", gi.action !== "error", gi);
+  const gi = must(await oc.rpc("import_guardian_row", { _school: S, _row: { full_name: "ولي", national_id: "12" + sfx + "01", phone: "9665011" + sfx.slice(0, 5), relationship: "father", student_csmart: "00-12a" + sfx }, _dry: true })) as any;
+  check("5 guardian import finds the child by the exact number", gi.action !== "error" && gi.action !== "conflict", gi);
+  const gc = must(await oc.rpc("import_guardian_row", { _school: S, _row: { full_name: "ولي", national_id: "12" + sfx + "01", phone: "9665011" + sfx.slice(0, 5), relationship: "father", student_csmart: "00-12A" + sfx }, _dry: true })) as any;
+  check("5b guardian import rejects a case-only difference and explains it", gc.action === "conflict" && /حالة الحروف/.test(gc.reason), gc);
 
   // --- ID permission comes from the permission tree
   const t1 = must(await admin.from("teachers").insert({ school_id: S, full_name: "معلم الهوية", phone: "966501" + sfx.slice(0, 3) + "001", user_id: users.t1, national_id: nid(1), status: "active" }).select("id").single())!.id;
