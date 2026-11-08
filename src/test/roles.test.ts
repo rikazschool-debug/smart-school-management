@@ -163,3 +163,14 @@ describe("guardian visits menu", () => {
     expect(N.student).not.toContain("family_visits");
   });
 });
+
+describe("events menu", () => {
+  it("events sit inside school administration for the owner; principal, vice, guardian and student open it, the visits entry stays", async () => {
+    const { ownerSection, ownerSectionNav, NAV_BY_ROLE: N } = await import("@/lib/roles");
+    expect(ownerSection("/app/events")).toBe("school_admin");
+    expect(ownerSectionNav("school_admin", N.org_owner)).toContain("events");
+    expect(ownerSectionNav("school_admin", N.org_owner)).toContain("family_visits");
+    for (const r of ["principal", "vice_principal", "guardian", "student"] as const) expect(N[r]).toContain("events");
+    expect(N.teacher).not.toContain("events");
+  });
+});

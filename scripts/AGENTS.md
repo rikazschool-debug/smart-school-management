@@ -105,3 +105,4 @@
 - scripts/class-groups-e2e.ts: section groups (one per section+year, reasons, principal moderator/manual overrides, policy, transfers, principal change; 30 checks). `--keep` leaves cge- data and writes /tmp/browser/cg/fixture.json; `teardown` removes it. scripts/class-groups-journey.py: browser journey (needs --keep).
 - scripts/cg-privacy-e2e.ts: identity privacy in section groups (27 checks; `--keep` writes /tmp/browser/cgp/fixture.json for scripts/cg-privacy-journey.py, then run `teardown`).
 - scripts/cg-live-journey.py / cg-switch-journey.py: live delivery+reconnect+revoke and capacity switch (need cg-privacy-e2e --keep).
+- scripts/evt-e2e.ts: events section (courses/forms/public link/review/capacity race/delegation revoke/attendance/internal course/trip consents/isolation/rate limit; 75 checks). `--keep` + `teardown` for browser journeys.
