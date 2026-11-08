@@ -87,6 +87,7 @@ try {
   check("notes tables unreadable directly", ((await pA.c.from("pp_notes" as any).select("id")).data ?? []).length === 0);
 
   // ---------- tags
+  const dbg = await pA.c.rpc("pp_tag_save", { _org: org, _id: null, _name: "تجربة", _color: "green", _kinds: ["teacher"], _active: true }); console.log("DBG", JSON.stringify(dbg));
   check("principal cannot manage tag dictionary", denied(await pA.c.rpc("pp_tag_save", { _org: org, _id: null, _name: "متميز", _color: "green", _kinds: ["teacher"], _active: true })));
   const tag = (await owner.c.rpc("pp_tag_save", { _org: org, _id: null, _name: "متميز", _color: "green", _kinds: ["teacher", "student"], _active: true })).data;
   const tagG = (await owner.c.rpc("pp_tag_save", { _org: org, _id: null, _name: "متابعة", _color: "amber", _kinds: ["guardian"], _active: true })).data;
