@@ -131,6 +131,11 @@ async function main() {
   ok("30 new subject keeps two groups", ((await admin.from("conversations").select("id").eq("school_id", S).eq("group_type", "class")).data ?? []).length === 2);
   void addSt; void S2r; void cB2;
   console.log(`\n${pass}/${pass + fail} passed`);
+  if (process.argv.includes("--keep")) {
+    await admin.from("memberships").update({ is_active: true }).eq("user_id", pr.id).eq("school_id", S);
+    await import("fs").then((fs) => { fs.mkdirSync("/tmp/browser/cg", { recursive: true }); fs.writeFileSync("/tmp/browser/cg/fixture.json", JSON.stringify({ pw, school: S, gA, gB, principal: pr2.email, teacher: t2.email, guardian: g2.email, student: st.email, staff: staff.email })); });
+    console.log("kept fixture /tmp/browser/cg/fixture.json"); if (fail) process.exit(1); return;
+  }
   await teardown();
   if (fail) process.exit(1);
 }
