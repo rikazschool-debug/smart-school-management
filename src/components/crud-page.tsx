@@ -17,7 +17,6 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { PersonCard } from "@/components/people/person-card";
 import { BulkBar } from "@/components/people/bulk-bar";
 import { TagChip, usePpCaps, useSchoolOrg, useTags, type PersonKind, type Tag } from "@/components/people/shared";
-import { TagsAdmin } from "@/components/people/tags-admin";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = supabase as any;
@@ -97,7 +96,15 @@ export function RecordForm({
   onSubmit: (v: Row) => void;
   submitting: boolean;
 }) {
-  const [v, setV] = useState<Row>(initial);
+  const autoDn = (n: unknown) => { const w = String(n ?? "").trim().split(/\s+/).filter(Boolean); return w.length > 1 ? `${w[0]} ${w[w.length - 1]}` : (w[0] ?? ""); };
+  const hasDn = fields.some((f) => f.key === "display_name" && !f.hideInForm) && fields.some((f) => f.key === "full_name");
+  const [v, setV] = useState<Row>(() => hasDn && !initial["display_name"] && initial["full_name"] ? { ...initial, display_name: autoDn(initial["full_name"]) } : initial);
+  // display name follows first + last word of the full name until the user edits it
+  const [dnTouched, setDnTouched] = useState(() => !!initial["display_name"] && initial["display_name"] !== autoDn(initial["full_name"]));
+  const change = (key: string, val: unknown) => {
+    if (key === "display_name") setDnTouched(true);
+    setV((x) => ({ ...x, [key]: val, ...(hasDn && key === "full_name" && !dnTouched ? { display_name: autoDn(val) } : {}) }));
+  };
   return (
     <form
       className="space-y-4"
@@ -141,7 +148,7 @@ export function RecordForm({
                       id={f.key}
                       type={f.type ?? "text"}
                       value={v[f.key] ?? ""}
-                      onChange={(e) => setV({ ...v, [f.key]: e.target.value })}
+                      onChange={(e) => change(f.key, e.target.value)}
                     />
                   )}
                 </>
@@ -199,6 +206,12 @@ export function CrudTable({
     return m;
   } });
   const showTags = !!person && !!caps?.view;
+  const qcTags = useQueryClient();
+  async function setTag(id: string, tag: string, on: boolean) {
+    const { error } = await db.rpc("pp_tag_set", { _kind: person!.kind, _id: id, _tag: tag, _on: on });
+    if (error) return void toast.error(arabicError(error));
+    await Promise.all([qcTags.invalidateQueries({ queryKey: ["pp-row-tags"] }), qcTags.invalidateQueries({ queryKey: ["pp-card"] }), qcTags.invalidateQueries({ queryKey: ["pp-tag-ids"] }), qcTags.invalidateQueries({ queryKey: ["pp-tags"] })]);
+  }
   const tagsCell = (r: Row) => { const l = rowTags.data?.get(r["id"]) ?? []; return l.length ? <div className="flex flex-wrap gap-1">{l.map((t) => <TagChip key={t.id} t={t} />)}</div> : <span className="text-xs text-muted-foreground">—</span>; };
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [selAll, setSelAll] = useState(false);
@@ -301,7 +314,6 @@ export function CrudTable({
 
   return (
     <section className="space-y-3">
-      {person && caps?.tags_manage && org && <TagsAdmin org={org} />}
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-bold">{title}</h2>
         <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{total.data ?? "…"}</span>
@@ -408,6 +420,24 @@ export function CrudTable({
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent dir="rtl" className="max-w-2xl">
           <DialogHeader><DialogTitle>{editing?.["id"] ? "تعديل" : "إضافة"} — {title}</DialogTitle></DialogHeader>
+          {editing && person && editing["id"] && caps?.tags_assign && (
+            <div className="space-y-1.5 rounded-lg border p-3">
+              <Label>الوسوم <span className="text-xs font-normal text-muted-foreground">(تُحفظ فور الضغط)</span></Label>
+              {kindTags.filter((t) => t.active).length === 0 ? <p className="text-xs text-muted-foreground">لا توجد وسوم لهذا النوع بعد — أضفها من قسم «الوسوم» في القائمة الجانبية.</p> : (
+                <div className="flex flex-wrap gap-2">
+                  {kindTags.filter((t) => t.active || rowTags.data?.get(editing["id"])?.some((x) => x.id === t.id)).map((t) => {
+                    const on = !!rowTags.data?.get(editing["id"])?.some((x) => x.id === t.id);
+                    return (
+                      <button key={t.id} type="button" aria-pressed={on} onClick={() => void setTag(editing["id"], t.id, !on)}
+                        className={`rounded-full border-2 ${on ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"}`}>
+                        <TagChip t={{ name: (on ? "✓ " : "+ ") + t.name, color: t.color }} />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
           {editing && <RecordForm fields={fields} schoolId={schoolId} initial={editing} onSubmit={(v) => save.mutate(v)} submitting={save.isPending} />}
         </DialogContent>
       </Dialog>
