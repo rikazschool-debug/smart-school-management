@@ -1731,6 +1731,7 @@ export type Database = {
       }
       attendance_days: {
         Row: {
+          class_session_id: string | null
           created_at: string
           date: string
           escalated_at: string | null
@@ -1749,6 +1750,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          class_session_id?: string | null
           created_at?: string
           date: string
           escalated_at?: string | null
@@ -1767,6 +1769,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          class_session_id?: string | null
           created_at?: string
           date?: string
           escalated_at?: string | null
@@ -1785,6 +1788,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "attendance_days_class_session_id_fkey"
+            columns: ["class_session_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_attendance"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attendance_days_policy_id_fkey"
             columns: ["policy_id"]
@@ -9807,6 +9817,7 @@ export type Database = {
           created_by: string
           date: string
           id: string
+          kind: string
           period_id: string
           rev: number
           school_id: string
@@ -9824,6 +9835,7 @@ export type Database = {
           created_by?: string
           date: string
           id?: string
+          kind?: string
           period_id: string
           rev?: number
           school_id: string
@@ -9841,6 +9853,7 @@ export type Database = {
           created_by?: string
           date?: string
           id?: string
+          kind?: string
           period_id?: string
           rev?: number
           school_id?: string
@@ -15470,9 +15483,15 @@ export type Database = {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
         Returns: boolean
       }
+      _la_first_slot: {
+        Args: { _date: string; _school: string; _section: string }
+        Returns: string
+      }
+      _la_is_daily: { Args: { _date: string; _slot: string }; Returns: boolean }
       _la_mine: { Args: { _date: string; _slot: string }; Returns: boolean }
       _la_read: { Args: { _id: string }; Returns: boolean }
       _la_taker: { Args: { _date: string; _slot: string }; Returns: string }
+      _la_write_days: { Args: { _id: string }; Returns: undefined }
       _link_section_room: { Args: { _classroom: string }; Returns: string }
       _live_staff: { Args: { _school: string }; Returns: boolean }
       _meet_busy: {
@@ -16695,6 +16714,7 @@ export type Database = {
         Returns: Json
       }
       att_counselor: { Args: { _school: string }; Returns: boolean }
+      att_daily_since: { Args: never; Returns: string }
       att_day_rows: {
         Args: { _from: string; _school: string; _status?: string; _to: string }
         Returns: {
