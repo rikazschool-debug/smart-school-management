@@ -82,7 +82,7 @@ try {
   const pdf = (n = 2000) => new Blob([new Uint8Array(n).fill(37)], { type: "application/pdf" });
   // browser path: server prepares the slot (service-only SQL) + signed upload URL; bytes go up without any account
   const slot = async (fn: string, args: any) => {
-    const r = (await admin.rpc(fn, args)).data as any;
+    const rr = await admin.rpc(fn, args); if (rr.error) throw new Error(fn + ": " + rr.error.message); const r = rr.data as any;
     if (r?.error) return r;
     const s = await admin.storage.from("rikaz-files").createSignedUploadUrl(r.path);
     return { ...r, token: s.data!.token };
