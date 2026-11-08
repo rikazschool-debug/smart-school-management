@@ -29,7 +29,7 @@ try {
   const S = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(S);
   const org2 = (await owner2.c.rpc("create_organization", { _org_name: "مؤسسة أخرى", _school_name: "فرع آخر" })).data; orgs.push(org2);
   const S2 = (await owner2.c.from("schools").select("id").eq("org_id", org2).single()).data!.id; tr.addSchool(S2);
-  const ins = async (t: string, v: any) => { const r = await owner.c.from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data; };
+  const ins = async (t: string, v: any) => { const r = await (t === "teachers" ? admin : owner.c).from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data; };
   const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
   const stage = await ins("stages", { name: "متوسط" }); const grade = await ins("grades", { name: "أول متوسط", stage_id: stage.id });
   const secA = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });

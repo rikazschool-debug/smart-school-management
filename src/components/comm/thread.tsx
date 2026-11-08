@@ -343,7 +343,7 @@ function SuccessorLink({ conv }: { conv: string }) {
   const q = useQuery({ queryKey: ["cg-successor", conv], queryFn: async () => ((await db.rpc("class_group_successor", { _conv: conv })).data ?? null) as string | null });
   if (!q.data) return null;
   return (
-    <a href={`/app/communication?tab=classes&conv=${q.data}`} className="block border-b bg-primary/10 px-3 py-2 text-xs font-medium text-primary underline">
+    <a href={`/app/communication?tab=classes&c=${q.data}`} className="block border-b bg-primary/10 px-3 py-2 text-xs font-medium text-primary underline">
       انتقلت المحادثة إلى مجموعة الشعبة — افتح مجموعة الشعبة النشطة
     </a>
   );
