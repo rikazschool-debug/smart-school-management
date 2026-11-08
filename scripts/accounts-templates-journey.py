@@ -11,9 +11,12 @@ def check(n, c, e=""):
     global ok, bad
     ok += c; bad += (not c); print("PASS" if c else "FAIL", n, "" if c else e, flush=True)
 async def login(page, ident, pw):
-    await page.goto("http://localhost:8080/auth"); await page.wait_for_load_state("networkidle")
-    await page.locator("#email").fill(ident); await page.locator("#password").fill(pw)
-    await page.get_by_role("button", name="دخول", exact=True).click()
+    # password sign-in through the API, then restore the session (the /auth page now opens on a three-entry chooser)
+    import requests
+    env = {k: v.strip('"') for k, v in (l.split("=", 1) for l in open("/dev-server/.env").read().splitlines() if "=" in l)}
+    s = requests.post(env["VITE_SUPABASE_URL"] + "/auth/v1/token?grant_type=password", headers={"apikey": env["VITE_SUPABASE_PUBLISHABLE_KEY"]}, json={"email": ident, "password": pw}).json()
+    await page.goto("http://localhost:8080/"); await page.evaluate("([k,v]) => localStorage.setItem(k,v)", [f"sb-{env['VITE_SUPABASE_PROJECT_ID']}-auth-token", json.dumps(s)])
+    await page.goto("http://localhost:8080/app")
 async def download(page, path):
     async with page.expect_download() as dl:
         await page.get_by_role("button", name="تنزيل القالب الفارغ").click()
@@ -38,13 +41,17 @@ async def main():
         await page.get_by_role("button", name="استيراد Excel").click()
         sp = await download(page, D / "tpl-students.xlsx")
         wb, ws, heads, data, fmt = inspect(sp)
-        check("1 blank student template: Rikaz columns, no rows, ID column kept as text, instructions sheet", heads[:3] == ["اسم الطالب", "رقم الهوية", "تاريخ الميلاد"] and not data and fmt == "@" and "تعليمات" in wb.sheetnames, [heads, len(data), fmt])
+        col = lambda name: heads.index(name) + 1
+        fmt = ws.cell(2, col("رقم الهوية")).number_format
+        check("1 blank student template: Rikaz columns incl. display name, no rows, ID column kept as text, instructions sheet", heads[:3] == ["اسم الطالب", "الاسم المعروض", "رقم الهوية"] and not data and fmt == "@" and "تعليمات" in wb.sheetnames, [heads, len(data), fmt])
+        K = ["اسم الطالب", "رقم الهوية", "تاريخ الميلاد", "الجنس", "الصف", "الفصل", "اسم ولي الأمر", "هوية ولي الأمر", "جوال ولي الأمر", "صلة القرابة"]
         rows = [["طالب قالب أول", nid(8), "2015-03-01", "ذكر", "الأول الابتدائي", "أ", "ولي قالب", "", ph(8), "أب"],
                 ["", nid(9), "2015-03-02", "ذكر", "الأول الابتدائي", "أ"],
                 ["طالب بلا هوية", "", "2015-03-03", "ذكر", "الأول الابتدائي", "أ"],
                 ["طالب قالب رابع", "0" + nid(6)[1:], "05/04/2015", "ذكر", "الأول الابتدائي", "أ"]]
         for i, r in enumerate(rows):
-            for j, v in enumerate(r): ws.cell(i + 2, j + 1, v)
+            for j, v in enumerate(r): ws.cell(i + 2, col(K[j]), v)
+        ws.cell(2, col("الاسم المعروض"), "طالب القالب")
         wb.save(D / "tpl-students-filled.xlsx")
         tv = await run_import(page, D / "tpl-students-filled.xlsx")
         await page.screenshot(path=str(SH / "t1_students_preview.png"))
@@ -64,23 +71,67 @@ async def main():
         r2 = await page.locator("[role=dialog]").inner_text()
         check("5 uploading the same file again reuses records (no duplicates)", r2.count("موجود مسبقًا") >= 1, r2[:700])
         await page.keyboard.press("Escape"); await page.wait_for_timeout(500)
+        await page.get_by_placeholder(re.compile("بحث")).first.fill("طالب قالب أول"); await page.wait_for_timeout(2500)
+        check("5b display name typed in the file is what the list shows", await page.get_by_text("طالب القالب").count() >= 1)
+        await page.get_by_placeholder(re.compile("بحث")).first.fill("")
+        # old template (before display name / C-Smart columns): still read by header names
+        ow = openpyxl.Workbook(); os_ = ow.active; os_.title = "البيانات"
+        for j, h in enumerate(["اسم الطالب", "رقم الهوية", "تاريخ الميلاد", "الجنس", "الصف", "الفصل"]): os_.cell(1, j + 1, h)
+        for j, v in enumerate(["طالب قالب قديم", nid(7), "2015-06-01", "ذكر", "الأول الابتدائي", "أ"]): os_.cell(2, j + 1, v)
+        ow.save(D / "old-template.xlsx")
+        await page.get_by_role("button", name="استيراد Excel").click()
+        ov = await run_import(page, D / "old-template.xlsx")
+        check("5c old template without the new columns still reads 1 valid row", "1 صف" in ov and "1 صالح" in ov, ov[:500])
+        await page.get_by_role("button", name=re.compile("تأكيد استيراد 1")).click()
+        await page.get_by_text("النتيجة:").wait_for(timeout=60000)
+        await page.keyboard.press("Escape"); await page.wait_for_timeout(500)
         # teachers template
         await page.goto("http://localhost:8080/app/teachers"); await page.wait_for_load_state("networkidle")
         await page.get_by_role("button", name="استيراد Excel").click()
         tp = await download(page, D / "tpl-teachers.xlsx")
         wb, ws, heads, data, fmt = inspect(tp)
-        check("6 blank teacher template: Rikaz columns, no rows, text format", heads[:3] == ["الإسم", "رقم الهوية", "الجوال"] and not data and fmt == "@", [heads, fmt])
+        col = lambda name: heads.index(name) + 1
+        check("6 blank teacher template: Rikaz columns incl. display name, no rows, text format", heads[:4] == ["الإسم", "الاسم المعروض", "رقم الهوية أو الإقامة", "الجوال"] and not data and ws.cell(2, col("رقم الهوية أو الإقامة")).number_format == "@", [heads])
+        TK = ["الإسم", "رقم الهوية أو الإقامة", "الجوال"]
         trows = [["معلم قالب أول", nid(5)[:9] + "7", ph(6)], ["معلم بلا جوال", "", ""], ["معلم جوال خاطئ", "", "0112345678"]]
         for i, r in enumerate(trows):
-            for j, v in enumerate(r): ws.cell(i + 2, j + 1, v)
+            for j, v in enumerate(r): ws.cell(i + 2, col(TK[j]), v)
         wb.save(D / "tpl-teachers-filled.xlsx")
         tv = await run_import(page, D / "tpl-teachers-filled.xlsx")
         await page.screenshot(path=str(SH / "t3_teachers_preview.png"))
         check("7 teacher rows: missing and landline mobiles flagged, 1 valid", "3 صف" in tv and "1 صالح" in tv, tv[:700])
         await page.get_by_role("button", name=re.compile("تأكيد استيراد 1")).click()
         await page.get_by_text("النتيجة:").wait_for(timeout=40000)
-        tr = await page.locator("[role=dialog]").inner_text()
-        check("8 teacher saved; waits for first WhatsApp sign-in", "أُضيف" in tr and "بانتظار أول دخول بالجوال" in tr, tr[:500])
+        await page.wait_for_timeout(1500); tr = await page.locator("[role=dialog]").inner_text()
+        i8 = tr.find("النتيجة:"); check("8 teacher saved; waits for first WhatsApp sign-in", "أُضيف" in tr and "بانتظار أول دخول" in tr, tr[i8:i8+600])
+        # guardians template: download, fill by header names, import, re-import
+        await page.keyboard.press("Escape"); await page.wait_for_timeout(500)
+        await page.goto("http://localhost:8080/app/guardians"); await page.wait_for_load_state("networkidle")
+        await page.get_by_role("button", name="استيراد أولياء الأمور والعلاقات").click()
+        gp = await download(page, D / "tpl-guardians.xlsx")
+        wb, ws, heads, data, _ = inspect(gp); col = lambda name: heads.index(name) + 1
+        check("8b blank guardian template has display name and child columns", "الاسم المعروض" in heads and "هوية الابن" in heads and not data, heads)
+        for k, v in {"اسم ولي الأمر": "ولية قالب الاستيراد", "الاسم المعروض": "أم القالب", "هوية ولي الأمر أو إقامته": nid(4)[:9] + "1", "الجوال المعتمد": ph(4)[:9] + "1", "صلة القرابة": "أم", "هوية الابن": nid(8)}.items():
+            ws.cell(2, col(k), v)
+        wb.save(D / "tpl-guardians-filled.xlsx")
+        dlg = page.locator("[role=dialog]")
+        await page.set_input_files("input[aria-label='ملف استيراد أولياء الأمور']", str(D / "tpl-guardians-filled.xlsx"))
+        await page.get_by_text("المعاينة (").wait_for(timeout=20000); await page.wait_for_timeout(1500)
+        gv = await dlg.inner_text()
+        check("8c guardian row linked to an imported student is ready to create", "إنشاء: 1" in gv, gv[gv.find("المعاينة ("):][:300])
+        await page.get_by_role("button", name=re.compile("استيراد 1 صف صالح")).click()
+        await page.get_by_text("منشأ:").wait_for(timeout=60000); await page.wait_for_timeout(1000)
+        gr = await dlg.inner_text(); await page.screenshot(path=str(SH / "t5_guardians_result.png"))
+        check("8d guardian saved once", "منشأ: 1" in gr and "مرفوض: 0" in gr, gr[gr.find("النتيجة"):][:300])
+        await page.keyboard.press("Escape"); await page.wait_for_timeout(1500)
+        await page.goto("http://localhost:8080/app/guardians"); await page.wait_for_timeout(3500)
+        check("8e guardian list shows the display name from the file", await page.get_by_text("أم القالب").count() >= 1)
+        await page.get_by_role("button", name="استيراد أولياء الأمور والعلاقات").click()
+        await page.set_input_files("input[aria-label='ملف استيراد أولياء الأمور']", str(D / "tpl-guardians-filled.xlsx"))
+        await page.get_by_text("المعاينة (").wait_for(timeout=20000); await page.wait_for_timeout(1500)
+        g2 = await dlg.inner_text(); await page.screenshot(path=str(SH / "t6_guardians_reimport.png"))
+        check("8f re-importing the guardian file: already linked, nothing new", "مربوط مسبقًا: 1" in g2 and "إنشاء: 0" in g2, g2[g2.find("المعاينة ("):][:300])
+        await page.keyboard.press("Escape"); await page.wait_for_timeout(500)
         # phone width
         m = await b.new_context(viewport={"width": 390, "height": 844}); mp = await m.new_page()
         await login(mp, F["pr"], F["pw"]); await mp.wait_for_url(re.compile("/app"), timeout=20000)

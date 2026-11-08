@@ -44,7 +44,12 @@ const ins = await admin.from("teachers").insert(rows).select("id"); if (ins.erro
 await admin.from("teachers").update({ user_id: teacher.id }).eq("id", ins.data[0]!.id);
 await admin.from("teachers").insert([1, 2, 3].map((i) => ({ school_id: B, full_name: `معلم ب ${i} ${run % 1000}`, status: "active" })));
 await admin.from("guardians").insert({ school_id: A, full_name: `ولي أمر pbx ${run % 1000}`, user_id: guardian.id });
+// side card for student / staff, and one person who is both a teacher and a guardian
+const stu = await admin.from("students").insert({ school_id: A, full_name: `طالب pbx ${run % 1000}`, user_id: student.id, status: "active" }).select("id").single(); if (stu.error) throw stu.error;
+const emp = await admin.from("hr_employees").insert({ org_id: org, employee_no: `PBX${run % 1000}`, full_name: `موظف pbx ${run % 1000}` }).select("id").single(); if (emp.error) throw emp.error;
+const dualG = await admin.from("guardians").insert({ school_id: A, full_name: `أحمد محمد العتيبي ${run % 1000}`, user_id: teacher.id }).select("id").single(); if (dualG.error) throw dualG.error;
+const dm = await admin.from("memberships").insert({ user_id: teacher.id, org_id: org, school_id: A, role: "guardian" }); if (dm.error) throw dm.error;
 const tag = (await admin.from("pp_tags").insert({ org_id: org, name: "متابعة pbx", color: "amber", kinds: ["teacher", "guardian"], created_by: owner.id }).select("id").single()).data!.id;
 mkdirSync("/tmp/browser/pp2", { recursive: true });
-writeFileSync(FX, JSON.stringify({ org, schools: [A, B], A, B, tag, pw, users, accounts: { owner: owner.email, pA: pA.email, pB: pB.email, viewer: viewer.email, teacher: teacher.email, guardian: guardian.email, student: student.email }, linkedTeacher: ins.data[0]!.id }, null, 2));
+writeFileSync(FX, JSON.stringify({ org, schools: [A, B], A, B, tag, pw, users, accounts: { owner: owner.email, pA: pA.email, pB: pB.email, viewer: viewer.email, teacher: teacher.email, guardian: guardian.email, student: student.email }, linkedTeacher: ins.data[0]!.id, student: stu.data!.id, employee: emp.data!.id, dualGuardian: dualG.data!.id, run: run % 1000 }, null, 2));
 console.log("fixture ready", FX);

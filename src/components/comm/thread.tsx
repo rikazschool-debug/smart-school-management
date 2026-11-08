@@ -317,6 +317,7 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
       if (uploading) return void toast.error("انتظر اكتمال رفع المرفقات");
       if (pending.some((p) => p.status === "failed")) return void toast.error("أزل المرفق الفاشل أو أعد رفعه قبل الإرسال");
       const ready = pending.filter((p) => p.status === "ready").map((p) => p.id!);
+      if (clip && !body.trim() && !ready.length) return void sendClip(); // main send button also sends a previewed recording
       if (!body.trim() && !ready.length) return;
       const b = body;
       setBody(""); setPending([]);

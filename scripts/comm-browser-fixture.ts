@@ -48,7 +48,7 @@ async function setup() {
   const { data: orgId, error: oe } = await owner.c.rpc("create_organization", { _org_name: "مؤسسة رحلات التواصل", _school_name: "مدرسة رحلات التواصل" });
   if (oe) throw oe;
   const S = (await owner.c.from("schools").select("id").eq("org_id", orgId).single()).data!.id;
-  const ins = async (t: string, v: any) => { const r = await owner.c.from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) throw new Error(t + ": " + r.error.message); return r.data; };
+  const ins = async (t: string, v: any) => { const r = await (["teachers", "guardians", "students"].includes(t) ? admin : owner.c).from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) throw new Error(t + ": " + r.error.message); return r.data; };
   const join = async (u: { c: any; email: string }, role: string) => { const a = await owner.c.rpc("invite_member", { _email: u.email, _school: S, _role: role }); if (a.error) throw a.error; await u.c.rpc("accept_my_invitations"); };
   const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
   const stage = await ins("stages", { name: "متوسط" });
