@@ -53,3 +53,4 @@
 - ID sign-in: id-login.functions.ts → service-only _idl_* SQL; existing accounts only, generic errors. Test: idl-e2e.
 - Family home, fin_*, section rooms: src/components/family/AGENTS.md.
 - Live refresh, display names: src/lib/AGENTS.md.
+- Sanad AI assistant: src/lib/sanad.functions.ts reads context only through the caller's RLS client (context.supabase), never admin; Gemini key GEMINI_API_KEY server-side; answers only from those records or Rikaz how-to.
