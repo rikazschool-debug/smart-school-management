@@ -142,5 +142,5 @@
 
 ## B8 (Nov 8 2026)
 - [x] Support form: requester never picks department/assignee (all tickets to platform owner).
-- [~] Rename «الرئيسية» → «لوحة التحكم المركزية» (done) + redesign home cards with charts/stats, clickable to sections, for every dashboard (real data).
+- [x] Rename «الرئيسية» → «لوحة التحكم المركزية» (done) + redesign home cards with charts/stats, clickable to sections, for every dashboard (real data).
 - [x] «سند» AI assistant per dashboard, answers only from the caller's own RLS data; Gemini API key from user.

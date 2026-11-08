@@ -143,7 +143,7 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         <Kpi tone={2} label="شعبة" value={d?.sections} icon={Layers} to={go("academic", "/app/academic")} />
         <Kpi tone={3} label="مقرر" value={d?.courses} icon={BookOpen} to={go("courses", "/app/courses")} hint={d?.pending ? `${d.pending} تكليف بانتظار الاعتماد` : undefined} />
         <Kpi tone={4} label="حضور اليوم" value={rate == null ? "—" : `${rate}%`} icon={CalendarCheck} to={go("attendance", "/app/attendance")} hint={c ? `${c.today.present + c.today.late} حاضر · ${c.today.absent} غائب` : undefined} />
-        <Kpi tone={0} label="واجبات تستحق خلال أسبوع" value={c?.dueSoon} icon={ClipboardList} to={go("homework", "/app/homework")} />
+        <Kpi tone={0} label="واجبات هذا الأسبوع" value={c?.dueSoon} icon={ClipboardList} to={go("homework", "/app/homework")} />
       </KpiGrid>
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title="الحضور خلال آخر 7 أيام" to={go("attendance", "/app/attendance")} className="lg:col-span-2">
@@ -157,7 +157,7 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         <Panel title="تسكين الشعب (الطلاب / السعة)" to={go("students", "/app/students")} className="lg:col-span-2">
           {!c ? <LoadingState rows={3} /> : <Meter rows={c.sections.slice(0, 8)} />}
         </Panel>
-        <Panel title="الواجبات والاختبارات حسب الحالة" to={go("homework", "/app/homework")}>
+        <Panel title="الواجبات والاختبارات" to={go("homework", "/app/homework")}>
           {!c ? <LoadingState rows={3} /> : <Donut data={c.homework} center="عنصر" />}
         </Panel>
       </div>
