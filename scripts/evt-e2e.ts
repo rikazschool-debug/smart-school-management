@@ -146,7 +146,6 @@ try {
   check("27 accepted never exceeds capacity", accepted === 2, accepted);
   const A2 = await appId(a2.ref);
   check("28 reject without reason refused", !!(await R(p1, "evt_app_act", { _id: A2.id, _rev: A2.rev, _action: "reject" })).e);
-  const loser = [A3, A4].find(async () => true)!;
   const lr = (await admin.from("evt_applications").select("id,rev,status").in("id", [A3.id, A4.id]).neq("status", "accepted").single()).data!;
   const rj = await R(p1, "evt_app_act", { _id: lr.id, _rev: lr.rev, _action: "reject", _internal: "اكتمال العدد", _message: "نعتذر لاكتمال المقاعد" });
   check("29 reject with internal reason + applicant message", rj.d?.status === "rejected", rj.e);
@@ -156,7 +155,6 @@ try {
   check("31 reconsider returns to review with a reason", rc.d?.status === "review", rc.e);
   const lrev = (await admin.from("evt_applications").select("rev").eq("id", lr.id).single()).data!.rev;
   check("32 re-accept after reconsider still respects capacity", /اكتملت/.test((await R(p1, "evt_app_act", { _id: lr.id, _rev: lrev, _action: "accept" })).e?.message ?? ""));
-  void loser;
 
   // ---------- info needed + tracking ----------
   const A2b = await appId(a2.ref);
