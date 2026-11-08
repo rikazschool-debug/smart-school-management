@@ -83,7 +83,7 @@ export function SessionProvider({ user, children }: { user: User; children: Reac
   // the server decides identity visibility from the active capacity; keep it in sync on load
   const syncedKey = useRef<string | null>(null);
   useEffect(() => {
-    const c = (q.data ?? []).find((x) => x.key === activeKey) ?? (q.data ?? []).find((x) => x.schoolId) ?? (q.data ?? [])[0];
+    const c = (q.data ?? []).find((x) => x.key === activeKey) ?? (q.data ?? []).find((x) => x.key === "admin") ?? (q.data ?? []).find((x) => x.schoolId) ?? (q.data ?? [])[0];
     if (!c || syncedKey.current === c.key) return;
     syncedKey.current = c.key;
     void (supabase as any).rpc("set_active_context", { _role: c.role, _school: c.schoolId }).then(() => {
@@ -91,7 +91,7 @@ export function SessionProvider({ user, children }: { user: User; children: Reac
     });
   }, [q.data, activeKey, qc]);
   const active = useMemo(
-    () => contexts.find((c) => c.key === activeKey) ?? contexts.find((c) => c.schoolId) ?? contexts[0] ?? null,
+    () => contexts.find((c) => c.key === activeKey) ?? contexts.find((c) => c.key === "admin") ?? contexts.find((c) => c.schoolId) ?? contexts[0] ?? null,
     [contexts, activeKey],
   );
   const value: SessionValue = {
