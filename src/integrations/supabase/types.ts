@@ -10293,6 +10293,7 @@ export type Database = {
           reply_to: string | null
           school_id: string | null
           sender_id: string
+          sent_as: string | null
           seq: number
         }
         Insert: {
@@ -10309,6 +10310,7 @@ export type Database = {
           reply_to?: string | null
           school_id?: string | null
           sender_id: string
+          sent_as?: string | null
           seq: number
         }
         Update: {
@@ -10325,6 +10327,7 @@ export type Database = {
           reply_to?: string | null
           school_id?: string | null
           sender_id?: string
+          sent_as?: string | null
           seq?: number
         }
         Relationships: [
@@ -14316,6 +14319,30 @@ export type Database = {
           },
         ]
       }
+      user_active_context: {
+        Row: {
+          org_id: string | null
+          role: string
+          school_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          org_id?: string | null
+          role: string
+          school_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          org_id?: string | null
+          role?: string
+          school_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vice_scopes: {
         Row: {
           created_at: string
@@ -14709,7 +14736,15 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: string
       }
+      _cg_generic_label2: {
+        Args: { _conv: string; _user: string }
+        Returns: string
+      }
       _cg_label: { Args: { _reasons: string[] }; Returns: string }
+      _cg_msg_visible: {
+        Args: { _conv: string; _sender: string; _sent_as: string }
+        Returns: boolean
+      }
       _cg_private: { Args: { _conv: string }; Returns: boolean }
       _cg_sender_visible: {
         Args: { _conv: string; _sender: string }
@@ -14768,6 +14803,7 @@ export type Database = {
       _course_title: { Args: { _course: string }; Returns: string }
       _csmart_exact: { Args: { _s: string }; Returns: string }
       _csmart_key: { Args: { _s: string }; Returns: string }
+      _ctx_staff: { Args: { _org: string; _school: string }; Returns: boolean }
       _cv_can: {
         Args: {
           _action: string
@@ -19433,6 +19469,10 @@ export type Database = {
         }[]
       }
       server_now: { Args: never; Returns: string }
+      set_active_context: {
+        Args: { _role: string; _school: string }
+        Returns: undefined
+      }
       set_authorized_pickup_active: {
         Args: { _active: boolean; _id: string }
         Returns: undefined
