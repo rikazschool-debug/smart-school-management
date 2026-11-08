@@ -229,3 +229,49 @@ export const resetStaffPassword = createServerFn({ method: "POST" })
     await supabaseAdmin.auth.admin.signOut(data.userId, "global").catch(() => undefined);
     return { ok: true };
   });
+
+type HrLoginInput = { orgId: string; base: string; p: Record<string, string>; reason?: string | null };
+
+/**
+ * HR adds an employee with a new ID+OTP login (no username/password). The auth user is created locked and recorded in
+ * hr_login_pending; hr_employee_create_login (caller's own permissions) writes file + membership (+ teacher) in one
+ * transaction; only then is the login unlocked. Retries reuse the same pending account, so nothing is duplicated.
+ */
+export const createHrEmployeeLogin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: HrLoginInput) => {
+    if (!UUID.test(d?.orgId ?? "")) throw new Error("مؤسسة غير صالحة");
+    if (!d.p || typeof d.p !== "object") throw new Error("بيانات غير صالحة");
+    if (!/^[12]\d{9}$/.test((d.p["national_id"] ?? "").replace(/\D/g, ""))) throw new Error("رقم الهوية/الإقامة غير صحيح");
+    if (!UUID.test(d.p["school_id"] ?? "")) throw new Error("اختر المدرسة");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const nid = data.p["national_id"]!.replace(/\D/g, "");
+    const { data: allowed } = await context.supabase.rpc("hr_login_roles" as never, { _org: data.orgId, _school: data.p["school_id"] } as never);
+    if (!((allowed as string[] | null) ?? []).includes(data.base)) throw new Error("لا يمكنك منح هذا الدور");
+    const { data: pre, error: preErr } = await context.supabase.rpc("hr_login_precheck" as never, { _org: data.orgId, _nid: nid, _phone: data.p["phone"] ?? "" } as never);
+    if (preErr) throw new Error(preErr.message);
+    if (((pre as unknown[]) ?? []).length) return { conflicts: pre as { kind: string; employee_id?: string }[] };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: pend } = await supabaseAdmin.from("hr_login_pending" as never).select("user_id")
+      .eq("org_id", data.orgId).eq("actor", context.userId).eq("national_id", nid).maybeSingle();
+    let uid = (pend as { user_id: string } | null)?.user_id ?? null;
+    if (!uid) {
+      const email = `id-${crypto.randomUUID().slice(0, 12)}@${STAFF_DOMAIN}`;
+      const c = await supabaseAdmin.auth.admin.createUser({ email, email_confirm: true, ban_duration: "876000h", user_metadata: { full_name: (data.p["full_name"] ?? "").trim() } });
+      if (c.error || !c.data.user) throw new Error("تعذّر إنشاء حساب الدخول");
+      uid = c.data.user.id;
+      const ins = await supabaseAdmin.from("hr_login_pending" as never).insert({ user_id: uid, org_id: data.orgId, actor: context.userId, national_id: nid } as never);
+      if (ins.error) { await supabaseAdmin.auth.admin.deleteUser(uid).catch(() => undefined); throw new Error("تعذّر حجز حساب الدخول؛ أعد المحاولة"); }
+    }
+    const { data: empId, error } = await context.supabase.rpc("hr_employee_create_login" as never, { _org: data.orgId, _uid: uid, _base: data.base, _p: data.p, _reason: data.reason ?? null } as never);
+    if (error) {
+      const m = /CONFLICT:(.*)$/.exec(error.message);
+      if (m) return { conflicts: JSON.parse(m[1]!) as { kind: string; employee_id?: string }[] };
+      throw new Error(error.message); // login stays locked + pending; a retry reuses it
+    }
+    const ub = await supabaseAdmin.auth.admin.updateUserById(uid, { ban_duration: "none" });
+    if (ub.error) throw new Error("حُفظ الملف لكن تعذّر تفعيل الدخول؛ أعد المحاولة لإكماله");
+    return { employeeId: empId as string, userId: uid };
+  });
