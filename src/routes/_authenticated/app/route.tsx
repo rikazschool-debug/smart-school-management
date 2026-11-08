@@ -15,7 +15,7 @@ import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
-import { FileText, IdCard, PartyPopper, UserPlus } from "lucide-react";
+import { FileText, IdCard, Tags, PartyPopper, UserPlus } from "lucide-react";
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
@@ -42,6 +42,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   courses: { to: "/app/courses", label: "المقررات والتكليفات", icon: BookOpen },
   students: { to: "/app/students", label: "الطلاب والتسكين", icon: GraduationCap },
   guardians: { to: "/app/guardians", label: "أولياء الأمور", icon: Users },
+  tags: { to: "/app/tags", label: "الوسوم", icon: Tags },
   classrooms: { to: "/app/classrooms", label: "الفصول الرقمية", icon: School },
   virtual: { to: "/app/virtual-classes", label: "الحصص الافتراضية", icon: MonitorPlay },
   homework: { to: "/app/homework", label: "الواجبات والاختبارات", icon: ClipboardList },
@@ -100,7 +101,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
   { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "events"] },
-  { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
+  { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians", "tags"] },
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
   { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage"] },
@@ -175,7 +176,7 @@ function Shell() {
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
-    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
+    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
   const opsOnly = ops.opsOnly;
   if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
