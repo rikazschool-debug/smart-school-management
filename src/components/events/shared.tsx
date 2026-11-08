@@ -5,7 +5,7 @@ import { Pill } from "@/components/admin/shared";
 
 export type Kind = "trip" | "general" | "course";
 export type KindCaps = Record<string, boolean>;
-export type EvtCaps = { owner: boolean; delegated: number; family: boolean; schools: { id: string; name: string; trip: KindCaps; general: KindCaps; course: KindCaps }[] };
+export type EvtCaps = { owner: boolean; delegated: number; family: boolean; tpl_view: boolean; schools: { id: string; name: string; trip: KindCaps; general: KindCaps; course: KindCaps }[] };
 export type AppCounts = { total: number; new: number; review: number; info_needed: number; accepted: number; rejected: number; cancelled: number };
 export type EvtRow = {
   id: string; rev: number; kind: Kind; title: string; school_id: string; school: string; category: string | null; status: string; reg_open: boolean; reg_state: string;
