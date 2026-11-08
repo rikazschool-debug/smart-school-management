@@ -151,7 +151,7 @@ async function main() {
     const old = (await admin.from("conversations").insert({ org_id: org, school_id: S, kind: "group", group_type: "custom", title: "علوم — أول متوسط — شعبة أ", course_id: cA1.id, section_id: A.id, year_id: year.id, membership_mode: "manual", dedupe_key: "course:" + cA1.id, created_by: owner.id }).select().single()).data!;
     await admin.from("conversation_members").insert([{ conversation_id: old.id, user_id: t1.id, role: "moderator", source: "manual" }, { conversation_id: old.id, user_id: st.id, role: "member", source: "manual" }]);
     await admin.from("conversations").update({ group_type: "course", status: "archived" }).eq("id", old.id);
-    await import("fs").then((fs) => { fs.mkdirSync("/tmp/browser/cg", { recursive: true }); fs.writeFileSync("/tmp/browser/cg/fixture.json", JSON.stringify({ pw, school: S, gA, gB, principal: pr2.email, oldPrincipal: pr.email, teacher: t2.email, teacher1: t1.email, guardian1: g1.email, old: (await admin.from("conversations").select("id").eq("dedupe_key", "course:" + cA1.id).single()).data!.id, guardian: g2.email, student: st.email, staff: staff.email })); });
+    const fs = await import("fs"); { fs.mkdirSync("/tmp/browser/cg", { recursive: true }); fs.writeFileSync("/tmp/browser/cg/fixture.json", JSON.stringify({ pw, school: S, gA, gB, principal: pr2.email, oldPrincipal: pr.email, teacher: t2.email, teacher1: t1.email, guardian1: g1.email, old: old.id, guardian: g2.email, student: st.email, staff: staff.email })); }
     console.log("kept fixture /tmp/browser/cg/fixture.json"); if (fail) process.exit(1); return;
   }
   await teardown();
