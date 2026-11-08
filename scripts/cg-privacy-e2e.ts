@@ -114,7 +114,7 @@ async function main() {
   ok("22a dual staff+guardian without chosen capacity is treated as guardian (masked)", by(await view(g2), mS)?.sender_id == null);
   const sc = await g2.c.rpc("set_active_context", { _role: "teacher", _school: S });
   ok("22 in staff capacity (group member, staff reason needed) — guardian-reason member still masked", !sc.error && by(await view(g2), mS)?.sender_id == null, sc.error?.message);
-  await pr.c.rpc("class_group_add_member", { _conv: gA, _user: g2.id, _reason: "تفويض متابعة" });
+  const ga = await pr.c.rpc("class_group_add_member", { _conv: gA, _user: g2.id, _reason: "تفويض متابعة" }); console.log("dbg", ga.error?.message, JSON.stringify((await admin.from("conversation_members").select("reasons,role,left_at").eq("conversation_id", gA).eq("user_id", g2.id)).data));
   ok("22b staff capacity + explicit staff grant in group → real sender", by(await view(g2), mS)?.sender_id === st.id);
   await g2.c.rpc("set_active_context", { _role: "guardian", _school: S });
   ok("22c switching back to guardian capacity masks again (old msgs, search)", by(await view(g2), mS)?.sender_id == null
