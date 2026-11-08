@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { askText } from "@/components/confirm";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { SECTION_LABELS, useOrgSections, type SectionKey } from "@/components/owner-portal";
 
 export const Route = createFileRoute("/_authenticated/app/platform")({
@@ -51,7 +53,8 @@ function Page() {
                 <TableRow key={o["id"]}>
                   <TableCell className="align-top font-semibold">{o["name"]}{o["is_test"] && <span className="ms-1 text-xs font-normal text-muted-foreground">(اختبار)</span>}</TableCell>
                   <TableCell className="align-top text-sm">{(o["owners"] ?? []).length ? (o["owners"] as Row[]).map((w, i) => (
-                    <div key={i}>{w["name"]}<span className="block text-xs text-muted-foreground" dir="ltr">{w["email"]}</span></div>
+                    <div key={i}>{w["name"]}<span className="block text-xs text-muted-foreground" dir="ltr">{w["email"]}</span>
+                      <span className="block text-xs">الهوية: <span dir="ltr">{w["national_id"] ?? "—"}</span> • الجوال: <span dir="ltr">{w["phone"] ?? "—"}</span></span></div>
                   )) : <span className="text-muted-foreground">بلا مالك</span>}</TableCell>
                   <TableCell className="align-top text-sm">
                     <span className="font-semibold">{o["schools"]?.length ?? 0}</span>
@@ -59,7 +62,7 @@ function Page() {
                   </TableCell>
                   <TableCell>{new Date(o["created_at"]).toLocaleDateString("ar-SA")}</TableCell>
                   <TableCell>{o["is_active"] ? "نشطة" : "موقوفة"}</TableCell>
-                  <TableCell><SectionsDialog org={o} /></TableCell>
+                  <TableCell className="space-y-1"><EditOrgDialog org={o} /><SectionsDialog org={o} /></TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -163,6 +166,48 @@ function SectionsDialog({ org }: { org: Row }) {
         <ul className="max-h-48 space-y-1 overflow-auto text-xs text-muted-foreground">
           {!log.data?.length ? <li>لا تغييرات بعد.</li> : log.data.map((l, i) => <li key={i}>{t(l["at"])} — {l["actor"]}: {SECTION_LABELS[l["section"] as SectionKey]} {l["after"] ? "فُعّل" : "عُلّق"} ({l["reason"]})</li>)}
         </ul>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Platform owner edits the organization name and its owner's name, ID number and mobile (used for ID + code sign-in). Saved only via platform_org_save. */
+function EditOrgDialog({ org }: { org: Row }) {
+  const qc = useQueryClient();
+  const owner = ((org["owners"] ?? []) as Row[])[0];
+  const [open, setOpen] = useState(false);
+  const [f, setF] = useState({ name: "", owner: "", nid: "", phone: "" });
+  const [busy, setBusy] = useState(false);
+  function start(v: boolean) {
+    if (v) setF({ name: org["name"] ?? "", owner: owner?.["name"] === "—" ? "" : owner?.["name"] ?? "", nid: owner?.["national_id"] ?? "", phone: owner?.["phone"] ?? "" });
+    setOpen(v);
+  }
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await db.rpc("platform_org_save", { _org: org["id"], _name: f.name, _owner: owner?.["user_id"] ?? null, _owner_name: f.owner, _nid: f.nid, _phone: f.phone });
+    setBusy(false);
+    if (error) return void toast.error(arabicError(error));
+    toast.success("حُفظت بيانات المؤسسة والمالك");
+    setOpen(false);
+    void qc.invalidateQueries({ queryKey: ["platform-orgs"] });
+  }
+  return (
+    <Dialog open={open} onOpenChange={start}>
+      <DialogTrigger asChild><Button size="sm" variant="outline">تعديل البيانات</Button></DialogTrigger>
+      <DialogContent>
+        <DialogHeader><DialogTitle>بيانات {org["name"]}</DialogTitle></DialogHeader>
+        <form onSubmit={save} className="space-y-3">
+          <div className="space-y-1"><Label htmlFor="o-name">اسم المؤسسة</Label><Input id="o-name" value={f.name} maxLength={150} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
+          {owner ? (<>
+            <p className="pt-2 text-sm font-semibold">بيانات المالك الشخصية <span className="text-xs font-normal text-muted-foreground" dir="ltr">{owner["email"]}</span></p>
+            <div className="space-y-1"><Label htmlFor="o-owner">اسم المالك</Label><Input id="o-owner" value={f.owner} maxLength={120} onChange={(e) => setF({ ...f, owner: e.target.value })} /></div>
+            <div className="space-y-1"><Label htmlFor="o-nid">رقم الهوية أو الإقامة</Label><Input id="o-nid" dir="ltr" inputMode="numeric" maxLength={10} value={f.nid} onChange={(e) => setF({ ...f, nid: e.target.value })} /></div>
+            <div className="space-y-1"><Label htmlFor="o-phone">رقم الجوال (يصل إليه رمز الدخول)</Label><Input id="o-phone" dir="ltr" inputMode="tel" maxLength={16} placeholder="05xxxxxxxx" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
+            <p className="text-xs text-muted-foreground">بعد الحفظ يدخل المالك من «الإدارة والموظفين» برقم الهوية ثم الرمز المرسل إلى جواله.</p>
+          </>) : <p className="text-sm text-muted-foreground">لا يوجد مالك لهذه المؤسسة.</p>}
+          <Button className="w-full" disabled={busy}>{busy ? "جارٍ الحفظ…" : "حفظ"}</Button>
+        </form>
       </DialogContent>
     </Dialog>
   );

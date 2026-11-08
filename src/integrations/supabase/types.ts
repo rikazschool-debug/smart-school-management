@@ -11003,6 +11003,33 @@ export type Database = {
           },
         ]
       }
+      org_owner_identity: {
+        Row: {
+          created_at: string
+          national_id: string | null
+          phone: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          national_id?: string | null
+          phone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          national_id?: string | null
+          phone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       org_section_log: {
         Row: {
           actor: string
@@ -19253,6 +19280,17 @@ export type Database = {
         }[]
       }
       pin_message: { Args: { _id: string; _pin: boolean }; Returns: undefined }
+      platform_org_save: {
+        Args: {
+          _name: string
+          _nid: string
+          _org: string
+          _owner: string
+          _owner_name: string
+          _phone: string
+        }
+        Returns: undefined
+      }
       platform_orgs: { Args: never; Returns: Json }
       platform_overview: { Args: never; Returns: Json }
       platform_section_log: { Args: { _org: string }; Returns: Json }
