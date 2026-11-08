@@ -62,7 +62,7 @@ async def main():
         await tp.screenshot(path=S + "2-teacher-voice-preview.png")
         has_prev = await tp.get_by_role("button", name="تشغيل الرسالة الصوتية").count() >= 1
         check("teacher: recording stops into a preview player before sending", has_prev)
-        await tp.get_by_role("button", name="إرسال", exact=True).click(); await tp.wait_for_timeout(6000)
+        await tp.get_by_role("button", name="إرسال الصوت").click(); await tp.wait_for_timeout(6000)
         check("voice sent: preview cleared", await tp.get_by_text("معاينة التسجيل").count() == 0)
         # attachments panel
         await tp.get_by_role("button", name="المرفقات").click(); await tp.wait_for_timeout(2500)
