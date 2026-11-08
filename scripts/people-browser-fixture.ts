@@ -23,12 +23,15 @@ async function user(tag: string) {
   users.push(u.data.user.id); tr.addUser(u.data.user.id); return { email, id: u.data.user.id };
 }
 const owner = await user("owner"), pA = await user("pa"), pB = await user("pb"), viewer = await user("view"), teacher = await user("t"), guardian = await user("g"), student = await user("s");
-const org = (await admin.from("organizations").insert({ name: "مؤسسة pbx" }).select("id").single()).data!.id;
-const A = (await admin.from("schools").insert({ org_id: org, name: "pbx فرع أ" }).select("id").single()).data!.id;
+const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
+const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY!;
+const oc = createClient(env.VITE_SUPABASE_URL!, PK, { auth: { persistSession: false }, global: { fetch: ((input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); }) as any } });
+await oc.auth.signInWithPassword({ email: owner.email, password: pw });
+const org = (await oc.rpc("create_organization", { _org_name: "مؤسسة pbx", _school_name: "pbx فرع أ" })).data as string;
+const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id;
 const B = (await admin.from("schools").insert({ org_id: org, name: "pbx فرع ب" }).select("id").single()).data!.id;
 tr.addSchool(A); tr.addSchool(B);
 const mem = await admin.from("memberships").insert([
-  { user_id: owner.id, org_id: org, school_id: A, role: "org_owner" },
   { user_id: pA.id, org_id: org, school_id: A, role: "principal" }, { user_id: pB.id, org_id: org, school_id: B, role: "principal" },
   { user_id: viewer.id, org_id: org, school_id: A, role: "vice_principal" },
   { user_id: teacher.id, org_id: org, school_id: A, role: "teacher" }, { user_id: guardian.id, org_id: org, school_id: A, role: "guardian" },
