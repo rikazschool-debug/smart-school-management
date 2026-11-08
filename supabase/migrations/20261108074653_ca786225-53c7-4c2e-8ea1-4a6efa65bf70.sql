@@ -1,0 +1,2 @@
+revoke execute on function public.conv_hidden_count(uuid), public._msg_file_row_ok(uuid), public._storage_file_ok(text), public.class_group_members(uuid), public.conversation_people(uuid) from public, anon;
+grant execute on function public.conv_hidden_count(uuid), public._msg_file_row_ok(uuid), public._storage_file_ok(text), public.class_group_members(uuid), public.conversation_people(uuid) to authenticated;
