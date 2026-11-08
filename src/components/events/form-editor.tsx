@@ -2,7 +2,7 @@
 // and keeps each published version; applications store the version they were submitted with.
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Copy, Monitor, Plus, Smartphone, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Monitor, Plus, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,11 +48,7 @@ export function FormEditor({ item }: { item: string }) {
     onSuccess: (r) => { toast.success(`نُشر الإصدار ${r.version}؛ يسري على الطلبات الجديدة فقط`); refresh(); },
     onError: (e) => toast.error(arabicError(e)),
   });
-  const copy = useMutation({
-    mutationFn: (from: string) => rpc<{ draft_rev: number; draft: Field[] }>("evt_form_copy", { _item: item, _from: from }),
-    onSuccess: (r) => { setFields(r.draft); setRev(r.draft_rev); setDirty(false); toast.success("نُسخ النموذج إلى المسودة"); refresh(); },
-    onError: (e) => toast.error(arabicError(e)),
-  });
+
 
   // impact warnings: bindings used for identification/notifications removed vs. the published version
   const warnings = useMemo(() => {
