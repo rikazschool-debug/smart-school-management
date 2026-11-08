@@ -20,7 +20,7 @@ async def main():
         print("marks:", await pg.get_by_test_id("mark").count())
         await pg.get_by_role("radiogroup", name="حالة ريم العتيبي").get_by_role("radio", name="غائب").click()
         await pg.get_by_role("radiogroup", name="حالة سلمان الحربي").get_by_role("radio", name="متأخر").click()
-        await pg.get_by_role("button", name="اعتماد حضور اليوم").click(); await pg.wait_for_timeout(2500)
+        await pg.get_by_role("button", name="اعتماد حضور اليوم").click(); await pg.wait_for_timeout(800); await pg.get_by_role("button", name="اعتماد", exact=True).last.click(); await pg.wait_for_timeout(2500)
         await pg.screenshot(path="/tmp/browser/la/2_approved.png")
         print("approved badge:", await pg.get_by_text("معتمد").count())
         await pg.get_by_role("radiogroup", name="حالة ريم العتيبي").get_by_role("radio", name="بعذر").click()
