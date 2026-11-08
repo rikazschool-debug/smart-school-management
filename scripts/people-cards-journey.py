@@ -35,7 +35,7 @@ async def main():
             ctx, p, errs = await login(br, "teacher", mobile)
             if mobile:  # phone menu is behind a button
                 async def menu():
-                    await goto(p, "/app"); b = p.get_by_role("button", name=re.compile("القائمة"))
+                    await goto(p, "/app"); await p.wait_for_timeout(2500); b = p.get_by_role("button", name=re.compile("القائمة"))
                     if await b.count(): await b.first.click(); await p.wait_for_timeout(800)
                     return await p.locator("body").inner_text()
             g = await pick(p, "ولي الأمر"); g = await menu() if mobile else g
@@ -49,7 +49,9 @@ async def main():
         # owner sees the same person as two separate records (teacher + guardian), never merged
         ctx, p, errs = await login(br, "owner")
         await goto(p, "/app/guardians")
-        check("owner: dual person listed as a guardian too (separate record)", await p.get_by_role("button", name=re.compile("أحمد.*" + R)).count() >= 1)
+        try: await p.get_by_role("button", name=re.compile("أحمد.*" + R)).first.wait_for(timeout=15000); seen = True
+        except Exception: seen = False
+        check("owner: dual person listed as a guardian too (separate record)", seen)
         await ctx.close(); await br.close()
         print(f"\n{ok} passed, {bad} failed")
 asyncio.run(main())
