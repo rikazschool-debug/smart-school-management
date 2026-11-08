@@ -38,7 +38,9 @@ async def main():
         check("added staff appears with «إضافة يدوية»", await p.locator("aside li", has_text=name).get_by_text("إضافة يدوية").count() > 0)
         g1row = p.locator("aside li", has_text="ولي ابنين").first
         await g1row.get_by_role("button", name="إزالة").click(); await reason(p, "طلب ولي الأمر")
-        check("removed member listed under «أزالهم المدير»", await p.get_by_text("أزالهم المدير").is_visible())
+        try: await p.get_by_text("أزالهم المدير").wait_for(timeout=10000); seen = True
+        except Exception: seen = False
+        check("removed member listed under «أزالهم المدير»", seen)
         resync(); await p.reload(); await p.wait_for_timeout(9000); await p.locator("#class-pick").select_option(F["gA"]); await p.wait_for_timeout(2000)
         check("removal respected after resync", await p.get_by_text("أزالهم المدير").is_visible() and await p.locator("aside li", has_text="السبب: طلب ولي الأمر").count() == 1)
         await p.locator("aside li", has_text="السبب: طلب ولي الأمر").get_by_role("button", name="إعادة").click(); await p.wait_for_timeout(2500)
