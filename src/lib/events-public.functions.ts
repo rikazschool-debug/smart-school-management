@@ -41,14 +41,14 @@ function cleanAnswers(a: unknown): Record<string, unknown> {
   return out;
 }
 
-const getPublicCourseFn = createServerFn({ method: "GET" })
+export const getPublicCourseFn = createServerFn({ method: "GET" })
   .inputValidator((d: { token: string }) => ({ token: String(d?.token ?? "").toLowerCase().slice(0, 64) }))
   .handler(async ({ data }) => {
     if (!TOKEN.test(data.token)) return JSON.stringify({ state: "invalid" });
     return call("_evt_public_get", { _token: data.token });
   });
 
-const submitPublicCourseFn = createServerFn({ method: "POST" })
+export const submitPublicCourseFn = createServerFn({ method: "POST" })
   .inputValidator((d: { token: string; version: number; answers: unknown; clientKey: string; hp?: string; elapsed?: number }) => ({
     token: String(d?.token ?? "").toLowerCase().slice(0, 64), version: Number(d?.version) || 0, answers: cleanAnswers(d?.answers),
     clientKey: String(d?.clientKey ?? ""), hp: String(d?.hp ?? ""), elapsed: Number(d?.elapsed) || 0,
@@ -60,14 +60,14 @@ const submitPublicCourseFn = createServerFn({ method: "POST" })
     return call("_evt_public_submit", { _token: data.token, _ip: await clientHash(), _version: data.version, _answers: data.answers, _client_key: data.clientKey });
   });
 
-const trackPublicAppFn = createServerFn({ method: "POST" })
+export const trackPublicAppFn = createServerFn({ method: "POST" })
   .inputValidator((d: { code: string }) => ({ code: String(d?.code ?? "").toLowerCase().slice(0, 64) }))
   .handler(async ({ data }) => {
     if (!CODE.test(data.code)) return JSON.stringify({ error: "invalid" });
     return call("_evt_public_track", { _code: data.code, _ip: await clientHash() });
   });
 
-const updatePublicAppFn = createServerFn({ method: "POST" })
+export const updatePublicAppFn = createServerFn({ method: "POST" })
   .inputValidator((d: { code: string; rev: number; action: "update" | "withdraw"; answers?: unknown }) => ({
     code: String(d?.code ?? "").toLowerCase().slice(0, 64), rev: Number(d?.rev) || 0, action: d?.action === "withdraw" ? "withdraw" : "update", answers: cleanAnswers(d?.answers),
   }))
