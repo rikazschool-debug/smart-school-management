@@ -1,3 +1,4 @@
+import { askText } from "@/components/confirm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useMemo, useState } from "react";
@@ -147,7 +148,7 @@ function Members({ conv, onClose, onChanged }: { conv: string; onClose: () => vo
               <li key={c["user_id"]} className="flex items-center gap-2 p-3 text-sm">
                 <span className="min-w-0 flex-1"><span className="block truncate">{c["full_name"]}</span><span className="text-[11px] text-muted-foreground">{c["label"]}</span></span>
                 <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
-                  const r = await askText({ title: `إضافة ${c["full_name"]}`, label: "سبب الإضافة", required: true });
+                  const r = await askText(`سبب إضافة ${c["full_name"]}`, { required: true });
                   if (r) run("class_group_add_member", { _user: c["user_id"], _reason: r }, "أُضيف العضو");
                 }}>إضافة</Button>
               </li>))}
@@ -167,7 +168,7 @@ function Members({ conv, onClose, onChanged }: { conv: string; onClose: () => vo
                   <div className="flex flex-wrap gap-1 pt-1">
                     <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={busy} onClick={() => run("class_group_set_role", { _user: x["user_id"], _role: x["role"] === "moderator" ? "member" : "moderator" }, "حُفظ الدور")}>{x["role"] === "moderator" ? "إلغاء الإشراف" : "تعيين مشرفًا"}</Button>
                     <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive" disabled={busy} onClick={async () => {
-                      const r = await askText({ title: `إزالة ${x["full_name"]} من المجموعة`, label: "سبب الإزالة", required: true });
+                      const r = await askText(`سبب إزالة ${x["full_name"]} من المجموعة`, { required: true });
                       if (r) run("class_group_remove_member", { _user: x["user_id"], _reason: r }, "أُزيل العضو؛ لن تعيده المزامنة");
                     }}>إزالة</Button>
                     {x["overridden"] && <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={busy} onClick={() => run("class_group_restore_auto", { _user: x["user_id"] }, "استُعيدت العضوية التلقائية")}>استعادة التلقائي</Button>}
