@@ -673,3 +673,4 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Server: conv_messages RPC, _cg_sender_visible RLS on messages/conversation_members/files, storage via _storage_file_ok; conversation_people, class_group_members, search_messages filtered.
 - Results: cg-privacy-e2e 24/24, class-groups-e2e 32/32, comm-e2e 95/95, comm-roles-e2e 36/36. Browser journey not yet run.
 - Note: a guardian who is also school staff is treated as staff (sees and is shown with real identity).
+- Follow-up: cg-privacy-e2e 27/27 (authorized staff manually added sees real senders of new messages, loses access on removal; history before joining stays hidden by visible_from). Browser cg-privacy-journey 10/10: student & guardian on 390px see «ولي أمر»/«طالب» and no peer names in messages or members; teacher & principal on 1280px see real names. Test data removed. Not published.

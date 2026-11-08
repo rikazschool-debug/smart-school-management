@@ -115,9 +115,24 @@ async function main() {
   ok("22 guardian who is also school staff (member of group) sees real identities", asStaff?.sender_id === st.id);
   const st2Again = by(await view(st2), mG);
   ok("23 that person's guardian message now shows as staff name (staff role wins)", st2Again?.sender_id === g2.id);
+  const sNo = await staff.c.rpc("conv_messages", { _conv: gA, _before: null, _limit: 50 });
+  ok("25 school staff not in the group and not a manager gets nothing", !(sNo.data ?? []).length);
+  const add = await pr.c.rpc("class_group_add_member", { _conv: gA, _user: staff.id, _reason: "متابعة السلوك" });
+  const mAfter = await send(st, "بعد التفويض " + run);
+  ok("26 authorized staff added by principal sees real sender", !add.error && by(await view(staff), mAfter)?.sender_id === st.id, add.error?.message);
+  await pr.c.rpc("class_group_remove_member", { _conv: gA, _user: staff.id, _reason: "انتهاء التفويض" });
+  const after = await staff.c.rpc("conv_messages", { _conv: gA, _before: null, _limit: 50 });
+  ok("27 after removal (authorization withdrawn) staff gets nothing", !(after.data ?? []).length);
   const audit = (await admin.from("messages").select("sender_id").eq("id", mG).single()).data;
   ok("24 real sender stored internally", audit?.sender_id === g2.id);
   console.log(`\n${pass} passed, ${fail} failed`);
+  if (process.argv.includes("--keep")) {
+    await admin.from("student_guardians").update({ verified: true }).eq("student_id", s1.id).eq("guardian_id", G1.id);
+    await admin.from("memberships").update({ is_active: false }).eq("user_id", g2.id).eq("role", "teacher");
+    const fs = await import("fs"); fs.mkdirSync("/tmp/browser/cgp", { recursive: true });
+    fs.writeFileSync("/tmp/browser/cgp/fixture.json", JSON.stringify({ pw, gA, run, principal: pr.email, teacher: t1.email, g1: g1.email, g2: g2.email, st: st.email, st2: st2.email }));
+    console.log("kept /tmp/browser/cgp/fixture.json"); if (fail) process.exit(1); return;
+  }
   await teardown();
   if (fail) process.exit(1);
 }
