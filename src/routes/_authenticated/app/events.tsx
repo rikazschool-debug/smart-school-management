@@ -15,7 +15,7 @@ import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { AppsList, ItemDetail, ItemForm, useEvtRefresh } from "@/components/events/item";
 import { FormFields, missingRequired } from "@/components/events/form-render";
 import {
-  APP_STATUS, KIND, KIND_PLURAL, MODE, REG_STATE, StatusPill, AppPill, canAny, fmtDT, hasEvents, newClientKey, useEvtCaps,
+  KIND, KIND_PLURAL, MODE, REG_STATE, StatusPill, AppPill, canAny, fmtDT, hasEvents, newClientKey, useEvtCaps,
   type Answers, type EvtRow, type Field, type Kind,
 } from "@/components/events/shared";
 
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/app/events")({
 });
 
 const sm = selectCls("", true);
-export const EVT_TAB_LABELS: Record<Tab, string> = { summary: "الملخص والتقويم", trip: "الرحلات المدرسية", general: "الفعاليات العامة", course: "الدورات", apps: "طلبات التسجيل", forms: "إعدادات النماذج", reports: "التقارير", family: "فعاليات أبنائي" };
+const EVT_TAB_LABELS: Record<Tab, string> = { summary: "الملخص والتقويم", trip: "الرحلات المدرسية", general: "الفعاليات العامة", course: "الدورات", apps: "طلبات التسجيل", forms: "إعدادات النماذج", reports: "التقارير", family: "فعاليات أبنائي" };
 
 function Page() {
   const { tab, item, app } = Route.useSearch();
@@ -42,6 +42,7 @@ function Page() {
   const caps = useEvtCaps(org);
   const [school, setSchool] = useState<string>("");
   const [creating, setCreating] = useState<Kind | null>(null);
+  const [appStatus, setAppStatus] = useState("");
   if (!active || !org) return <ForbiddenState />;
   if (caps.isLoading) return <LoadingState />;
   if (caps.error || !caps.data) return <ErrorState message={arabicError(caps.error)} onRetry={() => caps.refetch()} />;
@@ -94,8 +95,6 @@ function Page() {
     </div>
   );
 }
-let appStatus = ""; // eslint-disable-line prefer-const
-function setAppStatus(s: string) { appStatus = s; }
 
 function useList(org: string, school: string | null, kind: Kind | null, status: string, q: string) {
   return useQuery({ queryKey: ["evt-list", org, school, kind, status, q], refetchInterval: 30_000, queryFn: () => rpc<EvtRow[]>("evt_list", { _org: org, _school: school, _kind: kind, _status: status || null, _q: q || null }) });
@@ -337,4 +336,3 @@ function ApplyForm({ item, kids, conditions, onDone }: { item: string; kids: Fam
   );
 }
 
-export { APP_STATUS };
