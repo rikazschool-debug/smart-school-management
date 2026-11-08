@@ -663,3 +663,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Phone calendar: invited teacher opens meeting details (place, duration, purpose) and duty details (type, time); non-invited teacher sees own duty but not the meeting.
 - Copy fix: staff sign-in entry no longer mentions username/password (removed in B3.8).
 - Still open: real WhatsApp delivery (provider accepted / delivered / signed in, each recorded separately) — waits for a consenting number. Test data torn down.
+
+## B5 مجموعات الشعب (Nov 8 2026)
+- class-groups-e2e 30/30، comm-e2e 95/95، class-groups-journey 9/9 (كمبيوتر/جوال). أرشفة مجموعات المواد مسجلة في class_group_runs. بيانات الاختبار حُذفت. لم يُنشر.

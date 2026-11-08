@@ -15,7 +15,7 @@ import { timeLabel } from "@/lib/comm";
 
 /** Section groups: one automatic group per section + year (students, assigned teachers, verified guardians, principal as moderator).
  *  Membership and settings change only through class_group_* RPCs; the principal/owner manages members with recorded reasons. */
-export function ClassesTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
+export function ClassesTab({ ctx, focus }: { ctx: AppContext & { schoolId: string }; focus?: string | undefined }) {
   const qc = useQueryClient();
   const teacher = ctx.role === "teacher";
   const simple = ctx.role === "student" || ctx.role === "guardian";
@@ -35,7 +35,7 @@ export function ClassesTab({ ctx }: { ctx: AppContext & { schoolId: string } }) 
       return data as Row[];
     },
   });
-  const [pick, setPick] = useState<string>("");
+  const [pick, setPick] = useState<string>(focus ?? "");
   const [open, setOpen] = useState<string | null>(null);
   const [side, setSide] = useState(false);
   useEffect(() => {
