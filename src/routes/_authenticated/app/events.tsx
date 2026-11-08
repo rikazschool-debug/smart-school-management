@@ -330,7 +330,7 @@ function ApplyForm({ item, kids, conditions, onDone }: { item: string; kids: Fam
       <div className="space-y-1"><Label htmlFor={`st-${item}`}>الطالب</Label>
         <select id={`st-${item}`} className={selectCls("w-full")} value={student} onChange={(e) => setStudent(e.target.value)}><option value="">اختر…</option>{kids.map((k) => <option key={k.id} value={k.id}>{k.name} — {k.school}</option>)}</select></div>
       {conditions && <p className="whitespace-pre-wrap rounded bg-muted p-2 text-xs">{conditions}</p>}
-      <FormFields fields={cur.fields} value={ans} onChange={setAns} disabled={send.isPending} />
+      <FormFields fields={cur.fields} value={ans} onChange={setAns} disabled={send.isPending} upload={accountUploader(cur.item, ckey)} />
       <Button type="submit" disabled={send.isPending}>{send.isPending ? "جارٍ الإرسال…" : "إرسال الطلب"}</Button>
     </form>
   );
