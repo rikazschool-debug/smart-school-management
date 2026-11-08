@@ -17,7 +17,8 @@ import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { HrImport } from "@/components/hr/import";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
-import { GENDER, STATUS, rpc, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
+import { HrCategories } from "@/components/hr/categories";
+import { GENDER, STATUS, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
   validateSearch: (s: Record<string, unknown>): { emp?: string; add?: string; imp?: string } => ({
@@ -96,6 +97,7 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
         {m.caps.create && <Button size="sm" variant="outline" onClick={() => nav({ search: { imp: "1" } })}><Upload className="size-4" />استيراد Excel</Button>}
       </div>
       {add && m.caps.create && <AddEmployee org={org} m={m} onClose={() => nav({ search: {} })} onDone={(id) => nav({ search: { emp: id } })} />}
+      {m.org_wide && m.caps.edit && <HrCategories org={org} />}
       {imp && m.caps.create && all.data && <HrImport org={org} m={m} existing={all.data} onClose={() => nav({ search: {} })} onDone={() => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-list-all"] }); }} />}
       <HrIdReadiness org={org} school={school} onOpen={(id) => nav({ search: { emp: id } })} />
       {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} />}
@@ -130,12 +132,13 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
 }
 
 type Cand = { accounts: { user_id: string; name: string; roles: string[]; schools: { id: string; name: string }[] | null }[]; teachers: { teacher_id: string; name: string; school_id: string; school: string; user_id: string | null; specialization: string | null }[] };
-const EMPTY = { full_name: "", user_id: "", school_id: "", teacher_id: "", job_title: "", department: "", hire_date: "", phone: "", email: "", gender: "", national_id: "", nationality: "", birth_date: "" };
+const EMPTY = { full_name: "", display_name: "", category_id: "", user_id: "", school_id: "", teacher_id: "", job_title: "", department: "", hire_date: "", phone: "", email: "", gender: "", national_id: "", nationality: "", birth_date: "" };
 
 function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClose: () => void; onDone: (id: string) => void }) {
   const qc = useQueryClient();
   const cand = useQuery({ queryKey: ["hr-cand", org], queryFn: () => rpc<Cand>("hr_candidates", { _org: org }) });
   const [f, setF] = useState({ ...EMPTY });
+  const cats = useHrCats(org);
   const set = (k: keyof typeof EMPTY, v: string) => setF((x) => ({ ...x, [k]: v }));
   const schools = m.schools.filter((s) => s.create);
   const teachers = (cand.data?.teachers ?? []).filter((t) => t.school_id === f.school_id && (!t.user_id || t.user_id === f.user_id));
@@ -168,6 +171,11 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
               <select id="hr-sch" className={selectCls("mt-1 w-full")} value={f.school_id} onChange={(e) => setF((x) => ({ ...x, school_id: e.target.value, teacher_id: "" }))}>
                 <option value="">اختر المدرسة</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select></div>
+            <div><Label htmlFor="hr-cat">التصنيف الوظيفي</Label>
+              <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
+                <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">التصنيف وصف وظيفي فقط ولا يمنح صلاحيات أو دور دخول.</p></div>
             <div className="md:col-span-2"><Label htmlFor="hr-t">ربط بسجل معلم موجود في المدرسة (اختياري)</Label>
               <select id="hr-t" className={selectCls("mt-1 w-full")} value={f.teacher_id} disabled={!f.school_id} onChange={(e) => e.target.value ? pickTeacher(e.target.value) : set("teacher_id", "")}>
                 <option value="">ليس معلمًا / لا ربط</option>{teachers.map((t) => <option key={t.teacher_id} value={t.teacher_id}>{t.name}{t.specialization ? ` — ${t.specialization}` : ""}{t.user_id ? " (له حساب)" : ""}</option>)}
@@ -192,7 +200,8 @@ function EmpFields({ f, set, sensitive, withStatus }: { f: Record<string, string
   );
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {F("full_name", "الاسم الكامل")}
+      {F("full_name", "الاسم الرسمي الكامل")}
+      {F("display_name", "الاسم المعروض", "text", { placeholder: "يُملأ تلقائيًا بالاسم الأول والأخير" })}
       {F("job_title", "المسمى الوظيفي")}
       {F("hire_date", "تاريخ المباشرة", "date")}
       {F("phone", "الجوال", "tel", { dir: "ltr", inputMode: "tel" })}
@@ -270,6 +279,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
   const d = useQuery({ queryKey: ["hr-emp", id], queryFn: () => rpc<Detail>("hr_employee_get", { _id: id }) });
   const [edit, setEdit] = useState<Record<string, string> | null>(null);
   const [asg, setAsg] = useState<Record<string, string> | null>(null);
+  const cats = useHrCats(org);
   const others = useQuery({ queryKey: ["hr-list", org, "", "", "active"], enabled: !!asg, queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: null, _q: null, _status: "active" }) });
   const refresh = () => { qc.invalidateQueries({ queryKey: ["hr-emp", id] }); qc.invalidateQueries({ queryKey: ["hr-list"] }); };
   const saveEmp = useMutation({
@@ -290,7 +300,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
       const reason = ending ? await askText("سبب إنهاء التعيين", { required: true, ok: "حفظ" }) : null;
       if (ending && !reason) throw new Error("أُلغي");
       const { id: aid, ...p } = v;
-      return rpc("hr_assignment_save", { _employee: id, _id: aid || null, _p: Object.fromEntries(Object.entries(p).filter(([, x]) => x !== "")), _reason: reason });
+      return rpc("hr_assignment_save", { _employee: id, _id: aid || null, _p: { ...Object.fromEntries(Object.entries(p).filter(([, x]) => x !== "")), category_id: p["category_id"] ?? "" }, _reason: reason });
     },
     onSuccess: () => { toast.success("حُفظ التعيين"); setAsg(null); refresh(); },
     onError: (e) => { if ((e as Error).message !== "أُلغي") toast.error(arabicError(e)); },
@@ -300,11 +310,11 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
   if (d.error) return <ErrorState message={arabicError(d.error)} />;
   const { employee: e, assignments, can_edit, events } = d.data!;
   const row = (k: string, v: React.ReactNode) => <div className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>;
-  const startEdit = () => setEdit({ full_name: e.full_name, job_title: e.job_title ?? "", hire_date: e.hire_date ?? "", phone: e.phone ?? "", email: e.email ?? "", gender: e.gender ?? "", status: e.status, end_date: e.end_date ?? "", ...(e.sensitive ? { national_id: e.national_id ?? "", nationality: e.nationality ?? "", birth_date: e.birth_date ?? "" } : {}) });
+  const startEdit = () => setEdit({ full_name: e.full_name, display_name: e.display_name ?? "", job_title: e.job_title ?? "", hire_date: e.hire_date ?? "", phone: e.phone ?? "", email: e.email ?? "", gender: e.gender ?? "", status: e.status, end_date: e.end_date ?? "", ...(e.sensitive ? { national_id: e.national_id ?? "", nationality: e.nationality ?? "", birth_date: e.birth_date ?? "" } : {}) });
   return (
     <section className="space-y-4 rounded-xl border-2 border-primary/30 bg-card p-4" aria-label={`ملف ${e.full_name}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="min-w-0 flex-1"><span className="block text-lg font-bold">{e.full_name}</span><span className="text-xs text-muted-foreground"><bdi dir="ltr">{e.employee_no}</bdi> · {STATUS[e.status]}</span></span>
+        <span className="min-w-0 flex-1"><span className="block text-lg font-bold">{e.display_name || e.full_name}</span>{e.display_name && e.display_name !== e.full_name && <span className="block text-xs text-muted-foreground">الاسم الرسمي: {e.full_name}</span>}<span className="text-xs text-muted-foreground"><bdi dir="ltr">{e.employee_no}</bdi> · {STATUS[e.status]}</span></span>
         {can_edit && !edit && <Button size="sm" variant="outline" onClick={startEdit}>تعديل الملف</Button>}
         <Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق الملف"><X className="size-4" /></Button>
       </div>
@@ -327,10 +337,11 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
         </dl>
       )}
       <div>
-        <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
+        <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", category_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
         {asg && (
           <div className="mb-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-3">
             <div><Label htmlFor="as-sch">المدرسة</Label><select id="as-sch" className={selectCls("mt-1 w-full")} value={asg["school_id"]} onChange={(ev) => setAsg({ ...asg, school_id: ev.target.value })}><option value="">اختر</option>{m.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+            <div><Label htmlFor="as-cat">التصنيف الوظيفي</Label><select id="as-cat" className={selectCls("mt-1 w-full")} value={asg["category_id"] ?? ""} onChange={(ev) => setAsg({ ...asg, category_id: ev.target.value })}><option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active || c.id === asg["category_id"]).map((c) => <option key={c.id} value={c.id}>{c.name}{c.is_active ? "" : " (معطل)"}</option>)}</select></div>
             <div><Label htmlFor="as-job">الوظيفة في هذا التعيين</Label><Input id="as-job" className="mt-1" value={asg["job_title"]} onChange={(ev) => setAsg({ ...asg, job_title: ev.target.value })} /></div>
             <div><Label htmlFor="as-dep">القسم</Label><Input id="as-dep" className="mt-1" value={asg["department"]} onChange={(ev) => setAsg({ ...asg, department: ev.target.value })} /></div>
             <div><Label htmlFor="as-mgr">المدير المباشر</Label><select id="as-mgr" className={selectCls("mt-1 w-full")} value={asg["manager_id"]} onChange={(ev) => setAsg({ ...asg, manager_id: ev.target.value })}><option value="">بلا</option>{mgrs.map((x) => <option key={x.id} value={x.id}>{x.full_name}</option>)}</select></div>
@@ -345,10 +356,10 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
               <li key={a.id} className={"flex flex-wrap items-center gap-2 rounded-lg border p-2 text-sm " + (a.active ? "" : "opacity-70")}>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{a.school}{a.is_primary && <span className="ms-2 rounded bg-secondary px-1.5 text-xs font-normal">أساسي</span>}{!a.active && <span className="ms-2 rounded bg-muted px-1.5 text-xs font-normal">منتهٍ</span>}</span>
-                  <span className="block text-xs text-muted-foreground">{[a.job_title, a.department, a.manager && `المدير: ${a.manager}`, a.teacher && `سجل المعلم: ${a.teacher}`].filter(Boolean).join(" · ")}</span>
+                  <span className="block text-xs text-muted-foreground">{[a.category, a.job_title, a.department, a.manager && `المدير: ${a.manager}`, a.teacher && `سجل المعلم: ${a.teacher}`].filter(Boolean).join(" · ")}</span>
                   <span className="block text-xs text-muted-foreground"><bdi dir="ltr">{a.start_date}</bdi> ← {a.end_date ? <bdi dir="ltr">{a.end_date}</bdi> : "مستمر"}</span>
                 </span>
-                {can_edit && a.active && !asg && <Button size="sm" variant="ghost" onClick={() => setAsg({ id: a.id, school_id: a.school_id, job_title: a.job_title ?? "", department: a.department ?? "", manager_id: a.manager_id ?? "", start_date: a.start_date, end_date: a.end_date ?? "", ...(a.teacher_id ? { teacher_id: a.teacher_id } : {}) })}>تعديل / إنهاء</Button>}
+                {can_edit && a.active && !asg && <Button size="sm" variant="ghost" onClick={() => setAsg({ id: a.id, school_id: a.school_id, category_id: a.category_id ?? "", job_title: a.job_title ?? "", department: a.department ?? "", manager_id: a.manager_id ?? "", start_date: a.start_date, end_date: a.end_date ?? "", ...(a.teacher_id ? { teacher_id: a.teacher_id } : {}) })}>تعديل / إنهاء</Button>}
               </li>
             ))}
           </ul>
