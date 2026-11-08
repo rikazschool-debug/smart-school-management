@@ -129,7 +129,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     const ok = out.filter((x) => x.state === "ok").length; toast.success(`أُضيف ${ok} موظفًا`);
   };
   const report = () => {
-    const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, safe(r.p["full_name"] ?? ""), LBL[r.state], safe([...r.errs, r.msg].filter(Boolean).join("، "))])]);
+    const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "الاسم المعروض", "التصنيف", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, safe(r.p["full_name"] ?? ""), safe(r.p["display_name"] ?? "تلقائي"), safe(cats.find((c) => c.id === r.p["category_id"])?.name ?? ""), LBL[r.state], safe([...r.errs, r.msg].filter(Boolean).join("، "))])]);
     const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] }; XLSX.utils.book_append_sheet(wb, ws, "النتائج"); XLSX.writeFile(wb, "تقرير-استيراد-الموظفين.xlsx");
   };
   const shown = res ?? rows;
@@ -137,7 +137,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   return (
     <div className="space-y-3 rounded-xl border bg-card p-4">
       <div className="flex items-center gap-2"><h3 className="flex-1 font-bold">استيراد موظفين من Excel</h3><Button size="icon" variant="ghost" aria-label="إغلاق" onClick={onClose}><X className="size-4" /></Button></div>
-      <p className="text-sm text-muted-foreground">يُنشأ ملف موظف بلا حساب دخول، ويمكن ربطه بحساب أو سجل معلم لاحقًا. لا يُحفظ أي صف قبل المعاينة، والصفوف الموجودة مسبقًا تُتخطى ولا تُكرر.{!sens && " أعمدة الهوية والجنسية والميلاد مخفية لأنها تحتاج صلاحية البيانات الحساسة."}</p>
+      <p className="text-sm text-muted-foreground">يُنشأ ملف موظف بلا حساب دخول، ويمكن ربطه بحساب أو سجل معلم لاحقًا. لا يُحفظ أي صف قبل المعاينة، والصفوف الموجودة مسبقًا تُتخطى ولا تُكرر. الحقول المطلوبة: الاسم الكامل والمدرسة (*)؛ التصنيف لا يمنح صلاحية، والاسم المعروض يُملأ تلقائيًا إن تُرك فارغًا.{!sens && " أعمدة الهوية والجنسية والميلاد مخفية لأنها تحتاج صلاحية البيانات الحساسة."}</p>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" onClick={template}><Download className="size-4" />تنزيل القالب</Button>
         <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border px-3 py-1.5 text-sm"><Upload className="size-4" />اختيار ملف
@@ -161,9 +161,9 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
             {(["new", "dup", "bad", "ok", "fail"] as const).map((s) => { const c = shown.filter((r) => r.state === s).length; return c ? <span key={s} className={`rounded px-2 py-0.5 ${CLS[s]}`}>{LBL[s]}: {c}</span> : null; })}
           </div>
           <div className="max-h-96 overflow-auto rounded border">
-            <table className="w-full text-sm"><thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-start">الصف</th><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">المدرسة</th><th className="p-2 text-start">النتيجة</th></tr></thead>
+            <table className="w-full text-sm"><thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-start">الصف</th><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">الاسم المعروض</th><th className="p-2 text-start">المدرسة</th><th className="p-2 text-start">التصنيف</th><th className="p-2 text-start">النتيجة</th></tr></thead>
               <tbody>{shown.map((r) => (
-                <tr key={r.i} className="border-t"><td className="p-2">{r.i}</td><td className="p-2">{r.p["full_name"] || "—"}</td><td className="p-2">{schools.find((s) => s.id === r.p["school_id"])?.name ?? "—"}</td>
+                <tr key={r.i} className="border-t"><td className="p-2">{r.i}</td><td className="p-2">{r.p["full_name"] || "—"}</td><td className="p-2">{r.p["display_name"] || <span className="text-xs text-muted-foreground">تلقائي</span>}</td><td className="p-2">{schools.find((s) => s.id === r.p["school_id"])?.name ?? "—"}</td><td className="p-2">{cats.find((c) => c.id === r.p["category_id"])?.name ?? "—"}</td>
                   <td className="p-2"><span className={`rounded px-1.5 ${CLS[r.state]}`}>{LBL[r.state]}</span> <span className="text-xs text-muted-foreground">{[...r.errs, r.msg].filter(Boolean).join("، ")}</span></td></tr>
               ))}</tbody></table>
           </div>
