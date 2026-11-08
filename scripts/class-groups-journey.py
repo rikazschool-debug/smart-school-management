@@ -89,8 +89,12 @@ async def main():
         for w, h in [(1280, 1800), (390, 844)]:
             ctx, p = await open_as(b, "teacher1", w, h, f"/app/communication?tab=archive&c={F['old']}")
             link = p.get_by_text("انتقلت المحادثة إلى مجموعة الشعبة")
-            vis = await link.count() > 0
-            if vis: await link.click(); await p.wait_for_timeout(5000)
+            try: await link.wait_for(timeout=15000); vis = True
+            except Exception: vis = False
+            if vis:
+                await link.click()
+                try: await p.get_by_text("إعلان المعلم").first.wait_for(timeout=20000)
+                except Exception: pass
             body = await p.locator("body").inner_text()
             check(f"successor link opens the right section group ({w}px)", vis and "إعلان المعلم" in body)
             await p.screenshot(path=f"{OUT}/5_link_{w}.png"); await ctx.close()
