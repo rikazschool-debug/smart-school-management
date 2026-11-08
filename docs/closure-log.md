@@ -646,3 +646,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - بيانات الاختبار أزيلت (teardown لكل fixture).
 - ما زال منفصلًا: اختبار واتساب الحقيقي (ينتظر رقمًا بموافقة صاحبه)، والنشر — لم يُنشر.
 
+
+## B4 — Daily attendance by first-period teacher (Nov 8 2026, staging)
+- Effective from 2026-11-08 (att_daily_since). Only the section's first-period slot opens; substitute takes over; approval writes attendance_days (source class); gate entry + class absence = in_school_absent; gate entries after approval flagged, never override; teacher edits same day only with reason.
+- lesson-att-e2e 31/31 (incl. 19a–19e new). Not yet: guardian child daily view, late arrival/exit events, later-teacher exception report, vice exception path, configurable edit window, browser journeys, B4.8 acceptance items.
