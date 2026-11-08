@@ -118,7 +118,8 @@ function Page() {
             return (
               <article key={s["id"]} className={"flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-sm " + (s["is_active"] ? "" : "border-dashed")}>
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <LogoPicker schoolId={s["id"]} onDone={() => qc.invalidateQueries({ queryKey: ["school-logo", s["id"]] })} />
+                  <div className="min-w-0 flex-1">
                     <h2 className="font-bold">{s["name"]}</h2>
                     <p className="text-sm text-muted-foreground">{[GENDER[genders.data?.[s["id"]] ?? ""], s["city"], s["stage_type"], s["code"]].filter(Boolean).join(" · ") || "لا توجد بيانات إضافية"}</p>
                   </div>
