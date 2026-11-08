@@ -1,0 +1,10 @@
+revoke all on function public._perm_base(uuid,uuid,text,text) from public, anon, authenticated;
+revoke all on function public.evt_save(jsonb) from public, anon;
+revoke all on function public.evt_get(uuid) from public, anon;
+revoke all on function public.evt_caps(uuid) from public, anon;
+grant execute on function public.evt_save(jsonb) to authenticated;
+grant execute on function public.evt_get(uuid) to authenticated;
+grant execute on function public.evt_caps(uuid) to authenticated;
+revoke all on function public._evt_caps_base(uuid) from public, anon, authenticated;
+revoke all on function public._evt_get_base(uuid) from public, anon, authenticated;
+revoke all on function public._evt_save_base(jsonb) from public, anon, authenticated;
