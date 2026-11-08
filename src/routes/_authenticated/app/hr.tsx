@@ -19,6 +19,9 @@ import { HrImport } from "@/components/hr/import";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { PersonCardButton } from "@/components/people/person-card";
 import { HrCategories } from "@/components/hr/categories";
+import { useServerFn } from "@tanstack/react-start";
+import { createHrEmployeeLogin } from "@/lib/accounts.functions";
+import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { GENDER, STATUS, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
@@ -143,11 +146,28 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   const set = (k: keyof typeof EMPTY, v: string) => setF((x) => ({ ...x, [k]: v }));
   const schools = m.schools.filter((s) => s.create);
   const teachers = (cand.data?.teachers ?? []).filter((t) => t.school_id === f.school_id && (!t.user_id || t.user_id === f.user_id));
+  const [mode, setMode] = useState<"new" | "link">("new");
+  const [base, setBase] = useState("");
+  const [confirm, setConfirm] = useState(false);
+  const [conflicts, setConflicts] = useState<{ kind: string; employee_id?: string }[]>([]);
+  const createLogin = useServerFn(createHrEmployeeLogin);
+  const roles = useQuery({ enabled: !!f.school_id, queryKey: ["hr-login-roles", org, f.school_id], queryFn: () => rpc<string[]>("hr_login_roles", { _org: org, _school: f.school_id }) });
+  const done = (id: string) => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-cand"] }); onDone(id); };
   const save = useMutation({
     mutationFn: () => rpc<string>("hr_employee_save", { _org: org, _id: null, _p: Object.fromEntries(Object.entries(f).filter(([, v]) => v !== "")), _reason: null }),
-    onSuccess: (id) => { toast.success("أُضيف ملف الموظف"); qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-cand"] }); onDone(id); },
+    onSuccess: (id) => { toast.success("أُضيف ملف الموظف"); done(id); },
     onError: (e) => toast.error(arabicError(e)),
   });
+  const create = useMutation({
+    mutationFn: () => createLogin({ data: { orgId: org, base, p: Object.fromEntries(Object.entries({ ...f, user_id: "", teacher_id: "" }).filter(([, v]) => v !== "")) } }),
+    onSuccess: (r) => {
+      if ("conflicts" in r && r.conflicts) { setConfirm(false); setConflicts(r.conflicts); return; }
+      toast.success("أُنشئ ملف الموظف وحساب دخوله"); done((r as { employeeId: string }).employeeId);
+    },
+    onError: (e) => { setConfirm(false); toast.error(arabicError(e)); },
+  });
+  const schoolName = schools.find((s) => s.id === f.school_id)?.name ?? "";
+  const canNew = !!f.full_name.trim() && !!f.school_id && !!base && /^[12]\d{9}$/.test(f.national_id.replace(/\D/g, "")) && !!localPhone(f.phone);
   const pickAccount = (uid: string) => {
     const a = cand.data?.accounts.find((x) => x.user_id === uid);
     const t = (cand.data?.teachers ?? []).find((x) => x.user_id === uid);
@@ -163,8 +183,33 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
       <div className="mb-3 flex items-center gap-2"><p className="flex-1 font-bold">إضافة موظف</p><Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق"><X className="size-4" /></Button></div>
       {cand.isLoading ? <LoadingState rows={1} /> : cand.error ? <ErrorState message={arabicError(cand.error)} /> : (
         <div className="space-y-4">
+          <div role="radiogroup" aria-label="حساب الدخول" className="grid gap-2 sm:grid-cols-2">
+            {([["new", "إنشاء حساب جديد للموظف", "يدخل برقم الهوية أو الإقامة ثم رمز يصل إلى جواله المعتمد."], ["link", "ربط يدوي بحساب موجود", "لموظف لديه حساب دخول في المؤسسة من قبل."]] as const).map(([k, t, d]) => (
+              <button key={k} type="button" role="radio" aria-checked={mode === k} onClick={() => { setMode(k); setConfirm(false); setConflicts([]); setF((x) => ({ ...x, user_id: "", teacher_id: "" })); }}
+                className={"rounded-lg border p-3 text-start " + (mode === k ? "border-primary bg-primary/5" : "hover:border-primary")}>
+                <span className="block font-semibold">{t}</span><span className="block text-xs text-muted-foreground">{d}</span>
+              </button>))}
+          </div>
+          {mode === "new" && !m.caps.sensitive && <p className="rounded-lg border border-warning/40 bg-warning/10 p-2 text-sm">إنشاء حساب الدخول يحتاج إدخال رقم الهوية، وهو صلاحية «البيانات الحساسة» غير المتاحة لك.</p>}
+          {mode === "new" ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              <div><Label htmlFor="hr-sch">المدرسة</Label>
+                <select id="hr-sch" className={selectCls("mt-1 w-full")} value={f.school_id} onChange={(e) => { setF((x) => ({ ...x, school_id: e.target.value })); setBase(""); setConflicts([]); }}>
+                  <option value="">اختر المدرسة</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select></div>
+              <div><Label htmlFor="hr-cat">التصنيف الوظيفي</Label>
+                <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
+                  <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select></div>
+              <div><Label htmlFor="hr-role">دور الدخول</Label>
+                <select id="hr-role" className={selectCls("mt-1 w-full")} value={base} disabled={!f.school_id} onChange={(e) => { setBase(e.target.value); if (!f.job_title) set("job_title", ROLE_LABELS[e.target.value as Role] ?? ""); }}>
+                  <option value="">{f.school_id ? "اختر الدور" : "اختر المدرسة أولًا"}</option>{(roles.data ?? []).map((r) => <option key={r} value={r}>{ROLE_LABELS[r as Role] ?? r}</option>)}
+                </select>
+                <p className="mt-1 text-xs text-muted-foreground">تظهر الأدوار التي يحق لك منحها فقط. لا تُمنح صلاحيات الموارد البشرية تلقائيًا.</p></div>
+            </div>
+          ) : (
           <div className="grid gap-3 md:grid-cols-2">
-            <div><Label htmlFor="hr-acc">ربط بحساب موجود (اختياري)</Label>
+            <div><Label htmlFor="hr-acc">الحساب الموجود</Label>
               <select id="hr-acc" className={selectCls("mt-1 w-full")} value={f.user_id} onChange={(e) => e.target.value ? pickAccount(e.target.value) : set("user_id", "")}>
                 <option value="">بلا حساب دخول</option>{cand.data!.accounts.map((a) => <option key={a.user_id} value={a.user_id}>{a.name} — {(a.schools ?? []).map((s) => s.name).join("، ")}</option>)}
               </select></div>
@@ -183,9 +228,33 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
               </select>
               <p className="mt-1 text-xs text-muted-foreground">يبقى الملف الأكاديمي للمعلم كما هو؛ الربط يضيف الملف الوظيفي فقط.</p></div>
           </div>
-          <EmpFields f={f} set={set} sensitive={m.caps.sensitive} />
+          )}
+          <EmpFields f={f} set={(k: never, v: string) => { set(k, v); setConflicts([]); setConfirm(false); }} sensitive={m.caps.sensitive} loginPhone={mode === "new"} />
+          {conflicts.length > 0 && (
+            <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+              <p className="font-semibold">لم يُنشأ شيء — توجد بيانات سابقة تحتاج مراجعة:</p>
+              <ul className="mt-1 list-disc ps-5">{conflicts.map((c, i) => <li key={i}>{CONFLICT[c.kind] ?? c.kind}{c.employee_id && <> — <button type="button" className="text-primary underline" onClick={() => onDone(c.employee_id!)}>فتح الملف الموجود</button></>}</li>)}</ul>
+              <p className="mt-1 text-xs text-muted-foreground">لا يُدمج أو يُستبدل أي سجل تلقائيًا. إن كان الشخص نفسه ولديه حساب، استخدم «ربط يدوي بحساب موجود».</p>
+            </div>)}
+          {mode === "new" && confirm && (
+            <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm" aria-label="تأكيد الإنشاء">
+              <p className="mb-1 font-semibold">راجع قبل الإنشاء</p>
+              <dl className="grid gap-1 sm:grid-cols-2">
+                <div><dt className="inline text-muted-foreground">الموظف: </dt><dd className="inline">{f.full_name}</dd></div>
+                <div><dt className="inline text-muted-foreground">المدرسة: </dt><dd className="inline font-semibold">{schoolName}</dd></div>
+                <div><dt className="inline text-muted-foreground">دور الدخول: </dt><dd className="inline">{ROLE_LABELS[base as Role]}</dd></div>
+                <div><dt className="inline text-muted-foreground">الجوال المعتمد: </dt><dd className="inline"><bdi dir="ltr">{localPhone(f.phone)}</bdi></dd></div>
+              </dl>
+              <p className="mt-1 text-xs text-muted-foreground">الصلاحيات: الصلاحيات المعتمدة لدور «{ROLE_LABELS[base as Role]}» في هذه المدرسة فقط، دون أي صلاحية إضافية أو صلاحية موارد بشرية.{base === "teacher" ? " سيُنشأ سجل معلم مرتبط." : ""} لن تُرسل رسالة الآن؛ الدخول لاحقًا برقم الهوية ورمز إلى الجوال.</p>
+            </div>)}
           <div className="flex flex-wrap gap-2 border-t pt-3">
-            <Button disabled={!f.full_name.trim() || !f.school_id || save.isPending} onClick={() => save.mutate()}><UserCheck className="size-4" />{save.isPending ? "…" : "حفظ الموظف"}</Button>
+            {mode === "link" ? (
+              <Button disabled={!f.full_name.trim() || !f.school_id || save.isPending} onClick={() => save.mutate()}><UserCheck className="size-4" />{save.isPending ? "…" : "حفظ الموظف"}</Button>
+            ) : !confirm ? (
+              <Button disabled={!canNew || !m.caps.sensitive} onClick={() => setConfirm(true)}><UserCheck className="size-4" />متابعة للتأكيد</Button>
+            ) : (
+              <Button disabled={create.isPending} onClick={() => create.mutate()}><UserCheck className="size-4" />{create.isPending ? "جارٍ الإنشاء…" : "تأكيد إنشاء الملف والحساب"}</Button>
+            )}
             <Button variant="ghost" onClick={onClose}>إلغاء</Button>
           </div>
         </div>
@@ -194,7 +263,21 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   );
 }
 
-function EmpFields({ f, set, sensitive, withStatus }: { f: Record<string, string>; set: (k: never, v: string) => void; sensitive: boolean; withStatus?: boolean }) {
+const CONFLICT: Record<string, string> = {
+  bad_id: "رقم الهوية/الإقامة غير صحيح (10 أرقام تبدأ بـ1 أو 2)", bad_phone: "رقم الجوال غير صحيح (05xxxxxxxx)",
+  hr_file: "رقم الهوية مسجل لملف موظف في المؤسسة", teacher: "رقم الهوية مسجل لسجل معلم", guardian: "رقم الهوية مسجل لولي أمر",
+  owner: "رقم الهوية مسجل لمالك مؤسسة", other_org: "رقم الهوية مسجل لموظف في مؤسسة أخرى", phone_used: "رقم الجوال مستخدم لحساب شخص آخر",
+};
+/** Local display of a Saudi mobile (05xxxxxxxx); null when not a valid mobile. Stored server-side as +9665xxxxxxxx. */
+export function localPhone(s: string) {
+  let d = (s ?? "").replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2);
+  if (/^9665\d{8}$/.test(d)) d = "0" + d.slice(3);
+  else if (/^5\d{8}$/.test(d)) d = "0" + d;
+  return /^05\d{8}$/.test(d) ? d : null;
+}
+
+function EmpFields({ f, set, sensitive, withStatus, loginPhone }: { f: Record<string, string>; set: (k: never, v: string) => void; sensitive: boolean; withStatus?: boolean; loginPhone?: boolean }) {
   const s = set as (k: string, v: string) => void;
   const F = (k: string, label: string, type = "text", extra: Record<string, string> = {}) => (
     <div><Label htmlFor={`hr-${k}`}>{label}</Label><Input id={`hr-${k}`} type={type} className="mt-1" value={f[k] ?? ""} onChange={(e) => s(k, e.target.value)} {...extra} /></div>
@@ -205,7 +288,7 @@ function EmpFields({ f, set, sensitive, withStatus }: { f: Record<string, string
       {F("display_name", "الاسم المعروض", "text", { placeholder: "يُملأ تلقائيًا بالاسم الأول والأخير" })}
       {F("job_title", "المسمى الوظيفي")}
       {F("hire_date", "تاريخ المباشرة", "date")}
-      {F("phone", "الجوال", "tel", { dir: "ltr", inputMode: "tel" })}
+      {F("phone", loginPhone ? "رقم الجوال المعتمد للدخول" : "الجوال", "tel", { dir: "ltr", inputMode: "tel", placeholder: "05xxxxxxxx" })}
       {F("email", "البريد الوظيفي", "email", { dir: "ltr" })}
       <div><Label htmlFor="hr-gender">الجنس</Label><select id="hr-gender" className={selectCls("mt-1 w-full")} value={f["gender"] ?? ""} onChange={(e) => s("gender", e.target.value)}><option value="">—</option>{Object.entries(GENDER).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
       {sensitive ? <>
