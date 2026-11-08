@@ -1,0 +1,1 @@
+alter function public.att_daily_since() set search_path = public;
