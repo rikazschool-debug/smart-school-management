@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, useSession } from "@/lib/session";
-import { useSchoolOrg } from "@/components/people/shared";
 import { ROLE_LABELS } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/app/chat-settings")({
@@ -34,7 +33,7 @@ const roleLabel = (r: string) => r === "all" ? "الجميع" : (ROLE_LABELS as 
 
 function Page() {
   const { active } = useSession();
-  const org = useSchoolOrg(active?.schoolId ?? null).data ?? (active as { orgId?: string } | null)?.orgId ?? null;
+  const org = active?.orgId ?? null;
   const q = useQuery({ enabled: !!org, queryKey: ["cs-admin", org], queryFn: async () => { const { data, error } = await db.rpc("cs_admin", { _org: org }); if (error) throw error; return data as Admin; } });
   if (!active) return <ForbiddenState />;
   if (!org) return <EmptyState title="اختر مدرسة من شريط السياق أولًا" />;
