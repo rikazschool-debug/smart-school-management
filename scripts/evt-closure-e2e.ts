@@ -210,9 +210,9 @@ try {
   const ge = await R(p1, "evt_save", { _p: { kind: "general", school_id: S1, title: "اليوم المفتوح", target: { all: true }, sessions: [{ starts_at: soon(5) }] } });
   await R(p1, "evt_set_status", { _id: ge.d.id, _rev: ge.d.rev, _action: "publish" });
   const ro = (await R(p1, "evt_roster", { _item: ge.d.id })).d;
-  const mk = await R(p1, "evt_mark", { _session: ro.sessions[0].id, _app: null, _student: kids.k3, _status: "present" });
+  const mkA = await R(p1, "evt_mark", { _session: ro.sessions[0].id, _app: null, _student: kids.k3, _status: "present" });
   const ro2 = (await R(p1, "evt_roster", { _item: ge.d.id })).d;
-  check("38 general event published and attendance saved", !mk.e && JSON.stringify(ro2).includes("present"), mk.e ?? ro2);
+  check("38 general event published and attendance saved", !mkA.e && JSON.stringify(ro2).includes("present"), mkA.e ?? ro2);
 
   // ---------- abandoned uploads ----------
   await admin.from("files").update({ created_at: new Date(Date.now() - 25 * 3600e3).toISOString() }).eq("id", sUn.id);
