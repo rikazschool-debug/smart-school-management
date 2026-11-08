@@ -16,6 +16,11 @@ export const Route = createFileRoute("/api/public/wati/webhook")({
         const s = ev ? watiStatus(ev) : null;
         if (!s) return new Response("ignored", { status: 200 });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        // event applicant messages carry local ids "evt-<outbox id>"; same never-backwards rule in SQL
+        if (s.localId.startsWith("evt-")) {
+          await supabaseAdmin.rpc("_evt_outbox_status" as never, { _id: s.localId.slice(4), _status: s.status, _detail: s.detail ?? s.code ?? null } as never);
+          return new Response("ok", { status: 200 });
+        }
         const { data: cur } = await supabaseAdmin.from("otp_sends" as never).select("status").eq("local_message_id", s.localId).maybeSingle();
         const now = (cur as { status: string } | null)?.status;
         if (!now) return new Response("unknown", { status: 200 });
