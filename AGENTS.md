@@ -50,7 +50,7 @@
 
 - Notifications hub (bc_*): RPC-only; audience _bc_audience + fingerprint checked at send; perms notices/hub_meetings. Tests: bc-e2e.
 - Guardian visits (gv_*): src/components/family-visits/AGENTS.md.
-- Events (evt_*: trips, general events, courses, public registration): src/components/events/AGENTS.md.
+- Events (evt_*): src/components/events/AGENTS.md.
 - ID sign-in: id-login.functions.ts → service-only _idl_* SQL; existing accounts only, generic errors. Test: idl-e2e.
 - Family home, fin_*, section rooms: src/components/family/AGENTS.md.
 - Live refresh (live_signals): src/lib/AGENTS.md.
