@@ -38,7 +38,7 @@ try {
   check("principal's manage box is empty", !((await L(pr.c, "manage")).data ?? []).length);
   const n = (await admin.from("notifications").select("user_id").eq("user_id", p.id)).data ?? [];
   check("platform owner notified of new tickets", n.length >= 4, n.length);
-  const asg = await p.c.rpc("support_action", { _ticket: tg.data, _action: "assign", _assignee: t.id, _rev: null, _reason: null });
+  const asg = await p.c.rpc("support_action", { _ticket: tg.data, _action: "assign", _value: t.id, _rev: (await admin.from("support_tickets").select("rev").eq("id", tg.data).single()).data?.rev ?? null, _reason: null });
   const tget = await admin.from("support_tickets").select("assignee").eq("id", tg.data).single();
   check("platform owner assigns the guardian's ticket to a teacher", tget.data?.assignee === t.id, asg.error ?? tget.data);
   check("assignee can read it", !!(await t.c.rpc("support_can_read", { _ticket: tg.data })).data);
@@ -47,6 +47,7 @@ try {
   check("principal still cannot read the assigned ticket", !(await pr.c.rpc("support_can_read", { _ticket: tg.data })).data);
 } catch (e) { bad++; console.error("ERROR", e); }
 finally {
+  for (const o of orgs) await admin.from("support_tickets").delete().eq("org_id", o);
   if (plat) await admin.from("platform_admins").delete().eq("user_id", plat);
   for (const o of orgs) await tr.purgeOrg(o).catch((e: unknown) => console.error("purge", e));
   await tr.cleanup?.();
