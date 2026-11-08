@@ -703,3 +703,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 | General event create → publish → attendance | Done (server) | evt-closure-e2e 38 |
 | WhatsApp to external applicants | Queue + sender + log ready; blocked on an approved WATI template | evt-closure-e2e 23–26 |
 | Multi-account browser journeys, Excel/PDF opening, published-site checks | Not done in this batch | — |
+
+## 2026-11-08 — Events section forms (B8)
+- Four fixed section forms in «إعدادات النماذج» (trips, general events, courses, registration requests); draft → publish; auto-applied to new items; versions bound per item/course; explicit previewed update; school customization via evt_forms.customize; audit log.
+- Evidence: scripts/evt-forms-e2e.ts 38/38; evt-e2e 75/75; evt-closure-e2e 43/43; perm7-e2e 20/20; browser journey (owner, desktop + 390px) 13/13: publish «وسيلة النقل» → new trip shows it → answer saved and shown in details.
+- Open: perm6-e2e check 3 (role templates lack evt_* sections) predates this change.
