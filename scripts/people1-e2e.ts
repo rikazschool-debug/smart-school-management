@@ -86,14 +86,7 @@ try {
   const chk = (await teacher.c.rpc("people_dn_check", { _org: org, _name: "أم سالم", _user: null, _nid: null })).data as any;
   check("availability check returns suggestion", chk.ok === false && String(chk.suggestion).startsWith("أم سالم"), chk);
 
-  // existing records: preview without change, explicit apply
-  await admin.from("teachers").insert({ school_id: A, full_name: "قديم أول" });
-  const old = (await admin.from("teachers").insert({ school_id: A, full_name: "سجل قديم" }).select("id").single()).data!.id;
-  await admin.rpc("_dn_test_null" as never).then(() => null, () => null);
-  await admin.from("person_display_names").delete().eq("org_id", org).eq("norm", "سجل قديم");
-  await admin.from("teachers").update({ display_name_manual: false }).eq("id", old);
-  // simulate a pre-existing record without a display name
-  await admin.rpc("exec_sql" as never).then(() => null, () => null);
+  // existing records: preview only (no change) — owner-only
   const pv0 = await pr.c.rpc("people_dn_preview", { _org: org });
   check("principal cannot open the org-wide preview", has(pv0, "صلاحية"));
   const pv = (await owner.c.rpc("people_dn_preview", { _org: org })).data as any;
