@@ -43,6 +43,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   students: { to: "/app/students", label: "الطلاب والتسكين", icon: GraduationCap },
   guardians: { to: "/app/guardians", label: "أولياء الأمور", icon: Users },
   tags: { to: "/app/tags", label: "الوسوم", icon: Tags },
+  chat_settings: { to: "/app/chat-settings", label: "ضبط المحادثات", icon: MessagesSquare },
   classrooms: { to: "/app/classrooms", label: "الفصول الرقمية", icon: School },
   virtual: { to: "/app/virtual-classes", label: "الحصص الافتراضية", icon: MonitorPlay },
   homework: { to: "/app/homework", label: "الواجبات والاختبارات", icon: ClipboardList },
@@ -177,7 +178,7 @@ function Shell() {
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
-    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
+    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(owner ? ["chat_settings"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
   const opsOnly = ops.opsOnly;
   if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
