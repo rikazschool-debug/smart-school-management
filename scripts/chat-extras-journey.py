@@ -14,7 +14,7 @@ def rest(method, table, body=None, q=""):
     r = requests.request(method, f"{SRV}/rest/v1/{table}{q}", headers={"apikey": SK, "Authorization": f"Bearer {SK}", "Content-Type": "application/json", "Prefer": "return=representation"}, json=body)
     r.raise_for_status(); return r.json()
 owner = F["users"]["owner"]["id"]
-rest("POST", "cs_replies", {"org_id": F["org"], "title": "شكر للتواصل", "shortcut": "شكر", "body": "شكرًا لتواصلكم، سنعود إليكم قريبًا.", "roles": [], "active": True, "created_by": owner})
+rest("POST", "cs_replies", {"org_id": F["org"], "title": "شكر للتواصل", "shortcut": "شكر", "body": "شكرًا لتواصلكم، سنعود إليكم قريبًا.", "roles": ["all"], "active": True, "created_by": owner})
 rest("POST", "cs_auto_rules", {"org_id": F["org"], "kind": "welcome", "name": "ترحيب", "body": "مرحبًا بكم، استلمنا رسالتكم.", "school_ids": [], "recipient_roles": [], "priority": 1, "cooldown_hours": 24, "sender_label": "رد آلي", "active": True, "activated_at": "2020-01-01T00:00:00Z", "created_by": owner})
 def session(who):
     return requests.post(f"{URL}/auth/v1/token?grant_type=password", headers={"apikey": PK}, json={"email": F["users"][who]["email"], "password": F["pw"]}).json()
