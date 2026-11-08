@@ -75,6 +75,7 @@ async function main() {
   ok("1 student sees guardian msg as «ولي أمر» without account id", by(st2v, mG)?.sender_name === "ولي أمر" && by(st2v, mG)?.sender_id === null && !JSON.stringify(by(st2v, mG)).includes(g2.id));
   ok("2 guardian sees other student's msg as «طالب»", by(g2v, mS)?.sender_name === "طالب" && by(g2v, mS)?.sender_id === null);
   ok("3 own message shows «أنت»", by(g2v, mG)?.sender_name === "أنت" && by(stv, mS)?.sender_name === "أنت");
+  console.log("dbg4", JSON.stringify(by(g1v, mS)));
   ok("4 guardian sees own linked child's message by real name", by(g1v, mS)?.sender_name === "طالب" ? false : by(g1v, mS)?.sender_id === st.id);
   ok("5 guardian does not see another guardian's identity", by(g1v, mG)?.sender_name === "ولي أمر");
   ok("6 teacher message shows real name + label to students/guardians", by(st2v, mT)?.sender_id === t1.id && !!by(st2v, mT)?.sender_label);
@@ -95,8 +96,8 @@ async function main() {
   ok("14 search masks sender for student", sr.length === 1 && sr[0].sender_name === "ولي أمر");
   const srT = ((await t1.c.rpc("search_messages", { _q: "ولي أمر " + run, _school: S })).data ?? []) as any[];
   ok("15 search shows real name to teacher", srT[0]?.sender_name === "ولي شعبتين");
-  const rep = by(g2v, (await view(g2)).find((x: any) => x.reply_to === mG)?.id ?? "");
-  ok("16 reply quoting guardian msg: replier masked for other guardian, quoted id kept", rep?.sender_name === "طالب" && rep?.reply_to === mG);
+  const rep = by(stv, stv.find((x: any) => x.reply_to === mG)?.id ?? "");
+  ok("16 reply quoting guardian msg: replier masked for other student, quoted id kept", rep?.sender_name === "طالب" && rep?.reply_to === mG);
   const notif = ((await admin.from("notifications").select("title").eq("user_id", st2.id).ilike("title", "%ولي شعبتين%")).data ?? []);
   ok("17 notifications carry no guardian name", notif.length === 0);
   const dm2 = await st2.c.rpc("start_direct_conversation", { _school: S, _other: g2.id });
