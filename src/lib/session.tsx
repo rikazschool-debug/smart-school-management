@@ -80,6 +80,16 @@ export function SessionProvider({ user, children }: { user: User; children: Reac
   const [activeKey, setActiveKey] = useState<string | null>(null);
   useEffect(() => setActiveKey(localStorage.getItem(STORAGE)), []);
   const contexts = q.data ?? [];
+  // the server decides identity visibility from the active capacity; keep it in sync on load
+  const syncedKey = useRef<string | null>(null);
+  useEffect(() => {
+    const c = (q.data ?? []).find((x) => x.key === activeKey) ?? (q.data ?? []).find((x) => x.schoolId) ?? (q.data ?? [])[0];
+    if (!c || syncedKey.current === c.key) return;
+    syncedKey.current = c.key;
+    void (supabase as any).rpc("set_active_context", { _role: c.role, _school: c.schoolId }).then(() => {
+      void qc.invalidateQueries({ predicate: (x) => ["msgs", "people", "cg-members", "msg-search"].includes(String(x.queryKey[0])) });
+    });
+  }, [q.data, activeKey, qc]);
   const active = useMemo(
     () => contexts.find((c) => c.key === activeKey) ?? contexts.find((c) => c.schoolId) ?? contexts[0] ?? null,
     [contexts, activeKey],
@@ -93,6 +103,11 @@ export function SessionProvider({ user, children }: { user: User; children: Reac
     setActive: (k) => {
       localStorage.setItem(STORAGE, k);
       setActiveKey(k);
+      // switching capacity (staff ↔ guardian) drops everything cached under the previous one
+      const c = contexts.find((x) => x.key === k);
+      if (c) void (supabase as any).rpc("set_active_context", { _role: c.role, _school: c.schoolId }).then(() => {
+        void qc.resetQueries({ predicate: (x) => x.queryKey[0] !== "contexts" });
+      });
     },
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
