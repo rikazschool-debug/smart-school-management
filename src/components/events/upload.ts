@@ -32,8 +32,8 @@ function fail(r: Record<string, unknown>): never {
 }
 
 /** Public registration form (no account): the slot is bound to this form fill (clientKey). */
-export const publicUploader = (token: string, clientKey: string): Uploader => async (field, file, p) => {
-  const r = await preparePublicFile({ data: { token, clientKey, field, name: file.name, mime: file.type, size: file.size } });
+export const publicUploader = (token: string, clientKey: () => string): Uploader => async (field, file, p) => {
+  const r = await preparePublicFile({ data: { token, clientKey: clientKey(), field, name: file.name, mime: file.type, size: file.size } });
   if (r["error"]) fail(r);
   await signedPut(r as unknown as Slot, file, p);
   return { id: String(r["id"]) };

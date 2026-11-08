@@ -111,7 +111,7 @@ function JoinPage() {
       {done ? null : d.state === "open" && fields ? (
         <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); void send(); }} noValidate>
           <h2 className="text-lg font-bold">نموذج التسجيل</h2>
-          <FormFields fields={fields} value={answers} onChange={setAnswers} disabled={busy} upload={publicUploader(token, key.current)} />
+          <FormFields fields={fields} value={answers} onChange={setAnswers} disabled={busy} upload={publicUploader(token, () => key.current)} />
           {/* honeypot: hidden from people, bots fill it */}
           <div aria-hidden className="absolute -left-[9999px] h-0 overflow-hidden"><label>اترك هذا الحقل فارغًا<input tabIndex={-1} autoComplete="off" value={hp} onChange={(e) => setHp(e.target.value)} /></label></div>
           {err && <p role="alert" className="rounded-lg bg-destructive/10 p-2 text-sm text-destructive">{err}</p>}
