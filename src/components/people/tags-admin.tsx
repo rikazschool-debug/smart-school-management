@@ -13,9 +13,9 @@ const KINDS: PersonKind[] = ["teacher", "employee", "student", "guardian"];
 type Draft = { id: string | null; name: string; color: string; kinds: PersonKind[]; active: boolean };
 
 /** «الوسوم» — organization-level tag dictionary (owner or explicit org-level grant; the server decides). */
-export function TagsAdmin({ org }: { org: string }) {
+export function TagsAdmin({ org, defaultOpen = false }: { org: string; defaultOpen?: boolean }) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const q = useTags(org, open);
   const [d, setD] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
