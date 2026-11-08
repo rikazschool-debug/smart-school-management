@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { PersonCard } from "@/components/people/person-card";
+import { BulkBar } from "@/components/people/bulk-bar";
+import { usePpCaps, useSchoolOrg, useTags, TagChip, type PersonKind } from "@/components/people/shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = supabase as any;
@@ -156,13 +159,14 @@ export function RecordForm({
 
 export function CrudTable({
   title, table, schoolId, select = "*", fields, columns, searchKeys, filter, filters, canWrite,
-  canDelete = canWrite, canCreate = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated,
+  canDelete = canWrite, canCreate = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated, person,
 }: {
   title: string; table: string; schoolId: string; select?: string; fields: Field[]; columns: Column[];
   searchKeys: string[]; filter?: Record<string, unknown>; filters?: FilterDef[]; canWrite: boolean; /** hide the generic «إضافة» when a screen owns its own add flow */ canCreate?: boolean;
   canDelete?: boolean; order?: string; defaults?: Row; extraActions?: (r: Row) => ReactNode;
   /** extra buttons next to «إضافة» (e.g. import) */ toolbar?: ReactNode; exportable?: boolean;
   /** called with the new row after a successful create */ onCreated?: ((r: Row) => void) | undefined;
+  /** people lists: name opens the side card; selection, tag filter and bulk actions (all re-checked on the server) */ person?: { kind: PersonKind } | undefined;
 }) {
   const qc = useQueryClient();
   const [input, setInput] = useState("");
@@ -174,20 +178,38 @@ export function CrudTable({
   useEffect(() => { const t = setTimeout(() => { setSearch(clean(input)); setPage(0); }, 300); return () => clearTimeout(t); }, [input]);
   const setFilter = (k: string, v: string) => { setFv((x) => ({ ...x, [k]: v })); setPage(0); };
   const active = (filters ?? []).filter((f) => fv[f.key]);
-  const clearAll = () => { setInput(""); setSearch(""); setFv({}); setPage(0); };
+  const clearAll = () => { setInput(""); setSearch(""); setFv({}); setTagF(""); setPage(0); };
+  // ---- people tools
+  const caps = usePpCaps(person ? schoolId : null).data;
+  const org = useSchoolOrg(person ? schoolId : null).data;
+  const tagList = useTags(org, !!person && !!caps?.view).data ?? [];
+  const kindTags = person ? tagList.filter((t) => t.kinds.includes(person.kind)) : [];
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [tagF, setTagF] = useState("");
+  const tagIds = useQuery({ enabled: !!person && !!tagF, queryKey: ["pp-tag-ids", schoolId, person?.kind, tagF], queryFn: async () => {
+    const { data, error } = await db.rpc("pp_tag_ids", { _school: schoolId, _kind: person!.kind, _tag: tagF }); if (error) throw error; return data as string[];
+  } });
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [selAll, setSelAll] = useState(false);
+  const names = useRef(new Map<string, string>());
+  useEffect(() => { setSel(new Set()); setSelAll(false); }, [search, fv, tagF, schoolId]);
+  const selecting = !!person && !!caps && (caps.bulk || caps.export);
 
-  const build = (head = false) => {
-    let sel = select;
+  const build = (head = false, onlyIds?: string[], pick?: string) => {
+    let sel = pick ?? select;
     for (const f of active) if (f.inner) sel = sel.replace(new RegExp(`\\b${f.inner}\\(`), `${f.inner}!inner(`);
     let qq = db.from(table).select(sel, { count: "exact", head }).eq("school_id", schoolId);
     for (const [k, v] of Object.entries(filter ?? {})) qq = qq.eq(k, v);
     for (const f of active) { qq = qq.eq(f.path ?? f.key, fv[f.key]); for (const [k, v] of Object.entries(f.extra ?? {})) qq = qq.eq(k, v); }
     if (search && searchKeys.length) qq = qq.or(searchKeys.map((k) => `${k}.ilike.*${search}*`).join(","));
+    if (tagF) qq = qq.in("id", tagIds.data?.length ? tagIds.data : ["00000000-0000-0000-0000-000000000000"]);
+    if (onlyIds) qq = qq.in("id", onlyIds);
     return qq.order(order, { ascending: order !== "created_at" }).order("id");
   };
   // the key carries every parameter, so a slow older response can never overwrite the newer one
   const q = useQuery({
-    queryKey: [table, schoolId, select, filter, search, fv, page],
+    queryKey: [table, schoolId, select, filter, search, fv, page, tagF, tagIds.data],
+    enabled: !tagF || !!tagIds.data,
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const { data, error, count } = await build().range(page * PAGE, page * PAGE + PAGE - 1);
@@ -220,11 +242,15 @@ export function CrudTable({
   const labelOf = useFilterLabels(filters ?? [], schoolId);
   const filterText = () => [...(search ? [`بحث: ${search}`] : []), ...active.map((f) => `${f.label}: ${labelOf(f.key, fv[f.key]!)}`)];
   const plain = (c: Column, r: Row) => { const t = c.text?.(r); if (t !== undefined) return t ?? ""; const v = c.render(r); return typeof v === "string" || typeof v === "number" ? v : ""; };
-  async function doExport(kind: "xlsx" | "pdf" | "print") {
+  async function doExport(kind: "xlsx" | "pdf" | "print", onlyIds?: string[]) {
     setExporting(true);
     try {
       const all: Row[] = [];
-      for (let p = 0; p < 20; p++) {
+      if (onlyIds) {
+        for (let i = 0; i < onlyIds.length; i += 150) {
+          const { data, error } = await build(false, onlyIds.slice(i, i + 150)); if (error) throw error; all.push(...(data as Row[]));
+        }
+      } else for (let p = 0; p < 20; p++) {
         const { data, error } = await build().range(p * 1000, p * 1000 + 999);
         if (error) throw error;
         all.push(...(data as Row[])); if ((data as Row[]).length < 1000) break;
@@ -239,6 +265,24 @@ export function CrudTable({
   }
 
   const rows = q.data?.rows ?? [];
+  for (const r of rows) names.current.set(r["id"], r["display_name"] || r["full_name"] || "");
+  async function resolveIds(): Promise<string[]> {
+    if (!selAll) return [...sel];
+    const out: string[] = [];
+    for (let p = 0; p < 2; p++) {
+      const { data, error } = await build(false, undefined, "id, full_name, display_name").range(p * 1000, p * 1000 + 999);
+      if (error) throw error;
+      for (const r of data as Row[]) { out.push(r["id"]); names.current.set(r["id"], r["display_name"] || r["full_name"] || ""); }
+      if ((data as Row[]).length < 1000) break;
+    }
+    return out;
+  }
+  const isSel = (id: string) => selAll || sel.has(id);
+  const toggle = (id: string) => { if (selAll) { setSelAll(false); setSel(new Set(rows.map((r) => r["id"]).filter((x) => x !== id))); return; } setSel((x) => { const n = new Set(x); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
+  const nameCell = (r: Row) => person && caps?.view
+    ? <button type="button" className="text-start font-medium text-primary hover:underline" onClick={() => setOpenId(r["id"])}>{columns[0]?.render(r)}</button>
+    : columns[0]?.render(r);
+  const cell = (c: Column, i: number, r: Row) => i === 0 ? nameCell(r) : c.render(r);
   const count = q.data?.count ?? 0;
   const pages = Math.max(1, Math.ceil(count / PAGE));
   const filtering = !!search || active.length > 0;
@@ -264,6 +308,12 @@ export function CrudTable({
           <Search className="absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pe-9" placeholder="بحث…" aria-label={`بحث في ${title}`} value={input} onChange={(e) => setInput(e.target.value)} />
         </div>
+        {person && kindTags.length > 0 && (
+          <select aria-label="الوسم" className={selectCls("w-full md:w-auto")} value={tagF} onChange={(e) => { setTagF(e.target.value); setPage(0); }}>
+            <option value="">الوسم: الكل</option>
+            {kindTags.map((t) => <option key={t.id} value={t.id}>{t.name}{t.active ? "" : " (معطل)"}</option>)}
+          </select>
+        )}
         {!!filters?.length && (<>
           <div className="hidden flex-wrap gap-2 md:flex">{selects}</div>
           <Sheet>
@@ -278,9 +328,16 @@ export function CrudTable({
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" aria-live="polite">
         <span>{q.isFetching && !q.isLoading ? "جارٍ التحديث…" : `${count} نتيجة`}</span>
+        {tagF && <span className="rounded-full bg-muted px-2 py-0.5 text-foreground">الوسم: {kindTags.find((t) => t.id === tagF)?.name}</span>}
         {filterText().map((t) => <span key={t} className="rounded-full bg-muted px-2 py-0.5 text-foreground">{t}</span>)}
         {filtering && <button className="inline-flex items-center gap-1 text-primary hover:underline" onClick={clearAll}><X className="size-3" /> مسح الفلاتر</button>}
       </div>
+      {selecting && (sel.size > 0 || selAll) && caps && (
+        <BulkBar kind={person!.kind} schoolId={schoolId} caps={caps} tags={kindTags} count={sel.size} mode={selAll ? "all" : "ids"} total={count} pageCount={rows.length}
+          onPage={() => { setSelAll(false); setSel((x) => new Set([...x, ...rows.map((r) => r["id"])])); }} onAll={() => setSelAll(true)}
+          onClear={() => { setSel(new Set()); setSelAll(false); }} resolveIds={resolveIds} nameOf={(id) => names.current.get(id)}
+          onExport={(ids) => doExport("xlsx", ids)} />
+      )}
       {q.isLoading ? (
         <LoadingState />
       ) : q.error ? (
@@ -293,13 +350,16 @@ export function CrudTable({
         <div className="hidden overflow-x-auto rounded-xl border bg-card md:block">
           <Table>
             <TableHeader><TableRow>
+              {selecting && <TableHead className="w-8"><input type="checkbox" aria-label="تحديد هذه الصفحة" className="size-4 accent-primary"
+                checked={rows.length > 0 && rows.every((r) => isSel(r["id"]))} onChange={(e) => { setSelAll(false); setSel((x) => { const n = new Set(x); for (const r of rows) e.target.checked ? n.add(r["id"]) : n.delete(r["id"]); return n; }); }} /></TableHead>}
               {columns.map((c) => <TableHead key={c.label} className="text-start">{c.label}</TableHead>)}
               {(canWrite || extraActions) && <TableHead className="text-start">إجراءات</TableHead>}
             </TableRow></TableHeader>
             <TableBody>
               {rows.map((r) => (
-                <TableRow key={r["id"]}>
-                  {columns.map((c) => <TableCell key={c.label}>{c.render(r)}</TableCell>)}
+                <TableRow key={r["id"]} data-state={isSel(r["id"]) ? "selected" : undefined}>
+                  {selecting && <TableCell><input type="checkbox" aria-label={`تحديد ${names.current.get(r["id"]) ?? ""}`} className="size-4 accent-primary" checked={isSel(r["id"])} onChange={() => toggle(r["id"])} /></TableCell>}
+                  {columns.map((c, i) => <TableCell key={c.label}>{cell(c, i, r)}</TableCell>)}
                   {(canWrite || extraActions) && <TableCell className="whitespace-nowrap"><Actions r={r} /></TableCell>}
                 </TableRow>
               ))}
@@ -309,7 +369,10 @@ export function CrudTable({
         <ul className="space-y-2 md:hidden">
           {rows.map((r) => (
             <li key={r["id"]} className="rounded-xl border bg-card p-3 text-sm">
-              <div className="font-medium">{columns[0]?.render(r)}</div>
+              <div className="flex items-start gap-2 font-medium">
+                {selecting && <input type="checkbox" aria-label={`تحديد ${names.current.get(r["id"]) ?? ""}`} className="mt-1 size-5 accent-primary" checked={isSel(r["id"])} onChange={() => toggle(r["id"])} />}
+                <div className="min-w-0 flex-1">{nameCell(r)}</div>
+              </div>
               <dl className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                 {columns.slice(1).map((c) => <div key={c.label} className="min-w-0"><dt className="text-muted-foreground">{c.label}</dt><dd className="break-words">{c.render(r)}</dd></div>)}
               </dl>
@@ -325,6 +388,7 @@ export function CrudTable({
           </div>
         )}
       </>)}
+      {person && <PersonCard kind={person.kind} id={openId} org={org} onClose={() => setOpenId(null)} />}
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent dir="rtl" className="max-w-2xl">
           <DialogHeader><DialogTitle>{editing?.["id"] ? "تعديل" : "إضافة"} — {title}</DialogTitle></DialogHeader>
