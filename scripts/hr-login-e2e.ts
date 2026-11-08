@@ -9,7 +9,7 @@ const shim = (key: string) => (input: any, init: any = {}) => { const h = new He
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "hlg");
 const run = Date.now(), pw = "Test-pass-" + run;
-let ok = 0, bad = 0;
+let seq = 0, ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)?.slice(0, 400)); };
 async function user(tag: string) {
   const email = `hlg-${tag}-${run}@rikaz.test`;
@@ -20,7 +20,7 @@ async function user(tag: string) {
 }
 const nidBase = 1900000000 + (run % 90000000);
 async function pending(org: string, actor: string, nid: string) {
-  const u = (await admin.auth.admin.createUser({ email: `hlg-p-${nid}-${run}@rikaz.test`, email_confirm: true })).data.user!; tr.addUser(u.id);
+  const u = (await admin.auth.admin.createUser({ email: `hlg-p-${nid}-${++seq}-${run}@rikaz.test`, email_confirm: true })).data.user!; tr.addUser(u.id);
   await admin.from("hr_login_pending").insert({ user_id: u.id, org_id: org, actor, national_id: nid }); return u.id;
 }
 const orgs: string[] = [];
@@ -28,7 +28,7 @@ try {
   const owner = await user("owner"), hr = await user("hr"), other = await user("x");
   const org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة حساب موظف", _school_name: "فرع أ" })).data; orgs.push(org);
   const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(A);
-  const B = (await owner.c.rpc("org_school_save", { _org: org, _id: null, _name: "فرع ب", _city: null, _reason: "تجربة" })).data as string;
+  const B = (await admin.from("schools").insert({ org_id: org, name: "فرع ب" }).select("id").single()).data?.id as string;
   if (B) tr.addSchool(B);
   const org2 = (await other.c.rpc("create_organization", { _org_name: "أخرى", _school_name: "س" })).data; orgs.push(org2);
   tr.addSchool((await admin.from("schools").select("id").eq("org_id", org2).single()).data!.id);
