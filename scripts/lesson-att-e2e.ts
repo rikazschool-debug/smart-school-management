@@ -118,9 +118,9 @@ async function main() {
   const d3 = (await t1.c.rpc("la_get", { _id: id })).data as any;
   const s1 = d3.marks.find((m: any) => m.student_id === studs[1].id);
   ok("19d gate entry after approval shown as conflict", !!s1.gate_in && s1.gate_after === true);
-  const ab = await t1.c.rpc("la_save", { _id: id, _rev: d3.rev, _marks: [{ student_id: studs[1].id, status: "absent" }], _reason: "لم يحضر الفصل" });
+  const abx = await t1.c.rpc("la_save", { _id: id, _rev: d3.rev, _marks: [{ student_id: studs[1].id, status: "absent" }], _reason: "لم يحضر الفصل" });
   const r1 = (await admin.from("attendance_days").select("status").eq("student_id", studs[1].id).eq("date", today).single()).data;
-  ok("19e gate entry + class absence = in_school_absent", !ab.error && r1?.status === "in_school_absent", ab.error?.message ?? JSON.stringify(r1));
+  ok("19e gate entry + class absence = in_school_absent", !abx.error && r1?.status === "in_school_absent", abx.error?.message ?? JSON.stringify(r1));
   await admin.from("gate_movements").delete().eq("school_id", S);
   const day = await pr.c.rpc("la_school_day", { _school: S, _date: today });
   ok("20 principal sees day status", !day.error && (day.data as any[])[0]?.status === "approved" && (day.data as any[])[0]?.late === 0, day.error?.message);
