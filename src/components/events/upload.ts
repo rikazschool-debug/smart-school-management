@@ -7,8 +7,8 @@ import { preparePublicFile, prepareTrackFile } from "@/lib/events-public.functio
 export type Slot = { id: string; path: string; token?: string };
 export type Uploader = (fieldId: string, file: File, onProgress: (pct: number) => void) => Promise<{ id: string }>;
 
-const BASE = () => String(import.meta.env.VITE_SUPABASE_URL ?? "").replace(/\/$/, "");
-const KEY = () => String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "");
+const BASE = () => String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/$/, "");
+const KEY = () => String(import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ?? "");
 
 function xhr(method: string, url: string, file: File, headers: Record<string, string>, onProgress: (p: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {

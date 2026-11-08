@@ -9,16 +9,16 @@ import { Button } from "@/components/ui/button";
 import { ACCEPT, ACCEPT_MIME, type Answers, type Field } from "./shared";
 import type { Uploader } from "./upload";
 
-type Up = { key: string; file: File; pct: number; id?: string; error?: string };
+type Up = { key: string; file: File; pct: number; id?: string | undefined; error?: string | undefined };
 
 /** One attachment field: each file is prepared on the server, uploaded with progress, and can be retried or removed. */
 function FileField({ f, ids, onIds, upload, disabled }: { f: Field; ids: string[]; onIds: (ids: string[]) => void; upload?: Uploader | undefined; disabled?: boolean | undefined }) {
   const [ups, setUps] = useState<Up[]>([]);
+  const [prev, setPrev] = useState<string[]>(ids); // files saved earlier (completing an application keeps them unless removed)
   const max0 = f.max_files ?? 1;
   const max = Math.max(0, max0 - prev.length);
   const patch = (key: string, u: Partial<Up>) => setUps((l) => l.map((x) => (x.key === key ? { ...x, ...u } : x)));
   const sync = useRef(onIds); sync.current = onIds;
-  const [prev, setPrev] = useState<string[]>(ids); // files saved earlier (completing an application keeps them unless removed)
   const done = ups.filter((x) => x.id).map((x) => x.id!).join(",");
   useEffect(() => { if (ups.length || prev.length !== ids.length) sync.current([...prev, ...(done ? done.split(",") : [])]); }, [done, prev.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const run = async (u: Up) => {
