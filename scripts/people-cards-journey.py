@@ -7,7 +7,7 @@ async def card_from_list(p, path, name, shot):
     await goto(p, path)
     await p.get_by_role("button", name=re.compile(name)).first.click()
     await p.get_by_text("سجل الأحداث").wait_for(timeout=15000); await p.wait_for_timeout(800)
-    dlg = p.locator("[role=dialog]"); t = await dlg.inner_text(); await p.screenshot(path=S + shot)
+    dlg = p.locator("[role=dialog]", has_text="سجل الأحداث").last; t = await dlg.inner_text(); await p.screenshot(path=S + shot)
     over = await p.evaluate("document.documentElement.scrollWidth > window.innerWidth + 1")
     await p.keyboard.press("Escape"); await p.wait_for_timeout(500); return t, over
 async def pick(p, label):
@@ -20,7 +20,7 @@ async def main():
             tag = "phone" if mobile else "desktop"
             ctx, p, errs = await login(br, "owner", mobile)
             t, over = await card_from_list(p, "/app/students", "طالب pbx", f"card-student-{tag}.png")
-            check(f"{tag}: student card opens with notes and timeline", "الملاحظات" in t and "سجل الأحداث" in t and not over, t[:200])
+            check(f"{tag}: student card opens with notes and timeline", "ملاحظات داخلية" in t and "سجل الأحداث" in t and not over, t[:200])
             t, over = await card_from_list(p, "/app/guardians", "ولي أمر pbx", f"card-guardian-{tag}.png")
             check(f"{tag}: guardian card opens", "سجل الأحداث" in t and not over, t[:200])
             await goto(p, "/app/hr"); await p.get_by_role("button").filter(has_text="موظف pbx").first.click(); await p.wait_for_timeout(2500)
