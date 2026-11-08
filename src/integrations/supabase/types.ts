@@ -21333,6 +21333,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      pp_access_preview: {
+        Args: {
+          _action: string
+          _ids: string[]
+          _kind: string
+          _school: string
+        }
+        Returns: Json
+      }
       pp_bulk: {
         Args: {
           _action: string
