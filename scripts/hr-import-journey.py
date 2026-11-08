@@ -37,8 +37,12 @@ console.log(JSON.stringify(r.data));"""], capture_output=True, text=True, cwd="/
 
 async def login(br, who, w=1280, h=1800):
     ctx = await br.new_context(viewport={"width": w, "height": h}, accept_downloads=True); p = await ctx.new_page()
-    await p.goto(B + "/auth"); await p.wait_for_timeout(2500); await p.fill("#email", F[who]); await p.fill("#password", F["pw"])
-    await p.press("#password", "Enter"); await p.wait_for_function("location.pathname.startsWith('/app')", timeout=25000); await p.wait_for_timeout(1500); return p
+    # API sign-in + restored session (the /auth page opens on a three-entry chooser)
+    import requests
+    env = {k: v.strip('"') for k, v in (l.split("=", 1) for l in open("/dev-server/.env").read().splitlines() if "=" in l)}
+    s = requests.post(env["VITE_SUPABASE_URL"] + "/auth/v1/token?grant_type=password", headers={"apikey": env["VITE_SUPABASE_PUBLISHABLE_KEY"]}, json={"email": F[who], "password": F["pw"]}).json()
+    await p.goto(B + "/"); await p.evaluate("([k,v]) => localStorage.setItem(k,v)", [f"sb-{env['VITE_SUPABASE_PROJECT_ID']}-auth-token", json.dumps(s)])
+    await p.goto(B + "/app"); await p.wait_for_timeout(2500); return p
 
 async def open_import(p):
     await p.goto(B + "/app/hr"); await p.wait_for_timeout(3000)
