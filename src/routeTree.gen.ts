@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/app/route'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app/index'
 import { Route as AuthenticatedAppAcademicRouteImport } from './routes/_authenticated/app/academic'
 import { Route as AuthenticatedAppAdmissionsRouteImport } from './routes/_authenticated/app/admissions'
@@ -56,6 +57,7 @@ import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppTeamLeaveRouteImport } from './routes/_authenticated/app/team-leave'
 import { Route as AuthenticatedAppTransportRouteImport } from './routes/_authenticated/app/transport'
 import { Route as AuthenticatedAppVisitsRouteImport } from './routes/_authenticated/app/visits'
+import { Route as JoinTrackCodeRouteImport } from './routes/join.track.$code'
 import { Route as AuthenticatedAppAdminIndexRouteImport } from './routes/_authenticated/app/admin.index'
 import { Route as AuthenticatedAppAdminCalendarRouteImport } from './routes/_authenticated/app/admin.calendar'
 import { Route as AuthenticatedAppAdminDutiesRouteImport } from './routes/_authenticated/app/admin.duties'
@@ -120,6 +122,11 @@ const AuthenticatedAppRouteRoute = AuthenticatedAppRouteRouteImport.update({
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinTokenRoute = JoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
@@ -354,6 +361,11 @@ const AuthenticatedAppVisitsRoute = AuthenticatedAppVisitsRouteImport.update({
   path: '/visits',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
+const JoinTrackCodeRoute = JoinTrackCodeRouteImport.update({
+  id: '/join/track/$code',
+  path: '/join/track/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppAdminIndexRoute =
   AuthenticatedAppAdminIndexRouteImport.update({
     id: '/admin/',
@@ -572,6 +584,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/app': typeof AuthenticatedAppRouteRouteWithChildren
   '/invite/$token': typeof InviteTokenRoute
+  '/join/$token': typeof JoinTokenRoute
   '/app/academic': typeof AuthenticatedAppAcademicRoute
   '/app/admissions': typeof AuthenticatedAppAdmissionsRoute
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
@@ -612,6 +625,7 @@ export interface FileRoutesByFullPath {
   '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app/visits': typeof AuthenticatedAppVisitsRoute
+  '/join/track/$code': typeof JoinTrackCodeRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
@@ -655,6 +669,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/join/$token': typeof JoinTokenRoute
   '/app/academic': typeof AuthenticatedAppAcademicRoute
   '/app/admissions': typeof AuthenticatedAppAdmissionsRoute
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
@@ -695,6 +710,7 @@ export interface FileRoutesByTo {
   '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app/visits': typeof AuthenticatedAppVisitsRoute
+  '/join/track/$code': typeof JoinTrackCodeRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
@@ -741,6 +757,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteRouteWithChildren
   '/invite/$token': typeof InviteTokenRoute
+  '/join/$token': typeof JoinTokenRoute
   '/_authenticated/app/academic': typeof AuthenticatedAppAcademicRoute
   '/_authenticated/app/admissions': typeof AuthenticatedAppAdmissionsRoute
   '/_authenticated/app/attendance': typeof AuthenticatedAppAttendanceRoute
@@ -781,6 +798,7 @@ export interface FileRoutesById {
   '/_authenticated/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
   '/_authenticated/app/transport': typeof AuthenticatedAppTransportRoute
   '/_authenticated/app/visits': typeof AuthenticatedAppVisitsRoute
+  '/join/track/$code': typeof JoinTrackCodeRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/_authenticated/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
@@ -827,6 +845,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/app'
     | '/invite/$token'
+    | '/join/$token'
     | '/app/academic'
     | '/app/admissions'
     | '/app/attendance'
@@ -867,6 +886,7 @@ export interface FileRouteTypes {
     | '/app/team-leave'
     | '/app/transport'
     | '/app/visits'
+    | '/join/track/$code'
     | '/app/'
     | '/app/admin/calendar'
     | '/app/admin/duties'
@@ -910,6 +930,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/invite/$token'
+    | '/join/$token'
     | '/app/academic'
     | '/app/admissions'
     | '/app/attendance'
@@ -950,6 +971,7 @@ export interface FileRouteTypes {
     | '/app/team-leave'
     | '/app/transport'
     | '/app/visits'
+    | '/join/track/$code'
     | '/app'
     | '/app/admin/calendar'
     | '/app/admin/duties'
@@ -995,6 +1017,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/app'
     | '/invite/$token'
+    | '/join/$token'
     | '/_authenticated/app/academic'
     | '/_authenticated/app/admissions'
     | '/_authenticated/app/attendance'
@@ -1035,6 +1058,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/team-leave'
     | '/_authenticated/app/transport'
     | '/_authenticated/app/visits'
+    | '/join/track/$code'
     | '/_authenticated/app/'
     | '/_authenticated/app/admin/calendar'
     | '/_authenticated/app/admin/duties'
@@ -1080,6 +1104,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  JoinTokenRoute: typeof JoinTokenRoute
+  JoinTrackCodeRoute: typeof JoinTrackCodeRoute
   ApiPublicAdmissionsWordpressRoute: typeof ApiPublicAdmissionsWordpressRoute
   ApiPublicAuthSendSmsRoute: typeof ApiPublicAuthSendSmsRoute
   ApiPublicHrAttendanceRoute: typeof ApiPublicHrAttendanceRoute
@@ -1128,6 +1154,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$token': {
+      id: '/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof JoinTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/': {
@@ -1416,6 +1449,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/visits'
       preLoaderRoute: typeof AuthenticatedAppVisitsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/join/track/$code': {
+      id: '/join/track/$code'
+      path: '/join/track/$code'
+      fullPath: '/join/track/$code'
+      preLoaderRoute: typeof JoinTrackCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/admin/': {
       id: '/_authenticated/app/admin/'
@@ -1851,6 +1891,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   InviteTokenRoute: InviteTokenRoute,
+  JoinTokenRoute: JoinTokenRoute,
+  JoinTrackCodeRoute: JoinTrackCodeRoute,
   ApiPublicAdmissionsWordpressRoute: ApiPublicAdmissionsWordpressRoute,
   ApiPublicAuthSendSmsRoute: ApiPublicAuthSendSmsRoute,
   ApiPublicHrAttendanceRoute: ApiPublicHrAttendanceRoute,

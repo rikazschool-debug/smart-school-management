@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { FormFields, missingRequired } from "@/components/events/form-render";
 import { APP_STATUS, fmtDT, type Answers, type Field } from "@/components/events/shared";
 import { PUBLIC_ERR, trackPublicApp, updatePublicApp } from "@/lib/events-public.functions";
-import { ask } from "@/components/confirm";
 import { Shell } from "./join.$token";
 
 export const Route = createFileRoute("/join/track/$code")({
@@ -28,6 +27,7 @@ function TrackPage() {
   const [ans, setAns] = useState<Answers>({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [sure, setSure] = useState(false);
   useEffect(() => { if (q.data?.answers) setAns(q.data.answers); }, [q.data?.answers]);
   if (q.isLoading) return <Shell><p className="text-muted-foreground">جارٍ التحميل…</p></Shell>;
   const t = q.data;
@@ -37,7 +37,7 @@ function TrackPage() {
   async function act(action: "update" | "withdraw") {
     if (!t || busy) return;
     if (action === "update" && t.fields) { const m = missingRequired(t.fields, ans); if (m) { setErr(`الحقل «${m}» مطلوب`); return; } }
-    if (action === "withdraw" && !(await ask("سحب طلبك نهائيًا؟", { destructive: true, ok: "سحب الطلب" }))) return;
+    if (action === "withdraw" && !sure) { setSure(true); return; }
     setBusy(true); setErr(null);
     try {
       const r = (await updatePublicApp({ data: { code, rev: t.rev, action, answers: ans } })) as Record<string, unknown>;
@@ -65,7 +65,7 @@ function TrackPage() {
         </form>
       )}
       {err && <p role="alert" className="mt-3 rounded-lg bg-destructive/10 p-2 text-sm text-destructive">{err}</p>}
-      {t.can_withdraw && <Button variant="outline" className="mt-4" disabled={busy} onClick={() => void act("withdraw")}>سحب الطلب</Button>}
+      {t.can_withdraw && <div className="mt-4 flex flex-wrap items-center gap-2"><Button variant={sure ? "destructive" : "outline"} disabled={busy} onClick={() => void act("withdraw")}>{sure ? "تأكيد سحب الطلب نهائيًا" : "سحب الطلب"}</Button>{sure && <Button variant="ghost" onClick={() => setSure(false)}>تراجع</Button>}</div>}
     </Shell>
   );
 }
