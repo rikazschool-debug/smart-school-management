@@ -1,0 +1,2 @@
+revoke execute on function public._cg_generic_label2(uuid,uuid), public._cg_viewer_staff(uuid), public._cg_sender_visible(uuid,uuid), public._msg_file_row_ok(uuid), public.conv_messages(uuid,bigint,int), public.search_messages(text,uuid) from public, anon;
+grant execute on function public._cg_generic_label2(uuid,uuid), public._cg_viewer_staff(uuid), public._cg_sender_visible(uuid,uuid), public._msg_file_row_ok(uuid), public.conv_messages(uuid,bigint,int), public.search_messages(text,uuid) to authenticated;

@@ -11,6 +11,7 @@ export const LIVE_TOPICS: Record<string, string[]> = {
   pickup: ["att-pk-pending", "att-pk-queue", "att-mine"],
   la: ["la-my", "la-school", "la"],
   "att-day": ["family-att", "la", "la-school"],
+  msg: ["msgs", "convs", "people", "cg-members", "my-section-groups"],
 };
 
 export function keysForTopic(topic: string): string[] {
@@ -21,6 +22,7 @@ export function useLiveSignals() {
   const qc = useQueryClient();
   useEffect(() => {
     const pending = new Set<string>();
+    let joined = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const flush = () => {
       timer = null;
@@ -35,7 +37,10 @@ export function useLiveSignals() {
         pending.add(t);
         if (!timer) timer = setTimeout(flush, 400); // bursts (one change → several signals) refetch once
       })
-      .subscribe();
+      .subscribe((status) => {
+        // after a dropped connection comes back, refetch what may have been missed
+        if (status === "SUBSCRIBED") { if (joined) qc.invalidateQueries({ predicate: (q) => ["msgs", "convs", "notifications", "notif-unread"].includes(String(q.queryKey[0] ?? "")) }); joined = true; }
+      });
     return () => { if (timer) clearTimeout(timer); supabase.removeChannel(ch); };
   }, [qc]);
 }

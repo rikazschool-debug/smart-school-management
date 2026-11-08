@@ -40,7 +40,6 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
       if (error) throw error;
       return data as Row[];
     },
-    refetchInterval: conv["kind"] === "group" ? 10000 : false,
     getNextPageParam: (last) => (last.length < PAGE ? null : (last[last.length - 1]!["seq"] as number)),
   });
   const people = useQuery({
