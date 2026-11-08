@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { arabicError, useSession } from "@/lib/session";
 import { KIND_LABEL, SafeText, cleanupStalePending, discardPendingFile, openFile, timeLabel, uploadMessageFile, type PendingFile } from "@/lib/comm";
 import { GroupPanel } from "@/components/comm/group-panel";
-import { AttachmentsSheet, RepliesButton, RepliesMenu, VoicePlayer, VoiceRecorder, filterReplies, slashQuery, uploadVoice, useConvLimits, useSavedReplies, type Saved, type VoiceClip } from "@/components/comm/chat-extras";
+import { AttachmentsSheet, RepliesButton, RepliesMenu, VoicePlayer, VoiceRecorder, fillReply, filterReplies, slashQuery, uploadVoice, useConvLimits, useSavedReplies, type Saved, type VoiceClip } from "@/components/comm/chat-extras";
 import { Images } from "lucide-react";
 
 const PAGE = 30;
