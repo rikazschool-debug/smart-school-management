@@ -1,0 +1,43 @@
+import asyncio, re, json, sys
+sys.path.insert(0, "/dev-server/scripts")
+exec(open("/dev-server/scripts/people-journey.py").read().split("async def main")[0])
+async def run_owner(br, action, reason):
+    ctx, p, errs = await login(br, "owner")
+    await goto(p, "/app/teachers")
+    await p.get_by_label(re.compile(r"^تحديد أحمد \d+$")).first.check()
+    await p.get_by_label("الإجراء الجماعي").select_option(value=action)
+    await p.get_by_role("button", name="تنفيذ", exact=True).click()
+    dlg = p.get_by_role("alertdialog"); await dlg.wait_for(timeout=15000)
+    txt = await dlg.inner_text()
+    await p.screenshot(path=S+f"sus-{action}.png")
+    await dlg.locator("textarea, input").first.fill(reason)
+    await dlg.get_by_role("button", name="تنفيذ").click()
+    await p.get_by_text(re.compile("نتيجة:")).wait_for(timeout=20000)
+    rep = await p.locator("[role=dialog]").inner_text()
+    await ctx.close(); return txt, rep, errs
+async def teacher_view(br, tag):
+    ctx, p, errs = await login(br, "teacher")
+    await goto(p, "/app"); await p.wait_for_timeout(2500)
+    await p.screenshot(path=S+f"sus-teacher-{tag}.png")
+    body = await p.locator("body").inner_text(); await ctx.close(); return body
+async def main():
+    async with async_playwright() as pw:
+        br = await pw.chromium.launch(headless=True)
+        before = await teacher_view(br, "before")
+        txt, rep, errs = await run_owner(br, "org_login_off", "اختبار إيقاف عام")
+        print("CONFIRM:", txt.replace("\n"," | ")[:600])
+        check("confirmation shows organization-wide effect", "كل المؤسسة" in txt and "لا يتغير السجل" in txt, txt)
+        check("result: 1 ok", "نجح 1" in rep, rep[:200])
+        after = await teacher_view(br, "off")
+        print("TEACHER OFF:", after[:300].replace("\n"," | "))
+        check("suspended teacher signs in and sees 'access paused', no create-organization form", "وصولك موقوف" in after and "تسجيل المؤسسة" not in after, after[:300])
+        txt2, rep2, _ = await run_owner(br, "org_login_on", "اختبار إعادة")
+        check("restore confirmation explains it reopens only org-level stops", "التعليق الخاص بمدرسة يبقى" in txt2, txt2)
+        back = await teacher_view(br, "on")
+        check("teacher regains the school after restore", "الواجبات والاختبارات" in back and "الواجبات والاختبارات" in before, back[:200])
+        txt3, rep3, _ = await run_owner(br, "account_off", "تعليق مدرسة")
+        check("school-only confirmation says other schools/capacities untouched", "هذه المدرسة بهذه الصفة فقط" in txt3, txt3)
+        await run_owner(br, "account_on", "إعادة مدرسة")
+        check("owner pages without errors", not errs, errs)
+        print(f"\n{ok} passed, {bad} failed")
+asyncio.run(main())
