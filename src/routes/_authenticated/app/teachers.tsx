@@ -50,7 +50,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
   return (
     <>
       <PageHeader title="المعلمون" desc="يدخل المعلم برقم الهوية أو الإقامة ثم رمز تحقق يصل إلى جواله المعتمد لدى الإدارة. التخصصات والأقسام إدارة تعليمية فقط." />
-      <CrudTable title="المعلمون" table="teachers" schoolId={schoolId} canWrite={w} order="full_name"
+      <CrudTable person={{ kind: "teacher" }} title="المعلمون" table="teachers" schoolId={schoolId} canWrite={w} order="full_name"
         select={COLS} searchKeys={["full_name", "display_name", "email", "specialization"]}
         filters={[
           { key: "department_id", label: "القسم", remote: { table: "departments", label: "name" } },

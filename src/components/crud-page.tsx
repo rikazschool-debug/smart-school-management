@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { PersonCard } from "@/components/people/person-card";
 import { BulkBar } from "@/components/people/bulk-bar";
-import { usePpCaps, useSchoolOrg, useTags, TagChip, type PersonKind } from "@/components/people/shared";
+import { usePpCaps, useSchoolOrg, useTags, type PersonKind } from "@/components/people/shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = supabase as any;

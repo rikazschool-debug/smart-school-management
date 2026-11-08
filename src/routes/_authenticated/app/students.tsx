@@ -65,7 +65,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   return (
     <>
       <PageHeader title="الطلاب والتسكين" desc="ملف الطالب، ربط ولي الأمر، والتسكين في الشعبة. لا يلزم أن يكون للطالب حساب دخول." />
-      <CrudTable title="الطلاب" table="students" schoolId={ctx.schoolId} canWrite={w} order="full_name"
+      <CrudTable person={{ kind: "student" }} title="الطلاب" table="students" schoolId={ctx.schoolId} canWrite={w} order="full_name"
         select="*, enrollments(status, sections(name, grades(name))), student_guardians(id)"
         searchKeys={["full_name", "display_name", "national_id", "csmart_no"]}
         filters={[
