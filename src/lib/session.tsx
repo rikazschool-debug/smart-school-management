@@ -45,7 +45,8 @@ async function loadContexts(): Promise<AppContext[]> {
   if (admin) {
     out.push({ key: "admin", role: "platform_admin", orgId: null, orgName: "المنصة", schoolId: null, schoolName: "كل المؤسسات", departmentId: null });
     for (const s of schools ?? [])
-      out.push({ key: `admin:${s.id}`, role: "platform_admin", orgId: s.org_id, orgName: s.organizations?.name ?? "", schoolId: s.id, schoolName: s.name, departmentId: null });
+      // Platform admin acts with the group owner's full capabilities inside any school (server: is_org_owner/_perm_owner).
+      out.push({ key: `admin:${s.id}`, role: "org_owner", orgId: s.org_id, orgName: s.organizations?.name ?? "", schoolId: s.id, schoolName: s.name, departmentId: null });
   }
   for (const m of mems ?? []) {
     if (m.role === "org_owner") {

@@ -14,6 +14,8 @@ import { selectCls } from "@/components/ui/native-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { arabicError, useSession } from "@/lib/session";
+import { SchoolLogo } from "@/components/school-logo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/app/schools")({
   validateSearch: (s: Record<string, unknown>): { new?: boolean } => (s["new"] === true || s["new"] === "true" ? { new: true } : {}),
@@ -24,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/app/schools")({
 /** Staff roles linkable from this page (department heads need a department → members page). */
 const LINK_ROLES: Role[] = ["principal", "vice_principal", "supervisor", "student_affairs", "teacher", "counselor", "nurse", "security"];
 
-const ACTIONS: Record<string, string> = { school_create: "إضافة مدرسة", school_update: "تعديل بيانات", school_suspend: "إيقاف فرع", school_activate: "تفعيل فرع" };
+const ACTIONS: Record<string, string> = { school_create: "إضافة مدرسة", school_update: "تعديل بيانات", school_suspend: "إيقاف فرع", school_activate: "تفعيل فرع", school_logo: "تغيير الشعار" };
 
 const GENDER: Record<string, string> = { boys: "بنين", girls: "بنات", mixed: "بنين وبنات" };
 
@@ -118,7 +120,8 @@ function Page() {
             return (
               <article key={s["id"]} className={"flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-sm " + (s["is_active"] ? "" : "border-dashed")}>
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <LogoPicker schoolId={s["id"]} onDone={() => qc.invalidateQueries({ queryKey: ["school-logo", s["id"]] })} />
+                  <div className="min-w-0 flex-1">
                     <h2 className="font-bold">{s["name"]}</h2>
                     <p className="text-sm text-muted-foreground">{[GENDER[genders.data?.[s["id"]] ?? ""], s["city"], s["stage_type"], s["code"]].filter(Boolean).join(" · ") || "لا توجد بيانات إضافية"}</p>
                   </div>
@@ -233,5 +236,31 @@ function LinkStaffDialog({ school, onClose, onDone }: { school: Row | null; onCl
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Click the square to upload/replace the school logo (owner or platform admin; checked on the server). */
+function LogoPicker({ schoolId, onDone }: { schoolId: string; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  async function pick(f: File | undefined) {
+    if (!f) return;
+    if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(f.type)) return void toast.error("اختر صورة PNG أو JPG أو WEBP أو SVG");
+    if (f.size > 2 * 1024 * 1024) return void toast.error("الحد الأقصى لحجم الشعار 2 ميجابايت");
+    setBusy(true);
+    const path = `${schoolId}/${Date.now()}-${f.name.replace(/[^\w.-]/g, "_")}`;
+    const up = await supabase.storage.from("school-logos").upload(path, f, { contentType: f.type });
+    if (up.error) { setBusy(false); return void toast.error(arabicError(up.error)); }
+    const { error } = await db.rpc("school_set_logo" as never, { _school: schoolId, _path: path } as never);
+    setBusy(false);
+    if (error) return void toast.error(arabicError(error));
+    toast.success("تم حفظ الشعار");
+    onDone();
+  }
+  return (
+    <label className="shrink-0 cursor-pointer" title="تغيير شعار المدرسة">
+      <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="sr-only" disabled={busy} aria-label="شعار المدرسة" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
+      <SchoolLogo schoolId={schoolId} className="size-12 rounded-xl border"
+        fallback={<span className="grid size-12 place-items-center rounded-xl border border-dashed text-[10px] text-muted-foreground">{busy ? "جارٍ الرفع" : "+ شعار"}</span>} />
+    </label>
   );
 }

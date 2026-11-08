@@ -13262,6 +13262,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          logo_path: string | null
           name: string
           org_id: string
           stage_type: string | null
@@ -13274,6 +13275,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          logo_path?: string | null
           name: string
           org_id: string
           stage_type?: string | null
@@ -13286,6 +13288,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          logo_path?: string | null
           name?: string
           org_id?: string
           stage_type?: string | null
@@ -20399,6 +20402,10 @@ export type Database = {
         }[]
       }
       school_org: { Args: { _school: string }; Returns: string }
+      school_set_logo: {
+        Args: { _path: string; _school: string }
+        Returns: undefined
+      }
       school_today: { Args: never; Returns: string }
       school_today_org: { Args: { _org: string }; Returns: string }
       search_messages: {
