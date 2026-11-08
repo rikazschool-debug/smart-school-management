@@ -61,7 +61,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
       return (data ?? []) as Row[];
     },
   });
-  const names = useMemo(() => Object.fromEntries((people.data ?? []).map((p) => [p["user_id"], p["full_name"]])), [people.data]);
+  const names = useMemo(() => Object.fromEntries((people.data ?? []).map((p) => [p["user_id"], p["label"] ? `${p["full_name"]} · ${p["label"]}` : p["full_name"]])), [people.data]);
   const maxSeq = list.length ? list[list.length - 1]!["seq"] : 0;
 
   // realtime: RLS still applies, so removed members stop receiving events
@@ -127,7 +127,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-bold leading-tight">{conv["title"]}</h2>
           <p className="truncate text-xs text-muted-foreground">
-            {conv["group_type"] === "section" ? "مجموعة الفصل" : KIND_LABEL[conv["kind"]]}{conv["section_label"] && conv["kind"] === "student" ? ` • ${conv["section_label"]}` : ""}{conv["student_name"] && conv["kind"] !== "student" ? ` • بشأن الطالب: ${conv["student_name"]}` : ""}{conv["counterpart"] ? ` • ${conv["counterpart"]}` : ""}{conv["school_name"] ? ` • ${conv["school_name"]}` : " • عابرة للفروع"}
+            {conv["group_type"] === "section" || conv["group_type"] === "class" ? "مجموعة الفصل" : KIND_LABEL[conv["kind"]]}{conv["section_label"] && conv["kind"] === "student" ? ` • ${conv["section_label"]}` : ""}{conv["student_name"] && conv["kind"] !== "student" ? ` • بشأن الطالب: ${conv["student_name"]}` : ""}{conv["counterpart"] ? ` • ${conv["counterpart"]}` : ""}{conv["school_name"] ? ` • ${conv["school_name"]}` : " • عابرة للفروع"}
           </p>
         </div>
         <Button variant="ghost" size="icon" aria-label={conv["muted"] ? "إلغاء الكتم" : "كتم الإشعارات"} title={conv["muted"] ? "إلغاء الكتم" : "كتم الإشعارات"} onClick={async () => { await db.rpc("set_member_prefs", { _conv: id, _muted: !conv["muted"], _archived: null }); onChanged(); }}>
@@ -272,7 +272,7 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
     return () => window.removeEventListener("beforeunload", h);
   }, [body, pending.length]);
   const allowFiles = conv["allow_attachments"] !== false;
-  const dest = conv["group_type"] === "section" ? "مجموعة الفصل" : conv["kind"] === "student" ? `محادثة خاصة مع ${conv["counterpart"] === "الطالب" ? "الطالب " : "المعلم "}${conv["title"]}` : null;
+  const dest = conv["group_type"] === "section" || conv["group_type"] === "class" ? "مجموعة الفصل" : conv["kind"] === "student" ? `محادثة خاصة مع ${conv["counterpart"] === "الطالب" ? "الطالب " : "المعلم "}${conv["title"]}` : null;
   const uploading = pending.some((p) => p.status === "uploading");
 
   async function start(p: PendingFile) {

@@ -114,7 +114,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
     if (tab === "mine" && c["kind"] === "group") return false;
     if (tab === "groups" && c["kind"] !== "group") return false;
     // subject/section groups live in their own tab; students' inbox holds only chats with their teachers
-    if (tab !== "archive" && c["kind"] === "group" && (c["group_type"] === "course" || c["group_type"] === "section")) return false;
+    if (tab !== "archive" && c["kind"] === "group" && (c["group_type"] === "course" || c["group_type"] === "section" || c["group_type"] === "class")) return false;
     if (ctx.role === "student" && c["kind"] !== "student" && c["kind"] !== "group") return false;
     if (kind && c["kind"] !== kind) return false;
     if (child && c["student_name"] !== child) return false;
