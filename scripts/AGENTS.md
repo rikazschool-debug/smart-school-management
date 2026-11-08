@@ -113,3 +113,4 @@
 - scripts/cs-e2e.ts: chat settings, saved replies, auto replies, voice limits, gallery (37 checks; csx- data, self-cleaning).
 - scripts/support-platform-e2e.ts: platform-run support desk (all roles create, platform-only management, assignee replies; 10 checks).
 - scripts/people-cards-journey.py: side card for student/guardian/staff (desktop+phone) + one person teacher & guardian switching capacity (17 checks; people-browser-fixture). scripts/chat-extras-journey.py: welcome auto reply, saved replies «/» + button, real recording via fake microphone, attachments panel, guardian/teacher/student (14 checks; comm-browser-fixture). accounts-templates-journey.py now also covers old templates, display-name column and guardian import/re-import (17 checks).
+- scripts/hr-login-e2e.ts: HR add employee with new ID/OTP login (role limits, pending-login proof, duplicate ID/phone, no duplicates, teacher record, ID resolve, school scope; 17 checks).
