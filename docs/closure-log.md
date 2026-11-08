@@ -688,3 +688,18 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - scripts/evt-e2e.ts: 75/75 (مؤسستان، دورة داخلية وخارجية، أخوان بالجوال نفسه، الضغط المزدوج، تزامن القبول على آخر مقعد، إصداران للنموذج، تفويض وسحب، حضور، موافقات رحلة، حدود المحاولات، الزيارات تعمل).
 - متصفح: 6/6 (تسجيل من جوال بلا حساب ومتابعة الحالة، صفحة الدورة والطلب ومحرر النموذج ومعاينة الجوال للمدير على الكمبيوتر، ولي الأمر على الجوال). بيانات الاختبار حُذفت.
 - مفتوح: حقل «مرفق» في النماذج ومرفقات الفعالية، وإرسال رسائل للمتقدم الخارجي عبر واتساب/بريد (لا توجد قناة مهيأة؛ يُسجَّل «لا توجد قناة» ويتابع برابط المتابعة).
+
+## 2026-11-08 — Events closure (prompt-200)
+| Requirement | Result | Evidence |
+|---|---|---|
+| Attachment field in registration form (type/size/count/required on server) | Done | evt-closure-e2e 1–12 |
+| Upload progress + retry, public form without account | Done | browser journey 390px (upload → submit → tracking shows file) |
+| Protected files: signed links + record permissions | Done | evt-closure-e2e 13–18, 27–31 |
+| Abandoned upload cleanup | Done | evt-closure-e2e 39–40 |
+| Event/course/trip attachments | Done | evt-closure-e2e 27–31 |
+| Info request → completion with file via tracking → decision | Done | evt-closure-e2e 19–21 |
+| New form version keeps earlier application on its version | Done | evt-closure-e2e 22 |
+| Trip: approve one child/decline other, change before deadline, deadline, renewal on material change | Done (server) | evt-closure-e2e 32–37 |
+| General event create → publish → attendance | Done (server) | evt-closure-e2e 38 |
+| WhatsApp to external applicants | Queue + sender + log ready; blocked on an approved WATI template | evt-closure-e2e 23–26 |
+| Multi-account browser journeys, Excel/PDF opening, published-site checks | Not done in this batch | — |

@@ -106,3 +106,4 @@
 - scripts/cg-privacy-e2e.ts: identity privacy in section groups (27 checks; `--keep` writes /tmp/browser/cgp/fixture.json for scripts/cg-privacy-journey.py, then run `teardown`).
 - scripts/cg-live-journey.py / cg-switch-journey.py: live delivery+reconnect+revoke and capacity switch (need cg-privacy-e2e --keep).
 - scripts/evt-e2e.ts: events section (courses/forms/public link/review/capacity race/delegation revoke/attendance/internal course/trip consents/isolation/rate limit; 75 checks). `--keep` + `teardown` for browser journeys.
+- scripts/evt-closure-e2e.ts: events attachments, consent renewal, outbox (43 checks); `--keep` + `teardown` for browser journeys.

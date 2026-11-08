@@ -21,10 +21,11 @@ export type EvtItem = EvtRow & {
   log: { action: string; at: string; by: string | null; details: Record<string, unknown> }[];
 };
 
-export type FieldKind = "section" | "text" | "textarea" | "number" | "date" | "phone" | "email" | "select" | "multi" | "checkbox";
+export type FieldKind = "section" | "text" | "textarea" | "number" | "date" | "phone" | "email" | "select" | "multi" | "checkbox" | "file";
 export type Field = {
   id: string; kind: FieldKind; label: string; help?: string | undefined; placeholder?: string | undefined; required?: boolean | undefined; audience?: "all" | "internal" | "external" | undefined;
   options?: string[] | undefined; role?: "name" | "phone" | "email" | "birth_date" | "guardian_name" | undefined; min?: number | undefined; max?: number | undefined; maxlen?: number | undefined;
+  accept?: ("pdf" | "image" | "doc" | "sheet")[] | undefined; max_mb?: number | undefined; max_files?: number | undefined;
 };
 export type Answers = Record<string, string | boolean | string[]>;
 
@@ -45,7 +46,7 @@ export const ATT: Record<string, string> = { present: "حاضر", late: "متأ�
 export const CATEGORY: Record<string, string> = { internal: "داخلي", external: "خارجي" };
 export const SOURCE: Record<string, string> = { link: "رابط التسجيل", account: "حساب ركاز", target: "جمهور الفعالية" };
 export const FIELD_KIND: Record<FieldKind, string> = {
-  section: "قسم (عنوان)", text: "نص قصير", textarea: "نص طويل", number: "رقم", date: "تاريخ", phone: "جوال", email: "بريد إلكتروني", select: "قائمة اختيار", multi: "اختيار متعدد", checkbox: "مربع موافقة",
+  section: "قسم (عنوان)", text: "نص قصير", textarea: "نص طويل", number: "رقم", date: "تاريخ", phone: "جوال", email: "بريد إلكتروني", select: "قائمة اختيار", multi: "اختيار متعدد", checkbox: "مربع موافقة", file: "مرفق",
 };
 export const ROLE: Record<string, string> = { name: "اسم المشارك", phone: "جوال التواصل", email: "البريد للتواصل", birth_date: "تاريخ الميلاد", guardian_name: "اسم ولي الأمر" };
 export const STAFF_CAPS: Record<string, string> = { edit: "إدارة الدورة والنموذج والرابط", apps: "عرض الطلبات ومراجعتها", decide: "القبول والرفض", attend: "تسجيل الحضور" };
@@ -54,7 +55,7 @@ export const LOG: Record<string, string> = {
   link_enable: "تفعيل الرابط", link_disable: "إيقاف الرابط", link_renew: "تجديد الرابط", staff_set: "تفويض موظف", staff_remove: "سحب تفويض",
   form_publish: "نشر إصدار النموذج", form_copy: "نسخ نموذج", consent: "رد ولي أمر", attend: "تعديل الحضور",
   submit: "استلام الطلب", review: "بدء المراجعة", info: "طلب استكمال", accept: "قبول", reject: "رفض", reconsider: "إعادة نظر", reason: "سبب داخلي",
-  notify: "إشعار", withdraw: "سحب المتقدم طلبه", complete_info: "استكمل المتقدم بياناته",
+  notify: "إشعار", withdraw: "سحب المتقدم طلبه", complete_info: "استكمل المتقدم بياناته", file: "إضافة مرفق", file_remove: "حذف مرفق", consent_reset: "تجديد الموافقات بعد تعديل جوهري",
 };
 
 /** Ready-made fields the editor can add and then customize. */
@@ -94,8 +95,12 @@ export const visibleFields = (fields: Field[], cat: "internal" | "external") => 
 export function answerText(f: Field, v: unknown): string {
   if (v === undefined || v === null || v === "") return "—";
   if (f.kind === "checkbox") return v === true ? "نعم" : "لا";
+  if (f.kind === "file") return Array.isArray(v) && v.length ? `${v.length} ملف` : "—";
   if (Array.isArray(v)) return v.join("، ");
   return String(v);
 }
 
 export const newClientKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now().toString(16)}-0000-4000-8000-${Math.random().toString(16).slice(2, 14).padEnd(12, "0")}`);
+
+export const ACCEPT: Record<string, string> = { pdf: "PDF", image: "صورة", doc: "Word", sheet: "Excel" };
+export const ACCEPT_MIME: Record<string, string> = { pdf: "application/pdf", image: "image/png,image/jpeg,image/webp", doc: ".docx", sheet: ".xlsx" };

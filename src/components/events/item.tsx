@@ -17,6 +17,8 @@ import { PeoplePicker } from "@/components/people-picker";
 import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { FormEditor } from "./form-editor";
+import { AppFiles, ItemFiles } from "./files";
+import { flushEvtMessagesFn } from "@/lib/events-public.functions";
 import {
   APP_STATUS, ATT, AUDIENCE, AppPill, CATEGORY, KIND, LOG, MODE, REG_STATE, SOURCE, STAFF_CAPS, StatusPill, answerText, fmtD, fmtDT, fromLocal, toLocal,
   type EvtItem, type Field, type Kind, type Session,
@@ -195,6 +197,7 @@ export function ItemDetail({ id, app, openApp, onClose }: { id: string; app?: st
               {c["publish"] && ["draft", "published"].includes(it.status) && <Button size="sm" variant="destructive" disabled={act.isPending} onClick={async () => { const r = await askText("سبب الإلغاء (يظهر للمتقدمين وأولياء الأمور):", { required: true, ok: "إلغاء الفعالية" }); if (r) act.mutate({ action: "cancel", reason: r }); }}>إلغاء</Button>}
               {c["publish"] && ["completed", "cancelled"].includes(it.status) && <Button size="sm" variant="outline" disabled={act.isPending} onClick={() => act.mutate({ action: "archive" })}>أرشفة</Button>}
             </div>
+            <ItemFiles item={it.id} canEdit={!!c["edit"] && !["cancelled", "archived"].includes(it.status)} />
             {it.status === "cancelled" && <p className="rounded-lg bg-destructive/10 p-2 text-sm">سبب الإلغاء: {it.cancel_reason}</p>}
             {it.kind === "course" && it.status === "published" && it.form_version === 0 && <p className="rounded-lg bg-warning/15 p-2 text-sm">انشر نموذج التسجيل من تبويب «إعدادات النموذج» قبل فتح التسجيل.</p>}
             {it.kind === "course" && url && (c["link"] || c["publish"]) && (
@@ -324,7 +327,7 @@ export function AppDetail({ id, onClose }: { id: string; onClose: () => void }) 
   const [note, setNote] = useState("");
   const act = useMutation({
     mutationFn: (p: { action: string; internal?: string | null; message?: string | null }) => rpc<{ already?: boolean }>("evt_app_act", { _id: id, _rev: q.data!.rev, _action: p.action, _internal: p.internal ?? null, _message: p.message ?? null }),
-    onSuccess: (r) => { toast.success(r?.already ? "نُفذ القرار مسبقًا" : "تم"); refresh(); }, onError: (e) => { toast.error(arabicError(e)); refresh(); },
+    onSuccess: (r) => { toast.success(r?.already ? "نُفذ القرار مسبقًا" : "تم"); refresh(); void flushEvtMessagesFn().catch(() => undefined); }, onError: (e) => { toast.error(arabicError(e)); refresh(); },
   });
   const addNote = useMutation({ mutationFn: () => rpc("evt_app_note", { _id: id, _body: note }), onSuccess: () => { setNote(""); refresh(); }, onError: (e) => toast.error(arabicError(e)) });
   if (q.isLoading) return <LoadingState />;
@@ -359,6 +362,7 @@ export function AppDetail({ id, onClose }: { id: string; onClose: () => void }) 
           {a.fields.filter((f) => f.kind !== "section").map((f) => <Dt key={f.id} k={f.label} v={answerText(f, a.answers[f.id])} />)}
         </dl>
       </div>
+      <AppFiles app={a.id} labels={Object.fromEntries(a.fields.map((f) => [f.id, f.label]))} />
       <div className="rounded-xl border p-3">
         <p className="mb-2 text-sm font-bold">ملاحظات داخلية</p>
         {a.notes.length ? <ul className="mb-2 space-y-1 text-sm">{a.notes.map((n, i) => <li key={i}>{n.body} <span className="text-xs text-muted-foreground">— {n.by} · {fmtDT(n.at)}</span></li>)}</ul> : <p className="mb-2 text-sm text-muted-foreground">لا توجد.</p>}

@@ -14,6 +14,8 @@ import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { AppsList, ItemDetail, ItemForm, useEvtRefresh } from "@/components/events/item";
 import { FormFields, missingRequired } from "@/components/events/form-render";
+import { accountUploader } from "@/components/events/upload";
+import { ItemFiles } from "@/components/events/files";
 import {
   KIND, KIND_PLURAL, MODE, REG_STATE, StatusPill, AppPill, canAny, fmtDT, hasEvents, newClientKey, useEvtCaps,
   type Answers, type EvtRow, type Field, type Kind,
@@ -276,6 +278,7 @@ function FamilyEvent({ e, guardian, onDone }: { e: Fam["events"][number]; guardi
       <div className="flex flex-wrap items-center gap-2"><b>{e.title}</b><span className="text-xs text-muted-foreground">{KIND[e.kind]} · {e.school} · للطالب: {e.student}</span><span className="ms-auto"><StatusPill s={e.status} /></span></div>
       {e.sessions.length > 0 && <p className="mt-1 text-sm">{e.sessions.map((s) => fmtDT(s.starts_at)).join(" · ")}{e.location ? ` — ${e.location}` : ""}</p>}
       {e.description && <p className="mt-1 whitespace-pre-wrap text-sm">{e.description}</p>}
+      <div className="mt-2"><ItemFiles item={e.id} canEdit={false} /></div>
       {e.conditions && <p className="mt-1 whitespace-pre-wrap rounded bg-muted p-2 text-xs">{e.conditions}</p>}
       {e.status === "cancelled" && <p className="mt-1 text-sm text-destructive">أُلغيت{e.cancel_reason ? `: ${e.cancel_reason}` : ""}</p>}
       {e.kind === "trip" && e.consent_required && (
@@ -330,7 +333,7 @@ function ApplyForm({ item, kids, conditions, onDone }: { item: string; kids: Fam
       <div className="space-y-1"><Label htmlFor={`st-${item}`}>الطالب</Label>
         <select id={`st-${item}`} className={selectCls("w-full")} value={student} onChange={(e) => setStudent(e.target.value)}><option value="">اختر…</option>{kids.map((k) => <option key={k.id} value={k.id}>{k.name} — {k.school}</option>)}</select></div>
       {conditions && <p className="whitespace-pre-wrap rounded bg-muted p-2 text-xs">{conditions}</p>}
-      <FormFields fields={cur.fields} value={ans} onChange={setAns} disabled={send.isPending} />
+      <FormFields fields={cur.fields} value={ans} onChange={setAns} disabled={send.isPending} upload={accountUploader(item, key)} />
       <Button type="submit" disabled={send.isPending}>{send.isPending ? "جارٍ الإرسال…" : "إرسال الطلب"}</Button>
     </form>
   );

@@ -13,7 +13,7 @@ import { rpc } from "@/components/hr/shared";
 import { ask } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { FormFields } from "./form-render";
-import { FIELD_KIND, ROLE, SUGGESTED, fmtDT, visibleFields, type Answers, type Field, type FieldKind } from "./shared";
+import { ACCEPT, FIELD_KIND, ROLE, SUGGESTED, fmtDT, visibleFields, type Answers, type Field, type FieldKind } from "./shared";
 
 type FormData = { draft: Field[]; draft_rev: number; version: number; can_edit: boolean; audience: string; published: Field[] | null;
   versions: { version: number; at: string; by: string; apps: number }[]; library: { item_id: string; title: string; school: string; version: number }[] | null };
@@ -136,7 +136,7 @@ export function FormEditor({ item }: { item: string }) {
               <p className="mb-2 text-sm font-bold">إضافة حقل</p>
               <div className="flex flex-wrap gap-1.5">
                 {(Object.keys(FIELD_KIND) as FieldKind[]).map((k) => (
-                  <Button key={k} size="sm" variant="outline" onClick={() => add({ id: k === "section" ? "section" : k, kind: k, label: FIELD_KIND[k], required: false, audience: "all", ...(k === "select" || k === "multi" ? { options: ["خيار 1", "خيار 2"] } : {}) })}><Plus className="size-3" /> {FIELD_KIND[k]}</Button>
+                  <Button key={k} size="sm" variant="outline" onClick={() => add({ id: k === "section" ? "section" : k, kind: k, label: FIELD_KIND[k], required: false, audience: "all", ...(k === "select" || k === "multi" ? { options: ["خيار 1", "خيار 2"] } : {}), ...(k === "file" ? { accept: ["pdf", "image"] as Field["accept"], max_mb: 5, max_files: 1 } : {}) })}><Plus className="size-3" /> {FIELD_KIND[k]}</Button>
                 ))}
               </div>
             </div>
@@ -189,6 +189,14 @@ function FieldProps({ f, all, onChange }: { f: Field; all: Field[]; onChange: (p
         {f.kind === "number" && <>
           <div className="space-y-1"><Label>أقل قيمة</Label><Input type="number" value={f.min ?? ""} onChange={(e) => onChange({ min: e.target.value === "" ? undefined : Number(e.target.value) })} /></div>
           <div className="space-y-1"><Label>أعلى قيمة</Label><Input type="number" value={f.max ?? ""} onChange={(e) => onChange({ max: e.target.value === "" ? undefined : Number(e.target.value) })} /></div>
+        </>}
+        {f.kind === "file" && <>
+          <div className="space-y-1 sm:col-span-2"><Label>الأنواع المسموحة</Label>
+            <div className="flex flex-wrap gap-3">{(["pdf", "image", "doc", "sheet"] as const).map((a) => (
+              <label key={a} className="flex items-center gap-1.5 text-sm"><input type="checkbox" className="size-4" checked={(f.accept ?? ["pdf", "image"]).includes(a)}
+                onChange={(e) => { const cur = f.accept ?? ["pdf", "image"]; onChange({ accept: e.target.checked ? [...cur, a] : cur.filter((x) => x !== a) }); }} /> {ACCEPT[a]}</label>))}</div></div>
+          <div className="space-y-1"><Label>أقصى حجم للملف (ميغابايت، حتى 20)</Label><Input type="number" min={1} max={20} value={f.max_mb ?? 5} onChange={(e) => onChange({ max_mb: Number(e.target.value) || 5 })} /></div>
+          <div className="space-y-1"><Label>أقصى عدد ملفات (حتى 5)</Label><Input type="number" min={1} max={5} value={f.max_files ?? 1} onChange={(e) => onChange({ max_files: Number(e.target.value) || 1 })} /></div>
         </>}
         {(f.kind === "text" || f.kind === "textarea") && <div className="space-y-1"><Label>أقصى عدد أحرف</Label><Input type="number" value={f.maxlen ?? ""} onChange={(e) => onChange({ maxlen: e.target.value === "" ? undefined : Number(e.target.value) })} /></div>}
       </>}

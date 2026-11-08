@@ -4272,6 +4272,62 @@ export type Database = {
           },
         ]
       }
+      evt_outbox: {
+        Row: {
+          app_id: string
+          attempts: number
+          created_at: string
+          dedupe_key: string
+          detail: string | null
+          id: string
+          item_id: string
+          kind: string
+          params: Json
+          phone: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          app_id: string
+          attempts?: number
+          created_at?: string
+          dedupe_key: string
+          detail?: string | null
+          id?: string
+          item_id: string
+          kind: string
+          params?: Json
+          phone: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          app_id?: string
+          attempts?: number
+          created_at?: string
+          dedupe_key?: string
+          detail?: string | null
+          id?: string
+          item_id?: string
+          kind?: string
+          params?: Json
+          phone?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_outbox_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "evt_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evt_sessions: {
         Row: {
           ends_at: string | null
@@ -15553,6 +15609,7 @@ export type Database = {
         Args: { _action: string; _school: string; _section: string }
         Returns: boolean
       }
+      _evt_app_file_ok: { Args: { _app: string }; Returns: boolean }
       _evt_caps_for: { Args: { _kind: string; _school: string }; Returns: Json }
       _evt_check_answers: {
         Args: { _a: Json; _cat: string; _fields: Json }
@@ -15563,7 +15620,24 @@ export type Database = {
         Args: { _label: string; _max: number; _s: string }
         Returns: string
       }
+      _evt_consent_reset: {
+        Args: { _item: string; _why: string }
+        Returns: undefined
+      }
       _evt_fields_for: { Args: { _cat: string; _fields: Json }; Returns: Json }
+      _evt_file_field: { Args: { _fid: string; _fields: Json }; Returns: Json }
+      _evt_file_slot: {
+        Args: {
+          _field: Json
+          _item: Database["public"]["Tables"]["evt_items"]["Row"]
+          _key: string
+          _mime: string
+          _name: string
+          _size: number
+          _user: string
+        }
+        Returns: Json
+      }
       _evt_guardian_of: {
         Args: { _student: string; _uid: string }
         Returns: boolean
@@ -15585,6 +15659,7 @@ export type Database = {
         }
         Returns: Json
       }
+      _evt_item_file_ok: { Args: { _item: string }; Returns: boolean }
       _evt_log: {
         Args: {
           _action: string
@@ -15595,9 +15670,67 @@ export type Database = {
         }
         Returns: undefined
       }
+      _evt_mimes: { Args: { _accept: Json }; Returns: string[] }
       _evt_name: { Args: { _uid: string }; Returns: string }
       _evt_ok: { Args: { _action: string; _item: string }; Returns: boolean }
+      _evt_outbox_claim: {
+        Args: { _limit: number; _ready: boolean }
+        Returns: {
+          app_id: string
+          attempts: number
+          created_at: string
+          dedupe_key: string
+          detail: string | null
+          id: string
+          item_id: string
+          kind: string
+          params: Json
+          phone: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "evt_outbox"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      _evt_outbox_done: {
+        Args: { _detail: string; _id: string; _status: string }
+        Returns: undefined
+      }
+      _evt_outbox_status: {
+        Args: { _detail: string; _id: string; _status: string }
+        Returns: boolean
+      }
       _evt_phone: { Args: { _s: string }; Returns: string }
+      _evt_public_app_files: { Args: { _code: string }; Returns: Json }
+      _evt_public_file: {
+        Args: {
+          _client_key: string
+          _field: string
+          _ip: string
+          _mime: string
+          _name: string
+          _size: number
+          _token: string
+        }
+        Returns: Json
+      }
+      _evt_public_file_track: {
+        Args: {
+          _code: string
+          _field: string
+          _ip: string
+          _mime: string
+          _name: string
+          _size: number
+        }
+        Returns: Json
+      }
+      _evt_public_files: { Args: { _token: string }; Returns: Json }
       _evt_public_get: { Args: { _token: string }; Returns: Json }
       _evt_public_submit: {
         Args: {
@@ -18077,6 +18210,13 @@ export type Database = {
           storage_path: string
         }[]
       }
+      create_evt_file: {
+        Args: { _item: string; _mime: string; _name: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
       create_feedback_file: {
         Args: { _grade: string; _mime: string; _name: string; _size: number }
         Returns: {
@@ -18372,6 +18512,7 @@ export type Database = {
         }
         Returns: Json
       }
+      evt_app_files: { Args: { _app: string }; Returns: Json }
       evt_app_get: { Args: { _id: string }; Returns: Json }
       evt_app_note: { Args: { _body: string; _id: string }; Returns: undefined }
       evt_apply: {
@@ -18411,6 +18552,19 @@ export type Database = {
       }
       evt_consents: { Args: { _item: string }; Returns: Json }
       evt_family: { Args: never; Returns: Json }
+      evt_file_prepare: {
+        Args: {
+          _client_key: string
+          _field: string
+          _item: string
+          _mime: string
+          _name: string
+          _size: number
+        }
+        Returns: Json
+      }
+      evt_file_remove: { Args: { _file: string }; Returns: undefined }
+      evt_files: { Args: { _item: string }; Returns: Json }
       evt_form_copy: { Args: { _from: string; _item: string }; Returns: Json }
       evt_form_get: { Args: { _item: string }; Returns: Json }
       evt_form_publish: { Args: { _item: string; _rev: number }; Returns: Json }

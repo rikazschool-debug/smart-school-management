@@ -3,9 +3,67 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
-import type { Answers, Field } from "./shared";
+import { useEffect, useRef, useState } from "react";
+import { Paperclip, RotateCcw, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ACCEPT, ACCEPT_MIME, type Answers, type Field } from "./shared";
+import type { Uploader } from "./upload";
 
-export function FormFields({ fields, value, onChange, disabled }: { fields: Field[]; value: Answers; onChange: (v: Answers) => void; disabled?: boolean }) {
+type Up = { key: string; file: File; pct: number; id?: string | undefined; error?: string | undefined };
+
+/** One attachment field: each file is prepared on the server, uploaded with progress, and can be retried or removed. */
+function FileField({ f, ids, onIds, upload, disabled }: { f: Field; ids: string[]; onIds: (ids: string[]) => void; upload?: Uploader | undefined; disabled?: boolean | undefined }) {
+  const [ups, setUps] = useState<Up[]>([]);
+  const [prev, setPrev] = useState<string[]>(ids); // files saved earlier (completing an application keeps them unless removed)
+  const max0 = f.max_files ?? 1;
+  const max = Math.max(0, max0 - prev.length);
+  const patch = (key: string, u: Partial<Up>) => setUps((l) => l.map((x) => (x.key === key ? { ...x, ...u } : x)));
+  const sync = useRef(onIds); sync.current = onIds;
+  const done = ups.filter((x) => x.id).map((x) => x.id!).join(",");
+  useEffect(() => { if (ups.length || prev.length !== ids.length) sync.current([...prev, ...(done ? done.split(",") : [])]); }, [done, prev.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  const run = async (u: Up) => {
+    if (!upload) return;
+    patch(u.key, { pct: 0, error: undefined });
+    try {
+      const r = await upload(f.id, u.file, (pct) => patch(u.key, { pct }));
+      patch(u.key, { id: r.id, pct: 100 });
+    } catch (e) { patch(u.key, { error: (e as Error).message }); }
+  };
+  const add = (list: FileList | null) => {
+    if (!list) return;
+    for (const file of Array.from(list).slice(0, Math.max(0, max - ups.filter((x) => !x.error).length))) {
+      if ((f.max_mb ?? 5) * 1048576 < file.size) { setUps((l) => [...l, { key: crypto.randomUUID(), file, pct: 0, error: `الحجم أكبر من ${f.max_mb ?? 5} ميغابايت` }]); continue; }
+      const u: Up = { key: crypto.randomUUID(), file, pct: 0 };
+      setUps((l) => [...l, u]);
+      void run(u);
+    }
+  };
+  const remove = (u: Up) => setUps((l) => l.filter((x) => x.key !== u.key));
+  const accept = (f.accept ?? ["pdf", "image"]).map((a) => ACCEPT_MIME[a]).join(",");
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">المسموح: {(f.accept ?? ["pdf", "image"]).map((a) => ACCEPT[a]).join("، ")} · حتى {f.max_mb ?? 5} ميغابايت · {max0} ملف كحد أقصى</p>
+      {prev.length > 0 && <div className="flex items-center gap-2 rounded-md border p-2 text-sm"><Paperclip className="size-4" /><span className="flex-1">{prev.length} ملف مرفوع سابقًا</span>
+        <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => setPrev([])}>إزالة</Button></div>}
+      {ups.map((u) => (
+        <div key={u.key} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+          <Paperclip className="size-4 shrink-0" />
+          <span className="min-w-0 flex-1 truncate">{u.file.name}</span>
+          {u.error ? <span className="text-xs text-destructive">{u.error}</span> : u.id ? <span className="text-xs text-primary">تم الرفع</span> : <span className="text-xs" aria-live="polite">{u.pct}%</span>}
+          {u.error && upload && <Button type="button" size="sm" variant="outline" onClick={() => run(u)} aria-label="إعادة المحاولة"><RotateCcw className="size-3" /> إعادة</Button>}
+          <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => remove(u)} aria-label="إزالة"><X className="size-3" /></Button>
+        </div>
+      ))}
+      {ups.filter((x) => !x.error).length < max && (
+        <input type="file" accept={accept} multiple={max > 1} disabled={disabled || !upload} aria-label={f.label} className="block w-full text-sm"
+          onChange={(e) => { add(e.target.files); e.target.value = ""; }} />
+      )}
+      {!upload && <p className="text-xs text-muted-foreground">الرفع متاح عند التقديم الفعلي.</p>}
+    </div>
+  );
+}
+
+export function FormFields({ fields, value, onChange, disabled, upload }: { fields: Field[]; value: Answers; onChange: (v: Answers) => void; disabled?: boolean; upload?: Uploader | undefined }) {
   const set = (id: string, v: string | boolean | string[]) => onChange({ ...value, [id]: v });
   return (
     <div className="space-y-4">
@@ -24,6 +82,11 @@ export function FormFields({ fields, value, onChange, disabled }: { fields: Fiel
           <div key={f.id} className="flex items-start gap-2">
             <input id={id} type="checkbox" className="mt-1 size-4" disabled={disabled} checked={v === true} onChange={(e) => set(f.id, e.target.checked)} />
             <div>{lbl}{help}</div>
+          </div>
+        );
+        if (f.kind === "file") return (
+          <div key={f.id} className="space-y-1">{lbl}{help}
+            <FileField f={f} ids={Array.isArray(v) ? v : []} upload={upload} disabled={disabled} onIds={(ids) => set(f.id, ids)} />
           </div>
         );
         if (f.kind === "multi") {

@@ -420,3 +420,8 @@ A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, iden
 - ولي الأمر: يرى الرحلات والفعاليات الموجهة لأبنائه، ويوافق أو يرفض لكل ابن قبل آخر موعد، ويسجّل أبناءه في الدورات الداخلية.
 - الطالب: يرى فعالياته ويسجل في الدورات الداخلية لنفسه.
 - المتقدم الخارجي: رابط عام بلا حساب + رابط متابعة خاص بطلبه فقط.
+
+### Events attachments (2026-11-08)
+- Add/remove event attachments: holders of the event's edit permission (incl. delegated course staff with edit).
+- Open event attachments: event viewers; targeted families of a published trip/event; families in the org for published internal courses; applicants.
+- Open application files: course reviewers (apps/files), the applicant, the student's verified guardian. Public applicants only through their tracking link (server-signed 60s link).
