@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Eye, Minus, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
@@ -50,6 +50,7 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
   const [preview, setPreview] = useState<{ before: Effective; after: Effective } | null>(null);
   const [busy, setBusy] = useState(false);
   const orig = useMemo(() => (eff.data ? toGrants(eff.data.effective) : []), [eff.data]);
+  useEffect(() => () => { permDraft.dirty = false; }, []);
   if (eff.isLoading) return <LoadingState />;
   if (eff.error) return <ErrorState message={arabicError(eff.error)} />;
   const e = eff.data!;
