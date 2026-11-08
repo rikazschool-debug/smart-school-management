@@ -47,10 +47,9 @@
 - Admissions (ad_*): RPC-only; access via _ad_ok over the 'admissions' perm section (own area, platform-switchable); accepting never creates a student/account/seat; linking to a student is explicit (ad_act link). Website intake only via signed /api/public/admissions/wordpress → service-only _ad_ingest. Tests: admissions-e2e, wp-e2e.
 - Evaluation (cv_*/ev_*): RPC-only; visit-form.ts matches _cv_codes(); ratings keep form snapshots.
 - HR (hr_*): RPC-only, single source; see src/components/hr/AGENTS.md.
-- Display names: person_display_names (unique per org) is claimed only by the _dn_trg trigger on hr_employees/teachers/students/guardians; same person = same login or ID number; never used to merge or link records.
 
 - Notifications hub (bc_*): RPC-only; audience _bc_audience + fingerprint checked at send; perms notices/hub_meetings. Tests: bc-e2e.
 - Guardian visits (gv_*): src/components/family-visits/AGENTS.md.
 - ID sign-in: id-login.functions.ts → service-only _idl_* SQL; existing accounts only, generic errors. Test: idl-e2e.
 - Family home, fin_*, section rooms: src/components/family/AGENTS.md.
-- Live refresh (live_signals): src/lib/AGENTS.md.
+- Live refresh, display names: src/lib/AGENTS.md.
