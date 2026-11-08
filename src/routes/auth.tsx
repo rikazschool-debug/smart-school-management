@@ -195,12 +195,39 @@ function AuthPage() {
                   </Button>
                 ))}
               </div>
+              <PlatformOwnerLogin onDone={() => navigate({ to: "/app" })} />
             </div>
           )}
           {search.invite && <p className="text-xs text-muted-foreground">أنشئ حسابًا بنفس البريد الذي دُعيت به وستظهر لك عضويتك تلقائيًا.</p>}
         </div>
       </div>
     </div>
+  );
+}
+
+/** Platform owner controls every organization, so it never uses the shared demo password: its own password is typed here. */
+const PLATFORM_OWNER_EMAIL = "owner@platform.rikaz.app";
+function PlatformOwnerLogin({ onDone }: { onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function login(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    await supabase.auth.signOut();
+    localStorage.removeItem("rikaz.activeContext");
+    const { error } = await supabase.auth.signInWithPassword({ email: PLATFORM_OWNER_EMAIL, password: pw });
+    setBusy(false);
+    if (error) return void toast.error(arabicError(error));
+    onDone();
+  }
+  if (!open) return <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setOpen(true)}>مالك المنصة</Button>;
+  return (
+    <form onSubmit={login} className="space-y-2 rounded-lg border bg-background p-2">
+      <Label htmlFor="po-pw" className="text-xs">كلمة مرور مالك المنصة (خاصة، ليست كلمة المرور التجريبية)</Label>
+      <PasswordInput id="po-pw" value={pw} onChange={(e) => setPw(e.target.value)} />
+      <Button className="w-full" size="sm" disabled={busy || pw.length < 8}>{busy ? "جارٍ…" : "دخول مالك المنصة"}</Button>
+    </form>
   );
 }
 
