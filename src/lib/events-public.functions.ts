@@ -19,11 +19,12 @@ async function clientHash(): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
 }
 
-async function call<T>(fn: string, args: Record<string, unknown>): Promise<T | { error: string }> {
+// results travel as JSON text (the SQL result is plain JSON) and are parsed by the wrappers below
+async function call(fn: string, args: Record<string, unknown>): Promise<string> {
   const sb = await admin();
   const { data, error } = await sb.rpc(fn as never, args as never);
-  if (error) { console.error("evt public", fn, error.message); return { error: "server" }; }
-  return data as T;
+  if (error) { console.error("evt public", fn, error.message); return JSON.stringify({ error: "server" }); }
+  return JSON.stringify(data ?? { error: "server" });
 }
 
 /** answers: only plain JSON values (string | boolean | string[]), bounded size. */
@@ -40,39 +41,39 @@ function cleanAnswers(a: unknown): Record<string, unknown> {
   return out;
 }
 
-export const getPublicCourse = createServerFn({ method: "GET" })
+const getPublicCourseFn = createServerFn({ method: "GET" })
   .inputValidator((d: { token: string }) => ({ token: String(d?.token ?? "").toLowerCase().slice(0, 64) }))
   .handler(async ({ data }) => {
-    if (!TOKEN.test(data.token)) return { state: "invalid" } as Record<string, unknown>;
-    return (await call<Record<string, unknown>>("_evt_public_get", { _token: data.token })) as Record<string, unknown>;
+    if (!TOKEN.test(data.token)) return JSON.stringify({ state: "invalid" });
+    return call("_evt_public_get", { _token: data.token });
   });
 
-export const submitPublicCourse = createServerFn({ method: "POST" })
+const submitPublicCourseFn = createServerFn({ method: "POST" })
   .inputValidator((d: { token: string; version: number; answers: unknown; clientKey: string; hp?: string; elapsed?: number }) => ({
     token: String(d?.token ?? "").toLowerCase().slice(0, 64), version: Number(d?.version) || 0, answers: cleanAnswers(d?.answers),
     clientKey: String(d?.clientKey ?? ""), hp: String(d?.hp ?? ""), elapsed: Number(d?.elapsed) || 0,
   }))
   .handler(async ({ data }) => {
-    if (!TOKEN.test(data.token) || !UUID.test(data.clientKey)) return { error: "invalid", message: "طلب غير صالح" };
+    if (!TOKEN.test(data.token) || !UUID.test(data.clientKey)) return JSON.stringify({ error: "invalid", message: "طلب غير صالح" });
     // anti-bot: hidden field must stay empty and a human needs a few seconds to fill the form
-    if (data.hp || data.elapsed < 4000) return { error: "bot" };
-    return (await call<Record<string, unknown>>("_evt_public_submit", { _token: data.token, _ip: await clientHash(), _version: data.version, _answers: data.answers, _client_key: data.clientKey })) as Record<string, unknown>;
+    if (data.hp || data.elapsed < 4000) return JSON.stringify({ error: "bot" });
+    return call("_evt_public_submit", { _token: data.token, _ip: await clientHash(), _version: data.version, _answers: data.answers, _client_key: data.clientKey });
   });
 
-export const trackPublicApp = createServerFn({ method: "POST" })
+const trackPublicAppFn = createServerFn({ method: "POST" })
   .inputValidator((d: { code: string }) => ({ code: String(d?.code ?? "").toLowerCase().slice(0, 64) }))
   .handler(async ({ data }) => {
-    if (!CODE.test(data.code)) return { error: "invalid" } as Record<string, unknown>;
-    return (await call<Record<string, unknown>>("_evt_public_track", { _code: data.code, _ip: await clientHash() })) as Record<string, unknown>;
+    if (!CODE.test(data.code)) return JSON.stringify({ error: "invalid" });
+    return call("_evt_public_track", { _code: data.code, _ip: await clientHash() });
   });
 
-export const updatePublicApp = createServerFn({ method: "POST" })
+const updatePublicAppFn = createServerFn({ method: "POST" })
   .inputValidator((d: { code: string; rev: number; action: "update" | "withdraw"; answers?: unknown }) => ({
     code: String(d?.code ?? "").toLowerCase().slice(0, 64), rev: Number(d?.rev) || 0, action: d?.action === "withdraw" ? "withdraw" : "update", answers: cleanAnswers(d?.answers),
   }))
   .handler(async ({ data }) => {
-    if (!CODE.test(data.code)) return { error: "invalid" } as Record<string, unknown>;
-    return (await call<Record<string, unknown>>("_evt_public_update", { _code: data.code, _ip: await clientHash(), _rev: data.rev, _action: data.action, _answers: data.answers })) as Record<string, unknown>;
+    if (!CODE.test(data.code)) return JSON.stringify({ error: "invalid" });
+    return call("_evt_public_update", { _code: data.code, _ip: await clientHash(), _rev: data.rev, _action: data.action, _answers: data.answers });
   });
 
 export const PUBLIC_ERR: Record<string, string> = {
@@ -84,3 +85,10 @@ export const PUBLIC_ERR: Record<string, string> = {
   changed: "تغيّر الطلب؛ حدّث الصفحة.",
   server: "تعذر الاتصال بالخادم؛ أعد المحاولة.",
 };
+
+type In<F> = F extends (o: { data: infer D }) => unknown ? D : never;
+const parse = (t: string) => JSON.parse(t) as Record<string, unknown>;
+export const getPublicCourse = async (o: { data: In<typeof getPublicCourseFn> }) => parse(await getPublicCourseFn(o));
+export const submitPublicCourse = async (o: { data: In<typeof submitPublicCourseFn> }) => parse(await submitPublicCourseFn(o));
+export const trackPublicApp = async (o: { data: In<typeof trackPublicAppFn> }) => parse(await trackPublicAppFn(o));
+export const updatePublicApp = async (o: { data: In<typeof updatePublicAppFn> }) => parse(await updatePublicAppFn(o));

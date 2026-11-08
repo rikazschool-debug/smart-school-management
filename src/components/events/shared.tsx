@@ -23,8 +23,8 @@ export type EvtItem = EvtRow & {
 
 export type FieldKind = "section" | "text" | "textarea" | "number" | "date" | "phone" | "email" | "select" | "multi" | "checkbox";
 export type Field = {
-  id: string; kind: FieldKind; label: string; help?: string; placeholder?: string; required?: boolean; audience?: "all" | "internal" | "external";
-  options?: string[]; role?: "name" | "phone" | "email" | "birth_date" | "guardian_name"; min?: number; max?: number; maxlen?: number;
+  id: string; kind: FieldKind; label: string; help?: string | undefined; placeholder?: string | undefined; required?: boolean | undefined; audience?: "all" | "internal" | "external" | undefined;
+  options?: string[] | undefined; role?: "name" | "phone" | "email" | "birth_date" | "guardian_name" | undefined; min?: number | undefined; max?: number | undefined; maxlen?: number | undefined;
 };
 export type Answers = Record<string, string | boolean | string[]>;
 
