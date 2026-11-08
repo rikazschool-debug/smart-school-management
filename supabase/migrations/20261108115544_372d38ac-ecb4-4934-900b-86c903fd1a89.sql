@@ -1,0 +1,1 @@
+grant select (display_name, display_name_manual) on public.teachers to authenticated;
