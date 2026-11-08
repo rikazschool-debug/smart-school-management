@@ -154,3 +154,11 @@
 - [x] Login via ID/iqama + OTP only
 - [ ] (blocked: mobile 0536649779 already belongs to demo teacher أ. فهد القحطاني — owner to decide) Create real employee سالم الدوسري (counselor, ID 2583680366, 0536649779) from the UI; keep it; no OTP/message to him
 - [x] Tests: synthetic accounts, desktop+mobile, no cross-school access; clean synthetic only
+
+## B10 — Permissions screen: edit an existing employee (all roles)
+- [ ] Person + school + capacity picker (staff vs guardian), unsaved-change warning
+- [ ] Panel 1 read-only effective access (from server, with source + limits + pending conditions)
+- [ ] Panel 2 full tree starting from effective state; follow-role / grant / deny / restore defaults; delegation limits server-side
+- [ ] Tree inventory complete (teaching, comm split use/manage/settings, HR self vs admin, etc.), search + filters, expand/collapse, RTL mobile
+- [ ] Before/after preview, audited save, conflict detection, no partial success
+- [ ] Same source drives nav, route guards, server; tests for teacher/principal/vice/counselor/delegate/multi-role/guardian
