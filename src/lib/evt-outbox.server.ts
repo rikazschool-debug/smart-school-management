@@ -19,7 +19,7 @@ export async function drainEvtOutbox(limit = 10): Promise<number> {
       const body: Record<string, unknown> = {
         template_name: template, broadcast_name: "rikaz_events",
         recipients: [{ phone_number: r.phone, local_message_id: `evt-${r.id}`, custom_params: [
-          { name: "1", value: (p.name ?? "").slice(0, 60) }, { name: "2", value: p.ref ?? "" },
+          { name: "name", value: (p.name ?? "").slice(0, 60) }, { name: "2", value: p.ref ?? "" },
           { name: "3", value: (p.title ?? "").slice(0, 120) }, { name: "4", value: (p.status ?? "").slice(0, 300) }] }],
       };
       const ch = process.env["WATI_CHANNEL"]?.trim();
