@@ -52,7 +52,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
           { key: "email", label: "البريد (اختياري)", type: "email" },
         ]}
         columns={[
-          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>} },
+          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <><button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>}</> },
           { label: "الهوية", text: (r) => id(r["national_id"]), render: (r) => <span dir="ltr">{id(r["national_id"])}</span> },
           { label: "الجوال", text: (r) => ph(r["phone"]), render: (r) => <span dir="ltr">{ph(r["phone"])}</span> },
           { label: "الأبناء", text: (r) => String(r["student_guardians"]?.length ?? 0), render: (r) => {

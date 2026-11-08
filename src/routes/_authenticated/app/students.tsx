@@ -88,7 +88,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         defaults={{ status: "active" }}
         onCreated={w ? (r) => setGuarding(r) : undefined}
         columns={[
-          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>} },
+          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <><button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>}</> },
           { label: "الهوية", render: (r) => <span dir="ltr">{r["national_id"] ?? "—"}</span> },
           { label: "رقم C‑Smart", text: (r) => r["csmart_no"] ?? "", render: (r) => r["csmart_no"] ? <span dir="ltr">{r["csmart_no"]}</span> : <span className="text-muted-foreground">غير مسجّل</span> },
           { label: "الشعبة", text: (r) => { const e = (r["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active"); return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : "غير مسكّن"; }, render: (r) => {
