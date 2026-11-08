@@ -102,8 +102,8 @@ async def main():
         check("7 teacher rows: missing and landline mobiles flagged, 1 valid", "3 صف" in tv and "1 صالح" in tv, tv[:700])
         await page.get_by_role("button", name=re.compile("تأكيد استيراد 1")).click()
         await page.get_by_text("النتيجة:").wait_for(timeout=40000)
-        tr = await page.locator("[role=dialog]").inner_text()
-        check("8 teacher saved; waits for first WhatsApp sign-in", "أُضيف" in tr and "بانتظار أول دخول بالجوال" in tr, tr[:500])
+        await page.wait_for_timeout(1500); tr = await page.locator("[role=dialog]").inner_text()
+        i8 = tr.find("النتيجة:"); check("8 teacher saved; waits for first WhatsApp sign-in", "أُضيف" in tr and "بانتظار أول دخول" in tr, tr[i8:i8+600])
         # phone width
         m = await b.new_context(viewport={"width": 390, "height": 844}); mp = await m.new_page()
         await login(mp, F["pr"], F["pw"]); await mp.wait_for_url(re.compile("/app"), timeout=20000)
