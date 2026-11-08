@@ -24,26 +24,39 @@ function Page() {
     queryKey: ["platform-orgs"],
     enabled: ok,
     queryFn: async () => {
-      const { data, error } = await db.from("organizations").select("*, schools(id)").order("created_at", { ascending: false });
+      const { data, error } = await db.rpc("platform_orgs");
       if (error) throw error;
-      return data as Row[];
+      return (data ?? []) as Row[];
     },
   });
+  const [showTest, setShowTest] = useState(false);
   if (!ok) return <ForbiddenState />;
+  const rows = (q.data ?? []).filter((o) => showTest || !o["is_test"]);
+  const testCount = (q.data ?? []).filter((o) => o["is_test"]).length;
   return (
     <>
       <PageHeader title="المؤسسات المشتركة" desc="عرض كل المؤسسات على المنصة وعدد مدارسها." />
       <PlatformOverview />
       <CleanupHealth />
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد مؤسسات بعد" /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !rows.length ? <EmptyState title="لا توجد مؤسسات بعد" /> : (
         <div className="rounded-xl border bg-card">
+          <div className="flex items-center justify-between border-b p-3 text-sm">
+            <span className="font-semibold">المؤسسات ومالكوها وفروعها ({rows.length})</span>
+            {testCount > 0 && <Button size="sm" variant="ghost" onClick={() => setShowTest((v) => !v)}>{showTest ? "إخفاء مؤسسات الاختبار" : `إظهار مؤسسات الاختبار (${testCount})`}</Button>}
+          </div>
           <Table>
-            <TableHeader><TableRow><TableHead className="text-start">المؤسسة</TableHead><TableHead className="text-start">المدارس</TableHead><TableHead className="text-start">التسجيل</TableHead><TableHead className="text-start">الحالة</TableHead><TableHead className="text-start">الأقسام</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead className="text-start">المؤسسة</TableHead><TableHead className="text-start">المالك</TableHead><TableHead className="text-start">الفروع</TableHead><TableHead className="text-start">التسجيل</TableHead><TableHead className="text-start">الحالة</TableHead><TableHead className="text-start">الأقسام</TableHead></TableRow></TableHeader>
             <TableBody>
-              {q.data.map((o) => (
+              {rows.map((o) => (
                 <TableRow key={o["id"]}>
-                  <TableCell>{o["name"]}</TableCell>
-                  <TableCell>{o["schools"]?.length ?? 0}</TableCell>
+                  <TableCell className="align-top font-semibold">{o["name"]}{o["is_test"] && <span className="ms-1 text-xs font-normal text-muted-foreground">(اختبار)</span>}</TableCell>
+                  <TableCell className="align-top text-sm">{(o["owners"] ?? []).length ? (o["owners"] as Row[]).map((w, i) => (
+                    <div key={i}>{w["name"]}<span className="block text-xs text-muted-foreground" dir="ltr">{w["email"]}</span></div>
+                  )) : <span className="text-muted-foreground">بلا مالك</span>}</TableCell>
+                  <TableCell className="align-top text-sm">
+                    <span className="font-semibold">{o["schools"]?.length ?? 0}</span>
+                    <ul className="mt-1 space-y-0.5 text-xs">{(o["schools"] as Row[] ?? []).map((s) => <li key={s["id"]}>{s["name"]}{s["city"] ? ` — ${s["city"]}` : ""}{!s["is_active"] && <span className="text-destructive"> (موقوف)</span>}</li>)}</ul>
+                  </TableCell>
                   <TableCell>{new Date(o["created_at"]).toLocaleDateString("ar-SA")}</TableCell>
                   <TableCell>{o["is_active"] ? "نشطة" : "موقوفة"}</TableCell>
                   <TableCell><SectionsDialog org={o} /></TableCell>
