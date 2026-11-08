@@ -25,6 +25,9 @@ async def main():
         b = await pw.chromium.launch(headless=True)
         # 1. principal (new) on desktop: manage members
         ctx, p = await open_as(b, "principal", 1280, 1800)
+        for _ in range(3):
+            try: await p.locator("#class-pick").wait_for(timeout=15000); break
+            except Exception: await p.reload()
         opts = await p.locator("#class-pick option").all_inner_texts()
         check("new principal sees all section groups (3)", len(opts) == 3)
         await p.locator("#class-pick").select_option(F["gA"]); await p.wait_for_timeout(2000)
