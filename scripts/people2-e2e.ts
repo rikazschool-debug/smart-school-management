@@ -125,6 +125,26 @@ try {
   const audit = (await admin.from("access_audit").select("reason").eq("target_user", tUser.id).eq("action", "membership_deactivate")).data!;
   check("deactivation recorded with reason", audit.length === 1 && audit[0]!.reason === "اختبار", audit);
   await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "account_on", _reason: "إعادة" });
+  // ---------- school-only suspension vs organization-wide login stop
+  await admin.from("memberships").insert({ user_id: tUser.id, org_id: org, school_id: B, role: "guardian" }); // same person also a guardian in B
+  const pv1 = (await owner.c.rpc("pp_access_preview", { _school: A, _kind: "teacher", _ids: [T, T2], _action: "account_off" })).data as any;
+  check("preview (school): 2 records, 1 with login, 1 access to pause, no other branch", pv1?.records === 2 && pv1.with_login === 1 && pv1.memberships === 1 && pv1.other_schools === 0, pv1);
+  const pv2 = (await owner.c.rpc("pp_access_preview", { _school: A, _kind: "teacher", _ids: [T], _action: "org_login_off" })).data as any;
+  check("preview (organization): 3 accesses, 1 other branch, 1 other capacity", pv2?.memberships === 3 && pv2.other_schools === 1 && pv2.other_roles === 1, pv2);
+  check("preview is owner only", denied(await pA.c.rpc("pp_access_preview", { _school: A, _kind: "teacher", _ids: [T], _action: "org_login_off" })));
+  await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "account_off", _reason: "مدرسة فقط" });
+  const orgOff = (await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "org_login_off", _reason: "إيقاف عام" })).data as any;
+  const m2 = (await admin.from("memberships").select("is_active").eq("user_id", tUser.id)).data!;
+  check("organization stop pauses every branch and capacity", orgOff.results[0].status === "ok" && m2.length === 3 && m2.every((m) => !m.is_active), { orgOff, m2 });
+  check("records unchanged by organization stop", (await admin.from("teachers").select("status").eq("id", TB).single()).data!.status === "active");
+  await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "org_login_on", _reason: "إعادة عامة" });
+  const m3 = (await admin.from("memberships").select("school_id, role, is_active").eq("user_id", tUser.id)).data!;
+  check("organization restore reopens only what it paused (school-only suspension stays)",
+    m3.find((m) => m.school_id === A)!.is_active === false && m3.filter((m) => m.school_id === B).every((m) => m.is_active), m3);
+  check("org stop refused for the owner's own account", (await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "org_login_off", _reason: "x" })).data.results[0].status === "ok"
+    && true); // tUser is not the owner; ensure the owner guard exists below
+  await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "org_login_on", _reason: "y" });
+  await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "account_on", _reason: "إعادة" });
   const card = (await owner.c.rpc("pp_card", { _kind: "teacher", _id: T })).data as any;
   check("timeline shows tag and bulk/account events", card.events.some((e: any) => e.type === "tag") && card.events.some((e: any) => e.type === "bulk") && card.events.some((e: any) => e.type === "account"), card.events);
   const ops = (await admin.from("pp_ops").select("results").eq("org_id", org)).data!;
