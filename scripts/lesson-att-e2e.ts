@@ -121,6 +121,12 @@ async function main() {
   const abx = await t1.c.rpc("la_save", { _id: id, _rev: d3.rev, _marks: [{ student_id: studs[1].id, status: "absent" }], _reason: "لم يحضر الفصل" });
   const r1 = (await admin.from("attendance_days").select("status").eq("student_id", studs[1].id).eq("date", today).single()).data;
   ok("19e gate entry + class absence = in_school_absent", !abx.error && r1?.status === "in_school_absent", abx.error?.message ?? JSON.stringify(r1));
+  const rec = await pr.c.rpc("att_day_rows", { _school: S, _from: today, _to: today });
+  const brd = (await pr.c.rpc("attendance_board", { _school: S, _date: today })).data as any;
+  const recs = (rec.data ?? []) as any[];
+  const cnt = (s: string) => recs.filter((r) => r.status === s).length;
+  ok("19e2 records list = board counts (incl. in_school_absent)", !rec.error && recs.length === brd?.recorded && cnt("in_school_absent") === brd?.in_school_absent && brd?.in_school_absent === 1
+    && ["present", "late", "absent", "excused", "pending_review"].every((s) => cnt(s) === brd?.[s]) && recs.every((r) => r.source === "class"), JSON.stringify(rec.error ?? brd));
   await admin.from("gate_movements").delete().eq("school_id", S);
   const sec2 = await t1.c.rpc("la_section_today", { _slot: sl2.data.id });
   ok("19f later-period teacher reads today's result", !sec2.error && (sec2.data as any).students.length === 3, sec2.error?.message);
