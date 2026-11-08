@@ -11,9 +11,12 @@ def check(n, c, e=""):
     global ok, bad
     ok += c; bad += (not c); print("PASS" if c else "FAIL", n, "" if c else e, flush=True)
 async def login(page, ident, pw):
-    await page.goto("http://localhost:8080/auth"); await page.wait_for_load_state("networkidle")
-    await page.locator("#email").fill(ident); await page.locator("#password").fill(pw)
-    await page.get_by_role("button", name="دخول", exact=True).click()
+    # password sign-in through the API, then restore the session (the /auth page now opens on a three-entry chooser)
+    import requests
+    env = {k: v.strip('"') for k, v in (l.split("=", 1) for l in open("/dev-server/.env").read().splitlines() if "=" in l)}
+    s = requests.post(env["VITE_SUPABASE_URL"] + "/auth/v1/token?grant_type=password", headers={"apikey": env["VITE_SUPABASE_PUBLISHABLE_KEY"]}, json={"email": ident, "password": pw}).json()
+    await page.goto("http://localhost:8080/"); await page.evaluate("([k,v]) => localStorage.setItem(k,v)", [f"sb-{env['VITE_SUPABASE_PROJECT_ID']}-auth-token", json.dumps(s)])
+    await page.goto("http://localhost:8080/app")
 async def download(page, path):
     async with page.expect_download() as dl:
         await page.get_by_role("button", name="تنزيل القالب الفارغ").click()
