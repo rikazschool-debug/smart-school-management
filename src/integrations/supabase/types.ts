@@ -20771,6 +20771,7 @@ export type Database = {
         Args: { _org: string; _reopen_days: number }
         Returns: undefined
       }
+      my_access_paused: { Args: never; Returns: boolean }
       my_class_groups: {
         Args: { _school: string }
         Returns: {
@@ -21332,6 +21333,15 @@ export type Database = {
           _section: string
         }
         Returns: undefined
+      }
+      pp_access_preview: {
+        Args: {
+          _action: string
+          _ids: string[]
+          _kind: string
+          _school: string
+        }
+        Returns: Json
       }
       pp_bulk: {
         Args: {

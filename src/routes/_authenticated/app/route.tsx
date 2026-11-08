@@ -339,8 +339,24 @@ function Onboarding({ onSignOut }: { onSignOut: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [pending, setPending] = useState<boolean | null>(null);
-  useEffect(() => { supabase.rpc("my_link_pending" as never).then(({ data }) => setPending(data === true)); }, []);
-  if (pending === null) return <LoadingState />;
+  const [paused, setPaused] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.rpc("my_link_pending" as never).then(({ data }) => setPending(data === true));
+    supabase.rpc("my_access_paused" as never).then(({ data }) => setPaused(data === true));
+  }, []);
+  if (pending === null || paused === null) return <LoadingState />;
+  if (paused) return (
+    <div className="flex min-h-screen items-center justify-center p-6">
+      <div className="w-full max-w-lg space-y-4 rounded-2xl border bg-card p-8 shadow-sm">
+        <h1 className="font-display text-2xl">وصولك موقوف حاليًا</h1>
+        <p className="text-sm text-muted-foreground">أوقفت إدارة المؤسسة وصول حسابك. سجلك في المدرسة لم يتغير. تواصل مع الإدارة لإعادة الوصول، ثم اضغط «تحديث».</p>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={refresh}>تحديث</Button>
+          <Button type="button" variant="ghost" onClick={onSignOut}>خروج</Button>
+        </div>
+      </div>
+    </div>
+  );
   if (pending) return (
     <div className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-lg space-y-4 rounded-2xl border bg-card p-8 shadow-sm">
