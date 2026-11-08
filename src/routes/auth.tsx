@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicError } from "@/lib/session";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts";
-import { isReviewHost } from "@/lib/review-host";
 import { ROLE_LABELS } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,8 +53,6 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
   const [entry, setEntry] = useState<Entry | null>(search.invite ? "staff" : null);
-  const [review, setReview] = useState(false);
-  useEffect(() => { setReview(isReviewHost(window.location.hostname)); }, []);
   const navigate = useNavigate();
   const go = () => (search.invite ? navigate({ to: "/invite/$token", params: { token: search.invite } }) : navigate({ to: "/app" }));
 
@@ -188,9 +185,9 @@ function AuthPage() {
               </form>}
             </>
           )}
-          {mode === "signin" && review && (
+          {mode === "signin" && (
             <div className="space-y-2 rounded-xl border border-dashed bg-card p-3">
-              <p className="text-sm font-semibold">دخول سريع بالحسابات التجريبية <span className="text-xs font-normal text-muted-foreground">(بيئة المراجعة فقط)</span></p>
+              <p className="text-sm font-semibold">دخول سريع بالحسابات التجريبية <span className="text-xs font-normal text-muted-foreground">(بيانات تجريبية)</span></p>
               <div className="grid grid-cols-2 gap-2">
                 {DEMO_ACCOUNTS.map((d) => (
                   <Button key={d.email} type="button" size="sm" variant="secondary" disabled={busy} onClick={() => demoLogin(d.email)}>

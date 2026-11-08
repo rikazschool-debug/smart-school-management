@@ -1,6 +1,6 @@
 import type { Role } from "./roles";
 
-// Demo accounts for the development preview only (the login buttons are hidden in production builds).
+// Demo accounts: login buttons shown on preview and published site (demo org data only). Never add platform admins here — DEMO_PASSWORD ships in the browser bundle.
 export const DEMO_PASSWORD = "Demo-Rikaz-2026";
 
 export const DEMO_ACCOUNTS: { role: Role; email: string; name: string; label?: string; template?: string }[] = [
