@@ -186,7 +186,7 @@ function Shell() {
   const sidebar = (
     <nav aria-label="القائمة الرئيسية" className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 py-5">
-        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">ر</span>
+        <SchoolLogo schoolId={active.schoolId} className="size-10 shrink-0 rounded-xl border" fallback={<span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">ر</span>} />
         <div className="min-w-0">
           <p className="font-display text-xl leading-none text-foreground">ركاز</p>
           <p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{active.schoolName}</p>
