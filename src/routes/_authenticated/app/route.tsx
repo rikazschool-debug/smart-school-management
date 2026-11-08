@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: "groups" | "manage" | "notices" | "meetings" | "circulars" }> = {
-  home: { to: "/app", label: "الرئيسية", icon: Home },
+  home: { to: "/app", label: "لوحة التحكم المركزية", icon: Home },
   platform: { to: "/app/platform", label: "المؤسسات", icon: ShieldCheck },
   schools: { to: "/app/schools", label: "المدارس والفروع", icon: Building2 },
   members: { to: "/app/members", label: "المستخدمون والأدوار", icon: UserCog },
