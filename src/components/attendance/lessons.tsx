@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { rpc } from "@/components/hr/shared";
-import { askText } from "@/components/confirm";
+import { ask, askText } from "@/components/confirm";
 import { riyadhToday } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
 
@@ -19,8 +19,8 @@ const ST: Record<Status, { label: string; cls: string }> = {
   excused: { label: "بعذر", cls: "bg-muted text-muted-foreground border-border" },
 };
 const ACT: Record<string, string> = { open: "فتح المسودة", approve: "اعتماد", correct: "تعديل بعد الاعتماد" };
-type Lesson = { slot_id: string; start: string; end?: string; period: string; subject: string; section: string; grade?: string; teacher?: string; substitute?: boolean; session_id: string | null; status: "draft" | "approved" | "none" | null; absent: number; late: number };
-type Mark = { student_id: string; name: string; status: Status; note: string | null };
+type Lesson = { slot_id: string; start: string; end?: string; period: string; subject: string; section: string; grade?: string; teacher?: string; substitute?: boolean; session_id: string | null; status: "draft" | "approved" | "none" | null; absent: number; late: number; kind?: "daily" | "lesson"; no_taker?: boolean; in_school_absent?: number };
+type Mark = { student_id: string; name: string; status: Status; note: string | null; gate_in?: string | null; gate_by?: string | null; gate_after?: boolean };
 type Detail = { id: string; date: string; status: "draft" | "approved"; rev: number; can_edit: boolean; subject: string; section: string; period: string; teacher: string; approved_at: string | null; approved_by: string | null; marks: Mark[]; events: { action: string; at: string; by: string | null; reason: string | null; changes: { student_id: string; from?: string; to: string }[] }[] };
 
 function StatusBadge({ s }: { s: Lesson["status"] }) {
@@ -45,14 +45,14 @@ export function LessonsTab() {
   const rows = q.data ?? [];
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">يبدأ رصد الحصة بكل الطلاب «حاضر». حدّد الغائب والمتأخر ثم اعتمد. بعد الاعتماد يُسمح بالتعديل خلال 7 أيام بسبب مكتوب، ويُسجَّل كل تغيير.</p>
-      {!rows.length ? <EmptyState title="لا حصص لك اليوم في الجدول المنشور" /> : (
-        <ul className="grid gap-2 sm:grid-cols-2" aria-label="حصصي اليوم">
+      <p className="text-sm text-muted-foreground">رصد حضور اليوم يتم مرة واحدة في الحصة الأولى لكل شعبة. يبدأ الكشف بكل الطلاب «حاضر»؛ حدّد الغائب والمتأخر وصاحب العذر ثم اعتمد. التعديل بعد الاعتماد في يوم الرصد فقط وبسبب مكتوب.</p>
+      {!rows.length ? <EmptyState title="لا يوجد لك رصد حضور اليوم (لست معلم الحصة الأولى لأي شعبة)" /> : (
+        <ul className="grid gap-2 sm:grid-cols-2" aria-label="رصد حضور اليوم">
           {rows.map((l) => (
             <li key={l.slot_id} className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3" data-testid="lesson">
               <div className="min-w-0">
                 <p className="font-semibold">{l.subject} — {l.grade ? `${l.grade} / ` : ""}{l.section}</p>
-                <p className="text-xs text-muted-foreground">{l.period} · {String(l.start).slice(0, 5)}{l.substitute ? " · حصة انتظار (بديل)" : ""}</p>
+                <p className="text-xs text-muted-foreground">{l.period} · {String(l.start).slice(0, 5)}{l.substitute ? " · بصفتك بديلًا معتمدًا" : ""} · رصد حضور اليوم</p>
                 <div className="mt-1 flex items-center gap-2 text-xs"><StatusBadge s={l.status} />{l.session_id && <span className="text-muted-foreground">غائب {l.absent} · متأخر {l.late}</span>}</div>
               </div>
               <Button size="sm" variant={l.status === "approved" ? "outline" : "default"} disabled={start.isPending}
@@ -88,9 +88,9 @@ export function LessonsSchoolTab({ schoolId }: { schoolId: string }) {
             <tbody>{rows.map((r) => (
               <tr key={r.slot_id} className="border-t">
                 <td className="p-2">{r.period} <span className="text-xs text-muted-foreground">{String(r.start).slice(0, 5)}</span></td>
-                <td className="p-2">{r.subject}</td><td className="p-2">{r.section}</td><td className="p-2">{r.teacher ?? "—"}</td>
+                <td className="p-2">{r.subject}</td><td className="p-2">{r.section}</td><td className="p-2">{r.no_taker ? <span className="font-semibold text-destructive">لا يوجد مكلف — يحتاج معالجة الوكيل</span> : r.teacher ?? "—"}{r.kind === "lesson" && <span className="ms-1 text-xs text-muted-foreground">(حضور حصة سابق)</span>}</td>
                 <td className="p-2"><StatusBadge s={r.status} /></td>
-                <td className="p-2">{r.session_id ? `${r.absent} / ${r.late}` : "—"}</td>
+                <td className="p-2">{r.session_id ? `${r.absent} / ${r.late}` : "—"}{!!r.in_school_absent && <span className="block text-xs text-destructive">دخل المدرسة ولم يحضر الفصل: {r.in_school_absent}</span>}</td>
                 <td className="p-2">{r.session_id && <Button size="sm" variant="ghost" onClick={() => setOpen(r.session_id)}>التفاصيل</Button>}</td>
               </tr>))}</tbody>
           </table>
@@ -110,6 +110,7 @@ function Session({ id, onClose }: { id: string; onClose: () => void }) {
   const changed = d ? d.marks.filter((m) => marks[m.student_id] && marks[m.student_id] !== m.status) : [];
   const refresh = () => { qc.invalidateQueries({ queryKey: ["la", id] }); qc.invalidateQueries({ queryKey: ["la-my"] }); qc.invalidateQueries({ queryKey: ["la-school"] }); };
   const payload = () => changed.map((m) => ({ student_id: m.student_id, status: marks[m.student_id] }));
+  const counts = useMemo(() => { const c = { present: 0, absent: 0, late: 0, excused: 0 } as Record<Status, number>; Object.values(marks).forEach((s) => c[s]++); return c; }, [marks]);
   const save = useMutation({
     mutationFn: async (approve: boolean) => {
       let rev = d!.rev;
@@ -120,15 +121,18 @@ function Session({ id, onClose }: { id: string; onClose: () => void }) {
         return "corrected";
       }
       if (changed.length) rev = await rpc<number>("la_save", { _id: id, _rev: rev, _marks: payload(), _reason: null });
-      if (approve) await rpc("la_approve", { _id: id, _rev: rev });
+      if (approve) {
+        const ok = await ask(`اعتماد حضور اليوم: حاضر ${counts.present} · غائب ${counts.absent} · متأخر ${counts.late} · بعذر ${counts.excused}`, { ok: "اعتماد" });
+        if (!ok) return "cancel";
+        await rpc("la_approve", { _id: id, _rev: rev });
+      }
       return approve ? "approved" : "saved";
     },
-    onSuccess: (r) => { if (r === "cancel") return; toast.success(r === "approved" ? "اعتُمد حضور الحصة" : r === "corrected" ? "حُفظ التعديل وسُجّل" : "حُفظت المسودة"); refresh(); },
+    onSuccess: (r) => { if (r === "cancel") return; toast.success(r === "approved" ? "اعتُمد حضور اليوم" : r === "corrected" ? "حُفظ التعديل وسُجّل" : "حُفظت المسودة"); refresh(); },
     onError: (e) => { toast.error(arabicError(e)); refresh(); },
   });
-  const counts = useMemo(() => { const c = { present: 0, absent: 0, late: 0, excused: 0 } as Record<Status, number>; Object.values(marks).forEach((s) => c[s]++); return c; }, [marks]);
   return (
-    <section className="rounded-xl border-2 border-primary/30 bg-card p-4" aria-label="رصد حضور الحصة">
+    <section className="rounded-xl border-2 border-primary/30 bg-card p-4" aria-label="رصد حضور اليوم">
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : d && (
         <>
           <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
@@ -144,7 +148,10 @@ function Session({ id, onClose }: { id: string; onClose: () => void }) {
             <ul className="divide-y rounded-lg border">
               {d.marks.map((m) => (
                 <li key={m.student_id} className="flex flex-wrap items-center justify-between gap-2 p-2" data-testid="mark">
-                  <span className="font-medium">{m.name}</span>
+                  <span className="font-medium">{m.name}
+                    {m.gate_in ? <span className={`block text-xs ${m.gate_after ? "text-destructive" : "text-muted-foreground"}`}>دخل من البوابة الساعة {new Date(m.gate_in).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}{m.gate_by ? ` · سجّله ${m.gate_by}` : " · آليًا"}{m.gate_after ? " · وصلت بعد الاعتماد (تعارض للمراجعة)" : ""}</span> : null}
+                    {m.gate_in && marks[m.student_id] === "absent" && <span className="block text-xs font-semibold text-destructive">دخل المدرسة ولم يحضر الفصل</span>}
+                  </span>
                   <div className="flex gap-1" role="radiogroup" aria-label={`حالة ${m.name}`}>
                     {(Object.keys(ST) as Status[]).map((s) => (
                       <button key={s} type="button" role="radio" aria-checked={marks[m.student_id] === s} disabled={!d.can_edit}
@@ -160,7 +167,7 @@ function Session({ id, onClose }: { id: string; onClose: () => void }) {
             <div className="mt-3 flex flex-wrap gap-2">
               {d.status === "draft" ? (
                 <>
-                  <Button disabled={save.isPending} onClick={() => save.mutate(true)}><CheckCircle2 className="size-4" />اعتماد الحضور</Button>
+                  <Button disabled={save.isPending} onClick={() => save.mutate(true)}><CheckCircle2 className="size-4" />اعتماد حضور اليوم</Button>
                   <Button variant="outline" disabled={save.isPending || !changed.length} onClick={() => save.mutate(false)}>حفظ المسودة</Button>
                 </>
               ) : <Button disabled={save.isPending || !changed.length} onClick={() => save.mutate(false)}>حفظ التعديل (بسبب)</Button>}
