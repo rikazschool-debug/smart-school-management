@@ -390,6 +390,7 @@ export function CrudTable({
               </div>
               <dl className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                 {columns.slice(1).map((c) => <div key={c.label} className="min-w-0"><dt className="text-muted-foreground">{c.label}</dt><dd className="break-words">{c.render(r)}</dd></div>)}
+                {showTags && <div className="col-span-2"><dt className="text-muted-foreground">الوسوم</dt><dd>{tagsCell(r)}</dd></div>}
               </dl>
               {(canWrite || extraActions) && <div className="mt-2 flex flex-wrap gap-1 border-t pt-2"><Actions r={r} /></div>}
             </li>
