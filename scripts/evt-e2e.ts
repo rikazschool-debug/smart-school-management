@@ -88,7 +88,7 @@ try {
   const C1 = c1.d.id; let rev = c1.d.rev;
   check("6 open registration before publish refused", !!(await R(p1, "evt_set_status", { _id: C1, _rev: rev, _action: "open_reg" })).e);
   rev = (await R(p1, "evt_set_status", { _id: C1, _rev: rev, _action: "publish" })).d.rev;
-  check("7 open registration without published form refused", !!(await R(p1, "evt_set_status", { _id: C1, _rev: rev, _action: "open_reg" })).e);
+  check("7 new course gets the published registration form automatically (v1)", (await R(p1, "evt_form_get", { _item: C1 })).d?.version === 1);
   check("8 field with markup refused", !!(await R(p1, "evt_form_save", { _item: C1, _rev: (await R(p1, "evt_form_get", { _item: C1 })).d.draft_rev, _fields: [{ id: "x", kind: "text", label: "<script>alert(1)</script>" }] })).e);
   const fields = [
     { id: "sec1", kind: "section", label: "بيانات المشارك" },
