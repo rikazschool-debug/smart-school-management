@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FormFields, missingRequired } from "@/components/events/form-render";
 import { APP_STATUS, fmtDT, type Answers, type Field } from "@/components/events/shared";
-import { PUBLIC_ERR, trackPublicApp, updatePublicApp } from "@/lib/events-public.functions";
+import { PUBLIC_ERR, publicFiles, trackPublicApp, updatePublicApp } from "@/lib/events-public.functions";
+import { trackUploader } from "@/components/events/upload";
+import { PublicFiles } from "@/components/events/public-files";
 import { Shell } from "./join.$token";
 
 export const Route = createFileRoute("/join/track/$code")({
@@ -57,10 +59,11 @@ function TrackPage() {
         <p className="mt-2 text-xs text-muted-foreground">أُرسل {fmtDT(t.created_at)} · آخر تحديث {fmtDT(t.updated_at)}</p>
         {t.item.status === "cancelled" && <p className="mt-2 text-sm text-destructive">أُلغيت الدورة{t.item.cancel_reason ? `: ${t.item.cancel_reason}` : ""}</p>}
       </div>
+      <PublicFiles title="الملفات المرفقة بطلبك" load={() => publicFiles({ data: { code } })} qk={["evt-track-files", code, t.rev]} />
       {t.can_update && t.fields && (
         <form className="mt-5 space-y-4" onSubmit={(e) => { e.preventDefault(); void act("update"); }}>
           <h2 className="font-bold">استكمال البيانات</h2>
-          <FormFields fields={t.fields} value={ans} onChange={setAns} disabled={busy} />
+          <FormFields fields={t.fields} value={ans} onChange={setAns} disabled={busy} upload={trackUploader(code)} />
           <Button type="submit" disabled={busy}>{busy ? "جارٍ الإرسال…" : "إرسال البيانات المستكملة"}</Button>
         </form>
       )}

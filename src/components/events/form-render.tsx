@@ -14,11 +14,13 @@ type Up = { key: string; file: File; pct: number; id?: string; error?: string };
 /** One attachment field: each file is prepared on the server, uploaded with progress, and can be retried or removed. */
 function FileField({ f, ids, onIds, upload, disabled }: { f: Field; ids: string[]; onIds: (ids: string[]) => void; upload?: Uploader | undefined; disabled?: boolean | undefined }) {
   const [ups, setUps] = useState<Up[]>([]);
-  const max = f.max_files ?? 1;
+  const max0 = f.max_files ?? 1;
+  const max = Math.max(0, max0 - prev.length);
   const patch = (key: string, u: Partial<Up>) => setUps((l) => l.map((x) => (x.key === key ? { ...x, ...u } : x)));
   const sync = useRef(onIds); sync.current = onIds;
+  const [prev, setPrev] = useState<string[]>(ids); // files saved earlier (completing an application keeps them unless removed)
   const done = ups.filter((x) => x.id).map((x) => x.id!).join(",");
-  useEffect(() => { if (ups.length || ids.length) sync.current(done ? done.split(",") : []); }, [done]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (ups.length || prev.length !== ids.length) sync.current([...prev, ...(done ? done.split(",") : [])]); }, [done, prev.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const run = async (u: Up) => {
     if (!upload) return;
     patch(u.key, { pct: 0, error: undefined });
@@ -40,7 +42,9 @@ function FileField({ f, ids, onIds, upload, disabled }: { f: Field; ids: string[
   const accept = (f.accept ?? ["pdf", "image"]).map((a) => ACCEPT_MIME[a]).join(",");
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">المسموح: {(f.accept ?? ["pdf", "image"]).map((a) => ACCEPT[a]).join("، ")} · حتى {f.max_mb ?? 5} ميغابايت · {max} ملف كحد أقصى</p>
+      <p className="text-xs text-muted-foreground">المسموح: {(f.accept ?? ["pdf", "image"]).map((a) => ACCEPT[a]).join("، ")} · حتى {f.max_mb ?? 5} ميغابايت · {max0} ملف كحد أقصى</p>
+      {prev.length > 0 && <div className="flex items-center gap-2 rounded-md border p-2 text-sm"><Paperclip className="size-4" /><span className="flex-1">{prev.length} ملف مرفوع سابقًا</span>
+        <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => setPrev([])}>إزالة</Button></div>}
       {ups.map((u) => (
         <div key={u.key} className="flex items-center gap-2 rounded-md border p-2 text-sm">
           <Paperclip className="size-4 shrink-0" />
