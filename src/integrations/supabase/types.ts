@@ -17542,6 +17542,7 @@ export type Database = {
         Args: { _id: string; _kind: string; _on: boolean; _tag: string }
         Returns: string
       }
+      _pp_tags_manager: { Args: { _org: string }; Returns: boolean }
       _provision_link: {
         Args: {
           _actor: string
