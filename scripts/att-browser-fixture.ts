@@ -38,8 +38,8 @@ const g = await ins("guardians", { full_name: "أحمد الأب", email: gu.ema
 for (const s of kids.slice(0, 2)) await admin.from("student_guardians").insert({ school_id: A, student_id: s.id, guardian_id: g.id, relationship: "أب", can_follow: true, can_pickup: true, verified: true });
 const dep = await ins("departments", { name: "عام" }); const sub = await ins("subjects", { name: "لغتي", department_id: dep.id });
 const course = await ins("courses", { year_id: year.id, subject_id: sub.id, section_id: sec1.id });
-const t = await ins("teachers", { full_name: "معلم الشعبة", email: te.email, department_id: dep.id });
-await admin.from("teachers").update({ user_id: te.id }).eq("id", t.id);
+// teachers has no direct client insert (identity rules) — test data goes through the service role
+const t = (await admin.from("teachers").insert({ school_id: A, full_name: "معلم الشعبة", email: te.email, department_id: dep.id, user_id: te.id }).select().single()).data!;
 const a = await ins("teacher_assignments", { course_id: course.id, teacher_id: t.id }); await owner.c.rpc("decide_assignment", { _id: a.id, _approve: true });
 const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
 await owner.c.rpc("save_attendance_policy", { _org: org, _school: A, _effective_from: today, _v: { arrival_open: "00:00", day_start: "00:01", day_end: "23:58", grace_minutes: 0, study_days: [0, 1, 2, 3, 4, 5, 6], absence_review_at: "23:59" } });
