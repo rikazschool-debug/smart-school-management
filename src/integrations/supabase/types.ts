@@ -18372,6 +18372,7 @@ export type Database = {
         Args: { _date?: string; _school: string }
         Returns: Json
       }
+      la_section_today: { Args: { _slot: string }; Returns: Json }
       late_joiners: {
         Args: { _hw: string }
         Returns: {
