@@ -4112,6 +4112,7 @@ export type Database = {
       }
       evt_items: {
         Row: {
+          apply_tpl_version: string | null
           audience: string
           cancel_reason: string | null
           capacity: number | null
@@ -4122,6 +4123,8 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          extra: Json
+          extra_fields: Json
           id: string
           kind: string
           link_active: boolean
@@ -4140,10 +4143,12 @@ export type Database = {
           status: string
           target: Json
           title: string
+          tpl_version: string | null
           trainer: string | null
           updated_at: string
         }
         Insert: {
+          apply_tpl_version?: string | null
           audience?: string
           cancel_reason?: string | null
           capacity?: number | null
@@ -4154,6 +4159,8 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          extra?: Json
+          extra_fields?: Json
           id?: string
           kind: string
           link_active?: boolean
@@ -4172,10 +4179,12 @@ export type Database = {
           status?: string
           target?: Json
           title: string
+          tpl_version?: string | null
           trainer?: string | null
           updated_at?: string
         }
         Update: {
+          apply_tpl_version?: string | null
           audience?: string
           cancel_reason?: string | null
           capacity?: number | null
@@ -4186,6 +4195,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          extra?: Json
+          extra_fields?: Json
           id?: string
           kind?: string
           link_active?: boolean
@@ -4204,10 +4215,18 @@ export type Database = {
           status?: string
           target?: Json
           title?: string
+          tpl_version?: string | null
           trainer?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "evt_items_apply_tpl_version_fkey"
+            columns: ["apply_tpl_version"]
+            isOneToOne: false
+            referencedRelation: "evt_tpl_versions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "evt_items_org_id_fkey"
             columns: ["org_id"]
@@ -4220,6 +4239,13 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evt_items_tpl_version_fkey"
+            columns: ["tpl_version"]
+            isOneToOne: false
+            referencedRelation: "evt_tpl_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -4394,6 +4420,133 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "evt_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_tpl_log: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          details: Json
+          id: string
+          tpl_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          tpl_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          tpl_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_tpl_log_tpl_id_fkey"
+            columns: ["tpl_id"]
+            isOneToOne: false
+            referencedRelation: "evt_tpls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_tpl_versions: {
+        Row: {
+          body: Json
+          id: string
+          published_at: string
+          published_by: string | null
+          tpl_id: string
+          version: number
+        }
+        Insert: {
+          body: Json
+          id?: string
+          published_at?: string
+          published_by?: string | null
+          tpl_id: string
+          version: number
+        }
+        Update: {
+          body?: Json
+          id?: string
+          published_at?: string
+          published_by?: string | null
+          tpl_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_tpl_versions_tpl_id_fkey"
+            columns: ["tpl_id"]
+            isOneToOne: false
+            referencedRelation: "evt_tpls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_tpls: {
+        Row: {
+          created_at: string
+          draft: Json
+          draft_rev: number
+          id: string
+          kind: string
+          org_id: string
+          school_id: string | null
+          updated_at: string
+          updated_by: string | null
+          use_custom: boolean
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          draft?: Json
+          draft_rev?: number
+          id?: string
+          kind: string
+          org_id: string
+          school_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          use_custom?: boolean
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          draft?: Json
+          draft_rev?: number
+          id?: string
+          kind?: string
+          org_id?: string
+          school_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          use_custom?: boolean
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_tpls_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evt_tpls_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -15613,6 +15766,7 @@ export type Database = {
         Returns: boolean
       }
       _evt_app_file_ok: { Args: { _app: string }; Returns: boolean }
+      _evt_caps_base: { Args: { _org: string }; Returns: Json }
       _evt_caps_for: { Args: { _kind: string; _school: string }; Returns: Json }
       _evt_check_answers: {
         Args: { _a: Json; _cat: string; _fields: Json }
@@ -15627,6 +15781,7 @@ export type Database = {
         Args: { _item: string; _why: string }
         Returns: undefined
       }
+      _evt_core: { Args: { _kind: string }; Returns: Json }
       _evt_fields_for: { Args: { _cat: string; _fields: Json }; Returns: Json }
       _evt_file_field: { Args: { _fid: string; _fields: Json }; Returns: Json }
       _evt_file_slot: {
@@ -15641,6 +15796,7 @@ export type Database = {
         }
         Returns: Json
       }
+      _evt_get_base: { Args: { _id: string }; Returns: Json }
       _evt_guardian_of: {
         Args: { _student: string; _uid: string }
         Returns: boolean
@@ -15772,6 +15928,7 @@ export type Database = {
         Args: { i: Database["public"]["Tables"]["evt_items"]["Row"] }
         Returns: Json
       }
+      _evt_save_base: { Args: { _p: Json }; Returns: Json }
       _evt_school_ok: {
         Args: { _action: string; _kind: string; _school: string }
         Returns: boolean
@@ -15796,6 +15953,36 @@ export type Database = {
           _title: string
         }
         Returns: undefined
+      }
+      _evt_tpl_can: {
+        Args: { _action: string; _org: string; _school: string }
+        Returns: boolean
+      }
+      _evt_tpl_clean: { Args: { _body: Json; _kind: string }; Returns: Json }
+      _evt_tpl_default: { Args: { _kind: string }; Returns: Json }
+      _evt_tpl_diff: { Args: { _new: Json; _old: Json }; Returns: Json }
+      _evt_tpl_eff: { Args: { _kind: string; _school: string }; Returns: Json }
+      _evt_tpl_row: {
+        Args: { _kind: string; _org: string; _school: string }
+        Returns: {
+          created_at: string
+          draft: Json
+          draft_rev: number
+          id: string
+          kind: string
+          org_id: string
+          school_id: string | null
+          updated_at: string
+          updated_by: string | null
+          use_custom: boolean
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "evt_tpls"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       _family_ok: {
         Args: {
@@ -16868,10 +17055,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      _perm_base_v7: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
       _perm_catalog_base: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
+      _perm_catalog_v6: { Args: never; Returns: Json }
       _perm_denied: {
         Args: { _action: string; _org: string; _section: string; _uid: string }
         Returns: boolean
@@ -16900,6 +17097,10 @@ export type Database = {
         Returns: boolean
       }
       _perm_valid_base: {
+        Args: { _action: string; _scope: string; _section: string }
+        Returns: boolean
+      }
+      _perm_valid_v7: {
         Args: { _action: string; _scope: string; _section: string }
         Returns: boolean
       }
@@ -18580,6 +18781,14 @@ export type Database = {
         Returns: Json
       }
       evt_get: { Args: { _id: string }; Returns: Json }
+      evt_item_tpl_preview: {
+        Args: { _item: string; _which: string }
+        Returns: Json
+      }
+      evt_item_tpl_update: {
+        Args: { _item: string; _rev: number; _which: string }
+        Returns: Json
+      }
       evt_link: {
         Args: { _action: string; _id: string; _rev: number }
         Returns: Json
@@ -18615,6 +18824,33 @@ export type Database = {
       }
       evt_staff_set: {
         Args: { _caps: string[]; _item: string; _user: string }
+        Returns: undefined
+      }
+      evt_tpl_effective: {
+        Args: { _kind: string; _school: string }
+        Returns: Json
+      }
+      evt_tpl_get: {
+        Args: { _kind: string; _org: string; _school: string }
+        Returns: Json
+      }
+      evt_tpl_overview: { Args: { _org: string }; Returns: Json }
+      evt_tpl_publish: {
+        Args: { _kind: string; _org: string; _rev: number; _school: string }
+        Returns: Json
+      }
+      evt_tpl_save: {
+        Args: {
+          _body: Json
+          _kind: string
+          _org: string
+          _rev: number
+          _school: string
+        }
+        Returns: Json
+      }
+      evt_tpl_use: {
+        Args: { _custom: boolean; _kind: string; _school: string }
         Returns: undefined
       }
       extend_homework: {
