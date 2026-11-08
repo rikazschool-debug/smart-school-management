@@ -736,3 +736,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## 2026-11-08 — إغلاق B7
 - الاستيراد من الشاشة: طلاب/معلمون/أولياء أمور (accounts-templates-journey 17/17 مع قالب قديم وإعادة استيراد)، موظفون (hr-import-journey 22/22).
 - البطاقة الجانبية وتعدد الصفات: people-cards-journey 17/17. المحادثات الجديدة: chat-extras-journey 14/14 (ميكروفون وهمي في المتصفح). زر «إرسال» الرئيسي يرسل التسجيل المعاين أيضًا.
+
+## 2026-11-08 — HR: add employee with new login
+- hr-login-e2e 17/17. Browser (demo owner, desktop 1280 + phone 390): form, role list, confirm step, conflict shown for سالم الدوسري (mobile already used by demo teacher); nothing created.

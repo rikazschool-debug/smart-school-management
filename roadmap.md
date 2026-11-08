@@ -146,11 +146,11 @@
 - [x] «سند» AI assistant per dashboard, answers only from the caller's own RLS data; Gemini API key from user.
 
 ## B9 — HR add employee + login account (one form)
-- [ ] School → job category → login role (approved roles only, within caller's rights; never auto HR admin)
-- [ ] Single "approved login mobile" field (reuse existing, E.164 for OTP, local display)
-- [ ] Mode: create new account / manually link existing
-- [ ] Confirm step (school, role, perms) → one server transaction: employee file + auth user + membership + teacher row if teacher; idempotent retry, no partial success
-- [ ] Duplicate ID/account check → show conflict, no auto merge
-- [ ] Login via ID/iqama + OTP only
-- [ ] Create real employee سالم الدوسري (counselor, ID 2583680366, 0536649779) from the UI; keep it; no OTP/message to him
-- [ ] Tests: synthetic accounts, desktop+mobile, no cross-school access; clean synthetic only
+- [x] School → job category → login role (approved roles only, within caller's rights; never auto HR admin)
+- [x] Single "approved login mobile" field (reuse existing, E.164 for OTP, local display)
+- [x] Mode: create new account / manually link existing
+- [x] Confirm step (school, role, perms) → one server transaction: employee file + auth user + membership + teacher row if teacher; idempotent retry, no partial success
+- [x] Duplicate ID/account check → show conflict, no auto merge
+- [x] Login via ID/iqama + OTP only
+- [ ] (blocked: mobile 0536649779 already belongs to demo teacher أ. فهد القحطاني — owner to decide) Create real employee سالم الدوسري (counselor, ID 2583680366, 0536649779) from the UI; keep it; no OTP/message to him
+- [x] Tests: synthetic accounts, desktop+mobile, no cross-school access; clean synthetic only

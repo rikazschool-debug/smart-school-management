@@ -446,3 +446,8 @@ A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, iden
 | إيقاف/إعادة الدخول على مستوى المؤسسة (كل الفروع والصفات؛ الإعادة تفتح ما أوقفه هذا الإجراء فقط) | نعم (لا يشمل مالكي المجموعة ولا حسابه) | لا | لا |
 نافذة التأكيد تعرض الأثر من الخادم (pp_access_preview) والسبب إلزامي؛ السجل الدراسي/الوظيفي لا يتغير. الموقوف كليًا يرى «وصولك موقوف حاليًا».
 الطالب وولي الأمر والمعلم: لا شيء. التصنيف الوظيفي لا يمنح أي صلاحية.
+
+## HR add employee with login — 2026-11-08
+- Org owner: may give any staff login role (principal…security) when adding an employee.
+- HR with create permission on a school: only teacher, counselor, nurse, security, student affairs, in their schools.
+- No HR permission is ever granted by this step; personal HR file access stays off.

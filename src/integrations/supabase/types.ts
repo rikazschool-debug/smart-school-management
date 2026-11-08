@@ -9524,6 +9524,38 @@ export type Database = {
           },
         ]
       }
+      hr_login_pending: {
+        Row: {
+          actor: string
+          created_at: string
+          national_id: string
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          actor: string
+          created_at?: string
+          national_id: string
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          national_id?: string
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_login_pending_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_open_batches: {
         Row: {
           approved_at: string | null
@@ -17106,6 +17138,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _hr_login_roles: {
+        Args: { _org: string; _school: string }
+        Returns: string[]
+      }
       _hr_lv_any: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_lv_balance: {
         Args: { _emp: string; _type: string; _year: number }
@@ -20242,6 +20278,16 @@ export type Database = {
         Returns: Json
       }
       hr_emp_money: { Args: { _emp: string }; Returns: Json }
+      hr_employee_create_login: {
+        Args: {
+          _base: string
+          _org: string
+          _p: Json
+          _reason?: string
+          _uid: string
+        }
+        Returns: string
+      }
       hr_employee_get: { Args: { _id: string }; Returns: Json }
       hr_employee_list: {
         Args: { _org: string; _q?: string; _school?: string; _status?: string }
@@ -20442,6 +20488,14 @@ export type Database = {
         Returns: undefined
       }
       hr_letter_vars: { Args: never; Returns: Json }
+      hr_login_precheck: {
+        Args: { _nid: string; _org: string; _phone: string }
+        Returns: Json
+      }
+      hr_login_roles: {
+        Args: { _org: string; _school: string }
+        Returns: string[]
+      }
       hr_me: { Args: { _org: string }; Returns: Json }
       hr_money_caps: { Args: { _org: string }; Returns: Json }
       hr_money_people: { Args: { _org: string }; Returns: Json }
