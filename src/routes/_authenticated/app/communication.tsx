@@ -187,7 +187,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
           {q.trim().length >= 2 && !!hits.data?.length && (
             <div className="border-t p-3 text-xs">
               <p className="mb-1 font-semibold">رسائل مطابقة</p>
-              <ul className="space-y-1">{hits.data.slice(0, 10).map((h) => <li key={h["message_id"]}><button className="w-full truncate text-start hover:underline" onClick={() => onSelect(h["conversation_id"])}>{h["conv_title"]}: {h["body"]}</button></li>)}</ul>
+              <ul className="space-y-1">{hits.data.slice(0, 10).map((h) => <li key={h["message_id"]}><button className="w-full truncate text-start hover:underline" onClick={() => onSelect(h["conversation_id"])}>{h["conv_title"]} — {h["sender_name"]}: {h["body"]}</button></li>)}</ul>
             </div>
           )}
         </div>

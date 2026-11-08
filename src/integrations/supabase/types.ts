@@ -14705,8 +14705,18 @@ export type Database = {
         }
       }
       _cg_counts: { Args: { _school: string }; Returns: Json }
+      _cg_generic_label: {
+        Args: { _conv: string; _user: string }
+        Returns: string
+      }
       _cg_label: { Args: { _reasons: string[] }; Returns: string }
+      _cg_private: { Args: { _conv: string }; Returns: boolean }
+      _cg_sender_visible: {
+        Args: { _conv: string; _sender: string }
+        Returns: boolean
+      }
       _cg_title: { Args: { _section: string; _year: string }; Returns: string }
+      _cg_viewer_staff: { Args: { _conv: string }; Returns: boolean }
       _circ_audience_multi: {
         Args: { _aud: Json; _targets: string[] }
         Returns: {
@@ -15683,6 +15693,7 @@ export type Database = {
         }
         Returns: string
       }
+      _msg_file_row_ok: { Args: { _file: string }; Returns: boolean }
       _mt_action_core: {
         Args: { _action: string; _data: Json; _id: string; _rev: number }
         Returns: Json
@@ -16102,6 +16113,7 @@ export type Database = {
         Args: { _actor: string; _student: string; _uid: string }
         Returns: undefined
       }
+      _storage_file_ok: { Args: { _name: string }; Returns: boolean }
       _student_ok: {
         Args: { _student: string; _teacher: string }
         Returns: boolean
@@ -17242,6 +17254,26 @@ export type Database = {
       classroom_regroup: { Args: { _school?: string }; Returns: Json }
       cleanup_health: { Args: never; Returns: Json }
       conv_access_ok: { Args: { _conv: string }; Returns: boolean }
+      conv_hidden_count: { Args: { _conv: string }; Returns: number }
+      conv_messages: {
+        Args: { _before?: number; _conv: string; _limit?: number }
+        Returns: {
+          body: string
+          created_at: string
+          deleted_at: string
+          edited_at: string
+          files: Json
+          id: string
+          masked: boolean
+          mine: boolean
+          pinned_at: string
+          reply_to: string
+          sender_id: string
+          sender_label: string
+          sender_name: string
+          seq: number
+        }[]
+      }
       conv_send_block: { Args: { _conv: string }; Returns: string }
       conversation_people: {
         Args: { _conv: string }
@@ -19376,6 +19408,7 @@ export type Database = {
           conversation_id: string
           created_at: string
           message_id: string
+          sender_name: string
           seq: number
         }[]
       }
