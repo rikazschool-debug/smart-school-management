@@ -90,6 +90,8 @@ const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتي�
 const AD_SUB = [["apps", "الطلاب المحتملون"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
 
 /** Evaluation sub-sections (owner/principal/granted platform); class visits is its own page. "forms" needs owner or evaluation.forms — the page and RPCs re-check. */
+/** Events sub-sections (the page shows only tabs the server allows). */
+const EVT_SUB = [["summary", "الملخص والتقويم"], ["trip", "الرحلات المدرسية"], ["general", "الفعاليات العامة"], ["course", "الدورات"], ["apps", "طلبات التسجيل"], ["forms", "إعدادات النماذج"], ["reports", "التقارير"]] as const;
 const EV_SUB = [["summary", "الملخص والمؤشرات"], ["guardians", "تقييمات أولياء الأمور"], ["visits", "الزيارات الصفية"], ["monthly", "التقييم الشهري"], ["forms", "النماذج والإعدادات"]] as const;
 const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary";
 
@@ -234,6 +236,13 @@ function Shell() {
                         <Link key={t} to="/app/support" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS + (supTab === t || (!supTab && i === 0) ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>
                           {t === "settings" ? "الإعدادات والتصنيفات" : SUPPORT_TAB_LABELS[t]}
                         </Link>
+                      ))}
+                    </div>
+                  )}
+                  {k === "events" && path.startsWith("/app/events") && !["guardian", "student"].includes(active.role) && (
+                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                      {EVT_SUB.map(([t, label]) => (
+                        <Link key={t} to="/app/events" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>
                       ))}
                     </div>
                   )}
