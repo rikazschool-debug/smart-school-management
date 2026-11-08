@@ -3145,6 +3145,247 @@ export type Database = {
           },
         ]
       }
+      cs_auto_rules: {
+        Row: {
+          activated_at: string | null
+          active: boolean
+          body: string
+          cooldown_hours: number
+          created_at: string
+          created_by: string | null
+          hours: Json
+          id: string
+          kind: string
+          name: string
+          org_id: string
+          priority: number
+          recipient_roles: string[]
+          school_ids: string[]
+          sender_label: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          active?: boolean
+          body: string
+          cooldown_hours?: number
+          created_at?: string
+          created_by?: string | null
+          hours?: Json
+          id?: string
+          kind: string
+          name: string
+          org_id: string
+          priority?: number
+          recipient_roles?: string[]
+          school_ids?: string[]
+          sender_label?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          active?: boolean
+          body?: string
+          cooldown_hours?: number
+          created_at?: string
+          created_by?: string | null
+          hours?: Json
+          id?: string
+          kind?: string
+          name?: string
+          org_id?: string
+          priority?: number
+          recipient_roles?: string[]
+          school_ids?: string[]
+          sender_label?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_auto_rules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_auto_runs: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          org_id: string
+          reply_message_id: string | null
+          result: string
+          rule_id: string
+          trigger_message_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          org_id: string
+          reply_message_id?: string | null
+          result: string
+          rule_id: string
+          trigger_message_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          org_id?: string
+          reply_message_id?: string | null
+          result?: string
+          rule_id?: string
+          trigger_message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_auto_runs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "cs_auto_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_log: {
+        Row: {
+          action: string
+          actor: string
+          after: Json | null
+          before: Json | null
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          org_id: string
+        }
+        Insert: {
+          action: string
+          actor: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          org_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_replies: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          roles: string[]
+          shortcut: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          roles?: string[]
+          shortcut: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          roles?: string[]
+          shortcut?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_replies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_settings: {
+        Row: {
+          attachments_enabled: boolean
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+          voice_enabled: boolean
+          voice_max_bytes: number
+          voice_max_sec: number
+        }
+        Insert: {
+          attachments_enabled?: boolean
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+          voice_enabled?: boolean
+          voice_max_bytes?: number
+          voice_max_sec?: number
+        }
+        Update: {
+          attachments_enabled?: boolean
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          voice_enabled?: boolean
+          voice_max_bytes?: number
+          voice_max_sec?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cv_events: {
         Row: {
           action: string
@@ -4651,6 +4892,7 @@ export type Database = {
           cleanup_last_at: string | null
           created_at: string
           description: string | null
+          duration_sec: number | null
           id: string
           mime_type: string
           name: string
@@ -4668,6 +4910,7 @@ export type Database = {
           cleanup_last_at?: string | null
           created_at?: string
           description?: string | null
+          duration_sec?: number | null
           id?: string
           mime_type: string
           name: string
@@ -4685,6 +4928,7 @@ export type Database = {
           cleanup_last_at?: string | null
           created_at?: string
           description?: string | null
+          duration_sec?: number | null
           id?: string
           mime_type?: string
           name?: string
@@ -11115,6 +11359,7 @@ export type Database = {
       }
       messages: {
         Row: {
+          auto_rule_id: string | null
           body: string
           client_id: string
           conversation_id: string
@@ -11123,6 +11368,7 @@ export type Database = {
           deleted_by: string | null
           edited_at: string | null
           id: string
+          kind: string
           pinned_at: string | null
           pinned_by: string | null
           reply_to: string | null
@@ -11132,6 +11378,7 @@ export type Database = {
           seq: number
         }
         Insert: {
+          auto_rule_id?: string | null
           body?: string
           client_id: string
           conversation_id: string
@@ -11140,6 +11387,7 @@ export type Database = {
           deleted_by?: string | null
           edited_at?: string | null
           id?: string
+          kind?: string
           pinned_at?: string | null
           pinned_by?: string | null
           reply_to?: string | null
@@ -11149,6 +11397,7 @@ export type Database = {
           seq: number
         }
         Update: {
+          auto_rule_id?: string | null
           body?: string
           client_id?: string
           conversation_id?: string
@@ -11157,6 +11406,7 @@ export type Database = {
           deleted_by?: string | null
           edited_at?: string | null
           id?: string
+          kind?: string
           pinned_at?: string | null
           pinned_by?: string | null
           reply_to?: string | null
@@ -11166,6 +11416,13 @@ export type Database = {
           seq?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_auto_rule_id_fkey"
+            columns: ["auto_rule_id"]
+            isOneToOne: false
+            referencedRelation: "cs_auto_rules"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_conversation_id_fkey"
             columns: ["conversation_id"]
@@ -15977,6 +16234,75 @@ export type Database = {
         }[]
       }
       _course_title: { Args: { _course: string }; Returns: string }
+      _cs_clean: { Args: { _max: number; _t: string }; Returns: string }
+      _cs_get: {
+        Args: { _org: string }
+        Returns: {
+          attachments_enabled: boolean
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+          voice_enabled: boolean
+          voice_max_bytes: number
+          voice_max_sec: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cs_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _cs_in_hours: { Args: { _at: string; _hours: Json }; Returns: boolean }
+      _cs_log: {
+        Args: {
+          _action: string
+          _after: Json
+          _before: Json
+          _entity: string
+          _id: string
+          _org: string
+        }
+        Returns: undefined
+      }
+      _cs_my_roles: { Args: { _org: string }; Returns: string[] }
+      _cs_ok: { Args: { _action: string; _org: string }; Returns: boolean }
+      _cs_pick: {
+        Args: {
+          _at: string
+          _conv: string
+          _kind_conv: string
+          _org: string
+          _recipient_roles: string[]
+          _school: string
+          _seq: number
+        }
+        Returns: {
+          activated_at: string | null
+          active: boolean
+          body: string
+          cooldown_hours: number
+          created_at: string
+          created_by: string | null
+          hours: Json
+          id: string
+          kind: string
+          name: string
+          org_id: string
+          priority: number
+          recipient_roles: string[]
+          school_ids: string[]
+          sender_label: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cs_auto_rules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _csmart_exact: { Args: { _s: string }; Returns: string }
       _csmart_key: { Args: { _s: string }; Returns: string }
       _ctx_staff: { Args: { _org: string; _school: string }; Returns: boolean }
@@ -17467,11 +17793,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      _perm_base_v9: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
       _perm_catalog_base: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
       _perm_catalog_v6: { Args: never; Returns: Json }
+      _perm_catalog_v8: { Args: never; Returns: Json }
       _perm_denied: {
         Args: { _action: string; _org: string; _section: string; _uid: string }
         Returns: boolean
@@ -18763,6 +19099,21 @@ export type Database = {
       classroom_regroup: { Args: { _school?: string }; Returns: Json }
       cleanup_health: { Args: never; Returns: Json }
       conv_access_ok: { Args: { _conv: string }; Returns: boolean }
+      conv_files: {
+        Args: { _before: string; _conv: string; _limit?: number; _tab: string }
+        Returns: {
+          created_at: string
+          duration: number
+          id: string
+          message_id: string
+          mime: string
+          name: string
+          sender_name: string
+          seq: number
+          size_bytes: number
+          storage_path: string
+        }[]
+      }
       conv_hidden_count: { Args: { _conv: string }; Returns: number }
       conv_messages: {
         Args: { _before?: number; _conv: string; _limit?: number }
@@ -18773,6 +19124,7 @@ export type Database = {
           edited_at: string
           files: Json
           id: string
+          kind: string
           masked: boolean
           mine: boolean
           pinned_at: string
@@ -18973,6 +19325,73 @@ export type Database = {
           id: string
           storage_path: string
         }[]
+      }
+      create_voice_file: {
+        Args: { _conv: string; _duration: number; _mime: string; _size: number }
+        Returns: {
+          id: string
+          storage_path: string
+        }[]
+      }
+      cs_admin: { Args: { _org: string }; Returns: Json }
+      cs_conv_limits: { Args: { _conv: string }; Returns: Json }
+      cs_my_replies: {
+        Args: { _conv: string }
+        Returns: {
+          body: string
+          id: string
+          shortcut: string
+          title: string
+        }[]
+      }
+      cs_reply_save: {
+        Args: {
+          _active: boolean
+          _body: string
+          _id: string
+          _org: string
+          _roles: string[]
+          _shortcut: string
+          _title: string
+        }
+        Returns: string
+      }
+      cs_rule_preview: {
+        Args: {
+          _at: string
+          _first: boolean
+          _org: string
+          _role: string
+          _school: string
+        }
+        Returns: Json
+      }
+      cs_rule_save: {
+        Args: {
+          _active: boolean
+          _body: string
+          _cooldown: number
+          _hours: Json
+          _id: string
+          _kind: string
+          _label: string
+          _name: string
+          _org: string
+          _priority: number
+          _roles: string[]
+          _schools: string[]
+        }
+        Returns: string
+      }
+      cs_settings_save: {
+        Args: {
+          _attach: boolean
+          _max_mb: number
+          _max_sec: number
+          _org: string
+          _voice: boolean
+        }
+        Returns: undefined
       }
       current_timetable: {
         Args: { _date: string; _school: string }

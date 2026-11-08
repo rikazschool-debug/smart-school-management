@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { arabicError, useSession } from "@/lib/session";
 import { KIND_LABEL, SafeText, cleanupStalePending, discardPendingFile, openFile, timeLabel, uploadMessageFile, type PendingFile } from "@/lib/comm";
 import { GroupPanel } from "@/components/comm/group-panel";
+import { AttachmentsSheet, RepliesButton, RepliesMenu, VoicePlayer, VoiceRecorder, filterReplies, slashQuery, uploadVoice, useConvLimits, useSavedReplies, type Saved, type VoiceClip } from "@/components/comm/chat-extras";
+import { Images } from "lucide-react";
 
 const PAGE = 30;
 /** Drafts stay with their own conversation AND signed-in user (memory only, never stored on the device,
@@ -29,6 +31,12 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   const qc = useQueryClient();
   const { user } = useSession();
   const [panel, setPanel] = useState(false);
+  const [gallery, setGallery] = useState(false);
+  const jump = (seq: number) => {
+    const el = document.getElementById(`msg-${id}-${seq}`);
+    if (!el) return void toast.info("الرسالة أقدم من المعروض — اضغط «تحميل رسائل أقدم» ثم أعد المحاولة");
+    el.scrollIntoView({ block: "center" }); el.classList.add("ring-2", "ring-primary"); setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 2000);
+  };
   const bottom = useRef<HTMLDivElement>(null);
 
   const msgs = useInfiniteQuery({
@@ -129,8 +137,10 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
         <Button variant="ghost" size="icon" aria-label={conv["archived"] ? "إخراج من الأرشيف" : "أرشفة لدي"} title={conv["archived"] ? "إخراج من الأرشيف" : "أرشفة لدي"} onClick={async () => { await db.rpc("set_member_prefs", { _conv: id, _muted: null, _archived: !conv["archived"] }); onChanged(); }}>
           {conv["archived"] ? <ArchiveRestore className="size-4" /> : <Archive className="size-4" />}
         </Button>
+        <Button variant="ghost" size="icon" aria-label="المرفقات" title="المرفقات" onClick={() => setGallery(true)}><Images className="size-4" /></Button>
         {isGroup && <Button variant={panel ? "secondary" : "ghost"} size="icon" aria-label="الأعضاء والإعدادات" onClick={() => setPanel(!panel)}><Users className="size-4" /></Button>}
       </header>
+      <AttachmentsSheet conv={id} open={gallery} onClose={() => setGallery(false)} onJump={jump} />
       {conv["status"] === "archived" && (
         <p role="status" className="border-b border-warning/40 bg-warning/15 px-3 py-2 text-xs font-medium text-warning-foreground">🔒 هذه المجموعة مؤرشفة: الرسائل السابقة للقراءة فقط، ولا يمكن الإرسال أو الرد أو إضافة مرفقات.</p>
       )}
@@ -159,7 +169,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
           ) : (
             <ul className="space-y-2.5">
               {list.map((m) => (
-                <Message key={m["id"]} m={m} mine={!!m["mine"]} name={names[m["id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
+                <Message key={m["id"]} domId={`msg-${id}-${m["seq"]}`} m={m} mine={!!m["mine"]} name={names[m["id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
                   files={(files.data ?? []).filter((f) => f["source_id"] === m["id"])} receipt={receipt(m)} canAct={!block} isGroup={isGroup} canReply={canReply} isMod={isMod}
                   onReply={() => setReply(m)} onChanged={() => qc.invalidateQueries({ queryKey: ["msgs", id] })} />
               ))}
@@ -195,15 +205,15 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   );
 }
 
-function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, canReply, isMod, onReply, onChanged }: {
-  m: Row; mine: boolean; name: string; parent: Row | undefined; files: Row[]; receipt: string | null; canAct: boolean; isGroup: boolean; canReply: boolean; isMod: boolean; onReply: () => void; onChanged: () => void;
+function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup, canReply, isMod, onReply, onChanged }: {
+  domId: string; m: Row; mine: boolean; name: string; parent: Row | undefined; files: Row[]; receipt: string | null; canAct: boolean; isGroup: boolean; canReply: boolean; isMod: boolean; onReply: () => void; onChanged: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(m["body"]);
   const deleted = !!m["deleted_at"];
   return (
-    <li className={`group max-w-[85%] break-words rounded-2xl p-3 text-sm shadow-sm sm:max-w-[70%] ${mine ? "ms-auto rounded-se-sm bg-primary/10" : "me-auto rounded-ss-sm border bg-card"}`}>
-      {!mine && <p className="mb-1 text-xs font-semibold text-primary">{name}</p>}
+    <li id={domId} className={`group max-w-[85%] transition-shadow ${m["kind"] === "auto" ? "border-dashed" : ""} break-words rounded-2xl p-3 text-sm shadow-sm sm:max-w-[70%] ${mine ? "ms-auto rounded-se-sm bg-primary/10" : "me-auto rounded-ss-sm border bg-card"}`}>
+      {!mine && <p className="mb-1 text-xs font-semibold text-primary">{m["kind"] === "auto" ? `🤖 ${m["sender_name"]}` : name}</p>}
       {parent && <p className="mb-1 truncate border-s-2 border-primary/50 ps-2 text-xs text-muted-foreground">رد على {parent["mine"] ? "أنت" : parent["sender_name"]}: {parent["deleted_at"] ? "رسالة محذوفة" : parent["body"] || "مرفق"}</p>}
       {m["reply_to"] && !parent && <p className="mb-1 border-s-2 ps-2 text-xs text-muted-foreground">رد على رسالة أقدم</p>}
       {deleted ? <p className="italic text-muted-foreground">حُذفت هذه الرسالة</p> : editing ? (
@@ -219,7 +229,7 @@ function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, canRe
       ) : m["body"] && <SafeText text={m["body"]} />}
       {!deleted && files.length > 0 && (
         <ul className="mt-2 flex flex-wrap gap-1">
-          {files.map((f) => <li key={f["id"]}><button onClick={() => openFile(f)} className="flex max-w-full items-center gap-1 rounded-full border bg-background px-3 py-1 text-xs hover:bg-muted"><Paperclip className="size-3 shrink-0" /><span className="truncate">{f["name"]}</span> ({Math.ceil(f["size_bytes"] / 1024)} ك.ب)</button></li>)}
+          {files.map((f) => String(f["mime"] ?? "").startsWith("audio/") ? <li key={f["id"]}><VoicePlayer file={f} seconds={f["duration"]} /></li> : <li key={f["id"]}><button onClick={() => openFile(f)} className="flex max-w-full items-center gap-1 rounded-full border bg-background px-3 py-1 text-xs hover:bg-muted"><Paperclip className="size-3 shrink-0" /><span className="truncate">{f["name"]}</span> ({Math.ceil(f["size_bytes"] / 1024)} ك.ب)</button></li>)}
         </ul>
       )}
       <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
@@ -265,7 +275,29 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
     window.addEventListener("beforeunload", h);
     return () => window.removeEventListener("beforeunload", h);
   }, [body, pending.length]);
-  const allowFiles = conv["allow_attachments"] !== false;
+  const limits = useConvLimits(conv["id"]).data;
+  const allowFiles = conv["allow_attachments"] !== false && limits?.attachments !== false;
+  const saved = useSavedReplies(conv["id"]).data ?? [];
+  const ta = useRef<HTMLTextAreaElement>(null);
+  const [slash, setSlash] = useState<{ start: number; q: string } | null>(null);
+  const [menuAll, setMenuAll] = useState(false);
+  const [act, setAct] = useState(0);
+  const menuItems = filterReplies(saved, menuAll ? "" : slash?.q ?? "");
+  const menuOpen = (!!slash || menuAll) && saved.length > 0;
+  const [clip, setClip] = useState<VoiceClip | null>(null);
+  const [voiceBusy, setVoiceBusy] = useState(false);
+  function pick(r: Saved) {
+    const el = ta.current; const caret = el?.selectionStart ?? body.length;
+    const next = slash ? body.slice(0, slash.start) + r.body + body.slice(caret) : (body ? body + (body.endsWith(" ") ? "" : " ") : "") + r.body;
+    setBody(next); setSlash(null); setMenuAll(false); setAct(0);
+    setTimeout(() => { el?.focus(); const p = slash ? slash.start + r.body.length : next.length; el?.setSelectionRange(p, p); }, 0);
+  }
+  async function sendClip() {
+    if (!clip) return;
+    setVoiceBusy(true);
+    try { const r = await uploadVoice(conv["id"], clip); setClip(null); await onSend("", [r.id]); }
+    catch (e) { toast.error((e as Error).message); } finally { setVoiceBusy(false); }
+  }
   const dest = conv["group_type"] === "section" || conv["group_type"] === "class" ? "مجموعة الفصل" : conv["kind"] === "student" ? `محادثة خاصة مع ${conv["counterpart"] === "الطالب" ? "الطالب " : "المعلم "}${conv["title"]}` : null;
   const uploading = pending.some((p) => p.status === "uploading");
 
@@ -311,9 +343,24 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
           ))}
         </ul>
       )}
+      {clip && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/50 p-2 text-xs">
+          <span className="font-medium">معاينة التسجيل:</span><VoicePlayer blob={clip.blob} seconds={clip.seconds} />
+          <Button type="button" size="sm" disabled={voiceBusy} onClick={sendClip}>{voiceBusy ? "جارٍ الإرسال…" : "إرسال الصوت"}</Button>
+          <Button type="button" size="sm" variant="ghost" disabled={voiceBusy} onClick={() => setClip(null)}>إلغاء</Button>
+        </div>
+      )}
+      {menuOpen && <RepliesMenu items={menuItems} active={act} onHover={setAct} onPick={pick} />}
       <div className="flex items-end gap-2 rounded-xl border bg-background p-1.5 focus-within:ring-2 focus-within:ring-ring">
-        <Textarea aria-label="نص الرسالة" placeholder="اكتب رسالتك…" rows={2} maxLength={4000} className="min-h-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0" onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.scrollIntoView({ block: "nearest" }), 300); }} value={body} onChange={(e) => setBody(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} />
+        <Textarea aria-label="نص الرسالة" placeholder="اكتب رسالتك…" rows={2} maxLength={4000} className="min-h-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0" onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.scrollIntoView({ block: "nearest" }), 300); }} ref={ta} value={body} onChange={(e) => { setBody(e.target.value); setMenuAll(false); setSlash(slashQuery(e.target.value, e.target.selectionStart ?? e.target.value.length)); setAct(0); }}
+          onKeyDown={(e) => {
+            if (menuOpen && menuItems.length) {
+              if (e.key === "ArrowDown") { e.preventDefault(); setAct((a) => (a + 1) % menuItems.length); return; }
+              if (e.key === "ArrowUp") { e.preventDefault(); setAct((a) => (a - 1 + menuItems.length) % menuItems.length); return; }
+              if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); pick(menuItems[act]!); return; }
+            }
+            if (menuOpen && e.key === "Escape") { e.preventDefault(); setSlash(null); setMenuAll(false); return; }
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} />
         {allowFiles && conv["kind"] && (
           <label className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="إرفاق ملف" title="إرفاق ملف">
             <Paperclip className="size-4" />
@@ -325,6 +372,8 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
             }} />
           </label>
         )}
+        {saved.length > 0 && <RepliesButton onClick={() => { setMenuAll((x) => !x); setSlash(null); setAct(0); }} />}
+        {limits?.voice && !clip && <VoiceRecorder limits={limits} onReady={setClip} disabled={voiceBusy} />}
         <Button className="shrink-0" disabled={uploading}>إرسال</Button>
       </div>
     </form>
