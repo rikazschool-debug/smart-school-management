@@ -64,10 +64,9 @@ try {
   const s1 = await admin.from("students").insert({ school_id: B, full_name: "نوره سالم الأحمد" }).select("id, display_name").single();
   check("student with same short name as guardian gets variant", s1.data?.display_name === "نورة الأحمد 2" || s1.data?.display_name === "نوره الأحمد", s1);
   const twin = await admin.from("hr_employees").insert({ org_id: org, employee_no: "X1", full_name: "نورة الأحمد", national_id: "1100000001" }).select("display_name").single();
-  check("employee + guardian with same ID number = one person, one name", twin.data?.display_name === "نورة الأحمد", twin);
+  check("same ID number without verified link is stopped for review (never merged)", String(twin.error?.message).includes("تعارض يحتاج مراجعة"), twin);
   await admin.from("guardians").update({ display_name: "أم سالم" }).eq("id", g1.data!.id);
-  const synced = (await admin.from("hr_employees").select("display_name, display_name_manual").eq("national_id", "1100000001").single()).data!;
-  check("renaming one record syncs the same person's other record", synced.display_name === "أم سالم" && synced.display_name_manual, synced);
+  check("guardian rename saved as manual", (await admin.from("guardians").select("display_name_manual").eq("id", g1.data!.id).single()).data!.display_name_manual === true);
   check("old name released after rename", !(await admin.from("teachers").insert({ school_id: A, full_name: "س", display_name: "نورة الأحمد" })).error);
   await admin.from("guardians").update({ full_name: "نورة محمد الأحمد" }).eq("id", g1.data!.id);
   check("manual name not replaced when official name changes", (await admin.from("guardians").select("display_name").eq("id", g1.data!.id).single()).data!.display_name === "أم سالم");
