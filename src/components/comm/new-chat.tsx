@@ -28,7 +28,7 @@ export function NewChatDialog({ ctx, open, onOpenChange, onCreated }: { ctx: App
             <Button size="sm" variant={mode === "direct" ? "default" : "outline"} onClick={() => setMode("direct")}>مع زميل أو الإدارة</Button>
           </div>
         )}
-        {isGuardian ? <GuardianStart ctx={ctx} onCreated={onCreated} /> : mode === "family" ? <StaffFamilyStart ctx={ctx} teacher={isTeacher} onCreated={onCreated} /> : <DirectStart ctx={ctx} onCreated={onCreated} />}
+        {isGuardian ? <GuardianStart ctx={ctx} onCreated={onCreated} /> : mode === "family" && !isTeacher ? <AdminFamilyStart ctx={ctx} onCreated={onCreated} /> : mode === "family" ? <StaffFamilyStart ctx={ctx} teacher={isTeacher} onCreated={onCreated} /> : <DirectStart ctx={ctx} onCreated={onCreated} />}
       </DialogContent>
     </Dialog>
   );
@@ -107,6 +107,66 @@ function StaffFamilyStart({ ctx, teacher, onCreated }: { ctx: AppContext & { sch
         }
         setBusy(false);
         if (last) onCreated(last);
+      }}>{busy ? "جارٍ الإنشاء…" : "بدء المحادثة"}</Button>
+    </div>
+  );
+}
+
+/** School administration: choose the guardian first, then which child the conversation is about (each chat is tied to one child). */
+function AdminFamilyStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: string }; onCreated: (id: string) => void }) {
+  const [guardian, setGuardian] = useState("");
+  const [student, setStudent] = useState("");
+  const [q, setQ] = useState("");
+  const [body, setBody] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [key] = useState(() => crypto.randomUUID());
+  const list = useQuery({
+    queryKey: ["fam-guardians-admin", ctx.schoolId],
+    queryFn: async () => {
+      const { data, error } = await db.from("student_guardians")
+        .select("student_id, relationship, students!inner(full_name, status), guardians!inner(id, full_name, user_id)")
+        .eq("school_id", ctx.schoolId).eq("verified", true).eq("can_follow", true).eq("students.status", "active").not("guardians.user_id", "is", null).limit(2000);
+      if (error) throw error;
+      const m = new Map<string, { id: string; name: string; kids: { id: string; name: string; rel: string }[] }>();
+      for (const r of data as Row[]) {
+        const g = r["guardians"]; const e = m.get(g.id) ?? { id: g.id, name: g.full_name, kids: [] };
+        e.kids.push({ id: r["student_id"], name: r["students"]?.full_name, rel: r["relationship"] }); m.set(g.id, e);
+      }
+      return [...m.values()].sort((a, b) => a.name.localeCompare(b.name, "ar"));
+    },
+  });
+  const shown = (list.data ?? []).filter((g) => !q.trim() || g.name.includes(q.trim()) || g.kids.some((k) => k.name?.includes(q.trim())));
+  const g = list.data?.find((x) => x.id === guardian);
+  useEffect(() => { setStudent(g?.kids.length === 1 ? g.kids[0]!.id : ""); }, [guardian]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <label className="text-sm font-medium" htmlFor="fg">ولي الأمر</label>
+        <input aria-label="بحث عن ولي أمر" className={sel} placeholder="ابحث باسم ولي الأمر أو الابن…" value={q} onChange={(e) => setQ(e.target.value)} />
+        {list.isLoading ? <LoadingState /> : !list.data?.length ? <EmptyState title="لا يوجد أولياء أمور موثّقون لديهم حساب في هذه المدرسة" /> : (
+          <select id="fg" className={sel} value={guardian} onChange={(e) => setGuardian(e.target.value)}>
+            <option value="">— اختر ولي الأمر —</option>
+            {shown.map((x) => <option key={x.id} value={x.id}>{x.name} — {x.kids.map((k) => k.name).join("، ")}</option>)}
+          </select>
+        )}
+      </div>
+      {g && g.kids.length > 1 && (
+        <div className="space-y-1">
+          <label className="text-sm font-medium" htmlFor="fgk">بخصوص أي ابن؟</label>
+          <select id="fgk" className={sel} value={student} onChange={(e) => setStudent(e.target.value)}>
+            <option value="">— اختر —</option>{g.kids.map((k) => <option key={k.id} value={k.id}>{k.name} ({k.rel})</option>)}
+          </select>
+        </div>
+      )}
+      {g && student && <p className="text-xs font-semibold text-primary">بخصوص: {g.kids.find((k) => k.id === student)?.name}</p>}
+      <Textarea aria-label="الرسالة الأولى" placeholder="الرسالة الأولى (اختياري)" value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} />
+      <Button disabled={!guardian || !student || busy} onClick={async () => {
+        setBusy(true);
+        const { data: auth } = await db.auth.getUser();
+        const { data, error } = await db.rpc("start_family_conversation", { _student: student, _guardian: guardian, _staff_user: auth.user.id });
+        if (error) { setBusy(false); return void toast.error(arabicError(error)); }
+        await firstMessage(data, body, key);
+        setBusy(false); onCreated(data);
       }}>{busy ? "جارٍ الإنشاء…" : "بدء المحادثة"}</Button>
     </div>
   );
