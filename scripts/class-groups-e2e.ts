@@ -117,7 +117,7 @@ async function main() {
   await admin.from("teacher_assignments").update({ status: "rejected" }).eq("teacher_id", T2.id).eq("course_id", cB1.id);
   ok("26 ended assignment removes teacher from that section only", one(await mem(gB), t2.id).length === 0 && one(await mem(gA), t2.id).length === 1);
   // principal change
-  await owner.c.rpc("change_member_role", { _membership: (await admin.from("memberships").select("id").eq("user_id", pr2.id).eq("school_id", S).single()).data!.id, _role: "principal", _reason: "تعيين" } as any);
+  await owner.c.rpc("change_member_role", { _department: null, _id: (await admin.from("memberships").select("id").eq("user_id", pr2.id).eq("school_id", S).single()).data!.id, _role: "principal", _reason: "تعيين" } as any);
   await admin.from("memberships").update({ is_active: false }).eq("user_id", pr.id).eq("school_id", S);
   mA = await mem(gA);
   ok("27 new principal added as moderator, old one removed", one(mA, pr2.id)[0]?.role === "moderator" && one(mA, pr.id).length === 0, JSON.stringify(one(mA, pr2.id)));
