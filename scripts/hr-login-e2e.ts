@@ -33,7 +33,7 @@ try {
   const org2 = (await other.c.rpc("create_organization", { _org_name: "أخرى", _school_name: "س" })).data; orgs.push(org2);
   tr.addSchool((await admin.from("schools").select("id").eq("org_id", org2).single()).data!.id);
   await admin.from("memberships").insert({ user_id: hr.id, org_id: org, school_id: A, role: "teacher" });
-  for (const a of ["view", "create", "edit", "sensitive"]) await hr.c && await owner.c.rpc("perm_override_set", { _org: org, _user: hr.id, _section: "hr_employees", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة" });
+  for (const a of ["view", "create", "edit", "sensitive"]) await owner.c.rpc("perm_override_set", { _org: org, _user: hr.id, _section: "hr_employees", _action: a, _effect: "grant", _scope: "branch", _reason: "تجربة" });
 
   const ownerRoles = (await owner.c.rpc("hr_login_roles", { _org: org, _school: A })).data as string[];
   const hrRoles = (await hr.c.rpc("hr_login_roles", { _org: org, _school: A })).data as string[];
@@ -76,5 +76,5 @@ try {
   }
 } catch (e) { bad++; console.log("FAIL crash", e); }
 for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.log("purge", e?.message));
-await tr.cleanup?.();
+for (const u of tr.users) await admin.auth.admin.deleteUser(u).catch(() => undefined);
 console.log(`\n${ok} passed, ${bad} failed`); process.exit(bad ? 1 : 0);
