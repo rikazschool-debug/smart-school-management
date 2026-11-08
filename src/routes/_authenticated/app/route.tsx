@@ -12,6 +12,7 @@ import { Award, Briefcase,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
+import { Sanad } from "@/components/sanad";
 import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: "groups" | "manage" | "notices" | "meetings" | "circulars" }> = {
-  home: { to: "/app", label: "الرئيسية", icon: Home },
+  home: { to: "/app", label: "لوحة التحكم المركزية", icon: Home },
   platform: { to: "/app/platform", label: "المؤسسات", icon: ShieldCheck },
   schools: { to: "/app/schools", label: "المدارس والفروع", icon: Building2 },
   members: { to: "/app/members", label: "المستخدمون والأدوار", icon: UserCog },
@@ -327,6 +328,7 @@ function Shell() {
           <Outlet />
           <ConfirmHost />
         </main>
+        <Sanad schoolId={active.schoolId ?? null} role={active.role} roleLabel={ROLE_LABELS[active.role] ?? ""} />
       </div>
     </div>
   );
