@@ -44,7 +44,7 @@ async function main() {
   ok("1 owner reads own org settings", !(await owner.c.rpc("cs_admin", { _org: org })).error);
   ok("2 other org owner cannot read/manage this org", !!(await o2.c.rpc("cs_admin", { _org: org })).error && !!(await o2.c.rpc("cs_reply_save", { _org: org, _id: null, _title: "x", _shortcut: "x", _body: "x", _roles: ["all"], _active: true })).error);
   ok("3 principal without explicit grant is refused", !!(await pr.c.rpc("cs_admin", { _org: org })).error);
-  await admin.from("perm_overrides").insert({ org_id: org, user_id: sa.id, section: "chat_settings", action: "replies", effect: "grant", scope: "org" });
+  await admin.from("perm_overrides").insert({ org_id: org, user_id: sa.id, section: "chat_settings", action: "replies", effect: "grant", scope: "org", reason: "اختبار تفويض", created_by: owner.id });
   const saAdm = await sa.c.rpc("cs_admin", { _org: org });
   ok("4 delegated person (replies grant) can view + manage replies only", !saAdm.error && saAdm.data?.caps?.replies === true && saAdm.data?.caps?.autoreply === false
     && !!(await sa.c.rpc("cs_settings_save", { _org: org, _voice: false, _max_sec: 30, _max_mb: 1, _attach: true })).error);
