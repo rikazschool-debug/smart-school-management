@@ -238,3 +238,29 @@ function LinkStaffDialog({ school, onClose, onDone }: { school: Row | null; onCl
     </Dialog>
   );
 }
+
+/** Click the square to upload/replace the school logo (owner or platform admin; checked on the server). */
+function LogoPicker({ schoolId, onDone }: { schoolId: string; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  async function pick(f: File | undefined) {
+    if (!f) return;
+    if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(f.type)) return void toast.error("اختر صورة PNG أو JPG أو WEBP أو SVG");
+    if (f.size > 2 * 1024 * 1024) return void toast.error("الحد الأقصى لحجم الشعار 2 ميجابايت");
+    setBusy(true);
+    const path = `${schoolId}/${Date.now()}-${f.name.replace(/[^\w.-]/g, "_")}`;
+    const up = await supabase.storage.from("school-logos").upload(path, f, { contentType: f.type });
+    if (up.error) { setBusy(false); return void toast.error(arabicError(up.error)); }
+    const { error } = await db.rpc("school_set_logo" as never, { _school: schoolId, _path: path } as never);
+    setBusy(false);
+    if (error) return void toast.error(arabicError(error));
+    toast.success("تم حفظ الشعار");
+    onDone();
+  }
+  return (
+    <label className="shrink-0 cursor-pointer" title="تغيير شعار المدرسة">
+      <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="sr-only" disabled={busy} aria-label="شعار المدرسة" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
+      <SchoolLogo schoolId={schoolId} className="size-12 rounded-xl border"
+        fallback={<span className="grid size-12 place-items-center rounded-xl border border-dashed text-[10px] text-muted-foreground">{busy ? "جارٍ الرفع" : "+ شعار"}</span>} />
+    </label>
+  );
+}
