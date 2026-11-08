@@ -1,16 +1,22 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, Minus, Plus, RotateCcw } from "lucide-react";
+import { CheckCircle2, Eye, Minus, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { selectCls } from "@/components/ui/native-select";
-import { askText } from "@/components/confirm";
+import { ask, askText } from "@/components/confirm";
 import { ErrorState, LoadingState } from "@/components/states";
 import { PermTree, type Grant, type PermCatalog } from "@/components/perm-tree";
 import { arabicError } from "@/lib/session";
-import { ROLE_LABELS, type Role } from "@/lib/roles";
+import { NAV_BY_ROLE, NAV_LABELS, ROLE_LABELS, type Role } from "@/lib/roles";
+
+/** Unsaved draft in the open employee panel; the picker asks before discarding it. */
+export const permDraft = { dirty: false };
+export async function confirmDiscard() { return !permDraft.dirty || (await ask("لديك تعديلات غير محفوظة على صلاحيات هذا الموظف. تجاهلها والمتابعة؟", { destructive: true, ok: "تجاهل التعديلات" })); }
+/** Pages that come with the base role and wait for a condition before they open. */
+const NAV_COND: Partial<Record<string, string>> = { classroom: "يحتاج تكليفًا تعليميًا ساريًا", homework: "يحتاج تكليفًا تعليميًا ساريًا", schedule: "يظهر بعد نشر الجدول", my_employment: "بعد تفعيل خدمات الموظف من الموارد البشرية" };
 
 export type Eff = { section: string; action: string; scope: string | null; allowed_schools: string[]; base_schools: string[]; source: string | null };
 export type Effective = { is_owner: boolean; base_roles: { role: string; school: string | null }[]; roles: { id: string; name: string; school_ids: string[] | null; approval_limit: number | null }[]; overrides: { section: string; action: string; effect: string; scope: string | null }[]; effective: Eff[] };
@@ -44,6 +50,7 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
   const [preview, setPreview] = useState<{ before: Effective; after: Effective } | null>(null);
   const [busy, setBusy] = useState(false);
   const orig = useMemo(() => (eff.data ? toGrants(eff.data.effective) : []), [eff.data]);
+  useEffect(() => () => { permDraft.dirty = false; }, []);
   if (eff.isLoading) return <LoadingState />;
   if (eff.error) return <ErrorState message={arabicError(eff.error)} />;
   const e = eff.data!;
@@ -53,7 +60,15 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
   function overrides(): Changes["overrides"] { return draft.overrides; }
   const changes = (): Changes => ({ assign: add, unassign: drop, overrides: overrides() });
   const dirty = add.length > 0 || drop.length > 0 || overrides().length > 0;
+  permDraft.dirty = dirty;
   const reset = () => { setAdd([]); setDrop([]); setTree(null); setUndeny([]); setPreview(null); };
+  async function restoreDefaults() {
+    const personal = e.effective.filter((x) => x.source === "deny" || x.source === "override");
+    if (!personal.length) { toast.info("لا تخصيصات شخصية؛ الموظف يتبع أدواره بالفعل"); return; }
+    if (!(await ask(`ستُزال ${personal.length} من التخصيصات الشخصية (منح ومنع) ويعود الموظف لصلاحيات أدواره فقط. تبقى مسودة حتى تحفظها.`, { ok: "استعادة افتراضي الدور" }))) return;
+    setTree(orig.filter((g) => e.effective.find((x) => `${x.section}.${x.action}` === `${g.section}.${g.action}`)?.source !== "override"));
+    setUndeny(e.effective.filter((x) => x.source === "deny").map((x) => `${x.section}.${x.action}`)); setPreview(null);
+  }
 
   async function doPreview() {
     setBusy(true);
@@ -64,6 +79,12 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
     const reason = await askText("سبب التعديل (يُسجَّل)", { required: true, ok: "حفظ التغييرات" }); if (!reason) return;
     setBusy(true);
     try {
+      // someone else may have changed this employee while we edited: never write over it
+      const fresh = (await call("perm_effective", { _org: org, _user: user })) as Effective;
+      if (JSON.stringify(fresh.effective) !== JSON.stringify(e.effective) || JSON.stringify(fresh.roles) !== JSON.stringify(e.roles)) {
+        toast.error("تغيّرت صلاحيات هذا الموظف أثناء تحريرك. حُدّثت الحالة المحفوظة؛ راجع الفرق وأعد التعديل.");
+        reset(); qc.invalidateQueries({ queryKey: ["perm-eff", org, user] }); return;
+      }
       await call("perm_apply", { _org: org, _user: user, _changes: changes(), _reason: reason });
       toast.success("حُفظت التغييرات وتسري من الطلب التالي");
       reset(); for (const k of [["perm-eff", org, user], ["perm-roles", org], ["perm-log", org], ["perm-people", org], ["perm-sections", org]]) qc.invalidateQueries({ queryKey: k });
@@ -77,7 +98,10 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
       <div>
         <p className="text-base font-bold">{name}</p>
         <p className="text-xs text-muted-foreground">الدور الأساسي: {e.base_roles.map((b) => `${ROLE_LABELS[b.role as Role] ?? b.role}${b.school ? ` — ${b.school}` : ""}`).join("، ") || "—"}</p>
+        <p className="text-xs text-muted-foreground">الأدوار الإضافية: {e.roles.map((r) => r.name).join("، ") || "لا يوجد"}</p>
+        <p className="text-xs text-muted-foreground">الصفة التي تُعدَّل: موظف. صفة ولي الأمر (إن وُجدت) منفصلة ولا تتأثر بهذه الشاشة.</p>
       </div>
+      {!e.is_owner && <CurrentAccess c={c} e={e} />}
       {e.is_owner ? <p className="rounded-lg bg-secondary/50 p-3">مالك المؤسسة يملك جميع الصلاحيات ولا تُقيَّد صلاحياته.</p> : (<>
         <section>
           <p className="mb-2 font-bold">الأدوار</p>
@@ -113,10 +137,13 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
         <section>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <p className="font-bold">الأقسام والإجراءات (تخصيص لهذا الموظف)</p>
-            {(tree || undeny.length > 0) && <Button size="sm" variant="ghost" onClick={() => { setTree(null); setUndeny([]); setPreview(null); }}><RotateCcw className="size-4" />إلغاء التخصيص</Button>}
+            <span className="flex flex-wrap gap-1">
+              {(tree || undeny.length > 0) && <Button size="sm" variant="ghost" onClick={() => { setTree(null); setUndeny([]); setPreview(null); }}>تجاهل تعديلات الشجرة</Button>}
+              <Button size="sm" variant="outline" onClick={restoreDefaults}><RotateCcw className="size-4" />استعادة افتراضي الدور</Button>
+            </span>
           </div>
           <p className="mb-2 text-xs text-muted-foreground">تعكس الشجرة الوصول الفعلي الحالي. الإضافة هنا تفويض شخصي. إلغاء صلاحية من دور = «منع صريح» ظاهر بالأحمر؛ «رفع المنع» يعيدها لقواعد الدور دون منع خفي.</p>
-          <PermTree c={c} value={cur} onChange={(g) => { setTree(g); setPreview(null); }} disabledAreas={dis.data ?? []} denied={draft.denied} sources={draft.sources}
+          <PermTree c={c} value={cur} onChange={(g) => { setTree(g); setPreview(null); }} disabledAreas={dis.data ?? []} denied={draft.denied} sources={draft.sources} orig={orig} personal={Object.fromEntries(e.effective.filter((x) => x.source === "override" || x.source === "deny").map((x) => [`${x.section}.${x.action}`, x.source!]))}
             onUndeny={(k) => { const o = orig.find((g) => `${g.section}.${g.action}` === k); if (o && !cur.some((g) => `${g.section}.${g.action}` === k)) setTree([...cur, o]); else setUndeny([...undeny, k]); setPreview(null); }} />
         </section>
         <div className="flex flex-wrap gap-2 border-t pt-3">
@@ -190,5 +217,34 @@ export function Diff({ c, p }: { c: PermCatalog; p: { before: Effective; after: 
         </ul>
       </div>
     </div>
+  );
+}
+
+/** Read-only: what is saved on the server now — granted sections/actions with source and where, plus the pages of the base role. */
+function CurrentAccess({ c, e }: { c: PermCatalog; e: Effective }) {
+  const on = e.effective.filter(isOn);
+  const groups = c.areas.map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key).map((s) => ({ s, acts: on.filter((x) => x.section === s.key) })).filter((x) => x.acts.length) })).filter((x) => x.secs.length);
+  const denies = e.effective.filter((x) => x.source === "deny");
+  const navKeys = [...new Set(e.base_roles.flatMap((b) => NAV_BY_ROLE[b.role as Role] ?? []))];
+  return (
+    <section aria-label="الأقسام والإجراءات الممنوحة للموظف حاليًا" className="rounded-xl border bg-secondary/20 p-3">
+      <p className="font-bold">الأقسام والإجراءات الممنوحة للموظف حاليًا</p>
+      <p className="mb-2 text-xs text-muted-foreground">للقراءة فقط — الحالة المحفوظة في الخادم. التعديل يتم في الشجرة أدناه.</p>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div>
+          <p className="mb-1 text-xs font-semibold text-primary">صفحات دوره الأساسي</p>
+          <ul className="flex flex-wrap gap-1">{navKeys.map((k) => <li key={k} className="flex items-center gap-1 rounded border bg-card px-2 py-0.5 text-xs"><CheckCircle2 className="size-3 text-success" />{NAV_LABELS[k] ?? k}{NAV_COND[k] && <span className="text-muted-foreground">— {NAV_COND[k]}</span>}</li>)}</ul>
+          <p className="mt-1 text-[11px] text-muted-foreground">مصدرها الدور الأساسي، ونطاقها مدرسته وتكليفاته أو بياناته الشخصية فقط.</p>
+        </div>
+        <div>
+          <p className="mb-1 text-xs font-semibold text-primary">أقسام الصلاحيات</p>
+          {!groups.length ? <p className="text-xs text-muted-foreground">لا أقسام إضافية ممنوحة.</p> : (
+            <ul className="space-y-1 text-xs">{groups.map(({ ar, secs }) => <li key={ar.key}><span className="font-semibold">{ar.label}</span>
+              <ul className="ms-3">{secs.map(({ s, acts }) => { const full = acts.length === s.actions.length; return (
+                <li key={s.key}><span className={full ? "font-medium" : ""}>{full ? "■" : "◧"} {s.label}</span>: {acts.map((a) => `${s.labels?.[a.action] ?? c.actions[a.action] ?? a.action} (${SOURCE[a.source ?? ""] ?? ""}${where(c, a) ? ` · ${where(c, a)}` : ""})`).join("، ")}</li>); })}</ul></li>)}</ul>)}
+          {denies.length > 0 && <p className="mt-1 text-xs text-destructive">منع خاص: {denies.map((d) => { const s = c.sections.find((x) => x.key === d.section); return `${s?.label ?? d.section} ← ${s?.labels?.[d.action] ?? c.actions[d.action] ?? d.action}`; }).join("، ")}</p>}
+        </div>
+      </div>
+    </section>
   );
 }

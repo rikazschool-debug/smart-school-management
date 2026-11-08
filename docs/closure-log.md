@@ -739,3 +739,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-08 — HR: add employee with new login
 - hr-login-e2e 17/17. Browser (demo owner, desktop 1280 + phone 390): form, role list, confirm step, conflict shown for سالم الدوسري (mobile already used by demo teacher); nothing created.
+
+## 2026-11-08 — Permissions: edit existing employee (phase 1)
+- Read-only current-access panel, tree statuses (inherited/personal grant/deny/unsaved), follow-role, restore role defaults, filters, expand/collapse, unsaved-change guard, stale-edit check before save. Browser (demo owner, 1280 + 390): no errors; unsaved status + discard prompt shown.

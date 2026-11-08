@@ -24,24 +24,44 @@ function TriBox({ state, onChange, disabled, label: l }: { state: "none" | "some
  * Collapsible tree of areas → sections → actions with tri-state boxes and search.
  * Ticking a section grants only its basic (view) action at the narrowest scope; stronger actions stay separate.
  */
-export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, denied = [], onUndeny, sources = {} }: { c: PermCatalog; value: Grant[]; onChange: (g: Grant[]) => void; disabledAreas?: string[]; readOnly?: boolean;
-  /** "section.action" keys blocked explicitly (shown, never hidden); onUndeny returns them to the role's rules. */ denied?: string[]; onUndeny?: (key: string) => void; sources?: Record<string, string> }) {
+export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, denied = [], onUndeny, sources = {}, orig, personal }: { c: PermCatalog; value: Grant[]; onChange: (g: Grant[]) => void; disabledAreas?: string[]; readOnly?: boolean;
+  /** "section.action" keys blocked explicitly (shown, never hidden); onUndeny returns them to the role's rules. */ denied?: string[]; onUndeny?: (key: string) => void; sources?: Record<string, string>;
+  /** saved state and personal overrides (section.action → override|deny), to show status and filter */ orig?: Grant[]; personal?: Record<string, string> }) {
   const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<"all" | "on" | "off" | "personal">("all");
+  const was = (k: string) => !!orig?.some((g) => `${g.section}.${g.action}` === k);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const has = (s: string, a: string) => value.find((g) => g.section === s && g.action === a);
   const set = (s: PermSec, a: string, scope: string) => onChange([...value.filter((g) => !(g.section === s.key && g.action === a)), ...(scope ? [{ section: s.key, action: a, scope }] : [])]);
   const term = q.trim();
-  const match = (s: PermSec) => !term || s.label.includes(term) || s.actions.some((a) => label(c, s, a).includes(term));
+  const SYN: Record<string, string> = { "محادث": "تواصل رسائل مجموعات", "واجب": "اختبارات", "موظف": "موارد بشرية", "صيانة": "باصات", "مالي": "مشتريات عهد" };
+  const syn = (t: string) => Object.entries(SYN).filter(([k, v]) => t.includes(k) || v.includes(t)).map(([k]) => k);
+  const hit = (txt: string) => !term || txt.includes(term) || syn(term).some((x) => txt.includes(x));
+  const keep = (s: PermSec, a: string) => { const k = `${s.key}.${a}`; const on = !!has(s.key, a);
+    return filter === "all" || (filter === "on" && on) || (filter === "off" && !on) || (filter === "personal" && (!!personal?.[k] || on !== was(k))); };
+  const match = (s: PermSec) => (hit(s.label) || s.actions.some((a) => hit(label(c, s, a)))) && s.actions.some((a) => keep(s, a));
   const secState = (s: PermSec): "none" | "some" | "all" => { const n = s.actions.filter((a) => has(s.key, a)).length; return n === 0 ? "none" : n === s.actions.length ? "all" : "some"; };
   const tickSection = (s: PermSec, on: boolean) => {
-    if (!on) return onChange(value.filter((g) => g.section !== s.key));
+    if (!on) {
+      const gone = s.actions.filter((a) => has(s.key, a)).map((a) => label(c, s, a));
+      void import("@/components/confirm").then(({ ask }) => ask(`سيُلغى من «${s.label}»: ${gone.join("، ")}. ما كان موروثًا من دور يصبح منعًا خاصًا لهذا الموظف.`, { destructive: true, ok: "إلغاء القسم" }))
+        .then((ok) => { if (ok) onChange(value.filter((g) => g.section !== s.key)); });
+      return;
+    }
     const a = baseAction(s); setOpen((o) => ({ ...o, [s.key]: true }));
     if (a && !has(s.key, a)) onChange([...value, { section: s.key, action: a, scope: s.scopes[0]! }]);
   };
-  const areas = useMemo(() => c.areas.map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key && match(s)) })).filter((x) => x.ar.soon || x.secs.length || !term), [c, term]); // eslint-disable-line react-hooks/exhaustive-deps
+  const areas = useMemo(() => c.areas.map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key && match(s)) })).filter((x) => x.ar.soon || x.secs.length || !term), [c, term, filter, value]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="space-y-2">
-      <Input aria-label="بحث في الأقسام" placeholder="بحث في الأقسام والإجراءات" value={q} onChange={(e) => setQ(e.target.value)} className="w-full sm:w-72" />
+      <div className="flex flex-wrap items-center gap-2">
+        <Input aria-label="بحث في الأقسام" placeholder="بحث في الأقسام والإجراءات" value={q} onChange={(e) => setQ(e.target.value)} className="w-full sm:w-72" />
+        {orig && <select aria-label="تصفية" className={selectCls("w-44")} value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
+          <option value="all">الكل</option><option value="on">المسموح حاليًا</option><option value="off">غير المسموح</option><option value="personal">التخصيصات الشخصية</option></select>}
+        <button type="button" className="text-xs text-primary underline" onClick={() => setOpen(Object.fromEntries([...c.areas.map((a) => [a.key, true]), ...c.sections.map((s) => [s.key, true])]))}>فتح الكل</button>
+        <button type="button" className="text-xs text-primary underline" onClick={() => setOpen(Object.fromEntries([...c.areas.map((a) => [a.key, false]), ...c.sections.map((s) => [s.key, false])]))}>إغلاق الكل</button>
+      </div>
+      {(term || filter !== "all") && <p className="text-xs text-muted-foreground">البحث والتصفية لا يغيّران الصلاحيات؛ تحديد قسم يؤثر على كل إجراءاته وإن كانت مخفية بالتصفية.</p>}
       <ul className="divide-y rounded-xl border">
         {areas.map(({ ar, secs }) => {
           const locked = disabledAreas.includes(ar.key);
@@ -81,7 +101,8 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                         {so && !baseAction(s) && secState(s) === "none" && <p className="ms-8 mt-1 text-xs text-muted-foreground">لا عرض مستقلًا لهذا القسم؛ اختر الإجراء المطلوب صراحة.</p>}
                         {so && (
                           <div className="ms-8 mt-2 grid gap-2 sm:grid-cols-2">
-                            {s.actions.map((a) => { const g = has(s.key, a); const k = `${s.key}.${a}`; const dn = denied.includes(k); return (
+                            {s.actions.filter((a) => keep(s, a) && (!term || hit(s.label) || hit(label(c, s, a)))).map((a) => { const g = has(s.key, a); const k = `${s.key}.${a}`; const dn = denied.includes(k);
+                              const changed = !!orig && !!g !== was(k); const st = changed ? "تعديل غير محفوظ" : personal?.[k] === "override" ? "منح خاص" : personal?.[k] === "deny" ? "منع خاص" : g ? "موروث" : ""; return (
                               <div key={a} className={"min-w-0 rounded " + (dn ? "bg-destructive/5 p-1" : "")}>
                               <label className="flex min-w-0 items-center gap-2 text-sm">
                                 <input type="checkbox" className="size-4 accent-primary" disabled={readOnly || locked} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? s.scopes[0]! : "")} />
@@ -89,7 +110,10 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                                 {g && <select aria-label={`نطاق ${label(c, s, a)}`} disabled={readOnly || locked} className={selectCls("w-32 shrink-0", true)} value={g.scope} onChange={(e) => set(s, a, e.target.value)}>
                                   {s.scopes.map((sc) => <option key={sc} value={sc}>{c.scopes[sc]}</option>)}</select>}
                               </label>
-                              {g && sources[k] && <p className="ms-6 text-[11px] text-muted-foreground">المصدر: {sources[k]}</p>}
+                              {orig && st && <p className={"ms-6 text-[11px] " + (changed ? "font-semibold text-warning" : "text-muted-foreground")}>{st}{g && sources[k] && !changed ? ` — ${sources[k]}` : ""}
+                                {(changed || personal?.[k] === "override") && !readOnly && <button type="button" className="ms-2 underline" onClick={() => { const o = orig.find((x) => `${x.section}.${x.action}` === k && personal?.[k] !== "override");
+                                  onChange([...value.filter((x) => `${x.section}.${x.action}` !== k), ...(o ? [o] : [])]); }}>اتباع الدور</button>}</p>}
+                              {!orig && g && sources[k] && <p className="ms-6 text-[11px] text-muted-foreground">المصدر: {sources[k]}</p>}
                               {dn && <p className="ms-6 flex flex-wrap items-center gap-2 text-[11px] text-destructive">ممنوع صراحة — يغلب أي دور
                                 {onUndeny && !readOnly && <button type="button" className="underline" onClick={() => onUndeny(k)}>رفع المنع والعودة لصلاحيات الدور</button>}</p>}
                               </div>); })}
