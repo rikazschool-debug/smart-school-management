@@ -17,11 +17,13 @@ import { PeoplePicker } from "@/components/people-picker";
 import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { FormEditor } from "./form-editor";
+import { FormFields } from "./form-render";
+import { TplUpdate, useTplEffective } from "./section-forms";
 import { AppFiles, ItemFiles } from "./files";
 import { flushEvtMessagesFn } from "@/lib/events-public.functions";
 import {
   APP_STATUS, ATT, AUDIENCE, AppPill, CATEGORY, KIND, LOG, MODE, REG_STATE, SOURCE, STAFF_CAPS, StatusPill, answerText, fmtD, fmtDT, fromLocal, toLocal,
-  type EvtItem, type Field, type Kind, type Session,
+  TPL_SOURCE, type Answers, type CoreLabels, type EvtItem, type Field, type Kind, type Session,
 } from "./shared";
 
 const sm = selectCls("", true);
@@ -52,6 +54,14 @@ const fromItem = (i: EvtItem): Draft => ({
 export function ItemForm({ kind, school, item, onDone, onClose }: { kind: Kind; school: string; item?: EvtItem; onDone: (id: string) => void; onClose: () => void }) {
   const [d, setD] = useState<Draft>(item ? fromItem(item) : emptyDraft(kind));
   const set = (p: Partial<Draft>) => setD((x) => ({ ...x, ...p }));
+  // section form: newest published version for a new item, the item's own snapshot when editing
+  const eff = useTplEffective(school, kind, !item);
+  const [extra, setExtra] = useState<Answers>(item?.extra ?? {});
+  const [changed, setChanged] = useState(false);
+  const xFields: Field[] = item ? item.extra_fields ?? [] : eff.data?.body.fields ?? [];
+  const core: CoreLabels = item ? item.core_labels ?? {} : eff.data?.body.core ?? {};
+  const L = (id: string, def: string) => core[id]?.label || def;
+  const H = (id: string) => core[id]?.help ? <p className="text-xs text-muted-foreground">{core[id]!.help}</p> : null;
   const sections = useQuery({ queryKey: ["evt-sections", school], enabled: kind !== "course", queryFn: async () => {
     const r = await supabase.from("sections").select("id,name").eq("school_id", school).order("name"); if (r.error) throw r.error; return r.data as { id: string; name: string }[]; } });
   const save = useMutation({
@@ -59,11 +69,14 @@ export function ItemForm({ kind, school, item, onDone, onClose }: { kind: Kind; 
       id: item?.id ?? null, rev: item?.rev ?? null, kind, school_id: school, title: d.title, description: d.description, category: d.category, location: d.location,
       mode: d.mode, trainer: d.trainer, audience: d.audience, target: d.target, reg_opens: fromLocal(d.reg_opens), reg_closes: fromLocal(d.reg_closes),
       capacity: d.capacity, conditions: d.conditions, consent_required: d.consent_required, consent_deadline: fromLocal(d.consent_deadline),
-      need_emergency: d.need_emergency, need_medical: d.need_medical,
+      need_emergency: d.need_emergency, need_medical: d.need_medical, extra, tpl_version: item ? null : eff.data?.version_id ?? null,
       sessions: d.sessions.filter((s) => s.starts_at).map((s) => ({ id: s.id ?? null, title: s.title, starts_at: fromLocal(s.starts_at), ends_at: s.ends_at ? fromLocal(s.ends_at) : null, location: s.location })),
     } }),
     onSuccess: (r) => { toast.success(item ? "حُفظت التعديلات" : "حُفظت مسودة"); onDone(r.id); },
-    onError: (e) => toast.error(arabicError(e)),
+    onError: (e) => {
+      if (/نُشر تعديل جديد على نموذج/.test(String((e as { message?: string })?.message ?? ""))) { setChanged(true); void eff.refetch(); }
+      toast.error(arabicError(e));
+    },
   });
   const updS = (i: number, p: Partial<Session>) => set({ sessions: d.sessions.map((s, j) => (j === i ? { ...s, ...p } : s)) });
   return (
@@ -71,15 +84,15 @@ export function ItemForm({ kind, school, item, onDone, onClose }: { kind: Kind; 
       <div className="flex items-center"><h2 className="flex-1 text-lg font-bold">{item ? `تعديل ${KIND[kind]}` : `${KIND[kind]} جديدة`}</h2><Button type="button" size="icon" variant="ghost" aria-label="إغلاق" onClick={onClose}><X className="size-4" /></Button></div>
       <fieldset className="grid gap-3 sm:grid-cols-2">
         <legend className="mb-2 text-sm font-bold text-primary">١. البيانات الأساسية</legend>
-        <div className="space-y-1 sm:col-span-2"><Label htmlFor="e-title">الاسم</Label><Input id="e-title" required maxLength={150} value={d.title} onChange={(e) => set({ title: e.target.value })} /></div>
-        <div className="space-y-1 sm:col-span-2"><Label htmlFor="e-desc">الوصف</Label><Textarea id="e-desc" maxLength={4000} value={d.description} onChange={(e) => set({ description: e.target.value })} /></div>
+        <div className="space-y-1 sm:col-span-2"><Label htmlFor="e-title">{L("title", "الاسم")}</Label>{H("title")}<Input id="e-title" required maxLength={150} value={d.title} onChange={(e) => set({ title: e.target.value })} /></div>
+        <div className="space-y-1 sm:col-span-2"><Label htmlFor="e-desc">{L("description", "الوصف")}</Label>{H("description")}<Textarea id="e-desc" maxLength={4000} value={d.description} onChange={(e) => set({ description: e.target.value })} /></div>
         <div className="space-y-1"><Label htmlFor="e-cat">التصنيف</Label><Input id="e-cat" maxLength={80} placeholder={kind === "course" ? "مثال: مهارات رقمية" : "مثال: ثقافية"} value={d.category} onChange={(e) => set({ category: e.target.value })} /></div>
         <div className="space-y-1"><Label htmlFor="e-mode">طريقة الحضور</Label><select id="e-mode" className={selectCls("w-full")} value={d.mode} onChange={(e) => set({ mode: e.target.value })}>{Object.entries(MODE).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-        <div className="space-y-1"><Label htmlFor="e-loc">المكان أو الرابط</Label><Input id="e-loc" maxLength={200} value={d.location} onChange={(e) => set({ location: e.target.value })} /></div>
-        {kind === "course" && <div className="space-y-1"><Label htmlFor="e-tr">المدرب (اختياري)</Label><Input id="e-tr" maxLength={120} value={d.trainer} onChange={(e) => set({ trainer: e.target.value })} /></div>}
+        <div className="space-y-1"><Label htmlFor="e-loc">{L("location", "المكان أو الرابط")}</Label>{H("location")}<Input id="e-loc" maxLength={200} value={d.location} onChange={(e) => set({ location: e.target.value })} /></div>
+        {kind === "course" && <div className="space-y-1"><Label htmlFor="e-tr">{L("trainer", "المدرب (اختياري)")}</Label><Input id="e-tr" maxLength={120} value={d.trainer} onChange={(e) => set({ trainer: e.target.value })} /></div>}
       </fieldset>
       <fieldset className="space-y-2">
-        <legend className="mb-2 text-sm font-bold text-primary">٢. المواعيد</legend>
+        <legend className="mb-2 text-sm font-bold text-primary">٢. {L("sessions", "المواعيد")}</legend>{H("sessions")}
         {d.sessions.map((s, i) => (
           <div key={i} className="grid gap-2 rounded-lg border p-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <Input aria-label={`عنوان الجلسة ${i + 1}`} placeholder={`الجلسة ${i + 1}`} value={s.title ?? ""} onChange={(e) => updS(i, { title: e.target.value })} />
@@ -94,10 +107,10 @@ export function ItemForm({ kind, school, item, onDone, onClose }: { kind: Kind; 
         <fieldset className="grid gap-3 sm:grid-cols-2">
           <legend className="mb-2 text-sm font-bold text-primary">٣. التسجيل</legend>
           <div className="space-y-1"><Label htmlFor="e-aud">الفئة المستهدفة</Label><select id="e-aud" className={selectCls("w-full")} value={d.audience} onChange={(e) => set({ audience: e.target.value })}>{Object.entries(AUDIENCE).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-          <div className="space-y-1"><Label htmlFor="e-cap">السعة (المقاعد)</Label><Input id="e-cap" type="number" min={1} value={d.capacity} onChange={(e) => set({ capacity: e.target.value })} /></div>
+          <div className="space-y-1"><Label htmlFor="e-cap">{L("capacity", "السعة (المقاعد)")}</Label><Input id="e-cap" type="number" min={1} value={d.capacity} onChange={(e) => set({ capacity: e.target.value })} /></div>
           <div className="space-y-1"><Label htmlFor="e-ro">بداية التسجيل</Label><Input id="e-ro" type="datetime-local" value={d.reg_opens} onChange={(e) => set({ reg_opens: e.target.value })} /></div>
           <div className="space-y-1"><Label htmlFor="e-rc">نهاية التسجيل</Label><Input id="e-rc" type="datetime-local" value={d.reg_closes} onChange={(e) => set({ reg_closes: e.target.value })} /></div>
-          <div className="space-y-1 sm:col-span-2"><Label htmlFor="e-cond">الشروط</Label><Textarea id="e-cond" maxLength={4000} value={d.conditions} onChange={(e) => set({ conditions: e.target.value })} /></div>
+          <div className="space-y-1 sm:col-span-2"><Label htmlFor="e-cond">{L("conditions", "الشروط")}</Label><Textarea id="e-cond" maxLength={4000} value={d.conditions} onChange={(e) => set({ conditions: e.target.value })} /></div>
         </fieldset>
       ) : (
         <fieldset className="space-y-3">
@@ -123,10 +136,19 @@ export function ItemForm({ kind, school, item, onDone, onClose }: { kind: Kind; 
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.need_medical} onChange={(e) => set({ need_medical: e.target.checked })} /> إقرار طبي</label>
             </div>
           )}
-          <div className="space-y-1"><Label htmlFor="e-cond2">التعليمات والشروط</Label><Textarea id="e-cond2" maxLength={4000} value={d.conditions} onChange={(e) => set({ conditions: e.target.value })} /></div>
+          <div className="space-y-1"><Label htmlFor="e-cond2">{L("conditions", "التعليمات والشروط")}</Label><Textarea id="e-cond2" maxLength={4000} value={d.conditions} onChange={(e) => set({ conditions: e.target.value })} /></div>
         </fieldset>
       )}
-      <div className="flex gap-2"><Button type="submit" disabled={save.isPending}>{save.isPending ? "جارٍ الحفظ…" : item ? "حفظ التعديلات" : "حفظ مسودة"}</Button><Button type="button" variant="outline" onClick={onClose}>إلغاء</Button></div>
+      {!item && eff.isLoading && <LoadingState />}
+      {changed && <p role="alert" className="rounded-lg border border-warning/50 bg-warning/10 p-2 text-sm">نُشر تعديل جديد على نموذج هذا القسم أثناء التعبئة. عُرضت الحقول المحدّثة ومدخلاتك محفوظة؛ راجعها ثم احفظ مرة أخرى.</p>}
+      {xFields.length > 0 && (
+        <fieldset className="space-y-2">
+          <legend className="mb-2 text-sm font-bold text-primary">بيانات إضافية</legend>
+          <FormFields fields={xFields} value={extra} onChange={(v) => { setExtra(v); }} />
+        </fieldset>
+      )}
+      {!item && eff.data && <p className="text-xs text-muted-foreground">النموذج المطبَّق: {TPL_SOURCE[eff.data.source]}{eff.data.version ? ` · الإصدار ${eff.data.version}` : ""}</p>}
+      <div className="flex gap-2"><Button type="submit" disabled={save.isPending || (!item && !eff.data)}>{save.isPending ? "جارٍ الحفظ…" : item ? "حفظ التعديلات" : "حفظ مسودة"}</Button><Button type="button" variant="outline" onClick={onClose}>إلغاء</Button></div>
     </form>
   );
 }
@@ -200,6 +222,7 @@ export function ItemDetail({ id, app, openApp, onClose }: { id: string; app?: st
             <ItemFiles item={it.id} canEdit={!!c["edit"] && !["cancelled", "archived"].includes(it.status)} />
             {it.status === "cancelled" && <p className="rounded-lg bg-destructive/10 p-2 text-sm">سبب الإلغاء: {it.cancel_reason}</p>}
             {it.kind === "course" && it.status === "published" && it.form_version === 0 && <p className="rounded-lg bg-warning/15 p-2 text-sm">انشر نموذج التسجيل من تبويب «إعدادات النموذج» قبل فتح التسجيل.</p>}
+            {it.kind === "course" && <RegChecklist it={it} />}
             {it.kind === "course" && url && (c["link"] || c["publish"]) && (
               <div className="rounded-xl border p-3">
                 <p className="text-sm font-bold">رابط التسجيل {it.link_active ? <span className="text-success">(مفعّل)</span> : <span className="text-destructive">(موقوف)</span>}</p>
@@ -223,6 +246,11 @@ export function ItemDetail({ id, app, openApp, onClose }: { id: string; app?: st
               {it.kind === "trip" && <><Dt k="موافقة ولي الأمر" v={it.consent_required ? `مطلوبة حتى ${fmtDT(it.consent_deadline)}` : "غير مطلوبة"} /><Dt k="الطوارئ / الإقرار الطبي" v={`${it.need_emergency ? "بيانات طوارئ" : "—"} · ${it.need_medical ? "إقرار طبي" : "—"}`} /></>}
               <Dt k="أنشأها" v={`${it.created_by} · ${fmtD(it.created_at)}`} />
             </dl>
+            {it.extra_fields?.some((f) => f.kind !== "section") && (
+              <div className="rounded-xl border p-3"><p className="mb-1 text-sm font-bold">بيانات إضافية</p>
+                <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">{it.extra_fields.filter((f) => f.kind !== "section").map((f) => <Dt key={f.id} k={f.label} v={answerText(f, it.extra?.[f.id])} />)}</dl></div>
+            )}
+            <TplUpdate item={it} which="item" onDone={refresh} />
             {it.description && <p className="whitespace-pre-wrap text-sm">{it.description}</p>}
             {it.conditions && <div className="rounded-lg bg-muted p-3 text-sm"><b>الشروط والتعليمات</b><p className="whitespace-pre-wrap">{it.conditions}</p></div>}
             <div><p className="mb-1 text-sm font-bold">المواعيد</p>
@@ -488,6 +516,25 @@ function StaffTab({ item }: { item: EvtItem }) {
         <div className="flex flex-wrap gap-3 text-sm">{Object.entries(STAFF_CAPS).map(([k, l]) => <label key={k} className="flex items-center gap-1.5"><input type="checkbox" checked={caps.includes(k)} onChange={() => setCaps(caps.includes(k) ? caps.filter((x) => x !== k) : [...caps, k])} /> {l}</label>)}</div>
         <Button size="sm" disabled={!pick.length || !caps.length || setS.isPending} onClick={() => setS.mutate({ user: pick[0]!, caps })}>حفظ التفويض</Button>
       </div>
+    </div>
+  );
+}
+
+/** Registration status with what is still needed to accept applications through the link. */
+export function RegChecklist({ it }: { it: EvtItem }) {
+  const now = Date.now();
+  const steps: [boolean, string][] = [
+    [it.status === "published", "نشر الدورة"],
+    [it.form_version > 0, "نموذج طلبات التسجيل مرتبط"],
+    [it.reg_open, "فتح التسجيل"],
+    [!it.reg_opens || new Date(it.reg_opens).getTime() <= now, "بدأت فترة التسجيل"],
+    [!it.reg_closes || new Date(it.reg_closes).getTime() > now, "لم تنتهِ فترة التسجيل"],
+    [it.link_active, "رابط التسجيل مفعّل"],
+  ];
+  return (
+    <div className="rounded-xl border p-3 text-sm">
+      <p className="font-bold">حالة التسجيل: <span className="text-primary">{REG_STATE[it.reg_state] ?? it.reg_state}</span></p>
+      <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs">{steps.map(([ok, l]) => <li key={l} className={ok ? "text-success" : "text-muted-foreground"}>{ok ? "✓" : "○"} {l}</li>)}</ul>
     </div>
   );
 }
