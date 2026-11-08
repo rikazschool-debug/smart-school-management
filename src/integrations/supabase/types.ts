@@ -2502,6 +2502,44 @@ export type Database = {
           },
         ]
       }
+      class_group_runs: {
+        Row: {
+          action: string
+          actor: string | null
+          after: Json
+          before: Json
+          created_at: string
+          id: string
+          school_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after: Json
+          before: Json
+          created_at?: string
+          id?: string
+          school_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after?: Json
+          before?: Json
+          created_at?: string
+          id?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_group_runs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classroom_posts: {
         Row: {
           audience: string
@@ -2764,6 +2802,53 @@ export type Database = {
           },
         ]
       }
+      conv_member_overrides: {
+        Row: {
+          actor: string | null
+          added: boolean
+          conversation_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          removed: boolean
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actor?: string | null
+          added?: boolean
+          conversation_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          removed?: boolean
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actor?: string | null
+          added?: boolean
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          removed?: boolean
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conv_member_overrides_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_members: {
         Row: {
           added_by: string | null
@@ -2775,6 +2860,7 @@ export type Database = {
           left_at: string | null
           left_reason: string | null
           muted: boolean
+          reasons: string[]
           role: string
           source: string
           updated_at: string
@@ -2791,6 +2877,7 @@ export type Database = {
           left_at?: string | null
           left_reason?: string | null
           muted?: boolean
+          reasons?: string[]
           role?: string
           source?: string
           updated_at?: string
@@ -2807,6 +2894,7 @@ export type Database = {
           left_at?: string | null
           left_reason?: string | null
           muted?: boolean
+          reasons?: string[]
           role?: string
           source?: string
           updated_at?: string
@@ -14577,6 +14665,48 @@ export type Database = {
         Args: { _org: string; _school: string }
         Returns: boolean
       }
+      _cg_admin: {
+        Args: { _conv: string }
+        Returns: {
+          allow_attachments: boolean
+          allow_replies: boolean
+          course_id: string | null
+          created_at: string
+          created_by: string
+          dedupe_key: string | null
+          department_id: string | null
+          description: string | null
+          expires_at: string | null
+          group_type: string | null
+          guardian_id: string | null
+          history_policy: string
+          id: string
+          kind: string
+          last_message_at: string | null
+          last_seq: number
+          membership_mode: string
+          org_id: string
+          post_policy: string
+          school_id: string | null
+          section_id: string | null
+          staff_kind: string | null
+          staff_user_id: string | null
+          status: string
+          student_id: string | null
+          title: string
+          updated_at: string
+          year_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _cg_counts: { Args: { _school: string }; Returns: Json }
+      _cg_label: { Args: { _reasons: string[] }; Returns: string }
+      _cg_title: { Args: { _section: string; _year: string }; Returns: string }
       _circ_audience_multi: {
         Args: { _aud: Json; _targets: string[] }
         Returns: {
@@ -14604,6 +14734,14 @@ export type Database = {
       _circular_audience: {
         Args: { _aud: Json; _school: string }
         Returns: string[]
+      }
+      _class_want: {
+        Args: { _section: string; _year: string }
+        Returns: {
+          r: string
+          reasons: string[]
+          uid: string
+        }[]
       }
       _complete_account_setup: {
         Args: { _password_changed: boolean; _uid: string }
@@ -16098,6 +16236,7 @@ export type Database = {
         Args: { _fallback: string; _org: string; _u: string }
         Returns: string
       }
+      _sync_school_classes: { Args: { _school: string }; Returns: number }
       _task_target_ok: {
         Args: { _school: string; _user: string }
         Returns: boolean
@@ -17011,6 +17150,76 @@ export type Database = {
           user_id: string
         }[]
       }
+      class_group_add_member: {
+        Args: { _conv: string; _reason: string; _user: string }
+        Returns: undefined
+      }
+      class_group_candidates: {
+        Args: { _conv: string; _q?: string }
+        Returns: {
+          full_name: string
+          label: string
+          user_id: string
+        }[]
+      }
+      class_group_delete_message: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      class_group_log: {
+        Args: { _conv: string }
+        Returns: {
+          action: string
+          actor_name: string
+          created_at: string
+          details: Json
+        }[]
+      }
+      class_group_members: {
+        Args: { _conv: string }
+        Returns: {
+          full_name: string
+          label: string
+          overridden: boolean
+          override_reason: string
+          reasons: string[]
+          removed: boolean
+          role: string
+          user_id: string
+        }[]
+      }
+      class_group_migrate: { Args: { _school: string }; Returns: Json }
+      class_group_preview: {
+        Args: { _school: string }
+        Returns: {
+          class_conv: string
+          class_title: string
+          course_conv: string
+          course_title: string
+          files: number
+          messages: number
+          section_label: string
+          status: string
+        }[]
+      }
+      class_group_remove_member: {
+        Args: { _conv: string; _reason: string; _user: string }
+        Returns: undefined
+      }
+      class_group_restore_auto: {
+        Args: { _conv: string; _user: string }
+        Returns: undefined
+      }
+      class_group_rollback: { Args: { _school: string }; Returns: Json }
+      class_group_set_description: {
+        Args: { _conv: string; _description: string }
+        Returns: undefined
+      }
+      class_group_set_role: {
+        Args: { _conv: string; _role: string; _user: string }
+        Returns: undefined
+      }
+      class_group_successor: { Args: { _conv: string }; Returns: string }
       class_roster: {
         Args: { _section: string }
         Returns: {
@@ -17039,6 +17248,7 @@ export type Database = {
         Returns: {
           full_name: string
           joined_at: string
+          label: string
           last_read_seq: number
           role: string
           source: string
@@ -18487,6 +18697,23 @@ export type Database = {
       my_dept_ids: { Args: never; Returns: string[] }
       my_link_pending: { Args: never; Returns: boolean }
       my_profile: { Args: { _school: string }; Returns: Json }
+      my_section_groups: {
+        Args: { _school: string }
+        Returns: {
+          can_manage: boolean
+          children: string
+          conversation_id: string
+          last_at: string
+          members: number
+          post_policy: string
+          section_id: string
+          section_label: string
+          students: number
+          teachers: string
+          title: string
+          unread: number
+        }[]
+      }
       my_teacher_ids: { Args: never; Returns: string[] }
       norm_phone: { Args: { _p: string }; Returns: string }
       od_caps: { Args: { _org: string }; Returns: Json }
@@ -19595,6 +19822,10 @@ export type Database = {
         Returns: Json
       }
       support_summary: { Args: { _school?: string }; Returns: Json }
+      sync_class_group: {
+        Args: { _section: string; _year: string }
+        Returns: string
+      }
       sync_course_group: { Args: { _course: string }; Returns: string }
       sync_derived_group: { Args: { _conv: string }; Returns: number }
       sync_section_group: { Args: { _section: string }; Returns: string }
