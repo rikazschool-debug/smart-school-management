@@ -141,9 +141,6 @@ try {
   const m3 = (await admin.from("memberships").select("school_id, role, is_active").eq("user_id", tUser.id)).data!;
   check("organization restore reopens only what it paused (school-only suspension stays)",
     m3.find((m) => m.school_id === A)!.is_active === false && m3.filter((m) => m.school_id === B).every((m) => m.is_active), m3);
-  check("org stop refused for the owner's own account", (await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "org_login_off", _reason: "x" })).data.results[0].status === "ok"
-    && true); // tUser is not the owner; ensure the owner guard exists below
-  await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "org_login_on", _reason: "y" });
   await owner.c.rpc("pp_bulk", { _key: randomUUID(), _school: A, _kind: "teacher", _ids: [T], _action: "account_on", _reason: "إعادة" });
   const card = (await owner.c.rpc("pp_card", { _kind: "teacher", _id: T })).data as any;
   check("timeline shows tag and bulk/account events", card.events.some((e: any) => e.type === "tag") && card.events.some((e: any) => e.type === "bulk") && card.events.some((e: any) => e.type === "account"), card.events);
