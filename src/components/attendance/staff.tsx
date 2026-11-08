@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, type AppContext } from "@/lib/session";
-import { DAY_STATUS, DAY_TONE, KIND, MOVE_KIND, PICKUP_STATUS, hm, riyadhToday, sectionOf } from "@/lib/attendance";
+import { DAY_STATUS, DAY_TONE, RECORD_HEADERS, recordRow, KIND, MOVE_KIND, PICKUP_STATUS, hm, riyadhToday, sectionOf } from "@/lib/attendance";
 import { canScanWith } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
 
@@ -54,7 +54,7 @@ export function TodayTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean })
   const tiles: [string, number | undefined, string][] = [
     ["المتوقع حضورهم", b?.["expected"], ""], ["لم يُسجل حضوره بعد", b?.["not_yet"], ""],
     ["حاضر", b?.["present"], "text-primary"], ["متأخر", b?.["late"], "text-amber-600"], ["غياب يحتاج مراجعة", b?.["pending_review"], ""], ["مُصعّد للوكيل", b?.["escalated"], "text-amber-600"],
-    ["غائب بعد المراجعة", b?.["absent"], "text-destructive"], ["بعذر", b?.["excused"], ""], ["داخل المدرسة الآن", b?.["inside"], "text-primary"],
+    ["غائب بعد المراجعة", b?.["absent"], "text-destructive"], ["بعذر", b?.["excused"], ""], ["دخل المدرسة ولم يحضر الفصل", b?.["in_school_absent"], "text-destructive"], ["داخل المدرسة الآن", b?.["inside"], "text-primary"],
     ["خروج مبكر", b?.["early_out"], ""], ["طلبات مفتوحة", b?.["open_requests"], ""],
   ];
   return (
@@ -395,7 +395,7 @@ export function RecordsTab({ ctx, canCorrect }: { ctx: Ctx; canCorrect: boolean 
         <div className="space-y-1"><Label htmlFor="rf">من</Label><Input id="rf" type="date" value={from} onChange={(e) => e.target.value && setFrom(e.target.value)} /></div>
         <div className="space-y-1"><Label htmlFor="rt">إلى</Label><Input id="rt" type="date" value={to} onChange={(e) => e.target.value && setTo(e.target.value)} /></div>
       </div>
-      <ListTools s={t} placeholder="ابحث باسم الطالب" count={rows.length} exp={{ title: `سجل الحضور ${from} — ${to}`, school: ctx.schoolName, headers: ["التاريخ", "الطالب", "الشعبة", "الحالة", "دقائق التأخر", "وقت الدخول", "المصدر", "ملاحظة"], rows: () => rows.map((d) => [d["date"], d["student_name"], d["section"], DAY_STATUS[d["status"]], d["late_minutes"] || "", hm(d["first_in_at"]), d["source"] === "scan" ? "مسح" : d["source"] === "manual" ? "يدوي" : "مراجعة", d["note"] ?? ""]) }} />
+      <ListTools s={t} placeholder="ابحث باسم الطالب" count={rows.length} exp={{ title: `سجل الحضور ${from} — ${to}`, school: ctx.schoolName, headers: RECORD_HEADERS, rows: () => rows.map((d) => recordRow(d)) }} />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !rows.length ? <EmptyState title={q.data?.length ? "لا نتائج مطابقة" : "لا توجد سجلات في هذه الفترة"} /> : (
         <ul className="divide-y rounded-xl border bg-card">
           {rows.slice(0, 300).map((d) => (
