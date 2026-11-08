@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { arabicError, useSession } from "@/lib/session";
 import { KIND_LABEL, SafeText, cleanupStalePending, discardPendingFile, openFile, timeLabel, uploadMessageFile, type PendingFile } from "@/lib/comm";
 import { GroupPanel } from "@/components/comm/group-panel";
-import { AttachmentsSheet, RepliesButton, RepliesMenu, VoicePlayer, VoiceRecorder, filterReplies, slashQuery, uploadVoice, useConvLimits, useSavedReplies, type Saved, type VoiceClip } from "@/components/comm/chat-extras";
+import { AttachmentsSheet, RepliesButton, RepliesMenu, VoicePlayer, VoiceRecorder, fillReply, filterReplies, slashQuery, uploadVoice, useConvLimits, useSavedReplies, type Saved, type VoiceClip } from "@/components/comm/chat-extras";
 import { Images } from "lucide-react";
 
 const PAGE = 30;
@@ -286,7 +286,9 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
   const menuOpen = (!!slash || menuAll) && saved.length > 0;
   const [clip, setClip] = useState<VoiceClip | null>(null);
   const [voiceBusy, setVoiceBusy] = useState(false);
-  function pick(r: Saved) {
+  const me = useQuery({ queryKey: ["my-profile-name", userId], staleTime: 600_000, queryFn: async () => { const { data } = await db.from("profiles").select("full_name").eq("id", userId).maybeSingle(); return (data?.["full_name"] as string | undefined) ?? ""; } });
+  function pick(raw: Saved) {
+    const r = { ...raw, body: fillReply(raw.body, me.data ?? "") };
     const el = ta.current; const caret = el?.selectionStart ?? body.length;
     const next = slash ? body.slice(0, slash.start) + r.body + body.slice(caret) : (body ? body + (body.endsWith(" ") ? "" : " ") : "") + r.body;
     setBody(next); setSlash(null); setMenuAll(false); setAct(0);

@@ -207,3 +207,5 @@ export function AttachmentsSheet({ conv, open, onClose, onJump }: { conv: string
     </Sheet>
   );
 }
+
+export { fillReply } from "@/lib/reply-fill";
