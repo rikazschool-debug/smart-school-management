@@ -129,7 +129,7 @@ function AdminFamilyStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: st
       if (error) throw error;
       const m = new Map<string, { id: string; name: string; kids: { id: string; name: string; rel: string }[] }>();
       for (const r of data as Row[]) {
-        const g = r["guardians"]; const e = m.get(g.id) ?? { id: g.id, name: g.full_name, kids: [] };
+        const g = r["guardians"]; const e = m.get(g.id) ?? { id: g.id as string, name: g.full_name as string, kids: [] as { id: string; name: string; rel: string }[] };
         e.kids.push({ id: r["student_id"], name: r["students"]?.full_name, rel: r["relationship"] }); m.set(g.id, e);
       }
       return [...m.values()].sort((a, b) => a.name.localeCompare(b.name, "ar"));

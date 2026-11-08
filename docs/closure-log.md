@@ -728,3 +728,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-08 — الإيقاف الجماعي
 - pp_bulk: account_off/on = هذه المدرسة وهذه الصفة فقط؛ org_login_off/on = كل عضويات الشخص في المؤسسة (الإعادة تفتح فقط ما أوقفه هذا الإجراء عبر access_audit). pp_access_preview يعرض الأثر في نافذة التأكيد. my_access_paused يعرض «وصولك موقوف حاليًا». الأدلة: people2-e2e 55/55، people-journey 23/23، people-suspend-journey 7/7.
+
+## 2026-11-08 — مكتب الدعم لدى مالك المنصة + محادثة ولي الأمر
+- كل التذاكر لمالك المنصة فقط؛ المدير/مالك المجموعة لا يريان تذاكر غيرهم. support-platform-e2e 10/10.
+- المدير يختار ولي الأمر أولًا ثم الابن عند بدء محادثة (تحقق متصفح بحساب مدير تجريبي).
