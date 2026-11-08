@@ -54,6 +54,7 @@ import { Route as AuthenticatedAppSchoolsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenticated/app/students'
 import { Route as AuthenticatedAppSubstitutionsRouteImport } from './routes/_authenticated/app/substitutions'
 import { Route as AuthenticatedAppSupportRouteImport } from './routes/_authenticated/app/support'
+import { Route as AuthenticatedAppTagsRouteImport } from './routes/_authenticated/app/tags'
 import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
 import { Route as AuthenticatedAppTeamLeaveRouteImport } from './routes/_authenticated/app/team-leave'
 import { Route as AuthenticatedAppTransportRouteImport } from './routes/_authenticated/app/transport'
@@ -344,6 +345,11 @@ const AuthenticatedAppSupportRoute = AuthenticatedAppSupportRouteImport.update({
   path: '/support',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
+const AuthenticatedAppTagsRoute = AuthenticatedAppTagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
 const AuthenticatedAppTeachersRoute =
   AuthenticatedAppTeachersRouteImport.update({
     id: '/teachers',
@@ -628,6 +634,7 @@ export interface FileRoutesByFullPath {
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
+  '/app/tags': typeof AuthenticatedAppTagsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
@@ -714,6 +721,7 @@ export interface FileRoutesByTo {
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
+  '/app/tags': typeof AuthenticatedAppTagsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
@@ -803,6 +811,7 @@ export interface FileRoutesById {
   '/_authenticated/app/students': typeof AuthenticatedAppStudentsRoute
   '/_authenticated/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
   '/_authenticated/app/support': typeof AuthenticatedAppSupportRoute
+  '/_authenticated/app/tags': typeof AuthenticatedAppTagsRoute
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/_authenticated/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
   '/_authenticated/app/transport': typeof AuthenticatedAppTransportRoute
@@ -892,6 +901,7 @@ export interface FileRouteTypes {
     | '/app/students'
     | '/app/substitutions'
     | '/app/support'
+    | '/app/tags'
     | '/app/teachers'
     | '/app/team-leave'
     | '/app/transport'
@@ -978,6 +988,7 @@ export interface FileRouteTypes {
     | '/app/students'
     | '/app/substitutions'
     | '/app/support'
+    | '/app/tags'
     | '/app/teachers'
     | '/app/team-leave'
     | '/app/transport'
@@ -1066,6 +1077,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/students'
     | '/_authenticated/app/substitutions'
     | '/_authenticated/app/support'
+    | '/_authenticated/app/tags'
     | '/_authenticated/app/teachers'
     | '/_authenticated/app/team-leave'
     | '/_authenticated/app/transport'
@@ -1441,6 +1453,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSupportRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/tags': {
+      id: '/_authenticated/app/tags'
+      path: '/tags'
+      fullPath: '/app/tags'
+      preLoaderRoute: typeof AuthenticatedAppTagsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/teachers': {
       id: '/_authenticated/app/teachers'
       path: '/teachers'
@@ -1769,6 +1788,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppStudentsRoute: typeof AuthenticatedAppStudentsRoute
   AuthenticatedAppSubstitutionsRoute: typeof AuthenticatedAppSubstitutionsRoute
   AuthenticatedAppSupportRoute: typeof AuthenticatedAppSupportRoute
+  AuthenticatedAppTagsRoute: typeof AuthenticatedAppTagsRoute
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
   AuthenticatedAppTeamLeaveRoute: typeof AuthenticatedAppTeamLeaveRoute
   AuthenticatedAppTransportRoute: typeof AuthenticatedAppTransportRoute
@@ -1847,6 +1867,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppStudentsRoute: AuthenticatedAppStudentsRoute,
   AuthenticatedAppSubstitutionsRoute: AuthenticatedAppSubstitutionsRoute,
   AuthenticatedAppSupportRoute: AuthenticatedAppSupportRoute,
+  AuthenticatedAppTagsRoute: AuthenticatedAppTagsRoute,
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
   AuthenticatedAppTeamLeaveRoute: AuthenticatedAppTeamLeaveRoute,
   AuthenticatedAppTransportRoute: AuthenticatedAppTransportRoute,
