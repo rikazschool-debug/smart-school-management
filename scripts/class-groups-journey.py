@@ -23,7 +23,7 @@ async def main():
         for who, label in [("teacher", "مجموعات فصولي"), ("guardian", "مجموعات فصول أبنائي"), ("student", "مجموعة فصلي")]:
             ctx, p = await open_as(b, F[who], 390, 844)
             body = await p.locator("body").inner_text()
-            check(f"{who} phone: tab «{label}» and a group", label in body and "شعبة" in body.replace("/", "شعبة"))
+            check(f"{who} phone: own section group opens", "مجموعة الفصل" in body and "أول متوسط" in body)
             if who == "guardian": check("guardian sees children names", "أبنائي" in body)
             if who == "teacher": check("teacher has no member management", await p.get_by_role("button", name="إضافة موظف").count() == 0)
             await p.screenshot(path=f"{OUT}/2_{who}.png"); await ctx.close()
