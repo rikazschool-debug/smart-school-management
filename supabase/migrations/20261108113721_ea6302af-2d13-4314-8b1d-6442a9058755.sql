@@ -1,0 +1,3 @@
+create or replace function public._dn_default(_full text) returns text language sql immutable set search_path = public as $$
+  select case when array_length(w,1) >= 2 then w[1]||' '||w[array_length(w,1)] else public._dn_clean(_full) end
+  from (select regexp_split_to_array(public._dn_clean(regexp_replace(coalesce(_full,''), '^\s*(أ\.|د\.|م\.|أ/|د/|الأستاذ|الأستاذة|الدكتور|الدكتورة)\s*', '')),' ') w) x $$;
