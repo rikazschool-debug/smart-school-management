@@ -92,6 +92,11 @@ export function ClassesTab({ ctx, focus }: { ctx: AppContext & { schoolId: strin
           {!simple && <Button size="sm" variant="outline" className="md:hidden" onClick={() => setSide(true)}><Users className="size-4" /> الأعضاء</Button>}
         </div>
       </div>
+      {g && Number(g["members"]) <= 1 && (
+        <p role="status" className="rounded-xl border border-dashed bg-muted/40 p-3 text-sm text-muted-foreground">
+          لا يوجد أعضاء في هذه المجموعة بعد غير المدير. يُضاف الطلاب والمعلمون وأولياء الأمور تلقائيًا عند اكتمال التسكين والتكليف والعلاقات الموثقة وتجهيز حساباتهم.
+        </p>
+      )}
       <div className={`grid h-[calc(100dvh-21rem)] min-h-[26rem] overflow-hidden rounded-2xl border bg-card shadow-sm ${simple ? "" : "md:grid-cols-[1fr_19rem]"}`}>
         <section className="flex min-h-0 min-w-0 flex-col">
           {open && open !== g?.["conversation_id"] && (
