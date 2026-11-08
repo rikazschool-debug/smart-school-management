@@ -1,0 +1,2 @@
+revoke all on function public._pp_name(uuid) from public, anon, authenticated;
+revoke all on function public._pp_rec(text,uuid), public._pp_schools(uuid,text), public._pp_ok(text,uuid,text), public._pp_note_can(pp_notes,text) from authenticated;
