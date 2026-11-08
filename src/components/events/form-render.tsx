@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Paperclip, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ACCEPT, ACCEPT_MIME, type Answers, type Field } from "./shared";
@@ -16,27 +16,27 @@ function FileField({ f, ids, onIds, upload, disabled }: { f: Field; ids: string[
   const [ups, setUps] = useState<Up[]>([]);
   const max = f.max_files ?? 1;
   const patch = (key: string, u: Partial<Up>) => setUps((l) => l.map((x) => (x.key === key ? { ...x, ...u } : x)));
-  const run = async (u: Up, cur: string[]) => {
+  const sync = useRef(onIds); sync.current = onIds;
+  const done = ups.filter((x) => x.id).map((x) => x.id!).join(",");
+  useEffect(() => { if (ups.length || ids.length) sync.current(done ? done.split(",") : []); }, [done]); // eslint-disable-line react-hooks/exhaustive-deps
+  const run = async (u: Up) => {
     if (!upload) return;
     patch(u.key, { pct: 0, error: undefined });
     try {
       const r = await upload(f.id, u.file, (pct) => patch(u.key, { pct }));
       patch(u.key, { id: r.id, pct: 100 });
-      onIds([...cur, r.id]);
     } catch (e) { patch(u.key, { error: (e as Error).message }); }
   };
   const add = (list: FileList | null) => {
     if (!list) return;
-    let cur = ids;
     for (const file of Array.from(list).slice(0, Math.max(0, max - ups.filter((x) => !x.error).length))) {
       if ((f.max_mb ?? 5) * 1048576 < file.size) { setUps((l) => [...l, { key: crypto.randomUUID(), file, pct: 0, error: `الحجم أكبر من ${f.max_mb ?? 5} ميغابايت` }]); continue; }
       const u: Up = { key: crypto.randomUUID(), file, pct: 0 };
       setUps((l) => [...l, u]);
-      void run(u, cur).then(() => undefined);
-      cur = cur; // ids are appended through onIds as each upload finishes
+      void run(u);
     }
   };
-  const remove = (u: Up) => { setUps((l) => l.filter((x) => x.key !== u.key)); if (u.id) onIds(ids.filter((x) => x !== u.id)); };
+  const remove = (u: Up) => setUps((l) => l.filter((x) => x.key !== u.key));
   const accept = (f.accept ?? ["pdf", "image"]).map((a) => ACCEPT_MIME[a]).join(",");
   return (
     <div className="space-y-2">
@@ -46,7 +46,7 @@ function FileField({ f, ids, onIds, upload, disabled }: { f: Field; ids: string[
           <Paperclip className="size-4 shrink-0" />
           <span className="min-w-0 flex-1 truncate">{u.file.name}</span>
           {u.error ? <span className="text-xs text-destructive">{u.error}</span> : u.id ? <span className="text-xs text-primary">تم الرفع</span> : <span className="text-xs" aria-live="polite">{u.pct}%</span>}
-          {u.error && upload && <Button type="button" size="sm" variant="outline" onClick={() => run(u, ids)} aria-label="إعادة المحاولة"><RotateCcw className="size-3" /> إعادة</Button>}
+          {u.error && upload && <Button type="button" size="sm" variant="outline" onClick={() => run(u)} aria-label="إعادة المحاولة"><RotateCcw className="size-3" /> إعادة</Button>}
           <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => remove(u)} aria-label="إزالة"><X className="size-3" /></Button>
         </div>
       ))}
