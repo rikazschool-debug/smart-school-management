@@ -141,6 +141,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
       {conv["status"] === "archived" && (
         <p role="status" className="border-b border-warning/40 bg-warning/15 px-3 py-2 text-xs font-medium text-warning-foreground">🔒 هذه المجموعة مؤرشفة: الرسائل السابقة للقراءة فقط، ولا يمكن الإرسال أو الرد أو إضافة مرفقات.</p>
       )}
+      {conv["status"] === "archived" && conv["group_type"] === "course" && <SuccessorLink conv={id} />}
       {conv["archived"] && conv["status"] !== "archived" && (
         <p className="border-b bg-muted/60 px-3 py-2 text-xs text-muted-foreground">هذه المحادثة في أرشيفك أنت فقط؛ ما زالت نشطة للآخرين ويمكنك الإرسال فيها.</p>
       )}
@@ -334,5 +335,16 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
         <Button className="shrink-0" disabled={uploading}>إرسال</Button>
       </div>
     </form>
+  );
+}
+
+/** Archived subject group → link to the active section group (only when the caller is a member or the principal). */
+function SuccessorLink({ conv }: { conv: string }) {
+  const q = useQuery({ queryKey: ["cg-successor", conv], queryFn: async () => ((await db.rpc("class_group_successor", { _conv: conv })).data ?? null) as string | null });
+  if (!q.data) return null;
+  return (
+    <a href={`/app/communication?tab=classes&conv=${q.data}`} className="block border-b bg-primary/10 px-3 py-2 text-xs font-medium text-primary underline">
+      انتقلت المحادثة إلى مجموعة الشعبة — افتح مجموعة الشعبة النشطة
+    </a>
   );
 }
