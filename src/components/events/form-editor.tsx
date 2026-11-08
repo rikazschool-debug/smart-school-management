@@ -13,6 +13,7 @@ import { rpc } from "@/components/hr/shared";
 import { ask } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { FormFields } from "./form-render";
+import { TplLink } from "./section-forms";
 import { ACCEPT, FIELD_KIND, ROLE, SUGGESTED, fmtDT, visibleFields, type Answers, type Field, type FieldKind } from "./shared";
 
 type FormData = { draft: Field[]; draft_rev: number; version: number; can_edit: boolean; audience: string; published: Field[] | null;
@@ -85,6 +86,7 @@ export function FormEditor({ item }: { item: string }) {
 
   return (
     <div className="space-y-4">
+      <TplLink item={item} />
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3 text-sm">
         <span>الإصدار المنشور: <b>{d.version || "لا يوجد"}</b></span>
         {dirty && <span className="text-warning-foreground">· تغييرات غير محفوظة</span>}
@@ -109,7 +111,7 @@ export function FormEditor({ item }: { item: string }) {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div>
-          {fields.length === 0 ? <EmptyState title="النموذج فارغ" hint="أضف حقولًا من القائمة الجانبية أو انسخ نموذجًا محفوظًا." /> : (
+          {fields.length === 0 ? <EmptyState title="النموذج فارغ" hint="أضف حقولًا من القائمة الجانبية." /> : (
             <ol className="space-y-2">
               {fields.map((f, i) => (
                 <li key={f.id + i} className={`rounded-xl border bg-card ${sel === i ? "ring-2 ring-primary" : ""}`}>
@@ -144,15 +146,6 @@ export function FormEditor({ item }: { item: string }) {
               <p className="mb-2 text-sm font-bold">حقول مقترحة</p>
               <div className="flex flex-wrap gap-1.5">{SUGGESTED.map((f) => <Button key={f.id} size="sm" variant="secondary" onClick={() => add(f)}>{f.label}</Button>)}</div>
             </div>
-            {!!d.library?.length && (
-              <div className="rounded-xl border bg-card p-3">
-                <p className="mb-2 text-sm font-bold">نسخ نموذج محفوظ</p>
-                <ul className="space-y-1 text-sm">{d.library.map((l) => (
-                  <li key={l.item_id} className="flex items-center gap-2"><span className="flex-1 truncate">{l.title} <span className="text-xs text-muted-foreground">({l.school}{l.version ? ` · إصدار ${l.version}` : " · مسودة"})</span></span>
-                    <Button size="sm" variant="ghost" disabled={copy.isPending} onClick={async () => { if (!fields.length || (await ask("سيستبدل النسخ مسودة النموذج الحالية. متابعة؟"))) copy.mutate(l.item_id); }}><Copy className="size-4" /> نسخ</Button></li>
-                ))}</ul>
-              </div>
-            )}
           </aside>
         )}
       </div>
@@ -167,11 +160,11 @@ export function FormEditor({ item }: { item: string }) {
   );
 }
 
-function FieldProps({ f, all, onChange }: { f: Field; all: Field[]; onChange: (p: Partial<Field>) => void }) {
+export function FieldProps({ f, all, onChange, itemMode }: { f: Field; all: Field[]; onChange: (p: Partial<Field>) => void; itemMode?: boolean }) {
   const [opts, setOpts] = useState((f.options ?? []).join("\n"));
   useEffect(() => setOpts((f.options ?? []).join("\n")), [f.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const roleFor: Partial<Record<FieldKind, string[]>> = { text: ["name", "guardian_name"], phone: ["phone"], email: ["email"], date: ["birth_date"] };
-  const roles = (roleFor[f.kind] ?? []).filter((r) => r === f.role || !all.some((x) => x.role === r));
+  const roles = itemMode ? [] : (roleFor[f.kind] ?? []).filter((r) => r === f.role || !all.some((x) => x.role === r));
   return (
     <div className="grid gap-3 border-t p-3 sm:grid-cols-2">
       <div className="space-y-1 sm:col-span-2"><Label>{f.kind === "section" ? "عنوان القسم" : "اسم الحقل"}</Label><Input value={f.label} maxLength={200} onChange={(e) => onChange({ label: e.target.value })} /></div>
@@ -180,8 +173,8 @@ function FieldProps({ f, all, onChange }: { f: Field; all: Field[]; onChange: (p
         <div className="space-y-1"><Label>المعرّف (بالإنجليزية)</Label><Input dir="ltr" value={f.id} maxLength={40} onChange={(e) => onChange({ id: slug(e.target.value) })} /></div>
         {["text", "textarea", "number", "phone", "email"].includes(f.kind) && <div className="space-y-1"><Label>النص الإرشادي</Label><Input value={f.placeholder ?? ""} maxLength={120} onChange={(e) => onChange({ placeholder: e.target.value })} /></div>}
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="size-4" checked={!!f.required} onChange={(e) => onChange({ required: e.target.checked })} /> حقل إلزامي</label>
-        <div className="space-y-1"><Label>يظهر لـ</Label>
-          <select className={sm} value={f.audience ?? "all"} onChange={(e) => onChange({ audience: e.target.value as Field["audience"] })}><option value="all">الجميع</option><option value="internal">طلاب المدارس فقط</option><option value="external">الخارجيين فقط</option></select></div>
+        {!itemMode && <div className="space-y-1"><Label>يظهر لـ</Label>
+          <select className={sm} value={f.audience ?? "all"} onChange={(e) => onChange({ audience: e.target.value as Field["audience"] })}><option value="all">الجميع</option><option value="internal">طلاب المدارس فقط</option><option value="external">الخارجيين فقط</option></select></div>}
         {roles.length > 0 && <div className="space-y-1"><Label>ربط ببيانات المشارك</Label>
           <select className={sm} value={f.role ?? ""} onChange={(e) => onChange({ role: (e.target.value || undefined) as Field["role"] })}><option value="">بلا ربط</option>{roles.map((r) => <option key={r} value={r}>{ROLE[r]}</option>)}</select></div>}
         {(f.kind === "select" || f.kind === "multi") && <div className="space-y-1 sm:col-span-2"><Label>الخيارات (خيار في كل سطر)</Label>
