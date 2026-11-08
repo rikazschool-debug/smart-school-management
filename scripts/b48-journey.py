@@ -35,7 +35,7 @@ async def simulate_send(route):
     if res.get("error"): inner = {"k": ["error"], "v": [{"t": 1, "s": "simulated issue failed: " + res["error"]}]}
     else: inner = {"k": ["challenge", "masked"], "v": [{"t": 1, "s": res["challenge"]}, {"t": 1, "s": "05•••••" + res["phone"][-2:]}]}
     out = {"t": 10, "i": 0, "p": {"k": ["result", "error", "context"], "v": [{"t": 10, "i": 1, "p": inner, "o": 0}, {"t": 2, "s": 1}, {"t": 11, "i": 2, "p": {"k": [], "v": []}, "o": 0}]}, "o": 0}
-    await route.fulfill(status=200, content_type="application/json", body=json.dumps(out))
+    await route.fulfill(status=200, headers={"content-type": "application/json", "x-tss-serialized": "true"}, body=json.dumps(out))
 
 async def id_login(br, who, entry, vp, wrong_first=False):
     ctx = await br.new_context(viewport=vp); pg = await ctx.new_page(); pg.errs = []
