@@ -666,3 +666,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## B5 مجموعات الشعب (Nov 8 2026)
 - class-groups-e2e 30/30، comm-e2e 95/95، class-groups-journey 9/9 (كمبيوتر/جوال). أرشفة مجموعات المواد مسجلة في class_group_runs. بيانات الاختبار حُذفت. لم يُنشر.
+- واتساب: أكد المالك في 8 نوفمبر 2026 أنه جرّب الدخول برمز واتساب فعليًا ونجح. هذا تأكيد من المالك، ومختلف عن اختبارات idl/b48 التي حاكت الإرسال فقط؛ لم يُسجَّل لدينا رد المزود أو التسليم بأنفسنا.
+- B5 قبول ما قبل النشر: class-groups-e2e 32/32، comm-roles-e2e 36/36، comm-e2e 95/95، class-groups-journey 19/19؛ التفاصيل وخطة الانتقال في docs/class-groups-acceptance.md. بيانات cge- حُذفت.

@@ -92,6 +92,11 @@ export function ClassesTab({ ctx, focus }: { ctx: AppContext & { schoolId: strin
           {!simple && <Button size="sm" variant="outline" className="md:hidden" onClick={() => setSide(true)}><Users className="size-4" /> الأعضاء</Button>}
         </div>
       </div>
+      {g && Number(g["members"]) <= 1 && (
+        <p role="status" className="rounded-xl border border-dashed bg-muted/40 p-3 text-sm text-muted-foreground">
+          لا يوجد أعضاء في هذه المجموعة بعد غير المدير. يُضاف الطلاب والمعلمون وأولياء الأمور تلقائيًا عند اكتمال التسكين والتكليف والعلاقات الموثقة وتجهيز حساباتهم.
+        </p>
+      )}
       <div className={`grid h-[calc(100dvh-21rem)] min-h-[26rem] overflow-hidden rounded-2xl border bg-card shadow-sm ${simple ? "" : "md:grid-cols-[1fr_19rem]"}`}>
         <section className="flex min-h-0 min-w-0 flex-col">
           {open && open !== g?.["conversation_id"] && (
@@ -204,7 +209,7 @@ function Roster({ course, teacher, active, onOpen, onClose }: { course: string; 
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="space-y-2 border-b p-3">
         <div className="flex items-center gap-2">
-          <h3 className="flex-1 font-bold">طلاب المادة <span className="text-xs font-normal text-muted-foreground">({r.data?.length ?? 0})</span></h3>
+          <h3 className="flex-1 font-bold">طلاب الشعبة <span className="text-xs font-normal text-muted-foreground">({r.data?.length ?? 0})</span></h3>
           <Button size="icon" variant="ghost" className="md:hidden" aria-label="إغلاق قائمة الطلاب" onClick={onClose}><X className="size-4" /></Button>
         </div>
         <div className="relative">

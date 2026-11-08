@@ -10,7 +10,7 @@
 - scripts/perm4-e2e.ts: owner-only users/roles, group creation, dept-head scope, publisher label. scripts/cleanup-monitor-e2e.ts: monitor alerts/recovery on an isolated channel.
 - scripts/comm-browser-fixture.ts setup|teardown: isolated org/users (cbx-) for communication browser journeys; always run teardown after.
 - scripts/homework-e2e.ts: homework lifecycle/permissions (`NODE_PATH=node_modules bun scripts/homework-e2e.ts`).
-- scripts/comm-roles-e2e.ts: SUPERSEDED (old per-subject groups; fails by design) — section-group rules live in scripts/class-groups-e2e.ts. Was: per-role communication (subject groups, transfer/teacher change, group-creation matrix, student limits, circulars).
+- scripts/comm-roles-e2e.ts: per-role communication (section groups, transfer/teacher change, group-creation matrix, student limits, circulars).
 - scripts/homework2-e2e.ts: feedback files, template copy, late joiners, report export scope.
 - scripts/hw-browser-fixture.ts setup|teardown: isolated homework data (hbx-) for browser journeys; always run teardown after.
 - scripts/assignment-validity-e2e.ts: assignment start/end boundaries (future, ended-but-approved, ends today, end<start, open session, independent dept-head role) on isolated data.

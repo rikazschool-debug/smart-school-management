@@ -129,11 +129,29 @@ async function main() {
   // new subject reuses section group
   await ins("courses", { year_id: year.id, subject_id: (await ins("subjects", { name: "لغتي" })).id, section_id: A.id, weekly_periods: 1 });
   ok("30 new subject keeps two groups", ((await admin.from("conversations").select("id").eq("school_id", S).eq("group_type", "class")).data ?? []).length === 2);
+  // empty group → filled automatically once relation + eligible account exist
+  const stc = await user("stc", "طالب لاحق");
+  await owner.c.rpc("invite_member", { _email: stc.email, _school: S, _role: "student" }); await stc.c.rpc("accept_my_invitations");
+  const C = await ins("sections", { name: "ج", grade_id: grade.id, year_id: year.id, capacity: 30 });
+  const s5 = await ins("students", { full_name: "طالب بلا حساب" }); await ins("enrollments", { student_id: s5.id, section_id: C.id, year_id: year.id });
+  const gC = (await admin.from("conversations").select("id").eq("section_id", C.id).eq("group_type", "class").single()).data!.id;
+  ok("31 group without eligible accounts has only the principal", (await mem(gC)).every((x) => x.reasons.includes("principal")) && one(await mem(gC), stc.id).length === 0);
+  await admin.from("students").update({ user_id: stc.id }).eq("id", s5.id);
+  ok("32 student added automatically once account is linked", one(await mem(gC), stc.id).length === 1);
   void addSt; void S2r; void cB2;
   console.log(`\n${pass}/${pass + fail} passed`);
   if (process.argv.includes("--keep")) {
-    await admin.from("memberships").update({ is_active: true }).eq("user_id", pr.id).eq("school_id", S);
-    await import("fs").then((fs) => { fs.mkdirSync("/tmp/browser/cg", { recursive: true }); fs.writeFileSync("/tmp/browser/cg/fixture.json", JSON.stringify({ pw, school: S, gA, gB, principal: pr2.email, teacher: t2.email, guardian: g2.email, student: st.email, staff: staff.email })); });
+    // browser fixture: old principal demoted to vice; t2 teaches A+B again; g2 has two kids in A + one in B; g1 has kids in A and B
+    await admin.from("memberships").update({ is_active: true, role: "vice_principal" }).eq("user_id", pr.id).eq("school_id", S);
+    await admin.from("teacher_assignments").update({ status: "approved" }).eq("teacher_id", T2.id).eq("course_id", cB1.id);
+    await ins("student_guardians", { student_id: s3.id, guardian_id: G2.id, ...v });
+    const s4 = await ins("students", { full_name: "ابن رابع" }); await ins("enrollments", { student_id: s4.id, section_id: A.id, year_id: year.id });
+    await ins("student_guardians", { student_id: s4.id, guardian_id: G2.id, ...v });
+    // archived subject group with old members (st left section A, t1 still teaches A)
+    const old = (await admin.from("conversations").insert({ org_id: org, school_id: S, kind: "group", group_type: "custom", title: "علوم — أول متوسط — شعبة أ", course_id: cA1.id, section_id: A.id, year_id: year.id, membership_mode: "manual", dedupe_key: "course:" + cA1.id, created_by: owner.id }).select().single()).data!;
+    await admin.from("conversation_members").insert([{ conversation_id: old.id, user_id: t1.id, role: "moderator", source: "manual" }, { conversation_id: old.id, user_id: st.id, role: "member", source: "manual" }]);
+    await admin.from("conversations").update({ group_type: "course", status: "archived" }).eq("id", old.id);
+    const fs = await import("fs"); { fs.mkdirSync("/tmp/browser/cg", { recursive: true }); fs.writeFileSync("/tmp/browser/cg/fixture.json", JSON.stringify({ pw, school: S, gA, gB, principal: pr2.email, oldPrincipal: pr.email, teacher: t2.email, teacher1: t1.email, guardian1: g1.email, old: old.id, guardian: g2.email, student: st.email, staff: staff.email })); }
     console.log("kept fixture /tmp/browser/cg/fixture.json"); if (fail) process.exit(1); return;
   }
   await teardown();
