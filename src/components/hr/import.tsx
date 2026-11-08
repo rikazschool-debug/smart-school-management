@@ -49,7 +49,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   const schools = m.schools.filter((s) => s.create || m.caps.create);
   const sens = m.caps.sensitive;
   const fields = FIELDS.filter((f) => !f.sensitive || sens);
-  const cats = (useHrCats(org).data ?? []).filter((c) => c.active);
+  const cats = (useHrCats(org).data ?? []).filter((c) => c.is_active);
 
   const template = () => {
     const ws = XLSX.utils.aoa_to_sheet([fields.map((f) => f.label), fields.map((f) => f.key === "school" ? schools[0]?.name ?? "" : f.key === "category" ? cats[0]?.name ?? "" : f.key === "hire_date" ? "2026-09-01" : f.key === "gender" ? "ذكر" : "")]);
