@@ -14,7 +14,10 @@ res = []
 def check(n, c): res.append(bool(c)); print(("✓ " if c else "✗ ") + n)
 async def open_as(b, who, w=390, h=844, path="/app/communication?tab=classes"):
     ctx = await b.new_context(viewport={"width": w, "height": h}); p = await ctx.new_page()
-    await sign_in(p, BASE, F[who], F["pw"], path); await p.wait_for_timeout(5000); return ctx, p
+    await sign_in(p, BASE, F[who], F["pw"], path)
+    try: await p.get_by_role("heading", name="المجموعات").or_(p.get_by_text("الأرشيف").first).first.wait_for(timeout=15000)
+    except Exception: pass
+    await p.wait_for_timeout(5000); return ctx, p
 async def reason(p, text):
     await p.get_by_role("alertdialog").get_by_role("textbox").fill(text); await p.get_by_role("alertdialog").get_by_role("button", name="تأكيد").click(); await p.wait_for_timeout(2500)
 async def main():
@@ -36,7 +39,7 @@ async def main():
         g1row = p.locator("aside li", has_text="ولي ابنين").first
         await g1row.get_by_role("button", name="إزالة").click(); await reason(p, "طلب ولي الأمر")
         check("removed member listed under «أزالهم المدير»", await p.get_by_text("أزالهم المدير").is_visible())
-        resync(); await p.reload(); await p.wait_for_timeout(5000); await p.locator("#class-pick").select_option(F["gA"]); await p.wait_for_timeout(2000)
+        resync(); await p.reload(); await p.wait_for_timeout(9000); await p.locator("#class-pick").select_option(F["gA"]); await p.wait_for_timeout(2000)
         check("removal respected after resync", await p.get_by_text("أزالهم المدير").is_visible() and await p.locator("aside li", has_text="السبب: طلب ولي الأمر").count() == 1)
         await p.locator("aside li", has_text="السبب: طلب ولي الأمر").get_by_role("button", name="إعادة").click(); await p.wait_for_timeout(2500)
         check("restore brings member back", await p.get_by_text("أزالهم المدير").count() == 0 and await p.locator("aside li", has_text="ولي ابنين").count() > 0)
@@ -50,9 +53,11 @@ async def main():
             cards = p.locator("button", has_text="أول متوسط / أ")
             if await cards.count(): await cards.first.click(); await p.wait_for_timeout(2500)
             box = p.get_by_label("نص الرسالة")
+            try: await box.wait_for(timeout=10000)
+            except Exception: pass
             if await box.count() == 0 or not await box.is_enabled():
                 body = await p.locator("body").inner_text(); await ctx.close(); return ("blocked", body)
-            await box.fill(text); await p.get_by_role("button", name="إرسال").click(); await p.wait_for_timeout(3000)
+            await box.fill(text); await p.get_by_role("button", name="إرسال").click(); await p.wait_for_timeout(5000)
             body = await p.locator("body").inner_text(); await p.screenshot(path=f"{OUT}/2_{who}.png"); await ctx.close()
             return ("sent" if text in body and "تعذر" not in body else "error", body)
         r, body = await try_send("teacher", "إعلان المعلم")
