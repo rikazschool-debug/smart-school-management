@@ -39,7 +39,7 @@ function JoinPage() {
   const [version, setVersion] = useState(0);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [done, setDone] = useState<{ ref: string; track?: string; dup?: boolean } | null>(null);
+  const [done, setDone] = useState<{ ref: string; track?: string | undefined; dup?: boolean } | null>(null);
   const [hp, setHp] = useState("");
   const started = useRef(Date.now());
   const key = useRef<string>("");
