@@ -163,7 +163,7 @@ function EditWindow({ schoolId }: { schoolId: string }) {
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3 text-sm">
       <span>مدة تعديل المعلم بعد الاعتماد:</span>
-      <select className={selectCls + " w-40"} value={v} disabled={save.isPending} onChange={(e) => save.mutate(Number(e.target.value))} aria-label="مدة تعديل المعلم">
+      <select className={selectCls("w-40")} value={v} disabled={save.isPending} onChange={(e) => save.mutate(Number(e.target.value))} aria-label="مدة تعديل المعلم">
         {[0, 1, 2, 3, 7].map((n) => <option key={n} value={n}>{n === 0 ? "يوم الرصد فقط" : `${n} أيام`}</option>)}
       </select>
       <span className="text-xs text-muted-foreground">يغيّرها المدير فقط، وكل تغيير يُسجَّل. بعد المدة يصحّح الوكيل أو المدير بسبب.</span>

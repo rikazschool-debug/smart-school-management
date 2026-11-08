@@ -69,7 +69,8 @@ async function main() {
   const slot = sl.data.id as string;
 
   const mine = await t1.c.rpc("la_my_lessons", { _date: today });
-  ok("1 teacher sees today's lesson", !mine.error && (mine.data as any[]).length === 1 && (mine.data as any[])[0].slot_id === slot, mine.error?.message);
+  const dly = ((mine.data as any[]) ?? []).filter((x) => x.daily);
+  ok("1 teacher sees one daily sheet (first period only)", !mine.error && dly.length === 1 && dly[0].slot_id === slot, mine.error?.message);
   const other = await t2.c.rpc("la_my_lessons", { _date: today });
   ok("2 unassigned teacher sees no lesson", !other.error && (other.data as any[]).length === 0);
   const o2 = await t2.c.rpc("la_open", { _slot: slot, _date: today });
@@ -121,6 +122,23 @@ async function main() {
   const r1 = (await admin.from("attendance_days").select("status").eq("student_id", studs[1].id).eq("date", today).single()).data;
   ok("19e gate entry + class absence = in_school_absent", !abx.error && r1?.status === "in_school_absent", abx.error?.message ?? JSON.stringify(r1));
   await admin.from("gate_movements").delete().eq("school_id", S);
+  const sec2 = await t1.c.rpc("la_section_today", { _slot: sl2.data.id });
+  ok("19f later-period teacher reads today's result", !sec2.error && (sec2.data as any).students.length === 3, sec2.error?.message);
+  const rp = await t1.c.rpc("la_report_missing", { _slot: sl2.data.id, _student: studs[2].id, _note: "غير موجود" });
+  ok("19g later-period teacher reports a missing student", !rp.error, rp.error?.message);
+  const late = await pr.c.rpc("att_day_event", { _student: studs[1].id, _kind: "late_arrival", _reason: "وصل مع ولي أمره" });
+  const r2 = (await admin.from("attendance_days").select("status,note,class_session_id").eq("student_id", studs[1].id).eq("date", today).single()).data;
+  ok("19h late arrival recorded, original approval kept", !late.error && r2?.status === "late" && /وصل متأخرًا/.test(r2?.note ?? "") && r2?.class_session_id === id, late.error?.message ?? JSON.stringify(r2));
+  const tl = await t1.c.rpc("att_day_event", { _student: studs[1].id, _kind: "left_early", _reason: "محاولة" });
+  ok("19i teacher cannot record day events", !!tl.error);
+  const fa = await g.c.rpc("family_attendance", { _student: studs[0].id });
+  ok("19j guardian sees own child's daily status", !fa.error && (fa.data as any).today_row?.status === "excused", fa.error?.message);
+  const fb = await g.c.rpc("family_attendance", { _student: studs[1].id });
+  ok("19k guardian cannot read another student", !!fb.error);
+  const st0 = await t1.c.rpc("att_daily_settings_save", { _school: S, _days: 3 });
+  ok("19l teacher cannot change edit window", !!st0.error);
+  const st1 = await pr.c.rpc("att_daily_settings_save", { _school: S, _days: 0 });
+  ok("19m principal sets edit window", !st1.error, st1.error?.message);
   const day = await pr.c.rpc("la_school_day", { _school: S, _date: today });
   ok("20 principal sees day status", !day.error && (day.data as any[])[0]?.status === "approved" && (day.data as any[])[0]?.late === 0, day.error?.message);
   const tday = await t1.c.rpc("la_school_day", { _school: S, _date: today });
