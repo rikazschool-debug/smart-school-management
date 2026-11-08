@@ -5746,6 +5746,8 @@ export type Database = {
       guardians: {
         Row: {
           created_at: string
+          display_name: string | null
+          display_name_manual: boolean
           email: string | null
           full_name: string
           id: string
@@ -5757,6 +5759,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          display_name?: string | null
+          display_name_manual?: boolean
           email?: string | null
           full_name: string
           id?: string
@@ -5768,6 +5772,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          display_name?: string | null
+          display_name_manual?: boolean
           email?: string | null
           full_name?: string
           id?: string
@@ -6932,6 +6938,7 @@ export type Database = {
       }
       hr_assignments: {
         Row: {
+          category_id: string | null
           created_at: string
           created_by: string | null
           department: string | null
@@ -6948,6 +6955,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           department?: string | null
@@ -6964,6 +6972,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           department?: string | null
@@ -6980,6 +6989,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "hr_assignments_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "hr_job_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "hr_assignments_employee_id_fkey"
             columns: ["employee_id"]
@@ -8008,6 +8024,8 @@ export type Database = {
           birth_date: string | null
           created_at: string
           created_by: string | null
+          display_name: string | null
+          display_name_manual: boolean
           email: string | null
           employee_no: string
           end_date: string | null
@@ -8035,6 +8053,8 @@ export type Database = {
           birth_date?: string | null
           created_at?: string
           created_by?: string | null
+          display_name?: string | null
+          display_name_manual?: boolean
           email?: string | null
           employee_no: string
           end_date?: string | null
@@ -8062,6 +8082,8 @@ export type Database = {
           birth_date?: string | null
           created_at?: string
           created_by?: string | null
+          display_name?: string | null
+          display_name_manual?: boolean
           email?: string | null
           employee_no?: string
           end_date?: string | null
@@ -8587,6 +8609,44 @@ export type Database = {
             columns: ["renewal_of"]
             isOneToOne: false
             referencedRelation: "hr_in_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_job_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_job_categories_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -13081,6 +13141,47 @@ export type Database = {
           },
         ]
       }
+      person_display_names: {
+        Row: {
+          created_at: string
+          display_name: string
+          national_id: string | null
+          norm: string
+          org_id: string
+          src_id: string
+          src_table: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          national_id?: string | null
+          norm: string
+          org_id: string
+          src_id: string
+          src_table: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          national_id?: string | null
+          norm?: string
+          org_id?: string
+          src_id?: string
+          src_table?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_display_names_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pickup_requests: {
         Row: {
           arrived_at: string | null
@@ -13761,6 +13862,8 @@ export type Database = {
           birth_date: string | null
           created_at: string
           csmart_no: string | null
+          display_name: string | null
+          display_name_manual: boolean
           email: string | null
           full_name: string
           gender: string | null
@@ -13775,6 +13878,8 @@ export type Database = {
           birth_date?: string | null
           created_at?: string
           csmart_no?: string | null
+          display_name?: string | null
+          display_name_manual?: boolean
           email?: string | null
           full_name: string
           gender?: string | null
@@ -13789,6 +13894,8 @@ export type Database = {
           birth_date?: string | null
           created_at?: string
           csmart_no?: string | null
+          display_name?: string | null
+          display_name_manual?: boolean
           email?: string | null
           full_name?: string
           gender?: string | null
@@ -14788,6 +14895,8 @@ export type Database = {
         Row: {
           created_at: string
           department_id: string | null
+          display_name: string | null
+          display_name_manual: boolean
           email: string | null
           full_name: string
           id: string
@@ -14802,6 +14911,8 @@ export type Database = {
         Insert: {
           created_at?: string
           department_id?: string | null
+          display_name?: string | null
+          display_name_manual?: boolean
           email?: string | null
           full_name: string
           id?: string
@@ -14816,6 +14927,8 @@ export type Database = {
         Update: {
           created_at?: string
           department_id?: string | null
+          display_name?: string | null
+          display_name_manual?: boolean
           email?: string | null
           full_name?: string
           id?: string
@@ -15622,6 +15735,26 @@ export type Database = {
         Returns: boolean
       }
       _cv_codes: { Args: never; Returns: string[] }
+      _dn_clean: { Args: { _s: string }; Returns: string }
+      _dn_default: { Args: { _full: string }; Returns: string }
+      _dn_norm: { Args: { _s: string }; Returns: string }
+      _dn_org: { Args: { _r: Json; _t: string }; Returns: string }
+      _dn_person_claim: {
+        Args: { _nid: string; _org: string; _uid: string }
+        Returns: string
+      }
+      _dn_same: {
+        Args: {
+          _nid: string
+          _uid: string
+          c: Database["public"]["Tables"]["person_display_names"]["Row"]
+        }
+        Returns: boolean
+      }
+      _dn_suggest: {
+        Args: { _name: string; _nid: string; _org: string; _uid: string }
+        Returns: string
+      }
       _duty_assignment_mine: {
         Args: { _id: string }
         Returns: {
@@ -16144,6 +16277,10 @@ export type Database = {
         Args: { _emp: string; _only_active: boolean }
         Returns: Json
       }
+      _hr_assignment_save_base: {
+        Args: { _employee: string; _id: string; _p: Json; _reason?: string }
+        Returns: string
+      }
       _hr_at_any: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_at_bounds: {
         Args: {
@@ -16225,6 +16362,10 @@ export type Database = {
         }
         Returns: Json
       }
+      _hr_cat_check: {
+        Args: { _cat: string; _old: string; _org: string }
+        Returns: undefined
+      }
       _hr_check_teacher: {
         Args: {
           _assign: string
@@ -16290,6 +16431,10 @@ export type Database = {
       }
       _hr_emp_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
       _hr_emp_school: { Args: { _emp: string }; Returns: string }
+      _hr_employee_save_base: {
+        Args: { _id: string; _org: string; _p: Json; _reason?: string }
+        Returns: string
+      }
       _hr_ext_on: { Args: { _ext: string; _org: string }; Returns: boolean }
       _hr_geo_m: {
         Args: { a1: number; a2: number; o1: number; o2: number }
@@ -19320,6 +19465,11 @@ export type Database = {
       hr_att_team: { Args: { _date: string; _org: string }; Returns: Json }
       hr_att_unassigned: { Args: { _org: string }; Returns: Json }
       hr_candidates: { Args: { _org: string }; Returns: Json }
+      hr_cat_list: { Args: { _org: string }; Returns: Json }
+      hr_cat_save: {
+        Args: { _active: boolean; _id: string; _name: string; _org: string }
+        Returns: string
+      }
       hr_contract_ack: {
         Args: {
           _decision: string
@@ -20305,6 +20455,12 @@ export type Database = {
         Returns: string
       }
       pc_transfer_accept: { Args: { _id: string }; Returns: string }
+      people_dn_apply: { Args: { _org: string }; Returns: Json }
+      people_dn_check: {
+        Args: { _name: string; _nid: string; _org: string; _user: string }
+        Returns: Json
+      }
+      people_dn_preview: { Args: { _org: string }; Returns: Json }
       people_pick: {
         Args: {
           _branch?: string

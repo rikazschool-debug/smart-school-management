@@ -52,4 +52,4 @@
 - Guardian visits (gv_*): src/components/family-visits/AGENTS.md.
 - ID sign-in: id-login.functions.ts → service-only _idl_* SQL; existing accounts only, generic errors. Test: idl-e2e.
 - Family home, fin_*, section rooms: src/components/family/AGENTS.md.
-- Live refresh (live_signals): src/lib/AGENTS.md.
+- Live refresh, display names: src/lib/AGENTS.md.

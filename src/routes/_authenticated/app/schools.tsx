@@ -1,3 +1,4 @@
+import { DisplayNamesPreview } from "@/components/display-names-preview";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -195,6 +196,7 @@ function Page() {
         </DialogContent>
       </Dialog>
 
+      {allowed && orgId && <DisplayNamesPreview org={orgId} />}
       <LinkStaffDialog school={link} onClose={() => setLink(null)} onDone={done} />
     </>
   );
