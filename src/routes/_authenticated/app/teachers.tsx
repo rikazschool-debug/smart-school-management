@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/app/teachers")({
 });
 
 // national_id is not selectable directly; read through teacher_id_status (people_identity.view)
-const COLS = "id, school_id, user_id, full_name, email, phone, specialization, department_id, status, created_at, departments(name)";
+const COLS = "id, school_id, user_id, full_name, display_name, email, phone, specialization, department_id, status, created_at, departments(name)";
 type IdState = { teacher_id: string; national_id: string | null; hr_national_id: string | null; state: "ready" | "missing" | "conflict"; problem: string | null };
 
 function Page() {
@@ -69,7 +69,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
         ]}
         defaults={{ status: "active" }}
         columns={[
-          { label: "الاسم", render: (r) => r["full_name"] },
+          { label: "الاسم", text: (r) => r["display_name"] || r["full_name"], render: (r) => <>{r["display_name"] || r["full_name"]}{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>}</> },
           ...(idView ? [{ label: "الهوية / الإقامة", text: (r: Row) => st(r)?.national_id ?? "", render: (r: Row) => <span dir="ltr">{st(r)?.national_id ?? "—"}</span> }] : []),
           { label: "التخصص", render: (r) => r["specialization"] ?? "—" },
           { label: "القسم", render: (r) => r["departments"]?.name ?? "—" },
