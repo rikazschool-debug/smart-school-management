@@ -45,7 +45,7 @@ function Page() {
   return (
     <>
       {m.owner && <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>}
-      <PageHeader title="الموارد البشرية" desc="ملفات الموظفين وتعييناتهم. الموظف سجل واحد في المؤسسة يرتبط بحساب دخوله وسجل المعلم إن وُجد، ولا يُنشأ حساب أو معلم جديد من هنا." />
+      <PageHeader title="الموارد البشرية" desc="ملفات الموظفين وتعييناتهم. الموظف سجل واحد في المؤسسة يرتبط بحساب دخوله وسجل المعلم إن وُجد؛ يمكن إنشاء حساب دخوله بالهوية والجوال من نموذج الإضافة." />
       {m.enabled && <nav aria-label="أقسام الموارد البشرية" className="mb-4 flex flex-wrap gap-2 text-sm">
         <span className="rounded-lg bg-primary px-3 py-1.5 text-primary-foreground">ملفات الموظفين</span>
         <Link to="/app/hr/contracts" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">العقود</Link>
@@ -269,7 +269,7 @@ const CONFLICT: Record<string, string> = {
   owner: "رقم الهوية مسجل لمالك مؤسسة", other_org: "رقم الهوية مسجل لموظف في مؤسسة أخرى", phone_used: "رقم الجوال مستخدم لحساب شخص آخر",
 };
 /** Local display of a Saudi mobile (05xxxxxxxx); null when not a valid mobile. Stored server-side as +9665xxxxxxxx. */
-export function localPhone(s: string) {
+function localPhone(s: string) {
   let d = (s ?? "").replace(/\D/g, "");
   if (d.startsWith("00")) d = d.slice(2);
   if (/^9665\d{8}$/.test(d)) d = "0" + d.slice(3);
