@@ -13,7 +13,7 @@ export const TAG_COLORS: { key: string; label: string }[] = [
 export type Tag = { id: string; name: string; color: string; kinds: PersonKind[]; active: boolean; uses?: number };
 export type PpCaps = { view: boolean; bulk: boolean; export: boolean; tags_assign: boolean; accounts: boolean; tags_manage: boolean };
 
-export function TagChip({ t, onRemove }: { t: Pick<Tag, "name" | "color">; onRemove?: () => void }) {
+export function TagChip({ t, onRemove }: { t: Pick<Tag, "name" | "color">; onRemove?: (() => void) | undefined }) {
   return (
     <span className={`tag-chip tag-${t.color} inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs`}>
       <span className="tag-dot size-2 rounded-full" aria-hidden />
