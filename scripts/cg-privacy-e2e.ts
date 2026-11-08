@@ -118,7 +118,7 @@ async function main() {
   const sNo = await staff.c.rpc("conv_messages", { _conv: gA, _before: null, _limit: 50 });
   ok("25 school staff not in the group and not a manager gets nothing", !(sNo.data ?? []).length);
   const add = await pr.c.rpc("class_group_add_member", { _conv: gA, _user: staff.id, _reason: "متابعة السلوك" });
-  ok("26 authorized staff added by principal sees real sender", !add.error && by(await view(staff), mS)?.sender_id === st.id, add.error?.message);
+  ok("26 authorized staff added by principal sees real sender", !add.error && by(await view(staff), await send(st, "بعد التفويض " + run))?.sender_id === st.id, add.error?.message);
   await pr.c.rpc("class_group_remove_member", { _conv: gA, _user: staff.id, _reason: "انتهاء التفويض" });
   const after = await staff.c.rpc("conv_messages", { _conv: gA, _before: null, _limit: 50 });
   ok("27 after removal (authorization withdrawn) staff gets nothing", !(after.data ?? []).length);
