@@ -47,7 +47,7 @@ try {
   check("principal still cannot read the assigned ticket", !(await pr.c.rpc("support_can_read", { _ticket: tg.data })).data);
 } catch (e) { bad++; console.error("ERROR", e); }
 finally {
-  for (const o of orgs) await admin.from("support_tickets").delete().eq("org_id", o);
+  for (const o of orgs) { const tk = ((await admin.from("support_tickets").select("id").eq("org_id", o)).data ?? []).map((x: any) => x.id); for (const tb of ["support_messages", "support_events", "support_info_requests", "support_notes", "support_followers"]) await admin.from(tb).delete().in("ticket_id", tk); await admin.from("support_tickets").delete().eq("org_id", o); }
   if (plat) await admin.from("platform_admins").delete().eq("user_id", plat);
   for (const o of orgs) await tr.purgeOrg(o).catch((e: unknown) => console.error("purge", e));
   await tr.cleanup?.();
