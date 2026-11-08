@@ -35,12 +35,12 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
     queryKey: ["msgs", id],
     initialPageParam: null as number | null,
     queryFn: async ({ pageParam }) => {
-      let q = db.from("messages").select("id, seq, sender_id, body, reply_to, created_at, edited_at, deleted_at, pinned_at").eq("conversation_id", id).order("seq", { ascending: false }).limit(PAGE);
-      if (pageParam != null) q = q.lt("seq", pageParam);
-      const { data, error } = await q;
+      // server masks student/guardian identities for viewers who may not see them
+      const { data, error } = await db.rpc("conv_messages", { _conv: id, _before: pageParam, _limit: PAGE });
       if (error) throw error;
       return data as Row[];
     },
+    refetchInterval: conv["kind"] === "group" ? 10000 : false,
     getNextPageParam: (last) => (last.length < PAGE ? null : (last[last.length - 1]!["seq"] as number)),
   });
   const people = useQuery({
@@ -53,15 +53,9 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   });
   const list = useMemo(() => (msgs.data?.pages.flat() ?? []).slice().sort((a, b) => a["seq"] - b["seq"]), [msgs.data]);
   const ids = list.map((m) => m["id"]);
-  const files = useQuery({
-    queryKey: ["msg-files", id, ids.length, list[list.length - 1]?.["seq"]],
-    enabled: ids.length > 0,
-    queryFn: async () => {
-      const { data } = await db.from("files").select("id, name, size_bytes, storage_path, source_id").eq("source_type", "message").in("source_id", ids);
-      return (data ?? []) as Row[];
-    },
-  });
-  const names = useMemo(() => Object.fromEntries((people.data ?? []).map((p) => [p["user_id"], p["label"] ? `${p["full_name"]} · ${p["label"]}` : p["full_name"]])), [people.data]);
+  const files = { data: list.flatMap((m) => ((m["files"] ?? []) as Row[]).map((f) => ({ ...f, source_id: m["id"] }))) };
+  void ids;
+  const names = useMemo(() => Object.fromEntries(list.map((m) => [m["id"], m["sender_label"] ? `${m["sender_name"]} · ${m["sender_label"]}` : m["sender_name"]])), [list]);
   const maxSeq = list.length ? list[list.length - 1]!["seq"] : 0;
 
   // realtime: RLS still applies, so removed members stop receiving events
@@ -112,7 +106,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   }
 
   function receipt(m: Row) {
-    if (m["sender_id"] !== user.id) return null;
+    if (!m["mine"]) return null;
     const readers = others.filter((p) => p["last_read_seq"] >= m["seq"]).length;
     if (!others.length) return "محفوظة";
     if (isGroup) return readers ? `قرأها ${readers} من ${others.length}` : "متاحة للأعضاء";
@@ -166,7 +160,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
           ) : (
             <ul className="space-y-2.5">
               {list.map((m) => (
-                <Message key={m["id"]} m={m} mine={m["sender_id"] === user.id} name={names[m["sender_id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
+                <Message key={m["id"]} m={m} mine={!!m["mine"]} name={names[m["id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
                   files={(files.data ?? []).filter((f) => f["source_id"] === m["id"])} receipt={receipt(m)} canAct={!block} isGroup={isGroup} canReply={canReply} isMod={isMod}
                   onReply={() => setReply(m)} onChanged={() => qc.invalidateQueries({ queryKey: ["msgs", id] })} />
               ))}
@@ -211,7 +205,7 @@ function Message({ m, mine, name, parent, files, receipt, canAct, isGroup, canRe
   return (
     <li className={`group max-w-[85%] break-words rounded-2xl p-3 text-sm shadow-sm sm:max-w-[70%] ${mine ? "ms-auto rounded-se-sm bg-primary/10" : "me-auto rounded-ss-sm border bg-card"}`}>
       {!mine && <p className="mb-1 text-xs font-semibold text-primary">{name}</p>}
-      {parent && <p className="mb-1 truncate border-s-2 border-primary/50 ps-2 text-xs text-muted-foreground">رد على: {parent["deleted_at"] ? "رسالة محذوفة" : parent["body"] || "مرفق"}</p>}
+      {parent && <p className="mb-1 truncate border-s-2 border-primary/50 ps-2 text-xs text-muted-foreground">رد على {parent["mine"] ? "أنت" : parent["sender_name"]}: {parent["deleted_at"] ? "رسالة محذوفة" : parent["body"] || "مرفق"}</p>}
       {m["reply_to"] && !parent && <p className="mb-1 border-s-2 ps-2 text-xs text-muted-foreground">رد على رسالة أقدم</p>}
       {deleted ? <p className="italic text-muted-foreground">حُذفت هذه الرسالة</p> : editing ? (
         <form className="space-y-1" onSubmit={async (e) => {
@@ -301,7 +295,7 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
       {restored && body && <p className="text-xs text-muted-foreground">مسودة غير مرسلة لهذه المحادثة فقط — لا تُنقل لمحادثة أخرى.</p>}
       {reply && (
         <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1 text-xs">
-          <Reply className="size-3" /> <span className="min-w-0 flex-1 truncate">رد على {names[reply["sender_id"]] ?? ""}: {reply["body"]}</span>
+          <Reply className="size-3" /> <span className="min-w-0 flex-1 truncate">رد على {reply["mine"] ? "رسالتك" : (reply["sender_label"] ? `${reply["sender_name"]} · ${reply["sender_label"]}` : reply["sender_name"]) ?? ""}: {reply["body"]}</span>
           <button type="button" aria-label="إلغاء الرد" onClick={onCancelReply}><X className="size-3" /></button>
         </div>
       )}
