@@ -28,6 +28,7 @@ def fn_name(url):
     except Exception: return ""
 
 async def simulate_send(route):
+    print("  [simulated send intercepted]", flush=True)
     body = json.loads(route.request.post_data or "{}")
     nid = body["t"]["p"]["v"][0]["p"]["v"][0]["s"]
     res = issue(nid)
@@ -46,7 +47,10 @@ async def id_login(br, who, entry, vp, wrong_first=False):
     await pg.goto(B + "/auth"); await pg.wait_for_timeout(5000)
     await pg.get_by_role("button", name=entry).click(); await pg.wait_for_timeout(800)
     await pg.fill("#idl-nid", F["nid"][who]); await pg.get_by_role("button", name="إرسال الرمز").click()
-    await pg.locator("#idl-code").wait_for(timeout=15000)
+    try: await pg.locator("#idl-code").wait_for(timeout=15000)
+    except Exception:
+        await pg.screenshot(path=SH + f"a_{who}_fail.png"); al = pg.get_by_role("alert")
+        raise RuntimeError(f"{who}: no code field; alert={await al.inner_text() if await al.count() else None}")
     if wrong_first:
         await pg.fill("#idl-code", "000000"); await pg.get_by_role("button", name="تأكيد الدخول").click(); await pg.wait_for_timeout(2500)
         al = pg.get_by_role("alert")
