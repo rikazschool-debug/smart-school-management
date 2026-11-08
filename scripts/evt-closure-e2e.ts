@@ -91,13 +91,14 @@ try {
 
   // ---------- course with an attachment field ----------
   const c1 = await R(p1, "evt_save", { _p: { kind: "course", school_id: S1, title: "دورة الروبوت", audience: "both", capacity: "5", sessions: [{ starts_at: soon(72) }] } });
+  await admin.from("evt_forms").delete().eq("item_id", c1.d.id); // legacy per-course form flow (section forms: evt-forms-e2e)
   const C1 = c1.d.id; let rev = (await R(p1, "evt_set_status", { _id: C1, _rev: c1.d.rev, _action: "publish" })).d.rev;
   const fields = [
     { id: "pname", kind: "text", label: "اسم المشارك", required: true, role: "name" },
     { id: "gphone", kind: "phone", label: "جوال ولي الأمر", required: true, role: "phone", audience: "external" },
     { id: "idcopy", kind: "file", label: "صورة الهوية", required: true, accept: ["pdf", "image", "exe"], max_mb: 1, max_files: 2 },
   ];
-  const fs = await R(p1, "evt_form_save", { _item: C1, _rev: 0, _fields: fields });
+  const fs = await R(p1, "evt_form_save", { _item: C1, _rev: (await R(p1, "evt_form_get", { _item: C1 })).d.draft_rev, _fields: fields });
   const pub = await R(p1, "evt_form_publish", { _item: C1, _rev: fs.d?.draft_rev });
   const fv = (await admin.from("evt_form_versions").select("fields").eq("version", 1).eq("form_id", (await admin.from("evt_forms").select("id").eq("item_id", C1).single()).data!.id).single()).data!.fields as any[];
   const ff = fv.find((x) => x.id === "idcopy");

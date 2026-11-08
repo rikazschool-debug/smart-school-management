@@ -5,7 +5,7 @@ import { Pill } from "@/components/admin/shared";
 
 export type Kind = "trip" | "general" | "course";
 export type KindCaps = Record<string, boolean>;
-export type EvtCaps = { owner: boolean; delegated: number; family: boolean; schools: { id: string; name: string; trip: KindCaps; general: KindCaps; course: KindCaps }[] };
+export type EvtCaps = { owner: boolean; delegated: number; family: boolean; tpl_view: boolean; schools: { id: string; name: string; trip: KindCaps; general: KindCaps; course: KindCaps }[] };
 export type AppCounts = { total: number; new: number; review: number; info_needed: number; accepted: number; rejected: number; cancelled: number };
 export type EvtRow = {
   id: string; rev: number; kind: Kind; title: string; school_id: string; school: string; category: string | null; status: string; reg_open: boolean; reg_state: string;
@@ -19,7 +19,19 @@ export type EvtItem = EvtRow & {
   link_active: boolean; token: string | null; published_at: string | null; created_by: string; created_at: string; caps: Record<string, boolean>; form_version: number;
   targets: number | null; session_list: Session[]; staff: { user_id: string; name: string; caps: string[] }[] | null;
   log: { action: string; at: string; by: string | null; details: Record<string, unknown> }[];
+  extra: Answers; extra_fields: Field[]; core_labels: CoreLabels;
+  tpl: TplLinkInfo; apply_tpl: TplLinkInfo | null;
 };
+export type CoreLabels = Record<string, { label?: string; help?: string }>;
+export type TplLinkInfo = { version: number; latest: number; source: "group" | "school" | "default"; outdated: boolean };
+export type TplKind = Kind | "apply";
+export const TPL_KIND: Record<TplKind, [string, string]> = {
+  trip: ["نموذج الرحلات المدرسية", "يضبط حقول إنشاء رحلة مدرسية جديدة."],
+  general: ["نموذج الفعاليات العامة", "يضبط حقول إنشاء فعالية عامة جديدة."],
+  course: ["نموذج الدورات", "يضبط حقول إنشاء دورة جديدة."],
+  apply: ["نموذج طلبات التسجيل", "يضبط الحقول التي يعبئها المتقدم عند التسجيل، بما يشمل نموذج التسجيل الخارجي."],
+};
+export const TPL_SOURCE: Record<string, string> = { group: "نموذج المجموعة", school: "تخصيص المدرسة", default: "النموذج الافتراضي" };
 
 export type FieldKind = "section" | "text" | "textarea" | "number" | "date" | "phone" | "email" | "select" | "multi" | "checkbox" | "file";
 export type Field = {
@@ -55,7 +67,7 @@ export const LOG: Record<string, string> = {
   link_enable: "تفعيل الرابط", link_disable: "إيقاف الرابط", link_renew: "تجديد الرابط", staff_set: "تفويض موظف", staff_remove: "سحب تفويض",
   form_publish: "نشر إصدار النموذج", form_copy: "نسخ نموذج", consent: "رد ولي أمر", attend: "تعديل الحضور",
   submit: "استلام الطلب", review: "بدء المراجعة", info: "طلب استكمال", accept: "قبول", reject: "رفض", reconsider: "إعادة نظر", reason: "سبب داخلي",
-  notify: "إشعار", withdraw: "سحب المتقدم طلبه", complete_info: "استكمل المتقدم بياناته", file: "إضافة مرفق", file_remove: "حذف مرفق", consent_reset: "تجديد الموافقات بعد تعديل جوهري",
+  notify: "إشعار", withdraw: "سحب المتقدم طلبه", complete_info: "استكمل المتقدم بياناته", file: "إضافة مرفق", file_remove: "حذف مرفق", consent_reset: "تجديد الموافقات بعد تعديل جوهري", form_from_tpl: "تطبيق نموذج طلبات التسجيل", tpl_update: "تحديث نموذج العنصر",
 };
 
 /** Ready-made fields the editor can add and then customize. */

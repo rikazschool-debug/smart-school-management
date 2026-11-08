@@ -107,3 +107,4 @@
 - scripts/cg-live-journey.py / cg-switch-journey.py: live delivery+reconnect+revoke and capacity switch (need cg-privacy-e2e --keep).
 - scripts/evt-e2e.ts: events section (courses/forms/public link/review/capacity race/delegation revoke/attendance/internal course/trip consents/isolation/rate limit; 75 checks). `--keep` + `teardown` for browser journeys.
 - scripts/evt-closure-e2e.ts: events attachments, consent renewal, outbox (43 checks); `--keep` + `teardown` for browser journeys.
+- scripts/evt-forms-e2e.ts: events section forms (4 forms, draft vs publish, auto-apply, version guard, registration link binding, school customization grant, isolation; 38 checks).

@@ -16,6 +16,7 @@ import { AppsList, ItemDetail, ItemForm, useEvtRefresh } from "@/components/even
 import { FormFields, missingRequired } from "@/components/events/form-render";
 import { accountUploader } from "@/components/events/upload";
 import { ItemFiles } from "@/components/events/files";
+import { SectionForms } from "@/components/events/section-forms";
 import {
   KIND, KIND_PLURAL, MODE, REG_STATE, StatusPill, AppPill, canAny, fmtDT, hasEvents, newClientKey, useEvtCaps,
   type Answers, type EvtRow, type Field, type Kind,
@@ -45,6 +46,7 @@ function Page() {
   const [school, setSchool] = useState<string>("");
   const [creating, setCreating] = useState<Kind | null>(null);
   const [appStatus, setAppStatus] = useState("");
+  const refreshEvt = useEvtRefresh();
   if (!active || !org) return <ForbiddenState />;
   if (caps.isLoading) return <LoadingState />;
   if (caps.error || !caps.data) return <ErrorState message={arabicError(caps.error)} onRetry={() => caps.refetch()} />;
@@ -56,7 +58,7 @@ function Page() {
     "summary",
     ...(["trip", "general", "course"] as Kind[]).filter((k) => canAny(c, k, "view") || (k === "course" && c.delegated > 0)),
     ...(canAny(c, "course", "apps") || c.delegated > 0 ? (["apps"] as Tab[]) : []),
-    ...(canAny(c, "course", "forms") ? (["forms"] as Tab[]) : []),
+    ...(c.tpl_view ? (["forms"] as Tab[]) : []),
     ...(c.schools.some((s) => s.trip["export"] || s.general["export"] || s.course["export"]) ? (["reports"] as Tab[]) : []),
     ...(c.family ? (["family"] as Tab[]) : []),
   ] as Tab[]));
@@ -80,7 +82,7 @@ function Page() {
           {kindTab && canCreate(kindTab) && <Button size="sm" onClick={() => setCreating(kindTab)}><CalendarPlus className="size-4" /> {kindTab === "course" ? "دورة جديدة" : kindTab === "trip" ? "رحلة جديدة" : "فعالية جديدة"}</Button>}
           {kindTab && !createSchool && <span className="text-xs text-muted-foreground">اختر مدرسة للإنشاء</span>}
         </div>} />
-      {creating && createSchool && <ItemForm kind={creating} school={createSchool} onClose={() => setCreating(null)} onDone={(id) => { setCreating(null); nav({ search: { tab: creating, item: id } }); }} />}
+      {creating && createSchool && <ItemForm kind={creating} school={createSchool} onClose={() => setCreating(null)} onDone={(id) => { setCreating(null); refreshEvt(); nav({ search: { tab: creating, item: id } }); }} />}
       {item && <ItemDetail key={item} id={item} app={app} openApp={(a) => nav({ search: { tab: cur, item, app: a } })} onClose={() => nav({ search: { tab: cur } })} />}
       {tabs.length > 1 && (
         <div className="mb-4 flex flex-wrap gap-2" role="tablist">
@@ -90,7 +92,7 @@ function Page() {
       {cur === "summary" && <Summary org={org} school={branch || null} open={(r) => nav({ search: { tab: r.kind, item: r.id } })} />}
       {kindTab && <ItemList org={org} school={branch || null} kind={kindTab} open={(id) => nav({ search: { tab: kindTab, item: id } })} />}
       {cur === "apps" && !item && <AppsList org={org} school={branch || null} status={appStatus} setStatus={setAppStatus} showItem open={(id, it) => nav({ search: { tab: "apps", item: it, app: id } })} />}
-      {cur === "forms" && <FormsTab org={org} school={branch || null} open={(id) => nav({ search: { tab: "course", item: id } })} />}
+      {cur === "forms" && <SectionForms org={org} />}
       {cur === "reports" && <Reports org={org} school={branch || null} schoolName={c.schools.find((s) => s.id === branch)?.name} />}
       {cur === "family" && <Family />}
       {staff && cur === "summary" && <p className="mt-6 text-sm text-muted-foreground">لقاءات أولياء الأمور تُنظَّم من <Link className="text-primary underline" to="/app/admin/meetings">الاجتماعات</Link>، وزيارات أولياء الأمور من <Link className="text-primary underline" to="/app/family-visits">الزيارات</Link>.</p>}
@@ -110,7 +112,7 @@ function Row({ r, open }: { r: EvtRow; open: (r: EvtRow) => void }) {
       {r.kind === "course" && <span className="text-xs">طلبات {r.apps.total} · مقبول {r.apps.accepted}{r.capacity ? `/${r.capacity}` : ""}{r.apps.new ? ` · جديد ${r.apps.new}` : ""}</span>}
       {r.kind === "trip" && r.consents && <span className="text-xs">موافق {r.consents.approved} · رافض {r.consents.declined}</span>}
       <span className="ms-auto flex items-center gap-2">{r.kind === "course" && r.status === "published" && <span className="text-xs text-primary">{REG_STATE[r.reg_state]}</span>}<StatusPill s={r.status} /></span>
-    </button></li>
+    </button>{r.kind === "course" && <LinkActions id={r.id} />}</li>
   );
 }
 
@@ -182,19 +184,6 @@ function Summary({ org, school, open }: { org: string; school: string | null; op
   );
 }
 function Stat({ label, v, sub }: { label: string; v: number; sub: string }) { return <div className="rounded-xl border bg-card p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="text-2xl font-bold">{v}</p><p className="text-xs text-muted-foreground">{sub}</p></div>; }
-
-function FormsTab({ org, school, open }: { org: string; school: string | null; open: (id: string) => void }) {
-  const list = useList(org, school, "course", "", "");
-  if (list.isLoading) return <LoadingState />;
-  if (list.error) return <ErrorState message={arabicError(list.error)} />;
-  const rows = (list.data ?? []).filter((r) => r.status !== "archived");
-  return (
-    <div>
-      <p className="mb-3 text-sm text-muted-foreground">لكل دورة نموذج تسجيل بإصدارات. افتح الدورة ثم تبويب «إعدادات النموذج» لإنشاء نموذج جديد أو نسخ نموذج محفوظ وتخصيصه.</p>
-      {!rows.length ? <EmptyState title="لا توجد دورات" /> : <ul className="divide-y rounded-xl border bg-card">{rows.map((r) => <Row key={r.id} r={r} open={(x) => open(x.id)} />)}</ul>}
-    </div>
-  );
-}
 
 type Rep = EvtRow & { att: { present: number; marked: number } };
 function Reports({ org, school, schoolName }: { org: string; school: string | null; schoolName?: string | undefined }) {
@@ -339,3 +328,18 @@ function ApplyForm({ item, kids, conditions, onDone }: { item: string; kids: Fam
   );
 }
 
+
+/** «نسخ رابط التسجيل» / «معاينة صفحة التسجيل» in the course list (the token is returned only to link/publish holders). */
+function LinkActions({ id }: { id: string }) {
+  const get = async () => {
+    const it = await rpc<{ token: string | null }>("evt_get", { _id: id });
+    if (!it.token) { toast.error("ليست لديك صلاحية رابط التسجيل لهذه الدورة"); return null; }
+    return `${window.location.origin}/join/${it.token}`;
+  };
+  return (
+    <span className="flex flex-wrap gap-1 px-3 pb-2">
+      <Button size="sm" variant="ghost" onClick={async () => { const u = await get().catch((e) => { toast.error(arabicError(e)); return null; }); if (u) { void navigator.clipboard.writeText(u); toast.success("نُسخ رابط التسجيل"); } }}>نسخ رابط التسجيل</Button>
+      <Button size="sm" variant="ghost" onClick={async () => { const w = window.open("", "_blank"); const u = await get().catch(() => null); if (u && w) w.location.href = u; else w?.close(); }}>معاينة صفحة التسجيل</Button>
+    </span>
+  );
+}
