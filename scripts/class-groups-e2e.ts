@@ -52,7 +52,8 @@ async function main() {
   const A = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 }), B = await ins("sections", { name: "ب", grade_id: grade.id, year_id: year.id, capacity: 30 });
   const cA1 = await ins("courses", { year_id: year.id, subject_id: subA.id, section_id: A.id, weekly_periods: 2 }), cA2 = await ins("courses", { year_id: year.id, subject_id: subB.id, section_id: A.id, weekly_periods: 2 });
   const cB1 = await ins("courses", { year_id: year.id, subject_id: subA.id, section_id: B.id, weekly_periods: 2 }), cB2 = await ins("courses", { year_id: year.id, subject_id: subB.id, section_id: B.id, weekly_periods: 2 });
-  for (const [c, t] of [[cA1, T1], [cA2, T1], [cA1, T2], [cB1, T2]] as any[]) { const a = await ins("teacher_assignments", { course_id: c.id, teacher_id: t.id }); await pr.c.rpc("decide_assignment", { _id: a.id, _approve: true }); }
+  const cA3 = await ins("courses", { year_id: year.id, subject_id: (await ins("subjects", { name: "فنية" })).id, section_id: A.id, weekly_periods: 1 });
+  for (const [c, t] of [[cA1, T1], [cA2, T1], [cA3, T2], [cB1, T2]] as any[]) { const a = await ins("teacher_assignments", { course_id: c.id, teacher_id: t.id }); await pr.c.rpc("decide_assignment", { _id: a.id, _approve: true }); }
   const s1 = await ins("students", { full_name: "ابن أول", user_id: st.id }), s2 = await ins("students", { full_name: "ابن ثان" }), s3 = await ins("students", { full_name: "ابن ثالث" });
   const e1 = await ins("enrollments", { student_id: s1.id, section_id: A.id, year_id: year.id }); await ins("enrollments", { student_id: s2.id, section_id: A.id, year_id: year.id }); await ins("enrollments", { student_id: s3.id, section_id: B.id, year_id: year.id });
   const G1 = await ins("guardians", { full_name: "ولي ابنين", user_id: g1.id }), G2 = await ins("guardians", { full_name: "ولي شعبتين", user_id: g2.id });
@@ -128,7 +129,7 @@ async function main() {
   // new subject reuses section group
   await ins("courses", { year_id: year.id, subject_id: (await ins("subjects", { name: "لغتي" })).id, section_id: A.id, weekly_periods: 1 });
   ok("30 new subject keeps two groups", ((await admin.from("conversations").select("id").eq("school_id", S).eq("group_type", "class")).data ?? []).length === 2);
-  void addSt; void S2r;
+  void addSt; void S2r; void cB2;
   console.log(`\n${pass}/${pass + fail} passed`);
   await teardown();
   if (fail) process.exit(1);
