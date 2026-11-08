@@ -86,9 +86,11 @@ try {
   const c1 = await R(p1, "evt_save", { _p: { kind: "course", school_id: S1, title: "دورة البرمجة للناشئين", audience: "both", capacity: "2", mode: "in_person", location: "معمل الحاسب", sessions } });
   check("5 principal creates course draft", !c1.e && !!c1.d?.id, c1.e);
   const C1 = c1.d.id; let rev = c1.d.rev;
+  // legacy per-course form flow: drop the form auto-applied from section settings (covered by evt-forms-e2e)
+  await admin.from("evt_forms").delete().eq("item_id", C1);
   check("6 open registration before publish refused", !!(await R(p1, "evt_set_status", { _id: C1, _rev: rev, _action: "open_reg" })).e);
   rev = (await R(p1, "evt_set_status", { _id: C1, _rev: rev, _action: "publish" })).d.rev;
-  check("7 new course gets the published registration form automatically (v1)", (await R(p1, "evt_form_get", { _item: C1 })).d?.version === 1);
+  check("7 open registration without published form refused", !!(await R(p1, "evt_set_status", { _id: C1, _rev: rev, _action: "open_reg" })).e);
   check("8 field with markup refused", !!(await R(p1, "evt_form_save", { _item: C1, _rev: (await R(p1, "evt_form_get", { _item: C1 })).d.draft_rev, _fields: [{ id: "x", kind: "text", label: "<script>alert(1)</script>" }] })).e);
   const fields = [
     { id: "sec1", kind: "section", label: "بيانات المشارك" },
@@ -214,6 +216,7 @@ try {
 
   // ---------- internal course from a guardian account ----------
   const c2 = (await R(p1, "evt_save", { _p: { kind: "course", school_id: S1, title: "نادي القراءة الداخلي", audience: "internal", sessions: [{ starts_at: soon(48) }] } })).d;
+  await admin.from("evt_forms").delete().eq("item_id", c2.id);
   let r2 = (await R(p1, "evt_set_status", { _id: c2.id, _rev: c2.rev, _action: "publish" })).d.rev;
   const fi = await R(p1, "evt_form_save", { _item: c2.id, _rev: (await R(p1, "evt_form_get", { _item: c2.id })).d.draft_rev, _fields: [{ id: "why", kind: "textarea", label: "لماذا ترغب بالمشاركة؟", required: true }] });
   await R(p1, "evt_form_publish", { _item: c2.id, _rev: fi.d.draft_rev });

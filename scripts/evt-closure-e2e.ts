@@ -91,6 +91,7 @@ try {
 
   // ---------- course with an attachment field ----------
   const c1 = await R(p1, "evt_save", { _p: { kind: "course", school_id: S1, title: "دورة الروبوت", audience: "both", capacity: "5", sessions: [{ starts_at: soon(72) }] } });
+  await admin.from("evt_forms").delete().eq("item_id", c1.d.id); // legacy per-course form flow (section forms: evt-forms-e2e)
   const C1 = c1.d.id; let rev = (await R(p1, "evt_set_status", { _id: C1, _rev: c1.d.rev, _action: "publish" })).d.rev;
   const fields = [
     { id: "pname", kind: "text", label: "اسم المشارك", required: true, role: "name" },
