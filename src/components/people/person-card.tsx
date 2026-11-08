@@ -152,3 +152,12 @@ function Notes({ c, kind, id, onChange }: { c: Card; kind: PersonKind; id: strin
     </section>
   );
 }
+
+/** Opens the side card from screens that are not CrudTable lists (e.g. an HR employee file). */
+export function PersonCardButton({ kind, id, org, label = "البطاقة والملاحظات" }: { kind: PersonKind; id: string; org: string | null | undefined; label?: string }) {
+  const [open, setOpen] = useState(false);
+  return (<>
+    <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>{label}</Button>
+    <PersonCard kind={kind} id={open ? id : null} org={org} onClose={() => setOpen(false)} />
+  </>);
+}

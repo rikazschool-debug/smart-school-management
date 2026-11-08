@@ -17,6 +17,7 @@ import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { HrImport } from "@/components/hr/import";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
+import { PersonCardButton } from "@/components/people/person-card";
 import { HrCategories } from "@/components/hr/categories";
 import { GENDER, STATUS, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
@@ -315,6 +316,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
     <section className="space-y-4 rounded-xl border-2 border-primary/30 bg-card p-4" aria-label={`ملف ${e.full_name}`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="min-w-0 flex-1"><span className="block text-lg font-bold">{e.display_name || e.full_name}</span>{e.display_name && e.display_name !== e.full_name && <span className="block text-xs text-muted-foreground">الاسم الرسمي: {e.full_name}</span>}<span className="text-xs text-muted-foreground"><bdi dir="ltr">{e.employee_no}</bdi> · {STATUS[e.status]}</span></span>
+        <PersonCardButton kind="employee" id={e.id} org={org} />
         {can_edit && !edit && <Button size="sm" variant="outline" onClick={startEdit}>تعديل الملف</Button>}
         <Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق الملف"><X className="size-4" /></Button>
       </div>
