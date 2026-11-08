@@ -97,7 +97,7 @@ try {
     { id: "gphone", kind: "phone", label: "جوال ولي الأمر", required: true, role: "phone", audience: "external" },
     { id: "idcopy", kind: "file", label: "صورة الهوية", required: true, accept: ["pdf", "image", "exe"], max_mb: 1, max_files: 2 },
   ];
-  const fs = await R(p1, "evt_form_save", { _item: C1, _rev: 0, _fields: fields });
+  const fs = await R(p1, "evt_form_save", { _item: C1, _rev: (await R(p1, "evt_form_get", { _item: C1 })).d.draft_rev, _fields: fields });
   const pub = await R(p1, "evt_form_publish", { _item: C1, _rev: fs.d?.draft_rev });
   const fv = (await admin.from("evt_form_versions").select("fields").eq("version", 1).eq("form_id", (await admin.from("evt_forms").select("id").eq("item_id", C1).single()).data!.id).single()).data!.fields as any[];
   const ff = fv.find((x) => x.id === "idcopy");

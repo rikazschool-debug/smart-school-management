@@ -89,7 +89,7 @@ try {
   check("6 open registration before publish refused", !!(await R(p1, "evt_set_status", { _id: C1, _rev: rev, _action: "open_reg" })).e);
   rev = (await R(p1, "evt_set_status", { _id: C1, _rev: rev, _action: "publish" })).d.rev;
   check("7 open registration without published form refused", !!(await R(p1, "evt_set_status", { _id: C1, _rev: rev, _action: "open_reg" })).e);
-  check("8 field with markup refused", !!(await R(p1, "evt_form_save", { _item: C1, _rev: 0, _fields: [{ id: "x", kind: "text", label: "<script>alert(1)</script>" }] })).e);
+  check("8 field with markup refused", !!(await R(p1, "evt_form_save", { _item: C1, _rev: (await R(p1, "evt_form_get", { _item: C1 })).d.draft_rev, _fields: [{ id: "x", kind: "text", label: "<script>alert(1)</script>" }] })).e);
   const fields = [
     { id: "sec1", kind: "section", label: "بيانات المشارك" },
     { id: "pname", kind: "text", label: "اسم المشارك", required: true, role: "name" },
@@ -98,7 +98,7 @@ try {
     { id: "level", kind: "select", label: "المستوى", options: ["مبتدئ", "متوسط"], required: true },
     { id: "agree", kind: "checkbox", label: "أوافق على الشروط", required: true },
   ];
-  const fs1 = await R(p1, "evt_form_save", { _item: C1, _rev: 0, _fields: fields });
+  const fs1 = await R(p1, "evt_form_save", { _item: C1, _rev: (await R(p1, "evt_form_get", { _item: C1 })).d.draft_rev, _fields: fields });
   check("9 form draft saved", !fs1.e, fs1.e);
   const pub1 = await R(p1, "evt_form_publish", { _item: C1, _rev: fs1.d.draft_rev });
   check("10 form version 1 published", pub1.d?.version === 1, pub1);
@@ -215,7 +215,7 @@ try {
   // ---------- internal course from a guardian account ----------
   const c2 = (await R(p1, "evt_save", { _p: { kind: "course", school_id: S1, title: "نادي القراءة الداخلي", audience: "internal", sessions: [{ starts_at: soon(48) }] } })).d;
   let r2 = (await R(p1, "evt_set_status", { _id: c2.id, _rev: c2.rev, _action: "publish" })).d.rev;
-  const fi = await R(p1, "evt_form_save", { _item: c2.id, _rev: 0, _fields: [{ id: "why", kind: "textarea", label: "لماذا ترغب بالمشاركة؟", required: true }] });
+  const fi = await R(p1, "evt_form_save", { _item: c2.id, _rev: (await R(p1, "evt_form_get", { _item: c2.id })).d.draft_rev, _fields: [{ id: "why", kind: "textarea", label: "لماذا ترغب بالمشاركة؟", required: true }] });
   await R(p1, "evt_form_publish", { _item: c2.id, _rev: fi.d.draft_rev });
   r2 = (await R(p1, "evt_set_status", { _id: c2.id, _rev: r2, _action: "open_reg" })).d.rev;
   const tok2 = (await R(p1, "evt_get", { _id: c2.id })).d.token;
