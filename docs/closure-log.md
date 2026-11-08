@@ -679,3 +679,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## 2026-11-08 — Demo buttons on published site + platform owner login
 - Demo account buttons now show on preview and published site (user request).
 - Platform owner account owner@platform.rikaz.app added via platform_admins insert; own private password (not the shared demo password), entered on the login page under «مالك المنصة». Verified: sign-in reaches «لوحة أدمن المنصة».
+
+## 2026-11-08 — Group owner ID sign-in
+- org_owner_identity (RPC-only) + platform_org_save: platform owner edits org name and owner name/ID/mobile; _idl_resolve includes active org owners. Verified via UI save + resolve (test values removed).
