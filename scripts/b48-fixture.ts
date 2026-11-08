@@ -67,9 +67,9 @@ const sg = await admin.from("student_guardians").insert({ school_id: S, student_
 const gs = await U.pr!.c.rpc("gv_settings_save", { _school: S, _p: { enabled: true, days: [0, 1, 2, 3, 4, 5, 6], start_time: "00:00", end_time: "23:40", slot_minutes: 20 } }); if (gs.error) throw gs.error;
 const slots = ((await U.g1!.c.rpc("gv_slots", { _school: S, _from: today, _to: today })).data ?? []) as any[];
 const nowMin = riyadh().getUTCHours() * 60 + riyadh().getUTCMinutes() + 30;
-const slot = slots.find((s) => s.free && Number(String(s.slot_time ?? s.time).slice(0, 2)) * 60 + Number(String(s.slot_time ?? s.time).slice(3, 5)) >= nowMin);
+const slot = slots.find((s) => s.free && Number(String(s.at).slice(0, 2)) * 60 + Number(String(s.at).slice(3, 5)) >= nowMin);
 if (!slot) throw new Error("no free slot left today: " + JSON.stringify(slots.slice(-2)));
-const slotTime = String(slot.slot_time ?? slot.time).slice(0, 5);
+const slotTime = String(slot.at).slice(0, 5);
 const V = await U.g1!.c.rpc("gv_create", { _p: { source: "guardian", student_id: kid.id, reason_cat: "academic", details: "متابعة المستوى الدراسي", slot_date: today, slot_time: slotTime } }); if (V.error) throw V.error;
 const vrev = (await admin.from("gv_visits").select("rev").eq("id", V.data).single()).data!.rev;
 const cf = await U.pr!.c.rpc("gv_act", { _id: V.data, _action: "confirm", _rev: vrev, _p: { host_id: U.h1!.id } }); if (cf.error) throw cf.error;
