@@ -9,3 +9,4 @@
 - Manual groups: created/filled only by org owner (any branch/cross-branch), principal (own school) or an owner-granted groups.create holder, via _can_create_group (perm_allows); derived class groups are untouched.
 - Server test: scripts/comm-e2e.ts (see scripts/AGENTS.md).
 - Hub circulars (orgWide for the org owner) list and target the whole org; the last visited school is only the default home school. Groups come from every selected branch, grouped by branch.
+- Identity privacy in class/course/section groups: _cg_sender_visible decides per viewer (self, school staff member of the group or manager, staff sender, own verified child). Thread reads only via conv_messages (generic «طالب»/«ولي أمر», null sender_id); messages/conversation_members/files RLS hide masked rows, so ids never reach the client; conversation_people/class_group_members/search_messages apply the same filter. Tests: scripts/cg-privacy-e2e.ts.
