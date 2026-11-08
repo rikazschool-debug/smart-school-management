@@ -9,6 +9,8 @@ export const LIVE_TOPICS: Record<string, string[]> = {
   "adm-requests": ["adm-requests", "adm-request", "adm-summary"],
   "adm-decisions": ["adm-decisions", "adm-summary"],
   pickup: ["att-pk-pending", "att-pk-queue", "att-mine"],
+  la: ["la-my", "la-school", "la"],
+  "att-day": ["family-att", "la", "la-school"],
 };
 
 export function keysForTopic(topic: string): string[] {

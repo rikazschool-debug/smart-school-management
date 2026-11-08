@@ -1663,6 +1663,35 @@ export type Database = {
           },
         ]
       }
+      att_daily_settings: {
+        Row: {
+          school_id: string
+          teacher_edit_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          school_id: string
+          teacher_edit_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          school_id?: string
+          teacher_edit_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "att_daily_settings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_corrections: {
         Row: {
           day_id: string
@@ -9816,6 +9845,8 @@ export type Database = {
           created_at: string
           created_by: string
           date: string
+          exception_by: string | null
+          exception_reason: string | null
           id: string
           kind: string
           period_id: string
@@ -9834,6 +9865,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           date: string
+          exception_by?: string | null
+          exception_reason?: string | null
           id?: string
           kind?: string
           period_id: string
@@ -9852,6 +9885,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           date?: string
+          exception_by?: string | null
+          exception_reason?: string | null
           id?: string
           kind?: string
           period_id?: string
@@ -15483,6 +15518,7 @@ export type Database = {
         Args: { r: Database["public"]["Tables"]["invitations"]["Row"] }
         Returns: boolean
       }
+      _la_edit_days: { Args: { _school: string }; Returns: number }
       _la_first_slot: {
         Args: { _date: string; _school: string; _section: string }
         Returns: string
@@ -15492,6 +15528,10 @@ export type Database = {
       _la_read: { Args: { _id: string }; Returns: boolean }
       _la_taker: { Args: { _date: string; _slot: string }; Returns: string }
       _la_write_days: { Args: { _id: string }; Returns: undefined }
+      _la_writer: {
+        Args: { a: Database["public"]["Tables"]["lesson_attendance"]["Row"] }
+        Returns: string
+      }
       _link_section_room: { Args: { _classroom: string }; Returns: string }
       _live_staff: { Args: { _school: string }; Returns: boolean }
       _meet_busy: {
@@ -16714,7 +16754,15 @@ export type Database = {
         Returns: Json
       }
       att_counselor: { Args: { _school: string }; Returns: boolean }
+      att_daily_settings_save: {
+        Args: { _days: number; _school: string }
+        Returns: undefined
+      }
       att_daily_since: { Args: never; Returns: string }
+      att_day_event: {
+        Args: { _kind: string; _reason: string; _student: string }
+        Returns: undefined
+      }
       att_day_rows: {
         Args: { _from: string; _school: string; _status?: string; _to: string }
         Returns: {
@@ -17339,6 +17387,7 @@ export type Database = {
         Args: { _due: string; _id: string; _reason: string; _student: string }
         Returns: undefined
       }
+      family_attendance: { Args: { _student: string }; Returns: Json }
       family_child: { Args: { _student: string }; Returns: Json }
       family_children: { Args: never; Returns: Json }
       family_contacts: {
@@ -18304,9 +18353,17 @@ export type Database = {
         Returns: string
       }
       la_approve: { Args: { _id: string; _rev: number }; Returns: undefined }
+      la_exception_open: {
+        Args: { _date: string; _reason: string; _slot: string }
+        Returns: string
+      }
       la_get: { Args: { _id: string }; Returns: Json }
       la_my_lessons: { Args: { _date?: string }; Returns: Json }
       la_open: { Args: { _date: string; _slot: string }; Returns: string }
+      la_report_missing: {
+        Args: { _note?: string; _slot: string; _student: string }
+        Returns: undefined
+      }
       la_save: {
         Args: { _id: string; _marks: Json; _reason?: string; _rev: number }
         Returns: number
@@ -18315,6 +18372,7 @@ export type Database = {
         Args: { _date?: string; _school: string }
         Returns: Json
       }
+      la_section_today: { Args: { _slot: string }; Returns: Json }
       late_joiners: {
         Args: { _hw: string }
         Returns: {
