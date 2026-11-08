@@ -118,3 +118,10 @@
 }
 body { font-family: "Cairo", system-ui, sans-serif; }
 .font-display { font-family: "Cairo", sans-serif; font-weight: 800; }
+
+/* Person tags: the tag name is always shown next to its colour (never colour alone). */
+.tag-chip { --tag-h: 250; --tag-c: 0.02; background: oklch(0.95 var(--tag-c) var(--tag-h)); color: oklch(0.35 calc(var(--tag-c) * 3) var(--tag-h)); border: 1px solid oklch(0.85 var(--tag-c) var(--tag-h)); }
+.tag-chip .tag-dot { background: oklch(0.6 calc(var(--tag-c) * 5) var(--tag-h)); }
+.tag-slate { --tag-h: 250; --tag-c: 0.01; } .tag-red { --tag-h: 27; --tag-c: 0.04; } .tag-amber { --tag-h: 75; --tag-c: 0.04; }
+.tag-green { --tag-h: 150; --tag-c: 0.035; } .tag-teal { --tag-h: 190; --tag-c: 0.03; } .tag-blue { --tag-h: 250; --tag-c: 0.04; }
+.tag-violet { --tag-h: 300; --tag-c: 0.04; } .tag-pink { --tag-h: 350; --tag-c: 0.04; }
