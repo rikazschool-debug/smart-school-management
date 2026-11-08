@@ -46,6 +46,7 @@ function Page() {
   const [school, setSchool] = useState<string>("");
   const [creating, setCreating] = useState<Kind | null>(null);
   const [appStatus, setAppStatus] = useState("");
+  const refreshEvt = useEvtRefresh();
   if (!active || !org) return <ForbiddenState />;
   if (caps.isLoading) return <LoadingState />;
   if (caps.error || !caps.data) return <ErrorState message={arabicError(caps.error)} onRetry={() => caps.refetch()} />;
@@ -81,7 +82,7 @@ function Page() {
           {kindTab && canCreate(kindTab) && <Button size="sm" onClick={() => setCreating(kindTab)}><CalendarPlus className="size-4" /> {kindTab === "course" ? "دورة جديدة" : kindTab === "trip" ? "رحلة جديدة" : "فعالية جديدة"}</Button>}
           {kindTab && !createSchool && <span className="text-xs text-muted-foreground">اختر مدرسة للإنشاء</span>}
         </div>} />
-      {creating && createSchool && <ItemForm kind={creating} school={createSchool} onClose={() => setCreating(null)} onDone={(id) => { setCreating(null); nav({ search: { tab: creating, item: id } }); }} />}
+      {creating && createSchool && <ItemForm kind={creating} school={createSchool} onClose={() => setCreating(null)} onDone={(id) => { setCreating(null); refreshEvt(); nav({ search: { tab: creating, item: id } }); }} />}
       {item && <ItemDetail key={item} id={item} app={app} openApp={(a) => nav({ search: { tab: cur, item, app: a } })} onClose={() => nav({ search: { tab: cur } })} />}
       {tabs.length > 1 && (
         <div className="mb-4 flex flex-wrap gap-2" role="tablist">
