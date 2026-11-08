@@ -15,7 +15,7 @@ import { addDays, dayName, riyadhToday, weekStartOf } from "@/components/admin/s
 import { askText } from "@/components/confirm";
 import { supabase } from "@/integrations/supabase/client";
 import { PeoplePicker } from "@/components/people-picker";
-import { DAYS, EVENT, REASONS, SOURCE, STATUS, SlotPicker, StatusPill, awaitingText, type Caps, type Visit, type VisitDetail } from "@/components/family-visits/shared";
+import { DAYS, EVENT, REASONS, SOURCE, STATUS, SlotPicker, CalendarSlotPicker, StatusPill, awaitingText, type Caps, type Visit, type VisitDetail } from "@/components/family-visits/shared";
 
 type Tab = "calendar" | "mine" | "school" | "reception" | "settings";
 const TABS: Tab[] = ["calendar", "mine", "school", "reception", "settings"];
@@ -343,6 +343,7 @@ function RequestForm({ onDone, onClose }: { onDone: (id: string) => void; onClos
   const kids = useQuery({ queryKey: ["gv-kids"], queryFn: () => rpc<{ student_id: string; student: string; school_id: string; school: string }[]>("gv_my_children", {}) });
   const [kid, setKid] = useState(""); const [cat, setCat] = useState("academic"); const [details, setDetails] = useState("");
   const [slot, setSlot] = useState<{ d: string; t: string } | null>(null);
+  const [review, setReview] = useState(false);
   const refresh = useRefreshAll();
   const k = kids.data?.find((x) => x.student_id === kid);
   useEffect(() => { if (!kid && kids.data?.length === 1) setKid(kids.data[0]!.student_id); }, [kids.data, kid]);
@@ -364,8 +365,26 @@ function RequestForm({ onDone, onClose }: { onDone: (id: string) => void; onClos
           <div className="space-y-1"><Label htmlFor="gv-rcat">تصنيف السبب</Label><select id="gv-rcat" className={selectCls()} value={cat} onChange={(e) => setCat(e.target.value)}>{Object.entries(REASONS).map(([kk, l]) => <option key={kk} value={kk}>{l}</option>)}</select></div>
           <div className="space-y-1 sm:col-span-2"><Label htmlFor="gv-rdet">تفاصيل السبب</Label><Textarea id="gv-rdet" rows={3} value={details} onChange={(e) => setDetails(e.target.value)} /></div>
         </div>
-        {k && <div className="space-y-1"><Label>اختر موعدًا متاحًا</Label><SlotPicker school={k.school_id} value={slot} onChange={setSlot} /></div>}
-        <Button disabled={!kid || details.trim().length < 3 || !slot || save.isPending} onClick={() => save.mutate()}>إرسال الطلب</Button>
+        {k && <div className="space-y-1"><Label>اختر اليوم والموعد</Label><CalendarSlotPicker key={k.school_id} school={k.school_id} value={slot} onChange={setSlot} /></div>}
+        {!review ? (
+          <Button disabled={!kid || details.trim().length < 3 || !slot} onClick={() => setReview(true)}>مراجعة الطلب</Button>
+        ) : k && slot && (
+          <div className="space-y-3 rounded-lg border border-primary/40 bg-primary/5 p-3" aria-label="مراجعة تفاصيل الطلب">
+            <h3 className="text-sm font-semibold">راجع تفاصيل الطلب قبل الإرسال</h3>
+            <dl className="grid gap-2 text-sm sm:grid-cols-2">
+              <div><dt className="text-xs text-muted-foreground">الابن / الابنة</dt><dd>{k.student}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">المدرسة</dt><dd>{k.school}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">تصنيف السبب</dt><dd>{REASONS[cat] ?? cat}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">الموعد</dt><dd>{dayName(slot.d)} {slot.d} — الساعة {slot.t}</dd></div>
+              <div className="sm:col-span-2"><dt className="text-xs text-muted-foreground">تفاصيل السبب</dt><dd className="whitespace-pre-wrap">{details}</dd></div>
+            </dl>
+            <p className="text-xs text-muted-foreground">سيصل الطلب للمدرسة بانتظار تأكيد الموعد.</p>
+            <div className="flex gap-2">
+              <Button disabled={save.isPending} onClick={() => save.mutate()}>تأكيد الإرسال</Button>
+              <Button variant="outline" disabled={save.isPending} onClick={() => setReview(false)}>تعديل</Button>
+            </div>
+          </div>
+        )}
       </>)}
     </section>
   );
