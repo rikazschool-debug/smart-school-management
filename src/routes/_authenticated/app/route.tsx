@@ -12,6 +12,7 @@ import { Award, Briefcase,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
+import { Sanad } from "@/components/sanad";
 import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
@@ -327,6 +328,7 @@ function Shell() {
           <Outlet />
           <ConfirmHost />
         </main>
+        <Sanad schoolId={active.schoolId ?? null} role={active.role} roleLabel={ROLE_LABELS[active.role] ?? ""} />
       </div>
     </div>
   );
