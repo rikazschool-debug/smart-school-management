@@ -156,9 +156,9 @@
 - [x] Tests: synthetic accounts, desktop+mobile, no cross-school access; clean synthetic only
 
 ## B10 — Permissions screen: edit an existing employee (all roles)
-- [ ] Person + school + capacity picker (staff vs guardian), unsaved-change warning
-- [ ] Panel 1 read-only effective access (from server, with source + limits + pending conditions)
-- [ ] Panel 2 full tree starting from effective state; follow-role / grant / deny / restore defaults; delegation limits server-side
-- [ ] Tree inventory complete (teaching, comm split use/manage/settings, HR self vs admin, etc.), search + filters, expand/collapse, RTL mobile
-- [ ] Before/after preview, audited save, conflict detection, no partial success
+- [~] (done: name/base/extra roles/capacity note, unsaved warning; open: per-school overrides need server model) Person + school + capacity picker (staff vs guardian), unsaved-change warning
+- [x] Panel 1 read-only effective access (from server, with source + limits + pending conditions)
+- [~] (done: statuses, follow role, restore defaults, section-untick confirm; open: disable non-delegable with reason) Panel 2 full tree starting from effective state; follow-role / grant / deny / restore defaults; delegation limits server-side
+- [~] (done: search synonyms, filters, expand/collapse; open: teaching/comm/personal tools as controllable sections + server gates) Tree inventory complete (teaching, comm split use/manage/settings, HR self vs admin, etc.), search + filters, expand/collapse, RTL mobile
+- [~] (done: preview, audited save, client conflict check; open: server-side version check) Before/after preview, audited save, conflict detection, no partial success
 - [ ] Same source drives nav, route guards, server; tests for teacher/principal/vice/counselor/delegate/multi-role/guardian
