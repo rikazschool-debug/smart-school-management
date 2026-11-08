@@ -54,7 +54,7 @@ async function main() {
   const tch = await ins("teachers", { full_name: "معلم الحصة", user_id: t1.id });
   const tch2 = await ins("teachers", { full_name: "معلم آخر", user_id: t2.id });
   const sec = await ins("sections", { name: "ب", grade_id: grade.id, year_id: year.id, capacity: 30 });
-  const c = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec.id, weekly_periods: 1 });
+  const c = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec.id, weekly_periods: 2 });
   const a = await ins("teacher_assignments", { course_id: c.id, teacher_id: tch.id });
   await pr.c.rpc("decide_assignment", { _id: a.id, _approve: true });
   const studs = [] as any[];
@@ -63,6 +63,8 @@ async function main() {
   await ins("student_guardians", { student_id: studs[0].id, guardian_id: gd.id, relationship: "father", verified: true, can_follow: true, verified_at: new Date().toISOString() });
   const tt = await ins("timetables", { year_id: year.id, name: "الجدول", created_by: pr.id });
   const sl = await pr.c.from("timetable_slots").insert({ timetable_id: tt.id, school_id: S, day: dow, period_id: P.id, course_id: c.id, section_id: sec.id, teacher_id: tch.id }).select().single(); if (sl.error) throw sl.error;
+  const P2 = await ins("periods", { sort_order: 2, name: "الحصة الثانية", start_time: "08:20", end_time: "09:05" });
+  const sl2 = await pr.c.from("timetable_slots").insert({ timetable_id: tt.id, school_id: S, day: dow, period_id: P2.id, course_id: c.id, section_id: sec.id, teacher_id: tch.id }).select().single(); if (sl2.error) throw sl2.error;
   const pb = await pr.c.rpc("publish_timetable", { _id: tt.id, _effective_from: today }); if (pb.error) throw pb.error;
   const slot = sl.data.id as string;
 
@@ -109,11 +111,8 @@ async function main() {
   const dd = await admin.from("attendance_days").select("student_id,status,source,class_session_id").eq("school_id", S).eq("date", today);
   ok("19a approval wrote official daily records", !dd.error && dd.data!.length === 3 && dd.data!.every((r: any) => r.source === "class" && r.class_session_id === id), JSON.stringify(dd.error ?? dd.data));
   ok("19b correction reflected in daily record", dd.data?.find((r: any) => r.student_id === studs[0].id)?.status === "excused");
-  const P2 = await ins("periods", { sort_order: 2, name: "الحصة الثانية", start_time: "08:20", end_time: "09:05" });
-  const sl2 = await admin.from("timetable_slots").insert({ timetable_id: tt.id, school_id: S, day: dow, period_id: P2.id, course_id: c.id, section_id: sec.id, teacher_id: tch.id }).select().single();
-  const o3 = sl2.error ? { error: sl2.error } : await t1.c.rpc("la_open", { _slot: sl2.data.id, _date: today });
-  ok("19c later-period teacher cannot take daily attendance", !!o3.error && !sl2.error, sl2.error?.message ?? o3.error?.message);
-  if (!sl2.error) await admin.from("timetable_slots").delete().eq("id", sl2.data.id);
+  const o3 = await t1.c.rpc("la_open", { _slot: sl2.data.id, _date: today });
+  ok("19c later-period teacher cannot take daily attendance", !!o3.error, o3.error?.message);
   await admin.from("gate_movements").insert({ school_id: S, student_id: studs[1].id, date: today, kind: "in", at: new Date().toISOString() });
   const d3 = (await t1.c.rpc("la_get", { _id: id })).data as any;
   const s1 = d3.marks.find((m: any) => m.student_id === studs[1].id);
