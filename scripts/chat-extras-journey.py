@@ -14,7 +14,7 @@ def rest(method, table, body=None, q=""):
     r = requests.request(method, f"{SRV}/rest/v1/{table}{q}", headers={"apikey": SK, "Authorization": f"Bearer {SK}", "Content-Type": "application/json", "Prefer": "return=representation"}, json=body)
     r.raise_for_status(); return r.json()
 owner = F["users"]["owner"]["id"]
-rest("POST", "cs_replies", {"org_id": F["org"], "title": "شكر للتواصل", "shortcut": "شكر", "body": "شكرًا لتواصلكم، سنعود إليكم قريبًا.", "roles": ["all"], "active": True, "created_by": owner})
+rest("POST", "cs_replies", {"org_id": F["org"], "title": "شكر للتواصل", "shortcut": "شكر", "body": "شكرًا لتواصلكم، سنعود إليكم قريبًا.", "roles": ["teacher"], "active": True, "created_by": owner})
 rest("POST", "cs_auto_rules", {"org_id": F["org"], "kind": "welcome", "name": "ترحيب", "body": "مرحبًا بكم، استلمنا رسالتكم.", "school_ids": [], "recipient_roles": [], "priority": 1, "cooldown_hours": 24, "sender_label": "رد آلي", "active": True, "activated_at": "2020-01-01T00:00:00Z", "created_by": owner})
 def session(who):
     return requests.post(f"{URL}/auth/v1/token?grant_type=password", headers={"apikey": PK}, json={"email": F["users"][who]["email"], "password": F["pw"]}).json()
@@ -51,20 +51,19 @@ async def main():
         v = await box.input_value()
         check("choosing a reply puts its text in the box (editable, not sent)", "شكرًا لتواصلكم" in v and (await tp.locator("body").inner_text()).count("شكرًا لتواصلكم") <= 1, v)
         await box.fill(v + " — أ. معلم"); await tp.keyboard.press("Enter"); await tp.wait_for_timeout(2500)
-        check("edited reply sent once", (await tp.locator("body").inner_text()).count("سنعود إليكم قريبًا. — أ. معلم") == 1)
+        check("edited reply sent once (box cleared, shown in the thread)", await box.input_value() == "" and await tp.locator("li, article, div.rounded-2xl", has_text="سنعود إليكم قريبًا. — أ. معلم").count() >= 1)
         await tp.get_by_role("button", name="الردود المحفوظة").click(); await tp.wait_for_timeout(1000)
         check("saved replies button opens the same list", await tp.get_by_role("listbox", name="الردود المحفوظة").count() == 1)
-        await tp.keyboard.press("Escape")
+        await tp.get_by_role("button", name="الردود المحفوظة").click(); await tp.wait_for_timeout(500)
+        check("pressing the button again closes the list", await tp.get_by_role("listbox", name="الردود المحفوظة").count() == 0)
         # real recording with the fake microphone
         await tp.get_by_role("button", name="تسجيل رسالة صوتية").click(); await tp.wait_for_timeout(3500)
         await tp.get_by_role("button", name="إيقاف التسجيل").click(); await tp.wait_for_timeout(1500)
         await tp.screenshot(path=S + "2-teacher-voice-preview.png")
         has_prev = await tp.get_by_role("button", name="تشغيل الرسالة الصوتية").count() >= 1
         check("teacher: recording stops into a preview player before sending", has_prev)
-        send_btn = tp.get_by_role("button", name=re.compile("^إرسال"))
-        if await send_btn.count(): await send_btn.last.click()
-        else: await tp.keyboard.press("Enter")
-        await tp.wait_for_timeout(5000)
+        await tp.get_by_role("button", name="إرسال", exact=True).click(); await tp.wait_for_timeout(6000)
+        check("voice sent: preview cleared", await tp.get_by_text("معاينة التسجيل").count() == 0)
         # attachments panel
         await tp.get_by_role("button", name="المرفقات").click(); await tp.wait_for_timeout(2500)
         sheet = tp.locator("[role=dialog]").last
