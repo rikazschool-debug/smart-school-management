@@ -51,5 +51,5 @@ const dualG = await admin.from("guardians").insert({ school_id: A, full_name: `�
 const dm = await admin.from("memberships").insert({ user_id: teacher.id, org_id: org, school_id: A, role: "guardian" }); if (dm.error) throw dm.error;
 const tag = (await admin.from("pp_tags").insert({ org_id: org, name: "متابعة pbx", color: "amber", kinds: ["teacher", "guardian"], created_by: owner.id }).select("id").single()).data!.id;
 mkdirSync("/tmp/browser/pp2", { recursive: true });
-writeFileSync(FX, JSON.stringify({ org, schools: [A, B], A, B, tag, pw, users, accounts: { owner: owner.email, pA: pA.email, pB: pB.email, viewer: viewer.email, teacher: teacher.email, guardian: guardian.email, student: student.email }, linkedTeacher: ins.data[0]!.id }, null, 2));
+writeFileSync(FX, JSON.stringify({ org, schools: [A, B], A, B, tag, pw, users, accounts: { owner: owner.email, pA: pA.email, pB: pB.email, viewer: viewer.email, teacher: teacher.email, guardian: guardian.email, student: student.email }, linkedTeacher: ins.data[0]!.id, student: stu.data!.id, employee: emp.data!.id, dualGuardian: dualG.data!.id, run: run % 1000 }, null, 2));
 console.log("fixture ready", FX);
