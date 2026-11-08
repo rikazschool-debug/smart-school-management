@@ -55,19 +55,20 @@ try {
   // re-save the assignment: must not duplicate the group
   await admin.from("teacher_assignments").update({ note: "إعادة حفظ" }).eq("id", aMA.id);
 
-  const groups = async (u: any) => ((await u.c.rpc("my_class_groups", { _school: S })).data ?? []) as any[];
-  const g = await admin.from("conversations").select("id,course_id,group_type,title").eq("school_id", S).eq("kind", "group");
-  check("1 one subject group per course (3), no general section group", g.data?.filter((x) => x.group_type === "course").length === 3 && !g.data?.some((x) => x.group_type === "section"), g.data);
-  check("2 title subject — grade — section", g.data?.some((x) => x.title.startsWith("رياضيات — أول متوسط — شعبة أ")), g.data?.map((x) => x.title));
+  // section groups replace subject groups (B5): one per section+year
+  const groups = async (u: any) => ((await u.c.rpc("my_section_groups", { _school: S })).data ?? []) as any[];
+  const g = await admin.from("conversations").select("id,section_id,group_type,title").eq("school_id", S).eq("kind", "group");
+  check("1 one section group per section (2), no subject or general groups", g.data?.filter((x) => x.group_type === "class").length === 2 && !g.data?.some((x) => x.group_type === "course" || x.group_type === "section"), g.data);
+  check("2 title grade — section — year — school", g.data?.some((x) => x.title.startsWith("أول متوسط — شعبة أ —")), g.data?.map((x) => x.title));
   const t1g = await groups(t1);
-  check("3 teacher of math in two sections sees two separate groups", t1g.length === 2 && t1g.every((x) => x.subject === "رياضيات"), t1g);
+  check("3 teacher of math in two sections sees two separate groups", t1g.length === 2, t1g);
   const s1g = await groups(s1);
-  check("4 student sees only own subjects (math A + science A)", s1g.length === 2 && s1g.every((x) => x.section_label.endsWith("أ")), s1g);
-  check("5 guardian is not a member of student subject groups", (await groups(g1)).length === 0);
-  const gMA = g.data!.find((x) => x.course_id === mA.id)!.id;
-  const man = await admin.from("conversation_members").insert({ conversation_id: gMA, user_id: g1.id, role: "member", source: "manual" });
-  check("6 manual membership insert into subject group rejected", !!man.error);
-  check("7 principal cannot hand-add members to subject group", !!(await pr.c.rpc("add_group_members", { _conv: gMA, _users: [vp.id] })).error);
+  check("4 student sees only own section group", s1g.length === 1 && s1g[0].section_label.endsWith("أ"), s1g);
+  check("5 guardian (verified link) sees only his child's section group with child name", (await groups(g1)).length === 1 && (await groups(g1))[0].children, await groups(g1));
+  const gMA = g.data!.find((x) => x.section_id === secA.id)!.id, gMB = g.data!.find((x) => x.section_id === secB.id)!.id, gPA = gMA;
+  const man = await admin.from("conversation_members").insert({ conversation_id: gMA, user_id: vp.id, role: "member", source: "manual" });
+  check("6 manual membership insert into section group rejected", !!man.error);
+  check("7 principal cannot use generic add on section group (only class_group_add_member)", !!(await pr.c.rpc("add_group_members", { _conv: gMA, _users: [vp.id] })).error);
 
   // group creation matrix
   check("8 teacher cannot create a group", !!(await grp(t1.c, org, S, "مجموعة معلم")).error);
@@ -111,15 +112,14 @@ try {
   await admin.from("teacher_assignments").update({ status: "ended", end_date: "2026-09-01" }).eq("id", aMA.id);
   await admin.from("teacher_assignments").insert({ school_id: S, course_id: mA.id, teacher_id: te2.id, start_date: "2026-09-02", status: "approved" });
   const live = async (conv: string, u: string) => !!(await admin.from("conversation_members").select("id").eq("conversation_id", conv).eq("user_id", u).is("left_at", null)).data?.length;
-  check("31 old teacher leaves subject group on teacher change", !(await live(gMA, t1.id)));
-  check("32 new teacher joins subject group", await live(gMA, t2.id));
+  check("31 old teacher leaves section group on teacher change", !(await live(gMA, t1.id)));
+  check("32 new teacher is in section group", await live(gMA, t2.id));
   check("33 old teacher's private chat with student becomes read-only", !!(await t1.c.rpc("send_message", { _conv: sc.data, _body: "x", _client_id: crypto.randomUUID() })).error);
   await admin.from("enrollments").update({ section_id: secB.id }).eq("id", e1.id);
-  const gMB = g.data!.find((x) => x.course_id === mB.id)!.id, gPA = g.data!.find((x) => x.course_id === pA.id)!.id;
-  check("34 transferred student leaves old section subject groups", !(await live(gMA, s1.id)) && !(await live(gPA, s1.id)));
-  check("35 transferred student joins new section subject group", await live(gMB, s1.id));
-  const after = await admin.from("conversations").select("id").eq("school_id", S).eq("group_type", "course");
-  check("36 no duplicate groups after changes", after.data?.length === 3, after.data);
+  check("34 transferred student leaves old section group", !(await live(gMA, s1.id)) && !(await live(gPA, s1.id)));
+  check("35 transferred student joins new section group", await live(gMB, s1.id));
+  const after = await admin.from("conversations").select("id").eq("school_id", S).eq("group_type", "class");
+  check("36 no duplicate groups after changes", after.data?.length === 2, after.data);
 } catch (e) { bad++; console.log("ERROR", e); }
 finally {
   for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.log("cleanup", e.message));
