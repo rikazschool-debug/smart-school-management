@@ -222,9 +222,9 @@ export function TicketList({ ctx, box, onOpen, initialStatus, caps }: { ctx: Ctx
 
 /* ---------------- create ---------------- */
 export function NewTicket({ ctx, onDone, onCancel, internal = false, branches = [] }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void; internal?: boolean; branches?: Branch[] }) {
-  const [mode, setMode] = useState<"internal" | "own">(internal ? "internal" : "own");
-  if (mode === "internal") return <InternalTicket ctx={ctx} branches={branches} onDone={onDone} onCancel={onCancel} onOwn={() => setMode("own")} />;
-  return <OwnTicket ctx={ctx} onDone={onDone} onCancel={onCancel} onInternal={internal ? () => setMode("internal") : undefined} />;
+  // Platform-run desk: every ticket goes to the platform owner; no branch routing (department/assignee) from the requester side.
+  void internal; void branches; void InternalTicket;
+  return <OwnTicket ctx={ctx} onDone={onDone} onCancel={onCancel} />;
 }
 
 function OwnTicket({ ctx, onDone, onCancel, onInternal }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void; onInternal?: (() => void) | undefined }) {

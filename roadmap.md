@@ -139,3 +139,8 @@
 ## B8 — طلبات Nov 8 (مساءً)
 - [x] محادثة المدير مع ولي أمر: اختيار ولي الأمر أولًا ثم الابن
 - [x] تذاكر الدعم من الجميع تذهب لمالك المنصة فقط؛ المُسنَد إليه يرد ويغيّر الحالة (support-platform-e2e 10/10)
+
+## B8 (Nov 8 2026)
+- [x] Support form: requester never picks department/assignee (all tickets to platform owner).
+- [ ] Rename «الرئيسية» → «لوحة التحكم المركزية» + redesign home cards with charts/stats, clickable to sections, for every dashboard (real data).
+- [ ] «سند» AI assistant per dashboard, answers only from the caller's own RLS data; Gemini API key from user.
