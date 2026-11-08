@@ -3776,6 +3776,572 @@ export type Database = {
         }
         Relationships: []
       }
+      evt_app_notes: {
+        Row: {
+          app_id: string
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+        }
+        Insert: {
+          app_id: string
+          body: string
+          created_at?: string
+          created_by: string
+          id?: string
+        }
+        Update: {
+          app_id?: string
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_app_notes_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "evt_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_applications: {
+        Row: {
+          answers: Json
+          applicant_message: string | null
+          applicant_user: string | null
+          birth_date: string | null
+          category: string
+          client_key: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          email: string | null
+          fields: Json
+          form_version: number
+          guardian_name: string | null
+          id: string
+          item_id: string
+          name_key: string | null
+          org_id: string
+          participant_name: string
+          phone: string | null
+          reason_internal: string | null
+          ref: string
+          rev: number
+          school_id: string
+          source: string
+          status: string
+          student_id: string | null
+          track_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          answers: Json
+          applicant_message?: string | null
+          applicant_user?: string | null
+          birth_date?: string | null
+          category: string
+          client_key?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email?: string | null
+          fields: Json
+          form_version: number
+          guardian_name?: string | null
+          id?: string
+          item_id: string
+          name_key?: string | null
+          org_id: string
+          participant_name: string
+          phone?: string | null
+          reason_internal?: string | null
+          ref: string
+          rev?: number
+          school_id: string
+          source: string
+          status?: string
+          student_id?: string | null
+          track_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          applicant_message?: string | null
+          applicant_user?: string | null
+          birth_date?: string | null
+          category?: string
+          client_key?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email?: string | null
+          fields?: Json
+          form_version?: number
+          guardian_name?: string | null
+          id?: string
+          item_id?: string
+          name_key?: string | null
+          org_id?: string
+          participant_name?: string
+          phone?: string | null
+          reason_internal?: string | null
+          ref?: string
+          rev?: number
+          school_id?: string
+          source?: string
+          status?: string
+          student_id?: string | null
+          track_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_applications_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "evt_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evt_applications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_attendance: {
+        Row: {
+          app_id: string | null
+          id: string
+          marked_by: string | null
+          session_id: string
+          status: string
+          student_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          app_id?: string | null
+          id?: string
+          marked_by?: string | null
+          session_id: string
+          status: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          app_id?: string | null
+          id?: string
+          marked_by?: string | null
+          session_id?: string
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_attendance_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "evt_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evt_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "evt_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evt_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_consents: {
+        Row: {
+          decided_at: string
+          decision: string
+          emergency_name: string | null
+          emergency_phone: string | null
+          guardian_user: string
+          item_id: string
+          medical_ack: boolean
+          medical_note: string | null
+          student_id: string
+        }
+        Insert: {
+          decided_at?: string
+          decision: string
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          guardian_user: string
+          item_id: string
+          medical_ack?: boolean
+          medical_note?: string | null
+          student_id: string
+        }
+        Update: {
+          decided_at?: string
+          decision?: string
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          guardian_user?: string
+          item_id?: string
+          medical_ack?: boolean
+          medical_note?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_consents_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "evt_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evt_consents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_form_versions: {
+        Row: {
+          fields: Json
+          form_id: string
+          published_at: string
+          published_by: string | null
+          version: number
+        }
+        Insert: {
+          fields: Json
+          form_id: string
+          published_at?: string
+          published_by?: string | null
+          version: number
+        }
+        Update: {
+          fields?: Json
+          form_id?: string
+          published_at?: string
+          published_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_form_versions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "evt_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_forms: {
+        Row: {
+          created_at: string
+          draft: Json
+          draft_rev: number
+          id: string
+          item_id: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          draft?: Json
+          draft_rev?: number
+          id?: string
+          item_id: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          draft?: Json
+          draft_rev?: number
+          id?: string
+          item_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_forms_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: true
+            referencedRelation: "evt_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_hits: {
+        Row: {
+          at: string
+          bucket: string
+          id: number
+        }
+        Insert: {
+          at?: string
+          bucket: string
+          id?: number
+        }
+        Update: {
+          at?: string
+          bucket?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      evt_items: {
+        Row: {
+          audience: string
+          cancel_reason: string | null
+          capacity: number | null
+          category: string | null
+          conditions: string | null
+          consent_deadline: string | null
+          consent_required: boolean
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          kind: string
+          link_active: boolean
+          location: string | null
+          mode: string
+          need_emergency: boolean
+          need_medical: boolean
+          org_id: string
+          public_token: string | null
+          published_at: string | null
+          reg_closes: string | null
+          reg_open: boolean
+          reg_opens: string | null
+          rev: number
+          school_id: string
+          status: string
+          target: Json
+          title: string
+          trainer: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          cancel_reason?: string | null
+          capacity?: number | null
+          category?: string | null
+          conditions?: string | null
+          consent_deadline?: string | null
+          consent_required?: boolean
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          kind: string
+          link_active?: boolean
+          location?: string | null
+          mode?: string
+          need_emergency?: boolean
+          need_medical?: boolean
+          org_id: string
+          public_token?: string | null
+          published_at?: string | null
+          reg_closes?: string | null
+          reg_open?: boolean
+          reg_opens?: string | null
+          rev?: number
+          school_id: string
+          status?: string
+          target?: Json
+          title: string
+          trainer?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          cancel_reason?: string | null
+          capacity?: number | null
+          category?: string | null
+          conditions?: string | null
+          consent_deadline?: string | null
+          consent_required?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          kind?: string
+          link_active?: boolean
+          location?: string | null
+          mode?: string
+          need_emergency?: boolean
+          need_medical?: boolean
+          org_id?: string
+          public_token?: string | null
+          published_at?: string | null
+          reg_closes?: string | null
+          reg_open?: boolean
+          reg_opens?: string | null
+          rev?: number
+          school_id?: string
+          status?: string
+          target?: Json
+          title?: string
+          trainer?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_items_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evt_items_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_log: {
+        Row: {
+          action: string
+          actor: string | null
+          app_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          internal: boolean
+          item_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          app_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          internal?: boolean
+          item_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          app_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          internal?: boolean
+          item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_log_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "evt_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evt_log_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "evt_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_sessions: {
+        Row: {
+          ends_at: string | null
+          id: string
+          item_id: string
+          location: string | null
+          seq: number
+          starts_at: string
+          title: string | null
+        }
+        Insert: {
+          ends_at?: string | null
+          id?: string
+          item_id: string
+          location?: string | null
+          seq?: number
+          starts_at: string
+          title?: string | null
+        }
+        Update: {
+          ends_at?: string | null
+          id?: string
+          item_id?: string
+          location?: string | null
+          seq?: number
+          starts_at?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_sessions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "evt_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evt_staff: {
+        Row: {
+          caps: string[]
+          created_at: string
+          granted_by: string | null
+          item_id: string
+          user_id: string
+        }
+        Insert: {
+          caps: string[]
+          created_at?: string
+          granted_by?: string | null
+          item_id: string
+          user_id: string
+        }
+        Update: {
+          caps?: string[]
+          created_at?: string
+          granted_by?: string | null
+          item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evt_staff_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "evt_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       file_cleanup_config: {
         Row: {
           id: boolean
@@ -14987,6 +15553,114 @@ export type Database = {
         Args: { _action: string; _school: string; _section: string }
         Returns: boolean
       }
+      _evt_caps_for: { Args: { _kind: string; _school: string }; Returns: Json }
+      _evt_check_answers: {
+        Args: { _a: Json; _cat: string; _fields: Json }
+        Returns: Json
+      }
+      _evt_check_fields: { Args: { _f: Json }; Returns: Json }
+      _evt_clean: {
+        Args: { _label: string; _max: number; _s: string }
+        Returns: string
+      }
+      _evt_fields_for: { Args: { _cat: string; _fields: Json }; Returns: Json }
+      _evt_guardian_of: {
+        Args: { _student: string; _uid: string }
+        Returns: boolean
+      }
+      _evt_hit: {
+        Args: { _bucket: string; _max: number; _window: string }
+        Returns: boolean
+      }
+      _evt_insert_app: {
+        Args: {
+          _answers: Json
+          _cat: string
+          _client_key: string
+          _item: string
+          _source: string
+          _student: string
+          _user: string
+          _version: number
+        }
+        Returns: Json
+      }
+      _evt_log: {
+        Args: {
+          _action: string
+          _app: string
+          _details: Json
+          _internal?: boolean
+          _item: string
+        }
+        Returns: undefined
+      }
+      _evt_name: { Args: { _uid: string }; Returns: string }
+      _evt_ok: { Args: { _action: string; _item: string }; Returns: boolean }
+      _evt_phone: { Args: { _s: string }; Returns: string }
+      _evt_public_get: { Args: { _token: string }; Returns: Json }
+      _evt_public_submit: {
+        Args: {
+          _answers: Json
+          _client_key: string
+          _ip: string
+          _token: string
+          _version: number
+        }
+        Returns: Json
+      }
+      _evt_public_track: { Args: { _code: string; _ip: string }; Returns: Json }
+      _evt_public_update: {
+        Args: {
+          _action: string
+          _answers: Json
+          _code: string
+          _ip: string
+          _rev: number
+        }
+        Returns: Json
+      }
+      _evt_reg_state: { Args: { _item: string }; Returns: string }
+      _evt_roster: {
+        Args: { _item: string }
+        Returns: {
+          app_id: string
+          category: string
+          extra: string
+          name: string
+          source: string
+          student_id: string
+        }[]
+      }
+      _evt_row: {
+        Args: { i: Database["public"]["Tables"]["evt_items"]["Row"] }
+        Returns: Json
+      }
+      _evt_school_ok: {
+        Args: { _action: string; _kind: string; _school: string }
+        Returns: boolean
+      }
+      _evt_sec: { Args: { _kind: string }; Returns: string }
+      _evt_targets: {
+        Args: { _item: string }
+        Returns: {
+          student_id: string
+        }[]
+      }
+      _evt_tell_family: {
+        Args: { _item: string; _key: string; _title: string }
+        Returns: undefined
+      }
+      _evt_tell_staff: {
+        Args: {
+          _app: string
+          _body: string
+          _item: string
+          _key: string
+          _title: string
+        }
+        Returns: undefined
+      }
       _family_ok: {
         Args: {
           _guardian: string
@@ -17688,6 +18362,104 @@ export type Database = {
         Returns: Json
       }
       ev_teacher_file: { Args: { _teacher: string }; Returns: Json }
+      evt_app_act: {
+        Args: {
+          _action: string
+          _id: string
+          _internal?: string
+          _message?: string
+          _rev: number
+        }
+        Returns: Json
+      }
+      evt_app_get: { Args: { _id: string }; Returns: Json }
+      evt_app_note: { Args: { _body: string; _id: string }; Returns: undefined }
+      evt_apply: {
+        Args: {
+          _answers: Json
+          _client_key: string
+          _item: string
+          _student: string
+          _version: number
+        }
+        Returns: Json
+      }
+      evt_apply_form: { Args: { _item: string }; Returns: Json }
+      evt_apps: {
+        Args: {
+          _cat?: string
+          _from?: string
+          _item?: string
+          _limit?: number
+          _offset?: number
+          _org: string
+          _q?: string
+          _school?: string
+          _status?: string
+          _to?: string
+        }
+        Returns: Json
+      }
+      evt_calendar: {
+        Args: { _from: string; _org: string; _school: string; _to: string }
+        Returns: Json
+      }
+      evt_caps: { Args: { _org: string }; Returns: Json }
+      evt_consent: {
+        Args: { _decision: string; _item: string; _p?: Json; _student: string }
+        Returns: undefined
+      }
+      evt_consents: { Args: { _item: string }; Returns: Json }
+      evt_family: { Args: never; Returns: Json }
+      evt_form_copy: { Args: { _from: string; _item: string }; Returns: Json }
+      evt_form_get: { Args: { _item: string }; Returns: Json }
+      evt_form_publish: { Args: { _item: string; _rev: number }; Returns: Json }
+      evt_form_save: {
+        Args: { _fields: Json; _item: string; _rev: number }
+        Returns: Json
+      }
+      evt_form_version: {
+        Args: { _item: string; _version: number }
+        Returns: Json
+      }
+      evt_get: { Args: { _id: string }; Returns: Json }
+      evt_link: {
+        Args: { _action: string; _id: string; _rev: number }
+        Returns: Json
+      }
+      evt_list: {
+        Args: {
+          _kind?: string
+          _org: string
+          _q?: string
+          _school?: string
+          _status?: string
+        }
+        Returns: Json
+      }
+      evt_mark: {
+        Args: {
+          _app: string
+          _session: string
+          _status: string
+          _student: string
+        }
+        Returns: undefined
+      }
+      evt_report: {
+        Args: { _kind?: string; _org: string; _school?: string }
+        Returns: Json
+      }
+      evt_roster: { Args: { _item: string }; Returns: Json }
+      evt_save: { Args: { _p: Json }; Returns: Json }
+      evt_set_status: {
+        Args: { _action: string; _id: string; _reason?: string; _rev: number }
+        Returns: Json
+      }
+      evt_staff_set: {
+        Args: { _caps: string[]; _item: string; _user: string }
+        Returns: undefined
+      }
       extend_homework: {
         Args: { _due: string; _id: string; _reason: string; _student: string }
         Returns: undefined
