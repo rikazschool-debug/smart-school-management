@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { rpc } from "@/components/hr/shared";
+import { supabase } from "@/integrations/supabase/client";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { AppsList, ItemDetail, ItemForm, useEvtRefresh } from "@/components/events/item";
@@ -332,7 +333,8 @@ function ApplyForm({ item, kids, conditions, onDone }: { item: string; kids: Fam
 /** «نسخ رابط التسجيل» / «معاينة صفحة التسجيل» in the course list (the token is returned only to link/publish holders). */
 function LinkActions({ id }: { id: string }) {
   const get = async () => {
-    const it = await rpc<{ token: string | null }>("evt_get", { _id: id });
+    let it = await rpc<{ token: string | null }>("evt_get", { _id: id });
+    if (!it.token) { await supabase.auth.refreshSession().catch(() => null); it = await rpc<{ token: string | null }>("evt_get", { _id: id }); }
     if (!it.token) { toast.error("ليست لديك صلاحية رابط التسجيل لهذه الدورة"); return null; }
     return `${window.location.origin}/join/${it.token}`;
   };
