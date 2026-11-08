@@ -308,9 +308,10 @@ export function CrudTable({
           <Search className="absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pe-9" placeholder="بحث…" aria-label={`بحث في ${title}`} value={input} onChange={(e) => setInput(e.target.value)} />
         </div>
-        {person && kindTags.length > 0 && (
-          <select aria-label="الوسم" className={selectCls("w-full md:w-auto")} value={tagF} onChange={(e) => { setTagF(e.target.value); setPage(0); }}>
-            <option value="">الوسم: الكل</option>
+        {person && caps?.view && (
+          <select aria-label="الوسم" disabled={kindTags.length === 0} title={kindTags.length === 0 ? "لا توجد وسوم بعد — أضفها من صفحة المدارس (قاموس الوسوم)" : undefined}
+            className={selectCls("w-full md:w-auto")} value={tagF} onChange={(e) => { setTagF(e.target.value); setPage(0); }}>
+            <option value="">{kindTags.length === 0 ? "الوسوم: لا توجد بعد" : "الوسم: الكل"}</option>
             {kindTags.map((t) => <option key={t.id} value={t.id}>{t.name}{t.active ? "" : " (معطل)"}</option>)}
           </select>
         )}
