@@ -67,7 +67,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <PageHeader title="الطلاب والتسكين" desc="ملف الطالب، ربط ولي الأمر، والتسكين في الشعبة. لا يلزم أن يكون للطالب حساب دخول." />
       <CrudTable title="الطلاب" table="students" schoolId={ctx.schoolId} canWrite={w} order="full_name"
         select="*, enrollments(status, sections(name, grades(name))), student_guardians(id)"
-        searchKeys={["full_name", "national_id", "csmart_no"]}
+        searchKeys={["full_name", "display_name", "national_id", "csmart_no"]}
         filters={[
           { key: "status", label: "الحالة", options: STATUS },
           { key: "gender", label: "الجنس", options: [{ value: "male", label: "ذكر" }, { value: "female", label: "أنثى" }] },
@@ -76,7 +76,8 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         canCreate={false}
         toolbar={w ? <PeopleImport kind="students" schoolId={ctx.schoolId} /> : undefined}
         fields={[
-          { key: "full_name", label: "الاسم الكامل", required: true },
+          { key: "full_name", label: "الاسم الرسمي الكامل", required: true },
+          { key: "display_name", label: "الاسم المعروض (يُملأ تلقائيًا إن تُرك فارغًا)" },
           { key: "national_id", label: "رقم هوية الطالب أو إقامته" },
           { key: "csmart_no", label: "رقم الطالب الداخلي — C‑Smart" },
           { key: "birth_date", label: "تاريخ الميلاد", type: "date" },
@@ -87,7 +88,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         defaults={{ status: "active" }}
         onCreated={w ? (r) => setGuarding(r) : undefined}
         columns={[
-          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["full_name"]}</button> },
+          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>} },
           { label: "الهوية", render: (r) => <span dir="ltr">{r["national_id"] ?? "—"}</span> },
           { label: "رقم C‑Smart", text: (r) => r["csmart_no"] ?? "", render: (r) => r["csmart_no"] ? <span dir="ltr">{r["csmart_no"]}</span> : <span className="text-muted-foreground">غير مسجّل</span> },
           { label: "الشعبة", text: (r) => { const e = (r["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active"); return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : "غير مسكّن"; }, render: (r) => {

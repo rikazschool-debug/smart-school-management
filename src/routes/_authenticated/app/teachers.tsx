@@ -51,7 +51,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
     <>
       <PageHeader title="المعلمون" desc="يدخل المعلم برقم الهوية أو الإقامة ثم رمز تحقق يصل إلى جواله المعتمد لدى الإدارة. التخصصات والأقسام إدارة تعليمية فقط." />
       <CrudTable title="المعلمون" table="teachers" schoolId={schoolId} canWrite={w} order="full_name"
-        select={COLS} searchKeys={["full_name", "email", "specialization"]}
+        select={COLS} searchKeys={["full_name", "display_name", "email", "specialization"]}
         filters={[
           { key: "department_id", label: "القسم", remote: { table: "departments", label: "name" } },
           { key: "status", label: "الحالة", options: [{ value: "active", label: "نشط" }, { value: "inactive", label: "موقوف" }] },
@@ -59,7 +59,8 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
         canCreate={false}
         toolbar={w ? <PeopleImport kind="teachers" schoolId={schoolId} /> : undefined}
         fields={[
-          { key: "full_name", label: "الاسم الكامل", required: true },
+          { key: "full_name", label: "الاسم الرسمي الكامل", required: true },
+          { key: "display_name", label: "الاسم المعروض (يُملأ تلقائيًا إن تُرك فارغًا)" },
           { key: "phone", label: "الجوال المعتمد لرمز التحقق" },
           { key: "email", label: "البريد (اختياري)", type: "email" },
           { key: "specialization", label: "التخصص" },

@@ -43,15 +43,16 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
       <PageHeader title="أولياء الأمور" desc="سجل واحد لكل ولي أمر يجمع أبناءه. الجوال المعتمد هنا هو الذي يُرسل إليه رمز الدخول، وكل تغيير عليه يُسجّل." />
       <CrudTable title="أولياء الأمور" table="guardians" schoolId={schoolId} canWrite={w} order="full_name"
         toolbar={w ? <GuardianImport schoolId={schoolId} /> : undefined}
-        select="*, student_guardians(id, verified)" searchKeys={["full_name", "phone", "email", "national_id"]}
+        select="*, student_guardians(id, verified)" searchKeys={["full_name", "display_name", "phone", "email", "national_id"]}
         fields={[
-          { key: "full_name", label: "الاسم الكامل", required: true },
+          { key: "full_name", label: "الاسم الرسمي الكامل", required: true },
+          { key: "display_name", label: "الاسم المعروض (يُملأ تلقائيًا إن تُرك فارغًا)" },
           { key: "national_id", label: "رقم هوية ولي الأمر أو إقامته" },
           { key: "phone", label: "الجوال المعتمد لرمز الدخول" },
           { key: "email", label: "البريد (اختياري)", type: "email" },
         ]}
         columns={[
-          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["full_name"]}</button> },
+          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>} },
           { label: "الهوية", text: (r) => id(r["national_id"]), render: (r) => <span dir="ltr">{id(r["national_id"])}</span> },
           { label: "الجوال", text: (r) => ph(r["phone"]), render: (r) => <span dir="ltr">{ph(r["phone"])}</span> },
           { label: "الأبناء", text: (r) => String(r["student_guardians"]?.length ?? 0), render: (r) => {

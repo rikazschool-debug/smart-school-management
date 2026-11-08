@@ -128,6 +128,8 @@ export function useSchool() {
 
 export function arabicError(e: unknown): string {
   const msg = (e as { message?: string })?.message ?? String(e);
+  const hint = (e as { hint?: string })?.hint;
+  if (msg.includes("الاسم المعروض غير متاح")) return hint ? `الاسم المعروض غير متاح — ${hint}` : msg;
   if (msg.includes("violates foreign key")) return "لا يمكن الحذف: السجل مرتبط بسجلات أخرى. أوقفه أو انقل ارتباطاته أولًا.";
   if (msg.includes("duplicate key") || msg.includes("unique")) return "السجل موجود مسبقًا (تكرار غير مسموح).";
   if (msg.includes("row-level security") || msg.includes("permission denied")) return "ليست لديك صلاحية لهذا الإجراء.";
