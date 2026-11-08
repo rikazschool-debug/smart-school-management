@@ -64,6 +64,7 @@ async function main() {
   const gA = (await admin.from("conversations").select("id").eq("school_id", S).eq("section_id", A.id).eq("group_type", "class").single()).data!.id;
   // g1: kids s1(st) & s2(st2); g2: kid s2(st2) only. Messages from guardian g2 and student st.
   const send = async (u: any, b: string, reply: string | null = null) => { const r = await u.c.rpc("send_message", { _conv: gA, _body: b, _client_id: crypto.randomUUID(), _reply_to: reply }); if (r.error) throw new Error(b + ": " + r.error.message); return r.data[0].id as string; };
+  await admin.from("students").update({ user_id: null }).eq("id", s2.id); await admin.from("students").update({ user_id: st2.id }).eq("id", s2.id);
   console.log("members", JSON.stringify(((await admin.from("conversation_members").select("user_id, reasons").eq("conversation_id", gA).is("left_at", null)).data ?? []).map((m: any) => [m.user_id === st2.id ? "ST2" : m.user_id === st.id ? "ST" : m.user_id.slice(0,4), m.reasons])));
   await pr.c.rpc("set_class_group_settings", { _conv: gA, _post_policy: "all" } as any);
   const mG = await send(g2, "رسالة ولي أمر " + run), mS = await send(st, "رسالة طالب " + run), mT = await send(t1, "رسالة معلم " + run);
