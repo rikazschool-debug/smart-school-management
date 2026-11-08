@@ -108,12 +108,12 @@ function Notes({ c, kind, id, onChange }: { c: Card; kind: PersonKind; id: strin
     catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
   }
   async function edit(n: Note) {
-    const v = await askText("تعديل الملاحظة (يُحفظ النص السابق في السجل)", { initial: n.body, multiline: true });
+    const v = await askText("تعديل الملاحظة (يُحفظ النص السابق في السجل)", { initial: n.body, long: true, ok: "حفظ" });
     if (v == null) return;
     try { await pp("pp_note_edit", { _note: n.id, _body: v }); onChange(); } catch (e) { toast.error(arabicError(e)); }
   }
   async function remove(n: Note) {
-    const r = await askText("سبب إزالة الملاحظة", { ok: "إزالة" });
+    const r = await askText("سبب إزالة الملاحظة", { ok: "إزالة", required: true });
     if (r == null) return;
     try { await pp("pp_note_edit", { _note: n.id, _body: null, _remove: true, _reason: r }); onChange(); } catch (e) { toast.error(arabicError(e)); }
   }
