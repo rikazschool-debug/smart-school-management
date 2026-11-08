@@ -49,7 +49,7 @@ async def main():
             ctx, p = await open_as(b, who)
             cards = p.locator("button", has_text="أول متوسط / أ")
             if await cards.count(): await cards.first.click(); await p.wait_for_timeout(2500)
-            box = p.get_by_placeholder("اكتب رسالتك...")
+            box = p.get_by_label("نص الرسالة")
             if await box.count() == 0 or not await box.is_enabled():
                 body = await p.locator("body").inner_text(); await ctx.close(); return ("blocked", body)
             await box.fill(text); await p.get_by_role("button", name="إرسال").click(); await p.wait_for_timeout(3000)
