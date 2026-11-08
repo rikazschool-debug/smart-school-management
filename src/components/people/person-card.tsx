@@ -40,7 +40,7 @@ function Body({ kind, id, org }: { kind: PersonKind; id: string; org: string | n
   const q = useQuery({ queryKey: ["pp-card", kind, id], queryFn: () => pp<Card>("pp_card", { _kind: kind, _id: id }) });
   const c = q.data;
   const tags = useTags(org, !!c?.caps.tags_assign);
-  const refresh = () => { void qc.invalidateQueries({ queryKey: ["pp-card", kind, id] }); void qc.invalidateQueries({ queryKey: ["pp-tag-ids"] }); };
+  const refresh = () => { void qc.invalidateQueries({ queryKey: ["pp-card", kind, id] }); void qc.invalidateQueries({ queryKey: ["pp-tag-ids"] }); void qc.invalidateQueries({ queryKey: ["pp-row-tags"] }); };
   if (q.isLoading) return <LoadingState />;
   if (q.error || !c) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const free = (tags.data ?? []).filter((t: Tag) => t.active && t.kinds.includes(kind) && !c.tags.some((x) => x.id === t.id));

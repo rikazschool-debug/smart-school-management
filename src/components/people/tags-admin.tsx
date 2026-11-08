@@ -21,7 +21,7 @@ export function TagsAdmin({ org }: { org: string }) {
   const [busy, setBusy] = useState(false);
   async function save(x: Draft) {
     setBusy(true);
-    try { await pp("pp_tag_save", { _org: org, _id: x.id, _name: x.name, _color: x.color, _kinds: x.kinds, _active: x.active }); toast.success("حُفظ الوسم"); setD(null); void qc.invalidateQueries({ queryKey: ["pp-tags", org] }); }
+    try { await pp("pp_tag_save", { _org: org, _id: x.id, _name: x.name, _color: x.color, _kinds: x.kinds, _active: x.active }); toast.success("حُفظ الوسم"); setD(null); void qc.invalidateQueries({ queryKey: ["pp-tags", org] }); void qc.invalidateQueries({ queryKey: ["pp-row-tags"] }); }
     catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
   }
   const edit = (t: Tag) => setD({ id: t.id, name: t.name, color: t.color, kinds: t.kinds, active: t.active });

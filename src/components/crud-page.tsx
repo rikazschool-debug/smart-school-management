@@ -16,7 +16,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { PersonCard } from "@/components/people/person-card";
 import { BulkBar } from "@/components/people/bulk-bar";
-import { usePpCaps, useSchoolOrg, useTags, type PersonKind } from "@/components/people/shared";
+import { TagChip, usePpCaps, useSchoolOrg, useTags, type PersonKind, type Tag } from "@/components/people/shared";
+import { TagsAdmin } from "@/components/people/tags-admin";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = supabase as any;
@@ -189,6 +190,16 @@ export function CrudTable({
   const tagIds = useQuery({ enabled: !!person && !!tagF, queryKey: ["pp-tag-ids", schoolId, person?.kind, tagF], queryFn: async () => {
     const { data, error } = await db.rpc("pp_tag_ids", { _school: schoolId, _kind: person!.kind, _tag: tagF }); if (error) throw error; return data as string[];
   } });
+  const rowTags = useQuery({ enabled: !!person && !!caps?.view && kindTags.length > 0, queryKey: ["pp-row-tags", schoolId, person?.kind, kindTags.map((t) => t.id).join()], queryFn: async () => {
+    const m = new Map<string, Tag[]>();
+    for (const t of kindTags) {
+      const { data, error } = await db.rpc("pp_tag_ids", { _school: schoolId, _kind: person!.kind, _tag: t.id }); if (error) throw error;
+      for (const id of (data as string[]) ?? []) m.set(id, [...(m.get(id) ?? []), t]);
+    }
+    return m;
+  } });
+  const showTags = !!person && !!caps?.view;
+  const tagsCell = (r: Row) => { const l = rowTags.data?.get(r["id"]) ?? []; return l.length ? <div className="flex flex-wrap gap-1">{l.map((t) => <TagChip key={t.id} t={t} />)}</div> : <span className="text-xs text-muted-foreground">—</span>; };
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [selAll, setSelAll] = useState(false);
   const names = useRef(new Map<string, string>());
@@ -290,6 +301,7 @@ export function CrudTable({
 
   return (
     <section className="space-y-3">
+      {person && caps?.tags_manage && org && <TagsAdmin org={org} />}
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-bold">{title}</h2>
         <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{total.data ?? "…"}</span>
@@ -354,6 +366,7 @@ export function CrudTable({
               {selecting && <TableHead className="w-8"><input type="checkbox" aria-label="تحديد هذه الصفحة" className="size-4 accent-primary"
                 checked={rows.length > 0 && rows.every((r) => isSel(r["id"]))} onChange={(e) => { setSelAll(false); setSel((x) => { const n = new Set(x); for (const r of rows) e.target.checked ? n.add(r["id"]) : n.delete(r["id"]); return n; }); }} /></TableHead>}
               {columns.map((c) => <TableHead key={c.label} className="text-start">{c.label}</TableHead>)}
+              {showTags && <TableHead className="text-start">الوسوم</TableHead>}
               {(canWrite || extraActions) && <TableHead className="text-start">إجراءات</TableHead>}
             </TableRow></TableHeader>
             <TableBody>
@@ -361,6 +374,7 @@ export function CrudTable({
                 <TableRow key={r["id"]} data-state={isSel(r["id"]) ? "selected" : undefined}>
                   {selecting && <TableCell><input type="checkbox" aria-label={`تحديد ${names.current.get(r["id"]) ?? ""}`} className="size-4 accent-primary" checked={isSel(r["id"])} onChange={() => toggle(r["id"])} /></TableCell>}
                   {columns.map((c, i) => <TableCell key={c.label}>{cell(c, i, r)}</TableCell>)}
+                  {showTags && <TableCell>{tagsCell(r)}</TableCell>}
                   {(canWrite || extraActions) && <TableCell className="whitespace-nowrap"><Actions r={r} /></TableCell>}
                 </TableRow>
               ))}
@@ -376,6 +390,7 @@ export function CrudTable({
               </div>
               <dl className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                 {columns.slice(1).map((c) => <div key={c.label} className="min-w-0"><dt className="text-muted-foreground">{c.label}</dt><dd className="break-words">{c.render(r)}</dd></div>)}
+                {showTags && <div className="col-span-2"><dt className="text-muted-foreground">الوسوم</dt><dd>{tagsCell(r)}</dd></div>}
               </dl>
               {(canWrite || extraActions) && <div className="mt-2 flex flex-wrap gap-1 border-t pt-2"><Actions r={r} /></div>}
             </li>
