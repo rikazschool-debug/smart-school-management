@@ -77,6 +77,9 @@ function Body({ kind, id, org }: { kind: PersonKind; id: string; org: string | n
             {free.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         )}
+        {c.caps.tags_assign && tags.isSuccess && free.length === 0 && c.tags.length === 0 && (
+          <p className="text-xs text-muted-foreground">لا توجد وسوم مخصّصة لهذا النوع بعد. يضيفها مالك المؤسسة من صفحة المدارس ← قاموس الوسوم.</p>
+        )}
       </section>
 
       {c.caps.notes_view && <Notes c={c} kind={kind} id={id} onChange={refresh} />}
