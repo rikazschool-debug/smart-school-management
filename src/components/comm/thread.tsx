@@ -286,7 +286,9 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
   const menuOpen = (!!slash || menuAll) && saved.length > 0;
   const [clip, setClip] = useState<VoiceClip | null>(null);
   const [voiceBusy, setVoiceBusy] = useState(false);
-  function pick(r: Saved) {
+  const me = useQuery({ queryKey: ["my-profile-name", userId], staleTime: 600_000, queryFn: async () => { const { data } = await db.from("profiles").select("full_name").eq("id", userId).maybeSingle(); return (data?.["full_name"] as string | undefined) ?? ""; } });
+  function pick(raw: Saved) {
+    const r = { ...raw, body: fillReply(raw.body, me.data ?? "") };
     const el = ta.current; const caret = el?.selectionStart ?? body.length;
     const next = slash ? body.slice(0, slash.start) + r.body + body.slice(caret) : (body ? body + (body.endsWith(" ") ? "" : " ") : "") + r.body;
     setBody(next); setSlash(null); setMenuAll(false); setAct(0);
