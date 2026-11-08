@@ -75,8 +75,7 @@ async function main() {
   ok("1 student sees guardian msg as «ولي أمر» without account id", by(st2v, mG)?.sender_name === "ولي أمر" && by(st2v, mG)?.sender_id === null && !JSON.stringify(by(st2v, mG)).includes(g2.id));
   ok("2 guardian sees other student's msg as «طالب»", by(g2v, mS)?.sender_name === "طالب" && by(g2v, mS)?.sender_id === null);
   ok("3 own message shows «أنت»", by(g2v, mG)?.sender_name === "أنت" && by(stv, mS)?.sender_name === "أنت");
-  console.log("dbg4", JSON.stringify(by(g1v, mS)));
-  ok("4 guardian sees own linked child's message by real name", by(g1v, mS)?.sender_name === "طالب" ? false : by(g1v, mS)?.sender_id === st.id);
+  ok("4 guardian sees own linked child's message by real name", by(g1v, mS)?.masked === false && by(g1v, mS)?.sender_id === st.id);
   ok("5 guardian does not see another guardian's identity", by(g1v, mG)?.sender_name === "ولي أمر");
   ok("6 teacher message shows real name + label to students/guardians", by(st2v, mT)?.sender_id === t1.id && !!by(st2v, mT)?.sender_label);
   ok("7 assigned teacher sees real sender of guardian/student msgs", by(t1v, mG)?.sender_id === g2.id && by(t1v, mS)?.sender_id === st.id);
