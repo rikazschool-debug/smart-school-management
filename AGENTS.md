@@ -13,7 +13,7 @@
 - Scope reference: docs/rikaz-scope-v8.md. Build per shared function across all affected role dashboards.
 - Authorization lives in Postgres RLS + SECURITY DEFINER helpers (can_manage_school, can_view_student, ...); UI nav (src/lib/roles.ts) only mirrors it — never rely on hidden buttons.
 - Users/roles/invitations/memberships: org owner only, via RPCs (invite_member, revoke/resend_invitation, set_membership_active, change_member_role, decide_account_request); others only file request_account; acceptance needs matching confirmed email + live token; authenticated has no direct write on memberships; every change goes to access_audit — one accountable authority, no self-escalation.
-- Platform admins: added only via SQL insert into platform_admins; no in-app path.
+- Platform admins: added only via SQL insert into platform_admins; no in-app path. They act as org owner everywhere (is_org_owner/_perm_owner/perm_scope return true; UI school contexts use role org_owner); actions are audited under their own id. School logos: private bucket school-logos (path <school_id>/…), set via school_set_logo.
 - One classroom per course, created only by decide_assignment via ensure_classroom (idempotent).
 - Browser pages query Supabase directly with the RLS-bound client; the generic CrudTable in src/components/crud-page.tsx is the shared list/form/search component.
 - Supervisors read only assigned teachers (supervisor_teachers) and their classes/students via supervised_* helpers, read-only; staff_view (school-wide read) excludes them.
