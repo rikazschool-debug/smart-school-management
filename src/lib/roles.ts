@@ -250,16 +250,16 @@ export type CommTab = "inbox" | "mine" | "groups" | "classes" | "circulars" | "a
 export function commTabs(role: Role): CommTab[] {
   // student: subject groups + private chats started by teachers; never family/admin forms, staff directory or administrative circulars
   if (role === "student") return ["classes", "inbox", "archive"];
-  // guardian: children's teachers + permitted school administration, targeted circulars; never student group discussions
-  if (role === "guardian") return ["inbox", "circulars", "archive"];
+  // guardian: children's section groups (verified link only), children's teachers + permitted administration, targeted circulars
+  if (role === "guardian") return ["classes", "inbox", "circulars", "archive"];
   // staff meetings tab (virtual meetings from the same meeting record); never for students/guardians
   if (role === "teacher") return ["classes", "inbox", "mine", "groups", "meetings", "circulars", "archive"];
   const base: CommTab[] = ["inbox", "mine", "groups", "meetings", "circulars", "archive"];
   return canManage(role) ? [...base, "classes", "manage"] : base;
 }
 export function commTabLabel(role: Role, t: CommTab): string {
-  if (role === "student") return ({ classes: "مجموعات موادي", inbox: "رسائل معلميّ", archive: "الأرشيف" } as Record<string, string>)[t] ?? t;
-  const L: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي الخاصة", groups: role === "teacher" ? "مجموعاتي الإدارية" : "مجموعاتي", classes: role === "teacher" ? "مجموعات موادي" : "مجموعات المواد", circulars: "التعاميم", meetings: "الاجتماعات", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
+  if (role === "student") return ({ classes: "مجموعة فصلي", inbox: "رسائل معلميّ", archive: "الأرشيف" } as Record<string, string>)[t] ?? t;
+  const L: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي الخاصة", groups: role === "teacher" ? "مجموعاتي الإدارية" : "مجموعاتي", classes: role === "teacher" ? "مجموعات فصولي" : role === "guardian" ? "مجموعات فصول أبنائي" : "مجموعات الفصول", circulars: "التعاميم", meetings: "الاجتماعات", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
   return L[t];
 }
 export function commTitle(role: Role): { title: string; desc: string } {
