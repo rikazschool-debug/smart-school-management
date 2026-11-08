@@ -1,7 +1,7 @@
 // Events closure: form attachments (public/no account + tracking), event attachments, file access, abandoned-upload cleanup,
 // trip consent change/deadline/renewal, general event attendance, applicant message queue (dedupe + no-template log).
 // Self-contained: creates its own evx- orgs/users and removes them at the end (also on failure).
-// Run: NODE_PATH=node_modules bun scripts/evt-closure-e2e.ts
+// Run: NODE_PATH=node_modules bun scripts/evt-closure-e2e.ts  (--keep leaves data + /tmp/browser/evtc/fixture.json; `teardown` removes it)
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { TestRun } from "./lib/test-run";
@@ -218,11 +218,12 @@ try {
   await admin.from("files").update({ created_at: new Date(Date.now() - 25 * 3600e3).toISOString() }).eq("id", sUn.id);
   await admin.rpc("run_file_cleanup");
   check("39 abandoned upload older than 24h is cleaned", (await admin.from("files").select("source_type").eq("id", sUn.id).maybeSingle()).data?.source_type !== "evt_pending");
+  if (keep) { mkdirSync(DIR, { recursive: true }); writeFileSync(FX, JSON.stringify({ orgs, schools: S, users: Object.values(users).map((u) => u.id), pw, token: TOK, course: C1, trip: T, p1: users.p1!.email, g1: users.g1!.email })); }
   check("40 linked files are never touched by cleanup", (await admin.from("files").select("source_type").eq("id", s1.id).single()).data!.source_type === "evt_app");
 } catch (e) {
   fail++; console.error("ERROR", e);
 } finally {
   console.log(`\n${pass} passed, ${fail} failed`);
-  await teardown({ orgs, schools: S, users: Object.values(users).map((u) => u.id) }).catch((e) => console.error("teardown failed", e));
+  if (!keep) await teardown({ orgs, schools: S, users: Object.values(users).map((u) => u.id) }).catch((e) => console.error("teardown failed", e));
   process.exit(fail ? 1 : 0);
 }
