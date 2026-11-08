@@ -123,8 +123,8 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
       let id = r.existingId ?? null;
       if (!id) {
         const payload: Row = kind === "students"
-          ? { school_id: schoolId, full_name: d["full_name"], national_id: d["national_id"], csmart_no: d["csmart_no"] ?? null, birth_date: d["birth_date"], gender: d["gender"], status: "active" }
-          : { school_id: schoolId, full_name: d["full_name"], national_id: (lookups as { nidLocked?: boolean } | undefined)?.nidLocked ? null : d["national_id"], phone: d["phone"], email: d["email"], specialization: d["specialization"], department_id: r.department_id ?? null, status: "active" };
+          ? { school_id: schoolId, full_name: d["full_name"], display_name: d["display_name"] ?? null, national_id: d["national_id"], csmart_no: d["csmart_no"] ?? null, birth_date: d["birth_date"], gender: d["gender"], status: "active" }
+          : { school_id: schoolId, full_name: d["full_name"], display_name: d["display_name"] ?? null, national_id: (lookups as { nidLocked?: boolean } | undefined)?.nidLocked ? null : d["national_id"], phone: d["phone"], email: d["email"], specialization: d["specialization"], department_id: r.department_id ?? null, status: "active" };
         const ins = await db.from(kind).insert(payload).select("id").single();
         if (ins.error) {
           // a previous attempt may have saved it: look it up instead of duplicating

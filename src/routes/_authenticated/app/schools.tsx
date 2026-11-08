@@ -1,3 +1,4 @@
+import { TagsAdmin } from "@/components/people/tags-admin";
 import { DisplayNamesPreview } from "@/components/display-names-preview";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -197,6 +198,7 @@ function Page() {
       </Dialog>
 
       {allowed && orgId && <DisplayNamesPreview org={orgId} />}
+      {allowed && orgId && <TagsAdmin org={orgId} />}
       <LinkStaffDialog school={link} onClose={() => setLink(null)} onDone={done} />
     </>
   );

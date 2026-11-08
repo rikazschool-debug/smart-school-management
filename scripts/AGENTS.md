@@ -109,3 +109,4 @@
 - scripts/evt-closure-e2e.ts: events attachments, consent renewal, outbox (43 checks); `--keep` + `teardown` for browser journeys.
 - scripts/evt-forms-e2e.ts: events section forms (4 forms, draft vs publish, auto-apply, version guard, registration link binding, school customization grant, isolation; 38 checks).
 - scripts/people1-e2e.ts: staff job categories + org-wide display names (auto/manual, same-person sync, concurrency, owner preview; 28 checks).
+- scripts/people2-e2e.ts: person card, notes, tags, bulk actions, verified-link names (48 checks). scripts/people-browser-fixture.ts setup|teardown (pbx-) + scripts/people-journey.py (owner/principals/view-only desktop+mobile, teacher/guardian/student; opens the export); always run teardown after.

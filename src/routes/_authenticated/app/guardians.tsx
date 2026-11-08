@@ -41,7 +41,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
   return (
     <>
       <PageHeader title="أولياء الأمور" desc="سجل واحد لكل ولي أمر يجمع أبناءه. الجوال المعتمد هنا هو الذي يُرسل إليه رمز الدخول، وكل تغيير عليه يُسجّل." />
-      <CrudTable title="أولياء الأمور" table="guardians" schoolId={schoolId} canWrite={w} order="full_name"
+      <CrudTable person={{ kind: "guardian" }} title="أولياء الأمور" table="guardians" schoolId={schoolId} canWrite={w} order="full_name"
         toolbar={w ? <GuardianImport schoolId={schoolId} /> : undefined}
         select="*, student_guardians(id, verified)" searchKeys={["full_name", "display_name", "phone", "email", "national_id"]}
         fields={[

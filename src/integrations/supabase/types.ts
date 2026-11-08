@@ -13403,6 +13403,264 @@ export type Database = {
           },
         ]
       }
+      pp_note_log: {
+        Row: {
+          action: string
+          actor: string
+          created_at: string
+          id: string
+          note_id: string
+          old_body: string | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          created_at?: string
+          id?: string
+          note_id: string
+          old_body?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          created_at?: string
+          id?: string
+          note_id?: string
+          old_body?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pp_note_log_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "pp_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pp_notes: {
+        Row: {
+          author: string
+          body: string
+          created_at: string
+          edited_by: string | null
+          id: string
+          kind: string
+          org_id: string
+          rec_id: string
+          removed_at: string | null
+          removed_by: string | null
+          school_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          body: string
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          rec_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          rec_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          school_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pp_notes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pp_notes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pp_ops: {
+        Row: {
+          action: string
+          actor: string
+          client_key: string
+          created_at: string
+          failed: number
+          id: string
+          kind: string
+          ok: number
+          org_id: string
+          reason: string | null
+          refused: number
+          results: Json
+          school_id: string | null
+          tag_id: string | null
+          total: number
+        }
+        Insert: {
+          action: string
+          actor: string
+          client_key: string
+          created_at?: string
+          failed?: number
+          id?: string
+          kind: string
+          ok?: number
+          org_id: string
+          reason?: string | null
+          refused?: number
+          results?: Json
+          school_id?: string | null
+          tag_id?: string | null
+          total?: number
+        }
+        Update: {
+          action?: string
+          actor?: string
+          client_key?: string
+          created_at?: string
+          failed?: number
+          id?: string
+          kind?: string
+          ok?: number
+          org_id?: string
+          reason?: string | null
+          refused?: number
+          results?: Json
+          school_id?: string | null
+          tag_id?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pp_ops_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pp_tag_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          org_id: string
+          rec_id: string
+          removed_at: string | null
+          removed_by: string | null
+          school_id: string | null
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          rec_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          school_id?: string | null
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          rec_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          school_id?: string | null
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pp_tag_links_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pp_tag_links_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "pp_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pp_tags: {
+        Row: {
+          active: boolean
+          color: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kinds: string[]
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kinds?: string[]
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kinds?: string[]
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pp_tags_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_path: string | null
@@ -17253,6 +17511,38 @@ export type Database = {
         Args: { _d: Json; _id: string; _mode: string; _person: string }
         Returns: undefined
       }
+      _pp_name: { Args: { _u: string }; Returns: string }
+      _pp_note_can: {
+        Args: {
+          _action: string
+          n: Database["public"]["Tables"]["pp_notes"]["Row"]
+        }
+        Returns: boolean
+      }
+      _pp_ok: {
+        Args: { _action: string; _id: string; _kind: string }
+        Returns: boolean
+      }
+      _pp_rec: {
+        Args: { _id: string; _kind: string }
+        Returns: {
+          display_name: string
+          full_name: string
+          org: string
+          schools: string[]
+          status: string
+          uid: string
+        }[]
+      }
+      _pp_schools: {
+        Args: { _action: string; _org: string }
+        Returns: string[]
+      }
+      _pp_tag_apply: {
+        Args: { _id: string; _kind: string; _on: boolean; _tag: string }
+        Returns: string
+      }
+      _pp_tags_manager: { Args: { _org: string }; Returns: boolean }
       _provision_link: {
         Args: {
           _actor: string
@@ -20622,6 +20912,57 @@ export type Database = {
           _reason: string
           _section: string
         }
+        Returns: undefined
+      }
+      pp_bulk: {
+        Args: {
+          _action: string
+          _ids: string[]
+          _key: string
+          _kind: string
+          _reason?: string
+          _school: string
+          _tag?: string
+        }
+        Returns: Json
+      }
+      pp_caps: { Args: { _school: string }; Returns: Json }
+      pp_card: { Args: { _id: string; _kind: string }; Returns: Json }
+      pp_export_log: {
+        Args: { _count: number; _key: string; _kind: string; _school: string }
+        Returns: undefined
+      }
+      pp_note_add: {
+        Args: { _body: string; _id: string; _kind: string; _school: string }
+        Returns: string
+      }
+      pp_note_edit: {
+        Args: {
+          _body: string
+          _note: string
+          _reason?: string
+          _remove?: boolean
+        }
+        Returns: undefined
+      }
+      pp_tag_ids: {
+        Args: { _kind: string; _school: string; _tag: string }
+        Returns: string[]
+      }
+      pp_tag_list: { Args: { _org: string }; Returns: Json }
+      pp_tag_save: {
+        Args: {
+          _active: boolean
+          _color: string
+          _id: string
+          _kinds: string[]
+          _name: string
+          _org: string
+        }
+        Returns: string
+      }
+      pp_tag_set: {
+        Args: { _id: string; _kind: string; _on: boolean; _tag: string }
         Returns: undefined
       }
       prepare_template_files: {

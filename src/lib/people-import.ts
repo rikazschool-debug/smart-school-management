@@ -9,6 +9,7 @@ export type IKind = PKind | "guardians";
 export const FIELDS: Record<IKind, Field[]> = {
   students: [
     { key: "full_name", label: "اسم الطالب", required: true, hint: "مطلوب — الاسم بالعربية", syn: ["اسم الطالب", "الاسم الكامل", "الاسم", "الإسم", "اسم الطالبة"] },
+    { key: "display_name", label: "الاسم المعروض", hint: "اختياري — يُملأ تلقائيًا بالاسم الأول والأخير، ويجب ألا يتكرر لشخص آخر في المؤسسة", syn: ["الاسم المعروض", "اسم العرض", "display name"] },
     { key: "national_id", label: "رقم الهوية", required: true, hint: "مطلوب — 10 أرقام، يُكتب نصًا", syn: ["رقم الهوية", "رقمها", "الهوية", "السجل المدني", "رقم السجل المدني", "رقم الهوية/الإقامة"] },
     { key: "csmart_no", label: "رقم الطالب الداخلي — C‑Smart", hint: "يُكتب نصًا وتُحفظ الأصفار الأولى — مطلوب لدخول الطالب", syn: ["رقم الطالب الداخلي — C‑Smart", "رقم الطالب الداخلي", "رقم الطالب", "رقم C-Smart", "رقم سي سمارت", "C-Smart", "csmart"] },
     { key: "birth_date", label: "تاريخ الميلاد", hint: "ميلادي YYYY-MM-DD أو DD/MM/YYYY", syn: ["تاريخ الميلاد", "تاريخ الولادة", "date of birth"] },
@@ -22,6 +23,7 @@ export const FIELDS: Record<IKind, Field[]> = {
   ],
   guardians: [
     { key: "full_name", label: "اسم ولي الأمر", required: true, hint: "مطلوب", syn: ["اسم ولي الأمر", "ولي الأمر", "اسم ولي الامر", "الاسم"] },
+    { key: "display_name", label: "الاسم المعروض", hint: "اختياري — يُملأ تلقائيًا بالاسم الأول والأخير، ويجب ألا يتكرر لشخص آخر في المؤسسة", syn: ["الاسم المعروض", "اسم العرض", "display name"] },
     { key: "national_id", label: "هوية ولي الأمر أو إقامته", required: true, hint: "مطلوب — 10 أرقام، يُكتب نصًا", syn: ["هوية ولي الأمر أو إقامته", "هوية ولي الأمر", "رقم هوية ولي الأمر", "هوية ولي الامر", "رقم الهوية"] },
     { key: "phone", label: "الجوال المعتمد", required: true, hint: "مطلوب — 05XXXXXXXX، يُرسل إليه رمز الدخول", syn: ["الجوال المعتمد", "جوال ولي الأمر", "الجوال", "رقم الجوال", "جوال ولي الامر"] },
     { key: "email", label: "البريد (اختياري)", hint: "اختياري", syn: ["البريد (اختياري)", "البريد", "البريد الإلكتروني"] },
@@ -32,6 +34,7 @@ export const FIELDS: Record<IKind, Field[]> = {
   ],
   teachers: [
     { key: "full_name", label: "الإسم", required: true, hint: "مطلوب", syn: ["الإسم", "الاسم", "الاسم الكامل", "اسم المعلم", "اسم المعلمة"] },
+    { key: "display_name", label: "الاسم المعروض", hint: "اختياري — يُملأ تلقائيًا بالاسم الأول والأخير، ويجب ألا يتكرر لشخص آخر في المؤسسة", syn: ["الاسم المعروض", "اسم العرض", "display name"] },
     { key: "national_id", label: "رقم الهوية أو الإقامة", hint: "10 أرقام يُكتب نصًا — يلزم للدخول بالهوية ثم رمز التحقق", syn: ["رقم الهوية أو الإقامة", "رقم الهوية", "الهوية", "السجل المدني", "رقم الإقامة"] },
     { key: "phone", label: "الجوال", required: true, hint: "مطلوب — 05XXXXXXXX، يدخل به المعلم برمز واتساب", syn: ["الجوال", "رقم الجوال", "جوال"] },
     { key: "email", label: "البريد الإلكتروني", hint: "اختياري", syn: ["البريد الإلكتروني", "البريد", "البريد الالكتروني"] },
@@ -298,7 +301,7 @@ export function checkGuardianRows(rows: RawRow[], schoolName: string): GuardianC
     if (nid && ph) { const p = phoneOf.get(nid); if (p && p !== ph) e.push("ولي الأمر نفسه بجوالين مختلفين في الملف"); phoneOf.set(nid, ph); }
     const pair = `${nid}|${snid || scs}`;
     if (nid && (snid || scs)) { if (pairs.has(pair)) e.push("العلاقة نفسها مكررة في الملف"); pairs.add(pair); }
-    return { errors: e, payload: { full_name: (v["full_name"] ?? "").replace(/\s+/g, " ").trim(), national_id: nid, phone: ph ?? "", email: (v["email"] ?? "").trim(), relationship: rel, student_nid: snid, student_csmart: scs ?? "" } };
+    return { errors: e, payload: { full_name: (v["full_name"] ?? "").replace(/\s+/g, " ").trim(), display_name: (v["display_name"] ?? "").replace(/\s+/g, " ").trim(), national_id: nid, phone: ph ?? "", email: (v["email"] ?? "").trim(), relationship: rel, student_nid: snid, student_csmart: scs ?? "" } };
   });
 }
 
@@ -309,6 +312,8 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
   return rows.map((r) => {
     const v = r.values; const e: string[] = []; const notes: string[] = [];
     const data: Record<string, string | null> = { full_name: v["full_name"]!.replace(/\s+/g, " ").trim() };
+    data["display_name"] = (v["display_name"] ?? "").replace(/\s+/g, " ").trim() || null;
+    if ((data["display_name"] ?? "").length > 80) e.push("الاسم المعروض طويل (حتى 80 حرفًا)");
     if (r.formulas.length) e.push(`خلايا صيغ مرفوضة: ${r.formulas.join("، ")}`);
     if (!data["full_name"]) e.push("الاسم مطلوب");
     const out: CheckedRow = { ...r, data, errors: e, notes };

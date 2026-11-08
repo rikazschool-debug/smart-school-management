@@ -5,23 +5,23 @@ import { buttonVariants } from "@/components/ui/button";
 
 /** Shared Rikaz confirmation / reason dialog (replaces browser confirm/prompt: RTL, Cairo, large touch targets).
  *  ask() resolves true/false; askText() resolves the typed text or null when cancelled. */
-type Req = { message: string; input?: { label: string; required?: boolean } | undefined; destructive?: boolean | undefined; ok?: string | undefined; resolve: (v: string | boolean | null) => void };
+type Req = { message: string; input?: { label: string; required?: boolean; initial?: string | undefined; long?: boolean | undefined } | undefined; destructive?: boolean | undefined; ok?: string | undefined; resolve: (v: string | boolean | null) => void };
 let push: ((r: Req) => void) | null = null;
 
 export function ask(message: string, opts: { destructive?: boolean; ok?: string } = {}): Promise<boolean> {
   return new Promise((resolve) => { if (!push) return resolve(window.confirm(message)); push({ message, ...opts, resolve: (v) => resolve(v === true) }); });
 }
-export function askText(message: string, opts: { required?: boolean; ok?: string } = {}): Promise<string | null> {
+export function askText(message: string, opts: { required?: boolean; ok?: string; initial?: string; long?: boolean } = {}): Promise<string | null> {
   return new Promise((resolve) => {
     if (!push) return resolve(window.prompt(message));
-    push({ message, input: { label: message, required: opts.required ?? false }, ok: opts.ok, resolve: (v) => resolve(typeof v === "string" ? v : null) });
+    push({ message, input: { label: message, required: opts.required ?? false, initial: opts.initial, long: opts.long }, ok: opts.ok, resolve: (v) => resolve(typeof v === "string" ? v : null) });
   });
 }
 
 export function ConfirmHost() {
   const [req, setReq] = useState<Req | null>(null);
   const [text, setText] = useState("");
-  useEffect(() => { push = (r) => { setText(""); setReq(r); }; return () => { push = null; }; }, []);
+  useEffect(() => { push = (r) => { setText(r.input?.initial ?? ""); setReq(r); }; return () => { push = null; }; }, []);
   const close = (v: string | boolean | null) => { req?.resolve(v); setReq(null); };
   const blocked = !!req?.input?.required && text.trim().length < 3;
   return (
@@ -33,7 +33,9 @@ export function ConfirmHost() {
         </AlertDialogHeader>
         {req?.input && (
           <div className="space-y-1">
-            <Input autoFocus aria-label={req.input.label} value={text} onChange={(e) => setText(e.target.value)} maxLength={500} />
+            {req.input.long
+              ? <textarea autoFocus aria-label={req.input.label} className="min-h-24 w-full rounded-md border bg-background p-2 text-sm" value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} />
+              : <Input autoFocus aria-label={req.input.label} value={text} onChange={(e) => setText(e.target.value)} maxLength={500} />}
             {req.input.required && <p className="text-xs text-muted-foreground">ثلاثة أحرف على الأقل.</p>}
           </div>
         )}
