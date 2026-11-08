@@ -20771,6 +20771,7 @@ export type Database = {
         Args: { _org: string; _reopen_days: number }
         Returns: undefined
       }
+      my_access_paused: { Args: never; Returns: boolean }
       my_class_groups: {
         Args: { _school: string }
         Returns: {
