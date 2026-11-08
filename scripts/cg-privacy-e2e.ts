@@ -126,6 +126,8 @@ async function main() {
   ok("24 real sender stored internally", audit?.sender_id === g2.id);
   console.log(`\n${pass} passed, ${fail} failed`);
   if (process.argv.includes("--keep")) {
+    await admin.from("student_guardians").update({ verified: true }).eq("student_id", s1.id).eq("guardian_id", G1.id);
+    await admin.from("memberships").update({ is_active: false }).eq("user_id", g2.id).eq("role", "teacher");
     const fs = await import("fs"); fs.mkdirSync("/tmp/browser/cgp", { recursive: true });
     fs.writeFileSync("/tmp/browser/cgp/fixture.json", JSON.stringify({ pw, gA, run, principal: pr.email, teacher: t1.email, g1: g1.email, g2: g2.email, st: st.email, st2: st2.email }));
     console.log("kept /tmp/browser/cgp/fixture.json"); if (fail) process.exit(1); return;
