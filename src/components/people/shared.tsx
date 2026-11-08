@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { db } from "@/components/crud-page";
+import { supabase } from "@/integrations/supabase/client";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 
 export type PersonKind = "teacher" | "employee" | "student" | "guardian";
 export const KIND_LABEL: Record<PersonKind, string> = { teacher: "معلمون", employee: "موظفون وإداريون", student: "طلاب", guardian: "أولياء أمور" };
