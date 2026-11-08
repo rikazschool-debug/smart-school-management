@@ -153,7 +153,7 @@ async function main() {
   const sm = await t2.c.rpc("la_my_lessons", { _date: today });
   ok("24 substitute now sees the lesson", (sm.data as any[] ?? []).length === 1 && (sm.data as any[])[0].substitute === true);
   const om = await t1.c.rpc("la_my_lessons", { _date: today });
-  ok("25 absent teacher no longer sees it", (om.data as any[] ?? []).length === 0);
+  ok("25 absent teacher no longer sees it", !(om.data as any[] ?? []).some((x) => x.slot_id === slot));
   const own = await t1.c.rpc("la_save", { _id: id, _rev: d.rev, _marks: [{ student_id: studs[2].id, status: "late" }], _reason: "تجربة" });
   ok("26 absent teacher cannot edit", !!own.error);
 
