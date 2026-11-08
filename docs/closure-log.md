@@ -682,3 +682,9 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-08 — Group owner ID sign-in
 - org_owner_identity (RPC-only) + platform_org_save: platform owner edits org name and owner name/ID/mobile; _idl_resolve includes active org owners. Verified via UI save + resolve (test values removed).
+
+## 2026-11-08 — قسم «الفعاليات» (E1–E7)
+- evt_* (RPC-only) + شجرة الصلاحيات (3 أقسام) + صفحة /app/events + الرابط العام /join/$token ومتابعة /join/track/$code.
+- scripts/evt-e2e.ts: 75/75 (مؤسستان، دورة داخلية وخارجية، أخوان بالجوال نفسه، الضغط المزدوج، تزامن القبول على آخر مقعد، إصداران للنموذج، تفويض وسحب، حضور، موافقات رحلة، حدود المحاولات، الزيارات تعمل).
+- متصفح: 6/6 (تسجيل من جوال بلا حساب ومتابعة الحالة، صفحة الدورة والطلب ومحرر النموذج ومعاينة الجوال للمدير على الكمبيوتر، ولي الأمر على الجوال). بيانات الاختبار حُذفت.
+- مفتوح: حقل «مرفق» في النماذج ومرفقات الفعالية، وإرسال رسائل للمتقدم الخارجي عبر واتساب/بريد (لا توجد قناة مهيأة؛ يُسجَّل «لا توجد قناة» ويتابع برابط المتابعة).

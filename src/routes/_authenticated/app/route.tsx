@@ -14,7 +14,8 @@ import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
-import { FileText, IdCard, UserPlus } from "lucide-react";
+import { FileText, IdCard, PartyPopper, UserPlus } from "lucide-react";
+import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   hr_training: { to: "/app/hr/training", label: "التدريب والتطوير", icon: GraduationCap },
   visits: { to: "/app/visits", label: "الزيارات الصفية", icon: ClipboardList },
   family_visits: { to: "/app/family-visits", label: "الزيارات", icon: CalendarDays },
+  events: { to: "/app/events", label: "الفعاليات", icon: PartyPopper },
   evaluation: { to: "/app/evaluation", label: "نظام التقييم الشامل", icon: Award },
   hub_notices: { to: "/app/hub", tab: "notices", label: "الإشعارات", icon: Megaphone },
   hub_meetings: { to: "/app/hub", tab: "meetings", label: "الاجتماعات", icon: CalendarDays },
@@ -88,13 +90,15 @@ const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتي�
 const AD_SUB = [["apps", "الطلاب المحتملون"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
 
 /** Evaluation sub-sections (owner/principal/granted platform); class visits is its own page. "forms" needs owner or evaluation.forms — the page and RPCs re-check. */
+/** Events sub-sections (the page shows only tabs the server allows). */
+const EVT_SUB = [["summary", "الملخص والتقويم"], ["trip", "الرحلات المدرسية"], ["general", "الفعاليات العامة"], ["course", "الدورات"], ["apps", "طلبات التسجيل"], ["forms", "إعدادات النماذج"], ["reports", "التقارير"]] as const;
 const EV_SUB = [["summary", "الملخص والمؤشرات"], ["guardians", "تقييمات أولياء الأمور"], ["visits", "الزيارات الصفية"], ["monthly", "التقييم الشهري"], ["forms", "النماذج والإعدادات"]] as const;
 const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary";
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
-  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits"] },
+  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "events"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
@@ -122,6 +126,8 @@ function Shell() {
   const sp = useSchoolPerms(pcRole ? active?.schoolId : null);
   const mt = useMtMe(active?.orgId ?? null, pcRole);
   const ad = useAdMe(active?.orgId ?? null, pcRole);
+  // events: base roles have it in NAV_BY_ROLE; other staff get it from granted evt_* perms or a course delegation (evt_caps re-checks)
+  const evt = useEvtCaps(active?.orgId ?? null, pcRole && !["principal", "vice_principal"].includes(active?.role ?? ""));
   const ops = useOpsStaff(active ?? null, user.id);
   // HR: own employment file for any staff member who has one (hr_my_employment returns null otherwise); HR workspace via perm_my_school hr_* keys
   const myHr = useQuery({ queryKey: ["hr-mine", active?.orgId], enabled: pcRole, staleTime: 60_000, queryFn: async () => { const r = await supabase.rpc("hr_my_employment" as never, { _org: active!.orgId } as never); if (r.error) return null; return r.data as unknown; } });
@@ -168,9 +174,9 @@ function Shell() {
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
-    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : [])] as NavKey[];
+    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
   const opsOnly = ops.opsOnly;
-  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr"].includes(k)));
+  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events"].includes(k)));
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   let nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   // class visits live under the evaluation sub-menu for roles that have both
@@ -230,6 +236,13 @@ function Shell() {
                         <Link key={t} to="/app/support" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS + (supTab === t || (!supTab && i === 0) ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>
                           {t === "settings" ? "الإعدادات والتصنيفات" : SUPPORT_TAB_LABELS[t]}
                         </Link>
+                      ))}
+                    </div>
+                  )}
+                  {k === "events" && path.startsWith("/app/events") && !["guardian", "student"].includes(active.role) && (
+                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                      {EVT_SUB.map(([t, label]) => (
+                        <Link key={t} to="/app/events" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>
                       ))}
                     </div>
                   )}
