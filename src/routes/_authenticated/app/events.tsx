@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { rpc } from "@/components/hr/shared";
+import { supabase } from "@/integrations/supabase/client";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { AppsList, ItemDetail, ItemForm, useEvtRefresh } from "@/components/events/item";
