@@ -14,6 +14,8 @@ import { selectCls } from "@/components/ui/native-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { arabicError, useSession } from "@/lib/session";
+import { SchoolLogo } from "@/components/school-logo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/app/schools")({
   validateSearch: (s: Record<string, unknown>): { new?: boolean } => (s["new"] === true || s["new"] === "true" ? { new: true } : {}),
@@ -24,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/app/schools")({
 /** Staff roles linkable from this page (department heads need a department → members page). */
 const LINK_ROLES: Role[] = ["principal", "vice_principal", "supervisor", "student_affairs", "teacher", "counselor", "nurse", "security"];
 
-const ACTIONS: Record<string, string> = { school_create: "إضافة مدرسة", school_update: "تعديل بيانات", school_suspend: "إيقاف فرع", school_activate: "تفعيل فرع" };
+const ACTIONS: Record<string, string> = { school_create: "إضافة مدرسة", school_update: "تعديل بيانات", school_suspend: "إيقاف فرع", school_activate: "تفعيل فرع", school_logo: "تغيير الشعار" };
 
 const GENDER: Record<string, string> = { boys: "بنين", girls: "بنات", mixed: "بنين وبنات" };
 

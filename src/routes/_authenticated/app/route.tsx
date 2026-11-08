@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useCanGoBack, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
+import { SchoolLogo } from "@/components/school-logo";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOpsStaff } from "@/lib/ops-staff";
