@@ -655,3 +655,11 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## 2026-11-08 — B4.4/B4.7 daily attendance: screen ↔ Excel/PDF match
 - Fix: records export labelled class-sheet rows «مراجعة» and left «دخل المدرسة ولم يحضر الفصل» blank; today board had no tile for it. Now one row builder (recordRow) feeds screen and files; attendance_board adds in_school_absent + recorded.
 - Evidence: lesson-att-e2e 40/40 (19e2 list = board counts); vitest attendance.test.ts 3/3; browser (vice principal 1280px): 3 screen rows = 3 Excel rows, statuses/sources identical; guardian 390px: own child shows today status incl. «بانتظار تحقق المدرسة», unlinked child refused. att-browser-fixture fixed (teachers via service role) and torn down.
+
+## 2026-11-08 — B4.8 acceptance closure (staging)
+- New scripts/b48-fixture.ts + scripts/b48-journey.py: 19/19, separate accounts, phone 390px.
+- Sign-in method, recorded per account: student = ID + C-Smart through /auth, fully REAL (wrong number refused). Teacher, second teacher, reception (HR record) and guardian = ID → code → REAL server verify (wrong code refused); only the WhatsApp SEND is SIMULATED (requestIdCode intercepted in the browser, challenge issued by the same service-only _idl_issue with a known code; nothing sent to any phone). No session restore used in this journey.
+- Reception: visit confirmed for today → arrival → departure recorded (arrived_at + left_at), reason hidden from reception, guardian sees «مكتملة».
+- Phone calendar: invited teacher opens meeting details (place, duration, purpose) and duty details (type, time); non-invited teacher sees own duty but not the meeting.
+- Copy fix: staff sign-in entry no longer mentions username/password (removed in B3.8).
+- Still open: real WhatsApp delivery (provider accepted / delivered / signed in, each recorded separately) — waits for a consenting number. Test data torn down.
