@@ -13,7 +13,7 @@ import { PeoplePicker } from "@/components/people-picker";
 import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { PermTree } from "@/components/perm-tree";
-import { PersonPanel } from "@/components/perm-person";
+import { PersonPanel, confirmDiscard } from "@/components/perm-person";
 import { StaffWizard } from "@/components/staff-wizard";
 import { PasswordInput } from "@/components/password-input";
 import { resetStaffPassword } from "@/lib/accounts.functions";
@@ -210,7 +210,7 @@ function People({ org, school, initialUser = null }: { org: string; school: stri
             {tabs.map((t, i) => (
               <li key={t.key} className="shrink-0">
                 {"extra" in t && !("extra" in (tabs[i - 1] ?? {})) && <p className="mb-1 mt-3 hidden px-2 text-xs font-semibold text-muted-foreground md:block">أدوار الصلاحيات</p>}
-                <button type="button" aria-current={t.key === cur.key ? "true" : undefined} onClick={() => { setTab(t.key); setUser(null); }}
+                <button type="button" aria-current={t.key === cur.key ? "true" : undefined} onClick={async () => { if (!(await confirmDiscard())) return; setTab(t.key); setUser(null); }}
                   className={`flex w-full items-center justify-between gap-2 whitespace-nowrap rounded-lg border px-3 py-2 text-sm md:border-transparent ${t.key === cur.key ? "border-primary bg-primary/10 font-semibold text-primary" : "bg-card hover:bg-secondary md:bg-transparent"}`}>
                   <span className="truncate">{t.label}</span><span className="text-xs text-muted-foreground">{t.n}</span>
                 </button>
@@ -221,9 +221,9 @@ function People({ org, school, initialUser = null }: { org: string; school: stri
         <div className="min-w-0">
           {sel ? (
             <>
-              <button type="button" onClick={() => setUser(null)} className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />{cur.label}</button>
+              <button type="button" onClick={async () => { if (await confirmDiscard()) setUser(null); }} className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />{cur.label}</button>
               {login(sel.user_id) && <ResetPassword org={org} user={sel.user_id} username={login(sel.user_id)!.username} />}
-              <PersonPanel org={org} user={sel.user_id} name={sel.name} c={cat.data!} roles={roles.data!} />
+              <PersonPanel key={sel.user_id} org={org} user={sel.user_id} name={sel.name} c={cat.data!} roles={roles.data!} />
             </>
           ) : (
             <>

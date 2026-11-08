@@ -24,7 +24,7 @@ function TriBox({ state, onChange, disabled, label: l }: { state: "none" | "some
  * Collapsible tree of areas → sections → actions with tri-state boxes and search.
  * Ticking a section grants only its basic (view) action at the narrowest scope; stronger actions stay separate.
  */
-export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, denied = [], onUndeny, sources = {} }: { c: PermCatalog; value: Grant[]; onChange: (g: Grant[]) => void; disabledAreas?: string[]; readOnly?: boolean;
+export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, denied = [], onUndeny, sources = {}, orig, personal }: { c: PermCatalog; value: Grant[]; onChange: (g: Grant[]) => void; disabledAreas?: string[]; readOnly?: boolean;
   /** "section.action" keys blocked explicitly (shown, never hidden); onUndeny returns them to the role's rules. */ denied?: string[]; onUndeny?: (key: string) => void; sources?: Record<string, string>;
   /** saved state and personal overrides (section.action → override|deny), to show status and filter */ orig?: Grant[]; personal?: Record<string, string> }) {
   const [q, setQ] = useState("");
