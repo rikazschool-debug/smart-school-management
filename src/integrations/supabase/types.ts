@@ -15738,6 +15738,7 @@ export type Database = {
       _dn_clean: { Args: { _s: string }; Returns: string }
       _dn_default: { Args: { _full: string }; Returns: string }
       _dn_norm: { Args: { _s: string }; Returns: string }
+      _dn_org: { Args: { _r: Json; _t: string }; Returns: string }
       _dn_person_claim: {
         Args: { _nid: string; _org: string; _uid: string }
         Returns: string
