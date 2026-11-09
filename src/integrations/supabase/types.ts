@@ -17086,6 +17086,10 @@ export type Database = {
         }
         Returns: string
       }
+      _hr_employee_create_login_v1_ops: {
+        Args: { _org: string; _p: Json; _reason: string; _uid: string }
+        Returns: string
+      }
       _hr_employee_save_base: {
         Args: { _id: string; _org: string; _p: Json; _reason?: string }
         Returns: string
