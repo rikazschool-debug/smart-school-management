@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { db } from "@/components/crud-page";
+import { supabase } from "@/integrations/supabase/client";
 
 export type MqSection = "live" | "calls" | "followups" | "reports" | "settings";
 export type MqCaps = { enabled: boolean; owner?: boolean; manage?: boolean; own?: boolean; link?: boolean; listen?: boolean; download?: boolean; export?: boolean;
   schools?: { id: string; name: string }[]; link_schools?: { id: string; name: string }[]; agents?: { id: string; name: string }[]; sync?: { at: string | null; ok: boolean | null }; dialer_url?: string | null };
 
-const rpc = async (fn: string, args: Record<string, unknown>) => { const { data, error } = await db.rpc(fn, args); if (error) throw error; return data; };
+const rpc = async (fn: string, args: Record<string, unknown>) => { const { data, error } = await supabase.rpc(fn as never, args as never); if (error) throw error; return data; };
 
 export function useMqCaps(orgId: string | null) {
   return useQuery({ queryKey: ["mq-caps", orgId], enabled: !!orgId, staleTime: 60_000, queryFn: async () => (await rpc("mq_caps", { _org: orgId })) as MqCaps });
