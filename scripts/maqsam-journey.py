@@ -26,7 +26,7 @@ async def main():
         await p.goto(B + "/app/support?mq=reports"); await p.wait_for_timeout(4000)
         t = await p.locator("main").inner_text(); await p.screenshot(path=f"{S}/owner-reports.png")
         check("report shows totals", "الإجمالي" in t and "فائتة" in t)
-        await p.get_by_role("button", name="فائتة").first.click(); await p.wait_for_timeout(3000)
+        await p.locator("button:has-text(\"فائتة\")").first.click(); await p.wait_for_timeout(4000); await p.screenshot(path=f"{S}/drill.png"); print((await p.locator("main").inner_text())[-300:])
         check("missed card opens matching list (1)", "1 مكالمة" in await p.locator("main").inner_text())
         await p.goto(B + "/app/support?mq=settings"); await p.wait_for_timeout(4000)
         t = await p.locator("main").inner_text(); await p.screenshot(path=f"{S}/owner-settings.png")
