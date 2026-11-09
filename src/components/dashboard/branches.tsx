@@ -3,6 +3,8 @@ import { ArrowLeft, Building2, GraduationCap, Users } from "lucide-react";
 import { useSchoolsOverview } from "@/components/owner-portal";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
+import { SchoolLogo } from "@/components/school-logo";
+import { MapPin, Phone } from "lucide-react";
 
 /** Owner view of every branch in the group; opening one shows that school's details. */
 export function BranchesOverview({ orgId }: { orgId: string }) {
@@ -17,12 +19,16 @@ export function BranchesOverview({ orgId }: { orgId: string }) {
         <Link key={s["id"]} to="/app/school-home" search={{ s: s["id"] }}
           className={"group flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm transition hover:border-primary hover:shadow-md " + (s["is_active"] ? "" : "border-dashed opacity-80")}>
           <div className="flex items-start gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Building2 className="size-5" /></span>
+            <SchoolLogo schoolId={s["id"]} className="size-12 shrink-0 rounded-xl border" fallback={<span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Building2 className="size-5" /></span>} />
             <div className="min-w-0 flex-1">
               <h2 className="font-bold leading-snug">{s["name"]}</h2>
               <p className="text-xs text-muted-foreground">{[s["city"], s["stage_type"]].filter(Boolean).join(" · ") || "—"}</p>
             </div>
             <span className={"shrink-0 rounded-full px-2 py-0.5 text-xs " + (s["is_active"] ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>{s["is_active"] ? "نشطة" : "موقوفة"}</span>
+          </div>
+          <div className="grid gap-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5"><MapPin className="size-3.5 shrink-0" />{s["address"] || "العنوان غير مسجل"}</span>
+            <span className="flex items-center gap-1.5"><Phone className="size-3.5 shrink-0" /><span dir="ltr">{s["phone"] || "—"}</span></span>
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="rounded-xl bg-secondary/50 p-3"><GraduationCap className="mb-1 size-4 text-muted-foreground" /><b className="font-display text-lg">{Number(s["students"] ?? 0).toLocaleString("en-US")}</b> <span className="text-muted-foreground">طالب</span></div>
