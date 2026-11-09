@@ -5,7 +5,7 @@ import { BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School,
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { StatusPill } from "@/components/family-visits/shared";
-import { StudentHomework } from "@/routes/_authenticated/app/homework.index";
+import { StudentHomework } from "@/components/homework/student-homework";
 import { DAYS_AR } from "@/lib/timetable-model";
 import { arabicError } from "@/lib/session";
 import { cn } from "@/lib/utils";
