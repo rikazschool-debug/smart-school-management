@@ -18539,6 +18539,7 @@ export type Database = {
         Args: { _section: string; _user: string }
         Returns: boolean
       }
+      _tmp_diag_cat: { Args: never; Returns: Json }
       _tt_courses: {
         Args: { _tt: string }
         Returns: {
