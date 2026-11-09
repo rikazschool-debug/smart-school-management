@@ -13,7 +13,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Pill, fmt } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
 import { exportXlsx } from "@/lib/export";
-import { mqSync, mqTest } from "@/lib/maqsam.functions";
+import { mqSaveCreds, mqSync, mqTest } from "@/lib/maqsam.functions";
 import { PRIO, useCategories } from "@/components/support/support";
 import { AssigneePicker, type Assignee } from "@/components/support/assignee-picker";
 
@@ -21,7 +21,7 @@ import { AssigneePicker, type Assignee } from "@/components/support/assignee-pic
 type Row = any;
 export type MqSection = "live" | "calls" | "followups" | "reports" | "settings";
 export type MqCaps = { enabled: boolean; owner?: boolean; manage?: boolean; own?: boolean; link?: boolean; listen?: boolean; download?: boolean; export?: boolean;
-  schools?: { id: string; name: string }[]; link_schools?: { id: string; name: string }[]; agents?: { id: string; name: string }[]; sync?: { at: string | null; ok: boolean | null } };
+  schools?: { id: string; name: string }[]; link_schools?: { id: string; name: string }[]; agents?: { id: string; name: string }[]; sync?: { at: string | null; ok: boolean | null }; dialer_url?: string | null };
 
 const STATE: Record<string, string> = { initiated: "بدأت", in_progress: "جارية", completed: "مكتملة", busy: "مشغول", no_answer: "لم يُرد", canceled: "ملغاة", failed: "فشلت",
   aborted: "قُطعت", blocked: "محظورة", serviced: "تم الرد", abandoned: "تركها المتصل", dropped: "انقطعت", out_of_hours: "خارج الدوام" };
@@ -35,8 +35,8 @@ export function useMqCaps(orgId: string | null) {
 
 export const MQ_LABEL: Record<MqSection, string> = { live: "لوحة الاتصال", calls: "المكالمات", followups: "المتابعات", reports: "تقارير الاتصال", settings: "إعدادات Maqsam" };
 export function mqSections(c: MqCaps): MqSection[] {
-  if (!c.enabled) return c.manage ? ["settings"] : [];
-  return ["live", "calls", "followups", ...(c.export ? (["reports"] as const) : []), ...(c.manage ? (["settings"] as const) : [])];
+  if (!c.enabled) return c.owner ? ["settings"] : [];
+  return ["live", "calls", "followups", ...(c.export ? (["reports"] as const) : []), ...(c.owner ? (["settings"] as const) : [])];
 }
 
 function Dir({ r }: { r: Row }) {
@@ -319,10 +319,68 @@ export function ReportsPanel({ orgId, caps }: { orgId: string; caps: MqCaps }) {
 }
 
 export function MqSettingsPanel({ orgId }: { orgId: string }) {
+  const info = useQuery({ queryKey: ["mq", "link", orgId], queryFn: () => rpc("mq_link_info", { _org: orgId }) as Promise<Row> });
+  return (
+    <div className="space-y-4">
+      {info.isLoading ? <LoadingState /> : info.error ? <ErrorState message={arabicError(info.error)} /> : <LinkCard orgId={orgId} info={info.data} />}
+      {info.data?.linked && <MqLinkedSettings orgId={orgId} />}
+    </div>
+  );
+}
+
+function LinkCard({ orgId, info }: { orgId: string; info: Row }) {
   const qc = useQueryClient();
-  const test = useServerFn(mqTest); const sync = useServerFn(mqSync);
+  const test = useServerFn(mqTest); const save = useServerFn(mqSaveCreds);
+  const [base, setBase] = useState<string>(info.base_url ? `https://${info.base_url}` : "https://mq.maqsam.com");
+  const [keyId, setKeyId] = useState(""); const [secret, setSecret] = useState("");
+  const [dialer, setDialer] = useState<string>(info.dialer_url ?? "");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["mq"] }); qc.invalidateQueries({ queryKey: ["mq-caps", orgId] }); };
+  const doTest = async () => {
+    setBusy(true); setResult(null);
+    try { const r = await test({ data: { orgId, base, keyId, secret } }); setResult(r.ok ? { ok: true, text: `الاتصال ناجح (${r.agents} موظف في الحساب)${"unsaved" in r && r.unsaved ? " — لم يُحفظ بعد" : ""}` } : { ok: false, text: r.error ?? "فشل الاتصال" }); }
+    catch (e) { setResult({ ok: false, text: arabicError(e) }); } finally { setBusy(false); refresh(); }
+  };
+  const doSave = async () => {
+    setBusy(true); setResult(null);
+    try { const r = await save({ data: { orgId, base, keyId, secret } }); if (r.ok) { setKeyId(""); setSecret(""); setResult({ ok: true, text: "تم حفظ الربط بعد نجاح الاختبار" }); toast.success("تم حفظ الربط"); } else setResult({ ok: false, text: r.error ?? "تعذّر الحفظ" }); }
+    catch (e) { setResult({ ok: false, text: arabicError(e) }); } finally { setBusy(false); refresh(); }
+  };
+  return (
+    <section className="space-y-3 rounded-xl border bg-card p-4 text-sm">
+      <h3 className="font-semibold">ربط حساب Maqsam</h3>
+      <p className="text-muted-foreground">
+        {info.has_creds ? <>الربط محفوظ مشفّرًا في الخادم (المفتاح المنتهي بـ <span dir="ltr">{info.key_hint}</span>، حُدّث {fmt(info.creds_updated_at)}). أدخل بيانات جديدة لاستبداله؛ يبقى الربط الحالي حتى تنجح البيانات الجديدة.</>
+          : info.linked ? "الحساب مربوط حاليًا بمفاتيح الإعداد الأولي. احفظ الربط هنا لتصبح بيانات المؤسسة مشفّرة ومستقلة." : "لا يوجد ربط بعد."}
+      </p>
+      <p>آخر اتصال ناجح: <b>{info.last_ok_at ? fmt(info.last_ok_at) : "—"}</b>{info.last_test_ok === false ? <span className="text-destructive"> — فشل آخر اختبار</span> : null}</p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="space-y-1"><Label htmlFor="mq-base">الرابط الأساسي لواجهة API</Label><Input id="mq-base" dir="ltr" placeholder="https://mq.maqsam.com" value={base} onChange={(e) => setBase(e.target.value)} /></div>
+        <div className="space-y-1"><Label htmlFor="mq-key">رقم مفتاح التعريف / Access Key ID</Label><Input id="mq-key" dir="ltr" autoComplete="off" placeholder={info.has_creds ? "محفوظ — اتركه فارغًا للإبقاء" : ""} value={keyId} onChange={(e) => setKeyId(e.target.value)} /></div>
+        <div className="space-y-1"><Label htmlFor="mq-secret">كلمة مرور مفتاح الربط / Access Key Secret</Label><Input id="mq-secret" dir="ltr" type="password" autoComplete="new-password" placeholder={info.has_creds ? "••••••••" : ""} value={secret} onChange={(e) => setSecret(e.target.value)} /></div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="outline" disabled={busy} onClick={doTest}>اختبار الاتصال</Button>
+        <Button size="sm" disabled={busy || !keyId || !secret} onClick={doSave}>حفظ الربط</Button>
+        {result && <Pill tone={result.ok ? "ok" : "bad"}>{result.text}</Pill>}
+      </div>
+      <p className="text-xs text-muted-foreground">الاختبار طلب قراءة فقط (قائمة الموظفين) ولا يُجري أي مكالمة. بدون بيانات جديدة يُختبر الربط المحفوظ.</p>
+      {info.linked && (
+        <div className="space-y-1 border-t pt-3">
+          <Label htmlFor="mq-dialer">عنوان لوحة المكالمات للمؤسسة</Label>
+          <div className="flex gap-2"><Input id="mq-dialer" dir="ltr" value={dialer} onChange={(e) => setDialer(e.target.value)} />
+            <Button size="sm" variant="outline" onClick={async () => { try { await rpc("mq_set_dialer", { _org: orgId, _url: dialer.trim() }); toast.success("تم الحفظ"); refresh(); } catch (e) { toast.error(arabicError(e)); } }}>حفظ</Button></div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function MqLinkedSettings({ orgId }: { orgId: string }) {
+  const qc = useQueryClient();
+  const sync = useServerFn(mqSync);
   const q = useQuery({ queryKey: ["mq", "settings", orgId], queryFn: () => rpc("mq_settings", { _org: orgId }) as Promise<Row> });
-  const [probe, setProbe] = useState(false);
   const [mic, setMic] = useState<string>("");
   const run = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); } catch (e) { toast.error(arabicError(e)); } finally { qc.invalidateQueries({ queryKey: ["mq"] }); qc.invalidateQueries({ queryKey: ["mq-caps", orgId] }); } };
   if (q.isLoading) return <LoadingState />;
@@ -331,13 +389,10 @@ export function MqSettingsPanel({ orgId }: { orgId: string }) {
   return (
     <div className="space-y-4">
       <section className="space-y-2 rounded-xl border bg-card p-4 text-sm">
-        <h3 className="font-semibold">حالة الربط</h3>
-        <p>الحساب: <span dir="ltr">{s.base_url}</span> — مخصص لهذه المجموعة فقط. المفاتيح محفوظة في الخادم ولا تظهر هنا.</p>
-        <p>آخر اختبار: {s.last_test_at ? `${fmt(s.last_test_at)} — ${s.last_test_ok ? "ناجح" : "فشل"}` : "لم يُختبر"}{s.last_test_ok === false && s.last_test_error ? ` (${s.last_test_error})` : ""}</p>
+        <h3 className="font-semibold">المزامنة</h3>
         <p>آخر مزامنة: {s.last_sync_at ? `${fmt(s.last_sync_at)} (${s.last_sync_count ?? 0} سجل)` : "لم تتم"}{s.last_sync_ok === false ? ` — فشلت آخر محاولة: ${s.last_sync_error ?? ""}` : ""}</p>
         <p>مكالمات بانتظار المراجعة (فرع غير محدد أو تطابقات متعددة): <b>{s.review}</b></p>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => run(async () => { const r = await test({ data: { orgId } }); if (!r.ok) throw new Error(r.error); }, "الاتصال بـ Maqsam ناجح")}>اختبار الاتصال</Button>
           <Button size="sm" variant="outline" onClick={() => run(() => sync({ data: { orgId, force: true } }), "تمت المزامنة")}><RefreshCw className="size-4" /> مزامنة الآن</Button>
         </div>
         <p className="text-xs text-muted-foreground">تتم المزامنة تلقائيًا عند فتح شاشة المكالمات (مرة كل دقيقة على الأكثر) مع تداخل زمني لاستدراك أي انقطاع؛ تكرار السجل لا يضيف مكالمة.</p>
@@ -369,14 +424,11 @@ export function MqSettingsPanel({ orgId }: { orgId: string }) {
       </section>
 
       <section className="space-y-2 rounded-xl border bg-card p-4 text-sm">
-        <h3 className="font-semibold">فحص تمهيدي: تضمين لوحة اتصال Maqsam</h3>
-        <p className="text-muted-foreground">لا يُجري أي اتصال. يفتح لوحة Maqsam داخل ركاز لنرى هل تسمح بالتضمين، وهل يعمل دخول الموظف، وهل يُمنح الميكروفون. الصوت داخل ركاز لا يُعتبر منجزًا قبل مكالمة واردة وصادرة فعلية يسمع فيها الطرفان بعضهما.</p>
+        <h3 className="font-semibold">فحص الميكروفون</h3>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => setProbe(!probe)}>{probe ? "إغلاق الفحص" : "فتح اللوحة داخل ركاز"}</Button>
           <Button size="sm" variant="outline" onClick={async () => { try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach((t) => t.stop()); setMic("مُنح الميكروفون لركاز"); } catch { setMic("رُفض الميكروفون أو غير متاح"); } }}>فحص الميكروفون</Button>
           {mic && <Pill tone={mic.startsWith("مُنح") ? "ok" : "bad"}>{mic}</Pill>}
         </div>
-        {probe && <iframe title="Maqsam Dialer" src="https://portal.mq.maqsam.com/phone/dialer" allow="microphone; autoplay" className="h-[520px] w-full rounded-lg border" />}
       </section>
     </div>
   );
@@ -384,18 +436,37 @@ export function MqSettingsPanel({ orgId }: { orgId: string }) {
 
 // Live call panel: the Maqsam dialer stays mounted on the right while the ticket form edits/saves in a side column.
 // The service number is shared by all branches → the agent picks the branch; the call id is linked when already synced, else «بانتظار ربط المكالمة».
+const DIALER = "https://portal.mq.maqsam.com/phone/dialer";
+let dialerWin: Window | null = null;
+/** Opens (or focuses) the one Maqsam dialer window; returns false when the browser blocked it. */
+export function openDialer(url?: string | null): boolean {
+  if (dialerWin && !dialerWin.closed) { dialerWin.focus(); return true; }
+  const w = 380, h = 720, left = Math.max(0, window.screenX + window.outerWidth - w - 40), top = Math.max(0, window.screenY + 80);
+  // named target → the browser reuses the same window even after a page reload; no reload when it already exists
+  dialerWin = window.open(url || DIALER, "rikaz-maqsam-dialer", `popup=yes,width=${w},height=${h},left=${left},top=${top}`);
+  return !!dialerWin;
+}
+
 export function LivePanel({ orgId, caps, assignable }: { orgId: string; caps: MqCaps; assignable: { id: string; name: string }[] }) {
   const [side, setSide] = useState<"" | "new" | "link">("");
+  const [blocked, setBlocked] = useState(false);
+  const [open, setOpen] = useState(false);
+  useEffect(() => { const ok = openDialer(caps.dialer_url); setBlocked(!ok); setOpen(ok); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const t = setInterval(() => setOpen(!!dialerWin && !dialerWin.closed), 2000); return () => clearInterval(t); }, []);
   return (
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_420px]">
-      <section className="space-y-2 rounded-xl border bg-card p-3">
+      <section className="space-y-3 rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="flex-1 font-semibold">لوحة الاتصال (Maqsam)</h3>
           {caps.link && <><Button size="sm" variant={side === "new" ? "default" : "outline"} onClick={() => setSide(side === "new" ? "" : "new")}><Ticket className="size-4" /> إنشاء تذكرة</Button>
             <Button size="sm" variant={side === "link" ? "default" : "outline"} onClick={() => setSide(side === "link" ? "" : "link")}>ربط بتذكرة قائمة</Button></>}
         </div>
-        <iframe title="Maqsam Dialer" src="https://portal.mq.maqsam.com/phone/dialer" allow="microphone; autoplay" className="h-[560px] w-full rounded-lg border" />
-        <p className="text-xs text-muted-foreground">تبقى لوحة الاتصال مفتوحة أثناء تحرير التذكرة وحفظها.</p>
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <Pill tone={open ? "ok" : "bad"}>{open ? "لوحة Maqsam مفتوحة في نافذة مستقلة" : "لوحة Maqsam غير مفتوحة"}</Pill>
+          <Button size="sm" variant={blocked || !open ? "default" : "outline"} onClick={() => { const ok = openDialer(caps.dialer_url); setBlocked(!ok); setOpen(ok); }}>فتح لوحة Maqsam في نافذة مستقلة</Button>
+        </div>
+        {blocked && <p className="text-sm text-destructive">منع المتصفح فتح النافذة تلقائيًا — اضغط الزر أعلاه، أو اسمح بالنوافذ المنبثقة لركاز.</p>}
+        <p className="text-xs text-muted-foreground">تبقى نافذة Maqsam مفتوحة ولا يُعاد تحميلها أثناء فتح نموذج التذكرة أو حفظه. اختر الفرع حسب موضوع المكالمة؛ إن لم يظهر سجل المكالمة بعد تُحفظ التذكرة «بانتظار ربط المكالمة».</p>
       </section>
       {side && <aside aria-label="نموذج التذكرة" className="rounded-xl border bg-card p-3">{side === "new" ? <LiveNew orgId={orgId} caps={caps} assignable={assignable} onClose={() => setSide("")} /> : <LiveLink orgId={orgId} onClose={() => setSide("")} />}</aside>}
     </div>
