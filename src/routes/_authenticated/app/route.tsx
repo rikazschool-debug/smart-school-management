@@ -20,6 +20,7 @@ import { useSchoolPerms } from "@/lib/school-perms";
 import { FileText, IdCard, Tags, PartyPopper, UserPlus } from "lucide-react";
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
+import { setOwnerInSchool, useOwnerInSchool } from "@/lib/owner-scope";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -151,6 +152,7 @@ function Shell() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const supTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "") });
   const evTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "summary") });
+  const ownerInSchool = useOwnerInSchool();
   const schoolPicked = useRouterState({ select: (r) => !!(r.location.search as Record<string, unknown>)["s"] });
   const lastSection = useRef<OwnerSection | null>(null);
   const router = useRouter();
@@ -185,6 +187,10 @@ function Shell() {
   const owner = active.role === "org_owner";
   const section = owner ? ownerSection(path, lastSection.current) : null;
   lastSection.current = section;
+  const cleanPath = path.replace(/\/+$/, "") || "/";
+  // owner group account vs inside one school: /app and the branch list are the group; opening a branch enters it; shared pages keep the last state
+  if (owner) { if (cleanPath === "/app" || (cleanPath === "/app/school-home" && !schoolPicked)) setOwnerInSchool(false); else if (cleanPath === "/app/school-home" && schoolPicked) setOwnerInSchool(true); }
+  const groupView = owner && !ownerInSchool && !(cleanPath === "/app/school-home" && schoolPicked);
   // Owner home has no side menu; inside a section only that section's menu shows; shared pages (profile…) keep the last section.
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
@@ -211,10 +217,10 @@ function Shell() {
   const sidebar = (
     <nav aria-label="القائمة الرئيسية" className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 py-5">
-        <SchoolLogo schoolId={active.schoolId} className="size-10 shrink-0 rounded-xl border" fallback={<span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">ر</span>} />
+        <SchoolLogo schoolId={groupView ? null : active.schoolId} className="size-10 shrink-0 rounded-xl border" fallback={<span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">ر</span>} />
         <div className="min-w-0">
           <p className="font-display text-xl leading-none text-foreground">ركاز</p>
-          <p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{active.schoolName}</p>
+          <p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{groupView ? active.orgName : active.schoolName}</p>
         </div>
       </div>
       {owner && section && <p className="mx-3 mb-3 rounded-lg bg-secondary px-3 py-2 text-sm font-bold text-primary">{OWNER_SECTION_LABELS[section]}</p>}
@@ -332,7 +338,7 @@ function Shell() {
           <div className="relative flex min-w-0 flex-1 items-center sm:flex-none">
             <Building2 aria-hidden className="pointer-events-none absolute right-3 size-4 text-primary" />
             <label className="sr-only" htmlFor="ctx">تبديل الدور أو المدرسة</label>
-            <select
+            {groupView ? <span className="flex min-h-9 items-center rounded-full border bg-card pr-9 pl-4 text-sm font-medium shadow-sm">{ROLE_LABELS[active.role]} · {active.orgName}</span> : <select
               id="ctx"
               title="تبديل الدور أو المدرسة"
               className={selectCls("w-full min-w-0 rounded-full bg-card pr-9 font-medium shadow-sm sm:w-auto sm:max-w-md", true)}
@@ -344,7 +350,7 @@ function Shell() {
                   {opsOnly && c.schoolId === active.schoolId && c.role === active.role ? (ops.title === "عملي" ? "متعدد الأدوار" : ops.title) : ROLE_LABELS[c.role]} · {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
                 </option>
               ))}
-            </select>
+            </select>}
           </div>
           <div className="ms-auto flex shrink-0 items-center gap-1">
             <NotificationBell />
