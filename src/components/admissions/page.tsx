@@ -13,15 +13,10 @@ import { askText } from "@/components/confirm";
 import { Field, Pager, Panel, SearchBox, Stat, StatGrid, TableCard, Toolbar, TD, TH, TRC, TR } from "@/components/procurement/ui";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { arabicError, useSession } from "@/lib/session";
+import { validateAdSearch, type AdSearch } from "@/components/admissions/search";
+export { validateAdSearch, type AdSearch };
 import { ACTION, CHANNEL, ENR, OUTCOME, STATUS, hasAdmissions, tone, useAdMe, type AdMe, type Sch } from "@/components/admissions/shared";
 
-export type AdSearch = { tab?: "summary" | "apps" | "students" | "settings"; r?: string; new?: "1"; status?: string; assignee?: string; due?: string; pending?: string; linked?: string };
-export function validateAdSearch(s: Record<string, unknown>): AdSearch {
-  const str = (k: string) => (typeof s[k] === "string" && s[k] ? { [k]: s[k] as string } : {});
-  const tabs = ["summary", "apps", "students", "settings"];
-  return { ...(tabs.includes(s["tab"] as string) ? { tab: s["tab"] as NonNullable<AdSearch["tab"]> } : {}), ...str("r"), ...(s["new"] === "1" || s["new"] === 1 ? { new: "1" as const } : {}),
-    ...str("status"), ...str("assignee"), ...str("due"), ...str("pending"), ...str("linked") };
-}
 
 const fmt = (v: unknown) => (v ? new Date(String(v)).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }) : "—");
 const day = (v: unknown) => (v ? String(v).slice(0, 10) : "—");

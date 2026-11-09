@@ -53,3 +53,4 @@
 - ID sign-in: id-login.functions.ts → service-only _idl_* SQL; existing accounts only, generic errors. Test: idl-e2e.
 - Family home, fin_*, section rooms: src/components/family/AGENTS.md.
 - Live refresh, display names: src/lib/AGENTS.md.
+- Route files export only `Route` and keep no unused top-level code; shared helpers, validators and components live under src/components or src/lib — anything else is bundled into app startup and blanks the dev preview.

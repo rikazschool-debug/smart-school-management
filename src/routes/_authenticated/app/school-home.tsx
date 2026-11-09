@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { EmptyState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked, useOrgSections } from "@/components/owner-portal";
 import { useSession, type AppContext } from "@/lib/session";
-import { StaffHome } from "./index";
+import { StaffHome } from "@/components/dashboard/home";
 
 export const Route = createFileRoute("/_authenticated/app/school-home")({
   head: () => ({ meta: [{ title: "إدارة المدارس — ركاز" }, { name: "description", content: "مؤشرات المدرسة وما يحتاج إلى متابعة." }] }),

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { MaintenancePage, validateMtSearch } from "@/components/maintenance/page";
+import { MaintenancePage } from "@/components/maintenance/page";
+import { validateMtSearch } from "@/components/maintenance/search";
 
 export const Route = createFileRoute("/_authenticated/app/bus-maintenance")({
   head: () => ({ meta: [{ title: "إدارة تشغيل وصيانة الباصات — ركاز" }, { name: "description", content: "سجلات الباصات وحالة التشغيل وطلبات صيانتها." }, { name: "robots", content: "noindex" }] }),
