@@ -16149,6 +16149,20 @@ export type Database = {
         Args: { n: Database["public"]["Tables"]["bc_notices"]["Row"] }
         Returns: boolean
       }
+      _bt_base: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
+      _bt_guard: {
+        Args: { _action: string; _section: string }
+        Returns: boolean
+      }
+      _bt_off: { Args: { _action: string; _section: string }; Returns: boolean }
       _can_circ_scope: {
         Args: { _home: string; _org: string; _scope: string }
         Returns: boolean
@@ -16258,6 +16272,21 @@ export type Database = {
         Returns: string
       }
       _conv_link: { Args: { _conv: string }; Returns: string }
+      _conv_send_block_v1: { Args: { _conv: string }; Returns: string }
+      _copy_homework_template_v0: {
+        Args: {
+          _available_from: string
+          _course: string
+          _due_at: string
+          _id: string
+          _title: string
+        }
+        Returns: string
+      }
+      _copy_homework_v0: {
+        Args: { _course: string; _id: string }
+        Returns: string
+      }
       _course_members: {
         Args: { _course: string }
         Returns: {
@@ -17253,6 +17282,12 @@ export type Database = {
       _hr_mn_any: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_mn_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
       _hr_month: { Args: { _m: string }; Returns: string }
+      _hr_my_contract_v0: { Args: { _id: string }; Returns: Json }
+      _hr_my_contracts_v0: { Args: { _org: string }; Returns: Json }
+      _hr_my_documents_v0: { Args: { _org: string }; Returns: Json }
+      _hr_my_employment_v0: { Args: { _org: string }; Returns: Json }
+      _hr_my_money_v0: { Args: { _org: string }; Returns: Json }
+      _hr_my_payslip_v0: { Args: { _id: string }; Returns: Json }
       _hr_name: { Args: { _u: string }; Returns: string }
       _hr_open_check: {
         Args: { _kind: string; _org: string; _rows: Json; _stage?: string }
@@ -17844,6 +17879,7 @@ export type Database = {
       _perm_catalog_v4: { Args: never; Returns: Json }
       _perm_catalog_v6: { Args: never; Returns: Json }
       _perm_catalog_v8: { Args: never; Returns: Json }
+      _perm_catalog_v9: { Args: never; Returns: Json }
       _perm_denied: {
         Args: { _action: string; _org: string; _section: string; _uid: string }
         Returns: boolean
@@ -17925,11 +17961,17 @@ export type Database = {
         }
         Returns: string
       }
+      _publish_homework_v0: { Args: { _id: string }; Returns: string }
       _regroup_counts: { Args: { _school: string }; Returns: Json }
       _report_reviewer: {
         Args: { _org: string; _school: string }
         Returns: boolean
       }
+      _revise_homework_v0: {
+        Args: { _d: Json; _id: string; _note: string }
+        Returns: number
+      }
+      _save_homework_v0: { Args: { _d: Json; _id: string }; Returns: string }
       _scope_manager: {
         Args: { _org: string; _school: string }
         Returns: boolean
@@ -17939,6 +17981,10 @@ export type Database = {
       _section_users: {
         Args: { _guardians: boolean; _section: string; _year: string }
         Returns: string[]
+      }
+      _set_homework_kind_v0: {
+        Args: { _id: string; _kind: string }
+        Returns: undefined
       }
       _staff_overrides: {
         Args: {
@@ -17993,6 +18039,18 @@ export type Database = {
       _stage_student_password: {
         Args: { _actor: string; _student: string; _uid: string }
         Returns: undefined
+      }
+      _start_direct_conversation_v0: {
+        Args: { _other: string; _school: string }
+        Returns: string
+      }
+      _start_family_conversation_v0: {
+        Args: { _guardian: string; _staff_user: string; _student: string }
+        Returns: string
+      }
+      _start_student_conversation_v0: {
+        Args: { _student: string }
+        Returns: string
       }
       _storage_file_ok: { Args: { _name: string }; Returns: boolean }
       _student_ok: {
