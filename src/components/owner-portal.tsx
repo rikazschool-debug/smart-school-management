@@ -128,18 +128,11 @@ const CARDS: Card[] = [
   },
   {
     key: "support", title: "الدعم الفني والمساعدة", icon: LifeBuoy, to: "/app/support", open: "فتح الدعم",
-    desc: "صندوق واحد لتذاكر كل مدارس المجموعة: إنشاء وإسناد وتحويل بين الفروع، ومتابعة المهل والتقارير.",
+    desc: "صندوق واحد لتذاكر كل مدارس المجموعة: إنشاء وإسناد وتحويل بين الفروع، ومتابعة المهل والتقارير، والمكالمات الهاتفية.",
     features: [
       { icon: LifeBuoy, label: "ملخص الدعم", to: "/app/support", search: { tab: "summary" } },
       { icon: LifeBuoy, label: "كل التذاكر", to: "/app/support", search: { tab: "manage" } },
-    ],
-  },
-  {
-    key: "calls", title: "المكالمات الهاتفية", icon: Phone, to: "/app/calls", open: "فتح المكالمات",
-    desc: "لوحة اتصال Maqsam في نافذة مستقلة، وسجل المكالمات والمتابعات وتقارير الاتصال وإعدادات الربط.",
-    features: [
-      { icon: Phone, label: "لوحة الاتصال", to: "/app/calls", search: { mq: "live" } },
-      { icon: Phone, label: "إعدادات Maqsam", to: "/app/calls", search: { mq: "settings" } },
+      { icon: Phone, label: "المكالمات الهاتفية", to: "/app/calls", search: { mq: "live" } },
     ],
   },
   {
