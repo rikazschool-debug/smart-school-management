@@ -22,18 +22,6 @@ function useSectionRooms(schoolId: string | null) {
   });
 }
 
-function useClassrooms(schoolId: string | null) {
-  return useQuery({
-    queryKey: ["classrooms", schoolId],
-    enabled: !!schoolId,
-    queryFn: async () => {
-      const { data, error } = await db.from("classrooms").select("id, title, status, course_id").eq("school_id", schoolId).order("title");
-      if (error) throw error;
-      return data as Row[];
-    },
-  });
-}
-
 function Page() {
   const { active } = useSession();
   const q = useSectionRooms(active?.schoolId ?? null);
