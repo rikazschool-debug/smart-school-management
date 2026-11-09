@@ -5,7 +5,9 @@ import { selectCls } from "@/components/ui/native-select";
 import { rpc, type HrEmp } from "@/components/hr/shared";
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
-import { CAL_LABEL, HR_FIELDS, HR_GROUPS, cleanValue, type Cal } from "@/lib/hr-fields";
+import { CAL_LABEL, HR_FIELDS, HR_GROUPS, ID_TYPES, cleanValue, passportDateErr, type Cal } from "@/lib/hr-fields";
+/** shown in the basic form next to the ID number (EmpFields), not in this list */
+export const ID_KEYS = ["id_type", "id_version"];
 
 // Extra employee data (same definitions as the Excel template), grouped like the import.
 /** shown when no direct manager is set: requests then go straight to HR (server: pending_hr). */
@@ -26,7 +28,7 @@ export function ProfileFields({ f, set, sensitive, org, self }: { f: Record<stri
   return (
     <div className="space-y-3">
       {HR_GROUPS.filter((g) => g.key !== "basic" || PROFILE_FIELDS.some((x) => x.group === "basic")).map((g) => {
-        const list = PROFILE_FIELDS.filter((x) => x.group === g.key && (!x.sensitive || sensitive));
+        const list = PROFILE_FIELDS.filter((x) => x.group === g.key && (!x.sensitive || sensitive) && !ID_KEYS.includes(x.key) && (!x.key.startsWith("licence_") || f["has_licence"] === "yes"));
         const hidden = PROFILE_FIELDS.some((x) => x.group === g.key && x.sensitive && !sensitive);
         if (!list.length && g.key !== "assign" && !hidden) return null;
         return (
@@ -39,10 +41,13 @@ export function ProfileFields({ f, set, sensitive, org, self }: { f: Record<stri
                   {(owners.data ?? []).filter((o) => !o.employee_id || o.employee_id !== self).map((o) => <option key={o.user_id} value={o.employee_id ?? `${OWNER_ACC}${o.user_id}`}>حساب المالك: {o.name}</option>)}
                   {(emps.data ?? []).filter((x) => x.id !== self && !ownerEmp.has(x.id)).map((x) => <option key={x.id} value={x.id}>{x.display_name || x.full_name} — {x.employee_no}</option>)}
                 </select><p className="mt-1 text-xs text-muted-foreground">«الموارد البشرية»: تذهب الطلبات (إجازات، استئذان) مباشرة إلى الموارد البشرية. «مالك المجموعة»: تصل للمالك وحده ويبت فيها. «حساب المالك»: يعتمد المالك مسؤولًا مباشرًا ثم تنتقل للموارد البشرية. أو اختر موظفًا بعينه. لا يكون الشخص مسؤولًا عن نفسه.</p></div>}
-              {list.map((x) => x.kind === "docdate" ? (
+              {list.map((x) => x.kind === "check" ? (
+                <div key={x.key} className="flex items-end pb-2"><label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" id={`hp-${x.key}`} checked={f[x.key] === "yes"} onChange={(e) => set(x.key, e.target.checked ? "yes" : "")} />{bi(x.key, x.label)}</label></div>
+              ) : x.kind === "docdate" ? (
                 <div key={x.key}><Label htmlFor={`hp-${x.key}`}>{bi(x.key, x.label)}</Label>
                   <div className="mt-1 flex gap-1"><Input id={`hp-${x.key}`} dir="ltr" placeholder="1447-05-10 أو 2027-01-31" value={f[x.key] ?? ""} onChange={(e) => set(x.key, e.target.value)} />
-                    <select aria-label={`تقويم ${x.label}`} className={selectCls("w-24")} value={f[`${x.key}_cal`] ?? ""} onChange={(e) => set(`${x.key}_cal`, e.target.value)}><option value="">تلقائي</option><option value="hijri">هجري</option><option value="gregorian">ميلادي</option></select></div></div>
+                    <select aria-label={`تقويم ${x.label}`} className={selectCls("w-24")} value={f[`${x.key}_cal`] ?? ""} onChange={(e) => set(`${x.key}_cal`, e.target.value)}><option value="">تلقائي</option><option value="hijri">هجري</option><option value="gregorian">ميلادي</option></select></div>
+                  {x.key === "passport_expiry" && passportDateErr(f) && <p role="alert" className="mt-1 text-xs text-destructive">{passportDateErr(f)}</p>}</div>
               ) : (
                 <div key={x.key}><Label htmlFor={`hp-${x.key}`}>{bi(x.key, x.label)}</Label><Input id={`hp-${x.key}`} className="mt-1" dir={["iban", "digits"].includes(x.kind) || x.key === "name_en" || x.key === "passport_no" ? "ltr" : undefined} value={f[x.key] ?? ""} onChange={(e) => set(x.key, e.target.value)} /><EnHint k={x.key} v={f[x.key]} /></div>
               ))}
@@ -58,6 +63,10 @@ export function ProfileFields({ f, set, sensitive, org, self }: { f: Record<stri
 /** Validate the extra fields with the shared rules; returns payload for hr_employee_profile_save (mode set) or an error. */
 export function profilePayload(f: Record<string, string>, sensitive: boolean, prev?: Prof | null): { p: Record<string, string>; err?: string } {
   const p: Record<string, string> = {};
+  const pe = sensitive ? passportDateErr(f) : ""; if (pe) return { p, err: pe };
+  f = { ...f };
+  if ("has_licence" in f && f["has_licence"] !== "yes") { f["licence_type"] = ""; f["licence_expiry"] = ""; f["licence_expiry_cal"] = ""; }
+  if (f["id_type"] === "none") f["id_version"] = "";
   for (const x of PROFILE_FIELDS) {
     if (x.sensitive && !sensitive) continue;
     if (!(x.key in f)) continue;
@@ -99,7 +108,7 @@ export function ProfileView({ pr }: { pr: Prof | undefined }) {
           <div key={g.key}><p className="mb-1 text-xs font-semibold text-muted-foreground">{g.label}</p>
             <dl className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
               {extra.map(([k, v]) => <div key={k} className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>)}
-              {list.map((x) => { const v = pr[x.key] as string | null | undefined; const cal = pr[`${x.key}_cal`] as Cal | null | undefined;
+              {list.map((x) => { const v0 = pr[x.key] as string | null | undefined; const v = x.kind === "idtype" ? (v0 ? ID_TYPES[v0] ?? v0 : v0) : x.kind === "check" ? (v0 === "yes" ? "نعم" : v0) : v0; const cal = pr[`${x.key}_cal`] as Cal | null | undefined;
                 return <div key={x.key} className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{x.label}</dt><dd className="font-medium">{v ? <bdi dir={["iban", "digits"].includes(x.kind) ? "ltr" : undefined}>{v}{cal ? ` (${CAL_LABEL[cal]})` : ""}</bdi> : "—"}</dd></div>; })}
             </dl></div>
         );

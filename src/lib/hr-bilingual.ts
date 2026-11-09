@@ -13,14 +13,14 @@ export const EN_LABEL: Record<string, string> = {
   assignment_note: "Assignment", pay_method: "Payment Method", iban: "Bank IBAN", bank_name: "Bank Name",
   mid_iban: "Intermediary IBAN", mid_bank: "Intermediary Bank", mid_name: "Intermediary Name", mid_id: "Intermediary ID No.",
   sponsor_name: "Sponsor Name", sponsor_no: "Sponsor No.", category: "Job Category", hire_date: "Start Date",
-  status: "Status", end_date: "End of Service Date", login_role: "Login Role", asg_from: "From", asg_to: "To (optional)", account: "Existing Account", teacher: "Linked Teacher Record",
+  status: "Status", end_date: "End of Service Date", login_role: "Login Role", asg_from: "From", asg_to: "To (optional)", account: "Existing Account", id_type: "ID Type", id_version: "ID Version Number", passport_issue: "Passport Issue Date", passport_place: "Passport Place of Issue", has_licence: "Has a Driving Licence", licence_type: "Licence Type", licence_expiry: "Licence Expiry Date", teacher: "Linked Teacher Record",
 };
 /** «عربي / English» label; Arabic only when no English label is known. */
 export const bi = (key: string, ar: string) => (EN_LABEL[key] ? `${ar} / ${EN_LABEL[key]}` : ar);
 
 /** Fields whose values are never translated (names of people, contact, IDs, dates, numbers). */
 const NO_HINT = new Set(["full_name", "name_en", "display_name", "manager", "manager_name", "manager_no", "employee_no", "phone", "login_phone", "email",
-  "national_id", "passport_no", "iban", "mid_iban", "mid_id", "mid_name", "sponsor_name", "sponsor_no", "birth_date", "id_expiry", "passport_expiry", "hire_date", "end_date", "address"]);
+  "national_id", "passport_no", "iban", "mid_iban", "mid_id", "mid_name", "sponsor_name", "sponsor_no", "id_version", "passport_issue", "licence_expiry", "id_type", "has_licence", "birth_date", "id_expiry", "passport_expiry", "hire_date", "end_date", "address"]);
 export const hasHint = (key: string) => !NO_HINT.has(key);
 
 const DICT: Record<string, string> = {

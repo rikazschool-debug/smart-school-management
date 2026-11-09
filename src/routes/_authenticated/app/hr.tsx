@@ -16,7 +16,7 @@ import { askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { HrImport } from "@/components/hr/import";
-import { HR_FIELDS, cleanValue } from "@/lib/hr-fields";
+import { HR_FIELDS, ID_TYPES, cleanValue } from "@/lib/hr-fields";
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
 import { ProfileFields, ProfileView, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
@@ -240,7 +240,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
               <p className="mt-1 text-xs text-muted-foreground">يبقى الملف الأكاديمي للمعلم كما هو؛ الربط يضيف الملف الوظيفي فقط.</p></div>
           </div>
           )}
-          <EmpFields f={f} set={(k: never, v: string) => { set(k, v); setConflicts([]); setConfirm(false); }} sensitive={m.caps.sensitive} loginPhone={mode === "new"} />
+          <EmpFields f={f} set={(k: never, v: string) => { set(k, v); setConflicts([]); setConfirm(false); }} sensitive={m.caps.sensitive} loginPhone={mode === "new"} px={px} setPx={(k, v) => { setPx((x) => ({ ...x, [k]: v })); setConfirm(false); }} />
           <ProfileFields f={px} set={(k, v) => setPx((x) => ({ ...x, [k]: v }))} sensitive={m.caps.sensitive} org={org} />
           {conflicts.length > 0 && (
             <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
@@ -262,7 +262,10 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
           <div className="flex flex-wrap gap-2 border-t pt-3">
             {mode === "link" ? (
               <Button disabled={!f.full_name.trim() || !f.school_id || save.isPending} onClick={() => save.mutate()}><UserCheck className="size-4" />{save.isPending ? "…" : "حفظ الموظف"}</Button>
-            ) : !confirm ? (
+            ) : px["id_type"] === "none" ? (<>
+              <p role="alert" className="w-full rounded-lg border border-warning/40 bg-warning/10 p-2 text-sm">تعذّر إنشاء حساب دخول: الدخول يتم برقم الهوية أو الإقامة، ونوع الهوية «لا يوجد». يمكنك حفظ ملف الموظف الآن بلا حساب، وإنشاء الحساب لاحقًا بعد إدخال الهوية.</p>
+              <Button disabled={!f.full_name.trim() || !f.school_id || f.school_id === CENTRAL || save.isPending} onClick={() => save.mutate()}><UserCheck className="size-4" />{save.isPending ? "…" : "حفظ ملف الموظف بلا حساب"}</Button>
+            </>) : !confirm ? (
               <Button disabled={!canNew || !m.caps.sensitive} onClick={() => setConfirm(true)}><UserCheck className="size-4" />متابعة للتأكيد</Button>
             ) : (
               <Button disabled={create.isPending} onClick={() => create.mutate()}><UserCheck className="size-4" />{create.isPending ? "جارٍ الإنشاء…" : "تأكيد إنشاء الملف والحساب"}</Button>
@@ -289,7 +292,7 @@ function localPhone(s: string) {
   return /^05\d{8}$/.test(d) ? d : null;
 }
 
-function EmpFields({ f, set, sensitive, withStatus, loginPhone }: { f: Record<string, string>; set: (k: never, v: string) => void; sensitive: boolean; withStatus?: boolean; loginPhone?: boolean }) {
+function EmpFields({ f, set, sensitive, withStatus, loginPhone, px, setPx }: { f: Record<string, string>; set: (k: never, v: string) => void; sensitive: boolean; withStatus?: boolean; loginPhone?: boolean; px?: Record<string, string>; setPx?: (k: string, v: string) => void }) {
   const raw = set as (k: string, v: string) => void;
   // display name follows first + last word of the full name until the user types their own
   const auto = (n: string) => { const w = n.trim().split(/\s+/).filter(Boolean); return w.length > 1 ? `${w[0]} ${w[w.length - 1]}` : (w[0] ?? ""); };
@@ -307,7 +310,9 @@ function EmpFields({ f, set, sensitive, withStatus, loginPhone }: { f: Record<st
       {F("email", "البريد الوظيفي", "email", { dir: "ltr" })}
       <div><Label htmlFor="hr-gender">{bi("gender", "الجنس")}</Label><select id="hr-gender" className={selectCls("mt-1 w-full")} value={f["gender"] ?? ""} onChange={(e) => s("gender", e.target.value)}><option value="">—</option>{Object.entries(GENDER).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select><EnHint k="gender" v={GENDER[f["gender"] as keyof typeof GENDER]} /></div>
       {sensitive ? <>
-        {F("national_id", "رقم الهوية / الإقامة", "text", { dir: "ltr", inputMode: "numeric" })}
+        {px && setPx && <div><Label htmlFor="hr-id_type">{bi("id_type", "نوع الهوية")}</Label><select id="hr-id_type" className={selectCls("mt-1 w-full")} value={px["id_type"] ?? ""} onChange={(e) => { setPx("id_type", e.target.value); if (e.target.value === "none") { raw("national_id", ""); setPx("id_version", ""); } }}><option value="">—</option>{Object.entries(ID_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>}
+        {F("national_id", "رقم الهوية / الإقامة", "text", { dir: "ltr", inputMode: "numeric", ...(px?.["id_type"] === "none" ? { disabled: "true", placeholder: "لا يوجد" } : {}) })}
+        {px && setPx && <div><Label htmlFor="hr-id_version">{bi("id_version", "رقم النسخة")}</Label><Input id="hr-id_version" className="mt-1" dir="ltr" disabled={px["id_type"] === "none"} placeholder={px["id_type"] === "none" ? "لا يوجد" : ""} value={px["id_version"] ?? ""} onChange={(e) => setPx("id_version", e.target.value)} /></div>}
         {F("nationality", "الجنسية")}
         {F("birth_date", "تاريخ الميلاد", "date")}
       </> : <p className="self-end text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">رقم الهوية والجنسية وتاريخ الميلاد تحتاج صلاحية «البيانات الحساسة».</p>}
@@ -427,7 +432,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
       {d.data!.view === "hr" && <AddressCard emp={id} />}
       {edit ? (
         <div className="space-y-3">
-          <EmpFields f={edit} set={((k: string, v: string) => setEdit((x) => ({ ...x!, [k]: v }))) as never} sensitive={!!e.sensitive} withStatus />
+          <EmpFields f={edit} set={((k: string, v: string) => setEdit((x) => ({ ...x!, [k]: v }))) as never} sensitive={!!e.sensitive} withStatus px={px} setPx={(k, v) => setPx((x) => ({ ...x, [k]: v }))} />
           <ProfileFields f={px} set={(k, v) => setPx((x) => ({ ...x, [k]: v }))} sensitive={!!prof.data?.sensitive} org={org} self={id} />
           {edit["status"] === "ended" && <p className="rounded bg-warning/15 p-2 text-xs">إنهاء الخدمة لا يوقف حساب الدخول تلقائيًا؛ يصل تنبيه للمالك لمراجعة الحساب والعضويات.</p>}
           <div className="flex gap-2"><Button disabled={saveEmp.isPending} onClick={() => saveEmp.mutate(edit)}>{saveEmp.isPending ? "…" : "حفظ"}</Button><Button variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
