@@ -221,10 +221,11 @@ export function TicketList({ ctx, box, onOpen, initialStatus, caps }: { ctx: Ctx
 }
 
 /* ---------------- create ---------------- */
-export function NewTicket({ ctx, onDone, onCancel, internal = false, branches = [] }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void; internal?: boolean; branches?: Branch[] }) {
-  // Platform-run desk: every ticket goes to the platform owner; no branch routing (department/assignee) from the requester side.
-  void internal; void branches; void InternalTicket;
-  return <OwnTicket ctx={ctx} onDone={onDone} onCancel={onCancel} />;
+export function NewTicket({ ctx, onDone, onCancel, internal = false, branches = [], assignable = [] }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void; internal?: boolean; branches?: Branch[]; assignable?: Branch[] }) {
+  // «دعم منصة ركاز» stays the default path (تذاكري); owners / support.create holders may also open an internal branch ticket with assignment.
+  const [mode, setMode] = useState<"own" | "internal">("own");
+  if (internal && mode === "internal") return <InternalTicket ctx={ctx as never} branches={branches} assignable={assignable} onDone={onDone} onCancel={onCancel} onOwn={() => setMode("own")} />;
+  return <OwnTicket ctx={ctx} onDone={onDone} onCancel={onCancel} onInternal={internal ? () => setMode("internal") : undefined} />;
 }
 
 function OwnTicket({ ctx, onDone, onCancel, onInternal }: { ctx: Ctx; onDone: (id: string) => void; onCancel: () => void; onInternal?: (() => void) | undefined }) {
@@ -254,7 +255,7 @@ function OwnTicket({ ctx, onDone, onCancel, onInternal }: { ctx: Ctx; onDone: (i
   }
   return (
     <div className="space-y-4 rounded-xl border bg-card p-4">
-      <div className="flex flex-wrap items-center gap-2"><p className="flex-1 font-semibold">تذكرة جديدة</p>{onInternal && <Button size="sm" variant="outline" onClick={onInternal}>تذكرة داخلية لفرع</Button>}</div>
+      <div className="flex flex-wrap items-center gap-2"><p className="flex-1 font-semibold">تذكرة جديدة</p>{onInternal && <Button size="sm" variant="outline" onClick={onInternal}>إنشاء تذكرة داخلية</Button>}</div>
       {canPlatform && (
         <div className="space-y-1">
           <Label htmlFor="sp-scope">الجهة</Label>

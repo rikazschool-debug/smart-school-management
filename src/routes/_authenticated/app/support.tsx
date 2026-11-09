@@ -67,7 +67,7 @@ function Page() {
       {search.t ? (
         <TicketDetail id={search.t} ctx={ctx} userId={user.id} onBack={() => go({ tab })} />
       ) : creating ? (
-        <NewTicket internal={internal} branches={c.create} ctx={ctx} onCancel={() => setCreating(false)} onDone={(id) => { setCreating(false); go({ t: id }); }} />
+        <NewTicket internal={internal} branches={c.create} assignable={c.assign_new} ctx={ctx} onCancel={() => setCreating(false)} onDone={(id) => { setCreating(false); go({ t: id }); }} />
       ) : (
         <>
           {(tabs.length > 1 || settings) && (

@@ -9,31 +9,30 @@ import { selectCls } from "@/components/ui/native-select";
 import { arabicError, type AppContext } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { PRIO, useCategories } from "@/components/support/support";
-import { RoutePicker, useRouteDepts, type RouteCand } from "@/components/support/route-picker";
+import { AssigneePicker, type Assignee } from "@/components/support/assignee-picker";
 import { DraftFiles, type DraftFile } from "@/components/support/draft-files";
 import type { Branch } from "@/components/support/caps";
 
 // Internal ticket opened by the org owner / principal for one branch: branch → department (optional) → person (optional) + attachments.
 // support_open re-checks branch/department/assignee/files and is idempotent by client key.
-export function InternalTicket({ ctx, branches: allowed, onDone, onCancel, onOwn }: { ctx: AppContext; branches: Branch[]; onDone: (id: string) => void; onCancel: () => void; onOwn: () => void }) {
+export function InternalTicket({ ctx, branches: allowed, assignable = [], onDone, onCancel, onOwn }: { ctx: AppContext; branches: Branch[]; assignable?: Branch[]; onDone: (id: string) => void; onCancel: () => void; onOwn: () => void }) {
   const owner = ctx.role === "org_owner";
   // branches where the person holds support.create (support_caps); support_open re-checks
   const pick = allowed.length > 1;
   const [school, setSchool] = useState<string>(pick ? "" : allowed[0]?.id ?? "");
   const [title, setTitle] = useState(""); const [body, setBody] = useState("");
   const [prio, setPrio] = useState("normal"); const [cat, setCat] = useState("");
-  const [dept, setDept] = useState(""); const [who, setWho] = useState<RouteCand | null>(null);
+  const dept = ""; const [who, setWho] = useState<Assignee | null>(null);
   const [files, setFiles] = useState<DraftFile[]>([]);
   const [review, setReview] = useState(false); const [busy, setBusy] = useState(false);
   const key = useMemo(() => crypto.randomUUID(), []);
   const cats = useCategories("school", ctx.orgId);
-  const depts = useRouteDepts(school);
   const schoolName = allowed.find((s) => s.id === school)?.name;
   const uploading = files.some((f) => f.state === "uploading"), failed = files.some((f) => f.state === "failed");
 
   async function changeSchool(v: string) {
     for (const f of files) if (f.id) await db.rpc("support_release_file", { _file: f.id });
-    setSchool(v); setDept(""); setWho(null); setFiles([]);
+    setSchool(v); setWho(null); setFiles([]);
     if (who) toast.message("أُزيل المسؤول المختار؛ اختره من جديد في الفرع الجديد");
   }
   function check() {
@@ -65,14 +64,13 @@ export function InternalTicket({ ctx, branches: allowed, onDone, onCancel, onOwn
           <div className="space-y-1"><Label htmlFor="it-cat">تصنيف المشكلة</Label><select id="it-cat" className={selectCls()} value={cat} onChange={(e) => setCat(e.target.value)}><option value="">بدون</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
           <div className="space-y-1"><Label htmlFor="it-prio">الأولوية</Label><select id="it-prio" className={selectCls()} value={prio} onChange={(e) => setPrio(e.target.value)}>{Object.entries(PRIO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
         </div>
-        <RoutePicker school={school} dept={dept} onDept={setDept} who={who} onWho={setWho} />
+        <AssigneePicker school={school} canAssign={assignable.some((b) => b.id === school)} who={who} onWho={setWho} />
       </fieldset>
       {!review && <DraftFiles school={school} files={files} setFiles={setFiles} />}
       {review ? (
         <div className="space-y-2 rounded-lg border bg-muted/40 p-3 text-sm" aria-label="ملخص التذكرة">
           <p className="font-semibold">راجع قبل الحفظ</p>
           <p>الفرع: <b>{schoolName ?? "—"}</b></p>
-          <p>القسم الموجّه إليه: <b>{depts.data?.find((d) => d.id === dept)?.name ?? "بدون قسم"}</b></p>
           <p>المسؤول: <b>{who ? `${who.name} · ${ROLE_LABELS[who.role as Role] ?? who.role}` : "بلا مسؤول (قائمة غير المسندة)"}</b></p>
           <p>المرفقات: <b>{files.length ? files.map((f) => f.file.name).join("، ") : "لا يوجد"}</b></p>
           <div className="flex flex-wrap gap-2 pt-1"><Button disabled={busy} onClick={submit}>تأكيد وإنشاء التذكرة</Button><Button variant="outline" disabled={busy} onClick={() => setReview(false)}>تعديل</Button></div>
