@@ -167,7 +167,7 @@ function SchoolsStats({ orgId }: { orgId: string | null }) {
         <div key={i.l} className="flex items-center gap-3 px-4 py-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><i.icon className="size-5" /></span>
           <div className="min-w-0">
-            <dd className="font-display text-2xl leading-none tabular-nums">{i.v.toLocaleString("ar-SA")}</dd>
+            <dd className="font-display text-2xl leading-none tabular-nums">{i.v}</dd>
             <dt className="mt-1 truncate text-xs text-muted-foreground">{i.l}</dt>
           </div>
         </div>
@@ -176,7 +176,7 @@ function SchoolsStats({ orgId }: { orgId: string | null }) {
   );
 }
 
-const CAP = 6;
+const CAP = 5;
 function SectionCard({ c, locked }: { c: Card; locked: boolean }) {
   const [all, setAll] = useState(false);
   const list = all ? c.features : c.features.slice(0, CAP);
@@ -184,12 +184,12 @@ function SectionCard({ c, locked }: { c: Card; locked: boolean }) {
   return (
     <section aria-labelledby={`card-${c.key}`} aria-disabled={locked || undefined}
       className={"group relative flex flex-col rounded-2xl border bg-card p-4 shadow-sm transition-all duration-200 " + (locked ? "opacity-60" : "hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md")}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <span className={"grid size-10 shrink-0 place-items-center rounded-xl transition-colors " + (locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground")}>
           {locked ? <Lock className="size-5" /> : <c.icon className="size-5" />}
         </span>
         <div className="min-w-0 flex-1">
-          <h2 id={`card-${c.key}`} className="truncate font-display text-[15px] leading-tight" title={c.title}>{c.title}</h2>
+          <h2 id={`card-${c.key}`} className="font-display text-[15px] leading-snug">{c.title}</h2>
           <p className="mt-0.5 flex items-center gap-1.5 text-[11px]">
             {locked ? <span className="text-muted-foreground">غير مفعّل</span>
               : c.note ? <><span className="size-1.5 rounded-full bg-warning" /><span className="text-muted-foreground">{c.note}</span></>
@@ -201,17 +201,17 @@ function SectionCard({ c, locked }: { c: Card; locked: boolean }) {
       <p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-muted-foreground" title={c.desc}>{c.desc}</p>
       {locked ? <p className="mt-auto pt-3 text-xs text-muted-foreground">علّقه مالك المنصة؛ بياناته محفوظة.</p> : (
         <div className="mt-3 border-t pt-2.5">
-          <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+          <ul className="flex flex-wrap gap-1">
             {list.map((f) => (
-              <li key={f.label} className="min-w-0">
-                <Link to={f.to} {...(f.search ? { search: f.search } : {})} title={f.label}
-                  className="flex min-h-7 items-center gap-1.5 rounded-md px-1.5 text-xs transition-colors hover:bg-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <f.icon className="size-3.5 shrink-0 text-primary/70" /><span className="truncate">{f.label}</span>
+              <li key={f.label}>
+                <Link to={f.to} {...(f.search ? { search: f.search } : {})}
+                  className="inline-flex min-h-7 items-center gap-1 rounded-full border bg-background px-2 text-[11.5px] transition-colors hover:border-primary/40 hover:bg-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <f.icon className="size-3.5 shrink-0 text-primary/70" />{f.label}
                 </Link>
               </li>
             ))}
           </ul>
-          {more > 0 && <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="mt-1 px-1.5 text-xs font-semibold text-primary hover:underline">{all ? "عرض أقل" : `+${more} أخرى`}</button>}
+          {more > 0 && <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="mt-1.5 text-xs font-semibold text-primary hover:underline">{all ? "عرض أقل" : `+${more} أخرى`}</button>}
         </div>
       )}
     </section>
