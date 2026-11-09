@@ -9,6 +9,8 @@ import { SettingsTab } from "@/components/attendance/calls-settings";
 import { LessonsSchoolTab, LessonsTab } from "@/components/attendance/lessons";
 import { attTabsWith, canApproveAttendanceWith, type AttTab } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
+import { useOpsStaff } from "@/lib/ops-staff";
+import { useSession } from "@/lib/session";
 import type { AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/attendance")({
@@ -24,7 +26,10 @@ function Page() {
 
 function Att({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const perms = useSchoolPerms(ctx.schoolId);
-  const all = attTabsWith(ctx.role, perms);
+  const { user } = useSession();
+  const ops = useOpsStaff(ctx, user?.id);
+  // administrative assistant (no teacher record): no lesson sheets or pickup preparation, only today's board and records
+  const all = attTabsWith(ctx.role, perms).filter((t) => !ops.asst || (t !== "lessons" && t !== "pickups"));
   const station = all.includes("gate");
   const tabs = all.filter((t) => t !== "gate" && t !== "calls");
   const [tab, setTab] = useState<AttTab>(tabs[0] ?? "today");
@@ -41,7 +46,7 @@ function Att({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         </div>
       )}
       {tab === "lessons" && (ctx.role === "teacher" ? <LessonsTab /> : <LessonsSchoolTab schoolId={ctx.schoolId} />)}
-      {tab === "today" && <><TickStatus schoolId={ctx.schoolId} /><TodayTab ctx={ctx} canApprove={canApprove} /></>}
+      {tab === "today" && <><TickStatus schoolId={ctx.schoolId} /><TodayTab ctx={ctx} canApprove={canApprove} canRecord={!canApprove && !!perms?.["attendance.record"]} /></>}
             {tab === "pickups" && <PickupsTab ctx={ctx} canApprove={canApprove} gate={gate} />}
             {tab === "cards" && <CardsTab ctx={ctx} />}
       {tab === "records" && <RecordsTab ctx={ctx} canCorrect={gate} />}
