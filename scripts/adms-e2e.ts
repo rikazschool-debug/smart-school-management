@@ -25,7 +25,7 @@ async function user(tag: string) {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 function bridge(port: number, id: string, secret: string, sn: string) {
   const p = spawn("node", ["/dev-server/bridge/adms-bridge.mjs"], { env: { ...process.env, RIKAZ_URL: "http://localhost:8080", DEVICE_ID: id, DEVICE_SECRET: secret, DEVICE_SN: sn, PORT: String(port), TZ_OFFSET: "+03:00" } });
-  p.stdout.on("data", (d) => process.env.DEBUG && console.log(String(d)));
+  p.stdout.on("data", (d) => process.env.DEBUG && console.log(String(d))); p.stderr.on("data", (d) => console.log("bridge err", String(d)));
   return p;
 }
 // Riyadh local "YYYY-MM-DD HH:MM:SS", hours ago
