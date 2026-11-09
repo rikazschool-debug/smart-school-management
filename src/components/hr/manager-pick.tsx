@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { norm } from "@/lib/hr-fields";
 
@@ -8,6 +8,12 @@ export type MgrOpt = { v: string; name: string; role: string; branch: string; no
 /** Searchable direct-manager choice for one import row. "hr" = HR default (no named manager). */
 export function ManagerPick({ row, value, opts, onChange }: { row: number; value: string | undefined; opts: MgrOpt[]; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false), [q, setQ] = useState("");
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const off = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) { setOpen(false); setQ(""); } };
+    document.addEventListener("mousedown", off); return () => document.removeEventListener("mousedown", off);
+  }, [open]);
   const cur = opts.find((o) => o.v === value);
   const list = useMemo(() => {
     const n = norm(q);
@@ -15,15 +21,14 @@ export function ManagerPick({ row, value, opts, onChange }: { row: number; value
   }, [opts, q]);
   const label = (o: MgrOpt) => `${o.name}${o.role ? ` — ${o.role}` : ""}`;
   return (
-    <div className={"relative w-56" + (open ? " z-40" : "")}>
+    <div ref={box} className={"relative w-56" + (open ? " z-40" : "")}>
       <button type="button" aria-label={`المسؤول المباشر للصف ${row}`} aria-expanded={open} onClick={() => setOpen((x) => !x)}
-        className="relative z-30 flex w-full items-center gap-1 rounded-md border bg-background px-2 py-1 text-start">
+        className="flex w-full items-center gap-1 rounded-md border bg-background px-2 py-1 text-start">
         <span className="flex-1 truncate">{value === "hr" ? "الموارد البشرية (افتراضي)" : cur ? label(cur) : "اختر المسؤول المباشر"}</span>
         {cur?.batch != null && <span className="rounded bg-primary/10 px-1 text-[10px] text-primary">ضمن هذه الدفعة</span>}
         <ChevronDown className="size-3 shrink-0" />
       </button>
       {open && <>
-        <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
         <div className="absolute z-20 mt-1 w-72 rounded-md border bg-popover p-1 shadow-lg">
           <div className="flex items-center gap-1 border-b px-1 pb-1"><Search className="size-3 text-muted-foreground" />
             <input autoFocus onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); setQ(""); } }} aria-label={`بحث المسؤول للصف ${row}`} placeholder="ابحث بالاسم أو الرقم الوظيفي" className="w-full bg-transparent py-1 text-sm outline-none" value={q} onChange={(e) => setQ(e.target.value)} /></div>
