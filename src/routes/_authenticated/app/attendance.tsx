@@ -32,13 +32,15 @@ function Att({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const all = attTabsWith(ctx.role, perms).filter((t) => !ops.asst || (t !== "lessons" && t !== "pickups"));
   const station = all.includes("gate");
   const tabs = all.filter((t) => t !== "gate" && t !== "calls");
-  const [tab, setTab] = useState<AttTab>(tabs[0] ?? "today");
+  const [picked, setTab] = useState<AttTab | null>(null);
+  // tabs depend on permissions that load after the first render; fall back to the first allowed tab
+  const tab: AttTab = picked && tabs.includes(picked) ? picked : tabs[0] ?? "today";
   // UI mirrors SQL: approvals = managers + policy approver roles (default vice principal, student affairs); gate = student affairs/managers/security
   const canApprove = canApproveAttendanceWith(ctx.role, perms);
   const gate = perms && ctx.role !== "org_owner" ? !!perms["gate.operate"] || canApprove : ctx.role !== "teacher" && ctx.role !== "counselor";
   return (
     <>
-      <PageHeader title={ctx.role === "teacher" ? "رصد حضور اليوم وطلبات التجهيز" : "الحضور والمواظبة والخروج"} desc="الحضور الصباحي بالباركود منفصل عن طلبات الخروج والاستئذان. الطلب أو الموافقة أو النداء لا يعني أن الطالب خرج؛ الخروج يُسجَّل عند التسليم الفعلي فقط." />
+      <PageHeader title={ctx.role === "teacher" && !ops.asst ? "رصد حضور اليوم وطلبات التجهيز" : "الحضور والمواظبة والخروج"} desc="الحضور الصباحي بالباركود منفصل عن طلبات الخروج والاستئذان. الطلب أو الموافقة أو النداء لا يعني أن الطالب خرج؛ الخروج يُسجَّل عند التسليم الفعلي فقط." />
       {station && <Link to="/app/attendance-station" className="mb-4 inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-primary/5 px-4 py-2 font-semibold text-primary hover:bg-primary/10"><ScanLine className="size-5" />حضور الطلاب والنداء بالمسح</Link>}
       {tabs.length > 1 && (
         <div role="tablist" className="mb-5 flex flex-wrap gap-1 rounded-xl border bg-card p-1">
