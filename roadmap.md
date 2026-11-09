@@ -162,3 +162,11 @@
 - [x] (base-role tools area bt_*: deny-only, server gates, menu hides; test base-tools-e2e 22/22) Tree inventory complete (teaching, comm split use/manage/settings, HR self vs admin, etc.), search + filters, expand/collapse, RTL mobile
 - [~] (done: preview, audited save, client conflict check; open: server-side version check) Before/after preview, audited save, conflict detection, no partial success
 - [ ] Same source drives nav, route guards, server; tests for teacher/principal/vice/counselor/delegate/multi-role/guardian
+
+## B11 — مطابقة العقود (الطلاب والتسكين)
+- [ ] زر «إضافة طالب» + زر «مطابقة العقود»؛ أعمدة: العام الدراسي، آخر حالة العقد، آخر نوع العقد (حقول منفصلة عن العام الأكاديمي/التسكين)
+- [ ] نافذة: المدرسة، اختيار العام، رفع Excel بالسحب، الشرح، تعيين الأعمدة يدويًا، معاينة قبل الحفظ
+- [ ] مطابقة بالهوية/الإقامة نصيًا (أصفار، أرقام عربية) داخل المدرسة؛ فحص عمود العام؛ غير الموجود في الكشف ← «يحتاج تحديث/لا يوجد/لا يوجد» بعد تأكيد الكشف الكامل
+- [ ] مكرر/ناقص = مشكلة للمراجعة؛ هويات غير موجودة تُعرض فقط؛ منع استبدال بيانات أحدث بكشف أقدم
+- [ ] RPC بصلاحية مستقلة ونطاق مدرسة على الخادم، تحديث الحقول الثلاثة فقط، سجل من/متى، منع التكرار
+- [ ] اختبارات: مطابق، غائب، غير موجود، مكرر، عام مختلف، ملف فارغ، مدرسة أخرى لا تتأثر؛ رفع فعلي كمبيوتر/جوال
