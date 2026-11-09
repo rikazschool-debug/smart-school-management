@@ -3,7 +3,7 @@ import { ChevronDown, ChevronLeft, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { selectCls } from "@/components/ui/native-select";
 
-export type PermSec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean };
+export type PermSec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean; base_only?: boolean };
 export type PermCatalog = { areas: { key: string; label: string; soon?: boolean }[]; sections: PermSec[]; actions: Record<string, string>; scopes: Record<string, string>; locked: string[] };
 export type Grant = { section: string; action: string; scope: string };
 
@@ -39,7 +39,8 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
   const hit = (txt: string) => !term || txt.includes(term) || syn(term).some((x) => txt.includes(x));
   const keep = (s: PermSec, a: string) => { const k = `${s.key}.${a}`; const on = !!has(s.key, a);
     return filter === "all" || (filter === "on" && on) || (filter === "off" && !on) || (filter === "personal" && (!!personal?.[k] || on !== was(k))); };
-  const match = (s: PermSec) => (hit(s.label) || s.actions.some((a) => hit(label(c, s, a)))) && s.actions.some((a) => keep(s, a));
+  // base-role tools are deny-only for one person; role templates never carry them
+  const match = (s: PermSec) => (!s.base_only || !!orig) && (hit(s.label) || s.actions.some((a) => hit(label(c, s, a)))) && s.actions.some((a) => keep(s, a));
   const secState = (s: PermSec): "none" | "some" | "all" => { const n = s.actions.filter((a) => has(s.key, a)).length; return n === 0 ? "none" : n === s.actions.length ? "all" : "some"; };
   const tickSection = (s: PermSec, on: boolean) => {
     if (!on) {
@@ -49,6 +50,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
       return;
     }
     const a = baseAction(s); setOpen((o) => ({ ...o, [s.key]: true }));
+    if (s.base_only && a && !was(`${s.key}.${a}`)) return;
     if (a && !has(s.key, a)) onChange([...value, { section: s.key, action: a, scope: s.scopes[0]! }]);
   };
   const areas = useMemo(() => c.areas.map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key && match(s)) })).filter((x) => x.ar.soon || x.secs.length || !term), [c, term, filter, value]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -94,25 +96,26 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                           <button type="button" aria-expanded={so} onClick={() => setOpen({ ...open, [s.key]: !so })} className="grid size-6 place-items-center rounded hover:bg-muted" aria-label={so ? "طي" : "فتح"}>
                             {so ? <ChevronDown className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
                           </button>
-                          <TriBox label={s.label} state={secState(s)} disabled={readOnly || locked} onChange={(on) => tickSection(s, on)} />
+                          <TriBox label={s.label} state={secState(s)} disabled={readOnly || locked || (s.base_only && secState(s) === "none" && !s.actions.some((a) => was(`${s.key}.${a}`)))} onChange={(on) => tickSection(s, on)} />
                           <span className="font-medium">{s.label}</span>
                           {s.sensitive && <span className="text-xs text-muted-foreground">يتيح الاطلاع على أسماء الطلاب في الفرع</span>}
                         </div>
                         {so && !baseAction(s) && secState(s) === "none" && <p className="ms-8 mt-1 text-xs text-muted-foreground">لا عرض مستقلًا لهذا القسم؛ اختر الإجراء المطلوب صراحة.</p>}
                         {so && (
                           <div className="ms-8 mt-2 grid gap-2 sm:grid-cols-2">
-                            {s.actions.filter((a) => keep(s, a) && (!term || hit(s.label) || hit(label(c, s, a)))).map((a) => { const g = has(s.key, a); const k = `${s.key}.${a}`; const dn = denied.includes(k);
+                            {s.actions.filter((a) => keep(s, a) && (!term || hit(s.label) || hit(label(c, s, a)))).map((a) => { const g = has(s.key, a); const k = `${s.key}.${a}`; const dn = denied.includes(k); const noGrant = !!s.base_only && !g && !was(k) && !dn;
                               const changed = !!orig && !!g !== was(k); const st = changed ? "تعديل غير محفوظ" : personal?.[k] === "override" ? "منح خاص" : personal?.[k] === "deny" ? "منع خاص" : g ? "موروث" : ""; return (
                               <div key={a} className={"min-w-0 rounded " + (dn ? "bg-destructive/5 p-1" : "")}>
                               <label className="flex min-w-0 items-center gap-2 text-sm">
-                                <input type="checkbox" className="size-4 accent-primary" disabled={readOnly || locked} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? s.scopes[0]! : "")} />
+                                <input type="checkbox" className="size-4 accent-primary" disabled={readOnly || locked || noGrant || (!!s.base_only && dn && !g)} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? s.scopes[0]! : "")} />
                                 <span className="min-w-0 flex-1 truncate" title={label(c, s, a)}>{label(c, s, a)}</span>
-                                {g && <select aria-label={`نطاق ${label(c, s, a)}`} disabled={readOnly || locked} className={selectCls("w-32 shrink-0", true)} value={g.scope} onChange={(e) => set(s, a, e.target.value)}>
+                                {g && !s.base_only && <select aria-label={`نطاق ${label(c, s, a)}`} disabled={readOnly || locked} className={selectCls("w-32 shrink-0", true)} value={g.scope} onChange={(e) => set(s, a, e.target.value)}>
                                   {s.scopes.map((sc) => <option key={sc} value={sc}>{c.scopes[sc]}</option>)}</select>}
                               </label>
                               {orig && st && <p className={"ms-6 text-[11px] " + (changed ? "font-semibold text-warning" : "text-muted-foreground")}>{st}{g && sources[k] && !changed ? ` — ${sources[k]}` : ""}
                                 {(changed || personal?.[k] === "override") && !readOnly && <button type="button" className="ms-2 underline" onClick={() => { const o = orig.find((x) => `${x.section}.${x.action}` === k && personal?.[k] !== "override");
                                   onChange([...value.filter((x) => `${x.section}.${x.action}` !== k), ...(o ? [o] : [])]); }}>اتباع الدور</button>}</p>}
+                              {noGrant && <p className="ms-6 text-[11px] text-muted-foreground">غير متاحة: تأتي مع الدور الأساسي فقط ولا تُمنح لمن لا يملكها.</p>}
                               {!orig && g && sources[k] && <p className="ms-6 text-[11px] text-muted-foreground">المصدر: {sources[k]}</p>}
                               {dn && <p className="ms-6 flex flex-wrap items-center gap-2 text-[11px] text-destructive">ممنوع صراحة — يغلب أي دور
                                 {onUndeny && !readOnly && <button type="button" className="underline" onClick={() => onUndeny(k)}>رفع المنع والعودة لصلاحيات الدور</button>}</p>}
