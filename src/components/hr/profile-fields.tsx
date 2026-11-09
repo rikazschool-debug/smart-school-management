@@ -5,7 +5,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { rpc, type HrEmp } from "@/components/hr/shared";
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
-import { CAL_LABEL, HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, MID_KEYS, cleanValue, isMidPay, passportDateErr, type Cal, type HrGroup } from "@/lib/hr-fields";
+import { CAL_LABEL, HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, MID_KEYS, cleanValue, isNonMidPay, passportDateErr, type Cal, type HrGroup } from "@/lib/hr-fields";
 /** shown in the basic form next to the ID number (EmpFields), not in this list */
 export const ID_KEYS = ["id_type", "id_version"];
 
@@ -22,7 +22,7 @@ export const PROFILE_FIELDS = HR_FIELDS.filter((f) => f.where === "prof");
 export type Prof = Record<string, string | null | boolean | undefined> & { sensitive?: boolean; manager_id?: string | null; manager?: string | null; manager_no?: string | null; manager_kind?: string | null; department?: string | null };
 
 /** fields frozen (disabled, kept empty on save) until their switch is on */
-const frozen = (k: string, f: Record<string, string>) => (k.startsWith("licence_") && f["has_licence"] !== "yes") || (MID_KEYS.includes(k) && !isMidPay(f["pay_method"]));
+const frozen = (k: string, f: Record<string, string>) => (k.startsWith("licence_") && f["has_licence"] !== "yes") || (MID_KEYS.includes(k) && (!f["pay_method"] || isNonMidPay(f["pay_method"])));
 
 export function ProfileFields({ f, set, sensitive, org, self, only }: { f: Record<string, string>; set: (k: string, v: string) => void; sensitive: boolean; org: string; self?: string; only?: HrGroup }) {
   const emps = useQuery({ queryKey: ["hr-list", org, "", "", "active"], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: null, _q: null, _status: "active" }) });
@@ -79,7 +79,7 @@ export function profilePayload(f: Record<string, string>, sensitive: boolean, pr
   f = { ...f };
   if ("has_licence" in f && f["has_licence"] !== "yes") { f["licence_type"] = ""; f["licence_expiry"] = ""; f["licence_expiry_cal"] = ""; }
   if (f["id_type"] === "none") f["id_version"] = "";
-  if ("pay_method" in f && !isMidPay(f["pay_method"])) for (const k of MID_KEYS) if (k in f) f[k] = "";
+  if (isNonMidPay(f["pay_method"])) for (const k of MID_KEYS) if (k in f) f[k] = "";
   for (const x of PROFILE_FIELDS) {
     if (x.sensitive && !sensitive) continue;
     if (!(x.key in f)) continue;

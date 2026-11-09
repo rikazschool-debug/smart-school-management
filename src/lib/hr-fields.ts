@@ -22,6 +22,8 @@ export const HR_OPTIONS: Record<string, string[]> = {
 /** the intermediary (وسيط) bank fields are open only when the payment method is «وسيط» */
 export const MID_KEYS = ["mid_name", "mid_id", "mid_bank", "mid_iban"];
 export const isMidPay = (v: string | undefined) => norm(v) === norm("وسيط");
+/** a fixed non-intermediary method (bank transfer / cash) was picked → intermediary data is not used */
+export const isNonMidPay = (v: string | undefined) => !!v && HR_OPTIONS["pay_method"]!.some((o) => norm(o) === norm(v)) && !isMidPay(v);
 export const NAME_EN_MAX = 35;
 export type HrKind = "text" | "date" | "docdate" | "phone" | "email" | "gender" | "iban" | "digits" | "school" | "category" | "manager_no" | "idtype" | "check";
 /** where: base = hr_employees column (hr_employee_save); prof = hr_employee_profile (hr_employee_profile_save); asg = primary assignment */
