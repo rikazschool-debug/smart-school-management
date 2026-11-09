@@ -56,7 +56,7 @@ async function loadContexts(): Promise<AppContext[]> {
       for (const s of own)
         out.push({ key: `${m.id}:${s.id}`, role: "org_owner", orgId: m.org_id, orgName: m.organizations?.name ?? "", schoolId: s.id, schoolName: s.name, departmentId: null });
     } else {
-      out.push({ key: m.id, role: m.role as Role, orgId: m.org_id, orgName: m.organizations?.name ?? "", schoolId: m.school_id, schoolName: m.schools?.name ?? "", departmentId: m.department_id });
+      out.push({ key: m.id, role: m.role as Role, orgId: m.org_id, orgName: m.organizations?.name ?? "", schoolId: m.school_id, schoolName: m.schools?.name ?? (m.school_id ? "" : "الإدارة المركزية"), departmentId: m.department_id });
     }
   }
   return out;

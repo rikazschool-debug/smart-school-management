@@ -319,6 +319,7 @@ export function attTabsWith(role: Role, p?: SchoolPerms): AttTab[] {
     else t = t.filter((k) => k !== "gate" && k !== "calls");
     if (p["attendance.follow"] || p["attendance.approve"]) add(["today", "records", "followup"]);
     if (p["attendance.approve"]) add(["pickups"]);
+    if (p["attendance.view"] || p["attendance.record"]) add(["today", "records"]);
   }
   return t;
 }
