@@ -243,12 +243,15 @@ export const createHrEmployeeLogin = createServerFn({ method: "POST" })
     if (!UUID.test(d?.orgId ?? "")) throw new Error("مؤسسة غير صالحة");
     if (!d.p || typeof d.p !== "object") throw new Error("بيانات غير صالحة");
     if (!/^[12]\d{9}$/.test((d.p["national_id"] ?? "").replace(/\D/g, ""))) throw new Error("رقم الهوية/الإقامة غير صحيح");
-    if (!UUID.test(d.p["school_id"] ?? "")) throw new Error("اختر المدرسة");
+    // only the HR director may be created in the central administration (no school); the server re-checks
+    if (!UUID.test(d.p["school_id"] ?? "") && !(d.base === "tpl:مدير إدارة الموارد البشرية" && !d.p["school_id"])) throw new Error("اختر المدرسة");
     return d;
   })
   .handler(async ({ data, context }) => {
     const nid = data.p["national_id"]!.replace(/\D/g, "");
-    const { data: allowed } = await context.supabase.rpc("hr_login_roles" as never, { _org: data.orgId, _school: data.p["school_id"] } as never);
+    const { data: allowed } = data.p["school_id"]
+      ? await context.supabase.rpc("hr_login_roles" as never, { _org: data.orgId, _school: data.p["school_id"] } as never)
+      : await context.supabase.rpc("hr_login_central_roles" as never, { _org: data.orgId } as never);
     if (!((allowed as string[] | null) ?? []).includes(data.base)) throw new Error("لا يمكنك منح هذا الدور");
     const { data: pre, error: preErr } = await context.supabase.rpc("hr_login_precheck" as never, { _org: data.orgId, _nid: nid, _phone: data.p["phone"] ?? "" } as never);
     if (preErr) throw new Error(preErr.message);

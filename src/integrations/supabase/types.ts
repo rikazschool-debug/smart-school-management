@@ -7300,7 +7300,7 @@ export type Database = {
           manager_id: string | null
           manager_kind: string | null
           org_id: string
-          school_id: string
+          school_id: string | null
           start_date: string
           teacher_id: string | null
           updated_at: string
@@ -7318,7 +7318,7 @@ export type Database = {
           manager_id?: string | null
           manager_kind?: string | null
           org_id: string
-          school_id: string
+          school_id?: string | null
           start_date: string
           teacher_id?: string | null
           updated_at?: string
@@ -7336,7 +7336,7 @@ export type Database = {
           manager_id?: string | null
           manager_kind?: string | null
           org_id?: string
-          school_id?: string
+          school_id?: string | null
           start_date?: string
           teacher_id?: string | null
           updated_at?: string
@@ -17403,6 +17403,7 @@ export type Database = {
         Args: { m: Database["public"]["Tables"]["hr_in_members"]["Row"] }
         Returns: string
       }
+      _hr_is_owner_emp: { Args: { _emp: string }; Returns: boolean }
       _hr_l_any: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_l_new: {
         Args: {
@@ -17603,6 +17604,7 @@ export type Database = {
         Returns: boolean
       }
       _hr_org_ok: { Args: { _action: string; _org: string }; Returns: boolean }
+      _hr_owner_emp: { Args: { _org: string; _uid: string }; Returns: string }
       _hr_pay_build: { Args: { _run: string }; Returns: undefined }
       _hr_pf_any: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_pf_check_criteria: { Args: { _c: Json }; Returns: Json }
@@ -17622,6 +17624,10 @@ export type Database = {
       _hr_pf_user_can: {
         Args: { _action: string; _school: string; _uid: string }
         Returns: boolean
+      }
+      _hr_plan_guardian: {
+        Args: { _n: string; _org: string; _ph: string }
+        Returns: Json
       }
       _hr_pm_can_decide: {
         Args: { r: Database["public"]["Tables"]["hr_perm_requests"]["Row"] }
@@ -19187,6 +19193,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      att_roster: {
+        Args: { _school: string }
+        Returns: {
+          full_name: string
+          id: string
+          section: string
+        }[]
+      }
       att_scanner: { Args: { _school: string }; Returns: boolean }
       att_search_students: {
         Args: { _q: string; _school: string }
@@ -20680,6 +20694,16 @@ export type Database = {
         Returns: string
       }
       hr_employee_get: { Args: { _id: string }; Returns: Json }
+      hr_employee_link_guardian: {
+        Args: {
+          _base: string
+          _org: string
+          _p: Json
+          _reason?: string
+          _uid: string
+        }
+        Returns: string
+      }
       hr_employee_link_login: {
         Args: { _org: string; _p: Json; _reason?: string; _uid: string }
         Returns: string
@@ -20894,6 +20918,7 @@ export type Database = {
         Returns: undefined
       }
       hr_letter_vars: { Args: never; Returns: Json }
+      hr_login_central_roles: { Args: { _org: string }; Returns: string[] }
       hr_login_plan: { Args: { _org: string; _rows: Json }; Returns: Json }
       hr_login_precheck: {
         Args: { _nid: string; _org: string; _phone: string }
@@ -20926,6 +20951,7 @@ export type Database = {
         Args: { _kind: string; _org: string; _p: Json }
         Returns: string
       }
+      hr_org_owners: { Args: { _org: string }; Returns: Json }
       hr_pay_exception_set: {
         Args: { _on: boolean; _org: string; _reason: string }
         Returns: undefined
@@ -22021,6 +22047,13 @@ export type Database = {
       scan_attendance: {
         Args: { _school: string; _token: string }
         Returns: Json
+      }
+      schedule_slot_subjects: {
+        Args: { _timetable: string }
+        Returns: {
+          slot_id: string
+          subject: string
+        }[]
       }
       schedule_teacher_names: {
         Args: { _timetable: string }

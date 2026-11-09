@@ -453,3 +453,7 @@ A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, iden
 - No HR permission is ever granted by this step; personal HR file access stays off.
 
 - Base-role tools (bt_*): come with the base role only; the owner may stop them per employee (deny) or follow the role; never granted or put in templates. Deny currently applies to the employee in all branches of the org.
+
+- Administrative assistant (template «مساعد إداري», school scope): school_schedule.view (whole published timetable, read-only), attendance.view (today board, records), attendance.record (manual exceptional entry with reason). No lesson sheets, pickups, approvals or HR.
+- HR director (template «مدير إدارة الموارد البشرية», org scope): HR files view/create/edit/sensitive, leave/permission approval, payroll preparation, in every school; may sit in the central administration (no school). Created only by the owner. Cannot approve own leave.
+- Direct manager may be a named group-owner account (owner approves first, then a separate HR approver); nobody can be their own manager.

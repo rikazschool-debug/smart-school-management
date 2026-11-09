@@ -4,6 +4,7 @@ import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe, type MtMe } from "@/components/maintenance/shared";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
 import type { AppContext } from "@/lib/session";
+import { useSchoolPerms } from "@/lib/school-perms";
 
 /**
  * Operations staff (maintenance, follow-up, movement, procurement) hold a staff membership of type "teacher"
@@ -35,8 +36,14 @@ export function opsTitles(me: MtMe | undefined, pc: boolean, ad = false): string
   return out;
 }
 
+/** Administrative assistant: school timetable / attendance permissions without a teacher record (template «مساعد إداري»). */
+export const hasAssistantPerms = (p?: Record<string, boolean>) => !!p && !!(p["school_schedule.view"] || p["attendance.view"] || p["attendance.record"]);
+
 export function useOpsStaff(active: AppContext | null, userId: string | undefined) {
+  // central administration: staff membership without a school (HR director); capabilities come from hr_me on the server
+  const central = active?.role === "teacher" && !active.schoolId && !!userId;
   const isTeacherType = active?.role === "teacher" && !!active.schoolId && !!userId;
+  const sp = useSchoolPerms(isTeacherType ? active?.schoolId : null);
   const teachRow = useQuery({
     enabled: isTeacherType, staleTime: 60_000,
     queryKey: ["my-teacher-row", active?.schoolId, userId],
@@ -52,10 +59,12 @@ export function useOpsStaff(active: AppContext | null, userId: string | undefine
   const hasMt = hasKind(mt.data, "school") || hasKind(mt.data, "bus") || canFleet(mt.data);
   const hasPc = !!pc.data?.enabled && !!pc.data.caps?.view;
   const hasAd = hasAdmissions(ad.data);
-  const hasOps = hasMt || hasPc || hasAd;
-  const opsOnly = isTeacherType && teachRow.data === false && hasOps;
-  const jobs = opsOnly ? opsTitles(mt.data, hasPc, hasAd) : [];
+  const asst = hasAssistantPerms(sp);
+  const hasOps = hasMt || hasPc || hasAd || asst;
+  const opsOnly = central || (isTeacherType && teachRow.data === false && hasOps);
+  if (central) return { loading: false, opsOnly: true, central: true, asst: false, title: "الإدارة المركزية — الموارد البشرية", jobs: ["مدير إدارة الموارد البشرية"], hasPc: false, me: undefined };
+  const jobs = opsOnly ? [...opsTitles(mt.data, hasPc, hasAd), ...(asst ? ["مساعد إداري"] : [])] : [];
   // several jobs on one account → one neutral «لوحة عملي», never one role's name over the others
-  const title = !opsOnly ? null : jobs.length > 1 ? "عملي" : hasMt ? opsTitle(mt.data) : hasPc ? "مسؤول المشتريات" : "مسؤول القبول والتسجيل";
-  return { loading, opsOnly, title, jobs, hasPc, me: mt.data };
+  const title = !opsOnly ? null : jobs.length > 1 ? "عملي" : hasMt ? opsTitle(mt.data) : hasPc ? "مسؤول المشتريات" : hasAd ? "مسؤول القبول والتسجيل" : "مساعد إداري";
+  return { loading, opsOnly, central: false, asst: opsOnly && asst, title, jobs, hasPc, me: mt.data };
 }

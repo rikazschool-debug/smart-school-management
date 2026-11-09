@@ -23,7 +23,7 @@ import { PersonCardButton } from "@/components/people/person-card";
 import { HrCategories } from "@/components/hr/categories";
 import { useServerFn } from "@tanstack/react-start";
 import { createHrEmployeeLogin } from "@/lib/accounts.functions";
-import { GENDER, STATUS, roleLabel, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
+import { CENTRAL, GENDER, HR_DIRECTOR, STATUS, roleLabel, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
   validateSearch: (s: Record<string, unknown>): { emp?: string; add?: string; imp?: string } => ({
@@ -158,7 +158,8 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   const [confirm, setConfirm] = useState(false);
   const [conflicts, setConflicts] = useState<{ kind: string; employee_id?: string }[]>([]);
   const createLogin = useServerFn(createHrEmployeeLogin);
-  const roles = useQuery({ enabled: !!f.school_id, queryKey: ["hr-login-roles", org, f.school_id], queryFn: () => rpc<string[]>("hr_login_roles", { _org: org, _school: f.school_id }) });
+  const central = f.school_id === CENTRAL;
+  const roles = useQuery({ enabled: !!f.school_id, queryKey: ["hr-login-roles", org, f.school_id], queryFn: () => central ? rpc<string[]>("hr_login_central_roles", { _org: org }) : rpc<string[]>("hr_login_roles", { _org: org, _school: f.school_id }) });
   const done = (id: string) => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-cand"] }); onDone(id); };
   const save = useMutation({
     mutationFn: async () => { const ex = extra(); const id = await rpc<string>("hr_employee_save", { _org: org, _id: null, _p: fixPhone(Object.fromEntries(Object.entries(f).filter(([, v]) => v !== ""))), _reason: null }); await saveExtra(id, ex); return id; },
@@ -166,14 +167,14 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
     onError: (e) => toast.error(arabicError(e)),
   });
   const create = useMutation({
-    mutationFn: async () => { const ex = extra(); const r = await createLogin({ data: { orgId: org, base, p: Object.fromEntries(Object.entries({ ...f, user_id: "", teacher_id: "" }).filter(([, v]) => v !== "")) } }); if (!("conflicts" in r && r.conflicts)) await saveExtra((r as { employeeId: string }).employeeId, ex); return r; },
+    mutationFn: async () => { const ex = extra(); const r = await createLogin({ data: { orgId: org, base, p: Object.fromEntries(Object.entries({ ...f, user_id: "", teacher_id: "", school_id: central ? "" : f.school_id }).filter(([, v]) => v !== "")) } }); if (!("conflicts" in r && r.conflicts)) await saveExtra((r as { employeeId: string }).employeeId, ex); return r; },
     onSuccess: (r) => {
       if ("conflicts" in r && r.conflicts) { setConfirm(false); setConflicts(r.conflicts); return; }
       toast.success("أُنشئ ملف الموظف وحساب دخوله"); done((r as { employeeId: string }).employeeId);
     },
     onError: (e) => { setConfirm(false); toast.error(arabicError(e)); },
   });
-  const schoolName = schools.find((s) => s.id === f.school_id)?.name ?? "";
+  const schoolName = central ? "الإدارة المركزية" : schools.find((s) => s.id === f.school_id)?.name ?? "";
   const canNew = !!f.full_name.trim() && !!f.school_id && !!base && /^[12]\d{9}$/.test(f.national_id.replace(/\D/g, "")) && !!localPhone(f.phone);
   const pickAccount = (uid: string) => {
     const a = cand.data?.accounts.find((x) => x.user_id === uid);
@@ -203,7 +204,8 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
               <div><Label htmlFor="hr-sch">المدرسة</Label>
                 <select id="hr-sch" className={selectCls("mt-1 w-full")} value={f.school_id} onChange={(e) => { setF((x) => ({ ...x, school_id: e.target.value })); setBase(""); setConflicts([]); }}>
                   <option value="">اختر المدرسة</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select></div>
+                  {m.owner && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}
+                </select>{central && <p className="mt-1 text-xs text-muted-foreground">للإدارة المركزية دور «مدير إدارة الموارد البشرية» فقط.</p>}</div>
               <div><Label htmlFor="hr-cat">التصنيف الوظيفي</Label>
                 <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
                   <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -253,7 +255,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
                 <div><dt className="inline text-muted-foreground">دور الدخول: </dt><dd className="inline">{roleLabel(base)}</dd></div>
                 <div><dt className="inline text-muted-foreground">الجوال المعتمد: </dt><dd className="inline"><bdi dir="ltr">{localPhone(f.phone)}</bdi></dd></div>
               </dl>
-              <p className="mt-1 text-xs text-muted-foreground">الصلاحيات: الصلاحيات المعتمدة لدور «{roleLabel(base)}» في هذه المدرسة فقط، دون أي صلاحية إضافية أو صلاحية موارد بشرية.{base === "teacher" ? " سيُنشأ سجل معلم مرتبط." : ""} لن تُرسل رسالة الآن؛ الدخول لاحقًا برقم الهوية ورمز إلى الجوال.</p>
+              <p className="mt-1 text-xs text-muted-foreground">الصلاحيات: {base === HR_DIRECTOR ? "ملفات الموظفين (عرض، إضافة، تعديل، بيانات حساسة)، واعتماد الإجازات والاستئذان، وإعداد مسير الرواتب على مستوى المجموعة كلها." : base === "tpl:مساعد إداري" ? "عرض الجدول المدرسي، وعرض حضور الطلاب، وتسجيل الحضور اليدوي في هذه المدرسة فقط." : `الصلاحيات المعتمدة لدور «${roleLabel(base)}» في هذه المدرسة فقط، دون أي صلاحية إضافية أو صلاحية موارد بشرية.`}{base === "teacher" ? " سيُنشأ سجل معلم مرتبط." : ""} لن تُرسل رسالة الآن؛ الدخول لاحقًا برقم الهوية ورمز إلى الجوال.</p>
             </div>)}
           <div className="flex flex-wrap gap-2 border-t pt-3">
             {mode === "link" ? (

@@ -58,10 +58,12 @@ export function useSlots(timetableId: string | null | undefined) {
           if ((data as Row[]).length < 1000) return { data: all, error: null };
         }
       };
-      const [{ data, error }, names] = await Promise.all([page(), db.rpc("schedule_teacher_names", { _timetable: timetableId })]);
+      const [{ data, error }, names, subs] = await Promise.all([page(), db.rpc("schedule_teacher_names", { _timetable: timetableId }), db.rpc("schedule_slot_subjects" as never, { _timetable: timetableId } as never)]);
       if (error) throw error;
       const nm = new Map(((names.data ?? []) as Row[]).map((n) => [n["teacher_id"], n["full_name"]]));
-      return (data as Row[]).map((s): Row => ({ ...s, teachers: { ...(s["teachers"] ?? {}), full_name: s["teachers"]?.full_name ?? nm.get(s["teacher_id"]) ?? "" }, _names: nm }));
+      // subject names for viewers who may see the slot but not the course record (e.g. administrative assistant)
+      const sn = new Map(((subs.data ?? []) as unknown as Row[]).map((n) => [n["slot_id"], n["subject"]]));
+      return (data as Row[]).map((s): Row => ({ ...s, courses: s["courses"] ?? (sn.has(s["id"]) ? { subjects: { name: sn.get(s["id"]) } } : null), teachers: { ...(s["teachers"] ?? {}), full_name: s["teachers"]?.full_name ?? nm.get(s["teacher_id"]) ?? "" }, _names: nm }));
     },
   });
 }

@@ -42,7 +42,7 @@ function useStudents(S: string) {
 }
 
 /* ================= Today board ================= */
-export function TodayTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean }) {
+export function TodayTab({ ctx, canApprove, canRecord = false }: { ctx: Ctx; canApprove: boolean; canRecord?: boolean }) {
   const S = ctx.schoolId;
   const [date, setDate] = useState(riyadhToday());
   const refresh = useRefresh();
@@ -63,8 +63,9 @@ export function TodayTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean })
         <div className="space-y-1"><Label htmlFor="ad">التاريخ</Label><Input id="ad" type="date" value={date} max={riyadhToday()} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
         {pol ? <p className="pb-2 text-sm text-muted-foreground">الدوام {String(pol["day_start"]).slice(0, 5)} • السماح {pol["grace_minutes"]} د • التأخر يُحسب من {pol["late_from"] === "grace_end" ? "نهاية السماح" : "بداية الدوام"} • المراجعة {String(pol["absence_review_at"]).slice(0, 5)}</p>
           : board.isSuccess && <p className="pb-2 text-sm text-destructive">لم تُعتمد سياسة حضور لهذه المدرسة بعد — يحددها المالك أو المدير من «الإعدادات».</p>}
-        <Button variant="outline" className="ms-auto" onClick={async () => { const r = await rpc("build_absence_review", { _school: S, _date: date }); if (r.ok) { toast.success(r.data ? `أُضيف ${r.data} طالب إلى قائمة المراجعة` : "القائمة محدّثة"); refresh(); } }}>تحديث قائمة الغياب</Button>
+        {!canRecord && <Button variant="outline" className="ms-auto" onClick={async () => { const r = await rpc("build_absence_review", { _school: S, _date: date }); if (r.ok) { toast.success(r.data ? `أُضيف ${r.data} طالب إلى قائمة المراجعة` : "القائمة محدّثة"); refresh(); } }}>تحديث قائمة الغياب</Button>}
       </div>
+      {canRecord && <ManualEntry S={S} />}
       {board.isLoading ? <LoadingState /> : board.error ? <ErrorState message={arabicError(board.error)} onRetry={() => board.refetch()} /> : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {tiles.map(([l, v, c]) => <div key={l} className="rounded-2xl border bg-card p-4"><p className="text-xs text-muted-foreground">{l}</p><p className={`text-2xl font-bold ${c}`}>{v ?? 0}</p></div>)}
@@ -180,7 +181,8 @@ export function GateTab({ ctx, canApprove }: { ctx: Ctx; canApprove: boolean }) 
 }
 
 function ManualEntry({ S }: { S: string }) {
-  const st = useStudents(S);
+  // students expected today, through the server (approvers and attendance.record holders only)
+  const st = useQuery({ queryKey: ["att-roster", S], queryFn: async () => { const { data, error } = await db.rpc("att_roster" as never, { _school: S } as never); if (error) throw error; return data as unknown as { id: string; full_name: string; section: string | null }[]; } });
   const refresh = useRefresh();
   const [sid, setSid] = useState(""); const [kind, setKind] = useState("arrived"); const [reason, setReason] = useState("");
   return (
@@ -189,7 +191,7 @@ function ManualEntry({ S }: { S: string }) {
       const r = await rpc("manual_attendance", { _student: sid, _status: kind, _reason: reason }, "سُجّل الحضور اليدوي"); if (r.ok) { setSid(""); setReason(""); refresh(); }
     }}>
       <h2 className="font-bold sm:col-span-4">تسجيل يدوي استثنائي (بسبب موثق)</h2>
-      <select className={selectCls("w-full")} aria-label="الطالب" value={sid} onChange={(e) => setSid(e.target.value)}><option value="">— الطالب —</option>{st.data?.map((s) => <option key={s["id"]} value={s["id"]}>{s["full_name"]} — {sectionOf(s)}</option>)}</select>
+      <select className={selectCls("w-full")} aria-label="الطالب" value={sid} onChange={(e) => setSid(e.target.value)}><option value="">— الطالب —</option>{st.data?.map((s) => <option key={s.id} value={s.id}>{s.full_name}{s.section ? ` — ${s.section}` : ""}</option>)}</select>
       <select className={selectCls("w-full")} aria-label="النوع" value={kind} onChange={(e) => setKind(e.target.value)}><option value="arrived">وصل (يُحتسب الوقت الآن)</option><option value="excused">غياب بعذر</option></select>
       <Input aria-label="السبب" placeholder="السبب (إلزامي)" value={reason} onChange={(e) => setReason(e.target.value)} />
       <Button>تسجيل</Button>

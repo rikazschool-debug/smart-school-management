@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { ExportButtons } from "@/components/list-tools";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
+import { useSchoolPerms } from "@/lib/school-perms";
 import { canEditSchedule, scheduleLabel, scheduleTabs, type ScheduleTab } from "@/lib/roles";
 import { SubstitutionsTab } from "@/components/schedule/substitutions-tab";
 import { SettingsTab } from "@/components/schedule/settings-tab";
@@ -308,6 +309,9 @@ function Viewer({ ctx, embedded }: { ctx: Ctx; embedded?: boolean }) {
   const [date, setDate] = useState(todayISO());
   const setup = useDaySetup(S);
   const cur = useCurrentTimetable(S, date);
+  // granted «school_schedule.view» (e.g. administrative assistant): the whole published school timetable, read-only
+  const sp = useSchoolPerms(S);
+  const whole = ctx.role !== "student" && ctx.role !== "guardian" && !!sp?.["school_schedule.view"];
   const slots = useSlots(cur.data);
   const week = weekDates(date);
   const subs = useQuery({
@@ -361,7 +365,7 @@ function Viewer({ ctx, embedded }: { ctx: Ctx; embedded?: boolean }) {
   if (setup.error || cur.error) return <ErrorState message={arabicError(setup.error ?? cur.error)} />;
   const d = setup.data!;
   let base = slots.data ?? [];
-  if (ctx.role === "teacher") base = base.filter((s) => mine.data?.includes(s["teacher_id"]));
+  if (ctx.role === "teacher" && !whole) base = base.filter((s) => mine.data?.includes(s["teacher_id"]));
   // dept heads: the database already returns only their department's courses (is_dept_course), even when a teacher also teaches elsewhere
   if (ctx.role === "supervisor") base = base.filter((s) => scope.data?.includes(s["teacher_id"]));
   const subBySlot = new Map((subs.data ?? []).map((x) => [`${x["slot_id"]}|${x["date"]}`, x]));
@@ -369,9 +373,9 @@ function Viewer({ ctx, embedded }: { ctx: Ctx; embedded?: boolean }) {
   const allSlots = new Map((slots.data ?? []).map((s) => [s["id"], s]));
   const shown = applyFilter(base, filter);
   const cells = byCell(shown);
-  const title = scheduleLabel(ctx.role);
-  const sub_ = { teacher: "حصصي وحصص التغطية", student: "جدول شعبتي", guardian: "جدول كل ابن على حدة", dept_head: "جداول معلمي القسم", supervisor: "حصص المعلمين المسندين إليّ", vice_principal: "جداول معلمي نطاقك" }[ctx.role as string] ?? "الجدول المنشور";
-  const needsFilter = ["guardian", "dept_head", "supervisor", "student_affairs", "vice_principal"].includes(ctx.role);
+  const title = whole ? "الجدول المدرسي" : scheduleLabel(ctx.role);
+  const sub_ = { teacher: "حصصي وحصص التغطية", student: "جدول شعبتي", guardian: "جدول كل ابن على حدة", dept_head: "جداول معلمي القسم", supervisor: "حصص المعلمين المسندين إليّ", vice_principal: "جداول معلمي نطاقك" }[whole ? "" : ctx.role as string] ?? "الجدول المنشور";
+  const needsFilter = whole || ["guardian", "dept_head", "supervisor", "student_affairs", "vice_principal"].includes(ctx.role);
 
   return (
     <>
@@ -394,7 +398,7 @@ function Viewer({ ctx, embedded }: { ctx: Ctx; embedded?: boolean }) {
             cell={(day, p) => (
               <div className="space-y-1">
                 {(cells.get(`${day}|${p["id"]}`) ?? NONE).map((s) => (
-                  <SlotCard key={s["id"]} s={s} show={ctx.role === "teacher" ? ["section"] : ctx.role === "student" || ctx.role === "guardian" ? ["teacher"] : ["teacher", "section"]} sub={subBySlot.get(`${s["id"]}|${week[day]}`)} />
+                  <SlotCard key={s["id"]} s={s} show={ctx.role === "teacher" && !whole ? ["section"] : ctx.role === "student" || ctx.role === "guardian" ? ["teacher"] : ["teacher", "section"]} sub={subBySlot.get(`${s["id"]}|${week[day]}`)} />
                 ))}
               </div>
             )}
