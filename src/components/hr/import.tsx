@@ -18,8 +18,8 @@ import { CAL_LABEL, HR_FIELDS, TEMPLATE_HEAD, cleanValue, fieldForHeader, norm, 
 // the per-row plan (create/link/review) comes from hr_login_plan, the role from the owner-approved title→role table.
 type State = "review" | "new" | "dup" | "fill" | "same" | "conflict" | "bad" | "ok" | "filled" | "fail";
 type Row = { i: number; p: Record<string, string>; cal: Record<string, Cal | null>; errs: string[]; state: State; match?: string | undefined; gaps: string[]; msg?: string | undefined; schoolName: string; login?: Login | undefined };
-type Plan = { action: "create" | "link" | "review"; why?: string; user_id?: string; name?: string; roles?: string[]; schools?: string[] | null };
-type Login = { role: string; act: "wait" | "create" | "link" | "review"; why?: string | undefined; pl?: Plan | undefined };
+type Plan = { action: "create" | "link" | "link_guardian" | "review"; children?: number; why?: string; user_id?: string; name?: string; roles?: string[]; schools?: string[] | null };
+type Login = { role: string; act: "wait" | "create" | "link" | "link_guardian" | "review"; why?: string | undefined; pl?: Plan | undefined };
 const tnorm = (t: unknown) => String(t ?? "").trim().toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ");
 const pkey = (p: Record<string, string>) => `${p["national_id"] ?? ""}|${p["phone"] ?? ""}`;
 type Prof = Record<string, string | null> & { manager_no?: string | null; department?: string | null };
@@ -164,6 +164,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
       const pl = plan[pkey(r.p)];
       const lg: Login = !pl || !al ? { role, act: "wait", why: "جارٍ فحص الحساب…" }
         : pl.action === "review" ? { role, act: "review", why: pl.why, pl }
+        : pl.action === "link_guardian" && !role ? { role, act: "review", why: "حساب ولي أمر موجود — اختر الدور الوظيفي الذي يُضاف له", pl }
         : pl.action === "create" && !role ? { role, act: "review", why: r.p["job_title"] ? (t ? `دور المسمى «${r.p["job_title"]}» لا يحق لك منحه في هذه المدرسة — اختر دورًا` : `المسمى «${r.p["job_title"]}» غير مربوط بدور — اختر الدور`) : "اختر دور الدخول", pl }
         : { role, act: pl.action, pl };
       return lg.act === "review" ? { ...r, login: lg, state: "review", msg: lg.why } : { ...r, login: lg };
@@ -177,7 +178,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   }), [base, mode, profs, existing, withLogin, allowed, tmap, rolePick, plan]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const missing = HR_FIELDS.filter((f) => f.required && map[f.key] == null && !(f.key === "school" && Object.keys(pick).length));
-  const ready = rows.filter((r) => r.state === "fill" || (r.state === "new" && (!r.login || r.login.act === "create" || (r.login.act === "link" && linkOk[r.i]))));
+  const ready = rows.filter((r) => r.state === "fill" || (r.state === "new" && (!r.login || r.login.act === "create" || ((r.login.act === "link" || r.login.act === "link_guardian") && linkOk[r.i]))));
   const readyIds = new Set(ready.map((r) => r.i));
   const unmappedTitles = withLogin && m.owner ? [...new Map(rows.filter((r) => r.p["job_title"] && !tmap.has(tnorm(r.p["job_title"]))).map((r) => [tnorm(r.p["job_title"]), r.p["job_title"]!])).values()] : [];
   const ownerRoles = allowed[Object.keys(allowed)[0] ?? ""] ?? [];
@@ -211,11 +212,15 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
         } else if (r.login?.act === "link") {
           try { id = await call<string>("hr_employee_link_login", { _org: org, _uid: r.login.pl!.user_id, _p: p, _reason: rsn }); }
           catch (x) { out.set(r.i, { ...r, state: "fail", msg: `لم يُربط بالحساب: ${arabicError(x)}` }); continue; }
+        } else if (r.login?.act === "link_guardian") {
+          // existing guardian account: add the staff job, the guardian role and children links stay unchanged
+          try { id = await call<string>("hr_employee_link_guardian", { _org: org, _uid: r.login.pl!.user_id, _base: r.login.role, _p: p, _reason: rsn }); }
+          catch (x) { out.set(r.i, { ...r, state: "fail", msg: `لم يُربط بحساب ولي الأمر: ${arabicError(x)}` }); continue; }
         } else
         try { id = await call<string>("hr_employee_save", { _org: org, _id: null, _p: p, _reason: rsn }); }
         catch (x) { const em = String((x as Error)?.message ?? x); const k = em.match(/IMPORTED:([0-9a-f-]{36})/); if (k) { id = k[1]!; dup = true; } else { out.set(r.i, { ...r, state: "fail", msg: arabicError(x) }); continue; } }
         ids.set(r.i, id!);
-        try { await call("hr_employee_profile_save", { _org: org, _emp: id, _p: profPayload(r), _mode: "fill", _reason: why }); out.set(r.i, { ...r, state: dup ? "dup" : "ok", msg: dup ? "أُضيف سابقًا من الملف نفسه — لم يُكرر" : r.login?.act === "create" ? `أُنشئ الحساب بدور ${roleLabel(r.login.role)}` : r.login?.act === "link" ? "رُبط بالحساب الموجود" : undefined }); }
+        try { await call("hr_employee_profile_save", { _org: org, _emp: id, _p: profPayload(r), _mode: "fill", _reason: why }); out.set(r.i, { ...r, state: dup ? "dup" : "ok", msg: dup ? "أُضيف سابقًا من الملف نفسه — لم يُكرر" : r.login?.act === "create" ? `أُنشئ الحساب بدور ${roleLabel(r.login.role)}` : r.login?.act === "link" ? "رُبط بالحساب الموجود" : r.login?.act === "link_guardian" ? `رُبط بحساب ولي الأمر وأُضيفت صفة ${roleLabel(r.login.role)}` : undefined }); }
         catch (x) { out.set(r.i, { ...r, state: "fail", msg: `أُنشئ الملف لكن تعذّر حفظ البيانات الإضافية: ${arabicError(x)}` }); }
       } else if (r.state === "fill") {
         try { await call("hr_employee_profile_save", { _org: org, _emp: r.match, _p: { ...profPayload(r, r.gaps), ...(r.gaps.includes("manager_no") ? { manager_no: r.p["manager_no"] } : {}) }, _mode: "fill", _reason: `${why} — استكمال صف ${r.i}` }); out.set(r.i, { ...r, state: "filled" }); }
@@ -305,6 +310,8 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
                       : r.login?.role ? roleLabel(r.login.role) : "—"}</td>
                     <td className="p-2 text-xs">{!r.login ? "—" : r.login.act === "create" ? "إنشاء حساب" : r.login.act === "link" ? (
                       <label className="flex items-start gap-1"><input type="checkbox" aria-label={`تأكيد ربط الصف ${r.i}`} disabled={!!res} checked={!!linkOk[r.i]} onChange={(e) => setLinkOk((x) => ({ ...x, [r.i]: e.target.checked }))} /><span>ربط بحساب موجود بعد التأكيد: {r.login.pl?.name} — {(r.login.pl?.schools ?? []).join("، ")}</span></label>)
+                      : r.login.act === "link_guardian" ? (
+                      <label className="flex items-start gap-1"><input type="checkbox" aria-label={`تأكيد ربط ولي الأمر الصف ${r.i}`} disabled={!!res} checked={!!linkOk[r.i]} onChange={(e) => setLinkOk((x) => ({ ...x, [r.i]: e.target.checked }))} /><span>ربط بالحساب الموجود وإضافة الصفة الوظيفية: {r.login.pl?.name} — ولي أمر{r.login.pl?.children ? ` (${r.login.pl.children} من الأبناء)` : ""}، تبقى صفة ولي الأمر وروابط الأبناء</span></label>)
                       : r.login.act === "review" ? "يحتاج مراجعة" : "…"}</td>
                   </>}
                   <td className="p-2"><span className={`rounded px-1.5 ${CLS[r.state]}`}>{LBL[r.state]}</span> <span className="text-xs text-muted-foreground">{[...r.errs, r.msg].filter(Boolean).join("، ")}</span>
