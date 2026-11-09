@@ -16,6 +16,7 @@ import { askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { HrImport } from "@/components/hr/import";
+import { ProfileFields, ProfileView, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { PersonCardButton } from "@/components/people/person-card";
 import { HrCategories } from "@/components/hr/categories";
@@ -147,6 +148,9 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   const [f, setF] = useState({ ...EMPTY });
   const cats = useHrCats(org);
   const set = (k: keyof typeof EMPTY, v: string) => setF((x) => ({ ...x, [k]: v }));
+  const [px, setPx] = useState<Record<string, string>>(() => profileForm({ sensitive: m.caps.sensitive }));
+  const extra = () => { const r = profilePayload(px, m.caps.sensitive); if (r.err) throw new Error(r.err); return r.p; };
+  const saveExtra = async (id: string, p: Record<string, string>) => { const q = Object.fromEntries(Object.entries(p).filter(([, v]) => v !== "")); if (Object.keys(q).length) await rpc("hr_employee_profile_save", { _org: org, _emp: id, _p: q, _mode: "set", _reason: null }); };
   const schools = m.schools.filter((s) => s.create);
   const teachers = (cand.data?.teachers ?? []).filter((t) => t.school_id === f.school_id && (!t.user_id || t.user_id === f.user_id));
   const [mode, setMode] = useState<"new" | "link">("new");
@@ -157,12 +161,12 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   const roles = useQuery({ enabled: !!f.school_id, queryKey: ["hr-login-roles", org, f.school_id], queryFn: () => rpc<string[]>("hr_login_roles", { _org: org, _school: f.school_id }) });
   const done = (id: string) => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-cand"] }); onDone(id); };
   const save = useMutation({
-    mutationFn: () => rpc<string>("hr_employee_save", { _org: org, _id: null, _p: Object.fromEntries(Object.entries(f).filter(([, v]) => v !== "")), _reason: null }),
+    mutationFn: async () => { const ex = extra(); const id = await rpc<string>("hr_employee_save", { _org: org, _id: null, _p: Object.fromEntries(Object.entries(f).filter(([, v]) => v !== "")), _reason: null }); await saveExtra(id, ex); return id; },
     onSuccess: (id) => { toast.success("أُضيف ملف الموظف"); done(id); },
     onError: (e) => toast.error(arabicError(e)),
   });
   const create = useMutation({
-    mutationFn: () => createLogin({ data: { orgId: org, base, p: Object.fromEntries(Object.entries({ ...f, user_id: "", teacher_id: "" }).filter(([, v]) => v !== "")) } }),
+    mutationFn: async () => { const ex = extra(); const r = await createLogin({ data: { orgId: org, base, p: Object.fromEntries(Object.entries({ ...f, user_id: "", teacher_id: "" }).filter(([, v]) => v !== "")) } }); if (!("conflicts" in r && r.conflicts)) await saveExtra((r as { employeeId: string }).employeeId, ex); return r; },
     onSuccess: (r) => {
       if ("conflicts" in r && r.conflicts) { setConfirm(false); setConflicts(r.conflicts); return; }
       toast.success("أُنشئ ملف الموظف وحساب دخوله"); done((r as { employeeId: string }).employeeId);
@@ -233,6 +237,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
           </div>
           )}
           <EmpFields f={f} set={(k: never, v: string) => { set(k, v); setConflicts([]); setConfirm(false); }} sensitive={m.caps.sensitive} loginPhone={mode === "new"} />
+          <ProfileFields f={px} set={(k, v) => setPx((x) => ({ ...x, [k]: v }))} sensitive={m.caps.sensitive} org={org} />
           {conflicts.length > 0 && (
             <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
               <p className="font-semibold">لم يُنشأ شيء — توجد بيانات سابقة تحتاج مراجعة:</p>
@@ -368,6 +373,8 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
   const qc = useQueryClient();
   const d = useQuery({ queryKey: ["hr-emp", id], queryFn: () => rpc<Detail>("hr_employee_get", { _id: id }) });
   const [edit, setEdit] = useState<Record<string, string> | null>(null);
+  const prof = useQuery({ queryKey: ["hr-prof", id], queryFn: () => rpc<Prof>("hr_employee_profile_get", { _emp: id }) });
+  const [px, setPx] = useState<Record<string, string>>({});
   const [asg, setAsg] = useState<Record<string, string> | null>(null);
   const cats = useHrCats(org);
   const others = useQuery({ queryKey: ["hr-list", org, "", "", "active"], enabled: !!asg, queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: null, _q: null, _status: "active" }) });
@@ -379,9 +386,11 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
       if ((v["status"] ?? "active") !== e.status) { reason = await askText("سبب تغيير حالة الموظف", { required: true, ok: "حفظ" }); if (!reason) throw new Error("أُلغي"); }
       const p: Record<string, unknown> = { ...v };
       if (!e.sensitive) { delete p["national_id"]; delete p["nationality"]; delete p["birth_date"]; }
-      return rpc("hr_employee_save", { _org: org, _id: id, _p: p, _reason: reason });
+      const ex = profilePayload(px, !!prof.data?.sensitive, prof.data); if (ex.err) throw new Error(ex.err);
+      await rpc("hr_employee_save", { _org: org, _id: id, _p: p, _reason: reason });
+      return rpc("hr_employee_profile_save", { _org: org, _emp: id, _p: ex.p, _mode: "set", _reason: reason });
     },
-    onSuccess: () => { toast.success("حُفظت التعديلات"); setEdit(null); refresh(); },
+    onSuccess: () => { toast.success("حُفظت التعديلات"); setEdit(null); refresh(); qc.invalidateQueries({ queryKey: ["hr-prof", id] }); },
     onError: (e) => { if ((e as Error).message !== "أُلغي") toast.error(arabicError(e)); },
   });
   const saveAsg = useMutation({
@@ -400,7 +409,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
   if (d.error) return <ErrorState message={arabicError(d.error)} />;
   const { employee: e, assignments, can_edit, events } = d.data!;
   const row = (k: string, v: React.ReactNode) => <div className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>;
-  const startEdit = () => setEdit({ full_name: e.full_name, display_name: e.display_name ?? "", job_title: e.job_title ?? "", hire_date: e.hire_date ?? "", phone: e.phone ?? "", email: e.email ?? "", gender: e.gender ?? "", status: e.status, end_date: e.end_date ?? "", ...(e.sensitive ? { national_id: e.national_id ?? "", nationality: e.nationality ?? "", birth_date: e.birth_date ?? "" } : {}) });
+  const startEdit = () => { setPx(profileForm(prof.data)); setEdit({ full_name: e.full_name, display_name: e.display_name ?? "", job_title: e.job_title ?? "", hire_date: e.hire_date ?? "", phone: e.phone ?? "", email: e.email ?? "", gender: e.gender ?? "", status: e.status, end_date: e.end_date ?? "", ...(e.sensitive ? { national_id: e.national_id ?? "", nationality: e.nationality ?? "", birth_date: e.birth_date ?? "" } : {}) }); };
   return (
     <section className="space-y-4 rounded-xl border-2 border-primary/30 bg-card p-4" aria-label={`ملف ${e.full_name}`}>
       <div className="flex flex-wrap items-center gap-2">
@@ -415,6 +424,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
       {edit ? (
         <div className="space-y-3">
           <EmpFields f={edit} set={((k: string, v: string) => setEdit((x) => ({ ...x!, [k]: v }))) as never} sensitive={!!e.sensitive} withStatus />
+          <ProfileFields f={px} set={(k, v) => setPx((x) => ({ ...x, [k]: v }))} sensitive={!!prof.data?.sensitive} org={org} self={id} />
           {edit["status"] === "ended" && <p className="rounded bg-warning/15 p-2 text-xs">إنهاء الخدمة لا يوقف حساب الدخول تلقائيًا؛ يصل تنبيه للمالك لمراجعة الحساب والعضويات.</p>}
           <div className="flex gap-2"><Button disabled={saveEmp.isPending} onClick={() => saveEmp.mutate(edit)}>{saveEmp.isPending ? "…" : "حفظ"}</Button><Button variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
         </div>
@@ -426,6 +436,9 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
           {e.sensitive && <>{row("الجنسية", e.nationality)}{row("تاريخ الميلاد", e.birth_date)}</>}
           {e.status === "ended" && row("انتهاء الخدمة", e.end_date)}
         </dl>
+      )}
+      {!edit && <ProfileView pr={prof.data} />}
+      {false && (<></>
       )}
       <div>
         <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", category_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
