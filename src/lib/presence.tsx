@@ -29,7 +29,8 @@ export function usePresenceBeat(userId: string | null) {
     if (!userId) return;
     const tab = tabKey();
     let token: string | null = null;
-    const beat = () => { void rpc("presence_beat", { _tab: tab }); void supabase.auth.getSession().then(({ data }) => { token = data.session?.access_token ?? null; }); };
+    // the query builder is lazy: it only sends once .then() is called
+    const beat = () => { void rpc("presence_beat", { _tab: tab }).then(() => undefined, () => undefined); void supabase.auth.getSession().then(({ data }) => { token = data.session?.access_token ?? null; }); };
     beat();
     const t = window.setInterval(beat, BEAT_MS);
     const onVis = () => { if (document.visibilityState === "visible") beat(); };
