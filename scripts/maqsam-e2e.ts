@@ -111,7 +111,7 @@ try {
   await admin.rpc("_mq_ingest", { _org: org, _calls: [{ ...calls[0], state: "completed", duration: 120 }], _agents: [] });
   const st1 = (await admin.from("support_tickets").select("status").eq("id", t1.data).single()).data?.status;
   check("call ending does not change ticket status", st0 === st1, [st0, st1]);
-  const g = (await sa.c.rpc("mq_call_get", { _id: idA })).data;
+  const gr = await sa.c.rpc("mq_call_get", { _id: idA }); const g = gr.data; if (gr.error) console.log("GET ERR", gr.error);
   check("call shows both linked tickets", g?.tickets?.length === 2, g?.tickets);
   check("ticket shows its calls", ((await sa.c.rpc("mq_call_tickets_of", { _ticket: t1.data })).data ?? []).length === 1);
 
