@@ -68,10 +68,10 @@ const F0: F = { school: "", agent: "", dir: "", kind: "", from: "", to: "", q: "
 function Filters({ f, set, caps }: { f: F; set: (f: F) => void; caps: MqCaps }) {
   return (
     <div className="grid gap-2 rounded-xl border bg-card p-3 sm:grid-cols-4 lg:grid-cols-8">
-      <select aria-label="الفرع" className={selectCls} value={f.school} onChange={(e) => set({ ...f, school: e.target.value })}><option value="">كل الفروع</option>{caps.schools?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-      <select aria-label="الموظف" className={selectCls} value={f.agent} onChange={(e) => set({ ...f, agent: e.target.value })}><option value="">كل الموظفين</option>{caps.agents?.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
-      <select aria-label="الاتجاه" className={selectCls} value={f.dir} onChange={(e) => set({ ...f, dir: e.target.value })}><option value="">كل الاتجاهات</option><option value="inbound">واردة</option><option value="outbound">صادرة</option></select>
-      <select aria-label="الحالة" className={selectCls} value={f.kind} onChange={(e) => set({ ...f, kind: e.target.value })}><option value="">كل الحالات</option><option value="answered">مُجابة</option><option value="missed">فائتة</option></select>
+      <select aria-label="الفرع" className={selectCls()} value={f.school} onChange={(e) => set({ ...f, school: e.target.value })}><option value="">كل الفروع</option>{caps.schools?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+      <select aria-label="الموظف" className={selectCls()} value={f.agent} onChange={(e) => set({ ...f, agent: e.target.value })}><option value="">كل الموظفين</option>{caps.agents?.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
+      <select aria-label="الاتجاه" className={selectCls()} value={f.dir} onChange={(e) => set({ ...f, dir: e.target.value })}><option value="">كل الاتجاهات</option><option value="inbound">واردة</option><option value="outbound">صادرة</option></select>
+      <select aria-label="الحالة" className={selectCls()} value={f.kind} onChange={(e) => set({ ...f, kind: e.target.value })}><option value="">كل الحالات</option><option value="answered">مُجابة</option><option value="missed">فائتة</option></select>
       <Input aria-label="من تاريخ" type="date" value={f.from} onChange={(e) => set({ ...f, from: e.target.value })} />
       <Input aria-label="إلى تاريخ" type="date" value={f.to} onChange={(e) => set({ ...f, to: e.target.value })} />
       <Input aria-label="بحث" placeholder="رقم أو اسم" value={f.q} onChange={(e) => set({ ...f, q: e.target.value })} />
@@ -91,7 +91,7 @@ export function CallsPanel({ orgId, caps, initial }: { orgId: string; caps: MqCa
     <div className="space-y-3">
       <SyncBar orgId={orgId} caps={caps} />
       <Filters f={f} set={(x) => { setF(x); setPage(0); }} caps={caps} />
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.rows.length ? <EmptyState title="لا توجد مكالمات" desc="لا توجد مكالمات ضمن نطاقك والفلاتر المحددة." /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.rows.length ? <EmptyState title="لا توجد مكالمات" hint="لا توجد مكالمات ضمن نطاقك والفلاتر المحددة." /> : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-muted-foreground"><tr>{["الاتجاه", "الوقت", "الرقم", "المتصل", "الفرع", "الموظف", "المدة", "الحالة", "التذاكر", ""].map((h) => <th key={h} className="p-2 text-start font-medium">{h}</th>)}</tr></thead>
@@ -146,7 +146,7 @@ function CallDetail({ id, caps, onBack }: { id: string; caps: MqCaps; onBack: ()
       <section className="space-y-2 rounded-xl border bg-card p-4">
         <h3 className="font-semibold">الفرع</h3>
         {c.can.set_school ? (
-          <select aria-label="فرع المكالمة" className={selectCls} disabled={busy} value={c.school_id ?? ""} onChange={(e) => e.target.value && act(() => rpc("mq_call_set_school", { _id: id, _school: e.target.value }), "تم تحديد الفرع")}>
+          <select aria-label="فرع المكالمة" className={selectCls()} disabled={busy} value={c.school_id ?? ""} onChange={(e) => e.target.value && act(() => rpc("mq_call_set_school", { _id: id, _school: e.target.value }), "تم تحديد الفرع")}>
             <option value="">— لم يُحدَّد (للمراجعة) —</option>{caps.link_schools?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         ) : <p className="text-sm">{c.school ?? "لم يُحدَّد"}</p>}
@@ -214,7 +214,7 @@ function CallTickets({ c, id, busy, act }: { c: Row; id: string; busy: boolean; 
               {!c.school_id && <p className="text-sm text-destructive">حدّد فرع المكالمة أولًا.</p>}
               <Input placeholder="عنوان التذكرة" value={title} onChange={(e) => setTitle(e.target.value)} />
               <Textarea placeholder="التفاصيل" value={body} onChange={(e) => setBody(e.target.value)} />
-              <select aria-label="الأولوية" className={selectCls} value={prio} onChange={(e) => setPrio(e.target.value)}><option value="low">منخفضة</option><option value="normal">عادية</option><option value="high">عالية</option><option value="urgent">عاجلة</option></select>
+              <select aria-label="الأولوية" className={selectCls()} value={prio} onChange={(e) => setPrio(e.target.value)}><option value="low">منخفضة</option><option value="normal">عادية</option><option value="high">عالية</option><option value="urgent">عاجلة</option></select>
               <Button size="sm" disabled={busy || !c.school_id || title.trim().length < 3} onClick={() => act(() => rpc("mq_call_open_ticket", { _id: id, _title: title.trim(), _body: body.trim() || title.trim(), _priority: prio, _client_key: key.current }), "أُنشئت التذكرة وربطت بالمكالمة").then(() => setMode(""))}>إنشاء التذكرة</Button>
             </div>)}
           {mode === "link" && (
@@ -242,9 +242,9 @@ function CallFollowups({ c, id, act }: { c: Row; id: string; act: (fn: () => Pro
         </li>))}</ul>
       {c.can.link && (
         <div className="grid gap-2 sm:grid-cols-2">
-          <div><Label>النتيجة</Label><select className={selectCls} value={outcome} onChange={(e) => setOutcome(e.target.value)}>{OUTCOMES.map((o) => <option key={o}>{o}</option>)}</select></div>
+          <div><Label>النتيجة</Label><select className={selectCls()} value={outcome} onChange={(e) => setOutcome(e.target.value)}>{OUTCOMES.map((o) => <option key={o}>{o}</option>)}</select></div>
           <div><Label>موعد المتابعة (اختياري)</Label><Input type="datetime-local" value={due} onChange={(e) => setDue(e.target.value)} /></div>
-          <div><Label>المسؤول عن المتابعة</Label><select className={selectCls} value={who} onChange={(e) => setWho(e.target.value)}><option value="">— بلا مسؤول —</option>{(staff.data ?? []).map((p) => <option key={p.user_id ?? p.id} value={p.user_id ?? p.id}>{p.full_name ?? p.name}</option>)}</select></div>
+          <div><Label>المسؤول عن المتابعة</Label><select className={selectCls()} value={who} onChange={(e) => setWho(e.target.value)}><option value="">— بلا مسؤول —</option>{(staff.data ?? []).map((p) => <option key={p.user_id ?? p.id} value={p.user_id ?? p.id}>{p.full_name ?? p.name}</option>)}</select></div>
           <div><Label>ملاحظات</Label><Input value={note} onChange={(e) => setNote(e.target.value)} /></div>
           <Button size="sm" onClick={() => act(() => rpc("mq_followup_add", { _call: id, _outcome: outcome, _note: note, _due: due ? new Date(due).toISOString() : null, _assignee: who || null }), "تم تسجيل النتيجة").then(() => { setNote(""); setDue(""); })}>حفظ النتيجة</Button>
         </div>)}
@@ -259,10 +259,10 @@ export function FollowupsPanel({ orgId, onOpenCalls }: { orgId: string; onOpenCa
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        <select aria-label="الحالة" className={selectCls + " w-auto"} value={status} onChange={(e) => setStatus(e.target.value)}><option value="open">مفتوحة</option><option value="overdue">متأخرة</option><option value="done">منجزة</option><option value="all">الكل</option></select>
+        <select aria-label="الحالة" className={selectCls("w-auto")} value={status} onChange={(e) => setStatus(e.target.value)}><option value="open">مفتوحة</option><option value="overdue">متأخرة</option><option value="done">منجزة</option><option value="all">الكل</option></select>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> المسندة إليّ فقط</label>
       </div>
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد متابعات" desc="تظهر هنا متابعات المكالمات ضمن نطاقك." /> : (
+      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : !q.data?.length ? <EmptyState title="لا توجد متابعات" hint="تظهر هنا متابعات المكالمات ضمن نطاقك." /> : (
         <ul className="space-y-2">{q.data.map((f) => (
           <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 text-sm">
             <div><b>{f.outcome}</b> — <span dir="ltr">{f.number}</span>{f.contact ? ` (${f.contact})` : ""} <span className="text-muted-foreground">{f.school ?? "بلا فرع"} · {f.assignee ?? "بلا مسؤول"} · {f.due_at ? fmt(f.due_at) : "بلا موعد"}</span>{f.note && <div className="text-muted-foreground">{f.note}</div>}</div>
@@ -292,8 +292,8 @@ export function ReportsPanel({ orgId, caps }: { orgId: string; caps: MqCaps }) {
   return (
     <div className="space-y-3">
       <div className="grid gap-2 rounded-xl border bg-card p-3 sm:grid-cols-5">
-        <select aria-label="الفرع" className={selectCls} value={f.school} onChange={(e) => setF({ ...f, school: e.target.value })}><option value="">كل الفروع</option>{caps.schools?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-        <select aria-label="الموظف" className={selectCls} value={f.agent} onChange={(e) => setF({ ...f, agent: e.target.value })}><option value="">كل الموظفين</option>{caps.agents?.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
+        <select aria-label="الفرع" className={selectCls()} value={f.school} onChange={(e) => setF({ ...f, school: e.target.value })}><option value="">كل الفروع</option>{caps.schools?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+        <select aria-label="الموظف" className={selectCls()} value={f.agent} onChange={(e) => setF({ ...f, agent: e.target.value })}><option value="">كل الموظفين</option>{caps.agents?.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
         <Input aria-label="من" type="date" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} />
         <Input aria-label="إلى" type="date" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} />
         <Button variant="outline" onClick={exp} disabled={!r}><Download className="size-4" /> تصدير Excel</Button>
@@ -346,7 +346,7 @@ export function MqSettingsPanel({ orgId }: { orgId: string }) {
         {s.agents.map((a: Row) => (
           <div key={a.identifier} className="grid items-center gap-2 sm:grid-cols-3">
             <span>{a.name} {a.active === false && <Pill>غير نشط</Pill>}</span><span className="text-muted-foreground" dir="ltr">{a.email}</span>
-            <select aria-label={`ربط ${a.name}`} className={selectCls} value={a.user_id ?? ""} onChange={(e) => run(() => rpc("mq_agent_map", { _org: orgId, _identifier: a.identifier, _user: e.target.value || null }), "تم الربط")}>
+            <select aria-label={`ربط ${a.name}`} className={selectCls()} value={a.user_id ?? ""} onChange={(e) => run(() => rpc("mq_agent_map", { _org: orgId, _identifier: a.identifier, _user: e.target.value || null }), "تم الربط")}>
               <option value="">— غير مربوط —</option>{s.staff.map((p: Row) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>))}
@@ -358,7 +358,7 @@ export function MqSettingsPanel({ orgId }: { orgId: string }) {
         {s.numbers.map((n: Row) => (
           <div key={n.number} className="grid items-center gap-2 sm:grid-cols-3">
             <span dir="ltr" className="text-end sm:text-start">{n.number}</span><span className="text-muted-foreground">{n.calls} مكالمة</span>
-            <select aria-label={`فرع ${n.number}`} className={selectCls} value={n.school_id ?? ""} onChange={(e) => run(() => rpc("mq_number_map", { _org: orgId, _number: n.number, _school: e.target.value || null, _label: null }), "تم الحفظ")}>
+            <select aria-label={`فرع ${n.number}`} className={selectCls()} value={n.school_id ?? ""} onChange={(e) => run(() => rpc("mq_number_map", { _org: orgId, _number: n.number, _school: e.target.value || null, _label: null }), "تم الحفظ")}>
               <option value="">— بلا فرع (للمراجعة) —</option>{s.schools.map((x: Row) => <option key={x.id} value={x.id}>{x.name}</option>)}
             </select>
           </div>))}
