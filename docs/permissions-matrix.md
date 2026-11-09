@@ -459,3 +459,14 @@ A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, iden
 - Direct manager may be a named group-owner account (owner approves first, then a separate HR approver); nobody can be their own manager.
 
 - B14 (2026-11-09): المسؤول المباشر يُختار لكل صف في معاينة Excel (موظف نشط، حساب المالك، مدير ضمن الدفعة)؛ الخادم يرفض اختيار النفس ومؤسسة أخرى والملف غير النشط والحلقة الإدارية؛ صلاحية التعديل في الموارد البشرية مطلوبة. الإجازة: المسؤول المختار أولًا ثم الموارد. b14-e2e 20/20، b14-journey 19/19.
+
+## Calls (Maqsam, perm section `calls`) — 2026-11-09
+| Action | Owner | Granted staff |
+|---|---|---|
+| view (branch calls + follow-ups) | all branches | granted branches |
+| own (my calls only) | — | calls where they are the mapped agent |
+| link (ticket/follow-up/branch/caller) | yes | granted branches |
+| listen / download (separate, logged) | yes | granted branches |
+| export (reports + Excel, logged) | yes | granted branches |
+| manage (link, agents, numbers) | owner only | never |
+Calls with no branch: owner only. Deny overrides grant. Revoking listen stops an already issued token.
