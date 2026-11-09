@@ -14,13 +14,14 @@ import { ask, askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { rpc } from "@/components/hr/shared";
+import { DeviceCard, type Device } from "@/components/hr/att-devices";
 import { WEEKDAYS } from "@/components/hr/leave";
 import { AT_STATUS, AttStatus, DayRow, SOURCE, addDays, dtm, mins, riyadhToday, tm, type AttDay, type EmpDays } from "@/components/hr/attendance";
 
 type CapKey = "view" | "record" | "correct" | "settings" | "close" | "export";
 type Caps = { enabled: boolean; settings_admin: boolean; team: boolean; caps: Record<CapKey, boolean> };
 type Shift = { id: string; name: string; school_id: string | null; school: string | null; start_time: string; end_time: string; night: boolean; grace_in_min: number; grace_out_min: number; break_min: number; is_active: boolean; used: boolean; assigned: number };
-type Setup = { can_edit: boolean; work_days: number[] | null; allow_self_punch: boolean; require_location: boolean; schools: { id: string; name: string }[]; shifts: Shift[]; holidays: { id: string; date: string; name: string; school: string | null }[]; devices: { id: string; name: string; school: string | null; is_active: boolean; last_seen: string | null }[] };
+type Setup = { can_edit: boolean; work_days: number[] | null; allow_self_punch: boolean; require_location: boolean; schools: { id: string; name: string }[]; shifts: Shift[]; holidays: { id: string; date: string; name: string; school: string | null }[]; devices: Device[] };
 type Emp = { employee_id: string; employee: string; employee_no: string; school: string | null };
 type BoardRow = Emp & AttDay & { can_record: boolean };
 type Board = { date: string; closed: { school_id: string; school: string; closed: boolean; can_close: boolean; log: { action: string; reason: string | null; at: string; by: string | null }[] }[]; rows: BoardRow[] };
@@ -247,9 +248,9 @@ function Shifts({ org, k }: { org: string; k: Caps }) {
   const hol = useMutation({ mutationFn: () => rpc("hr_att_holiday_save", { _org: org, _school: hf.school || null, _date: hf.date, _name: hf.name }), onSuccess: () => { toast.success("أُضيفت العطلة"); setHf({ date: "", name: "", school: "" }); inv(); }, onError: err });
   const holDel = useMutation({ mutationFn: (id: string) => rpc("hr_att_holiday_delete", { _id: id }), onSuccess: () => { toast.success("حُذفت العطلة"); inv(); }, onError: err });
   const selfSet = useMutation({ mutationFn: (v: { self: boolean; loc: boolean }) => rpc("hr_att_settings_save", { _org: org, _self: v.self, _require_location: v.loc }), onSuccess: () => { toast.success("حُفظ الإعداد"); inv(); }, onError: err });
-  const [dname, setDname] = useState("");
+  const [dname, setDname] = useState(""); const [dschool, setDschool] = useState("");
   const [secret, setSecret] = useState<{ id: string; secret: string } | null>(null);
-  const dev = useMutation({ mutationFn: () => rpc<{ id: string; secret: string }>("hr_att_device_save", { _org: org, _school: null, _name: dname }), onSuccess: (r) => { setSecret(r); setDname(""); inv(); }, onError: err });
+  const dev = useMutation({ mutationFn: () => rpc<{ id: string; secret: string }>("hr_att_device_save", { _org: org, _school: dschool || null, _name: dname }), onSuccess: (r) => { setSecret(r); setDname(""); inv(); }, onError: err });
   const devT = useMutation({ mutationFn: (a: { id: string; on: boolean }) => rpc("hr_att_device_toggle", { _id: a.id, _active: a.on }), onSuccess: inv, onError: err });
   if (setup.isLoading) return <LoadingState />;
   if (setup.error) return <ErrorState message={arabicError(setup.error)} onRetry={() => setup.refetch()} />;
@@ -318,18 +319,17 @@ function Shifts({ org, k }: { org: string; k: Caps }) {
           <li key={h.id} className="flex items-center gap-2 rounded-lg border bg-card px-2 py-1"><bdi dir="ltr">{h.date}</bdi> {h.name}{h.school ? ` · ${h.school}` : ""}{can && <button type="button" className="text-xs text-destructive" onClick={async () => { if (await ask(`حذف عطلة ${h.name}؟`)) holDel.mutate(h.id); }}>حذف</button>}</li>))}</ul>}
       </Section>
       {can && (
-        <Section title="مصادر التسجيل" desc="الجوال معطّل افتراضيًا. الأجهزة ترسل بصماتها برابط موقّع بسر الجهاز.">
+        <Section title="مصادر التسجيل" desc="الجوال معطّل افتراضيًا. أجهزة ZKTeco (وضع ADMS) تتصل عبر برنامج الربط، ويُنقل الحضور والانصراف فقط بلا قوالب بصمة أو وجه.">
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.allow_self_punch} disabled={selfSet.isPending} onChange={(e) => selfSet.mutate({ self: e.target.checked, loc: d.require_location })} />السماح للموظف بتسجيل بصمته من «حضوري»</label>
           <p className="ms-6 text-xs text-muted-foreground">كل بصمة جوال تتطلب قراءة موقع حديثة ودقيقة داخل نطاق مدرسة الموظف؛ المدرسة بلا موقع معتمد ترفض التسجيل.</p>
           <SchoolSites org={org} />
           <form className="mt-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (dname.trim() && !dev.isPending) dev.mutate(); }}>
             <Input aria-label="اسم الجهاز" placeholder="اسم جهاز جديد" className="w-full sm:w-56" value={dname} onChange={(e) => setDname(e.target.value)} />
+            <select aria-label="مدرسة الجهاز" className={selectCls("w-full sm:w-44")} value={dschool} onChange={(e) => setDschool(e.target.value)}><option value="">مدرسة الجهاز…</option>{d.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
             <Button size="sm" type="submit" disabled={dev.isPending}><Plus className="size-4" />إضافة جهاز</Button>
           </form>
-          {secret && <div className="mt-2 rounded-lg border border-warning bg-warning/10 p-2 text-xs"><p>انسخ هذه البيانات الآن؛ لن يظهر السر مرة أخرى.</p><p dir="ltr" className="break-all font-mono">device: {secret.id}<br />secret: {secret.secret}<br />POST /api/public/hr/attendance</p><Button size="sm" variant="ghost" onClick={() => setSecret(null)}>تم</Button></div>}
-          {d.devices.length > 0 && <ul className="mt-2 space-y-1 text-sm">{d.devices.map((x) => (
-            <li key={x.id} className="flex items-center gap-2 rounded-lg bg-secondary/40 p-2"><span className="flex-1">{x.name}</span><span className="text-xs text-muted-foreground">{x.last_seen ? `آخر اتصال ${dtm(x.last_seen)}` : "لم يتصل بعد"}</span>
-              <Button size="sm" variant="ghost" onClick={() => devT.mutate({ id: x.id, on: !x.is_active })}>{x.is_active ? "إيقاف" : "تفعيل"}</Button></li>))}</ul>}
+          {secret && <div className="mt-2 rounded-lg border border-warning bg-warning/10 p-2 text-xs"><p>انسخ هذه البيانات الآن؛ لن يظهر السر مرة أخرى.</p><p dir="ltr" className="break-all font-mono">DEVICE_ID={secret.id}<br />DEVICE_SECRET={secret.secret}</p><p>أدخل الرقم التسلسلي للجهاز في بطاقته أدناه.</p><Button size="sm" variant="ghost" onClick={() => setSecret(null)}>تم</Button></div>}
+          {d.devices.length > 0 && <ul className="mt-2 space-y-2">{d.devices.map((x) => <DeviceCard key={x.id} org={org} d={x} schools={d.schools} onToggle={() => devT.mutate({ id: x.id, on: !x.is_active })} />)}</ul>}
         </Section>
       )}
     </div>
