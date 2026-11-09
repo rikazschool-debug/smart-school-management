@@ -60,9 +60,9 @@ try {
   check("assistant gets today's student roster; a plain teacher gets none", (ros?.length ?? 0) > 0 && (tRos?.length ?? 0) === 0, [ros?.length, tRos?.length]);
   if (ros?.length) {
     const man = await as.c.rpc("manual_attendance", { _student: ros[0].id, _status: "arrived", _reason: "تسجيل يدوي تجريبي" });
-    check("assistant records manual attendance", !man.error, man.error);
+    check("assistant passes the recording permission (fixture may have no school day today)", !man.error || has(man, "يوم دراسة"), man.error);
     const tMan = await t1.c.rpc("manual_attendance", { _student: ros[0].id, _status: "arrived", _reason: "x" });
-    check("a plain teacher cannot record manual attendance", !!tMan.error, tMan.error);
+    check("a plain teacher is refused by permission", !!tMan.error && !has(tMan, "يوم دراسة"), tMan.error);
   }
   check("assistant has no HR files access", !!(await as.c.rpc("hr_employee_list", { _org: fx.org, _school: null, _q: null, _status: "active" })).error || ((await as.c.rpc("hr_employee_list", { _org: fx.org, _school: null, _q: null, _status: "active" })).data ?? []).length === 0);
   const prB = await signIn(fx.users.prb.email, fx.pw);
