@@ -96,7 +96,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                           <button type="button" aria-expanded={so} onClick={() => setOpen({ ...open, [s.key]: !so })} className="grid size-6 place-items-center rounded hover:bg-muted" aria-label={so ? "طي" : "فتح"}>
                             {so ? <ChevronDown className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
                           </button>
-                          <TriBox label={s.label} state={secState(s)} disabled={readOnly || locked || (s.base_only && secState(s) === "none" && !s.actions.some((a) => was(`${s.key}.${a}`)))} onChange={(on) => tickSection(s, on)} />
+                          <TriBox label={s.label} state={secState(s)} disabled={readOnly || locked || (!!s.base_only && secState(s) === "none" && !s.actions.some((a) => was(`${s.key}.${a}`)))} onChange={(on) => tickSection(s, on)} />
                           <span className="font-medium">{s.label}</span>
                           {s.sensitive && <span className="text-xs text-muted-foreground">يتيح الاطلاع على أسماء الطلاب في الفرع</span>}
                         </div>
