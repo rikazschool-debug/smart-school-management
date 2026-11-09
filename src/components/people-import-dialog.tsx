@@ -63,6 +63,14 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { s
 const AR_VALUE: Record<string, string> = { male: "ذكر", female: "أنثى", father: "أب", mother: "أم", brother: "أخ", sister: "أخت", other: "أخرى" };
 const shown = (key: string, v: unknown) => { const t = String(v ?? ""); return key === "gender" || key === "relationship" ? AR_VALUE[t] ?? t : t; };
 
+// Display name follows the full name (first + last word) until the user types their own.
+const autoDn = (n: string) => { const w = n.trim().split(/\s+/).filter(Boolean); return w.length > 1 ? `${w[0]} ${w[w.length - 1]}` : (w[0] ?? ""); };
+function fillDn(cur: Record<string, string>, key: string, val: string): Record<string, string> {
+  const next = { ...cur, [key]: val };
+  if (key === "full_name") { const dn = cur["display_name"] ?? ""; if (!dn || dn === autoDn(cur["full_name"] ?? "")) next["display_name"] = autoDn(val); }
+  return next;
+}
+
 export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string }) {
   const qc = useQueryClient();
   const provision = useServerFn(provisionAccounts);
@@ -246,7 +254,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
               {fields.map((f) => (
                 <div key={f.key} className="space-y-1">
                   <Label htmlFor={`ps-${f.key}`}>{f.label}{f.required ? " *" : ""}</Label>
-                  <Input id={`ps-${f.key}`} dir={/phone|national_id|csmart_no|guardian_id|birth_date|email/.test(f.key) ? "ltr" : undefined} placeholder={f.hint} value={single[f.key] ?? ""} onChange={(e) => setSingle({ ...single, [f.key]: e.target.value })} />
+                  <Input id={`ps-${f.key}`} dir={/phone|national_id|csmart_no|guardian_id|birth_date|email/.test(f.key) ? "ltr" : undefined} placeholder={f.hint} value={single[f.key] ?? ""} onChange={(e) => setSingle(fillDn(single, f.key, e.target.value))} />
                 </div>
               ))}
               <div className="sm:col-span-2"><Button type="submit" disabled={busy}>{busy ? "جارٍ الحفظ…" : "حفظ"}</Button></div>
