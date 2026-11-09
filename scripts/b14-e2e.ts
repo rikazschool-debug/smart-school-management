@@ -60,8 +60,9 @@ try {
   check("manager from another organisation refused", !!(await save(Z, { manager_id: X })).error);
   check("non-owner account as owner manager refused", !!(await save(Z, { manager_owner: hr2.id })).error);
   await save(EA, { manager_id: Z });
-  const loop = await save(oEmp!, { manager_id: EA });
-  check("chain loop refused (owner → EA → Ziad → owner)", !!loop.error && String(loop.error.message).includes("حلقة"), loop.error);
+  await save(Z, { manager_id: M2 });
+  const loop = await save(M2, { manager_id: EA });
+  check("chain loop refused (M2 → EA → Ziad → M2)", !!loop.error && String(loop.error.message).includes("حلقة"), loop.error);
   const noPerm = await hr2.c.rpc("hr_employee_profile_save", { _org: org, _emp: EA, _p: { manager_id: M2 }, _mode: "set", _reason: "x" });
   check("caller without HR edit permission refused", !!noPerm.error, noPerm.error);
 
@@ -72,6 +73,7 @@ try {
   const bad1 = await owner.c.rpc("hr_employee_profile_save", { _org: org, _emp: B2, _p: { manager_no: "NO-SUCH-" + run }, _mode: "set", _reason: "x" });
   check("unknown manager number refused by the server", !!bad1.error, bad1.error);
 
+  await save(Z, { manager_owner: owner.id });
   // leave: chosen manager (owner) first, then HR; Ziad never approves his own
   await owner.c.rpc("hr_self_access_set", { _emp: Z, _active: true });
   const TY = (await owner.c.rpc("hr_leave_type_save", { _org: org, _id: null, _name: "إجازة سنوية", _active: true })).data;
