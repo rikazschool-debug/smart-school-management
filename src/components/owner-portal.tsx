@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Star, ArrowLeft, Building2, CheckCircle2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy, Phone } from "lucide-react";
+import { Star, ArrowLeft, Building2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy, Phone } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -145,30 +146,75 @@ const CARDS: Card[] = [
   },
 ];
 
+/** Group-wide figures shown as a strip above the sections (real data from schools overview). */
 function SchoolsStats({ orgId }: { orgId: string | null }) {
   const q = useSchoolsOverview(orgId);
-  if (q.isLoading) return <p className="text-xs text-muted-foreground">جارٍ عدّ المدارس…</p>;
+  if (q.isLoading) return <div className="h-[72px] animate-pulse rounded-2xl bg-secondary/50" aria-label="جارٍ عدّ المدارس" />;
   if (q.error || !q.data) return null;
   const active = q.data.filter((s) => s["is_active"]).length;
   const paused = q.data.length - active;
   const staff = q.data.reduce((a, s) => a + Number(s["staff_total"] ?? 0), 0);
   const students = q.data.reduce((a, s) => a + Number(s["students"] ?? 0), 0);
   const items = [
-    { v: active, l: "مدرسة نشطة" },
-    { v: paused, l: "فرع موقوف" },
-    { v: staff, l: "موظف مرتبط" },
-    { v: students, l: "طالب" },
+    { v: active, l: "مدرسة نشطة", icon: Building2 },
+    { v: paused, l: "فرع موقوف", icon: PauseCircle },
+    { v: staff, l: "موظف مرتبط", icon: IdCard },
+    { v: students, l: "طالب", icon: UserPlus },
   ];
   return (
-    <dl className="grid grid-cols-4 gap-1.5">
+    <dl className="grid grid-cols-2 overflow-hidden rounded-2xl border bg-card sm:grid-cols-4 sm:divide-x sm:divide-x-reverse">
       {items.map((i) => (
-        <div key={i.l} className="rounded-lg bg-secondary/50 px-2 py-1.5">
-          <dt className="sr-only">{i.l}</dt>
-          <dd className="font-display text-lg leading-none tabular-nums">{i.v}</dd>
-          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{i.l}</p>
+        <div key={i.l} className="flex items-center gap-3 px-4 py-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><i.icon className="size-5" /></span>
+          <div className="min-w-0">
+            <dd className="font-display text-2xl leading-none tabular-nums">{i.v.toLocaleString("ar-SA")}</dd>
+            <dt className="mt-1 truncate text-xs text-muted-foreground">{i.l}</dt>
+          </div>
         </div>
       ))}
     </dl>
+  );
+}
+
+const CAP = 6;
+function SectionCard({ c, locked }: { c: Card; locked: boolean }) {
+  const [all, setAll] = useState(false);
+  const list = all ? c.features : c.features.slice(0, CAP);
+  const more = c.features.length - CAP;
+  return (
+    <section aria-labelledby={`card-${c.key}`} aria-disabled={locked || undefined}
+      className={"group relative flex flex-col rounded-2xl border bg-card p-4 shadow-sm transition-all duration-200 " + (locked ? "opacity-60" : "hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md")}>
+      <div className="flex items-center gap-3">
+        <span className={"grid size-10 shrink-0 place-items-center rounded-xl transition-colors " + (locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground")}>
+          {locked ? <Lock className="size-5" /> : <c.icon className="size-5" />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 id={`card-${c.key}`} className="truncate font-display text-[15px] leading-tight" title={c.title}>{c.title}</h2>
+          <p className="mt-0.5 flex items-center gap-1.5 text-[11px]">
+            {locked ? <span className="text-muted-foreground">غير مفعّل</span>
+              : c.note ? <><span className="size-1.5 rounded-full bg-warning" /><span className="text-muted-foreground">{c.note}</span></>
+              : <><span className="size-1.5 rounded-full bg-success" /><span className="text-success">متاح</span></>}
+          </p>
+        </div>
+        {!locked && <Link to={c.to} aria-label={c.open} title={c.open} className="grid size-8 shrink-0 place-items-center rounded-full border text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="size-4" /></Link>}
+      </div>
+      <p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-muted-foreground" title={c.desc}>{c.desc}</p>
+      {locked ? <p className="mt-auto pt-3 text-xs text-muted-foreground">علّقه مالك المنصة؛ بياناته محفوظة.</p> : (
+        <div className="mt-3 border-t pt-2.5">
+          <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+            {list.map((f) => (
+              <li key={f.label} className="min-w-0">
+                <Link to={f.to} {...(f.search ? { search: f.search } : {})} title={f.label}
+                  className="flex min-h-7 items-center gap-1.5 rounded-md px-1.5 text-xs transition-colors hover:bg-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <f.icon className="size-3.5 shrink-0 text-primary/70" /><span className="truncate">{f.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {more > 0 && <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="mt-1 px-1.5 text-xs font-semibold text-primary hover:underline">{all ? "عرض أقل" : `+${more} أخرى`}</button>}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -176,48 +222,13 @@ export function OwnerPortal({ orgId }: { orgId: string | null }) {
   const q = useOrgSections(orgId);
   if (q.isLoading) return <LoadingState rows={2} />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
+  const schoolsOn = q.data?.["school_admin"]?.["enabled"] !== false;
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {CARDS.map((c) => {
-        const locked = c.section ? q.data?.[c.section]?.["enabled"] === false : false;
-        return (
-          <section key={c.key} aria-labelledby={`card-${c.key}`} aria-disabled={locked || undefined}
-            className={"group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow hover:shadow-md " + (locked ? "opacity-60" : "")}>
-            <span aria-hidden className={"absolute inset-x-0 top-0 h-1 " + (locked ? "bg-muted" : c.note ? "bg-warning" : "bg-primary")} />
-            <div className="flex items-start gap-3 p-4 pb-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">{locked ? <Lock className="size-5" /> : <c.icon className="size-5" />}</span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <h2 id={`card-${c.key}`} className="font-display text-base leading-tight">{c.title}</h2>
-                  {locked ? <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px]">غير مفعّل</span>
-                    : c.note ? <span className="shrink-0 rounded-full bg-warning/15 px-2 py-0.5 text-[11px]">{c.note}</span>
-                    : <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] text-success"><CheckCircle2 className="size-3" />متاح</span>}
-                </div>
-                <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{c.desc}</p>
-              </div>
-            </div>
-            {c.key === "schools" && !locked && <div className="px-4 pb-3"><SchoolsStats orgId={orgId} /></div>}
-            {!locked && c.features.length > 0 && (
-              <ul className="flex flex-wrap gap-1.5 px-4 pb-3">
-                {c.features.map((f) => (
-                  <li key={f.label}>
-                    <Link to={f.to} {...(f.search ? { search: f.search } : {})} className="inline-flex min-h-8 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs transition-colors hover:border-primary/40 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                      <f.icon className="size-3.5 shrink-0 text-primary" />{f.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="mt-auto border-t bg-secondary/30 px-4 py-2.5">
-              {locked ? <p className="text-xs text-muted-foreground">علّقه مالك المنصة؛ بياناته محفوظة.</p> : (
-                <Link to={c.to} className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  {c.open}<ArrowLeft className="size-4" />
-                </Link>
-              )}
-            </div>
-          </section>
-        );
-      })}
+    <div className="space-y-4">
+      {schoolsOn && <SchoolsStats orgId={orgId} />}
+      <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {CARDS.map((c) => <SectionCard key={c.key} c={c} locked={c.section ? q.data?.[c.section]?.["enabled"] === false : false} />)}
+      </div>
     </div>
   );
 }
