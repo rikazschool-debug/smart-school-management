@@ -10,7 +10,7 @@ import { arabicError, useSession } from "@/lib/session";
 export const Route = createFileRoute("/_authenticated/app/classrooms/")({ component: Page });
 
 /** Section rooms (one per class+section) the caller can open; subject classrooms live inside each. */
-export function useSectionRooms(schoolId: string | null) {
+function useSectionRooms(schoolId: string | null) {
   return useQuery({
     queryKey: ["section-rooms", schoolId],
     enabled: !!schoolId,
@@ -22,7 +22,7 @@ export function useSectionRooms(schoolId: string | null) {
   });
 }
 
-export function useClassrooms(schoolId: string | null) {
+function useClassrooms(schoolId: string | null) {
   return useQuery({
     queryKey: ["classrooms", schoolId],
     enabled: !!schoolId,
@@ -52,7 +52,7 @@ function Page() {
   );
 }
 
-export function ClassroomGrid({ rows }: { rows: Row[] }) {
+function ClassroomGrid({ rows }: { rows: Row[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {rows.map((c) => (
