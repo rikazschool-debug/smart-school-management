@@ -38,6 +38,12 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const [placing, setPlacing] = useState<Row | null>(null);
   const [viewing, setViewing] = useState<Row | null>(null);
   const [guarding, setGuarding] = useState<Row | null>(null);
+  // contract filters list every value present in this school (+ «لا يوجد» for empty)
+  const ctVals = useQuery({ queryKey: ["ct-vals", ctx.schoolId], queryFn: async () => {
+    const { data } = await db.from("students").select("contract_year, contract_status, contract_type").eq("school_id", ctx.schoolId).limit(5000);
+    const opts = (k: string) => [{ value: "__none", label: "لا يوجد" }, ...[...new Set(((data ?? []) as Row[]).map((r) => r[k]).filter((x) => x && x !== "لا يوجد"))].sort().map((x) => ({ value: x as string, label: x as string }))];
+    return { year: opts("contract_year"), status: opts("contract_status"), type: opts("contract_type") };
+  } });
   const ctCan = useQuery({ queryKey: ["ct-can", ctx.schoolId], queryFn: async () => { const { data } = await db.rpc("ct_can", { _school: ctx.schoolId }); return !!data; } });
 
   const link = useMutation({
@@ -73,6 +79,9 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         filters={[
           { key: "status", label: "الحالة", options: STATUS },
           { key: "gender", label: "الجنس", options: [{ value: "male", label: "ذكر" }, { value: "female", label: "أنثى" }] },
+          { key: "contract_year", label: "العام الدراسي (العقد)", options: ctVals.data?.year ?? [{ value: "__none", label: "لا يوجد" }] },
+          { key: "contract_status", label: "حالة العقد", options: ctVals.data?.status ?? [{ value: "__none", label: "لا يوجد" }] },
+          { key: "contract_type", label: "نوع العقد", options: ctVals.data?.type ?? [{ value: "__none", label: "لا يوجد" }] },
           { key: "section", label: "الشعبة", remote: { table: "sections", label: "name" }, path: "enrollments.section_id", inner: "enrollments", extra: { "enrollments.status": "active" } },
         ]}
         canCreate={false}
