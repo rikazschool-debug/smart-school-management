@@ -118,7 +118,7 @@ export function cleanValue(f: HrField, raw: unknown): { v: string; cal?: Cal | n
       const r = parseDate(typeof raw === "number" ? raw : t, f.kind === "docdate");
       return r.ok ? { v: r.date, cal: r.cal } : { v: t, err: `${f.label}: ${r.err}` };
     }
-    case "phone": { if (!t) return { v: "" }; const p = normPhone(t); return p ? { v: p } : { v: t, err: "رقم الجوال غير صحيح (05 أو 9665 أو ‎+9665)" }; }
+    case "phone": { if (!t) return { v: "" }; const p = normPhone(t); return p ? { v: "+" + p } : { v: t, err: "رقم الجوال غير صحيح (05 أو 9665 أو ‎+9665)" }; }
     case "email": return !t || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t) ? { v: t } : { v: t, err: "بريد غير صحيح" };
     case "gender": { const g = parseGender(t); return g === null ? { v: t, err: "الجنس: ذكر أو أنثى" } : { v: g }; }
     case "iban": { const s = cleanIban(t); return !s || ibanOk(s) ? { v: s } : { v: s, err: `${f.label} غير صحيح` }; }

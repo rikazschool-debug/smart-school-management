@@ -15,7 +15,7 @@ describe("employee data rules", () => {
     expect(fieldForHeader("الفرع")).toBe("school");
   });
   it("normalises Saudi phones from 05, 9665 and +9665", () => {
-    for (const p of ["0501234567", "966501234567", "+966501234567"]) expect(cleanValue(F("phone"), p).v).toBe("966501234567");
+    for (const p of ["0501234567", "966501234567", "+966501234567"]) expect(cleanValue(F("phone"), p).v).toBe("+966501234567");
     expect(cleanValue(F("phone"), "12345").err).toBeTruthy();
   });
   it("keeps identifiers as text with leading zeros", () => {
