@@ -12336,6 +12336,61 @@ export type Database = {
           },
         ]
       }
+      mq_ticket_pending: {
+        Row: {
+          call_id: string | null
+          created_at: string
+          created_by: string
+          linked_at: string | null
+          org_id: string
+          phone_norm: string | null
+          school_id: string
+          ticket_id: string
+        }
+        Insert: {
+          call_id?: string | null
+          created_at?: string
+          created_by: string
+          linked_at?: string | null
+          org_id: string
+          phone_norm?: string | null
+          school_id: string
+          ticket_id: string
+        }
+        Update: {
+          call_id?: string | null
+          created_at?: string
+          created_by?: string
+          linked_at?: string | null
+          org_id?: string
+          phone_norm?: string | null
+          school_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_ticket_pending_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "mq_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mq_ticket_pending_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mq_ticket_pending_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mt_bus_events: {
         Row: {
           action: string
@@ -19074,6 +19129,7 @@ export type Database = {
         }
         Returns: string
       }
+      _support_assign_new_ok: { Args: { _school: string }; Returns: boolean }
       _support_assign_target: {
         Args: {
           _uid: string
@@ -19126,6 +19182,21 @@ export type Database = {
       _support_ok: {
         Args: { _action: string; _school: string }
         Returns: boolean
+      }
+      _support_open_core: {
+        Args: {
+          _assignee: string
+          _body: string
+          _category: string
+          _client_key: string
+          _dept: string
+          _files: string[]
+          _priority: string
+          _school: string
+          _title: string
+          _via_call: boolean
+        }
+        Returns: string
       }
       _support_policy: {
         Args: { _org: string; _scope: string }
@@ -21981,12 +22052,51 @@ export type Database = {
         }
         Returns: Json
       }
+      mq_live_ticket: {
+        Args: {
+          _assignee?: string
+          _body: string
+          _call?: string
+          _category?: string
+          _client_key?: string
+          _org: string
+          _phone?: string
+          _priority?: string
+          _school: string
+          _title: string
+        }
+        Returns: Json
+      }
       mq_manage_check: { Args: { _org: string }; Returns: boolean }
       mq_number_map: {
         Args: { _label: string; _number: string; _org: string; _school: string }
         Returns: undefined
       }
+      mq_pending_tickets: {
+        Args: { _call?: string; _org: string }
+        Returns: {
+          created_at: string
+          mine: boolean
+          phone: string
+          ref: string
+          school: string
+          ticket_id: string
+          title: string
+        }[]
+      }
       mq_rec_ticket: { Args: { _call: string; _mode: string }; Returns: string }
+      mq_recent_calls: {
+        Args: { _minutes?: number; _org: string }
+        Returns: {
+          contact_label: string
+          direction: string
+          id: string
+          other_number: string
+          school_id: string
+          started_at: string
+          state: string
+        }[]
+      }
       mq_report: {
         Args: {
           _agent?: string
@@ -21998,6 +22108,7 @@ export type Database = {
         Returns: Json
       }
       mq_settings: { Args: { _org: string }; Returns: Json }
+      mq_ticket_call_state: { Args: { _ticket: string }; Returns: string }
       mq_ticket_search: { Args: { _id: string; _q: string }; Returns: Json }
       mq_view_check: { Args: { _org: string }; Returns: boolean }
       mt_action: {
@@ -23224,6 +23335,16 @@ export type Database = {
         Returns: {
           full_name: string
           id: string
+        }[]
+      }
+      support_new_assignees: {
+        Args: { _q?: string; _school: string }
+        Returns: {
+          dept_name: string
+          name: string
+          role: string
+          school_name: string
+          user_id: string
         }[]
       }
       support_new_candidates: {
