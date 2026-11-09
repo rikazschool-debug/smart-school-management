@@ -1,4 +1,5 @@
 import { useSchoolPerms } from "@/lib/school-perms";
+import { PresenceBadge, usePresenceConv, usePresenceMyConvs, type Presence } from "@/lib/presence";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -82,6 +83,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
   const [child, setChild] = useState("");
   const { user } = useSession();
   const school = allSchools ? null : ctx.schoolId;
+  const pres = usePresenceMyConvs(school);
   const convs = useQuery({
     queryKey: ["convs", school],
     queryFn: async () => {
@@ -166,6 +168,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="flex w-full min-w-0 items-center gap-2">
                       <span className={`min-w-0 flex-1 truncate ${c["unread"] ? "font-bold" : "font-medium"}`}>{c["title"]}</span>
+                      {c["kind"] !== "group" && <PresenceBadge compact p={pres.data?.get(c["id"])} />}
                       <span className="shrink-0 text-[11px] text-muted-foreground">{timeLabel(c["last_at"])}</span>
                     </span>
                     <span className="truncate text-xs text-muted-foreground">

@@ -14904,6 +14904,30 @@ export type Database = {
           },
         ]
       }
+      presence_sessions: {
+        Row: {
+          ended_at: string | null
+          last_beat: string
+          started_at: string
+          tab_key: string
+          user_id: string
+        }
+        Insert: {
+          ended_at?: string | null
+          last_beat?: string
+          started_at?: string
+          tab_key: string
+          user_id: string
+        }
+        Update: {
+          ended_at?: string | null
+          last_beat?: string
+          started_at?: string
+          tab_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_path: string | null
@@ -16776,6 +16800,21 @@ export type Database = {
           role?: string
           school_id?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_last_seen: {
+        Row: {
+          last_seen: string
+          user_id: string
+        }
+        Insert: {
+          last_seen: string
+          user_id: string
+        }
+        Update: {
+          last_seen?: string
           user_id?: string
         }
         Relationships: []
@@ -19044,6 +19083,7 @@ export type Database = {
         Returns: string
       }
       _pp_tags_manager: { Args: { _org: string }; Returns: boolean }
+      _presence_online: { Args: { _uid: string }; Returns: boolean }
       _provision_link: {
         Args: {
           _actor: string
@@ -21506,6 +21546,10 @@ export type Database = {
         }
         Returns: string
       }
+      hr_employee_dupcheck: {
+        Args: { _nid: string; _no: string; _org: string }
+        Returns: Json
+      }
       hr_employee_get: { Args: { _id: string }; Returns: Json }
       hr_employee_link_guardian: {
         Args: {
@@ -22846,6 +22890,32 @@ export type Database = {
           dst_path: string
           file_id: string
           src_path: string
+        }[]
+      }
+      presence_beat: { Args: { _tab: string }; Returns: undefined }
+      presence_conv: {
+        Args: { _conv: string }
+        Returns: {
+          last_seen: string
+          online: boolean
+          user_id: string
+        }[]
+      }
+      presence_end: { Args: { _tab: string }; Returns: undefined }
+      presence_my_convs: {
+        Args: { _school: string }
+        Returns: {
+          conversation_id: string
+          last_seen: string
+          online: boolean
+        }[]
+      }
+      presence_org: {
+        Args: { _org: string }
+        Returns: {
+          last_seen: string
+          online: boolean
+          user_id: string
         }[]
       }
       present_now: {

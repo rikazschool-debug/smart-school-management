@@ -198,3 +198,6 @@ Status: implemented · server-tested · browser-tested with simulated location �
 - Server: scripts/hr-p10-e2e.ts 75/75. Regression: hr-reports 26/26, hr-pay 81/81, hr-leave 54/54, hr-self 31/31, hr-e2e 25/25, hr-import 11/11.
 - Browser: scripts/hp10-journey.py 12/12 (employee phone 390px request → manager → HR; own address; opening file with errors blocked, clean file saved, approved by a second person, re-upload skipped, balances show opening).
 - Still blocked: R25/R26 (finance link). Real-device phone/fingerprint tests are not done in this sandbox.
+
+## 2026-11-09 — Add-employee tabs
+- 8 approved tabs; review step checks required fields and employee no./ID duplicates (hr_employee_dupcheck). Browser: scripts/hrtabs-journey.py 29/29.

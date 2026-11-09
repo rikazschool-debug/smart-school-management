@@ -2,36 +2,51 @@
 // Same labels, groups, sensitivity and validation everywhere.
 import { normPhone } from "@/lib/people-import";
 
-export type HrGroup = "basic" | "assign" | "docs" | "qual" | "pay";
+export type HrGroup = "personal" | "docs" | "job" | "qual" | "contact" | "pay";
+/** Order and names = the approved «إضافة موظف» tabs (1–6); tabs 7 (account) and 8 (review) have no data fields. */
 export const HR_GROUPS: { key: HrGroup; label: string }[] = [
-  { key: "basic", label: "البيانات الأساسية" },
-  { key: "assign", label: "التعيين والإشراف" },
+  { key: "personal", label: "البيانات الشخصية" },
   { key: "docs", label: "الهوية والوثائق" },
+  { key: "job", label: "البيانات الوظيفية" },
   { key: "qual", label: "المؤهلات" },
-  { key: "pay", label: "بيانات الدفع" },
+  { key: "contact", label: "بيانات التواصل" },
+  { key: "pay", label: "البيانات البنكية والدفع" },
 ];
+/** fixed choices shown as a list in the form (older free-text values stay selectable) */
+export const HR_OPTIONS: Record<string, string[]> = {
+  nationality: ["سعودي", "مصري", "سوداني", "يمني", "هندي", "بنقلاديشي", "باكستاني", "بدون"],
+  marital_status: ["متزوج", "غير متزوج"],
+  religion: ["مسلم", "غير مسلم"],
+  pay_method: ["تحويل بنكي", "نقداً", "وسيط"],
+};
+/** the intermediary (وسيط) bank fields are open only when the payment method is «وسيط» */
+export const MID_KEYS = ["mid_name", "mid_id", "mid_bank", "mid_iban"];
+export const isMidPay = (v: string | undefined) => norm(v) === norm("وسيط");
+/** a fixed non-intermediary method (bank transfer / cash) was picked → intermediary data is not used */
+export const isNonMidPay = (v: string | undefined) => !!v && HR_OPTIONS["pay_method"]!.some((o) => norm(o) === norm(v)) && !isMidPay(v);
+export const NAME_EN_MAX = 35;
 export type HrKind = "text" | "date" | "docdate" | "phone" | "email" | "gender" | "iban" | "digits" | "school" | "category" | "manager_no" | "idtype" | "check";
 /** where: base = hr_employees column (hr_employee_save); prof = hr_employee_profile (hr_employee_profile_save); asg = primary assignment */
-export type HrField = { key: string; label: string; group: HrGroup; kind: HrKind; where: "base" | "prof" | "asg" | "meta"; sensitive?: boolean; required?: boolean; template?: boolean; syn: string[] };
+export type HrField = { key: string; label: string; group: HrGroup; kind: HrKind; where: "base" | "prof" | "asg" | "meta"; sensitive?: boolean; required?: boolean; template?: boolean; max?: number; syn: string[] };
 
 // Order = the 34-column template (after «#»), then Rikaz-only fields.
 export const HR_FIELDS: HrField[] = [
-  { key: "employee_no", label: "الرقم الوظيفي", group: "basic", kind: "text", where: "base", template: true, syn: ["رقم الموظف", "employee no", "employee number"] },
-  { key: "full_name", label: "اسم الموظف", group: "basic", kind: "text", where: "base", required: true, template: true, syn: ["الاسم الكامل", "الاسم الرسمي الكامل", "الاسم", "name", "full name"] },
-  { key: "name_en", label: "الاسم الكامل - انجليزي", group: "basic", kind: "text", where: "prof", template: true, syn: ["الاسم الانجليزي", "الاسم بالانجليزي", "الاسم الكامل انجليزي", "english name"] },
-  { key: "job_title", label: "المسمى الوظيفي", group: "assign", kind: "text", where: "base", template: true, syn: ["الوظيفة", "job", "job title"] },
-  { key: "school", label: "الفرع", group: "assign", kind: "school", where: "meta", required: true, template: true, syn: ["المدرسة", "school", "branch"] },
-  { key: "department", label: "القسم", group: "assign", kind: "text", where: "asg", template: true, syn: ["department"] },
-  { key: "team", label: "الفريق", group: "assign", kind: "text", where: "prof", template: true, syn: ["team"] },
-  { key: "manager_name", label: "اسم المسؤول المباشر", group: "assign", kind: "text", where: "meta", template: true, syn: ["المسؤول المباشر", "المدير المباشر", "اسم المدير المباشر"] },
-  { key: "manager_no", label: "رقم المسؤول المباشر", group: "assign", kind: "manager_no", where: "meta", template: true, syn: ["الرقم الوظيفي للمسؤول المباشر", "رقم المدير المباشر"] },
-  { key: "phone", label: "رقم الجوال", group: "basic", kind: "phone", where: "base", template: true, syn: ["الجوال", "الهاتف", "phone", "mobile"] },
-  { key: "email", label: "البريد الإلكتروني", group: "basic", kind: "email", where: "base", template: true, syn: ["البريد", "البريد الوظيفي", "email"] },
-  { key: "gender", label: "الجنس", group: "basic", kind: "gender", where: "base", template: true, syn: ["gender"] },
-  { key: "marital_status", label: "الحالة الاجتماعية", group: "basic", kind: "text", where: "prof", template: true, syn: ["marital status"] },
-  { key: "nationality", label: "الجنسية", group: "docs", kind: "text", where: "base", sensitive: true, template: true, syn: ["nationality"] },
-  { key: "address", label: "العنوان", group: "basic", kind: "text", where: "prof", sensitive: true, template: true, syn: ["address"] },
-  { key: "birth_date", label: "تاريخ الميلاد", group: "docs", kind: "date", where: "base", sensitive: true, template: true, syn: ["الميلاد", "birth date"] },
+  { key: "employee_no", label: "الرقم الوظيفي", group: "job", kind: "text", where: "base", template: true, syn: ["رقم الموظف", "employee no", "employee number"] },
+  { key: "full_name", label: "اسم الموظف", group: "personal", kind: "text", where: "base", required: true, template: true, syn: ["الاسم الكامل", "الاسم الرسمي الكامل", "الاسم", "name", "full name"] },
+  { key: "name_en", label: "الاسم الكامل - انجليزي", group: "personal", kind: "text", where: "prof", template: true, max: NAME_EN_MAX, syn: ["الاسم الانجليزي", "الاسم بالانجليزي", "الاسم الكامل انجليزي", "english name"] },
+  { key: "job_title", label: "المسمى الوظيفي", group: "job", kind: "text", where: "base", template: true, syn: ["الوظيفة", "job", "job title"] },
+  { key: "school", label: "الفرع", group: "job", kind: "school", where: "meta", required: true, template: true, syn: ["المدرسة", "school", "branch"] },
+  { key: "department", label: "القسم", group: "job", kind: "text", where: "asg", template: true, syn: ["department"] },
+  { key: "team", label: "الفريق", group: "job", kind: "text", where: "prof", template: true, syn: ["team"] },
+  { key: "manager_name", label: "اسم المسؤول المباشر", group: "job", kind: "text", where: "meta", template: true, syn: ["المسؤول المباشر", "المدير المباشر", "اسم المدير المباشر"] },
+  { key: "manager_no", label: "رقم المسؤول المباشر", group: "job", kind: "manager_no", where: "meta", template: true, syn: ["الرقم الوظيفي للمسؤول المباشر", "رقم المدير المباشر"] },
+  { key: "phone", label: "رقم الجوال", group: "contact", kind: "phone", where: "base", template: true, syn: ["الجوال", "الهاتف", "phone", "mobile"] },
+  { key: "email", label: "البريد الإلكتروني", group: "contact", kind: "email", where: "base", template: true, syn: ["البريد", "البريد الوظيفي", "email"] },
+  { key: "gender", label: "الجنس", group: "personal", kind: "gender", where: "base", template: true, syn: ["gender"] },
+  { key: "marital_status", label: "الحالة الاجتماعية", group: "personal", kind: "text", where: "prof", template: true, syn: ["marital status"] },
+  { key: "nationality", label: "الجنسية", group: "personal", kind: "text", where: "base", sensitive: true, template: true, syn: ["nationality"] },
+  { key: "address", label: "العنوان", group: "personal", kind: "text", where: "prof", sensitive: true, template: true, syn: ["address"] },
+  { key: "birth_date", label: "تاريخ الميلاد", group: "personal", kind: "date", where: "base", sensitive: true, template: true, syn: ["الميلاد", "birth date"] },
   { key: "national_id", label: "رقم الهوية", group: "docs", kind: "digits", where: "base", sensitive: true, template: true, syn: ["الهوية", "رقم الهوية / الإقامة", "رقم الاقامة", "السجل المدني", "id"] },
   { key: "id_expiry", label: "تاريخ إنتهاء الهوية", group: "docs", kind: "docdate", where: "prof", sensitive: true, template: true, syn: ["تاريخ انتهاء الهوية", "انتهاء الهوية"] },
   { key: "passport_no", label: "رقم جواز السفر", group: "docs", kind: "text", where: "prof", sensitive: true, template: true, syn: ["رقم الجواز", "الجواز", "passport"] },
@@ -41,10 +56,10 @@ export const HR_FIELDS: HrField[] = [
   { key: "has_licence", label: "لديه رخصة قيادة", group: "docs", kind: "check", where: "prof", syn: ["رخصة القيادة", "driving licence"] },
   { key: "licence_type", label: "نوع الرخصة", group: "docs", kind: "text", where: "prof", syn: ["licence type"] },
   { key: "licence_expiry", label: "تاريخ انتهاء الرخصة", group: "docs", kind: "docdate", where: "prof", syn: ["انتهاء الرخصة", "licence expiry date"] },
-  { key: "religion", label: "الديانة", group: "basic", kind: "text", where: "prof", template: true, syn: ["الدين", "religion"] },
+  { key: "religion", label: "الديانة", group: "personal", kind: "text", where: "prof", template: true, syn: ["الدين", "religion"] },
   { key: "education", label: "التعليم", group: "qual", kind: "text", where: "prof", template: true, syn: ["المؤهل", "المؤهل العلمي", "education"] },
   { key: "specialization", label: "التخصص", group: "qual", kind: "text", where: "prof", template: true, syn: ["specialization", "major"] },
-  { key: "assignment_note", label: "الإسناد", group: "assign", kind: "text", where: "prof", template: true, syn: ["الاسناد"] },
+  { key: "assignment_note", label: "الإسناد", group: "job", kind: "text", where: "prof", template: true, syn: ["الاسناد"] },
   { key: "pay_method", label: "طريقة الدفع", group: "pay", kind: "text", where: "prof", template: true, syn: ["payment method"] },
   { key: "iban", label: "آيبان الحساب البنكي", group: "pay", kind: "iban", where: "prof", sensitive: true, template: true, syn: ["الايبان", "رقم الايبان", "iban"] },
   { key: "bank_name", label: "اسم البنك", group: "pay", kind: "text", where: "prof", template: true, syn: ["البنك", "bank"] },
@@ -57,9 +72,9 @@ export const HR_FIELDS: HrField[] = [
   // Rikaz-only (old templates / form)
   { key: "id_type", label: "نوع الهوية", group: "docs", kind: "idtype", where: "prof", sensitive: true, syn: ["id type"] },
   { key: "id_version", label: "رقم النسخة", group: "docs", kind: "text", where: "prof", sensitive: true, syn: ["رقم نسخة الهوية", "id version", "id version number"] },
-  { key: "display_name", label: "الاسم المعروض", group: "basic", kind: "text", where: "base", syn: ["اسم العرض", "display name"] },
-  { key: "category", label: "التصنيف الوظيفي", group: "assign", kind: "category", where: "meta", syn: ["التصنيف", "category"] },
-  { key: "hire_date", label: "تاريخ المباشرة", group: "assign", kind: "date", where: "base", syn: ["تاريخ التعيين", "hire date"] },
+  { key: "display_name", label: "الاسم المعروض", group: "personal", kind: "text", where: "base", syn: ["اسم العرض", "display name"] },
+  { key: "category", label: "التصنيف الوظيفي", group: "job", kind: "category", where: "meta", syn: ["التصنيف", "category"] },
+  { key: "hire_date", label: "تاريخ المباشرة", group: "job", kind: "date", where: "base", syn: ["تاريخ التعيين", "hire date"] },
 ];
 export const TEMPLATE_HEAD = ["#", ...HR_FIELDS.filter((f) => f.template).map((f) => f.label)];
 export const PROF_KEYS = HR_FIELDS.filter((f) => f.where === "prof").map((f) => f.key);
@@ -132,7 +147,7 @@ export function cleanValue(f: HrField, raw: unknown): { v: string; cal?: Cal | n
     case "idtype": { if (!t) return { v: "" }; const k = ID_TYPES[t] ? t : Object.keys(ID_TYPES).find((x) => norm(ID_TYPES[x]) === norm(t)); return k ? { v: k } : { v: t, err: "نوع الهوية غير معروف" }; }
     case "check": { if (!t) return { v: "" }; return ["yes", "نعم", "1", "true"].includes(norm(t)) ? { v: "yes" } : ["no", "لا", "0", "false"].includes(norm(t)) ? { v: "" } : { v: t, err: `${f.label}: نعم أو لا` }; }
     case "digits": { const s = t.replace(/\s/g, ""); return !s || /^\d{5,20}$/.test(s) ? { v: s } : { v: s, err: `${f.label}: أرقام فقط (5–20)` }; }
-    default: return t.length > 300 ? { v: t, err: `${f.label} طويل` } : { v: t };
+    default: return f.max && t.length > f.max ? { v: t, err: `${f.label}: لا يزيد عن ${f.max} خانة` } : t.length > 300 ? { v: t, err: `${f.label} طويل` } : { v: t };
   }
 }
 export const ID_TYPES: Record<string, string> = { national: "هوية وطنية", resident: "هوية مقيم", gcc: "هوية خليجية", border: "رقم حدود", none: "لا يوجد" };

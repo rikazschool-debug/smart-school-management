@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { PresenceBadge, usePresenceConv, usePresenceMyConvs, type Presence } from "@/lib/presence";
 import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { useState } from "react";
@@ -38,6 +39,7 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
       return data as Row[];
     },
   });
+  const pres = usePresenceConv(convId);
   const audit = useQuery({
     queryKey: ["audit", convId],
     queryFn: async () => {
@@ -86,7 +88,7 @@ export function GroupPanel({ convId, myRole, onChanged }: { convId: string; myRo
         <ul className="divide-y rounded-xl border bg-card">
           {(people.data ?? []).map((p) => (
             <li key={p["user_id"]} className="flex flex-wrap items-center gap-2 p-2">
-              <span className="min-w-0 flex-1 truncate">{p["full_name"]} {p["user_id"] === user.id && "(أنت)"}</span>
+              <span className="flex min-w-0 flex-1 items-center gap-2"><span className="truncate">{p["full_name"]} {p["user_id"] === user.id && "(أنت)"}</span><PresenceBadge compact p={pres.data?.get(p["user_id"])} /></span>
               <span className="text-xs text-muted-foreground">{p["role"] === "owner" ? "المالك" : p["role"] === "moderator" ? "مشرف" : "عضو"}{p["source"] === "derived" ? " • تلقائي" : ""}</span>
               {isOwner && p["role"] !== "owner" && (
                 <>

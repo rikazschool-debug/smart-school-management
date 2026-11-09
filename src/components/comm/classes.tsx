@@ -1,4 +1,5 @@
 import { askText } from "@/components/confirm";
+import { PresenceBadge, usePresenceConv, usePresenceMyConvs, type Presence } from "@/lib/presence";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { selectCls } from "@/components/ui/native-select";
 import { useEffect, useMemo, useState } from "react";
@@ -124,6 +125,7 @@ function Members({ conv, onClose, onChanged }: { conv: string; onClose: () => vo
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
+  const pres = usePresenceConv(conv);
   const m = useQuery({ queryKey: ["cg-members", conv], queryFn: async () => { const { data, error } = await db.rpc("class_group_members", { _conv: conv }); if (error) throw error; return data as Row[]; } });
   const cand = useQuery({ queryKey: ["cg-cand", conv, q], enabled: adding, queryFn: async () => ((await db.rpc("class_group_candidates", { _conv: conv, _q: q })).data ?? []) as Row[] });
   const run = async (fn: string, args: Record<string, unknown>, ok: string) => {
@@ -165,7 +167,7 @@ function Members({ conv, onClose, onChanged }: { conv: string; onClose: () => vo
             {active.map((x) => (
               <li key={x["user_id"]} className="space-y-1 p-3 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate font-medium">{x["full_name"]}</span>
+                  <span className="flex min-w-0 flex-1 items-center gap-2"><span className="truncate font-medium">{x["full_name"]}</span><PresenceBadge compact p={pres.data?.get(x["user_id"])} /></span>
                   {x["role"] === "moderator" && <span className="rounded-full bg-primary/10 px-2 text-[10px] text-primary">مشرف</span>}
                 </div>
                 <div className="flex flex-wrap gap-1">{(x["reasons"] as string[]).map((r) => <span key={r} className="rounded bg-muted px-1.5 text-[10px]">{REASON[r] ?? r}</span>)}</div>

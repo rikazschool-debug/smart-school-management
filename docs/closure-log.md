@@ -755,3 +755,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-09 — Internal ticket assignment + in-call tickets
 - support-assign-e2e 14/14. Voice continuity during save not tested (needs an authorised test call).
+- 2026-11-09 Phone calls inside support only (sidebar group + owner support card); presence (online/last seen, 30 s beat, 90 s timeout, multi-tab, logout ends) in owner members + authorized chats: presence-e2e 19/19, two-account live browser check.
+- 2026-11-09 «إضافة موظف» in the approved 8 tabs (personal, ID/docs, job, qualifications, contact, bank/payment, account, review) with fixed lists, frozen licence/intermediary fields, required-field list and employee no./ID duplicate check (hr_employee_dupcheck): hrtabs-journey 29/29, hr-fields/hr-bilingual unit 13/13.

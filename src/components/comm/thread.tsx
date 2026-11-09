@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { PresenceBadge, usePresenceConv, usePresenceMyConvs, type Presence } from "@/lib/presence";
 import { ask, askText } from "@/components/confirm";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -99,6 +100,8 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   const canReply = conv["allow_replies"] !== false || isMod;
   const pinned = list.filter((m) => m["pinned_at"] && !m["deleted_at"]);
   const others = (people.data ?? []).filter((p) => p["user_id"] !== user.id);
+  const pres = usePresenceConv(isGroup ? null : id);
+  const peer: Presence | undefined = !isGroup && pres.data ? (() => { const ps = others.map((o) => pres.data!.get(o["user_id"])).filter(Boolean) as Presence[]; return ps.length ? { online: ps.some((x) => x.online), last_seen: ps.map((x) => x.last_seen).filter(Boolean).sort().pop() ?? null } : undefined; })() : undefined;
 
   async function send(l: Local) {
     setLocals((x) => [...x.filter((y) => y.clientId !== l.clientId), { ...l, status: "sending" }]);
@@ -126,7 +129,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
         <Button variant="ghost" size="icon" className="md:hidden" aria-label="رجوع للقائمة" onClick={onBack}><ArrowRight className="size-5" /></Button>
         <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary font-bold text-secondary-foreground">{String(conv["title"] ?? "؟").trim().charAt(0)}</span>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-bold leading-tight">{conv["title"]}</h2>
+          <h2 className="flex min-w-0 items-center gap-2 font-bold leading-tight"><span className="truncate">{conv["title"]}</span>{peer && <PresenceBadge p={peer} />}</h2>
           <p className="truncate text-xs text-muted-foreground">
             {conv["group_type"] === "section" || conv["group_type"] === "class" ? "مجموعة الفصل" : KIND_LABEL[conv["kind"]]}{conv["section_label"] && conv["kind"] === "student" ? ` • ${conv["section_label"]}` : ""}{conv["student_name"] && conv["kind"] !== "student" ? ` • بشأن الطالب: ${conv["student_name"]}` : ""}{conv["counterpart"] ? ` • ${conv["counterpart"]}` : ""}{conv["school_name"] ? ` • ${conv["school_name"]}` : " • عابرة للفروع"}
           </p>
