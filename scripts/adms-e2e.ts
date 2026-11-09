@@ -66,7 +66,6 @@ try {
   const tIn = local(3), tOut = local(1);
   const body = `${eNo}\t${tIn}\t0\t1\t0\n${eNo}\t${tOut}\t1\t1\t0\n77777\t${tIn}\t0\t1\t0\n${gNo}\t${tIn}\t0\t1\t0\n`;
   const r1 = await post(18092, SN, "ATTLOG", body);
-  if (process.env.DEBUG) { const x = await admin.rpc("_hr_att_ingest2" as any, { _dev: dev.id, _sn: SN, _rows: [{ employee_no: "77777", at: new Date().toISOString(), ref: "dbg1" }], _info: {} }); console.log("DBG", x.error?.message, x.data); }
   check("device push accepted", r1.status === 200 && (await r1.text()) === "OK: 4", r1.status);
   const punches = async (emp: string) => (await admin.from("hr_att_punches").select("at,source,device_id").eq("employee_id", emp)).data ?? [];
   const pe = await punches(E);
