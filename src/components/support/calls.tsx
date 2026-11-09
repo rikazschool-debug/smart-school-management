@@ -15,29 +15,17 @@ import { arabicError } from "@/lib/session";
 import { exportXlsx } from "@/lib/export";
 import { mqSaveCreds, mqSync, mqTest } from "@/lib/maqsam.functions";
 import { PRIO, useCategories } from "@/components/support/support";
+import { MQ_LABEL, useMqCaps, mqSections, type MqCaps, type MqSection } from "@/components/support/calls-caps";
+export { MQ_LABEL, useMqCaps, mqSections, type MqCaps, type MqSection };
 import { AssigneePicker, type Assignee } from "@/components/support/assignee-picker";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
-export type MqSection = "live" | "calls" | "followups" | "reports" | "settings";
-export type MqCaps = { enabled: boolean; owner?: boolean; manage?: boolean; own?: boolean; link?: boolean; listen?: boolean; download?: boolean; export?: boolean;
-  schools?: { id: string; name: string }[]; link_schools?: { id: string; name: string }[]; agents?: { id: string; name: string }[]; sync?: { at: string | null; ok: boolean | null }; dialer_url?: string | null };
-
 const STATE: Record<string, string> = { initiated: "بدأت", in_progress: "جارية", completed: "مكتملة", busy: "مشغول", no_answer: "لم يُرد", canceled: "ملغاة", failed: "فشلت",
   aborted: "قُطعت", blocked: "محظورة", serviced: "تم الرد", abandoned: "تركها المتصل", dropped: "انقطعت", out_of_hours: "خارج الدوام" };
 const OUTCOMES = ["تم الحل في المكالمة", "يحتاج متابعة", "طلب معاودة الاتصال", "لم يُرد", "رقم خاطئ", "تحويل إلى قسم آخر"];
 const dur = (s: number) => `${Math.floor((s ?? 0) / 60)}:${String((s ?? 0) % 60).padStart(2, "0")}`;
 const rpc = async (fn: string, args: Record<string, unknown>) => { const { data, error } = await db.rpc(fn, args); if (error) throw error; return data; };
-
-export function useMqCaps(orgId: string | null) {
-  return useQuery({ queryKey: ["mq-caps", orgId], enabled: !!orgId, staleTime: 60_000, queryFn: async () => (await rpc("mq_caps", { _org: orgId })) as MqCaps });
-}
-
-export const MQ_LABEL: Record<MqSection, string> = { live: "لوحة الاتصال", calls: "المكالمات", followups: "المتابعات", reports: "تقارير الاتصال", settings: "إعدادات Maqsam" };
-export function mqSections(c: MqCaps): MqSection[] {
-  if (!c.enabled) return c.owner ? ["settings"] : [];
-  return ["live", "calls", "followups", ...(c.export ? (["reports"] as const) : []), ...(c.owner ? (["settings"] as const) : [])];
-}
 
 function Dir({ r }: { r: Row }) {
   if (r.missed) return <span className="inline-flex items-center gap-1 text-destructive"><PhoneMissed className="size-4" /> فائتة</span>;
