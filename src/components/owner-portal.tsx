@@ -162,9 +162,9 @@ function SchoolsStats({ orgId }: { orgId: string | null }) {
     { v: students, l: "طالب", icon: UserPlus },
   ];
   return (
-    <dl className="grid grid-cols-2 overflow-hidden rounded-2xl border bg-card sm:grid-cols-4 sm:divide-x sm:divide-x-reverse">
+    <dl className="grid grid-cols-2 overflow-hidden rounded-2xl border bg-card sm:grid-cols-4">
       {items.map((i) => (
-        <div key={i.l} className="flex items-center gap-3 px-4 py-3">
+        <div key={i.l} className="flex items-center gap-3 px-4 py-3 sm:[&:not(:first-child)]:border-s">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><i.icon className="size-5" /></span>
           <div className="min-w-0">
             <dd className="font-display text-2xl leading-none tabular-nums">{i.v}</dd>
