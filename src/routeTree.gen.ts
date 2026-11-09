@@ -89,6 +89,7 @@ import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './route
 import { Route as ApiPublicAdmissionsWordpressRouteImport } from './routes/api/public/admissions/wordpress'
 import { Route as ApiPublicAuthSendSmsRouteImport } from './routes/api/public/auth/send-sms'
 import { Route as ApiPublicHrAttendanceRouteImport } from './routes/api/public/hr/attendance'
+import { Route as ApiPublicMaqsamRecordingRouteImport } from './routes/api/public/maqsam/recording'
 import { Route as ApiPublicWatiWebhookRouteImport } from './routes/api/public/wati/webhook'
 import { Route as AuthenticatedAppAdminMeetingsIndexRouteImport } from './routes/_authenticated/app/admin.meetings.index'
 import { Route as AuthenticatedAppAdminMeetingsIdRouteImport } from './routes/_authenticated/app/admin.meetings.$id'
@@ -549,6 +550,12 @@ const ApiPublicHrAttendanceRoute = ApiPublicHrAttendanceRouteImport.update({
   path: '/api/public/hr/attendance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMaqsamRecordingRoute =
+  ApiPublicMaqsamRecordingRouteImport.update({
+    id: '/api/public/maqsam/recording',
+    path: '/api/public/maqsam/recording',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWatiWebhookRoute = ApiPublicWatiWebhookRouteImport.update({
   id: '/api/public/wati/webhook',
   path: '/api/public/wati/webhook',
@@ -673,6 +680,7 @@ export interface FileRoutesByFullPath {
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
+  '/api/public/maqsam/recording': typeof ApiPublicMaqsamRecordingRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
@@ -761,6 +769,7 @@ export interface FileRoutesByTo {
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
+  '/api/public/maqsam/recording': typeof ApiPublicMaqsamRecordingRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
@@ -852,6 +861,7 @@ export interface FileRoutesById {
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
+  '/api/public/maqsam/recording': typeof ApiPublicMaqsamRecordingRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
@@ -943,6 +953,7 @@ export interface FileRouteTypes {
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/hr/attendance'
+    | '/api/public/maqsam/recording'
     | '/api/public/wati/webhook'
     | '/app/admin/'
     | '/app/classrooms/'
@@ -1031,6 +1042,7 @@ export interface FileRouteTypes {
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/hr/attendance'
+    | '/api/public/maqsam/recording'
     | '/api/public/wati/webhook'
     | '/app/admin'
     | '/app/classrooms'
@@ -1121,6 +1133,7 @@ export interface FileRouteTypes {
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/hr/attendance'
+    | '/api/public/maqsam/recording'
     | '/api/public/wati/webhook'
     | '/_authenticated/app/admin/'
     | '/_authenticated/app/classrooms/'
@@ -1146,6 +1159,7 @@ export interface RootRouteChildren {
   ApiPublicAdmissionsWordpressRoute: typeof ApiPublicAdmissionsWordpressRoute
   ApiPublicAuthSendSmsRoute: typeof ApiPublicAuthSendSmsRoute
   ApiPublicHrAttendanceRoute: typeof ApiPublicHrAttendanceRoute
+  ApiPublicMaqsamRecordingRoute: typeof ApiPublicMaqsamRecordingRoute
   ApiPublicWatiWebhookRoute: typeof ApiPublicWatiWebhookRoute
 }
 
@@ -1711,6 +1725,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHrAttendanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/maqsam/recording': {
+      id: '/api/public/maqsam/recording'
+      path: '/api/public/maqsam/recording'
+      fullPath: '/api/public/maqsam/recording'
+      preLoaderRoute: typeof ApiPublicMaqsamRecordingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/wati/webhook': {
       id: '/api/public/wati/webhook'
       path: '/api/public/wati/webhook'
@@ -1960,6 +1981,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAdmissionsWordpressRoute: ApiPublicAdmissionsWordpressRoute,
   ApiPublicAuthSendSmsRoute: ApiPublicAuthSendSmsRoute,
   ApiPublicHrAttendanceRoute: ApiPublicHrAttendanceRoute,
+  ApiPublicMaqsamRecordingRoute: ApiPublicMaqsamRecordingRoute,
   ApiPublicWatiWebhookRoute: ApiPublicWatiWebhookRoute,
 }
 export const routeTree = rootRouteImport
