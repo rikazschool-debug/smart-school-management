@@ -17,7 +17,7 @@ export function ManagerPick({ row, value, opts, onChange }: { row: number; value
   return (
     <div className="relative w-56">
       <button type="button" aria-label={`المسؤول المباشر للصف ${row}`} aria-expanded={open} onClick={() => setOpen((x) => !x)}
-        className="flex w-full items-center gap-1 rounded-md border bg-background px-2 py-1 text-start">
+        className="relative z-30 flex w-full items-center gap-1 rounded-md border bg-background px-2 py-1 text-start">
         <span className="flex-1 truncate">{value === "hr" ? "الموارد البشرية (افتراضي)" : cur ? label(cur) : "اختر المسؤول المباشر"}</span>
         {cur?.batch != null && <span className="rounded bg-primary/10 px-1 text-[10px] text-primary">ضمن هذه الدفعة</span>}
         <ChevronDown className="size-3 shrink-0" />
