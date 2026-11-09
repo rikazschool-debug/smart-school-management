@@ -7577,39 +7577,109 @@ export type Database = {
           },
         ]
       }
-      hr_att_devices: {
+      hr_att_device_pins: {
         Row: {
           created_at: string
           created_by: string | null
+          device_id: string
+          employee_id: string
+          id: string
+          org_id: string
+          pin: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          device_id: string
+          employee_id: string
+          id?: string
+          org_id: string
+          pin: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          device_id?: string
+          employee_id?: string
+          id?: string
+          org_id?: string
+          pin?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_att_device_pins_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "hr_att_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_att_device_pins_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_att_device_pins_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_att_devices: {
+        Row: {
+          bridge_info: Json | null
+          created_at: string
+          created_by: string | null
+          device_seen: string | null
           id: string
           is_active: boolean
+          last_punch_at: string | null
+          last_received_at: string | null
           last_seen: string | null
           name: string
           org_id: string
           school_id: string | null
           secret: string
+          secret_rotated_at: string | null
+          serial_no: string | null
         }
         Insert: {
+          bridge_info?: Json | null
           created_at?: string
           created_by?: string | null
+          device_seen?: string | null
           id?: string
           is_active?: boolean
+          last_punch_at?: string | null
+          last_received_at?: string | null
           last_seen?: string | null
           name: string
           org_id: string
           school_id?: string | null
           secret: string
+          secret_rotated_at?: string | null
+          serial_no?: string | null
         }
         Update: {
+          bridge_info?: Json | null
           created_at?: string
           created_by?: string | null
+          device_seen?: string | null
           id?: string
           is_active?: boolean
+          last_punch_at?: string | null
+          last_received_at?: string | null
           last_seen?: string | null
           name?: string
           org_id?: string
           school_id?: string | null
           secret?: string
+          secret_rotated_at?: string | null
+          serial_no?: string | null
         }
         Relationships: [
           {
@@ -7826,6 +7896,82 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: true
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_att_unmatched: {
+        Row: {
+          at: string
+          decided_at: string | null
+          decided_by: string | null
+          device_id: string
+          employee_id: string | null
+          first_seen: string
+          id: string
+          last_seen: string
+          note: string | null
+          org_id: string
+          pin: string
+          reason: string
+          ref: string
+          status: string
+          times: number
+        }
+        Insert: {
+          at: string
+          decided_at?: string | null
+          decided_by?: string | null
+          device_id: string
+          employee_id?: string | null
+          first_seen?: string
+          id?: string
+          last_seen?: string
+          note?: string | null
+          org_id: string
+          pin: string
+          reason: string
+          ref: string
+          status?: string
+          times?: number
+        }
+        Update: {
+          at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          device_id?: string
+          employee_id?: string | null
+          first_seen?: string
+          id?: string
+          last_seen?: string
+          note?: string | null
+          org_id?: string
+          pin?: string
+          reason?: string
+          ref?: string
+          status?: string
+          times?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_att_unmatched_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "hr_att_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_att_unmatched_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_att_unmatched_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -17291,6 +17437,10 @@ export type Database = {
       }
       _hr_att_dev_auth: { Args: { _id: string }; Returns: Json }
       _hr_att_ingest: { Args: { _dev: string; _rows: Json }; Returns: Json }
+      _hr_att_ingest2: {
+        Args: { _dev: string; _info: Json; _rows: Json; _sn: string }
+        Returns: Json
+      }
       _hr_att_my_schools: {
         Args: { _emp: string }
         Returns: {
@@ -17298,6 +17448,22 @@ export type Database = {
           name: string
           school_id: string
         }[]
+      }
+      _hr_att_pin_emp: {
+        Args: {
+          _pin: string
+          d: Database["public"]["Tables"]["hr_att_devices"]["Row"]
+        }
+        Returns: Record<string, unknown>
+      }
+      _hr_att_put: {
+        Args: {
+          _at: string
+          _emp: string
+          _ref: string
+          d: Database["public"]["Tables"]["hr_att_devices"]["Row"]
+        }
+        Returns: string
       }
       _hr_basic: { Args: { _d: Json }; Returns: Json }
       _hr_c_data: {
@@ -20569,6 +20735,12 @@ export type Database = {
         Returns: string
       }
       hr_att_corr_withdraw: { Args: { _id: string }; Returns: undefined }
+      hr_att_device_config: {
+        Args: { _id: string; _school: string; _serial: string }
+        Returns: undefined
+      }
+      hr_att_device_pins_list: { Args: { _dev: string }; Returns: Json }
+      hr_att_device_rotate: { Args: { _id: string }; Returns: Json }
       hr_att_device_save: {
         Args: { _name: string; _org: string; _school: string }
         Returns: Json
@@ -20589,6 +20761,14 @@ export type Database = {
       hr_att_my: {
         Args: { _from: string; _org: string; _to: string }
         Returns: Json
+      }
+      hr_att_pin_link: {
+        Args: { _dev: string; _emp: string; _pin: string }
+        Returns: Json
+      }
+      hr_att_pin_unlink: {
+        Args: { _dev: string; _pin: string }
+        Returns: undefined
       }
       hr_att_punch_add: {
         Args: {
@@ -20642,6 +20822,11 @@ export type Database = {
       hr_att_sites_list: { Args: { _org: string }; Returns: Json }
       hr_att_team: { Args: { _date: string; _org: string }; Returns: Json }
       hr_att_unassigned: { Args: { _org: string }; Returns: Json }
+      hr_att_unmatched_dismiss: {
+        Args: { _dev: string; _pin: string; _reason: string }
+        Returns: Json
+      }
+      hr_att_unmatched_list: { Args: { _dev: string }; Returns: Json }
       hr_candidates: { Args: { _org: string }; Returns: Json }
       hr_cat_list: { Args: { _org: string }; Returns: Json }
       hr_cat_save: {
