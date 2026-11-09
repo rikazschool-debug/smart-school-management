@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { Download, Upload, X } from "lucide-react";
 import { toast } from "sonner";
@@ -6,182 +6,259 @@ import { Button } from "@/components/ui/button";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError } from "@/lib/session";
 import { rpc, useHrCats, type HrEmp, type HrMe } from "@/components/hr/shared";
+import { CAL_LABEL, HR_FIELDS, TEMPLATE_HEAD, cleanValue, fieldForHeader, norm, type Cal, type HrField } from "@/lib/hr-fields";
 
-// HR employee import: template → column map → per-row preview with errors → row-by-row save
-// through hr_employee_save (same server checks as the form; no bulk privileged path).
-type F = { key: string; label: string; required?: boolean; sensitive?: boolean; syn: string[] };
-const FIELDS: F[] = [
-  { key: "full_name", label: "الاسم الكامل", required: true, syn: ["الاسم", "اسم الموظف", "name", "full name"] },
-  { key: "display_name", label: "الاسم المعروض", syn: ["اسم العرض", "display name"] },
-  { key: "school", label: "المدرسة", required: true, syn: ["الفرع", "school"] },
-  { key: "category", label: "التصنيف الوظيفي", syn: ["التصنيف", "category"] },
-  { key: "employee_no", label: "الرقم الوظيفي", syn: ["رقم الموظف", "employee no"] },
-  { key: "job_title", label: "المسمى الوظيفي", syn: ["الوظيفة", "job"] },
-  { key: "department", label: "القسم", syn: ["department"] },
-  { key: "hire_date", label: "تاريخ التعيين", syn: ["تاريخ المباشرة", "hire date"] },
-  { key: "phone", label: "الجوال", syn: ["رقم الجوال", "الهاتف", "phone"] },
-  { key: "email", label: "البريد", syn: ["البريد الإلكتروني", "email"] },
-  { key: "gender", label: "الجنس", syn: ["gender"] },
-  { key: "national_id", label: "رقم الهوية", sensitive: true, syn: ["الهوية", "السجل المدني", "id"] },
-  { key: "nationality", label: "الجنسية", sensitive: true, syn: ["nationality"] },
-  { key: "birth_date", label: "تاريخ الميلاد", sensitive: true, syn: ["الميلاد", "birth date"] },
-];
-const n = (s: unknown) => String(s ?? "").trim().replace(/\s+/g, " ").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").toLowerCase();
-const digits = (s: string) => s.replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).replace(/\s/g, "");
-function toDate(v: unknown): string | null {
-  if (v == null || v === "") return "";
-  if (typeof v === "number") { const d = XLSX.SSF.parse_date_code(v); return d ? `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}` : null; }
-  const s = digits(String(v)).replace(/\//g, "-");
-  let y = "", mo = "", d = "";
-  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); if (m) [y, mo, d] = [m[1]!, m[2]!, m[3]!];
-  else { m = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/); if (m) [y, mo, d] = [m[3]!, m[2]!, m[1]!]; else return null; }
-  // reject impossible calendar dates (e.g. month 13, 31 Feb)
-  const dt = new Date(Date.UTC(+y, +mo - 1, +d));
-  if (dt.getUTCFullYear() !== +y || dt.getUTCMonth() !== +mo - 1 || dt.getUTCDate() !== +d) return null;
-  return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
-}
-type Row = { i: number; p: Record<string, string>; errs: string[]; state: "new" | "dup" | "bad" | "ok" | "fail"; msg?: string | undefined };
+// HR employee import (shared field rules in src/lib/hr-fields.ts):
+// workbook → sheet + header row → editable column map → per-row preview → row-by-row save through
+// hr_employee_save + hr_employee_profile_save (same server checks as the form; never creates logins or roles).
+type State = "new" | "dup" | "fill" | "same" | "conflict" | "bad" | "ok" | "filled" | "fail";
+type Row = { i: number; p: Record<string, string>; cal: Record<string, Cal | null>; errs: string[]; state: State; match?: string | undefined; gaps: string[]; msg?: string | undefined; schoolName: string };
+type Prof = Record<string, string | null> & { manager_no?: string | null; department?: string | null };
 
 export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m: HrMe; existing: HrEmp[]; onClose: () => void; onDone: () => void }) {
-  const [raw, setRaw] = useState<{ name: string; head: string[]; data: unknown[][] } | null>(null);
+  const [wb, setWb] = useState<{ name: string; book: XLSX.WorkBook } | null>(null);
+  const [sheet, setSheet] = useState(""), [hdr, setHdr] = useState(1);
   const [map, setMap] = useState<Record<string, number>>({});
+  const [mode, setMode] = useState<"new" | "fill">("new");
+  const [pick, setPick] = useState<Record<number, string>>({});
+  const [profs, setProfs] = useState<Record<string, Prof>>({});
   const [busy, setBusy] = useState(false), [res, setRes] = useState<Row[] | null>(null);
   const schools = m.schools.filter((s) => s.create || m.caps.create);
   const sens = m.caps.sensitive;
-  const fields = FIELDS.filter((f) => !f.sensitive || sens);
+  const fields = HR_FIELDS.filter((f) => !f.sensitive || sens);
   const cats = (useHrCats(org).data ?? []).filter((c) => c.is_active);
 
   const template = () => {
-    const ws = XLSX.utils.aoa_to_sheet([fields.map((f) => f.label), fields.map((f) => f.key === "school" ? schools[0]?.name ?? "" : f.key === "category" ? cats[0]?.name ?? "" : f.key === "hire_date" ? "2026-09-01" : f.key === "gender" ? "ذكر" : "")]);
-    ws["!cols"] = fields.map(() => ({ wch: 20 })); const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] };
-    XLSX.utils.book_append_sheet(wb, ws, "الموظفون"); XLSX.writeFile(wb, "قالب-استيراد-الموظفين.xlsx");
+    const head = TEMPLATE_HEAD.filter((h) => h === "#" || fields.some((f) => f.label === h));
+    const ws = XLSX.utils.aoa_to_sheet([head, head.map((h, k) => (k === 0 ? 1 : h === "الفرع" ? schools[0]?.name ?? "" : h === "الجنس" ? "ذكر" : ""))]);
+    ws["!cols"] = head.map(() => ({ wch: 20 })); const b = XLSX.utils.book_new(); b.Workbook = { Views: [{ RTL: true }] };
+    XLSX.utils.book_append_sheet(b, ws, "البيانات الأساسية"); XLSX.writeFile(b, "قالب-بيانات-الموظفين.xlsx");
   };
-  const lock = useRef(false);
+
+  const grid = useMemo(() => {
+    const sh = wb?.book.Sheets[sheet]; if (!sh) return null;
+    const rawA = XLSX.utils.sheet_to_json<unknown[]>(sh, { header: 1, raw: true, defval: "" });
+    const txtA = XLSX.utils.sheet_to_json<unknown[]>(sh, { header: 1, raw: false, defval: "" });
+    return { rawA, txtA };
+  }, [wb, sheet]);
+  const autoMap = (head: string[]) => { const mp: Record<string, number> = {}; head.forEach((h, k) => { const f = fieldForHeader(h); if (f && mp[f] == null && fields.some((x) => x.key === f)) mp[f] = k; }); return mp; };
+  const pickSheet = (book: XLSX.WorkBook, name: string) => {
+    setSheet(name); setPick({}); setRes(null);
+    const sh = book.Sheets[name]; const a = sh ? XLSX.utils.sheet_to_json<unknown[]>(sh, { header: 1, raw: false, defval: "" }) : [];
+    let best = 0, bestN = -1;
+    for (let r = 0; r < Math.min(15, a.length); r++) { const c = (a[r] ?? []).filter((h) => fieldForHeader(h)).length; if (c > bestN) { bestN = c; best = r; } }
+    setHdr(best + 1); setMap(autoMap((a[best] ?? []).map((h) => String(h).trim())));
+  };
   const load = async (file: File): Promise<unknown> => {
     if (!/\.(xlsx|xls|csv)$/i.test(file.name)) return toast.error("نوع الملف غير مدعوم؛ استخدم xlsx أو xls أو csv");
     if (file.size > MAX_BYTES) return toast.error("حجم الملف أكبر من 5 ميغابايت");
-    let wb: XLSX.WorkBook; try { wb = XLSX.read(await file.arrayBuffer()); } catch { return toast.error("تعذّر قراءة الملف؛ قد يكون تالفًا"); }
-    const sh = wb.Sheets[wb.SheetNames[0] ?? ""]; if (!sh) return toast.error("الملف فارغ");
-    const rawA = XLSX.utils.sheet_to_json<unknown[]>(sh, { header: 1, raw: true, defval: "" });
-    const txtA = XLSX.utils.sheet_to_json<unknown[]>(sh, { header: 1, raw: false, defval: "" });
-    // text columns keep the displayed value (leading zeros); dates keep the raw serial
-    const aoa = rawA.map((r, i) => r.map((c, k) => (typeof c === "number" ? (txtA[i]?.[k] ?? c) : c)));
-    const dateCols = new Set<number>();
-    const head = (aoa[0] ?? []).map((h) => String(h).trim());
-    const idx = aoa.slice(1).map((_, i) => i + 1).filter((i) => aoa[i]!.some((c) => String(c).trim() !== ""));
-    const data = idx.map((i) => aoa[i]!);
-    const mp: Record<string, number> = {};
-    for (const f of fields) { const k = head.findIndex((h) => [f.label, ...f.syn].map(n).includes(n(h))); if (k >= 0) { mp[f.key] = k; if (f.key.endsWith("_date")) dateCols.add(k); } }
-    const fixed = data.map((r, i) => r.map((c, k) => (dateCols.has(k) && typeof rawA[idx[i]!]?.[k] === "number" ? rawA[idx[i]!]![k] : c)));
-    if (!head.some(Boolean) || data.length === 0) return toast.error("الملف لا يحتوي صفوف بيانات");
-    if (data.length > MAX_ROWS) return toast.error(`الحد الأقصى ${MAX_ROWS} صف في الملف الواحد`);
-    setRaw({ name: file.name, head, data: fixed }); setMap(mp); setRes(null); return null;
+    let book: XLSX.WorkBook; try { book = XLSX.read(await file.arrayBuffer()); } catch { return toast.error("تعذّر قراءة الملف؛ قد يكون تالفًا"); }
+    if (!book.SheetNames.length) return toast.error("الملف فارغ");
+    setWb({ name: file.name, book });
+    pickSheet(book, book.SheetNames.find((s) => !/عقود|عقد|contract/i.test(s)) ?? book.SheetNames[0]!);
+    return null;
   };
-
-  const rows = useMemo<Row[]>(() => {
-    if (!raw) return [];
-    const exNo = new Set(existing.map((e) => n(e.employee_no)));
-    const byNo = new Map(existing.map((e) => [n(e.employee_no), e.id]));
-    const byId = new Map(existing.filter((e) => e.sensitive && e.national_id).map((e) => [e.national_id!, e.id]));
-    const exId = new Set(byId.keys());
-    const seenNo = new Set<string>(), seenId = new Set<string>();
-    return raw.data.map((r, i) => {
-      const g = (k: string) => (map[k] == null ? "" : r[map[k]!]);
-      const p: Record<string, string> = {}, errs: string[] = [];
-      for (const f of fields) if (!["school", "category", "hire_date", "birth_date", "gender"].includes(f.key)) p[f.key] = String(g(f.key) ?? "").trim();
-      if (!p["full_name"]) errs.push("الاسم مطلوب");
-      const sn = n(g("school")); const sc = schools.find((s) => n(s.name) === sn);
-      if (!sn) errs.push("المدرسة مطلوبة"); else if (!sc) errs.push("مدرسة غير معروفة أو غير مصرح بها"); else p["school_id"] = sc.id;
-      const cn = n(g("category"));
-      if (cn) { const c = cats.find((x) => n(x.name) === cn); if (!c) errs.push("تصنيف وظيفي غير معروف أو معطل"); else p["category_id"] = c.id; }
-      if ((p["display_name"] ?? "").length > 80) errs.push("الاسم المعروض طويل (حتى 80 حرفًا)");
-      if (!p["display_name"]) delete p["display_name"];
-      for (const k of ["hire_date", "birth_date"]) { if (map[k] == null) continue; const d = toDate(g(k)); if (d === null) errs.push(`${FIELDS.find((f) => f.key === k)!.label} غير صحيح`); else p[k] = d; }
-      const gv = n(g("gender")); p["gender"] = ["ذكر", "male", "m"].map(n).includes(gv) ? "male" : ["انثى", "female", "f"].map(n).includes(gv) ? "female" : "";
-      if (gv && !p["gender"]) errs.push("الجنس: ذكر أو أنثى");
-      if (p["national_id"]) { p["national_id"] = digits(p["national_id"]); if (!/^\d{5,20}$/.test(p["national_id"])) errs.push("رقم الهوية أرقام فقط (5–20)"); }
-      if (p["phone"]) p["phone"] = digits(p["phone"]);
-      if (p["email"] && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(p["email"])) errs.push("بريد غير صحيح");
-      let dup = "";
-      if (p["employee_no"]) { const k = n(p["employee_no"]); if (exNo.has(k)) dup = "الرقم الوظيفي موجود مسبقًا"; else if (seenNo.has(k)) errs.push("الرقم الوظيفي مكرر في الملف"); seenNo.add(k); }
-      if (p["national_id"]) { if (exId.has(p["national_id"])) dup = "رقم الهوية مسجل لموظف في المؤسسة"; else if (seenId.has(p["national_id"])) errs.push("رقم الهوية مكرر في الملف"); seenId.add(p["national_id"]); }
-      if (p["employee_no"] && p["national_id"]) { const a = byNo.get(n(p["employee_no"])), b = byId.get(p["national_id"]); if (a && b && a !== b) { errs.push("تعارض: الرقم الوظيفي والهوية يخصان موظفين مختلفين — راجع الصف"); dup = ""; } }
-      p["import_key"] = importKey(p);
-      return { i: i + 2, p, errs, state: errs.length ? "bad" : dup ? "dup" : "new", msg: dup || undefined };
-    });
-  }, [raw, map, existing, cats]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const missing = FIELDS.filter((f) => f.required && map[f.key] == null);
-  const ready = rows.filter((r) => r.state === "new");
-  const run = async () => {
-    if (lock.current) return; lock.current = true; setBusy(true); const out: Row[] = [];
-    for (const r of rows) {
-      if (r.state !== "new") { out.push(r); continue; }
-      const call = () => rpc("hr_employee_save", { _org: org, _id: null, _p: r.p, _reason: `استيراد Excel: ${raw!.name} — صف ${r.i}` });
-      let e: unknown = null;
-      for (let t = 0; t < 3; t++) { try { await call(); e = null; break; } catch (x) { e = x; if (!/fetch|network|Failed/i.test(String((x as Error)?.message ?? x))) break; await new Promise((s) => setTimeout(s, 800 * (t + 1))); } }
-      const em = e ? String((e as Error)?.message ?? e) : "";
-      if (!e) out.push({ ...r, state: "ok" });
-      else if (em.includes("IMPORTED:")) out.push({ ...r, state: "dup", msg: "أُضيف سابقًا من الملف نفسه — لم يُكرر" });
-      else out.push({ ...r, state: "fail", msg: arabicError(e) });
+  const head = useMemo(() => (grid?.txtA[hdr - 1] ?? []).map((h) => String(h).trim()), [grid, hdr]);
+  const data = useMemo(() => {
+    if (!grid) return [];
+    const out: { i: number; cells: unknown[] }[] = [];
+    for (let r = hdr; r < grid.rawA.length; r++) {
+      const raw = grid.rawA[r]!, txt = grid.txtA[r] ?? [];
+      if (!raw.some((c) => String(c).trim() !== "")) continue;
+      // text keeps the displayed value (leading zeros); date columns keep the Excel serial
+      out.push({ i: r + 1, cells: raw.map((c, k) => (typeof c === "number" ? (k in dateCols(map) ? c : txt[k] ?? c) : c)) });
     }
-    setRes(out); setBusy(false); lock.current = false; onDone();
-    const ok = out.filter((x) => x.state === "ok").length; toast.success(`أُضيف ${ok} موظفًا`);
+    return out;
+  }, [grid, hdr, map]);
+
+  const byNo = useMemo(() => new Map(existing.filter((e) => e.employee_no).map((e) => [norm(e.employee_no), e])), [existing]);
+  const byId = useMemo(() => new Map(existing.filter((e) => e.sensitive && e.national_id).map((e) => [e.national_id!, e])), [existing]);
+
+  const base = useMemo<Row[]>(() => {
+    const fileNos = new Map<string, string>();
+    for (const d of data) { const k = map["employee_no"]; if (k != null) { const v = norm(d.cells[k]); if (v) fileNos.set(v, String(d.cells[map["full_name"] ?? -1] ?? "")); } }
+    const seenNo = new Set<string>(), seenId = new Set<string>();
+    return data.map(({ i, cells }) => {
+      const p: Record<string, string> = {}, cal: Record<string, Cal | null> = {}, errs: string[] = [];
+      for (const f of fields) {
+        if (map[f.key] == null || ["school", "category"].includes(f.key)) continue;
+        const c = cleanValue(f, cells[map[f.key]!]); p[f.key] = c.v; if (c.err) errs.push(c.err); if (f.kind === "docdate") cal[f.key] = c.cal ?? null;
+      }
+      if (!p["full_name"]) errs.push("الاسم مطلوب");
+      const sName = String(cells[map["school"] ?? -1] ?? "").trim();
+      const sch = pick[i] ?? schools.find((s) => norm(s.name) === norm(sName))?.id;
+      if (sch) p["school_id"] = sch; else errs.push(sName ? `الفرع «${sName}» غير مطابق — اختر المدرسة` : "الفرع مطلوب — اختر المدرسة");
+      const cn = norm(cells[map["category"] ?? -1]); if (cn) { const c = cats.find((x) => norm(x.name) === cn); if (!c) errs.push("تصنيف وظيفي غير معروف أو معطل"); else p["category_id"] = c.id; }
+      if ((p["display_name"] ?? "").length > 80) errs.push("الاسم المعروض طويل (حتى 80 حرفًا)");
+      const no = norm(p["employee_no"]), nid = p["national_id"] ?? "";
+      if (no) { if (seenNo.has(no)) errs.push("الرقم الوظيفي مكرر في الملف"); seenNo.add(no); }
+      if (nid) { if (seenId.has(nid)) errs.push("رقم الهوية مكرر في الملف"); seenId.add(nid); }
+      const a = no ? byNo.get(no) : undefined, b = nid ? byId.get(nid) : undefined;
+      // manager by employee number (existing file or same batch); name only for review
+      const mno = norm(p["manager_no"]);
+      if (mno) {
+        if (mno === no) errs.push("المسؤول المباشر لا يكون الموظف نفسه");
+        const ex = byNo.get(mno); const inFile = fileNos.get(mno);
+        if (!ex && inFile == null) errs.push("رقم المسؤول المباشر غير موجود في المؤسسة أو الملف");
+        else if (p["manager_name"]) {
+          const names = ex ? [ex.full_name, ex.display_name ?? ""] : [inFile ?? ""];
+          if (!names.some((x) => x && (norm(x).includes(norm(p["manager_name"])) || norm(p["manager_name"]).includes(norm(x))))) errs.push("اسم المسؤول المباشر لا يطابق رقمه");
+        }
+      }
+      const rowBase = { i, p, cal, errs, gaps: [] as string[], schoolName: sName };
+      if (a && b && a.id !== b.id) return { ...rowBase, state: "conflict" as const, msg: "الرقم الوظيفي والهوية يخصان موظفين مختلفين" };
+      const match = a ?? b;
+      if (a && !b && nid && a.sensitive && a.national_id && a.national_id !== nid) return { ...rowBase, state: "conflict" as const, msg: "الرقم الوظيفي لموظف هويته مختلفة" };
+      if (match) return { ...rowBase, match: match.id, state: "dup" as const, msg: a ? "الرقم الوظيفي موجود مسبقًا" : "رقم الهوية مسجل لموظف في المؤسسة", errs: errs.filter((e) => !e.startsWith("الفرع")) };
+      p["import_key"] = importKey(p);
+      return { ...rowBase, state: errs.length ? "bad" as const : "new" as const };
+    });
+  }, [data, map, pick, cats, byNo, byId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // completion mode: read current extra data for matched employees, then preview only empty → filled values
+  useEffect(() => {
+    if (mode !== "fill") return;
+    const ids = [...new Set(base.filter((r) => r.match && !profs[r.match]).map((r) => r.match!))];
+    if (!ids.length) return;
+    let off = false;
+    (async () => { const got: Record<string, Prof> = {}; for (const id of ids) { try { got[id] = await rpc<Prof>("hr_employee_profile_get", { _emp: id }); } catch { got[id] = {}; } } if (!off) setProfs((x) => ({ ...x, ...got })); })();
+    return () => { off = true; };
+  }, [mode, base]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const rows = useMemo<Row[]>(() => base.map((r) => {
+    if (r.state !== "dup" || mode !== "fill") return r;
+    if (r.errs.length) return { ...r, state: "bad" };
+    const e = existing.find((x) => x.id === r.match)!, pr = profs[r.match!]; if (!pr) return { ...r, msg: "جارٍ قراءة البيانات الحالية…" };
+    const cur = (f: HrField) => f.where === "base" ? (e as Record<string, unknown>)[f.key] : f.key === "manager_no" ? pr.manager_no : f.key === "department" ? pr.department : pr[f.key];
+    const gaps = fields.filter((f) => !["school", "category", "manager_name", "full_name", "employee_no", "display_name"].includes(f.key) && r.p[f.key] && (cur(f) == null || cur(f) === "")).map((f) => f.key);
+    return gaps.length ? { ...r, state: "fill", gaps, msg: undefined } : { ...r, state: "same", msg: "لا توجد بيانات ناقصة يمكن استكمالها" };
+  }), [base, mode, profs, existing]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const missing = HR_FIELDS.filter((f) => f.required && map[f.key] == null && !(f.key === "school" && Object.keys(pick).length));
+  const ready = rows.filter((r) => r.state === "new" || r.state === "fill");
+  const lock = useRef(false);
+  const profPayload = (r: Row, only?: string[]) => {
+    const o: Record<string, string> = {};
+    for (const f of fields) if ((f.where === "prof" || f.key === "department" || (only && f.where === "base")) && r.p[f.key] && (!only || only.includes(f.key))) { o[f.key] = r.p[f.key]!; if (f.kind === "docdate" && r.cal[f.key]) o[`${f.key}_cal`] = r.cal[f.key]!; }
+    return o;
+  };
+  const call = async <T,>(fn: string, args: Record<string, unknown>) => {
+    let e: unknown = null;
+    for (let t = 0; t < 3; t++) { try { return await rpc<T>(fn, args); } catch (x) { e = x; if (!/fetch|network|Failed/i.test(String((x as Error)?.message ?? x))) break; await new Promise((s) => setTimeout(s, 800 * (t + 1))); } }
+    throw e;
+  };
+  const run = async () => {
+    if (lock.current) return; lock.current = true; setBusy(true);
+    const out = new Map<number, Row>(rows.map((r) => [r.i, r]));
+    const why = `استيراد Excel: ${wb!.name}`;
+    const ids = new Map<number, string>();
+    for (const r of rows) {
+      if (r.state === "new") {
+        const p: Record<string, string> = { import_key: r.p["import_key"]! };
+        for (const f of fields) if ((f.where === "base" || f.key === "department") && r.p[f.key]) p[f.key] = r.p[f.key]!;
+        p["school_id"] = r.p["school_id"]!; if (r.p["category_id"]) p["category_id"] = r.p["category_id"];
+        let id: string | null = null, dup = false;
+        try { id = await call<string>("hr_employee_save", { _org: org, _id: null, _p: p, _reason: `${why} — صف ${r.i}` }); }
+        catch (x) { const em = String((x as Error)?.message ?? x); const k = em.match(/IMPORTED:([0-9a-f-]{36})/); if (k) { id = k[1]!; dup = true; } else { out.set(r.i, { ...r, state: "fail", msg: arabicError(x) }); continue; } }
+        ids.set(r.i, id!);
+        try { await call("hr_employee_profile_save", { _org: org, _emp: id, _p: profPayload(r), _mode: "fill", _reason: why }); out.set(r.i, { ...r, state: dup ? "dup" : "ok", msg: dup ? "أُضيف سابقًا من الملف نفسه — لم يُكرر" : undefined }); }
+        catch (x) { out.set(r.i, { ...r, state: "fail", msg: `أُنشئ الملف لكن تعذّر حفظ البيانات الإضافية: ${arabicError(x)}` }); }
+      } else if (r.state === "fill") {
+        try { await call("hr_employee_profile_save", { _org: org, _emp: r.match, _p: { ...profPayload(r, r.gaps), ...(r.gaps.includes("manager_no") ? { manager_no: r.p["manager_no"] } : {}) }, _mode: "fill", _reason: `${why} — استكمال صف ${r.i}` }); out.set(r.i, { ...r, state: "filled" }); }
+        catch (x) { out.set(r.i, { ...r, state: "fail", msg: arabicError(x) }); }
+      }
+    }
+    // second pass: direct managers (may be employees added in this same batch)
+    for (const r of rows) {
+      const id = ids.get(r.i); if (!id || !r.p["manager_no"] || out.get(r.i)?.state === "fail") continue;
+      try { await call("hr_employee_profile_save", { _org: org, _emp: id, _p: { manager_no: r.p["manager_no"] }, _mode: "fill", _reason: why }); }
+      catch (x) { out.set(r.i, { ...out.get(r.i)!, msg: `حُفظ الموظف؛ لم يُربط المسؤول المباشر: ${arabicError(x)}` }); }
+    }
+    const list = [...out.values()];
+    setRes(list); setBusy(false); lock.current = false; onDone();
+    const c = (s: State) => list.filter((x) => x.state === s).length;
+    toast.success(`أُضيف ${c("ok")} · استُكمل ${c("filled")} · تُخطي ${c("dup") + c("same")} · رُفض ${c("bad") + c("conflict") + c("fail")}`);
   };
   const report = () => {
-    const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "الاسم المعروض", "التصنيف", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, safe(r.p["full_name"] ?? ""), safe(r.p["display_name"] ?? "تلقائي"), safe(cats.find((c) => c.id === r.p["category_id"])?.name ?? ""), LBL[r.state], safe([...r.errs, r.msg].filter(Boolean).join("، "))])]);
-    const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] }; XLSX.utils.book_append_sheet(wb, ws, "النتائج"); XLSX.writeFile(wb, "تقرير-استيراد-الموظفين.xlsx");
+    const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "الرقم الوظيفي", "المدرسة", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, safe(r.p["full_name"] ?? ""), safe(r.p["employee_no"] ?? ""), safe(schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName), LBL[r.state], safe([...r.errs, r.msg].filter(Boolean).join("، "))])]);
+    const b = XLSX.utils.book_new(); b.Workbook = { Views: [{ RTL: true }] }; XLSX.utils.book_append_sheet(b, ws, "النتائج"); XLSX.writeFile(b, "تقرير-استيراد-الموظفين.xlsx");
   };
   const shown = res ?? rows;
+  const unmapped = head.map((h, k) => ({ h, k })).filter(({ h, k }) => h && h !== "#" && !Object.values(map).includes(k));
+  const fLabel = (k: string) => HR_FIELDS.find((f) => f.key === k)?.label ?? k;
+  const showVal = (r: Row, k: string) => { const f = HR_FIELDS.find((x) => x.key === k)!; const v = r.p[k] ?? ""; return f.kind === "docdate" && r.cal[k] ? `${v} (${CAL_LABEL[r.cal[k]!]})` : f.kind === "gender" ? (v === "male" ? "ذكر" : "أنثى") : v; };
 
   return (
     <div className="space-y-3 rounded-xl border bg-card p-4">
       <div className="flex items-center gap-2"><h3 className="flex-1 font-bold">استيراد موظفين من Excel</h3><Button size="icon" variant="ghost" aria-label="إغلاق" onClick={onClose}><X className="size-4" /></Button></div>
-      <p className="text-sm text-muted-foreground">يُنشأ ملف موظف بلا حساب دخول، ويمكن ربطه بحساب أو سجل معلم لاحقًا. لا يُحفظ أي صف قبل المعاينة، والصفوف الموجودة مسبقًا تُتخطى ولا تُكرر. الحقول المطلوبة: الاسم الكامل والمدرسة (*)؛ التصنيف لا يمنح صلاحية، والاسم المعروض يُملأ تلقائيًا إن تُرك فارغًا.{!sens && " أعمدة الهوية والجنسية والميلاد مخفية لأنها تحتاج صلاحية البيانات الحساسة."}</p>
+      <p className="text-sm text-muted-foreground">يُنشأ ملف موظف فقط — دون حساب دخول أو دور أو صلاحية؛ المسمى الوظيفي وصف للوظيفة فقط. لا يُحفظ أي صف قبل المعاينة، وإعادة رفع الملف لا تكرر السجلات. المطابقة بالرقم الوظيفي أو الهوية فقط، لا بالاسم.{!sens && " أعمدة الهوية والجواز والآيبان والوسيط والكفيل والجنسية والميلاد مخفية وتُتجاهل لأنها تحتاج صلاحية البيانات الحساسة."}</p>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" onClick={template}><Download className="size-4" />تنزيل القالب</Button>
         <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border px-3 py-1.5 text-sm"><Upload className="size-4" />اختيار ملف
           <input type="file" accept=".xlsx,.xls,.csv" className="sr-only" aria-label="ملف الاستيراد" onChange={(e) => e.target.files?.[0] && load(e.target.files[0])} /></label>
-        {raw && <span className="self-center text-sm">{raw.name} — {raw.data.length} صف</span>}
+        {wb && <span className="self-center text-sm">{wb.name} — {data.length} صف</span>}
       </div>
-      {raw && !res && (
-        <div className="grid gap-2 sm:grid-cols-3">
-          {fields.map((f) => (
-            <label key={f.key} className="text-xs">{f.label}{f.required && " *"}
-              <select aria-label={`عمود ${f.label}`} className={selectCls("mt-1 w-full")} value={map[f.key] ?? ""} onChange={(e) => setMap((x) => { const y = { ...x }; if (e.target.value === "") delete y[f.key]; else y[f.key] = +e.target.value; return y; })}>
-                <option value="">— غير موجود —</option>{raw.head.map((h, k) => <option key={k} value={k}>{h || `عمود ${k + 1}`}</option>)}
-              </select></label>
-          ))}
-        </div>
-      )}
-      {raw && missing.length > 0 && <p className="text-sm text-destructive">حدد عمود: {missing.map((f) => f.label).join("، ")}</p>}
-      {raw && missing.length === 0 && (
+      {wb && !res && (
         <>
-          <div className="flex flex-wrap gap-3 text-sm">
-            {(["new", "dup", "bad", "ok", "fail"] as const).map((s) => { const c = shown.filter((r) => r.state === s).length; return c ? <span key={s} className={`rounded px-2 py-0.5 ${CLS[s]}`}>{LBL[s]}: {c}</span> : null; })}
+          <div className="flex flex-wrap items-end gap-3 text-sm">
+            <label>ورقة العمل<select aria-label="ورقة العمل" className={selectCls("mt-1 block")} value={sheet} onChange={(e) => pickSheet(wb.book, e.target.value)}>{wb.book.SheetNames.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
+            <label>صف العناوين<input aria-label="صف العناوين" type="number" min={1} max={30} className="mt-1 block w-20 rounded-md border bg-background px-2 py-1" value={hdr} onChange={(e) => { const v = Math.max(1, +e.target.value || 1); setHdr(v); setMap(autoMap((grid?.txtA[v - 1] ?? []).map((h) => String(h).trim()))); }} /></label>
+            <div role="radiogroup" aria-label="وضع الاستيراد" className="flex gap-2">
+              {([["new", "إضافة الموظفين الجدد"], ["fill", "استكمال البيانات الناقصة للموظفين الموجودين"]] as const).map(([k, t]) => (
+                <button key={k} type="button" role="radio" aria-checked={mode === k} onClick={() => setMode(k)} className={"rounded-md border px-3 py-1.5 " + (mode === k ? "border-primary bg-primary/10" : "")}>{t}</button>))}
+            </div>
           </div>
-          <div className="max-h-96 overflow-auto rounded border">
-            <table className="w-full text-sm"><thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-start">الصف</th><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">الاسم المعروض</th><th className="p-2 text-start">المدرسة</th><th className="p-2 text-start">التصنيف</th><th className="p-2 text-start">النتيجة</th></tr></thead>
+          {mode === "fill" && <p className="rounded bg-secondary p-2 text-xs">يُستكمل فقط ما هو فارغ حاليًا لموظف مطابق بالرقم الوظيفي أو الهوية دون تعارض. لا تُستبدل قيمة قائمة ولا تُمسح بخانة فارغة، ولا يُضاف موظف جديد في هذا الوضع.</p>}
+          <details className="rounded border p-2" open={Object.keys(map).length < 3}>
+            <summary className="cursor-pointer text-sm font-semibold">ربط الأعمدة ({Object.keys(map).length} مربوط{unmapped.length ? ` · ${unmapped.length} عمود غير مربوط` : ""})</summary>
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              {fields.map((f) => (
+                <label key={f.key} className="text-xs">{f.label}{f.required && " *"}
+                  <select aria-label={`عمود ${f.label}`} className={selectCls("mt-1 w-full")} value={map[f.key] ?? ""} onChange={(e) => setMap((x) => { const y = { ...x }; if (e.target.value === "") delete y[f.key]; else y[f.key] = +e.target.value; return y; })}>
+                    <option value="">— غير موجود —</option>{head.map((h, k) => <option key={k} value={k}>{h || `عمود ${k + 1}`}</option>)}
+                  </select></label>
+              ))}
+            </div>
+            {unmapped.length > 0 && <p className="mt-2 text-xs text-muted-foreground">أعمدة لن يُحفظ محتواها: {unmapped.map((u) => u.h).join("، ")}</p>}
+          </details>
+        </>
+      )}
+      {wb && missing.length > 0 && <p className="text-sm text-destructive">حدد عمود: {missing.map((f) => f.label).join("، ")}</p>}
+      {wb && missing.filter((f) => f.key !== "school").length === 0 && (
+        <>
+          <div className="flex flex-wrap gap-3 text-sm" aria-label="ملخص المعاينة">
+            {(Object.keys(LBL) as State[]).map((s) => { const c = shown.filter((r) => r.state === s).length; return c ? <span key={s} className={`rounded px-2 py-0.5 ${CLS[s]}`}>{LBL[s]}: {c}</span> : null; })}
+          </div>
+          <div className="max-h-[28rem] overflow-auto rounded border">
+            <table className="w-full text-sm"><thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-start">الصف</th><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">الرقم الوظيفي</th><th className="p-2 text-start">المدرسة</th><th className="p-2 text-start">المسؤول المباشر</th><th className="p-2 text-start">الحالة</th></tr></thead>
               <tbody>{shown.map((r) => (
-                <tr key={r.i} className="border-t"><td className="p-2">{r.i}</td><td className="p-2">{r.p["full_name"] || "—"}</td><td className="p-2">{r.p["display_name"] || <span className="text-xs text-muted-foreground">تلقائي</span>}</td><td className="p-2">{schools.find((s) => s.id === r.p["school_id"])?.name ?? "—"}</td><td className="p-2">{cats.find((c) => c.id === r.p["category_id"])?.name ?? "—"}</td>
-                  <td className="p-2"><span className={`rounded px-1.5 ${CLS[r.state]}`}>{LBL[r.state]}</span> <span className="text-xs text-muted-foreground">{[...r.errs, r.msg].filter(Boolean).join("، ")}</span></td></tr>
+                <tr key={r.i} className="border-t align-top"><td className="p-2">{r.i}</td><td className="p-2">{r.p["full_name"] || "—"}</td><td className="p-2"><bdi dir="ltr">{r.p["employee_no"] || "تلقائي"}</bdi></td>
+                  <td className="p-2">{!res && !schools.some((s) => norm(s.name) === norm(r.schoolName)) && r.state !== "dup" && r.state !== "fill" && r.state !== "same" ? (
+                    <select aria-label={`مدرسة الصف ${r.i}`} className={selectCls("w-40")} value={pick[r.i] ?? ""} onChange={(e) => setPick((x) => ({ ...x, [r.i]: e.target.value }))}><option value="">{r.schoolName ? `«${r.schoolName}» ← اختر` : "اختر المدرسة"}</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+                  ) : schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName ?? "—"}</td>
+                  <td className="p-2 text-xs">{r.p["manager_no"] ? <><bdi dir="ltr">{r.p["manager_no"]}</bdi>{r.p["manager_name"] && ` — ${r.p["manager_name"]}`}</> : "—"}</td>
+                  <td className="p-2"><span className={`rounded px-1.5 ${CLS[r.state]}`}>{LBL[r.state]}</span> <span className="text-xs text-muted-foreground">{[...r.errs, r.msg].filter(Boolean).join("، ")}</span>
+                    {r.state === "fill" && <ul className="mt-1 text-xs">{r.gaps.map((k) => <li key={k}>{fLabel(k)}: <bdi>{showVal(r, k)}</bdi></li>)}</ul>}
+                    {r.state === "new" && !res && <details className="text-xs"><summary className="cursor-pointer text-muted-foreground">القيم</summary><ul>{fields.filter((f) => r.p[f.key]).map((f) => <li key={f.key}>{f.label}: <bdi>{showVal(r, f.key)}</bdi></li>)}</ul></details>}
+                  </td></tr>
               ))}</tbody></table>
           </div>
-          {!res ? <Button disabled={busy || ready.length === 0} onClick={run}>{busy ? "جارٍ الحفظ…" : `حفظ ${ready.length} صفًا صالحًا`}</Button>
+          {!res ? <Button disabled={busy || ready.length === 0} onClick={run}>{busy ? "جارٍ الحفظ…" : mode === "new" ? `إضافة ${ready.length} موظفًا` : `استكمال ${ready.length} ملفًا`}</Button>
             : <Button variant="outline" onClick={report}><Download className="size-4" />تقرير النتائج</Button>}
         </>
       )}
     </div>
   );
 }
-const MAX_BYTES = 5 * 1024 * 1024, MAX_ROWS = 2000;
+const dateCols = (map: Record<string, number>) => Object.fromEntries(HR_FIELDS.filter((f) => f.kind === "date" || f.kind === "docdate").map((f) => map[f.key]).filter((k) => k != null).map((k) => [k, 1]));
+const MAX_BYTES = 5 * 1024 * 1024;
 // neutralise spreadsheet formulas in exported text
 export const safe = (v: string) => (/^[=+\-@\t\r]/.test(v) ? "'" + v : v);
 // stable per-row key: re-importing the same row (or retrying after a lost response) never creates a second employee
 export function importKey(p: Record<string, string>) {
-  const s = ["full_name", "school_id", "employee_no", "national_id", "phone", "email"].map((k) => n(p[k])).join("|");
+  const s = ["full_name", "school_id", "employee_no", "national_id", "phone", "email"].map((k) => norm(p[k])).join("|");
   let h1 = 0x811c9dc5, h2 = 5381; for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = (Math.imul(h2, 33) + c) | 0; }
   return "x" + (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
 }
-const LBL: Record<Row["state"], string> = { new: "جاهز", dup: "موجود — يُتخطى", bad: "خطأ", ok: "أُضيف", fail: "رفضه الخادم" };
-const CLS: Record<Row["state"], string> = { new: "bg-secondary", dup: "bg-muted", bad: "bg-destructive/10 text-destructive", ok: "bg-primary/10 text-primary", fail: "bg-destructive/10 text-destructive" };
+const LBL: Record<State, string> = { new: "جاهز للإضافة", fill: "سيُستكمل", dup: "موجود مسبقًا", same: "مكتمل — يُتخطى", conflict: "تعارض", bad: "يحتاج تصحيحًا", ok: "أُضيف", filled: "استُكمل", fail: "رفضه الخادم" };
+const CLS: Record<State, string> = { new: "bg-secondary", fill: "bg-primary/10 text-primary", dup: "bg-muted", same: "bg-muted", conflict: "bg-destructive/10 text-destructive", bad: "bg-destructive/10 text-destructive", ok: "bg-primary/10 text-primary", filled: "bg-primary/10 text-primary", fail: "bg-destructive/10 text-destructive" };

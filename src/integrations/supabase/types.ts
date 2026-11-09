@@ -8369,6 +8369,108 @@ export type Database = {
           },
         ]
       }
+      hr_employee_profile: {
+        Row: {
+          address: string | null
+          assignment_note: string | null
+          bank_name: string | null
+          education: string | null
+          employee_id: string
+          iban: string | null
+          id_expiry: string | null
+          id_expiry_cal: string | null
+          marital_status: string | null
+          mid_bank: string | null
+          mid_iban: string | null
+          mid_id: string | null
+          mid_name: string | null
+          name_en: string | null
+          org_id: string
+          passport_expiry: string | null
+          passport_expiry_cal: string | null
+          passport_no: string | null
+          pay_method: string | null
+          religion: string | null
+          specialization: string | null
+          sponsor_name: string | null
+          sponsor_no: string | null
+          team: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          address?: string | null
+          assignment_note?: string | null
+          bank_name?: string | null
+          education?: string | null
+          employee_id: string
+          iban?: string | null
+          id_expiry?: string | null
+          id_expiry_cal?: string | null
+          marital_status?: string | null
+          mid_bank?: string | null
+          mid_iban?: string | null
+          mid_id?: string | null
+          mid_name?: string | null
+          name_en?: string | null
+          org_id: string
+          passport_expiry?: string | null
+          passport_expiry_cal?: string | null
+          passport_no?: string | null
+          pay_method?: string | null
+          religion?: string | null
+          specialization?: string | null
+          sponsor_name?: string | null
+          sponsor_no?: string | null
+          team?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          address?: string | null
+          assignment_note?: string | null
+          bank_name?: string | null
+          education?: string | null
+          employee_id?: string
+          iban?: string | null
+          id_expiry?: string | null
+          id_expiry_cal?: string | null
+          marital_status?: string | null
+          mid_bank?: string | null
+          mid_iban?: string | null
+          mid_id?: string | null
+          mid_name?: string | null
+          name_en?: string | null
+          org_id?: string
+          passport_expiry?: string | null
+          passport_expiry_cal?: string | null
+          passport_no?: string | null
+          pay_method?: string | null
+          religion?: string | null
+          specialization?: string | null
+          sponsor_name?: string | null
+          sponsor_no?: string | null
+          team?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_employee_profile_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_profile_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_employees: {
         Row: {
           birth_date: string | null
@@ -17524,6 +17626,7 @@ export type Database = {
         }
       }
       _hr_pol_json: { Args: { _month: string; _org: string }; Returns: Json }
+      _hr_prof_json: { Args: { _emp: string; _sens: boolean }; Returns: Json }
       _hr_purge_org: { Args: { _org: string }; Returns: undefined }
       _hr_py_notify: {
         Args: {
@@ -20529,6 +20632,17 @@ export type Database = {
       hr_employee_get: { Args: { _id: string }; Returns: Json }
       hr_employee_list: {
         Args: { _org: string; _q?: string; _school?: string; _status?: string }
+        Returns: Json
+      }
+      hr_employee_profile_get: { Args: { _emp: string }; Returns: Json }
+      hr_employee_profile_save: {
+        Args: {
+          _emp: string
+          _mode?: string
+          _org: string
+          _p: Json
+          _reason?: string
+        }
         Returns: Json
       }
       hr_employee_save: {
