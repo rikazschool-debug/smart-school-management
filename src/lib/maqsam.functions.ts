@@ -7,6 +7,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * Sync pulls the call log (overlapping window, idempotent upsert by Maqsam call id) — calls are never placed from here.
  */
 const UUID = /^[0-9a-f-]{36}$/i;
+/** The project Maqsam keys belong to this organization only (مجموعة المالكي التعليمية). */
+export const MAQSAM_ORG = "a9a4b7e2-ab44-4bcf-a1bf-ebce6489f074";
 
 function creds() {
   const id = process.env["MAQSAM_ACCESS_KEY_ID"], secret = process.env["MAQSAM_ACCESS_SECRET"];
@@ -24,6 +26,7 @@ async function mq(base: string, path: string) {
 }
 
 export async function runSync(orgId: string, force: boolean) {
+  if (orgId !== MAQSAM_ORG) return { skipped: true, busy: false, fresh: false };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const b = await supabaseAdmin.rpc("_mq_sync_begin" as never, { _org: orgId, _force: force } as never);
   if (b.error) throw new Error("تعذّر بدء المزامنة");
@@ -75,6 +78,7 @@ export const mqTest = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: ok } = await context.supabase.rpc("mq_manage_check" as never, { _org: data.orgId } as never);
     if (!ok) throw new Error("غير مصرح");
+    if (data.orgId !== MAQSAM_ORG) return { ok: false, error: "هذه المؤسسة غير مربوطة بحساب Maqsam" };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     try {
       const agents = await mq("mq.maqsam.com", "/v1/agents");
