@@ -3447,6 +3447,51 @@ export type Database = {
           },
         ]
       }
+      ct_manual_log: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new: Json
+          old: Json
+          school_id: string
+          student_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new: Json
+          old: Json
+          school_id: string
+          student_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new?: Json
+          old?: Json
+          school_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_manual_log_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_manual_log_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cv_events: {
         Row: {
           action: string
@@ -19612,6 +19657,15 @@ export type Database = {
       ct_preview: {
         Args: { _rows: Json; _school: string; _year: string }
         Returns: Json
+      }
+      ct_set: {
+        Args: {
+          _status: string
+          _student: string
+          _type: string
+          _year: string
+        }
+        Returns: undefined
       }
       current_timetable: {
         Args: { _date: string; _school: string }

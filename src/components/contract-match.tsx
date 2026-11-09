@@ -183,3 +183,45 @@ export function ContractMatch({ schoolId }: { schoolId: string }) {
     </>
   );
 }
+
+/** Manual edit of one student's three contract fields (ct_set; empty = «لا يوجد»). */
+export function ContractEdit({ row, schoolId }: { row: Record<string, string | null>; schoolId: string }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [v, setV] = useState({ year: "", status: "", type: "" });
+  const [busy, setBusy] = useState(false);
+  const years = useQuery({ queryKey: ["ct-years", schoolId], enabled: open, queryFn: async () => {
+    const { data } = await db.from("academic_years").select("name").eq("school_id", schoolId).order("start_date", { ascending: false });
+    return ((data ?? []) as { name: string }[]).map((y) => y.name);
+  } });
+  const start = () => { setV({ year: row["contract_year"] ?? "لا يوجد", status: row["contract_status"] ?? "لا يوجد", type: row["contract_type"] ?? "لا يوجد" }); setOpen(true); };
+  async function save() {
+    setBusy(true);
+    const { error } = await db.rpc("ct_set", { _student: row["id"], _year: v.year, _status: v.status, _type: v.type });
+    setBusy(false);
+    if (error) return void toast.error(arabicError(error));
+    toast.success("حُفظت بيانات العقد"); setOpen(false); qc.invalidateQueries();
+  }
+  return (
+    <>
+      <Button variant="ghost" size="sm" onClick={start}><FileCheck2 className="size-4" /> العقد</Button>
+      <Dialog open={open} onOpenChange={(o) => !busy && setOpen(o)}>
+        <DialogContent dir="rtl">
+          <DialogHeader><DialogTitle>بيانات العقد — {row["full_name"]}</DialogTitle></DialogHeader>
+          <label className="text-sm">العام الدراسي
+            <input list="ct-years" aria-label="العام الدراسي للعقد" className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={v.year} maxLength={60} onChange={(e) => setV({ ...v, year: e.target.value })} />
+            <datalist id="ct-years">{["لا يوجد", "يحتاج تحديث", ...(years.data ?? [])].map((y) => <option key={y} value={y} />)}</datalist>
+          </label>
+          <label className="text-sm">حالة العقد
+            <input aria-label="حالة العقد" className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={v.status} maxLength={120} onChange={(e) => setV({ ...v, status: e.target.value })} />
+          </label>
+          <label className="text-sm">نوع العقد
+            <input aria-label="نوع العقد" className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={v.type} maxLength={120} onChange={(e) => setV({ ...v, type: e.target.value })} />
+          </label>
+          <p className="text-xs text-muted-foreground">الخانة الفارغة تُحفظ «لا يوجد». يتغير هذا السجل فقط، ويُسجَّل من عدّل ومتى.</p>
+          <Button disabled={busy} onClick={save}>حفظ</Button>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
