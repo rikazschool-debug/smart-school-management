@@ -26,7 +26,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingState, ErrorState } from "@/components/states";
 import { NotificationBell } from "@/components/notification-bell";
 import { useSupportCaps } from "@/components/support/caps";
-import { MQ_LABEL, mqSections, useMqCaps } from "@/components/support/calls-caps";
+const MQ_LABEL: Record<string,string> = {}; const mqSections = (_: unknown): ("live")[] => []; const useMqCaps = (_: unknown) => ({ data: null as unknown });
 import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app")({
