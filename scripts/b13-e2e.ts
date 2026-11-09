@@ -52,21 +52,22 @@ try {
   check("assistant sees the whole published school timetable (a teacher still only his own)", all > 0 && seen === all && tSeen < all, [all, seen, tSeen]);
   const subs = (await as.c.rpc("schedule_slot_subjects", { _timetable: fx.tt })).data as any[];
   check("assistant gets subject names for the slots", (subs?.length ?? 0) === all && subs.every((x) => !!x.subject), subs?.slice(0, 2));
-  const board = await as.c.rpc("attendance_board", { _school: fx.school });
+  const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+  const board = await as.c.rpc("attendance_board", { _school: fx.school, _date: today });
   check("assistant reads today's attendance board", !board.error && !!board.data, board.error);
   const ros = (await as.c.rpc("att_roster", { _school: fx.school })).data as any[];
   const tRos = (await t1.c.rpc("att_roster", { _school: fx.school })).data as any[];
   check("assistant gets today's student roster; a plain teacher gets none", (ros?.length ?? 0) > 0 && (tRos?.length ?? 0) === 0, [ros?.length, tRos?.length]);
   if (ros?.length) {
-    const man = await as.c.rpc("manual_attendance", { _student: ros[0].id, _status: "present", _reason: "تسجيل يدوي تجريبي" });
+    const man = await as.c.rpc("manual_attendance", { _student: ros[0].id, _status: "arrived", _reason: "تسجيل يدوي تجريبي" });
     check("assistant records manual attendance", !man.error, man.error);
-    const tMan = await t1.c.rpc("manual_attendance", { _student: ros[0].id, _status: "absent", _reason: "x" });
+    const tMan = await t1.c.rpc("manual_attendance", { _student: ros[0].id, _status: "arrived", _reason: "x" });
     check("a plain teacher cannot record manual attendance", !!tMan.error, tMan.error);
   }
   check("assistant has no HR files access", !!(await as.c.rpc("hr_employee_list", { _org: fx.org, _school: null, _q: null, _status: "active" })).error || ((await as.c.rpc("hr_employee_list", { _org: fx.org, _school: null, _q: null, _status: "active" })).data ?? []).length === 0);
   const prB = await signIn(fx.users.prb.email, fx.pw);
   const otherS = (await admin.from("schools").select("id").eq("org_id", fx.orgB).limit(1).single()).data!.id;
-  const xb = await as.c.rpc("attendance_board", { _school: otherS });
+  const xb = await as.c.rpc("attendance_board", { _school: otherS, _date: today });
   check("assistant sees nothing of another school", !!xb.error || !xb.data, xb.data); void prB;
 
   // ── own org: owner عبدالرحمن, schools A/B, central HR director زياد ──
@@ -94,7 +95,7 @@ try {
   const zc = await signIn(pz.email, pw);
   const zl = ((await zc.c.rpc("hr_employee_list", { _org: org, _school: null, _q: null, _status: "active" })).data ?? []) as any[];
   check("HR director sees employees of every school", zl.some((x) => x.id === EA) && zl.some((x) => x.id === EB), zl.map((x) => x.full_name));
-  const zEdit = await zc.c.rpc("hr_employee_save", { _org: org, _id: EB, _p: { job_title: "معلم أول" }, _reason: "تعديل" });
+  const zEdit = await zc.c.rpc("hr_employee_save", { _org: org, _id: EB, _p: { full_name: "موظف فرع ب", school_id: B, job_title: "معلم أول", hire_date: "2024-09-01" }, _reason: "تعديل" });
   check("HR director edits a file in school B", !zEdit.error, zEdit.error);
 
   // ── named owner as direct manager; no self-manager ──
