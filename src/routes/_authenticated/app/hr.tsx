@@ -16,6 +16,7 @@ import { askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { HrImport } from "@/components/hr/import";
+import { HR_FIELDS, cleanValue } from "@/lib/hr-fields";
 import { ProfileFields, ProfileView, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { PersonCardButton } from "@/components/people/person-card";
@@ -139,6 +140,8 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
 type Cand = { accounts: { user_id: string; name: string; roles: string[]; schools: { id: string; name: string }[] | null }[]; teachers: { teacher_id: string; name: string; school_id: string; school: string; user_id: string | null; specialization: string | null }[] };
 /** Login role label: base roles, or «tpl:<template>» = operations staff with that permission template. */
 const TPL_LABELS: Record<string, string> = { "مسؤول صيانة مدارس": "مدير صيانة المدارس", "مسؤول صيانة باصات": "مدير صيانة الباصات", "مسؤول متابعة صيانة المدارس": "متابعة صيانة المدارس", "مسؤول مشتريات": "مسؤول المشتريات", "مسؤول متابعة صيانة الباصات": "متابعة صيانة الباصات", "مسؤول حركة النقل بالمدرسة": "مسؤول حركة النقل", "مسؤول القبول والتسجيل": "مسؤول القبول والتسجيل" };
+/** same phone rule as the Excel import (05 / 9665 / +9665 → +9665…) */
+function fixPhone<T extends Record<string, unknown>>(p: T): T { const v = String(p["phone"] ?? ""); if (!v) return p; const c = cleanValue(HR_FIELDS.find((f) => f.key === "phone")!, v); if (c.err) throw new Error(c.err); return { ...p, phone: c.v }; }
 const roleLabel = (r: string) => (r.startsWith("tpl:") ? TPL_LABELS[r.slice(4)] ?? r.slice(4) : ROLE_LABELS[r as Role] ?? r);
 const EMPTY = { full_name: "", display_name: "", category_id: "", user_id: "", school_id: "", teacher_id: "", job_title: "", department: "", hire_date: "", phone: "", email: "", gender: "", national_id: "", nationality: "", birth_date: "" };
 
@@ -161,7 +164,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   const roles = useQuery({ enabled: !!f.school_id, queryKey: ["hr-login-roles", org, f.school_id], queryFn: () => rpc<string[]>("hr_login_roles", { _org: org, _school: f.school_id }) });
   const done = (id: string) => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-cand"] }); onDone(id); };
   const save = useMutation({
-    mutationFn: async () => { const ex = extra(); const id = await rpc<string>("hr_employee_save", { _org: org, _id: null, _p: Object.fromEntries(Object.entries(f).filter(([, v]) => v !== "")), _reason: null }); await saveExtra(id, ex); return id; },
+    mutationFn: async () => { const ex = extra(); const id = await rpc<string>("hr_employee_save", { _org: org, _id: null, _p: fixPhone(Object.fromEntries(Object.entries(f).filter(([, v]) => v !== ""))), _reason: null }); await saveExtra(id, ex); return id; },
     onSuccess: (id) => { toast.success("أُضيف ملف الموظف"); done(id); },
     onError: (e) => toast.error(arabicError(e)),
   });
@@ -387,7 +390,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
       const p: Record<string, unknown> = { ...v };
       if (!e.sensitive) { delete p["national_id"]; delete p["nationality"]; delete p["birth_date"]; }
       const ex = profilePayload(px, !!prof.data?.sensitive, prof.data); if (ex.err) throw new Error(ex.err);
-      await rpc("hr_employee_save", { _org: org, _id: id, _p: p, _reason: reason });
+      await rpc("hr_employee_save", { _org: org, _id: id, _p: fixPhone(p), _reason: reason });
       return rpc("hr_employee_profile_save", { _org: org, _emp: id, _p: ex.p, _mode: "set", _reason: reason });
     },
     onSuccess: () => { toast.success("حُفظت التعديلات"); setEdit(null); refresh(); qc.invalidateQueries({ queryKey: ["hr-prof", id] }); },
