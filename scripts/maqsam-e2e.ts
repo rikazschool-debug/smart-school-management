@@ -104,7 +104,7 @@ try {
   const t1 = await sa.c.rpc("mq_call_open_ticket", { _id: idA, _title: "استفسار من مكالمة", _body: "تفاصيل", _priority: "normal", _client_key: randomUUID() });
   check("create ticket from call", !t1.error && !!t1.data, t1.error);
   const st0 = (await admin.from("support_tickets").select("status").eq("id", t1.data).single()).data?.status;
-  const t2 = (await sa.c.rpc("support_open", { _school: A, _title: "تذكرة قائمة", _body: "نص", _priority: "normal", _category: null, _assignee: null, _client_key: randomUUID(), _dept: null, _files: null })).data;
+  const t2 = (await sa.c.rpc("support_create", { _scope: "school", _school: A, _title: "تذكرة قائمة", _body: "نص التذكرة القائمة", _priority: "normal", _category: null, _student: null, _client_key: randomUUID() })).data;
   check("existing ticket creation still works", !!t2);
   check("link call to existing ticket", !(await sa.c.rpc("mq_call_link_ticket", { _id: idA, _ticket: t2 })).error);
   check("cannot link a call to another org's ticket", !!(await sa.c.rpc("mq_call_link_ticket", { _id: idA, _ticket: randomUUID() })).error);
