@@ -6,7 +6,12 @@ import { z } from "zod";
  * headers X-Rikaz-Device / X-Rikaz-Timestamp / X-Rikaz-Signature. The organization comes from the device on the server.
  * Each punch carries a device-unique `ref`, so resending a batch adds nothing.
  */
-const Body = z.object({ punches: z.array(z.object({ employee_no: z.string().trim().min(1).max(40), at: z.string().max(40), ref: z.string().trim().min(1).max(80) })).min(1).max(500) });
+const Body = z.object({
+  punches: z.array(z.object({ employee_no: z.string().trim().min(1).max(40), at: z.string().max(40), ref: z.string().trim().min(1).max(80) })).max(500),
+  // ADMS bridge only: device serial (must match the registered device) and connection info; an empty batch is a heartbeat.
+  sn: z.string().trim().regex(/^[A-Za-z0-9]{6,30}$/).optional(),
+  info: z.object({ device_seen: z.string().max(40).optional(), bridge: z.string().max(40).optional(), firmware: z.string().max(80).optional() }).optional(),
+});
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const json = (status: number, body: Record<string, unknown>) => Response.json(body, { status });
 async function hmacHex(secret: string, msg: string) {
@@ -35,7 +40,11 @@ export const Route = createFileRoute("/api/public/hr/attendance")({
         let parsed;
         try { parsed = Body.safeParse(JSON.parse(raw)); } catch { return json(400, { ok: false, code: "bad_json" }); }
         if (!parsed.success) return json(422, { ok: false, code: "invalid" });
-        const r = await supabaseAdmin.rpc("_hr_att_ingest" as never, { _dev: dev, _rows: parsed.data.punches } as never);
+        const p = parsed.data;
+        if (!p.sn && p.punches.length === 0) return json(422, { ok: false, code: "invalid" });
+        const r = p.sn
+          ? await supabaseAdmin.rpc("_hr_att_ingest2" as never, { _dev: dev, _sn: p.sn, _rows: p.punches, _info: p.info ?? {} } as never)
+          : await supabaseAdmin.rpc("_hr_att_ingest" as never, { _dev: dev, _rows: p.punches } as never);
         if (r.error) return json(503, { ok: false, code: "unavailable" });
         const out = r.data as unknown as Record<string, unknown> & { ok: boolean };
         return json(out.ok ? 200 : 401, out);
