@@ -304,10 +304,12 @@ function ResetPassword({ org, user, username }: { org: string; user: string; use
 /** «إدارة المستخدمين»: main areas → sections → the people who actually hold access there (each person once per section). */
 function UsersBySection({ org, c }: { org: string; c: Catalog }) {
   const people = useQuery({ queryKey: ["perm-people", org], queryFn: async () => (await call("perm_people", { _org: org })) as PermPerson[] });
-  // One request per area: each stays short on large organizations (a single request over every section timed out).
-  const secQs = useQueries({ queries: c.areas.filter((a) => !a.soon).map((a) => ({
-    queryKey: ["perm-sections", org, a.key],
-    queryFn: async () => ((await call("perm_section_people", { _org: org, _area: a.key })) ?? []) as { user_id: string; sections: string[] }[],
+  // Small batches of sections: each request stays short (one request over every section timed out on a real org).
+  const batches: string[][] = [];
+  for (let i = 0; i < c.sections.length; i += 5) batches.push(c.sections.slice(i, i + 5).map((s) => s.key));
+  const secQs = useQueries({ queries: batches.map((b) => ({
+    queryKey: ["perm-sections", org, b.join(",")],
+    queryFn: async () => ((await call("perm_section_people", { _org: org, _sections: b })) ?? []) as { user_id: string; sections: string[] }[],
   })) });
   const secsLoading = secQs.some((q) => q.isPending);
   const secsError = secQs.find((q) => q.error)?.error ?? null;
