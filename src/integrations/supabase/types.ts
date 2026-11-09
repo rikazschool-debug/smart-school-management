@@ -21803,7 +21803,7 @@ export type Database = {
       }
       perm_section_people:
         | { Args: { _org: string }; Returns: Json }
-        | { Args: { _area: string; _org: string }; Returns: Json }
+        | { Args: { _org: string; _sections: string[] }; Returns: Json }
       pickup_arrived: {
         Args: { _confirmed?: boolean; _id: string; _id_last4?: string }
         Returns: Json
