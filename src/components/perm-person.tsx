@@ -239,7 +239,7 @@ function CurrentAccess({ c, e, cur, onToggle, undeny }: { c: PermCatalog; e: Eff
   return (
     <section aria-label="الأقسام والإجراءات الممنوحة للموظف حاليًا" className="rounded-xl border bg-secondary/20 p-3">
       <p className="font-bold">الأقسام والإجراءات الممنوحة للموظف حاليًا</p>
-      <p className="mb-2 text-xs text-muted-foreground">للقراءة فقط — الحالة المحفوظة في الخادم. التعديل يتم في الشجرة أدناه.</p>
+      <p className="mb-2 text-xs text-muted-foreground">الحالة المحفوظة في الخادم. يمكنك التعديل هنا مباشرة أو في الشجرة أدناه؛ لا شيء يُحفظ قبل «حفظ التغييرات».</p>
       <div className="grid gap-3 lg:grid-cols-2">
         <div>
           <p className="mb-1 text-xs font-semibold text-primary">صفحات دوره الأساسي</p>
