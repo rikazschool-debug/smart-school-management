@@ -353,7 +353,7 @@ function UsersBySection({ org, c }: { org: string; c: Catalog }) {
                 <button type="button" aria-current={area === a.key ? "true" : undefined} onClick={() => { setArea(a.key); setSec(""); }}
                   className={"flex w-full items-center justify-between gap-2 whitespace-nowrap rounded-lg border px-3 py-2 text-sm md:border-transparent " + (area === a.key ? "border-primary bg-primary/10 font-semibold text-primary" : "bg-card hover:bg-secondary md:bg-transparent")}>
                   <span className="truncate">{a.label}</span>
-                  <span className="text-xs text-muted-foreground">{a.soon ? "تحت الإنشاء" : locked ? "معلّق" : n}</span>
+                  <span className="text-xs text-muted-foreground">{a.soon ? "تحت الإنشاء" : locked ? "معلّق" : a.key !== "all" && secsLoading ? "…" : n}</span>
                 </button>
               </li>);
           })}
@@ -372,6 +372,7 @@ function UsersBySection({ org, c }: { org: string; c: Catalog }) {
           {branches.length > 1 && <select aria-label="الفرع" className={selectCls("w-40")} value={branch} onChange={(e) => setBranch(e.target.value)}><option value="">كل الفروع</option>{branches.map((b) => <option key={b}>{b}</option>)}</select>}
           <select aria-label="حالة الحساب" className={selectCls("w-40")} value={state} onChange={(e) => setState(e.target.value)}><option value="">كل الحالات</option>{Object.entries(ST).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         </div>
+        {secsError && <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">تعذّر حساب أعداد بعض الأقسام: {arabicError(secsError)} <button type="button" className="underline" onClick={() => secQs.forEach((q) => q.error && q.refetch())}>إعادة المحاولة</button></p>}
         <p className="text-xs text-muted-foreground">{list.length} مستخدم — الأعداد من الصلاحيات الفعلية، والشخص يظهر مرة واحدة في كل قسم مخوّل له.</p>
         {!list.length ? <p className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">لا يوجد مستخدمون مطابقون.</p> : (
           <ul className="divide-y rounded-xl border bg-card">
