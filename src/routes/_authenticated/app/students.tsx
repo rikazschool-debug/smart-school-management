@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { canManageStudents, type Role } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
 import { PeopleImport } from "@/components/people-import-dialog";
+import { ContractMatch } from "@/components/contract-match";
 import { AccountPanel } from "@/components/account-panel";
 import { GuardianQuickAdd } from "@/components/guardian-quick-add";
 import { studentReadiness } from "@/lib/people-import";
@@ -37,6 +38,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const [placing, setPlacing] = useState<Row | null>(null);
   const [viewing, setViewing] = useState<Row | null>(null);
   const [guarding, setGuarding] = useState<Row | null>(null);
+  const ctCan = useQuery({ queryKey: ["ct-can", ctx.schoolId], queryFn: async () => { const { data } = await db.rpc("ct_can", { _school: ctx.schoolId }); return !!data; } });
 
   const link = useMutation({
     mutationFn: async (v: Row) => {
@@ -74,7 +76,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           { key: "section", label: "الشعبة", remote: { table: "sections", label: "name" }, path: "enrollments.section_id", inner: "enrollments", extra: { "enrollments.status": "active" } },
         ]}
         canCreate={false}
-        toolbar={w ? <PeopleImport kind="students" schoolId={ctx.schoolId} /> : undefined}
+        toolbar={w || ctCan.data ? <>{w && <PeopleImport kind="students" schoolId={ctx.schoolId} />}{ctCan.data && <ContractMatch schoolId={ctx.schoolId} />}</> : undefined}
         fields={[
           { key: "full_name", label: "الاسم الرسمي الكامل", required: true },
           { key: "display_name", label: "الاسم المعروض (يُملأ تلقائيًا إن تُرك فارغًا)" },
@@ -101,6 +103,9 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             const m = studentReadiness(r);
             return m.length ? <span className="text-xs text-destructive">ينقص: {m.join("، ")}</span> : <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز</span>;
           } },
+          { label: "العام الدراسي", text: (r) => r["contract_year"] ?? "", render: (r) => r["contract_year"] ? <span className={r["contract_year"] === "يحتاج تحديث" ? "text-xs text-destructive" : "text-xs"}>{r["contract_year"]}</span> : <span className="text-muted-foreground">—</span> },
+          { label: "آخر حالة العقد", text: (r) => r["contract_status"] ?? "", render: (r) => <span className="text-xs">{r["contract_status"] ?? "—"}</span> },
+          { label: "آخر نوع العقد", text: (r) => r["contract_type"] ?? "", render: (r) => <span className="text-xs">{r["contract_type"] ?? "—"}</span> },
         ]}
         extraActions={(r) => w ? (
           <>

@@ -239,7 +239,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
   const stageCell = (x: Stage) => !x ? <span className="text-muted-foreground">—</span> : <span className={x.ok ? "text-primary" : "text-destructive"}>{x.msg}</span>;
   return (
     <>
-      <Button size="sm" onClick={() => { reset(); setSingle({}); setOpen("single"); }}><UserPlus className="size-4" /> إضافة</Button>
+      <Button size="sm" onClick={() => { reset(); setSingle({}); setOpen("single"); }}><UserPlus className="size-4" /> {kind === "students" ? "إضافة طالب" : "إضافة"}</Button>
       <Button variant="outline" size="sm" onClick={() => { reset(); setOpen("import"); }}><FileUp className="size-4" /> استيراد Excel</Button>
       <Dialog open={!!open} onOpenChange={(o) => { if (!busy && !o) setOpen(null); }}>
         <DialogContent dir="rtl" className="max-h-[92dvh] max-w-5xl overflow-y-auto">
