@@ -83,8 +83,8 @@ try {
   check("bad tab key refused", !!(await t.c.rpc("presence_beat", { _tab: "x" })).error);
 } catch (e) { bad++; console.error("ERROR", e); }
 finally {
-  const ids = tr["users"] as unknown as string[] | undefined;
-  if (Array.isArray(ids) && ids.length) { await admin.from("presence_sessions").delete().in("user_id", ids); await admin.from("user_last_seen").delete().in("user_id", ids); }
+  const ids = [...tr.users];
+  if (ids.length) { await admin.from("presence_sessions").delete().in("user_id", ids); await admin.from("user_last_seen").delete().in("user_id", ids); }
   for (const o of orgs) await tr.purgeOrg(o).catch((e: unknown) => console.error("purge", e));
   console.log(`\n${ok} passed, ${bad} failed`); process.exit(bad ? 1 : 0);
 }
