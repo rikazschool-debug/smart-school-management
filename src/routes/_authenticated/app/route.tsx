@@ -151,6 +151,7 @@ function Shell() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const supTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "") });
   const evTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "summary") });
+  const schoolPicked = useRouterState({ select: (r) => !!(r.location.search as Record<string, unknown>)["s"] });
   const lastSection = useRef<OwnerSection | null>(null);
   const router = useRouter();
   const canGoBack = useCanGoBack();
@@ -200,6 +201,9 @@ function Shell() {
   if (mqSecs.length) baseNav.push("calls");
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   let nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
+  // owner's branch list (no school opened yet): only the owner's general account menu (communication, notices, support)
+  if (owner && path.replace(/\/+$/, "") === "/app/school-home" && !schoolPicked)
+    nav = [...new Set(baseNav)].filter((k) => ["home", "profile", "communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings", "notifications", "support", "calls"].includes(k));
   // class visits live under the evaluation sub-menu for roles that have both
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
