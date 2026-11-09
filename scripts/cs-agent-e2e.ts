@@ -37,8 +37,7 @@ try {
   check("mapping is listed for import suggestions", tl.includes(ROLE), tl.slice(0, 200));
   check("principal cannot set title mappings", !!(await pr.c.rpc("hr_title_role_set", { _org: org, _title: "x", _base: ROLE })).error);
   const tpl = (await admin.from("perm_roles").select("id").is("org_id", null).eq("key", "cs_agent").single()).data!.id;
-  const pa = await owner.c.rpc("perm_assign", { _org: org, _user: ag.id, _role: tpl, _on: true, _schools: [A], _until: null, _reason: "اختبار" });
-  if (pa.error) { const pa2 = await admin.rpc("perm_assign" as never); void pa2; }
+  const pa = await owner.c.rpc("perm_assign", { _org: org, _user: ag.id, _role: tpl, _assign: true, _school_ids: [A], _limit: null, _reason: "اختبار" });
   check("template assigned to the agent", !pa.error, pa.error);
   const sp = (await ag.c.rpc("perm_my_school", { _school: A })).data as Record<string, boolean> | null;
   check("agent holds customer_service.handle (section shows)", !!sp?.["customer_service.handle"], sp);
