@@ -7,7 +7,7 @@ import { CAL_LABEL, HR_FIELDS, HR_GROUPS, cleanValue, type Cal } from "@/lib/hr-
 
 // Extra employee data (same definitions as the Excel template), grouped like the import.
 export const PROFILE_FIELDS = HR_FIELDS.filter((f) => f.where === "prof");
-export type Prof = Record<string, string | null> & { sensitive?: boolean; manager_id?: string | null; manager?: string | null; manager_no?: string | null; department?: string | null };
+export type Prof = Record<string, string | null | boolean | undefined> & { sensitive?: boolean; manager_id?: string | null; manager?: string | null; manager_no?: string | null; department?: string | null };
 
 export function ProfileFields({ f, set, sensitive, org, self }: { f: Record<string, string>; set: (k: string, v: string) => void; sensitive: boolean; org: string; self?: string }) {
   const emps = useQuery({ queryKey: ["hr-list", org, "", "", "active"], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: null, _q: null, _status: "active" }) });
@@ -61,7 +61,7 @@ export function profilePayload(f: Record<string, string>, sensitive: boolean, pr
 }
 export const profileForm = (pr: Prof | undefined | null): Record<string, string> => {
   const o: Record<string, string> = { manager_id: pr?.manager_id ?? "" };
-  for (const x of PROFILE_FIELDS) { if (x.sensitive && !pr?.sensitive) continue; o[x.key] = pr?.[x.key] ?? ""; if (x.kind === "docdate") o[`${x.key}_cal`] = pr?.[`${x.key}_cal`] ?? ""; }
+  for (const x of PROFILE_FIELDS) { if (x.sensitive && !pr?.sensitive) continue; o[x.key] = String(pr?.[x.key] ?? ""); if (x.kind === "docdate") o[`${x.key}_cal`] = String(pr?.[`${x.key}_cal`] ?? ""); }
   return o;
 };
 
@@ -77,7 +77,7 @@ export function ProfileView({ pr }: { pr: Prof | undefined }) {
           <div key={g.key}><p className="mb-1 text-xs font-semibold text-muted-foreground">{g.label}</p>
             <dl className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
               {extra.map(([k, v]) => <div key={k} className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>)}
-              {list.map((x) => { const v = pr[x.key]; const cal = pr[`${x.key}_cal`] as Cal | null | undefined;
+              {list.map((x) => { const v = pr[x.key] as string | null | undefined; const cal = pr[`${x.key}_cal`] as Cal | null | undefined;
                 return <div key={x.key} className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{x.label}</dt><dd className="font-medium">{v ? <bdi dir={["iban", "digits"].includes(x.kind) ? "ltr" : undefined}>{v}{cal ? ` (${CAL_LABEL[cal]})` : ""}</bdi> : "—"}</dd></div>; })}
             </dl></div>
         );
