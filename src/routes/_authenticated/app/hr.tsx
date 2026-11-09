@@ -224,7 +224,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
       <div className="mb-3 flex items-center gap-2"><p className="flex-1 font-bold">إضافة موظف</p><Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق"><X className="size-4" /></Button></div>
       {cand.isLoading ? <LoadingState rows={1} /> : cand.error ? <ErrorState message={arabicError(cand.error)} /> : (
         <div className="space-y-4">
-          <div role="tablist" aria-label="أقسام بيانات الموظف" className="flex gap-1 overflow-x-auto border-b pb-2">
+          <div role="tablist" aria-label="أقسام بيانات الموظف" className="flex flex-wrap gap-1 border-b pb-2">
             {TABS.map((t, i) => (
               <button key={t} type="button" role="tab" aria-selected={tab === i} onClick={() => go(i)}
                 className={"flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm " + (tab === i ? "bg-primary text-primary-foreground" : "hover:bg-secondary")}>
