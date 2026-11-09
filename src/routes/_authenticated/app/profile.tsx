@@ -65,13 +65,13 @@ function Page() {
     setBusy(false);
     if (error) return void toast.error(arabicError(error));
     toast.success("تم تحديث الصورة");
-    qc.invalidateQueries({ queryKey: ["my-profile"] });
+    qc.invalidateQueries({ queryKey: ["my-profile"] }); qc.invalidateQueries({ queryKey: ["my-avatar"] });
   }
 
   const p = q.data;
   const rows: [string, string | null | undefined][] = p ? [
     ["الاسم", p.full_name],
-    ["الحساب", `${ops.title ?? ROLE_LABELS[role]} — ${active.schoolName}`],
+    ["الحساب", `${ops.title ?? ROLE_LABELS[role]} — ${active.role === "org_owner" && !inSchool ? active.orgName : active.schoolName}`],
     ["رقم الهوية", p.national_id],
     ["الجوال", phone966(p.phone)],
     ["البريد", p.email && !p.email.endsWith(".local") ? p.email : null],

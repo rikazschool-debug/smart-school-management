@@ -20,6 +20,7 @@ import { useSchoolPerms } from "@/lib/school-perms";
 import { FileText, IdCard, Tags, PartyPopper, UserPlus } from "lucide-react";
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
+import { useMyAvatar } from "@/lib/my-avatar";
 import { setOwnerInSchool, useOwnerInSchool } from "@/lib/owner-scope";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -153,6 +154,7 @@ function Shell() {
   const supTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "") });
   const evTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "summary") });
   const ownerInSchool = useOwnerInSchool();
+  const myAvatar = useMyAvatar(active?.schoolId ?? null, user.id);
   const schoolPicked = useRouterState({ select: (r) => !!(r.location.search as Record<string, unknown>)["s"] });
   useEffect(() => {
     const cp = path.replace(/\/+$/, "") || "/";
@@ -221,7 +223,7 @@ function Shell() {
   const sidebar = (
     <nav aria-label="القائمة الرئيسية" className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 py-5">
-        <SchoolLogo schoolId={groupView ? null : active.schoolId} className="size-10 shrink-0 rounded-xl border" fallback={<span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">ر</span>} />
+        {groupView && myAvatar.data ? <img src={myAvatar.data} alt={active.orgName} className="size-10 shrink-0 rounded-xl border bg-card object-contain" /> : <SchoolLogo schoolId={groupView ? null : active.schoolId} className="size-10 shrink-0 rounded-xl border" fallback={<span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">ر</span>} />}
         <div className="min-w-0">
           <p className="font-display text-xl leading-none text-foreground">ركاز</p>
           <p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{groupView ? active.orgName : active.schoolName}</p>
@@ -305,7 +307,7 @@ function Shell() {
       </div>
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">{initial}</span>
+          {myAvatar.data ? <img src={myAvatar.data} alt="" className="size-9 shrink-0 rounded-full border bg-card object-cover" /> : <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">{initial}</span>}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{ops.title === "عملي" ? "متعدد الأدوار" : ops.title ?? ROLE_LABELS[active.role]}</p>
             <p className="truncate text-xs text-muted-foreground" dir="ltr">{user.email}</p>
