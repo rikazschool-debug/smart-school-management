@@ -34,7 +34,7 @@ function Att({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const tabs = all.filter((t) => t !== "gate" && t !== "calls");
   const [picked, setTab] = useState<AttTab | null>(null);
   // tabs depend on permissions that load after the first render; fall back to the first allowed tab
-  const tab: AttTab = picked && tabs.includes(picked) ? picked : tabs[0] ?? "today";
+  const tab: AttTab = picked && (tabs as AttTab[]).includes(picked) ? picked : tabs[0] ?? "today";
   // UI mirrors SQL: approvals = managers + policy approver roles (default vice principal, student affairs); gate = student affairs/managers/security
   const canApprove = canApproveAttendanceWith(ctx.role, perms);
   const gate = perms && ctx.role !== "org_owner" ? !!perms["gate.operate"] || canApprove : ctx.role !== "teacher" && ctx.role !== "counselor";
