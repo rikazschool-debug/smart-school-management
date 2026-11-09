@@ -135,6 +135,14 @@ const CARDS: Card[] = [
     ],
   },
   {
+    key: "calls", title: "المكالمات الهاتفية", icon: Phone, to: "/app/calls", open: "فتح المكالمات",
+    desc: "لوحة اتصال Maqsam في نافذة مستقلة، وسجل المكالمات والمتابعات وتقارير الاتصال وإعدادات الربط.",
+    features: [
+      { icon: Phone, label: "لوحة الاتصال", to: "/app/calls", search: { mq: "live" } },
+      { icon: Phone, label: "إعدادات Maqsam", to: "/app/calls", search: { mq: "settings" } },
+    ],
+  },
+  {
     key: "users", title: "إعداد المستخدمين والصلاحيات", icon: ShieldCheck, to: "/app/permissions", open: "فتح الصلاحيات",
     desc: "المستخدمون والدعوات، والمسميات والأدوار، وصلاحيات كل شخص ونطاقها.",
     features: [
