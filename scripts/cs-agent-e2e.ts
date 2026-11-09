@@ -42,7 +42,7 @@ try {
   const sp = (await ag.c.rpc("perm_my_school", { _school: A })).data as Record<string, boolean> | null;
   check("agent holds customer_service.handle (section shows)", !!sp?.["customer_service.handle"], sp);
   check("agent has no HR employees permission", !sp?.["hr_employees.view"] && !sp?.["hr_payroll.view"], sp);
-  const mk = () => t.c.rpc("support_create", { _scope: "school", _school: A, _title: "استفسار", _body: "سؤال", _priority: "normal", _category: null, _student: null, _client_key: randomUUID() });
+  const mk = () => t.c.rpc("support_create", { _scope: "school", _school: A, _title: "استفسار", _body: "لدي سؤال عن موعد التسجيل", _priority: "normal", _category: null, _student: null, _client_key: randomUUID() });
   const r1 = await mk(), r2 = await mk(); const t1 = r1.data, t2 = r2.data; check("tickets opened", !!t1 && !!t2, [r1.error, r2.error]);
   const rev = async (id: string) => (await admin.from("support_tickets").select("rev").eq("id", id).single()).data?.rev ?? null;
   const asg = await p.c.rpc("support_action", { _ticket: t1, _action: "assign", _value: ag.id, _rev: await rev(t1), _reason: null });
