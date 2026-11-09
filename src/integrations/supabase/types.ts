@@ -18189,6 +18189,7 @@ export type Database = {
       }
       _perm_catalog_base: { Args: never; Returns: Json }
       _perm_catalog_v11: { Args: never; Returns: Json }
+      _perm_catalog_v12: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
