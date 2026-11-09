@@ -457,3 +457,5 @@ A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, iden
 - Administrative assistant (template «مساعد إداري», school scope): school_schedule.view (whole published timetable, read-only), attendance.view (today board, records), attendance.record (manual exceptional entry with reason). No lesson sheets, pickups, approvals or HR.
 - HR director (template «مدير إدارة الموارد البشرية», org scope): HR files view/create/edit/sensitive, leave/permission approval, payroll preparation, in every school; may sit in the central administration (no school). Created only by the owner. Cannot approve own leave.
 - Direct manager may be a named group-owner account (owner approves first, then a separate HR approver); nobody can be their own manager.
+
+- B14 (2026-11-09): المسؤول المباشر يُختار لكل صف في معاينة Excel (موظف نشط، حساب المالك، مدير ضمن الدفعة)؛ الخادم يرفض اختيار النفس ومؤسسة أخرى والملف غير النشط والحلقة الإدارية؛ صلاحية التعديل في الموارد البشرية مطلوبة. الإجازة: المسؤول المختار أولًا ثم الموارد. b14-e2e 20/20، b14-journey 19/19.
