@@ -105,7 +105,8 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
         const o = orig.find((g) => `${g.section}.${g.action}` === k);
         if (!on) { setTree(cur.filter((g) => `${g.section}.${g.action}` !== k)); setUndeny(undeny.filter((x) => x !== k)); }
         else if (o) setTree([...cur.filter((g) => `${g.section}.${g.action}` !== k), o]);
-        else setUndeny([...undeny.filter((x) => x !== k), k]);
+        else if (e.effective.find((x) => `${x.section}.${x.action}` === k)?.source === "deny") setUndeny([...undeny.filter((x) => x !== k), k]);
+        else { const [sec, act] = k.split("."); const cs = c.sections.find((x) => x.key === sec); if (cs && !cs.base_only) setTree([...cur, { section: sec!, action: act!, scope: cs.scopes[0]! }]); }
         setPreview(null);
       }} undeny={undeny} />}
       {e.is_owner ? <p className="rounded-lg bg-secondary/50 p-3">مالك المؤسسة يملك جميع الصلاحيات ولا تُقيَّد صلاحياته.</p> : (<>
@@ -229,7 +230,10 @@ export function Diff({ c, p }: { c: PermCatalog; p: { before: Effective; after: 
 /** Read-only: what is saved on the server now — granted sections/actions with source and where, plus the pages of the base role. */
 function CurrentAccess({ c, e, cur, onToggle, undeny }: { c: PermCatalog; e: Effective; cur: Grant[]; onToggle: (key: string, on: boolean) => void; undeny: string[] }) {
   const on = e.effective.filter(isOn);
-  const groups = c.areas.map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key).map((s) => ({ s, acts: on.filter((x) => x.section === s.key) })).filter((x) => x.acts.length) })).filter((x) => x.secs.length);
+  // every area → section → action (sub-sections included); ticked = has it now
+  const effOf = (sec: string, a: string): Eff => e.effective.find((x) => x.section === sec && x.action === a) ?? { section: sec, action: a, scope: null, allowed_schools: [], base_schools: [], source: null };
+  const groups = c.areas.filter((ar) => !ar.soon).map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key).map((s) => ({ s, acts: s.actions.map((a) => effOf(s.key, a)).filter((x) => x.source !== "deny") })).filter((x) => x.acts.length) })).filter((x) => x.secs.length);
+  void on;
   const denies = e.effective.filter((x) => x.source === "deny");
   const navKeys = [...new Set(e.base_roles.flatMap((b) => NAV_BY_ROLE[b.role as Role] ?? []))];
   return (
@@ -245,13 +249,13 @@ function CurrentAccess({ c, e, cur, onToggle, undeny }: { c: PermCatalog; e: Eff
         <div>
           <p className="mb-1 text-xs font-semibold text-primary">أقسام الصلاحيات</p>
           <p className="mb-1 text-[11px] text-muted-foreground">العلامة = متاح له الآن. أزل العلامة لإيقافه (مسودة حتى الحفظ)، وأعدها للتراجع.</p>
-          {!groups.length && !denies.length ? <p className="text-xs text-muted-foreground">لا أقسام إضافية ممنوحة.</p> : (
+          {!groups.length && !denies.length ? <p className="text-xs text-muted-foreground">لا أقسام.</p> : (
             <ul className="space-y-2 text-xs">{groups.map(({ ar, secs }) => <li key={ar.key}><span className="font-semibold">{ar.label}</span>
               <ul className="ms-2 mt-1 space-y-1">{secs.map(({ s, acts }) => <li key={s.key}><span className="font-medium">{s.label}</span>
-                <ul className="ms-2">{acts.map((a) => { const k = `${a.section}.${a.action}`; const now = cur.some((g) => `${g.section}.${g.action}` === k); return (
-                  <li key={k}><label className={"flex items-start gap-2 rounded px-1 py-0.5 " + (now ? "bg-muted text-muted-foreground" : "bg-destructive/5 text-destructive")}>
-                    <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={now} aria-label={`${s.label} ← ${s.labels?.[a.action] ?? c.actions[a.action] ?? a.action}`} onChange={(ev) => onToggle(k, ev.target.checked)} />
-                    <span>{s.labels?.[a.action] ?? c.actions[a.action] ?? a.action} <span className="opacity-70">({SOURCE[a.source ?? ""] ?? ""}{where(c, a) ? ` · ${where(c, a)}` : ""}){!now && " — سيُوقف عند الحفظ"}</span></span></label></li>); })}</ul></li>)}</ul></li>)}
+                <ul className="ms-2">{acts.map((a) => { const k = `${a.section}.${a.action}`; const now = cur.some((g) => `${g.section}.${g.action}` === k); const had = isOn(a); return (
+                  <li key={k}><label className={"flex items-start gap-2 rounded px-1 py-0.5 " + (now && had ? "bg-muted text-muted-foreground" : now ? "bg-success/10" : had ? "bg-destructive/5 text-destructive" : "")}>
+                    <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={now} disabled={!had && !!s.base_only} aria-label={`${s.label} ← ${s.labels?.[a.action] ?? c.actions[a.action] ?? a.action}`} onChange={(ev) => onToggle(k, ev.target.checked)} />
+                    <span>{s.labels?.[a.action] ?? c.actions[a.action] ?? a.action} <span className="opacity-70">{had && <>({SOURCE[a.source ?? ""] ?? ""}{where(c, a) ? ` · ${where(c, a)}` : ""})</>}{had && !now && " — سيُوقف عند الحفظ"}{!had && now && " — يُمنح عند الحفظ"}{!had && s.base_only && " — يأتي مع الدور الأساسي فقط"}</span></span></label></li>); })}</ul></li>)}</ul></li>)}
               {denies.map((d) => { const k = `${d.section}.${d.action}`; const sec = c.sections.find((x) => x.key === d.section); const lifted = undeny.includes(k); return (
                 <li key={k}><label className={"flex items-start gap-2 rounded px-1 py-0.5 " + (lifted ? "bg-success/10" : "bg-destructive/5 text-destructive")}>
                   <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={lifted} aria-label={`${sec?.label ?? d.section} ← ${sec?.labels?.[d.action] ?? c.actions[d.action] ?? d.action}`} onChange={(ev) => onToggle(k, ev.target.checked)} />
