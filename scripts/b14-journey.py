@@ -59,7 +59,7 @@ async def main():
         check("2 similar name from this batch shown with «ضمن هذه الدفعة», branch and number", "عبدالرحمن السالم — معلم" in res and "ضمن هذه الدفعة" in res and "S-1" in res and "مدارس الروّاد" in res, res)
         await p.get_by_label("بحث المسؤول للصف 2").fill("زياد"); await p.wait_for_timeout(300)
         check("3 a row cannot pick itself", "لا نتائج" in await p.get_by_label("نتائج المسؤول للصف 2").inner_text())
-        await p.keyboard.press("Escape"); await p.mouse.click(5, 5); await p.wait_for_timeout(300)
+        await p.keyboard.press("Escape"); await p.wait_for_timeout(300)
         await pick(p, 2, "عبدالرحمن", "عبدالرحمن المالك")
         await pick(p, 2, "عبدالرحمن", "عبدالرحمن السالم")
         check("4 changed to the other manager", "عبدالرحمن السالم" in await p.get_by_label("المسؤول المباشر للصف 2").inner_text())

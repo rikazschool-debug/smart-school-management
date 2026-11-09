@@ -26,7 +26,7 @@ export function ManagerPick({ row, value, opts, onChange }: { row: number; value
         <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
         <div className="absolute z-20 mt-1 w-72 rounded-md border bg-popover p-1 shadow-lg">
           <div className="flex items-center gap-1 border-b px-1 pb-1"><Search className="size-3 text-muted-foreground" />
-            <input autoFocus aria-label={`بحث المسؤول للصف ${row}`} placeholder="ابحث بالاسم أو الرقم الوظيفي" className="w-full bg-transparent py-1 text-sm outline-none" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+            <input autoFocus onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); setQ(""); } }} aria-label={`بحث المسؤول للصف ${row}`} placeholder="ابحث بالاسم أو الرقم الوظيفي" className="w-full bg-transparent py-1 text-sm outline-none" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <ul role="listbox" aria-label={`نتائج المسؤول للصف ${row}`} className="max-h-60 overflow-auto py-1">
             <li role="option" aria-selected={value === "hr"} className="cursor-pointer rounded px-2 py-1 hover:bg-accent" onClick={() => { onChange("hr"); setOpen(false); }}>الموارد البشرية (افتراضي)</li>
             {list.map((o) => (
