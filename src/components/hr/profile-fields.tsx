@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { selectCls } from "@/components/ui/native-select";
 import { rpc, type HrEmp } from "@/components/hr/shared";
+import { bi } from "@/lib/hr-bilingual";
+import { EnHint } from "@/components/hr/en-hint";
 import { CAL_LABEL, HR_FIELDS, HR_GROUPS, cleanValue, type Cal } from "@/lib/hr-fields";
 
 // Extra employee data (same definitions as the Excel template), grouped like the import.
@@ -31,18 +33,18 @@ export function ProfileFields({ f, set, sensitive, org, self }: { f: Record<stri
           <fieldset key={g.key} className="rounded-lg border p-3">
             <legend className="px-1 text-sm font-semibold">{g.label}{g.key === "basic" ? " (إضافية)" : ""}</legend>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {g.key === "assign" && <div><Label htmlFor="hp-mgr">المسؤول المباشر</Label>
+              {g.key === "assign" && <div><Label htmlFor="hp-mgr">{bi("manager", "المسؤول المباشر")}</Label>
                 <select id="hp-mgr" className={selectCls("mt-1 w-full")} value={f["manager_id"] ?? ""} onChange={(e) => set("manager_id", e.target.value)}>
                   <option value="">{DEFAULT_MGR} (افتراضي)</option><option value={OWNER_VAL}>{OWNER_MGR} (أي مالك، بدل الموارد البشرية)</option>
                   {(owners.data ?? []).filter((o) => !o.employee_id || o.employee_id !== self).map((o) => <option key={o.user_id} value={o.employee_id ?? `${OWNER_ACC}${o.user_id}`}>حساب المالك: {o.name}</option>)}
                   {(emps.data ?? []).filter((x) => x.id !== self && !ownerEmp.has(x.id)).map((x) => <option key={x.id} value={x.id}>{x.display_name || x.full_name} — {x.employee_no}</option>)}
                 </select><p className="mt-1 text-xs text-muted-foreground">«الموارد البشرية»: تذهب الطلبات (إجازات، استئذان) مباشرة إلى الموارد البشرية. «مالك المجموعة»: تصل للمالك وحده ويبت فيها. «حساب المالك»: يعتمد المالك مسؤولًا مباشرًا ثم تنتقل للموارد البشرية. أو اختر موظفًا بعينه. لا يكون الشخص مسؤولًا عن نفسه.</p></div>}
               {list.map((x) => x.kind === "docdate" ? (
-                <div key={x.key}><Label htmlFor={`hp-${x.key}`}>{x.label}</Label>
+                <div key={x.key}><Label htmlFor={`hp-${x.key}`}>{bi(x.key, x.label)}</Label>
                   <div className="mt-1 flex gap-1"><Input id={`hp-${x.key}`} dir="ltr" placeholder="1447-05-10 أو 2027-01-31" value={f[x.key] ?? ""} onChange={(e) => set(x.key, e.target.value)} />
                     <select aria-label={`تقويم ${x.label}`} className={selectCls("w-24")} value={f[`${x.key}_cal`] ?? ""} onChange={(e) => set(`${x.key}_cal`, e.target.value)}><option value="">تلقائي</option><option value="hijri">هجري</option><option value="gregorian">ميلادي</option></select></div></div>
               ) : (
-                <div key={x.key}><Label htmlFor={`hp-${x.key}`}>{x.label}</Label><Input id={`hp-${x.key}`} className="mt-1" dir={["iban", "digits"].includes(x.kind) || x.key === "name_en" || x.key === "passport_no" ? "ltr" : undefined} value={f[x.key] ?? ""} onChange={(e) => set(x.key, e.target.value)} /></div>
+                <div key={x.key}><Label htmlFor={`hp-${x.key}`}>{bi(x.key, x.label)}</Label><Input id={`hp-${x.key}`} className="mt-1" dir={["iban", "digits"].includes(x.kind) || x.key === "name_en" || x.key === "passport_no" ? "ltr" : undefined} value={f[x.key] ?? ""} onChange={(e) => set(x.key, e.target.value)} /><EnHint k={x.key} v={f[x.key]} /></div>
               ))}
             </div>
             {hidden && <p className="mt-2 text-xs text-muted-foreground">بعض حقول هذه المجموعة تحتاج صلاحية «البيانات الحساسة».</p>}
