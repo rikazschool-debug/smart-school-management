@@ -33,7 +33,7 @@ export function usePresenceBeat(userId: string | null) {
     const t = window.setInterval(beat, BEAT_MS);
     const onVis = () => { if (document.visibilityState === "visible") beat(); };
     const onHide = () => {
-      const url = import.meta.env.VITE_SUPABASE_URL as string, key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      const url = import.meta.env["VITE_SUPABASE_URL"] as string, key = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string;
       if (!url || !key || !token) return;
       try {
         void fetch(`${url}/rest/v1/rpc/presence_end`, { method: "POST", keepalive: true, headers: { apikey: key, Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ _tab: tab }) });
@@ -66,7 +66,6 @@ export const usePresenceConv = (convId: string | null) => usePresenceMap("conv",
 /** Caller's private chats → other party's status. */
 export const usePresenceMyConvs = (schoolId: string | null, on = true) => usePresenceMap("myconvs", "presence_my_convs", on ? { _school: schoolId } : null, "conversation_id");
 
-const rtf = typeof Intl !== "undefined" ? new Intl.RelativeTimeFormat("ar", { numeric: "always" }) : null;
 const nf = new Intl.NumberFormat("ar-SA");
 /** «آخر ظهور منذ ٥ دقائق» within a day, else the Riyadh date+time. */
 export function lastSeenText(iso: string | null, now = Date.now()): string {
@@ -77,7 +76,6 @@ export function lastSeenText(iso: string | null, now = Date.now()): string {
   if (m < 60) return `آخر ظهور منذ ${m === 1 ? "دقيقة" : m === 2 ? "دقيقتين" : `${nf.format(m)} ${m <= 10 ? "دقائق" : "دقيقة"}`}`;
   const h = Math.round(m / 60);
   if (h < 24) return `آخر ظهور منذ ${h === 1 ? "ساعة" : h === 2 ? "ساعتين" : `${nf.format(h)} ${h <= 10 ? "ساعات" : "ساعة"}`}`;
-  void rtf;
   return "آخر ظهور " + d.toLocaleString("ar-SA-u-ca-gregory", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" });
 }
 
