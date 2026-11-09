@@ -109,7 +109,8 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
       }
       if (!p["full_name"]) errs.push("الاسم مطلوب");
       const sName = String(cells[map["school"] ?? -1] ?? "").trim();
-      const sch = pick[i] ?? schools.find((s) => norm(s.name) === norm(sName))?.id;
+      // central administration (no school): owner only, same rule as the manual add form
+      const sch = pick[i] ?? (m.owner && /^(ال)?ادار[هة] (ال)?مركزي[هة]/.test(norm(sName)) ? CENTRAL : schools.find((s) => norm(s.name) === norm(sName))?.id);
       if (sch) p["school_id"] = sch; else errs.push(sName ? `الفرع «${sName}» غير مطابق — اختر المدرسة` : "الفرع مطلوب — اختر المدرسة");
       const cn = norm(cells[map["category"] ?? -1]); if (cn) { const c = cats.find((x) => norm(x.name) === cn); if (!c) errs.push("تصنيف وظيفي غير معروف أو معطل"); else p["category_id"] = c.id; }
       if ((p["display_name"] ?? "").length > 80) errs.push("الاسم المعروض طويل (حتى 80 حرفًا)");
@@ -150,7 +151,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     let off = false;
     (async () => {
       if (need.length) { try { const got = await rpc<Record<string, Plan>>("hr_login_plan", { _org: org, _rows: [...new Map(need.map((r) => [pkey(r.p), { k: pkey(r.p), nid: r.p["national_id"] ?? "", phone: r.p["phone"] ?? "" }])).values()] }); if (!off) setPlan((x) => ({ ...x, ...got })); } catch (e) { toast.error(arabicError(e)); } }
-      for (const id of sch) { try { const a = await rpc<string[]>("hr_login_roles", { _org: org, _school: id }); if (!off) setAllowed((x) => ({ ...x, [id]: a ?? [] })); } catch { /* shown as review */ } }
+      for (const id of sch) { try { const a = id === CENTRAL ? await rpc<string[]>("hr_login_central_roles", { _org: org }) : await rpc<string[]>("hr_login_roles", { _org: org, _school: id }); if (!off) setAllowed((x) => ({ ...x, [id]: a ?? [] })); } catch { /* shown as review */ } }
     })();
     return () => { off = true; };
   }, [withLogin, mode, base]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -162,7 +163,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     return [
       ...owners.map((o) => ({ v: `o:${o.user_id}`, name: o.name, role: "مالك المجموعة", branch: "", no: existing.find((e) => e.id === o.employee_id)?.employee_no ?? "", emp: o.employee_id ?? undefined })),
       ...existing.filter((e) => e.status === "active" && !ownEmp.has(e.id)).map((e) => ({ v: `e:${e.id}`, name: e.full_name, role: e.job_title ?? "", branch: branch(e), no: e.employee_no, emp: e.id })),
-      ...base.filter((r) => r.state === "new" || r.state === "bad").map((r) => ({ v: `b:${r.i}`, name: r.p["full_name"] ?? "", role: r.p["job_title"] ?? "", branch: schools.find((x) => x.id === r.p["school_id"])?.name ?? r.schoolName, no: r.p["employee_no"] ?? "", batch: r.i })),
+      ...base.filter((r) => r.state === "new" || r.state === "bad").map((r) => ({ v: `b:${r.i}`, name: r.p["full_name"] ?? "", role: r.p["job_title"] ?? "", branch: r.p["school_id"] === CENTRAL ? "الإدارة المركزية" : schools.find((x) => x.id === r.p["school_id"])?.name ?? r.schoolName, no: r.p["employee_no"] ?? "", batch: r.i })),
     ];
   }, [owners, existing, base]); // eslint-disable-line react-hooks/exhaustive-deps
   const optFor = (r: Row) => mgrOpts.filter((o) => o.batch !== r.i && (!r.match || o.emp !== r.match));
@@ -244,7 +245,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
       if (r.state === "new" && readyIds.has(r.i)) {
         const p: Record<string, string> = { import_key: r.p["import_key"]! };
         for (const f of fields) if ((f.where === "base" || f.key === "department") && r.p[f.key]) p[f.key] = r.p[f.key]!;
-        p["school_id"] = r.p["school_id"]!; if (r.p["category_id"]) p["category_id"] = r.p["category_id"];
+        if (r.p["school_id"] === CENTRAL) p["central"] = "true"; else p["school_id"] = r.p["school_id"]!; if (r.p["category_id"]) p["category_id"] = r.p["category_id"];
         let id: string | null = null, dup = false;
         const rsn = `${why} — صف ${r.i}`;
         if (r.login?.act === "create") {
@@ -352,9 +353,9 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
             <table className="w-full text-sm"><thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-start">الصف</th><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">الرقم الوظيفي</th><th className="p-2 text-start">المدرسة</th><th className="p-2 text-start">المسؤول المباشر</th>{withLogin && mode === "new" && <><th className="p-2 text-start">الجوال</th><th className="p-2 text-start">دور الدخول</th><th className="p-2 text-start">الإجراء</th></>}<th className="p-2 text-start">الحالة</th></tr></thead>
               <tbody>{shown.map((r) => (
                 <tr key={r.i} className="border-t align-top"><td className="p-2">{r.i}</td><td className="p-2">{r.p["full_name"] || "—"}</td><td className="p-2"><bdi dir="ltr">{r.p["employee_no"] || "تلقائي"}</bdi></td>
-                  <td className="p-2">{!res && !schools.some((s) => norm(s.name) === norm(r.schoolName)) && r.state !== "dup" && r.state !== "fill" && r.state !== "same" ? (
-                    <select aria-label={`مدرسة الصف ${r.i}`} className={selectCls("w-40")} value={pick[r.i] ?? ""} onChange={(e) => setPick((x) => ({ ...x, [r.i]: e.target.value }))}><option value="">{r.schoolName ? `«${r.schoolName}» ← اختر` : "اختر المدرسة"}</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-                  ) : schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName ?? "—"}</td>
+                  <td className="p-2">{!res && r.p["school_id"] !== CENTRAL && !schools.some((s) => norm(s.name) === norm(r.schoolName)) && r.state !== "dup" && r.state !== "fill" && r.state !== "same" ? (
+                    <select aria-label={`مدرسة الصف ${r.i}`} className={selectCls("w-40")} value={pick[r.i] ?? ""} onChange={(e) => setPick((x) => ({ ...x, [r.i]: e.target.value }))}><option value="">{r.schoolName ? `«${r.schoolName}» ← اختر` : "اختر المدرسة"}</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}{m.owner && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}</select>
+                  ) : r.p["school_id"] === CENTRAL ? <span>الإدارة المركزية <span className="block text-xs text-muted-foreground">دور «مدير إدارة الموارد البشرية» فقط</span></span> : schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName ?? "—"}</td>
                   <td className="p-2 text-xs">{(!res && ["new", "bad", "review", "fill"].includes(r.state)) || (res && r.mgrFail) ? (
                     <>{r.p["manager_no"] && <p className="mb-1 text-muted-foreground">من الملف: <bdi dir="ltr">{r.p["manager_no"]}</bdi>{r.p["manager_name"] && ` — ${r.p["manager_name"]}`}</p>}
                       <ManagerPick row={r.i} value={res ? mgrPick[r.i] ?? r.mgr : r.mgr} opts={optFor(r)} onChange={(v) => setMgrPick((x) => ({ ...x, [r.i]: v }))} />
