@@ -136,6 +136,9 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
 }
 
 type Cand = { accounts: { user_id: string; name: string; roles: string[]; schools: { id: string; name: string }[] | null }[]; teachers: { teacher_id: string; name: string; school_id: string; school: string; user_id: string | null; specialization: string | null }[] };
+/** Login role label: base roles, or «tpl:<template>» = operations staff with that permission template. */
+const TPL_LABELS: Record<string, string> = { "مسؤول صيانة مدارس": "مدير صيانة المدارس", "مسؤول صيانة باصات": "مدير صيانة الباصات", "مسؤول متابعة صيانة المدارس": "متابعة صيانة المدارس", "مسؤول مشتريات": "مسؤول المشتريات", "مسؤول متابعة صيانة الباصات": "متابعة صيانة الباصات", "مسؤول حركة النقل بالمدرسة": "مسؤول حركة النقل", "مسؤول القبول والتسجيل": "مسؤول القبول والتسجيل" };
+const roleLabel = (r: string) => (r.startsWith("tpl:") ? TPL_LABELS[r.slice(4)] ?? r.slice(4) : ROLE_LABELS[r as Role] ?? r);
 const EMPTY = { full_name: "", display_name: "", category_id: "", user_id: "", school_id: "", teacher_id: "", job_title: "", department: "", hire_date: "", phone: "", email: "", gender: "", national_id: "", nationality: "", birth_date: "" };
 
 function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClose: () => void; onDone: (id: string) => void }) {
@@ -202,8 +205,8 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
                   <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select></div>
               <div><Label htmlFor="hr-role">دور الدخول</Label>
-                <select id="hr-role" className={selectCls("mt-1 w-full")} value={base} disabled={!f.school_id} onChange={(e) => { setBase(e.target.value); if (!f.job_title) set("job_title", ROLE_LABELS[e.target.value as Role] ?? ""); }}>
-                  <option value="">{f.school_id ? "اختر الدور" : "اختر المدرسة أولًا"}</option>{(roles.data ?? []).map((r) => <option key={r} value={r}>{ROLE_LABELS[r as Role] ?? r}</option>)}
+                <select id="hr-role" className={selectCls("mt-1 w-full")} value={base} disabled={!f.school_id} onChange={(e) => { setBase(e.target.value); if (!f.job_title) set("job_title", roleLabel(e.target.value)); }}>
+                  <option value="">{f.school_id ? "اختر الدور" : "اختر المدرسة أولًا"}</option>{(roles.data ?? []).map((r) => <option key={r} value={r}>{roleLabel(r)}</option>)}
                 </select>
                 <p className="mt-1 text-xs text-muted-foreground">تظهر الأدوار التي يحق لك منحها فقط. لا تُمنح صلاحيات الموارد البشرية تلقائيًا.</p></div>
             </div>
@@ -242,10 +245,10 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
               <dl className="grid gap-1 sm:grid-cols-2">
                 <div><dt className="inline text-muted-foreground">الموظف: </dt><dd className="inline">{f.full_name}</dd></div>
                 <div><dt className="inline text-muted-foreground">المدرسة: </dt><dd className="inline font-semibold">{schoolName}</dd></div>
-                <div><dt className="inline text-muted-foreground">دور الدخول: </dt><dd className="inline">{ROLE_LABELS[base as Role]}</dd></div>
+                <div><dt className="inline text-muted-foreground">دور الدخول: </dt><dd className="inline">{roleLabel(base)}</dd></div>
                 <div><dt className="inline text-muted-foreground">الجوال المعتمد: </dt><dd className="inline"><bdi dir="ltr">{localPhone(f.phone)}</bdi></dd></div>
               </dl>
-              <p className="mt-1 text-xs text-muted-foreground">الصلاحيات: الصلاحيات المعتمدة لدور «{ROLE_LABELS[base as Role]}» في هذه المدرسة فقط، دون أي صلاحية إضافية أو صلاحية موارد بشرية.{base === "teacher" ? " سيُنشأ سجل معلم مرتبط." : ""} لن تُرسل رسالة الآن؛ الدخول لاحقًا برقم الهوية ورمز إلى الجوال.</p>
+              <p className="mt-1 text-xs text-muted-foreground">الصلاحيات: الصلاحيات المعتمدة لدور «{roleLabel(base)}» في هذه المدرسة فقط، دون أي صلاحية إضافية أو صلاحية موارد بشرية.{base === "teacher" ? " سيُنشأ سجل معلم مرتبط." : ""} لن تُرسل رسالة الآن؛ الدخول لاحقًا برقم الهوية ورمز إلى الجوال.</p>
             </div>)}
           <div className="flex flex-wrap gap-2 border-t pt-3">
             {mode === "link" ? (
