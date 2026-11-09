@@ -208,7 +208,7 @@ function CallTickets({ c, id, busy, act }: { c: Row; id: string; busy: boolean; 
       <h3 className="font-semibold">التذاكر المرتبطة</h3>
       {c.tickets.length ? <ul className="space-y-1 text-sm">{c.tickets.map((t: Row) => <li key={t.id}><a className="text-primary underline" href={`/app/support?t=${t.id}`}>{t.ref}</a> — {t.title}</li>)}</ul> : <p className="text-sm text-muted-foreground">لا توجد تذكرة مرتبطة.</p>}
       <p className="text-xs text-muted-foreground">انتهاء المكالمة لا يغيّر حالة التذكرة.</p>
-      {c.can.link && c.org_id && <PendingForCall orgId={c.org_id} callId={id} onLinked={() => act(async () => null, "تم")} />}
+      {c.can.link && <PendingForCall callId={id} onLinked={() => act(async () => null, "تم")} />}
       {c.can.link && (
         <>
           <div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => setMode(mode === "new" ? "" : "new")}><Ticket className="size-4" /> تذكرة جديدة من المكالمة</Button><Button size="sm" variant="outline" onClick={() => setMode(mode === "link" ? "" : "link")}>ربط بتذكرة قائمة</Button></div>
@@ -474,8 +474,8 @@ function LiveLink({ orgId, onClose }: { orgId: string; onClose: () => void }) {
   );
 }
 
-export function PendingForCall({ orgId, callId, onLinked }: { orgId: string; callId: string; onLinked: () => void }) {
-  const q = useQuery({ queryKey: ["mq", "pending", callId], queryFn: () => rpc("mq_pending_tickets", { _org: orgId, _call: callId }) as Promise<Row[]> });
+export function PendingForCall({ callId, onLinked }: { callId: string; onLinked: () => void }) {
+  const q = useQuery({ queryKey: ["mq", "pending", callId], queryFn: () => rpc("mq_pending_tickets", { _org: null, _call: callId }) as Promise<Row[]> });
   if (!q.data?.length) return null;
   return (
     <div className="space-y-1 rounded-lg border border-dashed p-2 text-sm">
