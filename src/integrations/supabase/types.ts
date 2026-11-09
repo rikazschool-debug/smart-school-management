@@ -21546,6 +21546,10 @@ export type Database = {
         }
         Returns: string
       }
+      hr_employee_dupcheck: {
+        Args: { _nid: string; _no: string; _org: string }
+        Returns: Json
+      }
       hr_employee_get: { Args: { _id: string }; Returns: Json }
       hr_employee_link_guardian: {
         Args: {
