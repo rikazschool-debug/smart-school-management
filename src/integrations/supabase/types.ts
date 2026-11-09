@@ -18540,6 +18540,10 @@ export type Database = {
         Returns: boolean
       }
       _tmp_diag_psp: { Args: { _org: string; _uid: string }; Returns: Json }
+      _tmp_diag_sec: {
+        Args: { _org: string; _sec: string; _uid: string }
+        Returns: Json
+      }
       _tt_courses: {
         Args: { _tt: string }
         Returns: {
