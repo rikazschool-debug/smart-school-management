@@ -111,6 +111,7 @@ export function ContractMatch({ schoolId }: { schoolId: string }) {
                 <option value="">اختر العام</option>
                 {school.data?.years.map((y) => <option key={y.id} value={y.id}>{y.name}{y.is_current ? " (الحالي)" : ""}</option>)}
               </select>
+              {school.data && !school.data.years.length && <span className="mt-1 block text-xs text-destructive">لا توجد أعوام دراسية لهذه المدرسة — أضفها من «الإعداد الأكاديمي».</span>}
             </label>
           </div>
 
