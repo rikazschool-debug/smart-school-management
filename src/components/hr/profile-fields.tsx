@@ -6,6 +6,8 @@ import { rpc, type HrEmp } from "@/components/hr/shared";
 import { CAL_LABEL, HR_FIELDS, HR_GROUPS, cleanValue, type Cal } from "@/lib/hr-fields";
 
 // Extra employee data (same definitions as the Excel template), grouped like the import.
+/** shown when no direct manager is set: requests then go straight to HR (server: pending_hr). */
+export const DEFAULT_MGR = "الموارد البشرية / مالك المجموعة";
 export const PROFILE_FIELDS = HR_FIELDS.filter((f) => f.where === "prof");
 export type Prof = Record<string, string | null | boolean | undefined> & { sensitive?: boolean; manager_id?: string | null; manager?: string | null; manager_no?: string | null; department?: string | null };
 
@@ -23,8 +25,8 @@ export function ProfileFields({ f, set, sensitive, org, self }: { f: Record<stri
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {g.key === "assign" && <div><Label htmlFor="hp-mgr">المسؤول المباشر</Label>
                 <select id="hp-mgr" className={selectCls("mt-1 w-full")} value={f["manager_id"] ?? ""} onChange={(e) => set("manager_id", e.target.value)}>
-                  <option value="">بلا</option>{(emps.data ?? []).filter((x) => x.id !== self).map((x) => <option key={x.id} value={x.id}>{x.display_name || x.full_name} — {x.employee_no}</option>)}
-                </select></div>}
+                  <option value="">{DEFAULT_MGR} (افتراضي)</option>{(emps.data ?? []).filter((x) => x.id !== self).map((x) => <option key={x.id} value={x.id}>{x.display_name || x.full_name} — {x.employee_no}</option>)}
+                </select><p className="mt-1 text-xs text-muted-foreground">إن تُركت على الافتراضي تذهب الطلبات (إجازات، استئذان) مباشرة إلى الموارد البشرية ومالك المجموعة. يمكنك اختيار موظف آخر في أي وقت.</p></div>}
               {list.map((x) => x.kind === "docdate" ? (
                 <div key={x.key}><Label htmlFor={`hp-${x.key}`}>{x.label}</Label>
                   <div className="mt-1 flex gap-1"><Input id={`hp-${x.key}`} dir="ltr" placeholder="1447-05-10 أو 2027-01-31" value={f[x.key] ?? ""} onChange={(e) => set(x.key, e.target.value)} />
@@ -71,7 +73,7 @@ export function ProfileView({ pr }: { pr: Prof | undefined }) {
     <div className="space-y-2">
       {HR_GROUPS.map((g) => {
         const list = PROFILE_FIELDS.filter((x) => x.group === g.key && (!x.sensitive || pr.sensitive || x.key === "passport_no" || x.key === "iban"));
-        const extra = g.key === "assign" ? [["المسؤول المباشر", pr.manager ? `${pr.manager}${pr.manager_no ? ` (${pr.manager_no})` : ""}` : null] as const] : [];
+        const extra = g.key === "assign" ? [["المسؤول المباشر", pr.manager ? `${pr.manager}${pr.manager_no ? ` (${pr.manager_no})` : ""}` : `${DEFAULT_MGR} (تلقائي)`] as const] : [];
         if (!list.length && !extra.length) return null;
         return (
           <div key={g.key}><p className="mb-1 text-xs font-semibold text-muted-foreground">{g.label}</p>
