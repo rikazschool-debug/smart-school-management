@@ -16,7 +16,7 @@ import { askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { HrImport } from "@/components/hr/import";
-import { HR_FIELDS, ID_TYPES, cleanValue } from "@/lib/hr-fields";
+import { HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, NAME_EN_MAX, cleanValue, type HrGroup } from "@/lib/hr-fields";
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
 import { ProfileFields, ProfileView, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
@@ -292,30 +292,41 @@ function localPhone(s: string) {
   return /^05\d{8}$/.test(d) ? d : null;
 }
 
-function EmpFields({ f, set, sensitive, withStatus, loginPhone, px, setPx }: { f: Record<string, string>; set: (k: never, v: string) => void; sensitive: boolean; withStatus?: boolean; loginPhone?: boolean; px?: Record<string, string>; setPx?: (k: string, v: string) => void }) {
+function EmpFields({ f, set, sensitive, withStatus, loginPhone, px, setPx, only, withNo }: { f: Record<string, string>; set: (k: never, v: string) => void; sensitive: boolean; withStatus?: boolean; loginPhone?: boolean; px?: Record<string, string>; setPx?: (k: string, v: string) => void; only?: HrGroup; withNo?: boolean }) {
   const raw = set as (k: string, v: string) => void;
+  const on = (g: HrGroup) => !only || only === g;
   // display name follows first + last word of the full name until the user types their own
   const auto = (n: string) => { const w = n.trim().split(/\s+/).filter(Boolean); return w.length > 1 ? `${w[0]} ${w[w.length - 1]}` : (w[0] ?? ""); };
   const s = (k: string, v: string) => { raw(k, v); if (k === "full_name" && (!f["display_name"] || f["display_name"] === auto(f["full_name"] ?? ""))) raw("display_name", auto(v)); };
   const F = (k: string, label: string, type = "text", extra: Record<string, string> = {}) => (
     <div><Label htmlFor={`hr-${k}`}>{bi(k === "phone" && loginPhone ? "login_phone" : k, label)}</Label><Input id={`hr-${k}`} type={type} className="mt-1" value={f[k] ?? ""} onChange={(e) => s(k, e.target.value)} {...extra} /><EnHint k={k} v={f[k]} /></div>
   );
+  const nat = HR_OPTIONS["nationality"]!;
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {F("full_name", "الاسم الرسمي الكامل")}
-      {F("display_name", "الاسم المعروض", "text", { placeholder: "يُملأ تلقائيًا بالاسم الأول والأخير" })}
-      {F("job_title", "المسمى الوظيفي")}
-      {F("hire_date", "تاريخ المباشرة", "date")}
-      {F("phone", loginPhone ? "رقم الجوال المعتمد للدخول" : "الجوال", "tel", { dir: "ltr", inputMode: "tel", placeholder: "05xxxxxxxx" })}
-      {F("email", "البريد الوظيفي", "email", { dir: "ltr" })}
-      <div><Label htmlFor="hr-gender">{bi("gender", "الجنس")}</Label><select id="hr-gender" className={selectCls("mt-1 w-full")} value={f["gender"] ?? ""} onChange={(e) => s("gender", e.target.value)}><option value="">—</option>{Object.entries(GENDER).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select><EnHint k="gender" v={GENDER[f["gender"] as keyof typeof GENDER]} /></div>
-      {sensitive ? <>
+      {on("personal") && <>
+        {F("full_name", only ? "الاسم باللغة العربية" : "الاسم الرسمي الكامل")}
+        {F("display_name", "الاسم المعروض", "text", { placeholder: "يُملأ تلقائيًا بالاسم الأول والأخير" })}
+        <div><Label htmlFor="hr-gender">{bi("gender", "الجنس")}</Label><select id="hr-gender" className={selectCls("mt-1 w-full")} value={f["gender"] ?? ""} onChange={(e) => s("gender", e.target.value)}><option value="">—</option>{Object.entries(GENDER).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select><EnHint k="gender" v={GENDER[f["gender"] as keyof typeof GENDER]} /></div>
+        {sensitive ? <>
+          {F("birth_date", "تاريخ الميلاد", "date")}
+          <div><Label htmlFor="hr-nationality">{bi("nationality", "الجنسية")}</Label><select id="hr-nationality" className={selectCls("mt-1 w-full")} value={f["nationality"] ?? ""} onChange={(e) => s("nationality", e.target.value)}><option value="">—</option>{nat.map((o) => <option key={o} value={o}>{o}</option>)}{f["nationality"] && !nat.includes(f["nationality"]) && <option value={f["nationality"]}>{f["nationality"]}</option>}</select><EnHint k="nationality" v={f["nationality"]} /></div>
+        </> : <p className="self-end text-xs text-muted-foreground">الجنسية وتاريخ الميلاد تحتاج صلاحية «البيانات الحساسة».</p>}
+      </>}
+      {on("docs") && (sensitive ? <>
         {px && setPx && <div><Label htmlFor="hr-id_type">{bi("id_type", "نوع الهوية")}</Label><select id="hr-id_type" className={selectCls("mt-1 w-full")} value={px["id_type"] ?? ""} onChange={(e) => { setPx("id_type", e.target.value); if (e.target.value === "none") { raw("national_id", ""); setPx("id_version", ""); } }}><option value="">—</option>{Object.entries(ID_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>}
         {F("national_id", "رقم الهوية / الإقامة", "text", { dir: "ltr", inputMode: "numeric", ...(px?.["id_type"] === "none" ? { disabled: "true", placeholder: "لا يوجد" } : {}) })}
         {px && setPx && <div><Label htmlFor="hr-id_version">{bi("id_version", "رقم النسخة")}</Label><Input id="hr-id_version" className="mt-1" dir="ltr" disabled={px["id_type"] === "none"} placeholder={px["id_type"] === "none" ? "لا يوجد" : ""} value={px["id_version"] ?? ""} onChange={(e) => setPx("id_version", e.target.value)} /></div>}
-        {F("nationality", "الجنسية")}
-        {F("birth_date", "تاريخ الميلاد", "date")}
-      </> : <p className="self-end text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">رقم الهوية والجنسية وتاريخ الميلاد تحتاج صلاحية «البيانات الحساسة».</p>}
+      </> : <p className="self-end text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">نوع الهوية ورقمها تحتاج صلاحية «البيانات الحساسة».</p>)}
+      {on("job") && <>
+        {withNo && F("employee_no", "الرقم الوظيفي", "text", { dir: "ltr", placeholder: "اتركه فارغًا ليُولَّد تلقائيًا" })}
+        {F("job_title", "المسمى الوظيفي")}
+        {F("hire_date", only ? "تاريخ الالتحاق" : "تاريخ المباشرة", "date")}
+      </>}
+      {on("contact") && <>
+        {F("phone", loginPhone ? "رقم الجوال المعتمد للدخول" : "الجوال", "tel", { dir: "ltr", inputMode: "tel", placeholder: "05xxxxxxxx" })}
+        {F("email", "البريد الإلكتروني", "email", { dir: "ltr" })}
+      </>}
       {withStatus && <>
         <div><Label htmlFor="hr-status">{bi("status", "الحالة")}</Label><select id="hr-status" className={selectCls("mt-1 w-full")} value={f["status"] ?? "active"} onChange={(e) => s("status", e.target.value)}>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
         {f["status"] === "ended" && F("end_date", "تاريخ انتهاء الخدمة", "date")}
