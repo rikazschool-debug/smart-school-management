@@ -48,7 +48,7 @@ try {
   // 3 templates mirror the base role exactly (preview = current rule)
   let mism: string[] = [];
   for (const [name, u] of [["مدير مدرسة", prin], ["وكيل", vice], ["شؤون الطلاب", sa], ["أمن واستقبال", sec], ["مرشد طلابي", co]] as const) {
-    const e = ((await owner.c.rpc("perm_effective", { _org: org, _user: u.id })).data.effective as any[]).filter((x) => x.section !== "procurement");
+    const e = ((await owner.c.rpc("perm_effective", { _org: org, _user: u.id })).data.effective as any[]).filter((x) => x.section !== "procurement" && !x.section.startsWith("bt_")); // base tools are deny-only, never in templates
     const base = e.filter((x) => x.base_schools.includes("فرع أ")).map((x) => `${x.section}.${x.action}`).sort();
     const g = (tpl(name).grants as any[]).map((x) => `${x.section}.${x.action}`).sort();
     if (base.join() !== g.join()) mism.push(`${name}: base=${base} tpl=${g}`);

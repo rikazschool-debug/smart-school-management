@@ -742,3 +742,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-08 — Permissions: edit existing employee (phase 1)
 - Read-only current-access panel, tree statuses (inherited/personal grant/deny/unsaved), follow-role, restore role defaults, filters, expand/collapse, unsaved-change guard, stale-edit check before save. Browser (demo owner, 1280 + 390): no errors; unsaved status + discard prompt shown.
+
+- 2026-11-09 B10 base-role tools: perm area base_tools (bt_schedule/classroom/homework/chat_direct/chat_groups/my_employment), deny-only (no grant, not in templates), gated in hw_staff/hw_teacher, homework write RPCs, start_*_conversation, conv_send_block, hr_my_*, RLS restrictive on timetable_slots/classrooms/classroom_posts; menu hides schedule/classrooms/homework. scripts/base-tools-e2e.ts 22/22; perm7 20/20; comm-e2e 95/95; perm6 19/20 (check 3 pre-existing: events/people base not in templates); homework-e2e blocked pre-existing (teachers select revoked). Browser: owner tree 1280/390, deny draft + preview OK.
