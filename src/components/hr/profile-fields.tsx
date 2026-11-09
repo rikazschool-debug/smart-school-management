@@ -10,11 +10,17 @@ import { CAL_LABEL, HR_FIELDS, HR_GROUPS, cleanValue, type Cal } from "@/lib/hr-
 export const DEFAULT_MGR = "الموارد البشرية";
 export const OWNER_MGR = "مالك المجموعة";
 const OWNER_VAL = "@owner";
+/** a group-owner account chosen as the named direct manager (server creates/uses the owner's HR file) */
+const OWNER_ACC = "@owner:";
+export type HrOwner = { user_id: string; name: string; employee_id: string | null };
+export const useHrOwners = (org: string) => useQuery({ queryKey: ["hr-owners", org], queryFn: () => rpc<HrOwner[]>("hr_org_owners", { _org: org }) });
 export const PROFILE_FIELDS = HR_FIELDS.filter((f) => f.where === "prof");
 export type Prof = Record<string, string | null | boolean | undefined> & { sensitive?: boolean; manager_id?: string | null; manager?: string | null; manager_no?: string | null; manager_kind?: string | null; department?: string | null };
 
 export function ProfileFields({ f, set, sensitive, org, self }: { f: Record<string, string>; set: (k: string, v: string) => void; sensitive: boolean; org: string; self?: string }) {
   const emps = useQuery({ queryKey: ["hr-list", org, "", "", "active"], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: null, _q: null, _status: "active" }) });
+  const owners = useHrOwners(org);
+  const ownerEmp = new Set((owners.data ?? []).map((o) => o.employee_id).filter(Boolean));
   return (
     <div className="space-y-3">
       {HR_GROUPS.filter((g) => g.key !== "basic" || PROFILE_FIELDS.some((x) => x.group === "basic")).map((g) => {
@@ -27,8 +33,10 @@ export function ProfileFields({ f, set, sensitive, org, self }: { f: Record<stri
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {g.key === "assign" && <div><Label htmlFor="hp-mgr">المسؤول المباشر</Label>
                 <select id="hp-mgr" className={selectCls("mt-1 w-full")} value={f["manager_id"] ?? ""} onChange={(e) => set("manager_id", e.target.value)}>
-                  <option value="">{DEFAULT_MGR} (افتراضي)</option><option value={OWNER_VAL}>{OWNER_MGR}</option>{(emps.data ?? []).filter((x) => x.id !== self).map((x) => <option key={x.id} value={x.id}>{x.display_name || x.full_name} — {x.employee_no}</option>)}
-                </select><p className="mt-1 text-xs text-muted-foreground">«الموارد البشرية»: تذهب الطلبات (إجازات، استئذان) مباشرة إلى الموارد البشرية. «مالك المجموعة»: تصل للمالك وحده ويبت فيها. أو اختر موظفًا بعينه.</p></div>}
+                  <option value="">{DEFAULT_MGR} (افتراضي)</option><option value={OWNER_VAL}>{OWNER_MGR} (أي مالك، بدل الموارد البشرية)</option>
+                  {(owners.data ?? []).filter((o) => !o.employee_id || o.employee_id !== self).map((o) => <option key={o.user_id} value={o.employee_id ?? `${OWNER_ACC}${o.user_id}`}>حساب المالك: {o.name}</option>)}
+                  {(emps.data ?? []).filter((x) => x.id !== self && !ownerEmp.has(x.id)).map((x) => <option key={x.id} value={x.id}>{x.display_name || x.full_name} — {x.employee_no}</option>)}
+                </select><p className="mt-1 text-xs text-muted-foreground">«الموارد البشرية»: تذهب الطلبات (إجازات، استئذان) مباشرة إلى الموارد البشرية. «مالك المجموعة»: تصل للمالك وحده ويبت فيها. «حساب المالك»: يعتمد المالك مسؤولًا مباشرًا ثم تنتقل للموارد البشرية. أو اختر موظفًا بعينه. لا يكون الشخص مسؤولًا عن نفسه.</p></div>}
               {list.map((x) => x.kind === "docdate" ? (
                 <div key={x.key}><Label htmlFor={`hp-${x.key}`}>{x.label}</Label>
                   <div className="mt-1 flex gap-1"><Input id={`hp-${x.key}`} dir="ltr" placeholder="1447-05-10 أو 2027-01-31" value={f[x.key] ?? ""} onChange={(e) => set(x.key, e.target.value)} />
@@ -65,6 +73,7 @@ export function profilePayload(f: Record<string, string>, sensitive: boolean, pr
     if (want !== had) {
       if (want === OWNER_VAL) p["manager_kind"] = "owner";
       else if (want === "") p["manager_kind"] = "hr";
+      else if (want.startsWith(OWNER_ACC)) p["manager_owner"] = want.slice(OWNER_ACC.length);
       else p["manager_id"] = want;
     }
   }
