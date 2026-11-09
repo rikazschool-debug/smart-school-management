@@ -60,11 +60,13 @@ export function useOpsStaff(active: AppContext | null, userId: string | undefine
   const hasPc = !!pc.data?.enabled && !!pc.data.caps?.view;
   const hasAd = hasAdmissions(ad.data);
   const asst = hasAssistantPerms(sp);
-  const hasOps = hasMt || hasPc || hasAd || asst;
+  // customer service agent (template «مسؤول خدمة العملاء»): only tickets assigned to him, checked by support_* on the server
+  const cs = !!sp?.["customer_service.handle"];
+  const hasOps = hasMt || hasPc || hasAd || asst || cs;
   const opsOnly = central || (isTeacherType && teachRow.data === false && hasOps);
-  if (central) return { loading: false, opsOnly: true, central: true, asst: false, title: "الإدارة المركزية — الموارد البشرية", jobs: ["مدير إدارة الموارد البشرية"], hasPc: false, me: undefined };
-  const jobs = opsOnly ? [...opsTitles(mt.data, hasPc, hasAd), ...(asst ? ["مساعد إداري"] : [])] : [];
+  if (central) return { loading: false, opsOnly: true, central: true, asst: false, title: "الإدارة المركزية — الموارد البشرية", jobs: ["مدير إدارة الموارد البشرية"], cs: false, hasPc: false, me: undefined };
+  const jobs = opsOnly ? [...opsTitles(mt.data, hasPc, hasAd), ...(asst ? ["مساعد إداري"] : []), ...(cs ? ["مسؤول خدمة العملاء"] : [])] : [];
   // several jobs on one account → one neutral «لوحة عملي», never one role's name over the others
-  const title = !opsOnly ? null : jobs.length > 1 ? "عملي" : hasMt ? opsTitle(mt.data) : hasPc ? "مسؤول المشتريات" : hasAd ? "مسؤول القبول والتسجيل" : "مساعد إداري";
-  return { loading, opsOnly, central: false, asst: opsOnly && asst, title, jobs, hasPc, me: mt.data };
+  const title = !opsOnly ? null : jobs.length > 1 ? "عملي" : hasMt ? opsTitle(mt.data) : hasPc ? "مسؤول المشتريات" : hasAd ? "مسؤول القبول والتسجيل" : asst ? "مساعد إداري" : "مسؤول خدمة العملاء";
+  return { loading, opsOnly, central: false, asst: opsOnly && asst, cs: opsOnly && cs, title, jobs, hasPc, me: mt.data };
 }
