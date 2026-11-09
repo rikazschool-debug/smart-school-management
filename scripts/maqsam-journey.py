@@ -18,7 +18,7 @@ async def main():
         p = await login(br, "owner")
         await p.goto(B + "/app/calls?mq=calls"); await p.wait_for_timeout(5000)
         t = await p.locator("main").inner_text(); await p.screenshot(path=f"{S}/owner-calls.png")
-        nav = await p.locator("nav[aria-label='القائمة الرئيسية']").inner_text()
+        nav = " ".join(await p.locator("nav").all_inner_texts())
         check("sidebar has calls section with 5 pages", "المكالمات الهاتفية" in nav and all(x in nav for x in ["لوحة الاتصال", "المكالمات", "المتابعات", "تقارير الاتصال", "إعدادات Maqsam"]))
         check("owner sees calls of both branches", "فرع أ" in t and "فرع ب" in t and "3 مكالمة" in t)
         await p.get_by_text("فتح").first.click(); await p.wait_for_timeout(3000)
