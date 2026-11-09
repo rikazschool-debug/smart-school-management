@@ -438,8 +438,6 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
         </dl>
       )}
       {!edit && <ProfileView pr={prof.data} />}
-      {false && (<></>
-      )}
       <div>
         <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", category_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
         {asg && (
