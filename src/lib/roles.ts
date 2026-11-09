@@ -52,6 +52,7 @@ export type NavKey =
   | "comm_manage"
   | "profile"
   | "support"
+  | "calls"
   | "homework"
   | "grades"
   | "results"
@@ -83,8 +84,8 @@ export type NavKey =
   | "hub_circulars";
 
 /** Owner home is split into four sections; each section shows only its own side menu. */
-export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support";
-export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة" };
+export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support" | "calls";
+export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة", calls: "المكالمات الهاتفية" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "events"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
@@ -98,6 +99,7 @@ const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   users: ["members", "permissions"],
   hub: ["hub_notices", "hub_circulars"],
   support: ["support"],
+  calls: ["calls"],
 };
 const OWNER_COMMON: NavKey[] = ["home", "profile", "notifications", "support"];
 
@@ -113,6 +115,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
   if (p.startsWith("/app/hr")) return "hr";
   if (p === "/app/hub" || p.startsWith("/app/notice/")) return "hub";
   if (p === "/app/support" || p.startsWith("/app/support/")) return "support";
+  if (p === "/app/calls") return "calls";
   if (p.startsWith("/app/evaluation") || p.startsWith("/app/visits")) return "hr";
   if (p.startsWith("/app/admissions")) return "school_admin"; // admissions is a sub-tab of school administration
   if (p.startsWith("/app/maintenance")) return "maintenance";
@@ -124,6 +127,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
 /** Side-menu keys an owner sees inside a section (filtered further by what the role may open). */
 export function ownerSectionNav(section: OwnerSection, allowed: NavKey[]): NavKey[] {
   const own = OWNER_SECTION_KEYS[section].filter((k) => allowed.includes(k) || k === "school_home" || k === "finance" || k === "hr" || k === "permissions" || k === "procurement" || k === "operations" || k === "transport" || k === "maintenance" || k === "bus_maintenance" || k === "admissions" || k === "org_docs" || k === "family_visits" || k === "tags" || k === "chat_settings" || k === "events" || k === "evaluation" || k === "hr_training" || section === "hub");
+  // "calls" is added to `allowed` only when mq_caps grants a section
   return [...new Set([...own, ...OWNER_COMMON])];
 }
 
@@ -184,7 +188,7 @@ export const NAV_LABELS: Partial<Record<NavKey, string>> = {
   home: "لوحة التحكم المركزية", academic: "الإعداد الأكاديمي", teachers: "المعلمون", courses: "المقررات والتكليفات", students: "الطلاب والتسكين", guardians: "أولياء الأمور", tags: "الوسوم", chat_settings: "ضبط المحادثات",
   classrooms: "الفصول الرقمية", virtual: "الحصص الافتراضية", homework: "الواجبات والاختبارات", grades: "أرشيف الدرجات الفصلية", results: "النتائج", schedule: "الجدول المدرسي",
   attendance: "الحضور والخروج", station: "المسح والبوابة والنداء", pickup: "الخروج والاستئذان", admin: "التكليفات والطلبات", duties: "المناوبات", meetings: "الاجتماعات",
-  calendar: "تقويمي", communication: "التواصل", circulars: "التعاميم", comm_groups: "المجموعات", comm_manage: "إدارة المجموعات", notifications: "الإشعارات", support: "الدعم والمساعدة",
+  calendar: "تقويمي", communication: "التواصل", circulars: "التعاميم", comm_groups: "المجموعات", comm_manage: "إدارة المجموعات", notifications: "الإشعارات", support: "الدعم والمساعدة", calls: "المكالمات الهاتفية",
   procurement: "المشتريات والعهد", school_home: "لوحة المدرسة", maintenance: "إدارة صيانة المباني", bus_maintenance: "إدارة تشغيل وصيانة الباصات", admissions: "القبول والتسجيل",
 };
 

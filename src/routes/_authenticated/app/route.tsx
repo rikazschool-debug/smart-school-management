@@ -8,7 +8,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Award, Briefcase,
   Bell, MonitorPlay, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
-  ReceiptText, Wallet, Construction, KeyRound, LayoutDashboard, Wrench, Bus,
+  ReceiptText, Wallet, Phone, Construction, KeyRound, LayoutDashboard, Wrench, Bus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingState, ErrorState } from "@/components/states";
 import { NotificationBell } from "@/components/notification-bell";
 import { useSupportCaps } from "@/components/support/caps";
+import { MQ_LABEL, mqSections, useMqCaps } from "@/components/support/calls";
 import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -65,6 +66,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   profile: { to: "/app/profile", label: "الملف الشخصي", icon: UserCircle },
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
   support: { to: "/app/support", label: "الدعم والمساعدة", icon: LifeBuoy },
+  calls: { to: "/app/calls", label: "المكالمات الهاتفية", icon: Phone },
   procurement: { to: "/app/procurement", label: "المشتريات والعهد", icon: ReceiptText },
   school_home: { to: "/app/school-home", label: "لوحة المدرسة", icon: LayoutDashboard },
   finance: { to: "/app/finance", label: "بوابة المالية", icon: Wallet },
@@ -110,6 +112,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings"] },
   { label: "إدارة الإشعارات", keys: ["hub_notices", "hub_circulars"] },
   { label: "التنبيهات والدعم", keys: ["notifications", "support"] },
+  { label: "المكالمات الهاتفية", keys: ["calls"] },
 ];
 
 function AppLayout() {
@@ -152,6 +155,10 @@ function Shell() {
   const canGoBack = useCanGoBack();
   // support sub-menu mirrors the page's own tabs (supportTabs + support_caps); the page and support_* RPCs re-check
   const inSupport = path === "/app/support" || path.startsWith("/app/support/");
+  // phone calls section: shown only when mq_caps grants at least one page (the page and mq_* RPCs re-check)
+  const mqCaps = useMqCaps(active && active.role !== "platform_admin" && active.role !== "student" && active.role !== "guardian" ? active.orgId : null);
+  const mqSecs = mqCaps.data ? mqSections(mqCaps.data) : [];
+  const mqTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["mq"] ?? "") });
   const sCaps = useSupportCaps(inSupport && active && active.role !== "platform_admin" ? active.orgId : null);
 
   async function signOut() {
@@ -188,6 +195,7 @@ function Shell() {
   if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events", ...(ops.asst ? ["schedule", "attendance"] : [])].includes(k)));
   if (ops.asst && !sp?.["school_schedule.view"]) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => k !== "schedule"));
   if (ops.asst && !(sp?.["attendance.view"] || sp?.["attendance.record"])) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => k !== "attendance"));
+  if (mqSecs.length) baseNav.push("calls");
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   let nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   // class visits live under the evaluation sub-menu for roles that have both
@@ -247,6 +255,13 @@ function Shell() {
                         <Link key={t} to="/app/support" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS + (supTab === t || (!supTab && i === 0) ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>
                           {t === "settings" ? "الإعدادات والتصنيفات" : SUPPORT_TAB_LABELS[t]}
                         </Link>
+                      ))}
+                    </div>
+                  )}
+                  {k === "calls" && path === "/app/calls" && (
+                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                      {mqSecs.map((t, i) => (
+                        <Link key={t} to="/app/calls" search={{ mq: t }} onClick={() => setOpen(false)} className={SUB_CLS + (mqTab === t || (!mqTab && i === 0) ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>{MQ_LABEL[t]}</Link>
                       ))}
                     </div>
                   )}
