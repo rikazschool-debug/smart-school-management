@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { canManageStudents, type Role } from "@/lib/roles";
 import { AccountButton } from "@/components/account-button";
 import { PeopleImport } from "@/components/people-import-dialog";
-import { ContractMatch } from "@/components/contract-match";
+import { ContractMatch, ContractEdit } from "@/components/contract-match";
 import { AccountPanel } from "@/components/account-panel";
 import { GuardianQuickAdd } from "@/components/guardian-quick-add";
 import { studentReadiness } from "@/lib/people-import";
@@ -103,15 +103,18 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             const m = studentReadiness(r);
             return m.length ? <span className="text-xs text-destructive">ينقص: {m.join("، ")}</span> : <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز</span>;
           } },
-          { label: "العام الدراسي", text: (r) => r["contract_year"] ?? "", render: (r) => r["contract_year"] ? <span className={r["contract_year"] === "يحتاج تحديث" ? "text-xs text-destructive" : "text-xs"}>{r["contract_year"]}</span> : <span className="text-muted-foreground">—</span> },
-          { label: "آخر حالة العقد", text: (r) => r["contract_status"] ?? "", render: (r) => <span className="text-xs">{r["contract_status"] ?? "—"}</span> },
-          { label: "آخر نوع العقد", text: (r) => r["contract_type"] ?? "", render: (r) => <span className="text-xs">{r["contract_type"] ?? "—"}</span> },
+          { label: "العام الدراسي", text: (r) => r["contract_year"] ?? "لا يوجد", render: (r) => <span className={r["contract_year"] === "يحتاج تحديث" ? "text-xs text-destructive" : "text-xs"}>{r["contract_year"] ?? "لا يوجد"}</span> },
+          { label: "آخر حالة العقد", text: (r) => r["contract_status"] ?? "لا يوجد", render: (r) => <span className="text-xs">{r["contract_status"] ?? "لا يوجد"}</span> },
+          { label: "آخر نوع العقد", text: (r) => r["contract_type"] ?? "لا يوجد", render: (r) => <span className="text-xs">{r["contract_type"] ?? "لا يوجد"}</span> },
         ]}
-        extraActions={(r) => w ? (
+        extraActions={(r) => w || ctCan.data ? (
           <>
+            {ctCan.data && <ContractEdit row={r} schoolId={ctx.schoolId} />}
+            {w && <>
             <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>
             <Button variant="ghost" size="sm" onClick={() => setGuarding(r)}><Link2 className="size-4" /> ولي الأمر</Button>
             <Button variant="ghost" size="sm" onClick={() => setLinking(r)}>ربط بولي أمر مسجل</Button>
+            </>}
           </>
         ) : null} />
 
