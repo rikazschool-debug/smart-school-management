@@ -8379,9 +8379,15 @@ export type Database = {
           bank_name: string | null
           education: string | null
           employee_id: string
+          has_licence: string | null
           iban: string | null
           id_expiry: string | null
           id_expiry_cal: string | null
+          id_type: string | null
+          id_version: string | null
+          licence_expiry: string | null
+          licence_expiry_cal: string | null
+          licence_type: string | null
           marital_status: string | null
           mid_bank: string | null
           mid_iban: string | null
@@ -8391,7 +8397,10 @@ export type Database = {
           org_id: string
           passport_expiry: string | null
           passport_expiry_cal: string | null
+          passport_issue: string | null
+          passport_issue_cal: string | null
           passport_no: string | null
+          passport_place: string | null
           pay_method: string | null
           religion: string | null
           specialization: string | null
@@ -8407,9 +8416,15 @@ export type Database = {
           bank_name?: string | null
           education?: string | null
           employee_id: string
+          has_licence?: string | null
           iban?: string | null
           id_expiry?: string | null
           id_expiry_cal?: string | null
+          id_type?: string | null
+          id_version?: string | null
+          licence_expiry?: string | null
+          licence_expiry_cal?: string | null
+          licence_type?: string | null
           marital_status?: string | null
           mid_bank?: string | null
           mid_iban?: string | null
@@ -8419,7 +8434,10 @@ export type Database = {
           org_id: string
           passport_expiry?: string | null
           passport_expiry_cal?: string | null
+          passport_issue?: string | null
+          passport_issue_cal?: string | null
           passport_no?: string | null
+          passport_place?: string | null
           pay_method?: string | null
           religion?: string | null
           specialization?: string | null
@@ -8435,9 +8453,15 @@ export type Database = {
           bank_name?: string | null
           education?: string | null
           employee_id?: string
+          has_licence?: string | null
           iban?: string | null
           id_expiry?: string | null
           id_expiry_cal?: string | null
+          id_type?: string | null
+          id_version?: string | null
+          licence_expiry?: string | null
+          licence_expiry_cal?: string | null
+          licence_type?: string | null
           marital_status?: string | null
           mid_bank?: string | null
           mid_iban?: string | null
@@ -8447,7 +8471,10 @@ export type Database = {
           org_id?: string
           passport_expiry?: string | null
           passport_expiry_cal?: string | null
+          passport_issue?: string | null
+          passport_issue_cal?: string | null
           passport_no?: string | null
+          passport_place?: string | null
           pay_method?: string | null
           religion?: string | null
           specialization?: string | null
