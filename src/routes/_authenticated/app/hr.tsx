@@ -142,7 +142,7 @@ type Cand = { accounts: { user_id: string; name: string; roles: string[]; school
 /** Login role label: base roles, or «tpl:<template>» = operations staff with that permission template. */
 /** same phone rule as the Excel import (05 / 9665 / +9665 → +9665…) */
 function fixPhone<T extends Record<string, unknown>>(p: T): T { const v = String(p["phone"] ?? ""); if (!v) return p; const c = cleanValue(HR_FIELDS.find((f) => f.key === "phone")!, v); if (c.err) throw new Error(c.err); return { ...p, phone: c.v }; }
-const EMPTY = { full_name: "", display_name: "", category_id: "", user_id: "", school_id: "", teacher_id: "", job_title: "", department: "", hire_date: "", phone: "", email: "", gender: "", national_id: "", nationality: "", birth_date: "" };
+const EMPTY = { employee_no: "", full_name: "", display_name: "", category_id: "", user_id: "", school_id: "", teacher_id: "", job_title: "", department: "", hire_date: "", phone: "", email: "", gender: "", national_id: "", nationality: "", birth_date: "" };
 
 function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClose: () => void; onDone: (id: string) => void }) {
   const qc = useQueryClient();
@@ -188,88 +188,139 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
     const t = (cand.data?.teachers ?? []).find((x) => x.teacher_id === tid);
     setF((x) => ({ ...x, teacher_id: tid, ...(t ? { school_id: t.school_id, full_name: x.full_name || t.name, job_title: x.job_title || (t.specialization ? `معلم ${t.specialization}` : "معلم"), ...(t.user_id ? { user_id: t.user_id } : {}) } : {}) }));
   };
+  const sens = m.caps.sensitive;
+  const noId = px["id_type"] === "none";
+  const pErr = (() => { try { extra(); return ""; } catch (e) { return (e as Error).message; } })();
+  const phoneErr = (() => { try { fixPhone({ phone: f.phone }); return ""; } catch (e) { return (e as Error).message; } })();
+  // required fields per tab (same rules the server enforces); each item jumps to its tab
+  const missing: { t: number; msg: string }[] = [
+    ...(!f.full_name.trim() ? [{ t: 0, msg: "الاسم باللغة العربية" }] : []),
+    ...((px["name_en"] ?? "").length > NAME_EN_MAX ? [{ t: 0, msg: `الاسم بالإنجليزية لا يزيد عن ${NAME_EN_MAX} خانة` }] : []),
+    ...(pErr ? [{ t: 1, msg: pErr }] : []),
+    ...(!f.school_id ? [{ t: 2, msg: "الفرع" }] : []),
+    ...(phoneErr ? [{ t: 4, msg: phoneErr }] : []),
+    ...(mode === "new" && !noId ? [
+      ...(!sens ? [{ t: 6, msg: "إنشاء حساب الدخول يحتاج صلاحية «البيانات الحساسة»" }] : []),
+      ...(sens && !/^[12]\d{9}$/.test(f.national_id.replace(/\D/g, "")) ? [{ t: 1, msg: "رقم الهوية / الإقامة (10 أرقام تبدأ بـ1 أو 2)" }] : []),
+      ...(!localPhone(f.phone) ? [{ t: 4, msg: "رقم الجوال المعتمد للدخول (05xxxxxxxx)" }] : []),
+      ...(!base ? [{ t: 6, msg: "دور المستخدم" }] : []),
+    ] : []),
+    ...(mode === "new" && noId && central ? [{ t: 2, msg: "ملف الإدارة المركزية بلا هوية غير ممكن" }] : []),
+  ];
+  const TABS = [...HR_GROUPS.map((g) => g.label), "الحساب والصلاحيات", "المراجعة والتأكيد"];
+  const [tab, setTab] = useState(0);
+  const go = (t: number) => { setTab(t); setConflicts([]); };
+  const nid = f.national_id.replace(/\D/g, "");
+  const dup = useQuery({ enabled: tab === 7 && (!!f.employee_no.trim() || !!nid), queryKey: ["hr-dup", org, f.employee_no.trim(), nid], retry: false,
+    queryFn: () => rpc<{ no_used: boolean; no_emp: string | null; nid_used: boolean; nid_emp: string | null }>("hr_employee_dupcheck", { _org: org, _no: f.employee_no.trim() || null, _nid: nid || null }) });
+  const dupBad = !!(dup.data?.no_used || dup.data?.nid_used);
+  const ready = !missing.length && !dupBad && !dup.isFetching && !dup.error;
+  const accName = cand.data?.accounts.find((x) => x.user_id === f.user_id)?.name;
+  const Sum = ({ rows }: { rows: [string, React.ReactNode][] }) => (
+    <dl className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">{rows.map(([k, v]) => <div key={k} className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>)}</dl>
+  );
+  const mgrLabel = (() => { const v = px["manager_id"] ?? ""; return !v ? "الموارد البشرية (افتراضي)" : v === "@owner" ? "مالك المجموعة" : v.startsWith("@owner:") ? "حساب المالك" : "موظف محدد"; })();
+  const setP = (k: string, v: string) => setPx((x) => ({ ...x, [k]: v }));
   return (
     <section className="rounded-xl border bg-card p-4" aria-label="إضافة موظف">
       <div className="mb-3 flex items-center gap-2"><p className="flex-1 font-bold">إضافة موظف</p><Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق"><X className="size-4" /></Button></div>
       {cand.isLoading ? <LoadingState rows={1} /> : cand.error ? <ErrorState message={arabicError(cand.error)} /> : (
         <div className="space-y-4">
-          <div role="radiogroup" aria-label="حساب الدخول" className="grid gap-2 sm:grid-cols-2">
-            {([["new", "إنشاء حساب جديد للموظف", "يدخل برقم الهوية أو الإقامة ثم رمز يصل إلى جواله المعتمد."], ["link", "ربط يدوي بحساب موجود", "لموظف لديه حساب دخول في المؤسسة من قبل."]] as const).map(([k, t, d]) => (
-              <button key={k} type="button" role="radio" aria-checked={mode === k} onClick={() => { setMode(k); setConfirm(false); setConflicts([]); setF((x) => ({ ...x, user_id: "", teacher_id: "" })); }}
-                className={"rounded-lg border p-3 text-start " + (mode === k ? "border-primary bg-primary/5" : "hover:border-primary")}>
-                <span className="block font-semibold">{t}</span><span className="block text-xs text-muted-foreground">{d}</span>
+          <div role="tablist" aria-label="أقسام بيانات الموظف" className="flex gap-1 overflow-x-auto border-b pb-2">
+            {TABS.map((t, i) => (
+              <button key={t} type="button" role="tab" aria-selected={tab === i} onClick={() => go(i)}
+                className={"flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm " + (tab === i ? "bg-primary text-primary-foreground" : "hover:bg-secondary")}>
+                <span className={"grid size-5 place-items-center rounded-full text-xs " + (tab === i ? "bg-primary-foreground/20" : missing.some((x) => x.t === i) ? "bg-warning/20 text-warning-foreground" : "bg-secondary")}>{i + 1}</span>{t}
               </button>))}
           </div>
-          {mode === "new" && !m.caps.sensitive && <p className="rounded-lg border border-warning/40 bg-warning/10 p-2 text-sm">إنشاء حساب الدخول يحتاج إدخال رقم الهوية، وهو صلاحية «البيانات الحساسة» غير المتاحة لك.</p>}
-          {mode === "new" ? (
-            <div className="grid gap-3 md:grid-cols-3">
-              <div><Label htmlFor="hr-sch">{bi("school", "المدرسة")}</Label>
-                <select id="hr-sch" className={selectCls("mt-1 w-full")} value={f.school_id} onChange={(e) => { setF((x) => ({ ...x, school_id: e.target.value })); setBase(""); setConflicts([]); }}>
-                  <option value="">اختر المدرسة</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  {m.owner && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}
-                </select>{central && <p className="mt-1 text-xs text-muted-foreground">للإدارة المركزية دور «مدير إدارة الموارد البشرية» فقط.</p>}</div>
-              <div><Label htmlFor="hr-cat">{bi("category", "التصنيف الوظيفي")}</Label>
-                <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
-                  <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select></div>
-              <div><Label htmlFor="hr-role">{bi("login_role", "دور الدخول")}</Label>
-                <select id="hr-role" className={selectCls("mt-1 w-full")} value={base} disabled={!f.school_id} onChange={(e) => { setBase(e.target.value); if (!f.job_title) set("job_title", roleLabel(e.target.value)); }}>
-                  <option value="">{f.school_id ? "اختر الدور" : "اختر المدرسة أولًا"}</option>{(roles.data ?? []).map((r) => <option key={r} value={r}>{roleLabel(r)}</option>)}
-                </select>
-                <p className="mt-1 text-xs text-muted-foreground">تظهر الأدوار التي يحق لك منحها فقط. لا تُمنح صلاحيات الموارد البشرية تلقائيًا.</p></div>
-            </div>
-          ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            <div><Label htmlFor="hr-acc">{bi("account", "الحساب الموجود")}</Label>
-              <select id="hr-acc" className={selectCls("mt-1 w-full")} value={f.user_id} onChange={(e) => e.target.value ? pickAccount(e.target.value) : set("user_id", "")}>
-                <option value="">بلا حساب دخول</option>{cand.data!.accounts.map((a) => <option key={a.user_id} value={a.user_id}>{a.name} — {(a.schools ?? []).map((s) => s.name).join("، ")}</option>)}
-              </select></div>
-            <div><Label htmlFor="hr-sch">{bi("school", "مدرسة التعيين الأول")}</Label>
-              <select id="hr-sch" className={selectCls("mt-1 w-full")} value={f.school_id} onChange={(e) => setF((x) => ({ ...x, school_id: e.target.value, teacher_id: "" }))}>
-                <option value="">اختر المدرسة</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select></div>
-            <div><Label htmlFor="hr-cat">{bi("category", "التصنيف الوظيفي")}</Label>
-              <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
-                <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <p className="mt-1 text-xs text-muted-foreground">التصنيف وصف وظيفي فقط ولا يمنح صلاحيات أو دور دخول.</p></div>
-            <div className="md:col-span-2"><Label htmlFor="hr-t">{bi("teacher", "ربط بسجل معلم موجود في المدرسة (اختياري)")}</Label>
-              <select id="hr-t" className={selectCls("mt-1 w-full")} value={f.teacher_id} disabled={!f.school_id} onChange={(e) => e.target.value ? pickTeacher(e.target.value) : set("teacher_id", "")}>
-                <option value="">ليس معلمًا / لا ربط</option>{teachers.map((t) => <option key={t.teacher_id} value={t.teacher_id}>{t.name}{t.specialization ? ` — ${t.specialization}` : ""}{t.user_id ? " (له حساب)" : ""}</option>)}
-              </select>
-              <p className="mt-1 text-xs text-muted-foreground">يبقى الملف الأكاديمي للمعلم كما هو؛ الربط يضيف الملف الوظيفي فقط.</p></div>
+          <div role="tabpanel" aria-label={TABS[tab]} className="min-h-40">
+            {tab === 0 && <div className="space-y-3">
+              <EmpFields only="personal" f={f} set={(k: never, v: string) => set(k, v)} sensitive={sens} />
+              <ProfileFields only="personal" f={px} set={setP} sensitive={sens} org={org} />
+            </div>}
+            {tab === 1 && <div className="space-y-3">
+              <EmpFields only="docs" f={f} set={(k: never, v: string) => set(k, v)} sensitive={sens} px={px} setPx={setP} />
+              <ProfileFields only="docs" f={px} set={setP} sensitive={sens} org={org} />
+            </div>}
+            {tab === 2 && <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div><Label htmlFor="hr-sch">{bi("school", "الفرع")}</Label>
+                  <select id="hr-sch" className={selectCls("mt-1 w-full")} value={f.school_id} onChange={(e) => { setF((x) => ({ ...x, school_id: e.target.value, teacher_id: "" })); setBase(""); }}>
+                    <option value="">اختر الفرع</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    {m.owner && mode === "new" && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}
+                  </select>{central && <p className="mt-1 text-xs text-muted-foreground">للإدارة المركزية دور «مدير إدارة الموارد البشرية» فقط.</p>}</div>
+                <div><Label htmlFor="hr-cat">{bi("category", "التصنيف الوظيفي")}</Label>
+                  <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
+                    <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select><p className="mt-1 text-xs text-muted-foreground">التصنيف وصف وظيفي فقط ولا يمنح صلاحيات أو دور دخول.</p></div>
+              </div>
+              <EmpFields only="job" withNo f={f} set={(k: never, v: string) => set(k, v)} sensitive={sens} />
+              <ProfileFields only="job" f={px} set={setP} sensitive={sens} org={org} />
+            </div>}
+            {tab === 3 && <ProfileFields only="qual" f={px} set={setP} sensitive={sens} org={org} />}
+            {tab === 4 && <EmpFields only="contact" f={f} set={(k: never, v: string) => set(k, v)} sensitive={sens} loginPhone={mode === "new"} />}
+            {tab === 5 && <ProfileFields only="pay" f={px} set={setP} sensitive={sens} org={org} />}
+            {tab === 6 && <div className="space-y-3">
+              <div role="radiogroup" aria-label="نوع الحساب" className="grid gap-2 sm:grid-cols-2">
+                {([["new", "إنشاء حساب جديد للموظف", "يدخل برقم الهوية أو الإقامة ثم رمز يصل إلى جواله المعتمد."], ["link", "ربط بحساب موجود", "لموظف لديه حساب دخول في المؤسسة من قبل، أو حفظ الملف بلا حساب."]] as const).map(([k, t, d]) => (
+                  <button key={k} type="button" role="radio" aria-checked={mode === k} onClick={() => { setMode(k); setConflicts([]); setBase(""); setF((x) => ({ ...x, user_id: "", teacher_id: "", school_id: k === "link" && x.school_id === CENTRAL ? "" : x.school_id })); }}
+                    className={"rounded-lg border p-3 text-start " + (mode === k ? "border-primary bg-primary/5" : "hover:border-primary")}>
+                    <span className="block font-semibold">{t}</span><span className="block text-xs text-muted-foreground">{d}</span>
+                  </button>))}
+              </div>
+              {mode === "new" ? <>
+                {!sens && <p className="rounded-lg border border-warning/40 bg-warning/10 p-2 text-sm">إنشاء حساب الدخول يحتاج إدخال رقم الهوية، وهو صلاحية «البيانات الحساسة» غير المتاحة لك.</p>}
+                {noId && <p className="rounded-lg border border-warning/40 bg-warning/10 p-2 text-sm">نوع الهوية «لا يوجد»: لا يمكن إنشاء حساب دخول الآن، ويُحفظ ملف الموظف بلا حساب.</p>}
+                <div className="max-w-sm"><Label htmlFor="hr-role">{bi("login_role", "دور المستخدم")}</Label>
+                  <select id="hr-role" className={selectCls("mt-1 w-full")} value={base} disabled={!f.school_id || noId} onChange={(e) => { setBase(e.target.value); if (!f.job_title) set("job_title", roleLabel(e.target.value)); }}>
+                    <option value="">{f.school_id ? "اختر الدور" : "اختر الفرع أولًا (البيانات الوظيفية)"}</option>{(roles.data ?? []).map((r) => <option key={r} value={r}>{roleLabel(r)}</option>)}
+                  </select>
+                  <p className="mt-1 text-xs text-muted-foreground">تظهر الأدوار التي يحق لك منحها فقط. لا تُمنح صلاحيات الموارد البشرية تلقائيًا.</p></div>
+              </> : <div className="grid gap-3 md:grid-cols-2">
+                <div><Label htmlFor="hr-acc">{bi("account", "الحساب الموجود")}</Label>
+                  <select id="hr-acc" className={selectCls("mt-1 w-full")} value={f.user_id} onChange={(e) => e.target.value ? pickAccount(e.target.value) : set("user_id", "")}>
+                    <option value="">بلا حساب دخول</option>{cand.data!.accounts.map((a) => <option key={a.user_id} value={a.user_id}>{a.name} — {(a.schools ?? []).map((s) => s.name).join("، ")}</option>)}
+                  </select></div>
+                <div><Label htmlFor="hr-t">{bi("teacher", "ربط بسجل معلم موجود في الفرع (اختياري)")}</Label>
+                  <select id="hr-t" className={selectCls("mt-1 w-full")} value={f.teacher_id} disabled={!f.school_id} onChange={(e) => e.target.value ? pickTeacher(e.target.value) : set("teacher_id", "")}>
+                    <option value="">ليس معلمًا / لا ربط</option>{teachers.map((t) => <option key={t.teacher_id} value={t.teacher_id}>{t.name}{t.specialization ? ` — ${t.specialization}` : ""}{t.user_id ? " (له حساب)" : ""}</option>)}
+                  </select>
+                  <p className="mt-1 text-xs text-muted-foreground">يبقى الملف الأكاديمي للمعلم كما هو؛ الربط يضيف الملف الوظيفي فقط.</p></div>
+              </div>}
+            </div>}
+            {tab === 7 && <div className="space-y-4" aria-label="تأكيد الإنشاء">
+              <div><p className="mb-1 text-sm font-semibold">ملخص البيانات الشخصية</p>
+                <Sum rows={[["الاسم باللغة العربية", f.full_name], ["الاسم باللغة الإنجليزية", px["name_en"]], ["الاسم المعروض", f.display_name], ["الجنس", GENDER[f.gender as keyof typeof GENDER]], ...(sens ? [["الجنسية", f.nationality], ["تاريخ الميلاد", f.birth_date]] as [string, string][] : []), ["الحالة الاجتماعية", px["marital_status"]], ["الديانة", px["religion"]]]} /></div>
+              <div><p className="mb-1 text-sm font-semibold">ملخص البيانات الوظيفية</p>
+                <Sum rows={[["الفرع", <span className="font-semibold">{schoolName}</span>], ["التصنيف الوظيفي", (cats.data ?? []).find((c) => c.id === f.category_id)?.name], ["المسمى الوظيفي", f.job_title], ["الرقم الوظيفي", f.employee_no || "يُولَّد تلقائيًا"], ["تاريخ الالتحاق", f.hire_date], ["المسؤول المباشر", mgrLabel],
+                  ["نوع الحساب", mode === "new" ? (noId ? "بلا حساب (لا توجد هوية)" : "إنشاء حساب جديد") : f.user_id ? `ربط بحساب: ${accName ?? ""}` : "بلا حساب دخول"], ...(mode === "new" && !noId ? [["دور المستخدم", base ? roleLabel(base) : ""], ["الجوال المعتمد", <bdi dir="ltr">{localPhone(f.phone)}</bdi>]] as [string, React.ReactNode][] : [])]} /></div>
+              <div className="rounded-lg border p-3 text-sm">
+                <p className="mb-1 font-semibold">التحقق من اكتمال الحقول الإلزامية</p>
+                {missing.length ? <ul className="list-disc space-y-0.5 ps-5">{missing.map((x, i) => <li key={i}>{x.msg} — <button type="button" className="text-primary underline" onClick={() => go(x.t)}>{TABS[x.t]}</button></li>)}</ul>
+                  : <p className="text-success">الحقول الإلزامية مكتملة.</p>}
+                <p className="mb-1 mt-3 font-semibold">التحقق من عدم تكرار الرقم الوظيفي أو رقم الهوية</p>
+                {!f.employee_no.trim() && !nid ? <p className="text-muted-foreground">لا يوجد رقم وظيفي أو رقم هوية للتحقق (الرقم الوظيفي يُولَّد تلقائيًا).</p>
+                  : dup.isFetching ? <p className="text-muted-foreground">جارٍ التحقق…</p> : dup.error ? <p className="text-destructive">{arabicError(dup.error)}</p>
+                  : <ul className="space-y-0.5">
+                      {f.employee_no.trim() && <li className={dup.data?.no_used ? "text-destructive" : "text-success"}>{dup.data?.no_used ? <>الرقم الوظيفي مستخدم لموظف آخر — <button type="button" className="underline" onClick={() => onDone(dup.data!.no_emp!)}>فتح الملف الموجود</button></> : "الرقم الوظيفي غير مكرر."}</li>}
+                      {nid && <li className={dup.data?.nid_used ? "text-destructive" : "text-success"}>{dup.data?.nid_used ? <>رقم الهوية مسجل لموظف آخر في المؤسسة — <button type="button" className="underline" onClick={() => onDone(dup.data!.nid_emp!)}>فتح الملف الموجود</button></> : "رقم الهوية غير مكرر في المؤسسة."}</li>}
+                    </ul>}
+              </div>
+              {mode === "new" && !noId && base && <p className="text-xs text-muted-foreground">الصلاحيات: {base === HR_DIRECTOR ? "ملفات الموظفين (عرض، إضافة، تعديل، بيانات حساسة)، واعتماد الإجازات والاستئذان، وإعداد مسير الرواتب على مستوى المجموعة كلها." : base === "tpl:مساعد إداري" ? "عرض الجدول المدرسي، وعرض حضور الطلاب، وتسجيل الحضور اليدوي في هذه المدرسة فقط." : `الصلاحيات المعتمدة لدور «${roleLabel(base)}» في هذه المدرسة فقط، دون أي صلاحية إضافية أو صلاحية موارد بشرية.`}{base === "teacher" ? " سيُنشأ سجل معلم مرتبط." : ""} لن تُرسل رسالة الآن؛ الدخول لاحقًا برقم الهوية ورمز إلى الجوال.</p>}
+              {conflicts.length > 0 && (
+                <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                  <p className="font-semibold">لم يُنشأ شيء — توجد بيانات سابقة تحتاج مراجعة:</p>
+                  <ul className="mt-1 list-disc ps-5">{conflicts.map((c, i) => <li key={i}>{CONFLICT[c.kind] ?? c.kind}{c.employee_id && <> — <button type="button" className="text-primary underline" onClick={() => onDone(c.employee_id!)}>فتح الملف الموجود</button></>}</li>)}</ul>
+                  <p className="mt-1 text-xs text-muted-foreground">لا يُدمج أو يُستبدل أي سجل تلقائيًا. إن كان الشخص نفسه ولديه حساب، اختر «ربط بحساب موجود» في تبويب الحساب والصلاحيات.</p>
+                </div>)}
+            </div>}
           </div>
-          )}
-          <EmpFields f={f} set={(k: never, v: string) => { set(k, v); setConflicts([]); setConfirm(false); }} sensitive={m.caps.sensitive} loginPhone={mode === "new"} px={px} setPx={(k, v) => { setPx((x) => ({ ...x, [k]: v })); setConfirm(false); }} />
-          <ProfileFields f={px} set={(k, v) => setPx((x) => ({ ...x, [k]: v }))} sensitive={m.caps.sensitive} org={org} />
-          {conflicts.length > 0 && (
-            <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
-              <p className="font-semibold">لم يُنشأ شيء — توجد بيانات سابقة تحتاج مراجعة:</p>
-              <ul className="mt-1 list-disc ps-5">{conflicts.map((c, i) => <li key={i}>{CONFLICT[c.kind] ?? c.kind}{c.employee_id && <> — <button type="button" className="text-primary underline" onClick={() => onDone(c.employee_id!)}>فتح الملف الموجود</button></>}</li>)}</ul>
-              <p className="mt-1 text-xs text-muted-foreground">لا يُدمج أو يُستبدل أي سجل تلقائيًا. إن كان الشخص نفسه ولديه حساب، استخدم «ربط يدوي بحساب موجود».</p>
-            </div>)}
-          {mode === "new" && confirm && (
-            <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm" aria-label="تأكيد الإنشاء">
-              <p className="mb-1 font-semibold">راجع قبل الإنشاء</p>
-              <dl className="grid gap-1 sm:grid-cols-2">
-                <div><dt className="inline text-muted-foreground">الموظف: </dt><dd className="inline">{f.full_name}</dd></div>
-                <div><dt className="inline text-muted-foreground">المدرسة: </dt><dd className="inline font-semibold">{schoolName}</dd></div>
-                <div><dt className="inline text-muted-foreground">دور الدخول: </dt><dd className="inline">{roleLabel(base)}</dd></div>
-                <div><dt className="inline text-muted-foreground">الجوال المعتمد: </dt><dd className="inline"><bdi dir="ltr">{localPhone(f.phone)}</bdi></dd></div>
-              </dl>
-              <p className="mt-1 text-xs text-muted-foreground">الصلاحيات: {base === HR_DIRECTOR ? "ملفات الموظفين (عرض، إضافة، تعديل، بيانات حساسة)، واعتماد الإجازات والاستئذان، وإعداد مسير الرواتب على مستوى المجموعة كلها." : base === "tpl:مساعد إداري" ? "عرض الجدول المدرسي، وعرض حضور الطلاب، وتسجيل الحضور اليدوي في هذه المدرسة فقط." : `الصلاحيات المعتمدة لدور «${roleLabel(base)}» في هذه المدرسة فقط، دون أي صلاحية إضافية أو صلاحية موارد بشرية.`}{base === "teacher" ? " سيُنشأ سجل معلم مرتبط." : ""} لن تُرسل رسالة الآن؛ الدخول لاحقًا برقم الهوية ورمز إلى الجوال.</p>
-            </div>)}
-          <div className="flex flex-wrap gap-2 border-t pt-3">
-            {mode === "link" ? (
-              <Button disabled={!f.full_name.trim() || !f.school_id || save.isPending} onClick={() => save.mutate()}><UserCheck className="size-4" />{save.isPending ? "…" : "حفظ الموظف"}</Button>
-            ) : px["id_type"] === "none" ? (<>
-              <p role="alert" className="w-full rounded-lg border border-warning/40 bg-warning/10 p-2 text-sm">تعذّر إنشاء حساب دخول: الدخول يتم برقم الهوية أو الإقامة، ونوع الهوية «لا يوجد». يمكنك حفظ ملف الموظف الآن بلا حساب، وإنشاء الحساب لاحقًا بعد إدخال الهوية.</p>
-              <Button disabled={!f.full_name.trim() || !f.school_id || f.school_id === CENTRAL || save.isPending} onClick={() => save.mutate()}><UserCheck className="size-4" />{save.isPending ? "…" : "حفظ ملف الموظف بلا حساب"}</Button>
-            </>) : !confirm ? (
-              <Button disabled={!canNew || !m.caps.sensitive} onClick={() => setConfirm(true)}><UserCheck className="size-4" />متابعة للتأكيد</Button>
-            ) : (
-              <Button disabled={create.isPending} onClick={() => create.mutate()}><UserCheck className="size-4" />{create.isPending ? "جارٍ الإنشاء…" : "تأكيد إنشاء الملف والحساب"}</Button>
-            )}
+          <div className="flex flex-wrap items-center gap-2 border-t pt-3">
+            {tab > 0 && <Button variant="outline" onClick={() => go(tab - 1)}>السابق</Button>}
+            {tab < 7 ? <Button onClick={() => go(tab + 1)}>التالي</Button>
+              : mode === "new" && !noId ? <Button disabled={!ready || create.isPending} onClick={() => create.mutate()}><UserCheck className="size-4" />{create.isPending ? "جارٍ الحفظ…" : "حفظ بيانات الموظف وإنشاء الحساب"}</Button>
+              : <Button disabled={!ready || save.isPending} onClick={() => save.mutate()}><UserCheck className="size-4" />{save.isPending ? "…" : noId && mode === "new" ? "حفظ ملف الموظف بلا حساب" : "حفظ بيانات الموظف"}</Button>}
+            <span className="flex-1" />
             <Button variant="ghost" onClick={onClose}>إلغاء</Button>
           </div>
         </div>
