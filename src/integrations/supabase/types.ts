@@ -11105,6 +11105,47 @@ export type Database = {
           },
         ]
       }
+      hr_title_roles: {
+        Row: {
+          base: string
+          created_at: string
+          id: string
+          org_id: string
+          title: string
+          title_norm: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          base: string
+          created_at?: string
+          id?: string
+          org_id: string
+          title: string
+          title_norm: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          base?: string
+          created_at?: string
+          id?: string
+          org_id?: string
+          title?: string
+          title_norm?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_title_roles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       id_login_challenges: {
         Row: {
           attempts: number
@@ -17418,6 +17459,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _hr_login_plan_one: {
+        Args: { _nid: string; _org: string; _phone: string }
+        Returns: Json
+      }
       _hr_login_roles: {
         Args: { _org: string; _school: string }
         Returns: string[]
@@ -17706,6 +17751,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _hr_title_norm: { Args: { _t: string }; Returns: string }
       _hr_today: { Args: never; Returns: string }
       _hr_v_json: {
         Args: {
@@ -20634,6 +20680,10 @@ export type Database = {
         Returns: string
       }
       hr_employee_get: { Args: { _id: string }; Returns: Json }
+      hr_employee_link_login: {
+        Args: { _org: string; _p: Json; _reason?: string; _uid: string }
+        Returns: string
+      }
       hr_employee_list: {
         Args: { _org: string; _q?: string; _school?: string; _status?: string }
         Returns: Json
@@ -20844,6 +20894,7 @@ export type Database = {
         Returns: undefined
       }
       hr_letter_vars: { Args: never; Returns: Json }
+      hr_login_plan: { Args: { _org: string; _rows: Json }; Returns: Json }
       hr_login_precheck: {
         Args: { _nid: string; _org: string; _phone: string }
         Returns: Json
@@ -21037,6 +21088,11 @@ export type Database = {
           _org: string
         }
         Returns: string
+      }
+      hr_title_role_list: { Args: { _org: string }; Returns: Json }
+      hr_title_role_set: {
+        Args: { _base: string; _org: string; _title: string }
+        Returns: undefined
       }
       hub_dept_people: {
         Args: { _org: string; _schools: string[] }
