@@ -50,7 +50,7 @@ try {
   check("agent reads the assigned ticket", !!(await ag.c.rpc("support_can_read", { _ticket: t1 })).data);
   const rep = await ag.c.rpc("support_reply", { _ticket: t1, _body: "تم الرد", _client_key: randomUUID() });
   check("agent replies to the assigned ticket", !rep.error, rep.error);
-  const st = await ag.c.rpc("support_action", { _ticket: t1, _action: "resolve", _value: null, _rev: await rev(t1), _reason: null });
+  const st = await ag.c.rpc("support_action", { _ticket: t1, _action: "resolve", _value: null, _rev: await rev(t1), _reason: "تمت الإجابة على الاستفسار" });
   const s1 = (await admin.from("support_tickets").select("status").eq("id", t1).single()).data?.status;
   check("agent updates the assigned ticket's status", !st.error && s1 === "resolved", st.error ?? s1);
   check("agent cannot read an unassigned ticket", !(await ag.c.rpc("support_can_read", { _ticket: t2 })).data);
