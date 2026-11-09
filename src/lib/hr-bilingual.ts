@@ -13,7 +13,7 @@ export const EN_LABEL: Record<string, string> = {
   assignment_note: "Assignment", pay_method: "Payment Method", iban: "Bank IBAN", bank_name: "Bank Name",
   mid_iban: "Intermediary IBAN", mid_bank: "Intermediary Bank", mid_name: "Intermediary Name", mid_id: "Intermediary ID No.",
   sponsor_name: "Sponsor Name", sponsor_no: "Sponsor No.", category: "Job Category", hire_date: "Start Date",
-  status: "Status", end_date: "End of Service Date", login_role: "Login Role", account: "Existing Account", teacher: "Linked Teacher Record",
+  status: "Status", end_date: "End of Service Date", login_role: "Login Role", asg_from: "From", asg_to: "To (optional)", account: "Existing Account", teacher: "Linked Teacher Record",
 };
 /** «عربي / English» label; Arabic only when no English label is known. */
 export const bi = (key: string, ar: string) => (EN_LABEL[key] ? `${ar} / ${EN_LABEL[key]}` : ar);
