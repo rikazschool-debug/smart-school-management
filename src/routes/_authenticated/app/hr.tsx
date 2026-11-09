@@ -278,7 +278,10 @@ function localPhone(s: string) {
 }
 
 function EmpFields({ f, set, sensitive, withStatus, loginPhone }: { f: Record<string, string>; set: (k: never, v: string) => void; sensitive: boolean; withStatus?: boolean; loginPhone?: boolean }) {
-  const s = set as (k: string, v: string) => void;
+  const raw = set as (k: string, v: string) => void;
+  // display name follows first + last word of the full name until the user types their own
+  const auto = (n: string) => { const w = n.trim().split(/\s+/).filter(Boolean); return w.length > 1 ? `${w[0]} ${w[w.length - 1]}` : (w[0] ?? ""); };
+  const s = (k: string, v: string) => { raw(k, v); if (k === "full_name" && (!f["display_name"] || f["display_name"] === auto(f["full_name"] ?? ""))) raw("display_name", auto(v)); };
   const F = (k: string, label: string, type = "text", extra: Record<string, string> = {}) => (
     <div><Label htmlFor={`hr-${k}`}>{label}</Label><Input id={`hr-${k}`} type={type} className="mt-1" value={f[k] ?? ""} onChange={(e) => s(k, e.target.value)} {...extra} /></div>
   );
