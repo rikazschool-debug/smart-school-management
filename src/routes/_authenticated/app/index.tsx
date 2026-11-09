@@ -45,7 +45,7 @@ function Home() {
       {!active.schoolId && ops.central ? (
         <div className="grid gap-3 sm:grid-cols-3">
           {([["/app/hr", "ملفات الموظفين", "إضافة الموظفين وتعديل ملفاتهم"], ["/app/hr/leave", "الإجازات والاستئذان", "الطلبات بانتظار اعتماد الموارد البشرية"], ["/app/hr/payroll", "مسير الرواتب", "إعداد المسير ومراجعته"]] as const).map(([to, t, h]) => (
-            <a key={to} href={to} className="rounded-2xl border bg-card p-5 shadow-sm hover:border-primary"><p className="font-bold">{t}</p><p className="mt-1 text-sm text-muted-foreground">{h}</p></a>))}
+            <Link key={to} to={to} className="rounded-2xl border bg-card p-5 shadow-sm hover:border-primary"><p className="font-bold">{t}</p><p className="mt-1 text-sm text-muted-foreground">{h}</p></Link>))}
         </div>
       ) : !active.schoolId ? (
         <EmptyState title="اختر مدرسة من شريط السياق" hint={active.role === "platform_admin" ? "أو افتح صفحة المؤسسات." : "أو أضف مدرسة من صفحة المدارس."} />
