@@ -1,0 +1,1 @@
+alter function public._hr_title_norm(text) set search_path to 'public';

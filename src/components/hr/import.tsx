@@ -2,17 +2,26 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { Download, Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { createHrEmployeeLogin } from "@/lib/accounts.functions";
 import { Button } from "@/components/ui/button";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError } from "@/lib/session";
-import { rpc, useHrCats, type HrEmp, type HrMe } from "@/components/hr/shared";
+import { roleLabel, rpc, useHrCats, type HrEmp, type HrMe } from "@/components/hr/shared";
 import { CAL_LABEL, HR_FIELDS, TEMPLATE_HEAD, cleanValue, fieldForHeader, norm, type Cal, type HrField } from "@/lib/hr-fields";
 
 // HR employee import (shared field rules in src/lib/hr-fields.ts):
 // workbook → sheet + header row → editable column map → per-row preview → row-by-row save through
-// hr_employee_save + hr_employee_profile_save (same server checks as the form; never creates logins or roles).
-type State = "new" | "dup" | "fill" | "same" | "conflict" | "bad" | "ok" | "filled" | "fail";
-type Row = { i: number; p: Record<string, string>; cal: Record<string, Cal | null>; errs: string[]; state: State; match?: string | undefined; gaps: string[]; msg?: string | undefined; schoolName: string };
+// hr_employee_save + hr_employee_profile_save. With «إنشاء حسابات الدخول» each ready row also gets its login in the same
+// server operation (createHrEmployeeLogin) or is linked to an existing staff account after confirmation (hr_employee_link_login);
+// the per-row plan (create/link/review) comes from hr_login_plan, the role from the owner-approved title→role table.
+type State = "review" | "new" | "dup" | "fill" | "same" | "conflict" | "bad" | "ok" | "filled" | "fail";
+type Row = { i: number; p: Record<string, string>; cal: Record<string, Cal | null>; errs: string[]; state: State; match?: string | undefined; gaps: string[]; msg?: string | undefined; schoolName: string; login?: Login | undefined };
+type Plan = { action: "create" | "link" | "review"; why?: string; user_id?: string; name?: string; roles?: string[]; schools?: string[] | null };
+type Login = { role: string; act: "wait" | "create" | "link" | "review"; why?: string | undefined; pl?: Plan | undefined };
+const tnorm = (t: unknown) => String(t ?? "").trim().toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ");
+const pkey = (p: Record<string, string>) => `${p["national_id"] ?? ""}|${p["phone"] ?? ""}`;
 type Prof = Record<string, string | null> & { manager_no?: string | null; department?: string | null };
 
 export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m: HrMe; existing: HrEmp[]; onClose: () => void; onDone: () => void }) {
@@ -27,6 +36,15 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   const sens = m.caps.sensitive;
   const fields = HR_FIELDS.filter((f) => !f.sensitive || sens);
   const cats = (useHrCats(org).data ?? []).filter((c) => c.is_active);
+  const qc = useQueryClient();
+  const createLogin = useServerFn(createHrEmployeeLogin);
+  const [withLogin, setWithLogin] = useState(sens);
+  const [rolePick, setRolePick] = useState<Record<number, string>>({});
+  const [linkOk, setLinkOk] = useState<Record<number, boolean>>({});
+  const [plan, setPlan] = useState<Record<string, Plan>>({});
+  const [allowed, setAllowed] = useState<Record<string, string[]>>({});
+  const titles = useQuery({ enabled: withLogin, queryKey: ["hr-title-roles", org], queryFn: () => rpc<{ title: string; norm: string; base: string }[]>("hr_title_role_list", { _org: org }) });
+  const tmap = useMemo(() => new Map((titles.data ?? []).map((t) => [t.norm, t.base])), [titles.data]);
 
   const template = () => {
     const head = TEMPLATE_HEAD.filter((h) => h === "#" || fields.some((f) => f.label === h));
@@ -115,6 +133,19 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     });
   }, [data, map, pick, cats, byNo, byId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // login plan per row (server decides create / link / review) and roles the caller may grant per school
+  useEffect(() => {
+    if (!withLogin || mode !== "new") return;
+    const need = base.filter((r) => r.state === "new" && !(pkey(r.p) in plan));
+    const sch = [...new Set(base.filter((r) => r.state === "new" && r.p["school_id"] && !allowed[r.p["school_id"]]).map((r) => r.p["school_id"]!))];
+    let off = false;
+    (async () => {
+      if (need.length) { try { const got = await rpc<Record<string, Plan>>("hr_login_plan", { _org: org, _rows: [...new Map(need.map((r) => [pkey(r.p), { k: pkey(r.p), nid: r.p["national_id"] ?? "", phone: r.p["phone"] ?? "" }])).values()] }); if (!off) setPlan((x) => ({ ...x, ...got })); } catch (e) { toast.error(arabicError(e)); } }
+      for (const id of sch) { try { const a = await rpc<string[]>("hr_login_roles", { _org: org, _school: id }); if (!off) setAllowed((x) => ({ ...x, [id]: a ?? [] })); } catch { /* shown as review */ } }
+    })();
+    return () => { off = true; };
+  }, [withLogin, mode, base]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // completion mode: read current extra data for matched employees, then preview only empty → filled values
   useEffect(() => {
     if (mode !== "fill") return;
@@ -126,16 +157,31 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   }, [mode, base]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rows = useMemo<Row[]>(() => base.map((r) => {
+    if (r.state === "new" && mode === "new" && withLogin) {
+      const al = allowed[r.p["school_id"]!], t = tmap.get(tnorm(r.p["job_title"]));
+      const pick0 = rolePick[r.i];
+      const role = pick0 && al?.includes(pick0) ? pick0 : t && al?.includes(t) ? t : "";
+      const pl = plan[pkey(r.p)];
+      const lg: Login = !pl || !al ? { role, act: "wait", why: "جارٍ فحص الحساب…" }
+        : pl.action === "review" ? { role, act: "review", why: pl.why, pl }
+        : pl.action === "create" && !role ? { role, act: "review", why: r.p["job_title"] ? (t ? `دور المسمى «${r.p["job_title"]}» لا يحق لك منحه في هذه المدرسة — اختر دورًا` : `المسمى «${r.p["job_title"]}» غير مربوط بدور — اختر الدور`) : "اختر دور الدخول", pl }
+        : { role, act: pl.action, pl };
+      return lg.act === "review" ? { ...r, login: lg, state: "review", msg: lg.why } : { ...r, login: lg };
+    }
     if (r.state !== "dup" || mode !== "fill") return r;
     if (r.errs.length) return { ...r, state: "bad" };
     const e = existing.find((x) => x.id === r.match)!, pr = profs[r.match!]; if (!pr) return { ...r, msg: "جارٍ قراءة البيانات الحالية…" };
     const cur = (f: HrField) => f.where === "base" ? (e as Record<string, unknown>)[f.key] : f.key === "manager_no" ? pr.manager_no : f.key === "department" ? pr.department : pr[f.key];
     const gaps = fields.filter((f) => !["school", "category", "manager_name", "full_name", "employee_no", "display_name"].includes(f.key) && r.p[f.key] && (cur(f) == null || cur(f) === "")).map((f) => f.key);
     return gaps.length ? { ...r, state: "fill", gaps, msg: undefined } : { ...r, state: "same", msg: "لا توجد بيانات ناقصة يمكن استكمالها" };
-  }), [base, mode, profs, existing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [base, mode, profs, existing, withLogin, allowed, tmap, rolePick, plan]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const missing = HR_FIELDS.filter((f) => f.required && map[f.key] == null && !(f.key === "school" && Object.keys(pick).length));
-  const ready = rows.filter((r) => r.state === "new" || r.state === "fill");
+  const ready = rows.filter((r) => r.state === "fill" || (r.state === "new" && (!r.login || r.login.act === "create" || (r.login.act === "link" && linkOk[r.i]))));
+  const readyIds = new Set(ready.map((r) => r.i));
+  const unmappedTitles = withLogin && m.owner ? [...new Map(rows.filter((r) => r.p["job_title"] && !tmap.has(tnorm(r.p["job_title"]))).map((r) => [tnorm(r.p["job_title"]), r.p["job_title"]!])).values()] : [];
+  const ownerRoles = allowed[Object.keys(allowed)[0] ?? ""] ?? [];
+  const setTitle = async (title: string, b: string) => { try { await rpc("hr_title_role_set", { _org: org, _title: title, _base: b }); await qc.invalidateQueries({ queryKey: ["hr-title-roles", org] }); toast.success(`رُبط «${title}» بدور ${roleLabel(b)}`); } catch (e) { toast.error(arabicError(e)); } };
   const lock = useRef(false);
   const profPayload = (r: Row, only?: string[]) => {
     const o: Record<string, string> = {};
@@ -153,15 +199,23 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     const why = `استيراد Excel: ${wb!.name}`;
     const ids = new Map<number, string>();
     for (const r of rows) {
-      if (r.state === "new") {
+      if (r.state === "new" && readyIds.has(r.i)) {
         const p: Record<string, string> = { import_key: r.p["import_key"]! };
         for (const f of fields) if ((f.where === "base" || f.key === "department") && r.p[f.key]) p[f.key] = r.p[f.key]!;
         p["school_id"] = r.p["school_id"]!; if (r.p["category_id"]) p["category_id"] = r.p["category_id"];
         let id: string | null = null, dup = false;
-        try { id = await call<string>("hr_employee_save", { _org: org, _id: null, _p: p, _reason: `${why} — صف ${r.i}` }); }
+        const rsn = `${why} — صف ${r.i}`;
+        if (r.login?.act === "create") {
+          try { const x = await createLogin({ data: { orgId: org, base: r.login.role, p, reason: rsn } }); if ("conflicts" in x && x.conflicts) { out.set(r.i, { ...r, state: "fail", msg: "توقف: الهوية أو الجوال تغيّر وضعهما — أعد المعاينة" }); continue; } id = (x as { employeeId: string }).employeeId; }
+          catch (x) { out.set(r.i, { ...r, state: "fail", msg: `لم يُنشأ الملف/الحساب: ${arabicError(x)} — أعد الاعتماد لإكماله دون تكرار` }); continue; }
+        } else if (r.login?.act === "link") {
+          try { id = await call<string>("hr_employee_link_login", { _org: org, _uid: r.login.pl!.user_id, _p: p, _reason: rsn }); }
+          catch (x) { out.set(r.i, { ...r, state: "fail", msg: `لم يُربط بالحساب: ${arabicError(x)}` }); continue; }
+        } else
+        try { id = await call<string>("hr_employee_save", { _org: org, _id: null, _p: p, _reason: rsn }); }
         catch (x) { const em = String((x as Error)?.message ?? x); const k = em.match(/IMPORTED:([0-9a-f-]{36})/); if (k) { id = k[1]!; dup = true; } else { out.set(r.i, { ...r, state: "fail", msg: arabicError(x) }); continue; } }
         ids.set(r.i, id!);
-        try { await call("hr_employee_profile_save", { _org: org, _emp: id, _p: profPayload(r), _mode: "fill", _reason: why }); out.set(r.i, { ...r, state: dup ? "dup" : "ok", msg: dup ? "أُضيف سابقًا من الملف نفسه — لم يُكرر" : undefined }); }
+        try { await call("hr_employee_profile_save", { _org: org, _emp: id, _p: profPayload(r), _mode: "fill", _reason: why }); out.set(r.i, { ...r, state: dup ? "dup" : "ok", msg: dup ? "أُضيف سابقًا من الملف نفسه — لم يُكرر" : r.login?.act === "create" ? `أُنشئ الحساب بدور ${roleLabel(r.login.role)}` : r.login?.act === "link" ? "رُبط بالحساب الموجود" : undefined }); }
         catch (x) { out.set(r.i, { ...r, state: "fail", msg: `أُنشئ الملف لكن تعذّر حفظ البيانات الإضافية: ${arabicError(x)}` }); }
       } else if (r.state === "fill") {
         try { await call("hr_employee_profile_save", { _org: org, _emp: r.match, _p: { ...profPayload(r, r.gaps), ...(r.gaps.includes("manager_no") ? { manager_no: r.p["manager_no"] } : {}) }, _mode: "fill", _reason: `${why} — استكمال صف ${r.i}` }); out.set(r.i, { ...r, state: "filled" }); }
@@ -175,9 +229,9 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
       catch (x) { out.set(r.i, { ...out.get(r.i)!, msg: `حُفظ الموظف؛ لم يُربط المسؤول المباشر: ${arabicError(x)}` }); }
     }
     const list = [...out.values()];
-    setRes(list); setBusy(false); lock.current = false; onDone();
+    setRes(list); setBusy(false); lock.current = false; onDone(); qc.invalidateQueries({ queryKey: ["hr-cand"] });
     const c = (s: State) => list.filter((x) => x.state === s).length;
-    toast.success(`أُضيف ${c("ok")} · استُكمل ${c("filled")} · تُخطي ${c("dup") + c("same")} · رُفض ${c("bad") + c("conflict") + c("fail")}`);
+    toast.success(`أُضيف ${c("ok")} · استُكمل ${c("filled")} · تُخطي ${c("dup") + c("same")} · رُفض ${c("bad") + c("conflict") + c("fail")} · للمراجعة ${c("review")}`);
   };
   const report = () => {
     const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "الرقم الوظيفي", "المدرسة", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, safe(r.p["full_name"] ?? ""), safe(r.p["employee_no"] ?? ""), safe(schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName), LBL[r.state], safe([...r.errs, r.msg].filter(Boolean).join("، "))])]);
@@ -191,7 +245,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   return (
     <div className="space-y-3 rounded-xl border bg-card p-4">
       <div className="flex items-center gap-2"><h3 className="flex-1 font-bold">استيراد موظفين من Excel</h3><Button size="icon" variant="ghost" aria-label="إغلاق" onClick={onClose}><X className="size-4" /></Button></div>
-      <p className="text-sm text-muted-foreground">يُنشأ ملف موظف فقط — دون حساب دخول أو دور أو صلاحية؛ المسمى الوظيفي وصف للوظيفة فقط. لا يُحفظ أي صف قبل المعاينة، وإعادة رفع الملف لا تكرر السجلات. المطابقة بالرقم الوظيفي أو الهوية فقط، لا بالاسم.{!sens && " أعمدة الهوية والجواز والآيبان والوسيط والكفيل والجنسية والميلاد مخفية وتُتجاهل لأنها تحتاج صلاحية البيانات الحساسة."}</p>
+      <p className="text-sm text-muted-foreground">{withLogin ? "يُنشأ لكل صف جاهز ملف الموظف وحساب دخوله (بالهوية ثم رمز إلى الجوال) وعضوية المدرسة بالدور المحدد في عملية واحدة؛ الدور من ربط المسمى الوظيفي الذي يعتمده المالك أو من اختيارك في المعاينة." : "يُنشأ ملف موظف فقط — دون حساب دخول أو دور أو صلاحية."} لا يُحفظ أي صف قبل المعاينة، وإعادة رفع الملف لا تكرر السجلات. المطابقة بالرقم الوظيفي أو الهوية فقط، لا بالاسم.{!sens && " أعمدة الهوية والجواز والآيبان والوسيط والكفيل والجنسية والميلاد مخفية وتُتجاهل لأنها تحتاج صلاحية البيانات الحساسة."}</p>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" onClick={template}><Download className="size-4" />تنزيل القالب</Button>
         <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border px-3 py-1.5 text-sm"><Upload className="size-4" />اختيار ملف
@@ -208,6 +262,13 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
                 <button key={k} type="button" role="radio" aria-checked={mode === k} onClick={() => setMode(k)} className={"rounded-md border px-3 py-1.5 " + (mode === k ? "border-primary bg-primary/10" : "")}>{t}</button>))}
             </div>
           </div>
+          {mode === "new" && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={withLogin} disabled={!sens} onChange={(e) => setWithLogin(e.target.checked)} />إنشاء حسابات الدخول مع الملفات{!sens && " (يحتاج صلاحية البيانات الحساسة)"}</label>}
+          {unmappedTitles.length > 0 && ownerRoles.length > 0 && (
+            <div className="rounded border border-warning/40 bg-warning/10 p-2 text-sm" aria-label="ربط المسميات بالأدوار">
+              <p className="mb-1 font-semibold">مسميات وظيفية غير مربوطة بدور دخول (يعتمدها المالك ويُحفظ الربط للمرات القادمة)</p>
+              <div className="flex flex-wrap gap-2">{unmappedTitles.map((t) => (
+                <label key={t} className="text-xs">{t}<select aria-label={`دور المسمى ${t}`} className={selectCls("ms-1")} value="" onChange={(e) => e.target.value && setTitle(t, e.target.value)}><option value="">— اختر —</option>{ownerRoles.map((b) => <option key={b} value={b}>{roleLabel(b)}</option>)}</select></label>))}</div>
+            </div>)}
           {mode === "fill" && <p className="rounded bg-secondary p-2 text-xs">يُستكمل فقط ما هو فارغ حاليًا لموظف مطابق بالرقم الوظيفي أو الهوية دون تعارض. لا تُستبدل قيمة قائمة ولا تُمسح بخانة فارغة، ولا يُضاف موظف جديد في هذا الوضع.</p>}
           <details className="rounded border p-2" open={Object.keys(map).length < 3}>
             <summary className="cursor-pointer text-sm font-semibold">ربط الأعمدة ({Object.keys(map).length} مربوط{unmapped.length ? ` · ${unmapped.length} عمود غير مربوط` : ""})</summary>
@@ -230,13 +291,22 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
             {(Object.keys(LBL) as State[]).map((s) => { const c = shown.filter((r) => r.state === s).length; return c ? <span key={s} className={`rounded px-2 py-0.5 ${CLS[s]}`}>{LBL[s]}: {c}</span> : null; })}
           </div>
           <div className="max-h-[28rem] overflow-auto rounded border">
-            <table className="w-full text-sm"><thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-start">الصف</th><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">الرقم الوظيفي</th><th className="p-2 text-start">المدرسة</th><th className="p-2 text-start">المسؤول المباشر</th><th className="p-2 text-start">الحالة</th></tr></thead>
+            <table className="w-full text-sm"><thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-start">الصف</th><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">الرقم الوظيفي</th><th className="p-2 text-start">المدرسة</th><th className="p-2 text-start">المسؤول المباشر</th>{withLogin && mode === "new" && <><th className="p-2 text-start">الجوال</th><th className="p-2 text-start">دور الدخول</th><th className="p-2 text-start">الإجراء</th></>}<th className="p-2 text-start">الحالة</th></tr></thead>
               <tbody>{shown.map((r) => (
                 <tr key={r.i} className="border-t align-top"><td className="p-2">{r.i}</td><td className="p-2">{r.p["full_name"] || "—"}</td><td className="p-2"><bdi dir="ltr">{r.p["employee_no"] || "تلقائي"}</bdi></td>
                   <td className="p-2">{!res && !schools.some((s) => norm(s.name) === norm(r.schoolName)) && r.state !== "dup" && r.state !== "fill" && r.state !== "same" ? (
                     <select aria-label={`مدرسة الصف ${r.i}`} className={selectCls("w-40")} value={pick[r.i] ?? ""} onChange={(e) => setPick((x) => ({ ...x, [r.i]: e.target.value }))}><option value="">{r.schoolName ? `«${r.schoolName}» ← اختر` : "اختر المدرسة"}</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
                   ) : schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName ?? "—"}</td>
                   <td className="p-2 text-xs">{r.p["manager_no"] ? <><bdi dir="ltr">{r.p["manager_no"]}</bdi>{r.p["manager_name"] && ` — ${r.p["manager_name"]}`}</> : <span className="text-muted-foreground">الموارد البشرية (افتراضي)</span>}</td>
+                  {withLogin && mode === "new" && <>
+                    <td className="p-2 text-xs"><bdi dir="ltr">{r.p["phone"] || "—"}</bdi></td>
+                    <td className="p-2 text-xs">{r.login?.act === "link" ? <span>يحتفظ بأدواره: {(r.login.pl?.roles ?? []).map(roleLabel).join("، ")}</span>
+                      : r.login && !res && (r.state === "new" || r.state === "review") ? <select aria-label={`دور الصف ${r.i}`} className={selectCls("w-36")} value={r.login.role} onChange={(e) => setRolePick((x) => ({ ...x, [r.i]: e.target.value }))}><option value="">اختر الدور</option>{(allowed[r.p["school_id"] ?? ""] ?? []).map((b) => <option key={b} value={b}>{roleLabel(b)}</option>)}</select>
+                      : r.login?.role ? roleLabel(r.login.role) : "—"}</td>
+                    <td className="p-2 text-xs">{!r.login ? "—" : r.login.act === "create" ? "إنشاء حساب" : r.login.act === "link" ? (
+                      <label className="flex items-start gap-1"><input type="checkbox" aria-label={`تأكيد ربط الصف ${r.i}`} disabled={!!res} checked={!!linkOk[r.i]} onChange={(e) => setLinkOk((x) => ({ ...x, [r.i]: e.target.checked }))} /><span>ربط بحساب موجود بعد التأكيد: {r.login.pl?.name} — {(r.login.pl?.schools ?? []).join("، ")}</span></label>)
+                      : r.login.act === "review" ? "يحتاج مراجعة" : "…"}</td>
+                  </>}
                   <td className="p-2"><span className={`rounded px-1.5 ${CLS[r.state]}`}>{LBL[r.state]}</span> <span className="text-xs text-muted-foreground">{[...r.errs, r.msg].filter(Boolean).join("، ")}</span>
                     {r.state === "fill" && <ul className="mt-1 text-xs">{r.gaps.map((k) => <li key={k}>{fLabel(k)}: <bdi>{showVal(r, k)}</bdi></li>)}</ul>}
                     {r.state === "new" && !res && <details className="text-xs"><summary className="cursor-pointer text-muted-foreground">القيم</summary><ul>{fields.filter((f) => r.p[f.key]).map((f) => <li key={f.key}>{f.label}: <bdi>{showVal(r, f.key)}</bdi></li>)}</ul></details>}
@@ -260,5 +330,5 @@ export function importKey(p: Record<string, string>) {
   let h1 = 0x811c9dc5, h2 = 5381; for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = (Math.imul(h2, 33) + c) | 0; }
   return "x" + (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
 }
-const LBL: Record<State, string> = { new: "جاهز للإضافة", fill: "سيُستكمل", dup: "موجود مسبقًا", same: "مكتمل — يُتخطى", conflict: "تعارض", bad: "يحتاج تصحيحًا", ok: "أُضيف", filled: "استُكمل", fail: "رفضه الخادم" };
-const CLS: Record<State, string> = { new: "bg-secondary", fill: "bg-primary/10 text-primary", dup: "bg-muted", same: "bg-muted", conflict: "bg-destructive/10 text-destructive", bad: "bg-destructive/10 text-destructive", ok: "bg-primary/10 text-primary", filled: "bg-primary/10 text-primary", fail: "bg-destructive/10 text-destructive" };
+const LBL: Record<State, string> = { review: "يحتاج مراجعة", new: "جاهز للإضافة", fill: "سيُستكمل", dup: "موجود مسبقًا", same: "مكتمل — يُتخطى", conflict: "تعارض", bad: "يحتاج تصحيحًا", ok: "أُضيف", filled: "استُكمل", fail: "رفضه الخادم" };
+const CLS: Record<State, string> = { review: "bg-warning/15", new: "bg-secondary", fill: "bg-primary/10 text-primary", dup: "bg-muted", same: "bg-muted", conflict: "bg-destructive/10 text-destructive", bad: "bg-destructive/10 text-destructive", ok: "bg-primary/10 text-primary", filled: "bg-primary/10 text-primary", fail: "bg-destructive/10 text-destructive" };
