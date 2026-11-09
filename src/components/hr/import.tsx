@@ -356,8 +356,8 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
                   ) : schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName ?? "—"}</td>
                   <td className="p-2 text-xs">{(!res && ["new", "bad", "review", "fill"].includes(r.state)) || (res && r.mgrFail) ? (
                     <>{r.p["manager_no"] && <p className="mb-1 text-muted-foreground">من الملف: <bdi dir="ltr">{r.p["manager_no"]}</bdi>{r.p["manager_name"] && ` — ${r.p["manager_name"]}`}</p>}
-                      <ManagerPick row={r.i} value={r.mgr} opts={optFor(r)} onChange={(v) => setMgrPick((x) => ({ ...x, [r.i]: v }))} />
-                      {res && r.mgrFail && <Button size="sm" variant="outline" className="mt-1" disabled={!r.mgr || r.mgr.startsWith("b:") && !res.some((x) => x.i === +r.mgr!.slice(2) && x.match)} onClick={() => fixMgr(r)}>حفظ المسؤول</Button>}</>
+                      <ManagerPick row={r.i} value={res ? mgrPick[r.i] ?? r.mgr : r.mgr} opts={optFor(r)} onChange={(v) => setMgrPick((x) => ({ ...x, [r.i]: v }))} />
+                      {res && r.mgrFail && <Button size="sm" variant="outline" className="mt-1" disabled={(() => { const v = mgrPick[r.i] ?? r.mgr; return !v || v === "hr" || (v.startsWith("b:") && !res.some((x) => x.i === +v.slice(2) && x.match)); })()} onClick={() => fixMgr(r)}>حفظ المسؤول</Button>}</>
                   ) : r.mgr && r.mgr !== "hr" ? mgrOpts.find((o) => o.v === r.mgr)?.name ?? "—" : r.p["manager_no"] ? <><bdi dir="ltr">{r.p["manager_no"]}</bdi>{r.p["manager_name"] && ` — ${r.p["manager_name"]}`}</> : <span className="text-muted-foreground">الموارد البشرية (افتراضي)</span>}</td>
                   {withLogin && mode === "new" && <>
                     <td className="p-2 text-xs"><bdi dir="ltr">{r.p["phone"] || "—"}</bdi></td>
