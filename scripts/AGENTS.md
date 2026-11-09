@@ -116,3 +116,4 @@
 - scripts/hr-login-e2e.ts: HR add employee with new ID/OTP login (role limits, pending-login proof, duplicate ID/phone, no duplicates, teacher record, ID resolve, school scope; 17 checks).
 - scripts/base-tools-e2e.ts: base-role tools deny-only (catalog, base inheritance, no grant/template, homework/chat/HR guards, menu source, undeny; 22 checks).
 - scripts/b13-e2e.ts: admin assistant / central HR director / named owner manager / guardian-account linking (38 checks; needs timetable-e2e --keep fixture). scripts/b13-browser-fixture.ts setup|teardown (b13x-); always run teardown after, then timetable-e2e --teardown.
+- scripts/cs-agent-e2e.ts: customer service agent role (owner-only grant, title mapping, assigned ticket reply/resolve, unassigned refused, no HR; 18 checks).
