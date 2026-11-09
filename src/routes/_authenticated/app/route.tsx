@@ -111,8 +111,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
   { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings"] },
   { label: "إدارة الإشعارات", keys: ["hub_notices", "hub_circulars"] },
-  { label: "التنبيهات والدعم", keys: ["notifications", "support"] },
-  { label: "المكالمات الهاتفية", keys: ["calls"] },
+  { label: "التنبيهات والدعم", keys: ["notifications", "support", "calls"] },
 ];
 
 function AppLayout() {

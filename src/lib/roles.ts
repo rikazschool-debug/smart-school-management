@@ -98,7 +98,7 @@ const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   hr: ["hr", "evaluation", "hr_training"],
   users: ["members", "permissions"],
   hub: ["hub_notices", "hub_circulars"],
-  support: ["support"],
+  support: ["support", "calls"],
   calls: ["calls"],
 };
 const OWNER_COMMON: NavKey[] = ["home", "profile", "notifications", "support"];
@@ -115,7 +115,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
   if (p.startsWith("/app/hr")) return "hr";
   if (p === "/app/hub" || p.startsWith("/app/notice/")) return "hub";
   if (p === "/app/support" || p.startsWith("/app/support/")) return "support";
-  if (p === "/app/calls") return "calls";
+  if (p === "/app/calls") return "support"; // phone calls live inside the support section
   if (p.startsWith("/app/evaluation") || p.startsWith("/app/visits")) return "hr";
   if (p.startsWith("/app/admissions")) return "school_admin"; // admissions is a sub-tab of school administration
   if (p.startsWith("/app/maintenance")) return "maintenance";
