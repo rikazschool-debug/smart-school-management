@@ -15036,6 +15036,7 @@ export type Database = {
       }
       schools: {
         Row: {
+          address: string | null
           city: string | null
           code: string | null
           created_at: string
@@ -15044,11 +15045,13 @@ export type Database = {
           logo_path: string | null
           name: string
           org_id: string
+          phone: string | null
           stage_type: string | null
           student_gender: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           city?: string | null
           code?: string | null
           created_at?: string
@@ -15057,11 +15060,13 @@ export type Database = {
           logo_path?: string | null
           name: string
           org_id: string
+          phone?: string | null
           stage_type?: string | null
           student_gender?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           city?: string | null
           code?: string | null
           created_at?: string
@@ -15070,6 +15075,7 @@ export type Database = {
           logo_path?: string | null
           name?: string
           org_id?: string
+          phone?: string | null
           stage_type?: string | null
           student_gender?: string | null
           updated_at?: string
@@ -22373,6 +22379,7 @@ export type Database = {
       org_schools_overview: {
         Args: { _org: string }
         Returns: {
+          address: string
           city: string
           code: string
           id: string
@@ -22380,6 +22387,7 @@ export type Database = {
           name: string
           paused: number
           pending_invites: number
+          phone: string
           staff: Json
           staff_total: number
           stage_type: string
@@ -23087,6 +23095,10 @@ export type Database = {
         }[]
       }
       school_org: { Args: { _school: string }; Returns: string }
+      school_profile_save: {
+        Args: { _address: string; _phone: string; _school: string }
+        Returns: undefined
+      }
       school_set_logo: {
         Args: { _path: string; _school: string }
         Returns: undefined
