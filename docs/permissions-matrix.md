@@ -451,3 +451,5 @@ A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, iden
 - Org owner: may give any staff login role (principal…security) when adding an employee.
 - HR with create permission on a school: only teacher, counselor, nurse, security, student affairs, in their schools.
 - No HR permission is ever granted by this step; personal HR file access stays off.
+
+- Base-role tools (bt_*): come with the base role only; the owner may stop them per employee (deny) or follow the role; never granted or put in templates. Deny currently applies to the employee in all branches of the org.

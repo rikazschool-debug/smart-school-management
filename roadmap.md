@@ -158,7 +158,7 @@
 ## B10 — Permissions screen: edit an existing employee (all roles)
 - [~] (done: name/base/extra roles/capacity note, unsaved warning; open: per-school overrides need server model) Person + school + capacity picker (staff vs guardian), unsaved-change warning
 - [x] Panel 1 read-only effective access (from server, with source + limits + pending conditions)
-- [~] (done: statuses, follow role, restore defaults, section-untick confirm; open: disable non-delegable with reason) Panel 2 full tree starting from effective state; follow-role / grant / deny / restore defaults; delegation limits server-side
-- [~] (done: search synonyms, filters, expand/collapse; open: teaching/comm/personal tools as controllable sections + server gates) Tree inventory complete (teaching, comm split use/manage/settings, HR self vs admin, etc.), search + filters, expand/collapse, RTL mobile
+- [~] (done: statuses, follow role, restore defaults, section-untick confirm, base tools not grantable with reason; open: per-school deny) Panel 2 full tree starting from effective state; follow-role / grant / deny / restore defaults; delegation limits server-side
+- [x] (base-role tools area bt_*: deny-only, server gates, menu hides; test base-tools-e2e 22/22) Tree inventory complete (teaching, comm split use/manage/settings, HR self vs admin, etc.), search + filters, expand/collapse, RTL mobile
 - [~] (done: preview, audited save, client conflict check; open: server-side version check) Before/after preview, audited save, conflict detection, no partial success
 - [ ] Same source drives nav, route guards, server; tests for teacher/principal/vice/counselor/delegate/multi-role/guardian
