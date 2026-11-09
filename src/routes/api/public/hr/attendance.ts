@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/public/hr/attendance")({
         const r = p.sn
           ? await supabaseAdmin.rpc("_hr_att_ingest2" as never, { _dev: dev, _sn: p.sn, _rows: p.punches, _info: p.info ?? {} } as never)
           : await supabaseAdmin.rpc("_hr_att_ingest" as never, { _dev: dev, _rows: p.punches } as never);
-        if (r.error) return json(503, { ok: false, code: "unavailable" });
+        if (r.error) { console.error("attendance intake failed", r.error.code, r.error.message); return json(503, { ok: false, code: "unavailable" }); }
         const out = r.data as unknown as Record<string, unknown> & { ok: boolean };
         return json(out.ok ? 200 : 401, out);
       },
