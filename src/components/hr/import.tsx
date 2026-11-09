@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError } from "@/lib/session";
 import { roleLabel, rpc, useHrCats, type HrEmp, type HrMe } from "@/components/hr/shared";
+import { useHrOwners } from "@/components/hr/profile-fields";
+import { ManagerPick, type MgrOpt } from "@/components/hr/manager-pick";
 import { CAL_LABEL, HR_FIELDS, TEMPLATE_HEAD, cleanValue, fieldForHeader, norm, type Cal, type HrField } from "@/lib/hr-fields";
 
 // HR employee import (shared field rules in src/lib/hr-fields.ts):
@@ -17,7 +19,7 @@ import { CAL_LABEL, HR_FIELDS, TEMPLATE_HEAD, cleanValue, fieldForHeader, norm, 
 // server operation (createHrEmployeeLogin) or is linked to an existing staff account after confirmation (hr_employee_link_login);
 // the per-row plan (create/link/review) comes from hr_login_plan, the role from the owner-approved title→role table.
 type State = "review" | "new" | "dup" | "fill" | "same" | "conflict" | "bad" | "ok" | "filled" | "fail";
-type Row = { i: number; p: Record<string, string>; cal: Record<string, Cal | null>; errs: string[]; state: State; match?: string | undefined; gaps: string[]; msg?: string | undefined; schoolName: string; login?: Login | undefined };
+type Row = { mgr?: string | undefined; mgrAuto?: string | undefined; mgrErr?: string | undefined; mgrFail?: boolean; i: number; p: Record<string, string>; cal: Record<string, Cal | null>; errs: string[]; state: State; match?: string | undefined; gaps: string[]; msg?: string | undefined; schoolName: string; login?: Login | undefined };
 type Plan = { action: "create" | "link" | "link_guardian" | "review"; children?: number; why?: string; user_id?: string; name?: string; roles?: string[]; schools?: string[] | null };
 type Login = { role: string; act: "wait" | "create" | "link" | "link_guardian" | "review"; why?: string | undefined; pl?: Plan | undefined };
 const tnorm = (t: unknown) => String(t ?? "").trim().toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ");
@@ -43,6 +45,9 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   const [linkOk, setLinkOk] = useState<Record<number, boolean>>({});
   const [plan, setPlan] = useState<Record<string, Plan>>({});
   const [allowed, setAllowed] = useState<Record<string, string[]>>({});
+  // per-row direct manager choice: "hr" default · "e:<employee>" · "o:<owner account>" · "b:<row in this batch>"
+  const [mgrPick, setMgrPick] = useState<Record<number, string>>({});
+  const owners = useHrOwners(org).data ?? [];
   const titles = useQuery({ enabled: withLogin, queryKey: ["hr-title-roles", org], queryFn: () => rpc<{ title: string; norm: string; base: string }[]>("hr_title_role_list", { _org: org }) });
   const tmap = useMemo(() => new Map((titles.data ?? []).map((t) => [t.norm, t.base])), [titles.data]);
 
@@ -93,8 +98,8 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   const byId = useMemo(() => new Map(existing.filter((e) => e.sensitive && e.national_id).map((e) => [e.national_id!, e])), [existing]);
 
   const base = useMemo<Row[]>(() => {
-    const fileNos = new Map<string, string>();
-    for (const d of data) { const k = map["employee_no"]; if (k != null) { const v = norm(d.cells[k]); if (v) fileNos.set(v, String(d.cells[map["full_name"] ?? -1] ?? "")); } }
+    const fileNos = new Map<string, string>(), fileRow = new Map<string, number>();
+    for (const d of data) { const k = map["employee_no"]; if (k != null) { const v = norm(d.cells[k]); if (v) { fileNos.set(v, String(d.cells[map["full_name"] ?? -1] ?? "")); if (!fileRow.has(v)) fileRow.set(v, d.i); } } }
     const seenNo = new Set<string>(), seenId = new Set<string>();
     return data.map(({ i, cells }) => {
       const p: Record<string, string> = {}, cal: Record<string, Cal | null> = {}, errs: string[] = [];
@@ -113,17 +118,21 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
       if (nid) { if (seenId.has(nid)) errs.push("رقم الهوية مكرر في الملف"); seenId.add(nid); }
       const a = no ? byNo.get(no) : undefined, b = nid ? byId.get(nid) : undefined;
       // manager by employee number (existing file or same batch); name only for review
+      // the number from Excel only gives the initial choice; the row's manager can be changed in the preview
       const mno = norm(p["manager_no"]);
+      let mgrAuto: string | undefined, mgrErr: string | undefined;
       if (mno) {
-        if (mno === no) errs.push("المسؤول المباشر لا يكون الموظف نفسه");
         const ex = byNo.get(mno); const inFile = fileNos.get(mno);
-        if (!ex && inFile == null) errs.push("رقم المسؤول المباشر غير موجود في المؤسسة أو الملف");
-        else if (p["manager_name"]) {
+        if (mno === no) mgrErr = "المسؤول المباشر لا يكون الموظف نفسه";
+        else if (ex) { const ow = owners.find((o) => o.employee_id === ex.id); mgrAuto = ow ? `o:${ow.user_id}` : `e:${ex.id}`; }
+        else if (inFile != null) mgrAuto = `b:${fileRow.get(mno)}`;
+        else mgrErr = "رقم المسؤول المباشر غير موجود في المؤسسة أو الملف — اختر المسؤول";
+        if (mgrAuto && p["manager_name"]) {
           const names = ex ? [ex.full_name, ex.display_name ?? ""] : [inFile ?? ""];
-          if (!names.some((x) => x && (norm(x).includes(norm(p["manager_name"])) || norm(p["manager_name"]).includes(norm(x))))) errs.push("اسم المسؤول المباشر لا يطابق رقمه");
+          if (!names.some((x) => x && (norm(x).includes(norm(p["manager_name"])) || norm(p["manager_name"]).includes(norm(x))))) mgrErr = "اسم المسؤول المباشر لا يطابق رقمه — تأكد من الاختيار";
         }
       }
-      const rowBase = { i, p, cal, errs, gaps: [] as string[], schoolName: sName };
+      const rowBase = { i, p, cal, errs, gaps: [] as string[], schoolName: sName, mgrAuto, mgrErr };
       if (a && b && a.id !== b.id) return { ...rowBase, state: "conflict" as const, msg: "الرقم الوظيفي والهوية يخصان موظفين مختلفين" };
       const match = a ?? b;
       if (a && !b && nid && a.sensitive && a.national_id && a.national_id !== nid) return { ...rowBase, state: "conflict" as const, msg: "الرقم الوظيفي لموظف هويته مختلفة" };
@@ -131,7 +140,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
       p["import_key"] = importKey(p);
       return { ...rowBase, state: errs.length ? "bad" as const : "new" as const };
     });
-  }, [data, map, pick, cats, byNo, byId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, map, pick, cats, byNo, byId, owners]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // login plan per row (server decides create / link / review) and roles the caller may grant per school
   useEffect(() => {
@@ -146,6 +155,37 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     return () => { off = true; };
   }, [withLogin, mode, base]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // manager options: active employees of the organisation, owner accounts (even with a login only), managers added in this batch
+  const mgrOpts = useMemo<MgrOpt[]>(() => {
+    const ownEmp = new Set(owners.map((o) => o.employee_id).filter(Boolean));
+    const branch = (e: HrEmp) => (e.assignments ?? []).find((a) => a.is_primary && a.active)?.school ?? (e.assignments ?? [])[0]?.school ?? "";
+    return [
+      ...owners.map((o) => ({ v: `o:${o.user_id}`, name: o.name, role: "مالك المجموعة", branch: "", no: existing.find((e) => e.id === o.employee_id)?.employee_no ?? "", emp: o.employee_id ?? undefined })),
+      ...existing.filter((e) => e.status === "active" && !ownEmp.has(e.id)).map((e) => ({ v: `e:${e.id}`, name: e.full_name, role: e.job_title ?? "", branch: branch(e), no: e.employee_no, emp: e.id })),
+      ...base.filter((r) => r.state === "new" || r.state === "bad").map((r) => ({ v: `b:${r.i}`, name: r.p["full_name"] ?? "", role: r.p["job_title"] ?? "", branch: schools.find((x) => x.id === r.p["school_id"])?.name ?? r.schoolName, no: r.p["employee_no"] ?? "", batch: r.i })),
+    ];
+  }, [owners, existing, base]); // eslint-disable-line react-hooks/exhaustive-deps
+  const optFor = (r: Row) => mgrOpts.filter((o) => o.batch !== r.i && (!r.match || o.emp !== r.match));
+  const withMgr = (r: Row): Row => {
+    if (r.state !== "new" && r.state !== "bad" && !(r.state === "dup" && mode === "fill")) return r;
+    const chosen = mgrPick[r.i];
+    const mgr = chosen ?? r.mgrAuto ?? (r.p["manager_no"] ? undefined : "hr");
+    let mgrErr = chosen ? undefined : r.mgrErr;
+    if (mgr === `b:${r.i}` || (r.match && mgr === `e:${r.match}`)) mgrErr = "المسؤول المباشر لا يكون الموظف نفسه";
+    else if (mgr?.startsWith("b:")) { const t = base.find((x) => x.i === +mgr.slice(2)); if (!t || (t.state !== "new" && t.state !== "bad")) mgrErr = `المدير المختار (صف ${mgr.slice(2)}) لن يُضاف في هذه الدفعة — اختر غيره`; else if (t.errs.length) mgrErr = `المدير المختار (صف ${t.i}) يحتاج تصحيحًا أولًا`; }
+    else if (mgr && mgr !== "hr" && !mgrOpts.some((o) => o.v === mgr)) mgrErr = "المسؤول المختار غير متاح";
+    const out: Row = { ...r, mgr, mgrErr };
+    if (r.state === "bad" && !r.errs.length && !mgrErr) return { ...out, state: "new" };
+    if (r.state === "new" && mgrErr) return { ...out, state: "bad" };
+    return out;
+  };
+  const mgrPayload = (v: string | undefined, ids: Map<number, string>): Record<string, string> | null | string => {
+    if (!v || v === "hr") return null;
+    if (v.startsWith("e:")) return { manager_id: v.slice(2) };
+    if (v.startsWith("o:")) return { manager_owner: v.slice(2) };
+    const id = ids.get(+v.slice(2)); return id ? { manager_id: id } : `لم يُربط المسؤول المباشر لأن إضافة المدير (صف ${v.slice(2)}) تعذّرت — صحّح الاختيار`;
+  };
+
   // completion mode: read current extra data for matched employees, then preview only empty → filled values
   useEffect(() => {
     if (mode !== "fill") return;
@@ -156,7 +196,8 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     return () => { off = true; };
   }, [mode, base]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const rows = useMemo<Row[]>(() => base.map((r) => {
+  const rows = useMemo<Row[]>(() => base.map((r0) => {
+    const r = withMgr(r0);
     if (r.state === "new" && mode === "new" && withLogin) {
       const al = allowed[r.p["school_id"]!], t = tmap.get(tnorm(r.p["job_title"]));
       const pick0 = rolePick[r.i];
@@ -175,7 +216,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     const cur = (f: HrField) => f.where === "base" ? (e as Record<string, unknown>)[f.key] : f.key === "manager_no" ? pr.manager_no : f.key === "department" ? pr.department : pr[f.key];
     const gaps = fields.filter((f) => !["school", "category", "manager_name", "full_name", "employee_no", "display_name"].includes(f.key) && r.p[f.key] && (cur(f) == null || cur(f) === "")).map((f) => f.key);
     return gaps.length ? { ...r, state: "fill", gaps, msg: undefined } : { ...r, state: "same", msg: "لا توجد بيانات ناقصة يمكن استكمالها" };
-  }), [base, mode, profs, existing, withLogin, allowed, tmap, rolePick, plan]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [base, mode, profs, existing, withLogin, allowed, tmap, rolePick, plan, mgrPick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const missing = HR_FIELDS.filter((f) => f.required && map[f.key] == null && !(f.key === "school" && Object.keys(pick).length));
   const ready = rows.filter((r) => r.state === "fill" || (r.state === "new" && (!r.login || r.login.act === "create" || ((r.login.act === "link" || r.login.act === "link_guardian") && linkOk[r.i]))));
@@ -223,20 +264,32 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
         try { await call("hr_employee_profile_save", { _org: org, _emp: id, _p: profPayload(r), _mode: "fill", _reason: why }); out.set(r.i, { ...r, state: dup ? "dup" : "ok", msg: dup ? "أُضيف سابقًا من الملف نفسه — لم يُكرر" : r.login?.act === "create" ? `أُنشئ الحساب بدور ${roleLabel(r.login.role)}` : r.login?.act === "link" ? "رُبط بالحساب الموجود" : r.login?.act === "link_guardian" ? `رُبط بحساب ولي الأمر وأُضيفت صفة ${roleLabel(r.login.role)}` : undefined }); }
         catch (x) { out.set(r.i, { ...r, state: "fail", msg: `أُنشئ الملف لكن تعذّر حفظ البيانات الإضافية: ${arabicError(x)}` }); }
       } else if (r.state === "fill") {
-        try { await call("hr_employee_profile_save", { _org: org, _emp: r.match, _p: { ...profPayload(r, r.gaps), ...(r.gaps.includes("manager_no") ? { manager_no: r.p["manager_no"] } : {}) }, _mode: "fill", _reason: `${why} — استكمال صف ${r.i}` }); out.set(r.i, { ...r, state: "filled" }); }
+        try { await call("hr_employee_profile_save", { _org: org, _emp: r.match, _p: { ...profPayload(r, r.gaps), ...(r.gaps.includes("manager_no") && typeof mgrPayload(r.mgr, ids) === "object" ? mgrPayload(r.mgr, ids) as Record<string, string> : {}) }, _mode: "fill", _reason: `${why} — استكمال صف ${r.i}` }); out.set(r.i, { ...r, state: "filled" }); }
         catch (x) { out.set(r.i, { ...r, state: "fail", msg: arabicError(x) }); }
       }
     }
     // second pass: direct managers (may be employees added in this same batch)
     for (const r of rows) {
-      const id = ids.get(r.i); if (!id || !r.p["manager_no"] || out.get(r.i)?.state === "fail") continue;
-      try { await call("hr_employee_profile_save", { _org: org, _emp: id, _p: { manager_no: r.p["manager_no"] }, _mode: "fill", _reason: why }); }
-      catch (x) { out.set(r.i, { ...out.get(r.i)!, msg: `حُفظ الموظف؛ لم يُربط المسؤول المباشر: ${arabicError(x)}` }); }
+      const id = ids.get(r.i); if (!id || out.get(r.i)?.state === "fail") continue;
+      const mp = mgrPayload(r.mgr, ids); if (mp === null) continue;
+      if (typeof mp === "string") { out.set(r.i, { ...out.get(r.i)!, mgrFail: true, msg: `حُفظ الموظف؛ ${mp}` }); continue; }
+      try { await call("hr_employee_profile_save", { _org: org, _emp: id, _p: mp, _mode: "fill", _reason: `${why} — المسؤول المباشر للصف ${r.i}` }); }
+      catch (x) { out.set(r.i, { ...out.get(r.i)!, mgrFail: true, msg: `حُفظ الموظف؛ لم يُربط المسؤول المباشر: ${arabicError(x)} — صحّح الاختيار` }); }
     }
-    const list = [...out.values()];
+    const list = [...out.values()].map((x) => ({ ...x, match: x.match ?? ids.get(x.i) }));
     setRes(list); setBusy(false); lock.current = false; onDone(); qc.invalidateQueries({ queryKey: ["hr-cand"] });
     const c = (s: State) => list.filter((x) => x.state === s).length;
     toast.success(`أُضيف ${c("ok")} · استُكمل ${c("filled")} · تُخطي ${c("dup") + c("same")} · رُفض ${c("bad") + c("conflict") + c("fail")} · للمراجعة ${c("review")}`);
+  };
+  // after the batch: correct a row whose manager could not be linked
+  const fixMgr = async (r: Row): Promise<unknown> => {
+    const ids = new Map(res!.filter((x) => x.match).map((x) => [x.i, x.match!]));
+    const v = mgrPick[r.i] ?? r.mgr; const mp = mgrPayload(v, ids);
+    if (!r.match || mp === null || typeof mp === "string") return toast.error(typeof mp === "string" ? mp : "اختر المسؤول المباشر");
+    try { await call("hr_employee_profile_save", { _org: org, _emp: r.match, _p: mp, _mode: "fill", _reason: `استيراد Excel — تصحيح المسؤول المباشر للصف ${r.i}` });
+      setRes((l) => l!.map((x) => (x.i === r.i ? { ...x, mgr: v, mgrFail: false, msg: "رُبط المسؤول المباشر" } : x))); toast.success("حُفظ المسؤول المباشر"); onDone(); }
+    catch (x) { toast.error(arabicError(x)); }
+    return null;
   };
   const report = () => {
     const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "الرقم الوظيفي", "المدرسة", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, safe(r.p["full_name"] ?? ""), safe(r.p["employee_no"] ?? ""), safe(schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName), LBL[r.state], safe([...r.errs, r.msg].filter(Boolean).join("، "))])]);
@@ -302,7 +355,11 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
                   <td className="p-2">{!res && !schools.some((s) => norm(s.name) === norm(r.schoolName)) && r.state !== "dup" && r.state !== "fill" && r.state !== "same" ? (
                     <select aria-label={`مدرسة الصف ${r.i}`} className={selectCls("w-40")} value={pick[r.i] ?? ""} onChange={(e) => setPick((x) => ({ ...x, [r.i]: e.target.value }))}><option value="">{r.schoolName ? `«${r.schoolName}» ← اختر` : "اختر المدرسة"}</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
                   ) : schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName ?? "—"}</td>
-                  <td className="p-2 text-xs">{r.p["manager_no"] ? <><bdi dir="ltr">{r.p["manager_no"]}</bdi>{r.p["manager_name"] && ` — ${r.p["manager_name"]}`}</> : <span className="text-muted-foreground">الموارد البشرية (افتراضي)</span>}</td>
+                  <td className="p-2 text-xs">{(!res && ["new", "bad", "review", "fill"].includes(r.state)) || (res && r.mgrFail) ? (
+                    <>{r.p["manager_no"] && <p className="mb-1 text-muted-foreground">من الملف: <bdi dir="ltr">{r.p["manager_no"]}</bdi>{r.p["manager_name"] && ` — ${r.p["manager_name"]}`}</p>}
+                      <ManagerPick row={r.i} value={res ? mgrPick[r.i] ?? r.mgr : r.mgr} opts={optFor(r)} onChange={(v) => setMgrPick((x) => ({ ...x, [r.i]: v }))} />
+                      {res && r.mgrFail && <Button size="sm" variant="outline" className="mt-1" disabled={(() => { const v = mgrPick[r.i] ?? r.mgr; return !v || v === "hr" || (v.startsWith("b:") && !res.some((x) => x.i === +v.slice(2) && x.match)); })()} onClick={() => fixMgr(r)}>حفظ المسؤول</Button>}</>
+                  ) : r.mgr && r.mgr !== "hr" ? mgrOpts.find((o) => o.v === r.mgr)?.name ?? "—" : r.p["manager_no"] ? <><bdi dir="ltr">{r.p["manager_no"]}</bdi>{r.p["manager_name"] && ` — ${r.p["manager_name"]}`}</> : <span className="text-muted-foreground">الموارد البشرية (افتراضي)</span>}</td>
                   {withLogin && mode === "new" && <>
                     <td className="p-2 text-xs"><bdi dir="ltr">{r.p["phone"] || "—"}</bdi></td>
                     <td className="p-2 text-xs">{r.login?.act === "link" ? <span>يحتفظ بأدواره: {(r.login.pl?.roles ?? []).map(roleLabel).join("، ")}</span>
@@ -314,7 +371,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
                       <label className="flex items-start gap-1"><input type="checkbox" aria-label={`تأكيد ربط ولي الأمر الصف ${r.i}`} disabled={!!res} checked={!!linkOk[r.i]} onChange={(e) => setLinkOk((x) => ({ ...x, [r.i]: e.target.checked }))} /><span>ربط بالحساب الموجود وإضافة الصفة الوظيفية: {r.login.pl?.name} — ولي أمر{r.login.pl?.children ? ` (${r.login.pl.children} من الأبناء)` : ""}، تبقى صفة ولي الأمر وروابط الأبناء</span></label>)
                       : r.login.act === "review" ? "يحتاج مراجعة" : "…"}</td>
                   </>}
-                  <td className="p-2"><span className={`rounded px-1.5 ${CLS[r.state]}`}>{LBL[r.state]}</span> <span className="text-xs text-muted-foreground">{[...r.errs, r.msg].filter(Boolean).join("، ")}</span>
+                  <td className="p-2"><span className={`rounded px-1.5 ${CLS[r.state]}`}>{LBL[r.state]}</span> <span className="text-xs text-muted-foreground">{[...r.errs, r.mgrErr, r.msg].filter(Boolean).join("، ")}</span>
                     {r.state === "fill" && <ul className="mt-1 text-xs">{r.gaps.map((k) => <li key={k}>{fLabel(k)}: <bdi>{showVal(r, k)}</bdi></li>)}</ul>}
                     {r.state === "new" && !res && <details className="text-xs"><summary className="cursor-pointer text-muted-foreground">القيم</summary><ul>{fields.filter((f) => r.p[f.key]).map((f) => <li key={f.key}>{f.label}: <bdi>{showVal(r, f.key)}</bdi></li>)}</ul></details>}
                   </td></tr>

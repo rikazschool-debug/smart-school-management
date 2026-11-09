@@ -17,6 +17,8 @@ import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { HrImport } from "@/components/hr/import";
 import { HR_FIELDS, cleanValue } from "@/lib/hr-fields";
+import { bi } from "@/lib/hr-bilingual";
+import { EnHint } from "@/components/hr/en-hint";
 import { ProfileFields, ProfileView, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { PersonCardButton } from "@/components/people/person-card";
@@ -201,16 +203,16 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
           {mode === "new" && !m.caps.sensitive && <p className="rounded-lg border border-warning/40 bg-warning/10 p-2 text-sm">إنشاء حساب الدخول يحتاج إدخال رقم الهوية، وهو صلاحية «البيانات الحساسة» غير المتاحة لك.</p>}
           {mode === "new" ? (
             <div className="grid gap-3 md:grid-cols-3">
-              <div><Label htmlFor="hr-sch">المدرسة</Label>
+              <div><Label htmlFor="hr-sch">{bi("school", "المدرسة")}</Label>
                 <select id="hr-sch" className={selectCls("mt-1 w-full")} value={f.school_id} onChange={(e) => { setF((x) => ({ ...x, school_id: e.target.value })); setBase(""); setConflicts([]); }}>
                   <option value="">اختر المدرسة</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                   {m.owner && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}
                 </select>{central && <p className="mt-1 text-xs text-muted-foreground">للإدارة المركزية دور «مدير إدارة الموارد البشرية» فقط.</p>}</div>
-              <div><Label htmlFor="hr-cat">التصنيف الوظيفي</Label>
+              <div><Label htmlFor="hr-cat">{bi("category", "التصنيف الوظيفي")}</Label>
                 <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
                   <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select></div>
-              <div><Label htmlFor="hr-role">دور الدخول</Label>
+              <div><Label htmlFor="hr-role">{bi("login_role", "دور الدخول")}</Label>
                 <select id="hr-role" className={selectCls("mt-1 w-full")} value={base} disabled={!f.school_id} onChange={(e) => { setBase(e.target.value); if (!f.job_title) set("job_title", roleLabel(e.target.value)); }}>
                   <option value="">{f.school_id ? "اختر الدور" : "اختر المدرسة أولًا"}</option>{(roles.data ?? []).map((r) => <option key={r} value={r}>{roleLabel(r)}</option>)}
                 </select>
@@ -218,20 +220,20 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
             </div>
           ) : (
           <div className="grid gap-3 md:grid-cols-2">
-            <div><Label htmlFor="hr-acc">الحساب الموجود</Label>
+            <div><Label htmlFor="hr-acc">{bi("account", "الحساب الموجود")}</Label>
               <select id="hr-acc" className={selectCls("mt-1 w-full")} value={f.user_id} onChange={(e) => e.target.value ? pickAccount(e.target.value) : set("user_id", "")}>
                 <option value="">بلا حساب دخول</option>{cand.data!.accounts.map((a) => <option key={a.user_id} value={a.user_id}>{a.name} — {(a.schools ?? []).map((s) => s.name).join("، ")}</option>)}
               </select></div>
-            <div><Label htmlFor="hr-sch">مدرسة التعيين الأول</Label>
+            <div><Label htmlFor="hr-sch">{bi("school", "مدرسة التعيين الأول")}</Label>
               <select id="hr-sch" className={selectCls("mt-1 w-full")} value={f.school_id} onChange={(e) => setF((x) => ({ ...x, school_id: e.target.value, teacher_id: "" }))}>
                 <option value="">اختر المدرسة</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select></div>
-            <div><Label htmlFor="hr-cat">التصنيف الوظيفي</Label>
+            <div><Label htmlFor="hr-cat">{bi("category", "التصنيف الوظيفي")}</Label>
               <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
                 <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               <p className="mt-1 text-xs text-muted-foreground">التصنيف وصف وظيفي فقط ولا يمنح صلاحيات أو دور دخول.</p></div>
-            <div className="md:col-span-2"><Label htmlFor="hr-t">ربط بسجل معلم موجود في المدرسة (اختياري)</Label>
+            <div className="md:col-span-2"><Label htmlFor="hr-t">{bi("teacher", "ربط بسجل معلم موجود في المدرسة (اختياري)")}</Label>
               <select id="hr-t" className={selectCls("mt-1 w-full")} value={f.teacher_id} disabled={!f.school_id} onChange={(e) => e.target.value ? pickTeacher(e.target.value) : set("teacher_id", "")}>
                 <option value="">ليس معلمًا / لا ربط</option>{teachers.map((t) => <option key={t.teacher_id} value={t.teacher_id}>{t.name}{t.specialization ? ` — ${t.specialization}` : ""}{t.user_id ? " (له حساب)" : ""}</option>)}
               </select>
@@ -293,7 +295,7 @@ function EmpFields({ f, set, sensitive, withStatus, loginPhone }: { f: Record<st
   const auto = (n: string) => { const w = n.trim().split(/\s+/).filter(Boolean); return w.length > 1 ? `${w[0]} ${w[w.length - 1]}` : (w[0] ?? ""); };
   const s = (k: string, v: string) => { raw(k, v); if (k === "full_name" && (!f["display_name"] || f["display_name"] === auto(f["full_name"] ?? ""))) raw("display_name", auto(v)); };
   const F = (k: string, label: string, type = "text", extra: Record<string, string> = {}) => (
-    <div><Label htmlFor={`hr-${k}`}>{label}</Label><Input id={`hr-${k}`} type={type} className="mt-1" value={f[k] ?? ""} onChange={(e) => s(k, e.target.value)} {...extra} /></div>
+    <div><Label htmlFor={`hr-${k}`}>{bi(k === "phone" && loginPhone ? "login_phone" : k, label)}</Label><Input id={`hr-${k}`} type={type} className="mt-1" value={f[k] ?? ""} onChange={(e) => s(k, e.target.value)} {...extra} /><EnHint k={k} v={f[k]} /></div>
   );
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -303,14 +305,14 @@ function EmpFields({ f, set, sensitive, withStatus, loginPhone }: { f: Record<st
       {F("hire_date", "تاريخ المباشرة", "date")}
       {F("phone", loginPhone ? "رقم الجوال المعتمد للدخول" : "الجوال", "tel", { dir: "ltr", inputMode: "tel", placeholder: "05xxxxxxxx" })}
       {F("email", "البريد الوظيفي", "email", { dir: "ltr" })}
-      <div><Label htmlFor="hr-gender">الجنس</Label><select id="hr-gender" className={selectCls("mt-1 w-full")} value={f["gender"] ?? ""} onChange={(e) => s("gender", e.target.value)}><option value="">—</option>{Object.entries(GENDER).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+      <div><Label htmlFor="hr-gender">{bi("gender", "الجنس")}</Label><select id="hr-gender" className={selectCls("mt-1 w-full")} value={f["gender"] ?? ""} onChange={(e) => s("gender", e.target.value)}><option value="">—</option>{Object.entries(GENDER).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select><EnHint k="gender" v={GENDER[f["gender"] as keyof typeof GENDER]} /></div>
       {sensitive ? <>
         {F("national_id", "رقم الهوية / الإقامة", "text", { dir: "ltr", inputMode: "numeric" })}
         {F("nationality", "الجنسية")}
         {F("birth_date", "تاريخ الميلاد", "date")}
       </> : <p className="self-end text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">رقم الهوية والجنسية وتاريخ الميلاد تحتاج صلاحية «البيانات الحساسة».</p>}
       {withStatus && <>
-        <div><Label htmlFor="hr-status">الحالة</Label><select id="hr-status" className={selectCls("mt-1 w-full")} value={f["status"] ?? "active"} onChange={(e) => s("status", e.target.value)}>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+        <div><Label htmlFor="hr-status">{bi("status", "الحالة")}</Label><select id="hr-status" className={selectCls("mt-1 w-full")} value={f["status"] ?? "active"} onChange={(e) => s("status", e.target.value)}>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
         {f["status"] === "ended" && F("end_date", "تاريخ انتهاء الخدمة", "date")}
       </>}
     </div>
@@ -444,13 +446,13 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
         <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", category_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
         {asg && (
           <div className="mb-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div><Label htmlFor="as-sch">المدرسة</Label><select id="as-sch" className={selectCls("mt-1 w-full")} value={asg["school_id"]} onChange={(ev) => setAsg({ ...asg, school_id: ev.target.value })}><option value="">اختر</option>{m.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
-            <div><Label htmlFor="as-cat">التصنيف الوظيفي</Label><select id="as-cat" className={selectCls("mt-1 w-full")} value={asg["category_id"] ?? ""} onChange={(ev) => setAsg({ ...asg, category_id: ev.target.value })}><option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active || c.id === asg["category_id"]).map((c) => <option key={c.id} value={c.id}>{c.name}{c.is_active ? "" : " (معطل)"}</option>)}</select></div>
-            <div><Label htmlFor="as-job">الوظيفة في هذا التعيين</Label><Input id="as-job" className="mt-1" value={asg["job_title"]} onChange={(ev) => setAsg({ ...asg, job_title: ev.target.value })} /></div>
-            <div><Label htmlFor="as-dep">القسم</Label><Input id="as-dep" className="mt-1" value={asg["department"]} onChange={(ev) => setAsg({ ...asg, department: ev.target.value })} /></div>
-            <div><Label htmlFor="as-mgr">المدير المباشر</Label><select id="as-mgr" className={selectCls("mt-1 w-full")} value={asg["manager_id"]} onChange={(ev) => setAsg({ ...asg, manager_id: ev.target.value })}><option value="">الموارد البشرية (افتراضي)</option>{mgrs.map((x) => <option key={x.id} value={x.id}>{x.full_name}</option>)}</select></div>
-            <div><Label htmlFor="as-s">من</Label><Input id="as-s" type="date" className="mt-1" value={asg["start_date"]} onChange={(ev) => setAsg({ ...asg, start_date: ev.target.value })} /></div>
-            <div><Label htmlFor="as-e">إلى (اختياري)</Label><Input id="as-e" type="date" className="mt-1" value={asg["end_date"]} onChange={(ev) => setAsg({ ...asg, end_date: ev.target.value })} /></div>
+            <div><Label htmlFor="as-sch">{bi("school", "المدرسة")}</Label><select id="as-sch" className={selectCls("mt-1 w-full")} value={asg["school_id"]} onChange={(ev) => setAsg({ ...asg, school_id: ev.target.value })}><option value="">اختر</option>{m.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+            <div><Label htmlFor="as-cat">{bi("category", "التصنيف الوظيفي")}</Label><select id="as-cat" className={selectCls("mt-1 w-full")} value={asg["category_id"] ?? ""} onChange={(ev) => setAsg({ ...asg, category_id: ev.target.value })}><option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active || c.id === asg["category_id"]).map((c) => <option key={c.id} value={c.id}>{c.name}{c.is_active ? "" : " (معطل)"}</option>)}</select></div>
+            <div><Label htmlFor="as-job">{bi("job_title", "الوظيفة في هذا التعيين")}</Label><Input id="as-job" className="mt-1" value={asg["job_title"]} onChange={(ev) => setAsg({ ...asg, job_title: ev.target.value })} /><EnHint k="job_title" v={asg["job_title"]} /></div>
+            <div><Label htmlFor="as-dep">{bi("department", "القسم")}</Label><Input id="as-dep" className="mt-1" value={asg["department"]} onChange={(ev) => setAsg({ ...asg, department: ev.target.value })} /><EnHint k="department" v={asg["department"]} /></div>
+            <div><Label htmlFor="as-mgr">{bi("manager", "المدير المباشر")}</Label><select id="as-mgr" className={selectCls("mt-1 w-full")} value={asg["manager_id"]} onChange={(ev) => setAsg({ ...asg, manager_id: ev.target.value })}><option value="">الموارد البشرية (افتراضي)</option>{mgrs.map((x) => <option key={x.id} value={x.id}>{x.full_name}</option>)}</select></div>
+            <div><Label htmlFor="as-s">{bi("asg_from", "من")}</Label><Input id="as-s" type="date" className="mt-1" value={asg["start_date"]} onChange={(ev) => setAsg({ ...asg, start_date: ev.target.value })} /></div>
+            <div><Label htmlFor="as-e">{bi("asg_to", "إلى (اختياري)")}</Label><Input id="as-e" type="date" className="mt-1" value={asg["end_date"]} onChange={(ev) => setAsg({ ...asg, end_date: ev.target.value })} /></div>
             <div className="flex gap-2 sm:col-span-2 lg:col-span-3"><Button disabled={!asg["school_id"] || !asg["start_date"] || saveAsg.isPending} onClick={() => saveAsg.mutate(asg)}>{saveAsg.isPending ? "…" : "حفظ التعيين"}</Button><Button variant="ghost" onClick={() => setAsg(null)}>إلغاء</Button></div>
           </div>
         )}
