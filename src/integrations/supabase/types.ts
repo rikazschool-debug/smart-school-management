@@ -12109,6 +12109,44 @@ export type Database = {
           },
         ]
       }
+      mq_creds: {
+        Row: {
+          base_url: string
+          key_enc: string
+          key_hint: string | null
+          org_id: string
+          secret_enc: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          base_url: string
+          key_enc: string
+          key_hint?: string | null
+          org_id: string
+          secret_enc: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          base_url?: string
+          key_enc?: string
+          key_hint?: string | null
+          org_id?: string
+          secret_enc?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_creds_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mq_followups: {
         Row: {
           alerted_at: string | null
@@ -12183,6 +12221,7 @@ export type Database = {
         Row: {
           base_url: string
           created_at: string
+          dialer_url: string
           enabled: boolean
           last_sync_at: string | null
           last_sync_count: number | null
@@ -12197,6 +12236,7 @@ export type Database = {
         Insert: {
           base_url?: string
           created_at?: string
+          dialer_url?: string
           enabled?: boolean
           last_sync_at?: string | null
           last_sync_count?: number | null
@@ -12211,6 +12251,7 @@ export type Database = {
         Update: {
           base_url?: string
           created_at?: string
+          dialer_url?: string
           enabled?: boolean
           last_sync_at?: string | null
           last_sync_count?: number | null
@@ -18547,6 +18588,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      _mq_creds_get: { Args: { _org: string }; Returns: Json }
+      _mq_creds_put: {
+        Args: {
+          _base: string
+          _hint: string
+          _kenc: string
+          _org: string
+          _senc: string
+          _user: string
+        }
+        Returns: undefined
+      }
       _mq_ingest: {
         Args: { _agents: Json; _calls: Json; _org: string }
         Returns: number
@@ -22052,6 +22105,7 @@ export type Database = {
         }
         Returns: Json
       }
+      mq_link_info: { Args: { _org: string }; Returns: Json }
       mq_live_ticket: {
         Args: {
           _assignee?: string
@@ -22072,6 +22126,7 @@ export type Database = {
         Args: { _label: string; _number: string; _org: string; _school: string }
         Returns: undefined
       }
+      mq_owner_check: { Args: { _org: string }; Returns: boolean }
       mq_pending_tickets: {
         Args: { _call?: string; _org: string }
         Returns: {
@@ -22106,6 +22161,10 @@ export type Database = {
           _to?: string
         }
         Returns: Json
+      }
+      mq_set_dialer: {
+        Args: { _org: string; _url: string }
+        Returns: undefined
       }
       mq_settings: { Args: { _org: string }; Returns: Json }
       mq_ticket_call_state: { Args: { _ticket: string }; Returns: string }

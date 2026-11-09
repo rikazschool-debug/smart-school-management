@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Star, ArrowLeft, Building2, CheckCircle2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy } from "lucide-react";
+import { Star, ArrowLeft, Building2, CheckCircle2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy, Phone } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -132,6 +132,14 @@ const CARDS: Card[] = [
     features: [
       { icon: LifeBuoy, label: "ملخص الدعم", to: "/app/support", search: { tab: "summary" } },
       { icon: LifeBuoy, label: "كل التذاكر", to: "/app/support", search: { tab: "manage" } },
+    ],
+  },
+  {
+    key: "calls", title: "المكالمات الهاتفية", icon: Phone, to: "/app/calls", open: "فتح المكالمات",
+    desc: "لوحة اتصال Maqsam في نافذة مستقلة، وسجل المكالمات والمتابعات وتقارير الاتصال وإعدادات الربط.",
+    features: [
+      { icon: Phone, label: "لوحة الاتصال", to: "/app/calls", search: { mq: "live" } },
+      { icon: Phone, label: "إعدادات Maqsam", to: "/app/calls", search: { mq: "settings" } },
     ],
   },
   {

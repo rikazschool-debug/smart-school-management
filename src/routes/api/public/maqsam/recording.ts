@@ -13,10 +13,11 @@ export const Route = createFileRoute("/api/public/maqsam/recording")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const r = await supabaseAdmin.rpc("_mq_rec_consume" as never, { _token: t } as never);
         const d = r.data as unknown as { ok: boolean; ext_id?: number; mode?: string; base?: string; org?: string } | null;
-        if (r.error || !d?.ok || d.org !== "a9a4b7e2-ab44-4bcf-a1bf-ebce6489f074") return new Response("forbidden", { status: 403 });
-        const id = process.env["MAQSAM_ACCESS_KEY_ID"], secret = process.env["MAQSAM_ACCESS_SECRET"];
-        if (!id || !secret) return new Response("unavailable", { status: 503 });
-        const up = await fetch(`https://api.${d.base}/v1/recording/${d.ext_id}`, { headers: { Authorization: "Basic " + btoa(`${id}:${secret}`) } });
+        if (r.error || !d?.ok) return new Response("forbidden", { status: 403 });
+        const { orgCreds } = await import("@/lib/maqsam-creds.server");
+        const cr = d.org ? await orgCreds(d.org) : null;
+        if (!cr) return new Response("unavailable", { status: 503 });
+        const up = await fetch(`https://api.${cr.base}/v1/recording/${d.ext_id}`, { headers: { Authorization: cr.auth } });
         if (up.status === 404) return new Response("التسجيل غير متاح لهذه المكالمة", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
         if (!up.ok || !up.body) return new Response("تعذّر جلب التسجيل", { status: 502, headers: { "Content-Type": "text/plain; charset=utf-8" } });
         const h = new Headers({ "Content-Type": "audio/mpeg", "Cache-Control": "private, no-store" });
