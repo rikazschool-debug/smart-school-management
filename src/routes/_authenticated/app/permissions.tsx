@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
@@ -304,17 +304,26 @@ function ResetPassword({ org, user, username }: { org: string; user: string; use
 /** «إدارة المستخدمين»: main areas → sections → the people who actually hold access there (each person once per section). */
 function UsersBySection({ org, c }: { org: string; c: Catalog }) {
   const people = useQuery({ queryKey: ["perm-people", org], queryFn: async () => (await call("perm_people", { _org: org })) as PermPerson[] });
-  const secs = useQuery({ queryKey: ["perm-sections", org], queryFn: async () => (await call("perm_section_people", { _org: org })) as { user_id: string; sections: string[] }[] });
+  // One request per area: each stays short on large organizations (a single request over every section timed out).
+  const secQs = useQueries({ queries: c.areas.filter((a) => !a.soon).map((a) => ({
+    queryKey: ["perm-sections", org, a.key],
+    queryFn: async () => ((await call("perm_section_people", { _org: org, _area: a.key })) ?? []) as { user_id: string; sections: string[] }[],
+  })) });
+  const secsLoading = secQs.some((q) => q.isPending);
+  const secsError = secQs.find((q) => q.error)?.error ?? null;
   const roles = useQuery({ queryKey: ["perm-roles", org], queryFn: async () => (await call("perm_roles_list", { _org: org })) as Row[] });
   const logins = useQuery({ queryKey: ["staff-logins", org], queryFn: async () => (await call("staff_logins_list", { _org: org })) as { user_id: string; username: string; pending: boolean }[] });
   const dis = useDisabled(org);
   const [area, setArea] = useState("all"); const [sec, setSec] = useState("");
   const [role, setRole] = useState(""); const [branch, setBranch] = useState(""); const [state, setState] = useState(""); const [q, setQ] = useState("");
   const [user, setUser] = useState<string | null>(null);
-  if (people.isLoading || secs.isLoading || roles.isLoading) return <LoadingState />;
-  if (people.error || secs.error || roles.error) return <ErrorState message={arabicError(people.error ?? secs.error ?? roles.error)} />;
-  const all = people.data!;
-  const has = new Map(secs.data!.map((x) => [x.user_id, new Set(x.sections)]));
+  if (people.error || roles.error) return <ErrorState message={arabicError(people.error ?? roles.error)} />;
+  if (!people.data || !roles.data) return <LoadingState />;
+  const all = people.data;
+  const has = new Map<string, Set<string>>();
+  for (const q of secQs) for (const x of q.data ?? []) {
+    const s = has.get(x.user_id) ?? new Set<string>(); for (const k of x.sections ?? []) s.add(k); has.set(x.user_id, s);
+  }
   const inArea = (p: PermPerson, a: string) => c.sections.some((s) => s.parent === a && has.get(p.user_id)?.has(s.key));
   const login = (id: string) => logins.data?.find((l) => l.user_id === id);
   const status = (p: PermPerson) => (login(p.user_id)?.pending ? "pending" : p.base.some((b) => b.active) ? "active" : "stopped");
