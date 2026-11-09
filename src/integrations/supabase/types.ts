@@ -7298,6 +7298,7 @@ export type Database = {
           is_primary: boolean
           job_title: string | null
           manager_id: string | null
+          manager_kind: string | null
           org_id: string
           school_id: string
           start_date: string
@@ -7315,6 +7316,7 @@ export type Database = {
           is_primary?: boolean
           job_title?: string | null
           manager_id?: string | null
+          manager_kind?: string | null
           org_id: string
           school_id: string
           start_date: string
@@ -7332,6 +7334,7 @@ export type Database = {
           is_primary?: boolean
           job_title?: string | null
           manager_id?: string | null
+          manager_kind?: string | null
           org_id?: string
           school_id?: string
           start_date?: string
@@ -17527,6 +17530,7 @@ export type Database = {
       }
       _hr_lv_taken: { Args: { _req: string }; Returns: number }
       _hr_me_emp: { Args: { _org: string }; Returns: string }
+      _hr_mgr_kind: { Args: { _emp: string }; Returns: string }
       _hr_mn_any: { Args: { _action: string; _org: string }; Returns: boolean }
       _hr_mn_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
       _hr_month: { Args: { _m: string }; Returns: string }
