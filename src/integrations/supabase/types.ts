@@ -3386,6 +3386,67 @@ export type Database = {
           },
         ]
       }
+      ct_batches: {
+        Row: {
+          applied_at: string
+          applied_by: string
+          changes: Json
+          counts: Json
+          file_hash: string
+          id: string
+          org_id: string
+          school_id: string
+          year_id: string
+          year_name: string
+        }
+        Insert: {
+          applied_at?: string
+          applied_by: string
+          changes?: Json
+          counts?: Json
+          file_hash: string
+          id?: string
+          org_id: string
+          school_id: string
+          year_id: string
+          year_name: string
+        }
+        Update: {
+          applied_at?: string
+          applied_by?: string
+          changes?: Json
+          counts?: Json
+          file_hash?: string
+          id?: string
+          org_id?: string
+          school_id?: string
+          year_id?: string
+          year_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_batches_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_batches_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_batches_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cv_events: {
         Row: {
           action: string
@@ -14407,6 +14468,12 @@ export type Database = {
       students: {
         Row: {
           birth_date: string | null
+          contract_batch: string | null
+          contract_status: string | null
+          contract_synced_at: string | null
+          contract_type: string | null
+          contract_year: string | null
+          contract_year_start: string | null
           created_at: string
           csmart_no: string | null
           display_name: string | null
@@ -14423,6 +14490,12 @@ export type Database = {
         }
         Insert: {
           birth_date?: string | null
+          contract_batch?: string | null
+          contract_status?: string | null
+          contract_synced_at?: string | null
+          contract_type?: string | null
+          contract_year?: string | null
+          contract_year_start?: string | null
           created_at?: string
           csmart_no?: string | null
           display_name?: string | null
@@ -14439,6 +14512,12 @@ export type Database = {
         }
         Update: {
           birth_date?: string | null
+          contract_batch?: string | null
+          contract_status?: string | null
+          contract_synced_at?: string | null
+          contract_type?: string | null
+          contract_year?: string | null
+          contract_year_start?: string | null
           created_at?: string
           csmart_no?: string | null
           display_name?: string | null
@@ -16366,6 +16445,14 @@ export type Database = {
       }
       _csmart_exact: { Args: { _s: string }; Returns: string }
       _csmart_key: { Args: { _s: string }; Returns: string }
+      _ct_check: { Args: { _school: string }; Returns: undefined }
+      _ct_nid: { Args: { _s: string }; Returns: string }
+      _ct_plan: {
+        Args: { _rows: Json; _school: string; _year: string }
+        Returns: Json
+      }
+      _ct_txt: { Args: { _s: string }; Returns: string }
+      _ct_yr: { Args: { _s: string }; Returns: string }
       _ctx_staff: { Args: { _org: string; _school: string }; Returns: boolean }
       _cv_can: {
         Args: {
@@ -17860,6 +17947,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      _perm_base_v11: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
       _perm_base_v2: {
         Args: {
           _action: string
@@ -17888,6 +17984,7 @@ export type Database = {
         Returns: boolean
       }
       _perm_catalog_base: { Args: never; Returns: Json }
+      _perm_catalog_v11: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
@@ -19500,6 +19597,21 @@ export type Database = {
           _voice: boolean
         }
         Returns: undefined
+      }
+      ct_apply: {
+        Args: {
+          _full_confirmed: boolean
+          _hash: string
+          _rows: Json
+          _school: string
+          _year: string
+        }
+        Returns: Json
+      }
+      ct_can: { Args: { _school: string }; Returns: boolean }
+      ct_preview: {
+        Args: { _rows: Json; _school: string; _year: string }
+        Returns: Json
       }
       current_timetable: {
         Args: { _date: string; _school: string }
