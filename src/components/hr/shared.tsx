@@ -1,3 +1,4 @@
+import { ROLE_LABELS, type Role } from "@/lib/roles";
 // HR shared hooks/types. All reads/writes go through hr_* RPCs; the server decides scope and which fields are sent.
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,9 @@ export type HrMe = { enabled: boolean; owner: boolean; caps: HrCaps; org_wide: b
 export type HrAssign = { id: string; school_id: string; school: string; job_title: string | null; department: string | null; manager_id: string | null; manager: string | null; teacher_id: string | null; teacher: string | null; category_id?: string | null; category?: string | null; start_date: string; end_date: string | null; is_primary: boolean; active: boolean };
 export type HrEmp = { id: string; employee_no: string; full_name: string; display_name?: string | null; display_name_manual?: boolean; job_title: string | null; phone?: string | null; email?: string | null; gender?: string | null; hire_date?: string | null; status: string; end_date?: string | null; notes?: string | null; has_login?: boolean; self_access?: boolean; self_linked_at?: string | null; self_access_at?: string | null; self_access_by?: string | null; national_id?: string | null; nationality?: string | null; birth_date?: string | null; sensitive?: boolean; assignments?: HrAssign[] };
 
+/** Login role label: base roles, or «tpl:<template>» = operations staff with that permission template. */
+export const TPL_LABELS: Record<string, string> = { "مسؤول صيانة مدارس": "مدير صيانة المدارس", "مسؤول صيانة باصات": "مدير صيانة الباصات", "مسؤول متابعة صيانة المدارس": "متابعة صيانة المدارس", "مسؤول مشتريات": "مسؤول المشتريات", "مسؤول متابعة صيانة الباصات": "متابعة صيانة الباصات", "مسؤول حركة النقل بالمدرسة": "مسؤول حركة النقل", "مسؤول القبول والتسجيل": "مسؤول القبول والتسجيل" };
+export const roleLabel = (r: string) => (r.startsWith("tpl:") ? TPL_LABELS[r.slice(4)] ?? r.slice(4) : ROLE_LABELS[r as Role] ?? r);
 export const STATUS: Record<string, string> = { active: "على رأس العمل", suspended: "موقوف مؤقتًا", ended: "انتهت الخدمة" };
 export const GENDER: Record<string, string> = { male: "ذكر", female: "أنثى" };
 

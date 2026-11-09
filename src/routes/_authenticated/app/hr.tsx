@@ -24,7 +24,7 @@ import { HrCategories } from "@/components/hr/categories";
 import { useServerFn } from "@tanstack/react-start";
 import { createHrEmployeeLogin } from "@/lib/accounts.functions";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
-import { GENDER, STATUS, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
+import { GENDER, STATUS, roleLabel, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
   validateSearch: (s: Record<string, unknown>): { emp?: string; add?: string; imp?: string } => ({
@@ -139,10 +139,8 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
 
 type Cand = { accounts: { user_id: string; name: string; roles: string[]; schools: { id: string; name: string }[] | null }[]; teachers: { teacher_id: string; name: string; school_id: string; school: string; user_id: string | null; specialization: string | null }[] };
 /** Login role label: base roles, or «tpl:<template>» = operations staff with that permission template. */
-const TPL_LABELS: Record<string, string> = { "مسؤول صيانة مدارس": "مدير صيانة المدارس", "مسؤول صيانة باصات": "مدير صيانة الباصات", "مسؤول متابعة صيانة المدارس": "متابعة صيانة المدارس", "مسؤول مشتريات": "مسؤول المشتريات", "مسؤول متابعة صيانة الباصات": "متابعة صيانة الباصات", "مسؤول حركة النقل بالمدرسة": "مسؤول حركة النقل", "مسؤول القبول والتسجيل": "مسؤول القبول والتسجيل" };
 /** same phone rule as the Excel import (05 / 9665 / +9665 → +9665…) */
 function fixPhone<T extends Record<string, unknown>>(p: T): T { const v = String(p["phone"] ?? ""); if (!v) return p; const c = cleanValue(HR_FIELDS.find((f) => f.key === "phone")!, v); if (c.err) throw new Error(c.err); return { ...p, phone: c.v }; }
-const roleLabel = (r: string) => (r.startsWith("tpl:") ? TPL_LABELS[r.slice(4)] ?? r.slice(4) : ROLE_LABELS[r as Role] ?? r);
 const EMPTY = { full_name: "", display_name: "", category_id: "", user_id: "", school_id: "", teacher_id: "", job_title: "", department: "", hire_date: "", phone: "", email: "", gender: "", national_id: "", nationality: "", birth_date: "" };
 
 function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClose: () => void; onDone: (id: string) => void }) {
