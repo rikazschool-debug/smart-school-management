@@ -154,6 +154,11 @@ function Shell() {
   const evTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "summary") });
   const ownerInSchool = useOwnerInSchool();
   const schoolPicked = useRouterState({ select: (r) => !!(r.location.search as Record<string, unknown>)["s"] });
+  useEffect(() => {
+    const cp = path.replace(/\/+$/, "") || "/";
+    if (cp === "/app" || (cp === "/app/school-home" && !schoolPicked)) setOwnerInSchool(false);
+    else if (cp === "/app/school-home" && schoolPicked) setOwnerInSchool(true);
+  }, [path, schoolPicked]);
   const lastSection = useRef<OwnerSection | null>(null);
   const router = useRouter();
   const canGoBack = useCanGoBack();
@@ -189,7 +194,6 @@ function Shell() {
   lastSection.current = section;
   const cleanPath = path.replace(/\/+$/, "") || "/";
   // owner group account vs inside one school: /app and the branch list are the group; opening a branch enters it; shared pages keep the last state
-  if (owner) { if (cleanPath === "/app" || (cleanPath === "/app/school-home" && !schoolPicked)) setOwnerInSchool(false); else if (cleanPath === "/app/school-home" && schoolPicked) setOwnerInSchool(true); }
   const groupView = owner && !ownerInSchool && !(cleanPath === "/app/school-home" && schoolPicked);
   // Owner home has no side menu; inside a section only that section's menu shows; shared pages (profile…) keep the last section.
   const noSidebar = owner && section === null;
@@ -208,7 +212,7 @@ function Shell() {
   const pcNeedsOnly = !owner && !!pc.data && !pc.data.caps.view;
   let nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   // owner's branch list (no school opened yet): only the owner's general account menu (communication, notices, support)
-  if (owner && path.replace(/\/+$/, "") === "/app/school-home" && !schoolPicked)
+  if (groupView && section === "school_admin")
     nav = [...new Set(baseNav)].filter((k) => ["home", "profile", "communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings", "notifications", "support", "calls"].includes(k));
   // class visits live under the evaluation sub-menu for roles that have both
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
