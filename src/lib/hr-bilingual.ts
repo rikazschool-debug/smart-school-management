@@ -51,7 +51,7 @@ const DICT: Record<string, string> = {
   "رياضيات": "Mathematics", "الرياضيات": "Mathematics", "لغه عربيه": "Arabic Language", "اللغه العربيه": "Arabic Language", "لغه انجليزيه": "English Language",
   "اللغه الانجليزيه": "English Language", "علوم": "Science", "العلوم": "Science", "فيزياء": "Physics", "كيمياء": "Chemistry", "احياء": "Biology", "حاسب الي": "Computer Science",
   "الحاسب الالي": "Computer Science", "دراسات اسلاميه": "Islamic Studies", "الدراسات الاسلاميه": "Islamic Studies", "اجتماعيات": "Social Studies", "تربيه بدنيه": "Physical Education",
-  "تربيه فنيه": "Art Education", "رياض اطفال": "Kindergarten", "محاسبه": "Accounting", "اداره اعمال": "Business Administration", "تعليم": "Education", "الاداره": "Administration",
+  "تربيه فنيه": "Art Education", "رياض اطفال": "Kindergarten", "اداره اعمال": "Business Administration", "تعليم": "Education", "الاداره": "Administration",
   "الشؤون التعليميه": "Academic Affairs", "شؤون الطلاب": "Student Affairs", "الماليه": "Finance", "الصيانه": "Maintenance", "النقل": "Transport", "المشتريات": "Procurement",
   // payment / banks
   "تحويل بنكي": "Bank Transfer", "نقدي": "Cash", "نقدا": "Cash", "شيك": "Cheque", "مصرف الراجحي": "Al Rajhi Bank", "الراجحي": "Al Rajhi Bank", "البنك الاهلي": "Saudi National Bank",

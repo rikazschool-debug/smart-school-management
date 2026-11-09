@@ -282,13 +282,14 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     toast.success(`أُضيف ${c("ok")} · استُكمل ${c("filled")} · تُخطي ${c("dup") + c("same")} · رُفض ${c("bad") + c("conflict") + c("fail")} · للمراجعة ${c("review")}`);
   };
   // after the batch: correct a row whose manager could not be linked
-  const fixMgr = async (r: Row) => {
+  const fixMgr = async (r: Row): Promise<unknown> => {
     const ids = new Map(res!.filter((x) => x.match).map((x) => [x.i, x.match!]));
     const v = mgrPick[r.i] ?? r.mgr; const mp = mgrPayload(v, ids);
     if (!r.match || mp === null || typeof mp === "string") return toast.error(typeof mp === "string" ? mp : "اختر المسؤول المباشر");
     try { await call("hr_employee_profile_save", { _org: org, _emp: r.match, _p: mp, _mode: "fill", _reason: `استيراد Excel — تصحيح المسؤول المباشر للصف ${r.i}` });
       setRes((l) => l!.map((x) => (x.i === r.i ? { ...x, mgr: v, mgrFail: false, msg: "رُبط المسؤول المباشر" } : x))); toast.success("حُفظ المسؤول المباشر"); onDone(); }
     catch (x) { toast.error(arabicError(x)); }
+    return null;
   };
   const report = () => {
     const ws = XLSX.utils.aoa_to_sheet([["الصف", "الاسم", "الرقم الوظيفي", "المدرسة", "النتيجة", "التفاصيل"], ...res!.map((r) => [r.i, safe(r.p["full_name"] ?? ""), safe(r.p["employee_no"] ?? ""), safe(schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName), LBL[r.state], safe([...r.errs, r.msg].filter(Boolean).join("، "))])]);
