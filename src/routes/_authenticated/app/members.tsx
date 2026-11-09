@@ -15,6 +15,7 @@ import { ListTools, applyListTools, useListTools } from "@/components/list-tools
 import { supabase } from "@/integrations/supabase/client";
 import { ROLE_LABELS, invitableRoles, type Role } from "@/lib/roles";
 import { arabicError, type AppContext } from "@/lib/session";
+import { PresenceBadge, usePresenceOrg } from "@/lib/presence";
 
 export const Route = createFileRoute("/_authenticated/app/members")({
   head: () => ({ meta: [{ title: "المستخدمون والأدوار — ركاز" }, { name: "description", content: "إدارة مستخدمي المؤسسة ودعواتهم وأدوارهم لمالك المؤسسة." }] }),
@@ -41,6 +42,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const [dept, setDept] = useState("");
   const [editing, setEditing] = useState<{ id: string; role: Role; dept: string } | null>(null);
   const depts = useOptions("departments", "name", ctx.schoolId);
+  const pres = usePresenceOrg(ctx.orgId);
   const refresh = () => qc.invalidateQueries({ predicate: (q) => ["members", "invitations", "acct-req", "access-audit"].includes(q.queryKey[0] as string) });
   const mem = useQuery({
     queryKey: ["members", ctx.schoolId],
@@ -154,7 +156,7 @@ function Members({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             <TableBody>
               {memRows.map((m) => (
                 <TableRow key={m["id"]}>
-                  <TableCell>{m["profile"]?.full_name || "—"}</TableCell>
+                  <TableCell><div className="flex flex-col gap-0.5"><span>{m["profile"]?.full_name || "—"}</span><PresenceBadge p={pres.data?.get(m["user_id"])} /></div></TableCell>
                   <TableCell dir="ltr" className="text-end">{m["profile"]?.email ?? "—"}</TableCell>
                   <TableCell>
                     {editing && editing.id === m["id"] ? (() => { const ed = editing; return (

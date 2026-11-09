@@ -11,6 +11,7 @@ import { Award, Briefcase,
   ReceiptText, Wallet, Phone, Construction, KeyRound, LayoutDashboard, Wrench, Bus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { endPresence, usePresenceBeat } from "@/lib/presence";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { Sanad } from "@/components/sanad";
 import { usePcMe } from "@/components/procurement/shared";
@@ -125,6 +126,7 @@ function AppLayout() {
 
 function Shell() {
   const { contexts, active, setActive, loading, user } = useSession();
+  usePresenceBeat(user.id);
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
   // Staff granted procurement permissions get a workspace entry; the server (pc_me → perm_scope) is the only source.
@@ -163,6 +165,7 @@ function Shell() {
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
+    await endPresence();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
