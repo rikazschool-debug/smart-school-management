@@ -110,7 +110,7 @@ function Composer({ org, k, id, onClose }: { org: string; k: Scope; id: string |
   const [picked, setPicked] = useState<Record<string, Person>>({});
   const [pv, setPv] = useState<Preview | null>(null);
   const t = form?.t;
-  const people = useQuery({ queryKey: ["bc-people", org, t?.schools, t?.categories, t?.departments, q], enabled: !!t && t.mode === "pick" && q.trim().length >= 2 && t.schools.length > 0 && t.categories.length > 0,
+  const people = useQuery({ queryKey: ["bc-people", org, t?.schools, t?.categories, t?.departments, q], enabled: !!t && t.mode === "pick" && (q.trim().length === 0 || q.trim().length >= 2) && t.schools.length > 0 && t.categories.length > 0,
     queryFn: () => rpc<Person[]>("bc_people", { _org: org, _t: t, _q: q }) });
   const known = useQuery({ queryKey: ["bc-people-ids", org, form?.id], enabled: !!t && t.mode === "pick" && t.users.length > 0 && Object.keys(picked).length === 0,
     queryFn: () => rpc<Person[]>("bc_people", { _org: org, _t: t, _q: null, _ids: t!.users }) });
@@ -160,11 +160,17 @@ function Composer({ org, k, id, onClose }: { org: string; k: Scope; id: string |
           </div>
           {form.t.mode === "pick" && (
             <div className="mt-3 space-y-2">
-              <Input aria-label="بحث بالاسم" placeholder="ابحث بالاسم أو جزء منه (حرفان على الأقل)" value={q} onChange={(e) => setQ(e.target.value)} />
+              <Input aria-label="بحث بالاسم" placeholder="ابحث بالاسم لتضييق القائمة (اختياري)" value={q} onChange={(e) => setQ(e.target.value)} />
+              {people.isLoading && <p className="text-xs text-muted-foreground">جارٍ تحميل الأشخاص…</p>}
+              {(people.data ?? []).length > 0 && (() => { const ids = people.data!.map((p) => p.user_id); const all = ids.every((i) => form.t.users.includes(i)); return (
+                <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={all} onChange={() => {
+                  if (all) setT({ users: form.t.users.filter((u) => !ids.includes(u)) });
+                  else { setPicked({ ...picked, ...Object.fromEntries(people.data!.map((p) => [p.user_id, p])) }); setT({ users: [...new Set([...form.t.users, ...ids])] }); }
+                }} />تحديد الكل ({ids.length})</label>); })()}
               {(people.data ?? []).length > 0 && <ul className="max-h-56 overflow-auto rounded-lg border text-sm">{people.data!.map((p) => (
-                <li key={p.user_id}><button type="button" className="flex w-full items-center gap-2 border-b p-2 text-start hover:bg-muted" onClick={() => { setPicked({ ...picked, [p.user_id]: p }); setT({ users: form.t.users.includes(p.user_id) ? form.t.users : [...form.t.users, p.user_id] }); }}>
-                  <span className="flex-1">{p.name}</span><span className="text-xs text-muted-foreground">{p.category_label} · {p.school}</span>{form.t.users.includes(p.user_id) && <span className="text-xs text-success">مختار</span>}</button></li>))}</ul>}
-              {q.trim().length >= 2 && people.data?.length === 0 && <p className="text-xs text-muted-foreground">لا نتائج ضمن الفروع والفئات المختارة.</p>}
+                <li key={p.user_id}><label className="flex w-full cursor-pointer items-center gap-2 border-b p-2 text-start hover:bg-muted"><input type="checkbox" checked={form.t.users.includes(p.user_id)} onChange={() => { setPicked({ ...picked, [p.user_id]: p }); setT({ users: form.t.users.includes(p.user_id) ? form.t.users.filter((x) => x !== p.user_id) : [...form.t.users, p.user_id] }); }} />
+                  <span className="flex-1">{p.name}</span><span className="text-xs text-muted-foreground">{p.category_label} · {p.school}</span></label></li>))}</ul>}
+              {people.data?.length === 0 && <p className="text-xs text-muted-foreground">لا يوجد أشخاص بحسابات فعّالة ضمن الفروع والفئات المختارة.</p>}
               <div className="flex flex-wrap gap-2">{form.t.users.map((u) => <span key={u} className="flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-xs">{picked[u]?.name ?? "…"}{picked[u]?.school && ` · ${picked[u]!.school}`}<button type="button" aria-label="إزالة" onClick={() => setT({ users: form.t.users.filter((x) => x !== u) })}><X className="size-3" /></button></span>)}</div>
             </div>
           )}
