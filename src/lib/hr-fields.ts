@@ -10,7 +10,7 @@ export const HR_GROUPS: { key: HrGroup; label: string }[] = [
   { key: "qual", label: "المؤهلات" },
   { key: "pay", label: "بيانات الدفع" },
 ];
-export type HrKind = "text" | "date" | "docdate" | "phone" | "email" | "gender" | "iban" | "digits" | "school" | "category" | "manager_no";
+export type HrKind = "text" | "date" | "docdate" | "phone" | "email" | "gender" | "iban" | "digits" | "school" | "category" | "manager_no" | "idtype" | "check";
 /** where: base = hr_employees column (hr_employee_save); prof = hr_employee_profile (hr_employee_profile_save); asg = primary assignment */
 export type HrField = { key: string; label: string; group: HrGroup; kind: HrKind; where: "base" | "prof" | "asg" | "meta"; sensitive?: boolean; required?: boolean; template?: boolean; syn: string[] };
 
@@ -50,6 +50,13 @@ export const HR_FIELDS: HrField[] = [
   { key: "sponsor_name", label: "اسم الكفيل", group: "docs", kind: "text", where: "prof", sensitive: true, template: true, syn: ["الكفيل"] },
   { key: "sponsor_no", label: "رقم الكفيل", group: "docs", kind: "text", where: "prof", sensitive: true, template: true, syn: ["رقم الكفيل"] },
   // Rikaz-only (old templates / form)
+  { key: "id_type", label: "نوع الهوية", group: "docs", kind: "idtype", where: "prof", sensitive: true, syn: ["id type"] },
+  { key: "id_version", label: "رقم النسخة", group: "docs", kind: "text", where: "prof", sensitive: true, syn: ["رقم نسخة الهوية", "id version", "id version number"] },
+  { key: "passport_issue", label: "تاريخ إصدار جواز السفر", group: "docs", kind: "docdate", where: "prof", sensitive: true, syn: ["تاريخ اصدار الجواز", "passport issue date"] },
+  { key: "passport_place", label: "مكان إصدار جواز السفر", group: "docs", kind: "text", where: "prof", sensitive: true, syn: ["مكان اصدار الجواز", "passport place of issue"] },
+  { key: "has_licence", label: "لديه رخصة قيادة", group: "docs", kind: "check", where: "prof", syn: ["رخصة القيادة", "driving licence"] },
+  { key: "licence_type", label: "نوع الرخصة", group: "docs", kind: "text", where: "prof", syn: ["licence type"] },
+  { key: "licence_expiry", label: "تاريخ انتهاء الرخصة", group: "docs", kind: "docdate", where: "prof", syn: ["انتهاء الرخصة", "licence expiry date"] },
   { key: "display_name", label: "الاسم المعروض", group: "basic", kind: "text", where: "base", syn: ["اسم العرض", "display name"] },
   { key: "category", label: "التصنيف الوظيفي", group: "assign", kind: "category", where: "meta", syn: ["التصنيف", "category"] },
   { key: "hire_date", label: "تاريخ المباشرة", group: "assign", kind: "date", where: "base", syn: ["تاريخ التعيين", "hire date"] },
@@ -122,8 +129,18 @@ export function cleanValue(f: HrField, raw: unknown): { v: string; cal?: Cal | n
     case "email": return !t || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t) ? { v: t } : { v: t, err: "بريد غير صحيح" };
     case "gender": { const g = parseGender(t); return g === null ? { v: t, err: "الجنس: ذكر أو أنثى" } : { v: g }; }
     case "iban": { const s = cleanIban(t); return !s || ibanOk(s) ? { v: s } : { v: s, err: `${f.label} غير صحيح` }; }
+    case "idtype": { if (!t) return { v: "" }; const k = ID_TYPES[t] ? t : Object.keys(ID_TYPES).find((x) => norm(ID_TYPES[x]) === norm(t)); return k ? { v: k } : { v: t, err: "نوع الهوية غير معروف" }; }
+    case "check": { if (!t) return { v: "" }; return ["yes", "نعم", "1", "true"].includes(norm(t)) ? { v: "yes" } : ["no", "لا", "0", "false"].includes(norm(t)) ? { v: "" } : { v: t, err: `${f.label}: نعم أو لا` }; }
     case "digits": { const s = t.replace(/\s/g, ""); return !s || /^\d{5,20}$/.test(s) ? { v: s } : { v: s, err: `${f.label}: أرقام فقط (5–20)` }; }
     default: return t.length > 300 ? { v: t, err: `${f.label} طويل` } : { v: t };
   }
+}
+export const ID_TYPES: Record<string, string> = { national: "هوية وطنية", resident: "هوية مقيم", gcc: "هوية خليجية", border: "رقم حدود", none: "لا يوجد" };
+/** passport expiry before issue (same calendar) → message shown under the field and refused by the server */
+export function passportDateErr(f: Record<string, string | undefined>): string {
+  const a = cleanValue(HR_FIELDS.find((x) => x.key === "passport_issue")!, f["passport_issue"]), b = cleanValue(HR_FIELDS.find((x) => x.key === "passport_expiry")!, f["passport_expiry"]);
+  if (!a.v || !b.v || a.err || b.err) return "";
+  const ca = f["passport_issue_cal"] || a.cal, cb = f["passport_expiry_cal"] || b.cal;
+  return ca === cb && b.v < a.v ? "تاريخ انتهاء الجواز يسبق تاريخ إصداره" : "";
 }
 export const CAL_LABEL: Record<Cal, string> = { gregorian: "ميلادي", hijri: "هجري" };
