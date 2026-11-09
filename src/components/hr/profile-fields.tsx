@@ -5,6 +5,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { rpc, type HrEmp } from "@/components/hr/shared";
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
+import { DocDatePicker } from "@/components/hr/doc-date-picker";
 import { CAL_LABEL, HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, MID_KEYS, cleanValue, isNonMidPay, passportDateErr, type Cal, type HrGroup } from "@/lib/hr-fields";
 /** shown in the basic form next to the ID number (EmpFields), not in this list */
 export const ID_KEYS = ["id_type", "id_version"];
@@ -47,6 +48,7 @@ export function ProfileFields({ f, set, sensitive, org, self, only }: { f: Recor
               ) : x.kind === "docdate" ? (
                 <div key={x.key}><Label htmlFor={`hp-${x.key}`}>{bi(x.key, x.label)}</Label>
                   <div className="mt-1 flex gap-1"><Input id={`hp-${x.key}`} dir="ltr" disabled={off} placeholder={off ? "غير مطلوب" : "1447-05-10 أو 2027-01-31"} value={off ? "" : f[x.key] ?? ""} onChange={(e) => set(x.key, e.target.value)} />
+                    <DocDatePicker label={x.label} disabled={off} value={off ? "" : f[x.key] ?? ""} cal={f[`${x.key}_cal`] ?? ""} onPick={(v, c) => { set(x.key, v); set(`${x.key}_cal`, c); }} />
                     <select aria-label={`تقويم ${x.label}`} disabled={off} className={selectCls("w-24")} value={f[`${x.key}_cal`] ?? ""} onChange={(e) => set(`${x.key}_cal`, e.target.value)}><option value="">تلقائي</option><option value="hijri">هجري</option><option value="gregorian">ميلادي</option></select></div>
                   {x.key === "passport_expiry" && passportDateErr(f) && <p role="alert" className="mt-1 text-xs text-destructive">{passportDateErr(f)}</p>}</div>
               ) : opts ? (
