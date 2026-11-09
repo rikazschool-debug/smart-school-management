@@ -7,7 +7,7 @@ import { NO_CAPS, useSupportCaps } from "@/components/support/caps";
 import { useSession } from "@/lib/session";
 import { supportTabs, type SupportTab } from "@/lib/roles";
 import { SupportSummary } from "@/components/support/summary";
-import { CallsPanel, FollowupsPanel, MQ_LABEL, MqSettingsPanel, ReportsPanel, mqSections, useMqCaps, type MqSection } from "@/components/support/calls";
+import { CallsPanel, LivePanel, FollowupsPanel, MQ_LABEL, MqSettingsPanel, ReportsPanel, mqSections, useMqCaps, type MqSection } from "@/components/support/calls";
 import { HoursNote, InfoInbox, NewTicket, SupportReports, SupportSettings, TAB_LABEL, TicketDetail, TicketList } from "@/components/support/support";
 
 type Search = { t?: string; tab?: SupportTab | "settings"; st?: string; mq?: MqSection };
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/app/support")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     ...(typeof s["t"] === "string" ? { t: s["t"] } : {}),
     ...(typeof s["st"] === "string" ? { st: s["st"] } : {}),
-    ...(["calls", "followups", "reports", "settings"].includes(s["mq"] as string) ? { mq: s["mq"] as MqSection } : {}),
+    ...(["live", "calls", "followups", "reports", "settings"].includes(s["mq"] as string) ? { mq: s["mq"] as MqSection } : {}),
     ...(["summary", "mine", "assigned", "following", "info", "manage", "reports", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
   }),
   head: () => ({ meta: [{ title: "الدعم والمساعدة — ركاز" }, { name: "description", content: "تذاكر الدعم والمساعدة في ركاز." }, { name: "robots", content: "noindex" }] }),
@@ -60,7 +60,7 @@ function Page() {
         </div>
       )}
       {mq && orgId && mqc.data ? (
-        mq === "calls" ? <CallsPanel orgId={orgId} caps={mqc.data} /> : mq === "followups" ? <FollowupsPanel orgId={orgId} onOpenCalls={() => go({ mq: "calls" })} />
+        mq === "live" ? <LivePanel orgId={orgId} caps={mqc.data} assignable={c.assign_new} /> : mq === "calls" ? <CallsPanel orgId={orgId} caps={mqc.data} /> : mq === "followups" ? <FollowupsPanel orgId={orgId} onOpenCalls={() => go({ mq: "calls" })} />
           : mq === "reports" ? <ReportsPanel orgId={orgId} caps={mqc.data} /> : <MqSettingsPanel orgId={orgId} />
       ) : <>
       <HoursNote orgId={active.role === "platform_admin" ? null : active.orgId} />
