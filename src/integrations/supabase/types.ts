@@ -17076,6 +17076,20 @@ export type Database = {
       }
       _hr_emp_ok: { Args: { _action: string; _emp: string }; Returns: boolean }
       _hr_emp_school: { Args: { _emp: string }; Returns: string }
+      _hr_employee_create_login_v1: {
+        Args: {
+          _base: string
+          _org: string
+          _p: Json
+          _reason?: string
+          _uid: string
+        }
+        Returns: string
+      }
+      _hr_employee_create_login_v1_ops: {
+        Args: { _org: string; _p: Json; _reason: string; _uid: string }
+        Returns: string
+      }
       _hr_employee_save_base: {
         Args: { _id: string; _org: string; _p: Json; _reason?: string }
         Returns: string
