@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { useOpsStaff } from "@/lib/ops-staff";
+import { useOwnerInSchool } from "@/lib/owner-scope";
+import { SchoolProfile } from "@/components/school-profile";
 
 export const Route = createFileRoute("/_authenticated/app/profile")({
   head: () => ({ meta: [{ title: "الملف الشخصي — ركاز" }, { name: "robots", content: "noindex" }] }),
@@ -45,7 +47,9 @@ function Page() {
       return { ...p, photo };
     },
   });
+  const inSchool = useOwnerInSchool();
   if (!active) return <EmptyState title="لا يوجد حساب نشط" />;
+  if (active.role === "org_owner" && inSchool && active.schoolId) return <SchoolProfile schoolId={active.schoolId} />;
   const role = active.role as Role;
 
   async function upload(f: File) {
