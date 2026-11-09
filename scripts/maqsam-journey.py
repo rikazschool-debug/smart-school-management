@@ -1,5 +1,6 @@
 # Browser journey for support calls (needs maqsam-browser-fixture setup). Desktop owner + phone-width branch viewer.
-import asyncio, json, os
+import asyncio, json, os, requests
+env = dict(l.split("=",1) for l in open("/dev-server/.env").read().splitlines() if "=" in l); env = {k: v.strip('"') for k, v in env.items()}
 from playwright.async_api import async_playwright
 B = "http://localhost:8080"; F = json.load(open("/tmp/browser/mq/fixture.json")); S = "/tmp/browser/mq"
 ok = bad = 0
@@ -8,9 +9,9 @@ def check(n, c):
     ok += c; bad += (not c); print("PASS" if c else "FAIL", n)
 async def login(br, who, w=1280, h=1800):
     ctx = await br.new_context(viewport={"width": w, "height": h}); p = await ctx.new_page()
-    await p.goto(B + "/auth"); await p.wait_for_timeout(2500)
-    await p.fill("#email", F["users"][who]["email"]); await p.fill("#password", F["pw"]); await p.press("#password", "Enter")
-    await p.wait_for_function("location.pathname.startsWith('/app')", timeout=30000); return p
+    s = requests.post(env["VITE_SUPABASE_URL"] + "/auth/v1/token?grant_type=password", headers={"apikey": env["VITE_SUPABASE_PUBLISHABLE_KEY"]}, json={"email": F["users"][who]["email"], "password": F["pw"]}).json()
+    await p.goto(B + "/"); await p.evaluate("([k,v]) => localStorage.setItem(k,v)", [f"sb-{env['VITE_SUPABASE_PROJECT_ID']}-auth-token", json.dumps(s)])
+    await p.goto(B + "/app"); await p.wait_for_timeout(3000); return p
 async def main():
     async with async_playwright() as pw:
         br = await pw.chromium.launch(headless=True)
