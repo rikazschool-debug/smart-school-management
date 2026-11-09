@@ -207,3 +207,7 @@
 - [x] الإدارة المركزية في معاينة Excel
 - [x] دور مسؤول خدمة العملاء وقسمه وربط المسمى
 - [ ] تجربة المتصفح لصف زياد ورغد (الاعتماد الحقيقي للمستخدم)
+
+## B16 ZKTeco ADMS fingerprint link
+- [x] Bridge, serial binding, PIN matching, unmatched review, no duplicates, attendance only, status, key rotation, tests (adms-e2e 21/21)
+- [ ] Physical device test — waiting on the user running the bridge at the school
