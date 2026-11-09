@@ -157,7 +157,6 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   const teachers = (cand.data?.teachers ?? []).filter((t) => t.school_id === f.school_id && (!t.user_id || t.user_id === f.user_id));
   const [mode, setMode] = useState<"new" | "link">("new");
   const [base, setBase] = useState("");
-  const [confirm, setConfirm] = useState(false);
   const [conflicts, setConflicts] = useState<{ kind: string; employee_id?: string }[]>([]);
   const createLogin = useServerFn(createHrEmployeeLogin);
   const central = f.school_id === CENTRAL;
@@ -171,13 +170,12 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   const create = useMutation({
     mutationFn: async () => { const ex = extra(); const r = await createLogin({ data: { orgId: org, base, p: Object.fromEntries(Object.entries({ ...f, user_id: "", teacher_id: "", school_id: central ? "" : f.school_id }).filter(([, v]) => v !== "")) } }); if (!("conflicts" in r && r.conflicts)) await saveExtra((r as { employeeId: string }).employeeId, ex); return r; },
     onSuccess: (r) => {
-      if ("conflicts" in r && r.conflicts) { setConfirm(false); setConflicts(r.conflicts); return; }
+      if ("conflicts" in r && r.conflicts) { setConflicts(r.conflicts); return; }
       toast.success("أُنشئ ملف الموظف وحساب دخوله"); done((r as { employeeId: string }).employeeId);
     },
-    onError: (e) => { setConfirm(false); toast.error(arabicError(e)); },
+    onError: (e) => toast.error(arabicError(e)),
   });
   const schoolName = central ? "الإدارة المركزية" : schools.find((s) => s.id === f.school_id)?.name ?? "";
-  const canNew = !!f.full_name.trim() && !!f.school_id && !!base && /^[12]\d{9}$/.test(f.national_id.replace(/\D/g, "")) && !!localPhone(f.phone);
   const pickAccount = (uid: string) => {
     const a = cand.data?.accounts.find((x) => x.user_id === uid);
     const t = (cand.data?.teachers ?? []).find((x) => x.user_id === uid);
