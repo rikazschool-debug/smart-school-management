@@ -14,7 +14,8 @@ function tabKey(): string {
   return k;
 }
 
-const rpc = (fn: string, args: Record<string, unknown>) => (supabase.rpc as unknown as (f: string, a: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>)(fn, args);
+// keep `this` bound: a detached supabase.rpc throws silently inside the promise
+const rpc = (fn: string, args: Record<string, unknown>) => (supabase as unknown as { rpc: (f: string, a: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }> }).rpc(fn, args);
 
 /** Ends this tab's presence now (sign-out). */
 export async function endPresence() {
