@@ -23,7 +23,6 @@ import { PersonCardButton } from "@/components/people/person-card";
 import { HrCategories } from "@/components/hr/categories";
 import { useServerFn } from "@tanstack/react-start";
 import { createHrEmployeeLogin } from "@/lib/accounts.functions";
-import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { GENDER, STATUS, roleLabel, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
