@@ -14,10 +14,12 @@ import { Pill, fmt } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
 import { exportXlsx } from "@/lib/export";
 import { mqSync, mqTest } from "@/lib/maqsam.functions";
+import { PRIO, useCategories } from "@/components/support/support";
+import { AssigneePicker, type Assignee } from "@/components/support/assignee-picker";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
-export type MqSection = "calls" | "followups" | "reports" | "settings";
+export type MqSection = "live" | "calls" | "followups" | "reports" | "settings";
 export type MqCaps = { enabled: boolean; owner?: boolean; manage?: boolean; own?: boolean; link?: boolean; listen?: boolean; download?: boolean; export?: boolean;
   schools?: { id: string; name: string }[]; link_schools?: { id: string; name: string }[]; agents?: { id: string; name: string }[]; sync?: { at: string | null; ok: boolean | null } };
 
@@ -31,10 +33,10 @@ export function useMqCaps(orgId: string | null) {
   return useQuery({ queryKey: ["mq-caps", orgId], enabled: !!orgId, staleTime: 60_000, queryFn: async () => (await rpc("mq_caps", { _org: orgId })) as MqCaps });
 }
 
-export const MQ_LABEL: Record<MqSection, string> = { calls: "المكالمات", followups: "المتابعات", reports: "تقارير الاتصال", settings: "إعدادات Maqsam" };
+export const MQ_LABEL: Record<MqSection, string> = { live: "لوحة الاتصال", calls: "المكالمات", followups: "المتابعات", reports: "تقارير الاتصال", settings: "إعدادات Maqsam" };
 export function mqSections(c: MqCaps): MqSection[] {
   if (!c.enabled) return c.manage ? ["settings"] : [];
-  return ["calls", "followups", ...(c.export ? (["reports"] as const) : []), ...(c.manage ? (["settings"] as const) : [])];
+  return ["live", "calls", "followups", ...(c.export ? (["reports"] as const) : []), ...(c.manage ? (["settings"] as const) : [])];
 }
 
 function Dir({ r }: { r: Row }) {
@@ -206,6 +208,7 @@ function CallTickets({ c, id, busy, act }: { c: Row; id: string; busy: boolean; 
       <h3 className="font-semibold">التذاكر المرتبطة</h3>
       {c.tickets.length ? <ul className="space-y-1 text-sm">{c.tickets.map((t: Row) => <li key={t.id}><a className="text-primary underline" href={`/app/support?t=${t.id}`}>{t.ref}</a> — {t.title}</li>)}</ul> : <p className="text-sm text-muted-foreground">لا توجد تذكرة مرتبطة.</p>}
       <p className="text-xs text-muted-foreground">انتهاء المكالمة لا يغيّر حالة التذكرة.</p>
+      {c.can.link && <PendingForCall callId={id} onLinked={() => act(async () => null, "تم")} />}
       {c.can.link && (
         <>
           <div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => setMode(mode === "new" ? "" : "new")}><Ticket className="size-4" /> تذكرة جديدة من المكالمة</Button><Button size="sm" variant="outline" onClick={() => setMode(mode === "link" ? "" : "link")}>ربط بتذكرة قائمة</Button></div>
@@ -375,6 +378,110 @@ export function MqSettingsPanel({ orgId }: { orgId: string }) {
         </div>
         {probe && <iframe title="Maqsam Dialer" src="https://portal.mq.maqsam.com/phone/dialer" allow="microphone; autoplay" className="h-[520px] w-full rounded-lg border" />}
       </section>
+    </div>
+  );
+}
+
+// Live call panel: the Maqsam dialer stays mounted on the right while the ticket form edits/saves in a side column.
+// The service number is shared by all branches → the agent picks the branch; the call id is linked when already synced, else «بانتظار ربط المكالمة».
+export function LivePanel({ orgId, caps, assignable }: { orgId: string; caps: MqCaps; assignable: { id: string; name: string }[] }) {
+  const [side, setSide] = useState<"" | "new" | "link">("");
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_420px]">
+      <section className="space-y-2 rounded-xl border bg-card p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="flex-1 font-semibold">لوحة الاتصال (Maqsam)</h3>
+          {caps.link && <><Button size="sm" variant={side === "new" ? "default" : "outline"} onClick={() => setSide(side === "new" ? "" : "new")}><Ticket className="size-4" /> إنشاء تذكرة</Button>
+            <Button size="sm" variant={side === "link" ? "default" : "outline"} onClick={() => setSide(side === "link" ? "" : "link")}>ربط بتذكرة قائمة</Button></>}
+        </div>
+        <iframe title="Maqsam Dialer" src="https://portal.mq.maqsam.com/phone/dialer" allow="microphone; autoplay" className="h-[560px] w-full rounded-lg border" />
+        <p className="text-xs text-muted-foreground">تبقى لوحة الاتصال مفتوحة أثناء تحرير التذكرة وحفظها.</p>
+      </section>
+      {side && <aside aria-label="نموذج التذكرة" className="rounded-xl border bg-card p-3">{side === "new" ? <LiveNew orgId={orgId} caps={caps} assignable={assignable} onClose={() => setSide("")} /> : <LiveLink orgId={orgId} onClose={() => setSide("")} />}</aside>}
+    </div>
+  );
+}
+
+function useRecent(orgId: string) {
+  return useQuery({ queryKey: ["mq", "recent", orgId], refetchInterval: 30_000, queryFn: () => rpc("mq_recent_calls", { _org: orgId, _minutes: 120 }) as Promise<Row[]> });
+}
+
+function LiveNew({ orgId, caps, assignable, onClose }: { orgId: string; caps: MqCaps; assignable: { id: string; name: string }[]; onClose: () => void }) {
+  const qc = useQueryClient();
+  const schools = caps.link_schools ?? [];
+  const [school, setSchool] = useState(schools.length === 1 ? schools[0]!.id : "");
+  const [title, setTitle] = useState(""); const [body, setBody] = useState(""); const [prio, setPrio] = useState("normal"); const [cat, setCat] = useState("");
+  const [who, setWho] = useState<Assignee | null>(null); const [call, setCall] = useState(""); const [phone, setPhone] = useState("");
+  const [busy, setBusy] = useState(false); const [done, setDone] = useState<{ ticket: string; pending: boolean } | null>(null);
+  const key = useRef(crypto.randomUUID());
+  const cats = useCategories("school", orgId);
+  const recent = useRecent(orgId);
+  async function save() {
+    if (!school) return void toast.error("اختر الفرع حسب موضوع المكالمة");
+    setBusy(true);
+    try {
+      const r = (await rpc("mq_live_ticket", { _org: orgId, _school: school, _title: title.trim(), _body: body.trim(), _priority: prio, _category: cat || null, _assignee: who?.user_id ?? null, _call: call || null, _phone: phone || null, _client_key: key.current })) as { ticket: string; pending: boolean };
+      setDone(r); qc.invalidateQueries({ queryKey: ["mq"] });
+      toast.success(r.pending ? "حُفظت التذكرة — بانتظار ربط المكالمة" : "حُفظت التذكرة وربطت بالمكالمة");
+    } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
+  }
+  if (done) return (
+    <div className="space-y-2 text-sm">
+      <p className="font-semibold">حُفظت التذكرة</p>
+      {done.pending ? <Pill tone="warn">بانتظار ربط المكالمة</Pill> : <Pill tone="ok">مرتبطة بالمكالمة</Pill>}
+      {done.pending && <p className="text-xs text-muted-foreground">بعد مزامنة المكالمة، اربطها من سجل المكالمات.</p>}
+      <div className="flex gap-2"><a className="text-primary underline" href={`/app/support?t=${done.ticket}`} target="_blank" rel="noreferrer">فتح التذكرة</a>
+        <Button size="sm" variant="outline" onClick={onClose}>إغلاق</Button></div>
+    </div>
+  );
+  return (
+    <div className="space-y-3">
+      <p className="font-semibold">تذكرة من المكالمة</p>
+      <div className="space-y-1"><Label htmlFor="lv-school">الفرع (حسب موضوع المكالمة)</Label>
+        <select id="lv-school" className={selectCls()} value={school} onChange={(e) => { setSchool(e.target.value); if (who) toast.message("أُزيل الموظف المختار؛ اختره من الفرع الجديد"); setWho(null); }}><option value="">اختر</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+      <div className="space-y-1"><Label htmlFor="lv-title">العنوان</Label><Input id="lv-title" value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} /></div>
+      <div className="space-y-1"><Label htmlFor="lv-body">الوصف</Label><Textarea id="lv-body" rows={3} value={body} onChange={(e) => setBody(e.target.value)} /></div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div className="space-y-1"><Label htmlFor="lv-cat">التصنيف</Label><select id="lv-cat" className={selectCls()} value={cat} onChange={(e) => setCat(e.target.value)}><option value="">بدون</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+        <div className="space-y-1"><Label htmlFor="lv-prio">الأولوية</Label><select id="lv-prio" className={selectCls()} value={prio} onChange={(e) => setPrio(e.target.value)}>{Object.entries(PRIO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+      </div>
+      <AssigneePicker id="lv-who" school={school} canAssign={assignable.some((b) => b.id === school)} who={who} onWho={setWho} />
+      <div className="space-y-1"><Label htmlFor="lv-call">المكالمة</Label>
+        <select id="lv-call" className={selectCls()} value={call} onChange={(e) => setCall(e.target.value)}>
+          <option value="">لم تظهر بعد (بانتظار ربط المكالمة)</option>
+          {(recent.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.other_number} · {fmt(c.started_at)}{c.contact_label ? ` · ${c.contact_label}` : ""}</option>)}
+        </select></div>
+      {!call && <div className="space-y-1"><Label htmlFor="lv-phone">رقم المتصل (يساعد على الربط لاحقًا)</Label><Input id="lv-phone" dir="ltr" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>}
+      <div className="flex gap-2"><Button disabled={busy || !school || title.trim().length < 3 || body.trim().length < 5} onClick={save}>حفظ التذكرة</Button><Button variant="outline" onClick={onClose}>إلغاء</Button></div>
+    </div>
+  );
+}
+
+function LiveLink({ orgId, onClose }: { orgId: string; onClose: () => void }) {
+  const qc = useQueryClient();
+  const recent = useRecent(orgId);
+  const [call, setCall] = useState(""); const [s, setS] = useState(""); const [busy, setBusy] = useState(false);
+  const found = useQuery({ queryKey: ["mq", "tsearch", call, s], enabled: !!call, queryFn: () => rpc("mq_ticket_search", { _id: call, _q: s }) as Promise<Row[]> });
+  return (
+    <div className="space-y-3">
+      <p className="font-semibold">ربط المكالمة بتذكرة قائمة</p>
+      <select aria-label="المكالمة" className={selectCls()} value={call} onChange={(e) => setCall(e.target.value)}><option value="">اختر المكالمة</option>{(recent.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.other_number} · {fmt(c.started_at)}</option>)}</select>
+      {!call && <p className="text-xs text-muted-foreground">إذا لم تظهر المكالمة بعد، أنشئ التذكرة الآن واربطها لاحقًا من سجل المكالمات.</p>}
+      {call && <><Input placeholder="ابحث برقم التذكرة أو عنوانها" value={s} onChange={(e) => setS(e.target.value)} />
+        <ul className="space-y-1 text-sm">{(found.data ?? []).map((t) => <li key={t.id} className="flex items-center justify-between gap-2 rounded border p-2"><span>{t.ref} — {t.title}</span>
+          <Button size="sm" variant="outline" disabled={busy} onClick={async () => { setBusy(true); try { await rpc("mq_call_link_ticket", { _id: call, _ticket: t.id }); toast.success("تم الربط"); qc.invalidateQueries({ queryKey: ["mq"] }); onClose(); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } }}>ربط</Button></li>)}</ul></>}
+    </div>
+  );
+}
+
+export function PendingForCall({ callId, onLinked }: { callId: string; onLinked: () => void }) {
+  const q = useQuery({ queryKey: ["mq", "pending", callId], queryFn: () => rpc("mq_pending_tickets", { _org: null, _call: callId }) as Promise<Row[]> });
+  if (!q.data?.length) return null;
+  return (
+    <div className="space-y-1 rounded-lg border border-dashed p-2 text-sm">
+      <p className="font-medium">تذاكر بانتظار ربط المكالمة</p>
+      {q.data.map((t) => <div key={t.ticket_id} className="flex items-center justify-between gap-2"><span>{t.ref} — {t.title} <span className="text-muted-foreground">({t.school})</span></span>
+        <Button size="sm" variant="outline" onClick={async () => { try { await rpc("mq_call_link_ticket", { _id: callId, _ticket: t.ticket_id }); toast.success("رُبطت التذكرة بالمكالمة"); q.refetch(); onLinked(); } catch (e) { toast.error(arabicError(e)); } }}>ربط بهذه المكالمة</Button></div>)}
     </div>
   );
 }

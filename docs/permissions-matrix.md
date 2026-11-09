@@ -470,3 +470,5 @@ A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, iden
 | export (reports + Excel, logged) | yes | granted branches |
 | manage (link, agents, numbers) | owner only | never |
 Calls with no branch: owner only. Deny overrides grant. Revoking listen stops an already issued token.
+
+- Support: new internal ticket assignment = owner or support.assign on that branch, branch staff only. In-call ticket = calls.link on chosen branch.

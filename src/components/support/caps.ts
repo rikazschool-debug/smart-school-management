@@ -6,9 +6,9 @@ import { db } from "@/components/crud-page";
 export type Branch = { id: string; name: string };
 export type SupportCaps = {
   view: Branch[]; create: Branch[]; assign: Branch[]; transfer: Branch[]; status: Branch[];
-  follow: Branch[]; followers: Branch[]; export: Branch[]; settings: boolean; owner: boolean; following: number;
+  follow: Branch[]; followers: Branch[]; export: Branch[]; settings: boolean; owner: boolean; following: number; assign_new: Branch[];
 };
-export const NO_CAPS: SupportCaps = { view: [], create: [], assign: [], transfer: [], status: [], follow: [], followers: [], export: [], settings: false, owner: false, following: 0 };
+export const NO_CAPS: SupportCaps = { view: [], create: [], assign: [], transfer: [], status: [], follow: [], followers: [], export: [], settings: false, owner: false, following: 0, assign_new: [] };
 
 export function useSupportCaps(orgId: string | null | undefined) {
   return useQuery({

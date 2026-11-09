@@ -118,3 +118,4 @@
 - scripts/b13-e2e.ts: admin assistant / central HR director / named owner manager / guardian-account linking (38 checks; needs timetable-e2e --keep fixture). scripts/b13-browser-fixture.ts setup|teardown (b13x-); always run teardown after, then timetable-e2e --teardown.
 - scripts/cs-agent-e2e.ts: customer service agent role (owner-only grant, title mapping, assigned ticket reply/resolve, unassigned refused, no HR; 18 checks).
 - scripts/maqsam-e2e.ts: Maqsam calls (org binding, branch/own scopes, listen≠download, export/report totals, direct-link refusal, ticket link w/o status change, reminder once; 39 checks, synthetic calls). scripts/maqsam-browser-fixture.ts setup|teardown + maqsam-journey.py (10 checks, desktop owner + phone viewer); always run teardown after.
+- scripts/support-assign-e2e.ts: internal ticket branch-only assignment + live-call tickets pending/linked (14 checks).
