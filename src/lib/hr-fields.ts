@@ -30,7 +30,7 @@ export const HR_FIELDS: HrField[] = [
   { key: "gender", label: "الجنس", group: "basic", kind: "gender", where: "base", template: true, syn: ["gender"] },
   { key: "marital_status", label: "الحالة الاجتماعية", group: "basic", kind: "text", where: "prof", template: true, syn: ["marital status"] },
   { key: "nationality", label: "الجنسية", group: "docs", kind: "text", where: "base", sensitive: true, template: true, syn: ["nationality"] },
-  { key: "address", label: "العنوان", group: "basic", kind: "text", where: "prof", template: true, syn: ["address"] },
+  { key: "address", label: "العنوان", group: "basic", kind: "text", where: "prof", sensitive: true, template: true, syn: ["address"] },
   { key: "birth_date", label: "تاريخ الميلاد", group: "docs", kind: "date", where: "base", sensitive: true, template: true, syn: ["الميلاد", "birth date"] },
   { key: "national_id", label: "رقم الهوية", group: "docs", kind: "digits", where: "base", sensitive: true, template: true, syn: ["الهوية", "رقم الهوية / الإقامة", "رقم الاقامة", "السجل المدني", "id"] },
   { key: "id_expiry", label: "تاريخ إنتهاء الهوية", group: "docs", kind: "docdate", where: "prof", sensitive: true, template: true, syn: ["تاريخ انتهاء الهوية", "انتهاء الهوية"] },
