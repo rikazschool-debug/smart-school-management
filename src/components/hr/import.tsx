@@ -8,7 +8,7 @@ import { createHrEmployeeLogin } from "@/lib/accounts.functions";
 import { Button } from "@/components/ui/button";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError } from "@/lib/session";
-import { roleLabel, rpc, useHrCats, type HrEmp, type HrMe } from "@/components/hr/shared";
+import { CENTRAL, roleLabel, rpc, useHrCats, type HrEmp, type HrMe } from "@/components/hr/shared";
 import { useHrOwners } from "@/components/hr/profile-fields";
 import { ManagerPick, type MgrOpt } from "@/components/hr/manager-pick";
 import { CAL_LABEL, HR_FIELDS, TEMPLATE_HEAD, cleanValue, fieldForHeader, norm, type Cal, type HrField } from "@/lib/hr-fields";
@@ -353,7 +353,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
             <table className="w-full text-sm"><thead className="sticky top-0 bg-muted"><tr><th className="p-2 text-start">الصف</th><th className="p-2 text-start">الاسم</th><th className="p-2 text-start">الرقم الوظيفي</th><th className="p-2 text-start">المدرسة</th><th className="p-2 text-start">المسؤول المباشر</th>{withLogin && mode === "new" && <><th className="p-2 text-start">الجوال</th><th className="p-2 text-start">دور الدخول</th><th className="p-2 text-start">الإجراء</th></>}<th className="p-2 text-start">الحالة</th></tr></thead>
               <tbody>{shown.map((r) => (
                 <tr key={r.i} className="border-t align-top"><td className="p-2">{r.i}</td><td className="p-2">{r.p["full_name"] || "—"}</td><td className="p-2"><bdi dir="ltr">{r.p["employee_no"] || "تلقائي"}</bdi></td>
-                  <td className="p-2">{!res && r.p["school_id"] !== CENTRAL && !schools.some((s) => norm(s.name) === norm(r.schoolName)) && r.state !== "dup" && r.state !== "fill" && r.state !== "same" ? (
+                  <td className="p-2">{!res && (r.p["school_id"] !== CENTRAL || pick[r.i]) && !schools.some((s) => norm(s.name) === norm(r.schoolName)) && r.state !== "dup" && r.state !== "fill" && r.state !== "same" ? (
                     <select aria-label={`مدرسة الصف ${r.i}`} className={selectCls("w-40")} value={pick[r.i] ?? ""} onChange={(e) => setPick((x) => ({ ...x, [r.i]: e.target.value }))}><option value="">{r.schoolName ? `«${r.schoolName}» ← اختر` : "اختر المدرسة"}</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}{m.owner && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}</select>
                   ) : r.p["school_id"] === CENTRAL ? <span>الإدارة المركزية <span className="block text-xs text-muted-foreground">دور «مدير إدارة الموارد البشرية» فقط</span></span> : schools.find((s) => s.id === r.p["school_id"])?.name ?? r.schoolName ?? "—"}</td>
                   <td className="p-2 text-xs">{(!res && ["new", "bad", "review", "fill"].includes(r.state)) || (res && r.mgrFail) ? (
