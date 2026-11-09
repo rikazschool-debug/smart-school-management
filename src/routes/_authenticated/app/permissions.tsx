@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
@@ -304,15 +304,24 @@ function ResetPassword({ org, user, username }: { org: string; user: string; use
 /** «إدارة المستخدمين»: main areas → sections → the people who actually hold access there (each person once per section). */
 function UsersBySection({ org, c }: { org: string; c: Catalog }) {
   const people = useQuery({ queryKey: ["perm-people", org], queryFn: async () => (await call("perm_people", { _org: org })) as PermPerson[] });
-  // Small batches of sections: each request stays short (one request over every section timed out on a real org).
-  const batches: string[][] = [];
-  for (let i = 0; i < c.sections.length; i += 5) batches.push(c.sections.slice(i, i + 5).map((s) => s.key));
-  const secQs = useQueries({ queries: batches.map((b) => ({
-    queryKey: ["perm-sections", org, b.join(",")],
-    queryFn: async () => ((await call("perm_section_people", { _org: org, _sections: b })) ?? []) as { user_id: string; sections: string[] }[],
-  })) });
-  const secsLoading = secQs.some((q) => q.isPending);
-  const secsError = secQs.find((q) => q.error)?.error ?? null;
+  // One section per request, at most 3 at a time: each request stays well under the database time limit
+  // (one request over every section timed out on a real organization). The list itself never waits for these counts.
+  const secQ = useQuery({
+    queryKey: ["perm-sections", org, c.sections.length],
+    retry: 1,
+    queryFn: async () => {
+      const keys = c.sections.map((s) => s.key); const out: { user_id: string; sections: string[] }[] = [];
+      const worker = async () => {
+        for (let k = keys.shift(); k; k = keys.shift())
+          out.push(...(((await call("perm_section_people", { _org: org, _sections: [k] })) ?? []) as { user_id: string; sections: string[] }[]));
+      };
+      await Promise.all([worker(), worker(), worker()]);
+      return out;
+    },
+  });
+  const secQs = [secQ];
+  const secsLoading = secQ.isPending;
+  const secsError = secQ.error ?? null;
   const roles = useQuery({ queryKey: ["perm-roles", org], queryFn: async () => (await call("perm_roles_list", { _org: org })) as Row[] });
   const logins = useQuery({ queryKey: ["staff-logins", org], queryFn: async () => (await call("staff_logins_list", { _org: org })) as { user_id: string; username: string; pending: boolean }[] });
   const dis = useDisabled(org);
