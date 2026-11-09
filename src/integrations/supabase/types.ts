@@ -11903,6 +11903,439 @@ export type Database = {
           },
         ]
       }
+      mq_agents: {
+        Row: {
+          active: boolean | null
+          email: string | null
+          identifier: string
+          name: string | null
+          org_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          email?: string | null
+          identifier: string
+          name?: string | null
+          org_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          email?: string | null
+          identifier?: string
+          name?: string | null
+          org_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_agents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mq_call_tickets: {
+        Row: {
+          call_id: string
+          created_at: string
+          linked_by: string | null
+          ticket_id: string
+        }
+        Insert: {
+          call_id: string
+          created_at?: string
+          linked_by?: string | null
+          ticket_id: string
+        }
+        Update: {
+          call_id?: string
+          created_at?: string
+          linked_by?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_call_tickets_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "mq_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mq_call_tickets_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mq_calls: {
+        Row: {
+          agent_ids: string[]
+          agent_user: string | null
+          contact_id: string | null
+          contact_kind: string | null
+          contact_label: string | null
+          ctype: string | null
+          direction: string
+          duration: number
+          ext_id: number
+          id: string
+          match_count: number
+          org_id: string
+          other_number: string | null
+          phone_norm: string | null
+          school_id: string | null
+          school_source: string | null
+          service_number: string | null
+          started_at: string
+          state: string | null
+          synced_at: string
+        }
+        Insert: {
+          agent_ids?: string[]
+          agent_user?: string | null
+          contact_id?: string | null
+          contact_kind?: string | null
+          contact_label?: string | null
+          ctype?: string | null
+          direction: string
+          duration?: number
+          ext_id: number
+          id?: string
+          match_count?: number
+          org_id: string
+          other_number?: string | null
+          phone_norm?: string | null
+          school_id?: string | null
+          school_source?: string | null
+          service_number?: string | null
+          started_at: string
+          state?: string | null
+          synced_at?: string
+        }
+        Update: {
+          agent_ids?: string[]
+          agent_user?: string | null
+          contact_id?: string | null
+          contact_kind?: string | null
+          contact_label?: string | null
+          ctype?: string | null
+          direction?: string
+          duration?: number
+          ext_id?: number
+          id?: string
+          match_count?: number
+          org_id?: string
+          other_number?: string | null
+          phone_norm?: string | null
+          school_id?: string | null
+          school_source?: string | null
+          service_number?: string | null
+          started_at?: string
+          state?: string | null
+          synced_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_calls_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mq_calls_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mq_contacts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          note: string | null
+          org_id: string
+          phone_norm: string
+          school_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          note?: string | null
+          org_id: string
+          phone_norm: string
+          school_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          note?: string | null
+          org_id?: string
+          phone_norm?: string
+          school_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_contacts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mq_contacts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mq_followups: {
+        Row: {
+          alerted_at: string | null
+          assignee: string | null
+          call_id: string
+          created_at: string
+          created_by: string | null
+          done_at: string | null
+          done_by: string | null
+          due_at: string | null
+          id: string
+          note: string | null
+          org_id: string
+          outcome: string
+          school_id: string | null
+        }
+        Insert: {
+          alerted_at?: string | null
+          assignee?: string | null
+          call_id: string
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          due_at?: string | null
+          id?: string
+          note?: string | null
+          org_id: string
+          outcome: string
+          school_id?: string | null
+        }
+        Update: {
+          alerted_at?: string | null
+          assignee?: string | null
+          call_id?: string
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          due_at?: string | null
+          id?: string
+          note?: string | null
+          org_id?: string
+          outcome?: string
+          school_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_followups_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "mq_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mq_followups_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mq_followups_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mq_link: {
+        Row: {
+          base_url: string
+          created_at: string
+          enabled: boolean
+          last_sync_at: string | null
+          last_sync_count: number | null
+          last_sync_error: string | null
+          last_sync_ok: boolean | null
+          last_test_at: string | null
+          last_test_error: string | null
+          last_test_ok: boolean | null
+          org_id: string
+          sync_lock: string | null
+        }
+        Insert: {
+          base_url?: string
+          created_at?: string
+          enabled?: boolean
+          last_sync_at?: string | null
+          last_sync_count?: number | null
+          last_sync_error?: string | null
+          last_sync_ok?: boolean | null
+          last_test_at?: string | null
+          last_test_error?: string | null
+          last_test_ok?: boolean | null
+          org_id: string
+          sync_lock?: string | null
+        }
+        Update: {
+          base_url?: string
+          created_at?: string
+          enabled?: boolean
+          last_sync_at?: string | null
+          last_sync_count?: number | null
+          last_sync_error?: string | null
+          last_sync_ok?: boolean | null
+          last_test_at?: string | null
+          last_test_error?: string | null
+          last_test_ok?: boolean | null
+          org_id?: string
+          sync_lock?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_link_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mq_log: {
+        Row: {
+          action: string
+          call_id: string | null
+          created_at: string
+          details: Json | null
+          id: number
+          org_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          call_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: number
+          org_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          call_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: number
+          org_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      mq_numbers: {
+        Row: {
+          label: string | null
+          number: string
+          org_id: string
+          school_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          label?: string | null
+          number: string
+          org_id: string
+          school_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          label?: string | null
+          number?: string
+          org_id?: string
+          school_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_numbers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mq_numbers_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mq_rec_tokens: {
+        Row: {
+          call_id: string
+          expires_at: string
+          mode: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          call_id: string
+          expires_at: string
+          mode: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          call_id?: string
+          expires_at?: string
+          mode?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mq_rec_tokens_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "mq_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mt_bus_events: {
         Row: {
           action: string
@@ -18051,6 +18484,48 @@ export type Database = {
         }
         Returns: string
       }
+      _mq_any: { Args: { _action: string; _org: string }; Returns: boolean }
+      _mq_can: {
+        Args: {
+          _action: string
+          c: Database["public"]["Tables"]["mq_calls"]["Row"]
+        }
+        Returns: boolean
+      }
+      _mq_ingest: {
+        Args: { _agents: Json; _calls: Json; _org: string }
+        Returns: number
+      }
+      _mq_linked_orgs: { Args: never; Returns: string[] }
+      _mq_log: {
+        Args: { _action: string; _call: string; _d: Json; _org: string }
+        Returns: undefined
+      }
+      _mq_matches: { Args: { _norm: string; _org: string }; Returns: Json }
+      _mq_missed: { Args: { _dir: string; _state: string }; Returns: boolean }
+      _mq_ok: {
+        Args: { _action: string; _org: string; _school: string }
+        Returns: boolean
+      }
+      _mq_on: { Args: { _org: string }; Returns: boolean }
+      _mq_rec_consume: { Args: { _token: string }; Returns: Json }
+      _mq_row: {
+        Args: { c: Database["public"]["Tables"]["mq_calls"]["Row"] }
+        Returns: Json
+      }
+      _mq_sees: {
+        Args: { c: Database["public"]["Tables"]["mq_calls"]["Row"] }
+        Returns: boolean
+      }
+      _mq_sync_begin: { Args: { _force: boolean; _org: string }; Returns: Json }
+      _mq_sync_end: {
+        Args: { _err: string; _n: number; _ok: boolean; _org: string }
+        Returns: undefined
+      }
+      _mq_test_result: {
+        Args: { _err: string; _ok: boolean; _org: string }
+        Returns: undefined
+      }
       _msg_file_row_ok: { Args: { _file: string }; Returns: boolean }
       _mt_action_core: {
         Args: { _action: string; _data: Json; _id: string; _rev: number }
@@ -18383,6 +18858,7 @@ export type Database = {
       _perm_catalog_base: { Args: never; Returns: Json }
       _perm_catalog_v11: { Args: never; Returns: Json }
       _perm_catalog_v12: { Args: never; Returns: Json }
+      _perm_catalog_v13: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
@@ -21431,6 +21907,99 @@ export type Database = {
         Returns: undefined
       }
       mark_notifications_read: { Args: { _ids?: string[] }; Returns: number }
+      mq_agent_map: {
+        Args: { _identifier: string; _org: string; _user: string }
+        Returns: undefined
+      }
+      mq_call_get: { Args: { _id: string }; Returns: Json }
+      mq_call_link_ticket: {
+        Args: { _id: string; _ticket: string }
+        Returns: undefined
+      }
+      mq_call_open_ticket: {
+        Args: {
+          _body: string
+          _client_key?: string
+          _id: string
+          _priority?: string
+          _title: string
+        }
+        Returns: string
+      }
+      mq_call_set_contact: {
+        Args: { _cid: string; _id: string; _kind: string }
+        Returns: undefined
+      }
+      mq_call_set_school: {
+        Args: { _id: string; _school: string }
+        Returns: undefined
+      }
+      mq_call_tickets_of: { Args: { _ticket: string }; Returns: Json }
+      mq_calls_list: {
+        Args: {
+          _agent?: string
+          _dir?: string
+          _from?: string
+          _kind?: string
+          _limit?: number
+          _offset?: number
+          _org: string
+          _q?: string
+          _review?: boolean
+          _school?: string
+          _to?: string
+        }
+        Returns: Json
+      }
+      mq_caps: { Args: { _org: string }; Returns: Json }
+      mq_contact_save: {
+        Args: { _id: string; _name: string; _note: string }
+        Returns: string
+      }
+      mq_export_log: {
+        Args: { _org: string; _rows: number; _what: string }
+        Returns: undefined
+      }
+      mq_followup_add: {
+        Args: {
+          _assignee: string
+          _call: string
+          _due: string
+          _note: string
+          _outcome: string
+        }
+        Returns: string
+      }
+      mq_followup_done: { Args: { _id: string }; Returns: undefined }
+      mq_followup_tick: { Args: never; Returns: number }
+      mq_followups_list: {
+        Args: {
+          _mine?: boolean
+          _org: string
+          _school?: string
+          _status?: string
+        }
+        Returns: Json
+      }
+      mq_manage_check: { Args: { _org: string }; Returns: boolean }
+      mq_number_map: {
+        Args: { _label: string; _number: string; _org: string; _school: string }
+        Returns: undefined
+      }
+      mq_rec_ticket: { Args: { _call: string; _mode: string }; Returns: string }
+      mq_report: {
+        Args: {
+          _agent?: string
+          _from?: string
+          _org: string
+          _school?: string
+          _to?: string
+        }
+        Returns: Json
+      }
+      mq_settings: { Args: { _org: string }; Returns: Json }
+      mq_ticket_search: { Args: { _id: string; _q: string }; Returns: Json }
+      mq_view_check: { Args: { _org: string }; Returns: boolean }
       mt_action: {
         Args: { _action: string; _data: Json; _id: string; _rev: number }
         Returns: Json
