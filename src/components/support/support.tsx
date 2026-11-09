@@ -349,7 +349,7 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
       <Button variant="ghost" onClick={onBack}><ArrowRight className="size-4" /> كل التذاكر</Button>
       <div className="space-y-2 rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-xs text-muted-foreground" dir="ltr">{t.ref}</span>
+          <span className="font-mono text-xs text-muted-foreground" dir="ltr">{t.ref}</span><CallLinkState id={t.id} />
           <h2 className="text-lg font-bold">{t.title}</h2>
           <Pill tone={TONE[t.status] ?? "muted"}>{STATUS[t.status]}</Pill>
           <Pill tone={t.priority === "urgent" || t.priority === "high" ? "bad" : "muted"}>{PRIO[t.priority]}</Pill>
@@ -646,4 +646,12 @@ function StatTable({ title, head, rows }: { title: string; head: string[]; rows:
       )}
     </div>
   );
+}
+
+// «بانتظار ربط المكالمة» for tickets opened during a live Maqsam call before the call id was synced.
+function CallLinkState({ id }: { id: string }) {
+  const q = useQuery({ queryKey: ["mq", "tstate", id], queryFn: async () => (await db.rpc("mq_ticket_call_state" as never, { _ticket: id } as never)).data as unknown as string | null });
+  if (q.data === "pending") return <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">بانتظار ربط المكالمة</span>;
+  if (q.data === "linked") return <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">مرتبطة بمكالمة</span>;
+  return null;
 }
