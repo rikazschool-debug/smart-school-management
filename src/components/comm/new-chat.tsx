@@ -1,3 +1,4 @@
+import { useOwnerInSchool } from "@/lib/owner-scope";
 import { useQuery } from "@tanstack/react-query";
 import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { arabicError, type AppContext } from "@/lib/session";
-import { PeoplePicker } from "@/components/people-picker";
+import { PeoplePicker, usePeopleByIds } from "@/components/people-picker";
 
 const sel = selectCls("w-full");
 
@@ -244,14 +245,20 @@ function DirectStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: string 
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [key] = useState(() => crypto.randomUUID());
+  // group owner on the group account: directory of every branch; the chat belongs to the chosen person's branch
+  const inSchool = useOwnerInSchool();
+  const orgWide = ctx.role === "org_owner" && !inSchool;
+  const scope = { purpose: "direct" as const, school: orgWide ? null : ctx.schoolId, org: ctx.orgId };
+  const chosen = usePeopleByIds(scope, to);
+  const chatSchool = orgWide ? chosen.data?.get(to[0] ?? "")?.school_id : ctx.schoolId;
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">الدليل يعرض موظفي هذه المدرسة الساريين فقط، دون أرقام هواتف أو بريد.</p>
-      <PeoplePicker purpose="direct" school={ctx.schoolId} org={ctx.orgId} label="الموظف" value={to} onChange={setTo} single />
+      <p className="text-xs text-muted-foreground">{orgWide ? "الدليل يعرض موظفي جميع فروع المجموعة الساريين، دون أرقام هواتف أو بريد." : "الدليل يعرض موظفي هذه المدرسة الساريين فقط، دون أرقام هواتف أو بريد."}</p>
+      <PeoplePicker {...scope} label="الموظف" value={to} onChange={setTo} single showBranch={orgWide} />
       <Textarea aria-label="الرسالة الأولى" placeholder="الرسالة الأولى (اختياري)" value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} />
-      <Button disabled={!to.length || busy} onClick={async () => {
+      <Button disabled={!to.length || !chatSchool || busy} onClick={async () => {
         setBusy(true);
-        const { data, error } = await db.rpc("start_direct_conversation", { _school: ctx.schoolId, _other: to[0] });
+        const { data, error } = await db.rpc("start_direct_conversation", { _school: chatSchool, _other: to[0] });
         if (error) { setBusy(false); return void toast.error(arabicError(error)); }
         await firstMessage(data, body, key);
         setBusy(false); onCreated(data);
