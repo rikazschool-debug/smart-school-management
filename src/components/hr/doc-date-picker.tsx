@@ -18,7 +18,7 @@ export function toHijri(t: number): { y: number; m: number; d: number } {
 }
 /** UTC ms of the 1st day of a Hijri month (searched around the arithmetic estimate) */
 export function hijriMonthStart(y: number, m: number): number {
-  let t = Date.UTC(622, 6, 16) + Math.round(((y - 1) * 354.367 + (m - 1) * 29.53) * DAY);
+  let t = Date.UTC(622, 6, 16) + Math.round((y - 1) * 354.367 + (m - 1) * 29.53) * DAY; // whole days (UTC midnight)
   for (let i = 0; i < 60; i++) {
     const h = toHijri(t);
     const diff = (y - h.y) * 12 + (m - h.m);
