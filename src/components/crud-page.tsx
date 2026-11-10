@@ -68,6 +68,7 @@ function SelectField({ f, schoolId, value, onChange }: { f: Field; schoolId: str
   const opts = Array.isArray(o) ? o : (q.data ?? []);
   return (
     <select
+      id={f.key}
       className={selectCls("w-full")}
       value={value}
       onChange={(e) => onChange(e.target.value)}
