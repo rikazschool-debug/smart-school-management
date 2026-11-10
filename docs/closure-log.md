@@ -811,3 +811,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## Nov 10 2026 — Portal-bound sign-in + student direct entry
 - ID sign-in checks the chosen entry server-side (_idl_portal_ok, service-only): guardian entry only for guardian accounts, staff entry only for staff/platform accounts; checked at code send and again at verify. Evidence: demo guardian → guardian ✓ staff ✗; demo principal → staff ✓ guardian ✗; demo student → neither.
 - Student ID + C-Smart sign-in completes the first-login step (_idl_student_finish) — no initial-password page; portal opens directly. idl-e2e 26/26, accounts-e2e 23/23.
+
+## Nov 10 2026 — Principal notices
+- _perm_base grants notices view/draft/send to principal of that branch. Browser: demo principal sees «الإشعارات» in menu; new-notice form lists only his branch; categories students/guardians/staff/teachers + specific people.
