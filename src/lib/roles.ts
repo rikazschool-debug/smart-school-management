@@ -34,6 +34,7 @@ export type NavKey =
   | "hr_training"
   | "org_docs"
   | "platform"
+  | "signup_requests"
   | "schools"
   | "members"
   | "academic"
@@ -159,7 +160,7 @@ const MANAGE: NavKey[] = [
 export const HIDDEN_NAV: NavKey[] = ["virtual", "grades"];
 
 const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
-  platform_admin: ["home", "platform", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && !ADMIN_KEYS.includes(k))],
+  platform_admin: ["home", "platform", "signup_requests", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && !ADMIN_KEYS.includes(k))],
   // owner: branch counts on the admin page + own (multi-branch) meetings and calendar — no duties
   org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k !== "duties"), "visits", "evaluation", "family_visits", "events"],
   // class visits: principal-level (all branch teachers) and supervisor (assigned teachers) only — mirrors _cv_can_eval

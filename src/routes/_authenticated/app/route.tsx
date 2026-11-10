@@ -31,7 +31,7 @@ import { LoadingState, ErrorState } from "@/components/states";
 import { NotificationBell } from "@/components/notification-bell";
 import { useSupportCaps } from "@/components/support/caps";
 import { MQ_LABEL, mqSections, useMqCaps } from "@/components/support/calls-caps";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Inbox } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "لوحة ركاز" }, { name: "robots", content: "noindex" }] }),
@@ -40,7 +40,8 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: "groups" | "manage" | "notices" | "meetings" | "circulars" }> = {
   home: { to: "/app", label: "لوحة التحكم المركزية", icon: Home },
-  platform: { to: "/app/platform", label: "المؤسسات", icon: ShieldCheck },
+  platform: { to: "/app/platform", label: "المجموعات والصلاحيات", icon: ShieldCheck },
+  signup_requests: { to: "/app/signup-requests", label: "طلبات التسجيل", icon: Inbox },
   schools: { to: "/app/schools", label: "المدارس والفروع", icon: Building2 },
   members: { to: "/app/members", label: "المستخدمون والأدوار", icon: UserCog },
   academic: { to: "/app/academic", label: "الإعداد الأكاديمي", icon: Network },
@@ -107,7 +108,7 @@ const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-side
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
-  { label: "المنصة والمؤسسة", keys: ["platform", "schools", "members", "permissions"] },
+  { label: "المنصة والمؤسسة", keys: ["platform", "signup_requests", "schools", "members", "permissions"] },
   { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "events"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "الوسوم", keys: ["tags"] },
