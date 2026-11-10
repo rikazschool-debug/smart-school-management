@@ -1,3 +1,4 @@
+import { RikazLogo } from "@/components/logo";
 import { createFileRoute, Link, Outlet, useCanGoBack, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
 import { SchoolLogo } from "@/components/school-logo";
@@ -223,7 +224,7 @@ function Shell() {
   const sidebar = (
     <nav aria-label="القائمة الرئيسية" className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 py-5">
-        {groupView && myAvatar.data ? <img src={myAvatar.data} alt={active.orgName} className="size-10 shrink-0 rounded-xl border bg-card object-contain" /> : <SchoolLogo schoolId={groupView ? null : active.schoolId} className="size-10 shrink-0 rounded-xl border" fallback={<span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">ر</span>} />}
+        {groupView && myAvatar.data ? <img src={myAvatar.data} alt={active.orgName} className="size-10 shrink-0 rounded-xl border bg-card object-contain" /> : <SchoolLogo schoolId={groupView ? null : active.schoolId} className="size-10 shrink-0 rounded-xl border" fallback={<RikazLogo className="size-10" />} />}
         <div className="min-w-0">
           <p className="font-display text-xl leading-none text-foreground">ركاز <span className="text-sm font-normal text-muted-foreground">| مدارس تُدار بذكاء</span></p>
           <p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{groupView ? active.orgName : active.schoolName}</p>
@@ -329,7 +330,7 @@ function Shell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur sm:px-6">
           {noSidebar ? (
-            <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary font-display text-primary-foreground">ر</span>
+            <RikazLogo className="size-10" />
           ) : (
             <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" aria-label="القائمة" onClick={() => setOpen(true)}>
               <Menu className="size-5" />

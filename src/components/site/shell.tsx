@@ -1,3 +1,4 @@
+import { RikazLogo } from "@/components/logo";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
@@ -12,7 +13,7 @@ const NAV = [
 export function Brand({ light }: { light?: boolean }) {
   return (
     <Link to="/" className="flex items-center gap-2">
-      <span className={`grid size-9 place-items-center rounded-xl font-display text-lg ${light ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"}`}>ر</span>
+      <RikazLogo light={light} className="size-9" />
       <span className={`font-display text-xl ${light ? "text-primary-foreground" : "text-foreground"}`}>ركاز <span className={`text-xs font-normal ${light ? "text-primary-foreground/70" : "text-muted-foreground"}`}>| مدارس تُدار بذكاء</span></span>
     </Link>
   );
