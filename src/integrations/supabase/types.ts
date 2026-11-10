@@ -23315,6 +23315,19 @@ export type Database = {
         Args: { _path: string; _school: string }
         Returns: undefined
       }
+      school_staff_directory: {
+        Args: { _school: string }
+        Returns: {
+          account: string
+          category: string
+          employee_id: string
+          employee_no: string
+          full_name: string
+          job_title: string
+          kind: string
+          school_name: string
+        }[]
+      }
       school_today: { Args: never; Returns: string }
       school_today_org: { Args: { _org: string }; Returns: string }
       search_messages: {
