@@ -63,7 +63,7 @@ export function TodayTab({ ctx, canApprove, canRecord = false }: { ctx: Ctx; can
         <div className="space-y-1"><Label htmlFor="ad">التاريخ</Label><Input id="ad" type="date" value={date} max={riyadhToday()} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
         {pol ? <p className="pb-2 text-sm text-muted-foreground">الدوام {String(pol["day_start"]).slice(0, 5)} • السماح {pol["grace_minutes"]} د • التأخر يُحسب من {pol["late_from"] === "grace_end" ? "نهاية السماح" : "بداية الدوام"} • المراجعة {String(pol["absence_review_at"]).slice(0, 5)}</p>
           : board.isSuccess && <p className="pb-2 text-sm text-destructive">لم تُعتمد سياسة حضور لهذه المدرسة بعد — يحددها المالك أو المدير من «الإعدادات».</p>}
-        {!canRecord && <Button variant="outline" className="ms-auto" onClick={async () => { const r = await rpc("build_absence_review", { _school: S, _date: date }); if (r.ok) { toast.success(r.data ? `أُضيف ${r.data} طالب إلى قائمة المراجعة` : "القائمة محدّثة"); refresh(); } }}>تحديث قائمة الغياب</Button>}
+        {canApprove && <Button variant="outline" className="ms-auto" onClick={async () => { const r = await rpc("build_absence_review", { _school: S, _date: date }); if (r.ok) { toast.success(r.data ? `أُضيف ${r.data} طالب إلى قائمة المراجعة` : "القائمة محدّثة"); refresh(); } }}>تحديث قائمة الغياب</Button>}
       </div>
       {canRecord && <ManualEntry S={S} />}
       {board.isLoading ? <LoadingState /> : board.error ? <ErrorState message={arabicError(board.error)} onRetry={() => board.refetch()} /> : (

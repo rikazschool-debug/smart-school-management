@@ -7,7 +7,7 @@ import { RequireSchool } from "@/components/require-school";
 import { CompareTab, CardsTab, FollowupTab, PickupsTab, RecordsTab, TodayTab } from "@/components/attendance/staff";
 import { SettingsTab } from "@/components/attendance/calls-settings";
 import { LessonsSchoolTab, LessonsTab } from "@/components/attendance/lessons";
-import { attTabsWith, canApproveAttendanceWith, type AttTab } from "@/lib/roles";
+import { ATT_GRANTS, attTabsWith, canApproveAttendanceWith, type AttTab } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { useOpsStaff } from "@/lib/ops-staff";
 import { useSession } from "@/lib/session";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/app/attendance")({
 const LABEL: Record<AttTab, string> = { lessons: "رصد حضور اليوم", today: "لوحة اليوم", gate: "البوابة", pickups: "الاستلام والاستئذان", calls: "النداء", cards: "البطاقات والمستلمون", records: "السجلات", followup: "متابعة المواظبة", settings: "الإعدادات", compare: "مقارنة الفروع" };
 
 function Page() {
-  return <RequireSchool nav="attendance" extra={(p) => attTabsWith("teacher", p).some((t) => t !== "pickups")}>{(ctx) => <Att ctx={ctx} />}</RequireSchool>;
+  return <RequireSchool nav="attendance" extra={(p) => ATT_GRANTS.some((k) => !!p[k])}>{(ctx) => <Att ctx={ctx} />}</RequireSchool>;
 }
 
 function Att({ ctx }: { ctx: AppContext & { schoolId: string } }) {

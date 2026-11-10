@@ -90,6 +90,16 @@ try {
   const lk = (await admin.rpc("_idl_student", { _nid: nid(7), _csmart: "nope" })).data;
   check("18 five wrong tries lock the student ID", lk?.error === "locked", lk);
   check("19 while locked even the right number is refused", (await admin.rpc("_idl_student", { _nid: nid(7), _csmart: "CS2-" + sfx })).data?.error === "locked");
+  // newly added student: the automatic account waits for its first sign-in (record not linked yet) — ID + C-Smart must open it
+  const st3 = await user("student3");
+  const s3 = await ins("students", { full_name: "طالب جديد", national_id: nid(8), csmart_no: "CS3-" + sfx, status: "active" });
+  hashCache.set(nid(8), (await admin.rpc("_idl_hash" as any, { _s: nid(8) })).data as string);
+  const staged = await admin.rpc("_provision_link", { _kind: "student", _subject: s3.id, _uid: st3.id, _actor: owner.id, _pending: true });
+  const first = (await admin.rpc("_idl_student", { _nid: nid(8), _csmart: "CS3-" + sfx })).data;
+  check("19b a newly added student (account waiting for first sign-in) opens it with ID + C-Smart", !staged.error && first?.user_id === st3.id, [staged.error, first]);
+  check("19c the new student's first sign-in still needs exact C-Smart case", (await admin.rpc("_idl_student", { _nid: nid(8), _csmart: "cs3-" + sfx })).data?.error === "mismatch");
+  await admin.from("students").update({ status: "withdrawn" }).eq("id", s3.id);
+  check("19d a withdrawn new student cannot open the waiting account", (await admin.rpc("_idl_student", { _nid: nid(8), _csmart: "CS3-" + sfx })).data?.error === "mismatch");
   const sc = client(); await sc.auth.signInWithPassword({ email: st.email, password: pw });
   const seen = ((await sc.from("students").select("id, user_id")).data ?? []) as any[];
   check("20 a signed-in student cannot read another student's record", seen.every((s) => s.user_id === st.id), seen);
