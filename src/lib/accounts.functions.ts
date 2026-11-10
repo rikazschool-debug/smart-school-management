@@ -35,6 +35,7 @@ async function provisionCore(ctx: Ctx, kind: Kind, ids: string[]): Promise<ProvO
   const { data: rows, error } = await (kind === "teacher" ? ctx.supabase.from("teachers").select("id, school_id, user_id, phone, email, full_name") : ctx.supabase.from(table).select("*")).in("id", ids); // teachers.national_id is not readable directly
   if (error) throw new Error("تعذّرت قراءة السجلات");
   const out: ProvOut[] = [];
+  const queued: string[] = [];
   const allowed = new Map<string, boolean>();
   for (const r of (rows ?? []) as Record<string, string | null>[]) {
     const id = r["id"]!, school = r["school_id"]!;
@@ -68,12 +69,25 @@ async function provisionCore(ctx: Ctx, kind: Kind, ids: string[]): Promise<ProvO
       const { data: st, error: e2 } = await supabaseAdmin.rpc("_provision_link" as never, { _kind: kind, _subject: id, _uid: uid, _actor: ctx.userId, _pending: pending } as never);
       if (e2) throw new Error(e2.message);
       out.push({ id, state: String(st) });
+      if (kind === "guardian" && ["linked", "pending_phone"].includes(String(st))) queued.push(id);
     } catch (e) {
       out.push({ id, state: "error", msg: (e as Error).message });
     }
   }
   for (const id of ids) if (!out.some((o) => o.id === id)) out.push({ id, state: "error", msg: "السجل غير متاح" });
+  if (queued.length) await queueReadyMessages(queued);
   return out;
+}
+
+/** One «account ready» WhatsApp message per guardian (unique guardian_id → never repeated), then a send attempt. */
+async function queueReadyMessages(gids: string[]) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("guardians").select("id, school_id, full_name, schools(name), student_guardians(students(full_name))").in("id", gids);
+  for (const g of (data ?? []) as unknown as { id: string; school_id: string; full_name: string; schools: { name: string } | null; student_guardians: { students: { full_name: string } | null }[] }[]) {
+    const kids = g.student_guardians.map((x) => x.students?.full_name).filter(Boolean).join("، ");
+    await supabaseAdmin.from("acct_outbox" as never).insert({ school_id: g.school_id, guardian_id: g.id, params: { name: g.full_name, kids, school: g.schools?.name ?? "" } } as never);
+  }
+  try { const { drainAcctOutbox } = await import("@/lib/acct-outbox.server"); await drainAcctOutbox(10); } catch (e) { console.error("acct outbox", (e as Error).message); }
 }
 
 /**
@@ -114,19 +128,12 @@ export const autoAccounts = createServerFn({ method: "POST" })
     } else gids = [data.guardianId!];
     const res = gids.length ? await provisionCore(ctx, "guardian", gids) : [];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const guardians: AutoResult["guardians"] = [];
-    for (const r of res) {
-      const { data: g } = await supabaseAdmin.from("guardians").select("id, school_id, full_name, phone, schools(name), student_guardians(students(full_name, user_id))").eq("id", r.id).maybeSingle();
-      const gg = g as unknown as { id: string; school_id: string; full_name: string; phone: string | null; schools: { name: string } | null; student_guardians: { students: { full_name: string; user_id: string | null } | null }[] } | null;
-      let message = "none";
-      if (gg && ["linked", "pending_phone"].includes(r.state) && normPhone(gg.phone)) {
-        const kids = gg.student_guardians.map((x) => x.students?.full_name).filter(Boolean).join("، ");
-        const ins = await supabaseAdmin.from("acct_outbox" as never).insert({ school_id: gg.school_id, guardian_id: gg.id, params: { name: gg.full_name, kids, school: gg.schools?.name ?? "" } } as never);
-        message = ins.error ? "already" : "queued";
-      }
-      guardians.push({ id: r.id, name: gg?.full_name ?? "", state: r.state, ...(r.msg ? { msg: r.msg } : {}), message });
-    }
-    try { const { drainAcctOutbox } = await import("@/lib/acct-outbox.server"); await drainAcctOutbox(10); } catch (e) { console.error("acct outbox", (e as Error).message); }
+    const { data: names } = gids.length ? await supabaseAdmin.from("guardians").select("id, full_name").in("id", gids) : { data: [] };
+    const { data: msgs } = gids.length ? await supabaseAdmin.from("acct_outbox" as never).select("guardian_id, status").in("guardian_id", gids) : { data: [] };
+    const guardians: AutoResult["guardians"] = res.map((r) => ({
+      id: r.id, name: ((names ?? []) as { id: string; full_name: string }[]).find((n) => n.id === r.id)?.full_name ?? "", state: r.state, ...(r.msg ? { msg: r.msg } : {}),
+      message: ((msgs ?? []) as { guardian_id: string; status: string }[]).find((m) => m.guardian_id === r.id)?.status ?? "none",
+    }));
     return { student, guardians };
   });
 
