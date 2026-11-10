@@ -15,13 +15,14 @@ import { ROLE_LABELS } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Building2, GraduationCap, HeartHandshake, Sparkles, type LucideIcon } from "lucide-react";
 
 type Mode = "signin" | "signup" | "forgot";
 type Entry = "student" | "guardian" | "staff";
-const ENTRIES: { key: Entry; title: string; desc: string }[] = [
-  { key: "student", title: "الدخول إلى حساب الطالب", desc: "برقم الهوية أو الإقامة ورقم الطالب في C‑Smart" },
-  { key: "guardian", title: "الدخول إلى حساب ولي الأمر", desc: "برقم الهوية أو الإقامة ورمز يصل إلى جوالك المسجل في المدرسة" },
-  { key: "staff", title: "الدخول إلى حساب الإدارة والموظفين", desc: "برقم الهوية أو الإقامة ورمز يصل إلى جوالك المسجل" },
+const ENTRIES: { key: Entry; tab: string; icon: LucideIcon; title: string; desc: string }[] = [
+  { key: "student", tab: "الطالب", icon: GraduationCap, title: "الدخول إلى حساب الطالب", desc: "برقم الهوية أو الإقامة ورقم الطالب في C‑Smart" },
+  { key: "guardian", tab: "ولي الأمر", icon: HeartHandshake, title: "الدخول إلى حساب ولي الأمر", desc: "برقم الهوية أو الإقامة ورمز يصل إلى جوالك المسجل في المدرسة" },
+  { key: "staff", tab: "الإدارة والموظفون", icon: Building2, title: "الدخول إلى حساب الإدارة والموظفين", desc: "برقم الهوية أو الإقامة ورمز يصل إلى جوالك المسجل" },
 ];
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -53,7 +54,7 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
-  const [entry, setEntry] = useState<Entry | null>(search.invite ? "staff" : null);
+  const [entry, setEntry] = useState<Entry>(search.invite ? "staff" : "student");
   const navigate = useNavigate();
   const go = () => (search.invite ? navigate({ to: "/invite/$token", params: { token: search.invite } }) : navigate({ to: "/app" }));
 
@@ -127,36 +128,39 @@ function AuthPage() {
         </div>
       </div>
       <div className="site-hero-grad flex items-center justify-center p-6">
-        <div className="site-page w-full max-w-sm space-y-5 rounded-3xl border bg-card/90 p-6 shadow-xl backdrop-blur md:p-8">
+        <div className="site-page w-full max-w-md space-y-5 rounded-3xl border bg-card/90 p-6 shadow-xl backdrop-blur md:p-8">
           <div className="md:hidden"><Brand /></div>
-          {mode === "signin" && !entry ? (
+          {mode === "signin" && (
             <>
-              <h1 className="font-display text-2xl">تسجيل الدخول</h1>
-              <p className="text-sm text-muted-foreground">اختر نوع حسابك</p>
-              <div className="space-y-3">
+              <div>
+                <h1 className="font-display text-2xl">مرحبًا بك في ركاز</h1>
+                <p className="mt-1 text-sm text-muted-foreground">اختر نوع حسابك للمتابعة</p>
+              </div>
+              <div role="tablist" aria-label="نوع الحساب" className="relative grid grid-cols-3 gap-1 rounded-2xl bg-muted p-1.5">
+                <span aria-hidden className="absolute inset-y-1.5 rounded-xl bg-card shadow-md transition-all duration-500 ease-out"
+                  style={{ width: "calc((100% - 0.75rem - 0.5rem) / 3)", insetInlineStart: `calc(0.375rem + ${ENTRIES.findIndex((x) => x.key === entry)} * ((100% - 0.75rem - 0.5rem) / 3 + 0.25rem))` }} />
                 {ENTRIES.map((x) => (
-                  <button key={x.key} type="button" onClick={() => setEntry(x.key)} className="w-full rounded-xl border bg-card p-4 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-primary hover:bg-secondary hover:shadow-md">
-                    <span className="block font-semibold">{x.title}</span>
-                    <span className="mt-1 block text-xs text-muted-foreground">{x.desc}</span>
+                  <button key={x.key} role="tab" type="button" aria-selected={entry === x.key} onClick={() => setEntry(x.key)}
+                    className={`relative z-10 flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold transition-colors duration-300 ${entry === x.key ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                    <x.icon className={`size-5 transition-transform duration-500 ${entry === x.key ? "scale-110" : ""}`} />
+                    <span className="leading-tight">{x.tab}</span>
                   </button>
                 ))}
               </div>
+              <p key={entry} className="site-page flex items-start gap-2 rounded-xl bg-secondary/60 px-3 py-2 text-xs text-muted-foreground"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" />{ENTRIES.find((x) => x.key === entry)!.desc}</p>
             </>
-          ) : mode === "signin" && entry === "student" ? (
-            <>
-              <BackToEntries onClick={() => setEntry(null)} />
+          )}
+          {mode === "signin" && entry === "student" ? (
+            <div key="student" className="site-page">
               <StudentLogin onDone={() => navigate({ to: "/app" })} />
-            </>
+            </div>
           ) : mode === "signin" && entry === "guardian" ? (
-            <>
-              <BackToEntries onClick={() => setEntry(null)} />
+            <div key="guardian" className="site-page">
               <IdLogin title="الدخول إلى حساب ولي الأمر" onDone={() => navigate({ to: "/app/choose-role" })} />
-            </>
+            </div>
           ) : (
-            <>
-              {mode === "signin" && <BackToEntries onClick={() => setEntry(null)} />}
-              {mode === "signin" && !sent && <IdLogin title="الدخول برقم الهوية أو الإقامة" onDone={() => (search.invite ? go() : navigate({ to: "/app/choose-role" }))} />}
-              {/* sign-in is by ID only (user request); the password form stays for invitation signup and reset */}
+            <div key="staff" className="site-page space-y-5">
+              {mode === "signin" && !sent && <IdLogin title="الدخول إلى حساب الإدارة والموظفين" onDone={() => (search.invite ? go() : navigate({ to: "/app/choose-role" }))} />}              {/* sign-in is by ID only (user request); the password form stays for invitation signup and reset */}
               {(mode !== "signin" || !!search.invite) && <form onSubmit={submit} className="space-y-5">
                 <h2 className="font-display text-xl">
                   {mode === "signin" ? "أو باسم المستخدم وكلمة المرور" : mode === "signup" ? "إنشاء حساب" : "استعادة كلمة المرور"}
@@ -197,20 +201,20 @@ function AuthPage() {
                   )}
                 </div>
               </form>}
-            </>
+            </div>
           )}
           {mode === "signin" && (
-            <div className="space-y-2 rounded-xl border border-dashed bg-card p-3">
-              <p className="text-sm font-semibold">دخول سريع بالحسابات التجريبية <span className="text-xs font-normal text-muted-foreground">(بيانات تجريبية)</span></p>
-              <div className="grid grid-cols-2 gap-2">
+            <details className="group rounded-2xl border border-dashed bg-card/60 p-3" open>
+              <summary className="cursor-pointer list-none text-sm font-semibold">دخول سريع بالحسابات التجريبية <span className="text-xs font-normal text-muted-foreground">(بيانات تجريبية)</span></summary>
+              <div className="mt-3 grid max-h-56 grid-cols-2 gap-2 overflow-y-auto">
                 {DEMO_ACCOUNTS.map((d) => (
                   <Button key={d.email} type="button" size="sm" variant="secondary" disabled={busy} onClick={() => demoLogin(d.email)}>
                     {d.label ?? ROLE_LABELS[d.role]}
                   </Button>
                 ))}
               </div>
-              <PlatformOwnerLogin onDone={() => navigate({ to: "/app" })} />
-            </div>
+              <div className="mt-2"><PlatformOwnerLogin onDone={() => navigate({ to: "/app" })} /></div>
+            </details>
           )}
           {search.invite && <p className="text-xs text-muted-foreground">أنشئ حسابًا بنفس البريد الذي دُعيت به وستظهر لك عضويتك تلقائيًا.</p>}
         </div>
