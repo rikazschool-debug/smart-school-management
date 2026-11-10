@@ -82,18 +82,58 @@ export function MockPanel({ title }: { title: string }) {
   );
 }
 
+const TONES = ["site-tone-a", "site-tone-b", "site-tone-c"];
+/** Bento layout: some cards span wider for rhythm (only when there are 6+ items). */
+const SPAN = [
+  "lg:col-span-2", "", "", "lg:col-span-2",
+  "", "lg:col-span-2", "lg:col-span-2", "",
+  "", "", "lg:col-span-2", "",
+];
+
+function onSpot(e: React.MouseEvent<HTMLDivElement>) {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+}
+
 export function FeatureGrid({ items }: { items: Feature[] }) {
+  const bento = items.length >= 8;
   return (
-    <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((f, i) => (
-        <Reveal key={f.t} delay={(i % 3) * 90}>
-          <div className="group h-full rounded-2xl border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
-            <span className="grid size-11 place-items-center rounded-xl bg-secondary text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground"><f.icon className="size-5" /></span>
-            <h3 className="mt-4 font-bold">{f.t}</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.d}</p>
-          </div>
-        </Reveal>
-      ))}
+    <div className={`mt-12 grid gap-5 sm:grid-cols-2 ${bento ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
+      {items.map((f, i) => {
+        const wide = bento && SPAN[i % SPAN.length];
+        return (
+          <Reveal key={f.t} delay={(i % 4) * 90} className={wide || ""}>
+            <div onMouseMove={onSpot}
+              className={`site-spot site-card group relative h-full overflow-hidden rounded-3xl border bg-card p-6 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl ${TONES[i % 3]}`}>
+              <div className="site-blob pointer-events-none absolute -end-10 -top-10 size-36 rounded-full opacity-40 blur-2xl transition-all duration-700 group-hover:scale-150 group-hover:opacity-70" />
+              <span className="absolute end-5 top-5 font-display text-4xl font-bold text-foreground/5 transition-colors duration-500 group-hover:text-primary/15">{String(i + 1).padStart(2, "0")}</span>
+              <span className="site-icon relative grid size-12 place-items-center rounded-2xl text-primary-foreground shadow-lg transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110">
+                <f.icon className="size-6" />
+              </span>
+              <h3 className={`relative mt-5 font-bold ${wide ? "text-xl" : "text-lg"}`}>{f.t}</h3>
+              <p className="relative mt-2 text-sm leading-relaxed text-muted-foreground">{f.d}</p>
+              <div className="site-line relative mt-5 h-1 w-10 rounded-full transition-all duration-500 group-hover:w-24" />
+            </div>
+          </Reveal>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Endless moving strip of feature names. */
+export function FeatureMarquee({ items }: { items: Feature[] }) {
+  const row = [...items, ...items];
+  return (
+    <div className="relative overflow-hidden py-6 [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+      <div className="site-marquee flex w-max gap-3">
+        {row.map((f, i) => (
+          <span key={i} className="flex items-center gap-2 rounded-full border bg-card/80 px-4 py-2 text-sm shadow-sm backdrop-blur">
+            <f.icon className="size-4 text-primary" />{f.t}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
