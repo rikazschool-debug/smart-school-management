@@ -807,3 +807,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - J4 print one / two employees → PDF; each employee starts a new page; owner sees national ID, view+print-only user sees masked fields (34 masked, ID shown ••••).
 - J5 vice «عرض لوحة اليوم وسجلات الحضور» via the tree (preview → save) → menu + page appear, manual_attendance refused; withdraw → menu and page gone.
 - Fixes: _idl_student also opens a new student's waiting account (idl-e2e 26/26, new 19b–19d); attendance page now closed by direct link without a grant (RequireSchool extra uses ATT_GRANTS); «تحديث قائمة الغياب» only for approvers; CrudTable add form pre-fills `defaults` and select fields get ids. accounts-e2e 23/23, vice-att-e2e 11/11.
+
+## Nov 10 2026 — Portal-bound sign-in + student direct entry
+- ID sign-in checks the chosen entry server-side (_idl_portal_ok, service-only): guardian entry only for guardian accounts, staff entry only for staff/platform accounts; checked at code send and again at verify. Evidence: demo guardian → guardian ✓ staff ✗; demo principal → staff ✓ guardian ✗; demo student → neither.
+- Student ID + C-Smart sign-in completes the first-login step (_idl_student_finish) — no initial-password page; portal opens directly. idl-e2e 26/26, accounts-e2e 23/23.

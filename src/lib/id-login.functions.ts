@@ -28,16 +28,29 @@ function code6() {
   return String(b[0]! % 1_000_000).padStart(6, "0");
 }
 
+type Portal = "guardian" | "staff";
+const portalOf = (p: unknown): Portal => (p === "guardian" ? "guardian" : "staff");
+async function portalOk(uid: string, portal: Portal) {
+  const sb = await admin();
+  const { data } = await sb.rpc("_idl_portal_ok" as never, { _uid: uid, _portal: portal } as never);
+  return data === true;
+}
+const WRONG_PORTAL = { guardian: "هذا الحساب ليس حساب ولي أمر. استخدم بوابة «الإدارة والموظفون».", staff: "هذا الحساب ليس حساب موظف. استخدم بوابة «ولي الأمر» أو «الطالب»." };
+
 export const requestIdCode = createServerFn({ method: "POST" })
-  .inputValidator((d: { nid: string }) => ({ nid: String(d?.nid ?? "").replace(/\D/g, "").slice(0, 12) }))
+  .inputValidator((d: { nid: string; portal?: string }) => ({ nid: String(d?.nid ?? "").replace(/\D/g, "").slice(0, 12), portal: portalOf(d?.portal) }))
   .handler(async ({ data }) => {
     if (!/^[12]\d{9}$/.test(data.nid)) return { error: idLoginMessage("invalid") };
     const sb = await admin();
     const code = code6();
     const { data: r, error } = await sb.rpc("_idl_issue" as never, { _nid: data.nid, _code: code } as never);
     if (error) return { error: idLoginMessage("server") };
-    const res = r as { error?: string; challenge?: string; phone?: string };
+    const res = r as { error?: string; challenge?: string; phone?: string; user_id?: string };
     if (res.error || !res.challenge || !res.phone) return { error: idLoginMessage(res.error ?? "server") };
+    if (!res.user_id || !(await portalOk(res.user_id, data.portal))) {
+      await sb.rpc("_idl_mark_sent" as never, { _challenge: res.challenge, _status: "failed", _channel: "portal" } as never);
+      return { error: WRONG_PORTAL[data.portal] };
+    }
 
     const baseUrl = process.env["WATI_API_BASE_URL"], token = process.env["WATI_API_TOKEN"];
     let sent = false;
@@ -53,7 +66,7 @@ export const requestIdCode = createServerFn({ method: "POST" })
   });
 
 export const verifyIdCode = createServerFn({ method: "POST" })
-  .inputValidator((d: { challenge: string; code: string }) => ({ challenge: String(d?.challenge ?? ""), code: String(d?.code ?? "").replace(/\D/g, "").slice(0, 6) }))
+  .inputValidator((d: { challenge: string; code: string; portal?: string }) => ({ challenge: String(d?.challenge ?? ""), code: String(d?.code ?? "").replace(/\D/g, "").slice(0, 6), portal: portalOf(d?.portal) }))
   .handler(async ({ data }) => {
     if (!UUID.test(data.challenge) || data.code.length !== 6) return { error: idLoginMessage("wrong") };
     const sb = await admin();
@@ -61,6 +74,7 @@ export const verifyIdCode = createServerFn({ method: "POST" })
     if (error) return { error: idLoginMessage("server") };
     const res = r as { error?: string; user_id?: string };
     if (res.error || !res.user_id) return { error: idLoginMessage(res.error ?? "server") };
+    if (!(await portalOk(res.user_id, data.portal))) return { error: WRONG_PORTAL[data.portal] };
     return tokenFor(res.user_id);
   });
 
@@ -72,5 +86,8 @@ export const studentSignIn = createServerFn({ method: "POST" })
     if (error) return { error: idLoginMessage("server") };
     const res = r as { error?: string; user_id?: string };
     if (res.error || !res.user_id) return { error: idLoginMessage(res.error === "locked" ? "locked" : "student_mismatch") };
+    // ID + C-Smart is the student's credential: no initial-password page, the portal opens directly.
+    const { error: fe } = await sb.rpc("_idl_student_finish" as never, { _uid: res.user_id } as never);
+    if (fe) return { error: idLoginMessage("server") };
     return tokenFor(res.user_id);
   });

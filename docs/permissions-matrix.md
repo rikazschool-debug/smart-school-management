@@ -506,3 +506,5 @@ Calls with no branch: owner only. Deny overrides grant. Revoking listen stops an
 | المدير/المالك | يفتحها من الفصول ويديرها | كما كان | — |
 
 | ملفات الموظفين — طباعة (فردي/جماعي) | المالك؛ مدير إدارة الموارد البشرية (المؤسسة)؛ غيرهم بمنح صريح بنطاق الفرع — يُشترط العرض أيضًا |
+
+- Sign-in entries (Nov 10 2026): student entry = students only (ID + C-Smart, no password step); guardian entry = guardian accounts only; admin & staff entry = staff accounts only. Enforced on the server.
