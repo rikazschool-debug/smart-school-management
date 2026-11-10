@@ -221,7 +221,8 @@ export function CrudTable({
   const [selAll, setSelAll] = useState(false);
   const names = useRef(new Map<string, string>());
   useEffect(() => { setSel(new Set()); setSelAll(false); }, [search, fv, tagF, schoolId]);
-  const selecting = !!person && !!caps && (caps.bulk || caps.export);
+  const selecting = person ? !!caps && (caps.bulk || caps.export) : exportable;
+  const [selFmt, setSelFmt] = useState<"xlsx" | "pdf" | "print">("xlsx");
 
   const build = (head = false, onlyIds?: string[], pick?: string) => {
     let sel = pick ?? select;
@@ -366,6 +367,20 @@ export function CrudTable({
           onPage={() => { setSelAll(false); setSel((x) => new Set([...x, ...rows.map((r) => r["id"])])); }} onAll={() => setSelAll(true)}
           onClear={() => { setSel(new Set()); setSelAll(false); }} resolveIds={resolveIds} nameOf={(id) => names.current.get(id)}
           onExport={(ids, kind) => doExport(kind, ids)} />
+      )}
+      {!person && selecting && (sel.size > 0 || selAll) && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 p-2 text-sm" role="region" aria-label="التحديد">
+          <strong>{selAll ? `جميع النتائج (${count})` : `${sel.size} محدد`}</strong>
+          <Button size="sm" variant="ghost" onClick={() => { setSelAll(false); setSel((x) => new Set([...x, ...rows.map((r) => r["id"])])); }}>تحديد هذه الصفحة ({rows.length})</Button>
+          {!selAll && count > rows.length && <Button size="sm" variant="ghost" onClick={() => setSelAll(true)}>تحديد جميع النتائج ({count})</Button>}
+          <Button size="sm" variant="ghost" onClick={() => { setSel(new Set()); setSelAll(false); }}>إلغاء التحديد</Button>
+          <div className="ms-auto flex items-center gap-2">
+            <select aria-label="صيغة التصدير" className={selectCls()} value={selFmt} onChange={(e) => setSelFmt(e.target.value as typeof selFmt)}>
+              <option value="xlsx">Excel</option><option value="pdf">PDF</option><option value="print">طباعة</option>
+            </select>
+            <Button size="sm" variant="outline" disabled={exporting} onClick={async () => { try { await doExport(selFmt, await resolveIds()); } catch (e) { toast.error(arabicError(e)); } }}>تصدير المحددين</Button>
+          </div>
+        </div>
       )}
       {q.isLoading ? (
         <LoadingState />

@@ -23366,6 +23366,7 @@ export type Database = {
         Returns: undefined
       }
       run_file_cleanup: { Args: never; Returns: Json }
+      sanad_alerts_tick: { Args: never; Returns: number }
       save_attendance_policy: {
         Args: {
           _effective_from: string
