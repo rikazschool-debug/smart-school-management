@@ -249,10 +249,6 @@ function PlatformOwnerLogin({ onDone }: { onDone: () => void }) {
   );
 }
 
-function BackToEntries({ onClick }: { onClick: () => void }) {
-  return <button type="button" className="text-sm text-primary" onClick={onClick}>→ الرجوع إلى أنواع الحسابات</button>;
-}
-
 async function openWithToken(token: string) {
   await supabase.auth.signOut();
   localStorage.removeItem("rikaz.activeContext");
