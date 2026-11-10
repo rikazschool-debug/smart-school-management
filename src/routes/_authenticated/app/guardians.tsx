@@ -53,6 +53,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
       <PageHeader title="أولياء الأمور" desc="سجل واحد لكل ولي أمر يجمع أبناءه. الجوال المعتمد هنا هو الذي يُرسل إليه رمز الدخول، وكل تغيير عليه يُسجّل." />
       <CrudTable person={{ kind: "guardian" }} title="أولياء الأمور" table="guardians" schoolId={schoolId} canWrite={w} order="full_name"
         onUpdated={(gid) => { void auto({ data: { guardianId: gid } }).then((r) => { const g = r.guardians[0]; if (g && (g.state !== "linked" || g.message === "queued")) toast.info(autoSummary(r)); }).catch(() => undefined); }}
+        formExtra={(fill) => <HrPick schoolId={schoolId} onPick={fill} />}
         toolbar={w ? <GuardianImport schoolId={schoolId} /> : undefined}
         select="*, student_guardians(id, verified)" searchKeys={["full_name", "display_name", "phone", "email", "national_id"]}
         fields={[
@@ -150,6 +151,32 @@ function GuardianDetail({ g, canManage }: { g: Row; canManage: boolean }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/** «هل ولي الأمر موظف لدينا؟» — copies name/ID/mobile/email from the group's HR file (server-checked: can_edit_students, same group). */
+function HrPick({ schoolId, onPick }: { schoolId: string; onPick: (v: Row) => void }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const res = useQuery({ enabled: open && q.trim().length >= 2, queryKey: ["hr-guardian-cand", schoolId, q.trim()], queryFn: async () => {
+    const { data, error } = await db.rpc("hr_guardian_candidates", { _school: schoolId, _q: q.trim() }); if (error) throw error; return data as Row[];
+  } });
+  return (
+    <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-sm">
+      <label className="flex items-center gap-2 font-medium"><input type="checkbox" className="size-4 accent-primary" checked={open} onChange={(e) => setOpen(e.target.checked)} /> ولي الأمر موظف لدينا في الموارد البشرية — استورد بياناته</label>
+      {open && <>
+        <input className="w-full rounded-md border bg-background px-3 py-2" placeholder="ابحث بالاسم أو الرقم الوظيفي أو الهوية…" value={q} onChange={(e) => setQ(e.target.value)} />
+        {res.error && <p className="text-xs text-destructive">{arabicError(res.error)}</p>}
+        {res.data && res.data.length === 0 && <p className="text-xs text-muted-foreground">لا يوجد موظف مطابق.</p>}
+        <ul className="max-h-48 divide-y overflow-y-auto">
+          {(res.data ?? []).map((e) => (
+            <li key={e["id"]}><button type="button" className="w-full py-1.5 text-start hover:text-primary" onClick={() => { onPick({ full_name: e["full_name"], national_id: e["national_id"] ?? "", phone: e["phone"] ?? "", email: e["email"] ?? "" }); setOpen(false); toast.success("نُسخت بيانات الموظف — راجعها ثم احفظ"); }}>
+              {e["full_name"]} <span className="text-xs text-muted-foreground">{[e["employee_no"], e["job_title"]].filter(Boolean).join(" · ")}</span>
+            </button></li>
+          ))}
+        </ul>
+      </>}
     </div>
   );
 }

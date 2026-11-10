@@ -21870,6 +21870,18 @@ export type Database = {
         Args: { _ext: string; _on: boolean; _org: string; _reason: string }
         Returns: undefined
       }
+      hr_guardian_candidates: {
+        Args: { _q: string; _school: string }
+        Returns: {
+          email: string
+          employee_no: string
+          full_name: string
+          id: string
+          job_title: string
+          national_id: string
+          phone: string
+        }[]
+      }
       hr_hs_assign: {
         Args: { _emp: string; _note?: string; _start: string; _unit: string }
         Returns: string

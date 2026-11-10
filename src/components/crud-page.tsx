@@ -168,7 +168,7 @@ export function RecordForm({
 
 export function CrudTable({
   title, table, schoolId, select = "*", fields, columns, searchKeys, filter, filters, canWrite,
-  canDelete = canWrite, canCreate = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated, onUpdated, person,
+  canDelete = canWrite, canCreate = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated, onUpdated, person, formExtra,
 }: {
   title: string; table: string; schoolId: string; select?: string; fields: Field[]; columns: Column[];
   searchKeys: string[]; filter?: Record<string, unknown>; filters?: FilterDef[]; canWrite: boolean; /** hide the generic «إضافة» when a screen owns its own add flow */ canCreate?: boolean;
@@ -177,6 +177,7 @@ export function CrudTable({
   /** called with the new row after a successful create */ onCreated?: ((r: Row) => void) | undefined;
   /** called with the row id after a successful edit */ onUpdated?: ((id: string) => void) | undefined;
   /** people lists: name opens the side card; selection, tag filter and bulk actions (all re-checked on the server) */ person?: { kind: PersonKind } | undefined;
+  /** shown above the add form; `fill` merges values into it (e.g. copy from an HR file) */ formExtra?: ((fill: (v: Row) => void) => ReactNode) | undefined;
 }) {
   const qc = useQueryClient();
   const [input, setInput] = useState("");
@@ -185,6 +186,7 @@ export function CrudTable({
   const [page, setPage] = useState(0);
   const [editing, setEditing] = useState<Row | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   useEffect(() => { const t = setTimeout(() => { setSearch(clean(input)); setPage(0); }, 300); return () => clearTimeout(t); }, [input]);
   const setFilter = (k: string, v: string) => { setFv((x) => ({ ...x, [k]: v })); setPage(0); };
   const active = (filters ?? []).filter((f) => fv[f.key]);
@@ -440,7 +442,8 @@ export function CrudTable({
               )}
             </div>
           )}
-          {editing && <RecordForm fields={fields} schoolId={schoolId} initial={editing} onSubmit={(v) => save.mutate(v)} submitting={save.isPending} />}
+          {editing && !editing["id"] && formExtra?.((v) => { setEditing((e) => ({ ...(e ?? {}), ...v })); setFormKey((k) => k + 1); })}
+          {editing && <RecordForm key={formKey} fields={fields} schoolId={schoolId} initial={editing} onSubmit={(v) => save.mutate(v)} submitting={save.isPending} />}
         </DialogContent>
       </Dialog>
     </section>
