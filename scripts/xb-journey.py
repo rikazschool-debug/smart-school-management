@@ -53,7 +53,7 @@ async def main():
         # B side
         b, bp, berr = await login(br, "b")
         await bp.goto(B + "/app/communication", wait_until="domcontentloaded"); await bp.wait_for_timeout(5000)
-        await bp.get_by_text("عبدالله الفرع أ").first.click(); await bp.wait_for_timeout(4000)
+        await bp.get_by_text("عبدالله الفرع أ").first.click(); await bp.get_by_text("مرفق للزميل").nth(1).wait_for(timeout=20000); await bp.wait_for_timeout(1500)
         bt = await bp.locator("body").inner_text(); await bp.screenshot(path=S + "3-b-thread.png")
         check("B sees message and attachment", "مرحبًا من فرع الشمال" in bt and "note.txt" in bt, bt[-500:])
         btok = session("b")["access_token"]
