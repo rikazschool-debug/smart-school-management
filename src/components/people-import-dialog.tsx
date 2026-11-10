@@ -66,9 +66,21 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { s
 }
 
 // Single student add: these fields get dedicated controls (calendar, cascading stage→grade→section, relationship list, 966 mobile).
-const STUDENT_CUSTOM = new Set(["birth_date", "grade", "section", "relationship", "guardian_phone"]);
 type Opt = { id: string; name: string; parent: string | null };
-function StudentSingleExtras({ schoolId, v, set }: { schoolId: string; v: Record<string, string>; set: (x: Record<string, string>) => void }) {
+function FormSection({ n, title, hint, children }: { n: number; title: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-xl border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{n}</span>
+        <h3 className="font-semibold">{title}</h3>
+        {hint && <span className="text-xs text-muted-foreground">— {hint}</span>}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">{children}</div>
+    </section>
+  );
+}
+
+function StudentSingleExtras({ schoolId, v, set, plain }: { schoolId: string; v: Record<string, string>; set: (x: Record<string, string>) => void; plain: (key: string) => React.ReactNode }) {
   const [stages, setStages] = useState<Opt[]>([]), [grades, setGrades] = useState<Opt[]>([]), [secs, setSecs] = useState<Opt[]>([]);
   const [stage, setStage] = useState(""), [grade, setGrade] = useState(""), [sec, setSec] = useState("");
   useEffect(() => {
@@ -89,61 +101,76 @@ function StudentSingleExtras({ schoolId, v, set }: { schoolId: string; v: Record
   const name = (l: Opt[], id: string) => l.find((x) => x.id === id)?.name ?? "";
   const bd = v["birth_date"] ? new Date(v["birth_date"] + "T00:00:00") : undefined;
   const ph = v["guardian_phone"] ?? "";
+  const sel = selectCls("w-full");
   return (
-    <>
-      <div className="space-y-1">
-        <Label>تاريخ الميلاد</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline" className={cn("w-full justify-start font-normal", !bd && "text-muted-foreground")}>
-              <CalendarIcon className="size-4" />{bd ? format(bd, "yyyy/MM/dd") : "اختر التاريخ"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="single" selected={bd} captionLayout="dropdown" startMonth={new Date(1995, 0)} endMonth={new Date()} defaultMonth={bd ?? new Date(new Date().getFullYear() - 8, 0)}
-              onSelect={(d) => set({ ...v, birth_date: d ? format(d, "yyyy-MM-dd") : "" })} className="p-3 pointer-events-auto" />
-          </PopoverContent>
-        </Popover>
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="ps-stage">المرحلة</Label>
-        <select id="ps-stage" className={selectCls()} value={stage} onChange={(e) => { setStage(e.target.value); setGrade(""); setSec(""); set({ ...v, grade: "", section: "" }); }}>
-          <option value="">— اختر المرحلة —</option>
-          {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="ps-grade">الصف</Label>
-        <select id="ps-grade" className={selectCls()} disabled={!stage} value={grade} onChange={(e) => { setGrade(e.target.value); setSec(""); set({ ...v, grade: name(grades, e.target.value), section: "" }); }}>
-          <option value="">{stage ? "— اختر الصف —" : "اختر المرحلة أولًا"}</option>
-          {grades.filter((g) => g.parent === stage).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-        </select>
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="ps-sec">الفصل</Label>
-        <select id="ps-sec" className={selectCls()} disabled={!grade} value={sec} onChange={(e) => { setSec(e.target.value); set({ ...v, section: name(secs, e.target.value) }); }}>
-          <option value="">{grade ? "— اختر الفصل —" : "اختر الصف أولًا"}</option>
-          {secs.filter((s) => s.parent === grade).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="ps-rel">صلة القرابة</Label>
-        <select id="ps-rel" className={selectCls()} value={v["relationship"] ?? ""} onChange={(e) => set({ ...v, relationship: e.target.value })}>
-          <option value="">— اختر —</option>
-          {["أب", "أم", "أخ", "أخت", "أخرى"].map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
-        {v["relationship"] === "أخرى" && <Input aria-label="اكتب صلة القرابة" placeholder="اكتب صلة القرابة (مثال: خال، جد)" maxLength={30} value={v["relationship_other"] ?? ""} onChange={(e) => set({ ...v, relationship_other: e.target.value })} />}
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="ps-gphone">جوال ولي الأمر</Label>
-        <div dir="ltr" className="flex">
-          <span className="inline-flex items-center rounded-s-md border border-e-0 bg-muted px-3 text-sm text-muted-foreground">966</span>
-          <Input id="ps-gphone" dir="ltr" inputMode="numeric" className="rounded-s-none" placeholder="5XXXXXXXX" maxLength={9} value={ph}
-            onChange={(e) => { let d = e.target.value.replace(/\D/g, ""); if (d.startsWith("966")) d = d.slice(3); if (d.startsWith("0")) d = d.slice(1); set({ ...v, guardian_phone: d.slice(0, 9) }); }} />
+    <div className="space-y-4">
+      <FormSection n={1} title="بيانات الطالب">
+        {plain("full_name")}{plain("display_name")}{plain("national_id")}{plain("csmart_no")}
+        <div className="space-y-1">
+          <Label>تاريخ الميلاد</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline" className={cn("w-full justify-start font-normal", !bd && "text-muted-foreground")}>
+                <CalendarIcon className="size-4" />{bd ? format(bd, "yyyy/MM/dd") : "اختر التاريخ"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={bd} captionLayout="dropdown" startMonth={new Date(1995, 0)} endMonth={new Date()} defaultMonth={bd ?? new Date(new Date().getFullYear() - 8, 0)}
+                onSelect={(d) => set({ ...v, birth_date: d ? format(d, "yyyy-MM-dd") : "" })} className="p-3 pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
         </div>
-        <p className="text-xs text-muted-foreground">اختياري — يلزم لرمز الدخول ورسالة الجوال</p>
-      </div>
-    </>
+        <div className="space-y-1">
+          <Label htmlFor="ps-gender">الجنس</Label>
+          <select id="ps-gender" className={sel} value={v["gender"] ?? ""} onChange={(e) => set({ ...v, gender: e.target.value })}>
+            <option value="">— اختر —</option><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option>
+          </select>
+        </div>
+      </FormSection>
+      <FormSection n={2} title="التسكين" hint="اختياري، ويمكن لاحقًا">
+        <div className="space-y-1 sm:col-span-2">
+          <Label htmlFor="ps-stage">المرحلة</Label>
+          <select id="ps-stage" className={sel} value={stage} onChange={(e) => { setStage(e.target.value); setGrade(""); setSec(""); set({ ...v, grade: "", section: "" }); }}>
+            <option value="">— اختر المرحلة —</option>
+            {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="ps-grade">الصف</Label>
+          <select id="ps-grade" className={sel} disabled={!stage} value={grade} onChange={(e) => { setGrade(e.target.value); setSec(""); set({ ...v, grade: name(grades, e.target.value), section: "" }); }}>
+            <option value="">{stage ? "— اختر الصف —" : "اختر المرحلة أولًا"}</option>
+            {grades.filter((g) => g.parent === stage).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="ps-sec">الفصل</Label>
+          <select id="ps-sec" className={sel} disabled={!grade} value={sec} onChange={(e) => { setSec(e.target.value); set({ ...v, section: name(secs, e.target.value) }); }}>
+            <option value="">{grade ? "— اختر الفصل —" : "اختر الصف أولًا"}</option>
+            {secs.filter((s) => s.parent === grade).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
+      </FormSection>
+      <FormSection n={3} title="ولي الأمر" hint="يُربط بالطالب ويُنشأ حسابه تلقائيًا">
+        {plain("guardian_name")}{plain("guardian_id")}
+        <div className="space-y-1">
+          <Label htmlFor="ps-gphone">جوال ولي الأمر</Label>
+          <div dir="ltr" className="flex">
+            <span className="inline-flex items-center rounded-s-md border border-e-0 bg-muted px-3 text-sm text-muted-foreground">966</span>
+            <Input id="ps-gphone" dir="ltr" inputMode="numeric" className="rounded-s-none" placeholder="5XXXXXXXX" maxLength={9} value={ph}
+              onChange={(e) => { let d = e.target.value.replace(/\D/g, ""); if (d.startsWith("966")) d = d.slice(3); if (d.startsWith("0")) d = d.slice(1); set({ ...v, guardian_phone: d.slice(0, 9) }); }} />
+          </div>
+          <p className="text-xs text-muted-foreground">اختياري — يلزم لرمز الدخول ورسالة الجوال</p>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="ps-rel">صلة القرابة</Label>
+          <select id="ps-rel" className={sel} value={v["relationship"] ?? ""} onChange={(e) => set({ ...v, relationship: e.target.value })}>
+            <option value="">— اختر —</option>
+            {["أب", "أم", "أخ", "أخت", "أخرى"].map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+          {v["relationship"] === "أخرى" && <Input className="mt-2" aria-label="اكتب صلة القرابة" placeholder="اكتب صلة القرابة (مثال: خال، جد)" maxLength={30} value={v["relationship_other"] ?? ""} onChange={(e) => set({ ...v, relationship_other: e.target.value })} />}
+        </div>
+      </FormSection>
+    </div>
   );
 }
 
@@ -317,6 +344,15 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
     } catch (err) { toast.error(arabicError(err)); setBusy(false); }
   }
 
+  const plainField = (key: string) => {
+    const f = fields.find((x) => x.key === key); if (!f) return null;
+    return (
+      <div key={f.key} className="space-y-1">
+        <Label htmlFor={`ps-${f.key}`}>{f.label}{f.required ? " *" : ""}</Label>
+        <Input id={`ps-${f.key}`} dir={/phone|national_id|csmart_no|guardian_id|birth_date|email/.test(f.key) ? "ltr" : undefined} placeholder={f.hint} value={single[f.key] ?? ""} onChange={(e) => setSingle(fillDn(single, f.key, e.target.value))} />
+      </div>
+    );
+  };
   const valid = rows?.filter((r) => !r.errors.length).length ?? 0;
   const unmatched = (() => {
     const m = new Map<string, { key: string; grade: string; section: string; count: number }>();
@@ -343,15 +379,9 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
               : "يُنشأ للمعلم حساب بدور معلم فقط يدخل به بالهوية أو الإقامة ثم رمز تحقق على جواله المعتمد، ولا يصل لشيء قبل أول دخول. الحسابات الموجودة تُربط دون تغيير كلمة مرورها أو صلاحياتها."}
           </p>
           {open === "single" && !results && (
-            <form onSubmit={addSingle} className="grid gap-3 sm:grid-cols-2">
-              {kind === "students" && <StudentSingleExtras schoolId={schoolId} v={single} set={setSingle} />}
-              {fields.filter((f) => kind !== "students" || !STUDENT_CUSTOM.has(f.key)).map((f) => (
-                <div key={f.key} className="space-y-1">
-                  <Label htmlFor={`ps-${f.key}`}>{f.label}{f.required ? " *" : ""}</Label>
-                  <Input id={`ps-${f.key}`} dir={/phone|national_id|csmart_no|guardian_id|birth_date|email/.test(f.key) ? "ltr" : undefined} placeholder={f.hint} value={single[f.key] ?? ""} onChange={(e) => setSingle(fillDn(single, f.key, e.target.value))} />
-                </div>
-              ))}
-              <div className="sm:col-span-2"><Button type="submit" disabled={busy}>{busy ? "جارٍ الحفظ…" : "حفظ"}</Button></div>
+            <form onSubmit={addSingle} className={kind === "students" ? "space-y-4" : "grid gap-3 sm:grid-cols-2"}>
+              {kind === "students" ? <StudentSingleExtras schoolId={schoolId} v={single} set={setSingle} plain={plainField} /> : fields.map((f) => plainField(f.key))}
+              <div className="flex justify-end sm:col-span-2"><Button type="submit" disabled={busy}>{busy ? "جارٍ الحفظ…" : kind === "students" ? "حفظ الطالب" : "حفظ"}</Button></div>
             </form>
           )}
           {open === "import" && !results && (
