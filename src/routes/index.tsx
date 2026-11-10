@@ -29,11 +29,13 @@ function Home() {
     <SiteShell>
       <section className="relative -mt-16 overflow-hidden pt-16">
         <div className="site-hero-grad absolute inset-0 -z-10" />
+        <div className="site-aurora pointer-events-none absolute -top-20 end-[15%] -z-10 size-96 rounded-full bg-accent/25 blur-3xl" />
+        <div className="site-aurora pointer-events-none absolute bottom-0 start-[5%] -z-10 size-80 rounded-full bg-primary/20 blur-3xl" style={{ animationDelay: "-8s" }} />
         <div className="site-grid-bg absolute inset-0 -z-10" />
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 md:grid-cols-2 md:py-28">
           <div>
             <Reveal><p className="mb-4 inline-flex items-center gap-2 rounded-full border bg-card/80 px-3 py-1 text-sm text-primary backdrop-blur"><span className="size-2 animate-pulse rounded-full bg-success" />منصة متكاملة للمدارس والمجموعات التعليمية</p></Reveal>
-            <Reveal delay={100}><h1 className="font-display text-4xl leading-[1.25] md:text-6xl">مدارس تُدار <span className="text-primary">بذكاء</span><br />على أساسٍ متين</h1></Reveal>
+            <Reveal delay={100}><h1 className="font-display text-4xl leading-[1.25] md:text-6xl">مدارس تُدار <span className="site-shine-text">بذكاء</span><br />على أساسٍ متين</h1></Reveal>
             <Reveal delay={200}><p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">ركاز يربط الإدارة والمعلمين والطلاب وأولياء الأمور في نظام واحد: الهيكل الأكاديمي، الحضور، الواجبات، التواصل، والموارد البشرية — لكل فرع ولكل دور.</p></Reveal>
             <Reveal delay={300}>
               <div className="mt-8 flex flex-wrap gap-3">
