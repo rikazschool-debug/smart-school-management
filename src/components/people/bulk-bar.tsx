@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { provisionAccounts } from "@/lib/accounts.functions";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,7 +16,9 @@ const ACTION: Record<string, string> = {
   tag_add: "إسناد وسم", tag_remove: "إزالة وسم",
   account_off: "تعليق الوصول لهذه المدرسة", account_on: "إعادة الوصول لهذه المدرسة",
   org_login_off: "إيقاف الدخول على مستوى المؤسسة", org_login_on: "إعادة الدخول على مستوى المؤسسة",
+  login_create: "إنشاء حساب دخول",
 };
+const STATE: Record<string, string> = { linked: "أُنشئ/رُبط", pending_phone: "بانتظار تأكيد الجوال", already: "له حساب مسبقًا", missing_id: "ينقص رقم الهوية", missing_phone: "ينقص الجوال", error: "تعذّر" };
 type Preview = { records: number; with_login: number; without_login: number; memberships: number; other_schools: number; other_roles: number };
 /** Effect text for the confirmation window; numbers come from the server (pp_access_preview), never guessed here. */
 function effectText(action: string, p: Preview) {
@@ -31,12 +35,14 @@ function effectText(action: string, p: Preview) {
 export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCount, onPage, onAll, onClear, resolveIds, nameOf, onExport }: {
   kind: PersonKind; schoolId: string; caps: PpCaps; tags: Tag[]; count: number; mode: "ids" | "all"; total: number; pageCount: number;
   onPage: () => void; onAll: () => void; onClear: () => void; resolveIds: () => Promise<string[]>; nameOf: (id: string) => string | undefined;
-  onExport: (ids: string[]) => Promise<void>;
+  onExport: (ids: string[], kind: "xlsx" | "pdf" | "print") => Promise<void>;
 }) {
   const qc = useQueryClient();
   const [action, setAction] = useState("");
   const [tag, setTag] = useState("");
   const [busy, setBusy] = useState(false);
+  const [fmt, setFmt] = useState<"xlsx" | "pdf" | "print">("xlsx");
+  const provision = useServerFn(provisionAccounts);
   const [report, setReport] = useState<{ title: string; out: Out } | null>(null);
   const usable = tags.filter((t) => t.kinds.includes(kind));
   async function run() {
@@ -46,6 +52,24 @@ export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCo
     const n = mode === "all" ? total : count;
     let reason: string | null = null;
     let ids: string[] | null = null;
+    if (action === "login_create") {
+      if (!(await ask(`${label} لـ ${n} سجل؟\nالسجلات التي لها حساب تُربط دون تغيير كلمة المرور، والناقصة (هوية/جوال) تُرفض مع السبب.`, { ok: "تنفيذ" }))) return;
+      setBusy(true);
+      try {
+        const all = await resolveIds();
+        const res: Result[] = [];
+        for (let i = 0; i < all.length; i += 200) {
+          const part = await provision({ data: { kind, ids: all.slice(i, i + 200) } });
+          for (const r of part as { id: string; state: string; msg?: string }[]) {
+            const ok = ["linked", "pending_phone", "already"].includes(r.state);
+            res.push({ id: r.id, status: ok ? "ok" : r.state === "error" ? "failed" : "refused", reason: r.msg ?? STATE[r.state] ?? r.state });
+          }
+        }
+        setReport({ title: label, out: { repeat: false, ok: res.filter((r) => r.status === "ok").length, refused: res.filter((r) => r.status === "refused").length, failed: res.filter((r) => r.status === "failed").length, results: res } });
+        void qc.invalidateQueries();
+      } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
+      return;
+    }
     if (!action.startsWith("tag")) {
       setBusy(true);
       let p: Preview;
@@ -65,11 +89,12 @@ export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCo
   }
   async function exp() {
     setBusy(true);
-    try { const ids = await resolveIds(); await onExport(ids); void pp("pp_export_log", { _key: crypto.randomUUID(), _school: schoolId, _kind: kind, _count: ids.length }); }
+    try { const ids = await resolveIds(); await onExport(ids, fmt); void pp("pp_export_log", { _key: crypto.randomUUID(), _school: schoolId, _kind: kind, _count: ids.length }); }
     catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
   }
   const actions = [
     ...(caps.tags_assign && usable.length ? ["tag_add", "tag_remove"] : []),
+    ...(caps.accounts || caps.bulk ? ["login_create"] : []),
     ...(caps.accounts ? ["account_off", "account_on", "org_login_off", "org_login_on"] : []),
   ];
   return (
@@ -79,7 +104,12 @@ export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCo
       {mode !== "all" && total > pageCount && <Button size="sm" variant="ghost" onClick={onAll}>تحديد جميع النتائج ({total})</Button>}
       <Button size="sm" variant="ghost" onClick={onClear}>إلغاء التحديد</Button>
       <div className="ms-auto flex flex-wrap items-center gap-2">
-        {caps.export && <Button size="sm" variant="outline" disabled={busy} onClick={() => void exp()}>تصدير المحددين</Button>}
+        {caps.export && <>
+          <select aria-label="صيغة التصدير" className={selectCls()} value={fmt} onChange={(e) => setFmt(e.target.value as typeof fmt)}>
+            <option value="xlsx">Excel</option><option value="pdf">PDF</option><option value="print">طباعة</option>
+          </select>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => void exp()}>تصدير المحددين</Button>
+        </>}
         {actions.length > 0 && <>
           <select aria-label="الإجراء الجماعي" className={selectCls()} value={action} onChange={(e) => setAction(e.target.value)}>
             <option value="">إجراء…</option>

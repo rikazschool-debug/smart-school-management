@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { isValidElement, useEffect, useRef, useState, type ReactNode } from "react";
 import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -267,7 +267,7 @@ export function CrudTable({
 
   const labelOf = useFilterLabels(filters ?? [], schoolId);
   const filterText = () => [...(search ? [`بحث: ${search}`] : []), ...active.map((f) => `${f.label}: ${labelOf(f.key, fv[f.key]!)}`)];
-  const plain = (c: Column, r: Row) => { const t = c.text?.(r); if (t !== undefined) return t ?? ""; const v = c.render(r); return typeof v === "string" || typeof v === "number" ? v : ""; };
+  const plain = (c: Column, r: Row) => { const t = c.text?.(r); if (t !== undefined) return t ?? ""; return nodeText(c.render(r)); };
   async function doExport(kind: "xlsx" | "pdf" | "print", onlyIds?: string[]) {
     setExporting(true);
     try {
@@ -363,7 +363,7 @@ export function CrudTable({
         <BulkBar kind={person!.kind} schoolId={schoolId} caps={caps} tags={kindTags} count={sel.size} mode={selAll ? "all" : "ids"} total={count} pageCount={rows.length}
           onPage={() => { setSelAll(false); setSel((x) => new Set([...x, ...rows.map((r) => r["id"])])); }} onAll={() => setSelAll(true)}
           onClear={() => { setSel(new Set()); setSelAll(false); }} resolveIds={resolveIds} nameOf={(id) => names.current.get(id)}
-          onExport={(ids) => doExport("xlsx", ids)} />
+          onExport={(ids, kind) => doExport(kind, ids)} />
       )}
       {q.isLoading ? (
         <LoadingState />
@@ -453,6 +453,15 @@ export function CrudTable({
       {canDelete && <Button variant="ghost" size="icon" aria-label="حذف" onClick={async () => { if (await ask("تأكيد الحذف؟ لن يُحذف السجل إن كان مرتبطًا بسجلات أخرى.", { destructive: true, ok: "حذف" })) del.mutate(r["id"]); }}><Trash2 className="size-4 text-destructive" /></Button>}
     </>);
   }
+}
+
+/** Plain text of a rendered cell (spans, fragments, arrays) so exports never drop values shown on screen. */
+function nodeText(n: ReactNode): string {
+  if (n == null || typeof n === "boolean") return "";
+  if (typeof n === "string" || typeof n === "number") return String(n);
+  if (Array.isArray(n)) return n.map(nodeText).join("");
+  if (isValidElement(n)) { const ch = (n.props as { children?: ReactNode }).children; return typeof n.type === "string" || typeof n.type === "symbol" ? nodeText(ch) : ""; }
+  return "";
 }
 
 function FilterSelect({ f, schoolId, value, onChange }: { f: FilterDef; schoolId: string; value: string; onChange: (v: string) => void }) {
