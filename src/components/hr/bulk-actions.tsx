@@ -19,8 +19,8 @@ export function HrBulkActions({ org, m, ids, archived, onDone }: { org: string; 
   const [busy, setBusy] = useState(false); const [res, setRes] = useState<Res | null>(null);
   const acts = archived ? ["restore"] : ["transfer", "suspend", "activate", "archive"];
   const a = acts.includes(act) ? act : acts[0]!;
-  const run = async () => {
-    if (a === "transfer" && !school) return toast.error("اختر الفرع المنقول إليه");
+  const run = async (): Promise<void> => {
+    if (a === "transfer" && !school) { toast.error("اختر الفرع المنقول إليه"); return; }
     const reason = await askText(`${LABEL[a]} — ${ids.length} موظف. اكتب السبب${a === "archive" ? " (يبقى الملف في أرشيف الموظفين ويمكن استعادته)" : ""}`, { required: true, ok: "تنفيذ" });
     if (!reason) return;
     setBusy(true);

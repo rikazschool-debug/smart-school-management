@@ -80,7 +80,7 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
   const nav = useNavigate({ from: "/app/hr" });
   const [q, setQ] = useState(""), [school, setSchool] = useState(""), [status, setStatus] = useState("active");
   const list = useQuery({ queryKey: ["hr-list", org, school, q, status], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: school || null, _q: q || null, _status: status || null }) });
-  const rows = list.data ?? [];
+  const rows = (list.data ?? []).filter((r) => status || r.status !== "archived");
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [printIds, setPrintIds] = useState<string[] | null>(null);
   const canPrint = !!m.caps.print;
