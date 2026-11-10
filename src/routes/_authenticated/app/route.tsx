@@ -1,3 +1,4 @@
+import { RikazLogo } from "@/components/logo";
 import { createFileRoute, Link, Outlet, useCanGoBack, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
 import { SchoolLogo } from "@/components/school-logo";
@@ -329,7 +330,7 @@ function Shell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur sm:px-6">
           {noSidebar ? (
-            <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary font-display text-primary-foreground">ر</span>
+            <RikazLogo className="size-10" />
           ) : (
             <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" aria-label="القائمة" onClick={() => setOpen(true)}>
               <Menu className="size-5" />

@@ -1,3 +1,4 @@
+import { RikazLogo } from "@/components/logo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -137,7 +138,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div dir="rtl" className="min-h-screen bg-background px-4 py-8">
       <main className="relative mx-auto max-w-2xl rounded-2xl border bg-card p-5 shadow-sm sm:p-8">
-        <p className="mb-4 flex items-center gap-2 font-display text-lg text-primary"><span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">ر</span> ركاز</p>
+        <p className="mb-4 flex items-center gap-2 font-display text-lg text-primary"><RikazLogo className="size-8" /> ركاز</p>
         {children}
       </main>
     </div>

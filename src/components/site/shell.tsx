@@ -1,3 +1,4 @@
+import { RikazLogo } from "@/components/logo";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
