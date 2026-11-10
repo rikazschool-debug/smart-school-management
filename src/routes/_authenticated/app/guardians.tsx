@@ -15,7 +15,7 @@ import { canManageStudents } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { AccountButton } from "@/components/account-button";
 import { guardianReadiness, localPhone, maskTail } from "@/lib/people-import";
-import { CreateAccountButton, autoSummary } from "@/components/guardian-quick-add";
+import { CreateAccountButton, MSG_STATE, autoSummary } from "@/components/guardian-quick-add";
 import { autoAccounts } from "@/lib/accounts.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { GuardianImport } from "@/components/guardian-import-dialog";
@@ -40,6 +40,10 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
   const w = role === "org_owner" || !!sp?.["people_family.edit"];
   const [viewing, setViewing] = useState<Row | null>(null);
   const auto = useServerFn(autoAccounts);
+  const msgs = useQuery({ queryKey: ["acct-outbox", schoolId], queryFn: async () => {
+    const { data } = await db.rpc("acct_outbox_state" as never, { _school: schoolId } as never);
+    return new Map(((data ?? []) as unknown as { guardian_id: string; status: string }[]).map((m) => [m.guardian_id, m.status]));
+  } });
   // full ID/phone only for those who manage students; others see the last digits
   const full = w || canManageStudents(role);
   const id = (v: string | null) => (v ? (full ? v : maskTail(v)) : "—");
@@ -67,6 +71,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
             return <span>{l.length}{l.length > v && <span className="ms-1 text-xs text-muted-foreground">({l.length - v} بانتظار التوثيق)</span>}</span>;
           } },
           { label: "الحساب", text: (r) => (r["user_id"] ? "مرتبط" : "بلا حساب"), render: (r) => (r["user_id"] ? <span className="text-primary">مرتبط</span> : <span className="text-muted-foreground">بلا حساب</span>) },
+          { label: "إشعار التجهيز", text: (r) => MSG_STATE[msgs.data?.get(r["id"]) ?? ""] ?? "—", render: (r) => <span className="text-xs">{MSG_STATE[msgs.data?.get(r["id"]) ?? ""] ?? "—"}</span> },
           { label: "جاهزية الدخول", text: (r) => { const m = guardianReadiness(r); return m.length ? `ينقص: ${m.join("، ")}` : "جاهز"; }, render: (r) => {
             const m = guardianReadiness(r);
             return m.length ? <span className="text-xs text-destructive">ينقص: {m.join("، ")}</span> : <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز</span>;
