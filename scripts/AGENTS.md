@@ -120,3 +120,4 @@
 - scripts/maqsam-e2e.ts: Maqsam calls (org binding, branch/own scopes, listen≠download, export/report totals, direct-link refusal, ticket link w/o status change, reminder once; 39 checks, synthetic calls). scripts/maqsam-browser-fixture.ts setup|teardown + maqsam-journey.py (10 checks, desktop owner + phone viewer); always run teardown after.
 - scripts/support-assign-e2e.ts: internal ticket branch-only assignment + live-call tickets pending/linked (14 checks).
 - scripts/xbranch-e2e.ts: cross-branch staff messaging (setting scope, directory, start/reply/notify, cross-org block; 26 checks).
+- scripts/xb-browser-fixture.ts setup|teardown (xbj-) + scripts/xb-journey.py: cross-branch chat in the browser (title, branch, attachment, presence, read-only after narrowing; 16 checks).
