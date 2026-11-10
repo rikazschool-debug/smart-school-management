@@ -19,7 +19,7 @@ import { Sanad } from "@/components/sanad";
 import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
-import { FileText, IdCard, Tags, PartyPopper, UserPlus } from "lucide-react";
+import { HeartPulse, FileText, IdCard, Tags, PartyPopper, UserPlus } from "lucide-react";
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { ROOM_TABS, roomTabsForRole } from "@/components/classroom-room-tabs";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
