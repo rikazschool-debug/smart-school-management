@@ -37,6 +37,7 @@ const t2 = (await nurse.c.rpc("health_today", { _school: S })).data as any;
 check("13 dose marked as given", t2.doses.some((d: any) => d.med_id === gm.data && d.given));
 const ev2 = await nurse.c.rpc("health_event_add", { _student: kid, _p: { kind: "note", summary: "ملاحظة داخلية", shared: false } });
 const gf = (await gu.c.rpc("health_file", { _student: kid })).data as any;
+const gfe = await gu.c.rpc("health_file", { _student: kid }); if (gfe.error) console.log(gfe.error);
 check("14 guardian sees shared events only", gf.events.some((e: any) => e.id === ev.data) && !gf.events.some((e: any) => e.id === ev2.data));
 check("15 guardian notified once of shared event", ((await admin.from("notifications").select("id").eq("user_id", gu.uid).eq("dedupe_key", "health-e:" + ev.data)).data ?? []).length === 1);
 check("16 health counselor notified of guardian update", ((await admin.from("notifications").select("id").eq("user_id", nurse.uid).like("dedupe_key", "health-g:" + kid + "%")).data ?? []).length >= 1);
