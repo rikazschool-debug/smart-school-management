@@ -173,6 +173,8 @@ function Shell() {
   const canGoBack = useCanGoBack();
   // support sub-menu mirrors the page's own tabs (supportTabs + support_caps); the page and support_* RPCs re-check
   const inSupport = path === "/app/support" || path.startsWith("/app/support/");
+  // owner opening «الدعم» from another section (?p=1): only own tickets to the platform owner, the section stays as it was
+  const platformHelp = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["p"] ?? "") === "1" });
   // phone calls section: shown only when mq_caps grants at least one page (the page and mq_* RPCs re-check)
   const mqCaps = useMqCaps(active && active.role !== "platform_admin" && active.role !== "student" && active.role !== "guardian" ? active.orgId : null);
   const mqSecs = mqCaps.data ? mqSections(mqCaps.data) : [];
@@ -199,7 +201,7 @@ function Shell() {
 
   const ct = commTabs(active.role);
   const owner = active.role === "org_owner";
-  const section = owner ? ownerSection(path, lastSection.current) : null;
+  const section = owner ? (inSupport && platformHelp ? lastSection.current : ownerSection(path, lastSection.current)) : null;
   lastSection.current = section;
   const cleanPath = path.replace(/\/+$/, "") || "/";
   // owner group account vs inside one school: /app and the branch list are the group; opening a branch enters it; shared pages keep the last state
@@ -250,7 +252,7 @@ function Shell() {
                   <Fragment key={k}>
                   <Link
                     to={n.to}
-                    {...(n.tab ? { search: { tab: n.tab } } : {})}
+                    {...(n.tab ? { search: { tab: n.tab } } : k === "support" && owner && section && section !== "support" ? { search: { tab: "mine", p: "1" } } : {})}
                     activeOptions={{ exact: k === "home" || k === "admin", includeSearch: k === "communication" || !!n.tab }}
                     onClick={() => setOpen(false)}
                     className="group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
@@ -276,7 +278,7 @@ function Shell() {
                       ))}
                     </div>
                   )}
-                  {k === "support" && inSupport && (active.role === "platform_admin" || sCaps.data) && (
+                  {k === "support" && inSupport && !platformHelp && (active.role === "platform_admin" || sCaps.data) && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {[...supportTabs(active.role, (sCaps.data?.view.length ?? 0) > 0), ...(active.role === "platform_admin" || sCaps.data?.settings ? (["settings"] as const) : [])].map((t, i) => (
                         <Link key={t} to="/app/support" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS + (supTab === t || (!supTab && i === 0) ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>
