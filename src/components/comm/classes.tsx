@@ -233,7 +233,7 @@ function Roster({ course, teacher, active, onOpen, onClose }: { course: string; 
                   {!s["has_account"] && <span className="block text-[11px] text-muted-foreground">المراسلة المباشرة غير متاحة حتى تفعيل حسابه</span>}
                 </span>
                 {s["unread"] > 0 && <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold leading-4 text-primary-foreground" aria-label="رسائل غير مقروءة">{s["unread"]}</span>}
-                {teacher && s["can_message"] && (
+                {false && teacher && s["can_message"] && (
                   <Button size="sm" variant="outline" disabled={busy === s["student_id"]} aria-label={`مراسلة الطالب ${s["full_name"]}`} onClick={async () => {
                     setBusy(s["student_id"]);
                     const { data, error } = await db.rpc("start_student_conversation", { _student: s["student_id"] });

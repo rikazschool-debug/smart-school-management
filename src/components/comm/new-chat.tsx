@@ -20,17 +20,18 @@ export function NewChatDialog({ ctx, open, onOpenChange, onCreated }: { ctx: App
   const isStudent = ctx.role === "student";
   const isTeacher = ctx.role === "teacher";
   const isFamilyAdmin = ["principal", "vice_principal", "student_affairs", "org_owner", "platform_admin"].includes(ctx.role);
-  const [mode, setMode] = useState<"family" | "direct">(isGuardian ? "family" : isTeacher ? "family" : "direct");
+  const [mode, setMode] = useState<"family" | "direct">(isGuardian ? "family" : "direct");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>محادثة جديدة</DialogTitle></DialogHeader>
         {!isGuardian && !isStudent && (
           <div className="flex gap-2">
-            {(isTeacher || isFamilyAdmin) && <Button size="sm" variant={mode === "family" ? "default" : "outline"} onClick={() => setMode("family")}>مع ولي أمر</Button>}
+            {isFamilyAdmin && <Button size="sm" variant={mode === "family" ? "default" : "outline"} onClick={() => setMode("family")}>مع ولي أمر</Button>}
             <Button size="sm" variant={mode === "direct" ? "default" : "outline"} onClick={() => setMode("direct")}>مع زميل أو الإدارة</Button>
           </div>
         )}
+        {isTeacher && <p className="rounded-md bg-muted p-2 text-xs text-muted-foreground">المحادثات الخاصة مع الطلاب وأولياء الأمور متوقفة. التواصل العام عبر «مجموعة الفصل» داخل الفصل الرقمي، والأمور الفردية مع إدارة المدرسة أو الوكيل أو المرشد الطلابي.</p>}
         {isStudent ? <StudentStart onCreated={onCreated} /> : isGuardian ? <GuardianStart ctx={ctx} onCreated={onCreated} /> : mode === "family" && !isTeacher ? <AdminFamilyStart ctx={ctx} onCreated={onCreated} /> : mode === "family" ? <StaffFamilyStart ctx={ctx} teacher={isTeacher} onCreated={onCreated} /> : <DirectStart ctx={ctx} onCreated={onCreated} />}
       </DialogContent>
     </Dialog>

@@ -73,12 +73,15 @@ try {
   check("assigned teacher and principal are members", mA.includes(users.t1) && mA.includes(users.p1));
   check("notification link opens the classroom tab", (must(await admin.rpc("_conv_link", { _conv: GA })) as string) === `/app/classrooms/section/${RA}?tab=group`);
 
-  // new class: simulate a section without any group yet (assignment triggers may have made one) → creating the classroom prepares one
-  for (const g of await groupOf(B)) must(await admin.from("conversations").delete().eq("id", g.id));
-  check("new class: no group before the classroom", (await groupOf(B)).length === 0);
+  // empty section: creating it alone (no students, no subjects) prepares its digital classroom + one class group
+  const E = (await ins("sections", { school_id: s0, grade_id: gr, year_id: y, name: "د" })).id;
+  const RE = must(await admin.from("section_rooms").select("id").eq("section_id", E)) as any[];
+  const gE = await groupOf(E);
+  check("empty section: classroom ready on creation", RE.length === 1, RE);
+  check("empty section: exactly one class group ready", gE.length === 1, gE);
   must(await admin.rpc("ensure_classroom", { _course: cB }));
   const gB = await groupOf(B);
-  check("new class: creating the classroom prepares exactly one group", gB.length === 1, gB);
+  check("classroom for a section reuses its one group", gB.length === 1, gB);
   const RB = (must(await admin.from("section_rooms").select("id").eq("section_id", B).single()) as any).id as string;
   must(await admin.rpc("ensure_classroom", { _course: cC }));
   const RC = (must(await admin.from("section_rooms").select("id").eq("section_id", C).single()) as any).id as string;
@@ -90,6 +93,15 @@ try {
   check("teacher opens assigned class group", (await cg(T1c, RA)) === GA);
   check("principal opens it from the classroom", (await cg(P1, RA)) === GA);
   check("owner opens it from the classroom (manager)", (await cg(O, RA)) === GA);
+  const REid = RE[0]!.id as string;
+  const pl = must(await P1.rpc("section_rooms_list", { _school: s0 })) as any[];
+  check("principal lists the empty section's classroom", pl.some((x) => x.id === REid));
+  check("owner lists the empty section's classroom", (must(await O.rpc("section_rooms_list", { _school: s0 })) as any[]).some((x) => x.id === REid));
+  check("principal opens the empty section's group", (await cg(P1, REid)) === gE[0].id);
+  must(await admin.from("enrollments").update({ status: "ended", end_date: "2026-11-06" }).eq("student_id", k3).eq("status", "active"));
+  await ins("enrollments", { school_id: s0, student_id: k3, section_id: E, year_id: y, start_date: "2026-08-20" });
+  check("placed student sees the new section's group without manual setup", (await cg(S3, REid)) === gE[0].id);
+  check("their guardian sees it too", (await cg(GXc, REid)) === gE[0].id);
   check("student of another class: room rejected", (await cg(S3, RA)) === "ERR");
   check("other guardian: room rejected", (await cg(GXc, RA)) === "ERR");
   check("unassigned teacher: room rejected", (await cg(T2c, RA)) === "ERR");
@@ -122,10 +134,20 @@ try {
   check("guardian starts a chat with the counselor", !fc.error, fc.error);
   check("guardian message reaches the counselor", !(await G1.rpc("send_message", { _conv: fc.data, _body: "استفسار", _client_id: uuid() })).error
     && ((must(await (await as("co")).from("messages").select("body").eq("conversation_id", fc.data)) as any[])[0]?.body === "استفسار"));
-  // an older teacher-initiated chat stays readable but read-only for the guardian
-  const old = await T1c.rpc("start_family_conversation", { _student: k1, _guardian: G, _staff_user: users.t1 });
+  // teachers can no longer start private chats with guardians or students
+  check("teacher cannot start a chat with a guardian", !!(await T1c.rpc("start_family_conversation", { _student: k1, _guardian: G, _staff_user: users.t1 })).error);
+  check("teacher cannot start a chat with a student", !!(await T1c.rpc("start_student_conversation", { _student: k1 })).error);
+  // an older teacher chat (created before the rule) stays readable but read-only for both sides
+  const legacy = async (kind: string, extra: Record<string, unknown>, other: string) => {
+    const c = await ins("conversations", { org_id: org, school_id: s0, kind, student_id: k1, staff_user_id: users.t1, staff_kind: "teacher", dedupe_key: `legacy:${kind}:${uuid()}`, created_by: users.t1, ...extra });
+    must(await admin.from("conversation_members").insert([{ conversation_id: c.id, user_id: users.t1, role: "member" }, { conversation_id: c.id, user_id: other, role: "member" }]));
+    must(await admin.from("messages").insert({ conversation_id: c.id, sender_id: users.t1, body: "رسالة سابقة", client_id: uuid(), seq: 1 }));
+    return { data: c.id as string, error: null };
+  };
+  const old = await legacy("family", { guardian_id: G }, users.g1);
   if (!old.error) {
-    await T1c.rpc("send_message", { _conv: old.data, _body: "رسالة سابقة", _client_id: uuid() });
+    check("old teacher chat: teacher cannot send", !!(await T1c.rpc("send_message", { _conv: old.data, _body: "متابعة", _client_id: uuid() })).error);
+    check("old teacher chat: teacher cannot attach", !!(await T1c.rpc("create_message_file", { _conv: old.data, _name: "a.pdf", _mime: "application/pdf", _size: 100 })).error);
     check("old teacher chat: guardian still reads", ((must(await G1.from("messages").select("id").eq("conversation_id", old.data)) as any[]).length) === 1);
     check("old teacher chat: guardian cannot send", !!(await G1.rpc("send_message", { _conv: old.data, _body: "رد", _client_id: uuid() })).error);
     check("old teacher chat: guardian cannot attach", !!(await G1.rpc("create_message_file", { _conv: old.data, _name: "a.pdf", _mime: "application/pdf", _size: 100 })).error);
@@ -142,9 +164,9 @@ try {
   check("student message reaches the counselor", !(await S1.rpc("send_message", { _conv: sa.data, _body: "سؤال", _client_id: uuid() })).error
     && ((must(await (await as("co")).from("messages").select("id").eq("conversation_id", sa.data)) as any[]).length) === 1);
   check("guardian never sees the student's private admin chat", ((must(await G1.from("messages").select("id").eq("conversation_id", sa.data)) as any[]).length) === 0);
-  const tsc = await T1c.rpc("start_student_conversation", { _student: k1 });
+  const tsc = await legacy("student", {}, users.s1);
   if (!tsc.error) {
-    await T1c.rpc("send_message", { _conv: tsc.data, _body: "رسالة سابقة", _client_id: uuid() });
+    check("old student chat: teacher cannot send", !!(await T1c.rpc("send_message", { _conv: tsc.data, _body: "متابعة", _client_id: uuid() })).error);
     check("old teacher chat: student still reads", ((must(await S1.from("messages").select("id").eq("conversation_id", tsc.data)) as any[]).length) === 1);
     check("old teacher chat: student cannot send", !!(await S1.rpc("send_message", { _conv: tsc.data, _body: "رد", _client_id: uuid() })).error);
     check("old teacher chat: student cannot attach", !!(await S1.rpc("create_message_file", { _conv: tsc.data, _name: "a.pdf", _mime: "application/pdf", _size: 100 })).error);
