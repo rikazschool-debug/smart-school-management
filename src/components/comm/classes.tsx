@@ -16,7 +16,7 @@ import { timeLabel } from "@/lib/comm";
 
 /** Section groups: one automatic group per section + year (students, assigned teachers, verified guardians, principal as moderator).
  *  Membership and settings change only through class_group_* RPCs; the principal/owner manages members with recorded reasons. */
-export function ClassesTab({ ctx, focus }: { ctx: AppContext & { schoolId: string }; focus?: string | undefined }) {
+export function ClassesTab({ ctx, focus, only }: { ctx: AppContext & { schoolId: string }; focus?: string | undefined; only?: string | undefined }) {
   const qc = useQueryClient();
   const teacher = ctx.role === "teacher";
   const simple = ctx.role === "student" || ctx.role === "guardian";
@@ -36,13 +36,15 @@ export function ClassesTab({ ctx, focus }: { ctx: AppContext & { schoolId: strin
       return data as Row[];
     },
   });
-  const [pick, setPick] = useState<string>(focus ?? "");
+  const [pick, setPick] = useState<string>(only ?? focus ?? "");
+  // inside a digital classroom: exactly that class's group (the server still decides membership / principal access)
+  const data = useMemo(() => (groups.data ?? []).filter((x) => !only || x["conversation_id"] === only), [groups.data, only]);
   const [open, setOpen] = useState<string | null>(null);
   const [side, setSide] = useState(false);
   useEffect(() => {
-    if (!pick && groups.data?.length && (!simple || groups.data.length === 1)) setPick(groups.data[0]!["conversation_id"]);
-  }, [groups.data, pick, simple]);
-  const g = groups.data?.find((x) => x["conversation_id"] === pick);
+    if (!pick && data.length && (!simple || data.length === 1)) setPick(data[0]!["conversation_id"]);
+  }, [data, pick, simple]);
+  const g = data.find((x) => x["conversation_id"] === pick);
   useEffect(() => { setOpen(g?.["conversation_id"] ?? null); }, [g?.["conversation_id"]]); // eslint-disable-line react-hooks/exhaustive-deps
   const current = (convs.data ?? []).find((c) => c["id"] === open);
   const course = useQuery({
@@ -54,11 +56,11 @@ export function ClassesTab({ ctx, focus }: { ctx: AppContext & { schoolId: strin
 
   if (groups.isLoading) return <LoadingState />;
   if (groups.error) return <ErrorState message={arabicError(groups.error)} onRetry={() => groups.refetch()} />;
-  if (!groups.data?.length) return <EmptyState title="لا توجد مجموعات فصول لك في العام الحالي" hint="تظهر مجموعة الشعبة تلقائيًا من التسكين وتكليف المعلم وعلاقة ولي الأمر الموثقة." />;
+  if (!data.length) return <EmptyState title={only ? "مجموعة هذا الفصل غير متاحة لك" : "لا توجد مجموعات فصول لك في العام الحالي"} hint="تظهر مجموعة الفصل تلقائيًا من التسكين وتكليف المعلم وعلاقة ولي الأمر الموثقة." />;
 
   if (simple && !g) return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {groups.data.map((x) => (
+      {data.map((x) => (
         <li key={x["conversation_id"]}>
           <button onClick={() => setPick(x["conversation_id"])} className="w-full rounded-2xl border bg-card p-4 text-start hover:border-primary">
             <span className="flex items-center gap-2"><span className="flex-1 font-bold">{x["section_label"]}</span>
@@ -75,11 +77,11 @@ export function ClassesTab({ ctx, focus }: { ctx: AppContext & { schoolId: strin
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-3 rounded-xl border bg-card p-3 sm:flex-row sm:items-center">
-        {simple ? (groups.data.length > 1 && <Button size="sm" variant="outline" className="self-start" onClick={() => setPick("")}>← كل المجموعات</Button>) : (
+        {only ? null : simple ? (data.length > 1 && <Button size="sm" variant="outline" className="self-start" onClick={() => setPick("")}>← كل المجموعات</Button>) : (
           <div className="min-w-0 sm:w-72">
             <label className="sr-only" htmlFor="class-pick">مجموعة الشعبة</label>
             <select id="class-pick" className={selectCls("w-full font-semibold")} value={pick} onChange={(e) => setPick(e.target.value)}>
-              {groups.data.map((x) => <option key={x["conversation_id"]} value={x["conversation_id"]}>{x["section_label"]}{x["unread"] > 0 ? ` (${x["unread"]} جديدة)` : ""}</option>)}
+              {data.map((x) => <option key={x["conversation_id"]} value={x["conversation_id"]}>{x["section_label"]}{x["unread"] > 0 ? ` (${x["unread"]} جديدة)` : ""}</option>)}
             </select>
           </div>)}
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-xs">
