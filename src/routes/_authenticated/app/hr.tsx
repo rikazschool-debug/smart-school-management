@@ -27,6 +27,7 @@ import { EmployeePrintDialog, EmployeeSheetView } from "@/components/hr/employee
 import type { SheetAccount } from "@/lib/hr-sheet";
 import { useServerFn } from "@tanstack/react-start";
 import { createHrEmployeeLogin } from "@/lib/accounts.functions";
+import { HrBulkActions, EmpChildren } from "@/components/hr/bulk-actions";
 import { CENTRAL, GENDER, HR_DIRECTOR, STATUS, roleLabel, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
@@ -116,11 +117,12 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
       <HrIdReadiness org={org} school={school} onOpen={(id) => nav({ search: { emp: id } })} />
       {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} onPrint={() => setPrintIds([emp])} />}
       {printIds && <EmployeePrintDialog org={org} ids={printIds} onClose={() => setPrintIds(null)} />}
-      {canPrint && rows.length > 0 && (
+      {(canPrint || m.caps.edit) && rows.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <label className="flex items-center gap-2"><input type="checkbox" aria-label="تحديد كل الموظفين الظاهرين" checked={allSel} onChange={() => setSel(allSel ? new Set() : new Set(rows.map((r) => r.id)))} />تحديد الكل</label>
           <span className="text-muted-foreground">المحدد: {sel.size}</span>
-          <Button size="sm" variant="outline" disabled={!sel.size} onClick={() => setPrintIds(rows.filter((r) => sel.has(r.id)).map((r) => r.id).concat([...sel].filter((id) => !rows.some((r) => r.id === id))))}><Printer className="size-4" />طباعة المحددين</Button>
+          {m.caps.edit && <HrBulkActions org={org} m={m} ids={[...sel]} archived={status === "archived"} onDone={() => { setSel(new Set()); qc.invalidateQueries({ queryKey: ["hr-list"] }); }} />}
+          {canPrint && <Button size="sm" variant="outline" disabled={!sel.size} onClick={() => setPrintIds(rows.filter((r) => sel.has(r.id)).map((r) => r.id).concat([...sel].filter((id) => !rows.some((r) => r.id === id))))}><Printer className="size-4" />طباعة المحددين</Button>}
           {sel.size > 0 && <Button size="sm" variant="ghost" onClick={() => setSel(new Set())}>إلغاء التحديد</Button>}
         </div>
       )}
@@ -130,7 +132,7 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
         <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {rows.map((r) => (
             <li key={r.id} className="relative">
-              {canPrint && <input type="checkbox" aria-label={`تحديد ${r.full_name} للطباعة`} className="absolute end-2 bottom-2 z-10 size-4" checked={sel.has(r.id)} onChange={() => toggleSel(r.id)} />}
+              {(canPrint || m.caps.edit) && <input type="checkbox" aria-label={`تحديد ${r.full_name}`} className="absolute end-2 bottom-2 z-10 size-4" checked={sel.has(r.id)} onChange={() => toggleSel(r.id)} />}
               <button type="button" onClick={() => nav({ search: { emp: r.id } })} className={"w-full rounded-xl border bg-card p-3 text-start hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (emp === r.id ? "border-primary" : "")}>
                 <span className="flex items-start gap-3">
                   <span className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground"><IdCard className="size-5" /></span>
@@ -394,7 +396,7 @@ function EmpFields({ f, set, sensitive, withStatus, loginPhone, px, setPx, only,
         {F("email", "البريد الإلكتروني", "email", { dir: "ltr" })}
       </>}
       {withStatus && <>
-        <div><Label htmlFor="hr-status">{bi("status", "الحالة")}</Label><select id="hr-status" className={selectCls("mt-1 w-full")} value={f["status"] ?? "active"} onChange={(e) => s("status", e.target.value)}>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+        <div><Label htmlFor="hr-status">{bi("status", "الحالة")}</Label><select id="hr-status" className={selectCls("mt-1 w-full")} value={f["status"] ?? "active"} onChange={(e) => s("status", e.target.value)}>{Object.entries(STATUS).filter(([k]) => k !== "archived").map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
         {f["status"] === "ended" && F("end_date", "تاريخ انتهاء الخدمة", "date")}
       </>}
     </div>
@@ -503,11 +505,12 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
         <span className="min-w-0 flex-1"><span className="block text-lg font-bold">{e.display_name || e.full_name}</span>{e.display_name && e.display_name !== e.full_name && <span className="block text-xs text-muted-foreground">الاسم الرسمي: {e.full_name}</span>}<span className="text-xs text-muted-foreground"><bdi dir="ltr">{e.employee_no}</bdi> · {STATUS[e.status]}</span></span>
         <PersonCardButton kind="employee" id={e.id} org={org} />
         {m.caps.print && d.data!.view === "hr" && !edit && <Button size="sm" variant="outline" onClick={onPrint}><Printer className="size-4" />طباعة بيانات الموظف</Button>}
-        {can_edit && !edit && <Button size="sm" variant="outline" onClick={startEdit}>تعديل الملف</Button>}
+        {can_edit && !edit && e.status !== "archived" && <Button size="sm" variant="outline" onClick={startEdit}>تعديل الملف</Button>}
         <Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق الملف"><X className="size-4" /></Button>
       </div>
       {d.data!.view === "hr" && <SelfAccessCard e={e} org={org} canEdit={can_edit} onDone={refresh} />}
       <EmpOpenAssets emp={id} />
+      <EmpChildren emp={id} />
       {d.data!.view === "hr" && <AddressCard emp={id} />}
       {edit ? (
         <div className="space-y-3">
