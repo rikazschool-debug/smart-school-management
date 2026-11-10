@@ -131,8 +131,8 @@ const ns = await t1.c.from("notifications").select("id").like("dedupe_key", "msg
 check("recipient notified once, sender not", nm.data?.length === 1 && ns.data?.length === 0, [nm, ns]);
 const rp = await g1.c.rpc("send_message", { _conv: cid, _body: "شكرًا لك", _client_id: uuid(), _reply_to: m1.data[0].id });
 check("guardian cannot reply in a teacher chat (read-only for the family)", !!rp.error, rp);
-const pm = await prin.c.rpc("send_message", { _conv: f2.data, _body: "مرحبًا من الإدارة", _client_id: uuid() });
-const rp2 = await g1.c.rpc("send_message", { _conv: f2.data, _body: "شكرًا لك", _client_id: uuid(), _reply_to: pm.data?.[0]?.id });
+const pmA = await prin.c.rpc("send_message", { _conv: f2.data, _body: "مرحبًا من الإدارة", _client_id: uuid() });
+const rp2 = await g1.c.rpc("send_message", { _conv: f2.data, _body: "شكرًا لك", _client_id: uuid(), _reply_to: pmA.data?.[0]?.id });
 check("guardian replies to administration", !rp2.error, rp2.error);
 const rpn = await prin.c.from("notifications").select("id").like("dedupe_key", "reply:%");
 check("reply notifies original author", rpn.data?.length === 1, rpn);
