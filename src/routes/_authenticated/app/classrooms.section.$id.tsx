@@ -1,10 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BadgeCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, BookOpen, ClipboardList, MessagesSquare, School, UserRound, Users } from "lucide-react";
 import { db } from "@/components/crud-page";
-import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
+import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ClassroomPosts } from "@/components/classroom-posts";
-import { Button } from "@/components/ui/button";
 import { ROOM_TABS, type RoomTab, roomTabsFor, type RoomView } from "@/components/classroom-room-tabs";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { ClassesTab } from "@/components/comm/classes";
@@ -17,6 +16,7 @@ type Room = {
   guardians: { name: string; child: string; relationship: string; verified: boolean; account: boolean }[] | null;
   class_group: string | null;
 };
+const TAB_ICON: Record<RoomTab, typeof School> = { subjects: BookOpen, students: Users, guardians: UserRound, group: MessagesSquare };
 const REL: Record<string, string> = { father: "الأب", mother: "الأم", brother: "الأخ", sister: "الأخت", other: "أخرى" };
 
 export const Route = createFileRoute("/_authenticated/app/classrooms/section/$id")({
@@ -53,49 +53,67 @@ function Page() {
   return (
     <>
       <Link to="/app/classrooms" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />كل الفصول</Link>
-      <PageHeader title={r.title} desc={r.view === "family" ? "مواد الفصل ومعلموها ومشاركاتها ومجموعة الفصل." : "فصل الشعبة: كل مادة لها مشاركاتها، والمعلم ينشر في مواده فقط."} />
-      {tabs.length > 1 && (
-        <div role="tablist" aria-label="أقسام الفصل" className="mb-4 flex flex-wrap gap-2 border-b pb-3">
-          {tabs.map((k) => <Button key={k} role="tab" aria-selected={cur === k} size="sm" variant={cur === k ? "default" : "outline"} onClick={() => go(k)}>{ROOM_TABS.find(([x]) => x === k)![1]}</Button>)}
+      <header className="mb-5 overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="flex flex-col gap-4 bg-gradient-to-l from-primary/15 to-transparent p-5 sm:flex-row sm:items-center">
+          <div className="grid size-16 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow"><School className="size-8" /></div>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-2xl font-black">{r.title}</h1>
+            <p className="text-sm text-muted-foreground">{r.view === "family" ? "مواد الفصل ومعلموها ومشاركاتها ومجموعة الفصل." : "فصل الشعبة: كل مادة لها مشاركاتها، والمعلم ينشر في مواده فقط."}</p>
+          </div>
+          <dl className="grid grid-cols-3 gap-2 text-center sm:w-80">
+            <div className="rounded-lg bg-background/70 p-2"><dt className="text-[11px] text-muted-foreground">المواد</dt><dd className="text-lg font-bold">{r.subjects.length}</dd></div>
+            <div className="rounded-lg bg-background/70 p-2"><dt className="text-[11px] text-muted-foreground">المعلمون</dt><dd className="text-lg font-bold">{new Set(r.subjects.flatMap((x) => x.teachers)).size}</dd></div>
+            <div className="rounded-lg bg-background/70 p-2"><dt className="text-[11px] text-muted-foreground">الطلاب</dt><dd className="text-lg font-bold">{r.students ? r.students.length : "—"}</dd></div>
+          </dl>
         </div>
-      )}
-
-      {cur === "subjects" && (!r.subjects.length ? <EmptyState title="لا توجد مواد متاحة لك في هذا الفصل" /> : (
-        <>
-          <div role="tablist" aria-label="مواد الفصل" className="mb-4 flex flex-wrap gap-2">
-            {r.subjects.map((s) => (
-              <button key={s.classroom_id} role="tab" aria-selected={subj?.classroom_id === s.classroom_id}
-                onClick={() => nav({ to: "/app/classrooms/section/$id", params: { id }, search: { tab: "subjects", subject: s.classroom_id }, replace: true })}
-                className={cn("rounded-full border px-4 py-2 text-sm", subj?.classroom_id === s.classroom_id ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted")}>
-                {s.subject}{s.can_post ? " · موادي" : ""}
+        {tabs.length > 1 && (
+          <div role="tablist" aria-label="أقسام الفصل" className="flex gap-1 overflow-x-auto border-t px-3">
+            {tabs.map((k) => { const I = TAB_ICON[k]; return (
+              <button key={k} role="tab" aria-selected={cur === k} onClick={() => go(k)}
+                className={cn("-mb-px inline-flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition", cur === k ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}>
+                <I className="size-4" />{ROOM_TABS.find(([x]) => x === k)![1]}
               </button>
-            ))}
+            ); })}
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="md:col-span-2">
-              {subj && (
-                <>
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    <Link to="/app/homework" search={{ course: subj.course_id }} className="rounded-md border px-3 py-1.5 text-sm text-primary">واجبات {subj.subject} ←</Link>
-                  </div>
-                  <ClassroomPosts key={subj.classroom_id} classroom={subj.classroom_id} courseId={subj.course_id} />
-                </>
-              )}
+        )}
+      </header>
+
+      {cur === "subjects" && (!r.subjects.length ? <EmptyState title="لا توجد مواد في هذا الفصل بعد" hint="تظهر المواد هنا عند اعتماد تكليف معلم بمقرر في هذه الشعبة." /> : (
+        <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="space-y-2">
+            <h3 className="px-1 text-sm font-semibold text-muted-foreground">المواد والمعلمون</h3>
+            <div role="tablist" aria-label="مواد الفصل" className="flex gap-2 overflow-x-auto lg:flex-col">
+              {r.subjects.map((s) => { const on = subj?.classroom_id === s.classroom_id; return (
+                <button key={s.classroom_id} role="tab" aria-selected={on}
+                  onClick={() => nav({ to: "/app/classrooms/section/$id", params: { id }, search: { tab: "subjects", subject: s.classroom_id }, replace: true })}
+                  className={cn("flex min-w-48 shrink-0 items-center gap-3 rounded-xl border p-3 text-start transition", on ? "border-primary bg-primary/10" : "bg-card hover:bg-muted")}>
+                  <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", on ? "bg-primary text-primary-foreground" : "bg-muted text-primary")}><BookOpen className="size-4" /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold">{s.subject}{s.can_post && <span className="ms-1 text-xs text-primary">· موادي</span>}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{s.teachers.join("، ") || "بلا معلم"}</span>
+                  </span>
+                </button>
+              ); })}
             </div>
-            <aside className="rounded-2xl border bg-card p-5">
-              <h3 className="mb-2 font-semibold">المواد والمعلمون</h3>
-              <ul className="space-y-1 text-sm">
-                {r.subjects.map((s) => <li key={s.classroom_id} className="flex justify-between gap-2"><span>{s.subject}</span><span className="text-muted-foreground">{s.teachers.join("، ") || "—"}</span></li>)}
-              </ul>
-            </aside>
+          </aside>
+          <div className="min-w-0">
+            {subj && (
+              <>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card px-4 py-3">
+                  <div className="min-w-0"><p className="truncate font-bold">{subj.subject}</p><p className="truncate text-xs text-muted-foreground">{subj.teachers.join("، ") || "بلا معلم"}</p></div>
+                  <Link to="/app/homework" search={{ course: subj.course_id }} className="inline-flex shrink-0 items-center gap-1 rounded-md border px-3 py-1.5 text-sm text-primary hover:bg-muted"><ClipboardList className="size-4" />واجبات المادة</Link>
+                </div>
+                <ClassroomPosts key={subj.classroom_id} classroom={subj.classroom_id} courseId={subj.course_id} />
+              </>
+            )}
           </div>
-        </>
+        </div>
       ))}
 
       {cur === "students" && (
         <section className="rounded-2xl border bg-card p-5">
           <h3 className="mb-3 font-semibold">الطلاب ({r.students?.length ?? 0})</h3>
-          {r.students?.length ? <ol className="grid list-decimal gap-1 ps-5 text-sm sm:grid-cols-2">{r.students.map((n, i) => <li key={i}>{n}</li>)}</ol>
+          {r.students?.length ? <ol className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">{r.students.map((n, i) => <li key={i} className="flex items-center gap-2 rounded-lg border px-3 py-2"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs tabular-nums">{i + 1}</span><span className="truncate">{n}</span></li>)}</ol>
             : <p className="text-sm text-muted-foreground">لا يوجد طلاب مسكّنون في الشعبة.</p>}
         </section>
       )}
