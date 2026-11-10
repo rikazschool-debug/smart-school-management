@@ -110,6 +110,17 @@ try {
   check("after transfer: child card points to new room", ((must(await G1.rpc("family_child", { _student: k1 })) as any).room?.id) === RB);
   check("after transfer: guardian follows the child to the new room", !(await G1.rpc("section_room_get", { _room: RB })).error);
   check("after transfer: guardian leaves the old room", !!(await G1.rpc("section_room_get", { _room: RA })).error);
+  // a second child still in the old section keeps the guardian there (two children → both rooms); one guardian row, listed per child
+  const k3 = (await ins("students", { school_id: s0, full_name: "طالب ج" })).id;
+  await ins("enrollments", { school_id: s0, student_id: k3, section_id: A, year_id: y, start_date: "2026-11-07" });
+  must(await admin.from("student_guardians").insert({ school_id: s0, student_id: k3, guardian_id: gd, relationship: "father", can_follow: true, verified: true }));
+  check("sibling in old section: guardian opens both rooms", !(await G1.rpc("section_room_get", { _room: RA })).error && !(await G1.rpc("section_room_get", { _room: RB })).error);
+  // class chat group: shown only to its members, independent of classroom access
+  const conv = (await ins("conversations", { org_id: org, school_id: s0, kind: "group", group_type: "class", section_id: A, title: "مجموعة فصل أ", status: "active", year_id: y })).id;
+  must(await admin.from("conversation_members").insert({ conversation_id: conv, user_id: users.g1, role: "member", source: "auto" }));
+  check("class group link for a member guardian", ((must(await G1.rpc("section_room_get", { _room: RA })) as any).class_group) === conv);
+  check("principal not a member → no group link (classroom access does not add membership)", ((must(await P1.rpc("section_room_get", { _room: RA })) as any).class_group) === null);
+  check("opening the room never adds group members", ((must(await admin.from("conversation_members").select("id").eq("conversation_id", conv)) as any[]).length) === 1);
 
   // teacher change: T1 ends, T3 takes math A
   must(await admin.from("teacher_assignments").update({ status: "ended", end_date: "2026-11-06" }).eq("id", aT1));
