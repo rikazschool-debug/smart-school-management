@@ -29,7 +29,7 @@ function Editor({ o, onDone }: { o: Row; onDone: () => void }) {
   };
   return (
     <div className="mt-3 grid gap-2 sm:grid-cols-5">
-      <select className={selectCls} value={plan} onChange={(e) => setPlan(e.target.value)}>
+      <select className={selectCls()} value={plan} onChange={(e) => setPlan(e.target.value)}>
         {Object.entries(PLANS).map(([k, p]) => <option key={k} value={k}>{p.label}</option>)}
       </select>
       <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} aria-label="البداية" />
@@ -50,11 +50,11 @@ export function PlatformSubs() {
   const q = useQuery({ queryKey: ["platform-subs"], enabled: ok, queryFn: async () => { const { data, error } = await db.rpc("platform_subs_list" as never); if (error) throw error; return (data ?? []) as Row[]; } });
   if (!ok) return <ForbiddenState />;
   if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState error={q.error} />;
+  if (q.error) return <ErrorState message={arabicError(q.error)} />;
   const rows = q.data ?? [];
   return (
     <div className="space-y-4">
-      <PageHeader title="الاشتراكات والصلاحيات" description="باقة كل مجموعة ومدة اشتراكها. عند انتهاء المدة تصبح المجموعة للقراءة فقط." />
+      <PageHeader title="الاشتراكات والصلاحيات" desc="باقة كل مجموعة ومدة اشتراكها. عند انتهاء المدة تصبح المجموعة للقراءة فقط." />
       <div className="grid gap-3">
         {rows.map((o) => {
           const id = String(o["org_id"]);
