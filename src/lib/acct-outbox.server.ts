@@ -24,7 +24,7 @@ export async function drainAcctOutbox(limit = 10): Promise<number> {
     // claim: only one drain moves a row out of its current state
     const { data: claimed } = await supabaseAdmin.from("acct_outbox" as never).update({ status: "sending", updated_at: new Date().toISOString() } as never).eq("id", r.id).in("status", want).select("id");
     if (!(claimed as unknown[] | null)?.length) continue;
-    let status: "accepted" | "failed" | "waiting_template" = "waiting_template", detail = "no_template";
+    let status: "accepted" | "failed" | "waiting_template" | "unknown" = "waiting_template", detail = "no_template";
     if (ready) {
       const { data: g } = await supabaseAdmin.from("guardians").select("phone").eq("id", r.guardian_id).maybeSingle();
       const phone = normPhone((g as { phone: string | null } | null)?.phone ?? "");
@@ -45,7 +45,7 @@ export async function drainAcctOutbox(limit = 10): Promise<number> {
           const j = (() => { try { return JSON.parse(text); } catch { return null; } })() as { success?: boolean; result?: boolean; recipients?: { error?: unknown }[] } | null;
           const ok = res.ok && (j?.success ?? j?.result ?? false) && !j?.recipients?.[0]?.error;
           status = ok ? "accepted" : "failed"; detail = ok ? "accepted" : `http_${res.status}: ${text.slice(0, 160)}`;
-        } catch { status = "failed"; detail = "network"; }
+        } catch { status = "unknown"; detail = "network_or_timeout — not retried automatically (may have been delivered)"; }
       }
     }
     await supabaseAdmin.from("acct_outbox" as never).update({ status, detail, attempts: r.attempts + (ready ? 1 : 0), updated_at: new Date().toISOString(), ...(status === "accepted" ? { sent_at: new Date().toISOString() } : {}) } as never).eq("id", r.id);
