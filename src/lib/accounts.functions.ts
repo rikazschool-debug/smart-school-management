@@ -122,7 +122,7 @@ export const autoAccounts = createServerFn({ method: "POST" })
     let student: ProvOut | null = null;
     let gids: string[] = [];
     if (data.studentId) {
-      [student] = await provisionCore(ctx, "student", [data.studentId]);
+      student = (await provisionCore(ctx, "student", [data.studentId]))[0] ?? null;
       const { data: links } = await ctx.supabase.from("student_guardians").select("guardian_id").eq("student_id", data.studentId);
       gids = [...new Set(((links ?? []) as { guardian_id: string }[]).map((l) => l.guardian_id))];
     } else gids = [data.guardianId!];
