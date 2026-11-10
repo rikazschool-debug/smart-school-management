@@ -157,7 +157,7 @@ function Conditions({ f }: { f: HFile }) {
               <span className="ms-auto text-xs text-muted-foreground">{srcLabel(c.source)}</span>
             </div>
             {c.instructions && <p className="mt-1 text-sm text-muted-foreground">{c.instructions}</p>}
-            {canEditRow(f, c.source) && <RowActions onEdit={() => setForm(c)} onRemove={async () => { if (await ask({ title: "حذف الحالة؟", body: c.name })) save("health_item_remove", { _kind: "condition", _id: c.id }, "تم الحذف"); }} />}
+            {canEditRow(f, c.source) && <RowActions onEdit={() => setForm(c)} onRemove={async () => { if (await ask(`حذف الحالة «${c.name}»؟`, { destructive: true })) save("health_item_remove", { _kind: "condition", _id: c.id }, "تم الحذف"); }} />}
           </li>
         ))}</ul>
       )}
@@ -201,7 +201,7 @@ function Meds({ f }: { f: HFile }) {
             <div className="mt-1 flex flex-wrap gap-1">{m.times.map((t) => <span key={t} dir="ltr" className="rounded-md border px-2 py-0.5 text-xs">{t}</span>)}</div>
             {(m.start_date || m.end_date) && <p className="mt-1 text-xs text-muted-foreground">{m.start_date ?? "…"} ← {m.end_date ?? "مستمر"}</p>}
             {m.instructions && <p className="mt-1 text-sm text-muted-foreground">{m.instructions}</p>}
-            {canEditRow(f, m.source) && <RowActions onEdit={() => setForm(m)} onRemove={async () => { if (await ask({ title: "حذف الدواء؟", body: m.name })) save("health_item_remove", { _kind: "med", _id: m.id }, "تم الحذف"); }} />}
+            {canEditRow(f, m.source) && <RowActions onEdit={() => setForm(m)} onRemove={async () => { if (await ask(`حذف الدواء «${m.name}»؟`, { destructive: true })) save("health_item_remove", { _kind: "med", _id: m.id }, "تم الحذف"); }} />}
           </li>
         ))}</ul>
       )}
