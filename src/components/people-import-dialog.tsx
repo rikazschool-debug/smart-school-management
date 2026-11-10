@@ -67,6 +67,19 @@ async function loadLookups(kind: PKind, schoolId: string): Promise<Lookups & { s
 
 // Single student add: these fields get dedicated controls (calendar, cascading stage→grade→section, relationship list, 966 mobile).
 type Opt = { id: string; name: string; parent: string | null };
+function FormSection({ n, title, hint, children }: { n: number; title: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-xl border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{n}</span>
+        <h3 className="font-semibold">{title}</h3>
+        {hint && <span className="text-xs text-muted-foreground">— {hint}</span>}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">{children}</div>
+    </section>
+  );
+}
+
 function StudentSingleExtras({ schoolId, v, set, plain }: { schoolId: string; v: Record<string, string>; set: (x: Record<string, string>) => void; plain: (key: string) => React.ReactNode }) {
   const [stages, setStages] = useState<Opt[]>([]), [grades, setGrades] = useState<Opt[]>([]), [secs, setSecs] = useState<Opt[]>([]);
   const [stage, setStage] = useState(""), [grade, setGrade] = useState(""), [sec, setSec] = useState("");
@@ -89,19 +102,9 @@ function StudentSingleExtras({ schoolId, v, set, plain }: { schoolId: string; v:
   const bd = v["birth_date"] ? new Date(v["birth_date"] + "T00:00:00") : undefined;
   const ph = v["guardian_phone"] ?? "";
   const sel = selectCls("w-full");
-  const Section = ({ n, title, hint, children }: { n: number; title: string; hint?: string; children: React.ReactNode }) => (
-    <section className="rounded-xl border bg-card p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{n}</span>
-        <h3 className="font-semibold">{title}</h3>
-        {hint && <span className="text-xs text-muted-foreground">— {hint}</span>}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">{children}</div>
-    </section>
-  );
   return (
     <div className="space-y-4">
-      <Section n={1} title="بيانات الطالب">
+      <FormSection n={1} title="بيانات الطالب">
         {plain("full_name")}{plain("display_name")}{plain("national_id")}{plain("csmart_no")}
         <div className="space-y-1">
           <Label>تاريخ الميلاد</Label>
@@ -123,8 +126,8 @@ function StudentSingleExtras({ schoolId, v, set, plain }: { schoolId: string; v:
             <option value="">— اختر —</option><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option>
           </select>
         </div>
-      </Section>
-      <Section n={2} title="التسكين" hint="اختياري، ويمكن لاحقًا">
+      </FormSection>
+      <FormSection n={2} title="التسكين" hint="اختياري، ويمكن لاحقًا">
         <div className="space-y-1 sm:col-span-2">
           <Label htmlFor="ps-stage">المرحلة</Label>
           <select id="ps-stage" className={sel} value={stage} onChange={(e) => { setStage(e.target.value); setGrade(""); setSec(""); set({ ...v, grade: "", section: "" }); }}>
@@ -146,8 +149,8 @@ function StudentSingleExtras({ schoolId, v, set, plain }: { schoolId: string; v:
             {secs.filter((s) => s.parent === grade).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
-      </Section>
-      <Section n={3} title="ولي الأمر" hint="يُربط بالطالب ويُنشأ حسابه تلقائيًا">
+      </FormSection>
+      <FormSection n={3} title="ولي الأمر" hint="يُربط بالطالب ويُنشأ حسابه تلقائيًا">
         {plain("guardian_name")}{plain("guardian_id")}
         <div className="space-y-1">
           <Label htmlFor="ps-gphone">جوال ولي الأمر</Label>
@@ -166,7 +169,7 @@ function StudentSingleExtras({ schoolId, v, set, plain }: { schoolId: string; v:
           </select>
           {v["relationship"] === "أخرى" && <Input className="mt-2" aria-label="اكتب صلة القرابة" placeholder="اكتب صلة القرابة (مثال: خال، جد)" maxLength={30} value={v["relationship_other"] ?? ""} onChange={(e) => set({ ...v, relationship_other: e.target.value })} />}
         </div>
-      </Section>
+      </FormSection>
     </div>
   );
 }
