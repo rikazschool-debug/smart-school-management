@@ -90,6 +90,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   hr_training: { to: "/app/hr/training", label: "التدريب والتطوير", icon: GraduationCap },
   visits: { to: "/app/visits", label: "الزيارات الصفية", icon: ClipboardList },
   family_visits: { to: "/app/family-visits", label: "الزيارات", icon: CalendarDays },
+  health: { to: "/app/health", label: "الصحة المدرسية", icon: HeartPulse },
   events: { to: "/app/events", label: "الفعاليات", icon: PartyPopper },
   evaluation: { to: "/app/evaluation", label: "نظام التقييم الشامل", icon: Award },
   hub_notices: { to: "/app/hub", tab: "notices", label: "الإشعارات", icon: Megaphone },
@@ -112,7 +113,7 @@ const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-side
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "platform_subs", "signup_requests", "platform_notices", "schools", "members", "permissions"] },
-  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "events"] },
+  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "health", "events"] },
   { label: "الكادر التعليمي والإداري", keys: ["teachers"] },
   { label: "أولياء الأمور والطلاب", keys: ["students", "guardians"] },
   { label: "الوسوم", keys: ["tags"] },
@@ -207,7 +208,7 @@ function Shell() {
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
-    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] || sp?.["attendance.view"] || sp?.["attendance.record"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(!owner && (sp?.["notices.view"] || sp?.["notices.send"]) ? ["hub_notices"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(owner || ["view", "replies", "autoreply", "media"].some((a) => sp?.[`chat_settings.${a}`]) ? ["chat_settings"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
+    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] || sp?.["attendance.view"] || sp?.["attendance.record"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(!owner && (sp?.["notices.view"] || sp?.["notices.send"]) ? ["hub_notices"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["health.view"] || sp?.["health.record"] || sp?.["health.manage"] ? ["health"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(owner || ["view", "replies", "autoreply", "media"].some((a) => sp?.[`chat_settings.${a}`]) ? ["chat_settings"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
   // base-role tools the owner stopped for this person (perm_my_school bt_*; the server blocks them too)
   const btOff: [string, NavKey][] = [["bt_schedule.view", "schedule"], ["bt_classroom.view", "classrooms"], ["bt_homework.view", "homework"]];
   for (const [k, n] of btOff) if (sp && sp[k] === false && baseNav.includes(n)) baseNav.splice(baseNav.indexOf(n), 1);

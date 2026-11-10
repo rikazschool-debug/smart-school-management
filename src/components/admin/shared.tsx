@@ -17,7 +17,7 @@ export const PRIORITY: Record<string, string> = { low: "منخفضة", normal: "
 export const FIELD_TYPES: Record<string, string> = { text: "نص قصير", longtext: "نص طويل", choice: "اختيار", date: "تاريخ", number: "رقم" };
 export const STAFF_ROLES: Record<string, string> = {
   principal: "مدير المدرسة", vice_principal: "الوكيل", dept_head: "رئيس القسم", supervisor: "المشرف", student_affairs: "شؤون الطلاب",
-  teacher: "المعلم", counselor: "المرشد", nurse: "الممرض", security: "الأمن",
+  teacher: "المعلم", counselor: "المرشد", nurse: "المرشدة الصحية", security: "الأمن",
 };
 
 export type Field = { key?: string; label: string; type: string; required: boolean; options: string[] };
