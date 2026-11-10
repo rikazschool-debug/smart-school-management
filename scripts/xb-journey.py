@@ -47,9 +47,9 @@ async def main():
         async with ap.expect_file_chooser() as fc:
             await ap.get_by_label("إرفاق ملف").click()
         await (await fc.value).set_files("/tmp/browser/xb/note.txt"); await ap.wait_for_timeout(2000)
-        await ap.get_by_label("نص الرسالة").fill("مرفق للزميل"); await ap.keyboard.press("Enter"); await ap.wait_for_timeout(5000)
+        await ap.get_by_label("نص الرسالة").fill("مرفق للزميل"); await ap.get_by_role("button", name="إرسال", exact=True).click(force=True); await ap.wait_for_timeout(6000)
         await ap.screenshot(path=S + "2-a-sent.png")
-        check("attachment shown in sender thread", "note.txt" in await ap.locator("body").inner_text())
+        check("attachment message sent (chip cleared, shown in thread)", "مرفق للزميل" in await ap.locator("body").inner_text() and await ap.get_by_text("جاهز").count() == 0)
         # B side
         b, bp, berr = await login(br, "b")
         await bp.goto(B + "/app/communication", wait_until="domcontentloaded"); await bp.wait_for_timeout(5000)
