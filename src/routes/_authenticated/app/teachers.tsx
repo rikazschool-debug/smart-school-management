@@ -33,7 +33,9 @@ function Page() {
 }
 
 function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeof canManageAcademic>[0] }) {
-  const w = canManageAcademic(role);
+  const perms0 = useSchoolPerms(schoolId);
+  // edit = owner or people_staff.edit (owner-grantable); principal views only — server re-checks (can_edit_staff)
+  const w = role === "org_owner" || !!perms0?.["people_staff.edit"];
   // ID view/edit follow the permission tree (people_identity), not a role name; the server re-checks.
   const perms = useSchoolPerms(schoolId);
   const idView = !!perms?.["people_identity.view"], idEdit = !!perms?.["people_identity.edit"];
@@ -48,7 +50,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
     },
   });
   const st = (r: Row) => ids.data?.get(r["id"]);
-  const dir = seesStaffDirectory(role);
+  const dir = seesStaffDirectory(role) || !!perms0?.["people_staff.view"];
   const [tab, setTab] = useState<"dir" | "teachers">(dir ? "dir" : "teachers");
   return (
     <>

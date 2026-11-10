@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { canManageStudents } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
 import { AccountButton } from "@/components/account-button";
 import { guardianReadiness, localPhone, maskTail } from "@/lib/people-import";
 import { CreateAccountButton } from "@/components/guardian-quick-add";
@@ -33,11 +34,13 @@ function Page() {
 }
 
 function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<typeof canManageStudents>[0] }) {
-  const w = canManageStudents(role);
+  const sp = useSchoolPerms(schoolId);
+  const w = role === "org_owner" || !!sp?.["people_family.edit"];
   const [viewing, setViewing] = useState<Row | null>(null);
   // full ID/phone only for those who manage students; others see the last digits
-  const id = (v: string | null) => (v ? (w ? v : maskTail(v)) : "—");
-  const ph = (v: string | null) => (v ? (w ? localPhone(v) : maskTail(localPhone(v))) : "—");
+  const full = w || canManageStudents(role);
+  const id = (v: string | null) => (v ? (full ? v : maskTail(v)) : "—");
+  const ph = (v: string | null) => (v ? (full ? localPhone(v) : maskTail(localPhone(v))) : "—");
   return (
     <>
       <PageHeader title="أولياء الأمور" desc="سجل واحد لكل ولي أمر يجمع أبناءه. الجوال المعتمد هنا هو الذي يُرسل إليه رمز الدخول، وكل تغيير عليه يُسجّل." />

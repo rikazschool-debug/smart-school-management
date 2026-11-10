@@ -51,6 +51,18 @@ try {
   check("no sensitive fields returned", r.every((x) => !("national_id" in x) && !("phone" in x) && !Object.keys(x).some((k) => /salary|bank|iban|doc/i.test(k))), Object.keys(r[0] ?? {}));
   check("owner sees directory", !(await oc.rpc("school_staff_directory", { _school: S })).error);
   for (const k of ["vp", "tc", "gd"]) check(`${k} refused`, !!(await (await as(k)).rpc("school_staff_directory", { _school: S })).error);
+  // principal: view-only on staff and family records until the owner grants edit
+  const kid = must(await admin.from("students").insert({ school_id: S, full_name: "طالب الدليل", national_id: "1100000093", status: "active" }).select("id").single())!.id;
+  const VP = await as("vp");
+  const upd = async (c: any, t: string, id: string, v: any) => { const r = await c.from(t).update(v).eq("id", id).select("id"); return !r.error && (r.data ?? []).length === 1; };
+  check("principal can read students", ((await P.from("students").select("id").eq("id", kid)).data ?? []).length === 1);
+  check("principal cannot edit student", !(await upd(P, "students", kid, { full_name: "x" })));
+  check("principal cannot edit teacher", !(await upd(P, "teachers", tch, { full_name: "x" })));
+  check("vice cannot edit student", !(await upd(VP, "students", kid, { full_name: "x" })));
+  check("owner edits student and teacher", (await upd(oc, "students", kid, { full_name: "طالب" })) && (await upd(oc, "teachers", tch, { full_name: "معلم" })));
+  must(await admin.from("perm_overrides").insert([{ org_id: org, user_id: users.pr, section: "people_family", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: users.owner }, { org_id: org, user_id: users.pr, section: "people_staff", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: users.owner }]));
+  check("after owner grant: principal edits student", await upd(P, "students", kid, { full_name: "طالب ٢" }));
+  check("after owner grant: principal edits teacher", await upd(P, "teachers", tch, { full_name: "معلم ٢" }));
   check("principal refused for another branch", !!(await P.rpc("school_staff_directory", { _school: S2 })).error);
 } catch (e) { fail++; console.log("FAIL exception", (e as Error).message ?? e); }
 finally {
