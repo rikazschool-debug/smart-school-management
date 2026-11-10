@@ -14,7 +14,7 @@ export const TPL_LABELS: Record<string, string> = { "مسؤول صيانة مد�
 export const CENTRAL = "@central";
 export const HR_DIRECTOR = "tpl:مدير إدارة الموارد البشرية";
 export const roleLabel = (r: string) => (r.startsWith("tpl:") ? TPL_LABELS[r.slice(4)] ?? r.slice(4) : ROLE_LABELS[r as Role] ?? r);
-export const STATUS: Record<string, string> = { active: "على رأس العمل", suspended: "موقوف مؤقتًا", ended: "انتهت الخدمة" };
+export const STATUS: Record<string, string> = { active: "على رأس العمل", suspended: "موقوف مؤقتًا", ended: "انتهت الخدمة", archived: "في الأرشيف (محذوف)" };
 export const GENDER: Record<string, string> = { male: "ذكر", female: "أنثى" };
 
 export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
