@@ -139,4 +139,20 @@ body { font-family: "Cairo", system-ui, sans-serif; }
 .site-marquee { animation: site-marquee 30s linear infinite; }
 .site-grid-bg { background-image: linear-gradient(to right, color-mix(in oklab, var(--primary) 8%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--primary) 8%, transparent) 1px, transparent 1px); background-size: 48px 48px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%); }
 .site-hero-grad { background: radial-gradient(60% 60% at 80% 10%, color-mix(in oklab, var(--accent) 35%, transparent), transparent 70%), radial-gradient(50% 50% at 10% 30%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%); }
+@keyframes site-aurora { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(6%,-8%) scale(1.15); } 66% { transform: translate(-6%,6%) scale(.92); } }
+@keyframes site-spin { to { transform: rotate(360deg); } }
+@keyframes site-shine { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.site-aurora { animation: site-aurora 16s ease-in-out infinite; }
+.site-spin-slow { animation: site-spin 40s linear infinite; }
+.site-shine-text { background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: site-shine 6s linear infinite; }
+.site-tone-a { --tone: var(--primary); }
+.site-tone-b { --tone: var(--accent); }
+.site-tone-c { --tone: color-mix(in oklab, var(--primary) 55%, var(--accent)); }
+.site-card:hover { border-color: color-mix(in oklab, var(--tone) 45%, transparent); }
+.site-icon { background: linear-gradient(135deg, var(--tone), color-mix(in oklab, var(--tone) 60%, var(--foreground))); }
+.site-blob { background: var(--tone); }
+.site-line { background: linear-gradient(90deg, var(--tone), transparent); }
+.site-spot::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .4s; background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), color-mix(in oklab, var(--tone) 14%, transparent), transparent 70%); }
+.site-spot:hover::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .site-aurora, .site-spin-slow, .site-shine-text { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .site-page, .site-float, .site-glow, .site-marquee { animation: none; } .site-reveal { opacity: 1; transform: none; transition: none; } }
