@@ -59,7 +59,7 @@ export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCo
         const all = await resolveIds();
         const res: Result[] = [];
         for (let i = 0; i < all.length; i += 200) {
-          const part = await provision({ data: { kind, ids: all.slice(i, i + 200) } });
+          const part = await provision({ data: { kind: kind as "student" | "teacher" | "guardian", ids: all.slice(i, i + 200) } });
           for (const r of part as { id: string; state: string; msg?: string }[]) {
             const ok = ["linked", "pending_phone", "already"].includes(r.state);
             res.push({ id: r.id, status: ok ? "ok" : r.state === "error" ? "failed" : "refused", reason: r.msg ?? STATE[r.state] ?? r.state });
@@ -94,7 +94,7 @@ export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCo
   }
   const actions = [
     ...(caps.tags_assign && usable.length ? ["tag_add", "tag_remove"] : []),
-    ...(caps.accounts || caps.bulk ? ["login_create"] : []),
+    ...((caps.accounts || caps.bulk) && kind !== "employee" ? ["login_create"] : []),
     ...(caps.accounts ? ["account_off", "account_on", "org_login_off", "org_login_on"] : []),
   ];
   return (
