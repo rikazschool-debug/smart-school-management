@@ -122,3 +122,4 @@
 - scripts/xbranch-e2e.ts: cross-branch staff messaging (setting scope, directory, start/reply/notify, cross-org block; 26 checks).
 - scripts/xb-browser-fixture.ts setup|teardown (xbj-) + scripts/xb-journey.py: cross-branch chat in the browser (title, branch, attachment, presence, read-only after narrowing; 16 checks).
 - scripts/vice-att-e2e.ts: vice has no default attendance/gate; owner grants view/record/approve separately per branch; template clean; self-grant refused (11 checks). attendance-e2e grants the vice explicitly (currently stops early: direct insert into teachers is refused — fixture needs updating).
+- scripts/family-readonly-e2e.ts: guardian/student read-only records (direct writes + staff RPCs refused, own photo action only, owner edits; 30 checks).
