@@ -19,7 +19,7 @@ import { HrImport } from "@/components/hr/import";
 import { HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, NAME_EN_MAX, cleanValue, type HrGroup } from "@/lib/hr-fields";
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
-import { ProfileFields, ProfileView, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
+import { ProfileFields, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { PersonCardButton } from "@/components/people/person-card";
 import { HrCategories } from "@/components/hr/categories";
