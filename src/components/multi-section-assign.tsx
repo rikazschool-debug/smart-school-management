@@ -43,7 +43,7 @@ export function MultiSectionAssign({ schoolId, canCreateCourses }: { schoolId: s
     for (const s of data.data?.sections ?? []) {
       if (s["year_id"] !== yearId) continue;
       const g = s["grades"] ?? {}; const label = `${g.stages?.name ? g.stages.name + " — " : ""}${g.name ?? ""}`;
-      const cur = m.get(label) ?? { label, order: (g.stages?.sort_order ?? 0) * 1000 + (g.sort_order ?? 0), items: [] };
+      const cur = m.get(label) ?? { label, order: (g.stages?.sort_order ?? 0) * 1000 + (g.sort_order ?? 0), items: [] as Row[] };
       cur.items.push(s); m.set(label, cur);
     }
     return [...m.values()].sort((a, b) => a.order - b.order).map((g) => ({ ...g, items: g.items.sort((a, b) => String(a["name"]).localeCompare(String(b["name"]), "ar")) }));
