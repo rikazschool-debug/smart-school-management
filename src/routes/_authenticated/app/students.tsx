@@ -9,7 +9,8 @@ import { RequireSchool } from "@/components/require-school";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { canManageStudents, type Role } from "@/lib/roles";
+import { type Role } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
 import { AccountButton } from "@/components/account-button";
 import { PeopleImport } from "@/components/people-import-dialog";
 import { ContractMatch, ContractEdit } from "@/components/contract-match";
@@ -33,7 +34,9 @@ function Page() {
 
 function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const qc = useQueryClient();
-  const w = canManageStudents(ctx.role);
+  const sp = useSchoolPerms(ctx.schoolId);
+  // edit = owner or people_family.edit (owner-grantable); principal/vice view only — server re-checks (can_manage_students)
+  const w = ctx.role === "org_owner" || !!sp?.["people_family.edit"];
   const [linking, setLinking] = useState<Row | null>(null);
   const [placing, setPlacing] = useState<Row | null>(null);
   const [viewing, setViewing] = useState<Row | null>(null);
