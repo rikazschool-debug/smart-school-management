@@ -50,6 +50,7 @@ import { Route as AuthenticatedAppPermissionsRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppPickupRouteImport } from './routes/_authenticated/app/pickup'
 import { Route as AuthenticatedAppPlatformRouteImport } from './routes/_authenticated/app/platform'
 import { Route as AuthenticatedAppPlatformNoticesRouteImport } from './routes/_authenticated/app/platform-notices'
+import { Route as AuthenticatedAppPlatformSubsRouteImport } from './routes/_authenticated/app/platform-subs'
 import { Route as AuthenticatedAppProcurementRouteImport } from './routes/_authenticated/app/procurement'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app/profile'
 import { Route as AuthenticatedAppResultsRouteImport } from './routes/_authenticated/app/results'
@@ -327,6 +328,12 @@ const AuthenticatedAppPlatformNoticesRoute =
   AuthenticatedAppPlatformNoticesRouteImport.update({
     id: '/platform-notices',
     path: '/platform-notices',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppPlatformSubsRoute =
+  AuthenticatedAppPlatformSubsRouteImport.update({
+    id: '/platform-subs',
+    path: '/platform-subs',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppProcurementRoute =
@@ -682,6 +689,7 @@ export interface FileRoutesByFullPath {
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
   '/app/platform-notices': typeof AuthenticatedAppPlatformNoticesRoute
+  '/app/platform-subs': typeof AuthenticatedAppPlatformSubsRoute
   '/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
@@ -777,6 +785,7 @@ export interface FileRoutesByTo {
   '/app/pickup': typeof AuthenticatedAppPickupRoute
   '/app/platform': typeof AuthenticatedAppPlatformRoute
   '/app/platform-notices': typeof AuthenticatedAppPlatformNoticesRoute
+  '/app/platform-subs': typeof AuthenticatedAppPlatformSubsRoute
   '/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
@@ -875,6 +884,7 @@ export interface FileRoutesById {
   '/_authenticated/app/pickup': typeof AuthenticatedAppPickupRoute
   '/_authenticated/app/platform': typeof AuthenticatedAppPlatformRoute
   '/_authenticated/app/platform-notices': typeof AuthenticatedAppPlatformNoticesRoute
+  '/_authenticated/app/platform-subs': typeof AuthenticatedAppPlatformSubsRoute
   '/_authenticated/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/results': typeof AuthenticatedAppResultsRoute
@@ -973,6 +983,7 @@ export interface FileRouteTypes {
     | '/app/pickup'
     | '/app/platform'
     | '/app/platform-notices'
+    | '/app/platform-subs'
     | '/app/procurement'
     | '/app/profile'
     | '/app/results'
@@ -1068,6 +1079,7 @@ export interface FileRouteTypes {
     | '/app/pickup'
     | '/app/platform'
     | '/app/platform-notices'
+    | '/app/platform-subs'
     | '/app/procurement'
     | '/app/profile'
     | '/app/results'
@@ -1165,6 +1177,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/pickup'
     | '/_authenticated/app/platform'
     | '/_authenticated/app/platform-notices'
+    | '/_authenticated/app/platform-subs'
     | '/_authenticated/app/procurement'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/results'
@@ -1527,6 +1540,13 @@ declare module '@tanstack/react-router' {
       path: '/platform-notices'
       fullPath: '/app/platform-notices'
       preLoaderRoute: typeof AuthenticatedAppPlatformNoticesRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/platform-subs': {
+      id: '/_authenticated/app/platform-subs'
+      path: '/platform-subs'
+      fullPath: '/app/platform-subs'
+      preLoaderRoute: typeof AuthenticatedAppPlatformSubsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/procurement': {
@@ -1941,6 +1961,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppPickupRoute: typeof AuthenticatedAppPickupRoute
   AuthenticatedAppPlatformRoute: typeof AuthenticatedAppPlatformRoute
   AuthenticatedAppPlatformNoticesRoute: typeof AuthenticatedAppPlatformNoticesRoute
+  AuthenticatedAppPlatformSubsRoute: typeof AuthenticatedAppPlatformSubsRoute
   AuthenticatedAppProcurementRoute: typeof AuthenticatedAppProcurementRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppResultsRoute: typeof AuthenticatedAppResultsRoute
@@ -2024,6 +2045,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppPickupRoute: AuthenticatedAppPickupRoute,
   AuthenticatedAppPlatformRoute: AuthenticatedAppPlatformRoute,
   AuthenticatedAppPlatformNoticesRoute: AuthenticatedAppPlatformNoticesRoute,
+  AuthenticatedAppPlatformSubsRoute: AuthenticatedAppPlatformSubsRoute,
   AuthenticatedAppProcurementRoute: AuthenticatedAppProcurementRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppResultsRoute: AuthenticatedAppResultsRoute,
