@@ -15,7 +15,9 @@ import { AccountButton } from "@/components/account-button";
 import { PeopleImport } from "@/components/people-import-dialog";
 import { ContractMatch, ContractEdit } from "@/components/contract-match";
 import { AccountPanel } from "@/components/account-panel";
-import { GuardianQuickAdd } from "@/components/guardian-quick-add";
+import { GuardianQuickAdd, autoSummary } from "@/components/guardian-quick-add";
+import { autoAccounts } from "@/lib/accounts.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { studentReadiness } from "@/lib/people-import";
 import { arabicError, type AppContext } from "@/lib/session";
 
@@ -37,6 +39,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const sp = useSchoolPerms(ctx.schoolId);
   // edit = owner or people_family.edit (owner-grantable); principal/vice view only — server re-checks (can_manage_students)
   const w = ctx.role === "org_owner" || !!sp?.["people_family.edit"];
+  const auto = useServerFn(autoAccounts);
   const [linking, setLinking] = useState<Row | null>(null);
   const [placing, setPlacing] = useState<Row | null>(null);
   const [viewing, setViewing] = useState<Row | null>(null);
@@ -54,7 +57,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       const { error } = await db.from("student_guardians").insert({ ...v, student_id: linking?.["id"], school_id: ctx.schoolId });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("تم الربط — وثّق العلاقة ليتمكن ولي الأمر من المتابعة"); setLinking(null); qc.invalidateQueries(); },
+    onSuccess: () => { toast.success("تم الربط — وثّق العلاقة ليتمكن ولي الأمر من المتابعة"); const sid = linking?.["id"] as string | undefined; setLinking(null); qc.invalidateQueries(); if (sid) void auto({ data: { studentId: sid } }).then((r) => toast.info(autoSummary(r))).catch(() => undefined); },
     onError: (e) => toast.error(arabicError(e)),
   });
   const place = useMutation({
@@ -101,6 +104,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         ]}
         defaults={{ status: "active" }}
         onCreated={w ? (r) => setGuarding(r) : undefined}
+        onUpdated={(sid) => { void auto({ data: { studentId: sid } }).then((r) => { if (r.student && r.student.state !== "linked") toast.info(autoSummary(r)); }).catch(() => undefined); }}
         columns={[
           { label: "الاسم", text: (r) => r["full_name"], render: (r) => <><button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>}</> },
           { label: "الهوية", render: (r) => <span dir="ltr">{r["national_id"] ?? "—"}</span> },
