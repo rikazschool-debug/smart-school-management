@@ -31,7 +31,7 @@ import { LoadingState, ErrorState } from "@/components/states";
 import { NotificationBell } from "@/components/notification-bell";
 import { useSupportCaps } from "@/components/support/caps";
 import { MQ_LABEL, mqSections, useMqCaps } from "@/components/support/calls-caps";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Inbox } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "لوحة ركاز" }, { name: "robots", content: "noindex" }] }),
