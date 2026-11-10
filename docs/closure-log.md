@@ -759,3 +759,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - 2026-11-09 «إضافة موظف» in the approved 8 tabs (personal, ID/docs, job, qualifications, contact, bank/payment, account, review) with fixed lists, frozen licence/intermediary fields, required-field list and employee no./ID duplicate check (hr_employee_dupcheck): hrtabs-journey 29/29, hr-fields/hr-bilingual unit 13/13.
 - 2026-11-09 Owner dashboard redesigned to fit one screen (figures strip + 4-column section cards); Hijri/Gregorian calendar for ID/passport/licence dates: doc-date-picker unit 2/2, browser check (hijri 1450-03-15, gregorian 2031-06-20, licence picker frozen until ticked).
 - 2026-11-10: vice_principal lost default attendance/gate (_perm_vice_only in _perm_base); attendance.view/record grantable per person. Evidence: vice-att-e2e 11/11.
+
+## 2026-11-10 — ولي الأمر والطالب: عرض فقط
+- منع تعديل الاسم/الجوال/البريد مباشرة لحسابات ولي الأمر والطالب (سياسة profiles + _family_only). الإجراءات الخاصة (الصورة، التسليم، الرسائل، الموافقات) مستقلة.
+- الدليل: scripts/family-readonly-e2e.ts 30/30، rls-e2e 94/94، family-access-e2e 16/16.

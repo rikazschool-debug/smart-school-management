@@ -473,3 +473,5 @@ Calls with no branch: owner only. Deny overrides grant. Revoking listen stops an
 
 - Support: new internal ticket assignment = owner or support.assign on that branch, branch staff only. In-call ticket = calls.link on chosen branch.
 - الوكيل والحضور والمواظبة (نوفمبر 2026): لا وصول افتراضي للحضور أو البوابة؛ مالك المجموعة يمنح العرض أو التسجيل أو المتابعة أو الاعتماد أو تشغيل البوابة كلًّا على حدة، لفرع أو للمجموعة.
+
+| ولي الأمر / الطالب | عرض بياناته (أو بيانات أبنائه المرتبطين) فقط؛ لا تعديل للسجلات المعروضة؛ إجراءاته الخاصة تحفظ ردًا/طلبًا مستقلًا |
