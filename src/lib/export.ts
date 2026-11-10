@@ -101,7 +101,7 @@ export async function exportLetterPdf(l: LetterPdf) {
   await ensureCairo();
   const W = 794, H = 1123, PX = 68, PT = 72, FOOT = 70;
   const head = brandHeaderHtml({ fallbackName: l.org, side: `الرقم المرجعي: <bdi dir="ltr">${esc(l.ref)}</bdi><br>تاريخ الإصدار: <bdi dir="ltr">${esc(l.issued)}</bdi>` }) +
-    `<div style="font-size:17px;font-weight:700;margin:6px 0 16px">${esc(l.title)}</div>`
+    `<div style="font-size:17px;font-weight:700;margin:6px 0 16px">${esc(l.title)}</div>
     ${l.void ? `<div style="color:#b00;font-weight:700;border:2px solid #b00;padding:4px 10px;display:inline-block;margin-bottom:12px">${esc(l.void)} — غير صالح للاستخدام</div>` : ""}`;
   const P = `font-size:15px;line-height:2.1;white-space:pre-wrap;word-break:break-word;margin:0;min-height:1em`;
   const paras = l.body.replace(/\r/g, "").split("\n");
