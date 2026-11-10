@@ -109,9 +109,10 @@ check("guardian cannot message unrelated teacher by id", !!fG.error, fG);
 const fImp = await t1.c.rpc("start_family_conversation", { _student: s1.id, _guardian: G1.id, _staff_user: t2.id });
 check("cannot start chat as another user", !!fImp.error, fImp);
 const gc = await g1.c.rpc("guardian_contacts", { _student: s2.id });
-check("guardian contacts for child 2 = its teacher + admins", !!gc.data?.some((x: any) => x.user_id === t2.id) && !gc.data?.some((x: any) => x.user_id === t1.id), gc);
-const f2 = await g1.c.rpc("start_family_conversation", { _student: s2.id, _guardian: G1.id, _staff_user: t2.id });
-check("guardian starts chat about child 2", !f2.error, f2.error);
+check("guardian contacts for child 2 = administration only (no teachers)", !!gc.data?.some((x: any) => x.user_id === prin.id) && !gc.data?.some((x: any) => x.user_id === t2.id || x.user_id === t1.id), gc);
+check("guardian cannot start a chat with the child's teacher", !!(await g1.c.rpc("start_family_conversation", { _student: s2.id, _guardian: G1.id, _staff_user: t2.id })).error);
+const f2 = await g1.c.rpc("start_family_conversation", { _student: s2.id, _guardian: G1.id, _staff_user: prin.id });
+check("guardian starts chat with administration about child 2", !f2.error, f2.error);
 const cid = f1.data as string;
 const k1 = uuid();
 const m1 = await t1.c.rpc("send_message", { _conv: cid, _body: "السلام عليكم، سارة متميزة", _client_id: k1 });
@@ -129,21 +130,26 @@ const nm = await g1.c.from("notifications").select("id").like("dedupe_key", "msg
 const ns = await t1.c.from("notifications").select("id").like("dedupe_key", "msg:%");
 check("recipient notified once, sender not", nm.data?.length === 1 && ns.data?.length === 0, [nm, ns]);
 const rp = await g1.c.rpc("send_message", { _conv: cid, _body: "شكرًا لك", _client_id: uuid(), _reply_to: m1.data[0].id });
-check("guardian replies", !rp.error, rp.error);
-const rpn = await t1.c.from("notifications").select("id").like("dedupe_key", "reply:%");
+check("guardian cannot reply in a teacher chat (read-only for the family)", !!rp.error, rp);
+const pmA = await prin.c.rpc("send_message", { _conv: f2.data, _body: "مرحبًا من الإدارة", _client_id: uuid() });
+const rp2 = await g1.c.rpc("send_message", { _conv: f2.data, _body: "شكرًا لك", _client_id: uuid(), _reply_to: pmA.data?.[0]?.id });
+check("guardian replies to administration", !rp2.error, rp2.error);
+const rpn = await prin.c.from("notifications").select("id").like("dedupe_key", "reply:%");
 check("reply notifies original author", rpn.data?.length === 1, rpn);
 const otherMsg = await g1.c.rpc("send_message", { _conv: f2.data, _body: "x", _client_id: uuid(), _reply_to: m1.data[0].id });
 check("cannot reply to message from another chat", !!otherMsg.error, otherMsg);
 // 17 read from another device clears unread + notifications; mute
-await t1.c.rpc("mark_conversation_read", { _conv: cid, _seq: 999 });
-const t1l = await t1.c.rpc("my_conversations", { _school: S });
-const t1n = await t1.c.from("notifications").select("read_at").like("dedupe_key", "reply:%");
-check("17 read elsewhere fixes unread and notification", t1l.data?.[0]?.unread === 0 && !!t1n.data?.[0]?.read_at, [t1l, t1n]);
+await prin.c.rpc("mark_conversation_read", { _conv: f2.data, _seq: 999 });
+const t1l = await prin.c.rpc("my_conversations", { _school: S });
+const t1n = await prin.c.from("notifications").select("read_at").like("dedupe_key", "reply:%");
+check("17 read elsewhere fixes unread and notification", t1l.data?.find((x: any) => x.id === f2.data)?.unread === 0 && !!t1n.data?.[0]?.read_at, [t1l, t1n]);
+await g1.c.rpc("mark_conversation_read", { _conv: cid, _seq: 999 });
+const nmBefore = ((await g1.c.from("notifications").select("id").like("dedupe_key", "msg:%")).data ?? []).length;
 await g1.c.rpc("set_member_prefs", { _conv: cid, _muted: true, _archived: null });
 await t1.c.rpc("send_message", { _conv: cid, _body: "رسالة بعد الكتم", _client_id: uuid() });
 const nm2 = await g1.c.from("notifications").select("id").like("dedupe_key", "msg:%");
 const gl2 = await g1.c.rpc("my_conversations", { _school: S });
-check("17 muted → no new notification but unread counts", nm2.data?.length === 1 && gl2.data?.find((x: any) => x.id === cid)?.unread === 1, [nm2, gl2]);
+check("17 muted → no new notification but unread counts", nm2.data?.length === nmBefore && gl2.data?.find((x: any) => x.id === cid)?.unread === 1, [nm2, gl2]);
 // search scoped
 const sr = await g2.c.rpc("search_messages", { _q: "سارة" });
 const sr1 = await g1.c.rpc("search_messages", { _q: "سارة" });
@@ -368,7 +374,7 @@ const pT = await t2.c.from("messages").select("id").eq("conversation_id", pc.dat
 const inGroup = await stud2.c.from("messages").select("id").eq("conversation_id", GA);
 check("C5 student sees private msg; guardian & other teacher do not; group unchanged", pS.data?.[0]?.body === "رسالة خاصة للطالبة" && pG.data?.length === 0 && pT.data?.length === 0 && inGroup.data?.length === 1, [pS, pG, pT, inGroup]);
 const rep2 = await stud2.c.rpc("send_message", { _conv: pc.data, _body: "شكرًا أستاذ", _client_id: uuid() });
-check("C5 student replies privately", !rep2.error, rep2.error);
+check("C5 student cannot reply in a teacher chat (read-only for students)", !!rep2.error, rep2);
 const pc3 = await t3.c.rpc("start_student_conversation", { _student: s3.id });
 check("C7 unassigned teacher cannot message student by id", !!pc3.error, pc3);
 const pcS = await stud2.c.rpc("start_student_conversation", { _student: s2.id });
@@ -392,7 +398,7 @@ await owner.c.from("enrollments").update({ status: "ended", end_date: "2026-11-0
 const memA3 = await admin.from("conversation_members").select("left_at").eq("conversation_id", GA).eq("user_id", stud2.id).order("joined_at", { ascending: false }).limit(1);
 const blk = await stud2.c.rpc("send_message", { _conv: pc.data, _body: "بعد النقل", _client_id: uuid() });
 const histP = await admin.from("messages").select("id").eq("conversation_id", pc.data);
-check("C11 transfer removes student from class group, private chat read-only, history kept", !!memA3.data?.[0]?.left_at && !!blk.error && (histP.data?.length ?? 0) >= 2, [memA3, blk.error, histP]);
+check("C11 transfer removes student from class group, private chat read-only, history kept", !!memA3.data?.[0]?.left_at && !!blk.error && (histP.data?.length ?? 0) >= 1, [memA3, blk.error, histP]);
 
 console.log(`\n${ok} passed, ${bad} failed`);
 await admin.storage.from("rikaz-files").remove([fpath]);

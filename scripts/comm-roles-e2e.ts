@@ -96,7 +96,7 @@ try {
   check("23 principal cannot start a private student chat", !!(await pr.c.rpc("start_student_conversation", { _student: st1.id })).error);
   const sc = await t1.c.rpc("start_student_conversation", { _student: st1.id });
   check("24 teacher starts private chat with own student", !sc.error, sc.error);
-  check("25 student replies in allowed teacher chat", !(await s1.c.rpc("send_message", { _conv: sc.data, _body: "شكرًا", _client_id: crypto.randomUUID() })).error);
+  check("25 student cannot reply in a teacher chat (read-only)", !!(await s1.c.rpc("send_message", { _conv: sc.data, _body: "شكرًا", _client_id: crypto.randomUUID() })).error);
   const sm = await s1.c.from("conversation_members").select("conversation_id").eq("user_id", s1.id).is("left_at", null);
   check("26 guardian not added to teacher↔student chat", !(await admin.from("conversation_members").select("id").eq("conversation_id", sc.data).eq("user_id", g1.id)).data?.length, sm.data);
 

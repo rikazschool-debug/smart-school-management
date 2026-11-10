@@ -17,6 +17,7 @@ const sel = selectCls("w-full");
 
 export function NewChatDialog({ ctx, open, onOpenChange, onCreated }: { ctx: AppContext & { schoolId: string }; open: boolean; onOpenChange: (v: boolean) => void; onCreated: (id: string) => void }) {
   const isGuardian = ctx.role === "guardian";
+  const isStudent = ctx.role === "student";
   const isTeacher = ctx.role === "teacher";
   const isFamilyAdmin = ["principal", "vice_principal", "student_affairs", "org_owner", "platform_admin"].includes(ctx.role);
   const [mode, setMode] = useState<"family" | "direct">(isGuardian ? "family" : isTeacher ? "family" : "direct");
@@ -24,13 +25,13 @@ export function NewChatDialog({ ctx, open, onOpenChange, onCreated }: { ctx: App
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>محادثة جديدة</DialogTitle></DialogHeader>
-        {!isGuardian && (
+        {!isGuardian && !isStudent && (
           <div className="flex gap-2">
             {(isTeacher || isFamilyAdmin) && <Button size="sm" variant={mode === "family" ? "default" : "outline"} onClick={() => setMode("family")}>مع ولي أمر</Button>}
             <Button size="sm" variant={mode === "direct" ? "default" : "outline"} onClick={() => setMode("direct")}>مع زميل أو الإدارة</Button>
           </div>
         )}
-        {isGuardian ? <GuardianStart ctx={ctx} onCreated={onCreated} /> : mode === "family" && !isTeacher ? <AdminFamilyStart ctx={ctx} onCreated={onCreated} /> : mode === "family" ? <StaffFamilyStart ctx={ctx} teacher={isTeacher} onCreated={onCreated} /> : <DirectStart ctx={ctx} onCreated={onCreated} />}
+        {isStudent ? <StudentStart onCreated={onCreated} /> : isGuardian ? <GuardianStart ctx={ctx} onCreated={onCreated} /> : mode === "family" && !isTeacher ? <AdminFamilyStart ctx={ctx} onCreated={onCreated} /> : mode === "family" ? <StaffFamilyStart ctx={ctx} teacher={isTeacher} onCreated={onCreated} /> : <DirectStart ctx={ctx} onCreated={onCreated} />}
       </DialogContent>
     </Dialog>
   );
@@ -175,7 +176,6 @@ function AdminFamilyStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: st
 }
 
 function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: string }; onCreated: (id: string) => void }) {
-  const [who, setWho] = useState<"teacher" | "admin">("teacher");
   const [student, setStudent] = useState("");
   const [to, setTo] = useState("");
   const [body, setBody] = useState("");
@@ -202,13 +202,11 @@ function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: strin
   const link = kids.data?.find((k) => k["student_id"] === student);
   // one child → preselected; several → the guardian must choose explicitly
   useEffect(() => { if (kids.data?.length === 1 && !student) setStudent(kids.data[0]!["student_id"]); }, [kids.data, student]);
-  const shown = (contacts.data ?? []).filter((c) => c["kind"] === who);
+  // server returns only the permitted administration (incl. the student counselor) of the chosen child's school — never teachers
+  const shown = (contacts.data ?? []).filter((c) => c["kind"] === "admin");
   return (
     <div className="space-y-3">
-      <div className="flex gap-2" role="radiogroup" aria-label="جهة التواصل">
-        <Button size="sm" variant={who === "teacher" ? "default" : "outline"} onClick={() => { setWho("teacher"); setTo(""); }}>معلمو أبنائي</Button>
-        <Button size="sm" variant={who === "admin" ? "default" : "outline"} onClick={() => { setWho("admin"); setTo(""); }}>إدارة المدرسة</Button>
-      </div>
+      <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">التواصل مع المدرسة عبر <b>إدارة المدرسة</b> والمرشد الطلابي. للتواصل مع المعلمين استخدم «مجموعة الفصل» داخل الفصل الافتراضي.</p>
       <div className="space-y-1">
         <label className="text-sm font-medium" htmlFor="gk">الابن/الابنة</label>
         {kids.isLoading ? <LoadingState /> : !kids.data?.length ? <EmptyState title="لا يوجد أبناء موثّقون في هذه المدرسة" /> : (
@@ -220,9 +218,9 @@ function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: strin
           </select>
         )}
       </div>
-      {student && (contacts.isLoading ? <LoadingState /> : !shown.length ? <p className="text-sm text-muted-foreground">{who === "teacher" ? "لا يوجد معلمون حاليون متاحون لهذا الابن." : "لا توجد جهة إدارية مسموحة للأسرة حاليًا."}</p> : (
+      {student && (contacts.isLoading ? <LoadingState /> : !shown.length ? <p className="text-sm text-muted-foreground">لا توجد جهة إدارية مسموحة في مدرسة هذا الابن حاليًا.</p> : (
         <div className="space-y-1">
-          <label className="text-sm font-medium" htmlFor="gt">{who === "teacher" ? "معلم الابن الحالي" : "الجهة الإدارية المسموحة"}</label>
+          <label className="text-sm font-medium" htmlFor="gt">إدارة المدرسة</label>
           <select id="gt" className={sel} value={to} onChange={(e) => setTo(e.target.value)}>
             <option value="">— اختر —</option>{shown.map((c) => <option key={c["user_id"]} value={c["user_id"]}>{c["full_name"]} — {c["label"]}</option>)}
           </select>
@@ -233,6 +231,44 @@ function GuardianStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: strin
       <Button disabled={!to || !link || busy} onClick={async () => {
         setBusy(true);
         const { data, error } = await db.rpc("start_family_conversation", { _student: student, _guardian: link!["guardian_id"], _staff_user: to });
+        if (error) { setBusy(false); return void toast.error(arabicError(error)); }
+        await firstMessage(data, body, key);
+        setBusy(false); onCreated(data);
+      }}>{busy ? "جارٍ الإنشاء…" : "بدء التواصل"}</Button>
+    </div>
+  );
+}
+
+/** Student: permitted administration / counselor of the school they are currently enrolled in (server derives the school). */
+function StudentStart({ onCreated }: { onCreated: (id: string) => void }) {
+  const [to, setTo] = useState("");
+  const [body, setBody] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [key] = useState(() => crypto.randomUUID());
+  const contacts = useQuery({
+    queryKey: ["student-contacts"],
+    queryFn: async () => {
+      const { data, error } = await db.rpc("student_contacts");
+      if (error) throw error;
+      return (data ?? []) as Row[];
+    },
+  });
+  const school = contacts.data?.[0]?.["school_name"] as string | undefined;
+  return (
+    <div className="space-y-3">
+      <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">راسل إدارة مدرستك أو المرشد الطلابي. للتواصل مع المعلمين استخدم «مجموعة الفصل» داخل فصلك الافتراضي.</p>
+      {contacts.isLoading ? <LoadingState /> : !contacts.data?.length ? <EmptyState title="لا توجد جهة إدارية متاحة في مدرستك حاليًا" /> : (
+        <div className="space-y-1">
+          <label className="text-sm font-medium" htmlFor="st-to">إدارة المدرسة{school ? ` — ${school}` : ""}</label>
+          <select id="st-to" className={sel} value={to} onChange={(e) => setTo(e.target.value)}>
+            <option value="">— اختر —</option>{contacts.data.map((c) => <option key={c["user_id"]} value={c["user_id"]}>{c["full_name"]} — {c["label"]}</option>)}
+          </select>
+        </div>
+      )}
+      <Textarea aria-label="الرسالة الأولى" placeholder="الرسالة الأولى (اختياري)" value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} />
+      <Button disabled={!to || busy} onClick={async () => {
+        setBusy(true);
+        const { data, error } = await db.rpc("start_student_admin_conversation", { _staff: to });
         if (error) { setBusy(false); return void toast.error(arabicError(error)); }
         await firstMessage(data, body, key);
         setBusy(false); onCreated(data);

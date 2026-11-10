@@ -17505,6 +17505,7 @@ export type Database = {
         Args: { _aud: Json; _school: string }
         Returns: string[]
       }
+      _class_group_room: { Args: { _conv: string }; Returns: string }
       _class_want: {
         Args: { _section: string; _year: string }
         Returns: {
@@ -17515,6 +17516,10 @@ export type Database = {
       }
       _complete_account_setup: {
         Args: { _password_changed: boolean; _uid: string }
+        Returns: string
+      }
+      _contact_label: {
+        Args: { _r: Database["public"]["Enums"]["app_role"] }
         Returns: string
       }
       _conv_link: { Args: { _conv: string }; Returns: string }
@@ -18015,6 +18020,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      _family_admin_roles: {
+        Args: { _school: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
       }
       _family_ok: {
         Args: {
@@ -19429,6 +19438,10 @@ export type Database = {
         Returns: string
       }
       _storage_file_ok: { Args: { _name: string }; Returns: boolean }
+      _student_admin_ok: {
+        Args: { _staff: string; _student: string }
+        Returns: boolean
+      }
       _student_ok: {
         Args: { _student: string; _teacher: string }
         Returns: boolean
@@ -20573,6 +20586,7 @@ export type Database = {
         Returns: undefined
       }
       class_group_rollback: { Args: { _school: string }; Returns: Json }
+      class_group_room: { Args: { _conv: string }; Returns: string }
       class_group_set_description: {
         Args: { _conv: string; _description: string }
         Returns: undefined
@@ -23529,6 +23543,10 @@ export type Database = {
         Args: { _guardian: string; _staff_user: string; _student: string }
         Returns: string
       }
+      start_student_admin_conversation: {
+        Args: { _staff: string }
+        Returns: string
+      }
       start_student_conversation: {
         Args: { _student: string }
         Returns: string
@@ -23537,6 +23555,16 @@ export type Database = {
       start_xbranch_conversation: {
         Args: { _org: string; _other: string }
         Returns: string
+      }
+      student_contacts: {
+        Args: never
+        Returns: {
+          full_name: string
+          label: string
+          school_id: string
+          school_name: string
+          user_id: string
+        }[]
       }
       student_homework: {
         Args: { _student: string }

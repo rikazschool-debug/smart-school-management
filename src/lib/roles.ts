@@ -263,26 +263,25 @@ export function canOrganizeMeeting(role: Role) {
 }
 
 export type CommTab = "inbox" | "mine" | "groups" | "classes" | "circulars" | "archive" | "manage" | "meetings";
-/** Communication tabs per role. Students see their class groups and private chats with their teachers (they never start chats);
- *  classes = teacher class groups + roster (managers monitor); manage = group/circular/report admin (mirrors can_manage_school). */
+/** Communication tabs per role. Class groups are not here: each one is the «مجموعة الفصل» tab inside its digital classroom
+ *  («classes» stays only as an old-link value that redirects there). groups = authorised administrative groups only. */
 export function commTabs(role: Role): CommTab[] {
-  // student: subject groups + private chats started by teachers; never family/admin forms, staff directory or administrative circulars
-  if (role === "student") return ["classes", "inbox", "archive"];
-  // guardian: children's section groups (verified link only), children's teachers + permitted administration, targeted circulars
-  if (role === "guardian") return ["classes", "inbox", "circulars", "archive"];
-  // staff meetings tab (virtual meetings from the same meeting record); never for students/guardians
-  if (role === "teacher") return ["classes", "inbox", "mine", "groups", "meetings", "circulars", "archive"];
+  // student: chats with own school's administration/counselor (+ read-only old teacher chats); never circulars or groups
+  if (role === "student") return ["inbox", "archive"];
+  // guardian: chats with the child's school administration/counselor, targeted circulars
+  if (role === "guardian") return ["inbox", "circulars", "archive"];
+  if (role === "teacher") return ["inbox", "mine", "groups", "meetings", "circulars", "archive"];
   const base: CommTab[] = ["inbox", "mine", "groups", "meetings", "circulars", "archive"];
-  return canManage(role) ? [...base, "classes", "manage"] : base;
+  return canManage(role) ? [...base, "manage"] : base;
 }
 export function commTabLabel(role: Role, t: CommTab): string {
-  if (role === "student") return ({ classes: "مجموعة فصلي", inbox: "رسائل معلميّ", archive: "الأرشيف" } as Record<string, string>)[t] ?? t;
-  const L: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي الخاصة", groups: role === "teacher" ? "مجموعاتي الإدارية" : "مجموعاتي", classes: role === "teacher" ? "مجموعات فصولي" : role === "guardian" ? "مجموعات فصول أبنائي" : "مجموعات الفصول", circulars: "التعاميم", meetings: "الاجتماعات", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
+  if (role === "student") return ({ inbox: "رسائلي", archive: "الأرشيف" } as Record<string, string>)[t] ?? t;
+  const L: Record<CommTab, string> = { inbox: "الوارد", mine: "محادثاتي الخاصة", groups: "المجموعات الإدارية", classes: "مجموعات الفصول", circulars: "التعاميم", meetings: "الاجتماعات", archive: "الأرشيف", manage: "إدارة المجموعات والإعدادات" };
   return L[t];
 }
 export function commTitle(role: Role): { title: string; desc: string } {
-  if (role === "student") return { title: "فصولي ورسائل معلميّ", desc: "مجموعات موادك ورسائل معلميك فقط." };
-  if (role === "guardian") return { title: "التواصل مع المدرسة", desc: "معلمو أبنائك وإدارة المدرسة والتعاميم الموجهة إليك." };
+  if (role === "student") return { title: "التواصل مع إدارة المدرسة", desc: "راسل إدارة مدرستك أو المرشد الطلابي. مجموعة فصلك داخل الفصل الافتراضي." };
+  if (role === "guardian") return { title: "التواصل مع المدرسة", desc: "إدارة مدرسة الابن والمرشد الطلابي والتعاميم الموجهة إليك. مجموعات الفصول داخل الفصول الافتراضية." };
   return { title: "التواصل", desc: "لا يطّلع أحد على محادثة لست طرفًا فيها." };
 }
 /** Roles that start family conversations from the teacher side. */

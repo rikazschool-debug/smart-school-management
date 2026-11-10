@@ -10,6 +10,7 @@
 - scripts/perm4-e2e.ts: owner-only users/roles, group creation, dept-head scope, publisher label. scripts/cleanup-monitor-e2e.ts: monitor alerts/recovery on an isolated channel.
 - scripts/comm-browser-fixture.ts setup|teardown: isolated org/users (cbx-) for communication browser journeys; always run teardown after.
 - scripts/homework-e2e.ts: homework lifecycle/permissions (`NODE_PATH=node_modules bun scripts/homework-e2e.ts`).
+- scripts/class-room-group-e2e.ts: class group inside the classroom + family/student admin-only contacts (43 checks; `--keep` writes /tmp/browser/crg.json with sessions, then clean the org).
 - scripts/comm-roles-e2e.ts: per-role communication (section groups, transfer/teacher change, group-creation matrix, student limits, circulars).
 - scripts/homework2-e2e.ts: feedback files, template copy, late joiners, report export scope.
 - scripts/hw-browser-fixture.ts setup|teardown: isolated homework data (hbx-) for browser journeys; always run teardown after.
