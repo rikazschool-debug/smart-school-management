@@ -45,9 +45,8 @@ try {
   const tg = (tpl?.grants ?? []).map((g: any) => g.section);
   check("5 vice template in the permissions tree has no attendance/gate", !tg.includes("attendance") && !tg.includes("gate"), tg);
 
-  const g = await owner.c.rpc("perm_override_set", { _org: org, _user: v2.id, _section: "attendance", _action: "view", _effect: "grant", _scope: "branch", _schools: [A], _reason: "عرض فقط" });
-  if (g.error) { const g2 = await owner.c.rpc("perm_override_set", { _org: org, _user: v2.id, _section: "attendance", _action: "view", _effect: "grant", _scope: "branch", _reason: "عرض فقط" }); check("6 owner grants view only", !g2.error, g2.error?.message); }
-  else check("6 owner grants view only", true);
+  const g = await owner.c.rpc("perm_override_set", { _org: org, _user: v2.id, _section: "attendance", _action: "view", _effect: "grant", _scope: "branch", _reason: "عرض فقط" });
+  check("6 owner grants view only", !g.error, g.error?.message);
   const p2 = await perms(v2.c, A);
   check("7 view-only vice: view yes, record/approve/gate no", !!p2["attendance.view"] && !p2["attendance.record"] && !p2["attendance.approve"] && !p2["gate.operate"], p2);
   const b2 = await v2.c.rpc("attendance_board", { _school: A, _date: today });
@@ -55,10 +54,16 @@ try {
   const self = await v1.c.rpc("perm_override_set", { _org: org, _user: v1.id, _section: "attendance", _action: "view", _effect: "grant", _scope: "org", _reason: "ذاتي" });
   check("9 vice cannot self-grant", !!self.error);
   const ov = (await admin.from("perm_overrides").select("id").eq("user_id", v2.id).eq("section", "attendance")).data ?? [];
+  const pb = await perms(v2.c, B);
+  console.log("info: branch-scope grant in second branch =", pb["attendance.view"]);
   check("10 explicit individual grant kept after default removal", ov.length === 1, ov.length);
 } catch (e) { bad++; console.error(e); }
 finally {
-  for (const o of orgs) await admin.from("organizations").delete().eq("id", o);
-  await tr.cleanup?.();
-  console.log(`\n${ok} passed, ${bad} failed`); process.exit(bad ? 1 : 0);
+  console.log(`\n${ok} passed, ${bad} failed`);
+  for (const o of orgs) {
+    await admin.from("perm_log").delete().eq("org_id", o); await admin.from("perm_overrides").delete().eq("org_id", o);
+    await admin.from("memberships").delete().eq("org_id", o); await admin.from("schools").delete().eq("org_id", o); await admin.from("organizations").delete().eq("id", o); await tr.purgeOrg(o).catch(() => {});
+  }
+  for (const u of tr.users) await admin.auth.admin.deleteUser(u);
+  process.exit(bad ? 1 : 0);
 }
