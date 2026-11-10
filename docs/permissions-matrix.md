@@ -510,3 +510,6 @@ Calls with no branch: owner only. Deny overrides grant. Revoking listen stops an
 - Sign-in entries (Nov 10 2026): student entry = students only (ID + C-Smart, no password step); guardian entry = guardian accounts only; admin & staff entry = staff accounts only. Enforced on the server.
 
 - Notices hub (Nov 10 2026): principal views/drafts/sends notices by default, own branch only (_perm_base notices; _bc_schools limits branches and recipients). Owner can still deny per person.
+
+## School health (Nov 10 2026)
+- health section: nurse (labelled «المرشدة الصحية») full in branch, principal/vice view, owner all, others via tree. Guardian edits own entries only.
