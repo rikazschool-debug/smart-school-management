@@ -85,9 +85,10 @@ export function MockPanel({ title }: { title: string }) {
 const TONES = ["site-tone-a", "site-tone-b", "site-tone-c"];
 /** Bento layout: some cards span wider for rhythm (only when there are 6+ items). */
 const SPAN = [
-  "lg:col-span-2", "", "", "lg:col-span-2",
-  "", "lg:col-span-2", "lg:col-span-2", "",
-  "", "", "lg:col-span-2", "",
+  "lg:col-span-2", "", "",
+  "", "", "lg:col-span-2",
+  "", "lg:col-span-2", "",
+  "lg:col-span-2", "", "",
 ];
 
 function onSpot(e: React.MouseEvent<HTMLDivElement>) {
@@ -106,7 +107,7 @@ export function FeatureGrid({ items }: { items: Feature[] }) {
           <Reveal key={f.t} delay={(i % 4) * 90} className={wide || ""}>
             <div onMouseMove={onSpot}
               className={`site-spot site-card group relative h-full overflow-hidden rounded-3xl border bg-card p-6 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl ${TONES[i % 3]}`}>
-              <div className="site-blob pointer-events-none absolute -end-10 -top-10 size-36 rounded-full opacity-40 blur-2xl transition-all duration-700 group-hover:scale-150 group-hover:opacity-70" />
+              <div className="site-blob pointer-events-none absolute -end-10 -top-10 size-28 rounded-full opacity-20 blur-2xl transition-all duration-700 group-hover:scale-150 group-hover:opacity-45" />
               <span className="absolute end-5 top-5 font-display text-4xl font-bold text-foreground/5 transition-colors duration-500 group-hover:text-primary/15">{String(i + 1).padStart(2, "0")}</span>
               <span className="site-icon relative grid size-12 place-items-center rounded-2xl text-primary-foreground shadow-lg transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110">
                 <f.icon className="size-6" />
