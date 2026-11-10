@@ -116,7 +116,7 @@ try {
   must(await admin.from("student_guardians").insert({ school_id: s0, student_id: k3, guardian_id: gd, relationship: "father", can_follow: true, verified: true }));
   check("sibling in old section: guardian opens both rooms", !(await G1.rpc("section_room_get", { _room: RA })).error && !(await G1.rpc("section_room_get", { _room: RB })).error);
   // class chat group: shown only to its members, independent of classroom access
-  const conv = (await ins("conversations", { org_id: org, school_id: s0, kind: "group", group_type: "class", section_id: A, title: "مجموعة فصل أ", status: "active", year_id: y })).id;
+  const conv = (await ins("conversations", { org_id: org, school_id: s0, kind: "group", group_type: "class", section_id: A, title: "مجموعة فصل أ", status: "active", year_id: y, created_by: users.p1 })).id;
   must(await admin.from("conversation_members").insert({ conversation_id: conv, user_id: users.g1, role: "member", source: "auto" }));
   check("class group link for a member guardian", ((must(await G1.rpc("section_room_get", { _room: RA })) as any).class_group) === conv);
   check("principal not a member → no group link (classroom access does not add membership)", ((must(await P1.rpc("section_room_get", { _room: RA })) as any).class_group) === null);
