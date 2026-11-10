@@ -4,7 +4,7 @@ import { EmpOpenAssets } from "@/components/hr/assets";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Download, FileText, IdCard, Plus, Upload, UserCheck, X } from "lucide-react";
+import { ArrowRight, Download, FileText, IdCard, Plus, Printer, Upload, UserCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";
@@ -23,6 +23,8 @@ import { ProfileFields, ProfileView, profileForm, profilePayload, type Prof } fr
 import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { PersonCardButton } from "@/components/people/person-card";
 import { HrCategories } from "@/components/hr/categories";
+import { EmployeePrintDialog, EmployeeSheetView } from "@/components/hr/employee-sheet";
+import type { SheetAccount } from "@/lib/hr-sheet";
 import { useServerFn } from "@tanstack/react-start";
 import { createHrEmployeeLogin } from "@/lib/accounts.functions";
 import { CENTRAL, GENDER, HR_DIRECTOR, STATUS, roleLabel, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
@@ -78,6 +80,11 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
   const [q, setQ] = useState(""), [school, setSchool] = useState(""), [status, setStatus] = useState("active");
   const list = useQuery({ queryKey: ["hr-list", org, school, q, status], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: school || null, _q: q || null, _status: status || null }) });
   const rows = list.data ?? [];
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [printIds, setPrintIds] = useState<string[] | null>(null);
+  const canPrint = !!m.caps.print;
+  const toggleSel = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const allSel = rows.length > 0 && rows.every((r) => sel.has(r.id));
   const exp = (kind: "xlsx" | "pdf") => {
     const sens = rows.some((r) => r.sensitive);
     const headers = ["الرقم الوظيفي", "الاسم", "الوظيفة", "المدارس", "الحالة", "حساب دخول", ...(sens ? ["رقم الهوية"] : [])];
@@ -107,13 +114,23 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
       {m.org_wide && m.caps.edit && <HrCategories org={org} />}
       {imp && m.caps.create && all.data && <HrImport org={org} m={m} existing={all.data} onClose={() => nav({ search: {} })} onDone={() => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-list-all"] }); }} />}
       <HrIdReadiness org={org} school={school} onOpen={(id) => nav({ search: { emp: id } })} />
-      {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} />}
+      {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} onPrint={() => setPrintIds([emp])} />}
+      {printIds && <EmployeePrintDialog org={org} ids={printIds} onClose={() => setPrintIds(null)} />}
+      {canPrint && rows.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <label className="flex items-center gap-2"><input type="checkbox" aria-label="تحديد كل الموظفين الظاهرين" checked={allSel} onChange={() => setSel(allSel ? new Set() : new Set(rows.map((r) => r.id)))} />تحديد الكل</label>
+          <span className="text-muted-foreground">المحدد: {sel.size}</span>
+          <Button size="sm" variant="outline" disabled={!sel.size} onClick={() => setPrintIds(rows.filter((r) => sel.has(r.id)).map((r) => r.id).concat([...sel].filter((id) => !rows.some((r) => r.id === id))))}><Printer className="size-4" />طباعة المحددين</Button>
+          {sel.size > 0 && <Button size="sm" variant="ghost" onClick={() => setSel(new Set())}>إلغاء التحديد</Button>}
+        </div>
+      )}
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !rows.length ? (
         <EmptyState title="لا يوجد موظفون مطابقون" hint={m.caps.create ? "أضف الموظفين من حساباتهم أو سجلات المعلمين الموجودة." : "لا توجد ملفات موظفين في نطاقك."} />
       ) : (
         <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {rows.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} className="relative">
+              {canPrint && <input type="checkbox" aria-label={`تحديد ${r.full_name} للطباعة`} className="absolute end-2 bottom-2 z-10 size-4" checked={sel.has(r.id)} onChange={() => toggleSel(r.id)} />}
               <button type="button" onClick={() => nav({ search: { emp: r.id } })} className={"w-full rounded-xl border bg-card p-3 text-start hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (emp === r.id ? "border-primary" : "")}>
                 <span className="flex items-start gap-3">
                   <span className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground"><IdCard className="size-5" /></span>
