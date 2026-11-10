@@ -116,6 +116,7 @@ try {
   must(await admin.from("student_guardians").insert({ school_id: s0, student_id: k3, guardian_id: gd, relationship: "father", can_follow: true, verified: true }));
   check("sibling in old section: guardian opens both rooms", !(await G1.rpc("section_room_get", { _room: RA })).error && !(await G1.rpc("section_room_get", { _room: RB })).error);
   // class chat group: shown only to its members, independent of classroom access
+  must(await admin.from("academic_years").update({ is_current: true }).eq("id", y));
   must(await admin.rpc("sync_class_group", { _section: A, _year: y }));
   const conv = (must(await admin.from("conversations").select("id").eq("group_type", "class").eq("section_id", A).single()) as any).id as string;
   const memb = async () => new Set(((must(await admin.from("conversation_members").select("user_id").eq("conversation_id", conv).is("left_at", null)) as any[])).map((m) => m.user_id));
