@@ -324,6 +324,8 @@ export function supportTabs(role: Role, canView = role === "org_owner" || role =
 /** Flexible school permissions of the signed-in person in the active branch (perm_my_school; keys like "gate.operate").
  *  UI mirror only — the server resolves the same rule (base role + owner grants − explicit deny) on every request. */
 export type SchoolPerms = Record<string, boolean>;
+/** Owner grants that open «الحضور» for a role without it by default (same list adds the side-menu entry); none = page closed even by direct link. */
+export const ATT_GRANTS = ["gate.operate", "attendance.approve", "attendance.follow", "attendance.view", "attendance.record"] as const;
 export function attTabsWith(role: Role, p?: SchoolPerms): AttTab[] {
   // keep the role's own order (its first tab is the default); grants append, denials remove
   let t = attTabs(role);

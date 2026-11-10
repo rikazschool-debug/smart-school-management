@@ -7,7 +7,7 @@ import { RequireSchool } from "@/components/require-school";
 import { CompareTab, CardsTab, FollowupTab, PickupsTab, RecordsTab, TodayTab } from "@/components/attendance/staff";
 import { SettingsTab } from "@/components/attendance/calls-settings";
 import { LessonsSchoolTab, LessonsTab } from "@/components/attendance/lessons";
-import { attTabsWith, canApproveAttendanceWith, type AttTab } from "@/lib/roles";
+import { ATT_GRANTS, attTabsWith, canApproveAttendanceWith, type AttTab } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { useOpsStaff } from "@/lib/ops-staff";
 import { useSession } from "@/lib/session";
@@ -19,9 +19,6 @@ export const Route = createFileRoute("/_authenticated/app/attendance")({
 });
 
 const LABEL: Record<AttTab, string> = { lessons: "رصد حضور اليوم", today: "لوحة اليوم", gate: "البوابة", pickups: "الاستلام والاستئذان", calls: "النداء", cards: "البطاقات والمستلمون", records: "السجلات", followup: "متابعة المواظبة", settings: "الإعدادات", compare: "مقارنة الفروع" };
-
-// same grants that add «الحضور» to the side menu (route.tsx); without one the page is closed even by direct link
-const ATT_GRANTS = ["gate.operate", "attendance.approve", "attendance.follow", "attendance.view", "attendance.record"];
 
 function Page() {
   return <RequireSchool nav="attendance" extra={(p) => ATT_GRANTS.some((k) => !!p[k])}>{(ctx) => <Att ctx={ctx} />}</RequireSchool>;
