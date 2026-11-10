@@ -116,11 +116,15 @@ try {
   must(await admin.from("student_guardians").insert({ school_id: s0, student_id: k3, guardian_id: gd, relationship: "father", can_follow: true, verified: true }));
   check("sibling in old section: guardian opens both rooms", !(await G1.rpc("section_room_get", { _room: RA })).error && !(await G1.rpc("section_room_get", { _room: RB })).error);
   // class chat group: shown only to its members, independent of classroom access
-  const conv = (await ins("conversations", { org_id: org, school_id: s0, kind: "group", group_type: "class", section_id: A, title: "مجموعة فصل أ", status: "active", year_id: y, created_by: users.p1 })).id;
-  must(await admin.rpc("_add_member", { _conv: conv, _user: users.g1, _role: "member", _source: "auto", _visible: new Date().toISOString() }));
-  check("class group link for a member guardian", ((must(await G1.rpc("section_room_get", { _room: RA })) as any).class_group) === conv);
-  check("principal not a member → no group link (classroom access does not add membership)", ((must(await P1.rpc("section_room_get", { _room: RA })) as any).class_group) === null);
-  check("opening the room never adds group members", ((must(await admin.from("conversation_members").select("id").eq("conversation_id", conv)) as any[]).length) === 1);
+  must(await admin.rpc("sync_class_group", { _section: A, _year: y }));
+  const conv = (must(await admin.from("conversations").select("id").eq("group_type", "class").eq("section_id", A).single()) as any).id as string;
+  const memb = async () => new Set(((must(await admin.from("conversation_members").select("user_id").eq("conversation_id", conv).is("left_at", null)) as any[])).map((m) => m.user_id));
+  const before = await memb();
+  for (const [k, c] of [["g1", G1], ["s1", S1], ["p1", P1], ["t1", T1c]] as const) {
+    const got = ((await c.rpc("section_room_get", { _room: RA })).data as any)?.class_group ?? null;
+    check(`class group link for ${k} matches its own group membership`, got === (before.has(users[k]) ? conv : null), { got, member: before.has(users[k]) });
+  }
+  check("opening the room never changes group members", (await memb()).size === before.size);
 
   // teacher change: T1 ends, T3 takes math A
   must(await admin.from("teacher_assignments").update({ status: "ended", end_date: "2026-11-06" }).eq("id", aT1));
