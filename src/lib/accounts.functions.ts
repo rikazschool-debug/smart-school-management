@@ -44,32 +44,45 @@ async function provisionCore(ctx: Ctx, kind: Kind, ids: string[]): Promise<ProvO
       if (!allowed.get(school)) throw new Error(kind === "teacher" ? "إنشاء حسابات الكادر لمالك المجموعة" : "لا تملك صلاحية تعديل بيانات الطلاب وأولياء الأمور");
       if (r["user_id"]) { out.push({ id, state: "linked" }); continue; }
       let email: string | null = null, phone: string | null = null;
-      if (kind === "student") {
-        const nid = String(r["national_id"] ?? "").replace(/\D/g, "");
-        if (!nid) { out.push({ id, state: "missing_id", msg: "رقم هوية الطالب مطلوب لإنشاء حسابه" }); continue; }
-        email = studentLoginEmail(nid);
-      } else {
-        phone = normPhone(r["phone"]);
-        if (!phone) { out.push({ id, state: "missing_phone", msg: "جوال سعودي صحيح مطلوب لإنشاء الحساب" }); continue; }
+      let uid: string | null = null, pending = true, createdNew = false;
+      if (kind === "guardian") {
+        // same guardian (same national ID) already has a login in another branch of the organization → reuse it, never a second account
+        const { data: orgUid } = await supabaseAdmin.rpc("_guardian_org_uid" as never, { _guardian: id } as never);
+        if (orgUid) {
+          uid = orgUid as unknown as string;
+          const u = await supabaseAdmin.auth.admin.getUserById(uid);
+          pending = !u.data.user?.phone_confirmed_at;
+        }
       }
-      const { data: found } = await supabaseAdmin.rpc("_auth_user_lookup" as never, { _email: email, _phone: phone } as never);
-      const ex = (found as unknown as { user_id: string; phone_confirmed: boolean }[] | null)?.[0];
-      let uid = ex?.user_id ?? null;
-      let pending = true;
-      if (uid) {
-        // existing login: link without changing password/roles; an unconfirmed phone still has to be confirmed
-        pending = kind !== "student" && !ex!.phone_confirmed;
-      } else {
-        const created = kind === "student"
-          ? await supabaseAdmin.auth.admin.createUser({ email: email!, password: tempPassword(), email_confirm: true, user_metadata: { full_name: r["full_name"] } })
-          : await supabaseAdmin.auth.admin.createUser({ phone: phone!, phone_confirm: false, user_metadata: { full_name: r["full_name"] } });
-        if (created.error || !created.data.user) throw new Error("تعذّر إنشاء الحساب");
-        uid = created.data.user.id;
+      if (!uid) {
+        if (kind === "student") {
+          const nid = String(r["national_id"] ?? "").replace(/\D/g, "");
+          if (!nid) { out.push({ id, state: "missing_id", msg: "رقم هوية الطالب مطلوب لإنشاء حسابه" }); continue; }
+          email = studentLoginEmail(nid);
+        } else {
+          phone = normPhone(r["phone"]);
+          if (!phone) { out.push({ id, state: "missing_phone", msg: "جوال سعودي صحيح مطلوب لإنشاء الحساب" }); continue; }
+        }
+        const { data: found } = await supabaseAdmin.rpc("_auth_user_lookup" as never, { _email: email, _phone: phone } as never);
+        const ex = (found as unknown as { user_id: string; phone_confirmed: boolean }[] | null)?.[0];
+        uid = ex?.user_id ?? null;
+        if (uid) {
+          // existing login: link without changing password/roles; an unconfirmed phone still has to be confirmed
+          pending = kind !== "student" && !ex!.phone_confirmed;
+        } else {
+          const created = kind === "student"
+            ? await supabaseAdmin.auth.admin.createUser({ email: email!, password: tempPassword(), email_confirm: true, user_metadata: { full_name: r["full_name"] } })
+            : await supabaseAdmin.auth.admin.createUser({ phone: phone!, phone_confirm: false, user_metadata: { full_name: r["full_name"] } });
+          if (created.error || !created.data.user) throw new Error("تعذّر إنشاء الحساب");
+          uid = created.data.user.id;
+          createdNew = true;
+        }
       }
       const { data: st, error: e2 } = await supabaseAdmin.rpc("_provision_link" as never, { _kind: kind, _subject: id, _uid: uid, _actor: ctx.userId, _pending: pending } as never);
       if (e2) throw new Error(e2.message);
       out.push({ id, state: String(st) });
-      if (kind === "guardian" && ["linked", "pending_phone"].includes(String(st))) queued.push(id);
+      // «account ready» only for a brand-new guardian login; linking a sibling, another branch or a re-import never re-sends
+      if (kind === "guardian" && createdNew && ["linked", "pending_phone"].includes(String(st))) queued.push(id);
     } catch (e) {
       out.push({ id, state: "error", msg: (e as Error).message });
     }
@@ -85,6 +98,7 @@ async function queueReadyMessages(gids: string[]) {
   const { data } = await supabaseAdmin.from("guardians").select("id, school_id, full_name, schools(name), student_guardians(students(full_name))").in("id", gids);
   for (const g of (data ?? []) as unknown as { id: string; school_id: string; full_name: string; schools: { name: string } | null; student_guardians: { students: { full_name: string } | null }[] }[]) {
     const kids = g.student_guardians.map((x) => x.students?.full_name).filter(Boolean).join("، ");
+    // unique guardian_id: a retry or a second call finds the row and inserts nothing
     await supabaseAdmin.from("acct_outbox" as never).insert({ school_id: g.school_id, guardian_id: g.id, params: { name: g.full_name, kids, school: g.schools?.name ?? "" } } as never);
   }
   try { const { drainAcctOutbox } = await import("@/lib/acct-outbox.server"); await drainAcctOutbox(10); } catch (e) { console.error("acct outbox", (e as Error).message); }
