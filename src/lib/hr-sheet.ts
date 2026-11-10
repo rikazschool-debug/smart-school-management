@@ -1,3 +1,4 @@
+import { brandHeaderHtml } from "@/lib/export-brand";
 // One layout for the employee file: on-screen view, single print and bulk print all use buildSheet,
 // so section order and masking are identical everywhere. Data comes only from the server
 // (hr_employee_get / hr_employee_profile_get / hr_employee_account or hr_employee_print), already masked.
@@ -76,7 +77,7 @@ export function sheetHtml(items: SheetItem[], opts: { org?: string | undefined; 
     const e = it.employee;
     const secs = buildSheet(it, opts.roleLabel).map((s, n) => `<section><h2>${n + 1}. ${esc(s.title)}</h2><table>${s.rows.map((r) =>
       `<tr><th>${esc(r.label)}</th><td${r.ltr ? ' dir="ltr"' : ""}${r.masked ? ' class="m"' : ""}>${esc(r.value || "—")}</td></tr>`).join("")}</table></section>`).join("");
-    return `<article${i ? ' class="pb"' : ""}><header><div><h1>بيانات الموظف</h1><p>${esc(str(e["display_name"]) || str(e["full_name"]))} · <bdi dir="ltr">${esc(str(e["employee_no"]))}</bdi></p></div><div class="meta">${opts.org ? esc(opts.org) + "<br>" : ""}تاريخ الطباعة: ${esc(at)}${opts.by ? `<br>بواسطة: ${esc(opts.by)}` : ""}</div></header>${secs}<footer>سري — للاستخدام الإداري الداخلي فقط. لا يتضمن كلمات مرور أو أسرار حساب.</footer></article>`;
+    return `<article${i ? ' class="pb"' : ""}>${brandHeaderHtml({ fallbackName: opts.org })}<header><div><h1>بيانات الموظف</h1><p>${esc(str(e["display_name"]) || str(e["full_name"]))} · <bdi dir="ltr">${esc(str(e["employee_no"]))}</bdi></p></div><div class="meta">${opts.org ? esc(opts.org) + "<br>" : ""}تاريخ الطباعة: ${esc(at)}${opts.by ? `<br>بواسطة: ${esc(opts.by)}` : ""}</div></header>${secs}<footer>سري — للاستخدام الإداري الداخلي فقط. لا يتضمن كلمات مرور أو أسرار حساب.</footer></article>`;
   }).join("");
   return `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>بيانات الموظفين</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">

@@ -1,7 +1,8 @@
 import { RikazLogo } from "@/components/logo";
 import { createFileRoute, Link, Outlet, useCanGoBack, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
-import { SchoolLogo } from "@/components/school-logo";
+import { SchoolLogo, useSchoolLogo } from "@/components/school-logo";
+import { setExportBrand } from "@/lib/export-brand";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOpsStaff } from "@/lib/ops-staff";
@@ -202,6 +203,10 @@ function Shell() {
   const cleanPath = path.replace(/\/+$/, "") || "/";
   // owner group account vs inside one school: /app and the branch list are the group; opening a branch enters it; shared pages keep the last state
   const groupView = owner && !ownerInSchool && !(cleanPath === "/app/school-home" && schoolPicked);
+  const brandLogo = useSchoolLogo(groupView ? null : active?.schoolId);
+  const brandName = active ? (groupView ? active.orgName : active.schoolName) ?? "" : "";
+  const brandUrl = groupView ? myAvatar.data ?? null : brandLogo.data ?? null;
+  useEffect(() => { void setExportBrand(brandName, brandUrl); }, [brandName, brandUrl]);
   // Owner home has no side menu; inside a section only that section's menu shows; shared pages (profile…) keep the last section.
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
