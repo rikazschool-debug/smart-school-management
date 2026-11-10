@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS } from "@/lib/roles";
+import { XbranchSettings } from "@/components/comm/xbranch";
 
 export const Route = createFileRoute("/_authenticated/app/chat-settings")({
   component: Page,
@@ -44,6 +45,7 @@ function Page() {
     <>
       <PageHeader title="ضبط المحادثات" desc="إعدادات مؤسستك فقط. هذه الصلاحية لا تتيح قراءة المحادثات الخاصة أو ملفاتها." />
       <div className="space-y-6">
+        {active.role === "org_owner" && <XbranchSettings orgId={org} />}
         <Media org={org} d={d} />
         <Replies org={org} d={d} />
         <Rules org={org} d={d} />
