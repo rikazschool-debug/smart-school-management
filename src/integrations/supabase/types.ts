@@ -18822,6 +18822,10 @@ export type Database = {
       }
       _idl_nid: { Args: { _s: string }; Returns: string }
       _idl_phone: { Args: { _s: string }; Returns: string }
+      _idl_portal_ok: {
+        Args: { _portal: string; _uid: string }
+        Returns: boolean
+      }
       _idl_resolve: {
         Args: { _nid: string }
         Returns: {
@@ -18831,6 +18835,7 @@ export type Database = {
         }[]
       }
       _idl_student: { Args: { _csmart: string; _nid: string }; Returns: Json }
+      _idl_student_finish: { Args: { _uid: string }; Returns: string }
       _idl_verify: {
         Args: { _challenge: string; _code: string }
         Returns: Json
