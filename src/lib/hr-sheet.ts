@@ -70,7 +70,7 @@ export function buildSheet(it: SheetItem, roleLabel: (r: string) => string = (r)
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 /** Arabic RTL A4 document; every employee starts on a new page. Used by the preview iframe and printing. */
-export function sheetHtml(items: SheetItem[], opts: { org?: string; by?: string; at?: Date; roleLabel?: (r: string) => string } = {}): string {
+export function sheetHtml(items: SheetItem[], opts: { org?: string | undefined; by?: string | undefined; at?: Date; roleLabel?: (r: string) => string } = {}): string {
   const at = (opts.at ?? new Date()).toLocaleString("ar-SA-u-nu-latn", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Riyadh" });
   const pages = items.map((it, i) => {
     const e = it.employee;
