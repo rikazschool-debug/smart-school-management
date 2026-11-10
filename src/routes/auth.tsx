@@ -1,7 +1,8 @@
 import { PasswordInput } from "@/components/password-input";
 import { toLoginEmail } from "@/lib/guardian-login";
 import { studentLoginEmail } from "@/lib/people-import";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Brand } from "@/components/site/shell";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { requestIdCode, studentSignIn, verifyIdCode } from "@/lib/id-login.functions";
@@ -134,7 +135,7 @@ function AuthPage() {
               <p className="text-sm text-muted-foreground">اختر نوع حسابك</p>
               <div className="space-y-3">
                 {ENTRIES.map((x) => (
-                  <button key={x.key} type="button" onClick={() => setEntry(x.key)} className="w-full rounded-xl border bg-card p-4 text-start transition hover:border-primary hover:bg-secondary">
+                  <button key={x.key} type="button" onClick={() => setEntry(x.key)} className="w-full rounded-xl border bg-card p-4 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-primary hover:bg-secondary hover:shadow-md">
                     <span className="block font-semibold">{x.title}</span>
                     <span className="mt-1 block text-xs text-muted-foreground">{x.desc}</span>
                   </button>
