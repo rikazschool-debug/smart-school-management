@@ -28,6 +28,8 @@ try {
   org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة الحسابات", _school_name: "فرع الحسابات" })).data;
   const S = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(S);
   for (const [u, r] of [[pr, "principal"], [sa, "student_affairs"], [tch, "teacher"]] as any[]) await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: r });
+  // editing student/guardian records needs an explicit owner grant (people_family.edit) since Nov 10 2026
+  await admin.from("perm_overrides").insert({ org_id: org, user_id: sa.id, section: "people_family", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: owner.id });
   const ins = async (tb: string, v: any, c = admin) => { const r = await c.from(tb).insert({ school_id: S, ...v }).select(tb === "teachers" ? "id, school_id, user_id, full_name, email, phone, status" : "*").single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
   const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-30", is_current: true });
   const stage = await ins("stages", { name: "ابتدائي" }), grade = await ins("grades", { name: "الأول", stage_id: stage.id });
