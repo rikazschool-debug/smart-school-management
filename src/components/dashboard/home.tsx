@@ -8,6 +8,7 @@ import { ChildOverview } from "@/components/family/child-overview";
 import { NAV_BY_ROLE, ROLE_LABELS, canManage, type NavKey } from "@/lib/roles";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { OwnerPortal } from "@/components/owner-portal";
+import { PlatformHome } from "@/components/platform/platform-home";
 import { WorkToday } from "@/components/work-today";
 import { OpsHome } from "@/components/maintenance/ops-home";
 import { useOpsStaff } from "@/lib/ops-staff";
@@ -47,6 +48,8 @@ export function Home() {
           {([["/app/hr", "ملفات الموظفين", "إضافة الموظفين وتعديل ملفاتهم"], ["/app/hr/leave", "الإجازات والاستئذان", "الطلبات بانتظار اعتماد الموارد البشرية"], ["/app/hr/payroll", "مسير الرواتب", "إعداد المسير ومراجعته"]] as const).map(([to, t, h]) => (
             <Link key={to} to={to} className="rounded-2xl border bg-card p-5 shadow-sm hover:border-primary"><p className="font-bold">{t}</p><p className="mt-1 text-sm text-muted-foreground">{h}</p></Link>))}
         </div>
+      ) : active.role === "platform_admin" && !active.schoolId ? (
+        <PlatformHome />
       ) : !active.schoolId ? (
         <EmptyState title="اختر مدرسة من شريط السياق" hint={active.role === "platform_admin" ? "أو افتح صفحة المؤسسات." : "أو أضف مدرسة من صفحة المدارس."} />
       ) : active.role === "org_owner" ? (

@@ -2,7 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
 import { askText } from "@/components/confirm";
-import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
+import { useSession } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { arabicError } from "@/lib/session";
 
@@ -12,13 +13,13 @@ const STG: Record<string, string> = { kg: "رياض أطفال", primary: "اب�
 /** Platform owner: public school-registration requests, newest first. */
 export function SignupRequests() {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["platform-signup-requests"], queryFn: async () => { const { data, error } = await db.rpc("platform_signup_requests"); if (error) throw error; return (data ?? []) as Row[]; } });
+  const q = useQuery({ queryKey: ["signup-requests"], queryFn: async () => { const { data, error } = await db.rpc("platform_signup_requests"); if (error) throw error; return (data ?? []) as Row[]; } });
   async function setStatus(r: Row, status: string) {
     const note = await askText(`${r["ref"]} — ${ST[status]}: ملاحظة (اختيارية)`, { long: true });
     if (note === null) return;
     const { error } = await db.rpc("platform_signup_set", { _id: r["id"], _status: status, _note: note ?? "" });
     if (error) { toast.error(arabicError(error)); return; }
-    toast.success("تم التحديث"); qc.invalidateQueries({ queryKey: ["platform-signup-requests"] });
+    toast.success("تم التحديث"); qc.invalidateQueries({ queryKey: ["signup-requests"] });
   }
   const rows = q.data ?? [];
   const fresh = rows.filter((r) => r["status"] === "new").length;
@@ -49,4 +50,11 @@ export function SignupRequests() {
       )}
     </section>
   );
+}
+
+/** /app/signup-requests page (platform admin only; RPCs re-check). */
+export function SignupRequestsPage() {
+  const { active } = useSession();
+  if (active?.role !== "platform_admin") return <ForbiddenState />;
+  return (<><PageHeader title="طلبات التسجيل" desc="الطلبات الواردة من صفحة «إنشاء حساب» العامة، الأحدث أولًا." /><SignupRequests /></>);
 }
