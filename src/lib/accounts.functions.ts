@@ -13,10 +13,73 @@ function tempPassword() {
   return Array.from(b, (x) => a[x % a.length]).join("") + "7a";
 }
 
+type Ctx = { supabase: { from: (t: string) => any; rpc: (f: never, a: never) => any }; userId: string }; // eslint-disable-line @typescript-eslint/no-explicit-any
+type ProvOut = { id: string; state: string; msg?: string };
+
+/** Caller may create logins of this kind in this school: teachers → group owner only; students/guardians → owner or people_family.edit (automatic on add). */
+async function mayProvision(ctx: Ctx, kind: Kind, school: string): Promise<boolean> {
+  if (kind === "teacher") {
+    const { data: s } = await ctx.supabase.from("schools").select("org_id").eq("id", school).maybeSingle();
+    if (!s) return false;
+    const { data } = await ctx.supabase.rpc("is_org_owner" as never, { _org: s.org_id } as never);
+    return !!data;
+  }
+  const { data } = await ctx.supabase.rpc("can_edit_students" as never, { _school: school } as never);
+  return !!data;
+}
+
+/** Shared core: checks the caller per school with their own RLS client, then creates/links through the service role. */
+async function provisionCore(ctx: Ctx, kind: Kind, ids: string[]): Promise<ProvOut[]> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const table = kind === "student" ? "students" : kind === "teacher" ? "teachers" : "guardians";
+  const { data: rows, error } = await (kind === "teacher" ? ctx.supabase.from("teachers").select("id, school_id, user_id, phone, email, full_name") : ctx.supabase.from(table).select("*")).in("id", ids); // teachers.national_id is not readable directly
+  if (error) throw new Error("تعذّرت قراءة السجلات");
+  const out: ProvOut[] = [];
+  const allowed = new Map<string, boolean>();
+  for (const r of (rows ?? []) as Record<string, string | null>[]) {
+    const id = r["id"]!, school = r["school_id"]!;
+    try {
+      if (!allowed.has(school)) allowed.set(school, await mayProvision(ctx, kind, school));
+      if (!allowed.get(school)) throw new Error(kind === "teacher" ? "إنشاء حسابات الكادر لمالك المجموعة" : "لا تملك صلاحية تعديل بيانات الطلاب وأولياء الأمور");
+      if (r["user_id"]) { out.push({ id, state: "linked" }); continue; }
+      let email: string | null = null, phone: string | null = null;
+      if (kind === "student") {
+        const nid = String(r["national_id"] ?? "").replace(/\D/g, "");
+        if (!nid) { out.push({ id, state: "missing_id", msg: "رقم هوية الطالب مطلوب لإنشاء حسابه" }); continue; }
+        email = studentLoginEmail(nid);
+      } else {
+        phone = normPhone(r["phone"]);
+        if (!phone) { out.push({ id, state: "missing_phone", msg: "جوال سعودي صحيح مطلوب لإنشاء الحساب" }); continue; }
+      }
+      const { data: found } = await supabaseAdmin.rpc("_auth_user_lookup" as never, { _email: email, _phone: phone } as never);
+      const ex = (found as unknown as { user_id: string; phone_confirmed: boolean }[] | null)?.[0];
+      let uid = ex?.user_id ?? null;
+      let pending = true;
+      if (uid) {
+        // existing login: link without changing password/roles; an unconfirmed phone still has to be confirmed
+        pending = kind !== "student" && !ex!.phone_confirmed;
+      } else {
+        const created = kind === "student"
+          ? await supabaseAdmin.auth.admin.createUser({ email: email!, password: tempPassword(), email_confirm: true, user_metadata: { full_name: r["full_name"] } })
+          : await supabaseAdmin.auth.admin.createUser({ phone: phone!, phone_confirm: false, user_metadata: { full_name: r["full_name"] } });
+        if (created.error || !created.data.user) throw new Error("تعذّر إنشاء الحساب");
+        uid = created.data.user.id;
+      }
+      const { data: st, error: e2 } = await supabaseAdmin.rpc("_provision_link" as never, { _kind: kind, _subject: id, _uid: uid, _actor: ctx.userId, _pending: pending } as never);
+      if (e2) throw new Error(e2.message);
+      out.push({ id, state: String(st) });
+    } catch (e) {
+      out.push({ id, state: "error", msg: (e as Error).message });
+    }
+  }
+  for (const id of ids) if (!out.some((o) => o.id === id)) out.push({ id, state: "error", msg: "السجل غير متاح" });
+  return out;
+}
+
 /**
- * Creates or links the fixed-role login for students (national ID + initial password), teachers and guardians (mobile + WhatsApp code).
- * The caller's permission is checked with their own RLS client; only then the service role creates/links. New accounts have no access
- * until the first-login step (account_setup); existing accounts are linked without touching their password or roles.
+ * Creates or links the fixed-role login for students (national ID), teachers and guardians (ID + WhatsApp code to the mobile).
+ * Teachers: group owner only. Students/guardians: owner or an owner-granted people_family.edit (the screens call it automatically on add).
+ * New accounts have no access until the first-login step (account_setup); existing accounts are linked without touching password or roles.
  */
 export const provisionAccounts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -25,55 +88,46 @@ export const provisionAccounts = createServerFn({ method: "POST" })
     if (!Array.isArray(d.ids) || d.ids.length > 200 || !d.ids.every((x) => UUID.test(x))) throw new Error("معرّفات غير صالحة");
     return d;
   })
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data, context }) => provisionCore(context as unknown as Ctx, data.kind, data.ids));
+
+export type AutoResult = { student: ProvOut | null; guardians: { id: string; name: string; state: string; msg?: string; message: string }[] };
+
+/**
+ * Automatic logins after adding/editing a student or a guardian: the student (by national ID) and every linked guardian
+ * (by ID; needs a mobile for the WhatsApp code — without one the guardian waits as missing_phone until the mobile is added).
+ * Each newly ready guardian gets one «account ready» WhatsApp message (acct_outbox, unique per guardian).
+ */
+export const autoAccounts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { studentId?: string; guardianId?: string }) => {
+    if (d?.studentId ? !UUID.test(d.studentId) : !UUID.test(d?.guardianId ?? "")) throw new Error("معرّف غير صالح");
+    return d;
+  })
+  .handler(async ({ data, context }): Promise<AutoResult> => {
+    const ctx = context as unknown as Ctx;
+    let student: ProvOut | null = null;
+    let gids: string[] = [];
+    if (data.studentId) {
+      [student] = await provisionCore(ctx, "student", [data.studentId]);
+      const { data: links } = await ctx.supabase.from("student_guardians").select("guardian_id").eq("student_id", data.studentId);
+      gids = [...new Set(((links ?? []) as { guardian_id: string }[]).map((l) => l.guardian_id))];
+    } else gids = [data.guardianId!];
+    const res = gids.length ? await provisionCore(ctx, "guardian", gids) : [];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const table = data.kind === "student" ? "students" : data.kind === "teacher" ? "teachers" : "guardians";
-    const { data: rows, error } = await (data.kind === "teacher" ? context.supabase.from("teachers").select("id, school_id, user_id, phone, email, full_name") : context.supabase.from(table).select("*")).in("id", data.ids); // teachers.national_id is not readable directly // teachers.national_id is not readable directly
-    if (error) throw new Error("تعذّرت قراءة السجلات");
-    const out: { id: string; state: string; msg?: string }[] = [];
-    const allowed = new Map<string, boolean>();
-    for (const r of (rows ?? []) as Record<string, string | null>[]) {
-      const id = r["id"]!, school = r["school_id"]!;
-      try {
-        if (!allowed.has(school)) {
-          const fn = data.kind === "teacher" ? "is_school_principal" : "can_manage_students";
-          const { data: ok } = await context.supabase.rpc(fn as never, { _school: school } as never);
-          allowed.set(school, !!ok);
-        }
-        if (!allowed.get(school)) throw new Error("لا تملك صلاحية إنشاء هذا الحساب");
-        if (r["user_id"]) { out.push({ id, state: "linked" }); continue; }
-        let email: string | null = null, phone: string | null = null;
-        if (data.kind === "student") {
-          const nid = String(r["national_id"] ?? "").replace(/\D/g, "");
-          if (!nid) throw new Error("رقم هوية الطالب مطلوب لإنشاء حسابه");
-          email = studentLoginEmail(nid);
-        } else {
-          phone = normPhone(r["phone"]);
-          if (!phone) throw new Error("جوال سعودي صحيح مطلوب لإنشاء الحساب");
-        }
-        const { data: found } = await supabaseAdmin.rpc("_auth_user_lookup" as never, { _email: email, _phone: phone } as never);
-        const ex = (found as unknown as { user_id: string; phone_confirmed: boolean }[] | null)?.[0];
-        let uid = ex?.user_id ?? null;
-        let pending = true;
-        if (uid) {
-          // existing login: link without changing password/roles; an unconfirmed phone still has to be confirmed
-          pending = data.kind !== "student" && !ex!.phone_confirmed;
-        } else {
-          const created = data.kind === "student"
-            ? await supabaseAdmin.auth.admin.createUser({ email: email!, password: tempPassword(), email_confirm: true, user_metadata: { full_name: r["full_name"] } })
-            : await supabaseAdmin.auth.admin.createUser({ phone: phone!, phone_confirm: false, user_metadata: { full_name: r["full_name"] } });
-          if (created.error || !created.data.user) throw new Error("تعذّر إنشاء الحساب");
-          uid = created.data.user.id;
-        }
-        const { data: st, error: e2 } = await supabaseAdmin.rpc("_provision_link" as never, { _kind: data.kind, _subject: id, _uid: uid, _actor: context.userId, _pending: pending } as never);
-        if (e2) throw new Error(e2.message);
-        out.push({ id, state: String(st) });
-      } catch (e) {
-        out.push({ id, state: "error", msg: (e as Error).message });
+    const guardians: AutoResult["guardians"] = [];
+    for (const r of res) {
+      const { data: g } = await supabaseAdmin.from("guardians").select("id, school_id, full_name, phone, schools(name), student_guardians(students(full_name, user_id))").eq("id", r.id).maybeSingle();
+      const gg = g as unknown as { id: string; school_id: string; full_name: string; phone: string | null; schools: { name: string } | null; student_guardians: { students: { full_name: string; user_id: string | null } | null }[] } | null;
+      let message = "none";
+      if (gg && ["linked", "pending_phone"].includes(r.state) && normPhone(gg.phone)) {
+        const kids = gg.student_guardians.map((x) => x.students?.full_name).filter(Boolean).join("، ");
+        const ins = await supabaseAdmin.from("acct_outbox" as never).insert({ school_id: gg.school_id, guardian_id: gg.id, params: { name: gg.full_name, kids, school: gg.schools?.name ?? "" } } as never);
+        message = ins.error ? "already" : "queued";
       }
+      guardians.push({ id: r.id, name: gg?.full_name ?? "", state: r.state, ...(r.msg ? { msg: r.msg } : {}), message });
     }
-    for (const id of data.ids) if (!out.some((o) => o.id === id)) out.push({ id, state: "error", msg: "السجل غير متاح" });
-    return out;
+    try { const { drainAcctOutbox } = await import("@/lib/acct-outbox.server"); await drainAcctOutbox(10); } catch (e) { console.error("acct outbox", (e as Error).message); }
+    return { student, guardians };
   });
 
 /** Issues a one-time initial password for a student (shown once to the authorized manager, never stored). Also the safe recovery path. */
@@ -83,8 +137,9 @@ export const issueStudentPassword = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: s } = await context.supabase.from("students").select("id, school_id, national_id, user_id, full_name").eq("id", data.studentId).maybeSingle();
     if (!s) throw new Error("الطالب غير موجود");
-    const { data: ok } = await context.supabase.rpc("can_manage_students", { _school: s.school_id });
-    if (!ok) throw new Error("لا تملك صلاحية إدارة الطلاب");
+    const { data: sc } = await context.supabase.from("schools").select("org_id").eq("id", s.school_id).maybeSingle();
+    const { data: ok } = sc ? await context.supabase.rpc("is_org_owner" as never, { _org: (sc as { org_id: string }).org_id } as never) : { data: false };
+    if (!ok) throw new Error("إصدار كلمات المرور لمالك المجموعة فقط");
     const nid = String(s.national_id ?? "").replace(/\D/g, "");
     if (!nid) throw new Error("رقم هوية الطالب مطلوب");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
