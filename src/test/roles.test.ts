@@ -43,11 +43,11 @@ describe("role rules", () => {
     expect(NAV_BY_ROLE.nurse).toEqual(["home", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
     expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
   });
-  it("students get subject groups and teacher chats only — no circulars, groups or management", () => {
-    expect(commTabs("student")).toEqual(["classes", "inbox", "archive"]);
+  it("students get their own chats only — no circulars, groups or management; class groups live in the classroom", () => {
+    expect(commTabs("student")).toEqual(["inbox", "archive"]);
     expect(commTabs("student")).not.toContain("circulars");
     expect(commTabs("student")).not.toContain("manage");
-    expect(commTabs("teacher")).toContain("classes");
+    for (const r of ["teacher", "guardian", "principal", "org_owner"] as const) expect(commTabs(r)).not.toContain("classes");
   });
   it("only managers get the communication admin tab", () => {
     expect(commTabs("principal")).toContain("manage");
