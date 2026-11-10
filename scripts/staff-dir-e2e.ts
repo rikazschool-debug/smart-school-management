@@ -60,7 +60,7 @@ try {
   check("principal cannot edit teacher", !(await upd(P, "teachers", tch, { full_name: "x" })));
   check("vice cannot edit student", !(await upd(VP, "students", kid, { full_name: "x" })));
   check("owner edits student and teacher", (await upd(oc, "students", kid, { full_name: "طالب" })) && (await upd(oc, "teachers", tch, { full_name: "معلم" })));
-  must(await admin.from("perm_overrides").insert([{ org_id: org, user_id: users.pr, section: "people_family", action: "edit", effect: "grant", scope: "branch", reason: "اختبار" }, { org_id: org, user_id: users.pr, section: "people_staff", action: "edit", effect: "grant", scope: "branch", reason: "اختبار" }]));
+  must(await admin.from("perm_overrides").insert([{ org_id: org, user_id: users.pr, section: "people_family", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: users.owner }, { org_id: org, user_id: users.pr, section: "people_staff", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: users.owner }]));
   check("after owner grant: principal edits student", await upd(P, "students", kid, { full_name: "طالب ٢" }));
   check("after owner grant: principal edits teacher", await upd(P, "teachers", tch, { full_name: "معلم ٢" }));
   check("principal refused for another branch", !!(await P.rpc("school_staff_directory", { _school: S2 })).error);
