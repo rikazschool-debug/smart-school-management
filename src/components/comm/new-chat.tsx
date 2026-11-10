@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { arabicError, type AppContext } from "@/lib/session";
 import { PeoplePicker, usePeopleByIds } from "@/components/people-picker";
+import { useXbranch } from "@/components/comm/xbranch";
 
 const sel = selectCls("w-full");
 
@@ -248,17 +249,28 @@ function DirectStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: string 
   // group owner on the group account: directory of every branch; the chat belongs to the chosen person's branch
   const inSchool = useOwnerInSchool();
   const orgWide = ctx.role === "org_owner" && !inSchool;
-  const scope = { purpose: "direct" as const, school: orgWide ? null : ctx.schoolId, org: ctx.orgId };
+  const xb = useXbranch(ctx.orgId);
+  const [cross, setCross] = useState(false);
+  const xMode = cross && !orgWide && !!xb.data?.me;
+  const scope = xMode ? { purpose: "xbranch" as const, school: null, org: ctx.orgId } : { purpose: "direct" as const, school: orgWide ? null : ctx.schoolId, org: ctx.orgId };
   const chosen = usePeopleByIds(scope, to);
   const chatSchool = orgWide ? chosen.data?.get(to[0] ?? "")?.school_id : ctx.schoolId;
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">{orgWide ? "الدليل يعرض موظفي جميع فروع المجموعة الساريين، دون أرقام هواتف أو بريد." : "الدليل يعرض موظفي هذه المدرسة الساريين فقط، دون أرقام هواتف أو بريد."}</p>
-      <PeoplePicker {...scope} label="الموظف" value={to} onChange={setTo} single showBranch={orgWide} />
+      {!orgWide && xb.data?.me && (
+        <div className="flex gap-2">
+          <Button size="sm" variant={!cross ? "secondary" : "ghost"} onClick={() => { setCross(false); setTo([]); }}>زملاء هذه المدرسة</Button>
+          <Button size="sm" variant={cross ? "secondary" : "ghost"} onClick={() => { setCross(true); setTo([]); }}>زميل في فرع آخر</Button>
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">{xMode ? "ابحث بالاسم واختر الفرع؛ يظهر بجوار كل اسم الدور والفرع. المراسلة لا تمنح وصولًا لبيانات الفرع الآخر." : orgWide ? "الدليل يعرض موظفي جميع فروع المجموعة الساريين، دون أرقام هواتف أو بريد." : "الدليل يعرض موظفي هذه المدرسة الساريين فقط، دون أرقام هواتف أو بريد."}</p>
+      <PeoplePicker {...scope} label="الموظف" value={to} onChange={setTo} single showBranch={orgWide || xMode} />
       <Textarea aria-label="الرسالة الأولى" placeholder="الرسالة الأولى (اختياري)" value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} />
-      <Button disabled={!to.length || !chatSchool || busy} onClick={async () => {
+      <Button disabled={!to.length || (!xMode && !chatSchool) || busy} onClick={async () => {
         setBusy(true);
-        const { data, error } = await db.rpc("start_direct_conversation", { _school: chatSchool, _other: to[0] });
+        const { data, error } = xMode
+          ? await db.rpc("start_xbranch_conversation" as never, { _org: ctx.orgId, _other: to[0] } as never) as unknown as { data: string; error: { message: string } | null }
+          : await db.rpc("start_direct_conversation", { _school: chatSchool, _other: to[0] });
         if (error) { setBusy(false); return void toast.error(arabicError(error)); }
         await firstMessage(data, body, key);
         setBusy(false); onCreated(data);

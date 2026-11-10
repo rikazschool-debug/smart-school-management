@@ -16877,6 +16877,41 @@ export type Database = {
           },
         ]
       }
+      xb_settings: {
+        Row: {
+          mode: string
+          org_id: string
+          roles: string[]
+          schools: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          mode?: string
+          org_id: string
+          roles?: string[]
+          schools?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          mode?: string
+          org_id?: string
+          roles?: string[]
+          schools?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xb_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -19399,6 +19434,7 @@ export type Database = {
         Args: { _course: string; _user: string }
         Returns: boolean
       }
+      _xb_ok: { Args: { _org: string; _user: string }; Returns: boolean }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
       account_status: {
@@ -23242,6 +23278,10 @@ export type Database = {
         Returns: string
       }
       start_timetable_revision: { Args: { _id: string }; Returns: string }
+      start_xbranch_conversation: {
+        Args: { _org: string; _other: string }
+        Returns: string
+      }
       student_homework: {
         Args: { _student: string }
         Returns: {
@@ -23683,6 +23723,16 @@ export type Database = {
       }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
       vice_teacher_ids: { Args: never; Returns: string[] }
+      xb_get: { Args: { _org: string }; Returns: Json }
+      xb_save: {
+        Args: {
+          _mode: string
+          _org: string
+          _roles: string[]
+          _schools: string[]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:

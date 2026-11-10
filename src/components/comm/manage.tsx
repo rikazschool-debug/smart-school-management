@@ -14,6 +14,7 @@ import { PeoplePicker, usePeopleByIds } from "@/components/people-picker";
 import { GroupPanel } from "@/components/comm/group-panel";
 import { canCreateGroupWith } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
+import { XbranchSettings } from "@/components/comm/xbranch";
 
 const sel = selectCls("w-full");
 
@@ -30,6 +31,7 @@ export function ManageTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       {view === "groups" && <GroupsList ctx={ctx} />}
       {view === "new" && canNew && <GroupWizard ctx={ctx} onDone={() => setView("groups")} />}
       {view === "settings" && <CommSettings schoolId={ctx.schoolId} />}
+      {view === "settings" && ctx.role === "org_owner" && ctx.orgId && <XbranchSettings orgId={ctx.orgId} />}
       {view === "reports" && <Reports ctx={ctx} />}
     </div>
   );
