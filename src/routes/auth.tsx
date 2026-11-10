@@ -10,8 +10,6 @@ import { idLoginMessage } from "@/lib/id-login";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicError } from "@/lib/session";
-import { DEMO_PASSWORD } from "@/lib/demo-accounts";
-import { ROLE_LABELS } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,16 +60,6 @@ function AuthPage() {
     supabase.auth.getUser().then(({ data }) => data.user && go());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  async function demoLogin(email: string) {
-    setBusy(true);
-    await supabase.auth.signOut();
-    localStorage.removeItem("rikaz.activeContext");
-    const { error } = await supabase.auth.signInWithPassword({ email, password: DEMO_PASSWORD });
-    setBusy(false);
-    if (error) return void toast.error(arabicError(error));
-    navigate({ to: "/app" });
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
