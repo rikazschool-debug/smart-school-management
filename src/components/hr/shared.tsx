@@ -3,7 +3,7 @@ import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type HrCaps = { view: boolean; sensitive: boolean; create: boolean; edit: boolean; export: boolean };
+export type HrCaps = { view: boolean; sensitive: boolean; create: boolean; edit: boolean; export: boolean; print?: boolean };
 export type HrMe = { enabled: boolean; owner: boolean; caps: HrCaps; org_wide: boolean; schools: { id: string; name: string; create: boolean }[]; me: string | null; team: boolean };
 export type HrAssign = { id: string; school_id: string; school: string; job_title: string | null; department: string | null; manager_id: string | null; manager: string | null; teacher_id: string | null; teacher: string | null; category_id?: string | null; category?: string | null; start_date: string; end_date: string | null; is_primary: boolean; active: boolean };
 export type HrEmp = { id: string; employee_no: string; full_name: string; display_name?: string | null; display_name_manual?: boolean; job_title: string | null; phone?: string | null; email?: string | null; gender?: string | null; hire_date?: string | null; status: string; end_date?: string | null; notes?: string | null; has_login?: boolean; self_access?: boolean; self_linked_at?: string | null; self_access_at?: string | null; self_access_by?: string | null; national_id?: string | null; nationality?: string | null; birth_date?: string | null; sensitive?: boolean; assignments?: HrAssign[] };

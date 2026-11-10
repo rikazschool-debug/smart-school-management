@@ -4,7 +4,7 @@ import { EmpOpenAssets } from "@/components/hr/assets";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Download, FileText, IdCard, Plus, Upload, UserCheck, X } from "lucide-react";
+import { ArrowRight, Download, FileText, IdCard, Plus, Printer, Upload, UserCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";
@@ -19,10 +19,12 @@ import { HrImport } from "@/components/hr/import";
 import { HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, NAME_EN_MAX, cleanValue, type HrGroup } from "@/lib/hr-fields";
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
-import { ProfileFields, ProfileView, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
+import { ProfileFields, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { PersonCardButton } from "@/components/people/person-card";
 import { HrCategories } from "@/components/hr/categories";
+import { EmployeePrintDialog, EmployeeSheetView } from "@/components/hr/employee-sheet";
+import type { SheetAccount } from "@/lib/hr-sheet";
 import { useServerFn } from "@tanstack/react-start";
 import { createHrEmployeeLogin } from "@/lib/accounts.functions";
 import { CENTRAL, GENDER, HR_DIRECTOR, STATUS, roleLabel, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
@@ -78,6 +80,11 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
   const [q, setQ] = useState(""), [school, setSchool] = useState(""), [status, setStatus] = useState("active");
   const list = useQuery({ queryKey: ["hr-list", org, school, q, status], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: school || null, _q: q || null, _status: status || null }) });
   const rows = list.data ?? [];
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [printIds, setPrintIds] = useState<string[] | null>(null);
+  const canPrint = !!m.caps.print;
+  const toggleSel = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const allSel = rows.length > 0 && rows.every((r) => sel.has(r.id));
   const exp = (kind: "xlsx" | "pdf") => {
     const sens = rows.some((r) => r.sensitive);
     const headers = ["الرقم الوظيفي", "الاسم", "الوظيفة", "المدارس", "الحالة", "حساب دخول", ...(sens ? ["رقم الهوية"] : [])];
@@ -107,13 +114,23 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
       {m.org_wide && m.caps.edit && <HrCategories org={org} />}
       {imp && m.caps.create && all.data && <HrImport org={org} m={m} existing={all.data} onClose={() => nav({ search: {} })} onDone={() => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-list-all"] }); }} />}
       <HrIdReadiness org={org} school={school} onOpen={(id) => nav({ search: { emp: id } })} />
-      {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} />}
+      {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} onPrint={() => setPrintIds([emp])} />}
+      {printIds && <EmployeePrintDialog org={org} ids={printIds} onClose={() => setPrintIds(null)} />}
+      {canPrint && rows.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <label className="flex items-center gap-2"><input type="checkbox" aria-label="تحديد كل الموظفين الظاهرين" checked={allSel} onChange={() => setSel(allSel ? new Set() : new Set(rows.map((r) => r.id)))} />تحديد الكل</label>
+          <span className="text-muted-foreground">المحدد: {sel.size}</span>
+          <Button size="sm" variant="outline" disabled={!sel.size} onClick={() => setPrintIds(rows.filter((r) => sel.has(r.id)).map((r) => r.id).concat([...sel].filter((id) => !rows.some((r) => r.id === id))))}><Printer className="size-4" />طباعة المحددين</Button>
+          {sel.size > 0 && <Button size="sm" variant="ghost" onClick={() => setSel(new Set())}>إلغاء التحديد</Button>}
+        </div>
+      )}
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !rows.length ? (
         <EmptyState title="لا يوجد موظفون مطابقون" hint={m.caps.create ? "أضف الموظفين من حساباتهم أو سجلات المعلمين الموجودة." : "لا توجد ملفات موظفين في نطاقك."} />
       ) : (
         <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {rows.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} className="relative">
+              {canPrint && <input type="checkbox" aria-label={`تحديد ${r.full_name} للطباعة`} className="absolute end-2 bottom-2 z-10 size-4" checked={sel.has(r.id)} onChange={() => toggleSel(r.id)} />}
               <button type="button" onClick={() => nav({ search: { emp: r.id } })} className={"w-full rounded-xl border bg-card p-3 text-start hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (emp === r.id ? "border-primary" : "")}>
                 <span className="flex items-start gap-3">
                   <span className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground"><IdCard className="size-5" /></span>
@@ -438,9 +455,10 @@ function SelfAccessCard({ e, org, canEdit, onDone }: { e: HrEmp; org: string; ca
 type Detail = { view: "hr" | "self" | "manager"; employee: HrEmp; assignments: HrAssign[]; can_edit: boolean; events?: { at: string; action: string; reason: string | null; by: string; entity: string }[] };
 const ACT: Record<string, string> = { self_link: "ربط بحساب", self_unlink: "فك الربط بالحساب", self_on: "تفعيل الوصول للملف", self_off: "إيقاف الوصول للملف", create: "إنشاء", update: "تعديل", end: "إنهاء تعيين", "status:ended": "إنهاء الخدمة", "status:suspended": "إيقاف مؤقت", "status:active": "إعادة للعمل" };
 
-function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: HrMe; onClose: () => void }) {
+function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: string; m: HrMe; onClose: () => void; onPrint: () => void }) {
   const qc = useQueryClient();
   const d = useQuery({ queryKey: ["hr-emp", id], queryFn: () => rpc<Detail>("hr_employee_get", { _id: id }) });
+  const acc = useQuery({ queryKey: ["hr-emp-acc", id], enabled: d.data?.view === "hr", queryFn: () => rpc<SheetAccount>("hr_employee_account", { _id: id }) });
   const [edit, setEdit] = useState<Record<string, string> | null>(null);
   const prof = useQuery({ queryKey: ["hr-prof", id], queryFn: () => rpc<Prof>("hr_employee_profile_get", { _emp: id }) });
   const [px, setPx] = useState<Record<string, string>>({});
@@ -484,6 +502,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
       <div className="flex flex-wrap items-center gap-2">
         <span className="min-w-0 flex-1"><span className="block text-lg font-bold">{e.display_name || e.full_name}</span>{e.display_name && e.display_name !== e.full_name && <span className="block text-xs text-muted-foreground">الاسم الرسمي: {e.full_name}</span>}<span className="text-xs text-muted-foreground"><bdi dir="ltr">{e.employee_no}</bdi> · {STATUS[e.status]}</span></span>
         <PersonCardButton kind="employee" id={e.id} org={org} />
+        {m.caps.print && d.data!.view === "hr" && !edit && <Button size="sm" variant="outline" onClick={onPrint}><Printer className="size-4" />طباعة بيانات الموظف</Button>}
         {can_edit && !edit && <Button size="sm" variant="outline" onClick={startEdit}>تعديل الملف</Button>}
         <Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق الملف"><X className="size-4" /></Button>
       </div>
@@ -498,15 +517,8 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
           <div className="flex gap-2"><Button disabled={saveEmp.isPending} onClick={() => saveEmp.mutate(edit)}>{saveEmp.isPending ? "…" : "حفظ"}</Button><Button variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
         </div>
       ) : (
-        <dl className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          {row("المسمى الوظيفي", e.job_title)}{row("تاريخ المباشرة", e.hire_date)}{row("الجوال", e.phone && <bdi dir="ltr">{e.phone}</bdi>)}{row("البريد", e.email && <bdi dir="ltr">{e.email}</bdi>)}
-          {row("الجنس", e.gender ? GENDER[e.gender] : null)}{row("حساب الدخول", e.has_login ? (e.self_access ? "مرتبط ومفعّل" : "مرتبط — غير مفعّل") : "بلا حساب")}
-          {row("رقم الهوية", e.national_id && <bdi dir="ltr">{e.national_id}</bdi>)}
-          {e.sensitive && <>{row("الجنسية", e.nationality)}{row("تاريخ الميلاد", e.birth_date)}</>}
-          {e.status === "ended" && row("انتهاء الخدمة", e.end_date)}
-        </dl>
+        <EmployeeSheetView item={{ employee: e as never, assignments, profile: (prof.data ?? null) as never, account: acc.data ?? null }} />
       )}
-      {!edit && <ProfileView pr={prof.data} />}
       <div>
         <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", category_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
         {asg && (

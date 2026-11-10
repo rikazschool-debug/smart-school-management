@@ -796,3 +796,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - مجموعة الفصل تبويب داخل الفصل الافتراضي لكل الحسابات المصرّح لها؛ إنشاء الفصل يجهّز المجموعة أو يعيد استخدام الموجودة؛ الروابط والإشعارات القديمة تُوجَّه للتبويب؛ صفحة «المجموعات» إدارية فقط.
 - ولي الأمر والطالب: مراسلة إدارة المدرسة والمرشد الطلابي في مدرسة الابن/الطالب فقط؛ الخادم يرفض بدء أو إرسال أو إرفاق في محادثات المعلم (للقراءة فقط).
 - الأدلة: class-room-group-e2e 43/43، comm-e2e 97/97، comm-roles-e2e 36/36، classroom-room-e2e 42/42، class-groups-e2e 32/32، cg-privacy-e2e 32/32، rls-e2e 94/94؛ متصفح: ولي أمر/طالب/معلم يفتحون المجموعة داخل الفصل، ولي أمر آخر مرفوض، نافذتا «محادثة جديدة».
+
+## 2026-11-10 — HR employee file print
+- hr_employees gains action `print` (owner always; template «مدير إدارة الموارد البشرية» org scope; others by explicit grant). Evidence: scripts/hr-print-e2e.ts 13/13, src/lib/hr-sheet.test.ts 4/4, perm7-e2e 20/20, staff-dir-e2e 24/24; browser: owner opened file, single preview and bulk preview.
