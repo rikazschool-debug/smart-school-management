@@ -75,7 +75,8 @@ try {
   check("owner edits student", !refused(await oc.from("students").update({ full_name: "ابن القراءة المعدل" }).eq("id", kid).select("id")));
   check("owner edits guardian", !refused(await oc.from("guardians").update({ phone: "966501110099" }).eq("id", gid).select("id")));
   check("owner edits link", !refused(await oc.from("student_guardians").update({ can_pickup: false }).eq("id", link).select("id")));
-  check("owner can rename own profile", !refused(await oc.from("profiles").upsert({ id: users.owner, full_name: "مالك القراءة" }).select("id")));
+  must(await admin.from("profiles").upsert({ id: users.owner, full_name: "مالك" }));
+  check("owner can rename own profile", !refused(await oc.from("profiles").update({ full_name: "مالك القراءة" }).eq("id", users.owner).select("id")));
 } catch (e) { fail++; console.log("FAIL exception", (e as Error).message ?? e); }
 finally {
   await tr.deleteNotifications().catch(() => {});
