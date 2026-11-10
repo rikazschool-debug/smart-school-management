@@ -149,9 +149,15 @@ try {
     check("old teacher chat: student cannot send", !!(await S1.rpc("send_message", { _conv: tsc.data, _body: "رد", _client_id: uuid() })).error);
     check("old teacher chat: student cannot attach", !!(await S1.rpc("create_message_file", { _conv: tsc.data, _name: "a.pdf", _mime: "application/pdf", _size: 100 })).error);
   } else check("teacher-side student chat setup", false, tsc.error);
+  if (process.argv.includes("--keep")) {
+    const sess: Record<string, unknown> = {};
+    for (const k of ["s1", "g1", "t1", "gx"]) { const c = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }); sess[k] = (await c.auth.signInWithPassword({ email: emails[k]!, password: pw })).data.session; }
+    (await import("fs")).writeFileSync("/tmp/browser/crg.json", JSON.stringify({ org, RA, RB, RC, sess }));
+  }
 } catch (e) {
   fail++; console.log("ERROR", (e as Error).message ?? e);
 } finally {
+  if (org && process.argv.includes("--keep")) { console.log("kept", org); process.exit(fail ? 1 : 0); }
   if (org) {
     await tr.deleteNotifications().catch((e) => console.log("notif cleanup:", e.message));
     await tr.purgeOrg(org).catch((e) => console.log("purge:", e.message));
