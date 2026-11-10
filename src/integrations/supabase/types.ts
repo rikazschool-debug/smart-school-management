@@ -18110,6 +18110,7 @@ export type Database = {
       _gb_total: { Args: { _gb: string; _student: string }; Returns: number }
       _gb_window: { Args: { _gb: string; _student: string }; Returns: boolean }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
+      _guardian_org_uid: { Args: { _guardian: string }; Returns: string }
       _gv_host_ok: { Args: { _school: string; _uid: string }; Returns: boolean }
       _gv_level: {
         Args: { v: Database["public"]["Tables"]["gv_visits"]["Row"] }
