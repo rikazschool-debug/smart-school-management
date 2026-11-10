@@ -22,6 +22,9 @@ export const ACCOUNT_STATE: Record<string, string> = {
   missing_id: "بيانات ناقصة: أضف رقم هوية الطالب ليُنشأ حسابه تلقائيًا",
 };
 
+/** Stored «account ready» message state (acct_outbox.status) in plain words. */
+export const MSG_STATE: Record<string, string> = { queued: "قيد الإرسال", sending: "قيد الإرسال", waiting_template: "بانتظار القالب", accepted: "أُرسلت رسالة الجوال", failed: "تعذّر — ستُعاد المحاولة", unknown: "غير مؤكد — راجع WATI", skipped: "لم يُرسل (قبل اعتماد القالب)" };
+
 const MSG: Record<string, string> = { queued: "رسالة الجوال قيد الإرسال", accepted: "أُرسلت رسالة على الجوال", waiting_template: "رسالة الجوال بانتظار اعتماد قالب واتساب", failed: "تعذّر إرسال رسالة الجوال وستُعاد المحاولة" };
 
 /** Plain-language summary of the automatic logins (student + guardians) and the WhatsApp message. */

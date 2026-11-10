@@ -15,7 +15,7 @@ import { canManageStudents } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { AccountButton } from "@/components/account-button";
 import { guardianReadiness, localPhone, maskTail } from "@/lib/people-import";
-import { CreateAccountButton, autoSummary } from "@/components/guardian-quick-add";
+import { CreateAccountButton, MSG_STATE, autoSummary } from "@/components/guardian-quick-add";
 import { autoAccounts } from "@/lib/accounts.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { GuardianImport } from "@/components/guardian-import-dialog";
@@ -34,8 +34,6 @@ function Page() {
     </RequireSchool>
   );
 }
-
-const MSG_STATE: Record<string, string> = { queued: "قيد الإرسال", sending: "قيد الإرسال", waiting_template: "بانتظار القالب", accepted: "أُرسلت رسالة الجوال", failed: "تعذّر — ستُعاد المحاولة", unknown: "غير مؤكد — راجع WATI", skipped: "لم يُرسل (قبل اعتماد القالب)" };
 
 function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<typeof canManageStudents>[0] }) {
   const sp = useSchoolPerms(schoolId);
