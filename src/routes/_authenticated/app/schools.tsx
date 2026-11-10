@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { arabicError, useSession } from "@/lib/session";
 import { SchoolLogo } from "@/components/school-logo";
+import { PlatformSchools } from "@/components/platform/platform-schools";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/app/schools")({
@@ -35,6 +36,12 @@ const GENDER: Record<string, string> = { boys: "بنين", girls: "بنات", mi
 type Draft = { id?: string; name: string; code: string; city: string; stage_type: string; student_gender: string };
 
 function Page() {
+  const { active: a0 } = useSession();
+  if (a0?.role === "platform_admin" && !a0.orgId) return <PlatformSchools />;
+  return <SchoolsPage />;
+}
+
+function SchoolsPage() {
   const { active, contexts, setActive, refresh } = useSession();
   const search = Route.useSearch();
   const navigate = useNavigate();
