@@ -3,16 +3,21 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Layers } from "lucide-react";
+import { Layers, Plus } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { selectCls } from "@/components/ui/native-select";
+import { supabase } from "@/integrations/supabase/client";
 import { arabicError } from "@/lib/session";
 
-export function MultiSectionAssign({ schoolId, canCreateCourses }: { schoolId: string; canCreateCourses: boolean }) {
+/** mode «course»: the course add form — several sections at once, teacher optional.
+ *  mode «assign»: teacher required. With canApprove the assignments are approved at once (decide_assignment),
+ *  so each section's classroom shows the teacher right away; otherwise they wait for approval. */
+export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = false, mode = "assign" }: { schoolId: string; canCreateCourses: boolean; canApprove?: boolean; mode?: "course" | "assign" }) {
+  const isCourse = mode === "course";
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [teacher, setTeacher] = useState(""), [subject, setSubject] = useState(""), [year, setYear] = useState("");
@@ -20,6 +25,7 @@ export function MultiSectionAssign({ schoolId, canCreateCourses }: { schoolId: s
   const [start, setStart] = useState(new Date().toISOString().slice(0, 10)), [end, setEnd] = useState("");
   const [periods, setPeriods] = useState("4");
   const [busy, setBusy] = useState(false);
+  const [approveNow, setApproveNow] = useState(true);
   const sel = selectCls("w-full");
 
   const data = useQuery({
@@ -54,11 +60,11 @@ export function MultiSectionAssign({ schoolId, canCreateCourses }: { schoolId: s
   function toggle(id: string) { const n = new Set(picked); if (n.has(id)) n.delete(id); else n.add(id); setPicked(n); }
 
   async function save() {
-    if (!teacher || !subject || !yearId) return void toast.error("اختر المعلم والمادة والسنة");
+    if ((!teacher && !isCourse) || !subject || !yearId) return void toast.error(isCourse ? "اختر المادة والسنة" : "اختر المعلم والمادة والسنة");
     if (!picked.size) return void toast.error("اختر شعبة واحدة على الأقل");
     if (end && end < start) return void toast.error("نهاية السريان قبل بدايته");
     setBusy(true);
-    let ok = 0; const fails: string[] = [];
+    let ok = 0, made = 0, approved = 0; const fails: string[] = [];
     for (const sec of picked) {
       const label = data.data?.sections.find((x) => x["id"] === sec); const name = `${label?.["grades"]?.name ?? ""} / ${label?.["name"] ?? ""}`;
       try {
@@ -66,32 +72,39 @@ export function MultiSectionAssign({ schoolId, canCreateCourses }: { schoolId: s
         if (!cid) {
           if (!canCreateCourses) throw new Error("لا يوجد مقرر لهذه المادة في الشعبة؛ تطلب إنشاءه من الإدارة");
           const c = await db.from("courses").insert({ school_id: schoolId, year_id: yearId, subject_id: subject, section_id: sec, weekly_periods: Number(periods) || null }).select("id").single();
-          if (c.error) throw c.error; cid = c.data.id as string;
+          if (c.error) throw c.error; cid = c.data.id as string; made++;
         }
+        if (!teacher) { ok++; continue; }
         if (takenBy(sec)) throw new Error(`مكلف بها ${takenBy(sec)}`);
-        const a = await db.from("teacher_assignments").insert({ school_id: schoolId, course_id: cid, teacher_id: teacher, start_date: start, end_date: end || null, status: "pending" });
+        const a = await db.from("teacher_assignments").insert({ school_id: schoolId, course_id: cid, teacher_id: teacher, start_date: start, end_date: end || null, status: "pending" }).select("id").single();
         if (a.error) throw a.error;
         ok++;
+        if (canApprove && approveNow) {
+          const d = await supabase.rpc("decide_assignment", { _id: a.data.id as string, _approve: true });
+          if (d.error) throw new Error(`أُرسل التكليف لكن تعذر اعتماده: ${arabicError(d.error)}`);
+          approved++;
+        }
       } catch (e) { fails.push(`${name}: ${arabicError(e)}`); }
     }
     setBusy(false);
     qc.invalidateQueries();
-    if (ok) toast.success(`أُرسل ${ok} تكليف للاعتماد — يُجهَّز لكل شعبة فصلها الرقمي عند الاعتماد`);
+    if (ok) toast.success([made ? `أُنشئ ${made} مقرر` : "", teacher ? (approved ? `اعتُمد ${approved} تكليف — يظهر المعلم الآن في الفصل الرقمي لكل شعبة` : `أُرسل ${ok} تكليف للاعتماد — يظهر المعلم في الفصل الرقمي لكل شعبة بعد الاعتماد`) : ""].filter(Boolean).join(" · ") || "تم");
     if (fails.length) toast.error(fails.join("\n"), { duration: 10000 });
     if (!fails.length) { setOpen(false); setPicked(new Set()); }
   }
 
   return (
     <>
-      <Button size="sm" onClick={() => setOpen(true)}><Layers className="size-4" /> تكليف معلم بعدة شعب</Button>
+      {isCourse ? <Button size="sm" onClick={() => setOpen(true)}><Plus className="size-4" /> إضافة مقرر</Button>
+        : <Button size="sm" onClick={() => setOpen(true)}><Layers className="size-4" /> تكليف معلم بعدة شعب</Button>}
       <Dialog open={open} onOpenChange={(o) => !busy && setOpen(o)}>
         <DialogContent dir="rtl" className="max-h-[90dvh] max-w-2xl overflow-y-auto">
-          <DialogHeader><DialogTitle>تكليف معلم بعدة شعب</DialogTitle></DialogHeader>
-          <p className="text-xs text-muted-foreground">اختر المعلم والمادة ثم كل الشعب التي يدرّسها. يُرسل تكليف مستقل لكل شعبة للاعتماد، وبعد الاعتماد يظهر للمعلم الفصل الرقمي لكل شعبة.</p>
+          <DialogHeader><DialogTitle>{isCourse ? "إضافة مقرر لعدة شعب" : "تكليف معلم بعدة شعب"}</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">{isCourse ? "اختر السنة والمادة ثم الشعب، ويُنشأ مقرر لكل شعبة. اختر المعلم الآن ليُكلَّف بها كلها ويظهر في الفصل الرقمي لكل شعبة، أو اتركه وكلّفه لاحقًا." : "اختر المعلم والمادة ثم كل الشعب التي يدرّسها. يُنشأ تكليف مستقل لكل شعبة، وبعد الاعتماد يظهر المعلم في الفصل الرقمي لكل شعبة."}</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1"><Label htmlFor="ma-t">المعلم *</Label>
-              <select id="ma-t" className={sel} value={teacher} onChange={(e) => setTeacher(e.target.value)}>
-                <option value="">— اختر المعلم —</option>{data.data?.teachers.map((t) => <option key={t["id"]} value={t["id"]}>{t["full_name"]}</option>)}
+            <div className="space-y-1"><Label htmlFor="ma-t">{isCourse ? "المعلم (اختياري)" : "المعلم *"}</Label>
+              <select id="ma-t" className={sel} value={teacher} onChange={(e) => { setTeacher(e.target.value); setPicked(new Set()); }}>
+                <option value="">{isCourse ? "— بدون تكليف الآن —" : "— اختر المعلم —"}</option>{data.data?.teachers.map((t) => <option key={t["id"]} value={t["id"]}>{t["full_name"]}</option>)}
               </select></div>
             <div className="space-y-1"><Label htmlFor="ma-s">المادة *</Label>
               <select id="ma-s" className={sel} value={subject} onChange={(e) => { setSubject(e.target.value); setPicked(new Set()); }}>
@@ -101,9 +114,10 @@ export function MultiSectionAssign({ schoolId, canCreateCourses }: { schoolId: s
               <select id="ma-y" className={sel} value={yearId} onChange={(e) => { setYear(e.target.value); setPicked(new Set()); }}>
                 {data.data?.years.map((t) => <option key={t["id"]} value={t["id"]}>{t["name"]}{t["is_current"] ? " (الحالية)" : ""}</option>)}
               </select></div>
-            <div className="space-y-1"><Label htmlFor="ma-p">الحصص الأسبوعية (للمقررات الجديدة)</Label><Input id="ma-p" type="number" min={0} value={periods} onChange={(e) => setPeriods(e.target.value)} /></div>
-            <div className="space-y-1"><Label htmlFor="ma-st">بداية السريان *</Label><Input id="ma-st" type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
+            <div className="space-y-1"><Label htmlFor="ma-p">الحصص الأسبوعية{isCourse ? "" : " (للمقررات الجديدة)"}</Label><Input id="ma-p" type="number" min={0} value={periods} onChange={(e) => setPeriods(e.target.value)} /></div>
+            {teacher && <><div className="space-y-1"><Label htmlFor="ma-st">بداية السريان *</Label><Input id="ma-st" type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
             <div className="space-y-1"><Label htmlFor="ma-en">نهاية السريان</Label><Input id="ma-en" type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
+            {canApprove && <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={approveNow} onChange={(e) => setApproveNow(e.target.checked)} />اعتماد التكليف مباشرة (يظهر المعلم في الفصل الرقمي فورًا)</label>}</>}
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between"><Label>الشعب *</Label><span className="text-xs text-muted-foreground">المختار: {picked.size}</span></div>
@@ -112,9 +126,10 @@ export function MultiSectionAssign({ schoolId, canCreateCourses }: { schoolId: s
                 <legend className="px-1 text-sm font-semibold">{g.label}</legend>
                 <div className="flex flex-wrap gap-2">
                   {g.items.map((s) => {
-                    const by = takenBy(s["id"]); const on = picked.has(s["id"]);
+                    const exists = !!courseOf(s["id"]);
+                    const by = teacher ? takenBy(s["id"]) : isCourse && exists ? "المقرر موجود" : undefined; const on = picked.has(s["id"]);
                     return (
-                      <button key={s["id"]} type="button" disabled={!!by} onClick={() => toggle(s["id"])} aria-pressed={on} title={by ? `مكلف بها ${by}` : undefined}
+                      <button key={s["id"]} type="button" disabled={!!by} onClick={() => toggle(s["id"])} aria-pressed={on} title={by ? (teacher ? `مكلف بها ${by}` : by) : undefined}
                         className={`rounded-full border px-3 py-1 text-sm transition ${on ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-muted"} disabled:cursor-not-allowed disabled:opacity-50`}>
                         شعبة {s["name"]}{by ? ` — ${by}` : ""}
                       </button>
@@ -124,7 +139,7 @@ export function MultiSectionAssign({ schoolId, canCreateCourses }: { schoolId: s
               </fieldset>
             ))}
           </div>
-          <div className="flex justify-end"><Button onClick={save} disabled={busy}>{busy ? "جارٍ الإرسال…" : `إرسال ${picked.size || ""} تكليف`}</Button></div>
+          <div className="flex justify-end"><Button onClick={save} disabled={busy}>{busy ? "جارٍ الحفظ…" : !teacher ? `إنشاء ${picked.size || ""} مقرر` : canApprove && approveNow ? `حفظ واعتماد ${picked.size || ""} تكليف` : `إرسال ${picked.size || ""} تكليف`}</Button></div>
         </DialogContent>
       </Dialog>
     </>
