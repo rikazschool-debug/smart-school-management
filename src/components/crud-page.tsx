@@ -326,7 +326,7 @@ export function CrudTable({
             <Button variant="outline" size="sm" disabled={exporting || !count} onClick={() => doExport("pdf")}><FileDown className="size-4" /> {exporting ? "جارٍ التجهيز…" : "تنزيل PDF"}</Button>
             <Button variant="ghost" size="sm" disabled={exporting || !count} onClick={() => doExport("print")} title="يفتح نافذة الطباعة في المتصفح"><Printer className="size-4" /> طباعة</Button>
           </>)}
-          {canWrite && canCreate && <Button size="sm" onClick={() => setEditing({})}><Plus className="size-4" /> إضافة</Button>}
+          {canWrite && canCreate && <Button size="sm" onClick={() => setEditing({ ...(defaults ?? {}) })}><Plus className="size-4" /> إضافة</Button>}
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
