@@ -50,7 +50,7 @@ function Pricing() {
                 <ul className="mt-6 flex-1 space-y-3 text-sm">
                   {p.points.map((x) => <li key={x} className="flex items-start gap-2"><Check className={`mt-0.5 size-4 shrink-0 ${p.best ? "text-accent" : "text-primary"}`} />{x}</li>)}
                 </ul>
-                <Button asChild className="mt-8 w-full" variant={p.best ? "secondary" : "default"}><Link to="/auth">اطلب عرض سعر</Link></Button>
+                <Button asChild className="mt-8 w-full" variant={p.best ? "secondary" : "default"}><Link to="/register">اطلب عرض سعر</Link></Button>
               </div>
             </Reveal>
           ))}

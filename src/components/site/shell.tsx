@@ -39,13 +39,13 @@ export function SiteShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
-          <div className="hidden md:block"><Button asChild><Link to="/auth">تسجيل الدخول</Link></Button></div>
+          <div className="hidden items-center gap-2 md:flex"><Button asChild variant="outline"><Link to="/register">إنشاء حساب</Link></Button><Button asChild><Link to="/auth">تسجيل الدخول</Link></Button></div>
           <button type="button" className="md:hidden" aria-label="القائمة" onClick={() => setOpen((v) => !v)}>{open ? <X /> : <Menu />}</button>
         </div>
         {open && (
           <div className="site-page space-y-1 border-t bg-background px-6 py-3 md:hidden">
             {NAV.map((n) => <Link key={n.to} to={n.to} className={`block rounded-lg px-3 py-2 ${path === n.to ? "bg-secondary font-semibold" : ""}`}>{n.label}</Link>)}
-            <Button asChild className="mt-2 w-full"><Link to="/auth">تسجيل الدخول</Link></Button>
+            <Button asChild variant="outline" className="mt-2 w-full"><Link to="/register">إنشاء حساب</Link></Button><Button asChild className="mt-2 w-full"><Link to="/auth">تسجيل الدخول</Link></Button>
           </div>
         )}
       </header>
