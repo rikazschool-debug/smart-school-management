@@ -10,10 +10,11 @@ import { SupportSummary } from "@/components/support/summary";
 import type { MqSection } from "@/components/support/calls";
 import { HoursNote, InfoInbox, NewTicket, SupportReports, SupportSettings, TAB_LABEL, TicketDetail, TicketList } from "@/components/support/support";
 
-type Search = { t?: string; tab?: SupportTab | "settings"; st?: string; mq?: MqSection };
+type Search = { p?: "1"; t?: string; tab?: SupportTab | "settings"; st?: string; mq?: MqSection };
 
 export const Route = createFileRoute("/_authenticated/app/support")({
   validateSearch: (s: Record<string, unknown>): Search => ({
+    ...(String(s["p"] ?? "") === "1" ? { p: "1" as const } : {}),
     ...(typeof s["t"] === "string" ? { t: s["t"] } : {}),
     ...(typeof s["st"] === "string" ? { st: s["st"] } : {}),
     ...(["live", "calls", "followups", "reports", "settings"].includes(s["mq"] as string) ? { mq: s["mq"] as MqSection } : {}),
@@ -33,19 +34,20 @@ function Page() {
   if (!active) return <ForbiddenState />;
   if (active.role !== "platform_admin" && caps.isLoading) return <LoadingState />;
   const c = caps.data ?? NO_CAPS;
-  const tabs = supportTabs(active.role, c.view.length > 0);
-  const settings = active.role === "platform_admin" || c.settings;
+  const ph = search.p === "1" && active.role === "org_owner"; // owner from another section: own tickets to the platform only
+  const tabs: SupportTab[] = ph ? ["mine", "info"] : supportTabs(active.role, c.view.length > 0);
+  const settings = !ph && (active.role === "platform_admin" || c.settings);
   const tab = search.tab && (search.tab === "settings" ? settings : tabs.includes(search.tab)) ? search.tab : tabs[0]!;
   const canCreate = tabs.includes("mine");
-  const internal = c.create.length > 0;
+  const internal = !ph && c.create.length > 0;
   const ctx = { ...active };
-  const go = (s: Search) => navigate({ search: s });
+  const go = (s: Search) => navigate({ search: ph ? { ...s, p: "1" } : s });
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="الدعم والمساعدة"
-        desc={active.role === "platform_admin" ? "تذاكر دعم المنصة من ملاك المؤسسات ومديري المدارس." : "أرسل طلب مساعدة وتابع الرد عليه."}
+        desc={ph ? "أرسل تذكرة إلى مالك المنصة وتابع الرد عليها." : active.role === "platform_admin" ? "تذاكر دعم المنصة من ملاك المؤسسات ومديري المدارس." : "أرسل طلب مساعدة وتابع الرد عليه."}
         action={canCreate && !search.t && !creating ? <Button onClick={() => setCreating(true)}><Plus className="size-4" /> تذكرة جديدة</Button> : undefined}
       />
       <>
