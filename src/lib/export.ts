@@ -6,6 +6,7 @@
 // Print: optional separate path (browser print dialog).
 // Callers pass only already-permitted rows (fetched with the RLS-bound client) — never secrets or private file URLs.
 import * as XLSX from "xlsx";
+import { brandHeaderHtml, getExportBrand } from "@/lib/export-brand";
 
 export type ExportMeta = { title: string; school?: string | undefined; filters: string[]; note?: string | undefined };
 type Cell = string | number | null | undefined;
@@ -19,7 +20,8 @@ const metaLines = (m: ExportMeta, n: number) => [
 
 /** Builds the worksheet with typed cells: numbers stay numbers, everything else is a literal string cell. */
 export function buildSheet(meta: ExportMeta, headers: string[], rows: Cell[][]) {
-  const aoa: Cell[][] = [[meta.title], ...metaLines(meta, rows.length).map((l) => [l]), [], headers, ...rows];
+  const bn = getExportBrand().name || meta.school;
+  const aoa: Cell[][] = [...(bn ? [[bn]] : []), [meta.title], ...metaLines(meta, rows.length).map((l) => [l]), [], headers, ...rows];
   const ws: XLSX.WorkSheet = {};
   aoa.forEach((r, ri) => r.forEach((v, ci) => {
     if (v === null || v === undefined || v === "") return;
@@ -43,7 +45,7 @@ const TABLE = `width:100%;border-collapse:collapse;font-size:11px`;
 const TD = `border:1px solid #bbb;padding:4px 6px;text-align:right;vertical-align:top;word-break:break-word;white-space:normal`;
 
 function headerHtml(meta: ExportMeta, n: number) {
-  return `<div style="font-size:18px;font-weight:700;margin-bottom:4px">${esc(meta.title)}</div>` +
+  return brandHeaderHtml({ fallbackName: meta.school }) + `<div style="font-size:18px;font-weight:700;margin-bottom:4px">${esc(meta.title)}</div>` +
     metaLines(meta, n).map((l) => `<div style="font-size:11px;color:#444">${esc(l)}</div>`).join("");
 }
 const theadHtml = (headers: string[]) => `<thead><tr>${headers.map((h) => `<th style="${TD};background:#eef3f1;font-weight:700">${esc(h)}</th>`).join("")}</tr></thead>`;
@@ -98,9 +100,8 @@ export async function exportLetterPdf(l: LetterPdf) {
   const [{ toJpeg }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
   await ensureCairo();
   const W = 794, H = 1123, PX = 68, PT = 72, FOOT = 70;
-  const head = `<div style="display:flex;justify-content:space-between;border-bottom:2px solid #1f2a44;padding-bottom:8px;margin-bottom:22px">
-    <div><div style="font-size:20px;font-weight:700">${esc(l.org)}</div><div style="font-size:12px;color:#444">${esc(l.title)}</div></div>
-    <div style="font-size:12px;color:#444;line-height:1.9">الرقم المرجعي: <bdi dir="ltr">${esc(l.ref)}</bdi><br>تاريخ الإصدار: <bdi dir="ltr">${esc(l.issued)}</bdi></div></div>
+  const head = brandHeaderHtml({ fallbackName: l.org, side: `الرقم المرجعي: <bdi dir="ltr">${esc(l.ref)}</bdi><br>تاريخ الإصدار: <bdi dir="ltr">${esc(l.issued)}</bdi>` }) +
+    `<div style="font-size:17px;font-weight:700;margin:6px 0 16px">${esc(l.title)}</div>`
     ${l.void ? `<div style="color:#b00;font-weight:700;border:2px solid #b00;padding:4px 10px;display:inline-block;margin-bottom:12px">${esc(l.void)} — غير صالح للاستخدام</div>` : ""}`;
   const P = `font-size:15px;line-height:2.1;white-space:pre-wrap;word-break:break-word;margin:0;min-height:1em`;
   const paras = l.body.replace(/\r/g, "").split("\n");
