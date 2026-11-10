@@ -144,11 +144,11 @@ function AuthPage() {
             </div>
           ) : mode === "signin" && entry === "guardian" ? (
             <div key="guardian" className="site-page">
-              <IdLogin title="الدخول إلى حساب ولي الأمر" onDone={() => navigate({ to: "/app/choose-role" })} />
+              <IdLogin portal="guardian" title="الدخول إلى حساب ولي الأمر" onDone={() => navigate({ to: "/app/choose-role" })} />
             </div>
           ) : (
             <div key="staff" className="site-page space-y-5">
-              {mode === "signin" && !sent && <IdLogin title="الدخول إلى حساب الإدارة والموظفين" onDone={() => (search.invite ? go() : navigate({ to: "/app/choose-role" }))} />}              {/* sign-in is by ID only (user request); the password form stays for invitation signup and reset */}
+              {mode === "signin" && !sent && <IdLogin portal="staff" title="الدخول إلى حساب الإدارة والموظفين" onDone={() => (search.invite ? go() : navigate({ to: "/app/choose-role" }))} />}              {/* sign-in is by ID only (user request); the password form stays for invitation signup and reset */}
               {(mode !== "signin" || !!search.invite) && <form onSubmit={submit} className="space-y-5">
                 <h2 className="font-display text-xl">
                   {mode === "signin" ? "أو باسم المستخدم وكلمة المرور" : mode === "signup" ? "إنشاء حساب" : "استعادة كلمة المرور"}
@@ -235,7 +235,7 @@ async function openWithToken(token: string) {
 }
 
 /** Staff, teachers and guardians: ID/iqama → 6-digit code on WhatsApp to the mobile in the school record (all checks server-side). */
-function IdLogin({ onDone, title }: { onDone: () => void; title: string }) {
+function IdLogin({ onDone, title, portal }: { onDone: () => void; title: string; portal: "guardian" | "staff" }) {
   const reqFn = useServerFn(requestIdCode);
   const verFn = useServerFn(verifyIdCode);
   const [nid, setNid] = useState("");
@@ -246,7 +246,7 @@ function IdLogin({ onDone, title }: { onDone: () => void; title: string }) {
   async function send() {
     setBusy(true); setMsg(null);
     try {
-      const r = await reqFn({ data: { nid } });
+      const r = await reqFn({ data: { nid, portal } });
       if ("error" in r && r.error) setMsg(r.error);
       else if ("challenge" in r && r.challenge) { setCh({ id: r.challenge, masked: r.masked ?? "" }); setCode(""); }
     } catch { setMsg(idLoginMessage("server")); } finally { setBusy(false); }
@@ -255,7 +255,7 @@ function IdLogin({ onDone, title }: { onDone: () => void; title: string }) {
     if (!ch) return;
     setBusy(true); setMsg(null);
     try {
-      const r = await verFn({ data: { challenge: ch.id, code } });
+      const r = await verFn({ data: { challenge: ch.id, code, portal } });
       if (r.error || !r.token) { setMsg(r.error ?? idLoginMessage("server")); return; }
       await openWithToken(r.token);
       onDone();
