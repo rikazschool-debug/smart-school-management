@@ -55,3 +55,4 @@
 - Live refresh, display names: src/lib/AGENTS.md.
 - Route files export only `Route` and keep no unused top-level code; shared helpers, validators and components live under src/components or src/lib — anything else is bundled into app startup and blanks the dev preview.
 - Subscriptions (org_subscriptions): platform-owner only via platform_sub_save, which applies the plan sections through org_sections (logged); members read status via org_subscription.
+- People records edit rights: teachers writes use can_edit_staff (people_staff.edit), students/guardians/links/enrollments + guardian import/link RPCs use can_edit_students (people_family.edit); defaults principal/vice view-only, student affairs edits family, owner grants. Reads stay on can_manage_students/staff_view — never repoint those to the edit helper. Test: scripts/staff-dir-e2e.ts.
