@@ -31,7 +31,7 @@ try {
   const emp = async (no: string, name: string, uid: string | null, extra: Record<string, unknown> = {}) =>
     must(await admin.from("hr_employees").insert({ org_id: org, employee_no: no, full_name: name, user_id: uid, national_id: "1" + no.slice(-1) + run.toString().slice(-8), phone: "966500000000", status: "active", ...extra }).select("id").single())!.id as string;
   const eT = await emp("SDX-1", "معلم الدليل", users.tc!), eA = await emp("SDX-2", "إداري بلا حساب", null), eP = await emp("SDX-3", "موظف فرع آخر", null), eX = await emp("SDX-4", "منتهي التكليف", null);
-  const asg = (e: string, s: string, extra: Record<string, unknown> = {}) => ({ org_id: org, employee_id: e, school_id: s, start_date: "2026-01-01", ...extra });
+  const asg = (e: string, s: string, extra: Record<string, unknown> = {}) => ({ org_id: org, employee_id: e, school_id: s, start_date: "2026-01-01", is_primary: false, teacher_id: null, job_title: null, category_id: null, end_date: null, ...extra });
   must(await admin.from("hr_assignments").insert([
     asg(eT, S, { teacher_id: tch, job_title: "معلم رياضيات", category_id: cat, is_primary: true }),
     asg(eT, S, { job_title: "رائد نشاط", is_primary: false }),
