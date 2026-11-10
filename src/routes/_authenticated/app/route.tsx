@@ -23,7 +23,7 @@ import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
 import { useMyAvatar } from "@/lib/my-avatar";
 import { setOwnerInSchool, useOwnerInSchool } from "@/lib/owner-scope";
-import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, type NavKey, type OwnerSection } from "@/lib/roles";
+import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, teachersLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,7 +112,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "platform_subs", "signup_requests", "platform_notices", "schools", "members", "permissions"] },
   { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "events"] },
-  { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
+  { label: "الكادر والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "الوسوم", keys: ["tags"] },
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
@@ -253,7 +253,7 @@ function Shell() {
                     className="group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
                   >
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
-                    <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{k === "schedule" && active ? scheduleLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
+                    <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{k === "schedule" && active ? scheduleLabel(active.role) : k === "teachers" && active ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
                   </Link>
                   {k === "procurement" && path.startsWith("/app/procurement") && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">

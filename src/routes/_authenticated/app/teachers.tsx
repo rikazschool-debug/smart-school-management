@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { canManageAcademic } from "@/lib/roles";
+import { canManageAcademic, seesStaffDirectory, teachersLabel } from "@/lib/roles";
+import { StaffDirectory } from "@/components/staff-directory";
 import { AccountButton } from "@/components/account-button";
 import { PeopleImport } from "@/components/people-import-dialog";
 import { AccountPanel } from "@/components/account-panel";
@@ -20,7 +21,7 @@ import { arabicError } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/teachers")({
   component: Page,
-  head: () => ({ meta: [{ title: "المعلمون — ركاز" }, { name: "description", content: "سجلات المعلمين وجاهزية دخولهم بالهوية" }] }),
+  head: () => ({ meta: [{ title: "الكادر التعليمي — ركاز" }, { name: "description", content: "دليل الكادر التعليمي والإداري وسجلات المعلمين" }] }),
 });
 
 // national_id is not selectable directly; read through teacher_id_status (people_identity.view)
@@ -47,9 +48,23 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
     },
   });
   const st = (r: Row) => ids.data?.get(r["id"]);
+  const dir = seesStaffDirectory(role);
+  const [tab, setTab] = useState<"dir" | "teachers">(dir ? "dir" : "teachers");
   return (
     <>
-      <PageHeader title="المعلمون" desc="يدخل المعلم برقم الهوية أو الإقامة ثم رمز تحقق يصل إلى جواله المعتمد لدى الإدارة. التخصصات والأقسام إدارة تعليمية فقط." />
+      {dir && (
+        <div role="tablist" className="mb-4 inline-flex rounded-xl border bg-card p-1">
+          {([["dir", "الكادر التعليمي والإداري"], ["teachers", "سجلات المعلمين"]] as const).map(([k, l]) => (
+            <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+              className={`min-h-9 rounded-lg px-4 text-sm ${tab === k ? "bg-primary font-semibold text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}>{l}</button>
+          ))}
+        </div>
+      )}
+      {tab === "dir" ? (<>
+        <PageHeader title={teachersLabel(role)} desc="الكادر التابع لمدرستك من سجلات الموارد البشرية، كل موظف مرة واحدة مع حالة حساب الدخول." />
+        <StaffDirectory schoolId={schoolId} />
+      </>) : (<>
+      <PageHeader title={dir ? "سجلات المعلمين" : teachersLabel(role)} desc="يدخل المعلم برقم الهوية أو الإقامة ثم رمز تحقق يصل إلى جواله المعتمد لدى الإدارة. التخصصات والأقسام إدارة تعليمية فقط." />
       <CrudTable person={{ kind: "teacher" }} title="المعلمون" table="teachers" schoolId={schoolId} canWrite={w} order="full_name"
         select={COLS} searchKeys={["full_name", "display_name", "email", "specialization"]}
         filters={[
@@ -93,6 +108,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
           {editing && <NidForm key={editing["id"]} teacherId={editing["id"]} state={st(editing)} onDone={() => setEditing(null)} />}
         </DialogContent>
       </Dialog>
+      </>)}
     </>
   );
 }
