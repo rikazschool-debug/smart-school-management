@@ -799,3 +799,11 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-10 — HR employee file print
 - hr_employees gains action `print` (owner always; template «مدير إدارة الموارد البشرية» org scope; others by explicit grant). Evidence: scripts/hr-print-e2e.ts 13/13, src/lib/hr-sheet.test.ts 4/4, perm7-e2e 20/20, staff-dir-e2e 24/24; browser: owner opened file, single preview and bulk preview.
+
+## 2026-11-10 — Final acceptance round (demo group, test data removed after)
+- J1 empty section from «الإعداد الأكاديمي» → room + class group visible to principal and owner at once; student added from the new form into it; student signed in with ID + C-Smart, set first password, saw room + group. Guardian joined the group server-side; guardian UI not opened (WhatsApp code to a placeholder number; preview session for this backend cannot be minted).
+- J2 «إضافة مقرر» with teacher + two sections + direct approval → both visible to the teacher; legacy teacher–student chat read-only for both sides.
+- J3 owner calendar shows events of both branches; clicking opens the right item in its branch; branch filter works.
+- J4 print one / two employees → PDF; each employee starts a new page; owner sees national ID, view+print-only user sees masked fields (34 masked, ID shown ••••).
+- J5 vice «عرض لوحة اليوم وسجلات الحضور» via the tree (preview → save) → menu + page appear, manual_attendance refused; withdraw → menu and page gone.
+- Fixes: _idl_student also opens a new student's waiting account (idl-e2e 26/26, new 19b–19d); attendance page now closed by direct link without a grant (RequireSchool extra uses ATT_GRANTS); «تحديث قائمة الغياب» only for approvers; CrudTable add form pre-fills `defaults` and select fields get ids. accounts-e2e 23/23, vice-att-e2e 11/11.
