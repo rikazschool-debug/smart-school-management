@@ -14604,6 +14604,48 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_notices: {
+        Row: {
+          body: string
+          client_key: string
+          created_at: string
+          created_by: string
+          id: string
+          org_ids: string[]
+          recipients: number
+          roles: string[]
+          school_ids: string[]
+          scope: string
+          title: string
+        }
+        Insert: {
+          body: string
+          client_key: string
+          created_at?: string
+          created_by: string
+          id?: string
+          org_ids?: string[]
+          recipients?: number
+          roles?: string[]
+          school_ids?: string[]
+          scope: string
+          title: string
+        }
+        Update: {
+          body?: string
+          client_key?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          org_ids?: string[]
+          recipients?: number
+          roles?: string[]
+          school_ids?: string[]
+          scope?: string
+          title?: string
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           author_user_id: string
@@ -22905,6 +22947,19 @@ export type Database = {
         }[]
       }
       pin_message: { Args: { _id: string; _pin: boolean }; Returns: undefined }
+      platform_notice_send: {
+        Args: {
+          _body: string
+          _key: string
+          _orgs: string[]
+          _roles: string[]
+          _schools: string[]
+          _scope: string
+          _title: string
+        }
+        Returns: Json
+      }
+      platform_notices_list: { Args: never; Returns: Json }
       platform_org_save: {
         Args: {
           _name: string
