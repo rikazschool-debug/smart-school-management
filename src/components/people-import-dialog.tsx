@@ -21,6 +21,7 @@ import { arabicError } from "@/lib/session";
 import { provisionAccounts } from "@/lib/accounts.functions";
 import { FIELDS, csmartKey, norm, parseWorkbook, sectionSuggestion, templateBook, validate, type CheckedRow, type Lookups, type PKind, type RawRow } from "@/lib/people-import";
 import { ACCOUNT_STATE } from "@/components/guardian-quick-add";
+import { GuardianSourcePick } from "@/components/guardian-source-pick";
 
 type Stage = { ok: boolean; msg: string } | null;
 type Result = { key: string; line: string; name: string; academic: Stage; placement: Stage; guardian: Stage; account: Stage; guardianAccount: Stage; row: CheckedRow };
@@ -151,6 +152,7 @@ function StudentSingleExtras({ schoolId, v, set, plain }: { schoolId: string; v:
         </div>
       </FormSection>
       <FormSection n={3} title="ولي الأمر" hint="يُربط بالطالب ويُنشأ حسابه تلقائيًا">
+        <GuardianSourcePick schoolId={schoolId} onPick={(g) => set({ ...v, guardian_name: g.name, guardian_id: g.id, guardian_phone: g.phone })} />
         {plain("guardian_name")}{plain("guardian_id")}
         <div className="space-y-1">
           <Label htmlFor="ps-gphone">جوال ولي الأمر</Label>
