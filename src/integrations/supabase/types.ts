@@ -19188,6 +19188,7 @@ export type Database = {
       _perm_catalog_v11: { Args: never; Returns: Json }
       _perm_catalog_v12: { Args: never; Returns: Json }
       _perm_catalog_v13: { Args: never; Returns: Json }
+      _perm_catalog_v14: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
@@ -20376,6 +20377,7 @@ export type Database = {
         Returns: undefined
       }
       can_discuss_post: { Args: { _post: string }; Returns: boolean }
+      can_edit_staff: { Args: { _school: string }; Returns: boolean }
       can_invite: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
