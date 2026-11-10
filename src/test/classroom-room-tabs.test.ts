@@ -6,9 +6,9 @@ describe("digital classroom sections", () => {
     expect(roomTabsForRole("principal")).toEqual(["subjects", "students", "guardians", "group"]);
   });
   it("guardian and student see only subjects and teachers", () => {
-    expect(roomTabsForRole("guardian")).toEqual(["subjects"]);
-    expect(roomTabsForRole("student")).toEqual(["subjects"]);
-    expect(roomTabsFor("family")).toEqual(["subjects"]);
+    expect(roomTabsForRole("guardian")).toEqual(["subjects", "group"]);
+    expect(roomTabsForRole("student")).toEqual(["subjects", "group"]);
+    expect(roomTabsFor("family")).toEqual(["subjects", "group"]);
   });
   it("a teacher gets no guardians list", () => {
     expect(roomTabsForRole("teacher")).not.toContain("guardians");
