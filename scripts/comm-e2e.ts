@@ -156,7 +156,7 @@ check("search returns only accessible messages", sr.data?.length === 0 && sr1.da
 // 9 teacher assignment ended → read-only, no new sends
 await owner.c.rpc("end_assignment", { _id: aA.id });
 // legacy teacher chat (created before the rule): readable, sending blocked both ways
-const lg = (await admin.from("conversations").insert({ org_id: ORG, school_id: S, kind: "family", student_id: s1.id, guardian_id: G1.id, staff_user_id: t1.id, staff_kind: "teacher", dedupe_key: "legacy:" + uuid(), created_by: t1.id }).select("id").single()).data!.id;
+const lg = (await admin.from("conversations").insert({ org_id: (await admin.from("schools").select("org_id").eq("id", S).single()).data!.org_id, school_id: S, kind: "family", student_id: s1.id, guardian_id: G1.id, staff_user_id: t1.id, staff_kind: "teacher", dedupe_key: "legacy:" + uuid(), created_by: t1.id }).select("id").single()).data!.id;
 await admin.from("conversation_members").insert([{ conversation_id: lg, user_id: t1.id, role: "member" }, { conversation_id: lg, user_id: g1.id, role: "member" }]);
 await admin.from("messages").insert({ conversation_id: lg, sender_id: t1.id, body: "رسالة سابقة", client_id: uuid(), seq: 1 });
 const after = await t1.c.rpc("send_message", { _conv: lg, _body: "متابعة", _client_id: uuid() });
@@ -367,17 +367,7 @@ check("C3 teacher cannot read roster of a section not assigned", !!rosX.error);
 const gm = await t1.c.rpc("send_message", { _conv: GA, _body: "مرحبًا بالفصل", _client_id: uuid() });
 const gmS = await stud2.c.from("messages").select("id").eq("conversation_id", GA);
 check("C4 teacher posts to class group, student sees it", !gm.error && gmS.data?.length === 1, [gm.error, gmS]);
-const pc = await t1.c.rpc("start_student_conversation", { _student: s3.id });
-const pc2 = await t1.c.rpc("start_student_conversation", { _student: s3.id });
-check("C5 private chat opened once (no duplicate)", !pc.error && pc.data === pc2.data, [pc, pc2]);
-await t1.c.rpc("send_message", { _conv: pc.data, _body: "رسالة خاصة للطالبة", _client_id: uuid() });
-const pS = await stud2.c.from("messages").select("body").eq("conversation_id", pc.data);
-const pG = await g1.c.from("messages").select("id").eq("conversation_id", pc.data);
-const pT = await t2.c.from("messages").select("id").eq("conversation_id", pc.data);
-const inGroup = await stud2.c.from("messages").select("id").eq("conversation_id", GA);
-check("C5 student sees private msg; guardian & other teacher do not; group unchanged", pS.data?.[0]?.body === "رسالة خاصة للطالبة" && pG.data?.length === 0 && pT.data?.length === 0 && inGroup.data?.length === 1, [pS, pG, pT, inGroup]);
-const rep2 = await stud2.c.rpc("send_message", { _conv: pc.data, _body: "شكرًا أستاذ", _client_id: uuid() });
-check("C5 student cannot reply in a teacher chat (read-only for students)", !!rep2.error, rep2);
+check("C5 teacher cannot start a private chat with a student", !!(await t1.c.rpc("start_student_conversation", { _student: s3.id })).error);
 const pc3 = await t3.c.rpc("start_student_conversation", { _student: s3.id });
 check("C7 unassigned teacher cannot message student by id", !!pc3.error, pc3);
 const pcS = await stud2.c.rpc("start_student_conversation", { _student: s2.id });
