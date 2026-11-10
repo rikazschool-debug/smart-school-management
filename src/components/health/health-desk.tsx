@@ -49,7 +49,7 @@ export function HealthDesk() {
         <section className="rounded-2xl border bg-card p-4">
           <div className="mb-3 flex flex-wrap gap-2">
             <div className="relative min-w-56 flex-1"><Search className="absolute start-3 top-2.5 size-4 text-muted-foreground" /><Input className="ps-9" placeholder="ابحث بالاسم أو الهوية" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-            <select className={selectCls + " w-auto"} value={flag} onChange={(e) => setFlag(e.target.value)}>{FLAGS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+            <select className={selectCls("w-auto")} value={flag} onChange={(e) => setFlag(e.target.value)}>{FLAGS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
           </div>
           {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} /> : rows.length === 0 ? <EmptyState title="لا يوجد طلاب مطابقون" /> : (
             <ul className="divide-y">{rows.map((r) => (

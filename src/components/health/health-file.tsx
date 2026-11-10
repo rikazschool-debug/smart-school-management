@@ -111,7 +111,7 @@ function ProfileCard({ f }: { f: HFile }) {
     <Card title="البطاقة الصحية" icon={ShieldPlus} action={f.can_manage && !edit ? <Button size="sm" variant="outline" onClick={start}>{f.profile ? "تعديل" : "إضافة البيانات"}</Button> : undefined}>
       {edit ? (
         <form className="grid gap-3 sm:grid-cols-2" onSubmit={async (e) => { e.preventDefault(); if (await save("health_profile_save", { _student: f.student.id, _p: v }, "تم حفظ البطاقة الصحية")) setEdit(false); }}>
-          <div><Label>فصيلة الدم</Label><select className={selectCls} value={v.blood_type} onChange={(e) => setV({ ...v, blood_type: e.target.value })}><option value="">غير معروفة</option>{BLOOD.map((b) => <option key={b}>{b}</option>)}</select></div>
+          <div><Label>فصيلة الدم</Label><select className={selectCls()} value={v.blood_type} onChange={(e) => setV({ ...v, blood_type: e.target.value })}><option value="">غير معروفة</option>{BLOOD.map((b) => <option key={b}>{b}</option>)}</select></div>
           {P_FIELDS.map(([k, l]) => <div key={k}><Label>{l}</Label><Input value={v[k] ?? ""} inputMode={k.endsWith("_cm") || k.endsWith("_kg") ? "decimal" : undefined} onChange={(e) => setV({ ...v, [k]: e.target.value })} /></div>)}
           <div className="sm:col-span-2"><Label>الحساسية (أطعمة، أدوية…)</Label><Input value={v.allergies} onChange={(e) => setV({ ...v, allergies: e.target.value })} /></div>
           <div className="sm:col-span-2"><Label>النظام الغذائي</Label><Input value={v.diet} onChange={(e) => setV({ ...v, diet: e.target.value })} /></div>
@@ -141,8 +141,8 @@ function Conditions({ f }: { f: HFile }) {
       {form && (
         <form className="mb-4 grid gap-3 rounded-xl border bg-secondary/30 p-3 sm:grid-cols-2" onSubmit={async (e) => { e.preventDefault(); if (await save("health_condition_save", { _student: f.student.id, _id: form.id ?? null, _p: form }, "تم الحفظ")) setForm(null); }}>
           <div className="sm:col-span-2"><Label>اسم الحالة</Label><Input required value={form.name ?? ""} placeholder="مثال: ربو، سكري النوع الأول، حساسية الفول السوداني" onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-          <div><Label>النوع</Label><select className={selectCls} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{Object.entries(CATEGORIES).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-          <div><Label>الشدة</Label><select className={selectCls} value={form.severity} onChange={(e) => setForm({ ...form, severity: e.target.value })}>{Object.entries(SEVERITY).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+          <div><Label>النوع</Label><select className={selectCls()} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{Object.entries(CATEGORIES).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+          <div><Label>الشدة</Label><select className={selectCls()} value={form.severity} onChange={(e) => setForm({ ...form, severity: e.target.value })}>{Object.entries(SEVERITY).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
           <div className="sm:col-span-2"><Label>تعليمات للتعامل في المدرسة</Label><Textarea value={form.instructions ?? ""} onChange={(e) => setForm({ ...form, instructions: e.target.value })} /></div>
           <div className="flex gap-2 sm:col-span-2"><Button type="submit">حفظ</Button><Button type="button" variant="ghost" onClick={() => setForm(null)}>إلغاء</Button></div>
         </form>
@@ -222,8 +222,8 @@ function Events({ f }: { f: HFile }) {
       {form && (
         <form className="mb-4 grid gap-3 rounded-xl border bg-secondary/30 p-3" onSubmit={(e) => { e.preventDefault(); add.mutate(); }}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div><Label>نوع الحدث</Label><select className={selectCls} value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>{Object.entries(EVENT_KINDS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-            {form.kind === "med_given" && <div><Label>الدواء</Label><select className={selectCls} value={form.med_id} onChange={(e) => setForm({ ...form, med_id: e.target.value })}><option value="">—</option>{f.meds.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>}
+            <div><Label>نوع الحدث</Label><select className={selectCls()} value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>{Object.entries(EVENT_KINDS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+            {form.kind === "med_given" && <div><Label>الدواء</Label><select className={selectCls()} value={form.med_id} onChange={(e) => setForm({ ...form, med_id: e.target.value })}><option value="">—</option>{f.meds.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>}
           </div>
           <div><Label>الوصف</Label><Input required value={form.summary} placeholder="مثال: صداع خفيف، قياس الحرارة 37.2" onChange={(e) => setForm({ ...form, summary: e.target.value })} /></div>
           <div><Label>الإجراء المتخذ</Label><Textarea value={form.action_taken} onChange={(e) => setForm({ ...form, action_taken: e.target.value })} /></div>
