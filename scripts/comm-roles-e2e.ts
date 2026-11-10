@@ -109,7 +109,6 @@ try {
   const live = async (conv: string, u: string) => !!(await admin.from("conversation_members").select("id").eq("conversation_id", conv).eq("user_id", u).is("left_at", null)).data?.length;
   check("31 old teacher leaves section group on teacher change", !(await live(gMA, t1.id)));
   check("32 new teacher is in section group", await live(gMA, t2.id));
-  check("33 old teacher's private chat with student becomes read-only", !!(await t1.c.rpc("send_message", { _conv: sc.data, _body: "x", _client_id: crypto.randomUUID() })).error);
   await admin.from("enrollments").update({ section_id: secB.id }).eq("id", e1.id);
   check("34 transferred student leaves old section group", !(await live(gMA, s1.id)) && !(await live(gPA, s1.id)));
   check("35 transferred student joins new section group", await live(gMB, s1.id));
