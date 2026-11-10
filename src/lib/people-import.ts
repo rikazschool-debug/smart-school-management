@@ -16,9 +16,9 @@ export const FIELDS: Record<IKind, Field[]> = {
     { key: "gender", label: "الجنس", hint: "ذكر / أنثى", syn: ["الجنس", "النوع"] },
     { key: "grade", label: "الصف", hint: "اسم الصف كما في ركاز", syn: ["الصف"] },
     { key: "section", label: "الفصل", hint: "اسم الشعبة كما في ركاز", syn: ["الفصل", "الشعبة"] },
-    { key: "guardian_name", label: "اسم ولي الأمر", hint: "مطلوب إذا أُدخل جوال ولي الأمر", syn: ["اسم ولي الأمر", "ولي الأمر", "اسم ولي الامر"] },
-    { key: "guardian_id", label: "هوية ولي الأمر", hint: "اختياري — 10 أرقام", syn: ["هوية ولي الأمر", "رقم هوية ولي الأمر", "هوية ولي الامر"] },
-    { key: "guardian_phone", label: "جوال ولي الأمر", hint: "05XXXXXXXX — يدخل به ولي الأمر برمز واتساب", syn: ["جوال ولي الأمر", "رقم جوال ولي الأمر", "جوال ولي الامر"] },
+    { key: "guardian_name", label: "اسم ولي الأمر", hint: "مطلوب — يُضاف ولي الأمر ويُربط بالطالب تلقائيًا", syn: ["اسم ولي الأمر", "ولي الأمر", "اسم ولي الامر"] },
+    { key: "guardian_id", label: "هوية ولي الأمر", hint: "مطلوب مع اسم ولي الأمر — 10 أرقام", syn: ["هوية ولي الأمر", "رقم هوية ولي الأمر", "هوية ولي الامر"] },
+    { key: "guardian_phone", label: "جوال ولي الأمر", hint: "اختياري — 05XXXXXXXX، يلزم لرمز الدخول ورسالة الجوال", syn: ["جوال ولي الأمر", "رقم جوال ولي الأمر", "جوال ولي الامر"] },
     { key: "relationship", label: "صلة القرابة", hint: "أب / أم / أخ / أخت / أخرى", syn: ["صلة القرابة", "القرابة", "صلة ولي الأمر"] },
   ],
   guardians: [
@@ -363,8 +363,10 @@ export function validate(kind: PKind, rows: RawRow[], lk: Lookups): CheckedRow[]
       if (gName || gPhoneRaw || gId) {
         const gp = normPhone(gPhoneRaw);
         if (!gName) e.push("اسم ولي الأمر مطلوب");
-        if (!gp) e.push("جوال ولي الأمر غير صالح (05XXXXXXXX)");
-        if (gId && !isNationalId(gId)) e.push("هوية ولي الأمر 10 أرقام");
+        // name + ID required; the mobile is optional (without it the guardian's login waits as «بيانات ناقصة»)
+        if (gPhoneRaw.trim() && !gp) e.push("جوال ولي الأمر غير صالح (05XXXXXXXX)");
+        if (!gId) e.push("هوية ولي الأمر مطلوبة");
+        else if (!isNationalId(gId)) e.push("هوية ولي الأمر 10 أرقام");
         data["guardian_name"] = gName || null; data["guardian_phone"] = gp; data["guardian_id"] = gId || null;
         const rel = norm(v["relationship"]); data["relationship"] = rel ? REL[rel] ?? null : "father";
         if (rel && !data["relationship"]) e.push("صلة القرابة: أب / أم / أخ / أخت / أخرى");
