@@ -92,6 +92,14 @@ try {
   check("guardian opens child's room", !(await G1.rpc("section_room_get", { _room: RA })).error);
   check("guardian blocked from another room", !!(await G1.rpc("section_room_get", { _room: RB })).error);
   check("student cannot post", !!(await S1.from("classroom_posts").insert({ school_id: s0, classroom_id: oldRoom, author_user_id: users.s1, title: "x", body: "x", status: "published" })).error);
+  // privacy inside the room: family sees subjects/teachers only; teacher gets the roster; staff gets roster + guardians
+  const g1room = must(await G1.rpc("section_room_get", { _room: RA })) as any;
+  check("guardian: subjects only — no student list, no guardians", g1room.view === "family" && g1room.students === null && g1room.guardians === null && g1room.subjects.length === 2, g1room);
+  check("student: no classmates list, no guardians", s1room.view === "family" && s1room.students === null && s1room.guardians === null, s1room);
+  check("teacher: student list, no guardians", t1room.view === "teacher" && Array.isArray(t1room.students) && t1room.guardians === null, t1room);
+  const p1room = must(await P1.rpc("section_room_get", { _room: RA })) as any;
+  check("principal: students + guardians of the class", p1room.view === "staff" && p1room.students.length >= 1 && p1room.guardians.some((g: any) => g.name === "ولي أ" && g.verified), p1room);
+  check("class group link only for its members (none here)", g1room.class_group === null && p1room.class_group === null);
 
   // transfer s1 from A to B
   must(await admin.from("enrollments").update({ status: "ended", end_date: "2026-11-06" }).eq("id", e1));
@@ -100,6 +108,8 @@ try {
   check("after transfer: old section room closed", !!(await S1.rpc("section_room_get", { _room: RA })).error);
   check("after transfer: old section posts hidden", ((must(await S1.from("classroom_posts").select("id").eq("classroom_id", oldRoom)) as any[]).length) === 0);
   check("after transfer: child card points to new room", ((must(await G1.rpc("family_child", { _student: k1 })) as any).room?.id) === RB);
+  check("after transfer: guardian follows the child to the new room", !(await G1.rpc("section_room_get", { _room: RB })).error);
+  check("after transfer: guardian leaves the old room", !!(await G1.rpc("section_room_get", { _room: RA })).error);
 
   // teacher change: T1 ends, T3 takes math A
   must(await admin.from("teacher_assignments").update({ status: "ended", end_date: "2026-11-06" }).eq("id", aT1));
