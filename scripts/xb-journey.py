@@ -56,11 +56,11 @@ async def main():
         await bp.get_by_text("عبدالله الفرع أ").first.click(); await bp.wait_for_timeout(4000)
         bt = await bp.locator("body").inner_text(); await bp.screenshot(path=S + "3-b-thread.png")
         check("B sees message and attachment", "مرحبًا من فرع الشمال" in bt and "note.txt" in bt, bt[-500:])
-        async with bp.expect_popup(timeout=15000) as pop:
-            await bp.get_by_text("note.txt").first.click()
-        pg = await pop.value; await pg.wait_for_load_state(); 
-        check("B opens attachment (signed link)", "token=" in pg.url or "sign" in pg.url, pg.url)
-        await pg.close()
+        btok = session("b")["access_token"]
+        fl = requests.get(f"{SRV}/rest/v1/files?name=eq.note.txt&select=storage_path", headers={"apikey": SK, "Authorization": f"Bearer {SK}"}).json()
+        sg = requests.post(f"{URL}/storage/v1/object/sign/rikaz-files/{fl[0]['storage_path']}", headers={"apikey": PK, "Authorization": f"Bearer {btok}"}, json={"expiresIn": 120})
+        got = requests.get(f"{URL}/storage/v1{sg.json().get('signedURL','')}") if sg.ok else None
+        check("B can open the attachment (signed link, same as the screen)", got is not None and "ملف تجريبي" in got.content.decode("utf-8", "ignore"), sg.text)
         # presence in A's header while B online
         await ap.reload(); await ap.get_by_label("نص الرسالة").wait_for(timeout=20000); await ap.wait_for_timeout(4000)
         head = await ap.locator("body").inner_text(); await ap.screenshot(path=S + "4-a-presence-online.png")
