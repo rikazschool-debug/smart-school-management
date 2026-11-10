@@ -47,7 +47,7 @@ function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const room = useQuery({
     queryKey: ["class-group-room", search.c],
     enabled: !!search.c || search.tab === "classes",
-    queryFn: async () => search.c ? (((await db.rpc("class_group_room" as never, { _conv: search.c } as never)) as unknown as { data: string | null }).data ?? null) : null,
+    queryFn: async () => search.c ? (((await db.rpc("class_group_room", { _conv: search.c })).data ?? null) as string | null) : null,
   });
   useEffect(() => {
     if (room.data) rootNav({ to: "/app/classrooms/section/$id", params: { id: room.data }, search: { tab: "group" }, replace: true });

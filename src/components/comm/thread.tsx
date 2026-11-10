@@ -390,7 +390,7 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
 function SuccessorLink({ conv }: { conv: string }) {
   const q = useQuery({ queryKey: ["cg-successor", conv], queryFn: async () => {
     const next = ((await db.rpc("class_group_successor", { _conv: conv })).data ?? null) as string | null;
-    return next ? (((await db.rpc("class_group_room" as never, { _conv: next } as never)) as unknown as { data: string | null }).data ?? null) : null;
+    return next ? (((await db.rpc("class_group_room", { _conv: next })).data ?? null) as string | null) : null;
   } });
   if (!q.data) return null;
   return (

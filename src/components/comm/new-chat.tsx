@@ -248,9 +248,9 @@ function StudentStart({ onCreated }: { onCreated: (id: string) => void }) {
   const contacts = useQuery({
     queryKey: ["student-contacts"],
     queryFn: async () => {
-      const { data, error } = await (db.rpc as unknown as (f: string) => Promise<{ data: Row[] | null; error: Error | null }>)("student_contacts");
+      const { data, error } = await db.rpc("student_contacts");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Row[];
     },
   });
   const school = contacts.data?.[0]?.["school_name"] as string | undefined;
@@ -268,7 +268,7 @@ function StudentStart({ onCreated }: { onCreated: (id: string) => void }) {
       <Textarea aria-label="الرسالة الأولى" placeholder="الرسالة الأولى (اختياري)" value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} />
       <Button disabled={!to || busy} onClick={async () => {
         setBusy(true);
-        const { data, error } = await (db.rpc as unknown as (f: string, a: unknown) => Promise<{ data: string; error: Error | null }>)("start_student_admin_conversation", { _staff: to });
+        const { data, error } = await db.rpc("start_student_admin_conversation", { _staff: to });
         if (error) { setBusy(false); return void toast.error(arabicError(error)); }
         await firstMessage(data, body, key);
         setBusy(false); onCreated(data);
