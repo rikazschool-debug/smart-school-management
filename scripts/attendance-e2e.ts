@@ -40,6 +40,8 @@ try {
   for (const [u, role] of [[vp, "vice_principal"], [sec, "security"], [co, "counselor"], [te, "teacher"], [gu, "guardian"], [gu2, "guardian"], [stu, "student"]] as const) {
     await owner.c.rpc("invite_member", { _email: u.email, _school: A, _role: role }); await u.c.rpc("accept_my_invitations");
   }
+  // the vice has no attendance by default — the owner grants it explicitly (vice-att-e2e covers the default)
+  for (const [sec_, act] of [["attendance", "approve"], ["gate", "operate"]]) await owner.c.rpc("perm_override_set", { _org: org, _user: vp.id, _section: sec_, _action: act, _effect: "grant", _scope: "branch", _reason: "وكيل الحضور" });
   await admin.from("students").update({ user_id: stu.id }).eq("id", sSelf.id);
   const g1 = await ins(owner.c, A, "guardians", { full_name: "أبو خالد", email: gu.email, user_id: gu.id });
   const g2 = await ins(owner.c, A, "guardians", { full_name: "ولي آخر", email: gu2.email, user_id: gu2.id });

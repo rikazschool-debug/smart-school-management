@@ -168,7 +168,7 @@ const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
   // class visits: principal-level (all branch teachers) and supervisor (assigned teachers) only — mirrors _cv_can_eval
   principal: [...MANAGE, "visits", "evaluation", "family_visits", "events"],
   // vice: no academic setup (principal only) and no scanning station (gate account only); timetable view limited to the vice's scope
-  vice_principal: [...MANAGE.filter((k) => k !== "academic"), "family_visits", "events"],
+  vice_principal: [...MANAGE.filter((k) => k !== "academic" && k !== "attendance"), "family_visits", "events"],
   student_affairs: ["home", "students", "guardians", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
   dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
   supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "visits", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
@@ -298,7 +298,8 @@ export function attTabs(role: Role): AttTab[] {
   if (role === "student_affairs") return ["today", "gate", "pickups", "calls", "cards", "records", "followup", "lessons"];
   if (role === "org_owner") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls", "compare", "lessons"];
   if (role === "principal") return ["today", "pickups", "records", "followup", "cards", "settings", "gate", "calls", "lessons"];
-  if (role === "vice_principal") return ["today", "pickups", "records", "followup", "cards", "gate", "calls", "lessons"];
+  // vice: attendance is not a default section — only owner grants (attTabsWith) open tabs
+  if (role === "vice_principal") return [];
   return [];
 }
 
@@ -325,7 +326,7 @@ export function attTabsWith(role: Role, p?: SchoolPerms): AttTab[] {
     if (p["gate.operate"]) add(["today", "gate", "pickups", "calls"]);
     else t = t.filter((k) => k !== "gate" && k !== "calls");
     if (p["attendance.follow"] || p["attendance.approve"]) add(["today", "records", "followup"]);
-    if (p["attendance.approve"]) add(["pickups"]);
+    if (p["attendance.approve"]) add(["pickups", "cards"]);
     if (p["attendance.view"] || p["attendance.record"]) add(["today", "records"]);
   }
   return t;

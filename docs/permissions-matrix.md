@@ -472,3 +472,4 @@ A deny override removes even the base rule. Tests: scripts/identity-e2e.ts, iden
 Calls with no branch: owner only. Deny overrides grant. Revoking listen stops an already issued token.
 
 - Support: new internal ticket assignment = owner or support.assign on that branch, branch staff only. In-call ticket = calls.link on chosen branch.
+- الوكيل والحضور والمواظبة (نوفمبر 2026): لا وصول افتراضي للحضور أو البوابة؛ مالك المجموعة يمنح العرض أو التسجيل أو المتابعة أو الاعتماد أو تشغيل البوابة كلًّا على حدة، لفرع أو للمجموعة.
