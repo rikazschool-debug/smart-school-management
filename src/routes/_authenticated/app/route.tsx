@@ -1,8 +1,8 @@
 import { RikazLogo } from "@/components/logo";
 import { createFileRoute, Link, Outlet, useCanGoBack, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { ConfirmHost } from "@/components/confirm";
-import { SchoolLogo, useSchoolLogo } from "@/components/school-logo";
-import { setExportBrand } from "@/lib/export-brand";
+import { SchoolLogo } from "@/components/school-logo";
+import { ExportBrandSync } from "@/components/export-brand-sync";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOpsStaff } from "@/lib/ops-staff";
@@ -203,10 +203,6 @@ function Shell() {
   const cleanPath = path.replace(/\/+$/, "") || "/";
   // owner group account vs inside one school: /app and the branch list are the group; opening a branch enters it; shared pages keep the last state
   const groupView = owner && !ownerInSchool && !(cleanPath === "/app/school-home" && schoolPicked);
-  const brandLogo = useSchoolLogo(groupView ? null : active?.schoolId);
-  const brandName = active ? (groupView ? active.orgName : active.schoolName) ?? "" : "";
-  const brandUrl = groupView ? myAvatar.data ?? null : brandLogo.data ?? null;
-  useEffect(() => { void setExportBrand(brandName, brandUrl); }, [brandName, brandUrl]);
   // Owner home has no side menu; inside a section only that section's menu shows; shared pages (profile…) keep the last section.
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
@@ -238,7 +234,7 @@ function Shell() {
         {groupView && myAvatar.data ? <img src={myAvatar.data} alt={active.orgName} className="size-10 shrink-0 rounded-xl border bg-card object-contain" /> : <SchoolLogo schoolId={groupView ? null : active.schoolId} className="size-10 shrink-0 rounded-xl border" fallback={<RikazLogo className="size-10" />} />}
         <div className="min-w-0">
           <p className="font-display text-xl leading-none text-foreground">ركاز <span className="text-sm font-normal text-muted-foreground">| مدارس تُدار بذكاء</span></p>
-          <p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{groupView ? active.orgName : active.schoolName}</p>
+          <ExportBrandSync name={(groupView ? active.orgName : active.schoolName) ?? ""} schoolId={groupView ? null : active.schoolId} groupLogo={groupView ? myAvatar.data ?? null : null} /><p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{groupView ? active.orgName : active.schoolName}</p>
         </div>
       </div>
       {owner && section && <p className="mx-3 mb-3 rounded-lg bg-secondary px-3 py-2 text-sm font-bold text-primary">{OWNER_SECTION_LABELS[section]}</p>}
