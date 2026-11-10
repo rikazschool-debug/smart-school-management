@@ -188,7 +188,7 @@ export const NAV_LABELS: Partial<Record<NavKey, string>> = {
   family_visits: "الزيارات",
   events: "الفعاليات",
   hr_training: "التدريب والتطوير",
-  home: "لوحة التحكم المركزية", academic: "الإعداد الأكاديمي", teachers: "المعلمون", courses: "المقررات والتكليفات", students: "الطلاب والتسكين", guardians: "أولياء الأمور", tags: "الوسوم", chat_settings: "ضبط المحادثات",
+  home: "لوحة التحكم المركزية", academic: "الإعداد الأكاديمي", teachers: "الكادر التعليمي", courses: "المقررات والتكليفات", students: "الطلاب والتسكين", guardians: "أولياء الأمور", tags: "الوسوم", chat_settings: "ضبط المحادثات",
   classrooms: "الفصول الرقمية", virtual: "الحصص الافتراضية", homework: "الواجبات والاختبارات", grades: "أرشيف الدرجات الفصلية", results: "النتائج", schedule: "الجدول المدرسي",
   attendance: "الحضور والخروج", station: "المسح والبوابة والنداء", pickup: "الخروج والاستئذان", admin: "التكليفات والطلبات", duties: "المناوبات", meetings: "الاجتماعات",
   calendar: "تقويمي", communication: "التواصل", circulars: "التعاميم", comm_groups: "المجموعات", comm_manage: "إدارة المجموعات", notifications: "الإشعارات", support: "الدعم والمساعدة", calls: "المكالمات الهاتفية",
