@@ -33,7 +33,7 @@ const s1 = await t.c.rpc("send_message", { _conv: cv.data, _body: "مرحبًا 
 check("9 officer can send", !s1.error, s1.error);
 const s2 = await g.c.rpc("send_message", { _conv: cv.data, _body: "شكرًا", _client_id: crypto.randomUUID() });
 check("10 guardian can reply", !s2.error, s2.error);
-await owner.c.rpc("perm_override_clear" as any, { _org: org, _user: t.uid, _section: "cs_comm", _action: "message" });
+await owner.c.rpc("perm_override_set", { _org: org, _user: t.uid, _section: "cs_comm", _action: "message", _effect: null, _scope: null, _reason: null });
 await admin.from("perm_overrides" as any).delete().eq("user_id", t.uid).eq("section", "cs_comm");
 check("11 after revoke: sending is blocked (read-only)", !!(await t.c.rpc("send_message", { _conv: cv.data, _body: "x", _client_id: crypto.randomUUID() })).error);
 await admin.from("conversations").delete().eq("id", cv.data);
