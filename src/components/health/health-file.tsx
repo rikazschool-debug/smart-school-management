@@ -45,7 +45,7 @@ export function HealthFile({ studentId }: { studentId: string }) {
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const f = q.data!;
   const staff = f.viewer === "staff";
-  const alerts = [...f.conditions.filter((c) => c.severity === "high" || c.category === "allergy").map((c) => c.name), ...(f.profile?.allergies ? [String(f.profile.allergies)] : [])];
+  const alerts = [...f.conditions.filter((c) => c.severity === "high" || c.category === "allergy").map((c) => c.name), ...(f.profile?.["allergies"] ? [String(f.profile.allergies)] : [])];
   return (
     <div className="space-y-5">
       <section className="overflow-hidden rounded-2xl border bg-card">
@@ -57,7 +57,7 @@ export function HealthFile({ studentId }: { studentId: string }) {
             <p className="text-sm text-muted-foreground">{f.student.section ?? "غير مسكّن"}{f.student.birth_date ? ` · مواليد ${f.student.birth_date}` : ""}{staff && f.student.national_id ? ` · ${f.student.national_id}` : ""}</p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
-            <Stat label="فصيلة الدم" value={String(f.profile?.blood_type ?? "—")} />
+            <Stat label="فصيلة الدم" value={String(f.profile?.["blood_type"] ?? "—")} />
             <Stat label="الحالات" value={String(f.conditions.length)} />
             <Stat label="الأدوية" value={String(f.meds.length)} />
           </div>
@@ -111,19 +111,19 @@ function ProfileCard({ f }: { f: HFile }) {
     <Card title="البطاقة الصحية" icon={ShieldPlus} action={f.can_manage && !edit ? <Button size="sm" variant="outline" onClick={start}>{f.profile ? "تعديل" : "إضافة البيانات"}</Button> : undefined}>
       {edit ? (
         <form className="grid gap-3 sm:grid-cols-2" onSubmit={async (e) => { e.preventDefault(); if (await save("health_profile_save", { _student: f.student.id, _p: v }, "تم حفظ البطاقة الصحية")) setEdit(false); }}>
-          <div><Label>فصيلة الدم</Label><select className={selectCls()} value={v.blood_type} onChange={(e) => setV({ ...v, blood_type: e.target.value })}><option value="">غير معروفة</option>{BLOOD.map((b) => <option key={b}>{b}</option>)}</select></div>
+          <div><Label>فصيلة الدم</Label><select className={selectCls()} value={v["blood_type"]} onChange={(e) => setV({ ...v, blood_type: e.target.value })}><option value="">غير معروفة</option>{BLOOD.map((b) => <option key={b}>{b}</option>)}</select></div>
           {P_FIELDS.map(([k, l]) => <div key={k}><Label>{l}</Label><Input value={v[k] ?? ""} inputMode={k.endsWith("_cm") || k.endsWith("_kg") ? "decimal" : undefined} onChange={(e) => setV({ ...v, [k]: e.target.value })} /></div>)}
-          <div className="sm:col-span-2"><Label>الحساسية (أطعمة، أدوية…)</Label><Input value={v.allergies} onChange={(e) => setV({ ...v, allergies: e.target.value })} /></div>
-          <div className="sm:col-span-2"><Label>النظام الغذائي</Label><Input value={v.diet} onChange={(e) => setV({ ...v, diet: e.target.value })} /></div>
-          <div className="sm:col-span-2"><Label>ملاحظات</Label><Textarea value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} /></div>
+          <div className="sm:col-span-2"><Label>الحساسية (أطعمة، أدوية…)</Label><Input value={v["allergies"]} onChange={(e) => setV({ ...v, allergies: e.target.value })} /></div>
+          <div className="sm:col-span-2"><Label>النظام الغذائي</Label><Input value={v["diet"]} onChange={(e) => setV({ ...v, diet: e.target.value })} /></div>
+          <div className="sm:col-span-2"><Label>ملاحظات</Label><Textarea value={v["notes"]} onChange={(e) => setV({ ...v, notes: e.target.value })} /></div>
           <div className="flex gap-2 sm:col-span-2"><Button type="submit">حفظ</Button><Button type="button" variant="ghost" onClick={() => setEdit(false)}>إلغاء</Button></div>
         </form>
       ) : !f.profile ? <EmptyState title="لم تُعبّأ البطاقة الصحية بعد" hint={f.viewer === "guardian" ? "أضف فصيلة الدم وجهة الطوارئ والحساسية." : "بانتظار إدخال ولي الأمر أو المرشدة الصحية."} /> : (
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          {[["فصيلة الدم", p.blood_type], ...P_FIELDS.map(([k, l]) => [l, p[k]]), ["الحساسية", p.allergies], ["النظام الغذائي", p.diet], ["ملاحظات", p.notes]].map(([l, val]) => (
+          {[["فصيلة الدم", p["blood_type"]], ...P_FIELDS.map(([k, l]) => [l, p[k]]), ["الحساسية", p["allergies"]], ["النظام الغذائي", p["diet"]], ["ملاحظات", p["notes"]]].map(([l, val]) => (
             <div key={String(l)}><dt className="text-xs text-muted-foreground">{l}</dt><dd className="font-medium">{val == null || val === "" ? "—" : String(val)}</dd></div>
           ))}
-          <p className="col-span-2 text-xs text-muted-foreground">آخر تحديث {p.updated_at ? fmt(String(p.updated_at)) : ""} · بواسطة {p.updated_source === "guardian" ? "ولي الأمر" : "المدرسة"}</p>
+          <p className="col-span-2 text-xs text-muted-foreground">آخر تحديث {p["updated_at"] ? fmt(String(p["updated_at"])) : ""} · بواسطة {p["updated_source"] === "guardian" ? "ولي الأمر" : "المدرسة"}</p>
         </dl>
       )}
     </Card>
