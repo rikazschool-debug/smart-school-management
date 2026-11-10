@@ -107,28 +107,28 @@ function StudentSingleExtras({ schoolId, v, set }: { schoolId: string; v: Record
       </div>
       <div className="space-y-1">
         <Label htmlFor="ps-stage">المرحلة</Label>
-        <select id="ps-stage" className={selectCls} value={stage} onChange={(e) => { setStage(e.target.value); setGrade(""); setSec(""); set({ ...v, grade: "", section: "" }); }}>
+        <select id="ps-stage" className={selectCls()} value={stage} onChange={(e) => { setStage(e.target.value); setGrade(""); setSec(""); set({ ...v, grade: "", section: "" }); }}>
           <option value="">— اختر المرحلة —</option>
           {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
       </div>
       <div className="space-y-1">
         <Label htmlFor="ps-grade">الصف</Label>
-        <select id="ps-grade" className={selectCls} disabled={!stage} value={grade} onChange={(e) => { setGrade(e.target.value); setSec(""); set({ ...v, grade: name(grades, e.target.value), section: "" }); }}>
+        <select id="ps-grade" className={selectCls()} disabled={!stage} value={grade} onChange={(e) => { setGrade(e.target.value); setSec(""); set({ ...v, grade: name(grades, e.target.value), section: "" }); }}>
           <option value="">{stage ? "— اختر الصف —" : "اختر المرحلة أولًا"}</option>
           {grades.filter((g) => g.parent === stage).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
       </div>
       <div className="space-y-1">
         <Label htmlFor="ps-sec">الفصل</Label>
-        <select id="ps-sec" className={selectCls} disabled={!grade} value={sec} onChange={(e) => { setSec(e.target.value); set({ ...v, section: name(secs, e.target.value) }); }}>
+        <select id="ps-sec" className={selectCls()} disabled={!grade} value={sec} onChange={(e) => { setSec(e.target.value); set({ ...v, section: name(secs, e.target.value) }); }}>
           <option value="">{grade ? "— اختر الفصل —" : "اختر الصف أولًا"}</option>
           {secs.filter((s) => s.parent === grade).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
       </div>
       <div className="space-y-1">
         <Label htmlFor="ps-rel">صلة القرابة</Label>
-        <select id="ps-rel" className={selectCls} value={v["relationship"] ?? ""} onChange={(e) => set({ ...v, relationship: e.target.value })}>
+        <select id="ps-rel" className={selectCls()} value={v["relationship"] ?? ""} onChange={(e) => set({ ...v, relationship: e.target.value })}>
           <option value="">— اختر —</option>
           {["أب", "أم", "أخ", "أخت", "أخرى"].map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
