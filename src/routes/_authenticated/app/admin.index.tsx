@@ -111,7 +111,7 @@ function SectionLinks({ school, lead }: { school: string; lead: boolean }) {
   const links = [
     { to: "/app/admin/duties", label: "المناوبات", hint: lead ? `نقص التغطية هذا الأسبوع: ${s.duty_gaps_week ?? 0} · طلبات اعتذار: ${s.duty_changes_open ?? 0}` : `مناوباتي اليوم: ${s.duties_today_mine ?? 0}` },
     { to: "/app/admin/meetings", label: "الاجتماعات والقرارات", hint: `اجتماعاتي القادمة: ${s.meetings_upcoming_mine ?? 0} · قراراتي المفتوحة: ${s.decisions_open_mine ?? 0}` },
-    { to: "/app/admin/calendar", label: "تقويمي", hint: "التكليفات والمناوبات والاجتماعات والقرارات" },
+    { to: "/app/events", search: { tab: "summary" }, label: "التقويم", hint: "داخل الفعاليات: التكليفات والمناوبات والاجتماعات والقرارات مع الفعاليات" },
   ] as const;
   return (
     <div className="mb-6 grid gap-3 md:grid-cols-3">

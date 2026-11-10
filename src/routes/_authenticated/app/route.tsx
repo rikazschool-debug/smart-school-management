@@ -65,7 +65,6 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   admin: { to: "/app/admin", label: "التكليفات والطلبات", icon: Briefcase },
   duties: { to: "/app/admin/duties", label: "المناوبات", icon: ShieldCheck },
   meetings: { to: "/app/admin/meetings", label: "الاجتماعات", icon: UsersRound },
-  calendar: { to: "/app/admin/calendar", label: "تقويمي", icon: CalendarDays },
   communication: { to: "/app/communication", label: "التواصل", icon: MessagesSquare },
   comm_groups: { to: "/app/communication", label: "المجموعات", icon: Users, tab: "groups" },
   circulars: { to: "/app/circulars", label: "التعاميم", icon: Megaphone },
@@ -111,7 +110,7 @@ const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-side
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "platform_subs", "signup_requests", "platform_notices", "schools", "members", "permissions"] },
-  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "events"] },
+  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "events"] },
   { label: "الكادر التعليمي والإداري", keys: ["teachers"] },
   { label: "أولياء الأمور والطلاب", keys: ["students", "guardians"] },
   { label: "الوسوم", keys: ["tags"] },
@@ -292,7 +291,7 @@ function Shell() {
                   )}
                   {k === "events" && path.startsWith("/app/events") && !["guardian", "student"].includes(active.role) && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
-                      {EVT_SUB.map(([t, label]) => (
+                      {EVT_SUB.filter(([t]) => t === "summary" || !pcRole || ["principal", "vice_principal"].includes(active.role) || hasEvents(evt.data)).map(([t, label]) => (
                         <Link key={t} to="/app/events" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>
                       ))}
                     </div>

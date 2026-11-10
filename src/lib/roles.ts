@@ -65,7 +65,6 @@ export type NavKey =
   | "admin"
   | "duties"
   | "meetings"
-  | "calendar"
   | "notifications"
   | "procurement"
   | "school_home"
@@ -90,7 +89,7 @@ export type NavKey =
 export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support" | "calls";
 export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة", calls: "المكالمات الهاتفية" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
-  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "calendar", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "events"],
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "events"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
   admissions: ["admissions"],
@@ -134,8 +133,8 @@ export function ownerSectionNav(section: OwnerSection, allowed: NavKey[]): NavKe
   return [...new Set([...own, ...OWNER_COMMON])];
 }
 
-/** School administration sub-sections (duties, meetings, personal calendar) for every staff role. */
-const ADMIN_KEYS: NavKey[] = ["admin", "duties", "meetings", "calendar"];
+/** School administration sub-sections (duties, meetings) for every staff role; the personal calendar lives in «الفعاليات ← الملخص والتقويم». */
+const ADMIN_KEYS: NavKey[] = ["admin", "duties", "meetings"];
 
 const MANAGE: NavKey[] = [
   "home",
@@ -153,7 +152,6 @@ const MANAGE: NavKey[] = [
   "admin",
   "duties",
   "meetings",
-  "calendar",
   "communication",
   "notifications",
 ];
@@ -169,15 +167,15 @@ const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
   principal: [...MANAGE, "visits", "evaluation", "family_visits", "events"],
   // vice: no academic setup (principal only) and no scanning station (gate account only); timetable view limited to the vice's scope
   vice_principal: [...MANAGE.filter((k) => k !== "academic" && k !== "attendance"), "family_visits", "events"],
-  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
-  dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
-  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "visits", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
-  teacher: ["home", "classrooms", "virtual", "homework", "schedule", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
+  student_affairs: ["home", "students", "guardians", "schedule", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
+  dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
+  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "visits", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
+  teacher: ["home", "classrooms", "virtual", "homework", "schedule", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
   guardian: ["home", "classrooms", "homework", "schedule", "evaluation", "pickup", "communication", "notifications", "family_visits", "events"],
   student: ["home", "classrooms", "virtual", "homework", "schedule", "pickup", "communication", "notifications", "events"],
-  counselor: ["home", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
-  nurse: ["home", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
-  security: ["home", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"],
+  counselor: ["home", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
+  nurse: ["home", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
+  security: ["home", "attendance", "station", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
 };
 
 export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).map(([r, ks]) => [r, ks.filter((k) => !HIDDEN_NAV.includes(k))])) as Record<Role, NavKey[]>;
@@ -191,7 +189,7 @@ export const NAV_LABELS: Partial<Record<NavKey, string>> = {
   home: "لوحة التحكم المركزية", academic: "الإعداد الأكاديمي", teachers: "الكادر التعليمي", courses: "المقررات والتكليفات", students: "الطلاب والتسكين", guardians: "أولياء الأمور", tags: "الوسوم", chat_settings: "ضبط المحادثات",
   classrooms: "الفصول الرقمية", virtual: "الحصص الافتراضية", homework: "الواجبات والاختبارات", grades: "أرشيف الدرجات الفصلية", results: "النتائج", schedule: "الجدول المدرسي",
   attendance: "الحضور والخروج", station: "المسح والبوابة والنداء", pickup: "الخروج والاستئذان", admin: "التكليفات والطلبات", duties: "المناوبات", meetings: "الاجتماعات",
-  calendar: "تقويمي", communication: "التواصل", circulars: "التعاميم", comm_groups: "المجموعات", comm_manage: "إدارة المجموعات", notifications: "الإشعارات", support: "الدعم والمساعدة", calls: "المكالمات الهاتفية",
+  communication: "التواصل", circulars: "التعاميم", comm_groups: "المجموعات", comm_manage: "إدارة المجموعات", notifications: "الإشعارات", support: "الدعم والمساعدة", calls: "المكالمات الهاتفية",
   procurement: "المشتريات والعهد", school_home: "لوحة المدرسة", maintenance: "إدارة صيانة المباني", bus_maintenance: "إدارة تشغيل وصيانة الباصات", admissions: "القبول والتسجيل",
 };
 
