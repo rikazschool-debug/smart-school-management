@@ -103,7 +103,7 @@ export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = fa
           <p className="text-xs text-muted-foreground">{isCourse ? "اختر السنة والمادة ثم الشعب، ويُنشأ مقرر لكل شعبة. اختر المعلم الآن ليُكلَّف بها كلها ويظهر في الفصل الرقمي لكل شعبة، أو اتركه وكلّفه لاحقًا." : "اختر المعلم والمادة ثم كل الشعب التي يدرّسها. يُنشأ تكليف مستقل لكل شعبة، وبعد الاعتماد يظهر المعلم في الفصل الرقمي لكل شعبة."}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1"><Label htmlFor="ma-t">{isCourse ? "المعلم (اختياري)" : "المعلم *"}</Label>
-              <select id="ma-t" className={sel} value={teacher} onChange={(e) => setTeacher(e.target.value)}>
+              <select id="ma-t" className={sel} value={teacher} onChange={(e) => { setTeacher(e.target.value); setPicked(new Set()); }}>
                 <option value="">{isCourse ? "— بدون تكليف الآن —" : "— اختر المعلم —"}</option>{data.data?.teachers.map((t) => <option key={t["id"]} value={t["id"]}>{t["full_name"]}</option>)}
               </select></div>
             <div className="space-y-1"><Label htmlFor="ma-s">المادة *</Label>

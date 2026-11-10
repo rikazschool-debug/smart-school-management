@@ -73,7 +73,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <section className="mb-10 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-bold">التكليفات</h2>
-          {canAssign && <MultiSectionAssign schoolId={ctx.schoolId} canCreateCourses={manage} />}
+          {canAssign && <MultiSectionAssign schoolId={ctx.schoolId} canCreateCourses={manage} canApprove={canAssign} />}
         </div>
         {pending.isLoading ? <LoadingState /> : pending.error ? <ErrorState message={arabicError(pending.error)} onRetry={() => pending.refetch()} /> : visible.length === 0 ? (
           <EmptyState title="لا توجد تكليفات" hint={ctx.role === "dept_head" ? "تظهر هنا تكليفات مواد قسمك فقط." : undefined} />
@@ -100,7 +100,8 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         )}
       </section>
 
-      <CrudTable title="المقررات" table="courses" schoolId={ctx.schoolId} canWrite={manage} searchKeys={[]}
+      <CrudTable title="المقررات" table="courses" schoolId={ctx.schoolId} canWrite={manage} canCreate={false} searchKeys={[]}
+        toolbar={manage ? <MultiSectionAssign mode="course" schoolId={ctx.schoolId} canCreateCourses canApprove={canAssign} /> : null}
         select="*, academic_years(name), subjects(name, department_id), sections(name, grades(name)), teacher_assignments(status, teachers(full_name))"
         fields={[
           { key: "year_id", label: "السنة", type: "select", required: true, options: { table: "academic_years", label: "name" } },
