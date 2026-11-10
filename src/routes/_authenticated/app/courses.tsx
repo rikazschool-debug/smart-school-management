@@ -6,6 +6,7 @@ import { Check, UserPlus, X } from "lucide-react";
 import { CrudTable, db, RecordForm, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
+import { MultiSectionAssign } from "@/components/multi-section-assign";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,7 +71,10 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
     <>
       <PageHeader title="المقررات والتكليفات" desc="المقرر = مادة + شعبة + سنة. يُكلَّف به معلم ثم يعتمده رئيس القسم أو الإدارة." />
       <section className="mb-10 space-y-3">
-        <h2 className="text-lg font-bold">التكليفات</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold">التكليفات</h2>
+          {canAssign && <MultiSectionAssign schoolId={ctx.schoolId} canCreateCourses={manage} />}
+        </div>
         {pending.isLoading ? <LoadingState /> : pending.error ? <ErrorState message={arabicError(pending.error)} onRetry={() => pending.refetch()} /> : visible.length === 0 ? (
           <EmptyState title="لا توجد تكليفات" hint={ctx.role === "dept_head" ? "تظهر هنا تكليفات مواد قسمك فقط." : undefined} />
         ) : (
