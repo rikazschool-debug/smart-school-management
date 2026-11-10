@@ -1,3 +1,4 @@
+import { brandHeaderHtml } from "@/lib/export-brand";
 // HR letters: shared types, status labels, detail panel (staff + self) and print/PDF.
 // All data comes from hr_letter_* RPCs; the server decides what text (incl. pay) is sent.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,7 +49,7 @@ export function printLetter(l: LetterRow) {
     header{display:flex;justify-content:space-between;border-bottom:2px solid #1f2a44;padding-bottom:8px;margin-bottom:24px}
     h1{font-size:20px;margin:0}.m{font-size:12px;color:#444}.b{white-space:pre-wrap}footer{margin-top:40px;font-size:11px;color:#555;border-top:1px solid #ccc;padding-top:6px}
     .x{color:#b00;font-weight:700;border:2px solid #b00;padding:4px 10px;display:inline-block;margin-bottom:12px}</style></head><body>
-    <header><div><h1>${esc(l.org_name)}</h1><div class="m">${esc(l.template)}</div></div><div class="m">الرقم المرجعي: <bdi dir="ltr">${esc(l.ref_no ?? "")}</bdi><br>تاريخ الإصدار: <bdi dir="ltr">${esc((l.issued_at ?? "").slice(0, 10))}</bdi></div></header>
+    ${brandHeaderHtml({ fallbackName: l.org_name ?? undefined, side: `الرقم المرجعي: <bdi dir="ltr">${esc(l.ref_no ?? "")}</bdi><br>تاريخ الإصدار: <bdi dir="ltr">${esc((l.issued_at ?? "").slice(0, 10))}</bdi>` })}<h1 style="margin-bottom:16px">${esc(l.template)}</h1>
     ${cancelled ? `<div class="x">${l.status === "cancelled" ? "خطاب ملغى" : "خطاب مستبدل بتصحيح"} — غير صالح للاستخدام</div>` : ""}
     <div class="b">${esc(l.body)}</div>
     <footer>صادر من نظام ركاز. لا يتضمن هذا الخطاب توقيعًا أو ختمًا إلكترونيًا موثقًا من جهة خارجية.</footer>
