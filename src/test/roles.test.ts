@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NAV_BY_ROLE, attTabs, canCreateGroup, canCreateTask, canEditSchedule, canManageAcademic, canManageUsers, canOrganizeMeeting, canScanAttendance, commTabs, invitableRoles, type Role, scheduleTabs, scheduleLabel } from "@/lib/roles";
+import { NAV_BY_ROLE, attTabs, canCreateGroup, canCreateTask, canEditSchedule, canManageAcademic, canManageUsers, canOrganizeMeeting, canScanAttendance, commTabs, invitableRoles, type Role, scheduleTabs, scheduleLabel, seesStaffDirectory, teachersLabel } from "@/lib/roles";
 const ALL = Object.keys(NAV_BY_ROLE) as Role[];
 
 describe("attendance roles", () => {
@@ -172,5 +172,13 @@ describe("events menu", () => {
     expect(ownerSectionNav("school_admin", N.org_owner)).toContain("family_visits");
     for (const r of ["principal", "vice_principal", "guardian", "student"] as const) expect(N[r]).toContain("events");
     expect(N.teacher).not.toContain("events");
+  });
+});
+
+describe("staff directory", () => {
+  it("only the principal (and owner) get the unified teaching+administrative directory", () => {
+    expect(ALL.filter((r) => seesStaffDirectory(r)).sort()).toEqual(["org_owner", "principal"]);
+    expect(teachersLabel("principal")).toBe("الكادر التعليمي والإداري");
+    expect(teachersLabel("vice_principal")).toBe("الكادر التعليمي");
   });
 });
