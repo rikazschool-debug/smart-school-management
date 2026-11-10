@@ -1,7 +1,7 @@
 import { useId } from "react";
 
 /** Rikaz logo: rounded tile with an «R» cut out. `light` = white tile for dark backgrounds. */
-export function RikazLogo({ light, className = "size-9" }: { light?: boolean; className?: string }) {
+export function RikazLogo({ light, className = "size-9" }: { light?: boolean | undefined; className?: string | undefined }) {
   const id = useId().replace(/:/g, "");
   return (
     <svg viewBox="0 0 100 100" className={`${className} shrink-0 ${light ? "text-primary-foreground" : "text-primary"}`} role="img" aria-label="ركاز">
