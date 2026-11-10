@@ -17845,6 +17845,10 @@ export type Database = {
       }
       _course_title: { Args: { _course: string }; Returns: string }
       _cs_clean: { Args: { _max: number; _t: string }; Returns: string }
+      _cs_contact_ok: {
+        Args: { _school: string; _uid: string }
+        Returns: boolean
+      }
       _cs_get: {
         Args: { _org: string }
         Returns: {
@@ -17912,6 +17916,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      _cs_reach: {
+        Args: { _agent: string; _org: string; _other: string }
+        Returns: boolean
       }
       _csmart_exact: { Args: { _s: string }; Returns: string }
       _csmart_key: { Args: { _s: string }; Returns: string }
@@ -19573,6 +19581,7 @@ export type Database = {
       _perm_catalog_v14: { Args: never; Returns: Json }
       _perm_catalog_v15: { Args: never; Returns: Json }
       _perm_catalog_v16: { Args: never; Returns: Json }
+      _perm_catalog_v17: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
@@ -21173,6 +21182,7 @@ export type Database = {
         }[]
       }
       cs_admin: { Args: { _org: string }; Returns: Json }
+      cs_comm_me: { Args: { _org: string }; Returns: boolean }
       cs_conv_limits: { Args: { _conv: string }; Returns: Json }
       cs_my_replies: {
         Args: { _conv: string }
@@ -21231,6 +21241,10 @@ export type Database = {
           _voice: boolean
         }
         Returns: undefined
+      }
+      cs_start_conversation: {
+        Args: { _org: string; _other: string }
+        Returns: string
       }
       ct_apply: {
         Args: {

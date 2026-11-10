@@ -820,3 +820,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## Nov 10 2026 — HR bulk actions & archive
 - Transfer/suspend/archive/restore selected employees; children of employee-guardians shown. hr-bulk-e2e 12/12.
+
+## Nov 10 2026 — Customer service officer
+- cs_agent template = all support/calls perms (org) + cs_comm.message; health/cs_comm valid in tree. Real HR transfer verified (file + memberships intact). cs-comm-e2e 15/15.

@@ -288,24 +288,36 @@ function DirectStart({ ctx, onCreated }: { ctx: AppContext & { schoolId: string 
   const orgWide = ctx.role === "org_owner" && !inSchool;
   const xb = useXbranch(ctx.orgId);
   const [cross, setCross] = useState(false);
-  const xMode = cross && !orgWide && !!xb.data?.me;
-  const scope = xMode ? { purpose: "xbranch" as const, school: null, org: ctx.orgId } : { purpose: "direct" as const, school: orgWide ? null : ctx.schoolId, org: ctx.orgId };
+  const csMe = useQuery({ queryKey: ["cs-comm-me", ctx.orgId], queryFn: async () => { const r = await db.rpc("cs_comm_me" as never, { _org: ctx.orgId } as never); return !r.error && r.data === true; } });
+  const [cs, setCs] = useState(false);
+  const csMode = cs && !!csMe.data;
+  const xMode = !csMode && cross && !orgWide && !!xb.data?.me;
+  const scope = csMode ? { purpose: "cs_contact" as const, school: null, org: ctx.orgId } : xMode ? { purpose: "xbranch" as const, school: null, org: ctx.orgId } : { purpose: "direct" as const, school: orgWide ? null : ctx.schoolId, org: ctx.orgId };
   const chosen = usePeopleByIds(scope, to);
   const chatSchool = orgWide ? chosen.data?.get(to[0] ?? "")?.school_id : ctx.schoolId;
   return (
     <div className="space-y-3">
-      {!orgWide && xb.data?.me && (
+      {csMe.data && (
+        <div className="flex gap-2">
+          <Button size="sm" variant={!cs ? "secondary" : "ghost"} onClick={() => { setCs(false); setTo([]); }}>المراسلة المعتادة</Button>
+          <Button size="sm" variant={cs ? "secondary" : "ghost"} onClick={() => { setCs(true); setTo([]); }}>خدمة العملاء — أي مدرسة وأي شخص</Button>
+        </div>
+      )}
+      {csMode && <p className="text-xs text-muted-foreground">ابحث بالاسم واختر الفرع والدور؛ يشمل الموظفين وأولياء الأمور في المدارس المصرح لك بها.</p>}
+      {!csMode && !orgWide && xb.data?.me && (
         <div className="flex gap-2">
           <Button size="sm" variant={!cross ? "secondary" : "ghost"} onClick={() => { setCross(false); setTo([]); }}>زملاء هذه المدرسة</Button>
           <Button size="sm" variant={cross ? "secondary" : "ghost"} onClick={() => { setCross(true); setTo([]); }}>زميل في فرع آخر</Button>
         </div>
       )}
       <p className="text-xs text-muted-foreground">{xMode ? "ابحث بالاسم واختر الفرع؛ يظهر بجوار كل اسم الدور والفرع. المراسلة لا تمنح وصولًا لبيانات الفرع الآخر." : orgWide ? "الدليل يعرض موظفي جميع فروع المجموعة الساريين، دون أرقام هواتف أو بريد." : "الدليل يعرض موظفي هذه المدرسة الساريين فقط، دون أرقام هواتف أو بريد."}</p>
-      <PeoplePicker {...scope} label="الموظف" value={to} onChange={setTo} single showBranch={orgWide || xMode} />
+      <PeoplePicker {...scope} label={csMode ? "الشخص" : "الموظف"} value={to} onChange={setTo} single showBranch={orgWide || xMode || csMode} />
       <Textarea aria-label="الرسالة الأولى" placeholder="الرسالة الأولى (اختياري)" value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} />
-      <Button disabled={!to.length || (!xMode && !chatSchool) || busy} onClick={async () => {
+      <Button disabled={!to.length || (!xMode && !csMode && !chatSchool) || busy} onClick={async () => {
         setBusy(true);
-        const { data, error } = xMode
+        const { data, error } = csMode
+          ? await db.rpc("cs_start_conversation" as never, { _org: ctx.orgId, _other: to[0] } as never) as unknown as { data: string; error: { message: string } | null }
+          : xMode
           ? await db.rpc("start_xbranch_conversation" as never, { _org: ctx.orgId, _other: to[0] } as never) as unknown as { data: string; error: { message: string } | null }
           : await db.rpc("start_direct_conversation", { _school: chatSchool, _other: to[0] });
         if (error) { setBusy(false); return void toast.error(arabicError(error)); }
