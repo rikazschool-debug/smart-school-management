@@ -78,6 +78,17 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
   const chosen = usePeopleByIds(scope, value);
   const rows = useMemo(() => (list.data ?? []).filter((p) => !exclude.includes(p.user_id)), [list.data, exclude]);
   const total = list.data?.[0]?.total ?? 0;
+  // cross-branch directory: show the HR job title from the employee file (role stays the permission basis)
+  const titleIds = purpose === "xbranch" ? rows.map((p) => p.user_id) : [];
+  const titles = useQuery({
+    enabled: titleIds.length > 0 && !!org,
+    queryKey: ["xb-titles", org, titleIds],
+    queryFn: async () => {
+      const { data, error } = await db.rpc("xb_titles" as never, { _org: org, _ids: titleIds } as never);
+      if (error) throw error;
+      return new Map((data as unknown as { user_id: string; title: string }[]).map((t) => [t.user_id, t.title]));
+    },
+  });
   const toggle = (id: string) => onChange(single ? (value[0] === id ? [] : [id]) : value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
   const sm = selectCls("", true);
 
@@ -122,7 +133,7 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
               <label className="flex min-h-10 cursor-pointer items-center gap-2 px-2 text-sm hover:bg-muted">
                 <input type={single ? "radio" : "checkbox"} name={single ? `pp-${label}` : undefined} checked={value.includes(p.user_id)} onChange={() => toggle(p.user_id)} />
                 <span className="min-w-0 flex-1 truncate">{p.full_name}</span>
-                <span className="text-xs text-muted-foreground">{rolesLabel(p.roles)}{p.dept_name ? ` · ${p.dept_name}` : ""}{multiBranch ? ` · ${p.school_name}` : ""}</span>
+                <span className="text-xs text-muted-foreground">{titles.data?.get(p.user_id) ?? rolesLabel(p.roles)}{p.dept_name ? ` · ${p.dept_name}` : ""}{multiBranch ? ` · ${p.school_name}` : ""}</span>
               </label>
             </li>
           ))}

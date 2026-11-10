@@ -23733,6 +23733,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      xb_titles: {
+        Args: { _ids: string[]; _org: string }
+        Returns: {
+          title: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       app_role:
