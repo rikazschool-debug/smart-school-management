@@ -1,3 +1,4 @@
+import { SignupRequests } from "@/components/platform/signup-requests";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { db, type Row } from "@/components/crud-page";
@@ -38,6 +39,7 @@ function Page() {
   return (
     <>
       <PageHeader title="المؤسسات المشتركة" desc="عرض كل المؤسسات على المنصة وعدد مدارسها." />
+      <SignupRequests />
       <PlatformOverview />
       <CleanupHealth />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !rows.length ? <EmptyState title="لا توجد مؤسسات بعد" /> : (

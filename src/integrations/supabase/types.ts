@@ -15197,6 +15197,66 @@ export type Database = {
           },
         ]
       }
+      signup_requests: {
+        Row: {
+          admin_note: string | null
+          city: string | null
+          contact_name: string
+          created_at: string
+          email: string | null
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          job_title: string | null
+          notes: string | null
+          org_name: string
+          phone: string
+          schools_count: number | null
+          serial: number
+          stages: string[]
+          status: string
+          students_count: number | null
+        }
+        Insert: {
+          admin_note?: string | null
+          city?: string | null
+          contact_name: string
+          created_at?: string
+          email?: string | null
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          job_title?: string | null
+          notes?: string | null
+          org_name: string
+          phone: string
+          schools_count?: number | null
+          serial?: number
+          stages?: string[]
+          status?: string
+          students_count?: number | null
+        }
+        Update: {
+          admin_note?: string | null
+          city?: string | null
+          contact_name?: string
+          created_at?: string
+          email?: string | null
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          job_title?: string | null
+          notes?: string | null
+          org_name?: string
+          phone?: string
+          schools_count?: number | null
+          serial?: number
+          stages?: string[]
+          status?: string
+          students_count?: number | null
+        }
+        Relationships: []
+      }
       staff_logins: {
         Row: {
           created_at: string
@@ -22868,6 +22928,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_signup_requests: { Args: never; Returns: Json[] }
+      platform_signup_set: {
+        Args: { _id: string; _note: string; _status: string }
+        Returns: undefined
+      }
       pp_access_preview: {
         Args: {
           _action: string
@@ -23234,6 +23299,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      signup_request_submit: { Args: { _p: Json }; Returns: string }
       staff_directory: {
         Args: { _org?: string; _school: string }
         Returns: {
