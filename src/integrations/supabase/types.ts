@@ -18352,6 +18352,7 @@ export type Database = {
         Args: { v: Database["public"]["Tables"]["hr_document_versions"]["Row"] }
         Returns: Json
       }
+      _hr_emp_account: { Args: { _id: string }; Returns: Json }
       _hr_emp_json: {
         Args: {
           _sensitive: boolean
@@ -19253,6 +19254,7 @@ export type Database = {
       _perm_catalog_v12: { Args: never; Returns: Json }
       _perm_catalog_v13: { Args: never; Returns: Json }
       _perm_catalog_v14: { Args: never; Returns: Json }
+      _perm_catalog_v15: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
@@ -21804,6 +21806,7 @@ export type Database = {
         Returns: Json
       }
       hr_emp_money: { Args: { _emp: string }; Returns: Json }
+      hr_employee_account: { Args: { _id: string }; Returns: Json }
       hr_employee_create_login: {
         Args: {
           _base: string
@@ -21835,6 +21838,10 @@ export type Database = {
       }
       hr_employee_list: {
         Args: { _org: string; _q?: string; _school?: string; _status?: string }
+        Returns: Json
+      }
+      hr_employee_print: {
+        Args: { _ids: string[]; _org: string }
         Returns: Json
       }
       hr_employee_profile_get: { Args: { _emp: string }; Returns: Json }
