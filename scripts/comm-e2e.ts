@@ -144,11 +144,12 @@ const t1l = await prin.c.rpc("my_conversations", { _school: S });
 const t1n = await prin.c.from("notifications").select("read_at").like("dedupe_key", "reply:%");
 check("17 read elsewhere fixes unread and notification", t1l.data?.find((x: any) => x.id === f2.data)?.unread === 0 && !!t1n.data?.[0]?.read_at, [t1l, t1n]);
 await g1.c.rpc("mark_conversation_read", { _conv: cid, _seq: 999 });
+const nmBefore = ((await g1.c.from("notifications").select("id").like("dedupe_key", "msg:%")).data ?? []).length;
 await g1.c.rpc("set_member_prefs", { _conv: cid, _muted: true, _archived: null });
 await t1.c.rpc("send_message", { _conv: cid, _body: "رسالة بعد الكتم", _client_id: uuid() });
 const nm2 = await g1.c.from("notifications").select("id").like("dedupe_key", "msg:%");
 const gl2 = await g1.c.rpc("my_conversations", { _school: S });
-check("17 muted → no new notification but unread counts", nm2.data?.length === 1 && gl2.data?.find((x: any) => x.id === cid)?.unread === 1, [nm2, gl2]);
+check("17 muted → no new notification but unread counts", nm2.data?.length === nmBefore && gl2.data?.find((x: any) => x.id === cid)?.unread === 1, [nm2, gl2]);
 // search scoped
 const sr = await g2.c.rpc("search_messages", { _q: "سارة" });
 const sr1 = await g1.c.rpc("search_messages", { _q: "سارة" });
