@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BadgeCheck, MessagesSquare } from "lucide-react";
+import { ArrowRight, BadgeCheck } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { ClassroomPosts } from "@/components/classroom-posts";
 import { Button } from "@/components/ui/button";
 import { ROOM_TABS, type RoomTab, roomTabsFor, type RoomView } from "@/components/classroom-room-tabs";
-import { arabicError } from "@/lib/session";
+import { arabicError, useSession, type AppContext } from "@/lib/session";
+import { ClassesTab } from "@/components/comm/classes";
 import { cn } from "@/lib/utils";
 
 type Room = {
@@ -31,6 +32,7 @@ function Page() {
   const { id } = Route.useParams();
   const { subject, tab } = Route.useSearch();
   const nav = useNavigate();
+  const { active } = useSession();
   const q = useQuery({
     queryKey: ["section-room", id],
     queryFn: async () => {
@@ -51,7 +53,7 @@ function Page() {
   return (
     <>
       <Link to="/app/classrooms" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />كل الفصول</Link>
-      <PageHeader title={r.title} desc={r.view === "family" ? "مواد الفصل ومعلموها ومشاركاتها." : "فصل الشعبة: كل مادة لها مشاركاتها، والمعلم ينشر في مواده فقط."} />
+      <PageHeader title={r.title} desc={r.view === "family" ? "مواد الفصل ومعلموها ومشاركاتها ومجموعة الفصل." : "فصل الشعبة: كل مادة لها مشاركاتها، والمعلم ينشر في مواده فقط."} />
       {tabs.length > 1 && (
         <div role="tablist" aria-label="أقسام الفصل" className="mb-4 flex flex-wrap gap-2 border-b pb-3">
           {tabs.map((k) => <Button key={k} role="tab" aria-selected={cur === k} size="sm" variant={cur === k ? "default" : "outline"} onClick={() => go(k)}>{ROOM_TABS.find(([x]) => x === k)![1]}</Button>)}
@@ -118,12 +120,8 @@ function Page() {
       )}
 
       {cur === "group" && (
-        <section className="rounded-2xl border bg-card p-5">
-          <h3 className="mb-2 font-semibold">مجموعة الفصل</h3>
-          {r.class_group ? (
-            <Button asChild><Link to="/app/communication" search={{ c: r.class_group }}><MessagesSquare className="size-4" /> فتح مجموعة الفصل</Link></Button>
-          ) : <p className="text-sm text-muted-foreground">لست عضوًا في مجموعة هذا الفصل. العضوية في المجموعة مستقلة عن الفصل الرقمي وتُدار من التواصل.</p>}
-        </section>
+        r.class_group && active ? <ClassesTab ctx={{ ...active, schoolId: r.school_id } as AppContext & { schoolId: string }} only={r.class_group} />
+          : <EmptyState title="مجموعة الفصل غير متاحة لك" hint="تُجهَّز مجموعة الفصل تلقائيًا للعام الدراسي الحالي، ويدخلها الطلاب المسكّنون وأولياء أمورهم الموثّقون والمعلمون المكلّفون." />
       )}
     </>
   );
