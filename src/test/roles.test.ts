@@ -39,9 +39,9 @@ describe("role rules", () => {
     expect(invitableRoles("teacher")).toEqual([]);
   });
   it("counselor, nurse and security dashboards expose only communication, notifications and visits", () => {
-    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"]);
-    expect(NAV_BY_ROLE.nurse).toEqual(["home", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"]);
-    expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "duties", "meetings", "calendar", "communication", "notifications", "family_visits"]);
+    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
+    expect(NAV_BY_ROLE.nurse).toEqual(["home", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
+    expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
   });
   it("students get subject groups and teacher chats only — no circulars, groups or management", () => {
     expect(commTabs("student")).toEqual(["classes", "inbox", "archive"]);
@@ -53,16 +53,17 @@ describe("role rules", () => {
     expect(commTabs("principal")).toContain("manage");
     for (const r of ["teacher", "guardian", "dept_head", "supervisor", "student_affairs"] as const) expect(commTabs(r)).not.toContain("manage");
   });
-  it("duties, meetings and calendar: every staff role; never students, families or platform admin", () => {
+  it("duties, meetings and events (unified calendar): every staff role; duties/meetings never for students, families or platform admin", () => {
     for (const r of ["principal", "vice_principal", "dept_head", "supervisor", "student_affairs", "teacher", "counselor", "nurse", "security"] as const)
-      for (const k of ["duties", "meetings", "calendar"] as const) expect(NAV_BY_ROLE[r]).toContain(k);
+      for (const k of ["duties", "meetings", "events"] as const) expect(NAV_BY_ROLE[r]).toContain(k);
     for (const r of ["student", "guardian", "platform_admin"] as const)
-      for (const k of ["duties", "meetings", "calendar"] as const) expect(NAV_BY_ROLE[r]).not.toContain(k);
+      for (const k of ["duties", "meetings"] as const) expect(NAV_BY_ROLE[r]).not.toContain(k);
+    for (const r of Object.keys(NAV_BY_ROLE) as (keyof typeof NAV_BY_ROLE)[]) expect(NAV_BY_ROLE[r] as string[]).not.toContain("calendar");
     expect(NAV_BY_ROLE.org_owner).toContain("admin");
   });
-  it("owner sees meetings and calendar but not duties", () => {
+  it("owner sees meetings and the events calendar but not duties", () => {
     expect(NAV_BY_ROLE.org_owner).toContain("meetings");
-    expect(NAV_BY_ROLE.org_owner).toContain("calendar");
+    expect(NAV_BY_ROLE.org_owner).toContain("events");
     expect(NAV_BY_ROLE.org_owner).not.toContain("duties");
   });
   it("staff meetings tab in communication never shows for students or guardians", () => {
@@ -171,7 +172,7 @@ describe("events menu", () => {
     expect(ownerSectionNav("school_admin", N.org_owner)).toContain("events");
     expect(ownerSectionNav("school_admin", N.org_owner)).toContain("family_visits");
     for (const r of ["principal", "vice_principal", "guardian", "student"] as const) expect(N[r]).toContain("events");
-    expect(N.teacher).not.toContain("events");
+    expect(N.teacher).toContain("events"); // personal calendar; event tabs still need evt_* perms
   });
 });
 
