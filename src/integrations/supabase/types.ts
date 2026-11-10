@@ -6445,6 +6445,304 @@ export type Database = {
           },
         ]
       }
+      health_conditions: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          instructions: string | null
+          name: string
+          school_id: string
+          severity: string
+          source: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instructions?: string | null
+          name: string
+          school_id: string
+          severity?: string
+          source?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instructions?: string | null
+          name?: string
+          school_id?: string
+          severity?: string
+          source?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_conditions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_conditions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_events: {
+        Row: {
+          action_taken: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          med_id: string | null
+          occurred_at: string
+          school_id: string
+          shared: boolean
+          student_id: string
+          summary: string
+        }
+        Insert: {
+          action_taken?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          med_id?: string | null
+          occurred_at?: string
+          school_id: string
+          shared?: boolean
+          student_id: string
+          summary: string
+        }
+        Update: {
+          action_taken?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          med_id?: string | null
+          occurred_at?: string
+          school_id?: string
+          shared?: boolean
+          student_id?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_events_med_id_fkey"
+            columns: ["med_id"]
+            isOneToOne: false
+            referencedRelation: "health_meds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_events_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_events_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_log: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          details: Json
+          id: number
+          school_id: string
+          student_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          id?: number
+          school_id: string
+          student_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          id?: number
+          school_id?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
+      health_meds: {
+        Row: {
+          active: boolean
+          at_school: boolean
+          created_at: string
+          created_by: string | null
+          dose: string | null
+          end_date: string | null
+          id: string
+          instructions: string | null
+          name: string
+          school_id: string
+          source: string
+          start_date: string | null
+          student_id: string
+          times: string[]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          at_school?: boolean
+          created_at?: string
+          created_by?: string | null
+          dose?: string | null
+          end_date?: string | null
+          id?: string
+          instructions?: string | null
+          name: string
+          school_id: string
+          source?: string
+          start_date?: string | null
+          student_id: string
+          times?: string[]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          at_school?: boolean
+          created_at?: string
+          created_by?: string | null
+          dose?: string | null
+          end_date?: string | null
+          id?: string
+          instructions?: string | null
+          name?: string
+          school_id?: string
+          source?: string
+          start_date?: string | null
+          student_id?: string
+          times?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_meds_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_meds_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_profiles: {
+        Row: {
+          allergies: string | null
+          blood_type: string | null
+          created_at: string
+          diet: string | null
+          doctor_name: string | null
+          doctor_phone: string | null
+          emergency_name: string | null
+          emergency_phone: string | null
+          height_cm: number | null
+          insurance: string | null
+          notes: string | null
+          school_id: string
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+          updated_source: string
+          weight_kg: number | null
+        }
+        Insert: {
+          allergies?: string | null
+          blood_type?: string | null
+          created_at?: string
+          diet?: string | null
+          doctor_name?: string | null
+          doctor_phone?: string | null
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          height_cm?: number | null
+          insurance?: string | null
+          notes?: string | null
+          school_id: string
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_source?: string
+          weight_kg?: number | null
+        }
+        Update: {
+          allergies?: string | null
+          blood_type?: string | null
+          created_at?: string
+          diet?: string | null
+          doctor_name?: string | null
+          doctor_phone?: string | null
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          height_cm?: number | null
+          insurance?: string | null
+          notes?: string | null
+          school_id?: string
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_source?: string
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_profiles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homework: {
         Row: {
           allow_resubmit: boolean
@@ -18154,6 +18452,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      _health_editor: { Args: { _student: string }; Returns: string }
+      _health_log: {
+        Args: { _action: string; _d: Json; _school: string; _student: string }
+        Returns: undefined
+      }
+      _health_notify_staff: {
+        Args: { _student: string; _what: string }
+        Returns: undefined
+      }
+      _health_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
+      }
+      _health_school: { Args: { _student: string }; Returns: string }
       _home_roles: { Args: { _me: string; _school: string }; Returns: Json }
       _hr_addr_json: {
         Args: {
@@ -19260,6 +19572,7 @@ export type Database = {
       _perm_catalog_v13: { Args: never; Returns: Json }
       _perm_catalog_v14: { Args: never; Returns: Json }
       _perm_catalog_v15: { Args: never; Returns: Json }
+      _perm_catalog_v16: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
@@ -21502,6 +21815,32 @@ export type Database = {
         }
         Returns: boolean
       }
+      health_condition_save: {
+        Args: { _id: string; _p: Json; _student: string }
+        Returns: string
+      }
+      health_event_add: {
+        Args: { _p: Json; _student: string }
+        Returns: string
+      }
+      health_file: { Args: { _student: string }; Returns: Json }
+      health_item_remove: {
+        Args: { _id: string; _kind: string }
+        Returns: undefined
+      }
+      health_med_save: {
+        Args: { _id: string; _p: Json; _student: string }
+        Returns: string
+      }
+      health_profile_save: {
+        Args: { _p: Json; _student: string }
+        Returns: undefined
+      }
+      health_students: {
+        Args: { _flag?: string; _q?: string; _school: string }
+        Returns: Json
+      }
+      health_today: { Args: { _school: string }; Returns: Json }
       home_work: { Args: { _school: string }; Returns: Json }
       homework_list: {
         Args: {
