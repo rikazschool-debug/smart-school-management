@@ -20,6 +20,7 @@ import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { FileText, IdCard, Tags, PartyPopper, UserPlus } from "lucide-react";
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
+import { ROOM_TABS, roomTabsForRole } from "@/components/classroom-room-tabs";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
 import { useMyAvatar } from "@/lib/my-avatar";
 import { setOwnerInSchool, useOwnerInSchool } from "@/lib/owner-scope";
@@ -286,6 +287,13 @@ function Shell() {
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {mqSecs.map((t, i) => (
                         <Link key={t} to="/app/calls" search={{ mq: t }} onClick={() => setOpen(false)} className={SUB_CLS + (mqTab === t || (!mqTab && i === 0) ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>{MQ_LABEL[t]}</Link>
+                      ))}
+                    </div>
+                  )}
+                  {k === "classrooms" && path.startsWith("/app/classrooms/section/") && (
+                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                      {roomTabsForRole(active.role).map((t) => (
+                        <Link key={t} to="/app/classrooms/section/$id" params={{ id: path.split("/")[4] ?? "" }} search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{ROOM_TABS.find(([x]) => x === t)![1]}</Link>
                       ))}
                     </div>
                   )}

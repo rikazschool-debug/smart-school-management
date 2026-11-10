@@ -92,6 +92,14 @@ try {
   check("guardian opens child's room", !(await G1.rpc("section_room_get", { _room: RA })).error);
   check("guardian blocked from another room", !!(await G1.rpc("section_room_get", { _room: RB })).error);
   check("student cannot post", !!(await S1.from("classroom_posts").insert({ school_id: s0, classroom_id: oldRoom, author_user_id: users.s1, title: "x", body: "x", status: "published" })).error);
+  // privacy inside the room: family sees subjects/teachers only; teacher gets the roster; staff gets roster + guardians
+  const g1room = must(await G1.rpc("section_room_get", { _room: RA })) as any;
+  check("guardian: subjects only — no student list, no guardians", g1room.view === "family" && g1room.students === null && g1room.guardians === null && g1room.subjects.length === 2, g1room);
+  check("student: no classmates list, no guardians", s1room.view === "family" && s1room.students === null && s1room.guardians === null, s1room);
+  check("teacher: student list, no guardians", t1room.view === "teacher" && Array.isArray(t1room.students) && t1room.guardians === null, t1room);
+  const p1room = must(await P1.rpc("section_room_get", { _room: RA })) as any;
+  check("principal: students + guardians of the class", p1room.view === "staff" && p1room.students.length >= 1 && p1room.guardians.some((g: any) => g.name === "ولي أ" && g.verified), p1room);
+  check("class group link only for its members (none here)", g1room.class_group === null && p1room.class_group === null);
 
   // transfer s1 from A to B
   must(await admin.from("enrollments").update({ status: "ended", end_date: "2026-11-06" }).eq("id", e1));
@@ -100,6 +108,24 @@ try {
   check("after transfer: old section room closed", !!(await S1.rpc("section_room_get", { _room: RA })).error);
   check("after transfer: old section posts hidden", ((must(await S1.from("classroom_posts").select("id").eq("classroom_id", oldRoom)) as any[]).length) === 0);
   check("after transfer: child card points to new room", ((must(await G1.rpc("family_child", { _student: k1 })) as any).room?.id) === RB);
+  check("after transfer: guardian follows the child to the new room", !(await G1.rpc("section_room_get", { _room: RB })).error);
+  check("after transfer: guardian leaves the old room", !!(await G1.rpc("section_room_get", { _room: RA })).error);
+  // a second child still in the old section keeps the guardian there (two children → both rooms); one guardian row, listed per child
+  const k3 = (await ins("students", { school_id: s0, full_name: "طالب ج" })).id;
+  await ins("enrollments", { school_id: s0, student_id: k3, section_id: A, year_id: y, start_date: "2026-11-07" });
+  must(await admin.from("student_guardians").insert({ school_id: s0, student_id: k3, guardian_id: gd, relationship: "father", can_follow: true, verified: true }));
+  check("sibling in old section: guardian opens both rooms", !(await G1.rpc("section_room_get", { _room: RA })).error && !(await G1.rpc("section_room_get", { _room: RB })).error);
+  // class chat group: shown only to its members, independent of classroom access
+  must(await admin.from("academic_years").update({ is_current: true }).eq("id", y));
+  must(await admin.rpc("sync_class_group", { _section: A, _year: y }));
+  const conv = (must(await admin.from("conversations").select("id").eq("group_type", "class").eq("section_id", A).single()) as any).id as string;
+  const memb = async () => new Set(((must(await admin.from("conversation_members").select("user_id").eq("conversation_id", conv).is("left_at", null)) as any[])).map((m) => m.user_id));
+  const before = await memb();
+  for (const [k, c] of [["g1", G1], ["s1", S1], ["p1", P1], ["t1", T1c]] as const) {
+    const got = ((await c.rpc("section_room_get", { _room: RA })).data as any)?.class_group ?? null;
+    check(`class group link for ${k} matches its own group membership`, got === (before.has(users[k]) ? conv : null), { got, member: before.has(users[k]) });
+  }
+  check("opening the room never changes group members", (await memb()).size === before.size);
 
   // teacher change: T1 ends, T3 takes math A
   must(await admin.from("teacher_assignments").update({ status: "ended", end_date: "2026-11-06" }).eq("id", aT1));
