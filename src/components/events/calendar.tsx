@@ -93,7 +93,7 @@ export function UnifiedCalendar({ org, evtSchool, showEvents, personalSchools, s
           {showEvents && personalSchools.length > 0 && <><option value="events">الفعاليات فقط</option><option value="admin">مهامي الإدارية فقط</option></>}
           {kinds.map((k) => <option key={k} value={k}>{CAL_KIND[k].label}</option>)}
         </select>
-        <div className="ms-auto"><ExportButtons title="التقويم" school={schoolName} headers={["التاريخ", "اليوم", "النوع", "العنوان", "الوقت", "الحالة"]} filters={[`${first} — ${last}`]}
+        <div className="ms-auto"><ExportButtons title="التقويم" {...(schoolName ? { school: schoolName } : {})} headers={["التاريخ", "اليوم", "النوع", "العنوان", "الوقت", "الحالة"]} filters={[`${first} — ${last}`]}
           rows={() => items.map((r) => [r.day, dayName(r.day), CAL_KIND[r.kind].label, r.title, r.start ? `${r.start}${r.end ? `–${r.end}` : ""}` : "", statusLabel(r)])} /></div>
       </div>
       <div className="mb-2 flex flex-wrap gap-2 text-[11px]">{kinds.map((k) => <span key={k} className={`rounded px-1.5 py-0.5 ${CAL_KIND[k].cls}`}>{CAL_KIND[k].label}</span>)}</div>
