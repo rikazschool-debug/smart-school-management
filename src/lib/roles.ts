@@ -195,6 +195,15 @@ export const NAV_LABELS: Partial<Record<NavKey, string>> = {
   procurement: "المشتريات والعهد", school_home: "لوحة المدرسة", maintenance: "إدارة صيانة المباني", bus_maintenance: "إدارة تشغيل وصيانة الباصات", admissions: "القبول والتسجيل",
 };
 
+/** Staff menu/page name: principal-level gets the unified HR directory («والإداري»); other roles keep the teaching staff list. */
+export function teachersLabel(role: Role | "platform_admin"): string {
+  return role === "principal" || role === "org_owner" ? "الكادر التعليمي والإداري" : "الكادر التعليمي";
+}
+/** Principal-level roles see the read-only HR staff directory (mirrors school_staff_directory → is_school_principal). */
+export function seesStaffDirectory(role: Role | "platform_admin"): boolean {
+  return role === "principal" || role === "org_owner";
+}
+
 /** Roles a caller may invite (mirrors can_invite: organization owner only, never another owner). */
 export function invitableRoles(role: Role): Role[] {
   if (role !== "org_owner") return [];
