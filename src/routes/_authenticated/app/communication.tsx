@@ -18,7 +18,6 @@ import { Thread, hasDraft } from "@/components/comm/thread";
 import { NewChatDialog } from "@/components/comm/new-chat";
 import { CircularsTab } from "@/components/comm/circulars";
 import { ManageTab } from "@/components/comm/manage";
-import { ClassesTab } from "@/components/comm/classes";
 import { MeetingsTab } from "@/components/comm/meetings-tab";
 
 type Search = { tab?: CommTab; c?: string; circular?: string };
@@ -43,18 +42,30 @@ function Page() {
 function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/app/communication" });
+  const rootNav = useNavigate();
+  // class groups live inside their digital classroom: old links (?tab=classes, ?c=<class group>) open the classroom's group tab
+  const room = useQuery({
+    queryKey: ["class-group-room", search.c],
+    enabled: !!search.c || search.tab === "classes",
+    queryFn: async () => search.c ? (((await db.rpc("class_group_room" as never, { _conv: search.c } as never)) as unknown as { data: string | null }).data ?? null) : null,
+  });
+  useEffect(() => {
+    if (room.data) rootNav({ to: "/app/classrooms/section/$id", params: { id: room.data }, search: { tab: "group" }, replace: true });
+    else if (search.tab === "classes" && room.isFetched) rootNav({ to: "/app/classrooms", replace: true });
+  }, [room.data, room.isFetched, search.tab]); // eslint-disable-line react-hooks/exhaustive-deps
   // Sidebar sections: «التواصل» = chats only; «المجموعات» (?tab=groups|classes) and «إدارة المجموعات» (?tab=manage) are separate;
   // circulars and meetings have their own pages. Old links (?tab=circulars|meetings) still open here.
   const sp = useSchoolPerms(ctx.schoolId);
   const base = commTabs(ctx.role);
   const all = sp?.["groups.create"] && !base.includes("manage") ? [...base, "manage" as CommTab] : base;
-  const section: "groups" | "manage" | "chat" = search.tab === "manage" ? "manage" : search.tab === "groups" || search.tab === "classes" ? "groups" : "chat";
+  const section: "groups" | "manage" | "chat" = search.tab === "manage" ? "manage" : search.tab === "groups" ? "groups" : "chat";
   const tabs = section === "manage" ? all.filter((t) => t === "manage")
-    : section === "groups" ? all.filter((t) => t === "groups" || t === "classes")
-    : all.filter((t) => t === "inbox" || t === "mine" || t === "archive" || ((t === "circulars" || t === "meetings") && search.tab === t) || (t === "classes" && !all.includes("groups")));
+    : section === "groups" ? all.filter((t) => t === "groups")
+    : all.filter((t) => t === "inbox" || t === "mine" || t === "archive" || ((t === "circulars" || t === "meetings") && search.tab === t));
   const tab: CommTab = search.tab && tabs.includes(search.tab) ? search.tab : search.c ? "inbox" : tabs[0]!;
   const go = (s: Search) => navigate({ search: s, replace: false });
-  const head = section === "groups" ? { title: "المجموعات", description: "مجموعاتك الإدارية ومجموعات المواد." } : section === "manage" ? { title: "إدارة المجموعات", description: "إنشاء المجموعات وأعضاؤها وإعدادات التواصل." } : commTitle(ctx.role);
+  const head = section === "groups" ? { title: "المجموعات", description: "المجموعات الإدارية المصرّح لك بها. مجموعات الفصول داخل الفصول الافتراضية." } : section === "manage" ? { title: "إدارة المجموعات", description: "إنشاء المجموعات وأعضاؤها وإعدادات التواصل." } : commTitle(ctx.role);
+  if (room.data || (search.tab === "classes" && !room.isFetched)) return <LoadingState />;
   return (
     <>
       <PageHeader {...head} />
@@ -66,7 +77,6 @@ function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       </div>}
       {tab === "circulars" ? <CircularsTab ctx={ctx} focus={search.circular} onFocus={(id) => go(id ? { tab: "circulars", circular: id } : { tab: "circulars" })} />
         : tab === "manage" ? <ManageTab ctx={ctx} />
-        : tab === "classes" ? <ClassesTab ctx={ctx} focus={search.c} />
         : tab === "meetings" ? <MeetingsTab />
         : <Conversations ctx={ctx} tab={tab} selected={search.c} onSelect={(c) => go(c ? { tab, c } : { tab })} />}
     </>
@@ -115,7 +125,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
     if (tab === "archive" ? !archived : archived) return false;
     if (tab === "mine" && c["kind"] === "group") return false;
     if (tab === "groups" && c["kind"] !== "group") return false;
-    // subject/section groups live in their own tab; students' inbox holds only chats with their teachers
+    // subject/section/class groups live inside the digital classroom; students' inbox holds only their private chats
     if (tab !== "archive" && c["kind"] === "group" && (c["group_type"] === "course" || c["group_type"] === "section" || c["group_type"] === "class")) return false;
     if (ctx.role === "student" && c["kind"] !== "student" && c["kind"] !== "group") return false;
     if (kind && c["kind"] !== kind) return false;
@@ -127,7 +137,7 @@ function Conversations({ ctx, tab, selected, onSelect }: { ctx: AppContext & { s
   // guardian with several children: filter the inbox per child (names come from the family conversations themselves)
   const children = ctx.role === "guardian" ? [...new Set((convs.data ?? []).filter((c) => c["kind"] === "family" && c["student_name"]).map((c) => c["student_name"] as string))] : [];
   const current = (convs.data ?? []).find((c) => c["id"] === selected);
-  const canStart = ctx.role !== "student" && tab !== "groups";
+  const canStart = tab !== "groups";
 
   return (
     <div className="grid h-[calc(100dvh-14rem)] min-h-[26rem] overflow-hidden rounded-2xl border bg-card shadow-sm md:grid-cols-[21rem_1fr]">
