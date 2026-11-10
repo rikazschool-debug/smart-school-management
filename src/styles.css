@@ -125,3 +125,18 @@ body { font-family: "Cairo", system-ui, sans-serif; }
 .tag-slate { --tag-h: 250; --tag-c: 0.01; } .tag-red { --tag-h: 27; --tag-c: 0.04; } .tag-amber { --tag-h: 75; --tag-c: 0.04; }
 .tag-green { --tag-h: 150; --tag-c: 0.035; } .tag-teal { --tag-h: 190; --tag-c: 0.03; } .tag-blue { --tag-h: 250; --tag-c: 0.04; }
 .tag-violet { --tag-h: 300; --tag-c: 0.04; } .tag-pink { --tag-h: 350; --tag-c: 0.04; }
+
+/* Public site motion */
+@keyframes site-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes site-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes site-glow { 0%,100% { opacity: .55; transform: scale(1); } 50% { opacity: .85; transform: scale(1.08); } }
+@keyframes site-marquee { from { transform: translateX(0); } to { transform: translateX(50%); } }
+.site-page { animation: site-rise .6s cubic-bezier(.2,.7,.2,1) both; }
+.site-reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); }
+.site-reveal.is-in { opacity: 1; transform: none; }
+.site-float { animation: site-float 6s ease-in-out infinite; }
+.site-glow { animation: site-glow 8s ease-in-out infinite; }
+.site-marquee { animation: site-marquee 30s linear infinite; }
+.site-grid-bg { background-image: linear-gradient(to right, color-mix(in oklab, var(--primary) 8%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--primary) 8%, transparent) 1px, transparent 1px); background-size: 48px 48px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%); }
+.site-hero-grad { background: radial-gradient(60% 60% at 80% 10%, color-mix(in oklab, var(--accent) 35%, transparent), transparent 70%), radial-gradient(50% 50% at 10% 30%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%); }
+@media (prefers-reduced-motion: reduce) { .site-page, .site-float, .site-glow, .site-marquee { animation: none; } .site-reveal { opacity: 1; transform: none; transition: none; } }

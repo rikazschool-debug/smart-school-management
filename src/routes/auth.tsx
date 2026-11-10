@@ -1,7 +1,8 @@
 import { PasswordInput } from "@/components/password-input";
 import { toLoginEmail } from "@/lib/guardian-login";
 import { studentLoginEmail } from "@/lib/people-import";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Brand } from "@/components/site/shell";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { requestIdCode, studentSignIn, verifyIdCode } from "@/lib/id-login.functions";
@@ -108,20 +109,33 @@ function AuthPage() {
 
   return (
     <div className="grid min-h-screen md:grid-cols-2">
-      <div className="hidden flex-col justify-between bg-primary p-10 text-primary-foreground md:flex">
-        <span className="font-display text-3xl text-accent">ركاز</span>
-        <p className="font-display text-3xl leading-relaxed">مدرسة واحدة أو مجموعة كاملة —<br />كل دور يرى ما يخصه فقط.</p>
-        <p className="text-sm opacity-70">منصة إدارة المدارس</p>
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-primary p-10 text-primary-foreground md:flex">
+        <div className="site-glow absolute -left-24 -top-24 size-96 rounded-full bg-accent/25 blur-3xl" />
+        <div className="site-glow absolute -bottom-32 -right-20 size-96 rounded-full bg-primary-foreground/10 blur-3xl" style={{ animationDelay: "3s" }} />
+        <div className="site-page relative"><Brand light /></div>
+        <div className="site-page relative space-y-6" style={{ animationDelay: "150ms" }}>
+          <p className="font-display text-4xl leading-relaxed">مدرسة واحدة أو مجموعة كاملة —<br /><span className="text-accent">كل دور يرى ما يخصه فقط.</span></p>
+          <ul className="space-y-3 text-primary-foreground/85">
+            {["الطالب برقم الهوية ورقم الطالب", "ولي الأمر برمز يصل إلى جواله", "الإدارة والموظفون برمز تحقق"].map((x, i) => (
+              <li key={x} className="site-page flex items-center gap-3" style={{ animationDelay: `${300 + i * 100}ms` }}><span className="size-2 rounded-full bg-accent" />{x}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="relative flex items-center justify-between text-sm text-primary-foreground/70">
+          <span>منصة إدارة المدارس</span>
+          <Link to="/" className="hover:text-primary-foreground">العودة للموقع ←</Link>
+        </div>
       </div>
-      <div className="flex items-center justify-center p-6">
-        <div className="w-full max-w-sm space-y-5">
+      <div className="site-hero-grad flex items-center justify-center p-6">
+        <div className="site-page w-full max-w-sm space-y-5 rounded-3xl border bg-card/90 p-6 shadow-xl backdrop-blur md:p-8">
+          <div className="md:hidden"><Brand /></div>
           {mode === "signin" && !entry ? (
             <>
               <h1 className="font-display text-2xl">تسجيل الدخول</h1>
               <p className="text-sm text-muted-foreground">اختر نوع حسابك</p>
               <div className="space-y-3">
                 {ENTRIES.map((x) => (
-                  <button key={x.key} type="button" onClick={() => setEntry(x.key)} className="w-full rounded-xl border bg-card p-4 text-start transition hover:border-primary hover:bg-secondary">
+                  <button key={x.key} type="button" onClick={() => setEntry(x.key)} className="w-full rounded-xl border bg-card p-4 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-primary hover:bg-secondary hover:shadow-md">
                     <span className="block font-semibold">{x.title}</span>
                     <span className="mt-1 block text-xs text-muted-foreground">{x.desc}</span>
                   </button>
