@@ -22151,6 +22151,17 @@ export type Database = {
       }
       hr_emp_money: { Args: { _emp: string }; Returns: Json }
       hr_employee_account: { Args: { _id: string }; Returns: Json }
+      hr_employee_bulk: {
+        Args: {
+          _action: string
+          _ids: string[]
+          _org: string
+          _p?: Json
+          _reason?: string
+        }
+        Returns: Json
+      }
+      hr_employee_children: { Args: { _emp: string }; Returns: Json }
       hr_employee_create_login: {
         Args: {
           _base: string
