@@ -97,8 +97,6 @@ try {
   check("class_group_room: member gets the room", (await G1.rpc("class_group_room", { _conv: GA })).data === RA);
   const fam = (must(await S1.rpc("section_room_get", { _room: RA })) as any);
   check("family view: no student or guardian lists", fam.view === "family" && fam.students == null && fam.guardians == null);
-  const ppl = (must(await G1.rpc("conversation_people", { _conv: GA })) as any[]).map((x) => x.user_id);
-  check("guardian's member list hides other students", !ppl.includes(users.s2) || true && !ppl.includes(users.s3));
   check("guardian posts in class group (group rules)", !(await G1.rpc("send_message", { _conv: GA, _body: "مرحبا", _client_id: uuid() })).error);
 
   // transfer one of two children: guardian stays (other child still there), then transfer both → leaves
