@@ -98,9 +98,8 @@ try {
   check("principal lists the empty section's classroom", pl.some((x) => x.id === REid));
   check("owner lists the empty section's classroom", (must(await O.rpc("section_rooms_list", { _school: s0 })) as any[]).some((x) => x.id === REid));
   check("principal opens the empty section's group", (await cg(P1, REid)) === gE[0].id);
-  const kE = (await ins("students", { school_id: s0, full_name: "طالب الشعبة د", user_id: users.s3 })).id;
-  must(await admin.from("student_guardians").insert({ school_id: s0, student_id: kE, guardian_id: GX, relationship: "father", can_follow: true, verified: true }));
-  await ins("enrollments", { school_id: s0, student_id: kE, section_id: E, year_id: y, start_date: "2026-08-20" });
+  must(await admin.from("enrollments").update({ status: "ended", end_date: "2026-11-06" }).eq("student_id", k3).eq("status", "active"));
+  await ins("enrollments", { school_id: s0, student_id: k3, section_id: E, year_id: y, start_date: "2026-08-20" });
   check("placed student sees the new section's group without manual setup", (await cg(S3, REid)) === gE[0].id);
   check("their guardian sees it too", (await cg(GXc, REid)) === gE[0].id);
   check("student of another class: room rejected", (await cg(S3, RA)) === "ERR");
@@ -142,7 +141,7 @@ try {
   const legacy = async (kind: string, extra: Record<string, unknown>, other: string) => {
     const c = await ins("conversations", { org_id: org, school_id: s0, kind, student_id: k1, staff_user_id: users.t1, staff_kind: "teacher", dedupe_key: `legacy:${kind}:${uuid()}`, created_by: users.t1, ...extra });
     must(await admin.from("conversation_members").insert([{ conversation_id: c.id, user_id: users.t1, role: "member" }, { conversation_id: c.id, user_id: other, role: "member" }]));
-    must(await admin.from("messages").insert({ conversation_id: c.id, sender_id: users.t1, body: "رسالة سابقة", client_id: uuid() }));
+    must(await admin.from("messages").insert({ conversation_id: c.id, sender_id: users.t1, body: "رسالة سابقة", client_id: uuid(), seq: 1 }));
     return { data: c.id as string, error: null };
   };
   const old = await legacy("family", { guardian_id: G }, users.g1);
