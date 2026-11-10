@@ -43,6 +43,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   platform: { to: "/app/platform", label: "المجموعات والصلاحيات", icon: ShieldCheck },
   signup_requests: { to: "/app/signup-requests", label: "طلبات التسجيل", icon: Inbox },
   platform_notices: { to: "/app/platform-notices", label: "إشعارات المنصة", icon: Send },
+  platform_subs: { to: "/app/platform-subs", label: "الاشتراكات والصلاحيات", icon: ShieldCheck },
   schools: { to: "/app/schools", label: "المدارس والفروع", icon: Building2 },
   members: { to: "/app/members", label: "المستخدمون والأدوار", icon: UserCog },
   academic: { to: "/app/academic", label: "الإعداد الأكاديمي", icon: Network },
@@ -109,7 +110,7 @@ const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-side
 
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
-  { label: "المنصة والمؤسسة", keys: ["platform", "signup_requests", "platform_notices", "schools", "members", "permissions"] },
+  { label: "المنصة والمؤسسة", keys: ["platform", "platform_subs", "signup_requests", "platform_notices", "schools", "members", "permissions"] },
   { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "calendar", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "events"] },
   { label: "الكادر التعليمي والطلاب", keys: ["teachers", "students", "guardians"] },
   { label: "الوسوم", keys: ["tags"] },
@@ -220,7 +221,7 @@ function Shell() {
   if (groupView && section === "school_admin")
     nav = [...new Set(baseNav)].filter((k) => ["home", "profile", "communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings", "notifications", "support", "calls"].includes(k));
   // platform owner on the platform account: platform menu only; picking a branch switches to the group context (full group menu)
-  if (active.role === "platform_admin") nav = nav.filter((k) => ["home", "profile", "platform", "signup_requests", "platform_notices", "schools", "notifications", "support"].includes(k));
+  if (active.role === "platform_admin") nav = nav.filter((k) => ["home", "profile", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", "notifications", "support"].includes(k));
   // class visits live under the evaluation sub-menu for roles that have both
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);

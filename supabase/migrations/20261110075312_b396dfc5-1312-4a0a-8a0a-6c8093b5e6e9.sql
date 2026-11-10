@@ -1,0 +1,1 @@
+alter function public._plan_sections(text) set search_path = public;

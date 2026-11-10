@@ -54,3 +54,4 @@
 - Family home, fin_*, section rooms: src/components/family/AGENTS.md.
 - Live refresh, display names: src/lib/AGENTS.md.
 - Route files export only `Route` and keep no unused top-level code; shared helpers, validators and components live under src/components or src/lib — anything else is bundled into app startup and blanks the dev preview.
+- Subscriptions (org_subscriptions): platform-owner only via platform_sub_save, which applies the plan sections through org_sections (logged); members read status via org_subscription.
