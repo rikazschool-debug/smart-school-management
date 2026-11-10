@@ -26,7 +26,7 @@ try {
   const S2 = must(await admin.from("schools").insert({ org_id: org, name: "فرع آخر" }).select("id").single())!.id; tr.addSchool(S2);
   must(await admin.from("memberships").insert([{ user_id: users.hr, org_id: org, school_id: S, role: "student_affairs" }, { user_id: users.tc, org_id: org, school_id: S, role: "teacher" }]));
   const emp = async (no: string, name: string, uid: string | null) =>
-    must(await admin.from("hr_employees").insert({ org_id: org, employee_no: no, full_name: name, user_id: uid, national_id: "10" + run.toString().slice(-8), nationality: "سعودي", phone: "966500000000", status: "active" }).select("id").single())!.id as string;
+    must(await admin.from("hr_employees").insert({ org_id: org, employee_no: no, full_name: name, user_id: uid, national_id: "1" + no.slice(-1) + run.toString().slice(-8), nationality: "سعودي", phone: "966500000000", status: "active" }).select("id").single())!.id as string;
   const e1 = await emp("HPX-1", "موظف الفرع", users.tc!), e2 = await emp("HPX-2", "موظف فرع آخر", null);
   must(await admin.from("hr_assignments").insert([e1, e2].map((e, i) => ({ org_id: org, employee_id: e, school_id: i ? S2 : S, start_date: "2026-01-01", is_primary: true, job_title: "وظيفة" }))));
   must(await admin.from("hr_employee_profile").upsert({ org_id: org, employee_id: e1, iban: "SA0380000000608010167519", education: "بكالوريوس" }));
@@ -34,7 +34,7 @@ try {
   const o = must(await oc.rpc("hr_employee_print", { _org: org, _ids: [e1, e2] })) as any;
   check("owner prints both employees", o.items.length === 2 && o.refused === 0, o);
   const it = o.items.find((x: any) => x.employee.id === e1);
-  check("owner sees sensitive data in print", it?.employee.national_id?.startsWith("10") && it?.profile.iban === "SA0380000000608010167519", it);
+  check("owner sees sensitive data in print", it?.employee.national_id?.startsWith("11") && it?.profile.iban === "SA0380000000608010167519", it);
   check("account section: login + teacher role", it?.account.has_login === true && it?.account.roles.some((r: any) => r.role === "teacher"), it?.account);
   check("no password/secret keys", !/password|secret|token|encrypted/i.test(JSON.stringify(o)));
   check("hr_me exposes print for owner", (must(await oc.rpc("hr_me", { _org: org })) as any).caps.print === true);
