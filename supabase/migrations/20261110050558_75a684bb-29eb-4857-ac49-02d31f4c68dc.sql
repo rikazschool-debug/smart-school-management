@@ -1,0 +1,1 @@
+revoke execute on function public._xb_ok(uuid,uuid) from authenticated;
