@@ -180,7 +180,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
         const part = [...new Set(list.slice(i, i + 50))];
         try {
           const rs = await provision({ data: { kind: k, ids: part } });
-          for (const x of out) { const pid = pick(x); const m = pid ? rs.find((y) => y.id === pid) : undefined; if (m) set(x, m.state === "error" ? { ok: false, msg: m.msg ?? "تعذّر" } : { ok: m.state !== "review", msg: ACCOUNT_STATE[m.state] ?? m.state }); }
+          for (const x of out) { const pid = pick(x); const m = pid ? rs.find((y) => y.id === pid) : undefined; if (m) set(x, m.state === "error" ? { ok: false, msg: m.msg ?? "تعذّر" } : { ok: !["review", "missing_phone", "missing_id"].includes(m.state), msg: ACCOUNT_STATE[m.state] ?? m.state }); }
         } catch (e) { for (const x of out) if (part.includes(pick(x) ?? "")) set(x, { ok: false, msg: arabicError(e) }); }
       }
     };

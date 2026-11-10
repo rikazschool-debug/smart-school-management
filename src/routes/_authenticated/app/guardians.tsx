@@ -48,7 +48,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
     <>
       <PageHeader title="أولياء الأمور" desc="سجل واحد لكل ولي أمر يجمع أبناءه. الجوال المعتمد هنا هو الذي يُرسل إليه رمز الدخول، وكل تغيير عليه يُسجّل." />
       <CrudTable person={{ kind: "guardian" }} title="أولياء الأمور" table="guardians" schoolId={schoolId} canWrite={w} order="full_name"
-        onUpdated={(gid) => { void auto({ data: { guardianId: gid } }).then((r) => { const g = r.guardians[0]; if (g && g.state !== "linked" || g?.message === "queued") toast.info(autoSummary(r)); }).catch(() => undefined); }}
+        onUpdated={(gid) => { void auto({ data: { guardianId: gid } }).then((r) => { const g = r.guardians[0]; if (g && (g.state !== "linked" || g.message === "queued")) toast.info(autoSummary(r)); }).catch(() => undefined); }}
         toolbar={w ? <GuardianImport schoolId={schoolId} /> : undefined}
         select="*, student_guardians(id, verified)" searchKeys={["full_name", "display_name", "phone", "email", "national_id"]}
         fields={[
