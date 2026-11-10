@@ -53,7 +53,7 @@ function Comm({ ctx }: { ctx: AppContext & { schoolId: string } }) {
     if (room.data) rootNav({ to: "/app/classrooms/section/$id", params: { id: room.data }, search: { tab: "group" }, replace: true });
     else if (search.tab === "classes" && room.isFetched) rootNav({ to: "/app/classrooms", replace: true });
   }, [room.data, room.isFetched, search.tab]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Sidebar sections: «التواصل» = chats only; «المجموعات» (?tab=groups|classes) and «إدارة المجموعات» (?tab=manage) are separate;
+  // Sidebar sections: «التواصل» = chats only; «المجموعات» (?tab=groups, administrative only) and «إدارة المجموعات» (?tab=manage) are separate;
   // circulars and meetings have their own pages. Old links (?tab=circulars|meetings) still open here.
   const sp = useSchoolPerms(ctx.schoolId);
   const base = commTabs(ctx.role);
