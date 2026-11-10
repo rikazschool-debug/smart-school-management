@@ -455,9 +455,10 @@ function SelfAccessCard({ e, org, canEdit, onDone }: { e: HrEmp; org: string; ca
 type Detail = { view: "hr" | "self" | "manager"; employee: HrEmp; assignments: HrAssign[]; can_edit: boolean; events?: { at: string; action: string; reason: string | null; by: string; entity: string }[] };
 const ACT: Record<string, string> = { self_link: "ربط بحساب", self_unlink: "فك الربط بالحساب", self_on: "تفعيل الوصول للملف", self_off: "إيقاف الوصول للملف", create: "إنشاء", update: "تعديل", end: "إنهاء تعيين", "status:ended": "إنهاء الخدمة", "status:suspended": "إيقاف مؤقت", "status:active": "إعادة للعمل" };
 
-function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: HrMe; onClose: () => void }) {
+function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: string; m: HrMe; onClose: () => void; onPrint: () => void }) {
   const qc = useQueryClient();
   const d = useQuery({ queryKey: ["hr-emp", id], queryFn: () => rpc<Detail>("hr_employee_get", { _id: id }) });
+  const acc = useQuery({ queryKey: ["hr-emp-acc", id], enabled: d.data?.view === "hr", queryFn: () => rpc<SheetAccount>("hr_employee_account", { _id: id }) });
   const [edit, setEdit] = useState<Record<string, string> | null>(null);
   const prof = useQuery({ queryKey: ["hr-prof", id], queryFn: () => rpc<Prof>("hr_employee_profile_get", { _emp: id }) });
   const [px, setPx] = useState<Record<string, string>>({});
@@ -501,6 +502,7 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
       <div className="flex flex-wrap items-center gap-2">
         <span className="min-w-0 flex-1"><span className="block text-lg font-bold">{e.display_name || e.full_name}</span>{e.display_name && e.display_name !== e.full_name && <span className="block text-xs text-muted-foreground">الاسم الرسمي: {e.full_name}</span>}<span className="text-xs text-muted-foreground"><bdi dir="ltr">{e.employee_no}</bdi> · {STATUS[e.status]}</span></span>
         <PersonCardButton kind="employee" id={e.id} org={org} />
+        {m.caps.print && d.data!.view === "hr" && !edit && <Button size="sm" variant="outline" onClick={onPrint}><Printer className="size-4" />طباعة بيانات الموظف</Button>}
         {can_edit && !edit && <Button size="sm" variant="outline" onClick={startEdit}>تعديل الملف</Button>}
         <Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق الملف"><X className="size-4" /></Button>
       </div>
@@ -515,15 +517,8 @@ function EmployeePanel({ id, org, m, onClose }: { id: string; org: string; m: Hr
           <div className="flex gap-2"><Button disabled={saveEmp.isPending} onClick={() => saveEmp.mutate(edit)}>{saveEmp.isPending ? "…" : "حفظ"}</Button><Button variant="ghost" onClick={() => setEdit(null)}>إلغاء</Button></div>
         </div>
       ) : (
-        <dl className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          {row("المسمى الوظيفي", e.job_title)}{row("تاريخ المباشرة", e.hire_date)}{row("الجوال", e.phone && <bdi dir="ltr">{e.phone}</bdi>)}{row("البريد", e.email && <bdi dir="ltr">{e.email}</bdi>)}
-          {row("الجنس", e.gender ? GENDER[e.gender] : null)}{row("حساب الدخول", e.has_login ? (e.self_access ? "مرتبط ومفعّل" : "مرتبط — غير مفعّل") : "بلا حساب")}
-          {row("رقم الهوية", e.national_id && <bdi dir="ltr">{e.national_id}</bdi>)}
-          {e.sensitive && <>{row("الجنسية", e.nationality)}{row("تاريخ الميلاد", e.birth_date)}</>}
-          {e.status === "ended" && row("انتهاء الخدمة", e.end_date)}
-        </dl>
+        <EmployeeSheetView item={{ employee: e as never, assignments, profile: (prof.data ?? null) as never, account: acc.data ?? null }} />
       )}
-      {!edit && <ProfileView pr={prof.data} />}
       <div>
         <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", category_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
         {asg && (
