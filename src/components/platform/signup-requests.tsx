@@ -14,7 +14,7 @@ export function SignupRequests() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["platform-signup-requests"], queryFn: async () => { const { data, error } = await db.rpc("platform_signup_requests"); if (error) throw error; return (data ?? []) as Row[]; } });
   async function setStatus(r: Row, status: string) {
-    const note = await askText({ title: `${r["ref"]} — ${ST[status]}`, label: "ملاحظة (اختيارية)", optional: true } as never);
+    const note = await askText(`${r["ref"]} — ${ST[status]}: ملاحظة (اختيارية)`, { long: true });
     if (note === null) return;
     const { error } = await db.rpc("platform_signup_set", { _id: r["id"], _status: status, _note: note ?? "" });
     if (error) return toast.error(arabicError(error));
