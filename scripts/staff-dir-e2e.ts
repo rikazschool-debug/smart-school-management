@@ -29,7 +29,7 @@ try {
   const tch = must(await admin.from("teachers").insert({ school_id: S, full_name: "معلم الدليل", user_id: users.tc, status: "active" }).select("id").single())!.id;
   const cat = must(await admin.from("hr_job_categories").insert({ org_id: org, name: "هيئة تعليمية" }).select("id").single())!.id;
   const emp = async (no: string, name: string, uid: string | null, extra: Record<string, unknown> = {}) =>
-    must(await admin.from("hr_employees").insert({ org_id: org, employee_no: no, full_name: name, user_id: uid, national_id: "10" + run.toString().slice(-8), phone: "966500000000", status: "active", ...extra }).select("id").single())!.id as string;
+    must(await admin.from("hr_employees").insert({ org_id: org, employee_no: no, full_name: name, user_id: uid, national_id: "1" + no.slice(-1) + run.toString().slice(-8), phone: "966500000000", status: "active", ...extra }).select("id").single())!.id as string;
   const eT = await emp("SDX-1", "معلم الدليل", users.tc!), eA = await emp("SDX-2", "إداري بلا حساب", null), eP = await emp("SDX-3", "موظف فرع آخر", null), eX = await emp("SDX-4", "منتهي التكليف", null);
   const asg = (e: string, s: string, extra: Record<string, unknown> = {}) => ({ org_id: org, employee_id: e, school_id: s, start_date: "2026-01-01", ...extra });
   must(await admin.from("hr_assignments").insert([
