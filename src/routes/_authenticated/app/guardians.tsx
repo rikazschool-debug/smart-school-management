@@ -53,7 +53,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
       <PageHeader title="أولياء الأمور" desc="سجل واحد لكل ولي أمر يجمع أبناءه. الجوال المعتمد هنا هو الذي يُرسل إليه رمز الدخول، وكل تغيير عليه يُسجّل." />
       <CrudTable person={{ kind: "guardian" }} title="أولياء الأمور" table="guardians" schoolId={schoolId} canWrite={w} order="full_name"
         onUpdated={(gid) => { void auto({ data: { guardianId: gid } }).then((r) => { const g = r.guardians[0]; if (g && (g.state !== "linked" || g.message === "queued")) toast.info(autoSummary(r)); }).catch(() => undefined); }}
-        formExtra={(fill) => <HrPick schoolId={schoolId} onPick={fill} />}
+        formExtra={(_fill, close) => <HrPick schoolId={schoolId} onDone={close} />}
         toolbar={w ? <GuardianImport schoolId={schoolId} /> : undefined}
         select="*, student_guardians(id, verified)" searchKeys={["full_name", "display_name", "phone", "email", "national_id"]}
         fields={[
@@ -156,8 +156,18 @@ function GuardianDetail({ g, canManage }: { g: Row; canManage: boolean }) {
 }
 
 /** «هل ولي الأمر موظف لدينا؟» — copies name/ID/mobile/email from the group's HR file (server-checked: can_edit_students, same group). */
-function HrPick({ schoolId, onPick }: { schoolId: string; onPick: (v: Row) => void }) {
+function HrPick({ schoolId, onDone }: { schoolId: string; onDone: () => void }) {
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  async function pick(e: Row) {
+    setBusy(true);
+    const { data, error } = await db.rpc("hr_guardian_from_employee", { _school: schoolId, _emp: e["id"] });
+    setBusy(false);
+    if (error) return void toast.error(arabicError(error));
+    const st = (data as { state: string }).state;
+    toast.success(st === "exists" ? "ولي الأمر مسجّل مسبقًا في هذه المدرسة — لم يُكرَّر" : st === "linked" ? "أُضيف ولي الأمر بحساب الموظف نفسه — يدخل بوابة أولياء الأمور بنفس حسابه" : "أُضيف ولي الأمر من ملف الموارد البشرية");
+    onDone();
+  }
   const [q, setQ] = useState("");
   const res = useQuery({ enabled: open && q.trim().length >= 2, queryKey: ["hr-guardian-cand", schoolId, q.trim()], queryFn: async () => {
     const { data, error } = await db.rpc("hr_guardian_candidates", { _school: schoolId, _q: q.trim() }); if (error) throw error; return data as Row[];
@@ -171,7 +181,7 @@ function HrPick({ schoolId, onPick }: { schoolId: string; onPick: (v: Row) => vo
         {res.data && res.data.length === 0 && <p className="text-xs text-muted-foreground">لا يوجد موظف مطابق.</p>}
         <ul className="max-h-48 divide-y overflow-y-auto">
           {(res.data ?? []).map((e) => (
-            <li key={e["id"]}><button type="button" className="w-full py-1.5 text-start hover:text-primary" onClick={() => { onPick({ full_name: e["full_name"], national_id: e["national_id"] ?? "", phone: e["phone"] ?? "", email: e["email"] ?? "" }); setOpen(false); toast.success("نُسخت بيانات الموظف — راجعها ثم احفظ"); }}>
+            <li key={e["id"]}><button type="button" className="w-full py-1.5 text-start hover:text-primary" disabled={busy} onClick={() => void pick(e)}>
               {e["full_name"]} <span className="text-xs text-muted-foreground">{[e["employee_no"], e["job_title"]].filter(Boolean).join(" · ")}</span>
             </button></li>
           ))}
