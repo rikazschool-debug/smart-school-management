@@ -10,8 +10,6 @@ import { idLoginMessage } from "@/lib/id-login";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicError } from "@/lib/session";
-import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts";
-import { ROLE_LABELS } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,16 +60,6 @@ function AuthPage() {
     supabase.auth.getUser().then(({ data }) => data.user && go());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  async function demoLogin(email: string) {
-    setBusy(true);
-    await supabase.auth.signOut();
-    localStorage.removeItem("rikaz.activeContext");
-    const { error } = await supabase.auth.signInWithPassword({ email, password: DEMO_PASSWORD });
-    setBusy(false);
-    if (error) return void toast.error(arabicError(error));
-    navigate({ to: "/app" });
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -204,17 +192,7 @@ function AuthPage() {
             </div>
           )}
           {mode === "signin" && (
-            <details className="group rounded-2xl border border-dashed bg-card/60 p-3" open>
-              <summary className="cursor-pointer list-none text-sm font-semibold">دخول سريع بالحسابات التجريبية <span className="text-xs font-normal text-muted-foreground">(بيانات تجريبية)</span></summary>
-              <div className="mt-3 grid max-h-56 grid-cols-2 gap-2 overflow-y-auto">
-                {DEMO_ACCOUNTS.map((d) => (
-                  <Button key={d.email} type="button" size="sm" variant="secondary" disabled={busy} onClick={() => demoLogin(d.email)}>
-                    {d.label ?? ROLE_LABELS[d.role]}
-                  </Button>
-                ))}
-              </div>
-              <div className="mt-2"><PlatformOwnerLogin onDone={() => navigate({ to: "/app" })} /></div>
-            </details>
+            <div><PlatformOwnerLogin onDone={() => navigate({ to: "/app" })} /></div>
           )}
           {search.invite && <p className="text-xs text-muted-foreground">أنشئ حسابًا بنفس البريد الذي دُعيت به وستظهر لك عضويتك تلقائيًا.</p>}
         </div>
