@@ -19228,6 +19228,10 @@ export type Database = {
         Args: { _action: string; _scope: string; _section: string }
         Returns: boolean
       }
+      _perm_vice_only: {
+        Args: { _school: string; _uid: string }
+        Returns: boolean
+      }
       _pickup_delegate_set: {
         Args: { _d: Json; _id: string; _mode: string; _person: string }
         Returns: undefined
