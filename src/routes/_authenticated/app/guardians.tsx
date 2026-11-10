@@ -15,7 +15,9 @@ import { canManageStudents } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { AccountButton } from "@/components/account-button";
 import { guardianReadiness, localPhone, maskTail } from "@/lib/people-import";
-import { CreateAccountButton } from "@/components/guardian-quick-add";
+import { CreateAccountButton, autoSummary } from "@/components/guardian-quick-add";
+import { autoAccounts } from "@/lib/accounts.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { GuardianImport } from "@/components/guardian-import-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/guardians")({
@@ -37,6 +39,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
   const sp = useSchoolPerms(schoolId);
   const w = role === "org_owner" || !!sp?.["people_family.edit"];
   const [viewing, setViewing] = useState<Row | null>(null);
+  const auto = useServerFn(autoAccounts);
   // full ID/phone only for those who manage students; others see the last digits
   const full = w || canManageStudents(role);
   const id = (v: string | null) => (v ? (full ? v : maskTail(v)) : "—");
@@ -45,6 +48,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
     <>
       <PageHeader title="أولياء الأمور" desc="سجل واحد لكل ولي أمر يجمع أبناءه. الجوال المعتمد هنا هو الذي يُرسل إليه رمز الدخول، وكل تغيير عليه يُسجّل." />
       <CrudTable person={{ kind: "guardian" }} title="أولياء الأمور" table="guardians" schoolId={schoolId} canWrite={w} order="full_name"
+        onUpdated={(gid) => { void auto({ data: { guardianId: gid } }).then((r) => { const g = r.guardians[0]; if (g && (g.state !== "linked" || g.message === "queued")) toast.info(autoSummary(r)); }).catch(() => undefined); }}
         toolbar={w ? <GuardianImport schoolId={schoolId} /> : undefined}
         select="*, student_guardians(id, verified)" searchKeys={["full_name", "display_name", "phone", "email", "national_id"]}
         fields={[
@@ -69,7 +73,7 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
           } },
         ]}
         extraActions={(r) =>
-          w && !r["user_id"] ? (
+          role === "org_owner" && !r["user_id"] ? (
             r["phone"] ? <CreateAccountButton guardianId={r["id"]} name={r["full_name"]} />
             : r["email"] ? <AccountButton role={role} kind="guardian" recordId={r["id"]} email={r["email"]} schoolId={schoolId} /> : null
           ) : null

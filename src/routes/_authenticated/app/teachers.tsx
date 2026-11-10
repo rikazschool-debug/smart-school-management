@@ -96,7 +96,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
             if (s.state === "ready") return <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز للدخول بالهوية</span>;
             return <span className={`text-xs ${s.state === "conflict" ? "text-destructive" : "text-muted-foreground"}`}>{s.state === "conflict" ? "تعارض: " : "ينقص: "}{s.problem}</span>;
           } }] : []),
-          { label: "الحساب", render: (r) => <AccountPanel kind="teacher" id={r["id"]} canWrite={w} /> },
+          { label: "الحساب", render: (r) => <AccountPanel kind="teacher" id={r["id"]} canWrite={role === "org_owner"} /> },
         ]}
         extraActions={(r) => w || idEdit ? (
           <>

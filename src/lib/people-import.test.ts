@@ -123,6 +123,15 @@ describe("validation rules (import and single add)", () => {
     const r = validate("students", [raw({ full_name: "أ", national_id: "1000000013", guardian_name: "ولي", guardian_phone: "123" })], lk)[0]!;
     expect(r.errors.join()).toMatch(/جوال ولي الأمر/);
   });
+  it("guardian with name + ID and no mobile is accepted (login waits for the mobile)", () => {
+    const r = validate("students", [raw({ full_name: "أ", national_id: "1000000014", guardian_name: "ولي", guardian_id: "1000000022" })], lk)[0]!;
+    expect(r.errors).toEqual([]);
+    expect(r.data["guardian_phone"]).toBeNull();
+  });
+  it("guardian ID is required whenever guardian details are given", () => {
+    const r = validate("students", [raw({ full_name: "أ", national_id: "1000000015", guardian_name: "ولي", guardian_phone: "0501234567" })], lk)[0]!;
+    expect(r.errors.join()).toMatch(/هوية ولي الأمر مطلوبة/);
+  });
   it("teacher needs a valid mobile; same mobile twice is rejected", () => {
     const r = validate("teachers", [raw({ full_name: "م1", phone: "0501111111" }), raw({ full_name: "م2", phone: "501111111" }), raw({ full_name: "م3" })], empty);
     expect(r[0]!.errors).toEqual([]); expect(r[1]!.errors.join()).toMatch(/مكرر/); expect(r[2]!.errors.join()).toMatch(/الجوال مطلوب/);

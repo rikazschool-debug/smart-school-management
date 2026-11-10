@@ -244,6 +244,60 @@ export type Database = {
           },
         ]
       }
+      acct_outbox: {
+        Row: {
+          attempts: number
+          created_at: string
+          detail: string | null
+          guardian_id: string
+          id: string
+          params: Json
+          school_id: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          detail?: string | null
+          guardian_id: string
+          id?: string
+          params?: Json
+          school_id: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          detail?: string | null
+          guardian_id?: string
+          id?: string
+          params?: Json
+          school_id?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acct_outbox_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: true
+            referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acct_outbox_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_applications: {
         Row: {
           assignee: string | null
@@ -19589,6 +19643,14 @@ export type Database = {
         Returns: {
           state: string
           subject_id: string
+        }[]
+      }
+      acct_outbox_state: {
+        Args: { _school: string }
+        Returns: {
+          guardian_id: string
+          sent_at: string
+          status: string
         }[]
       }
       ack_circular: { Args: { _id: string }; Returns: number }

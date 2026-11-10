@@ -164,8 +164,8 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
             res.placement = en.error ? { ok: false, msg: arabicError(en.error) } : { ok: true, msg: "سُكّن" };
           }
         }
-        if (d["guardian_phone"]) {
-          const g = await db.rpc("upsert_student_guardian", { _student: id, _name: d["guardian_name"], _phone: d["guardian_phone"], _national_id: d["guardian_id"] ?? "", _relationship: d["relationship"] ?? "father" });
+        if (d["guardian_name"] && (d["guardian_id"] || d["guardian_phone"])) {
+          const g = await db.rpc("upsert_student_guardian", { _student: id, _name: d["guardian_name"], _phone: d["guardian_phone"] ?? "", _national_id: d["guardian_id"] ?? "", _relationship: d["relationship"] ?? "father" });
           if (g.error) res.guardian = { ok: false, msg: arabicError(g.error) };
           else { const gg = (g.data as Row[])[0] ?? {}; (res as Result & { gid?: string }).gid = gg["guardian_id"]; res.guardian = { ok: true, msg: gg["created"] ? "أُضيف ولي الأمر" : "رُبط بولي أمر موجود" }; }
         }
@@ -180,7 +180,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
         const part = [...new Set(list.slice(i, i + 50))];
         try {
           const rs = await provision({ data: { kind: k, ids: part } });
-          for (const x of out) { const pid = pick(x); const m = pid ? rs.find((y) => y.id === pid) : undefined; if (m) set(x, m.state === "error" ? { ok: false, msg: m.msg ?? "تعذّر" } : { ok: m.state !== "review", msg: ACCOUNT_STATE[m.state] ?? m.state }); }
+          for (const x of out) { const pid = pick(x); const m = pid ? rs.find((y) => y.id === pid) : undefined; if (m) set(x, m.state === "error" ? { ok: false, msg: m.msg ?? "تعذّر" } : { ok: !["review", "missing_phone", "missing_id"].includes(m.state), msg: ACCOUNT_STATE[m.state] ?? m.state }); }
         } catch (e) { for (const x of out) if (part.includes(pick(x) ?? "")) set(x, { ok: false, msg: arabicError(e) }); }
       }
     };
@@ -214,7 +214,7 @@ export function PeopleImport({ kind, schoolId }: { kind: PKind; schoolId: string
   async function addSingle(e: React.FormEvent) {
     e.preventDefault();
     // a single added student is always linked to a guardian (same ID or mobile reuses the existing guardian)
-    if (kind === "students" && (!(single["guardian_name"] ?? "").trim() || !(single["guardian_phone"] ?? "").trim())) return void toast.error("أدخل اسم ولي الأمر وجواله ليُربط بالطالب تلقائيًا");
+    if (kind === "students" && (!(single["guardian_name"] ?? "").trim() || !(single["guardian_id"] ?? "").trim())) return void toast.error("أدخل اسم ولي الأمر ورقم هويته ليُربط بالطالب تلقائيًا");
     setBusy(true);
     try {
       const raw: RawRow = { sheet: "إضافة فردية", line: 1, values: Object.fromEntries(fields.map((f) => [f.key, single[f.key] ?? ""])), formulas: [] };

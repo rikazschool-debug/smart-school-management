@@ -167,13 +167,14 @@ export function RecordForm({
 
 export function CrudTable({
   title, table, schoolId, select = "*", fields, columns, searchKeys, filter, filters, canWrite,
-  canDelete = canWrite, canCreate = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated, person,
+  canDelete = canWrite, canCreate = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated, onUpdated, person,
 }: {
   title: string; table: string; schoolId: string; select?: string; fields: Field[]; columns: Column[];
   searchKeys: string[]; filter?: Record<string, unknown>; filters?: FilterDef[]; canWrite: boolean; /** hide the generic «إضافة» when a screen owns its own add flow */ canCreate?: boolean;
   canDelete?: boolean; order?: string; defaults?: Row; extraActions?: (r: Row) => ReactNode;
   /** extra buttons next to «إضافة» (e.g. import) */ toolbar?: ReactNode; exportable?: boolean;
   /** called with the new row after a successful create */ onCreated?: ((r: Row) => void) | undefined;
+  /** called with the row id after a successful edit */ onUpdated?: ((id: string) => void) | undefined;
   /** people lists: name opens the side card; selection, tag filter and bulk actions (all re-checked on the server) */ person?: { kind: PersonKind } | undefined;
 }) {
   const qc = useQueryClient();
@@ -249,7 +250,7 @@ export function CrudTable({
   const save = useMutation({
     mutationFn: async (v: Row) => {
       const payload = { ...defaults, ...v, school_id: schoolId };
-      if (editing?.["id"]) { const res = await db.from(table).update(v).eq("id", editing["id"]); if (res.error) throw res.error; return null; }
+      if (editing?.["id"]) { const res = await db.from(table).update(v).eq("id", editing["id"]); if (res.error) throw res.error; onUpdated?.(editing["id"] as string); return null; }
       const res = onCreated ? await db.from(table).insert(payload).select().single() : await db.from(table).insert(payload);
       if (res.error) throw res.error;
       return (res.data as Row | null) ?? null;
