@@ -26,7 +26,7 @@ const today = () => new Intl.DateTimeFormat("ar-SA", { weekday: "long", day: "nu
 
 const QUICK: Partial<Record<NavKey, { label: string; hint: string; to: string; icon: LucideIcon }>> = {
   students: { label: "الطلاب والتسكين", hint: "إضافة طالب وتسكينه في شعبة", to: "/app/students", icon: GraduationCap },
-  teachers: { label: "المعلمون", hint: "ملفات المعلمين التعليمية", to: "/app/teachers", icon: UsersRound },
+  teachers: { label: "الكادر التعليمي", hint: "ملفات المعلمين التعليمية", to: "/app/teachers", icon: UsersRound },
   courses: { label: "المقررات والتكليفات", hint: "توزيع المعلمين واعتماده", to: "/app/courses", icon: BookOpen },
   schedule: { label: "الجدول المدرسي", hint: "إعداد الجدول ونشره", to: "/app/schedule", icon: CalendarDays },
   communication: { label: "التواصل", hint: "الرسائل والمجموعات والتعاميم", to: "/app/communication", icon: MessagesSquare },
