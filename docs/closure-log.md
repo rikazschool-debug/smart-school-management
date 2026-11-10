@@ -817,3 +817,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## Nov 10 2026 — School health section
 - Role nurse renamed «المرشدة الصحية»; health files, meds schedule, clinic log, guardian tab. scripts/health-e2e.ts 17/17; roles.test 27/27.
+
+## Nov 10 2026 — HR bulk actions & archive
+- Transfer/suspend/archive/restore selected employees; children of employee-guardians shown. hr-bulk-e2e 12/12.
