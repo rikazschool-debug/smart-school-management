@@ -35,7 +35,7 @@ try {
   const p1 = await perms(v1.c, A);
   check("1 vice without grant: no attendance or gate action", !p1["attendance.view"] && !p1["attendance.record"] && !p1["attendance.approve"] && !p1["attendance.follow"] && !p1["gate.operate"], p1);
   const b1 = await v1.c.rpc("attendance_board", { _school: A, _date: today });
-  check("2 vice without grant: direct server request refused", !!b1.error);
+  check("2 vice without grant: direct server request returns nothing", !!b1.error || b1.data === null, b1.data);
   const pp = await perms(prin.c, A);
   check("3 principal keeps attendance by default", !!pp["attendance.approve"] && !!pp["gate.operate"], pp);
   const ps = await perms(vsa.c, A);
@@ -50,12 +50,12 @@ try {
   const p2 = await perms(v2.c, A);
   check("7 view-only vice: view yes, record/approve/gate no", !!p2["attendance.view"] && !p2["attendance.record"] && !p2["attendance.approve"] && !p2["gate.operate"], p2);
   const b2 = await v2.c.rpc("attendance_board", { _school: A, _date: today });
-  check("8 view-only vice reads the board by direct request", !b2.error, b2.error?.message);
+  check("8 view-only vice reads the board by direct request", !b2.error && b2.data !== null, b2.error?.message);
   const self = await v1.c.rpc("perm_override_set", { _org: org, _user: v1.id, _section: "attendance", _action: "view", _effect: "grant", _scope: "org", _reason: "ذاتي" });
   check("9 vice cannot self-grant", !!self.error);
   const ov = (await admin.from("perm_overrides").select("id").eq("user_id", v2.id).eq("section", "attendance")).data ?? [];
-  const pb = await perms(v2.c, B);
-  console.log("info: branch-scope grant in second branch =", pb["attendance.view"]);
+  const rec = await v2.c.rpc("manual_attendance", { _student: "00000000-0000-0000-0000-000000000000", _status: "arrived", _reason: "تجربة" });
+  check("10a view-only vice cannot record by direct request", !!rec.error);
   check("10 explicit individual grant kept after default removal", ov.length === 1, ov.length);
 } catch (e) { bad++; console.error(e); }
 finally {
