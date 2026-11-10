@@ -45,7 +45,7 @@ export function HealthFile({ studentId }: { studentId: string }) {
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const f = q.data!;
   const staff = f.viewer === "staff";
-  const alerts = [...f.conditions.filter((c) => c.severity === "high" || c.category === "allergy").map((c) => c.name), ...(f.profile?.["allergies"] ? [String(f.profile.allergies)] : [])];
+  const alerts = [...f.conditions.filter((c) => c.severity === "high" || c.category === "allergy").map((c) => c.name), ...(f.profile?.["allergies"] ? [String(f.profile["allergies"])] : [])];
   return (
     <div className="space-y-5">
       <section className="overflow-hidden rounded-2xl border bg-card">
