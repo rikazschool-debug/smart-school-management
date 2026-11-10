@@ -15,7 +15,7 @@ const users: Record<string, string> = {}, emails: Record<string, string> = {}; l
 async function as(k: string) { const c = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }); const s = await c.auth.signInWithPassword({ email: emails[k]!, password: pw }); if (s.error) throw s.error; return c; }
 const must = <T,>(r: { data: T; error: any }) => { if (r.error) throw r.error; return r.data; };
 try {
-  for (const t of ["owner", "pr", "vp", "tc", "gd"]) {
+  for (const t of ["owner", "pr", "vp", "tc", "gd", "sa"]) {
     const email = `sdx-${t}-${run}@rikaz.test`;
     const r = await admin.auth.admin.createUser({ email, password: pw, email_confirm: true });
     if (r.error) throw r.error; users[t] = r.data.user!.id; emails[t] = email; tr.addUser(r.data.user!.id);
@@ -25,7 +25,7 @@ try {
   const S = must(await admin.from("schools").select("id").eq("org_id", org).single())!.id; tr.addSchool(S);
   const S2 = must(await admin.from("schools").insert({ org_id: org, name: "فرع آخر" }).select("id").single())!.id; tr.addSchool(S2);
   const mem = (u: string, role: string) => ({ user_id: users[u], org_id: org, school_id: S, role });
-  must(await admin.from("memberships").insert([mem("pr", "principal"), mem("vp", "vice_principal"), mem("tc", "teacher"), mem("gd", "guardian")]));
+  must(await admin.from("memberships").insert([mem("pr", "principal"), mem("vp", "vice_principal"), mem("tc", "teacher"), mem("gd", "guardian"), mem("sa", "student_affairs")]));
   const tch = must(await admin.from("teachers").insert({ school_id: S, full_name: "معلم الدليل", user_id: users.tc, status: "active" }).select("id").single())!.id;
   const cat = must(await admin.from("hr_job_categories").insert({ org_id: org, name: "هيئة تعليمية" }).select("id").single())!.id;
   const emp = async (no: string, name: string, uid: string | null, extra: Record<string, unknown> = {}) =>
@@ -59,6 +59,16 @@ try {
   check("principal cannot edit student", !(await upd(P, "students", kid, { full_name: "x" })));
   check("principal cannot edit teacher", !(await upd(P, "teachers", tch, { full_name: "x" })));
   check("vice cannot edit student", !(await upd(VP, "students", kid, { full_name: "x" })));
+  // student affairs: reads students/guardians, edits nothing until the owner grants people_family.edit
+  const SA = await as("sa");
+  const gid = must(await admin.from("guardians").insert({ school_id: S, full_name: "ولي الدليل", phone: "0500000093" }).select("id").single())!.id;
+  check("student affairs can read students", ((await SA.from("students").select("id").eq("id", kid)).data ?? []).length === 1);
+  check("student affairs cannot edit student by default", !(await upd(SA, "students", kid, { full_name: "x" })));
+  check("student affairs cannot edit guardian by default", !(await upd(SA, "guardians", gid, { full_name: "x" })));
+  check("student affairs cannot add a student by default", !!(await SA.from("students").insert({ school_id: S, full_name: "جديد" })).error);
+  check("student affairs cannot edit teacher", !(await upd(SA, "teachers", tch, { full_name: "x" })));
+  must(await admin.from("perm_overrides").insert({ org_id: org, user_id: users.sa, section: "people_family", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: users.owner }));
+  check("after owner grant: student affairs edits student and guardian", (await upd(SA, "students", kid, { full_name: "طالب س" })) && (await upd(SA, "guardians", gid, { full_name: "ولي س" })));
   check("owner edits student and teacher", (await upd(oc, "students", kid, { full_name: "طالب" })) && (await upd(oc, "teachers", tch, { full_name: "معلم" })));
   must(await admin.from("perm_overrides").insert([{ org_id: org, user_id: users.pr, section: "people_family", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: users.owner }, { org_id: org, user_id: users.pr, section: "people_staff", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: users.owner }]));
   check("after owner grant: principal edits student", await upd(P, "students", kid, { full_name: "طالب ٢" }));
