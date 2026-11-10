@@ -18,6 +18,7 @@ import { FormFields, missingRequired } from "@/components/events/form-render";
 import { accountUploader } from "@/components/events/upload";
 import { ItemFiles } from "@/components/events/files";
 import { SectionForms } from "@/components/events/section-forms";
+import { UnifiedCalendar } from "@/components/events/calendar";
 import {
   KIND, KIND_PLURAL, MODE, REG_STATE, StatusPill, AppPill, canAny, fmtDT, hasEvents, newClientKey, useEvtCaps,
   type Answers, type EvtRow, type Field, type Kind,
@@ -53,9 +54,12 @@ function Page() {
   if (caps.error || !caps.data) return <ErrorState message={arabicError(caps.error)} onRetry={() => caps.refetch()} />;
   const c = caps.data;
   const staff = hasEvents(c);
-  const family = ["guardian", "student"].includes(active.role) || (!staff && c.family);
-  if (!staff && !family) return <ForbiddenState />;
-  const tabs = (family && !staff ? (["family"] as Tab[]) : ([
+  const familyRole = ["guardian", "student"].includes(active.role);
+  // staff without any event permission still get the unified calendar (their own tasks, duties, meetings, decisions)
+  const personalOnly = !staff && !familyRole && !!active.schoolId;
+  const family = familyRole || (!staff && !personalOnly && c.family);
+  if (!staff && !family && !personalOnly) return <ForbiddenState />;
+  const tabs = (personalOnly ? (["summary", ...(c.family ? ["family"] : [])] as Tab[]) : family && !staff ? (["family"] as Tab[]) : ([
     "summary",
     ...(["trip", "general", "course"] as Kind[]).filter((k) => canAny(c, k, "view") || (k === "course" && c.delegated > 0)),
     ...(canAny(c, "course", "apps") || c.delegated > 0 ? (["apps"] as Tab[]) : []),
@@ -71,8 +75,8 @@ function Page() {
   const kindTab = cur === "trip" || cur === "general" || cur === "course" ? (cur as Kind) : null;
   return (
     <div>
-      <PageHeader eyebrow={family && !staff ? (active.role === "guardian" ? "ولي الأمر" : "الطالب") : `إدارة المدارس · ${c.owner ? active.orgName : active.schoolName}`} title="الفعاليات"
-        desc={family && !staff ? "الرحلات والفعاليات الموجهة إليك وإلى أبنائك، والدورات المتاحة للتسجيل." : "الرحلات المدرسية والفعاليات العامة والدورات. الزيارات ما زالت في قسمها، ولقاءات أولياء الأمور في «الاجتماعات»."}
+      <PageHeader eyebrow={personalOnly ? active.schoolName : family && !staff ? (active.role === "guardian" ? "ولي الأمر" : "الطالب") : `إدارة المدارس · ${c.owner ? active.orgName : active.schoolName}`} title="الفعاليات"
+        desc={personalOnly ? "تقويمك الموحّد: تكليفاتك وقراراتك المسندة ومناوباتك المنشورة والاجتماعات التي دُعيت إليها." : family && !staff ? "الرحلات والفعاليات الموجهة إليك وإلى أبنائك، والدورات المتاحة للتسجيل." : "الرحلات المدرسية والفعاليات العامة والدورات. الزيارات ما زالت في قسمها، ولقاءات أولياء الأمور في «الاجتماعات»."}
         action={staff && <div className="flex flex-wrap items-center gap-2">
           {c.schools.length > 1 && (
             <select aria-label="المدرسة" className={sm} value={branch} onChange={(e) => setSchool(e.target.value)}>
@@ -90,7 +94,9 @@ function Page() {
           {tabs.map((k) => <Button key={k} role="tab" aria-selected={cur === k} size="sm" variant={cur === k ? "default" : "outline"} onClick={() => nav({ search: { tab: k } })}>{EVT_TAB_LABELS[k]}</Button>)}
         </div>
       )}
-      {cur === "summary" && <Summary org={org} school={branch || null} open={(r) => nav({ search: { tab: r.kind, item: r.id } })} />}
+      {cur === "summary" && <Summary org={org} school={branch || null} showEvents={staff} schoolName={c.owner && !branch ? active.orgName : active.schoolName ?? undefined}
+        personalSchools={familyRole ? [] : branch ? [branch] : c.owner ? c.schools.map((s) => s.id) : active.schoolId ? [active.schoolId] : []}
+        open={(r) => nav({ search: { tab: r.kind, item: r.id } })} />}
       {kindTab && <ItemList org={org} school={branch || null} kind={kindTab} open={(id) => nav({ search: { tab: kindTab, item: id } })} />}
       {cur === "apps" && !item && <AppsList org={org} school={branch || null} status={appStatus} setStatus={setAppStatus} showItem open={(id, it) => nav({ search: { tab: "apps", item: it, app: id } })} />}
       {cur === "forms" && <SectionForms org={org} />}
@@ -136,51 +142,18 @@ function ItemList({ org, school, kind, open }: { org: string; school: string | n
   );
 }
 
-type CalRow = { item_id: string; kind: Kind; title: string; status: string; school: string; starts_at: string; ends_at: string | null; session: string | null };
-const riyadhDay = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" });
-
-function Summary({ org, school, open }: { org: string; school: string | null; open: (r: { id: string; kind: Kind }) => void }) {
-  const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
-  const [month, setMonth] = useState(today.slice(0, 7));
-  const first = `${month}-01`;
-  const last = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).toISOString().slice(0, 10);
-  const all = useList(org, school, null, "", "");
-  const cal = useQuery({ queryKey: ["evt-cal", org, school, month], queryFn: () => rpc<CalRow[]>("evt_calendar", { _org: org, _school: school, _from: first, _to: last }) });
-  const byDay = useMemo(() => { const m = new Map<string, CalRow[]>(); for (const r of cal.data ?? []) { const d = riyadhDay(r.starts_at); m.set(d, [...(m.get(d) ?? []), r]); } return m; }, [cal.data]);
-  const shift = (n: number) => { const d = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1 + n, 1)); setMonth(d.toISOString().slice(0, 7)); };
-  const lead = (new Date(first + "T00:00:00Z").getUTCDay() + 1) % 7; // week starts Saturday
-  const days = Number(last.slice(8, 10));
+function Summary({ org, school, showEvents, personalSchools, schoolName, open }: { org: string; school: string | null; showEvents: boolean; personalSchools: string[]; schoolName?: string | undefined; open: (r: { id: string; kind: Kind }) => void }) {
+  const all = useQuery({ queryKey: ["evt-list", org, school, null, "", ""], enabled: showEvents, refetchInterval: 30_000, queryFn: () => rpc<EvtRow[]>("evt_list", { _org: org, _school: school, _kind: null, _status: null, _q: null }) });
   const rows = all.data ?? [];
   const k = (kind: Kind) => rows.filter((r) => r.kind === kind && ["draft", "published"].includes(r.status));
   const pending = rows.filter((r) => r.kind === "course").reduce((s, r) => s + r.apps.new + r.apps.review + r.apps.info_needed, 0);
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-4">
+      {showEvents && <div className="grid gap-3 sm:grid-cols-4">
         {(["trip", "general", "course"] as Kind[]).map((kind) => <Stat key={kind} label={KIND_PLURAL[kind]} v={k(kind).length} sub={`${k(kind).filter((r) => r.status === "published").length} منشورة`} />)}
         <Stat label="طلبات بانتظار القرار" v={pending} sub="جديد + قيد المراجعة + استكمال" />
-      </div>
-      <div className="rounded-2xl border bg-card p-3">
-        <div className="mb-2 flex items-center gap-2">
-          <Button size="icon" variant="ghost" aria-label="الشهر السابق" onClick={() => shift(-1)}><ChevronRight className="size-4" /></Button>
-          <b className="flex-1 text-center">{new Date(first + "T12:00:00Z").toLocaleDateString("ar-SA-u-ca-gregory-nu-latn", { month: "long", year: "numeric" })}</b>
-          <Button size="icon" variant="ghost" aria-label="الشهر التالي" onClick={() => shift(1)}><ChevronLeft className="size-4" /></Button>
-        </div>
-        <div className="grid grid-cols-7 gap-1 text-center text-xs">
-          {["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"].map((d) => <div key={d} className="py-1 font-semibold text-muted-foreground">{d}</div>)}
-          {Array.from({ length: lead }).map((_, i) => <div key={`l${i}`} />)}
-          {Array.from({ length: days }).map((_, i) => {
-            const d = `${month}-${String(i + 1).padStart(2, "0")}`; const ev = byDay.get(d) ?? [];
-            return (
-              <div key={d} className={`min-h-16 rounded-lg border p-1 text-start ${d === today ? "border-primary" : ""}`}>
-                <span className="text-[11px] text-muted-foreground">{i + 1}</span>
-                {ev.slice(0, 3).map((e, j) => <button key={j} type="button" onClick={() => open({ id: e.item_id, kind: e.kind })} className={`mt-0.5 block w-full truncate rounded px-1 text-start text-[11px] ${e.kind === "trip" ? "bg-primary/15" : e.kind === "course" ? "bg-success/15" : "bg-warning/20"}`} title={e.title}>{e.title}</button>)}
-                {ev.length > 3 && <span className="text-[10px]">+{ev.length - 3}</span>}
-              </div>
-            );
-          })}
-        </div>
-        {cal.error && <p className="mt-2 text-sm text-destructive">{arabicError(cal.error)}</p>}
-      </div>
+      </div>}
+      <UnifiedCalendar org={org} evtSchool={school} showEvents={showEvents} personalSchools={personalSchools} schoolName={schoolName} openEvent={open} />
     </div>
   );
 }
