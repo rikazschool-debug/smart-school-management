@@ -17971,6 +17971,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      _family_only: { Args: { _u: string }; Returns: boolean }
       _file_policy: {
         Args: { _school: string }
         Returns: {
