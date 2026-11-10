@@ -20378,6 +20378,7 @@ export type Database = {
       }
       can_discuss_post: { Args: { _post: string }; Returns: boolean }
       can_edit_staff: { Args: { _school: string }; Returns: boolean }
+      can_edit_students: { Args: { _school: string }; Returns: boolean }
       can_invite: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
