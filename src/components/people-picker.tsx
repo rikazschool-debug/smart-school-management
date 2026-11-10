@@ -7,7 +7,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { arabicError } from "@/lib/session";
 
 /** Why the list is needed — the server applies that purpose's permission (see people_pick in SQL). */
-export type PickPurpose = "perm" | "group" | "direct" | "task" | "duty" | "meeting" | "decision" | "support_assign" | "support_info" | "pc_holder" | "pc_holder_mt_bus" | "pc_holder_mt_school" | "pc_transfer" | "visit_host" | "evt_staff" | "xbranch";
+export type PickPurpose = "perm" | "group" | "direct" | "task" | "duty" | "meeting" | "decision" | "support_assign" | "support_info" | "pc_holder" | "pc_holder_mt_bus" | "pc_holder_mt_school" | "pc_transfer" | "visit_host" | "evt_staff" | "xbranch" | "cs_contact";
 export type Person = { user_id: string; full_name: string; roles: string[]; school_id: string; school_name: string; dept_id: string | null; dept_name: string | null; total?: number };
 
 export const PERSON_ROLE: Record<string, string> = {
