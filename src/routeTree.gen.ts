@@ -74,6 +74,8 @@ import { Route as AuthenticatedAppAdminDutiesRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppChildIdRouteImport } from './routes/_authenticated/app/child.$id'
 import { Route as AuthenticatedAppClassroomsIndexRouteImport } from './routes/_authenticated/app/classrooms.index'
 import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_authenticated/app/classrooms.$id'
+import { Route as AuthenticatedAppHealthIndexRouteImport } from './routes/_authenticated/app/health.index'
+import { Route as AuthenticatedAppHealthIdRouteImport } from './routes/_authenticated/app/health.$id'
 import { Route as AuthenticatedAppHomeworkIndexRouteImport } from './routes/_authenticated/app/homework.index'
 import { Route as AuthenticatedAppHomeworkIdRouteImport } from './routes/_authenticated/app/homework.$id'
 import { Route as AuthenticatedAppHomeworkNewRouteImport } from './routes/_authenticated/app/homework.new'
@@ -466,6 +468,18 @@ const AuthenticatedAppClassroomsIdRoute =
     path: '/classrooms/$id',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppHealthIndexRoute =
+  AuthenticatedAppHealthIndexRouteImport.update({
+    id: '/health/',
+    path: '/health/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppHealthIdRoute =
+  AuthenticatedAppHealthIdRouteImport.update({
+    id: '/health/$id',
+    path: '/health/$id',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppHomeworkIndexRoute =
   AuthenticatedAppHomeworkIndexRouteImport.update({
     id: '/homework/',
@@ -712,6 +726,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
   '/app/child/$id': typeof AuthenticatedAppChildIdRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
+  '/app/health/$id': typeof AuthenticatedAppHealthIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/app/hr/assets': typeof AuthenticatedAppHrAssetsRoute
@@ -736,6 +751,7 @@ export interface FileRoutesByFullPath {
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
+  '/app/health/': typeof AuthenticatedAppHealthIndexRoute
   '/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
   '/app/virtual-classes/': typeof AuthenticatedAppVirtualClassesIndexRoute
   '/app/admin/meetings/$id': typeof AuthenticatedAppAdminMeetingsIdRoute
@@ -808,6 +824,7 @@ export interface FileRoutesByTo {
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
   '/app/child/$id': typeof AuthenticatedAppChildIdRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
+  '/app/health/$id': typeof AuthenticatedAppHealthIdRoute
   '/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/app/hr/assets': typeof AuthenticatedAppHrAssetsRoute
@@ -832,6 +849,7 @@ export interface FileRoutesByTo {
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
+  '/app/health': typeof AuthenticatedAppHealthIndexRoute
   '/app/homework': typeof AuthenticatedAppHomeworkIndexRoute
   '/app/virtual-classes': typeof AuthenticatedAppVirtualClassesIndexRoute
   '/app/admin/meetings/$id': typeof AuthenticatedAppAdminMeetingsIdRoute
@@ -907,6 +925,7 @@ export interface FileRoutesById {
   '/_authenticated/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
   '/_authenticated/app/child/$id': typeof AuthenticatedAppChildIdRoute
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
+  '/_authenticated/app/health/$id': typeof AuthenticatedAppHealthIdRoute
   '/_authenticated/app/homework/$id': typeof AuthenticatedAppHomeworkIdRoute
   '/_authenticated/app/homework/new': typeof AuthenticatedAppHomeworkNewRoute
   '/_authenticated/app/hr_/assets': typeof AuthenticatedAppHrAssetsRoute
@@ -931,6 +950,7 @@ export interface FileRoutesById {
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
+  '/_authenticated/app/health/': typeof AuthenticatedAppHealthIndexRoute
   '/_authenticated/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
   '/_authenticated/app/virtual-classes/': typeof AuthenticatedAppVirtualClassesIndexRoute
   '/_authenticated/app/admin/meetings/$id': typeof AuthenticatedAppAdminMeetingsIdRoute
@@ -1006,6 +1026,7 @@ export interface FileRouteTypes {
     | '/app/admin/duties'
     | '/app/child/$id'
     | '/app/classrooms/$id'
+    | '/app/health/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
     | '/app/hr/assets'
@@ -1030,6 +1051,7 @@ export interface FileRouteTypes {
     | '/api/public/wati/webhook'
     | '/app/admin/'
     | '/app/classrooms/'
+    | '/app/health/'
     | '/app/homework/'
     | '/app/virtual-classes/'
     | '/app/admin/meetings/$id'
@@ -1102,6 +1124,7 @@ export interface FileRouteTypes {
     | '/app/admin/duties'
     | '/app/child/$id'
     | '/app/classrooms/$id'
+    | '/app/health/$id'
     | '/app/homework/$id'
     | '/app/homework/new'
     | '/app/hr/assets'
@@ -1126,6 +1149,7 @@ export interface FileRouteTypes {
     | '/api/public/wati/webhook'
     | '/app/admin'
     | '/app/classrooms'
+    | '/app/health'
     | '/app/homework'
     | '/app/virtual-classes'
     | '/app/admin/meetings/$id'
@@ -1200,6 +1224,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/admin/duties'
     | '/_authenticated/app/child/$id'
     | '/_authenticated/app/classrooms/$id'
+    | '/_authenticated/app/health/$id'
     | '/_authenticated/app/homework/$id'
     | '/_authenticated/app/homework/new'
     | '/_authenticated/app/hr_/assets'
@@ -1224,6 +1249,7 @@ export interface FileRouteTypes {
     | '/api/public/wati/webhook'
     | '/_authenticated/app/admin/'
     | '/_authenticated/app/classrooms/'
+    | '/_authenticated/app/health/'
     | '/_authenticated/app/homework/'
     | '/_authenticated/app/virtual-classes/'
     | '/_authenticated/app/admin/meetings/$id'
@@ -1710,6 +1736,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppClassroomsIdRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/health/': {
+      id: '/_authenticated/app/health/'
+      path: '/health'
+      fullPath: '/app/health/'
+      preLoaderRoute: typeof AuthenticatedAppHealthIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/health/$id': {
+      id: '/_authenticated/app/health/$id'
+      path: '/health/$id'
+      fullPath: '/app/health/$id'
+      preLoaderRoute: typeof AuthenticatedAppHealthIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/homework/': {
       id: '/_authenticated/app/homework/'
       path: '/homework'
@@ -1983,6 +2023,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppAdminDutiesRoute: typeof AuthenticatedAppAdminDutiesRoute
   AuthenticatedAppChildIdRoute: typeof AuthenticatedAppChildIdRoute
   AuthenticatedAppClassroomsIdRoute: typeof AuthenticatedAppClassroomsIdRoute
+  AuthenticatedAppHealthIdRoute: typeof AuthenticatedAppHealthIdRoute
   AuthenticatedAppHomeworkIdRoute: typeof AuthenticatedAppHomeworkIdRoute
   AuthenticatedAppHomeworkNewRoute: typeof AuthenticatedAppHomeworkNewRoute
   AuthenticatedAppHrAssetsRoute: typeof AuthenticatedAppHrAssetsRoute
@@ -2002,6 +2043,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppNoticeIdRoute: typeof AuthenticatedAppNoticeIdRoute
   AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
+  AuthenticatedAppHealthIndexRoute: typeof AuthenticatedAppHealthIndexRoute
   AuthenticatedAppHomeworkIndexRoute: typeof AuthenticatedAppHomeworkIndexRoute
   AuthenticatedAppVirtualClassesIndexRoute: typeof AuthenticatedAppVirtualClassesIndexRoute
   AuthenticatedAppAdminMeetingsIdRoute: typeof AuthenticatedAppAdminMeetingsIdRoute
@@ -2067,6 +2109,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppAdminDutiesRoute: AuthenticatedAppAdminDutiesRoute,
   AuthenticatedAppChildIdRoute: AuthenticatedAppChildIdRoute,
   AuthenticatedAppClassroomsIdRoute: AuthenticatedAppClassroomsIdRoute,
+  AuthenticatedAppHealthIdRoute: AuthenticatedAppHealthIdRoute,
   AuthenticatedAppHomeworkIdRoute: AuthenticatedAppHomeworkIdRoute,
   AuthenticatedAppHomeworkNewRoute: AuthenticatedAppHomeworkNewRoute,
   AuthenticatedAppHrAssetsRoute: AuthenticatedAppHrAssetsRoute,
@@ -2086,6 +2129,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppNoticeIdRoute: AuthenticatedAppNoticeIdRoute,
   AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
+  AuthenticatedAppHealthIndexRoute: AuthenticatedAppHealthIndexRoute,
   AuthenticatedAppHomeworkIndexRoute: AuthenticatedAppHomeworkIndexRoute,
   AuthenticatedAppVirtualClassesIndexRoute:
     AuthenticatedAppVirtualClassesIndexRoute,

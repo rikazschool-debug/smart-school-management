@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
+import { HeartPulse, BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { StatusPill } from "@/components/family-visits/shared";
@@ -9,6 +9,7 @@ import { StudentHomework } from "@/components/homework/student-homework";
 import { DAYS_AR } from "@/lib/timetable-model";
 import { arabicError } from "@/lib/session";
 import { cn } from "@/lib/utils";
+import { HealthFile } from "@/components/health/health-file";
 
 /** One child's (or the student's own) overview. Everything comes from family_child, which checks the link on the server. */
 export type ChildData = {
@@ -37,7 +38,7 @@ export function useChild(studentId: string) {
   });
 }
 
-type Tab = "attendance" | "schedule" | "classrooms" | "homework" | "visits" | "finance";
+type Tab = "attendance" | "schedule" | "classrooms" | "homework" | "visits" | "finance" | "health";
 
 export function ChildOverview({ studentId }: { studentId: string }) {
   const q = useChild(studentId);
@@ -53,7 +54,7 @@ export function ChildOverview({ studentId }: { studentId: string }) {
     { k: "schedule", label: "الجدول", icon: CalendarDays },
     { k: "classrooms", label: "الفصل الرقمي", icon: School },
     { k: "homework", label: "الواجبات", icon: ClipboardList },
-    ...(guardian ? [{ k: "visits" as Tab, label: "الزيارات", icon: UserRound }, { k: "finance" as Tab, label: "البيانات المالية", icon: Landmark }] : []),
+    ...(guardian ? [{ k: "visits" as Tab, label: "الزيارات", icon: UserRound }, { k: "finance" as Tab, label: "البيانات المالية", icon: Landmark }, { k: "health" as Tab, label: "الملف الصحي", icon: HeartPulse }] : []),
   ];
   return (
     <div className="space-y-5">
@@ -98,6 +99,7 @@ export function ChildOverview({ studentId }: { studentId: string }) {
         </div>
       )}
       {tab === "finance" && guardian && d.finance && <Finance f={d.finance} />}
+      {tab === "health" && guardian && <HealthFile studentId={d.student.id} />}
     </div>
   );
 }

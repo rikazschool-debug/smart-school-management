@@ -12,7 +12,7 @@ export type Person = { user_id: string; full_name: string; roles: string[]; scho
 
 export const PERSON_ROLE: Record<string, string> = {
   org_owner: "مالك المؤسسة", principal: "مدير المدرسة", vice_principal: "وكيل", dept_head: "رئيس قسم", supervisor: "مشرف تربوي",
-  student_affairs: "شؤون الطلاب", teacher: "معلم", student: "طالب", guardian: "ولي أمر", counselor: "مرشد", nurse: "ممرض", security: "الأمن",
+  student_affairs: "شؤون الطلاب", teacher: "معلم", student: "طالب", guardian: "ولي أمر", counselor: "مرشد", nurse: "المرشدة الصحية", security: "الأمن",
 };
 export const rolesLabel = (rs: string[]) => rs.map((r) => PERSON_ROLE[r] ?? r).join("، ");
 

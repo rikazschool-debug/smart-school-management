@@ -814,3 +814,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## Nov 10 2026 — Principal notices
 - _perm_base grants notices view/draft/send to principal of that branch. Browser: demo principal sees «الإشعارات» in menu; new-notice form lists only his branch; categories students/guardians/staff/teachers + specific people.
+
+## Nov 10 2026 — School health section
+- Role nurse renamed «المرشدة الصحية»; health files, meds schedule, clinic log, guardian tab. scripts/health-e2e.ts 17/17; roles.test 27/27.

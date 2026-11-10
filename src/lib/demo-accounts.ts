@@ -14,7 +14,7 @@ export const DEMO_ACCOUNTS: { role: Role; email: string; name: string; label?: s
   { role: "guardian", email: "demo-guardian@rikaz.demo", name: "محمد الأحمد" },
   { role: "student", email: "demo-student@rikaz.demo", name: "سارة محمد" },
   { role: "counselor", email: "demo-counselor@rikaz.demo", name: "المرشد الطلابي" },
-  { role: "nurse", email: "demo-nurse@rikaz.demo", name: "ممرض المدرسة" },
+  { role: "nurse", email: "demo-nurse@rikaz.demo", name: "المرشدة الصحية" },
   { role: "security", email: "demo-security@rikaz.demo", name: "الأمن والاستقبال" },
   // Maintenance staff: membership role teacher + an owner-assigned permission template (scripts/seed-maint-demo.ts).
   { role: "teacher", email: "demo-maint-school@rikaz.demo", name: "مدير صيانة المدارس", label: "مدير صيانة المدارس", template: "مسؤول صيانة مدارس" },

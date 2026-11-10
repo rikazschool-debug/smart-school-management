@@ -40,7 +40,7 @@ describe("role rules", () => {
   });
   it("counselor, nurse and security dashboards expose only communication, notifications and visits", () => {
     expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
-    expect(NAV_BY_ROLE.nurse).toEqual(["home", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
+    expect(NAV_BY_ROLE.nurse).toEqual(["home", "health", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
     expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
   });
   it("students get their own chats only — no circulars, groups or management; class groups live in the classroom", () => {
