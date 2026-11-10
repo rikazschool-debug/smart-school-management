@@ -160,6 +160,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <Dialog open={!!guarding} onOpenChange={(o) => !o && setGuarding(null)}>
         <DialogContent dir="rtl">
           <DialogHeader><DialogTitle>ولي أمر {guarding?.["full_name"]}</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">يُنشأ حساب الطالب وحساب ولي الأمر تلقائيًا برقم الهوية بعد الحفظ، وتصل رسالة على جوال ولي الأمر إن كان مسجلًا.</p>
           {guarding && <GuardianQuickAdd key={guarding["id"]} studentId={guarding["id"]} studentName={guarding["full_name"]} onDone={() => setGuarding(null)} />}
         </DialogContent>
       </Dialog>
@@ -206,7 +207,7 @@ function StudentLinks({ studentId, schoolId, canWrite, email, hasAccount, role }
           ) : <span className="ms-auto text-xs text-muted-foreground">غير موثّقة</span>}
         </div>
       ))}
-      <AccountPanel kind="student" id={studentId} canWrite={canWrite} />
+      <AccountPanel kind="student" id={studentId} canWrite={role === "org_owner"} />
       {canWrite && email && !hasAccount && role === "org_owner" && (
         <AccountButton role={role} kind="student" recordId={studentId} email={email} schoolId={schoolId} label="دعوة ببريد الطالب (بديل)" />
       )}
