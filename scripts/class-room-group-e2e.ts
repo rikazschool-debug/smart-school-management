@@ -73,7 +73,8 @@ try {
   check("assigned teacher and principal are members", mA.includes(users.t1) && mA.includes(users.p1));
   check("notification link opens the classroom tab", (must(await admin.rpc("_conv_link", { _conv: GA })) as string) === `/app/classrooms/section/${RA}?tab=group`);
 
-  // new class: section B has no students yet → no group; creating the classroom prepares one
+  // new class: simulate a section without any group yet (assignment triggers may have made one) → creating the classroom prepares one
+  for (const g of await groupOf(B)) must(await admin.from("conversations").delete().eq("id", g.id));
   check("new class: no group before the classroom", (await groupOf(B)).length === 0);
   must(await admin.rpc("ensure_classroom", { _course: cB }));
   const gB = await groupOf(B);
