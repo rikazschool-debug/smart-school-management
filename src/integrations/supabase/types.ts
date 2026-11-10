@@ -21882,6 +21882,10 @@ export type Database = {
           phone: string
         }[]
       }
+      hr_guardian_from_employee: {
+        Args: { _emp: string; _school: string }
+        Returns: Json
+      }
       hr_hs_assign: {
         Args: { _emp: string; _note?: string; _start: string; _unit: string }
         Returns: string

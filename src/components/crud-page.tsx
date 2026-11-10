@@ -177,7 +177,7 @@ export function CrudTable({
   /** called with the new row after a successful create */ onCreated?: ((r: Row) => void) | undefined;
   /** called with the row id after a successful edit */ onUpdated?: ((id: string) => void) | undefined;
   /** people lists: name opens the side card; selection, tag filter and bulk actions (all re-checked on the server) */ person?: { kind: PersonKind } | undefined;
-  /** shown above the add form; `fill` merges values into it (e.g. copy from an HR file) */ formExtra?: ((fill: (v: Row) => void) => ReactNode) | undefined;
+  /** shown above the add form; `fill` merges values into it (e.g. copy from an HR file) */ formExtra?: ((fill: (v: Row) => void, close: () => void) => ReactNode) | undefined;
 }) {
   const qc = useQueryClient();
   const [input, setInput] = useState("");
@@ -442,7 +442,7 @@ export function CrudTable({
               )}
             </div>
           )}
-          {editing && !editing["id"] && formExtra?.((v) => { setEditing((e) => ({ ...(e ?? {}), ...v })); setFormKey((k) => k + 1); })}
+          {editing && !editing["id"] && formExtra?.((v) => { setEditing((e) => ({ ...(e ?? {}), ...v })); setFormKey((k) => k + 1); }, () => { setEditing(null); void qc.invalidateQueries(); })}
           {editing && <RecordForm key={formKey} fields={fields} schoolId={schoolId} initial={editing} onSubmit={(v) => save.mutate(v)} submitting={save.isPending} />}
         </DialogContent>
       </Dialog>
