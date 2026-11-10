@@ -17,7 +17,7 @@ export function SignupRequests() {
     const note = await askText(`${r["ref"]} — ${ST[status]}: ملاحظة (اختيارية)`, { long: true });
     if (note === null) return;
     const { error } = await db.rpc("platform_signup_set", { _id: r["id"], _status: status, _note: note ?? "" });
-    if (error) return toast.error(arabicError(error));
+    if (error) { toast.error(arabicError(error)); return; }
     toast.success("تم التحديث"); qc.invalidateQueries({ queryKey: ["platform-signup-requests"] });
   }
   const rows = q.data ?? [];
