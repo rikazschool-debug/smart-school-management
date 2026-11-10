@@ -53,7 +53,7 @@ try {
   check("8 view-only vice reads the board by direct request", !b2.error && b2.data !== null, b2.error?.message);
   const self = await v1.c.rpc("perm_override_set", { _org: org, _user: v1.id, _section: "attendance", _action: "view", _effect: "grant", _scope: "org", _reason: "ذاتي" });
   check("9 vice cannot self-grant", !!self.error);
-  const ov = (await admin.from("perm_overrides").select("id").eq("user_id", v2.id).eq("section", "attendance")).data ?? [];
+  const ovr = await admin.from("perm_overrides").select("*").eq("user_id", v2.id).eq("section", "attendance"); if (ovr.error) console.log(ovr.error.message); const ov = ovr.data ?? [];
   const rec = await v2.c.rpc("manual_attendance", { _student: "00000000-0000-0000-0000-000000000000", _status: "arrived", _reason: "تجربة" });
   check("10a view-only vice cannot record by direct request", !!rec.error);
   check("10 explicit individual grant kept after default removal", ov.length === 1, ov.length);
