@@ -13184,6 +13184,44 @@ export type Database = {
           },
         ]
       }
+      org_subscriptions: {
+        Row: {
+          ends_on: string
+          note: string | null
+          org_id: string
+          plan: string
+          starts_on: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ends_on: string
+          note?: string | null
+          org_id: string
+          plan: string
+          starts_on: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ends_on?: string
+          note?: string | null
+          org_id?: string
+          plan?: string
+          starts_on?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -19194,6 +19232,7 @@ export type Database = {
         Args: { _d: Json; _id: string; _mode: string; _person: string }
         Returns: undefined
       }
+      _plan_sections: { Args: { _plan: string }; Returns: string[] }
       _pp_name: { Args: { _u: string }; Returns: string }
       _pp_note_can: {
         Args: {
@@ -22533,6 +22572,7 @@ export type Database = {
         }[]
       }
       org_sections_get: { Args: { _org: string }; Returns: Json }
+      org_subscription: { Args: { _org: string }; Returns: Json }
       pc_ack: { Args: { _move: string }; Returns: undefined }
       pc_alerts_tick: { Args: never; Returns: number }
       pc_branch_overview: { Args: { _org: string }; Returns: Json }
@@ -22988,6 +23028,17 @@ export type Database = {
         Args: { _id: string; _note: string; _status: string }
         Returns: undefined
       }
+      platform_sub_save: {
+        Args: {
+          _end: string
+          _note: string
+          _org: string
+          _plan: string
+          _start: string
+        }
+        Returns: undefined
+      }
+      platform_subs_list: { Args: never; Returns: Json }
       pp_access_preview: {
         Args: {
           _action: string
