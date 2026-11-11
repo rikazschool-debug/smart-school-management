@@ -20734,6 +20734,7 @@ export type Database = {
         Args: { _org: string; _uid: string }
         Returns: string[]
       }
+      _wa_who: { Args: { _u: string }; Returns: string }
       _xb_ok: { Args: { _org: string; _user: string }; Returns: boolean }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
