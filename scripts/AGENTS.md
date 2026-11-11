@@ -126,3 +126,4 @@
 - scripts/family-readonly-e2e.ts: guardian/student read-only records (direct writes + staff RPCs refused, own photo action only, owner edits; 30 checks).
 - scripts/staff-dir-e2e.ts: principal HR staff directory (once per employee, account status, no sensitive fields, other roles/branches refused; 11 checks).
 - scripts/wa-assign-e2e.ts: WhatsApp assignment access (mine/branch perms, team→branch isolation, unlinked codes, reassignment sync, owner-only links; 17 checks, cleans its test logins).
+- scripts/wa-card-e2e.ts: WhatsApp card/notes/tags/quick replies for owner, authorized and unauthorized staff (21 checks).
