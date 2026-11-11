@@ -88,9 +88,14 @@ async function pullAssign(a: Adm, maxAgeSec: number) {
       }
       if (list.length < 100) break;
     }
-    const r = await a.rpc("_wa_assign_save" as never, { _items: items, _contacts: contacts } as never);
-    if (r.error) throw new Error(r.error.message);
-    return r.data as { saved: number; changed: number };
+    // save in batches so one call never hits the database statement timeout
+    let saved = 0, changed = 0; const B = 400;
+    for (let i = 0; i < Math.max(items.length, contacts.length); i += B) {
+      const r = await a.rpc("_wa_assign_save" as never, { _items: items.slice(i, i + B), _contacts: contacts.slice(i, i + B) } as never);
+      if (r.error) throw new Error(r.error.message);
+      const d = r.data as { saved: number; changed: number }; saved += d.saved; changed += d.changed;
+    }
+    return { saved, changed };
   } catch (e) {
     const m = e instanceof Error ? e.message : "sync";
     await a.rpc("_wa_assign_fail" as never, { _err: m } as never);
