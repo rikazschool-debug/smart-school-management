@@ -60,7 +60,7 @@ export const waSync = createServerFn({ method: "POST" })
 type Adm = Awaited<ReturnType<typeof admin>>;
 /** WATI is the assignment source: pull assignee/team codes (conversations/query, last 90 days) + contact owner/team names. */
 async function pullAssign(a: Adm, maxAgeSec: number) {
-  const age = await a.rpc("_wa_assign_age" as never);
+  const age = (await a.rpc("_wa_assign_age" as never)) as { data: unknown };
   if (typeof age.data === "number" && age.data < maxAgeSec) return { skipped: true };
   try {
     const now = new Date(); const from = new Date(now.getTime() - 90 * 864e5);
