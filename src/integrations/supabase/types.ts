@@ -17401,6 +17401,47 @@ export type Database = {
           },
         ]
       }
+      wa_bot_branches: {
+        Row: {
+          choice_id: string | null
+          choice_key: string
+          choice_title: string
+          id: string
+          org_id: string
+          school_id: string
+          set_at: string
+          set_by: string | null
+        }
+        Insert: {
+          choice_id?: string | null
+          choice_key: string
+          choice_title: string
+          id?: string
+          org_id: string
+          school_id: string
+          set_at?: string
+          set_by?: string | null
+        }
+        Update: {
+          choice_id?: string | null
+          choice_key?: string
+          choice_title?: string
+          id?: string
+          org_id?: string
+          school_id?: string
+          set_at?: string
+          set_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_bot_branches_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wa_connection: {
         Row: {
           created_at: string
@@ -17475,6 +17516,10 @@ export type Database = {
       wa_conversations: {
         Row: {
           assign_seen_at: string | null
+          bot_choice_at: string | null
+          bot_choice_id: string | null
+          bot_choice_title: string | null
+          bot_school_id: string | null
           contact_id: string | null
           contact_name: string | null
           contact_owner: string | null
@@ -17495,6 +17540,10 @@ export type Database = {
         }
         Insert: {
           assign_seen_at?: string | null
+          bot_choice_at?: string | null
+          bot_choice_id?: string | null
+          bot_choice_title?: string | null
+          bot_school_id?: string | null
           contact_id?: string | null
           contact_name?: string | null
           contact_owner?: string | null
@@ -17515,6 +17564,10 @@ export type Database = {
         }
         Update: {
           assign_seen_at?: string | null
+          bot_choice_at?: string | null
+          bot_choice_id?: string | null
+          bot_choice_title?: string | null
+          bot_school_id?: string | null
           contact_id?: string | null
           contact_name?: string | null
           contact_owner?: string | null
@@ -17535,6 +17588,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "wa_conversations_bot_school_id_fkey"
+            columns: ["bot_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "wa_conversations_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
@@ -17546,6 +17606,8 @@ export type Database = {
       wa_messages: {
         Row: {
           body: string | null
+          choice_id: string | null
+          choice_title: string | null
           conversation_id: string
           created_at: string
           direction: string
@@ -17565,6 +17627,8 @@ export type Database = {
         }
         Insert: {
           body?: string | null
+          choice_id?: string | null
+          choice_title?: string | null
           conversation_id: string
           created_at?: string
           direction: string
@@ -17584,6 +17648,8 @@ export type Database = {
         }
         Update: {
           body?: string | null
+          choice_id?: string | null
+          choice_title?: string | null
           conversation_id?: string
           created_at?: string
           direction?: string
@@ -20460,7 +20526,12 @@ export type Database = {
         Args: { _contacts: Json; _items: Json }
         Returns: Json
       }
+      _wa_bot_pick: {
+        Args: { _conv: string; _msg: string }
+        Returns: undefined
+      }
       _wa_can: { Args: { _org: string }; Returns: boolean }
+      _wa_choice: { Args: { _p: Json }; Returns: Json }
       _wa_conv: {
         Args: { _name: string; _wa: string; _wati: string }
         Returns: string
@@ -20469,6 +20540,10 @@ export type Database = {
         Args: { _conv: string }
         Returns: {
           assign_seen_at: string | null
+          bot_choice_at: string | null
+          bot_choice_id: string | null
+          bot_choice_title: string | null
+          bot_school_id: string | null
           contact_id: string | null
           contact_name: string | null
           contact_owner: string | null
@@ -20498,6 +20573,7 @@ export type Database = {
         Args: { _key: string; _payload: Json; _type: string }
         Returns: Json
       }
+      _wa_live_users: { Args: { _org: string }; Returns: string[] }
       _wa_mine: {
         Args: {
           _uid: string
@@ -20505,6 +20581,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      _wa_norm: { Args: { _t: string }; Returns: string }
       _wa_notify_targets: { Args: { _conv: string }; Returns: string[] }
       _wa_org: { Args: never; Returns: string }
       _wa_out_claim: {
@@ -24976,6 +25053,11 @@ export type Database = {
       }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
       vice_teacher_ids: { Args: never; Returns: string[] }
+      wa_bot_choices: { Args: never; Returns: Json }
+      wa_bot_link: {
+        Args: { _id: string; _school: string; _title: string }
+        Returns: undefined
+      }
       wa_codes: { Args: never; Returns: Json }
       wa_contact_card: { Args: { _conv: string }; Returns: Json }
       wa_conv_ref: { Args: { _conv: string }; Returns: Json }
