@@ -262,6 +262,8 @@ async function verifyJob(a: Adm, id: string) {
   for (let i = 0; i < 3 && !seen; i++) { if (i) await new Promise((r) => setTimeout(r, 1500)); seen = await readAssign(job); }
   const fin = (status: string, err: string | null) => a.rpc("_wa_transfer_finish" as never, { _id: id, _status: status, _error: err, _observed: seen } as never);
   if (seen) { await fin("done", null); return { status: "done" }; }
+  // after 2 minutes WATI's current assignment is the settled answer: the transfer did not happen
+  if (Date.now() - new Date(job["created_at"] as string).getTime() > 120_000) { await fin("failed", "لم يطبّق WATI التحويل؛ بقي الإسناد الفعلي كما هو"); return { status: "failed", error: "لم يطبّق WATI التحويل؛ بقي الإسناد الفعلي كما هو" }; }
   await fin("unknown", "لم يؤكد WATI الإسناد الجديد بعد");
   return { status: "unknown", error: "لم يؤكد WATI الإسناد الجديد بعد" };
 }
