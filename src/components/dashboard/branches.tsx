@@ -31,16 +31,17 @@ export function BranchesOverview({ orgId }: { orgId: string }) {
       {rows.map((s) => (
         <Link key={s["id"]} to="/app/school-home" search={{ s: s["id"] }}
           className={"group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-lg " + (s["is_active"] ? "" : "border-dashed opacity-80")}>
-          <div className="h-1.5 bg-gradient-to-l from-primary to-primary/40" />
-          <div className="flex flex-1 flex-col gap-4 p-5">
-            <div className="flex items-start gap-3">
-              <SchoolLogo schoolId={s["id"]} className="size-14 shrink-0 rounded-xl border bg-background object-contain p-1" fallback={<span className="grid size-14 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Building2 className="size-6" /></span>} />
-              <div className="min-w-0 flex-1">
-                <h2 className="font-bold leading-snug">{s["name"]}</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">{[s["city"], s["stage_type"]].filter(Boolean).join(" · ") || "—"}</p>
+          <div className="relative bg-gradient-to-l from-primary/15 via-primary/5 to-transparent px-5 pb-4 pt-5">
+            <span className={"absolute left-4 top-4 rounded-full px-2.5 py-0.5 text-xs font-medium " + (s["is_active"] ? "bg-success/15 text-success" : "bg-muted text-muted-foreground")}>{s["is_active"] ? "● نشطة" : "موقوفة"}</span>
+            <div className="flex items-center gap-3">
+              <SchoolLogo schoolId={s["id"]} className="size-16 shrink-0 rounded-2xl border-2 border-background bg-background object-contain p-1 shadow-md" fallback={<span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md"><Building2 className="size-7" /></span>} />
+              <div className="min-w-0 flex-1 pl-14">
+                <h2 className="text-base font-bold leading-snug">{s["name"]}</h2>
+                <p className="mt-1 text-xs text-muted-foreground">{[s["city"], s["stage_type"], s["code"]].filter(Boolean).join(" · ") || "—"}</p>
               </div>
-              <span className={"shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium " + (s["is_active"] ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>{s["is_active"] ? "نشطة" : "موقوفة"}</span>
             </div>
+          </div>
+          <div className="flex flex-1 flex-col gap-4 p-5 pt-4">
             <div className="grid gap-1.5 rounded-xl bg-secondary/40 p-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><MapPin className="size-3.5 shrink-0" /><span className="truncate">{s["address"] || "العنوان غير مسجل"}</span></span>
               <span className="flex items-center gap-1.5"><Phone className="size-3.5 shrink-0" /><span dir="ltr">{s["phone"] || "—"}</span></span>
