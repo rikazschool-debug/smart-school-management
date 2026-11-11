@@ -25,7 +25,8 @@ let org = "";
 try {
   const s = await watiSync(); ok("real WATI assignment sync saved", s.saved > 0, `saved=${s.saved}`);
   org = ((await admin.from("wa_connection").select("org_id").eq("id", "wati_main").single()).data as any).org_id;
-  const { data: convs } = await admin.from("wa_conversations").select("id,wati_assignee,wati_team_ids").eq("org_id", org);
+  const convs: any[] = [];
+  for (let f = 0; ; f += 1000) { const { data } = await admin.from("wa_conversations").select("id,wati_assignee,wati_team_ids").eq("org_id", org).order("id").range(f, f + 999); convs.push(...(data ?? [])); if ((data ?? []).length < 1000) break; }
   const { data: schools } = await admin.from("schools").select("id,name").eq("org_id", org).eq("is_active", true).order("name");
   const preOps = new Set(((await admin.from("wa_operator_links").select("wati_id").eq("org_id", org)).data ?? []).map((x: any) => x.wati_id));
   const preTeams = new Set(((await admin.from("wa_team_links").select("wati_id").eq("org_id", org)).data ?? []).map((x: any) => x.wati_id));
@@ -62,13 +63,13 @@ try {
   const expMine = convs!.filter((c) => c.wati_assignee === opX).map((c) => c.id).sort();
   const la = (await list(A.c, "mine"))!;
   ok("A «محادثاتي» = exactly the chats WATI assigns to A's code", JSON.stringify(la.map((x) => x.id).sort()) === JSON.stringify(expMine), `${la.length}/${expMine.length}`);
-  ok("A sees nothing else without «محادثات الفرع»", ((await list(A.c))!).every((x) => x.wati_assignee === undefined ? expMine.includes(x.id) : true));
+  ok("A sees nothing else without «محادثات الفرع»", ((await list(A.c))!).every((x) => expMine.includes(x.id)));
 
   await grant(B.id, "branch"); await link("team", t1, sB.id); await link("team", t2, sA.id);
   const lb = (await list(B.c))!.map((x) => x.id);
   const exp1 = convs!.filter((c) => c.wati_team_ids?.includes(t1)).map((c) => c.id);
   const only2 = convs!.filter((c) => c.wati_team_ids?.includes(t2) && !c.wati_team_ids.includes(t1)).map((c) => c.id);
-  ok("B sees its branch team's chats", exp1.every((id) => lb.includes(id)) && lb.length === exp1.length, `${lb.length}/${exp1.length}`);
+  ok("B sees its branch team's chats (list caps at 300)", lb.every((id) => exp1.includes(id)) && lb.length === Math.min(300, exp1.length), `${lb.length}/${exp1.length}`);
   ok("B does not see the other branch's team chats", only2.every((id) => !lb.includes(id)));
   const t2Conv = only2[0]!;
   ok("B opening another branch chat is refused", !!(await B.c.rpc("wa_messages_list", { _conv: t2Conv })).error);
