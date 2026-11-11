@@ -264,7 +264,7 @@ async function readAssign(job: Record<string, unknown>) {
 /** WATI staff list (legacy v1, the only route that returns operator emails) → wa_operator_links.wati_email. */
 async function syncOperatorEmails(a: Adm) {
   const j = await wati(`/${tenant()}/api/v1/operators`);
-  const ops = ((j["result"] as Record<string, unknown>[] | undefined) ?? []).map((o) => ({ id: o["id"], name: o["fullName"] ?? null, bot: !!o["isBot"], email: o["isBot"] ? null : o["email"] ?? null }));
+  const ops = ((j["result"] as Record<string, unknown>[] | undefined) ?? []).map((o) => ({ id: o["id"], name: o["fullName"] ?? null, bot: !!o["isBot"], teams: o["teamIds"] ?? [], email: o["isBot"] ? null : o["email"] ?? null }));
   if (!ops.length) return; // never wipe links on an empty/odd answer
   await a.rpc("_wa_operator_emails" as never, { _ops: ops } as never);
 }

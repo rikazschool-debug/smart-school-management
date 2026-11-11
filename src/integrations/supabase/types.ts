@@ -17832,27 +17832,30 @@ export type Database = {
       }
       wa_team_links: {
         Row: {
+          central: boolean
           label: string | null
           org_id: string
-          school_id: string
+          school_id: string | null
           updated_at: string
           updated_by: string | null
           wati_id: string
           wati_name: string | null
         }
         Insert: {
+          central?: boolean
           label?: string | null
           org_id: string
-          school_id: string
+          school_id?: string | null
           updated_at?: string
           updated_by?: string | null
           wati_id: string
           wati_name?: string | null
         }
         Update: {
+          central?: boolean
           label?: string | null
           org_id?: string
-          school_id?: string
+          school_id?: string | null
           updated_at?: string
           updated_by?: string | null
           wati_id?: string
@@ -17967,6 +17970,7 @@ export type Database = {
           is_bot: boolean
           org_id: string
           seen_at: string
+          team_ids: string[]
           wati_id: string
         }
         Insert: {
@@ -17975,6 +17979,7 @@ export type Database = {
           is_bot?: boolean
           org_id: string
           seen_at?: string
+          team_ids?: string[]
           wati_id: string
         }
         Update: {
@@ -17983,6 +17988,7 @@ export type Database = {
           is_bot?: boolean
           org_id?: string
           seen_at?: string
+          team_ids?: string[]
           wati_id?: string
         }
         Relationships: []
