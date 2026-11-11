@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
+import { useSchoolPerms } from "@/lib/school-perms";
 import {
   ADM_PAGE, AdminFiles, DAY_NAMES, DUTY_KIND, DUTY_STATUS, EXEC_STATUS, PagerBar, Pill, STAFF_ROLES, Timeline,
   addDays, dayName, fetchAllRows, fmt, hm, isLead, riyadhToday, useStaff, weekStartOf,
@@ -28,9 +29,14 @@ export const Route = createFileRoute("/_authenticated/app/admin/duties")({
 type Ctx = AppContext & { schoolId: string };
 
 function Duties({ ctx }: { ctx: Ctx }) {
-  const lead = isLead(ctx.role);
-  const tabs = [["mine", "مناوباتي"], ...(lead ? [["week", "جدول الأسبوع"], ["list", "القائمة والتقارير"], ["changes", "طلبات الاعتذار والتغيير"]] : []), ...(ctx.role === "principal" ? [["setup", "الإعداد والسياسة"]] : [])] as const;
-  const [tab, setTab] = useState<string>(lead ? "week" : "mine");
+  const p = useSchoolPerms(ctx.schoolId);
+  const lead = p ? !!(p["duty_rosters.view"] || p["duty_rosters.edit"]) : isLead(ctx.role);
+  const manage = !!p?.["duty_rosters.edit"];
+  const setupView = !!(p?.["duty_setup.view"] || p?.["duty_setup.edit"]);
+  const setupEdit = !!p?.["duty_setup.edit"];
+  const tabs = [["mine", "مناوباتي"], ...(lead ? [["week", "جدول الأسبوع"], ["list", "القائمة والتقارير"], ["changes", "طلبات الاعتذار والتغيير"]] : []), ...(setupView ? [["setup", "الإعداد والسياسة"]] : [])] as const;
+  const [picked, setTab] = useState<string | null>(null);
+  const tab = picked && tabs.some(([k]) => k === picked) ? picked : lead ? "week" : "mine";
   return (
     <div>
       <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
@@ -41,10 +47,11 @@ function Duties({ ctx }: { ctx: Ctx }) {
         ))}
       </div>
       {tab === "mine" && <MyDuties ctx={ctx} />}
-      {tab === "week" && lead && <Week ctx={ctx} />}
+      {(tab === "week" || tab === "changes" || tab === "setup") && ((tab === "setup" && !setupEdit) || (tab !== "setup" && !manage)) && <p className="mb-3 rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">صلاحيتك هنا للعرض فقط.</p>}
+      {tab === "week" && lead && <fieldset disabled={!manage} className="min-w-0"><Week ctx={ctx} /></fieldset>}
       {tab === "list" && lead && <DutyList ctx={ctx} />}
-      {tab === "changes" && lead && <Changes ctx={ctx} />}
-      {tab === "setup" && ctx.role === "principal" && <Setup ctx={ctx} />}
+      {tab === "changes" && lead && <fieldset disabled={!manage} className="min-w-0"><Changes ctx={ctx} /></fieldset>}
+      {tab === "setup" && setupView && <fieldset disabled={!setupEdit} className="min-w-0"><Setup ctx={ctx} /></fieldset>}
     </div>
   );
 }
