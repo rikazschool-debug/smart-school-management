@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingState, ErrorState } from "@/components/states";
 import { NotificationBell } from "@/components/notification-bell";
 import { useSupportCaps } from "@/components/support/caps";
+import { useWaOrgOk } from "@/components/support/whatsapp";
 import { MQ_LABEL, mqSections, useMqCaps } from "@/components/support/calls-caps";
 import { ArrowRight, Inbox, Send } from "lucide-react";
 
@@ -179,6 +180,7 @@ function Shell() {
   const mqCaps = useMqCaps(active && active.role !== "platform_admin" && active.role !== "student" && active.role !== "guardian" ? active.orgId : null);
   const mqSecs = mqCaps.data ? mqSections(mqCaps.data) : [];
   const mqTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["mq"] ?? "") });
+  const waOk = useWaOrgOk(inSupport && active?.role === "org_owner" ? active.orgId : null);
   const sCaps = useSupportCaps(inSupport && active && active.role !== "platform_admin" ? active.orgId : null);
 
   async function signOut() {
@@ -280,7 +282,7 @@ function Shell() {
                   )}
                   {k === "support" && inSupport && !platformHelp && (active.role === "platform_admin" || sCaps.data) && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
-                      {[...supportTabs(active.role, (sCaps.data?.view.length ?? 0) > 0), ...(active.role === "platform_admin" || sCaps.data?.settings ? (["settings"] as const) : [])].map((t, i) => (
+                      {[...supportTabs(active.role, (sCaps.data?.view.length ?? 0) > 0), ...(waOk.data === true ? (["whatsapp"] as const) : []), ...(active.role === "platform_admin" || sCaps.data?.settings ? (["settings"] as const) : [])].map((t, i) => (
                         <Link key={t} to="/app/support" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS + (supTab === t || (!supTab && i === 0) ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>
                           {t === "settings" ? "الإعدادات والتصنيفات" : SUPPORT_TAB_LABELS[t]}
                         </Link>
