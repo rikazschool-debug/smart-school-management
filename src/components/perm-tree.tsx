@@ -3,14 +3,14 @@ import { ChevronDown, ChevronLeft, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { selectCls } from "@/components/ui/native-select";
 
-export type PermSec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean; base_only?: boolean };
+export type PermSec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean; base_only?: boolean; locked_reason?: string; children?: string[] };
 export type PermCatalog = { areas: { key: string; label: string; soon?: boolean }[]; sections: PermSec[]; actions: Record<string, string>; scopes: Record<string, string>; locked: string[] };
 export type Grant = { section: string; action: string; scope: string };
 
 /** Actions never granted just by ticking a section — they must be chosen one by one. */
 const STRONG = new Set(["approve", "disburse", "settings", "review", "execute", "fleet", "publish", "organize", "create", "edit", "cancel", "assign", "export", "operate", "scan"]);
 /** The single "basic" action a section tick grants: view when the section has it, otherwise its lightest action. */
-export const baseAction = (s: PermSec) => (s.actions.includes("view") ? "view" : s.actions.find((a) => !STRONG.has(a)) ?? null);
+export const baseAction = (s: PermSec) => s.locked_reason ? null : (s.actions.includes("view") ? "view" : s.actions.find((a) => !STRONG.has(a)) ?? null);
 const label = (c: PermCatalog, s: PermSec, a: string) => s.labels?.[a] ?? c.actions[a] ?? a;
 
 function TriBox({ state, onChange, disabled, label: l }: { state: "none" | "some" | "all"; onChange: (on: boolean) => void; disabled?: boolean; label: string }) {
@@ -40,7 +40,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
   const keep = (s: PermSec, a: string) => { const k = `${s.key}.${a}`; const on = !!has(s.key, a);
     return filter === "all" || (filter === "on" && on) || (filter === "off" && !on) || (filter === "personal" && (!!personal?.[k] || on !== was(k))); };
   // base-role tools are deny-only for one person; role templates never carry them
-  const match = (s: PermSec) => (!s.base_only || !!orig) && (hit(s.label) || s.actions.some((a) => hit(label(c, s, a)))) && s.actions.some((a) => keep(s, a));
+  const match = (s: PermSec) => (!s.base_only || !!orig || !!s.locked_reason) && (hit(s.label) || s.children?.some(hit) || s.actions.some((a) => hit(label(c, s, a)))) && (s.actions.some((a) => keep(s, a)) || !!s.locked_reason);
   const secState = (s: PermSec): "none" | "some" | "all" => { const n = s.actions.filter((a) => has(s.key, a)).length; return n === 0 ? "none" : n === s.actions.length ? "all" : "some"; };
   const tickSection = (s: PermSec, on: boolean) => {
     if (!on) {
@@ -79,7 +79,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                 </button>
                 <TriBox label={ar.label} state={aState} disabled={readOnly || locked || ar.soon || !all.length} onChange={(on) => {
                   if (!on) return onChange(value.filter((g) => !all.some((s) => s.key === g.section)));
-                  const add = all.flatMap((s) => { const a = baseAction(s); return a && !has(s.key, a) ? [{ section: s.key, action: a, scope: s.scopes[0]! }] : []; });
+                  const add = all.flatMap((s) => { const a = baseAction(s); const scope = s.scopes[0]; return a && scope && !has(s.key, a) && (!s.base_only || was(`${s.key}.${a}`)) ? [{ section: s.key, action: a, scope }] : []; });
                   onChange([...value, ...add]); setOpen({ ...open, [ar.key]: true });
                 }} />
                 <span className="font-semibold">{ar.label}</span>
@@ -96,18 +96,20 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                           <button type="button" aria-expanded={so} onClick={() => setOpen({ ...open, [s.key]: !so })} className="grid size-6 place-items-center rounded hover:bg-muted" aria-label={so ? "طي" : "فتح"}>
                             {so ? <ChevronDown className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
                           </button>
-                          <TriBox label={s.label} state={secState(s)} disabled={readOnly || locked || (!!s.base_only && secState(s) === "none" && !s.actions.some((a) => was(`${s.key}.${a}`)))} onChange={(on) => tickSection(s, on)} />
+                          <TriBox label={s.label} state={secState(s)} disabled={readOnly || locked || !!s.locked_reason || (!!s.base_only && secState(s) === "none" && !s.actions.some((a) => was(`${s.key}.${a}`)))} onChange={(on) => tickSection(s, on)} />
                           <span className="font-medium">{s.label}</span>
                           {s.sensitive && <span className="text-xs text-muted-foreground">يتيح الاطلاع على أسماء الطلاب في الفرع</span>}
                         </div>
-                        {so && !baseAction(s) && secState(s) === "none" && <p className="ms-8 mt-1 text-xs text-muted-foreground">لا عرض مستقلًا لهذا القسم؛ اختر الإجراء المطلوب صراحة.</p>}
+                        {s.locked_reason && <p className="ms-8 mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Lock className="size-3" />{s.locked_reason}</p>}
+                        {so && s.children && <ul className="ms-8 mt-2 space-y-1 text-xs text-muted-foreground">{s.children.map((child) => <li key={child}>{child}</li>)}</ul>}
+                        {so && !s.locked_reason && !baseAction(s) && secState(s) === "none" && <p className="ms-8 mt-1 text-xs text-muted-foreground">لا عرض مستقلًا لهذا القسم؛ اختر الإجراء المطلوب صراحة.</p>}
                         {so && (
                           <div className="ms-8 mt-2 grid gap-2 sm:grid-cols-2">
                             {s.actions.filter((a) => keep(s, a) && (!term || hit(s.label) || hit(label(c, s, a)))).map((a) => { const g = has(s.key, a); const k = `${s.key}.${a}`; const dn = denied.includes(k); const noGrant = !!s.base_only && !g && !was(k) && !dn;
                               const changed = !!orig && !!g !== was(k); const st = changed ? "تعديل غير محفوظ" : personal?.[k] === "override" ? "منح خاص" : personal?.[k] === "deny" ? "منع خاص" : g ? "موروث" : ""; return (
                               <div key={a} className={"min-w-0 rounded " + (dn ? "bg-destructive/5 p-1" : "")}>
                               <label className="flex min-w-0 items-center gap-2 text-sm">
-                                <input type="checkbox" className="size-4 accent-primary" disabled={readOnly || locked || noGrant || (!!s.base_only && dn && !g)} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? s.scopes[0]! : "")} />
+                                <input type="checkbox" className="size-4 accent-primary" disabled={readOnly || locked || !!s.locked_reason || noGrant || (!!s.base_only && dn && !g)} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? (s.scopes[0] ?? "branch") : "")} />
                                 <span className="min-w-0 flex-1 truncate" title={label(c, s, a)}>{label(c, s, a)}</span>
                                 {g && !s.base_only && <select aria-label={`نطاق ${label(c, s, a)}`} disabled={readOnly || locked} className={selectCls("w-32 shrink-0", true)} value={g.scope} onChange={(e) => set(s, a, e.target.value)}>
                                   {s.scopes.map((sc) => <option key={sc} value={sc}>{c.scopes[sc]}</option>)}</select>}
