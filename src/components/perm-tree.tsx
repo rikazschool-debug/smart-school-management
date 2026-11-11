@@ -10,7 +10,7 @@ export type Grant = { section: string; action: string; scope: string };
 /** Actions never granted just by ticking a section — they must be chosen one by one. */
 const STRONG = new Set(["approve", "disburse", "settings", "review", "execute", "fleet", "publish", "organize", "create", "edit", "cancel", "assign", "export", "operate", "scan"]);
 /** The single "basic" action a section tick grants: view when the section has it, otherwise its lightest action. */
-export const baseAction = (s: PermSec) => s.locked_reason ? null : (s.actions.includes("view") ? "view" : s.actions.find((a) => !STRONG.has(a)) ?? null);
+export const baseAction = (s: PermSec) => s.locked_reason && !s.base_only ? null : (s.actions.includes("view") ? "view" : s.actions.find((a) => !STRONG.has(a)) ?? null);
 const label = (c: PermCatalog, s: PermSec, a: string) => s.labels?.[a] ?? c.actions[a] ?? a;
 
 function TriBox({ state, onChange, disabled, label: l }: { state: "none" | "some" | "all"; onChange: (on: boolean) => void; disabled?: boolean; label: string }) {
@@ -96,7 +96,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                           <button type="button" aria-expanded={so} onClick={() => setOpen({ ...open, [s.key]: !so })} className="grid size-6 place-items-center rounded hover:bg-muted" aria-label={so ? "طي" : "فتح"}>
                             {so ? <ChevronDown className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
                           </button>
-                          <TriBox label={s.label} state={secState(s)} disabled={readOnly || locked || !!s.locked_reason || (!!s.base_only && secState(s) === "none" && !s.actions.some((a) => was(`${s.key}.${a}`)))} onChange={(on) => tickSection(s, on)} />
+                          <TriBox label={s.label} state={secState(s)} disabled={readOnly || locked || (!!s.locked_reason && !s.base_only) || (!!s.base_only && secState(s) === "none" && !s.actions.some((a) => was(`${s.key}.${a}`)))} onChange={(on) => tickSection(s, on)} />
                           <span className="font-medium">{s.label}</span>
                           {s.sensitive && <span className="text-xs text-muted-foreground">يتيح الاطلاع على أسماء الطلاب في الفرع</span>}
                         </div>
@@ -109,7 +109,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                               const changed = !!orig && !!g !== was(k); const st = changed ? "تعديل غير محفوظ" : personal?.[k] === "override" ? "منح خاص" : personal?.[k] === "deny" ? "منع خاص" : g ? "موروث" : ""; return (
                               <div key={a} className={"min-w-0 rounded " + (dn ? "bg-destructive/5 p-1" : "")}>
                               <label className="flex min-w-0 items-center gap-2 text-sm">
-                                <input type="checkbox" className="size-4 accent-primary" disabled={readOnly || locked || !!s.locked_reason || noGrant || (!!s.base_only && dn && !g)} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? (s.scopes[0] ?? "branch") : "")} />
+                                <input type="checkbox" className="size-4 accent-primary" disabled={readOnly || locked || (!!s.locked_reason && !s.base_only) || noGrant || (!!s.base_only && dn && !g)} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? (s.scopes[0] ?? "branch") : "")} />
                                 <span className="min-w-0 flex-1 truncate" title={label(c, s, a)}>{label(c, s, a)}</span>
                                 {g && !s.base_only && <select aria-label={`نطاق ${label(c, s, a)}`} disabled={readOnly || locked} className={selectCls("w-32 shrink-0", true)} value={g.scope} onChange={(e) => set(s, a, e.target.value)}>
                                   {s.scopes.map((sc) => <option key={sc} value={sc}>{c.scopes[sc]}</option>)}</select>}
