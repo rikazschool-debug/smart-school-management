@@ -21,7 +21,7 @@ try {
     const c = createClient(URL_, ANON, { auth: { persistSession: false } }); await c.auth.signInWithPassword({ email, password: pw });
     await c.rpc("set_active_context", { _role: "teacher", _school: school }); return { id: u.data.user.id, c };
   };
-  const grant = (uid: string, school: string, action: string) => admin.from("perm_overrides").upsert({ org_id: org, user_id: uid, school_id: school, section: "wa_inbox", action, effect: "grant", scope: "branch", reason: "wa-transfer-e2e", created_by: owner.user_id });
+  const grant = (uid: string, school: string, action: string) => admin.from("perm_overrides").upsert({ org_id: org, user_id: uid, section: "wa_inbox", action, effect: "grant", scope: "branch", reason: "wa-transfer-e2e", created_by: owner.user_id });
   const A = await mk("a", S1.id), A2 = await mk("a2", S1.id), B = await mk("b", S2.id), C = await mk("c", S1.id);
   for (const [u, s] of [[A, S1], [A2, S1], [B, S2]] as const) await grant(u.id, s.id, "mine");
   await grant(A.id, S1.id, "transfer_branch");
