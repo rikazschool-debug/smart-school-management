@@ -51,6 +51,7 @@ try {
   ok("after verified result: previous holder loses messages", !!(await A.c.rpc("wa_messages_list", { _conv: conv })).error);
   ok("receiver opens chat with history", !(await A2.c.rpc("wa_messages_list", { _conv: conv })).error);
   const lg = (await A2.c.rpc("wa_transfer_log", { _conv: conv })).data as any[];
+  console.log(JSON.stringify(lg?.[0]));
   ok("log: actor, from, to, branches, note, result", lg?.[0]?.status === "done" && !!lg[0].by && !!lg[0].from_user && !!lg[0].to_user && lg[0].to_school === S1.name && lg[0].note === "يرجى المتابعة" && lg[0].from_schools?.length === 1);
   const au = await admin.from("access_audit").select("action").eq("actor", A.id).like("action", "wa_transfer_%");
   ok("audit row written", (au.data ?? []).some((x: any) => x.action === "wa_transfer_done"));
