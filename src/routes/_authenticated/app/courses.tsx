@@ -10,10 +10,11 @@ import { MultiSectionAssign } from "@/components/multi-section-assign";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { canManageAcademic } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
+import { workspacePages } from "@/lib/workspace-perms";
 import { arabicError, type AppContext } from "@/lib/session";
 
-export const Route = createFileRoute("/_authenticated/app/courses")({ component: Page });
+export const Route = createFileRoute("/_authenticated/app/courses")({ head: () => ({ meta: [{ title: "المقررات والتكليفات — ركاز" }, { name: "description", content: "المقررات وتكليفات المعلمين حسب التفويض والنطاق." }, { property: "og:title", content: "المقررات والتكليفات — ركاز" }, { property: "og:description", content: "عرض المقررات وإدارة تكليفات المعلمين حسب الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 export const STATUS_LABEL: Record<string, string> = { pending: "بانتظار الاعتماد", approved: "معتمد", rejected: "مرفوض", ended: "منتهٍ" };
 
@@ -22,13 +23,16 @@ function courseName(r: Row) {
 }
 
 function Page() {
-  return <RequireSchool nav="courses">{(ctx) => <Courses ctx={ctx} />}</RequireSchool>;
+  return <RequireSchool nav="courses" extra={(p) => workspacePages(p).includes("courses")}>{(ctx) => <Courses ctx={ctx} />}</RequireSchool>;
 }
 
 function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const qc = useQueryClient();
-  const manage = canManageAcademic(ctx.role);
-  const canAssign = manage || ctx.role === "dept_head";
+  const p = useSchoolPerms(ctx.schoolId);
+  const manage = !!p?.["course_setup.edit"];
+  const create = !!p?.["course_setup.create"];
+  const canAssign = !!p?.["course_assignments.assign"];
+  const approve = !!p?.["course_assignments.approve"];
   const [assigning, setAssigning] = useState<Row | null>(null);
 
   const pending = useQuery({
@@ -73,7 +77,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <section className="mb-10 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-bold">التكليفات</h2>
-          {canAssign && <MultiSectionAssign schoolId={ctx.schoolId} canCreateCourses={manage} canApprove={canAssign} />}
+          {canAssign && <MultiSectionAssign schoolId={ctx.schoolId} canCreateCourses={create} canApprove={approve} />}
         </div>
         {pending.isLoading ? <LoadingState /> : pending.error ? <ErrorState message={arabicError(pending.error)} onRetry={() => pending.refetch()} /> : visible.length === 0 ? (
           <EmptyState title="لا توجد تكليفات" hint={ctx.role === "dept_head" ? "تظهر هنا تكليفات مواد قسمك فقط." : undefined} />
@@ -87,13 +91,13 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   <p className="text-xs text-muted-foreground">من {a["start_date"]}{a["end_date"] ? ` إلى ${a["end_date"]}` : ""}</p>
                 </div>
                 <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">{STATUS_LABEL[a["status"]]}</span>
-                {a["status"] === "pending" && (manage || ctx.role === "dept_head") && (
+                {a["status"] === "pending" && approve && (
                   <>
                     <Button size="sm" onClick={() => decide(a["id"], true)}><Check className="size-4" /> اعتماد</Button>
                     <Button size="sm" variant="outline" onClick={() => decide(a["id"], false)}><X className="size-4" /> رفض</Button>
                   </>
                 )}
-                {a["status"] === "approved" && manage && <Button size="sm" variant="ghost" onClick={() => end(a["id"])}>إنهاء</Button>}
+                {a["status"] === "approved" && p?.["course_assignments.cancel"] && <Button size="sm" variant="ghost" onClick={() => end(a["id"])}>إنهاء</Button>}
               </li>
             ))}
           </ul>
@@ -101,7 +105,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       </section>
 
       <CrudTable title="المقررات" table="courses" schoolId={ctx.schoolId} canWrite={manage} canCreate={false} searchKeys={[]}
-        toolbar={manage ? <MultiSectionAssign mode="course" schoolId={ctx.schoolId} canCreateCourses canApprove={canAssign} /> : null}
+        toolbar={create ? <MultiSectionAssign mode="course" schoolId={ctx.schoolId} canCreateCourses canAssign={canAssign} canApprove={approve} /> : null}
         select="*, academic_years(name), subjects(name, department_id), sections(name, grades(name)), teacher_assignments(status, teachers(full_name))"
         fields={[
           { key: "year_id", label: "السنة", type: "select", required: true, options: { table: "academic_years", label: "name" } },

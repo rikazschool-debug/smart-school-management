@@ -9,14 +9,14 @@ import { arabicError } from "@/lib/session";
 
 /** «نطاق الوكلاء والمشرفين»: the principal sets each vice's departments/teachers and each supervisor's teachers.
  *  Writes only through set_staff_scope (principal level, audited); the scope is re-checked on every request by vice_teacher_ids / supervised_teacher_ids. */
-export function StaffScopes({ schoolId }: { schoolId: string }) {
+export function StaffScopes({ schoolId, canWrite = true }: { schoolId: string; canWrite?: boolean }) {
   const q = useQuery({
     queryKey: ["staff-scopes", schoolId],
     queryFn: async () => {
       const [list, depts, teachers] = await Promise.all([
         db.rpc("staff_scope_list" as never, { _school: schoolId } as never),
         db.from("departments").select("id, name").eq("school_id", schoolId).order("name"),
-        db.from("teachers").select("id, full_name, department_id, status").eq("school_id", schoolId).order("full_name"),
+        db.rpc("workspace_teacher_options", { _school: schoolId }),
       ]);
       if (list.error) throw list.error;
       return { people: (list.data ?? []) as unknown as Row[], depts: (depts.data ?? []) as Row[], teachers: (teachers.data ?? []) as Row[] };
@@ -24,17 +24,18 @@ export function StaffScopes({ schoolId }: { schoolId: string }) {
   });
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
-  const { people, depts, teachers } = q.data!;
+  if (!q.data) return <LoadingState />;
+  const { people, depts, teachers } = q.data;
   if (!people.length) return <EmptyState title="لا يوجد وكلاء أو مشرفون نشطون في المدرسة" hint="يضيف مالك المؤسسة الحسابات والأدوار من «المستخدمون والأدوار»." />;
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">تشابه الدور لا يعني تشابه النطاق: لكل وكيل أقسامه ومعلموه، ولكل مشرف معلموه المسندون إليه. يُطبَّق التغيير فورًا على الجدول والتكليفات والبيانات.</p>
-      {people.map((p) => <ScopeCard key={`${p["user_id"]}-${p["kind"]}`} schoolId={schoolId} p={p} depts={depts} teachers={teachers} />)}
+      {people.map((p) => <ScopeCard key={`${p["user_id"]}-${p["kind"]}`} schoolId={schoolId} p={p} depts={depts} teachers={teachers} canWrite={canWrite} />)}
     </div>
   );
 }
 
-function ScopeCard({ schoolId, p, depts, teachers }: { schoolId: string; p: Row; depts: Row[]; teachers: Row[] }) {
+function ScopeCard({ schoolId, p, depts, teachers, canWrite }: { schoolId: string; p: Row; depts: Row[]; teachers: Row[]; canWrite: boolean }) {
   const qc = useQueryClient();
   const vice = p["kind"] === "vice";
   const [d, setD] = useState<string[]>(p["departments"] ?? []);
@@ -53,7 +54,7 @@ function ScopeCard({ schoolId, p, depts, teachers }: { schoolId: string; p: Row;
         <h3 className="font-bold">{p["full_name"]}</h3>
         <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">{vice ? "وكيل" : "مشرف تربوي"}</span>
         <span className="text-xs text-muted-foreground">{total ? `${total} معلم ضمن النطاق` : "لا يوجد نطاق — لا يرى أي معلم"}</span>
-        <Button size="sm" className="ms-auto" disabled={!dirty || busy} onClick={async () => {
+        <Button size="sm" className="ms-auto" disabled={!canWrite || !dirty || busy} onClick={async () => {
           setBusy(true);
           const { error } = await db.rpc("set_staff_scope" as never, { _school: schoolId, _user: p["user_id"], _kind: p["kind"], _departments: vice ? d : [], _teachers: t } as never);
           setBusy(false);
@@ -68,7 +69,7 @@ function ScopeCard({ schoolId, p, depts, teachers }: { schoolId: string; p: Row;
             <div className="flex flex-wrap gap-2">
               {depts.map((x) => (
                 <label key={x["id"]} className="flex items-center gap-1 rounded-md border px-2 py-1 text-xs">
-                  <input type="checkbox" checked={d.includes(x["id"])} onChange={() => toggle(d, setD, x["id"])} />{x["name"]}
+                  <input type="checkbox" disabled={!canWrite} checked={d.includes(x["id"])} onChange={() => toggle(d, setD, x["id"])} />{x["name"]}
                 </label>
               ))}
             </div>
@@ -82,7 +83,7 @@ function ScopeCard({ schoolId, p, depts, teachers }: { schoolId: string; p: Row;
           const inherited = vice && viaDept.has(x["id"]);
           return (
             <label key={x["id"]} className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${inherited ? "bg-primary/5" : ""}`}>
-              <input type="checkbox" checked={inherited || t.includes(x["id"])} disabled={inherited} onChange={() => toggle(t, setT, x["id"])} />
+              <input type="checkbox" checked={inherited || t.includes(x["id"])} disabled={!canWrite || inherited} onChange={() => toggle(t, setT, x["id"])} />
               {x["full_name"]}{x["status"] && x["status"] !== "active" ? " (غير نشط)" : ""}{inherited ? " — عبر القسم" : ""}
             </label>
           );
