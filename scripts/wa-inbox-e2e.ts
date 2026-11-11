@@ -38,6 +38,27 @@ try {
   check("9 non-admin cannot list chats", !!(await pr.rpc("wa_conversations_list", { _q: null })).error);
   check("10 non-admin cannot read tables directly", ((await pr.from("wa_messages" as never).select("id")).data ?? []).length === 0);
   check("11 anonymous cannot open messages", !!(await createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }).rpc("wa_messages_list", { _conv: conv.id })).error);
+  // org scope: only the real owner of the linked org; other owners, demo and platform accounts are refused
+  const as = async (email: string) => {
+    const c = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } });
+    const l = await admin.auth.admin.generateLink({ type: "magiclink", email });
+    await c.auth.verifyOtp({ type: "magiclink", token_hash: (l.data as any).properties.hashed_token });
+    return c;
+  };
+  const org = (await admin.from("wa_connection").select("org_id").eq("id", "wati_main").single()).data as any;
+  const c2 = (await admin.from("wa_conversations").select("org_id").eq("id", conv.id).single()).data as any;
+  check("12 new conversation stamped with the linked org", c2?.org_id === org?.org_id, { c2, org });
+  const mid = ins[0]!.id;
+  const own = await as("gr.almalkigroup@gmail.com");
+  check("13 linked owner: wa_org_ok true", (await own.rpc("wa_org_ok", { _org: org.org_id })).data === true);
+  const ol = await own.rpc("wa_conversations_list", { _q: null });
+  check("14 linked owner lists chats incl. test chat", !ol.error && (ol.data as any[]).some((x) => x.id === conv.id), ol.error);
+  check("15 linked owner opens chat + send ref + media ref", !(await own.rpc("wa_messages_list", { _conv: conv.id })).error && !(await own.rpc("wa_conv_ref", { _conv: conv.id })).error);
+  for (const [n, email] of [["other org owner", "h4x-other-1793978486250@rikaz.test"], ["demo owner", "demo-owner@rikaz.demo"], ["platform admin", "owner@platform.rikaz.app"]] as const) {
+    const x = await as(email);
+    const r = await Promise.all([x.rpc("wa_org_ok", { _org: org.org_id }), x.rpc("wa_conversations_list", { _q: null }), x.rpc("wa_messages_list", { _conv: conv.id }), x.rpc("wa_conv_ref", { _conv: conv.id }), x.rpc("wa_media_ref", { _msg: mid }), x.rpc("wa_ok")]);
+    check(`16 ${n}: no tab, list, chat, send ref or attachment`, r[0].data !== true && !!r[1].error && !!r[2].error && !!r[3].error && !!r[4].error && r[5].data !== true, r.map((y) => y.error?.message ?? y.data));
+  }
 } finally {
   await admin.from("wa_webhook_events").delete().eq("payload->>conversationId", CONV);
   await admin.from("wa_webhook_events").delete().eq("payload->>id", OUT);
