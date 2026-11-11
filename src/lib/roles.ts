@@ -310,12 +310,12 @@ export function attTabs(role: Role): AttTab[] {
   return [];
 }
 
-export type SupportTab = "summary" | "mine" | "assigned" | "following" | "info" | "manage" | "reports";
-export const SUPPORT_TAB_LABELS: Record<SupportTab, string> = { summary: "الملخص", mine: "تذاكري", assigned: "المسندة إليّ", following: "أتابعها", info: "طلبات الإفادة", manage: "التذاكر", reports: "التقارير" };
+export type SupportTab = "summary" | "mine" | "assigned" | "following" | "info" | "manage" | "whatsapp" | "reports";
+export const SUPPORT_TAB_LABELS: Record<SupportTab, string> = { summary: "الملخص", mine: "تذاكري", assigned: "المسندة إليّ", following: "أتابعها", info: "طلبات الإفادة", manage: "التذاكر", whatsapp: "واتساب", reports: "التقارير" };
 /** «الدعم والمساعدة» tabs. `canView` = the person holds support.view in at least one branch (support_caps; owner/principal by default).
  *  Mirror only — support_manager/support_can_read decide on the server. Platform admin manages platform tickets only. */
 export function supportTabs(role: Role, canView = role === "org_owner" || role === "principal"): SupportTab[] {
-  if (role === "platform_admin") return ["manage", "reports"];
+  if (role === "platform_admin") return ["manage", "whatsapp", "reports"];
   const staff = !["student", "guardian"].includes(role);
   if (!staff) return ["mine", "info"];
   if (canView) return ["summary", "manage", "assigned", "following", "mine", "info", "reports"];
