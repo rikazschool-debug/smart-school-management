@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * WhatsApp inbox (WATI v3) for the platform-run support desk. Every function first re-checks the caller through their own
- * RLS client (wa_ok / wa_conv_ref / wa_media_ref = platform admins only); privileged writes go through service-only _wa_* SQL.
+ * RLS client (wa_ok / wa_conv_ref / wa_media_ref: owner, or wa_inbox mine/branch via WATI assignment links); privileged writes go through service-only _wa_* SQL.
  * Sending: claim by client key → one WATI call → record accepted/failed/unknown (a network timeout is "unknown", never retried).
  */
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -56,6 +56,55 @@ export const waSync = createServerFn({ method: "POST" })
     return { messages: msgs.length };
   });
 
+
+type Adm = Awaited<ReturnType<typeof admin>>;
+/** WATI is the assignment source: pull assignee/team codes (conversations/query, last 90 days) + contact owner/team names. */
+async function pullAssign(a: Adm, maxAgeSec: number) {
+  const age = await a.rpc("_wa_assign_age" as never);
+  if (typeof age.data === "number" && age.data < maxAgeSec) return { skipped: true };
+  try {
+    const now = new Date(); const from = new Date(now.getTime() - 90 * 864e5);
+    const items: unknown[] = []; let cursor = "";
+    for (let i = 0; i < 15; i++) {
+      const j = await wati("/api/ext/v3/conversations/query", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ time_range: { from: from.toISOString(), to: new Date(now.getTime() + 864e5).toISOString() }, page: { size: 100, ...(cursor ? { cursor } : {}) }, count: { mode: "none" }, result_mode: "conversations" }) });
+      for (const it of (j["items"] as Record<string, unknown>[] | undefined) ?? []) {
+        const ch = it["channel"] as Record<string, unknown> | string | undefined;
+        items.push({ conversation_id: it["conversation_id"], contact_id: it["contact_id"], assignee_id: it["assignee_id"] ?? null, team_ids: it["team_ids"] ?? [],
+          assignment: it["assignment"], status: it["status"], channel_type: typeof ch === "object" && ch ? (ch["type"] ?? ch["channel_type"] ?? "whatsapp") : "whatsapp" });
+      }
+      const pg = j["page"] as { has_more?: boolean; next_cursor?: string } | undefined;
+      if (!pg?.has_more || !pg.next_cursor) break; cursor = pg.next_cursor;
+    }
+    const contacts: unknown[] = [];
+    for (let pn = 1; pn <= 5; pn++) {
+      const j = await wati(`/api/ext/v3/contacts?page_size=100&page_number=${pn}`);
+      const list = (j["contact_list"] as Record<string, unknown>[] | undefined) ?? [];
+      for (const c of list) {
+        const cp = (c["custom_params"] as { name: string; value: string }[] | undefined) ?? [];
+        contacts.push({ id: c["id"], wa_id: c["wa_id"], name: c["name"], owner: cp.find((x) => x.name === "contact_owner")?.value ?? null, teams: c["teams"] ?? [] });
+      }
+      if (list.length < 100) break;
+    }
+    const r = await a.rpc("_wa_assign_save" as never, { _items: items, _contacts: contacts } as never);
+    if (r.error) throw new Error(r.error.message);
+    return r.data as { saved: number; changed: number };
+  } catch (e) {
+    const m = e instanceof Error ? e.message : "sync";
+    await a.rpc("_wa_assign_fail" as never, { _err: m } as never);
+    throw new Error(`تعذّرت مزامنة الإسناد من WATI: ${m.slice(0, 120)}`);
+  }
+}
+
+/** Assignment sync: on tab open and periodically while it is open (throttled server-side to once per 30s). */
+export const waSyncAssign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { force?: boolean }) => d)
+  .handler(async ({ data, context }) => {
+    await mustAdmin(context.supabase as never);
+    return await pullAssign(await admin(), data.force ? 5 : 30);
+  });
+
 type SendIn = { conv: string; key: string; text?: string; file?: { name: string; mime: string; b64: string; caption?: string } };
 export const waSend = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -66,10 +115,14 @@ export const waSend = createServerFn({ method: "POST" })
     return d;
   })
   .handler(async ({ data, context }) => {
-    const ref = await context.supabase.rpc("wa_conv_ref" as never, { _conv: data.conv } as never);
-    if (ref.error) throw new Error("غير مصرح");
-    const conv = ref.data as unknown as { wati_conv_id: string };
+    const pre = await context.supabase.rpc("wa_conv_ref" as never, { _conv: data.conv } as never);
+    if (pre.error) throw new Error("غير مصرح");
     const a = await admin();
+    // re-verify the WATI assignment right before sending (owner access does not depend on it)
+    if ((pre.data as unknown as { access: string }).access !== "owner") await pullAssign(a, 10);
+    const ref = await context.supabase.rpc("wa_conv_ref" as never, { _conv: data.conv } as never);
+    if (ref.error) throw new Error("لم تعد هذه المحادثة مسندة إليك في WATI");
+    const conv = ref.data as unknown as { wati_conv_id: string };
     const local = `wa-${data.key}`;
     const kind = data.file ? (data.file.mime.startsWith("image/") ? "image" : "document") : "text";
     const cl = await a.rpc("_wa_out_claim" as never, { _local: local, _conv: data.conv, _kind: kind, _body: data.file ? (data.file.caption ?? null) : data.text, _file: data.file?.name ?? null, _user: context.userId } as never);
