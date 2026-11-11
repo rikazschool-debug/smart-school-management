@@ -33,7 +33,7 @@ export function TransferBox({ conv }: { conv: string }) {
   };
   const go = async () => {
     const [kind, code = ""] = target.split(":"); setBusy(true);
-    try { report(await tf({ data: { conv, school, kind: kind as "operator" | "team", code, note: note.trim() || undefined, key } })); }
+    try { report(await tf({ data: { conv, school, kind: kind as "operator" | "team", code, ...(note.trim() ? { note: note.trim() } : {}), key } })); }
     catch (e) { toast.error((e as Error).message); setKey(crypto.randomUUID()); refresh(); } finally { setBusy(false); }
   };
   const verify = async (id: string) => { setBusy(true); try { report(await vf({ data: { id } })); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
