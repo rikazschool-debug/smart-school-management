@@ -24998,6 +24998,7 @@ export type Database = {
       wa_ok: { Args: never; Returns: boolean }
       wa_org_ok: { Args: { _org: string }; Returns: boolean }
       wa_quick_list: { Args: { _org: string }; Returns: Json }
+      wa_quick_list0: { Args: never; Returns: Json }
       wa_quick_save: {
         Args: {
           _active: boolean
@@ -25006,6 +25007,10 @@ export type Database = {
           _org: string
           _title: string
         }
+        Returns: string
+      }
+      wa_quick_save0: {
+        Args: { _active: boolean; _body: string; _id: string; _title: string }
         Returns: string
       }
       wa_tag_set: {

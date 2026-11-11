@@ -1,0 +1,4 @@
+create or replace function public.wa_quick_list0() returns jsonb language sql stable security definer set search_path to 'public' as $$ select public.wa_quick_list(public._wa_org()) $$;
+create or replace function public.wa_quick_save0(_id uuid, _title text, _body text, _active boolean) returns uuid language sql security definer set search_path to 'public' as $$ select public.wa_quick_save(public._wa_org(), _id, _title, _body, _active) $$;
+revoke all on function public.wa_quick_list0(), public.wa_quick_save0(uuid,text,text,boolean) from public, anon;
+grant execute on function public.wa_quick_list0(), public.wa_quick_save0(uuid,text,text,boolean) to authenticated;
