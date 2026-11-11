@@ -106,7 +106,7 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
         if (!on) { setTree(cur.filter((g) => `${g.section}.${g.action}` !== k)); setUndeny(undeny.filter((x) => x !== k)); }
         else if (o) setTree([...cur.filter((g) => `${g.section}.${g.action}` !== k), o]);
         else if (e.effective.find((x) => `${x.section}.${x.action}` === k)?.source === "deny") setUndeny([...undeny.filter((x) => x !== k), k]);
-        else { const [sec, act] = k.split("."); const cs = c.sections.find((x) => x.key === sec); if (cs && !cs.base_only) setTree([...cur, { section: sec!, action: act!, scope: cs.scopes[0]! }]); }
+        else { const [sec, act] = k.split("."); const cs = c.sections.find((x) => x.key === sec); const scope = cs?.scopes[0]; if (cs && sec && act && scope && !cs.base_only) setTree([...cur, { section: sec, action: act, scope }]); }
         setPreview(null);
       }} undeny={undeny} />}
       {e.is_owner ? <p className="rounded-lg bg-secondary/50 p-3">مالك المؤسسة يملك جميع الصلاحيات ولا تُقيَّد صلاحياته.</p> : (<>

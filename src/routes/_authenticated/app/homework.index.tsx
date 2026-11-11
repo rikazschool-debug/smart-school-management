@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
-import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
+import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { arabicError, useSchool } from "@/lib/session";
 import { canAuthorHomework } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
 import { ExportBar } from "@/components/homework/export";
 import { StudentHomework } from "@/components/homework/student-homework";
 import { HW_STATUS, SUB_STATUS, schoolTime, statusTone } from "@/lib/homework";
@@ -21,10 +22,12 @@ export const Route = createFileRoute("/_authenticated/app/homework/")({
 
 function Page() {
   const ctx = useSchool();
+  const permissions = useSchoolPerms(ctx?.schoolId);
   if (!ctx?.schoolId) return <EmptyState title="اختر مدرسة أولًا" />;
   if (ctx.role === "student") return <StudentList schoolId={ctx.schoolId} />;
   if (ctx.role === "guardian") return <GuardianList schoolId={ctx.schoolId} />;
-  return <StaffList schoolId={ctx.schoolId} author={canAuthorHomework(ctx.role)} />;
+  if (permissions?.["bt_homework.view"] === false) return <ForbiddenState />;
+  return <StaffList schoolId={ctx.schoolId} author={canAuthorHomework(ctx.role) && permissions?.["bt_homework.create"] !== false} />;
 }
 
 const Badge = ({ s, map }: { s: string; map: Record<string, string> }) => (

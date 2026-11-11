@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
-import { EmptyState, LoadingState, PageHeader } from "@/components/states";
+import { EmptyState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
+import { useSchoolPerms } from "@/lib/school-perms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ function Page() {
   const { edit } = Route.useSearch();
   const nav = useNavigate();
   const schoolId = ctx?.schoolId ?? "";
+  const permissions = useSchoolPerms(schoolId);
   const courses = useQuery({
     queryKey: ["my-teaching-courses", schoolId],
     enabled: !!schoolId,
@@ -64,12 +66,14 @@ function Page() {
     queryKey: ["hw-roster", f.course_id],
     enabled: !!course,
     queryFn: async () => {
-      const { data, error } = await db.from("enrollments").select("student_id, students(full_name)").eq("section_id", course!["section_id"]).eq("year_id", course!["year_id"]).eq("status", "active");
+      if (!course) return [];
+      const { data, error } = await db.from("enrollments").select("student_id, students(full_name)").eq("section_id", course["section_id"]).eq("year_id", course["year_id"]).eq("status", "active");
       if (error) throw error;
       return data as Row[];
     },
   });
   if (!ctx?.schoolId) return <EmptyState title="اختر مدرسة أولًا" />;
+  if (permissions?.["bt_homework.create"] === false || permissions?.["bt_homework.view"] === false) return <ForbiddenState />;
   if (courses.isLoading || (edit && existing.isLoading)) return <LoadingState />;
   if (!courses.data?.length) return <EmptyState title="لا توجد مقررات بتكليف ساري لك" hint="يُنشأ الواجب فقط على مقرر اعتُمد تكليفك به." />;
   const set = (k: keyof typeof f, v: unknown) => setF((p) => ({ ...p, [k]: v }));

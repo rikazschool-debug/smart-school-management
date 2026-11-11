@@ -8,6 +8,8 @@ type Row = any;
 import { ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
 import { askText } from "@/components/confirm";
+import { useSchoolPerms } from "@/lib/school-perms";
+import { workspacePages } from "@/lib/workspace-perms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,10 +19,11 @@ import { AdminFiles, PRIORITY, TASK_STATUS, Pill, Timeline, fmt, isLead } from "
 
 export const Route = createFileRoute("/_authenticated/app/admin/tasks/$id")({
   head: () => ({ meta: [{ title: "تفاصيل التكليف | ركاز" }, { name: "description", content: "متابعة تكليف إداري" }] }),
-  component: () => <RequireSchool nav="admin">{(ctx) => <Task role={ctx.role} />}</RequireSchool>,
+  component: () => <RequireSchool nav="admin" extra={(p) => workspacePages(p).includes("admin")}>{(ctx) => <Task role={ctx.role} school={ctx.schoolId} />}</RequireSchool>,
 });
 
-function Task({ role }: { role: string }) {
+function Task({ role, school }: { role: string; school: string }) {
+  const permissions = useSchoolPerms(school);
   const { id } = Route.useParams();
   const { user } = useSession();
   const qc = useQueryClient();
@@ -44,7 +47,7 @@ function Task({ role }: { role: string }) {
   if (!t) return <ErrorState message="التكليف غير موجود أو لا تملك صلاحية رؤيته" />;
   const me = user.id;
   const assignee = t.assignee === me;
-  const reviewer = t.assigner === me || isLead(role);
+  const reviewer = !!permissions?.["admin_tasks.manage"] && (t.assigner === me || isLead(role));
   const open = ["new", "in_progress", "returned"].includes(t.status);
 
   async function run(fn: string, args: Record<string, unknown>, ok: string) {
