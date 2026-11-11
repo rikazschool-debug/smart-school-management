@@ -48,9 +48,9 @@ function Duties({ ctx }: { ctx: Ctx }) {
       </div>
       {tab === "mine" && <MyDuties ctx={ctx} />}
       {(tab === "week" || tab === "changes" || tab === "setup") && ((tab === "setup" && !setupEdit) || (tab !== "setup" && !manage)) && <p className="mb-3 rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">صلاحيتك هنا للعرض فقط.</p>}
-      {tab === "week" && lead && <fieldset disabled={!manage} className="min-w-0"><Week ctx={ctx} /></fieldset>}
+      {tab === "week" && lead && <Week ctx={ctx} manage={manage} />}
       {tab === "list" && lead && <DutyList ctx={ctx} />}
-      {tab === "changes" && lead && <fieldset disabled={!manage} className="min-w-0"><Changes ctx={ctx} /></fieldset>}
+      {tab === "changes" && lead && <Changes ctx={ctx} manage={manage} />}
       {tab === "setup" && setupView && <fieldset disabled={!setupEdit} className="min-w-0"><Setup ctx={ctx} /></fieldset>}
     </div>
   );
@@ -135,7 +135,7 @@ function MyDuties({ ctx }: { ctx: Ctx }) {
 }
 
 // ---------------- week roster (lead) ----------------
-function Week({ ctx }: { ctx: Ctx }) {
+function Week({ ctx, manage }: { ctx: Ctx; manage: boolean }) {
   const qc = useQueryClient();
   const [week, setWeek] = useState(() => weekStartOf(riyadhToday()));
   const [day, setDay] = useState("");
@@ -211,8 +211,9 @@ function Week({ ctx }: { ctx: Ctx }) {
           {Array.from({ length: 7 }, (_, i) => addDays(week, i)).map((d) => <option key={d} value={d}>{DAY_NAMES[i(d)]} {d}</option>)}
         </select>
       </div>
+      <fieldset disabled={!manage} className="min-w-0 space-y-4">
       {roster.isLoading ? <LoadingState /> : roster.error ? <ErrorState message={arabicError(roster.error)} /> : !R ? (
-        <EmptyState title="لا يوجد جدول مناوبات لهذا الأسبوع" hint="أنشئ مسودة ثم اقترح التوزيع أو أسند يدويًا." action={<Button onClick={open} disabled={busy}>إنشاء جدول الأسبوع</Button>} />
+        <EmptyState title="لا يوجد جدول مناوبات لهذا الأسبوع" hint={manage ? "أنشئ مسودة ثم اقترح التوزيع أو أسند يدويًا." : undefined} action={manage ? <Button onClick={open} disabled={busy}>إنشاء جدول الأسبوع</Button> : undefined} />
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-4">
@@ -307,6 +308,7 @@ function Week({ ctx }: { ctx: Ctx }) {
           <section><h2 className="mb-2 font-semibold">سجل الجدول</h2><Timeline entity="duty" id={R.id} /></section>
         </>
       )}
+      </fieldset>
     </div>
   );
 }
@@ -386,7 +388,7 @@ function DutyList({ ctx }: { ctx: Ctx }) {
 }
 
 // ---------------- excuse/change requests (lead) ----------------
-function Changes({ ctx }: { ctx: Ctx }) {
+function Changes({ ctx, manage }: { ctx: Ctx; manage: boolean }) {
   const [status, setStatus] = useState("open");
   const q = useQuery({ queryKey: ["duty", "changes", ctx.schoolId, status], queryFn: async () => ((await db.rpc("adm_duty_change_list" as never, { _school: ctx.schoolId, _status: status || null } as never)).data ?? []) as Row[] });
   const { run, busy } = useRun();
@@ -403,7 +405,7 @@ function Changes({ ctx }: { ctx: Ctx }) {
               <Pill tone="warn">{c.kind === "excuse" ? "اعتذار" : "طلب تغيير"}</Pill><Pill tone={c.status === "accepted" ? "ok" : c.status === "declined" ? "bad" : "muted"}>{c.status === "open" ? "قيد المراجعة" : c.status === "accepted" ? "مقبول" : "مرفوض"}</Pill></div>
             <p className="mt-1 text-sm">{c.reason}</p>
             {c.decision_note && <p className="text-xs text-muted-foreground">القرار: {c.decision_note}</p>}
-            {c.status === "open" && <div className="mt-2 flex gap-2">
+            {c.status === "open" && manage && <div className="mt-2 flex gap-2">
               <Button size="sm" disabled={busy} onClick={async () => { const n = await askText("ملاحظة (اختيارية)"); if (n !== null) run("adm_duty_decide_change", { _id: c.id, _accept: true, _note: n }, "قُبل الطلب"); }}>قبول</Button>
               <Button size="sm" variant="outline" disabled={busy} onClick={async () => { const n = await askText("سبب الرفض", { required: true }); if (n) run("adm_duty_decide_change", { _id: c.id, _accept: false, _note: n }, "رُفض الطلب"); }}>رفض</Button>
             </div>}
