@@ -310,7 +310,7 @@ function UsersBySection({ org, c }: { org: string; c: Catalog }) {
     queryKey: ["perm-sections", org, c.sections.length],
     retry: 1,
     queryFn: async () => {
-      const keys = c.sections.map((s) => s.key); const out: { user_id: string; sections: string[] }[] = [];
+      const keys = c.sections.filter((s) => s.actions.length).map((s) => s.key); const out: { user_id: string; sections: string[] }[] = [];
       const worker = async () => {
         for (let k = keys.shift(); k; k = keys.shift())
           out.push(...(((await call("perm_section_people", { _org: org, _sections: [k] })) ?? []) as { user_id: string; sections: string[] }[]));
@@ -356,7 +356,7 @@ function UsersBySection({ org, c }: { org: string; c: Catalog }) {
     <div className="grid gap-4 md:grid-cols-[15rem_minmax(0,1fr)]">
       <nav aria-label="الأقسام">
         <ul className="flex gap-2 overflow-x-auto pb-2 md:flex-col md:gap-1 md:overflow-visible">
-          {[{ key: "all", label: "كل المستخدمين", soon: false }, ...c.areas].map((a) => {
+          {[{ key: "all", label: "كل المستخدمين", soon: false }, ...c.areas.filter((a) => a.soon || c.sections.some((s) => s.parent === a.key && s.actions.length))].map((a) => {
             const n = a.key === "all" ? all.length : all.filter((p) => inArea(p, a.key)).length;
             const locked = dis.data?.includes(a.key);
             return (
@@ -374,7 +374,7 @@ function UsersBySection({ org, c }: { org: string; c: Catalog }) {
         <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
           <Input aria-label="بحث" placeholder="بحث بالاسم أو اسم المستخدم" className="w-full sm:w-56" value={q} onChange={(e) => setQ(e.target.value)} />
           {area !== "all" && <select aria-label="القسم الفرعي" className={selectCls("w-44")} value={sec} onChange={(e) => setSec(e.target.value)}>
-            <option value="">كل الأقسام الفرعية</option>{c.sections.filter((s) => s.parent === area).map((s) => <option key={s.key} value={s.key}>{s.label} ({all.filter((p) => has.get(p.user_id)?.has(s.key)).length})</option>)}</select>}
+            <option value="">كل الأقسام الفرعية</option>{c.sections.filter((s) => s.parent === area && s.actions.length).map((s) => <option key={s.key} value={s.key}>{s.label} ({all.filter((p) => has.get(p.user_id)?.has(s.key)).length})</option>)}</select>}
           <select aria-label="الدور" className={selectCls("w-44")} value={role} onChange={(e) => setRole(e.target.value)}>
             <option value="">كل الأدوار</option>
             {BASE_TABS.map((r) => <option key={r} value={`base:${r}`}>{ROLE_LABELS[r]}</option>)}
