@@ -26,7 +26,7 @@ export function TransferBox({ conv }: { conv: string }) {
   const br = (o.branches as Row[]).find((b) => b.id === school);
   const refresh = () => { void qc.invalidateQueries({ queryKey: ["wa-card", conv] }); void qc.invalidateQueries({ queryKey: ["wa-convs"] }); void qc.invalidateQueries({ queryKey: ["wa-msgs"] }); };
   const report = (r: { status: string; error?: string }) => {
-    if (r.status === "done") { toast.success("تم التحويل وتأكّد في WATI"); setOpen(false); setNote(""); setTarget(""); }
+    if (r.status === "done") { toast.success((r as { reopened?: boolean }).reopened ? "كانت المحادثة مغلقة في WATI؛ أُعيد فتحها وتم التحويل وتأكّد" : "تم التحويل وتأكّد في WATI"); setOpen(false); setNote(""); setTarget(""); }
     else if (r.status === "unknown") toast.warning(`لم تتأكد النتيجة بعد: ${r.error ?? ""}. اضغط «تحقّق» قبل أي محاولة جديدة.`);
     else toast.error(`لم يتم التحويل، وبقي الإسناد الفعلي كما هو. السبب: ${r.error ?? ""}`);
     setKey(crypto.randomUUID()); refresh();
