@@ -65,7 +65,7 @@ export function WhatsAppInbox() {
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>آخر مزامنة للإسناد من WATI: {me.data.synced_at ? when(me.data.synced_at) : "لم تتم بعد"}</span>
-          {me.data.sync_error && <span className="text-destructive">({String(me.data.sync_error).slice(0, 60)})</span>}
+          {me.data.sync_error && <span className="text-destructive">({/abort|timeout/i.test(String(me.data.sync_error)) ? "تأخر رد WATI في آخر محاولة، وستُعاد المزامنة تلقائيًا" : String(me.data.sync_error).slice(0, 60)})</span>}
           {me.data.owner && <Button size="sm" variant="outline" onClick={() => setLinks(true)}><Link2 className="size-4" /> ربط موظفي وفرق واتساب</Button>}
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -121,6 +121,11 @@ function BotDialog({ conv, caps, windowOpen, onClose, onDone }: { conv: string; 
       setKey(crypto.randomUUID()); onDone();
     } catch (e) { toast.error((e as Error).message); setKey(crypto.randomUUID()); } finally { setBusy(false); }
   };
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 10_000); return () => clearInterval(t); }, []);
+  const rb = caps.recent_bot as { label: string; at: string; until: string; by?: string } | null;
+  const lock = rb && new Date(rb.until).getTime() > now ? rb : null;
+  const hm = (d: string) => new Date(d).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" });
   const cur = caps.assignee ? `${caps.assignee}${caps.assignee_bot ? " (بوت)" : ""}` : "غير مسندة";
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -138,7 +143,8 @@ function BotDialog({ conv, caps, windowOpen, onClose, onDone }: { conv: string; 
               <li>أثناء التشغيل يتولّى البوت المحادثة، وقد يغيّر WATI الإسناد أو الفريق حسب خطوات البوت نفسه (مثل «تحويل إلى فريق»). ركاز لا يغيّر الإسناد بنفسه، ويقرأه من WATI بعد التشغيل ويطبّق الصلاحيات عليه.</li>
               {!windowOpen && <li className="text-destructive">نافذة الرد الحر مغلقة: قد لا تصل رسائل البوت للعميل حتى يرد. الأنسب إرسال قالب معتمد أولًا.</li>}
             </ul>
-            <div className="flex gap-2"><Button className="flex-1" disabled={busy} onClick={() => void go()}>{busy ? "جارٍ التشغيل…" : `تأكيد تشغيل «${pick.name}»`}</Button><Button variant="ghost" onClick={() => setPick(null)}>رجوع</Button></div>
+            {lock && <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">شُغّل بوت «{lock.label}» على هذه المحادثة الساعة {hm(lock.at)}{lock.by ? ` بواسطة ${lock.by}` : ""}. يُسمح بتشغيل بوت آخر بعد الساعة {hm(lock.until)} حتى لا تتداخل البوتات على العميل.</div>}
+            <div className="flex gap-2"><Button className="flex-1" disabled={busy || !!lock} onClick={() => void go()}>{busy ? "جارٍ التشغيل…" : `تأكيد تشغيل «${pick.name}»`}</Button><Button variant="ghost" onClick={() => setPick(null)}>رجوع</Button></div>
           </div>)}
       </DialogContent>
     </Dialog>);
