@@ -106,6 +106,20 @@ export function WhatsAppInbox() {
 }
 
 /** Owner-only page: WATI operator code → Rikaz employee, WATI team code → branch, with sample chats to verify before saving. */
+/** WATI identity needed for «تحويل المحادثة»: operator email (assign) / exact team name (contact teams). Owner-only, audited. */
+function WatiId({ kind, code, cur, guess, onSaved }: { kind: "op" | "team"; code: string; cur: string; guess: string; onSaved: () => void }) {
+  const [v, setV] = useState(cur || guess);
+  const save = async () => {
+    const r = kind === "op" ? await supabase.rpc("wa_link_operator_email" as never, { _code: code, _email: v } as never)
+      : await supabase.rpc("wa_link_team_name" as never, { _code: code, _name: v } as never);
+    if (r.error) toast.error(r.error.message); else { toast.success("حُفظ"); onSaved(); }
+  };
+  return (<div className="flex items-center gap-2">
+    <Input dir={kind === "op" ? "ltr" : undefined} value={v} onChange={(e) => setV(e.target.value)} className="h-8 text-xs"
+      placeholder={kind === "op" ? "بريد الموظف في WATI (للتحويل)" : "اسم الفريق كما في WATI (للتحويل)"} />
+    <Button size="sm" variant="outline" disabled={v.trim() === cur} onClick={() => void save()}>حفظ</Button></div>);
+}
+
 function WaLinks({ onBack }: { onBack: () => void }) {
   const qc = useQueryClient();
   const d = useQuery({ queryKey: ["wa-codes"], queryFn: async () => { const r = await supabase.rpc("wa_codes" as never); if (r.error) throw r.error; return r.data as Row; } });
@@ -143,6 +157,8 @@ function WaLinks({ onBack }: { onBack: () => void }) {
           <Button size="sm" disabled={val === cur} onClick={() => save(kind, c.code, val, kind === "team" ? c.names?.[0]?.n : undefined)}>حفظ</Button>
         </div>
         {cur && <div className="text-xs text-primary">مربوط حاليًا: {kind === "op" ? c.user_name : c.school_name}</div>}
+        {cur && kind === "op" && <div className="text-xs text-muted-foreground">{c.email ? "بريد WATI مسجّل تلقائيًا — يمكن التحويل إليه" : "لا يوجد بريد في WATI لهذا الكود (مثل البوت) — لا يمكن التحويل إليه"}</div>}
+        {cur && kind === "team" && <WatiId kind={kind} code={c.code} cur={c.wati_name ?? ""} guess={c.names?.[0]?.n ?? ""} onSaved={() => void qc.invalidateQueries({ queryKey: ["wa-codes"] })} />}
       </div>
     );
   };

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { TransferBox } from "./whatsapp-transfer";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Copy, Lock, Mic, MessageSquareText, Paperclip, Plus, Send, Square, StickyNote, Tag, X, Zap } from "lucide-react";
@@ -48,6 +49,7 @@ export function ContactCard({ conv }: { conv: string }) {
         <Line k="الفرع" v={(c.branches ?? []).join("، ")} />
         <Line k="الفرق" v={(a?.ok ? a.teams : c.contact_teams ?? []).join("، ")} />
       </Sec>
+      <TransferBox conv={conv} />
       {c.students?.length > 0 && (
         <Sec t="الطلاب المرتبطون"><ul className="space-y-1 text-sm">{c.students.map((s: Row) => <li key={s.id}>{s.name}<span className="block text-xs text-muted-foreground">{s.school}{s.relationship ? ` · ${s.relationship}` : ""}</span></li>)}</ul></Sec>)}
       {Array.isArray(c.tickets) && (

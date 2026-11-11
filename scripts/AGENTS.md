@@ -127,3 +127,4 @@
 - scripts/staff-dir-e2e.ts: principal HR staff directory (once per employee, account status, no sensitive fields, other roles/branches refused; 11 checks).
 - scripts/wa-assign-e2e.ts: WhatsApp assignment access (mine/branch perms, team→branch isolation, unlinked codes, reassignment sync, owner-only links; 17 checks, cleans its test logins).
 - scripts/wa-card-e2e.ts: WhatsApp card/notes/tags/quick replies for owner, authorized and unauthorized staff (21 checks).
+- scripts/wa-transfer-e2e.ts: WhatsApp chat transfer scope/branch vs cross-branch, unresolved blocking, access handover, failed keeps assignment, log+audit (25 checks; fake chat, no WATI call).
