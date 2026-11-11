@@ -20276,6 +20276,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      _perm_base_pre334: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
       _perm_base_v11: {
         Args: {
           _action: string
@@ -20313,6 +20322,7 @@ export type Database = {
         Returns: boolean
       }
       _perm_catalog_base: { Args: never; Returns: Json }
+      _perm_catalog_pre334: { Args: never; Returns: Json }
       _perm_catalog_v11: { Args: never; Returns: Json }
       _perm_catalog_v12: { Args: never; Returns: Json }
       _perm_catalog_v13: { Args: never; Returns: Json }
@@ -20361,6 +20371,10 @@ export type Database = {
         Returns: boolean
       }
       _perm_valid_pre332: {
+        Args: { _action: string; _scope: string; _section: string }
+        Returns: boolean
+      }
+      _perm_valid_pre334: {
         Args: { _action: string; _scope: string; _section: string }
         Returns: boolean
       }
@@ -20671,6 +20685,10 @@ export type Database = {
         Args: { _school: string; _user: string }
         Returns: boolean
       }
+      _task_target_ok_pre334: {
+        Args: { _school: string; _user: string }
+        Returns: boolean
+      }
       _teaches_section: {
         Args: { _section: string; _user: string }
         Returns: boolean
@@ -20881,6 +20899,15 @@ export type Database = {
         Returns: string[]
       }
       _wa_who: { Args: { _u: string }; Returns: string }
+      _ws_ok: {
+        Args: { _action: string; _school: string; _section: string }
+        Returns: boolean
+      }
+      _ws_sections: { Args: never; Returns: Json }
+      _ws_view: {
+        Args: { _school: string; _section: string }
+        Returns: boolean
+      }
       _xb_ok: { Args: { _org: string; _user: string }; Returns: boolean }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
@@ -25398,6 +25425,15 @@ export type Database = {
       wa_transfer_get: { Args: { _id: string }; Returns: Json }
       wa_transfer_log: { Args: { _conv: string }; Returns: Json }
       wa_transfer_options: { Args: { _conv: string }; Returns: Json }
+      workspace_teacher_options: {
+        Args: { _school: string }
+        Returns: {
+          department_id: string
+          full_name: string
+          id: string
+          status: string
+        }[]
+      }
       xb_get: { Args: { _org: string }; Returns: Json }
       xb_save: {
         Args: {
