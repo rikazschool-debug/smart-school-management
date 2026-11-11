@@ -68,7 +68,7 @@ export function WhatsAppInbox() {
           {me.data.owner && <Button size="sm" variant="outline" onClick={() => setLinks(true)}><Link2 className="size-4" /> ربط موظفي وفرق واتساب</Button>}
         </div>
       </div>
-      <div className="grid gap-3 lg:grid-cols-[320px_1fr]">
+      <div className="grid min-w-0 gap-3 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div className="rounded-lg border bg-card">
           <div className="flex items-center gap-2 border-b p-2">
             <div className="relative flex-1"><Search className="absolute right-2 top-2.5 size-4 text-muted-foreground" /><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم أو الرقم" className="pr-8" /></div>
@@ -220,8 +220,8 @@ function Thread({ id, owner }: { id: string; owner: boolean }) {
   if (t.error) return <ErrorState message="تعذّر تحميل المحادثة" onRetry={() => void t.refetch()} />;
   const c = t.data.conversation; const msgs: Row[] = t.data.messages;
   return (
-    <div className="grid gap-3 xl:grid-cols-[1fr_280px]">
-    <div className="flex min-h-[60vh] flex-col rounded-lg border bg-card">
+    <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_280px]">
+    <div className="flex min-h-[60vh] min-w-0 flex-col rounded-lg border bg-card">
       <div className="flex items-center justify-between border-b p-3">
         <div><div className="font-semibold">{c.contact_name || c.wa_id}</div>{c.wa_id && <div className="text-xs text-muted-foreground" dir="ltr">+{c.wa_id}</div>}</div>
         {c.bot_branch && <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground" title="اختيار العميل في البوت — للعلم فقط، الإسناد من WATI">الفرع الذي اختاره العميل: {c.bot_branch}</span>}
