@@ -17427,6 +17427,51 @@ export type Database = {
           },
         ]
       }
+      wa_conv_tags: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          conversation_id: string
+          name: string
+          org_id: string
+          wati_error: string | null
+          wati_sync: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          conversation_id: string
+          name: string
+          org_id: string
+          wati_error?: string | null
+          wati_sync?: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          conversation_id?: string
+          name?: string
+          org_id?: string
+          wati_error?: string | null
+          wati_sync?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_conv_tags_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_conv_tags_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wa_conversations: {
         Row: {
           assign_seen_at: string | null
@@ -17566,6 +17611,48 @@ export type Database = {
           },
         ]
       }
+      wa_notes: {
+        Row: {
+          author: string
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          org_id: string
+        }
+        Insert: {
+          author: string
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          org_id: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_notes_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_notes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wa_operator_links: {
         Row: {
           org_id: string
@@ -17591,6 +17678,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "wa_operator_links_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_quick_replies: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          org_id: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          org_id: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          org_id?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_quick_replies_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -20334,6 +20465,35 @@ export type Database = {
         Args: { _name: string; _wa: string; _wati: string }
         Returns: string
       }
+      _wa_conv_ok: {
+        Args: { _conv: string }
+        Returns: {
+          assign_seen_at: string | null
+          contact_id: string | null
+          contact_name: string | null
+          contact_owner: string | null
+          contact_teams: string[]
+          created_at: string
+          id: string
+          last_at: string | null
+          last_inbound_at: string | null
+          last_text: string | null
+          org_id: string
+          unread: number
+          wa_id: string | null
+          wati_assignee: string | null
+          wati_assignment: string | null
+          wati_conv_id: string
+          wati_status: string | null
+          wati_team_ids: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wa_conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _wa_ingest: {
         Args: { _key: string; _payload: Json; _type: string }
         Returns: Json
@@ -20380,6 +20540,10 @@ export type Database = {
       }
       _wa_rank: { Args: { _s: string }; Returns: number }
       _wa_recover: { Args: { _limit?: number }; Returns: number }
+      _wa_tag_sync: {
+        Args: { _conv: string; _err: string; _name: string; _ok: boolean }
+        Returns: undefined
+      }
       _wa_ts: { Args: { _v: string }; Returns: string }
       _xb_ok: { Args: { _org: string; _user: string }; Returns: boolean }
       accept_invitation: { Args: { _token: string }; Returns: string }
@@ -24813,6 +24977,7 @@ export type Database = {
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
       vice_teacher_ids: { Args: never; Returns: string[] }
       wa_codes: { Args: never; Returns: Json }
+      wa_contact_card: { Args: { _conv: string }; Returns: Json }
       wa_conv_ref: { Args: { _conv: string }; Returns: Json }
       wa_conversations_list: {
         Args: { _box?: string; _q?: string }
@@ -24829,8 +24994,29 @@ export type Database = {
       wa_me: { Args: never; Returns: Json }
       wa_media_ref: { Args: { _msg: string }; Returns: Json }
       wa_messages_list: { Args: { _conv: string }; Returns: Json }
+      wa_note_add: { Args: { _body: string; _conv: string }; Returns: string }
       wa_ok: { Args: never; Returns: boolean }
       wa_org_ok: { Args: { _org: string }; Returns: boolean }
+      wa_quick_list: { Args: { _org: string }; Returns: Json }
+      wa_quick_list0: { Args: never; Returns: Json }
+      wa_quick_save: {
+        Args: {
+          _active: boolean
+          _body: string
+          _id: string
+          _org: string
+          _title: string
+        }
+        Returns: string
+      }
+      wa_quick_save0: {
+        Args: { _active: boolean; _body: string; _id: string; _title: string }
+        Returns: string
+      }
+      wa_tag_set: {
+        Args: { _conv: string; _name: string; _on: boolean }
+        Returns: undefined
+      }
       xb_get: { Args: { _org: string }; Returns: Json }
       xb_save: {
         Args: {

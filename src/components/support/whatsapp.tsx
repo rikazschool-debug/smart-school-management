@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ask } from "@/components/confirm";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { waMedia, waSend, waSync, waSyncAssign } from "@/lib/wa-inbox.functions";
+import { Composer, ContactCard } from "@/components/support/whatsapp-extras";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -96,7 +97,7 @@ export function WhatsAppInbox() {
             </ul>
           )}
         </div>
-        {open ? <Thread key={open} id={open} /> : <div className="rounded-lg border bg-card p-8"><EmptyState title="اختر محادثة" /></div>}
+        {open ? <Thread key={open} id={open} owner={!!me.data.owner} /> : <div className="rounded-lg border bg-card p-8"><EmptyState title="اختر محادثة" /></div>}
       </div>
     </div>
   );
@@ -158,7 +159,7 @@ function WaLinks({ onBack }: { onBack: () => void }) {
   );
 }
 
-function Thread({ id }: { id: string }) {
+function Thread({ id, owner }: { id: string; owner: boolean }) {
   const qc = useQueryClient();
   const sync = useServerFn(waSync); const send = useServerFn(waSend); const media = useServerFn(waMedia);
   const t = useQuery({
@@ -169,26 +170,16 @@ function Thread({ id }: { id: string }) {
   useEffect(() => { void sync({ data: { conv: id } }).then(() => qc.invalidateQueries({ queryKey: ["wa-msgs", id] })).catch((e: Error) => toast.error(`تعذّر جلب الرسائل من WATI: ${e.message}`)); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [t.data?.messages?.length]);
-  const [text, setText] = useState(""); const [sending, setSending] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const doSend = async (file?: File) => {
-    const body = text.trim();
-    if (!file && !body) return;
-    if (!t.data?.conversation?.window_open && !(await ask("مرّ أكثر من 24 ساعة على آخر رسالة من العميل؛ قد يرفض واتساب الرد الحر. متابعة؟"))) return;
+  const [sending, setSending] = useState(false);
+  const doSend = async (p: { text?: string; file?: { name: string; mime: string; b64: string; caption?: string; voice?: boolean } }) => {
+    if (!t.data?.conversation?.window_open && !(await ask("مرّ أكثر من 24 ساعة على آخر رسالة من العميل؛ قد يرفض واتساب الرد الحر. متابعة؟"))) return false;
     setSending(true);
     try {
-      let f: { name: string; mime: string; b64: string; caption?: string } | undefined;
-      if (file) {
-        if (file.size > 5 * 1024 * 1024) throw new Error("الملف أكبر من 5 ميغابايت");
-        const buf = new Uint8Array(await file.arrayBuffer()); let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
-        f = { name: file.name, mime: file.type || "application/octet-stream", b64: btoa(bin), ...(body ? { caption: body } : {}) };
-      }
-      const r = await send({ data: { conv: id, key: crypto.randomUUID(), ...(f ? { file: f } : { text: body }) } });
-      if (r.status === "failed") toast.error(`رفض WATI الإرسال: ${r.error ?? ""}`);
-      else if (r.status === "unknown") toast.warning("لم يتأكد قبول WATI للرسالة — تحقق قبل الإعادة");
-      else { toast.success("أُرسلت إلى WATI"); setText(""); }
-    } catch (e) { toast.error((e as Error).message); } finally { setSending(false); void qc.invalidateQueries({ queryKey: ["wa-msgs", id] }); void qc.invalidateQueries({ queryKey: ["wa-convs"] }); }
+      const r = await send({ data: { conv: id, key: crypto.randomUUID(), ...p } });
+      if (r.status === "failed") { toast.error(`رفض WATI الإرسال: ${r.error ?? ""}`); return false; }
+      if (r.status === "unknown") { toast.warning("لم يتأكد قبول WATI للرسالة — تحقق قبل الإعادة"); return false; }
+      toast.success(p.file?.voice ? "أُرسلت الرسالة الصوتية إلى WATI" : "أُرسلت إلى WATI"); return true;
+    } catch (e) { toast.error((e as Error).message); return false; } finally { setSending(false); void qc.invalidateQueries({ queryKey: ["wa-msgs", id] }); void qc.invalidateQueries({ queryKey: ["wa-convs"] }); }
   };
   const openMedia = async (m: Row) => {
     try {
@@ -203,6 +194,7 @@ function Thread({ id }: { id: string }) {
   if (t.error) return <ErrorState message="تعذّر تحميل المحادثة" onRetry={() => void t.refetch()} />;
   const c = t.data.conversation; const msgs: Row[] = t.data.messages;
   return (
+    <div className="grid gap-3 xl:grid-cols-[1fr_280px]">
     <div className="flex min-h-[60vh] flex-col rounded-lg border bg-card">
       <div className="flex items-center justify-between border-b p-3">
         <div><div className="font-semibold">{c.contact_name || c.wa_id}</div>{c.wa_id && <div className="text-xs text-muted-foreground" dir="ltr">+{c.wa_id}</div>}</div>
@@ -228,12 +220,9 @@ function Thread({ id }: { id: string }) {
         ))}
         <div ref={end} />
       </div>
-      <div className="flex items-end gap-2 border-t p-2">
-        <input ref={fileRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void doSend(f); }} />
-        <Button size="icon" variant="outline" disabled={sending} onClick={() => fileRef.current?.click()} aria-label="إرفاق ملف"><Paperclip className="size-4" /></Button>
-        <Textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب الرد… (يُرسل مع المرفق كتعليق إن وُجد)" className="flex-1" />
-        <Button disabled={sending || !text.trim()} onClick={() => doSend()}><Send className="size-4" /> إرسال</Button>
-      </div>
+      <Composer conv={id} sending={sending} owner={owner} onSend={doSend} />
+    </div>
+    <ContactCard conv={id} />
     </div>
   );
 }
