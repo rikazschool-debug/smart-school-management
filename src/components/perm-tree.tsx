@@ -77,7 +77,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                 <button type="button" aria-expanded={isOpen} onClick={() => setOpen({ ...open, [ar.key]: !isOpen })} className="grid size-7 place-items-center rounded hover:bg-muted" aria-label={isOpen ? "طي" : "فتح"}>
                   {isOpen ? <ChevronDown className="size-4" /> : <ChevronLeft className="size-4" />}
                 </button>
-                <TriBox label={ar.label} state={aState} disabled={readOnly || locked || ar.soon || !all.length} onChange={(on) => {
+                <TriBox label={ar.label} state={aState} disabled={readOnly || locked || ar.soon || !all.some((s) => baseAction(s) && s.scopes.length)} onChange={(on) => {
                   if (!on) return onChange(value.filter((g) => !all.some((s) => s.key === g.section)));
                   const add = all.flatMap((s) => { const a = baseAction(s); const scope = s.scopes[0]; return a && scope && !has(s.key, a) && (!s.base_only || was(`${s.key}.${a}`)) ? [{ section: s.key, action: a, scope }] : []; });
                   onChange([...value, ...add]); setOpen({ ...open, [ar.key]: true });
