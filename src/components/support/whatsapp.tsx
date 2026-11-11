@@ -69,7 +69,7 @@ function Thread({ id }: { id: string }) {
     queryFn: async () => { const r = await supabase.rpc("wa_messages_list" as never, { _conv: id } as never); if (r.error) throw r.error; return r.data as Row; },
     refetchInterval: 10_000,
   });
-  useEffect(() => { void sync({ data: { conv: id } }).then(() => qc.invalidateQueries({ queryKey: ["wa-msgs", id] })).catch(() => {}); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void sync({ data: { conv: id } }).then(() => qc.invalidateQueries({ queryKey: ["wa-msgs", id] })).catch((e: Error) => toast.error(`تعذّر جلب الرسائل من WATI: ${e.message}`)); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [t.data?.messages?.length]);
   const [text, setText] = useState(""); const [sending, setSending] = useState(false);
