@@ -487,7 +487,7 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
       const ending = !!v["end_date"] && !d.data!.assignments.find((a) => a.id === v["id"])?.end_date;
       const reason = ending ? await askText("سبب إنهاء التعيين", { required: true, ok: "حفظ" }) : null;
       if (ending && !reason) throw new Error("أُلغي");
-      const { id: aid, ...p } = v;
+      const { id: aid, ...p0 } = v; const p = p0["school_id"] === CENTRAL ? { ...p0, school_id: "", central: "true" } : p0;
       return rpc("hr_assignment_save", { _employee: id, _id: aid || null, _p: { ...Object.fromEntries(Object.entries(p).filter(([, x]) => x !== "")), category_id: p["category_id"] ?? "" }, _reason: reason });
     },
     onSuccess: () => { toast.success("حُفظ التعيين"); setAsg(null); refresh(); },
@@ -526,14 +526,14 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
         <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", category_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
         {asg && (
           <div className="mb-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div><Label htmlFor="as-sch">{bi("school", "المدرسة")}</Label><select id="as-sch" className={selectCls("mt-1 w-full")} value={asg["school_id"]} onChange={(ev) => setAsg({ ...asg, school_id: ev.target.value })}><option value="">اختر</option>{m.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}{asg["school_id"] && !m.schools.some((s) => s.id === asg["school_id"]) && <option value={asg["school_id"]}>{assignments.find((a) => a.school_id === asg["school_id"])?.school ?? "المدرسة الحالية"}</option>}</select></div>
+            <div><Label htmlFor="as-sch">{bi("school", "المدرسة")}</Label><select id="as-sch" className={selectCls("mt-1 w-full")} value={asg["school_id"]} onChange={(ev) => setAsg({ ...asg, school_id: ev.target.value })}><option value="">اختر</option>{m.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}{m.owner && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}{asg["school_id"] && asg["school_id"] !== CENTRAL && !m.schools.some((s) => s.id === asg["school_id"]) && <option value={asg["school_id"]}>{assignments.find((a) => a.school_id === asg["school_id"])?.school ?? "المدرسة الحالية"}</option>}</select></div>
             <div><Label htmlFor="as-cat">{bi("category", "التصنيف الوظيفي")}</Label><select id="as-cat" className={selectCls("mt-1 w-full")} value={asg["category_id"] ?? ""} onChange={(ev) => setAsg({ ...asg, category_id: ev.target.value })}><option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active || c.id === asg["category_id"]).map((c) => <option key={c.id} value={c.id}>{c.name}{c.is_active ? "" : " (معطل)"}</option>)}</select></div>
             <div><Label htmlFor="as-job">{bi("job_title", "الوظيفة في هذا التعيين")}</Label><Input id="as-job" className="mt-1" value={asg["job_title"]} onChange={(ev) => setAsg({ ...asg, job_title: ev.target.value })} /><EnHint k="job_title" v={asg["job_title"]} /></div>
             <div><Label htmlFor="as-dep">{bi("department", "القسم")}</Label><Input id="as-dep" className="mt-1" value={asg["department"]} onChange={(ev) => setAsg({ ...asg, department: ev.target.value })} /><EnHint k="department" v={asg["department"]} /></div>
             <div><Label htmlFor="as-mgr">{bi("manager", "المدير المباشر")}</Label><select id="as-mgr" className={selectCls("mt-1 w-full")} value={asg["manager_id"]} onChange={(ev) => setAsg({ ...asg, manager_id: ev.target.value })}><option value="">الموارد البشرية (افتراضي)</option>{mgrs.map((x) => <option key={x.id} value={x.id}>{x.full_name}</option>)}</select></div>
             <div><Label htmlFor="as-s">{bi("asg_from", "من")}</Label><Input id="as-s" type="date" className="mt-1" value={asg["start_date"]} onChange={(ev) => setAsg({ ...asg, start_date: ev.target.value })} /></div>
             <div><Label htmlFor="as-e">{bi("asg_to", "إلى (اختياري)")}</Label><Input id="as-e" type="date" className="mt-1" value={asg["end_date"]} onChange={(ev) => setAsg({ ...asg, end_date: ev.target.value })} /></div>
-            {(!asg["school_id"] || !asg["start_date"]) && <p className="text-xs text-destructive sm:col-span-2 lg:col-span-3">لتفعيل الحفظ: {!asg["school_id"] ? "اختر المدرسة" : "حدّد تاريخ البداية «من»"}.</p>}
+            {(!asg["school_id"] || !asg["start_date"]) && <p className="text-xs text-destructive sm:col-span-2 lg:col-span-3">لتفعيل الحفظ: {!asg["school_id"] ? "اختر المدرسة أو الإدارة المركزية" : "حدّد تاريخ البداية «من»"}.</p>}
             <div className="flex gap-2 sm:col-span-2 lg:col-span-3"><Button disabled={!asg["school_id"] || !asg["start_date"] || saveAsg.isPending} onClick={() => saveAsg.mutate(asg)}>{saveAsg.isPending ? "…" : "حفظ التعيين"}</Button><Button variant="ghost" onClick={() => setAsg(null)}>إلغاء</Button></div>
           </div>
         )}
@@ -546,7 +546,7 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
                   <span className="block text-xs text-muted-foreground">{[a.category, a.job_title, a.department, a.manager && `المدير: ${a.manager}`, a.teacher && `سجل المعلم: ${a.teacher}`].filter(Boolean).join(" · ")}</span>
                   <span className="block text-xs text-muted-foreground"><bdi dir="ltr">{a.start_date}</bdi> ← {a.end_date ? <bdi dir="ltr">{a.end_date}</bdi> : "مستمر"}</span>
                 </span>
-                {can_edit && a.active && !asg && <Button size="sm" variant="ghost" onClick={() => setAsg({ id: a.id, school_id: a.school_id, category_id: a.category_id ?? "", job_title: a.job_title ?? "", department: a.department ?? "", manager_id: a.manager_id ?? "", start_date: a.start_date, end_date: a.end_date ?? "", ...(a.teacher_id ? { teacher_id: a.teacher_id } : {}) })}>تعديل / إنهاء</Button>}
+                {can_edit && a.active && !asg && <Button size="sm" variant="ghost" onClick={() => setAsg({ id: a.id, school_id: a.school_id ?? CENTRAL, category_id: a.category_id ?? "", job_title: a.job_title ?? "", department: a.department ?? "", manager_id: a.manager_id ?? "", start_date: a.start_date, end_date: a.end_date ?? "", ...(a.teacher_id ? { teacher_id: a.teacher_id } : {}) })}>تعديل / إنهاء</Button>}
               </li>
             ))}
           </ul>
