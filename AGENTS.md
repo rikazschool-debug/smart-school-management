@@ -59,3 +59,4 @@
 - People records edit rights: teacher writes use can_edit_staff; students/guardians/links use can_edit_students. Enrollment writes use can_place_students (people_family.place; existing edit grants retained unless place denied), and the UI calls atomic student_place so a failed transfer preserves the prior enrollment. Reads stay on can_manage_students/staff_view. Tests: staff-dir-e2e.ts, placement-perm-e2e.ts.
 - Permission catalog informational entries remain locked; workspace sections and bt_* tools are grantable through owner-only templates/person edits. Tool grants never replace course assignment, participant, or private self-record identity checks.
 - Export branding: every PDF/print/Excel export carries the active school (or group) name + logo via src/lib/export-brand.ts (synced by ExportBrandSync in the app layout) — never a per-screen header.
+- Use one PermTree per editor to avoid duplicate controls.

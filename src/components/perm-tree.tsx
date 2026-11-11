@@ -69,7 +69,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 border-y py-3">
-        <div className="relative min-w-0 flex-1 sm:min-w-60"><Search className="pointer-events-none absolute start-3 top-3 size-4 text-muted-foreground" /><Input aria-label="بحث في الأقسام" placeholder="بحث في جميع الأقسام والإجراءات" value={q} onChange={(e) => setQ(e.target.value)} className="ps-9" /></div>
+        <div className="relative min-w-0 basis-full sm:min-w-60 sm:flex-1 sm:basis-auto"><Search className="pointer-events-none absolute start-3 top-3 size-4 text-muted-foreground" /><Input aria-label="بحث في الأقسام" placeholder="بحث في جميع الأقسام والإجراءات" value={q} onChange={(e) => setQ(e.target.value)} className="ps-9" /></div>
         <ListFilter className="size-4 text-muted-foreground" />
         <select aria-label="تصفية" className={selectCls("w-44")} value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
           <option value="all">كل الصلاحيات</option><option value="on">المسموح حاليًا</option><option value="off">غير المسموح</option>{orig && <option value="personal">التخصيصات الشخصية</option>}</select>
