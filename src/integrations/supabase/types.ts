@@ -17369,6 +17369,32 @@ export type Database = {
           },
         ]
       }
+      wa_connection: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          org_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_connection_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wa_conversations: {
         Row: {
           contact_name: string | null
@@ -17377,6 +17403,7 @@ export type Database = {
           last_at: string | null
           last_inbound_at: string | null
           last_text: string | null
+          org_id: string
           unread: number
           wa_id: string | null
           wati_conv_id: string
@@ -17388,6 +17415,7 @@ export type Database = {
           last_at?: string | null
           last_inbound_at?: string | null
           last_text?: string | null
+          org_id: string
           unread?: number
           wa_id?: string | null
           wati_conv_id: string
@@ -17399,11 +17427,20 @@ export type Database = {
           last_at?: string | null
           last_inbound_at?: string | null
           last_text?: string | null
+          org_id?: string
           unread?: number
           wa_id?: string | null
           wati_conv_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "wa_conversations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wa_messages: {
         Row: {
@@ -20116,6 +20153,7 @@ export type Database = {
         Args: { _at: string; _err: string; _msg: string; _status: string }
         Returns: undefined
       }
+      _wa_can: { Args: { _org: string }; Returns: boolean }
       _wa_conv: {
         Args: { _name: string; _wa: string; _wati: string }
         Returns: string
@@ -20124,6 +20162,7 @@ export type Database = {
         Args: { _key: string; _payload: Json; _type: string }
         Returns: Json
       }
+      _wa_org: { Args: never; Returns: string }
       _wa_out_claim: {
         Args: {
           _body: string
@@ -24583,6 +24622,7 @@ export type Database = {
       wa_media_ref: { Args: { _msg: string }; Returns: Json }
       wa_messages_list: { Args: { _conv: string }; Returns: Json }
       wa_ok: { Args: never; Returns: boolean }
+      wa_org_ok: { Args: { _org: string }; Returns: boolean }
       xb_get: { Args: { _org: string }; Returns: Json }
       xb_save: {
         Args: {
