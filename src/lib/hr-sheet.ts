@@ -7,7 +7,7 @@ import { CAL_LABEL, HR_FIELDS, HR_GROUPS, ID_TYPES, type Cal } from "@/lib/hr-fi
 type Val = string | number | boolean | null | undefined;
 export type SheetEmp = Record<string, Val> & { sensitive?: boolean };
 export type SheetAssign = { school: string; job_title?: string | null; department?: string | null; category?: string | null; manager?: string | null; start_date: string; end_date?: string | null; is_primary?: boolean; active?: boolean };
-export type SheetAccount = { has_login: boolean; self_access: boolean; roles: { role: string; school: string | null; active: boolean }[]; templates: string[] };
+export type SheetAccount = { has_login: boolean; self_access: boolean; roles: { role: string; school: string | null; active: boolean }[]; templates: string[]; is_teacher?: boolean };
 export type SheetItem = { employee: SheetEmp; assignments?: SheetAssign[]; profile?: Record<string, Val> | null; account?: SheetAccount | null };
 export type SheetRow = { label: string; value: string; ltr?: boolean; masked?: boolean };
 export type SheetSection = { key: string; title: string; rows: SheetRow[] };
@@ -61,7 +61,7 @@ export function buildSheet(it: SheetItem, roleLabel: (r: string) => string = (r)
     { label: "الوصول إلى «ملفي الوظيفي»", value: (acc?.self_access ?? e["self_access"]) ? "مفعّل" : "غير مفعّل" },
   ];
   if (acc) {
-    rows.push({ label: "الأدوار", value: acc.roles.map((r) => `${roleLabel(r.role)}${r.school ? ` — ${r.school}` : ""}${r.active ? "" : " (موقوف)"}`).join("، ") });
+    rows.push({ label: "الأدوار", value: acc.roles.map((r) => `${r.role === "teacher" && acc.is_teacher === false ? (acc.templates[0] ?? "موظف إداري") : roleLabel(r.role)}${r.school ? ` — ${r.school}` : ""}${r.active ? "" : " (موقوف)"}`).join("، ") });
     if (acc.templates.length) rows.push({ label: "قوالب الصلاحيات", value: acc.templates.join("، ") });
   }
   out.push({ key: "account", title: ACCOUNT_TITLE, rows });
