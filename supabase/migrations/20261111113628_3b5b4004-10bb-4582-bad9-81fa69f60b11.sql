@@ -1,0 +1,7 @@
+revoke all on function public._perm_catalog_pre334() from public,anon,authenticated;
+revoke all on function public._perm_base_pre334(uuid,uuid,text,text) from public,anon,authenticated;
+revoke all on function public._task_target_ok_pre334(uuid,uuid) from public,anon,authenticated;
+comment on function public.perm_catalog() is 'Intentional authenticated SECURITY DEFINER read-only permission metadata; no private user records, grants, or writes.';
+comment on function public._perm_base(uuid,uuid,text,text) is 'Intentional authenticated SECURITY DEFINER boolean role eligibility helper only; no records or writes. Actual access includes grants, explicit denials and session identity through _ws_ok.';
+comment on function public.workspace_teacher_options(uuid) is 'Intentional authenticated SECURITY DEFINER narrow choice pool: session permission and active-school checks, department scope, only academic teacher names/status, no personnel private fields.';
+comment on function public._task_target_ok(uuid,uuid) is 'Intentional authenticated SECURITY DEFINER recipient eligibility boolean; session create permission and existing scope or explicit owner delegation; no mutations or private records.';

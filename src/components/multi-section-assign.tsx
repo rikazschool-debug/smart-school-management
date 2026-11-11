@@ -16,7 +16,7 @@ import { arabicError } from "@/lib/session";
 /** mode «course»: the course add form — several sections at once, teacher optional.
  *  mode «assign»: teacher required. With canApprove the assignments are approved at once (decide_assignment),
  *  so each section's classroom shows the teacher right away; otherwise they wait for approval. */
-export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = false, mode = "assign" }: { schoolId: string; canCreateCourses: boolean; canApprove?: boolean; mode?: "course" | "assign" }) {
+export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = false, canAssign = true, mode = "assign" }: { schoolId: string; canCreateCourses: boolean; canApprove?: boolean; canAssign?: boolean; mode?: "course" | "assign" }) {
   const isCourse = mode === "course";
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -33,7 +33,7 @@ export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = fa
     queryKey: ["multi-assign", schoolId],
     queryFn: async () => {
       const [t, s, y, sec, co] = await Promise.all([
-        db.from("teachers").select("id, full_name").eq("school_id", schoolId).eq("status", "active").order("full_name"),
+        canAssign ? db.rpc("workspace_teacher_options", { _school: schoolId }) : Promise.resolve({ data: [], error: null }),
         db.from("subjects").select("id, name").eq("school_id", schoolId).order("name"),
         db.from("academic_years").select("id, name, is_current").eq("school_id", schoolId).order("start_date", { ascending: false }),
         db.from("sections").select("id, name, year_id, grades(name, sort_order, stages(name, sort_order))").eq("school_id", schoolId),
@@ -103,7 +103,7 @@ export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = fa
           <p className="text-xs text-muted-foreground">{isCourse ? "اختر السنة والمادة ثم الشعب، ويُنشأ مقرر لكل شعبة. اختر المعلم الآن ليُكلَّف بها كلها ويظهر في الفصل الرقمي لكل شعبة، أو اتركه وكلّفه لاحقًا." : "اختر المعلم والمادة ثم كل الشعب التي يدرّسها. يُنشأ تكليف مستقل لكل شعبة، وبعد الاعتماد يظهر المعلم في الفصل الرقمي لكل شعبة."}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1"><Label htmlFor="ma-t">{isCourse ? "المعلم (اختياري)" : "المعلم *"}</Label>
-              <select id="ma-t" className={sel} value={teacher} onChange={(e) => { setTeacher(e.target.value); setPicked(new Set()); }}>
+              <select id="ma-t" className={sel} disabled={!canAssign} value={teacher} onChange={(e) => { setTeacher(e.target.value); setPicked(new Set()); }}>
                 <option value="">{isCourse ? "— بدون تكليف الآن —" : "— اختر المعلم —"}</option>{data.data?.teachers.map((t) => <option key={t["id"]} value={t["id"]}>{t["full_name"]}</option>)}
               </select></div>
             <div className="space-y-1"><Label htmlFor="ma-s">المادة *</Label>

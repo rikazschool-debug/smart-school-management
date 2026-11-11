@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { canEditSchedule, scheduleLabel, scheduleTabs, type ScheduleTab } from "@/lib/roles";
+import { anyPermission, workspacePages } from "@/lib/workspace-perms";
 import { SubstitutionsTab } from "@/components/schedule/substitutions-tab";
 import { SettingsTab } from "@/components/schedule/settings-tab";
 import { GeneratePanel } from "@/components/schedule/generate-panel";
@@ -33,15 +34,17 @@ type Ctx = AppContext & { schoolId: string };
 const sel = selectCls("w-full");
 
 function Page() {
-  return <RequireSchool nav="schedule">{(ctx) => (scheduleTabs(ctx.role).length ? <ManagerTabs ctx={ctx} /> : <Viewer ctx={ctx} />)}</RequireSchool>;
+  return <RequireSchool nav="schedule" extra={(p) => workspacePages(p).includes("schedule")}>{(ctx) => <ManagerTabs ctx={ctx} />}</RequireSchool>;
 }
 
 function ManagerTabs({ ctx }: { ctx: Ctx }) {
-  const tabs = scheduleTabs(ctx.role);
+  const permissions = useSchoolPerms(ctx.schoolId);
+  const settings = anyPermission(permissions, ["schedule_day.view", "schedule_day.edit", "schedule_rooms.view", "schedule_rooms.edit", "schedule_loads.view", "schedule_loads.edit", "schedule_availability.view", "schedule_availability.edit", "schedule_requirements.view", "schedule_requirements.edit", "schedule_sub_policy.view", "schedule_sub_policy.edit"]);
+  const tabs: ScheduleTab[] = ["timetable", ...(scheduleTabs(ctx.role).includes("subs") ? ["subs" as const] : []), ...(settings ? ["settings" as const] : [])];
   const { tab: wanted = "timetable" } = Route.useSearch();
   const tab = tabs.includes(wanted) ? wanted : "timetable";
   const nav = useNavigate({ from: "/app/schedule" });
-  const editor = canEditSchedule(ctx.role);
+  const editor = anyPermission(permissions, ["schedule_drafts.view", "schedule_drafts.create", "schedule_drafts.edit", "schedule_drafts.generate", "schedule_drafts.publish", "schedule_drafts.revise"]);
   return (
     <>
       <PageHeader title="الجدول المدرسي" desc={editor ? "الجدول والبدلاء والإعدادات في مكان واحد. المسودة لا تظهر للمعلمين والطلاب والأسر حتى تنشرها." : "الجدول المنشور لمعلمي نطاقك (كاملًا أو حسب المعلم) مع الطباعة والتصدير، والبدلاء اليومية. الإعداد والتوليد والنشر لمدير المدرسة."} />
@@ -97,6 +100,8 @@ const applyFilter = (slots: Row[], f: string) =>
 /* ============ Manager: drafts, editor, generation, validation, publish, versions ============ */
 function Manager({ ctx }: { ctx: Ctx }) {
   const S = ctx.schoolId;
+  const permissions = useSchoolPerms(S);
+  const can = (action: string) => !!permissions?.[`schedule_drafts.${action}`];
   const qc = useQueryClient();
   const setup = useDaySetup(S);
   const years = useOptions("academic_years", "name", S);
@@ -164,7 +169,7 @@ function Manager({ ctx }: { ctx: Ctx }) {
               {!tts.data?.length && <li className="text-muted-foreground">لا توجد جداول بعد.</li>}
             </ul>
           </div>
-          <form className="space-y-2 rounded-2xl border bg-card p-4" onSubmit={async (e) => {
+          {can("create") && <form className="space-y-2 rounded-2xl border bg-card p-4" onSubmit={async (e) => {
             e.preventDefault();
             if (!nf.year) return void toast.error("اختر السنة الدراسية");
             const { data, error } = await db.from("timetables").insert({ school_id: S, year_id: nf.year, term_id: nf.term || null, name: nf.name }).select().single();
@@ -176,7 +181,7 @@ function Manager({ ctx }: { ctx: Ctx }) {
             <select className={sel} aria-label="السنة" value={nf.year} onChange={(e) => setNf({ ...nf, year: e.target.value })}><option value="">— السنة الدراسية —</option>{years.data?.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}</select>
             <select className={sel} aria-label="الفصل الدراسي" value={nf.term} onChange={(e) => setNf({ ...nf, term: e.target.value })}><option value="">— كل السنة —</option>{terms.data?.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}</select>
             <Button size="sm">إنشاء مسودة</Button>
-          </form>
+          </form>}
         </section>
       )}
       {!tts.data?.length && !versions && <EmptyState title="لا يوجد جدول بعد" hint="افتح «الإصدارات» وأنشئ مسودة للسنة الدراسية." />}
@@ -187,24 +192,24 @@ function Manager({ ctx }: { ctx: Ctx }) {
             <div className="space-y-1"><Label>عرض حسب</Label><Filter slots={slots.data ?? []} value={filter} onChange={setFilter} withRooms /></div>
             {isDraft ? (
               <>
-                <Button onClick={() => setGen(true)}><Wand2 className="me-1 size-4" /> توليد الجدول</Button>
+                {can("generate") && <Button onClick={() => setGen(true)}><Wand2 className="me-1 size-4" /> توليد الجدول</Button>}
                 <Button variant="outline" onClick={validate}><ShieldCheck className="me-1 size-4" /> فحص الجدول</Button>
                 <div className="space-y-1"><Label htmlFor="eff">تاريخ السريان</Label><Input id="eff" type="date" value={eff} onChange={(e) => setEff(e.target.value)} /></div>
-                <Button onClick={async () => {
+                {can("publish") && <Button onClick={async () => {
                   if (!(await ask(`نشر الجدول ليسري من ${eff}؟ سيُشعَر المعلمون والطلاب والأسر مرة واحدة.`))) return;
                   const { data, error } = await db.rpc("publish_timetable", { _id: tt["id"], _effective_from: eff });
                   if (error) { toast.error(arabicError(error)); return void validate(); }
                   toast.success(`نُشر الإصدار ${data}`); refresh();
-                }}>نشر</Button>
-                <Button variant="ghost" onClick={async () => {
+                }}>نشر</Button>}
+                {can("edit") && <Button variant="ghost" onClick={async () => {
                   if (!(await ask("تجاهل هذه المسودة؟ لا يتأثر الجدول المنشور.", { destructive: true }))) return;
                   const { error } = await db.from("timetables").update({ status: "discarded" }).eq("id", tt["id"]);
                   if (error) return void toast.error(arabicError(error));
                   setSel(""); refresh();
-                }}>تجاهل المسودة</Button>
+                }}>تجاهل المسودة</Button>}
               </>
             ) : (
-              <Button variant="outline" onClick={async () => {
+              can("revise") && <Button variant="outline" onClick={async () => {
                 const { data, error } = await db.rpc("start_timetable_revision", { _id: tt["id"] });
                 if (error) return void toast.error(arabicError(error));
                 toast.success("فُتحت نسخة تعديل"); refresh(); setSel(data);
@@ -232,7 +237,7 @@ function Manager({ ctx }: { ctx: Ctx }) {
                     {here.map((s) => (
                       <div key={s["id"]} className="group relative">
                         <SlotCard s={s} show={filter.startsWith("t:") ? ["section"] : filter.startsWith("s:") ? ["teacher"] : ["teacher", "section"]} problem={problemBySlot.get(s["id"])} />
-                        {isDraft && (
+                        {isDraft && can("edit") && (
                           <span className="absolute end-1 top-1 flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
                             <button aria-label={s["pinned"] ? "إلغاء تثبيت الحصة" : "تثبيت الحصة"} title={s["pinned"] ? "إلغاء التثبيت" : "تثبيت الحصة"} className="rounded bg-background px-1 text-[10px]" onClick={async () => {
                               const { error } = await db.from("timetable_slots").update({ pinned: !s["pinned"] }).eq("id", s["id"]);
@@ -246,14 +251,14 @@ function Manager({ ctx }: { ctx: Ctx }) {
                         )}
                       </div>
                     ))}
-                    {isDraft && <button aria-label={`إضافة حصة ${DAY_NAMES[day]} ${p["name"]}`} className="w-full rounded-md border border-dashed py-1 text-xs text-muted-foreground hover:bg-muted" onClick={() => setAdding({ day, period: p })}>+</button>}
+                    {isDraft && can("edit") && <button aria-label={`إضافة حصة ${DAY_NAMES[day]} ${p["name"]}`} className="w-full rounded-md border border-dashed py-1 text-xs text-muted-foreground hover:bg-muted" onClick={() => setAdding({ day, period: p })}>+</button>}
                   </div>
                 );
               }}
             />
           )}
           <AddSlot ctx={ctx} tt={tt} rooms={d.rooms} target={adding} filter={filter} onClose={() => setAdding(null)} onDone={refresh} />
-          {isDraft && <GeneratePanel tt={tt} open={gen} onClose={() => setGen(false)} onApplied={() => { refresh(); setProblems(null); }} />}
+          {isDraft && can("generate") && <GeneratePanel tt={tt} open={gen} onClose={() => setGen(false)} onApplied={() => { refresh(); setProblems(null); }} />}
         </>
       )}
     </>

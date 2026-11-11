@@ -12,6 +12,8 @@ import { ask } from "@/components/confirm";
 import { arabicError, type AppContext } from "@/lib/session";
 import { DAY_NAMES, useDaySetup } from "@/lib/schedule";
 import { UNAV_KIND } from "@/lib/timetable-model";
+import { useSchoolPerms } from "@/lib/school-perms";
+import { anyPermission } from "@/lib/workspace-perms";
 
 type Ctx = AppContext & { schoolId: string };
 const sel = selectCls("w-full");
@@ -48,6 +50,9 @@ export function useYearTerm(S: string) {
  *  Everything here feeds the generator and the server checks (_tt_slot_problem); nothing is entered twice. */
 export function SettingsTab({ ctx }: { ctx: Ctx }) {
   const S = ctx.schoolId;
+  const permissions = useSchoolPerms(S);
+  const access = (key: string) => anyPermission(permissions, [`${key}.view`, `${key}.edit`]);
+  const edit = (key: string) => !!permissions?.[`${key}.edit`];
   const yt = useYearTerm(S);
   const [year, setYear] = useState("");
   const [term, setTerm] = useState("");
@@ -57,7 +62,7 @@ export function SettingsTab({ ctx }: { ctx: Ctx }) {
   const terms = (yt.data?.terms ?? []).filter((t) => t["year_id"] === y);
   return (
     <>
-      <DayAndRooms S={S} />
+      <DayAndRooms S={S} dayView={access("schedule_day")} dayEdit={edit("schedule_day")} roomsView={access("schedule_rooms")} roomsEdit={edit("schedule_rooms")} />
       <div className="my-4 flex flex-wrap items-end gap-3 rounded-2xl border bg-muted/30 p-3">
         <div className="space-y-1"><Label htmlFor="st-y">السنة الدراسية</Label>
           <select id="st-y" className={selectCls("w-48")} value={y} onChange={(e) => { setYear(e.target.value); setTerm(""); }}>{yt.data?.years.map((x) => <option key={x["id"]} value={x["id"]}>{x["name"]}</option>)}</select></div>
@@ -66,17 +71,17 @@ export function SettingsTab({ ctx }: { ctx: Ctx }) {
         <p className="text-xs text-muted-foreground">متطلبات المقررات وأنصبة المعلمين مرتبطة بالسنة والفصل المختارين.</p>
       </div>
       {y ? <>
-        <CourseReqs S={S} year={y} term={term} />
-        <Loads S={S} year={y} term={term} />
+        {access("schedule_requirements") && <fieldset disabled={!edit("schedule_requirements")}><CourseReqs S={S} year={y} term={term} /></fieldset>}
+        {access("schedule_loads") && <fieldset disabled={!edit("schedule_loads")}><Loads S={S} year={y} term={term} /></fieldset>}
       </> : <p className="mb-3 text-sm text-muted-foreground">أضف سنة دراسية من الإعداد الأكاديمي أولًا.</p>}
-      <Availability S={S} />
-      <SubPolicy S={S} />
+      {access("schedule_availability") && <fieldset disabled={!edit("schedule_availability")}><Availability S={S} /></fieldset>}
+      {access("schedule_sub_policy") && <fieldset disabled={!edit("schedule_sub_policy")}><SubPolicy S={S} /></fieldset>}
       <p className="text-sm text-muted-foreground">إسناد المعلمين للمشرفين ونطاق الوكلاء صار في «الإعداد الأكاديمي ← نطاق الوكلاء والمشرفين».</p>
     </>
   );
 }
 
-function DayAndRooms({ S }: { S: string }) {
+function DayAndRooms({ S, dayView, dayEdit, roomsView, roomsEdit }: { S: string; dayView: boolean; dayEdit: boolean; roomsView: boolean; roomsEdit: boolean }) {
   const qc = useQueryClient();
   const q = useDaySetup(S);
   const [p, setP] = useState({ name: "", start: "", end: "", kind: "lesson" });
@@ -89,7 +94,7 @@ function DayAndRooms({ S }: { S: string }) {
   const kinds = [...new Set(["general", "معمل", "حاسب", "صالة رياضية", "فنية", ...d.rooms.map((r) => r["kind"] as string)])];
   return (
     <>
-      <Group title="اليوم الدراسي" hint={`${d.studyDays.length} أيام — ${d.periods.filter((x) => x["kind"] === "lesson").length} حصص`} open>
+      {dayView && <fieldset disabled={!dayEdit}><Group title="اليوم الدراسي" hint={`${d.studyDays.length} أيام — ${d.periods.filter((x) => x["kind"] === "lesson").length} حصص`} open>
         <h3 className="mb-2 text-sm font-semibold">أيام الدراسة</h3>
         <div className="mb-4 flex flex-wrap gap-2">
           {DAY_NAMES.map((n, i) => {
@@ -139,8 +144,8 @@ function DayAndRooms({ S }: { S: string }) {
           <div className="space-y-1"><Label htmlFor="pk">النوع</Label><select id="pk" className={sel} value={p.kind} onChange={(e) => setP({ ...p, kind: e.target.value })}><option value="lesson">حصة</option><option value="break">فسحة</option></select></div>
           <Button className="self-end">إضافة</Button>
         </form>
-      </Group>
-      <Group title="القاعات" hint={`${d.rooms.length} قاعة`}>
+      </Group></fieldset>}
+      {roomsView && <fieldset disabled={!roomsEdit}><Group title="القاعات" hint={`${d.rooms.length} قاعة`}>
         <ul className="mb-3 space-y-1 text-sm">
           {d.rooms.map((r) => (
             <li key={r["id"]} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-1.5">
@@ -162,7 +167,7 @@ function DayAndRooms({ S }: { S: string }) {
           <Input type="number" min={1} value={room.capacity} onChange={(e) => setRoom({ ...room, capacity: e.target.value })} placeholder="السعة" aria-label="السعة" />
           <Button>إضافة</Button>
         </form>
-      </Group>
+      </Group></fieldset>}
     </>
   );
 }
@@ -242,13 +247,15 @@ function Loads({ S, year, term }: { S: string; year: string; term: string }) {
       const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
       const wk = new Date(Date.parse(today) - new Date(today).getUTCDay() * 864e5).toISOString().slice(0, 10);
       const wkEnd = new Date(Date.parse(wk) + 6 * 864e5).toISOString().slice(0, 10);
-      const [t, l, tt, subs] = await Promise.all([
-        db.from("teachers").select("id, full_name, status, user_id, department_id").eq("school_id", S).order("full_name"),
+      const [t, l, tt, subs, accounts] = await Promise.all([
+        db.rpc("workspace_teacher_options", { _school: S }),
         db.from("teacher_loads").select("*").eq("school_id", S).eq("year_id", year),
         db.from("timetables").select("id, status, term_id, version, created_at").eq("school_id", S).eq("year_id", year).neq("status", "discarded").order("created_at", { ascending: false }),
         db.from("substitutions").select("substitute_teacher_id").eq("school_id", S).eq("status", "active").gte("date", wk).lte("date", wkEnd),
+        db.rpc("workspace_teacher_accounts", { _school: S }),
       ]);
       if (t.error) throw t.error;
+      const hasAccount = new Map(((accounts.data ?? []) as Row[]).map((x) => [x["id"], x["has_account"]]));
       const tts = ((tt.data ?? []) as Row[]).filter((x) => (x["term_id"] ?? "") === term);
       const ref = tts.find((x) => x["status"] === "draft") ?? tts.find((x) => x["status"] === "published");
       const placed = new Map<string, number>();
@@ -258,7 +265,7 @@ function Loads({ S, year, term }: { S: string; year: string; term: string }) {
       }
       const subN = new Map<string, number>();
       for (const s of (subs.data ?? []) as Row[]) subN.set(s["substitute_teacher_id"], (subN.get(s["substitute_teacher_id"]) ?? 0) + 1);
-      return { teachers: (t.data ?? []) as Row[], loads: ((l.data ?? []) as Row[]), placed, ref, subN };
+      return { teachers: ((t.data ?? []) as Row[]).map((x) => ({ ...x, has_account: hasAccount.get(x["id"]) })), loads: ((l.data ?? []) as Row[]), placed, ref, subN };
     },
   });
   const required = useMemo(() => {
@@ -315,7 +322,7 @@ function LoadRow({ t, ld, req, nCourses, placed, subs, dept, onSave }: { t: Row;
   const over = ld && req > ld["weekly_max"];
   return (
     <tr className="border-t" data-testid="load-row">
-      <td className="p-1.5 font-medium">{t["full_name"]}{!t["user_id"] && <span className="ms-1 text-[11px] text-muted-foreground">(بلا حساب دخول)</span>}</td>
+      <td className="p-1.5 font-medium">{t["full_name"]}{t["has_account"] === false && <span className="ms-1 text-[11px] text-muted-foreground">(بلا حساب دخول)</span>}</td>
       <td className="p-1.5">{dept ?? "—"}</td>
       <td className="p-1.5">{t["status"] === "active" ? "نشط" : "غير نشط"}</td>
       <td className="p-1.5"><Input aria-label={`نصاب ${t["full_name"]}`} className="h-8 w-16" type="number" min={0} max={60} value={w} onChange={(e) => setW(e.target.value)} /></td>
@@ -336,7 +343,11 @@ function LoadRow({ t, ld, req, nCourses, placed, subs, dept, onSave }: { t: Row;
 function Availability({ S }: { S: string }) {
   const qc = useQueryClient();
   const setup = useDaySetup(S);
-  const teachers = useOptions("teachers", "full_name", S);
+  const teachers = useQuery({ queryKey: ["workspace-teachers", S], queryFn: async () => {
+    const r = await db.rpc("workspace_teacher_options", { _school: S });
+    if (r.error) throw r.error;
+    return ((r.data ?? []) as Row[]).map((t) => ({ value: String(t["id"]), label: String(t["full_name"]) }));
+  } });
   const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
   const [f, setF] = useState({ teacher: "", kind: "last2", day: "", period: "", hard: "1", from: "", to: "", reason: "" });
   const [filter, setFilter] = useState("");

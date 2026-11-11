@@ -8,6 +8,8 @@ type Row = any;
 import { ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
 import { askText } from "@/components/confirm";
+import { useSchoolPerms } from "@/lib/school-perms";
+import { workspacePages } from "@/lib/workspace-perms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,10 +20,11 @@ import { AdminFiles, REQ_STATUS, STAFF_ROLES, Pill, Timeline, fmt, useStaff, typ
 
 export const Route = createFileRoute("/_authenticated/app/admin/requests/$id")({
   head: () => ({ meta: [{ title: "تفاصيل الطلب | ركاز" }, { name: "description", content: "متابعة طلب إداري" }] }),
-  component: () => <RequireSchool nav="admin">{(ctx) => <Req role={ctx.role} school={ctx.schoolId} />}</RequireSchool>,
+  component: () => <RequireSchool nav="admin" extra={(p) => workspacePages(p).includes("admin")}>{(ctx) => <Req role={ctx.role} school={ctx.schoolId} />}</RequireSchool>,
 });
 
 function Req({ role, school }: { role: string; school: string }) {
+  const permissions = useSchoolPerms(school);
   const { id } = Route.useParams();
   const { user } = useSession();
   const qc = useQueryClient();
@@ -46,8 +49,8 @@ function Req({ role, school }: { role: string; school: string }) {
   const r = q.data;
   if (!r) return <ErrorState message="الطلب غير موجود أو لا تملك صلاحية رؤيته" />;
   const mine = r.submitted_by === user.id;
-  const editable = mine && ["draft", "returned"].includes(r.status);
-  const handler = r.handler_user === user.id && ["submitted", "in_progress"].includes(r.status);
+  const editable = !!permissions?.["admin_requests.submit"] && mine && ["draft", "returned"].includes(r.status);
+  const handler = !!permissions?.["admin_requests.manage"] && r.handler_user === user.id && ["submitted", "in_progress"].includes(r.status);
   const fields = r.fields as Field[];
 
   const refresh = () => {
@@ -70,7 +73,8 @@ function Req({ role, school }: { role: string; school: string }) {
     return data;
   }
   async function saveDraft() {
-    return call("adm_save_request", { _id: id, _form: null, _answers: answers, _rev: r!.rev }, "حُفظت المسودة");
+    if (!r) return null;
+    return call("adm_save_request", { _id: id, _form: null, _answers: answers, _rev: r.rev }, "حُفظت المسودة");
   }
   async function submit() {
     const saved = await saveDraft();
@@ -83,7 +87,8 @@ function Req({ role, school }: { role: string; school: string }) {
       note = await askText(action === "complete" ? "ملاحظة للمقدم (اختياري)" : "اكتب السبب", { required: action !== "complete" });
       if (note === null) return;
     }
-    await call("adm_handle_request", { _id: id, _action: action, _note: note, _rev: r!.rev }, "حُدّث الطلب وأُشعر المقدم");
+    if (!r) return;
+    await call("adm_handle_request", { _id: id, _action: action, _note: note, _rev: r.rev }, "حُدّث الطلب وأُشعر المقدم");
   }
   async function reassign() {
     if (!to) return void toast.error("اختر الموظف");
@@ -100,7 +105,8 @@ function Req({ role, school }: { role: string; school: string }) {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-3 rounded-xl border bg-card p-4 md:col-span-2">
           {fields.filter((f) => f.type !== "file").map((f) => {
-            const k = f.key!;
+            const k = f.key;
+            if (!k) return null;
             const v = answers[k] ?? "";
             const set = (x: string) => setAnswers({ ...answers, [k]: x });
             const label = `${f.label}${f.required ? " *" : ""}`;

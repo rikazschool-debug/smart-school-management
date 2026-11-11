@@ -1,0 +1,3 @@
+comment on function public._ws_ok(uuid,text,text) is 'Intentional authenticated SECURITY DEFINER boolean: session auth.uid, active school and existing permission engine, no writes.';
+comment on function public._ws_view(uuid,text) is 'Intentional authenticated SECURITY DEFINER boolean: own session, deny wins, same scoped checks with short circuit to avoid timetable timeouts.';
+comment on function public._perm_base(uuid,uuid,text,text) is 'Intentional authenticated SECURITY DEFINER read-only base-role checker consumed by permission RPCs; does not grant roles or reveal records.';

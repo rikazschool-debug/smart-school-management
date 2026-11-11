@@ -1,0 +1,1 @@
+comment on function public.can_view_slot(uuid) is 'Intentional authenticated SECURITY DEFINER boolean slot visibility adapter: retains teacher, supervisor, vice, department, enrolled family and substitute scopes; no writes or caller-supplied user.';

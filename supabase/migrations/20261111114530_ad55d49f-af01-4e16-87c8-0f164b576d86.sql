@@ -1,0 +1,1 @@
+comment on function public._ws_granted(uuid,text,text) is 'Intentional authenticated SECURITY DEFINER RLS adapter: auth.uid only; _perm_granted remains inaccessible directly; boolean output only, no arbitrary user or writes, branch grants preserved.';
