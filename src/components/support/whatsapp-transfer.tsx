@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { selectCls } from "@/components/ui/native-select";
 import { waTransfer, waTransferVerify } from "@/lib/wa-inbox.functions";
 
-type Row = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+type Row = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 const rpc = async (f: string, a: Record<string, unknown>) => { const r = await supabase.rpc(f as never, a as never); if (r.error) throw r.error; return r.data as Row; };
 const ST: Record<string, string> = { done: "تم في WATI", failed: "فشل", unknown: "بانتظار التأكد", pending: "قيد التنفيذ" };
 const when = (s: string) => new Date(s).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh", dateStyle: "short", timeStyle: "short" });
@@ -32,7 +32,7 @@ export function TransferBox({ conv }: { conv: string }) {
     setKey(crypto.randomUUID()); refresh();
   };
   const go = async () => {
-    const [kind, code] = target.split(":"); setBusy(true);
+    const [kind, code = ""] = target.split(":"); setBusy(true);
     try { report(await tf({ data: { conv, school, kind: kind as "operator" | "team", code, note: note.trim() || undefined, key } })); }
     catch (e) { toast.error((e as Error).message); setKey(crypto.randomUUID()); refresh(); } finally { setBusy(false); }
   };
