@@ -265,7 +265,7 @@ function Loads({ S, year, term }: { S: string; year: string; term: string }) {
       }
       const subN = new Map<string, number>();
       for (const s of (subs.data ?? []) as Row[]) subN.set(s["substitute_teacher_id"], (subN.get(s["substitute_teacher_id"]) ?? 0) + 1);
-      return { teachers: (t.data ?? []) as Row[], loads: ((l.data ?? []) as Row[]), placed, ref, subN };
+      return { teachers: ((t.data ?? []) as Row[]).map((x) => ({ ...x, has_account: hasAccount.get(x["id"]) })), loads: ((l.data ?? []) as Row[]), placed, ref, subN };
     },
   });
   const required = useMemo(() => {

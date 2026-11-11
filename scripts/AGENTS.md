@@ -1,4 +1,5 @@
 # scripts rules
+- scripts/workspace-perm-e2e.ts tests independent workspace grants, write separation, deny/revoke and branch isolation; --keep writes isolated browser fixture, --teardown purges only registered test schools/users.
 - scripts/rls-e2e.ts is the end-to-end permission test (creates and deletes its own test users); run it after any RLS change: `NODE_PATH=node_modules bun scripts/rls-e2e.ts`.
 - Demo schedule data: scripts/seed-demo-schedule.ts (run after seed-demo.ts).
 - Test scripts clean up only through scripts/lib/test-run.ts (run-registered users+schools); never delete by school id alone.
