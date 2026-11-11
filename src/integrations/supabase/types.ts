@@ -20678,6 +20678,7 @@ export type Database = {
       }
       _wa_norm: { Args: { _t: string }; Returns: string }
       _wa_notify_targets: { Args: { _conv: string }; Returns: string[] }
+      _wa_operator_emails: { Args: { _ops: Json }; Returns: number }
       _wa_org: { Args: never; Returns: string }
       _wa_out_claim: {
         Args: {
