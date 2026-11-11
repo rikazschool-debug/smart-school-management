@@ -108,7 +108,14 @@ function BotDialog({ conv, caps, windowOpen, onClose, onDone }: { conv: string; 
     if (!pick) return; setBusy(true);
     try {
       const r = await run({ data: { conv, key, bot: pick.id } });
-      if (r.status === "accepted") { toast.success(`قبِل WATI تشغيل البوت «${pick.name}»`); onDone(); onClose(); return; }
+      if (r.status === "accepted") {
+        const ev = (r as { events?: string[] }).events ?? [];
+        toast.success(`قبِل WATI تشغيل البوت «${pick.name}»`);
+        if (ev.includes("blocked")) toast.warning("تنبيه: خطوات البوت نفسه حظرت المحادثة في WATI فور التشغيل — راجع إعداد البوت في WATI أو أعد فتحها.", { duration: 12_000 });
+        else if (ev.includes("ended") && !ev.includes("sent")) toast.warning("انتهى البوت فورًا في WATI دون أن يرسل رسالة للعميل — راجع خطوات البوت في WATI.", { duration: 12_000 });
+        else if (ev.includes("closed")) toast.warning("أغلق البوت المحادثة في WATI بعد التشغيل.", { duration: 10_000 });
+        onDone(); onClose(); return;
+      }
       if (r.status === "unknown") toast.warning(`لم تتأكد نتيجة التشغيل: ${r.error ?? ""}. راجع المحادثة قبل الإعادة.`);
       else toast.error(`لم يُشغَّل البوت: ${r.error ?? ""}`);
       setKey(crypto.randomUUID()); onDone();
