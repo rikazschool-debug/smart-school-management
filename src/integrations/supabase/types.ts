@@ -17369,6 +17369,38 @@ export type Database = {
           },
         ]
       }
+      wa_assign_log: {
+        Row: {
+          after: Json | null
+          at: string
+          before: Json | null
+          conversation_id: string
+          id: string
+        }
+        Insert: {
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          conversation_id: string
+          id?: string
+        }
+        Update: {
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          conversation_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_assign_log_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wa_connection: {
         Row: {
           created_at: string
@@ -17397,7 +17429,11 @@ export type Database = {
       }
       wa_conversations: {
         Row: {
+          assign_seen_at: string | null
+          contact_id: string | null
           contact_name: string | null
+          contact_owner: string | null
+          contact_teams: string[]
           created_at: string
           id: string
           last_at: string | null
@@ -17406,10 +17442,18 @@ export type Database = {
           org_id: string
           unread: number
           wa_id: string | null
+          wati_assignee: string | null
+          wati_assignment: string | null
           wati_conv_id: string
+          wati_status: string | null
+          wati_team_ids: string[]
         }
         Insert: {
+          assign_seen_at?: string | null
+          contact_id?: string | null
           contact_name?: string | null
+          contact_owner?: string | null
+          contact_teams?: string[]
           created_at?: string
           id?: string
           last_at?: string | null
@@ -17418,10 +17462,18 @@ export type Database = {
           org_id: string
           unread?: number
           wa_id?: string | null
+          wati_assignee?: string | null
+          wati_assignment?: string | null
           wati_conv_id: string
+          wati_status?: string | null
+          wati_team_ids?: string[]
         }
         Update: {
+          assign_seen_at?: string | null
+          contact_id?: string | null
           contact_name?: string | null
+          contact_owner?: string | null
+          contact_teams?: string[]
           created_at?: string
           id?: string
           last_at?: string | null
@@ -17430,7 +17482,11 @@ export type Database = {
           org_id?: string
           unread?: number
           wa_id?: string | null
+          wati_assignee?: string | null
+          wati_assignment?: string | null
           wati_conv_id?: string
+          wati_status?: string | null
+          wati_team_ids?: string[]
         }
         Relationships: [
           {
@@ -17506,6 +17562,112 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_operator_links: {
+        Row: {
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+          wati_id: string
+        }
+        Insert: {
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+          wati_id: string
+        }
+        Update: {
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+          wati_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_operator_links_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_sync_state: {
+        Row: {
+          assign_at: string | null
+          assign_count: number | null
+          assign_error: string | null
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          assign_at?: string | null
+          assign_count?: number | null
+          assign_error?: string | null
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          assign_at?: string | null
+          assign_count?: number | null
+          assign_error?: string | null
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_sync_state_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_team_links: {
+        Row: {
+          label: string | null
+          org_id: string
+          school_id: string
+          updated_at: string
+          updated_by: string | null
+          wati_id: string
+        }
+        Insert: {
+          label?: string | null
+          org_id: string
+          school_id: string
+          updated_at?: string
+          updated_by?: string | null
+          wati_id: string
+        }
+        Update: {
+          label?: string | null
+          org_id?: string
+          school_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          wati_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_team_links_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_team_links_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -19756,6 +19918,7 @@ export type Database = {
       _perm_catalog_v15: { Args: never; Returns: Json }
       _perm_catalog_v16: { Args: never; Returns: Json }
       _perm_catalog_v17: { Args: never; Returns: Json }
+      _perm_catalog_v18: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
@@ -20152,9 +20315,19 @@ export type Database = {
         Args: { _course: string; _user: string }
         Returns: boolean
       }
+      _wa_access: {
+        Args: { c: Database["public"]["Tables"]["wa_conversations"]["Row"] }
+        Returns: string
+      }
       _wa_apply_status: {
         Args: { _at: string; _err: string; _msg: string; _status: string }
         Returns: undefined
+      }
+      _wa_assign_age: { Args: never; Returns: number }
+      _wa_assign_fail: { Args: { _err: string }; Returns: undefined }
+      _wa_assign_save: {
+        Args: { _contacts: Json; _items: Json }
+        Returns: Json
       }
       _wa_can: { Args: { _org: string }; Returns: boolean }
       _wa_conv: {
@@ -20165,6 +20338,14 @@ export type Database = {
         Args: { _key: string; _payload: Json; _type: string }
         Returns: Json
       }
+      _wa_mine: {
+        Args: {
+          _uid: string
+          c: Database["public"]["Tables"]["wa_conversations"]["Row"]
+        }
+        Returns: boolean
+      }
+      _wa_notify_targets: { Args: { _conv: string }; Returns: string[] }
       _wa_org: { Args: never; Returns: string }
       _wa_out_claim: {
         Args: {
@@ -20186,6 +20367,10 @@ export type Database = {
           _wati: string
         }
         Returns: undefined
+      }
+      _wa_perm_any: {
+        Args: { _action: string; _org: string; _uid: string }
+        Returns: boolean
       }
       _wa_process: { Args: { _ev: string }; Returns: boolean }
       _wa_pull_save: { Args: { _conv: Json; _msgs: Json }; Returns: string }
@@ -24620,8 +24805,21 @@ export type Database = {
       }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
       vice_teacher_ids: { Args: never; Returns: string[] }
+      wa_codes: { Args: never; Returns: Json }
       wa_conv_ref: { Args: { _conv: string }; Returns: Json }
-      wa_conversations_list: { Args: { _q?: string }; Returns: Json }
+      wa_conversations_list: {
+        Args: { _box?: string; _q?: string }
+        Returns: Json
+      }
+      wa_link_operator: {
+        Args: { _code: string; _user: string }
+        Returns: undefined
+      }
+      wa_link_team: {
+        Args: { _code: string; _label?: string; _school: string }
+        Returns: undefined
+      }
+      wa_me: { Args: never; Returns: Json }
       wa_media_ref: { Args: { _msg: string }; Returns: Json }
       wa_messages_list: { Args: { _conv: string }; Returns: Json }
       wa_ok: { Args: never; Returns: boolean }
