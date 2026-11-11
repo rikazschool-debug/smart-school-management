@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { waContactAttrs, waTag } from "@/lib/wa-inbox.functions";
+import { fillOperator } from "@/lib/wa-placeholders";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -83,6 +84,8 @@ export function Composer({ conv, sending, onSend, owner }: { conv: string; sendi
   const [qr, setQr] = useState(false); const [manage, setManage] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const quick = useQuery({ queryKey: ["wa-quick"], queryFn: () => rpc("wa_quick_list0") });
+  const me = useQuery({ queryKey: ["wa-me"], queryFn: () => rpc("wa_me") });
+  const myName = (me.data?.name as string | undefined) ?? null;
   const rec = useRef<{ r: MediaRecorder; chunks: Blob[]; t0: number } | null>(null);
   const [recSec, setRecSec] = useState<number | null>(null);
   useEffect(() => { if (recSec === null) return; const i = setInterval(() => setRecSec(Math.round((Date.now() - (rec.current?.t0 ?? Date.now())) / 1000)), 500); return () => clearInterval(i); }, [recSec !== null]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -95,7 +98,7 @@ export function Composer({ conv, sending, onSend, owner }: { conv: string; sendi
       catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
       return;
     }
-    if (await onSend({ text: body })) setText("");
+    if (await onSend({ text: fillOperator(body, myName) })) setText("");
   };
   const sendFile = async (f: File) => {
     if (f.size > 5 * 1024 * 1024) { toast.error("الملف أكبر من 5 ميغابايت"); return; }
@@ -138,7 +141,7 @@ export function Composer({ conv, sending, onSend, owner }: { conv: string; sendi
         <div className="mb-2 max-h-48 overflow-y-auto rounded-md border bg-background">
           <div className="flex items-center justify-between border-b px-2 py-1 text-xs"><span className="flex items-center gap-1 font-bold">الردود الجاهزة <RikazOnly /></span>{owner && <button className="text-primary" onClick={() => setManage(true)}>إدارة</button>}</div>
           {!list.length ? <p className="p-2 text-xs text-muted-foreground">لا توجد ردود جاهزة{owner ? " — أضفها من «إدارة»." : "."}</p> :
-            list.map((q) => <button key={q.id} onClick={() => { setText(q.body); setQr(false); }} className="block w-full border-b p-2 text-right text-sm last:border-0 hover:bg-muted"><b>{q.title}</b><span className="block truncate text-xs text-muted-foreground">{q.body}</span></button>)}
+            list.map((q) => <button key={q.id} onClick={() => { setText(fillOperator(q.body, myName)); setQr(false); }} className="block w-full border-b p-2 text-right text-sm last:border-0 hover:bg-muted"><b>{q.title}</b><span className="block truncate text-xs text-muted-foreground">{q.body}</span></button>)}
         </div>)}
       {manage && <QuickManage list={quick.data ?? []} onClose={() => { setManage(false); void qc.invalidateQueries({ queryKey: ["wa-quick"] }); }} />}
       {recSec !== null ? (
