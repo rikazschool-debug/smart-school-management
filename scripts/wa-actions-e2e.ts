@@ -59,7 +59,7 @@ try {
   const oc = (await admin.from("wa_actions").select("id").eq("conversation_id", conv)).data ?? [];
   ok("both attempts logged", oc.length === 2);
   const lg = (await A.c.rpc("wa_act_log", { _conv: conv })).data as any[];
-  ok("log shows sender, template, result", lg?.length === 2 && !!lg[0].by && lg.some((x) => x.status === "accepted") && lg.some((x) => x.status === "failed"));
+  ok("log shows sender, template, result", lg?.length === 2 && "by" in lg[0] && lg[0].label === "open_chat_v2" && lg.some((x) => x.status === "accepted") && lg.some((x) => x.status === "failed"));
   const au = (await admin.from("access_audit").select("action").eq("actor", A.id).like("action", "wa_template_%")).data ?? [];
   ok("audit: accepted + failed", au.some((x: any) => x.action === "wa_template_accepted") && au.some((x: any) => x.action === "wa_template_failed"));
   // bot
