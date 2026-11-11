@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, Lock } from "lucide-react";
+import { ChevronDown, ChevronLeft, Lock, Search, Eye, X, ListFilter } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { selectCls } from "@/components/ui/native-select";
 
 export type PermSec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean; base_only?: boolean; locked_reason?: string; children?: string[] };
@@ -28,6 +29,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
   /** "section.action" keys blocked explicitly (shown, never hidden); onUndeny returns them to the role's rules. */ denied?: string[]; onUndeny?: (key: string) => void; sources?: Record<string, string>;
   /** saved state and personal overrides (section.action → override|deny), to show status and filter */ orig?: Grant[]; personal?: Record<string, string> }) {
   const [q, setQ] = useState("");
+  const [area, setArea] = useState(c.areas[0]?.key ?? "");
   const [filter, setFilter] = useState<"all" | "on" | "off" | "personal">("all");
   const was = (k: string) => !!orig?.some((g) => `${g.section}.${g.action}` === k);
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -54,74 +56,91 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
     const scope = s.scopes[0];
     if (a && scope && !has(s.key, a)) onChange([...value, { section: s.key, action: a, scope }]);
   };
-  const areas = useMemo(() => c.areas.map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key && match(s)) })).filter((x) => x.ar.soon || x.secs.length || !term), [c, term, filter, value]); // eslint-disable-line react-hooks/exhaustive-deps
+  const areas = useMemo(() => c.areas.map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key && match(s)) })).filter((x) => x.ar.soon || x.secs.length || !term), [c, term, filter, value, orig, personal]); // eslint-disable-line react-hooks/exhaustive-deps
+  const selected = areas.find(({ ar }) => ar.key === area) ?? areas[0];
+  const shown = term ? areas : selected ? [selected] : [];
+  const clearArea = async (ar: PermCatalog["areas"][number]) => {
+    const keys = new Set(c.sections.filter((s) => s.parent === ar.key && (!s.locked_reason || s.base_only)).map((s) => s.key));
+    const n = value.filter((g) => keys.has(g.section)).length;
+    if (!n) return;
+    const { ask } = await import("@/components/confirm");
+    if (await ask(`إلغاء ${n} صلاحية من «${ar.label}»؟ الصلاحيات الموروثة تصبح منعًا خاصًا عند الحفظ.`, { destructive: true, ok: "إلغاء الصلاحيات" })) onChange(value.filter((g) => !keys.has(g.section)));
+  };
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <Input aria-label="بحث في الأقسام" placeholder="بحث في الأقسام والإجراءات" value={q} onChange={(e) => setQ(e.target.value)} className="w-full sm:w-72" />
-        {orig && <select aria-label="تصفية" className={selectCls("w-44")} value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
-          <option value="all">الكل</option><option value="on">المسموح حاليًا</option><option value="off">غير المسموح</option><option value="personal">التخصيصات الشخصية</option></select>}
-        <button type="button" className="text-xs text-primary underline" onClick={() => setOpen(Object.fromEntries([...c.areas.map((a) => [a.key, true]), ...c.sections.map((s) => [s.key, true])]))}>فتح الكل</button>
-        <button type="button" className="text-xs text-primary underline" onClick={() => setOpen(Object.fromEntries([...c.areas.map((a) => [a.key, false]), ...c.sections.map((s) => [s.key, false])]))}>إغلاق الكل</button>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2 border-y py-3">
+        <div className="relative min-w-0 basis-full sm:min-w-60 sm:flex-1 sm:basis-auto"><Search className="pointer-events-none absolute start-3 top-3 size-4 text-muted-foreground" /><Input aria-label="بحث في الأقسام" placeholder="بحث في جميع الأقسام والإجراءات" value={q} onChange={(e) => setQ(e.target.value)} className="ps-9" /></div>
+        <ListFilter className="size-4 text-muted-foreground" />
+        <select aria-label="تصفية" className={selectCls("w-44")} value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
+          <option value="all">كل الصلاحيات</option><option value="on">المسموح حاليًا</option><option value="off">غير المسموح</option>{orig && <option value="personal">التخصيصات الشخصية</option>}</select>
+        <Button type="button" variant="ghost" size="icon" title="فتح كل الأقسام الفرعية" aria-label="فتح كل الأقسام الفرعية" onClick={() => setOpen(Object.fromEntries([...c.areas.map((a) => [a.key, true]), ...c.sections.map((s) => [s.key, true])]))}><ChevronDown /></Button>
+        <Button type="button" variant="ghost" size="icon" title="طي كل الأقسام الفرعية" aria-label="طي كل الأقسام الفرعية" onClick={() => setOpen(Object.fromEntries(c.sections.map((s) => [s.key, false])))}><ChevronLeft /></Button>
       </div>
-      {(term || filter !== "all") && <p className="text-xs text-muted-foreground">البحث والتصفية لا يغيّران الصلاحيات؛ تحديد قسم يؤثر على كل إجراءاته وإن كانت مخفية بالتصفية.</p>}
-      <ul className="divide-y rounded-xl border">
-        {areas.map(({ ar, secs }) => {
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
+      <nav aria-label="أقسام شجرة الصلاحيات" className="min-w-0">
+        <ul className="flex gap-1 overflow-x-auto pb-2 lg:max-h-[42rem] lg:flex-col lg:overflow-y-auto lg:border-e lg:pe-3">
+          {areas.map(({ ar }) => { const count = new Set(value.filter((g) => c.sections.some((s) => s.parent === ar.key && s.key === g.section)).map((g) => g.section)).size; return <li key={ar.key} className="shrink-0"><Button type="button" variant="ghost" aria-current={selected?.ar.key === ar.key ? "true" : undefined} onClick={() => { setArea(ar.key); setQ(""); }} className={"h-auto min-h-11 w-full justify-between gap-3 whitespace-normal px-3 py-2 text-start " + (selected?.ar.key === ar.key ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground")}><span className="min-w-0">{ar.label}</span><span className="shrink-0 text-xs tabular-nums">{count}/{c.sections.filter((s) => s.parent === ar.key).length}</span></Button></li>; })}
+        </ul>
+      </nav>
+      <div className="min-w-0">
+      {!shown.length && <p className="py-8 text-center text-sm text-muted-foreground">لا توجد صلاحيات مطابقة.</p>}
+      <ul className="space-y-4">
+        {shown.map(({ ar, secs }) => {
           const locked = disabledAreas.includes(ar.key);
           const all = c.sections.filter((s) => s.parent === ar.key);
           const st = all.map(secState);
           const aState = !all.length || st.every((x) => x === "none") ? "none" : st.every((x) => x !== "none") ? "all" : "some";
-          const isOpen = open[ar.key] ?? !!term;
+          const isOpen = true;
           return (
-            <li key={ar.key} className="p-2">
-              <div className="flex items-center gap-2">
-                <button type="button" aria-expanded={isOpen} onClick={() => setOpen({ ...open, [ar.key]: !isOpen })} className="grid size-7 place-items-center rounded hover:bg-muted" aria-label={isOpen ? "طي" : "فتح"}>
-                  {isOpen ? <ChevronDown className="size-4" /> : <ChevronLeft className="size-4" />}
-                </button>
+            <li key={ar.key}>
+              <div className="flex flex-wrap items-center gap-2 border-b pb-3">
                 <TriBox label={ar.label} state={aState} disabled={readOnly || locked || ar.soon || !all.some((s) => baseAction(s) && s.scopes.length)} onChange={(on) => {
-                  if (!on) return onChange(value.filter((g) => !all.some((s) => s.key === g.section)));
+                  if (!on) return void clearArea(ar);
                   const add = all.flatMap((s) => { const a = baseAction(s); const scope = s.scopes[0]; return a && scope && !has(s.key, a) && (!s.base_only || was(`${s.key}.${a}`)) ? [{ section: s.key, action: a, scope }] : []; });
                   onChange([...value, ...add]); setOpen({ ...open, [ar.key]: true });
                 }} />
-                <span className="font-semibold">{ar.label}</span>
+                <span className="min-w-0 flex-1 text-base font-semibold">{ar.label}</span>
+                <Button type="button" variant="outline" size="sm" disabled={readOnly || locked || ar.soon} onClick={() => { const add = all.flatMap((s) => { const a = baseAction(s), scope = s.scopes[0]; return a && scope && !has(s.key, a) && (!s.base_only || was(`${s.key}.${a}`)) ? [{section:s.key, action:a, scope}] : []; }); onChange([...value,...add]); }}><Eye />منح العرض</Button>
+                <Button type="button" variant="ghost" size="icon" title={`إلغاء صلاحيات ${ar.label}`} aria-label={`إلغاء صلاحيات ${ar.label}`} disabled={readOnly || locked || ar.soon || aState === "none"} onClick={() => void clearArea(ar)}><X className="text-destructive" /></Button>
                 {ar.soon && <span className="rounded bg-muted px-2 text-xs text-muted-foreground">تحت الإنشاء</span>}
                 {locked && <span className="flex items-center gap-1 rounded bg-muted px-2 text-xs text-muted-foreground"><Lock className="size-3" />معلّق من المنصة</span>}
               </div>
               {isOpen && !ar.soon && (
-                <ul className="ms-9 mt-2 space-y-2">
+                <ul className="mt-3 divide-y">
                   {secs.map((s) => {
-                    const so = open[s.key] ?? (secState(s) !== "none" || !!term);
+                    const so = open[s.key] ?? !!term;
                     return (
-                      <li key={s.key} className="rounded-lg border p-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <button type="button" aria-expanded={so} onClick={() => setOpen({ ...open, [s.key]: !so })} className="grid size-6 place-items-center rounded hover:bg-muted" aria-label={so ? "طي" : "فتح"}>
+                      <li key={s.key} className="py-3">
+                        <div className="flex items-center gap-2">
+                          <Button type="button" variant="ghost" size="icon" aria-expanded={so} onClick={() => setOpen({ ...open, [s.key]: !so })} className="size-7 shrink-0" aria-label={`${so ? "طي" : "فتح"} ${s.label}`}>
                             {so ? <ChevronDown className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
-                          </button>
+                          </Button>
                           <TriBox label={s.label} state={secState(s)} disabled={readOnly || locked || (!!s.locked_reason && !s.base_only) || (!!s.base_only && secState(s) === "none" && !s.actions.some((a) => was(`${s.key}.${a}`)))} onChange={(on) => tickSection(s, on)} />
-                          <span className="font-medium">{s.label}</span>
-                          {s.sensitive && <span className="text-xs text-muted-foreground">يتيح الاطلاع على أسماء الطلاب في الفرع</span>}
+                          <Button type="button" variant="ghost" className="h-auto min-w-0 flex-1 justify-start whitespace-normal px-1 text-start font-medium" onClick={() => setOpen({ ...open, [s.key]: !so })}>{s.label}</Button>
+                          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{s.actions.filter((a) => has(s.key,a)).length}/{s.actions.length}</span>
+                          <Button type="button" size="icon" variant="ghost" className="size-7 shrink-0" aria-label={`إلغاء ${s.label}`} title={`إلغاء ${s.label}`} disabled={readOnly || locked || secState(s) === "none" || (!!s.locked_reason && !s.base_only)} onClick={() => tickSection(s,false)}><X className="text-destructive" /></Button>
                         </div>
                         {s.locked_reason && <p className="ms-8 mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Lock className="size-3" />{s.locked_reason}</p>}
                         {so && s.children && <ul className="ms-8 mt-2 space-y-1 text-xs text-muted-foreground">{s.children.map((child) => <li key={child}>{child}</li>)}</ul>}
                         {so && !s.locked_reason && !baseAction(s) && secState(s) === "none" && <p className="ms-8 mt-1 text-xs text-muted-foreground">لا عرض مستقلًا لهذا القسم؛ اختر الإجراء المطلوب صراحة.</p>}
                         {so && (
-                          <div className="ms-8 mt-2 grid gap-2 sm:grid-cols-2">
+                          <div className="ms-0 mt-3 grid gap-2 xl:grid-cols-2 sm:ms-9">
                             {s.actions.filter((a) => keep(s, a) && (!term || hit(s.label) || hit(label(c, s, a)))).map((a) => { const g = has(s.key, a); const k = `${s.key}.${a}`; const dn = denied.includes(k); const noGrant = !!s.base_only && !g && !was(k) && !dn;
                               const changed = !!orig && !!g !== was(k); const st = changed ? "تعديل غير محفوظ" : personal?.[k] === "override" ? "منح خاص" : personal?.[k] === "deny" ? "منع خاص" : g ? "موروث" : ""; return (
-                              <div key={a} className={"min-w-0 rounded " + (dn ? "bg-destructive/5 p-1" : "")}>
-                              <label className="flex min-w-0 items-center gap-2 text-sm">
-                                <input type="checkbox" className="size-4 accent-primary" disabled={readOnly || locked || (!!s.locked_reason && !s.base_only) || noGrant || (!!s.base_only && dn && !g)} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? (s.scopes[0] ?? "branch") : "")} />
-                                <span className="min-w-0 flex-1 truncate" title={label(c, s, a)}>{label(c, s, a)}</span>
+                              <div key={a} className={"min-w-0 rounded-md p-2 " + (dn ? "bg-destructive/5" : g ? "bg-primary/5" : "bg-muted/40")}>
+                              <label className="flex min-w-0 flex-wrap items-start gap-2 text-sm">
+                                <input type="checkbox" className="mt-1 size-4 shrink-0 accent-primary" disabled={readOnly || locked || (!!s.locked_reason && !s.base_only) || noGrant || (!!s.base_only && dn && !g)} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? (s.scopes[0] ?? "branch") : "")} />
+                                <span className="min-w-0 flex-1 break-words" title={label(c, s, a)}>{label(c, s, a)}</span>
                                 {g && !s.base_only && <select aria-label={`نطاق ${label(c, s, a)}`} disabled={readOnly || locked} className={selectCls("w-32 shrink-0", true)} value={g.scope} onChange={(e) => set(s, a, e.target.value)}>
                                   {s.scopes.map((sc) => <option key={sc} value={sc}>{c.scopes[sc]}</option>)}</select>}
                               </label>
                               {orig && st && <p className={"ms-6 text-[11px] " + (changed ? "font-semibold text-warning" : "text-muted-foreground")}>{st}{g && sources[k] && !changed ? ` — ${sources[k]}` : ""}
-                                {(changed || personal?.[k] === "override") && !readOnly && <button type="button" className="ms-2 underline" onClick={() => { const o = orig.find((x) => `${x.section}.${x.action}` === k && personal?.[k] !== "override");
-                                  onChange([...value.filter((x) => `${x.section}.${x.action}` !== k), ...(o ? [o] : [])]); }}>اتباع الدور</button>}</p>}
+                                {(changed || personal?.[k] === "override") && !readOnly && <Button type="button" variant="link" size="sm" className="h-auto px-2 text-xs" onClick={() => { const o = orig.find((x) => `${x.section}.${x.action}` === k && personal?.[k] !== "override");
+                                  onChange([...value.filter((x) => `${x.section}.${x.action}` !== k), ...(o ? [o] : [])]); }}>اتباع الدور</Button>}</p>}
                               {noGrant && <p className="ms-6 text-[11px] text-muted-foreground">غير متاحة: تأتي مع الدور الأساسي فقط ولا تُمنح لمن لا يملكها.</p>}
                               {!orig && g && sources[k] && <p className="ms-6 text-[11px] text-muted-foreground">المصدر: {sources[k]}</p>}
                               {dn && <p className="ms-6 flex flex-wrap items-center gap-2 text-[11px] text-destructive">ممنوع صراحة — يغلب أي دور
-                                {onUndeny && !readOnly && <button type="button" className="underline" onClick={() => onUndeny(k)}>رفع المنع والعودة لصلاحيات الدور</button>}</p>}
+                                {onUndeny && !readOnly && <Button type="button" variant="link" size="sm" className="h-auto whitespace-normal p-0 text-xs text-destructive" onClick={() => onUndeny(k)}>رفع المنع والعودة لصلاحيات الدور</Button>}</p>}
                               </div>); })}
                           </div>
                         )}
@@ -134,7 +153,8 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
           );
         })}
       </ul>
-      <p className="text-xs text-muted-foreground">تحديد القسم يمنح العرض فقط ضمن أضيق نطاق؛ الإنشاء والتعديل والاعتماد والصرف والإعدادات تُختار منفصلة. إلغاء تحديد صلاحية آتية من دور يجعلها «ممنوعة صراحة» وتظهر بالأحمر؛ إلغاء صلاحية أضفتها أنت يعيدها لقواعد الدور فقط. لا تُمنح أقسام مستقبلية تلقائيًا.</p>
+      </div>
+      </div>
     </div>
   );
 }

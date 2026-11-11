@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Eye, Minus, Plus, RotateCcw } from "lucide-react";
+import { Eye, Minus, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,11 @@ import { ask, askText } from "@/components/confirm";
 import { ErrorState, LoadingState } from "@/components/states";
 import { PermTree, type Grant, type PermCatalog } from "@/components/perm-tree";
 import { arabicError } from "@/lib/session";
-import { NAV_BY_ROLE, NAV_LABELS, ROLE_LABELS, type Role } from "@/lib/roles";
+import { ROLE_LABELS, type Role } from "@/lib/roles";
 
 /** Unsaved draft in the open employee panel; the picker asks before discarding it. */
 export const permDraft = { dirty: false };
 export async function confirmDiscard() { return !permDraft.dirty || (await ask("لديك تعديلات غير محفوظة على صلاحيات هذا الموظف. تجاهلها والمتابعة؟", { destructive: true, ok: "تجاهل التعديلات" })); }
-/** Pages that come with the base role and wait for a condition before they open. */
-const NAV_COND: Partial<Record<string, string>> = { classroom: "يحتاج تكليفًا تعليميًا ساريًا", homework: "يحتاج تكليفًا تعليميًا ساريًا", schedule: "يظهر بعد نشر الجدول", my_employment: "بعد تفعيل خدمات الموظف من الموارد البشرية" };
-
 export type Eff = { section: string; action: string; scope: string | null; allowed_schools: string[]; base_schools: string[]; source: string | null };
 export type Effective = { is_owner: boolean; base_roles: { role: string; school: string | null }[]; roles: { id: string; name: string; school_ids: string[] | null; approval_limit: number | null }[]; overrides: { section: string; action: string; effect: string; scope: string | null }[]; effective: Eff[] };
 type Changes = { assign: { role_id: string; school_ids: string[] | null; limit: number | null }[]; unassign: string[]; overrides: { section: string; action: string; effect: string | null; scope: string | null }[] };
@@ -94,21 +91,13 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
   const sname = (id: string) => schools.data?.find((s) => s["id"] === id)?.["name"] ?? "—";
 
   return (
-    <div className="space-y-4 rounded-xl border bg-card p-4 text-sm">
+    <div className="space-y-4 text-sm">
       <div>
         <p className="text-base font-bold">{name}</p>
         <p className="text-xs text-muted-foreground">الدور الأساسي: {e.base_roles.map((b) => `${ROLE_LABELS[b.role as Role] ?? b.role}${b.school ? ` — ${b.school}` : ""}`).join("، ") || "—"}</p>
         <p className="text-xs text-muted-foreground">الأدوار الإضافية: {e.roles.map((r) => r.name).join("، ") || "لا يوجد"}</p>
         <p className="text-xs text-muted-foreground">الصفة التي تُعدَّل: موظف. صفة ولي الأمر (إن وُجدت) منفصلة ولا تتأثر بهذه الشاشة.</p>
       </div>
-      {!e.is_owner && <CurrentAccess c={c} e={e} cur={cur} onToggle={(k, on) => {
-        const o = orig.find((g) => `${g.section}.${g.action}` === k);
-        if (!on) { setTree(cur.filter((g) => `${g.section}.${g.action}` !== k)); setUndeny(undeny.filter((x) => x !== k)); }
-        else if (o) setTree([...cur.filter((g) => `${g.section}.${g.action}` !== k), o]);
-        else if (e.effective.find((x) => `${x.section}.${x.action}` === k)?.source === "deny") setUndeny([...undeny.filter((x) => x !== k), k]);
-        else { const [sec, act] = k.split("."); const cs = c.sections.find((x) => x.key === sec); const scope = cs?.scopes[0]; if (cs && sec && act && scope && !cs.base_only) setTree([...cur, { section: sec, action: act, scope }]); }
-        setPreview(null);
-      }} undeny={undeny} />}
       {e.is_owner ? <p className="rounded-lg bg-secondary/50 p-3">مالك المؤسسة يملك جميع الصلاحيات ولا تُقيَّد صلاحياته.</p> : (<>
         <section>
           <p className="mb-2 font-bold">الأدوار</p>
@@ -227,42 +216,3 @@ export function Diff({ c, p }: { c: PermCatalog; p: { before: Effective; after: 
   );
 }
 
-/** Read-only: what is saved on the server now — granted sections/actions with source and where, plus the pages of the base role. */
-function CurrentAccess({ c, e, cur, onToggle, undeny }: { c: PermCatalog; e: Effective; cur: Grant[]; onToggle: (key: string, on: boolean) => void; undeny: string[] }) {
-  const on = e.effective.filter(isOn);
-  // every area → section → action (sub-sections included); ticked = has it now
-  const effOf = (sec: string, a: string): Eff => e.effective.find((x) => x.section === sec && x.action === a) ?? { section: sec, action: a, scope: null, allowed_schools: [], base_schools: [], source: null };
-  const groups = c.areas.filter((ar) => !ar.soon).map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key).map((s) => ({ s, acts: s.actions.map((a) => effOf(s.key, a)).filter((x) => x.source !== "deny") })).filter((x) => x.acts.length) })).filter((x) => x.secs.length);
-  void on;
-  const denies = e.effective.filter((x) => x.source === "deny");
-  const navKeys = [...new Set(e.base_roles.flatMap((b) => NAV_BY_ROLE[b.role as Role] ?? []))];
-  return (
-    <section aria-label="الأقسام والإجراءات الممنوحة للموظف حاليًا" className="rounded-xl border bg-secondary/20 p-3">
-      <p className="font-bold">الأقسام والإجراءات الممنوحة للموظف حاليًا</p>
-      <p className="mb-2 text-xs text-muted-foreground">الحالة المحفوظة في الخادم. يمكنك التعديل هنا مباشرة أو في الشجرة أدناه؛ لا شيء يُحفظ قبل «حفظ التغييرات».</p>
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div>
-          <p className="mb-1 text-xs font-semibold text-primary">صفحات دوره الأساسي</p>
-          <ul className="flex flex-wrap gap-1">{navKeys.map((k) => <li key={k} className="flex items-center gap-1 rounded border bg-card px-2 py-0.5 text-xs"><CheckCircle2 className="size-3 text-success" />{NAV_LABELS[k] ?? k}{NAV_COND[k] && <span className="text-muted-foreground">— {NAV_COND[k]}</span>}</li>)}</ul>
-          <p className="mt-1 text-[11px] text-muted-foreground">مصدرها الدور الأساسي، ونطاقها مدرسته وتكليفاته أو بياناته الشخصية فقط.</p>
-        </div>
-        <div>
-          <p className="mb-1 text-xs font-semibold text-primary">أقسام الصلاحيات</p>
-          <p className="mb-1 text-[11px] text-muted-foreground">العلامة = متاح له الآن. أزل العلامة لإيقافه (مسودة حتى الحفظ)، وأعدها للتراجع.</p>
-          {!groups.length && !denies.length ? <p className="text-xs text-muted-foreground">لا أقسام.</p> : (
-            <ul className="space-y-2 text-xs">{groups.map(({ ar, secs }) => <li key={ar.key}><span className="font-semibold">{ar.label}</span>
-              <ul className="ms-2 mt-1 space-y-1">{secs.map(({ s, acts }) => <li key={s.key}><span className="font-medium">{s.label}</span>
-                <ul className="ms-2">{acts.map((a) => { const k = `${a.section}.${a.action}`; const now = cur.some((g) => `${g.section}.${g.action}` === k); const had = isOn(a); return (
-                  <li key={k}><label className={"flex items-start gap-2 rounded px-1 py-0.5 " + (now && had ? "bg-muted text-muted-foreground" : now ? "bg-success/10" : had ? "bg-destructive/5 text-destructive" : "")}>
-                    <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={now} disabled={(!!s.locked_reason && !s.base_only) || (!had && !!s.base_only)} aria-label={`${s.label} ← ${s.labels?.[a.action] ?? c.actions[a.action] ?? a.action}`} onChange={(ev) => onToggle(k, ev.target.checked)} />
-                    <span>{s.labels?.[a.action] ?? c.actions[a.action] ?? a.action} <span className="opacity-70">{had && <>({SOURCE[a.source ?? ""] ?? ""}{where(c, a) ? ` · ${where(c, a)}` : ""})</>}{had && !now && " — سيُوقف عند الحفظ"}{!had && now && " — يُمنح عند الحفظ"}{!had && s.base_only && " — يأتي مع الدور الأساسي فقط"}</span></span></label></li>); })}</ul></li>)}</ul></li>)}
-              {denies.map((d) => { const k = `${d.section}.${d.action}`; const sec = c.sections.find((x) => x.key === d.section); const lifted = undeny.includes(k); return (
-                <li key={k}><label className={"flex items-start gap-2 rounded px-1 py-0.5 " + (lifted ? "bg-success/10" : "bg-destructive/5 text-destructive")}>
-                  <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={lifted} aria-label={`${sec?.label ?? d.section} ← ${sec?.labels?.[d.action] ?? c.actions[d.action] ?? d.action}`} onChange={(ev) => onToggle(k, ev.target.checked)} />
-                  <span>{sec?.label ?? d.section} ← {sec?.labels?.[d.action] ?? c.actions[d.action] ?? d.action} — {lifted ? "يُرفع المنع عند الحفظ" : "منع خاص"}</span></label></li>); })}
-            </ul>)}
-        </div>
-      </div>
-    </section>
-  );
-}
