@@ -2,10 +2,10 @@
  * WATI template helpers shared by the server (validation) and the screen (fields/preview). Variables are the WATI parameter
  * names written as {{name}} in body_original, a media header link or a dynamic button URL — never Meta positions alone.
  */
-export type WaTplButton = { type: string; text: string; url?: string };
+export type WaTplButton = { type: string; text: string; url?: string | undefined };
 export type WaTpl = {
   id: string; name: string; category: string; language: string; body: string;
-  header: { type: string; link?: string; text?: string } | null;
+  header: { type: string; link?: string | undefined; text?: string | undefined } | null;
   buttons: WaTplButton[]; vars: { name: string; where: "body" | "header" | "button"; sample: string }[];
 };
 
