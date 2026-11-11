@@ -131,7 +131,7 @@ Vice principals and supervisors are scoped individually: same role ≠ same acce
 | group | org owner (org/branches), principal (own school) | active staff of that scope (no students/guardians/inactive) |
 | direct | eligible staff of the school | active staff of the school |
 | task | principal, vice, supervisor | principal: all school staff; vice: scope teachers; supervisor: assigned teachers (never self) |
-| duty | principal, vice (_adm_lead) | school staff; with a post, only its eligible roles |
+| duty | duty_rosters.edit or duty_setup.edit (defaults: principal+vice / principal; owner keeps counts only) | school staff; with a post, only its eligible roles |
 | meeting | principal (own school), org owner (branches) | staff of the meeting scope, never the organizer or owner |
 | decision | meeting organizers | staff of the chosen executing branch |
 No phone/email returned; ids outside the pool resolve to nothing.
