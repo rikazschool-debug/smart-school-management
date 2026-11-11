@@ -20901,6 +20901,10 @@ export type Database = {
         Returns: string[]
       }
       _wa_who: { Args: { _u: string }; Returns: string }
+      _ws_granted: {
+        Args: { _action: string; _school: string; _section: string }
+        Returns: boolean
+      }
       _ws_not_denied: {
         Args: { _school: string; _section: string }
         Returns: boolean
