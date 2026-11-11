@@ -223,7 +223,7 @@ export const waTag = createServerFn({ method: "POST" })
     try {
       const c = cfg();
       const res = data.on
-        ? await fetch(`${c.origin}/api/ext/v3/conversations/${encodeURIComponent(id)}/tags`, { method: "POST", headers: { Authorization: c.auth, "User-Agent": "Rikaz/1.0", "Content-Type": "application/json" }, body: JSON.stringify({ tagName: data.name, tag_name: data.name }), signal: AbortSignal.timeout(15_000) })
+        ? await fetch(`${c.origin}/api/ext/v3/conversations/${encodeURIComponent(id)}/tags`, { method: "POST", headers: { Authorization: c.auth, "User-Agent": "Rikaz/1.0", "Content-Type": "application/json" }, body: JSON.stringify({ tagName: data.name }), signal: AbortSignal.timeout(15_000) })
         : await fetch(`${c.origin}/api/ext/v3/conversations/${encodeURIComponent(id)}/tags/${encodeURIComponent(data.name)}`, { method: "DELETE", headers: { Authorization: c.auth, "User-Agent": "Rikaz/1.0" }, signal: AbortSignal.timeout(15_000) });
       const t = await res.text().catch(() => "");
       ok = res.ok && !/"added"\s*:\s*false/.test(t); if (!ok) err = `WATI ${res.status}: ${t.slice(0, 160)}`;
