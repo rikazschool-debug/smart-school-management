@@ -823,3 +823,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## Nov 10 2026 — Customer service officer
 - cs_agent template = all support/calls perms (org) + cs_comm.message; health/cs_comm valid in tree. Real HR transfer verified (file + memberships intact). cs-comm-e2e 15/15.
+
+## 2026-11-11 — WhatsApp inbox in support (WATI)
+- Read checks: conversations/messages/templates/channels OK; webhooks read 403 (needs webhooks:read or api scope); attachment download OK via documented GET /api/ext/v3/conversations/messages/file/{message_id} (JPEG 58 KB).
+- Built wa_* inbox, webhook storage, «واتساب» tab (platform admins). scripts/wa-inbox-e2e.ts 11/11. Live send test pending user (one text + one file to the agreed number).

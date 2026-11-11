@@ -7,6 +7,7 @@ import { NO_CAPS, useSupportCaps } from "@/components/support/caps";
 import { useSession } from "@/lib/session";
 import { supportTabs, type SupportTab } from "@/lib/roles";
 import { SupportSummary } from "@/components/support/summary";
+import { WhatsAppInbox } from "@/components/support/whatsapp";
 import type { MqSection } from "@/components/support/calls";
 import { HoursNote, InfoInbox, NewTicket, SupportReports, SupportSettings, TAB_LABEL, TicketDetail, TicketList } from "@/components/support/support";
 
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/app/support")({
     ...(typeof s["t"] === "string" ? { t: s["t"] } : {}),
     ...(typeof s["st"] === "string" ? { st: s["st"] } : {}),
     ...(["live", "calls", "followups", "reports", "settings"].includes(s["mq"] as string) ? { mq: s["mq"] as MqSection } : {}),
-    ...(["summary", "mine", "assigned", "following", "info", "manage", "reports", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
+    ...(["summary", "mine", "assigned", "following", "info", "manage", "whatsapp", "reports", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
   }),
   head: () => ({ meta: [{ title: "الدعم والمساعدة — ركاز" }, { name: "description", content: "تذاكر الدعم والمساعدة في ركاز." }, { name: "robots", content: "noindex" }] }),
   component: Page,
@@ -68,7 +69,7 @@ function Page() {
               ))}
             </div>
           )}
-          {tab === "settings" ? <SupportSettings ctx={ctx} /> : tab === "summary" ? <SupportSummary ctx={ctx} onPick={(k, st) => go({ tab: k, ...(st ? { st } : {}) })} /> : tab === "info" ? <InfoInbox /> : tab === "reports" ? <SupportReports ctx={ctx} /> : <TicketList key={tab + (search.st ?? "")} initialStatus={search.st} ctx={ctx} caps={c} box={tab} onOpen={(id) => go({ t: id, tab, ...(search.st ? { st: search.st } : {}) })} />}
+          {tab === "settings" ? <SupportSettings ctx={ctx} /> : tab === "summary" ? <SupportSummary ctx={ctx} onPick={(k, st) => go({ tab: k, ...(st ? { st } : {}) })} /> : tab === "info" ? <InfoInbox /> : tab === "reports" ? <SupportReports ctx={ctx} /> : tab === "whatsapp" ? <WhatsAppInbox /> : <TicketList key={tab + (search.st ?? "")} initialStatus={search.st} ctx={ctx} caps={c} box={tab} onOpen={(id) => go({ t: id, tab, ...(search.st ? { st: search.st } : {}) })} />}
         </>
       )}
       </>
