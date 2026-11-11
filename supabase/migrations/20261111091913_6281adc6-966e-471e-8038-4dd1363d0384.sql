@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.wa_codes() FROM PUBLIC, anon; GRANT EXECUTE ON FUNCTION public.wa_codes() TO authenticated;
