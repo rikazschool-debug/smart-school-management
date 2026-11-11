@@ -127,8 +127,8 @@ export function Composer({ conv, sending, onSend, owner }: { conv: string; sendi
   const list: Row[] = (quick.data ?? []).filter((q: Row) => q.is_active);
   return (
     <div className={`border-t p-2 ${note ? "bg-warning/10" : ""}`}>
-      <div className="mb-2 flex items-center gap-2">
-        <div role="tablist" className="inline-flex rounded-md border bg-background p-0.5 text-sm">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <div role="tablist" className="inline-flex shrink-0 whitespace-nowrap rounded-md border bg-background p-0.5 text-sm">
           <button role="tab" aria-selected={!note} onClick={() => setMode("reply")} className={`flex items-center gap-1 rounded px-3 py-1 ${!note ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><MessageSquareText className="size-4" />رد واتساب</button>
           <button role="tab" aria-selected={note} onClick={() => setMode("note")} className={`flex items-center gap-1 rounded px-3 py-1 ${note ? "bg-warning text-warning-foreground" : "text-muted-foreground"}`}><StickyNote className="size-4" />ملاحظة داخلية</button>
         </div>

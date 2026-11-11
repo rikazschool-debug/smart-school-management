@@ -204,7 +204,7 @@ export const waContactAttrs = createServerFn({ method: "POST" })
     try {
       const j = await wati(`/api/ext/v3/contacts/${encodeURIComponent(r.wa_id)}`);
       const hide = new Set(["name", "phone", "1", "2", "3", "contact_owner"]);
-      const params = ((j["custom_params"] as { name: string; value: string }[] | undefined) ?? []).filter((p) => p.value && !hide.has(p.name)).slice(0, 30);
+      const params = ((j["custom_params"] as { name: string; value: string }[] | undefined) ?? []).filter((p) => p.value && !hide.has(p.name) && !/^\d+$/.test(p.name)).slice(0, 30);
       return { ok: true, source: j["source"] as string | null, status: j["contact_status"] as string | null, teams: (j["teams"] as string[] | undefined) ?? [], params };
     } catch (e) { return { ok: false, error: e instanceof Error ? e.message.slice(0, 120) : "WATI" }; }
   });
