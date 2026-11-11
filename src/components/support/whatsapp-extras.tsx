@@ -12,7 +12,7 @@ import { fillOperator } from "@/lib/wa-placeholders";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
-const when = (t?: string | null) => (t ? new Date(t).toLocaleString("ar-SA-u-ca-gregory", { dateStyle: "short", timeStyle: "short" }) : "");
+import { waWhen as when } from "@/lib/wa-time";
 const rpc = async (fn: string, args?: Record<string, unknown>) => { const r = await supabase.rpc(fn as never, args as never); if (r.error) throw r.error; return r.data as Row; };
 const RikazOnly = () => <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 text-[10px] text-muted-foreground"><Lock className="size-3" />في ركاز فقط</span>;
 

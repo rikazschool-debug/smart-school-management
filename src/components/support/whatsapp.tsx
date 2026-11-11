@@ -17,7 +17,7 @@ import { Composer, ContactCard } from "@/components/support/whatsapp-extras";
 type Row = any;
 const ST: Record<string, string> = { sending: "يُرسل…", accepted: "قبِله WATI", sent: "أُرسلت", delivered: "وصلت", read: "قُرئت", replied: "رُدّ عليها", failed: "فشلت", unknown: "غير مؤكدة", received: "" };
 const KIND: Record<string, string> = { image: "صورة", document: "ملف", video: "فيديو", audio: "صوت", voice: "رسالة صوتية", sticker: "ملصق" };
-const when = (t?: string | null) => (t ? new Date(t).toLocaleString("ar-SA-u-ca-gregory", { dateStyle: "short", timeStyle: "short" }) : "");
+import { waWhen as when } from "@/lib/wa-time";
 
 /** «واتساب» tab: conversations visible per WATI assignment (owner = all; «محادثاتي» / «محادثات الفرع» by permission). The server filters. */
 export function WhatsAppInbox() {
@@ -39,7 +39,7 @@ export function WhatsAppInbox() {
     queryKey: ["wa-convs", q, b],
     enabled: !!me.data,
     queryFn: async () => { const r = await supabase.rpc("wa_conversations_list" as never, { _q: q || null, _box: b || null } as never); if (r.error) throw r.error; return (r.data ?? []) as Row[]; },
-    refetchInterval: 15_000,
+    refetchInterval: 30_000,
   });
   const [busy, setBusy] = useState(false);
   const refreshAll = () => Promise.all([qc.invalidateQueries({ queryKey: ["wa-convs"] }), qc.invalidateQueries({ queryKey: ["wa-me"] })]);
@@ -89,7 +89,9 @@ export function WhatsAppInbox() {
                       {c.mine && <span className="rounded bg-primary/10 px-1 text-primary">مسندة إليّ</span>}
                       {!c.mine && c.assignee_name && <span className="rounded bg-muted px-1">{c.assignee_name}</span>}
                       {(c.branches ?? []).map((n: string) => <span key={n} className="rounded bg-muted px-1">{n}</span>)}
-                      {c.unmapped && <span className="rounded bg-destructive/10 px-1 text-destructive">كود غير مربوط</span>}
+                      {c.bot_branch && <span className="rounded bg-accent px-1 text-accent-foreground" title="اختيار العميل في البوت — لا يمنح صلاحية">اختار: {c.bot_branch}</span>}
+                      {c.unmapped_op && <span className="rounded bg-destructive/10 px-1 text-destructive" title={`كود موظف WATI ${c.assignee_code ?? ""} غير مربوط بحساب في ركاز`}>موظف WATI غير مربوط</span>}
+                      {c.unmapped_team && <span className="rounded bg-destructive/10 px-1 text-destructive" title="أحد فرق WATI لهذه المحادثة غير مربوط بفرع">فريق WATI غير مربوط</span>}
                     </div>
                   </button>
                 </li>
@@ -155,6 +157,7 @@ function WaLinks({ onBack }: { onBack: () => void }) {
         {d.data.operators.length ? <div className="grid gap-2 md:grid-cols-2">{d.data.operators.map((c: Row) => <Card key={c.code} c={c} kind="op" />)}</div> : <EmptyState title="لا أكواد بعد — حدّث المزامنة" />}</section>
       <section className="space-y-2"><h3 className="font-semibold">فرق WATI ← الفروع</h3>
         {d.data.teams.length ? <div className="grid gap-2 md:grid-cols-2">{d.data.teams.map((c: Row) => <Card key={c.code} c={c} kind="team" />)}</div> : <EmptyState title="لا أكواد بعد" />}</section>
+      <BotBranches />
     </div>
   );
 }
@@ -165,7 +168,7 @@ function Thread({ id, owner }: { id: string; owner: boolean }) {
   const t = useQuery({
     queryKey: ["wa-msgs", id],
     queryFn: async () => { const r = await supabase.rpc("wa_messages_list" as never, { _conv: id } as never); if (r.error) throw r.error; return r.data as Row; },
-    refetchInterval: 10_000,
+    refetchInterval: 30_000,
   });
   useEffect(() => { void sync({ data: { conv: id } }).then(() => qc.invalidateQueries({ queryKey: ["wa-msgs", id] })).catch((e: Error) => toast.error(`تعذّر جلب الرسائل من WATI: ${e.message}`)); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   const end = useRef<HTMLDivElement>(null);
@@ -198,6 +201,7 @@ function Thread({ id, owner }: { id: string; owner: boolean }) {
     <div className="flex min-h-[60vh] flex-col rounded-lg border bg-card">
       <div className="flex items-center justify-between border-b p-3">
         <div><div className="font-semibold">{c.contact_name || c.wa_id}</div>{c.wa_id && <div className="text-xs text-muted-foreground" dir="ltr">+{c.wa_id}</div>}</div>
+        {c.bot_branch && <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground" title="اختيار العميل في البوت — للعلم فقط، الإسناد من WATI">الفرع الذي اختاره العميل: {c.bot_branch}</span>}
         <span className={`rounded-full px-2 py-0.5 text-xs ${c.window_open ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{c.window_open ? "نافذة الرد مفتوحة (24 ساعة)" : "نافذة الرد مغلقة"}</span>
       </div>
       <div className="max-h-[60vh] flex-1 space-y-2 overflow-y-auto p-3">
@@ -208,7 +212,8 @@ function Thread({ id, owner }: { id: string; owner: boolean }) {
                 m.has_media ? <button onClick={() => openMedia(m)} className="mb-1 flex items-center gap-1 text-primary underline"><Paperclip className="size-3" /> فتح {KIND[m.kind]}{m.file_name ? ` — ${m.file_name}` : ""}</button>
                   : <div className="mb-1 text-xs text-muted-foreground">[{KIND[m.kind]}{m.file_name ? ` — ${m.file_name}` : ""}]</div>
               )}
-              {m.body && <div className="whitespace-pre-wrap">{m.body}</div>}
+              {m.choice && <div className="mb-1 text-[11px] text-muted-foreground">اختيار من قائمة البوت</div>}
+              {m.body ? <div className={`whitespace-pre-wrap ${m.choice ? "font-semibold" : ""}`}>{m.body}</div> : m.kind === "interactive" && <div className="text-xs text-muted-foreground">[اختيار من قائمة — لم يصل نصه]</div>}
               <div className="mt-1 flex gap-2 text-[11px] text-muted-foreground">
                 <span>{when(m.at)}</span>
                 {m.direction === "out" && <span>{ST[m.status] ?? m.status}</span>}
@@ -233,4 +238,42 @@ export function useWaOrgOk(orgId: string | null | undefined) {
     queryKey: ["wa-org-ok", orgId], enabled: !!orgId, staleTime: 60_000,
     queryFn: async () => { const { data, error } = await supabase.rpc("wa_org_ok" as never, { _org: orgId } as never); if (error) return false; return data === true; },
   });
+}
+
+/** Owner-only: bot list options (by WATI row id, title as fallback) → Rikaz branch. Informational; never grants access. */
+function BotBranches() {
+  const qc = useQueryClient();
+  const d = useQuery({ queryKey: ["wa-bot"], queryFn: async () => { const r = await supabase.rpc("wa_bot_choices" as never); if (r.error) throw r.error; return r.data as Row; } });
+  const [pick, setPick] = useState<Record<string, string>>({});
+  if (d.isLoading) return <LoadingState />;
+  if (d.error) return <ErrorState message="تعذّر تحميل خيارات البوت" onRetry={() => void d.refetch()} />;
+  const save = async (c: Row, v: string) => {
+    const r = await supabase.rpc("wa_bot_link" as never, { _id: c.id ?? null, _title: c.title, _school: v || null } as never);
+    if (r.error) { toast.error(r.error.message); return; }
+    toast.success("حُفظ ربط الخيار"); void qc.invalidateQueries({ queryKey: ["wa-bot"] }); void qc.invalidateQueries({ queryKey: ["wa-convs"] });
+  };
+  return (
+    <section className="space-y-2"><h3 className="font-semibold">خيارات فروع البوت ← فروع ركاز</h3>
+      <p className="text-xs text-muted-foreground">يظهر الفرع الذي اختاره العميل بجانب المحادثة للعلم فقط؛ لا يمنح أي موظف صلاحية، ويبقى الإسناد من WATI.</p>
+      {!d.data.choices.length ? <EmptyState title="لم يصل أي اختيار من قائمة البوت بعد" /> : (
+        <div className="grid gap-2 md:grid-cols-2">{d.data.choices.map((c: Row) => {
+          const cur = c.link?.school_id ?? ""; const val = pick[c.key] ?? cur;
+          return (
+            <div key={c.key} className="space-y-2 rounded-lg border bg-card p-3">
+              <div className="flex justify-between gap-2"><b>{c.title}</b><span className="text-xs text-muted-foreground">{c.count} اختيار</span></div>
+              {c.id && <code className="text-[11px] text-muted-foreground" dir="ltr">id: {c.id}</code>}
+              <div className="flex items-center gap-2">
+                <select className={selectCls()} value={val} onChange={(e) => setPick((p) => ({ ...p, [c.key]: e.target.value }))}>
+                  <option value="">— غير مربوط —</option>
+                  {d.data.schools.map((s: Row) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <Button size="sm" disabled={val === cur} onClick={() => save(c, val)}>حفظ</Button>
+              </div>
+              {cur && <div className="text-xs text-primary">مربوط حاليًا: {c.link.school}</div>}
+            </div>
+          );
+        })}</div>
+      )}
+    </section>
+  );
 }

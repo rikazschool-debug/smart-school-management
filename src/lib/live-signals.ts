@@ -11,6 +11,7 @@ export const LIVE_TOPICS: Record<string, string[]> = {
   pickup: ["att-pk-pending", "att-pk-queue", "att-mine"],
   la: ["la-my", "la-school", "la"],
   "att-day": ["family-att", "la", "la-school"],
+  wa: ["wa-msgs", "wa-convs", "wa-card"],
   msg: ["msgs", "convs", "people", "cg-members", "my-section-groups"],
 };
 
