@@ -213,7 +213,7 @@ function Week({ ctx, manage }: { ctx: Ctx; manage: boolean }) {
       </div>
       <fieldset disabled={!manage} className="min-w-0 space-y-4">
       {roster.isLoading ? <LoadingState /> : roster.error ? <ErrorState message={arabicError(roster.error)} /> : !R ? (
-        <EmptyState title="لا يوجد جدول مناوبات لهذا الأسبوع" hint={manage ? "أنشئ مسودة ثم اقترح التوزيع أو أسند يدويًا." : undefined} action={manage ? <Button onClick={open} disabled={busy}>إنشاء جدول الأسبوع</Button> : undefined} />
+        <EmptyState title="لا يوجد جدول مناوبات لهذا الأسبوع" {...(manage ? { hint: "أنشئ مسودة ثم اقترح التوزيع أو أسند يدويًا.", action: <Button onClick={open} disabled={busy}>إنشاء جدول الأسبوع</Button> } : {})} />
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-4">
