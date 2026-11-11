@@ -830,3 +830,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## Nov 11 2026 — WhatsApp assignment from WATI
 - Codes from WATI conversations/query linked by the owner (staff code → login, team code → branch); perms wa_inbox.mine / wa_inbox.branch; unlinked = owner only; server checks on list/messages/media/reply + fresh sync before send. scripts/wa-assign-e2e.ts 17/17 (two branches, real WATI sync, simulated move then real re-sync).
+
+## 2026-11-11 — WhatsApp «تحويل المحادثة»
+- scripts/wa-transfer-e2e.ts 25/25. Real WATI transfer on test chat 966570567341 (owner session, from the screen): first attempt failed with WATI 5006 «Assignee Not Found» (lower-cased email) and kept the assignment; after fix, transfer to محمد رفعت ابراهيم confirmed by WATI re-read; then restored to the original WATI bot assignee and verified. Team transfer not exercised live (no team names recorded yet).

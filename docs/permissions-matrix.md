@@ -515,3 +515,5 @@ Calls with no branch: owner only. Deny overrides grant. Revoking listen stops an
 - health section: nurse (labelled «المرشدة الصحية») full in branch, principal/vice view, owner all, others via tree. Guardian edits own entries only.
 
 - واتساب: مالك المجموعة يرى كل المحادثات ويربط الأكواد؛ «محادثاتي» (wa_inbox.mine) = المسندة إليّ في WATI؛ «محادثات الفرع» (wa_inbox.branch) = فرق WATI المربوطة بفرعي؛ الانتماء للفرع وحده لا يكفي.
+
+- واتساب — تحويل المحادثة: «تحويل داخل الفرع» (wa_inbox.transfer_branch) و«تحويل بين الفروع» (wa_inbox.transfer_org) يمنحهما مالك المجموعة؛ المالك يحوّل لأي فرع.
