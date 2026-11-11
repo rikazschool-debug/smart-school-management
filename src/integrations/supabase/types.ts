@@ -20267,6 +20267,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      _perm_base_pre332: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
       _perm_base_v11: {
         Args: {
           _action: string
@@ -20347,6 +20356,10 @@ export type Database = {
         Returns: boolean
       }
       _perm_valid_base: {
+        Args: { _action: string; _scope: string; _section: string }
+        Returns: boolean
+      }
+      _perm_valid_pre332: {
         Args: { _action: string; _scope: string; _section: string }
         Returns: boolean
       }
@@ -21683,6 +21696,7 @@ export type Database = {
       can_manage_circular: { Args: { _c: string }; Returns: boolean }
       can_manage_school: { Args: { _school: string }; Returns: boolean }
       can_manage_students: { Args: { _school: string }; Returns: boolean }
+      can_place_students: { Args: { _school: string }; Returns: boolean }
       can_read_circular: { Args: { _c: string }; Returns: boolean }
       can_read_conv_at: {
         Args: { _at: string; _conv: string }
@@ -24878,6 +24892,10 @@ export type Database = {
           subject: string
           title: string
         }[]
+      }
+      student_place: {
+        Args: { _section: string; _student: string }
+        Returns: string
       }
       submit_homework: {
         Args: { _client: string; _hw: string }

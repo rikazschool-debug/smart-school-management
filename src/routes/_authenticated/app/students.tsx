@@ -21,7 +21,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { studentReadiness } from "@/lib/people-import";
 import { arabicError, type AppContext } from "@/lib/session";
 
-export const Route = createFileRoute("/_authenticated/app/students")({ component: Page });
+export const Route = createFileRoute("/_authenticated/app/students")({ component: Page, head: () => ({ meta: [{ title: "الطلاب والتسكين — ركاز" }, { name: "description", content: "سجلات الطلاب وتسكينهم في الشعب حسب الصلاحيات." }, { property: "og:title", content: "الطلاب والتسكين — ركاز" }, { property: "og:description", content: "سجلات الطلاب وتسكينهم في الشعب حسب الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }) });
 
 const STATUS = [
   { value: "active", label: "منتظم" },
@@ -31,7 +31,7 @@ const STATUS = [
 ];
 
 function Page() {
-  return <RequireSchool nav="students">{(ctx) => <Students ctx={ctx} />}</RequireSchool>;
+  return <RequireSchool nav="students" extra={(p) => !!p["people_family.view"] || !!p["people_family.edit"]}>{(ctx) => <Students ctx={ctx} />}</RequireSchool>;
 }
 
 function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
@@ -39,6 +39,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const sp = useSchoolPerms(ctx.schoolId);
   // edit = owner or people_family.edit (owner-grantable); principal/vice view only — server re-checks (can_manage_students)
   const w = ctx.role === "org_owner" || !!sp?.["people_family.edit"];
+  const placeCan = useQuery({ queryKey: ["can-place-students", ctx.schoolId], queryFn: async () => { const { data, error } = await db.rpc("can_place_students", { _school: ctx.schoolId }); if (error) throw error; return !!data; } });
   const auto = useServerFn(autoAccounts);
   const [linking, setLinking] = useState<Row | null>(null);
   const [placing, setPlacing] = useState<Row | null>(null);
@@ -63,13 +64,8 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const place = useMutation({
     mutationFn: async (v: Row) => {
       const sid = placing?.["id"];
-      const { data: sec, error: e1 } = await db.from("sections").select("year_id").eq("id", v["section_id"]).single();
-      if (e1) throw e1;
-      // end any active enrollment in the same year first (transfer between sections)
-      const { error: e2 } = await db.from("enrollments").update({ status: "ended", end_date: new Date().toISOString().slice(0, 10) })
-        .eq("student_id", sid).eq("year_id", sec.year_id).eq("status", "active");
-      if (e2) throw e2;
-      const { error } = await db.from("enrollments").insert({ student_id: sid, section_id: v["section_id"], year_id: sec.year_id, school_id: ctx.schoolId });
+      if (!sid || !v["section_id"]) throw new Error("اختر الطالب والشعبة");
+      const { error } = await db.rpc("student_place", { _student: sid, _section: v["section_id"] });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("تم التسكين"); setPlacing(null); qc.invalidateQueries(); },
@@ -123,11 +119,11 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           { label: "آخر حالة العقد", text: (r) => r["contract_status"] ?? "لا يوجد", render: (r) => <span className="text-xs">{r["contract_status"] ?? "لا يوجد"}</span> },
           { label: "آخر نوع العقد", text: (r) => r["contract_type"] ?? "لا يوجد", render: (r) => <span className="text-xs">{r["contract_type"] ?? "لا يوجد"}</span> },
         ]}
-        extraActions={(r) => w || ctCan.data ? (
+        extraActions={(r) => w || ctCan.data || placeCan.data ? (
           <>
             {ctCan.data && <ContractEdit row={r} schoolId={ctx.schoolId} />}
+            {placeCan.data && <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>}
             {w && <>
-            <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>
             <Button variant="ghost" size="sm" onClick={() => setGuarding(r)}><Link2 className="size-4" /> ولي الأمر</Button>
             <Button variant="ghost" size="sm" onClick={() => setLinking(r)}>ربط بولي أمر مسجل</Button>
             </>}

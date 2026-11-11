@@ -214,11 +214,12 @@ function Shell() {
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
     ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] || sp?.["attendance.view"] || sp?.["attendance.record"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(!owner && (sp?.["notices.view"] || sp?.["notices.send"]) ? ["hub_notices"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["health.view"] || sp?.["health.record"] || sp?.["health.manage"] ? ["health"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(owner || ["view", "replies", "autoreply", "media"].some((a) => sp?.[`chat_settings.${a}`]) ? ["chat_settings"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
   // base-role tools the owner stopped for this person (perm_my_school bt_*; the server blocks them too)
+  if (sp?.["people_family.view"] || sp?.["people_family.edit"]) baseNav.push("students", "guardians");
   const btOff: [string, NavKey][] = [["bt_schedule.view", "schedule"], ["bt_classroom.view", "classrooms"], ["bt_homework.view", "homework"]];
   for (const [k, n] of btOff) if (sp && sp[k] === false && baseNav.includes(n)) baseNav.splice(baseNav.indexOf(n), 1);
   const opsOnly = ops.opsOnly;
   if (ops.central) baseNav.push("hr");
-  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events", ...(ops.asst ? ["schedule", "attendance"] : [])].includes(k)));
+  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events", ...(sp?.["people_family.view"] || sp?.["people_family.edit"] ? ["students", "guardians"] : []), ...(sp?.["people.view"] ? ["tags"] : []), ...(ops.asst ? ["schedule", "attendance"] : [])].includes(k)));
   if (ops.asst && !sp?.["school_schedule.view"]) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => k !== "schedule"));
   if (ops.asst && !(sp?.["attendance.view"] || sp?.["attendance.record"])) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => k !== "attendance"));
   if (mqSecs.length) baseNav.push("calls");
