@@ -298,24 +298,37 @@ export const waTransfer = createServerFn({ method: "POST" })
     if (t.repeat && t.status !== "pending") return { id: t.id, status: t.status };
     if (t.repeat) return { id: t.id, ...(await verifyJob(a, t.id)) };
     const job = (await a.rpc("_wa_transfer_job" as never, { _id: t.id } as never)).data as unknown as Record<string, unknown>;
+    let reopened = false;
     try {
       const target = encodeURIComponent(job["wati_conv_id"] as string);
-      const res = data.kind === "operator"
-        ? await wati(`/api/ext/v3/conversations/${target}/operator`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assignee_email: job["email"] }) })
-        : await wati(`/api/ext/v3/contacts/teams`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target: job["wa_id"], teams: [job["team_name"]] }) });
+      const putOp = () => wati(`/api/ext/v3/conversations/${target}/operator`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assignee_email: job["email"] }) });
+      let res: Record<string, unknown>;
+      if (data.kind === "operator") {
+        try { res = await putOp(); }
+        catch (e) {
+          // WATI refuses to assign a Solved ticket (code 5007): reopen it (a definite refusal, so one retry is safe), then assign.
+          if (!/5007|ticket is Solved/i.test(e instanceof Error ? e.message : "")) throw e;
+          try { await wati(`/api/ext/v3/conversations/${target}/status`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ new_status: "open" }) }); }
+          catch (e2) { throw new Error(`WATI 400: المحادثة مغلقة (محلولة) في WATI وتعذّر إعادة فتحها — ${(e2 instanceof Error ? e2.message : "").slice(0, 120)}`); }
+          reopened = true;
+          res = await putOp();
+        }
+      } else res = await wati(`/api/ext/v3/contacts/teams`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target: job["wa_id"], teams: [job["team_name"]] }) });
       if (data.kind === "operator" && res["result"] === false) {
         await a.rpc("_wa_transfer_finish" as never, { _id: t.id, _status: "failed", _error: "رفض WATI الإسناد", _observed: null } as never);
         return { id: t.id, status: "failed", error: "رفض WATI الإسناد (تحقّق من بريد الموظف في WATI)" };
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      let msg = e instanceof Error ? e.message : String(e);
       if (/^WATI \d{3}/.test(msg)) {
+        if (/5007|ticket is Solved/i.test(msg)) msg = "المحادثة مغلقة (محلولة) في WATI، وWATI لا يسند المحادثات المغلقة";
+        else if (reopened) msg = `أُعيد فتح المحادثة في WATI لكن رُفض الإسناد: ${msg}`;
         await a.rpc("_wa_transfer_finish" as never, { _id: t.id, _status: "failed", _error: msg.slice(0, 300), _observed: null } as never);
         return { id: t.id, status: "failed", error: msg.slice(0, 300) };
       }
       // no answer: outcome unknown — verify, never resend
     }
-    try { return { id: t.id, ...(await verifyJob(a, t.id)) }; }
+    try { return { id: t.id, reopened, ...(await verifyJob(a, t.id)) }; }
     catch { await a.rpc("_wa_transfer_finish" as never, { _id: t.id, _status: "unknown", _error: "تعذّر التحقق من WATI", _observed: null } as never); return { id: t.id, status: "unknown", error: "تعذّر التحقق من WATI" }; }
   });
 

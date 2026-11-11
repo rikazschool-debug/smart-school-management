@@ -833,3 +833,5 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 
 ## 2026-11-11 — WhatsApp «تحويل المحادثة»
 - scripts/wa-transfer-e2e.ts 25/25. Real WATI transfer on test chat 966570567341 (owner session, from the screen): first attempt failed with WATI 5006 «Assignee Not Found» (lower-cased email) and kept the assignment; after fix, transfer to محمد رفعت ابراهيم confirmed by WATI re-read; then restored to the original WATI bot assignee and verified. Team transfer not exercised live (no team names recorded yet).
+
+- 2026-11-11: transfer of a Solved WATI chat failed with 5007. waTransfer now reopens (status open) and retries once; verified on test chat 966570567341 (solved → 5007 → open → assign 200 → re-read assignee matched), then restored to open + Bot.
