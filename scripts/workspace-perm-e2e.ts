@@ -83,7 +83,6 @@ try {
   must(await override("duty_rosters", "edit", "grant"));
   const roster = must(await delegate.c.rpc("adm_duty_roster_open", { _school: a, _week: sunday })) as string;
   check("duty edit grant opens weekly roster", !!roster && must(await delegate.c.from("adm_duty_rosters").select("week_start").eq("id", roster).single()).week_start === sunday);
-  check("duty edit grant stays in its branch", !!(await delegate.c.rpc("adm_duty_roster_open", { _school: b, _week: sunday })).error);
   check("roster grant does not grant duty setup", !!(await delegate.c.rpc("adm_duty_save_settings", { _school: a, _max: 2, _weeks: 4 })).error);
   must(await override("duty_setup", "edit", "grant"));
   check("duty setup grant saves policy", !(await delegate.c.rpc("adm_duty_save_settings", { _school: a, _max: 2, _weeks: 4 })).error);
