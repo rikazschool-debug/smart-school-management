@@ -36,7 +36,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
   const term = q.trim();
   const SYN: Record<string, string> = { "محادث": "تواصل رسائل مجموعات", "واجب": "اختبارات", "موظف": "موارد بشرية", "صيانة": "باصات", "مالي": "مشتريات عهد" };
   const syn = (t: string) => Object.entries(SYN).filter(([k, v]) => t.includes(k) || v.includes(t)).map(([k]) => k);
-  const hit = (txt: string) => !term || txt.includes(term) || syn(term).some((x) => txt.includes(x));
+  const hit = (txt: string) => !term || txt.includes(term) || txt.includes(term.replace(/^ال/, "")) || syn(term).some((x) => txt.includes(x));
   const keep = (s: PermSec, a: string) => { const k = `${s.key}.${a}`; const on = !!has(s.key, a);
     return filter === "all" || (filter === "on" && on) || (filter === "off" && !on) || (filter === "personal" && (!!personal?.[k] || on !== was(k))); };
   // base-role tools are deny-only for one person; role templates never carry them
