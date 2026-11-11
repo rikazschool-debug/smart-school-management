@@ -40,7 +40,7 @@ try {
   must(await admin.from("memberships").insert([{ org_id: org, school_id: a, user_id: delegate.id, role: "nurse" }, { org_id: org, school_id: b, user_id: delegate.id, role: "nurse" }, { org_id: org, school_id: a, user_id: other.id, role: "teacher" }]));
   const override = (section: string, action: string, effect: string | null) => owner.c.rpc("perm_override_set", { _org: org, _user: delegate.id, _section: section, _action: action, _effect: effect, _scope: effect === "grant" ? "branch" : null, _reason: "تجربة التفويض" });
   const catalog = must(await owner.c.rpc("perm_catalog"));
-  for (const s of ["academic_years", "academic_terms", "academic_stages", "academic_grades", "academic_sections", "academic_departments", "academic_subjects", "academic_scopes", "course_setup", "course_assignments", "admin_tasks", "admin_requests", "admin_forms", "schedule_drafts", "schedule_day", "schedule_rooms", "schedule_loads", "schedule_requirements", "schedule_availability", "schedule_sub_policy"]) {
+  for (const s of ["academic_years", "academic_terms", "academic_stages", "academic_grades", "academic_sections", "academic_departments", "academic_subjects", "academic_scopes", "course_setup", "course_assignments", "admin_tasks", "admin_requests", "admin_forms", "schedule_drafts", "schedule_day", "schedule_rooms", "schedule_loads", "schedule_requirements", "schedule_availability", "schedule_sub_policy", "duty_rosters", "duty_setup"]) {
     check(`${s} real view/action catalog`, catalog.sections.some((x: { key: string; actions: string[]; locked_reason?: string }) => x.key === s && x.actions.includes("view") && x.actions.length > 1 && !x.locked_reason));
   }
   check("no default academic year write", !!(await delegate.c.from("academic_years").insert({ school_id: a, name: "ممنوع", start_date: "2026-08-01", end_date: "2027-07-31" })).error);
@@ -74,6 +74,23 @@ try {
   await must(await override("admin_tasks", "create", "grant"));
   const pool = must(await delegate.c.rpc("people_pick", { _purpose: "task", _school: a, _limit: 20 }));
   check("delegated creator receives protected task pool", Array.isArray(pool) && pool.some((p: { user_id: string }) => p.user_id === other.id));
+  check("duties info row removed from locked list", !catalog.sections.some((x: { key: string }) => x.key === "duties_info"));
+  const sunday = "2027-01-03";
+  check("no default duty roster management", !!(await delegate.c.rpc("adm_duty_roster_open", { _school: a, _week: sunday })).error);
+  must(await override("duty_rosters", "view", "grant"));
+  check("duty view does not grant roster creation", !!(await delegate.c.rpc("adm_duty_roster_open", { _school: a, _week: sunday })).error);
+  check("duty view lists school duties", !(await delegate.c.rpc("adm_duty_list", { _school: a, _scope: "all", _q: null, _from: null, _to: null, _status: null, _post: null, _limit: 10, _offset: 0 })).error);
+  must(await override("duty_rosters", "edit", "grant"));
+  const roster = must(await delegate.c.rpc("adm_duty_roster_open", { _school: a, _week: sunday })) as string;
+  check("duty edit grant opens weekly roster", !!roster && must(await delegate.c.from("adm_duty_rosters").select("week_start").eq("id", roster).single()).week_start === sunday);
+  check("duty edit grant stays in its branch", !!(await delegate.c.rpc("adm_duty_roster_open", { _school: b, _week: sunday })).error);
+  check("roster grant does not grant duty setup", !!(await delegate.c.rpc("adm_duty_save_settings", { _school: a, _max: 2, _weeks: 4 })).error);
+  must(await override("duty_setup", "edit", "grant"));
+  check("duty setup grant saves policy", !(await delegate.c.rpc("adm_duty_save_settings", { _school: a, _max: 2, _weeks: 4 })).error);
+  check("other staff still cannot manage duties", !!(await other.c.rpc("adm_duty_roster_open", { _school: a, _week: "2027-01-10" })).error);
+  must(await override("duty_rosters", "edit", "deny"));
+  check("duty deny wins over grant", !!(await delegate.c.rpc("adm_duty_roster_open", { _school: a, _week: "2027-01-10" })).error);
+  must(await override("duty_rosters", "edit", null));
   check("cannot self-grant permissions", !!(await delegate.c.rpc("perm_role_save", { _org: org, _id: null, _name: "ممنوع", _description: "", _grants: grants, _reason: "ممنوع" })).error);
   must(await owner.c.rpc("perm_assign", { _org: org, _user: delegate.id, _role: role, _assign: false, _school_ids: [a], _limit: null, _reason: "اختبار السحب" }));
   check("role withdrawal stops writes immediately", !!(await delegate.c.from("academic_years").insert({ school_id: a, name: "ممنوع", start_date: "2026-08-01", end_date: "2027-07-31" })).error);
