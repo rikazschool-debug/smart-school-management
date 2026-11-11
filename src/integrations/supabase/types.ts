@@ -17369,6 +17369,140 @@ export type Database = {
           },
         ]
       }
+      wa_conversations: {
+        Row: {
+          contact_name: string | null
+          created_at: string
+          id: string
+          last_at: string | null
+          last_inbound_at: string | null
+          last_text: string | null
+          unread: number
+          wa_id: string | null
+          wati_conv_id: string
+        }
+        Insert: {
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          last_at?: string | null
+          last_inbound_at?: string | null
+          last_text?: string | null
+          unread?: number
+          wa_id?: string | null
+          wati_conv_id: string
+        }
+        Update: {
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          last_at?: string | null
+          last_inbound_at?: string | null
+          last_text?: string | null
+          unread?: number
+          wa_id?: string | null
+          wati_conv_id?: string
+        }
+        Relationships: []
+      }
+      wa_messages: {
+        Row: {
+          body: string | null
+          conversation_id: string
+          created_at: string
+          direction: string
+          error: string | null
+          file_name: string | null
+          id: string
+          kind: string
+          local_id: string | null
+          operator_name: string | null
+          sent_by: string | null
+          status: string
+          status_times: Json
+          wa_at: string | null
+          wamid: string | null
+          wati_msg_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          direction: string
+          error?: string | null
+          file_name?: string | null
+          id?: string
+          kind?: string
+          local_id?: string | null
+          operator_name?: string | null
+          sent_by?: string | null
+          status?: string
+          status_times?: Json
+          wa_at?: string | null
+          wamid?: string | null
+          wati_msg_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          direction?: string
+          error?: string | null
+          file_name?: string | null
+          id?: string
+          kind?: string
+          local_id?: string | null
+          operator_name?: string | null
+          sent_by?: string | null
+          status?: string
+          status_times?: Json
+          wa_at?: string | null
+          wamid?: string | null
+          wati_msg_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_webhook_events: {
+        Row: {
+          attempts: number
+          dedupe_key: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          received_at: string
+        }
+        Insert: {
+          attempts?: number
+          dedupe_key: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+        }
+        Update: {
+          attempts?: number
+          dedupe_key?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       xb_settings: {
         Row: {
           mode: string
@@ -19978,6 +20112,48 @@ export type Database = {
         Args: { _course: string; _user: string }
         Returns: boolean
       }
+      _wa_apply_status: {
+        Args: { _at: string; _err: string; _msg: string; _status: string }
+        Returns: undefined
+      }
+      _wa_conv: {
+        Args: { _name: string; _wa: string; _wati: string }
+        Returns: string
+      }
+      _wa_ingest: {
+        Args: { _key: string; _payload: Json; _type: string }
+        Returns: Json
+      }
+      _wa_out_claim: {
+        Args: {
+          _body: string
+          _conv: string
+          _file: string
+          _kind: string
+          _local: string
+          _user: string
+        }
+        Returns: Json
+      }
+      _wa_out_result: {
+        Args: {
+          _err: string
+          _local: string
+          _status: string
+          _wamid: string
+          _wati: string
+        }
+        Returns: undefined
+      }
+      _wa_process: { Args: { _ev: string }; Returns: boolean }
+      _wa_pull_save: { Args: { _conv: Json; _msgs: Json }; Returns: string }
+      _wa_put_msg: {
+        Args: { _conv: string; _owner: boolean; _p: Json }
+        Returns: boolean
+      }
+      _wa_rank: { Args: { _s: string }; Returns: number }
+      _wa_recover: { Args: { _limit?: number }; Returns: number }
+      _wa_ts: { Args: { _v: string }; Returns: string }
       _xb_ok: { Args: { _org: string; _user: string }; Returns: boolean }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
@@ -24400,6 +24576,11 @@ export type Database = {
       }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
       vice_teacher_ids: { Args: never; Returns: string[] }
+      wa_conv_ref: { Args: { _conv: string }; Returns: Json }
+      wa_conversations_list: { Args: { _q?: string }; Returns: Json }
+      wa_media_ref: { Args: { _msg: string }; Returns: Json }
+      wa_messages_list: { Args: { _conv: string }; Returns: Json }
+      wa_ok: { Args: never; Returns: boolean }
       xb_get: { Args: { _org: string }; Returns: Json }
       xb_save: {
         Args: {
