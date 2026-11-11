@@ -231,3 +231,85 @@ export const waTag = createServerFn({ method: "POST" })
     if (data.on) await (await admin()).rpc("_wa_tag_sync" as never, { _conv: data.conv, _name: data.name, _ok: ok, _err: err } as never);
     return { ok, error: err };
   });
+
+/**
+ * Chat transfer (WATI stays the assignment source): wa_transfer_begin checks the caller's scope and records a pending row →
+ * one WATI write (operator by email, or contact team set by name) → re-read the assignment from WATI → only a verified
+ * match is "done". A WATI error is "failed" (assignment kept); a timeout or non-matching read is "unknown" and must be
+ * verified (waTransferVerify) before any new transfer — never blindly retried.
+ */
+async function readAssign(job: Record<string, unknown>) {
+  const kind = job["kind"] as string, code = job["code"] as string;
+  const now = Date.now();
+  const filters = kind === "operator" ? { assignee_ids: [code] } : { team_ids: [code] };
+  let cursor = "";
+  for (let i = 0; i < 10; i++) {
+    const j = await wati("/api/ext/v3/conversations/query", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ time_range: { from: new Date(now - 365 * 864e5).toISOString(), to: new Date(now + 864e5).toISOString() }, filters,
+        page: { size: 100, ...(cursor ? { cursor } : {}) }, count: { mode: "none" }, result_mode: "conversations" }) });
+    for (const it of (j["items"] as Record<string, unknown>[] | undefined) ?? [])
+      if (it["conversation_id"] === job["wati_conv_id"]) return { assignee_id: (it["assignee_id"] as string | null) ?? null, team_ids: (it["team_ids"] as string[]) ?? [] };
+    const pg = j["page"] as { has_more?: boolean; next_cursor?: string } | undefined;
+    if (!pg?.has_more || !pg.next_cursor) break; cursor = pg.next_cursor;
+  }
+  return null;
+}
+async function verifyJob(a: Adm, id: string) {
+  const jr = await a.rpc("_wa_transfer_job" as never, { _id: id } as never);
+  if (jr.error || !jr.data) throw new Error("تعذّر قراءة التحويل");
+  const job = jr.data as unknown as Record<string, unknown>;
+  let seen: { assignee_id: string | null; team_ids: string[] } | null = null;
+  for (let i = 0; i < 3 && !seen; i++) { if (i) await new Promise((r) => setTimeout(r, 1500)); seen = await readAssign(job); }
+  const fin = (status: string, err: string | null) => a.rpc("_wa_transfer_finish" as never, { _id: id, _status: status, _error: err, _observed: seen } as never);
+  if (seen) { await fin("done", null); return { status: "done" }; }
+  await fin("unknown", "لم يؤكد WATI الإسناد الجديد بعد");
+  return { status: "unknown", error: "لم يؤكد WATI الإسناد الجديد بعد" };
+}
+
+export const waTransfer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { conv: string; school: string; kind: "operator" | "team"; code: string; note?: string; key: string }) => {
+    if (!UUID.test(d.conv) || !UUID.test(d.school) || !/^[\w-]{8,64}$/.test(d.key) || !/^[0-9a-f]{24}$/i.test(d.code) || !["operator", "team"].includes(d.kind)) throw new Error("bad");
+    if (d.note && d.note.length > 1000) throw new Error("الملاحظة طويلة");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const b = await context.supabase.rpc("wa_transfer_begin" as never, { _conv: data.conv, _school: data.school, _kind: data.kind, _code: data.code, _note: data.note ?? null, _key: data.key } as never);
+    if (b.error) throw new Error((b.error as { message?: string }).message ?? "غير مصرح");
+    const t = b.data as unknown as { id: string; repeat: boolean; status: string };
+    const a = await admin();
+    if (t.repeat && t.status !== "pending") return { id: t.id, status: t.status };
+    if (t.repeat) return { id: t.id, ...(await verifyJob(a, t.id)) };
+    const job = (await a.rpc("_wa_transfer_job" as never, { _id: t.id } as never)).data as unknown as Record<string, unknown>;
+    try {
+      const target = encodeURIComponent(job["wati_conv_id"] as string);
+      const res = data.kind === "operator"
+        ? await wati(`/api/ext/v3/conversations/${target}/operator`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assignee_email: job["email"] }) })
+        : await wati(`/api/ext/v3/contacts/teams`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target: job["wa_id"], teams: [job["team_name"]] }) });
+      if (data.kind === "operator" && res["result"] === false) {
+        await a.rpc("_wa_transfer_finish" as never, { _id: t.id, _status: "failed", _error: "رفض WATI الإسناد", _observed: null } as never);
+        return { id: t.id, status: "failed", error: "رفض WATI الإسناد (تحقّق من بريد الموظف في WATI)" };
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/^WATI \d{3}/.test(msg)) {
+        await a.rpc("_wa_transfer_finish" as never, { _id: t.id, _status: "failed", _error: msg.slice(0, 300), _observed: null } as never);
+        return { id: t.id, status: "failed", error: msg.slice(0, 300) };
+      }
+      // no answer: outcome unknown — verify, never resend
+    }
+    try { return { id: t.id, ...(await verifyJob(a, t.id)) }; }
+    catch { await a.rpc("_wa_transfer_finish" as never, { _id: t.id, _status: "unknown", _error: "تعذّر التحقق من WATI", _observed: null } as never); return { id: t.id, status: "unknown", error: "تعذّر التحقق من WATI" }; }
+  });
+
+/** Re-check an unresolved transfer against WATI (actor or anyone with access to the chat). */
+export const waTransferVerify = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => { if (!UUID.test(d.id)) throw new Error("bad"); return d; })
+  .handler(async ({ data, context }) => {
+    const g = await context.supabase.rpc("wa_transfer_get" as never, { _id: data.id } as never);
+    if (g.error) throw new Error("غير مصرح");
+    const st = (g.data as unknown as { status: string }).status;
+    if (st === "done" || st === "failed") return { status: st };
+    return await verifyJob(await admin(), data.id);
+  });
