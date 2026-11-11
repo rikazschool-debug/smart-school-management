@@ -20267,6 +20267,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      _perm_base_pre332: {
+        Args: {
+          _action: string
+          _school: string
+          _section: string
+          _uid: string
+        }
+        Returns: boolean
+      }
       _perm_base_v11: {
         Args: {
           _action: string
