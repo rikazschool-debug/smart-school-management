@@ -827,3 +827,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## 2026-11-11 — WhatsApp inbox in support (WATI)
 - Read checks: conversations/messages/templates/channels OK; webhooks read 403 (needs webhooks:read or api scope); attachment download OK via documented GET /api/ext/v3/conversations/messages/file/{message_id} (JPEG 58 KB).
 - Built wa_* inbox, webhook storage, «واتساب» tab (platform admins). scripts/wa-inbox-e2e.ts 11/11. Live send test pending user (one text + one file to the agreed number).
+
+## Nov 11 2026 — WhatsApp assignment from WATI
+- Codes from WATI conversations/query linked by the owner (staff code → login, team code → branch); perms wa_inbox.mine / wa_inbox.branch; unlinked = owner only; server checks on list/messages/media/reply + fresh sync before send. scripts/wa-assign-e2e.ts 17/17 (two branches, real WATI sync, simulated move then real re-sync).
