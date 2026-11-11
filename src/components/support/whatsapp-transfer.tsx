@@ -45,9 +45,9 @@ export function TransferBox({ conv }: { conv: string }) {
         <Button size="sm" variant="outline" className="mt-1 h-7 w-full" disabled={busy} onClick={() => void verify(un.id)}><RefreshCw className="size-3" /> تحقّق من WATI</Button></div>}
       {o.can && !un && (!open ? <Button size="sm" variant="outline" className="w-full" onClick={() => setOpen(true)}><ArrowLeftRight className="size-4" /> تحويل المحادثة</Button> : (
         <div className="space-y-2">
-          <select aria-label="الفرع" className={selectCls} value={school} onChange={(e) => { setSchool(e.target.value); setTarget(""); }}>
+          <select aria-label="الفرع" className={selectCls()} value={school} onChange={(e) => { setSchool(e.target.value); setTarget(""); }}>
             <option value="">اختر الفرع</option>{(o.branches as Row[]).map((b) => <option key={b.id} value={b.id}>{b.name}{b.current ? " (الحالي)" : ""}</option>)}</select>
-          {br && <select aria-label="المستلم" className={selectCls} value={target} onChange={(e) => setTarget(e.target.value)}>
+          {br && <select aria-label="المستلم" className={selectCls()} value={target} onChange={(e) => setTarget(e.target.value)}>
             <option value="">اختر الموظف أو الفريق</option>
             {br.operators.length > 0 && <optgroup label="موظفون">{br.operators.map((p: Row) => <option key={p.code} value={`operator:${p.code}`} disabled={!p.ready || p.current}>{p.name}{p.current ? " (الحالي)" : !p.ready ? " — بلا بريد WATI" : ""}</option>)}</optgroup>}
             {br.teams.length > 0 && <optgroup label="فرق">{br.teams.map((t: Row) => <option key={t.code} value={`team:${t.code}`} disabled={!t.ready}>{t.name}{!t.ready ? " — بلا اسم WATI" : ""}</option>)}</optgroup>}
