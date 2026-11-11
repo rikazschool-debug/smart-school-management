@@ -17960,6 +17960,33 @@ export type Database = {
           },
         ]
       }
+      wa_wati_operators: {
+        Row: {
+          email: string | null
+          full_name: string | null
+          is_bot: boolean
+          org_id: string
+          seen_at: string
+          wati_id: string
+        }
+        Insert: {
+          email?: string | null
+          full_name?: string | null
+          is_bot?: boolean
+          org_id: string
+          seen_at?: string
+          wati_id: string
+        }
+        Update: {
+          email?: string | null
+          full_name?: string | null
+          is_bot?: boolean
+          org_id?: string
+          seen_at?: string
+          wati_id?: string
+        }
+        Relationships: []
+      }
       wa_webhook_events: {
         Row: {
           attempts: number
@@ -20623,6 +20650,7 @@ export type Database = {
       }
       _wa_can: { Args: { _org: string }; Returns: boolean }
       _wa_choice: { Args: { _p: Json }; Returns: Json }
+      _wa_codes_base: { Args: never; Returns: Json }
       _wa_conv: {
         Args: { _name: string; _wa: string; _wati: string }
         Returns: string
@@ -20678,6 +20706,10 @@ export type Database = {
       }
       _wa_norm: { Args: { _t: string }; Returns: string }
       _wa_notify_targets: { Args: { _conv: string }; Returns: string[] }
+      _wa_op_in: {
+        Args: { _org: string; _place: string; _uid: string }
+        Returns: boolean
+      }
       _wa_operator_emails: { Args: { _ops: Json }; Returns: number }
       _wa_org: { Args: never; Returns: string }
       _wa_out_claim: {
@@ -20730,6 +20762,10 @@ export type Database = {
         Returns: string
       }
       _wa_ts: { Args: { _v: string }; Returns: string }
+      _wa_user_central: {
+        Args: { _org: string; _uid: string }
+        Returns: boolean
+      }
       _wa_user_schools: {
         Args: { _org: string; _uid: string }
         Returns: string[]
