@@ -108,7 +108,7 @@ function Thread({ id }: { id: string }) {
   return (
     <div className="flex min-h-[60vh] flex-col rounded-lg border bg-card">
       <div className="flex items-center justify-between border-b p-3">
-        <div><div className="font-semibold">{c.contact_name || c.wa_id}</div><div className="text-xs text-muted-foreground" dir="ltr">+{c.wa_id}</div></div>
+        <div><div className="font-semibold">{c.contact_name || c.wa_id}</div>{c.wa_id && <div className="text-xs text-muted-foreground" dir="ltr">+{c.wa_id}</div>}</div>
         <span className={`rounded-full px-2 py-0.5 text-xs ${c.window_open ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{c.window_open ? "نافذة الرد مفتوحة (24 ساعة)" : "نافذة الرد مغلقة"}</span>
       </div>
       <div className="max-h-[60vh] flex-1 space-y-2 overflow-y-auto p-3">
