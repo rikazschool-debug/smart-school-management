@@ -21,7 +21,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { BASE_TABS, peopleForTab, type PermPerson } from "@/lib/perm-tabs";
 
 export const Route = createFileRoute("/_authenticated/app/permissions")({
-  head: () => ({ meta: [{ title: "إعداد المستخدمين والصلاحيات — ركاز" }, { name: "description", content: "الأدوار والمسميات وصلاحيات الأقسام ونطاقاتها." }] }),
+  head: () => ({ meta: [{ title: "إعداد المستخدمين والصلاحيات — ركاز" }, { name: "description", content: "الأدوار والمسميات وصلاحيات الأقسام ونطاقاتها." }, { property: "og:title", content: "إعداد المستخدمين والصلاحيات — ركاز" }, { property: "og:description", content: "إدارة المستخدمين وتخصيص صلاحيات الأقسام والأدوار في ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Page,
 });
 
