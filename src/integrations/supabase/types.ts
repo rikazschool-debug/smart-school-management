@@ -23210,6 +23210,7 @@ export type Database = {
         Args: { _org: string }
         Returns: {
           address: string
+          admins: number
           city: string
           code: string
           id: string
@@ -23222,6 +23223,7 @@ export type Database = {
           staff_total: number
           stage_type: string
           students: number
+          teachers: number
         }[]
       }
       org_sections_get: { Args: { _org: string }; Returns: Json }
