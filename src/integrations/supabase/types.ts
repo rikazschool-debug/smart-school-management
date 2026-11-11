@@ -17453,6 +17453,7 @@ export type Database = {
           id: string
           kind: string
           local_id: string | null
+          on_behalf: boolean
           operator_name: string | null
           sent_by: string | null
           status: string
@@ -17471,6 +17472,7 @@ export type Database = {
           id?: string
           kind?: string
           local_id?: string | null
+          on_behalf?: boolean
           operator_name?: string | null
           sent_by?: string | null
           status?: string
@@ -17489,6 +17491,7 @@ export type Database = {
           id?: string
           kind?: string
           local_id?: string | null
+          on_behalf?: boolean
           operator_name?: string | null
           sent_by?: string | null
           status?: string
