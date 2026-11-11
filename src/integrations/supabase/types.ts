@@ -17725,6 +17725,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           user_id: string
+          wati_email: string | null
           wati_id: string
         }
         Insert: {
@@ -17732,6 +17733,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           user_id: string
+          wati_email?: string | null
           wati_id: string
         }
         Update: {
@@ -17739,6 +17741,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           user_id?: string
+          wati_email?: string | null
           wati_id?: string
         }
         Relationships: [
@@ -17835,6 +17838,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           wati_id: string
+          wati_name: string | null
         }
         Insert: {
           label?: string | null
@@ -17843,6 +17847,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           wati_id: string
+          wati_name?: string | null
         }
         Update: {
           label?: string | null
@@ -17851,6 +17856,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           wati_id?: string
+          wati_name?: string | null
         }
         Relationships: [
           {
@@ -17863,6 +17869,91 @@ export type Database = {
           {
             foreignKeyName: "wa_team_links_school_id_fkey"
             columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_transfers: {
+        Row: {
+          actor: string
+          before: Json
+          client_key: string
+          conversation_id: string
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          from_schools: string[]
+          id: string
+          kind: string
+          note: string | null
+          observed: Json | null
+          org_id: string
+          scope: string
+          status: string
+          target_code: string
+          target_school: string | null
+          target_user: string | null
+        }
+        Insert: {
+          actor: string
+          before: Json
+          client_key: string
+          conversation_id: string
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          from_schools?: string[]
+          id?: string
+          kind: string
+          note?: string | null
+          observed?: Json | null
+          org_id: string
+          scope: string
+          status?: string
+          target_code: string
+          target_school?: string | null
+          target_user?: string | null
+        }
+        Update: {
+          actor?: string
+          before?: Json
+          client_key?: string
+          conversation_id?: string
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          from_schools?: string[]
+          id?: string
+          kind?: string
+          note?: string | null
+          observed?: Json | null
+          org_id?: string
+          scope?: string
+          status?: string
+          target_code?: string
+          target_school?: string | null
+          target_user?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_transfers_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_transfers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_transfers_target_school_fkey"
+            columns: ["target_school"]
             isOneToOne: false
             referencedRelation: "schools"
             referencedColumns: ["id"]
@@ -20569,6 +20660,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _wa_conv_schools: {
+        Args: { c: Database["public"]["Tables"]["wa_conversations"]["Row"] }
+        Returns: string[]
+      }
       _wa_ingest: {
         Args: { _key: string; _payload: Json; _type: string }
         Returns: Json
@@ -20621,7 +20716,23 @@ export type Database = {
         Args: { _conv: string; _err: string; _name: string; _ok: boolean }
         Returns: undefined
       }
+      _wa_transfer_finish: {
+        Args: { _error: string; _id: string; _observed: Json; _status: string }
+        Returns: Json
+      }
+      _wa_transfer_job: { Args: { _id: string }; Returns: Json }
+      _wa_transfer_scope: {
+        Args: {
+          _target: string
+          c: Database["public"]["Tables"]["wa_conversations"]["Row"]
+        }
+        Returns: string
+      }
       _wa_ts: { Args: { _v: string }; Returns: string }
+      _wa_user_schools: {
+        Args: { _org: string; _uid: string }
+        Returns: string[]
+      }
       _xb_ok: { Args: { _org: string; _user: string }; Returns: boolean }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
@@ -25069,8 +25180,16 @@ export type Database = {
         Args: { _code: string; _user: string }
         Returns: undefined
       }
+      wa_link_operator_email: {
+        Args: { _code: string; _email: string }
+        Returns: undefined
+      }
       wa_link_team: {
         Args: { _code: string; _label?: string; _school: string }
+        Returns: undefined
+      }
+      wa_link_team_name: {
+        Args: { _code: string; _name: string }
         Returns: undefined
       }
       wa_me: { Args: never; Returns: Json }
@@ -25099,6 +25218,20 @@ export type Database = {
         Args: { _conv: string; _name: string; _on: boolean }
         Returns: undefined
       }
+      wa_transfer_begin: {
+        Args: {
+          _code: string
+          _conv: string
+          _key: string
+          _kind: string
+          _note: string
+          _school: string
+        }
+        Returns: Json
+      }
+      wa_transfer_get: { Args: { _id: string }; Returns: Json }
+      wa_transfer_log: { Args: { _conv: string }; Returns: Json }
+      wa_transfer_options: { Args: { _conv: string }; Returns: Json }
       xb_get: { Args: { _org: string }; Returns: Json }
       xb_save: {
         Args: {
