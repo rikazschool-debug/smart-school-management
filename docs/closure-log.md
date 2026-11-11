@@ -850,3 +850,8 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - Found an existing people permission validation gap: catalog exposed people actions but _perm_valid rejected them. Restored validation for card/notes/tags/bulk/export; tags_manage accepts only org scope. No actual staff grants changed.
 - Regression staff-dir-e2e exposed a prior _perm_base regression granting student affairs edits by default. Restored owner-only base for people_family edit/place; explicit grants still work. Final staff-dir-e2e 24/24; placement-perm-e2e 21/21; rls-e2e 94/94; targeted Vitest 6/6. Browser: owner role tree locked entries + placement action; vice submits placement and sees saved section with no record-edit control, 390px layout fits.
 - SECURITY DEFINER executable warnings on can_place_students/student_place are intentional authenticated helper/RPC boundaries with no anonymous execute and explicit authorization; tests include ungranted, self-grant and cross-branch refusals. Other pre-existing linter warnings were not changed. Test fixtures only; no real students, staff permissions or WATI conversations were modified.
+
+## 2026-11-11 — كل الأقسام الرئيسية والفرعية ظاهرة في شجرة الصلاحيات (prompt-333)
+- perm_catalog يضيف قسمًا رئيسيًا «المستخدمون والفروع والصلاحيات» وأقسامًا معلوماتية (الفروع، المستخدمون، الصلاحيات، المناوبات، التواصل، تعاميم البوابة، التدريب، المحاسبة/النقل المؤجلان، الملف الشخصي) مع أقسامها الفرعية وسبب عدم التفويض؛ وأقسامًا فرعية للحضور والبوابة والفصول والوسوم.
+- الأقسام المعلوماتية بلا إجراءات فلا تمنح شيئًا؛ تُستبعد من عدّ «إدارة المستخدمين».
+- الأدلة: placement-perm-e2e 21/21، perm-tree-rules 2/2، فحص متصفح لقالب دور جديد كمالك (كل الأقسام ظاهرة ومقفلة).
