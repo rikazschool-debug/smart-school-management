@@ -136,13 +136,13 @@ function WaLinks({ onBack }: { onBack: () => void }) {
   if (d.error) return <ErrorState message="تعذّر تحميل الأكواد" onRetry={() => void d.refetch()} />;
   const hint = (arr: { n: string; k: number }[] | null) => (arr ?? []).map((x) => `${x.n} (${x.k})`).join("، ");
   const Card = ({ c, kind }: { c: Row; kind: "op" | "team" }) => {
-    const cur = kind === "op" ? c.user_id ?? "" : c.school_id ?? "";
+    const cur = kind === "op" ? c.user_id ?? "" : c.central ? d.data.org_id : c.school_id ?? "";
     const key = kind + c.code; const val = pick[key] ?? cur;
     return (
       <div className="flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold">{kind === "op" ? (c.is_bot ? "البوت (WATI)" : c.wati_name ?? "اسم غير معروف في WATI") : (c.wati_name ?? c.names?.[0]?.n ?? "فريق")}</div>
+            <div className="truncate text-sm font-semibold">{kind === "op" ? (c.is_bot ? "البوت (WATI)" : c.wati_name ?? "اسم غير معروف في WATI") : (c.wati_name ?? c.handoff?.[0]?.n ?? c.names?.[0]?.n ?? "فريق بلا اسم")}</div>
             <code className="block truncate text-[11px] text-muted-foreground" dir="ltr">{c.code}</code>
           </div>
           <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{c.count} محادثة</span>
@@ -153,13 +153,15 @@ function WaLinks({ onBack }: { onBack: () => void }) {
           {(c.samples ?? []).length > 0 && <div className="line-clamp-2"><span className="text-foreground">أمثلة: </span>{c.samples.join("، ")}</div>}
           {kind === "op" && c.owners?.length > 0 && <div className="line-clamp-2"><span className="text-foreground">مالك جهة الاتصال: </span>{hint(c.owners)}</div>}
           {kind === "op" && c.operators?.length > 0 && <div className="line-clamp-2"><span className="text-foreground">اسم المرسل في الردود: </span>{hint(c.operators)}</div>}
+          {kind === "team" && c.handoff?.length > 0 && <div className="line-clamp-2"><span className="text-foreground">البوت حوّل إليه محادثات باسم: </span>{hint(c.handoff)}</div>}
+          {kind === "team" && c.members?.length > 0 && <div className="line-clamp-2"><span className="text-foreground">أعضاؤه في WATI: </span>{c.members.join("، ")}</div>}
           {kind === "team" && c.names?.length > 0 && <div className="line-clamp-2"><span className="text-foreground">اسم الفريق على جهات الاتصال: </span>{hint(c.names)}</div>}
         </dl>
         <div className="mt-auto grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-t pt-2">
           <select aria-label="الربط" className={`${selectCls()} min-w-0 w-full`} value={val} onChange={(e) => setPick((p) => ({ ...p, [key]: e.target.value }))}>
             <option value="">— غير مربوط —</option>
             {kind === "op" ? d.data.staff.map((s: Row) => <option key={s.user_id} value={s.user_id}>{s.name} — {s.school}</option>)
-              : d.data.schools.map((s: Row) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              : [<option key="central" value={d.data.org_id}>الإدارة المركزية</option>, ...d.data.schools.map((s: Row) => <option key={s.id} value={s.id}>{s.name}</option>)]}
           </select>
           <Button size="sm" className="shrink-0" disabled={val === cur} onClick={() => save(kind, c.code, val, kind === "team" ? c.names?.[0]?.n : undefined)}>حفظ</Button>
         </div>
