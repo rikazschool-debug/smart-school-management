@@ -20901,6 +20901,10 @@ export type Database = {
         Returns: string[]
       }
       _wa_who: { Args: { _u: string }; Returns: string }
+      _ws_not_denied: {
+        Args: { _school: string; _section: string }
+        Returns: boolean
+      }
       _ws_ok: {
         Args: { _action: string; _school: string; _section: string }
         Returns: boolean
@@ -25427,6 +25431,13 @@ export type Database = {
       wa_transfer_get: { Args: { _id: string }; Returns: Json }
       wa_transfer_log: { Args: { _conv: string }; Returns: Json }
       wa_transfer_options: { Args: { _conv: string }; Returns: Json }
+      workspace_teacher_accounts: {
+        Args: { _school: string }
+        Returns: {
+          has_account: boolean
+          id: string
+        }[]
+      }
       workspace_teacher_options: {
         Args: { _school: string }
         Returns: {
