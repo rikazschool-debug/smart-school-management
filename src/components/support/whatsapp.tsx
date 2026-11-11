@@ -132,7 +132,7 @@ function WaLinks({ onBack }: { onBack: () => void }) {
         {kind === "op" && c.operators?.length > 0 && <div className="text-xs">اسم المرسل في ردود هذه المحادثات: {hint(c.operators)}</div>}
         {kind === "team" && c.names?.length > 0 && <div className="text-xs">اسم الفريق على جهات الاتصال: {hint(c.names)}</div>}
         <div className="flex items-center gap-2">
-          <select className={selectCls} value={val} onChange={(e) => setPick((p) => ({ ...p, [key]: e.target.value }))}>
+          <select className={selectCls()} value={val} onChange={(e) => setPick((p) => ({ ...p, [key]: e.target.value }))}>
             <option value="">— غير مربوط —</option>
             {kind === "op" ? d.data.staff.map((s: Row) => <option key={s.user_id} value={s.user_id}>{s.name} — {s.school}</option>)
               : d.data.schools.map((s: Row) => <option key={s.id} value={s.id}>{s.name}</option>)}

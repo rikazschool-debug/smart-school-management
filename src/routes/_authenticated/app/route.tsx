@@ -180,7 +180,7 @@ function Shell() {
   const mqCaps = useMqCaps(active && active.role !== "platform_admin" && active.role !== "student" && active.role !== "guardian" ? active.orgId : null);
   const mqSecs = mqCaps.data ? mqSections(mqCaps.data) : [];
   const mqTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["mq"] ?? "") });
-  const waOk = useWaOrgOk(inSupport && active?.role === "org_owner" ? active.orgId : null);
+  const waOk = useWaOrgOk(inSupport && active && !["platform_admin", "student", "guardian"].includes(active.role) ? active.orgId : null);
   const sCaps = useSupportCaps(inSupport && active && active.role !== "platform_admin" ? active.orgId : null);
 
   async function signOut() {

@@ -31,7 +31,7 @@ function Page() {
   const navigate = useNavigate({ from: "/app/support" });
   const [creating, setCreating] = useState(false);
   const caps = useSupportCaps(active && active.role !== "platform_admin" ? active.orgId : null);
-  const wa = useWaOrgOk(active?.role === "org_owner" ? active.orgId : null);
+  const wa = useWaOrgOk(active && !["platform_admin", "student", "guardian"].includes(active.role) ? active.orgId : null);
   if (search.mq) return <Navigate to="/app/calls" search={{ mq: search.mq }} replace />;
   if (!active) return <ForbiddenState />;
   if (active.role !== "platform_admin" && caps.isLoading) return <LoadingState />;
