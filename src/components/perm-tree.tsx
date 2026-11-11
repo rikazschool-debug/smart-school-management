@@ -51,7 +51,8 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
     }
     const a = baseAction(s); setOpen((o) => ({ ...o, [s.key]: true }));
     if (s.base_only && a && !was(`${s.key}.${a}`)) return;
-    if (a && !has(s.key, a)) onChange([...value, { section: s.key, action: a, scope: s.scopes[0]! }]);
+    const scope = s.scopes[0];
+    if (a && scope && !has(s.key, a)) onChange([...value, { section: s.key, action: a, scope }]);
   };
   const areas = useMemo(() => c.areas.map((ar) => ({ ar, secs: c.sections.filter((s) => s.parent === ar.key && match(s)) })).filter((x) => x.ar.soon || x.secs.length || !term), [c, term, filter, value]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
