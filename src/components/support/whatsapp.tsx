@@ -68,7 +68,7 @@ export function WhatsAppInbox() {
           {me.data.owner && <Button size="sm" variant="outline" onClick={() => setLinks(true)}><Link2 className="size-4" /> ربط موظفي وفرق واتساب</Button>}
         </div>
       </div>
-      <div className="grid gap-3 lg:grid-cols-[320px_1fr]">
+      <div className="grid min-w-0 gap-3 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div className="rounded-lg border bg-card">
           <div className="flex items-center gap-2 border-b p-2">
             <div className="relative flex-1"><Search className="absolute right-2 top-2.5 size-4 text-muted-foreground" /><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم أو الرقم" className="pr-8" /></div>
@@ -114,10 +114,10 @@ function WatiId({ kind, code, cur, guess, onSaved }: { kind: "op" | "team"; code
       : await supabase.rpc("wa_link_team_name" as never, { _code: code, _name: v } as never);
     if (r.error) toast.error(r.error.message); else { toast.success("حُفظ"); onSaved(); }
   };
-  return (<div className="flex items-center gap-2">
+  return (<div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
     <Input dir={kind === "op" ? "ltr" : undefined} value={v} onChange={(e) => setV(e.target.value)} className="h-8 text-xs"
       placeholder={kind === "op" ? "بريد الموظف في WATI (للتحويل)" : "اسم الفريق كما في WATI (للتحويل)"} />
-    <Button size="sm" variant="outline" disabled={v.trim() === cur} onClick={() => void save()}>حفظ</Button></div>);
+    <Button size="sm" variant="outline" className="shrink-0" disabled={v.trim() === cur} onClick={() => void save()}>حفظ</Button></div>);
 }
 
 function WaLinks({ onBack }: { onBack: () => void }) {
@@ -139,25 +139,32 @@ function WaLinks({ onBack }: { onBack: () => void }) {
     const cur = kind === "op" ? c.user_id ?? "" : c.school_id ?? "";
     const key = kind + c.code; const val = pick[key] ?? cur;
     return (
-      <div className="space-y-2 rounded-lg border bg-card p-3">
-        <div className="flex items-center justify-between gap-2">
-          <code className="text-xs" dir="ltr">{c.code}</code>
-          <span className="text-xs text-muted-foreground">{c.count} محادثة</span>
+      <div className="flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold">{kind === "op" ? (c.is_bot ? "البوت (WATI)" : c.wati_name ?? "اسم غير معروف في WATI") : (c.wati_name ?? c.names?.[0]?.n ?? "فريق")}</div>
+            <code className="block truncate text-[11px] text-muted-foreground" dir="ltr">{c.code}</code>
+          </div>
+          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{c.count} محادثة</span>
         </div>
-        <div className="text-xs text-muted-foreground">أمثلة: {(c.samples ?? []).join("، ") || "—"}</div>
-        {kind === "op" && c.owners?.length > 0 && <div className="text-xs">«مالك جهة الاتصال» في WATI: {hint(c.owners)}</div>}
-        {kind === "op" && c.operators?.length > 0 && <div className="text-xs">اسم المرسل في ردود هذه المحادثات: {hint(c.operators)}</div>}
-        {kind === "team" && c.names?.length > 0 && <div className="text-xs">اسم الفريق على جهات الاتصال: {hint(c.names)}</div>}
-        <div className="flex items-center gap-2">
-          <select className={selectCls()} value={val} onChange={(e) => setPick((p) => ({ ...p, [key]: e.target.value }))}>
+        {kind === "op" && c.in_wati === false && <div className="rounded bg-destructive/10 px-2 py-1 text-xs text-destructive">هذا الكود لم يعد موجودًا في حسابات WATI</div>}
+        {kind === "op" && c.is_bot && cur && <div className="rounded bg-destructive/10 px-2 py-1 text-xs text-destructive">هذا كود البوت وليس موظفًا — يُفضّل إلغاء ربطه</div>}
+        <dl className="space-y-1 text-xs text-muted-foreground">
+          {(c.samples ?? []).length > 0 && <div className="line-clamp-2"><span className="text-foreground">أمثلة: </span>{c.samples.join("، ")}</div>}
+          {kind === "op" && c.owners?.length > 0 && <div className="line-clamp-2"><span className="text-foreground">مالك جهة الاتصال: </span>{hint(c.owners)}</div>}
+          {kind === "op" && c.operators?.length > 0 && <div className="line-clamp-2"><span className="text-foreground">اسم المرسل في الردود: </span>{hint(c.operators)}</div>}
+          {kind === "team" && c.names?.length > 0 && <div className="line-clamp-2"><span className="text-foreground">اسم الفريق على جهات الاتصال: </span>{hint(c.names)}</div>}
+        </dl>
+        <div className="mt-auto grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-t pt-2">
+          <select aria-label="الربط" className={`${selectCls()} min-w-0 w-full`} value={val} onChange={(e) => setPick((p) => ({ ...p, [key]: e.target.value }))}>
             <option value="">— غير مربوط —</option>
             {kind === "op" ? d.data.staff.map((s: Row) => <option key={s.user_id} value={s.user_id}>{s.name} — {s.school}</option>)
               : d.data.schools.map((s: Row) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
-          <Button size="sm" disabled={val === cur} onClick={() => save(kind, c.code, val, kind === "team" ? c.names?.[0]?.n : undefined)}>حفظ</Button>
+          <Button size="sm" className="shrink-0" disabled={val === cur} onClick={() => save(kind, c.code, val, kind === "team" ? c.names?.[0]?.n : undefined)}>حفظ</Button>
         </div>
         {cur && <div className="text-xs text-primary">مربوط حاليًا: {kind === "op" ? c.user_name : c.school_name}</div>}
-        {cur && kind === "op" && <div className="text-xs text-muted-foreground">{c.email ? "بريد WATI مسجّل تلقائيًا — يمكن التحويل إليه" : "لا يوجد بريد في WATI لهذا الكود (مثل البوت) — لا يمكن التحويل إليه"}</div>}
+        {cur && kind === "op" && !c.is_bot && <div className="text-xs text-muted-foreground">{c.email ? "بريد WATI مسجّل تلقائيًا — يمكن التحويل إليه" : "لا يوجد بريد في WATI لهذا الكود — لا يمكن التحويل إليه"}</div>}
         {cur && kind === "team" && <WatiId kind={kind} code={c.code} cur={c.wati_name ?? ""} guess={c.names?.[0]?.n ?? ""} onSaved={() => void qc.invalidateQueries({ queryKey: ["wa-codes"] })} />}
       </div>
     );
@@ -170,9 +177,9 @@ function WaLinks({ onBack }: { onBack: () => void }) {
         <Button variant="outline" onClick={onBack}>رجوع للمحادثات</Button>
       </div>
       <section className="space-y-2"><h3 className="font-semibold">موظفو WATI ← حسابات ركاز</h3>
-        {d.data.operators.length ? <div className="grid gap-2 md:grid-cols-2">{d.data.operators.map((c: Row) => <Card key={c.code} c={c} kind="op" />)}</div> : <EmptyState title="لا أكواد بعد — حدّث المزامنة" />}</section>
+        {d.data.operators.length ? <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">{d.data.operators.map((c: Row) => <Card key={c.code} c={c} kind="op" />)}</div> : <EmptyState title="لا أكواد بعد — حدّث المزامنة" />}</section>
       <section className="space-y-2"><h3 className="font-semibold">فرق WATI ← الفروع</h3>
-        {d.data.teams.length ? <div className="grid gap-2 md:grid-cols-2">{d.data.teams.map((c: Row) => <Card key={c.code} c={c} kind="team" />)}</div> : <EmptyState title="لا أكواد بعد" />}</section>
+        {d.data.teams.length ? <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">{d.data.teams.map((c: Row) => <Card key={c.code} c={c} kind="team" />)}</div> : <EmptyState title="لا أكواد بعد" />}</section>
       <BotBranches />
     </div>
   );
@@ -213,8 +220,8 @@ function Thread({ id, owner }: { id: string; owner: boolean }) {
   if (t.error) return <ErrorState message="تعذّر تحميل المحادثة" onRetry={() => void t.refetch()} />;
   const c = t.data.conversation; const msgs: Row[] = t.data.messages;
   return (
-    <div className="grid gap-3 xl:grid-cols-[1fr_280px]">
-    <div className="flex min-h-[60vh] flex-col rounded-lg border bg-card">
+    <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_280px]">
+    <div className="flex min-h-[60vh] min-w-0 flex-col rounded-lg border bg-card">
       <div className="flex items-center justify-between border-b p-3">
         <div><div className="font-semibold">{c.contact_name || c.wa_id}</div>{c.wa_id && <div className="text-xs text-muted-foreground" dir="ltr">+{c.wa_id}</div>}</div>
         {c.bot_branch && <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground" title="اختيار العميل في البوت — للعلم فقط، الإسناد من WATI">الفرع الذي اختاره العميل: {c.bot_branch}</span>}
