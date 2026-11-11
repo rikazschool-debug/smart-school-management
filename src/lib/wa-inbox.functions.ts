@@ -65,7 +65,7 @@ async function pullAssign(a: Adm, maxAgeSec: number) {
   try {
     const now = new Date(); const from = new Date(now.getTime() - 90 * 864e5);
     const items: unknown[] = []; let cursor = "";
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 30; i++) {
       const j = await wati("/api/ext/v3/conversations/query", { method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ time_range: { from: from.toISOString(), to: new Date(now.getTime() + 864e5).toISOString() }, page: { size: 100, ...(cursor ? { cursor } : {}) }, count: { mode: "none" }, result_mode: "conversations" }) });
       for (const it of (j["items"] as Record<string, unknown>[] | undefined) ?? []) {
@@ -77,7 +77,7 @@ async function pullAssign(a: Adm, maxAgeSec: number) {
       if (!pg?.has_more || !pg.next_cursor) break; cursor = pg.next_cursor;
     }
     const contacts: unknown[] = [];
-    for (let pn = 1; pn <= 5; pn++) {
+    for (let pn = 1; pn <= 20; pn++) {
       const j = await wati(`/api/ext/v3/contacts?page_size=100&page_number=${pn}`);
       const list = (j["contact_list"] as Record<string, unknown>[] | undefined) ?? [];
       for (const c of list) {

@@ -125,3 +125,4 @@
 - scripts/vice-att-e2e.ts: vice has no default attendance/gate; owner grants view/record/approve separately per branch; template clean; self-grant refused (11 checks). attendance-e2e grants the vice explicitly (currently stops early: direct insert into teachers is refused — fixture needs updating).
 - scripts/family-readonly-e2e.ts: guardian/student read-only records (direct writes + staff RPCs refused, own photo action only, owner edits; 30 checks).
 - scripts/staff-dir-e2e.ts: principal HR staff directory (once per employee, account status, no sensitive fields, other roles/branches refused; 11 checks).
+- scripts/wa-assign-e2e.ts: WhatsApp assignment access (mine/branch perms, team→branch isolation, unlinked codes, reassignment sync, owner-only links; 17 checks, cleans its test logins).
