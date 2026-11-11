@@ -23367,6 +23367,13 @@ export type Database = {
       }
       my_dept_ids: { Args: never; Returns: string[] }
       my_link_pending: { Args: never; Returns: boolean }
+      my_membership_titles: {
+        Args: never
+        Returns: {
+          membership_id: string
+          title: string
+        }[]
+      }
       my_profile: { Args: { _school: string }; Returns: Json }
       my_section_groups: {
         Args: { _school: string }
