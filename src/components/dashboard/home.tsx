@@ -12,6 +12,7 @@ import { PlatformHome } from "@/components/platform/platform-home";
 import { WorkToday } from "@/components/work-today";
 import { OpsHome } from "@/components/maintenance/ops-home";
 import { useOpsStaff } from "@/lib/ops-staff";
+import { CentralHrHome } from "@/components/dashboard/central-hr";
 
 
 async function count(table: string, schoolId: string, extra?: (q: ReturnType<typeof db.from>) => unknown) {
@@ -44,10 +45,7 @@ export function Home() {
     <>
       <PageHeader eyebrow={today()} title="لوحة التحكم المركزية" desc={`${ops.title ?? ROLE_LABELS[active.role]} · ${active.schoolName}${active.orgName ? ` — ${active.orgName}` : ""}`} />
       {!active.schoolId && ops.central ? (
-        <div className="grid gap-3 sm:grid-cols-3">
-          {([["/app/hr", "ملفات الموظفين", "إضافة الموظفين وتعديل ملفاتهم"], ["/app/hr/leave", "الإجازات والاستئذان", "الطلبات بانتظار اعتماد الموارد البشرية"], ["/app/hr/payroll", "مسير الرواتب", "إعداد المسير ومراجعته"]] as const).map(([to, t, h]) => (
-            <Link key={to} to={to} className="rounded-2xl border bg-card p-5 shadow-sm hover:border-primary"><p className="font-bold">{t}</p><p className="mt-1 text-sm text-muted-foreground">{h}</p></Link>))}
-        </div>
+        <CentralHrHome orgId={active.orgId ?? ""} />
       ) : active.role === "platform_admin" && !active.schoolId ? (
         <PlatformHome />
       ) : !active.schoolId ? (
