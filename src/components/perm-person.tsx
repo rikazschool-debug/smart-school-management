@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Eye, Minus, Plus, RotateCcw } from "lucide-react";
+import { Eye, Minus, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
@@ -94,21 +94,13 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
   const sname = (id: string) => schools.data?.find((s) => s["id"] === id)?.["name"] ?? "—";
 
   return (
-    <div className="space-y-4 rounded-xl border bg-card p-4 text-sm">
+    <div className="space-y-4 text-sm">
       <div>
         <p className="text-base font-bold">{name}</p>
         <p className="text-xs text-muted-foreground">الدور الأساسي: {e.base_roles.map((b) => `${ROLE_LABELS[b.role as Role] ?? b.role}${b.school ? ` — ${b.school}` : ""}`).join("، ") || "—"}</p>
         <p className="text-xs text-muted-foreground">الأدوار الإضافية: {e.roles.map((r) => r.name).join("، ") || "لا يوجد"}</p>
         <p className="text-xs text-muted-foreground">الصفة التي تُعدَّل: موظف. صفة ولي الأمر (إن وُجدت) منفصلة ولا تتأثر بهذه الشاشة.</p>
       </div>
-      {!e.is_owner && <CurrentAccess c={c} e={e} cur={cur} onToggle={(k, on) => {
-        const o = orig.find((g) => `${g.section}.${g.action}` === k);
-        if (!on) { setTree(cur.filter((g) => `${g.section}.${g.action}` !== k)); setUndeny(undeny.filter((x) => x !== k)); }
-        else if (o) setTree([...cur.filter((g) => `${g.section}.${g.action}` !== k), o]);
-        else if (e.effective.find((x) => `${x.section}.${x.action}` === k)?.source === "deny") setUndeny([...undeny.filter((x) => x !== k), k]);
-        else { const [sec, act] = k.split("."); const cs = c.sections.find((x) => x.key === sec); const scope = cs?.scopes[0]; if (cs && sec && act && scope && !cs.base_only) setTree([...cur, { section: sec, action: act, scope }]); }
-        setPreview(null);
-      }} undeny={undeny} />}
       {e.is_owner ? <p className="rounded-lg bg-secondary/50 p-3">مالك المؤسسة يملك جميع الصلاحيات ولا تُقيَّد صلاحياته.</p> : (<>
         <section>
           <p className="mb-2 font-bold">الأدوار</p>
