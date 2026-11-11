@@ -28,12 +28,13 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         const access = (key: string) => academicAccess(p, key);
         const edit = (key: string) => !!p[`${key}.edit`];
         const tabs = [...new Set(ACADEMIC_PARTS.filter((part) => access(part.key)).map((part) => part.tab))];
-        if (!tabs.length) return <ForbiddenState />;
+        const firstTab = tabs[0];
+        if (!firstTab) return <ForbiddenState />;
         const s = ctx.schoolId;
         return (
           <>
             <PageHeader title="الإعداد الأكاديمي" desc={`${ctx.schoolName} — السنوات، المراحل، الصفوف، الشعب، الأقسام والمواد`} />
-            <Tabs defaultValue={tabs[0]} key={tabs.join(",")} dir="rtl">
+            <Tabs defaultValue={firstTab} key={tabs.join(",")} dir="rtl">
               <TabsList className="mb-6 flex-wrap">
                 {tabs.includes("years") && <TabsTrigger value="years">السنوات والفصول</TabsTrigger>}
                 {tabs.includes("structure") && <TabsTrigger value="structure">المراحل والصفوف</TabsTrigger>}

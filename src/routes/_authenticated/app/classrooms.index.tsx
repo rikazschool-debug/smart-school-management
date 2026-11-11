@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from
 import { ListTools, applyListTools, useListTools } from "@/components/list-tools";
 import { NAV_BY_ROLE } from "@/lib/roles";
 import { arabicError, useSession } from "@/lib/session";
+import { useSchoolPerms } from "@/lib/school-perms";
 
 export const Route = createFileRoute("/_authenticated/app/classrooms/")({ component: Page });
 
@@ -26,7 +27,8 @@ function Page() {
   const { active } = useSession();
   const q = useSectionRooms(active?.schoolId ?? null);
   const t = useListTools();
-  if (!active || !NAV_BY_ROLE[active.role].includes("classrooms")) return <ForbiddenState />;
+  const permissions = useSchoolPerms(active?.schoolId);
+  if (!active || (!NAV_BY_ROLE[active.role].includes("classrooms") && !permissions?.["bt_classroom.view"]) || permissions?.["bt_classroom.view"] === false) return <ForbiddenState />;
   return (
     <>
       <PageHeader title="الفصول الرقمية" desc="فصل رقمي واحد لكل صف وشعبة، وداخله المواد ومعلموها ومشاركاتها. تظهر لك الفصول والمواد التي تخصك فقط." />

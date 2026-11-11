@@ -4,7 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { db } from "@/components/crud-page";
 import { PeoplePicker } from "@/components/people-picker";
-import { canCreateTask } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
+import { anyPermission, workspacePages } from "@/lib/workspace-perms";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
@@ -28,7 +29,7 @@ type Ctx = AppContext & { schoolId: string };
 function Page() {
   const { active } = useSession();
   if (active?.role === "org_owner" && !active.schoolId) return <OrgSummary orgId={active.orgId!} />;
-  return <RequireSchool nav="admin">{(ctx) => <Admin ctx={ctx} />}</RequireSchool>;
+  return <RequireSchool nav="admin" extra={(p) => workspacePages(p).includes("admin")}>{(ctx) => <Admin ctx={ctx} />}</RequireSchool>;
 }
 
 function OrgSummary({ orgId }: { orgId: string }) {
@@ -58,9 +59,11 @@ function OrgSummary({ orgId }: { orgId: string }) {
 }
 
 function Admin({ ctx }: { ctx: Ctx }) {
-  const principal = ctx.role === "principal";
-  const tabs = [["tasks", "التكليفات"], ["requests", "الطلبات"], ["new", "تقديم طلب"], ...(principal ? [["forms", "إعداد النماذج"]] : [])] as const;
+  const permissions = useSchoolPerms(ctx.schoolId);
+  const formView = anyPermission(permissions, ["admin_forms.view", "admin_forms.edit"]);
+  const tabs = [...(anyPermission(permissions, ["admin_tasks.view", "admin_tasks.create", "admin_tasks.manage"]) ? [["tasks", "التكليفات"]] : []), ...(anyPermission(permissions, ["admin_requests.view", "admin_requests.submit", "admin_requests.manage"]) ? [["requests", "الطلبات"]] : []), ...(permissions?.["admin_requests.submit"] ? [["new", "تقديم طلب"]] : []), ...(formView ? [["forms", "إعداد النماذج"]] : [])];
   const [tab, setTab] = useState<string>("tasks");
+  const selected = tabs.some(([key]) => key === tab) ? tab : tabs[0]?.[0];
   return (
     <div>
       <PageHeader eyebrow={ctx.schoolName} title="الإدارة المدرسية" desc="تكليفات الموظفين والطلبات الإدارية في مكان واحد." />
@@ -68,13 +71,13 @@ function Admin({ ctx }: { ctx: Ctx }) {
       <SectionLinks school={ctx.schoolId} lead={isLead(ctx.role)} />
       <div role="tablist" className="mb-4 flex flex-wrap gap-2 border-b pb-2">
         {tabs.map(([k, l]) => (
-          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${tab === k ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{l}</button>
+          <Button key={k} role="tab" aria-selected={selected === k} onClick={() => setTab(k ?? "tasks")} variant={selected === k ? "default" : "ghost"}>{l}</Button>
         ))}
       </div>
-      {tab === "tasks" && <Tasks ctx={ctx} />}
-      {tab === "requests" && <Requests ctx={ctx} />}
-      {tab === "new" && <NewRequest ctx={ctx} />}
-      {tab === "forms" && principal && <Forms ctx={ctx} />}
+      {selected === "tasks" && <Tasks ctx={ctx} />}
+      {selected === "requests" && <Requests ctx={ctx} />}
+      {selected === "new" && <NewRequest ctx={ctx} />}
+      {selected === "forms" && formView && <Forms ctx={ctx} canWrite={!!permissions?.["admin_forms.edit"]} />}
     </div>
   );
 }
@@ -145,6 +148,8 @@ async function fetchAll(call: (offset: number) => PromiseLike<{ data: unknown; e
 }
 
 function Tasks({ ctx }: { ctx: Ctx }) {
+  const permissions = useSchoolPerms(ctx.schoolId);
+  const create = !!permissions?.["admin_tasks.create"];
   const lead = isLead(ctx.role);
   const [scope, setScope] = useState(lead ? "all" : "mine");
   const [status, setStatus] = useState("open");
@@ -183,11 +188,11 @@ function Tasks({ ctx }: { ctx: Ctx }) {
               const data = await fetchAll((o) => db.rpc("adm_task_list", { _school: ctx.schoolId, _scope: scope, _q: q.trim() || null, _status: status || null, _priority: priority || null, _assignee: null, _dept: null, _from: null, _to: null, _limit: 100, _offset: o }));
               return data.map((t) => [t.title, t.assignee_name, t.assigner_name, TASK_STATUS[t.status], PRIORITY[t.priority], t.due_date, `${t.progress}%`]);
             }} />
-          {canCreateTask(ctx.role) && <Button size="sm" onClick={() => setCreating((v) => !v)}>{creating ? "إغلاق" : "تكليف جديد"}</Button>}
+          {create && <Button size="sm" onClick={() => setCreating((v) => !v)}>{creating ? "إغلاق" : "تكليف جديد"}</Button>}
         </div>
       </div>
       {creating && <NewTask ctx={ctx} onDone={() => setCreating(false)} />}
-      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? <EmptyState title="لا توجد تكليفات" hint={canCreateTask(ctx.role) ? "أنشئ تكليفًا من الزر أعلاه." : "ستظهر هنا التكليفات المسندة إليك."} /> : (
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? <EmptyState title="لا توجد تكليفات" hint={create ? "أنشئ تكليفًا من الزر أعلاه." : "ستظهر هنا التكليفات المسندة إليك."} /> : (
         <ul className="space-y-2">
           {list.data.map((t) => (
             <li key={t.id}>
@@ -349,7 +354,7 @@ function NewRequest({ ctx }: { ctx: Ctx }) {
   );
 }
 
-function Forms({ ctx }: { ctx: Ctx }) {
+function Forms({ ctx, canWrite }: { ctx: Ctx; canWrite: boolean }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Row | null>(null);
   const list = useQuery({
@@ -369,7 +374,7 @@ function Forms({ ctx }: { ctx: Ctx }) {
   if (editing) return <FormEditor ctx={ctx} form={editing} onClose={() => setEditing(null)} />;
   return (
     <div className="space-y-3">
-      <Button size="sm" onClick={() => setEditing({})}>نموذج جديد</Button>
+      {canWrite && <Button size="sm" onClick={() => setEditing({})}>نموذج جديد</Button>}
       {list.isLoading ? <LoadingState /> : !list.data?.length ? <EmptyState title="لا توجد نماذج" hint="أنشئ نموذجًا وحدد حقوله ومن يستقبله." /> : (
         <ul className="space-y-2">
           {list.data.map((f) => (
@@ -377,11 +382,11 @@ function Forms({ ctx }: { ctx: Ctx }) {
               <span className="font-semibold">{f.name}</span><span className="text-xs text-muted-foreground">إصدار {f.version}</span>
               <Pill tone={f.status === "active" ? "ok" : "muted"}>{FORM_STATUS[f.status]}</Pill>
               <span className="text-xs text-muted-foreground">{(f.audience as string[]).map((a) => STAFF_ROLES[a] ?? a).join("، ")}</span>
-              <div className="ms-auto flex gap-2">
+              {canWrite && <div className="ms-auto flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => setEditing(f)}>{f.status === "draft" ? "تعديل" : "إصدار جديد"}</Button>
                 {f.status !== "active" && <Button size="sm" variant="outline" onClick={() => setStatus(f.id, "active")}>تفعيل</Button>}
                 {f.status === "active" && <Button size="sm" variant="outline" onClick={() => setStatus(f.id, "archived")}>أرشفة</Button>}
-              </div>
+              </div>}
             </li>
           ))}
         </ul>
@@ -392,7 +397,6 @@ function Forms({ ctx }: { ctx: Ctx }) {
 
 function FormEditor({ ctx, form, onClose }: { ctx: Ctx; form: Row; onClose: () => void }) {
   const qc = useQueryClient();
-  const staff = useStaff(ctx.schoolId);
   const [d, setD] = useState({
     name: form.name ?? "", description: form.description ?? "", purpose: form.purpose ?? "", handler_user: form.handler_user ?? "",
     audience: (form.audience as string[]) ?? ["teacher"],
@@ -417,9 +421,7 @@ function FormEditor({ ctx, form, onClose }: { ctx: Ctx; form: Row; onClose: () =
       <div className="grid gap-3 md:grid-cols-2">
         <div><Label htmlFor="f-name">اسم النموذج</Label><Input id="f-name" value={d.name} onChange={(e) => setD({ ...d, name: e.target.value })} /></div>
         <div><Label htmlFor="f-h">المسؤول عن الاستقبال</Label>
-          <select id="f-h" className={sel} value={d.handler_user} onChange={(e) => setD({ ...d, handler_user: e.target.value })}>
-            <option value="">اختر موظفًا</option>{staff.data?.map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name} — {STAFF_ROLES[s.role] ?? s.role}</option>)}
-          </select>
+          <PeoplePicker purpose="admin_form_handler" school={ctx.schoolId} single compact label="المسؤول عن الاستقبال" value={d.handler_user ? [d.handler_user] : []} onChange={(ids) => setD({ ...d, handler_user: ids[0] ?? "" })} />
         </div>
         <div className="md:col-span-2"><Label htmlFor="f-d">الوصف</Label><Textarea id="f-d" value={d.description} onChange={(e) => setD({ ...d, description: e.target.value })} /></div>
       </div>
