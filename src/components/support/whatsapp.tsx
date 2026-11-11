@@ -39,7 +39,7 @@ export function WhatsAppInbox() {
           <div className="relative flex-1"><Search className="absolute right-2 top-2.5 size-4 text-muted-foreground" /><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم أو الرقم" className="pr-8" /></div>
           <Button size="icon" variant="outline" onClick={pull} disabled={busy} aria-label="تحديث من WATI"><RefreshCw className={`size-4 ${busy ? "animate-spin" : ""}`} /></Button>
         </div>
-        {list.isLoading ? <LoadingState /> : list.error ? <ErrorState /> : !list.data?.length ? <EmptyState title="لا توجد محادثات بعد" /> : (
+        {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message="تعذّر تحميل المحادثات" onRetry={() => void list.refetch()} /> : !list.data?.length ? <EmptyState title="لا توجد محادثات بعد" /> : (
           <ul className="max-h-[70vh] divide-y overflow-y-auto">
             {list.data.map((c) => (
               <li key={c.id}>
@@ -103,7 +103,7 @@ function Thread({ id }: { id: string }) {
   };
 
   if (t.isLoading) return <LoadingState />;
-  if (t.error) return <ErrorState />;
+  if (t.error) return <ErrorState message="تعذّر تحميل المحادثة" onRetry={() => void t.refetch()} />;
   const c = t.data.conversation; const msgs: Row[] = t.data.messages;
   return (
     <div className="flex min-h-[60vh] flex-col rounded-lg border bg-card">
