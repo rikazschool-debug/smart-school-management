@@ -1,0 +1,2 @@
+comment on function public._ws_not_denied(uuid,text) is 'Intentional authenticated SECURITY DEFINER: self-session-only RLS predicate; no user argument, no record contents, no mutations. Required because authenticated cannot execute _perm_denied directly.';
+comment on function public.workspace_teacher_accounts(uuid) is 'Intentional authenticated SECURITY DEFINER: only id and has_account for workspace_teacher_options authorized rows; retains caller school and action scope, no login identity or sensitive values.';
