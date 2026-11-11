@@ -157,7 +157,8 @@ function WaLinks({ onBack }: { onBack: () => void }) {
           <Button size="sm" disabled={val === cur} onClick={() => save(kind, c.code, val, kind === "team" ? c.names?.[0]?.n : undefined)}>حفظ</Button>
         </div>
         {cur && <div className="text-xs text-primary">مربوط حاليًا: {kind === "op" ? c.user_name : c.school_name}</div>}
-        {cur && <WatiId kind={kind} code={c.code} cur={(kind === "op" ? c.email : c.wati_name) ?? ""} guess={kind === "team" ? c.names?.[0]?.n ?? "" : ""} onSaved={() => void qc.invalidateQueries({ queryKey: ["wa-codes"] })} />}
+        {cur && kind === "op" && <div className="text-xs text-muted-foreground">{c.email ? "بريد WATI مسجّل تلقائيًا — يمكن التحويل إليه" : "لا يوجد بريد في WATI لهذا الكود (مثل البوت) — لا يمكن التحويل إليه"}</div>}
+        {cur && kind === "team" && <WatiId kind={kind} code={c.code} cur={(kind === "op" ? c.email : c.wati_name) ?? ""} guess={kind === "team" ? c.names?.[0]?.n ?? "" : ""} onSaved={() => void qc.invalidateQueries({ queryKey: ["wa-codes"] })} />}
       </div>
     );
   };

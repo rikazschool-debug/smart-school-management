@@ -104,7 +104,9 @@ export const waSyncAssign = createServerFn({ method: "POST" })
   .inputValidator((d: { force?: boolean }) => d)
   .handler(async ({ data, context }) => {
     await mustAdmin(context.supabase as never);
-    return await pullAssign(await admin(), data.force ? 5 : 30);
+    const a = await admin(); const r = await pullAssign(a, data.force ? 5 : 30);
+    if (!(r as { skipped?: boolean }).skipped) { try { await syncOperatorEmails(a); } catch { /* optional */ } }
+    return r;
   });
 
 type SendIn = { conv: string; key: string; text?: string; file?: { name: string; mime: string; b64: string; caption?: string; voice?: boolean } };
@@ -254,6 +256,13 @@ async function readAssign(job: Record<string, unknown>) {
   }
   return null;
 }
+/** WATI staff list (legacy v1, the only route that returns operator emails) → wa_operator_links.wati_email. */
+async function syncOperatorEmails(a: Adm) {
+  const j = await wati(`/${tenant()}/api/v1/operators`);
+  const ops = ((j["result"] as Record<string, unknown>[] | undefined) ?? []).filter((o) => !o["isBot"]).map((o) => ({ id: o["id"], email: o["email"] ?? null }));
+  if (!ops.length) return; // never wipe links on an empty/odd answer
+  await a.rpc("_wa_operator_emails" as never, { _ops: ops } as never);
+}
 async function verifyJob(a: Adm, id: string) {
   const jr = await a.rpc("_wa_transfer_job" as never, { _id: id } as never);
   if (jr.error || !jr.data) throw new Error("تعذّر قراءة التحويل");
@@ -276,6 +285,7 @@ export const waTransfer = createServerFn({ method: "POST" })
     return d;
   })
   .handler(async ({ data, context }) => {
+    if (data.kind === "operator") { try { await syncOperatorEmails(await admin()); } catch { /* keep stored emails */ } }
     const b = await context.supabase.rpc("wa_transfer_begin" as never, { _conv: data.conv, _school: data.school, _kind: data.kind, _code: data.code, _note: data.note ?? null, _key: data.key } as never);
     if (b.error) throw new Error((b.error as { message?: string }).message ?? "غير مصرح");
     const t = b.data as unknown as { id: string; repeat: boolean; status: string };
