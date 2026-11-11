@@ -45,7 +45,7 @@ export function Home() {
     <>
       <PageHeader eyebrow={today()} title="لوحة التحكم المركزية" desc={`${ops.title ?? ROLE_LABELS[active.role]} · ${active.schoolName}${active.orgName ? ` — ${active.orgName}` : ""}`} />
       {!active.schoolId && ops.central ? (
-        <CentralHrHome orgId={active.orgId} />
+        <CentralHrHome orgId={active.orgId ?? ""} />
       ) : active.role === "platform_admin" && !active.schoolId ? (
         <PlatformHome />
       ) : !active.schoolId ? (
