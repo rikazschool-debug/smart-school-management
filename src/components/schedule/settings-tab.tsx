@@ -341,7 +341,11 @@ function LoadRow({ t, ld, req, nCourses, placed, subs, dept, onSave }: { t: Row;
 function Availability({ S }: { S: string }) {
   const qc = useQueryClient();
   const setup = useDaySetup(S);
-  const teachers = useOptions("teachers", "full_name", S);
+  const teachers = useQuery({ queryKey: ["workspace-teachers", S], queryFn: async () => {
+    const r = await db.rpc("workspace_teacher_options", { _school: S });
+    if (r.error) throw r.error;
+    return ((r.data ?? []) as Row[]).map((t) => ({ value: String(t["id"]), label: String(t["full_name"]) }));
+  } });
   const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
   const [f, setF] = useState({ teacher: "", kind: "last2", day: "", period: "", hard: "1", from: "", to: "", reason: "" });
   const [filter, setFilter] = useState("");

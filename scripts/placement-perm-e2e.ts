@@ -73,7 +73,7 @@ try {
   must(await owner.c.rpc("perm_override_set", { _org: org, _user: other.id, _section: "people_family", _action: "place", _effect: "deny", _scope: null, _reason: "منع مستقل" }));
   check("placement deny defeats bundled edit compatibility", !!(await place(other.c, kid, s1)).error);
   const catalog = must(await owner.c.rpc("perm_catalog"));
-  check("locked academic section has no grantable actions", catalog.sections.find((s: { key: string }) => s.key === "academic_setup_info")?.actions.length === 0);
+  check("academic years has independent real view/edit actions", catalog.sections.find((s: { key: string }) => s.key === "academic_years")?.actions.join(",") === "view,edit");
   check("locked catalog entry cannot be forged into role", !!(await owner.c.rpc("perm_role_save", { _org: org, _id: null, _name: "اختبار قفل", _description: "", _grants: [{ section: "academic_setup_info", action: "edit", scope: "branch" }], _reason: "غير مدعوم" })).error);
   if (process.argv.includes("--keep") && failed === 0) {
     keep = true; mkdirSync("/tmp/browser/perm332", { recursive: true });

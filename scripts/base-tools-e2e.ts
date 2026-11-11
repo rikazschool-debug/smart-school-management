@@ -1,4 +1,4 @@
-// Base-role tools (bt_*): deny-only per employee, never granted; server gates in RPCs and RLS.
+// Base-role tools are grantable; grants never replace course/record identity checks.
 // Run: NODE_PATH=node_modules bun scripts/base-tools-e2e.ts
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
@@ -30,13 +30,14 @@ try {
   const apply = (u: string, overrides: any[]) => owner.c.rpc("perm_apply", { _org: org, _user: u, _changes: { overrides }, _reason: "اختبار أدوات الدور" });
 
   const cat = (await owner.c.rpc("perm_catalog")).data as any;
-  check("catalog has the base-tools area with 6 deny-only sections", cat.areas.some((a: any) => a.key === "base_tools") && cat.sections.filter((s: any) => s.parent === "base_tools" && s.base_only).length === 6);
+  check("catalog has 6 grantable base tool sections", cat.areas.some((a: any) => a.key === "base_tools") && cat.sections.filter((s: any) => s.parent === "base_tools" && !s.base_only && !s.locked_reason).length === 6);
 
   let et = await eff(t.id), en = await eff(n.id);
   check("teacher inherits homework create + schedule from base role", on(et, "bt_homework", "create") && on(et, "bt_schedule", "view") && et.effective.find((x: any) => x.section === "bt_homework" && x.action === "create").source === "base");
   check("nurse has no homework/schedule but has private chats", !on(en, "bt_homework", "create") && !on(en, "bt_schedule", "view") && on(en, "bt_chat_direct", "use"));
-  check("base tool cannot be granted to someone without it", !!(await apply(n.id, [{ section: "bt_homework", action: "create", effect: "grant", scope: "branch" }])).error);
-  check("role template cannot carry a base tool", !!(await owner.c.rpc("perm_role_save", { _org: org, _id: null, _name: "دور bt", _description: null, _grants: [{ section: "bt_schedule", action: "view", scope: "branch" }], _reason: "اختبار" })).error);
+  check("base tool can be granted to another staff role", !(await apply(n.id, [{ section: "bt_homework", action: "create", effect: "grant", scope: "branch" }])).error);
+  check("grant reads back as effective", on(await eff(n.id), "bt_homework", "create"));
+  check("role template accepts base tool", !(await owner.c.rpc("perm_role_save", { _org: org, _id: null, _name: "دور bt", _description: null, _grants: [{ section: "bt_schedule", action: "view", scope: "branch" }], _reason: "اختبار" })).error);
 
   // before any deny: homework save fails for another reason (bad input), chat starts
   const hw0 = await t.c.rpc("save_homework", { _id: null, _d: {} });
@@ -82,4 +83,5 @@ try {
   const logs = (await admin.from("perm_log").select("id").eq("target_user", t.id)).data ?? [];
   check("every change is logged", logs.length >= 6, logs.length);
 } catch (e) { bad++; console.log("FAIL exception", (e as Error).message); }
-finally { if (org) await tr.purgeOrg(org); console.log(`\n${ok} passed, ${bad} failed`); }
+finally { if (org) await tr.purgeOrg(org); for (const id of tr.users) await admin.auth.admin.deleteUser(id); console.log(`\n${ok} passed, ${bad} failed`); }
+process.exit(bad ? 1 : 0);

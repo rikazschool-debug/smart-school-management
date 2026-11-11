@@ -219,7 +219,9 @@ function Shell() {
   const delegatedPages = workspacePages(sp);
   baseNav.push(...delegatedPages);
   const btOff: [string, NavKey][] = [["bt_schedule.view", "schedule"], ["bt_classroom.view", "classrooms"], ["bt_homework.view", "homework"]];
-  for (const [k, n] of btOff) if (sp && sp[k] === false && baseNav.includes(n)) baseNav.splice(baseNav.indexOf(n), 1);
+  for (const [k, n] of btOff) if (sp && sp[k] === false && !(n === "schedule" && delegatedPages.includes("schedule")) && baseNav.includes(n)) {
+    for (let i = baseNav.length - 1; i >= 0; i--) if (baseNav[i] === n) baseNav.splice(i, 1);
+  }
   const opsOnly = ops.opsOnly;
   if (ops.central) baseNav.push("hr");
   if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events", ...delegatedPages, ...(sp?.["people_family.view"] || sp?.["people_family.edit"] ? ["students", "guardians"] : []), ...(sp?.["people.view"] ? ["tags"] : []), ...(ops.asst ? ["schedule", "attendance"] : [])].includes(k)));
