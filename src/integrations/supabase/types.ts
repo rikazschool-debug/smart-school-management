@@ -18213,6 +18213,8 @@ export type Database = {
         Args: { _entity: string; _id: string }
         Returns: boolean
       }
+      _adm_can_read_request_pre334: { Args: { _id: string }; Returns: boolean }
+      _adm_can_read_task_pre334: { Args: { _id: string }; Returns: boolean }
       _adm_check_answers: {
         Args: { _a: Json; _fields: Json; _strict: boolean }
         Returns: Json
