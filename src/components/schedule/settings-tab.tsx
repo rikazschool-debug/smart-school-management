@@ -247,13 +247,15 @@ function Loads({ S, year, term }: { S: string; year: string; term: string }) {
       const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
       const wk = new Date(Date.parse(today) - new Date(today).getUTCDay() * 864e5).toISOString().slice(0, 10);
       const wkEnd = new Date(Date.parse(wk) + 6 * 864e5).toISOString().slice(0, 10);
-      const [t, l, tt, subs] = await Promise.all([
+      const [t, l, tt, subs, accounts] = await Promise.all([
         db.rpc("workspace_teacher_options", { _school: S }),
         db.from("teacher_loads").select("*").eq("school_id", S).eq("year_id", year),
         db.from("timetables").select("id, status, term_id, version, created_at").eq("school_id", S).eq("year_id", year).neq("status", "discarded").order("created_at", { ascending: false }),
         db.from("substitutions").select("substitute_teacher_id").eq("school_id", S).eq("status", "active").gte("date", wk).lte("date", wkEnd),
+        db.rpc("workspace_teacher_accounts", { _school: S }),
       ]);
       if (t.error) throw t.error;
+      const hasAccount = new Map(((accounts.data ?? []) as Row[]).map((x) => [x["id"], x["has_account"]]));
       const tts = ((tt.data ?? []) as Row[]).filter((x) => (x["term_id"] ?? "") === term);
       const ref = tts.find((x) => x["status"] === "draft") ?? tts.find((x) => x["status"] === "published");
       const placed = new Map<string, number>();
@@ -320,7 +322,7 @@ function LoadRow({ t, ld, req, nCourses, placed, subs, dept, onSave }: { t: Row;
   const over = ld && req > ld["weekly_max"];
   return (
     <tr className="border-t" data-testid="load-row">
-      <td className="p-1.5 font-medium">{t["full_name"]}{!t["user_id"] && <span className="ms-1 text-[11px] text-muted-foreground">(بلا حساب دخول)</span>}</td>
+      <td className="p-1.5 font-medium">{t["full_name"]}{t["has_account"] === false && <span className="ms-1 text-[11px] text-muted-foreground">(بلا حساب دخول)</span>}</td>
       <td className="p-1.5">{dept ?? "—"}</td>
       <td className="p-1.5">{t["status"] === "active" ? "نشط" : "غير نشط"}</td>
       <td className="p-1.5"><Input aria-label={`نصاب ${t["full_name"]}`} className="h-8 w-16" type="number" min={0} max={60} value={w} onChange={(e) => setW(e.target.value)} /></td>

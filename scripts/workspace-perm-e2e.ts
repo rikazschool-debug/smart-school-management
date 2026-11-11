@@ -64,9 +64,9 @@ try {
   check("explicit deny defeats role edit", !!denied.error || denied.data?.length === 0);
   must(await override("academic_years", "edit", null));
   check("lifting deny restores role write", must(await delegate.c.from("academic_years").update({ name: "سنة مفوضة" }).eq("id", year).select("id")).length === 1);
-  const tt = must(await delegate.c.from("timetables").insert({ school_id: a, year_id: year, title: "مسودة مفوضة", status: "draft" }).select("id").single()).id;
+  const tt = must(await delegate.c.from("timetables").insert({ school_id: a, year_id: year, name: "مسودة مفوضة", status: "draft" }).select("id").single()).id;
   check("create draft independently", !!tt);
-  const tedit = await delegate.c.from("timetables").update({ title: "ممنوع" }).eq("id", tt).select("id");
+  const tedit = await delegate.c.from("timetables").update({ name: "ممنوع" }).eq("id", tt).select("id");
   check("draft create does not grant edit", !!tedit.error || tedit.data?.length === 0);
   check("draft create does not grant publish", !!(await delegate.c.rpc("publish_timetable", { _id: tt, _from: "2026-11-15" })).error);
   check("authorized draft validation works", !(await delegate.c.rpc("tt_validate", { _tt: tt })).error);
