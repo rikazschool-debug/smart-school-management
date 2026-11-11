@@ -7,7 +7,7 @@ import { NO_CAPS, useSupportCaps } from "@/components/support/caps";
 import { useSession } from "@/lib/session";
 import { supportTabs, type SupportTab } from "@/lib/roles";
 import { SupportSummary } from "@/components/support/summary";
-import { WhatsAppInbox } from "@/components/support/whatsapp";
+import { WhatsAppInbox, useWaOrgOk } from "@/components/support/whatsapp";
 import type { MqSection } from "@/components/support/calls";
 import { HoursNote, InfoInbox, NewTicket, SupportReports, SupportSettings, TAB_LABEL, TicketDetail, TicketList } from "@/components/support/support";
 
@@ -31,12 +31,13 @@ function Page() {
   const navigate = useNavigate({ from: "/app/support" });
   const [creating, setCreating] = useState(false);
   const caps = useSupportCaps(active && active.role !== "platform_admin" ? active.orgId : null);
+  const wa = useWaOrgOk(active?.role === "org_owner" ? active.orgId : null);
   if (search.mq) return <Navigate to="/app/calls" search={{ mq: search.mq }} replace />;
   if (!active) return <ForbiddenState />;
   if (active.role !== "platform_admin" && caps.isLoading) return <LoadingState />;
   const c = caps.data ?? NO_CAPS;
   const ph = search.p === "1" && active.role === "org_owner"; // owner from another section: own tickets to the platform only
-  const tabs: SupportTab[] = ph ? ["mine", "info"] : supportTabs(active.role, c.view.length > 0);
+  const tabs: SupportTab[] = ph ? ["mine", "info"] : [...supportTabs(active.role, c.view.length > 0), ...(wa.data === true ? (["whatsapp"] as const) : [])];
   const settings = !ph && (active.role === "platform_admin" || c.settings);
   const tab = search.tab && (search.tab === "settings" ? settings : tabs.includes(search.tab)) ? search.tab : tabs[0]!;
   const canCreate = tabs.includes("mine");

@@ -140,3 +140,11 @@ function Thread({ id }: { id: string }) {
     </div>
   );
 }
+
+/** Server gate mirror: true only for the real owner of the organization linked to the WATI connection (wa_org_ok). */
+export function useWaOrgOk(orgId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["wa-org-ok", orgId], enabled: !!orgId, staleTime: 60_000,
+    queryFn: async () => { const { data, error } = await supabase.rpc("wa_org_ok" as never, { _org: orgId } as never); if (error) return false; return data === true; },
+  });
+}
