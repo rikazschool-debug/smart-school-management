@@ -20323,6 +20323,7 @@ export type Database = {
       _perm_catalog_v18: { Args: never; Returns: Json }
       _perm_catalog_v19: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
+      _perm_catalog_v20: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
       _perm_catalog_v6: { Args: never; Returns: Json }
