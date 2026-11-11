@@ -22,6 +22,8 @@ async function wati(path: string, init?: RequestInit) {
   if (!res.ok) throw new Error(`WATI ${res.status}: ${text.slice(0, 200)}`);
   return JSON.parse(text || "{}") as Record<string, unknown>;
 }
+/** WATI workspace (tenant) id, needed only by legacy v1 routes (voice notes). */
+function tenant() { const t = process.env["WATI_TENANT_ID"] ?? "1056520"; if (!/^\d+$/.test(t)) throw new Error("رقم حساب WATI غير صالح"); return t; }
 async function admin() { return (await import("@/integrations/supabase/client.server")).supabaseAdmin; }
 async function mustAdmin(sb: { rpc: (f: never, a?: never) => PromiseLike<{ data: unknown; error: unknown }> }) {
   const { data, error } = await sb.rpc("wa_ok" as never);
@@ -105,7 +107,7 @@ export const waSyncAssign = createServerFn({ method: "POST" })
     return await pullAssign(await admin(), data.force ? 5 : 30);
   });
 
-type SendIn = { conv: string; key: string; text?: string; file?: { name: string; mime: string; b64: string; caption?: string } };
+type SendIn = { conv: string; key: string; text?: string; file?: { name: string; mime: string; b64: string; caption?: string; voice?: boolean } };
 export const waSend = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: SendIn) => {
@@ -125,6 +127,7 @@ export const waSend = createServerFn({ method: "POST" })
     const conv = ref.data as unknown as { wati_conv_id: string };
     const local = `wa-${data.key}`;
     const kind = data.file ? (data.file.mime.startsWith("image/") ? "image" : "document") : "text";
+    const conv2 = ref.data as unknown as { wa_id: string };
     const cl = await a.rpc("_wa_out_claim" as never, { _local: local, _conv: data.conv, _kind: kind, _body: data.file ? (data.file.caption ?? null) : data.text, _file: data.file?.name ?? null, _user: context.userId } as never);
     if (cl.error) throw new Error("تعذّر حفظ الرسالة");
     const claim = cl.data as unknown as { claimed: boolean; status: string };
@@ -139,6 +142,11 @@ export const waSend = createServerFn({ method: "POST" })
         if (data.file.caption) fd.set("caption", data.file.caption);
         const bin = Uint8Array.from(atob(data.file.b64), (ch) => ch.charCodeAt(0));
         fd.set("file", new Blob([bin], { type: data.file.mime || "application/octet-stream" }), data.file.name);
+        if (data.file.voice) {
+          // WATI documents voice notes only on the legacy v1 route (audio/ogg + voice=true)
+          const fv = new FormData(); fv.set("file", new Blob([bin], { type: "audio/ogg" }), data.file.name);
+          res = await fetch(`${c.origin}/${tenant()}/api/v1/sendSessionFile/${encodeURIComponent(conv2.wa_id)}?voice=true`, { method: "POST", headers: { Authorization: c.auth, "User-Agent": "Rikaz/1.0" }, body: fv, signal: AbortSignal.timeout(30_000) });
+        } else
         res = await fetch(`${c.origin}/api/ext/v3/conversations/messages/file`, { method: "POST", headers: { Authorization: c.auth, "User-Agent": "Rikaz/1.0" }, body: fd, signal: AbortSignal.timeout(30_000) });
       } else {
         res = await fetch(`${c.origin}/api/ext/v3/conversations/messages/text`, { method: "POST", headers: { Authorization: c.auth, "User-Agent": "Rikaz/1.0", "Content-Type": "application/json" },
@@ -150,7 +158,8 @@ export const waSend = createServerFn({ method: "POST" })
         const j = (() => { try { return JSON.parse(text) as Record<string, unknown>; } catch { return null; } })();
         const m = (j?.["message"] ?? j) as Record<string, unknown> | null;
         wid = (m?.["id"] as string | undefined) ?? null; wamid = (m?.["whatsapp_message_id"] as string | undefined) ?? (m?.["whatsappMessageId"] as string | undefined) ?? null;
-        if (!wid) { status = "unknown"; err = `no_id: ${text.slice(0, 160)}`; }
+        if (!wid && data.file?.voice) { if (j?.["result"] !== true) { status = "failed"; err = `WATI: ${text.slice(0, 160)}`; } }
+        else if (!wid) { status = "unknown"; err = `no_id: ${text.slice(0, 160)}`; }
       }
     } catch (e) { status = "unknown"; err = e instanceof Error ? e.message.slice(0, 160) : "network"; }
     const r = await a.rpc("_wa_out_result" as never, { _local: local, _status: status, _wati: wid, _wamid: wamid, _err: err } as never);
@@ -182,4 +191,43 @@ export const waMedia = createServerFn({ method: "POST" })
     const buf = new Uint8Array(total); let o = 0; for (const p of parts) { buf.set(p, o); o += p.byteLength; }
     let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
     return { mime: res.headers.get("content-type") ?? "application/octet-stream", name: m.file_name, b64: btoa(bin) };
+  });
+
+/** Contact attributes straight from WATI (read-only; GET /api/ext/v3/contacts/{target}). */
+export const waContactAttrs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { conv: string }) => { if (!UUID.test(d.conv)) throw new Error("bad"); return d; })
+  .handler(async ({ data, context }) => {
+    const ref = await context.supabase.rpc("wa_conv_ref" as never, { _conv: data.conv } as never);
+    if (ref.error) throw new Error("غير مصرح");
+    const r = ref.data as unknown as { wa_id: string };
+    try {
+      const j = await wati(`/api/ext/v3/contacts/${encodeURIComponent(r.wa_id)}`);
+      const hide = new Set(["name", "phone", "1", "2", "3", "contact_owner"]);
+      const params = ((j["custom_params"] as { name: string; value: string }[] | undefined) ?? []).filter((p) => p.value && !hide.has(p.name)).slice(0, 30);
+      return { ok: true, source: j["source"] as string | null, status: j["contact_status"] as string | null, teams: (j["teams"] as string[] | undefined) ?? [], params };
+    } catch (e) { return { ok: false, error: e instanceof Error ? e.message.slice(0, 120) : "WATI" }; }
+  });
+
+/** Tag on/off: saved in Rikaz first (wa_tag_set checks access), then pushed to WATI (which only accepts tags already defined there and cannot list them back). */
+export const waTag = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { conv: string; name: string; on: boolean }) => { if (!UUID.test(d.conv) || !d.name?.trim() || d.name.length > 40) throw new Error("bad"); return { ...d, name: d.name.trim() }; })
+  .handler(async ({ data, context }) => {
+    const set = await context.supabase.rpc("wa_tag_set" as never, { _conv: data.conv, _name: data.name, _on: data.on } as never);
+    if (set.error) throw new Error(set.error.message);
+    const ref = await context.supabase.rpc("wa_conv_ref" as never, { _conv: data.conv } as never);
+    if (ref.error) throw new Error("غير مصرح");
+    const id = (ref.data as unknown as { wati_conv_id: string }).wati_conv_id;
+    let ok = false, err: string | null = null;
+    try {
+      const c = cfg();
+      const res = data.on
+        ? await fetch(`${c.origin}/api/ext/v3/conversations/${encodeURIComponent(id)}/tags`, { method: "POST", headers: { Authorization: c.auth, "User-Agent": "Rikaz/1.0", "Content-Type": "application/json" }, body: JSON.stringify({ tagName: data.name, tag_name: data.name }), signal: AbortSignal.timeout(15_000) })
+        : await fetch(`${c.origin}/api/ext/v3/conversations/${encodeURIComponent(id)}/tags/${encodeURIComponent(data.name)}`, { method: "DELETE", headers: { Authorization: c.auth, "User-Agent": "Rikaz/1.0" }, signal: AbortSignal.timeout(15_000) });
+      const t = await res.text().catch(() => "");
+      ok = res.ok && !/"added"\s*:\s*false/.test(t); if (!ok) err = `WATI ${res.status}: ${t.slice(0, 160)}`;
+    } catch (e) { err = e instanceof Error ? e.message.slice(0, 160) : "network"; }
+    if (data.on) await (await admin()).rpc("_wa_tag_sync" as never, { _conv: data.conv, _name: data.name, _ok: ok, _err: err } as never);
+    return { ok, error: err };
   });
