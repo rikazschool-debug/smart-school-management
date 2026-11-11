@@ -264,7 +264,7 @@ async function syncOperatorEmails(a: Adm) {
   await a.rpc("_wa_operator_emails" as never, { _ops: ops } as never);
 }
 async function verifyJob(a: Adm, id: string) {
-  const jr = await a.rpc("_wa_transfer_job" as never, { _id: id } as never);
+  const jr = (await a.rpc("_wa_transfer_job" as never, { _id: id } as never)) as { data: unknown; error: unknown };
   if (jr.error || !jr.data) throw new Error("تعذّر قراءة التحويل");
   const job = jr.data as unknown as Record<string, unknown>;
   let seen = null as { assignee_id: string | null; team_ids: string[] } | null;
