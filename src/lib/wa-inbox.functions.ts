@@ -450,13 +450,31 @@ export const waRunBot = createServerFn({ method: "POST" })
     const job = (await a.rpc("_wa_act_job" as never, { _id: b.id } as never)).data as unknown as { wa_id: string };
     let status = "unknown", err: string | null = null;
     try {
-      const res = await wati("/api/ext/v3/chatbots/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target: job.wa_id, chatbot_id: data.bot }) });
+      // v3 POST chatbots/start answers 6002 «Start Chatbot Failed» for every bot on this account; the legacy v1 route
+      // (query params whatsappNumber + chatbotId) is the one that starts it (verified on the test chat, Nov 11 2026).
+      const res = await wati(`/${tenant()}/api/v1/chatbots/start?whatsappNumber=${encodeURIComponent(job.wa_id)}&chatbotId=${encodeURIComponent(data.bot)}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
       if (res["result"] === true) status = "accepted"; else { status = "failed"; err = "رفض WATI تشغيل البوت"; }
     } catch (e) {
       const m = e instanceof Error ? e.message : "network";
       if (/^WATI 4\d\d/.test(m)) { status = "failed"; err = m.slice(0, 200); } else { status = "unknown"; err = m.slice(0, 160); }
     }
     await a.rpc("_wa_act_finish" as never, { _id: b.id, _status: status, _error: err, _wati_ref: null } as never);
-    if (status === "accepted") { try { await pullAssign(a, 0); } catch { /* shown on next sync */ } }
-    return { id: b.id, status, error: err, duplicate: false };
+    // what WATI did right after the start (the bot's own steps may end, close or block the chat)
+    const events: string[] = [];
+    if (status === "accepted") {
+      const since = Date.now() - 5_000;
+      await new Promise((r) => setTimeout(r, 3_000));
+      try {
+        const conv = (job as unknown as { wati_conv_id: string }).wati_conv_id;
+        const j = await wati(`/api/ext/v3/conversations/${encodeURIComponent(conv)}/messages?page_size=15&page_number=1`);
+        for (const m of (j["message_list"] as Record<string, unknown>[] | undefined) ?? []) {
+          const at = Date.parse(String(m["created"] ?? "")); if (!(at >= since)) continue;
+          const t = String(m["text"] ?? m["event_description"] ?? "");
+          if (/blocked by/i.test(t)) events.push("blocked"); else if (/Ended: Chatbot/i.test(t)) events.push("ended");
+          else if (/closed by|status has been set as Solved/i.test(t)) events.push("closed"); else if (m["event_type"] === "message" && m["owner"]) events.push("sent");
+        }
+      } catch { /* informational only */ }
+      try { await pullAssign(a, 0); } catch { /* shown on next sync */ }
+    }
+    return { id: b.id, status, error: err, duplicate: false, events: [...new Set(events)] };
   });
