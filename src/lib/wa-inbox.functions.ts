@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { waTplCheck, waTplFromWati, type WaTpl } from "@/lib/wa-template";
 
 /**
  * WhatsApp inbox (WATI v3) for the platform-run support desk. Every function first re-checks the caller through their own
@@ -342,4 +343,120 @@ export const waTransferVerify = createServerFn({ method: "POST" })
     const st = (g.data as unknown as { status: string }).status;
     if (st === "done" || st === "failed") return { status: st };
     return await verifyJob(await admin(), data.id);
+  });
+
+/**
+ * Approved templates and WATI chatbots (wa_actions). Rights: wa_act_caps / wa_act_begin (owner, or chat access + wa_inbox.send_template /
+ * run_bot on the chat's branch). Templates are re-read from WATI at send time (approved, not authentication, exact variable names);
+ * one WATI call per client key; a timeout or a missing recipient result is "unknown" and is never retried automatically.
+ */
+async function liveTemplates() {
+  const out: WaTpl[] = [];
+  for (let pn = 1; pn <= 5; pn++) {
+    const j = await wati(`/api/ext/v3/messageTemplates?page_size=100&page_number=${pn}`);
+    const list = (j["templates"] as Record<string, unknown>[] | undefined) ?? [];
+    for (const r of list) { const t = waTplFromWati(r); if (t) out.push(t); }
+    if (list.length < 100) break;
+  }
+  return out.sort((x, y) => x.name.localeCompare(y.name));
+}
+async function caps(sb: unknown, conv: string) {
+  const r = await (sb as { rpc: (f: never, a: never) => PromiseLike<{ data: unknown; error: unknown }> }).rpc("wa_act_caps" as never, { _conv: conv } as never);
+  if (r.error) throw new Error("غير مصرح");
+  return r.data as { template: boolean; bot: boolean };
+}
+async function begin(sb: unknown, a: { conv: string; kind: "template" | "bot"; ref: string; label: string; params: unknown; key: string }) {
+  const r = await (sb as { rpc: (f: never, a: never) => PromiseLike<{ data: unknown; error: { message?: string } | null }> })
+    .rpc("wa_act_begin" as never, { _conv: a.conv, _kind: a.kind, _ref: a.ref, _label: a.label, _params: a.params, _key: a.key } as never);
+  if (r.error) throw new Error(r.error.message ?? "غير مصرح");
+  return r.data as { id: string; repeat: boolean; status: string; error?: string };
+}
+/** Non-owners: re-read the WATI assignment first so a chat transferred away cannot be acted on. */
+async function freshAccess(sb: unknown, conv: string) {
+  const pre = await (sb as { rpc: (f: never, a: never) => PromiseLike<{ data: unknown; error: unknown }> }).rpc("wa_conv_ref" as never, { _conv: conv } as never);
+  if (pre.error) throw new Error("غير مصرح");
+  if ((pre.data as { access: string }).access !== "owner") await pullAssign(await admin(), 10);
+}
+
+export const waTemplates = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { conv: string }) => { if (!UUID.test(d.conv)) throw new Error("bad"); return d; })
+  .handler(async ({ data, context }) => {
+    if (!(await caps(context.supabase, data.conv)).template) throw new Error("لا تملك صلاحية «إرسال قوالب واتساب» لهذه المحادثة");
+    try { return { ok: true as const, templates: await liveTemplates() }; }
+    catch (e) { return { ok: false as const, templates: [] as WaTpl[], error: e instanceof Error ? e.message.slice(0, 160) : "WATI" }; }
+  });
+
+export const waSendTemplate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { conv: string; key: string; name: string; values: Record<string, string> }) => {
+    if (!UUID.test(d.conv) || !/^[\w-]{8,64}$/.test(d.key) || !/^[\w.-]{1,200}$/.test(d.name) || typeof d.values !== "object" || !d.values) throw new Error("bad");
+    if (Object.keys(d.values).length > 40) throw new Error("bad");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    await freshAccess(context.supabase, data.conv);
+    const tpl = (await liveTemplates()).find((t) => t.name === data.name);
+    if (!tpl) throw new Error("القالب غير متاح للإرسال (غير معتمد في WATI أو قالب مصادقة)");
+    const vals = Object.fromEntries(Object.entries(data.values).map(([k, v]) => [k, String(v ?? "").trim()]));
+    const bad = waTplCheck(tpl, vals); if (bad) throw new Error(bad);
+    const params = tpl.vars.map((v) => ({ name: v.name, value: vals[v.name]! }));
+    const b = await begin(context.supabase, { conv: data.conv, kind: "template", ref: tpl.name, label: `${tpl.name}${tpl.language ? ` (${tpl.language})` : ""}`, params, key: data.key });
+    if (b.repeat) return { id: b.id, status: b.status, error: b.error ?? null, duplicate: true };
+    const a = await admin();
+    const job = (await a.rpc("_wa_act_job" as never, { _id: b.id } as never)).data as unknown as { wa_id: string; key: string };
+    let status = "unknown", err: string | null = null, ref: string | null = null;
+    try {
+      const res = await wati("/api/ext/v3/messageTemplates/send", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ template_name: tpl.name, broadcast_name: `rikaz-inbox-${job.key.slice(0, 8)}`, recipients: [{ target: job.wa_id, local_message_id: job.key, ...(params.length ? { custom_params: params } : {}) }] }) });
+      ref = (res["broadcast_id"] as string | undefined) ?? null;
+      const rec = ((res["recipients"] as Record<string, unknown>[] | undefined) ?? []).find((r) => r["local_message_id"] === job.key || r["target"] === job.wa_id || r["phone_number"] === job.wa_id);
+      const errs = (rec?.["errors"] as string[] | undefined) ?? [];
+      if (res["success"] === false) { status = "failed"; err = `WATI: ${String(res["error"] ?? "رفض الإرسال").slice(0, 200)}`; }
+      else if (!rec) { status = "unknown"; err = "لم يُرجع WATI نتيجة لهذا الرقم"; }
+      else if (errs.length) { status = "failed"; err = `WATI: ${errs.join("، ").slice(0, 200)}`; }
+      else status = "accepted";
+    } catch (e) {
+      const m = e instanceof Error ? e.message : "network";
+      if (/^WATI 4\d\d/.test(m)) { status = "failed"; err = m.slice(0, 200); } else { status = "unknown"; err = m.slice(0, 160); }
+    }
+    await a.rpc("_wa_act_finish" as never, { _id: b.id, _status: status, _error: err, _wati_ref: ref } as never);
+    return { id: b.id, status, error: err, duplicate: false };
+  });
+
+export const waBots = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { conv: string }) => { if (!UUID.test(d.conv)) throw new Error("bad"); return d; })
+  .handler(async ({ data, context }) => {
+    if (!(await caps(context.supabase, data.conv)).bot) throw new Error("لا تملك صلاحية «تشغيل بوت واتساب» لهذه المحادثة");
+    try {
+      const j = await wati("/api/ext/v3/chatbots?page_size=100&page_number=1");
+      const bots = ((j["chatbot_list"] as Record<string, unknown>[] | undefined) ?? []).map((b) => ({ id: String(b["id"]), name: String(b["name"] ?? b["id"]) }));
+      return { ok: true as const, bots };
+    } catch (e) { return { ok: false as const, bots: [] as { id: string; name: string }[], error: e instanceof Error ? e.message.slice(0, 160) : "WATI" }; }
+  });
+
+export const waRunBot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { conv: string; key: string; bot: string }) => { if (!UUID.test(d.conv) || !/^[\w-]{8,64}$/.test(d.key) || !/^[0-9a-f]{24}$/i.test(d.bot)) throw new Error("bad"); return d; })
+  .handler(async ({ data, context }) => {
+    await freshAccess(context.supabase, data.conv);
+    const list = ((await wati("/api/ext/v3/chatbots?page_size=100&page_number=1"))["chatbot_list"] as Record<string, unknown>[] | undefined) ?? [];
+    const bot = list.find((b) => b["id"] === data.bot);
+    if (!bot) throw new Error("البوت غير موجود في WATI");
+    const b = await begin(context.supabase, { conv: data.conv, kind: "bot", ref: data.bot, label: String(bot["name"] ?? data.bot), params: [], key: data.key });
+    if (b.repeat) return { id: b.id, status: b.status, error: b.error ?? null, duplicate: true };
+    const a = await admin();
+    const job = (await a.rpc("_wa_act_job" as never, { _id: b.id } as never)).data as unknown as { wa_id: string };
+    let status = "unknown", err: string | null = null;
+    try {
+      const res = await wati("/api/ext/v3/chatbots/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target: job.wa_id, chatbot_id: data.bot }) });
+      if (res["result"] === true) status = "accepted"; else { status = "failed"; err = "رفض WATI تشغيل البوت"; }
+    } catch (e) {
+      const m = e instanceof Error ? e.message : "network";
+      if (/^WATI 4\d\d/.test(m)) { status = "failed"; err = m.slice(0, 200); } else { status = "unknown"; err = m.slice(0, 160); }
+    }
+    await a.rpc("_wa_act_finish" as never, { _id: b.id, _status: status, _error: err, _wati_ref: null } as never);
+    if (status === "accepted") { try { await pullAssign(a, 0); } catch { /* shown on next sync */ } }
+    return { id: b.id, status, error: err, duplicate: false };
   });

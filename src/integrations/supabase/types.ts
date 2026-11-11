@@ -17369,6 +17369,78 @@ export type Database = {
           },
         ]
       }
+      wa_actions: {
+        Row: {
+          actor: string
+          before: Json | null
+          client_key: string
+          conversation_id: string
+          created_at: string
+          error: string | null
+          fingerprint: string
+          finished_at: string | null
+          id: string
+          kind: string
+          org_id: string
+          params: Json
+          ref: string
+          ref_label: string | null
+          status: string
+          wati_ref: string | null
+        }
+        Insert: {
+          actor: string
+          before?: Json | null
+          client_key: string
+          conversation_id: string
+          created_at?: string
+          error?: string | null
+          fingerprint: string
+          finished_at?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          params?: Json
+          ref: string
+          ref_label?: string | null
+          status?: string
+          wati_ref?: string | null
+        }
+        Update: {
+          actor?: string
+          before?: Json | null
+          client_key?: string
+          conversation_id?: string
+          created_at?: string
+          error?: string | null
+          fingerprint?: string
+          finished_at?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          params?: Json
+          ref?: string
+          ref_label?: string | null
+          status?: string
+          wati_ref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_actions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_actions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wa_assign_log: {
         Row: {
           after: Json | null
@@ -20240,6 +20312,7 @@ export type Database = {
       _perm_catalog_v16: { Args: never; Returns: Json }
       _perm_catalog_v17: { Args: never; Returns: Json }
       _perm_catalog_v18: { Args: never; Returns: Json }
+      _perm_catalog_v19: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
@@ -20639,6 +20712,23 @@ export type Database = {
       _wa_access: {
         Args: { c: Database["public"]["Tables"]["wa_conversations"]["Row"] }
         Returns: string
+      }
+      _wa_act_finish: {
+        Args: {
+          _error: string
+          _id: string
+          _status: string
+          _wati_ref: string
+        }
+        Returns: Json
+      }
+      _wa_act_job: { Args: { _id: string }; Returns: Json }
+      _wa_act_ok: {
+        Args: {
+          _action: string
+          c: Database["public"]["Tables"]["wa_conversations"]["Row"]
+        }
+        Returns: boolean
       }
       _wa_apply_status: {
         Args: { _at: string; _err: string; _msg: string; _status: string }
@@ -25208,6 +25298,19 @@ export type Database = {
       }
       verify_guardian_link: { Args: { _id: string }; Returns: undefined }
       vice_teacher_ids: { Args: never; Returns: string[] }
+      wa_act_begin: {
+        Args: {
+          _conv: string
+          _key: string
+          _kind: string
+          _label: string
+          _params: Json
+          _ref: string
+        }
+        Returns: Json
+      }
+      wa_act_caps: { Args: { _conv: string }; Returns: Json }
+      wa_act_log: { Args: { _conv: string }; Returns: Json }
       wa_bot_choices: { Args: never; Returns: Json }
       wa_bot_link: {
         Args: { _id: string; _school: string; _title: string }
