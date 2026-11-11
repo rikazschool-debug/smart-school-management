@@ -12,6 +12,7 @@ import { ask } from "@/components/confirm";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { waMedia, waSend, waSync, waSyncAssign } from "@/lib/wa-inbox.functions";
 import { Composer, ContactCard } from "@/components/support/whatsapp-extras";
+import { ActionBar } from "@/components/support/whatsapp-actions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -250,6 +251,7 @@ function Thread({ id, owner }: { id: string; owner: boolean }) {
         ))}
         <div ref={end} />
       </div>
+      <ActionBar conv={id} windowOpen={!!c.window_open} />
       <Composer conv={id} sending={sending} owner={owner} onSend={doSend} />
     </div>
     <ContactCard conv={id} />
