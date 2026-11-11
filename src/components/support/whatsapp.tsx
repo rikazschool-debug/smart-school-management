@@ -158,7 +158,7 @@ function WaLinks({ onBack }: { onBack: () => void }) {
         </div>
         {cur && <div className="text-xs text-primary">مربوط حاليًا: {kind === "op" ? c.user_name : c.school_name}</div>}
         {cur && kind === "op" && <div className="text-xs text-muted-foreground">{c.email ? "بريد WATI مسجّل تلقائيًا — يمكن التحويل إليه" : "لا يوجد بريد في WATI لهذا الكود (مثل البوت) — لا يمكن التحويل إليه"}</div>}
-        {cur && kind === "team" && <WatiId kind={kind} code={c.code} cur={(kind === "op" ? c.email : c.wati_name) ?? ""} guess={kind === "team" ? c.names?.[0]?.n ?? "" : ""} onSaved={() => void qc.invalidateQueries({ queryKey: ["wa-codes"] })} />}
+        {cur && kind === "team" && <WatiId kind={kind} code={c.code} cur={c.wati_name ?? ""} guess={c.names?.[0]?.n ?? ""} onSaved={() => void qc.invalidateQueries({ queryKey: ["wa-codes"] })} />}
       </div>
     );
   };

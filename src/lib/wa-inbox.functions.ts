@@ -267,7 +267,7 @@ async function verifyJob(a: Adm, id: string) {
   const jr = await a.rpc("_wa_transfer_job" as never, { _id: id } as never);
   if (jr.error || !jr.data) throw new Error("تعذّر قراءة التحويل");
   const job = jr.data as unknown as Record<string, unknown>;
-  let seen: { assignee_id: string | null; team_ids: string[] } | null = null;
+  let seen = null as { assignee_id: string | null; team_ids: string[] } | null;
   for (let i = 0; i < 3 && !seen; i++) { if (i) await new Promise((r) => setTimeout(r, 1500)); seen = await readAssign(job); }
   const fin = (status: string, err: string | null) => a.rpc("_wa_transfer_finish" as never, { _id: id, _status: status, _error: err, _observed: seen } as never);
   if (seen) { await fin("done", null); return { status: "done" }; }
