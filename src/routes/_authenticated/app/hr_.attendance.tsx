@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { HrPageTop } from "@/components/hr/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as XLSX from "xlsx";
 import { ArrowRight, Download, FileText, Plus, Upload } from "lucide-react";
@@ -53,8 +54,7 @@ function Page() {
   const any = k && Object.values(k.caps).some(Boolean);
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />ملفات الموظفين</Link>
-      <PageHeader title="الحضور والانصراف" desc="البصمات الخام تُحفظ كما وصلت ولا تُعدّل، ونتيجة اليوم تُحسب منها حسب الوردية والعطلات والإجازات المعتمدة. التصحيح بسبب مؤرخ، واليوم المغلق لا يُعدّل إلا بإعادة فتحه." />
+      <HrPageTop title="الحضور والانصراف" desc="البصمات الخام تُحفظ كما وصلت ولا تُعدّل، ونتيجة اليوم تُحسب منها حسب الوردية والعطلات والإجازات المعتمدة. التصحيح بسبب مؤرخ، واليوم المغلق لا يُعدّل إلا بإعادة فتحه." />
       {caps.isLoading ? <LoadingState /> : caps.error ? <ErrorState message={arabicError(caps.error)} onRetry={() => caps.refetch()} />
         : !k!.enabled ? <SectionLocked /> : !any ? <ForbiddenState /> : <Workspace org={org!} k={k!} />}
     </>

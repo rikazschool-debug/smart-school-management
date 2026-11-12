@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { HrPageTop } from "@/components/hr/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowRight, Download, FileText, Printer } from "lucide-react";
 import { toast } from "sonner";
@@ -35,8 +36,7 @@ function Page() {
   const list = cat.data ?? [];
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الموارد البشرية</Link>
-      <PageHeader title="تقارير الموارد البشرية" desc="كتالوج موحد للتقارير (R01–R29). الفلاتر نفسها تُطبّق على العرض والمجاميع والطباعة والتصدير، والنطاق والحقول الحساسة يحددها الخادم. كل طباعة وتصدير يُسجّل." />
+      <HrPageTop title="تقارير الموارد البشرية" desc="كتالوج موحد للتقارير (R01–R29). الفلاتر نفسها تُطبّق على العرض والمجاميع والطباعة والتصدير، والنطاق والحقول الحساسة يحددها الخادم. كل طباعة وتصدير يُسجّل." />
       {me.data && !me.data.enabled ? <SectionLocked /> : cat.isLoading ? <LoadingState /> : cat.error ? <ErrorState message={arabicError(cat.error)} onRetry={() => cat.refetch()} /> : list.length === 0 ? <EmptyState title="لا توجد تقارير متاحة لك" hint="تظهر التقارير حسب صلاحياتك في أقسام الموارد البشرية." /> : (
         <div className="space-y-4">
           <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3" aria-label="كتالوج التقارير">{list.map((c) => (

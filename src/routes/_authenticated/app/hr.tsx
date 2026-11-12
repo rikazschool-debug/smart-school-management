@@ -20,7 +20,7 @@ import { HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, NAME_EN_MAX, cleanValue, ty
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
 import { ProfileFields, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
-import { HrNavigation } from "@/components/hr/navigation";
+import { HrPageTop } from "@/components/hr/navigation";
 import { HrEmployeeList } from "@/components/hr/employee-list";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { PersonCardButton } from "@/components/people/person-card";
@@ -53,9 +53,7 @@ function Page() {
   if (!m || !org) return null;
   return (
     <>
-      {m.owner && <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>}
-      <PageHeader title="الموارد البشرية" />
-      {m.enabled && <HrNavigation />}
+      <HrPageTop title="الموارد البشرية" desc="ملفات الموظفين وتعييناتهم والدوام والخدمات الوظيفية في مدارس المؤسسة." nav={m.enabled} home={m.owner} />
       {!m.enabled ? <SectionLocked /> : !m.caps.view ? <ForbiddenState /> : <Workspace org={org} m={m} />}
     </>
   );

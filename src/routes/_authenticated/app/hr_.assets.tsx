@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { HrPageTop } from "@/components/hr/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -31,8 +32,7 @@ function Page() {
   if (!active) return null;
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />ملفات الموظفين</Link>
-      <PageHeader title="العهد العينية" desc="أجهزة ومفاتيح وغيرها، منفصلة عن العهد النقدية في المشتريات. للأصل عهدة نشطة واحدة فقط، وأي أثر مالي للفقد أو التلف يمر بقرار مستقل." />
+      <HrPageTop title="العهد العينية" desc="أجهزة ومفاتيح وغيرها، منفصلة عن العهد النقدية في المشتريات. للأصل عهدة نشطة واحدة فقط، وأي أثر مالي للفقد أو التلف يمر بقرار مستقل." />
       {caps.isLoading ? <LoadingState /> : caps.error ? <ErrorState message={arabicError(caps.error)} onRetry={() => caps.refetch()} /> : !caps.data!.hr ? <SectionLocked /> : caps.data!.schools.length === 0 ? <ForbiddenState /> : <Workspace org={org!} caps={caps.data!} />}
     </>
   );

@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { HrPageTop } from "@/components/hr/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Download, FileText, Plus, X } from "lucide-react";
 import { toast } from "sonner";
@@ -49,8 +50,7 @@ function Page() {
   const any = k && (Object.values(k.money).some(Boolean) || Object.values(k.pay).some(Boolean) || k.owner);
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />ملفات الموظفين</Link>
-      <PageHeader title="الرواتب والسلف" desc="الموارد البشرية تُعدّ المسير ← المالية تراجع ← الإدارة العامة تعتمد النسخة التي راجعتها المالية. القيد والصرف حالتان منفصلتان." />
+      <HrPageTop title="الرواتب والسلف" desc="الموارد البشرية تُعدّ المسير ← المالية تراجع ← الإدارة العامة تعتمد النسخة التي راجعتها المالية. القيد والصرف حالتان منفصلتان." />
       {caps.isLoading ? <LoadingState /> : caps.error ? <ErrorState message={arabicError(caps.error)} onRetry={() => caps.refetch()} />
         : !k!.enabled ? <SectionLocked /> : !any ? <ForbiddenState /> : <Workspace org={org!} k={k!} />}
     </>

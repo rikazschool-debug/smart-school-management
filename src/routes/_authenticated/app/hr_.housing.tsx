@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { HrPageTop } from "@/components/hr/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -36,8 +37,7 @@ function Page() {
   const on = d?.items.find((i) => i.ext === "housing")?.enabled;
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الموارد البشرية</Link>
-      <PageHeader title="السكن" desc="عقارات ووحدات بسعة محددة. التسكين والنقل والإخلاء بتاريخ سريان، والسجل المغلق لا يُعدّل. لا تتجاوز وحدة سعتها، ولا يُسكَّن موظف في وحدتين." />
+      <HrPageTop title="السكن" desc="عقارات ووحدات بسعة محددة. التسكين والنقل والإخلاء بتاريخ سريان، والسجل المغلق لا يُعدّل. لا تتجاوز وحدة سعتها، ولا يُسكَّن موظف في وحدتين." />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !d!.hr ? <SectionLocked /> : (
         <div className="space-y-4">
           {d!.owner && <Extensions org={org!} d={d!} />}
