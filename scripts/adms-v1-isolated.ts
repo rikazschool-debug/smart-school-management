@@ -154,7 +154,7 @@ check("receiver: org A event naming org B's device is rejected for review", r7.j
 // Process killed before COMMIT: nothing stored, the bridge retry is accepted. After COMMIT with lost ACK: retry → duplicate.
 const eKill = fix(ev(id(), "00042", now - 30_000));
 try { await sql.begin(async (tx) => { await tx.unsafe("select _adms_ingest('ingest_iso_A01',$1,$2,$3,$4,$5::text::jsonb)", ["d".repeat(48), A, RA, id(), JSON.stringify([eKill])]); throw new Error("killed"); }); } catch { /* rolled back */ }
-check("crash before commit: no raw row and no nonce left", (await one<{ n: number }>("select (select count(*) from adms_events where event_id=$1)+(select count(*) from adms_nonces where nonce=$2) n", eKill.event_id, "d".repeat(48))).n === 0);
+check("crash before commit: no raw row and no nonce left", (await one<{ n: number }>("select ((select count(*) from adms_events where event_id=$1)+(select count(*) from adms_nonces where nonce=$2))::int n", eKill.event_id, "d".repeat(48))).n === 0);
 const rk = await post(batch([eKill]));
 check("crash before commit: retry is accepted", rk.json.results![0]!.status === "accepted", rk);
 const rk2 = await post(batch([eKill]));

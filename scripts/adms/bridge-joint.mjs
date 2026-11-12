@@ -31,7 +31,8 @@ const stamp = (n) => new Date(n + 10800000).toISOString().slice(0, 19).replace('
 const now = Date.now();
 store.activate({ org_id: org.id, rikaz_org_id: msg.rikaz_org_id, site_id: site.id, device_id: device.id, from: new Date(now).toISOString() }, now);
 const when = now + 2000;
-const rows = [decodeAttlog(`00042\t${stamp(when)}\t0\t1\t0`, store.device(device.id), when), decodeAttlog(`00077\t${stamp(when + 1000)}\t0\t1\t0`, store.device(device.id), when + 1000)];
+// decodeAttlog returns the parsed rows of one ATTLOG text block.
+const rows = decodeAttlog(`00042\t${stamp(when)}\t0\t1\t0\n00077\t${stamp(when + 1000)}\t0\t1\t0`, store.device(device.id), when + 1000);
 store.enqueue(store.device(device.id), rows, when + 1000);
 store.db.exec('UPDATE bridge_outbox SET next_attempt=0');
 const config = { delivery_enabled: true, delivery_mode: 'mock', retry_base_ms: 1 };
@@ -40,7 +41,7 @@ await worker.tick();
 const first = store.db.prepare('SELECT event_id,state,receipt_id,last_error FROM bridge_outbox ORDER BY event_id').all();
 // Lost ACK: the receiver side drops the next response after commit; the bridge must retry the same event_id.
 const third = decodeAttlog(`00042\t${stamp(when + 5000)}\t1\t1\t0`, store.device(device.id), when + 5000);
-store.enqueue(store.device(device.id), [third], when + 5000); store.db.exec("UPDATE bridge_outbox SET next_attempt=0 WHERE state='pending'");
+store.enqueue(store.device(device.id), third, when + 5000); store.db.exec("UPDATE bridge_outbox SET next_attempt=0 WHERE state='pending'");
 console.log(JSON.stringify({ phase: 'lost_ack_next' }));
 await new Promise((r) => rl.once('line', r));
 await worker.tick();
