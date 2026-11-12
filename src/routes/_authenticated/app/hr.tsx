@@ -4,7 +4,7 @@ import { EmpOpenAssets } from "@/components/hr/assets";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Download, FileText, IdCard, Plus, Printer, Upload, UserCheck, X } from "lucide-react";
+import { ArrowRight, Download, FileText, Search, SlidersHorizontal, Plus, Printer, Upload, UserCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";
@@ -20,6 +20,8 @@ import { HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, NAME_EN_MAX, cleanValue, ty
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
 import { ProfileFields, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
+import { HrNavigation } from "@/components/hr/navigation";
+import { HrEmployeeList } from "@/components/hr/employee-list";
 import { HrIdReadiness } from "@/components/hr/id-readiness";
 import { PersonCardButton } from "@/components/people/person-card";
 import { HrCategories } from "@/components/hr/categories";
@@ -36,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/app/hr")({
     ...(s["add"] ? { add: "1" } : {}),
     ...(s["imp"] ? { imp: "1" } : {}),
   }),
-  head: () => ({ meta: [{ title: "الموارد البشرية — ركاز" }, { name: "description", content: "ملفات الموظفين وتعييناتهم في مدارس المؤسسة." }] }),
+  head: () => ({ meta: [{ title: "الموارد البشرية — ركاز" }, { name: "description", content: "ملفات الموظفين وتعييناتهم في مدارس المؤسسة." }, { property: "og:title", content: "الموارد البشرية — ركاز" }, { property: "og:description", content: "ملفات الموظفين والدوام والخدمات الوظيفية والتقارير في ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Page,
 });
 
@@ -47,28 +49,14 @@ function Page() {
   if (!active) return null;
   if (me.isLoading) return <LoadingState />;
   if (me.error) return <ErrorState message={arabicError(me.error)} onRetry={() => me.refetch()} />;
-  const m = me.data!;
+  const m = me.data;
+  if (!m || !org) return null;
   return (
     <>
       {m.owner && <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>}
-      <PageHeader title="الموارد البشرية" desc="ملفات الموظفين وتعييناتهم. الموظف سجل واحد في المؤسسة يرتبط بحساب دخوله وسجل المعلم إن وُجد؛ يمكن إنشاء حساب دخوله بالهوية والجوال من نموذج الإضافة." />
-      {m.enabled && <nav aria-label="أقسام الموارد البشرية" className="mb-4 flex flex-wrap gap-2 text-sm">
-        <span className="rounded-lg bg-primary px-3 py-1.5 text-primary-foreground">ملفات الموظفين</span>
-        <Link to="/app/hr/contracts" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">العقود</Link>
-        <Link to="/app/hr/documents" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">المستندات</Link>
-        <Link to="/app/hr/letters" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الخطابات</Link>
-        <Link to="/app/hr/leave" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الإجازات</Link>
-        <Link to="/app/hr/attendance" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الحضور والانصراف</Link>
-        <Link to="/app/hr/payroll" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الرواتب والسلف</Link>
-        <Link to="/app/hr/recruit" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التوظيف</Link>
-        <Link to="/app/hr/assets" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">العهد العينية</Link>
-        <Link to="/app/hr/performance" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الأداء</Link>
-        <Link to="/app/hr/insurance" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التأمين الطبي</Link>
-        <Link to="/app/hr/housing" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">السكن</Link>
-        <Link to="/app/hr/reports" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">التقارير</Link>
-        <Link to="/app/hr/opening" className="rounded-lg border bg-card px-3 py-1.5 hover:border-primary">الأرصدة الافتتاحية</Link>
-      </nav>}
-      {!m.enabled ? <SectionLocked /> : !m.caps.view ? <ForbiddenState /> : <Workspace org={org!} m={m} />}
+      <PageHeader title="الموارد البشرية" />
+      {m.enabled && <HrNavigation />}
+      {!m.enabled ? <SectionLocked /> : !m.caps.view ? <ForbiddenState /> : <Workspace org={org} m={m} />}
     </>
   );
 }
@@ -82,6 +70,7 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
   const list = useQuery({ queryKey: ["hr-list", org, school, q, status], queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: school || null, _q: q || null, _status: status || null }) });
   const rows = (list.data ?? []).filter((r) => status || r.status !== "archived");
   const [sel, setSel] = useState<Set<string>>(new Set());
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [printIds, setPrintIds] = useState<string[] | null>(null);
   const canPrint = !!m.caps.print;
   const toggleSel = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -95,33 +84,40 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
   };
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
-        <Input aria-label="بحث" placeholder="بحث بالاسم أو الرقم الوظيفي أو الوظيفة" className="w-full sm:w-64" value={q} onChange={(e) => setQ(e.target.value)} />
-        <select aria-label="المدرسة" className={selectCls("w-full sm:w-44")} value={school} onChange={(e) => setSchool(e.target.value)}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 className="text-lg font-bold">ملفات الموظفين <span className="ms-2 text-sm font-normal text-muted-foreground">{list.isLoading ? "…" : rows.length}</span></h2><p className="mt-1 text-xs text-muted-foreground">{m.org_wide ? "المؤسسة كاملة" : "الفروع المصرح بها"}</p></div>
+        <div className="flex flex-wrap gap-2">
+          {m.caps.create && <Button size="sm" onClick={() => nav({ search: { add: "1" } })}><Plus className="size-4" />إضافة موظف</Button>}
+          {m.caps.create && <Button size="sm" variant="outline" onClick={() => nav({ search: { imp: "1" } })}><Upload className="size-4" />استيراد Excel</Button>}
+          {m.caps.export && rows.length > 0 && <>
+            <Button variant="outline" size="sm" onClick={() => exp("xlsx")}><Download className="size-4" />Excel</Button>
+            <Button variant="outline" size="sm" onClick={() => exp("pdf")}><FileText className="size-4" />PDF</Button>
+          </>}
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 border-y py-3">
+        <div className="relative min-w-0 flex-1 basis-full sm:basis-64"><Search className="pointer-events-none absolute start-3 top-3 size-4 text-muted-foreground" /><Input aria-label="بحث" placeholder="الاسم أو الرقم الوظيفي أو الوظيفة" className="ps-9" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <select aria-label="المدرسة" className={selectCls("min-w-0 w-full sm:w-52")} value={school} onChange={(e) => setSchool(e.target.value)}>
           <option value="">كل المدارس</option>{m.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <select aria-label="الحالة" className={selectCls("w-full sm:w-40")} value={status} onChange={(e) => setStatus(e.target.value)}>
+        <select aria-label="الحالة" className={selectCls("w-full sm:w-44")} value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">كل الحالات</option>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <span className="flex-1" />
-        {m.caps.export && rows.length > 0 && <>
-          <Button variant="outline" size="sm" onClick={() => exp("xlsx")}><Download className="size-4" />Excel</Button>
-          <Button variant="outline" size="sm" onClick={() => exp("pdf")}><FileText className="size-4" />PDF</Button>
-        </>}
-        {m.caps.create && <Button size="sm" onClick={() => nav({ search: { add: "1" } })}><Plus className="size-4" />إضافة موظف</Button>}
-        {m.caps.create && <Button size="sm" variant="outline" onClick={() => nav({ search: { imp: "1" } })}><Upload className="size-4" />استيراد Excel</Button>}
+        <Button size="sm" variant={toolsOpen ? "secondary" : "ghost"} aria-expanded={toolsOpen} aria-controls="hr-file-tools" onClick={() => setToolsOpen(!toolsOpen)}><SlidersHorizontal className="size-4" />أدوات الملفات</Button>
       </div>
       {add && m.caps.create && <AddEmployee org={org} m={m} onClose={() => nav({ search: {} })} onDone={(id) => nav({ search: { emp: id } })} />}
-      {m.org_wide && m.caps.edit && <HrCategories org={org} />}
       {imp && m.caps.create && all.data && <HrImport org={org} m={m} existing={all.data} onClose={() => nav({ search: {} })} onDone={() => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-list-all"] }); }} />}
-      <HrIdReadiness org={org} school={school} onOpen={(id) => nav({ search: { emp: id } })} />
+      {toolsOpen && <div id="hr-file-tools" className="space-y-3 border-b pb-4">
+        {m.org_wide && m.caps.edit && <HrCategories org={org} />}
+        <HrIdReadiness org={org} school={school} onOpen={(id) => nav({ search: { emp: id } })} />
+      </div>}
       {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} onPrint={() => setPrintIds([emp])} />}
       {printIds && <EmployeePrintDialog org={org} ids={printIds} onClose={() => setPrintIds(null)} />}
       {(canPrint || m.caps.edit) && rows.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
+        <div className="flex flex-wrap items-center gap-3 text-sm">
           <label className="flex items-center gap-2"><input type="checkbox" aria-label="تحديد كل الموظفين الظاهرين" checked={allSel} onChange={() => setSel(allSel ? new Set() : new Set(rows.map((r) => r.id)))} />تحديد الكل</label>
           <span className="text-muted-foreground">المحدد: {sel.size}</span>
-          {m.caps.edit && <HrBulkActions org={org} m={m} ids={[...sel]} archived={status === "archived"} onDone={() => { setSel(new Set()); qc.invalidateQueries({ queryKey: ["hr-list"] }); }} />}
+          {m.caps.edit && sel.size > 0 && <HrBulkActions org={org} m={m} ids={[...sel]} archived={status === "archived"} onDone={() => { setSel(new Set()); qc.invalidateQueries({ queryKey: ["hr-list"] }); }} />}
           {canPrint && <Button size="sm" variant="outline" disabled={!sel.size} onClick={() => setPrintIds(rows.filter((r) => sel.has(r.id)).map((r) => r.id).concat([...sel].filter((id) => !rows.some((r) => r.id === id))))}><Printer className="size-4" />طباعة المحددين</Button>}
           {sel.size > 0 && <Button size="sm" variant="ghost" onClick={() => setSel(new Set())}>إلغاء التحديد</Button>}
         </div>
@@ -129,28 +125,7 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !rows.length ? (
         <EmptyState title="لا يوجد موظفون مطابقون" hint={m.caps.create ? "أضف الموظفين من حساباتهم أو سجلات المعلمين الموجودة." : "لا توجد ملفات موظفين في نطاقك."} />
       ) : (
-        <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-          {rows.map((r) => (
-            <li key={r.id} className="relative">
-              {(canPrint || m.caps.edit) && <input type="checkbox" aria-label={`تحديد ${r.full_name}`} className="absolute end-2 bottom-2 z-10 size-4" checked={sel.has(r.id)} onChange={() => toggleSel(r.id)} />}
-              <button type="button" onClick={() => nav({ search: { emp: r.id } })} className={"w-full rounded-xl border bg-card p-3 text-start hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (emp === r.id ? "border-primary" : "")}>
-                <span className="flex items-start gap-3">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground"><IdCard className="size-5" /></span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold">{r.full_name}</span>
-                    <span className="block text-xs text-muted-foreground"><bdi dir="ltr">{r.employee_no}</bdi> · {r.job_title ?? "بلا مسمى"}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{(r.assignments ?? []).map((a) => a.school).join("، ") || "بلا تعيين حالي"}</span>
-                  </span>
-                  <span className="flex flex-col items-end gap-1 text-xs">
-                    <span className={"rounded px-1.5 " + (r.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>{STATUS[r.status]}</span>
-                    {r.has_login && <span className="rounded bg-secondary px-1.5">حساب دخول</span>}
-                    {(r.assignments ?? []).some((a) => a.teacher_id) && <span className="rounded bg-secondary px-1.5">سجل معلم</span>}
-                  </span>
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <HrEmployeeList rows={rows} selected={sel} current={emp} selectable={canPrint || m.caps.edit} onSelect={toggleSel} onOpen={(id) => nav({ search: { emp: id } })} />
       )}
       <p className="text-xs text-muted-foreground">{m.org_wide ? "نطاقك: المؤسسة كاملة." : "نطاقك: موظفو المدارس المصرح لك بها حسب تعييناتهم الحالية."} {m.caps.sensitive ? "" : "رقم الهوية يظهر مختصرًا لأن البيانات الحساسة صلاحية مستقلة."}</p>
     </div>

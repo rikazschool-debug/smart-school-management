@@ -21,10 +21,10 @@ export function HrCategories({ org }: { org: string }) {
     onError: (e) => toast.error(arabicError(e)),
   });
   return (
-    <section className="mb-4 rounded-xl border bg-card p-3" aria-label="التصنيفات الوظيفية">
-      <button type="button" className="flex w-full items-center gap-2 text-start font-bold" aria-expanded={open} onClick={() => setOpen(!open)}>
+    <section className="border-b pb-3" aria-label="التصنيفات الوظيفية">
+      <Button variant="ghost" className="h-auto w-full justify-start gap-2 px-0 text-start font-bold hover:bg-transparent" aria-expanded={open} onClick={() => setOpen(!open)}>
         <Tags className="size-4" />التصنيفات الوظيفية <span className="text-xs font-normal text-muted-foreground">({cats.data?.length ?? 0})</span>
-      </button>
+      </Button>
       {open && (
         <div className="mt-3 space-y-3">
           <p className="text-xs text-muted-foreground">مثل: معلم، وكيل، مدير مدرسة، إداري. التصنيف منفصل عن التعيين بالمدرسة وعن دور الدخول، ولا يمنح أي صلاحية.</p>

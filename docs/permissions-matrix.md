@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-12 (prompt-338): HR overview presentation reorganized into grouped navigation, desktop employee table/mobile list, and expandable file tools. No capability, role, scope, RPC or field-masking change; existing create/export/edit/print checks are retained.
+
 | Capability | Org owner | Principal | Vice principal | Dept head | Supervisor | Student affairs | Teacher | Guardian / Student | Counselor / Nurse / Security | Platform admin |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Users & roles page, invite, resend/revoke, activate/deactivate, change role | ✔ own org only (`invite_member`, `set_membership_active`, `change_member_role`) | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |

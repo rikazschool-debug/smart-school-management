@@ -15,7 +15,7 @@ export function HrIdReadiness({ org, school, onOpen }: { org: string; school: st
   const rows = q.data ?? [];
   const bad = rows.filter((r) => r.state !== "ready").length;
   return (
-    <section className="rounded-xl border bg-card p-3" aria-label="جاهزية الدخول بالهوية">
+    <section className="py-2" aria-label="جاهزية الدخول بالهوية">
       <div className="flex flex-wrap items-center gap-2">
         <ShieldCheck className="size-5 text-primary" />
         <h2 className="font-semibold">جاهزية الدخول بالهوية — الموظفون غير المعلمين</h2>
@@ -27,7 +27,7 @@ export function HrIdReadiness({ org, school, onOpen }: { org: string; school: st
         <ul className="mt-3 divide-y text-sm">
           {rows.map((r) => (
             <li key={r.id} className="flex flex-wrap items-center gap-2 py-2">
-              <button type="button" className="font-medium hover:underline" onClick={() => onOpen(r.id)}>{r.full_name}</button>
+              <Button variant="ghost" className="h-auto whitespace-normal px-0 text-start font-medium hover:underline" onClick={() => onOpen(r.id)}>{r.full_name}</Button>
               <span className="text-xs text-muted-foreground">{r.job_title ?? "بلا مسمى"}</span>
               {r.national_id && <bdi dir="ltr" className="text-xs">{r.national_id}</bdi>}
               <span className="flex-1" />
