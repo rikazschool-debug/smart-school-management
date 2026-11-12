@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { HrPageTop } from "@/components/hr/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Download, FileText, Plus, Settings2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -38,8 +39,7 @@ function Page() {
   const k = caps.data;
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />ملفات الموظفين</Link>
-      <PageHeader title="مستندات الموظفين" desc="كل مستند مرتبط بملف الموظف، وكل نسخة محفوظة. لا تُقبل نسخة إلا من مراجع غير رافعها وغير الموظف نفسه. الملفات خاصة وتُفتح بصلاحية فقط." />
+      <HrPageTop title="مستندات الموظفين" desc="كل مستند مرتبط بملف الموظف، وكل نسخة محفوظة. لا تُقبل نسخة إلا من مراجع غير رافعها وغير الموظف نفسه. الملفات خاصة وتُفتح بصلاحية فقط." />
       {caps.isLoading ? <LoadingState /> : caps.error ? <ErrorState message={arabicError(caps.error)} onRetry={() => caps.refetch()} />
         : !k!.enabled ? <SectionLocked /> : !(k!.caps.view || k!.types_admin) ? <ForbiddenState /> : <Workspace org={org!} k={k!} />}
     </>

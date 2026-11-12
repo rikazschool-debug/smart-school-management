@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, GraduationCap, Star, UserRoundPlus } from "lucide-react";
+import { HrPageTop } from "@/components/hr/navigation";
 import { EmptyState, LoadingState, PageHeader, Section } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";
 import { useSession } from "@/lib/session";
@@ -18,8 +19,7 @@ function Page() {
   if (me.data && !me.data.enabled) return <SectionLocked />;
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الموارد البشرية</Link>
-      <PageHeader eyebrow="الموارد البشرية" title="التدريب والتطوير" desc="مكان البرامج التدريبية وإدارة المدربين الضيوف. المتاح الآن مرتبط بأدناه، والباقي في المرحلة التالية." />
+      <HrPageTop title="التدريب والتطوير" desc="مكان البرامج التدريبية وإدارة المدربين الضيوف. المتاح الآن مرتبط بأدناه، والباقي في المرحلة التالية." />
       <Section title="المتاح الآن">
         <div className="grid gap-3 md:grid-cols-2">
           <Link to="/app/evaluation" search={{ tab: "summary" }} className="flex items-start gap-3 rounded-xl border bg-card p-4 hover:border-primary">

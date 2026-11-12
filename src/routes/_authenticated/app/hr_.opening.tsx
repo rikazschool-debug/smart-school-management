@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { HrPageTop } from "@/components/hr/navigation";
 import { PageHeader } from "@/components/states";
 import { useSession } from "@/lib/session";
 import { OpeningBalances } from "@/components/hr/p10";
@@ -18,8 +19,7 @@ function Page() {
   if (!active) return null;
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />ملفات الموظفين</Link>
-      <PageHeader title="ترحيل الأرصدة الافتتاحية" desc="ارفع الملف ← معاينة لكل صف ← حفظ مع إجمالي المصدر ← يعتمد شخص آخر بعد المطابقة. إعادة رفع الملف نفسه لا تكرر شيئًا." />
+      <HrPageTop title="ترحيل الأرصدة الافتتاحية" desc="ارفع الملف ← معاينة لكل صف ← حفظ مع إجمالي المصدر ← يعتمد شخص آخر بعد المطابقة. إعادة رفع الملف نفسه لا تكرر شيئًا." />
       <nav aria-label="نوع الرصيد" className="mb-4 flex gap-2 text-sm">
         {([["leave", "أرصدة الإجازات"], ["advance", "السلف القائمة"]] as const).map(([v, l]) => <button key={v} type="button" onClick={() => nav({ search: v === "leave" ? {} : { k: v } })} className={"rounded-lg px-3 py-1.5 " + (k === v ? "bg-primary text-primary-foreground" : "border bg-card hover:border-primary")} aria-current={k === v ? "page" : undefined}>{l}</button>)}
       </nav>

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { HrPageTop } from "@/components/hr/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Download, Plus, X } from "lucide-react";
 import { toast } from "sonner";
@@ -41,8 +42,7 @@ function Page() {
   const can = d && (d.performance.view || d.performance.assign || d.performance.review || d.performance.publish || d.performance.evaluator);
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الموارد البشرية</Link>
-      <PageHeader title="الأداء الوظيفي" desc="تكليف ← تقييم ← مراجعة من غير المقيّم ← نشر ← إقرار أو اعتراض ← بتّ. النتيجة المنشورة ثابتة، والأدلة لا تظهر إلا للمقيّم ومن يملك صلاحيتها. أي أثر على الراتب أو الخدمة يحتاج قرارًا مستقلًا." />
+      <HrPageTop title="الأداء الوظيفي" desc="تكليف ← تقييم ← مراجعة من غير المقيّم ← نشر ← إقرار أو اعتراض ← بتّ. النتيجة المنشورة ثابتة، والأدلة لا تظهر إلا للمقيّم ومن يملك صلاحيتها. أي أثر على الراتب أو الخدمة يحتاج قرارًا مستقلًا." />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !d!.hr ? <SectionLocked /> : (
         <div className="space-y-4">
           {d!.owner && <Extensions org={org!} d={d!} />}

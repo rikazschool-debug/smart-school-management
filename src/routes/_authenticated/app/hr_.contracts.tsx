@@ -1,5 +1,6 @@
 import type React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { HrPageTop } from "@/components/hr/navigation";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Download, FileSignature, FileText, Plus, ScrollText, Trash2, X } from "lucide-react";
@@ -38,8 +39,7 @@ function Page() {
   if (!active) return null;
   return (
     <>
-      <Link to="/app/hr" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />ملفات الموظفين</Link>
-      <PageHeader title="العقود" desc="كل عقد مرتبط بملف الموظف. الإصدار المعتمد لا يتغير؛ أي تعديل أو تجديد ينشئ إصدارًا جديدًا يقرّه الموظف. المبالغ تظهر لمن يملك صلاحية التعويض فقط." />
+      <HrPageTop title="العقود" desc="كل عقد مرتبط بملف الموظف. الإصدار المعتمد لا يتغير؛ أي تعديل أو تجديد ينشئ إصدارًا جديدًا يقرّه الموظف. المبالغ تظهر لمن يملك صلاحية التعويض فقط." />
       {caps.isLoading ? <LoadingState /> : caps.error ? <ErrorState message={arabicError(caps.error)} onRetry={() => caps.refetch()} />
         : !caps.data!.enabled ? <SectionLocked /> : !caps.data!.caps.view ? <ForbiddenState /> : <Workspace org={org!} k={caps.data!} />}
     </>
