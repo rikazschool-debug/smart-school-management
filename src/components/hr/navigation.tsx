@@ -40,9 +40,9 @@ function useCurrent() {
 export function HrNavigation() {
   return (
     <nav aria-label="أقسام الموارد البشرية" className="mb-7 rounded-2xl border bg-card p-2 shadow-sm sm:p-3">
-      <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-2 lg:grid-cols-5 xl:grid-cols-7">
+      <ul className="-mx-1 flex snap-x gap-1.5 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 sm:gap-2 lg:grid-cols-5 xl:grid-cols-7">
         {items.map(({ label, to, icon: Icon }) => (
-          <li key={to} className="min-w-0">
+          <li key={to} className="w-[6.75rem] min-w-0 shrink-0 snap-start sm:w-auto">
             <Link to={to} activeOptions={{ exact: true }} activeProps={{ "aria-current": "page" }}
               className="group relative flex h-[5.25rem] min-w-0 flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border border-transparent px-2 text-center text-card-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary/5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:border-primary aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground aria-[current=page]:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-primary/15 group-aria-[current=page]:bg-primary-foreground/15 group-aria-[current=page]:text-primary-foreground group-aria-[current=page]:ring-primary-foreground/20">
