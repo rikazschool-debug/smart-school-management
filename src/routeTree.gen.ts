@@ -107,6 +107,7 @@ import { Route as AuthenticatedAppAdminRoomIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppAdminTasksIdRouteImport } from './routes/_authenticated/app/admin.tasks.$id'
 import { Route as AuthenticatedAppClassroomsSectionIdRouteImport } from './routes/_authenticated/app/classrooms.section.$id'
 import { Route as AuthenticatedAppVirtualClassesRoomIdRouteImport } from './routes/_authenticated/app/virtual-classes.room.$id'
+import { Route as ApiIntegrationsAdmsV1EventsRouteImport } from './routes/api/integrations/adms/v1/events'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -662,6 +663,12 @@ const AuthenticatedAppVirtualClassesRoomIdRoute =
     path: '/virtual-classes/room/$id',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const ApiIntegrationsAdmsV1EventsRoute =
+  ApiIntegrationsAdmsV1EventsRouteImport.update({
+    id: '/api/integrations/adms/v1/events',
+    path: '/api/integrations/adms/v1/events',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -760,6 +767,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
   '/app/classrooms/section/$id': typeof AuthenticatedAppClassroomsSectionIdRoute
   '/app/virtual-classes/room/$id': typeof AuthenticatedAppVirtualClassesRoomIdRoute
+  '/api/integrations/adms/v1/events': typeof ApiIntegrationsAdmsV1EventsRoute
   '/app/admin/meetings/': typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -858,6 +866,7 @@ export interface FileRoutesByTo {
   '/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
   '/app/classrooms/section/$id': typeof AuthenticatedAppClassroomsSectionIdRoute
   '/app/virtual-classes/room/$id': typeof AuthenticatedAppVirtualClassesRoomIdRoute
+  '/api/integrations/adms/v1/events': typeof ApiIntegrationsAdmsV1EventsRoute
   '/app/admin/meetings': typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 export interface FileRoutesById {
@@ -959,6 +968,7 @@ export interface FileRoutesById {
   '/_authenticated/app/admin/tasks/$id': typeof AuthenticatedAppAdminTasksIdRoute
   '/_authenticated/app/classrooms/section/$id': typeof AuthenticatedAppClassroomsSectionIdRoute
   '/_authenticated/app/virtual-classes/room/$id': typeof AuthenticatedAppVirtualClassesRoomIdRoute
+  '/api/integrations/adms/v1/events': typeof ApiIntegrationsAdmsV1EventsRoute
   '/_authenticated/app/admin/meetings/': typeof AuthenticatedAppAdminMeetingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -1060,6 +1070,7 @@ export interface FileRouteTypes {
     | '/app/admin/tasks/$id'
     | '/app/classrooms/section/$id'
     | '/app/virtual-classes/room/$id'
+    | '/api/integrations/adms/v1/events'
     | '/app/admin/meetings/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1158,6 +1169,7 @@ export interface FileRouteTypes {
     | '/app/admin/tasks/$id'
     | '/app/classrooms/section/$id'
     | '/app/virtual-classes/room/$id'
+    | '/api/integrations/adms/v1/events'
     | '/app/admin/meetings'
   id:
     | '__root__'
@@ -1258,6 +1270,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/admin/tasks/$id'
     | '/_authenticated/app/classrooms/section/$id'
     | '/_authenticated/app/virtual-classes/room/$id'
+    | '/api/integrations/adms/v1/events'
     | '/_authenticated/app/admin/meetings/'
   fileRoutesById: FileRoutesById
 }
@@ -1277,6 +1290,7 @@ export interface RootRouteChildren {
   ApiPublicHrAttendanceRoute: typeof ApiPublicHrAttendanceRoute
   ApiPublicMaqsamRecordingRoute: typeof ApiPublicMaqsamRecordingRoute
   ApiPublicWatiWebhookRoute: typeof ApiPublicWatiWebhookRoute
+  ApiIntegrationsAdmsV1EventsRoute: typeof ApiIntegrationsAdmsV1EventsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1967,6 +1981,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppVirtualClassesRoomIdRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/api/integrations/adms/v1/events': {
+      id: '/api/integrations/adms/v1/events'
+      path: '/api/integrations/adms/v1/events'
+      fullPath: '/api/integrations/adms/v1/events'
+      preLoaderRoute: typeof ApiIntegrationsAdmsV1EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2177,6 +2198,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHrAttendanceRoute: ApiPublicHrAttendanceRoute,
   ApiPublicMaqsamRecordingRoute: ApiPublicMaqsamRecordingRoute,
   ApiPublicWatiWebhookRoute: ApiPublicWatiWebhookRoute,
+  ApiIntegrationsAdmsV1EventsRoute: ApiIntegrationsAdmsV1EventsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

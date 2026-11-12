@@ -16,6 +16,7 @@ import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { rpc } from "@/components/hr/shared";
 import { DeviceCard, type Device } from "@/components/hr/att-devices";
+import { AdmsBridge } from "@/components/hr/adms-bridge";
 import { WEEKDAYS } from "@/components/hr/leave";
 import { AT_STATUS, AttStatus, DayRow, SOURCE, addDays, dtm, mins, riyadhToday, tm, type AttDay, type EmpDays } from "@/components/hr/attendance";
 
@@ -323,6 +324,9 @@ function Shifts({ org, k }: { org: string; k: Caps }) {
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.allow_self_punch} disabled={selfSet.isPending} onChange={(e) => selfSet.mutate({ self: e.target.checked, loc: d.require_location })} />السماح للموظف بتسجيل بصمته من «حضوري»</label>
           <p className="ms-6 text-xs text-muted-foreground">كل بصمة جوال تتطلب قراءة موقع حديثة ودقيقة داخل نطاق مدرسة الموظف؛ المدرسة بلا موقع معتمد ترفض التسجيل.</p>
           <SchoolSites org={org} />
+          <AdmsBridge org={org} />
+          <h3 className="mt-4 text-sm font-bold">أجهزة المسار السابق</h3>
+          <p className="text-xs text-muted-foreground">سجلات أجهزة الربط القديم محفوظة كما هي؛ الأجهزة الجديدة تُسجَّل في لوحة الجسر وتظهر أعلاه.</p>
           <form className="mt-3 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (dname.trim() && !dev.isPending) dev.mutate(); }}>
             <Input aria-label="اسم الجهاز" placeholder="اسم جهاز جديد" className="w-full sm:w-56" value={dname} onChange={(e) => setDname(e.target.value)} />
             <select aria-label="مدرسة الجهاز" className={selectCls("w-full sm:w-44")} value={dschool} onChange={(e) => setDschool(e.target.value)}><option value="">مدرسة الجهاز…</option>{d.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
