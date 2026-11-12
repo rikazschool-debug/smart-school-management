@@ -7,6 +7,7 @@ Updated: 2026-11-01.
 - Grouped the existing HR links into four named groups; replaced crowded employee cards with a desktop table and mobile rows, retaining names, employee numbers, branches, status and account indicators.
 - File tools are expandable; bulk commands appear only after selection. Existing search, branch/status filters, add/import, exports and employee opening remain connected to the same RPCs and permission checks.
 - The reported use-mobile hook already imports React explicitly; no matching TS2686 evidence was present in the available logs. Authenticated browser verification is unavailable for this external unmanaged Supabase project; do not count signed-out rendering as HR acceptance.
+- Verification: latest preview build OK; 36/36 tests passed (employee opening/selection, HR field rules, role rules). Browser /app/hr redirected to /auth with no page errors; authenticated desktop/mobile visual acceptance remains blocked, not completed.
 
 ## 2026-11-11 — التفويض الفعلي للأقسام (prompt-334/335)
 - عشرون قسمًا فرعيًا بإجراءات مستقلة؛ شجرة الأدوار والأشخاص وصفحات العرض/الإجراءات متصلة بفحص التفويض، دون تغيير موظفين حقيقيين.
