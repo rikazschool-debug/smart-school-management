@@ -75,7 +75,7 @@ function syncDeps(rikaz: string, bridge: string, fetcher: typeof fetch, limit = 
     note: async (health: boolean, error: string | null) => { await sql.unsafe("select _adms_sync_note($1,$2,$3,$4)", [rikaz, bridge, health, error]); },
   };
 }
-failNext = 1;
+failNext = 1; console.log("probe", JSON.stringify(await runSync({ ...syncDeps(RA, A, fakeBridge(A, "s".repeat(40)), 3), apply: async (f: number, p: unknown) => { try { await sql.unsafe("select _adms_apply_page($1,$2,$3,$4::jsonb)", [RA, A, f, JSON.stringify(p)]); } catch (e) { console.log("ERR", (e as Error).message); throw e; } } })));
 const s1 = await runSync(syncDeps(RA, A, fakeBridge(A, "s".repeat(40)), 3));
 check("sync: interrupted page leaves the stored cursor at the last applied page", !s1.ok && (await one<{ c: number }>("select cursor::int c from adms_orgs where bridge_org_id=$1", A)).c === 3, s1);
 const s2 = await runSync(syncDeps(RA, A, fakeBridge(A, "s".repeat(40)), 3));
