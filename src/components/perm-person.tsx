@@ -46,11 +46,13 @@ export function PersonPanel({ org, user, name, c, roles }: { org: string; user: 
   const [pick, setPick] = useState(""); const [limit, setLimit] = useState(""); const [scopeIds, setScopeIds] = useState<string[]>([]);
   const [preview, setPreview] = useState<{ before: Effective; after: Effective } | null>(null);
   const [busy, setBusy] = useState(false);
-  const orig = useMemo(() => (eff.data ? toGrants(eff.data.effective) : []), [eff.data]);
+  const orig = useMemo(() => (Array.isArray(eff.data?.effective) ? toGrants(eff.data.effective) : []), [eff.data]);
   useEffect(() => () => { permDraft.dirty = false; }, []);
-  if (eff.isLoading) return <LoadingState />;
   if (eff.error) return <ErrorState message={arabicError(eff.error)} />;
-  const e = eff.data!;
+  // isPending (not isLoading): a paused or not-yet-started fetch has no data either
+  if (eff.isPending) return <LoadingState />;
+  if (!eff.data || !Array.isArray(eff.data.effective)) return <ErrorState message="تعذّر قراءة صلاحيات هذا الموظف. أعد المحاولة." />;
+  const e = eff.data;
   const cur = tree ?? orig;
 
   const draft = draftOverrides(e.effective, orig, cur, undeny);
