@@ -1,4 +1,5 @@
 # HR rules
+- HR navigation and employee cards share presentation modules; the route retains data and actions so layout changes never alter authorization.
 - Log: docs/hr/execution-log.md (update per package).
 - HR attendance (hr_att_*): RPC-only; raw punches append-only and separate from computed hr_att_days; closed days change only after dated reopen; devices via signed /api/public/hr/attendance → service-only _hr_att_ingest; money effect only via payroll. Tests: hr-att-e2e, hra-journey.
 - HR pay (hr_decisions/hr_advances/hr_pay_*): RPC-only; dated hr_pay_policies, unset = held. Tests: hr-pay-e2e, hrp-journey.

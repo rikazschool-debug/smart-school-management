@@ -202,3 +202,7 @@ Status: implemented · server-tested · browser-tested with simulated location �
 
 ## 2026-11-09 — Add-employee tabs
 - 8 approved tabs; review step checks required fields and employee no./ID duplicates (hr_employee_dupcheck). Browser: scripts/hrtabs-journey.py 29/29.
+
+## 2026-11-12 — HR presentation restoration (prompt-339)
+- Restored the earlier employee-card layout and replaced grouped text navigation with individual icon tiles. Existing query, selection, file, import, export and permission paths are unchanged.
+- Employee interaction, sheet and field tests: 13/13. Authenticated visual verification unavailable for external Supabase; isolated presentation checks do not establish authenticated access.

@@ -30,7 +30,7 @@ const groups = [
 export function HrNavigation() {
   return (
     <nav aria-label="أقسام الموارد البشرية" className="mb-7 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-      {groups.flatMap(({ items }) => items).map(({ label, to, icon: Icon }) => (
+      {groups.map(({ items }) => items.map(({ label, to, icon: Icon }) => (
         <Button asChild variant="ghost" key={to} className="group h-24 min-w-0 flex-col gap-2 rounded-lg border bg-card px-2 py-3 text-center text-card-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary motion-reduce:transition-none">
           <Link to={to} activeOptions={{ exact: true }}
             activeProps={{ className: "border-primary bg-primary/10 text-primary ring-1 ring-primary/15", "aria-current": "page" }}>
@@ -38,7 +38,7 @@ export function HrNavigation() {
             <span className="min-w-0 whitespace-normal text-xs font-semibold leading-5">{label}</span>
           </Link>
         </Button>
-      ))}
+      )))}
     </nav>
   );
 }
