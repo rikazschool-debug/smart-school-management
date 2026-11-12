@@ -8,7 +8,7 @@ import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { selectCls } from "@/components/ui/native-select";
-import { ask, askText } from "@/components/confirm";
+import { ask } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { rpc, type HrEmp } from "@/components/hr/shared";
 import { dtm } from "@/components/hr/attendance";
@@ -156,7 +156,7 @@ function DevicePins({ org, d, school, onChange }: { org: string; d: Dev; school:
             {(pins.data ?? []).length === 0 ? <p className="text-xs text-muted-foreground">لا يوجد.</p> : (
               <ul className="mt-1 flex flex-wrap gap-2">{pins.data!.map((p) => (
                 <li key={p.pin} className="flex items-center gap-2 rounded-lg border px-2 py-1 text-xs"><span className="font-mono" dir="ltr">#{p.pin}</span>{p.employee}
-                  <button type="button" className="text-destructive" onClick={async () => { if (await askText(`سبب فك ربط الرقم ${p.pin}`, { required: true })) unl.mutate(p.pin); }}>فك الربط</button></li>))}</ul>)}
+                  <button type="button" className="text-destructive" onClick={async () => { if (await ask(`فك ربط الرقم ${p.pin}؟ الحركات المعالجة سابقًا لا تتغير.`)) unl.mutate(p.pin); }}>فك الربط</button></li>))}</ul>)}
           </div>
         </div>
       )}
