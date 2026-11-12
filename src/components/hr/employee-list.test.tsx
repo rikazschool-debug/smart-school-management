@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { HrEmployeeList } from "./employee-list";
@@ -10,13 +10,13 @@ describe("HR employee list interaction", () => {
   it("opens the selected employee file by its identifier", () => {
     const onOpen = vi.fn();
     render(<HrEmployeeList rows={rows} selected={new Set()} selectable onSelect={vi.fn()} onOpen={onOpen} />);
-    fireEvent.click(within(screen.getByRole("table")).getByRole("button", { name: "فتح ملف موظف اختبار" }));
+    fireEvent.click(screen.getByRole("button", { name: "فتح ملف موظف اختبار" }));
     expect(onOpen).toHaveBeenCalledWith("employee-1");
   });
   it("selects an employee without opening their file", () => {
     const onSelect = vi.fn(), onOpen = vi.fn();
     render(<HrEmployeeList rows={rows} selected={new Set()} selectable onSelect={onSelect} onOpen={onOpen} />);
-    fireEvent.click(within(screen.getByRole("table")).getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("checkbox"));
     expect(onSelect).toHaveBeenCalledWith("employee-1");
     expect(onOpen).not.toHaveBeenCalled();
   });
