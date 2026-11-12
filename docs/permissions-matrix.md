@@ -531,3 +531,11 @@ Calls with no branch: owner only. Deny overrides grant. Revoking listen stops an
 - شجرة الصلاحيات (prompt-334/335): الإعداد الأكاديمي (ثمانية أقسام)، المقررات وتكليفات المعلمين، التكليفات والطلبات والنماذج، والمسودات وإعدادات الجدول لها إجراءات مستقلة قابلة للمنح والمنع من المالك. صفحات الدور الأساسي تقبل التفويض مع بقاء هوية المعلم ونطاق سجلاته الخاصة. المستخدمون والفروع والصلاحيات تبقى للمالك؛ المحاسبة العامة والنقل مؤجلان.
 - تنظيم الشجرة (prompt-337): قائمة تخصيص واحدة للأشخاص والقوالب وإضافة الموظفين؛ التنقل والبحث والتصفية لا يغيرون المنح، ومنح العرض لا يمنح التعديل. الإلغاء الجماعي يتطلب تأكيدًا ويبقى مسودة حتى المعاينة والحفظ؛ لم تتغير قواعد الوصول.
 - الموارد البشرية (prompt-339): تغيير عرض فقط؛ استعادة بطاقات الموظفين، وبطاقات تنقل مستقلة للأقسام. فتح الملف والتحديد والطباعة والتصدير والإجراءات تخضع لنفس الصلاحيات دون تغيير.
+
+## ADMS Bridge v1 (prepared, not applied — supabase/pending/adms_v1.sql)
+| Action | Who |
+|---|---|
+| View bridge copy, sync now, link sites (branch / administrative location), link old device explicitly, map PINs, run processing | Org owner or org-wide `hr_attendance.settings` (`_adms_ok`) |
+| Turn attendance processing from bridge events on/off | Org owner only (`adms_processing_set`); default off |
+| Event intake, page apply, processing internals | Service only (`_adms_ingest`, `_adms_apply_page`, `_adms_process`) |
+| Read/write adms_* tables directly | Nobody (RLS on, no grants to anon/authenticated) |

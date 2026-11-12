@@ -1,4 +1,5 @@
 # scripts rules
+- scripts/adms-v1-isolated.ts: ADMS Bridge v1 Rikaz side on a throwaway LOCAL Postgres only (refuses non-local URLs); loads scripts/adms/isolated-stubs.sql + supabase/pending/adms_v1.sql; BRIDGE_SRC adds the joint run with the real bridge Worker (scripts/adms/bridge-joint.mjs, Node 22).
 - scripts/workspace-perm-e2e.ts tests independent workspace grants, write separation, deny/revoke and branch isolation; --keep writes isolated browser fixture, --teardown purges only registered test schools/users.
 - scripts/rls-e2e.ts is the end-to-end permission test (creates and deletes its own test users); run it after any RLS change: `NODE_PATH=node_modules bun scripts/rls-e2e.ts`.
 - Demo schedule data: scripts/seed-demo-schedule.ts (run after seed-demo.ts).

@@ -885,3 +885,7 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 - الأقسام العلوية أصبحت 14 بطاقة تنقل منفصلة بأيقونات وحالة نشطة؛ لا تعديل للبيانات أو صلاحيات الوصول.
 - اختبارات فتح الملف والتحديد وحقول الموظف والطباعة: 13/13. التحقق داخل الحساب الفعلي محجوب لعدم توفر جلسة Supabase الخارجية.
 - فحص متصفح معزول: 14 بطاقة قسم، فتح الملف والتحديد المستقل ناجحان، ولا تجاوز أفقي عند 1677px و390px؛ لا أخطاء تشغيل، وآخر فحص للمعاينة ناجح. ليس تحققًا من الدخول الفعلي.
+
+## 2026-11-12 — ADMS Bridge contract v1, Rikaz side (prompt-341)
+- Receiver /api/integrations/adms/v1/events (off: 503 intake_disabled), signed sync client + admsSyncNow, linking/PIN screen, SQL in supabase/pending/adms_v1.sql (NOT applied).
+- Evidence: vitest src/lib/adms 12/12; scripts/adms-v1-isolated.ts 53/53 on throwaway local Postgres incl. 5 joint checks with the real bridge 2.0.0 Store/Worker/read API. Preview: POST 503, GET 405. No production DB or bridge calls.

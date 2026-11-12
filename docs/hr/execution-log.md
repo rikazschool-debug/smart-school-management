@@ -209,3 +209,6 @@ Status: implemented · server-tested · browser-tested with simulated location �
 - Isolated browser presentation: 14 section tiles; selection/open callbacks verified; no horizontal overflow at 1677px or 390px; no runtime errors. Latest preview build OK.
 
 - 2026-11-12 prompt-340: shared HR header (HrPageTop) and refined section tiles on all 15 HR pages; presentation only, no permission or data change.
+
+## 2026-11-12 — ADMS Bridge v1 (Rikaz side)
+Prepared and tested in isolation; not applied or enabled. See docs/integrations/adms-v1.md.
