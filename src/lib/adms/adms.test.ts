@@ -121,7 +121,7 @@ describe("ADMS receiver", () => {
 describe("ADMS registry sync", () => {
   const cred = { rikaz_org_id: RA, bridge_org_id: A, base_url: "https://bridge.test", key_id: "registry_test_A", secret: "r".repeat(48) };
   const site = (seq: number, id: string, active = true) => ({ seq, kind: "site", id, op: "upsert", data: { id, org_id: A, name: "موقع " + seq, mode: "rikaz", timezone: "Asia/Riyadh", active, updated_at: "2026-11-12T06:00:00.000Z" } });
-  function bridge(pages: unknown[][], o: { failAt?: number } = {}) {
+  function bridge(pages: unknown[][], o: { failAt?: number | undefined } = {}) {
     const seen: { url: string; nonce: string; sigOk: boolean }[] = [];
     const f = (async (url: string, init: RequestInit) => {
       const h = init.headers as Record<string, string>, u = new URL(url), target = u.pathname + u.search;
