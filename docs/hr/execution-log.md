@@ -17,6 +17,7 @@ Status ladder (§12.4): مخطط → عقوده جاهزة → قيد التنف
 | P10 | Migration, launch | مخطط | all | — |
 
 ## Entries
+- 2026-11-12 prompt-338: presentation-only cleanup of the HR overview (four navigation groups, desktop employee table/mobile list, expandable categories/readiness, selected-only bulk controls). Existing HR RPCs, scope, sensitive masking and permissions unchanged. Authenticated operational acceptance still requires an available external Supabase session.
 - 2026-11-04 P0: no HRMS/ERPNext connection in code, secrets or database; no HR tables. Reuse map and live data counts recorded. No HR schema created (P0 gate: owner approves ownership map first).
 - 2026-11-04 P0 accepted: Rikaz = single source (D1), one employer per org (D2), policies entered by owner/HR, never guessed (D5).
 - 2026-11-04 P1+P2 (first part): area «الموارد البشرية» active in the permission tree with section hr_employees (view / sensitive / create / edit / export; branch or org). Base = principals view their branch; template base_principal mirrors it. Platform switch `hr` blocks every HR RPC.
