@@ -71,11 +71,11 @@ function syncDeps(rikaz: string, bridge: string, fetcher: typeof fetch, limit = 
   return {
     fetch: fetcher, nowMs: () => Date.now(), cred, limit,
     cursor: async () => Number((await one<{ c: number }>("select coalesce((select cursor from adms_orgs where bridge_org_id=$1),0)::int c", bridge)).c),
-    apply: async (from: number, page: unknown) => { await sql.begin(async (tx) => { await tx.unsafe("set local role service_role"); await tx.unsafe("select _adms_apply_page($1,$2,$3,$4::jsonb)", [rikaz, bridge, from, JSON.stringify(page)]); }); },
+    apply: async (from: number, page: unknown) => { await sql.begin(async (tx) => { await tx.unsafe("set local role service_role"); await tx.unsafe("select _adms_apply_page($1,$2,$3,$4::text::jsonb)", [rikaz, bridge, from, JSON.stringify(page)]); }); },
     note: async (health: boolean, error: string | null) => { await sql.unsafe("select _adms_sync_note($1,$2,$3,$4)", [rikaz, bridge, health, error]); },
   };
 }
-failNext = 1; console.log("probe", JSON.stringify(await runSync({ ...syncDeps(RA, A, fakeBridge(A, "s".repeat(40)), 3), apply: async (f: number, p: unknown) => { try { await sql.unsafe("select _adms_apply_page($1,$2,$3,$4::jsonb)", [RA, A, f, JSON.stringify(p)]); } catch (e) { console.log("ERR", (e as Error).message); throw e; } } })));
+failNext = 1;
 const s1 = await runSync(syncDeps(RA, A, fakeBridge(A, "s".repeat(40)), 3));
 check("sync: interrupted page leaves the stored cursor at the last applied page", !s1.ok && (await one<{ c: number }>("select cursor::int c from adms_orgs where bridge_org_id=$1", A)).c === 3, s1);
 const s2 = await runSync(syncDeps(RA, A, fakeBridge(A, "s".repeat(40)), 3));
@@ -120,7 +120,7 @@ const keyA: IngestKey = { key_id: "ingest_iso_A01", secret: "k".repeat(48), brid
 const keyB: IngestKey = { key_id: "ingest_iso_B01", secret: "q".repeat(48), bridge_org_id: B, rikaz_org_id: RB, scope: "events:ingest", enabled: true };
 const dbStore: IngestStore = async (a) => sql.begin(async (tx) => {
   await tx.unsafe("set local role service_role");
-  return ((await tx.unsafe("select _adms_ingest($1,$2,$3,$4,$5,$6::jsonb) r", [a.keyId, a.nonce, a.bridgeOrg, a.rikazOrg, a.requestId, JSON.stringify(a.events)])) as { r: never }[])[0]!.r;
+  return ((await tx.unsafe("select _adms_ingest($1,$2,$3,$4,$5,$6::text::jsonb) r", [a.keyId, a.nonce, a.bridgeOrg, a.rikazOrg, a.requestId, JSON.stringify(a.events)])) as { r: never }[])[0]!.r;
 });
 const riy = (ms: number) => new Date(ms + 3 * 3600_000).toISOString().slice(0, 19).replace("T", " ");
 const now = Date.now();
@@ -153,7 +153,7 @@ const r7 = await post(batch([fix(ev(id(), "00042", now - 40_000, { site_id: site
 check("receiver: org A event naming org B's device is rejected for review", r7.json.results![0]!.code === "scope_or_mapping_requires_review", r7);
 // Process killed before COMMIT: nothing stored, the bridge retry is accepted. After COMMIT with lost ACK: retry → duplicate.
 const eKill = fix(ev(id(), "00042", now - 30_000));
-try { await sql.begin(async (tx) => { await tx.unsafe("select _adms_ingest('ingest_iso_A01',$1,$2,$3,$4,$5::jsonb)", ["d".repeat(48), A, RA, id(), JSON.stringify([eKill])]); throw new Error("killed"); }); } catch { /* rolled back */ }
+try { await sql.begin(async (tx) => { await tx.unsafe("select _adms_ingest('ingest_iso_A01',$1,$2,$3,$4,$5::text::jsonb)", ["d".repeat(48), A, RA, id(), JSON.stringify([eKill])]); throw new Error("killed"); }); } catch { /* rolled back */ }
 check("crash before commit: no raw row and no nonce left", (await one<{ n: number }>("select (select count(*) from adms_events where event_id=$1)+(select count(*) from adms_nonces where nonce=$2) n", eKill.event_id, "d".repeat(48))).n === 0);
 const rk = await post(batch([eKill]));
 check("crash before commit: retry is accepted", rk.json.results![0]!.status === "accepted", rk);
@@ -164,7 +164,7 @@ try { await sql.unsafe("update adms_events set device_pin='1' where event_id=$1"
 let del = "";
 try { await sql.unsafe("delete from adms_events where event_id=$1", [e1.event_id]); } catch (e) { del = (e as Error).message; }
 check("raw events are immutable and append-only", raw.includes("raw_immutable") && del.includes("append_only"), { raw, del });
-const tz = await one<{ r: { results: { code: string }[] } }>("select _adms_ingest('ingest_iso_A01',$1,$2,$3,$4,$5::jsonb) r", "c".repeat(48), A, RA, id(), JSON.stringify([{ ...ev(id(), "1", now), raw_device_time: riy(now - 3600_000) }]));
+const tz = await one<{ r: { results: { code: string }[] } }>("select _adms_ingest('ingest_iso_A01',$1,$2,$3,$4,$5::text::jsonb) r", "c".repeat(48), A, RA, id(), JSON.stringify([{ ...ev(id(), "1", now), raw_device_time: riy(now - 3600_000) }]));
 check("database independently refuses raw time that does not match UTC (Riyadh −03:00)", tz.r.results[0]!.code === "time_inconsistent", tz);
 const old = fix(ev(id(), "00042", now - 70 * 86400_000, { received_at_utc: new Date(now).toISOString() }));
 await post(batch([old]));

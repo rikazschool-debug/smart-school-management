@@ -215,12 +215,12 @@ begin
   select * into b from adms_orgs where bridge_org_id = _bridge_org;
   for x in select * from jsonb_array_elements(_events) loop
     ev := (x->>'event_id')::uuid;
-    if b.bridge_org_id is null or b.org_id <> _rikaz_org or (x->>'org_id')::uuid <> _bridge_org or not section_enabled(_rikaz_org, 'hr') then
+    if b.bridge_org_id is null or b.org_id is distinct from _rikaz_org or (x->>'org_id')::uuid is distinct from _bridge_org or not coalesce(section_enabled(_rikaz_org, 'hr'), false) then
       res := res || jsonb_build_object('event_id', ev, 'status', 'rejected', 'code', 'scope_or_mapping_requires_review'); continue;
     end if;
     occ := (x->>'occurred_at_utc')::timestamptz; rec := (x->>'received_at_utc')::timestamptz;
     raw_utc := ((x->>'raw_device_time')::timestamp at time zone 'Asia/Riyadh');
-    if x->>'timezone' <> 'Asia/Riyadh' or raw_utc <> occ then
+    if x->>'timezone' is distinct from 'Asia/Riyadh' or occ is null or rec is null or raw_utc is distinct from occ then
       res := res || jsonb_build_object('event_id', ev, 'status', 'rejected', 'code', 'time_inconsistent'); continue;
     end if;
     select * into d from adms_devices where id = (x->>'device_id')::uuid;
@@ -242,7 +242,7 @@ begin
       res := res || jsonb_build_object('event_id', ev, 'status', 'accepted', 'durable', true, 'receipt_id', rid);
     else
       select * into old from adms_events where bridge_org_id = _bridge_org and event_id = ev;
-      if old.fingerprint = fp then
+      if old.fingerprint is not distinct from fp then
         res := res || jsonb_build_object('event_id', ev, 'status', 'duplicate', 'durable', true, 'receipt_id', old.receipt_id);
       else
         insert into adms_conflicts(bridge_org_id, event_id, request_id, key_id, fingerprint, payload) values (_bridge_org, ev, _request_id, _key_id, fp, x);
@@ -258,41 +258,43 @@ create or replace function public._adms_apply_page(_org uuid, _bridge_org uuid, 
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare b adms_orgs; it jsonb; dt jsonb; n int := 0; nxt bigint := (_page->>'next_cursor')::bigint; seq bigint; prev adms_devices;
 begin
-  if _page->>'contract_version' <> '1' or (_page->>'org_id')::uuid <> _bridge_org then raise exception 'page_scope_mismatch'; end if;
+  if jsonb_typeof(_page) is distinct from 'object' or _page->>'contract_version' is distinct from '1' or (_page->>'org_id')::uuid is distinct from _bridge_org or jsonb_typeof(_page->'items') is distinct from 'array' then raise exception 'page_scope_mismatch'; end if;
   if exists (select 1 from adms_orgs where org_id = _org and bridge_org_id <> _bridge_org) then raise exception 'org_bound_to_other_bridge_org'; end if;
   insert into adms_orgs(bridge_org_id, org_id) values (_bridge_org, _org) on conflict (bridge_org_id) do nothing;
   select * into b from adms_orgs where bridge_org_id = _bridge_org for update;
-  if b.org_id <> _org then raise exception 'bridge_org_bound_elsewhere'; end if;
-  if b.cursor <> _from then raise exception 'cursor_moved'; end if;
+  if b.org_id is distinct from _org then raise exception 'bridge_org_bound_elsewhere'; end if;
+  if b.cursor is distinct from _from then raise exception 'cursor_moved'; end if;
   if nxt is null or nxt < _from then raise exception 'invalid_next_cursor'; end if;
   for it in select value from jsonb_array_elements(_page->'items') order by (value->>'seq')::bigint loop
     seq := (it->>'seq')::bigint; dt := it->'data';
-    if seq <= _from or seq > nxt then raise exception 'seq_out_of_page'; end if;
+    if seq is null or seq <= _from or seq > nxt then raise exception 'seq_out_of_page'; end if;
+    if it->>'op' is null or it->>'op' not in ('upsert','remove') then raise exception 'unknown_op'; end if;
     if it->>'kind' = 'site' then
       if exists (select 1 from adms_sites where id = (it->>'id')::uuid and bridge_org_id <> _bridge_org) then raise exception 'site_owned_by_other_org'; end if;
       if it->>'op' = 'remove' then
         update adms_sites set active = false, removed_at = coalesce(removed_at, now()), last_seq = seq, updated_at = now() where id = (it->>'id')::uuid;
       else
-        if (dt->>'id')::uuid <> (it->>'id')::uuid or (dt->>'org_id')::uuid <> _bridge_org then raise exception 'item_scope_mismatch'; end if;
+        if (dt->>'id')::uuid is distinct from (it->>'id')::uuid or (dt->>'org_id')::uuid is distinct from _bridge_org then raise exception 'item_scope_mismatch'; end if;
         insert into adms_sites(id, bridge_org_id, name, mode, timezone, active, bridge_updated_at, last_seq)
         values ((dt->>'id')::uuid, _bridge_org, dt->>'name', dt->>'mode', dt->>'timezone', (dt->>'active')::boolean, (dt->>'updated_at')::timestamptz, seq)
         on conflict (id) do update set name = excluded.name, mode = excluded.mode, timezone = excluded.timezone, active = excluded.active,
           bridge_updated_at = excluded.bridge_updated_at, removed_at = null, last_seq = excluded.last_seq, updated_at = now();
       end if;
     elsif it->>'kind' = 'device' then
+      if it->>'op' not in ('upsert','remove') then raise exception 'unknown_op'; end if;
       select * into prev from adms_devices where id = (it->>'id')::uuid;
       if prev.id is not null and prev.bridge_org_id <> _bridge_org then raise exception 'device_owned_by_other_org'; end if;
       if it->>'op' = 'remove' then
         update adms_devices set active = false, removed_at = coalesce(removed_at, now()), last_seq = seq, updated_at = now() where id = (it->>'id')::uuid;
       else
-        if (dt->>'id')::uuid <> (it->>'id')::uuid or (dt->>'org_id')::uuid <> _bridge_org then raise exception 'item_scope_mismatch'; end if;
+        if (dt->>'id')::uuid is distinct from (it->>'id')::uuid or (dt->>'org_id')::uuid is distinct from _bridge_org then raise exception 'item_scope_mismatch'; end if;
         insert into adms_devices(id, bridge_org_id, site_id, name, serial_no, model, timezone, active, last_contact_at, last_punch_at, bridge_updated_at, last_seq)
         values ((dt->>'id')::uuid, _bridge_org, (dt->>'site_id')::uuid, dt->>'name', upper(dt->>'serial_no'), dt->>'model', dt->>'timezone', (dt->>'active')::boolean,
           (dt->>'last_contact_at')::timestamptz, (dt->>'last_punch_at')::timestamptz, (dt->>'updated_at')::timestamptz, seq)
         on conflict (id) do update set site_id = excluded.site_id, name = excluded.name, serial_no = excluded.serial_no, model = excluded.model,
           timezone = excluded.timezone, active = excluded.active, last_contact_at = excluded.last_contact_at, last_punch_at = excluded.last_punch_at,
           bridge_updated_at = excluded.bridge_updated_at, removed_at = null, last_seq = excluded.last_seq, updated_at = now();
-        if prev.id is not null and prev.site_id <> (dt->>'site_id')::uuid then
+        if prev.id is not null and prev.site_id is distinct from (dt->>'site_id')::uuid then
           perform _adms_log(_org, 'device_moved', prev.id, jsonb_build_object('from', prev.site_id, 'to', dt->>'site_id'));
         end if;
       end if;
