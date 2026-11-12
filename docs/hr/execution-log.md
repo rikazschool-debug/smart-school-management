@@ -206,3 +206,4 @@ Status: implemented · server-tested · browser-tested with simulated location �
 ## 2026-11-12 — HR presentation restoration (prompt-339)
 - Restored the earlier employee-card layout and replaced grouped text navigation with individual icon tiles. Existing query, selection, file, import, export and permission paths are unchanged.
 - Employee interaction, sheet and field tests: 13/13. Authenticated visual verification unavailable for external Supabase; isolated presentation checks do not establish authenticated access.
+- Isolated browser presentation: 14 section tiles; selection/open callbacks verified; no horizontal overflow at 1677px or 390px; no runtime errors. Latest preview build OK.
