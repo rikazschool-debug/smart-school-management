@@ -889,3 +889,6 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## 2026-11-12 — ADMS Bridge contract v1, Rikaz side (prompt-341)
 - Receiver /api/integrations/adms/v1/events (off: 503 intake_disabled), signed sync client + admsSyncNow, linking/PIN screen, SQL in supabase/pending/adms_v1.sql (NOT applied).
 - Evidence: vitest src/lib/adms 12/12; scripts/adms-v1-isolated.ts 53/53 on throwaway local Postgres incl. 5 joint checks with the real bridge 2.0.0 Store/Worker/read API. Preview: POST 503, GET 405. No production DB or bridge calls.
+## Stage 2 branch preservation and compatibility review — 2026-11-13
+
+Prepared an independent branch from main 9f85725db0b7b2ace8bd8174d975168dfc1e5fa2 with six application hardening files, focused tests, VPS runtime/reference templates and documentation. Earlier migrations and operational credentials are excluded. All 193 tests (36 files), Node production build/read-only network-none smoke, and Lovable sandbox Cloudflare build passed. The Lovable wrapper ignored a conflicting VPS preset. Existing 14 service identities/configurations and protected configuration hashes stayed unchanged. No merge, deployment, SQL, provider activation or database reconnection occurred. Scope, limits and queue-flush behavior: docs/vps-stage2-review.md.

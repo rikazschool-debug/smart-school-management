@@ -6,6 +6,8 @@ import { watiOrigin } from "@/lib/wati-otp";
 type Row = { id: string; phone: string; params: { name?: string; ref?: string; title?: string; status?: string } };
 
 export async function drainEvtOutbox(limit = 10): Promise<number> {
+  // Explicit VPS acceptance pause, before any queue claims/status changes. Unset preserves the preview's settings.
+  if (process.env["RIKAZ_OUTBOUND_ENABLED"] === "false") return 0;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const base = process.env["WATI_API_BASE_URL"], token = process.env["WATI_API_TOKEN"], template = process.env["WATI_EVT_TEMPLATE"]?.trim();
   const ready = !!(base && token && template);

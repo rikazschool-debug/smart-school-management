@@ -147,11 +147,12 @@ export const publicFilesFn = createServerFn({ method: "POST" })
     return JSON.stringify(out);
   });
 
-/** Sends queued applicant messages (idempotent; safe to call from anywhere). */
-export const flushEvtMessagesFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { drainEvtOutbox } = await import("@/lib/evt-outbox.server");
-  return { n: await drainEvtOutbox(10) };
-});
+/** Compatibility for the decision screen: never expose a global queue pump as a server function.
+ * Provider activation must add a trusted, tenant-scoped delivery worker; it cannot re-enable this browser entry.
+ */
+export async function flushEvtMessagesFn() {
+  return { n: 0, paused: true };
+}
 
 export const preparePublicFile = async (o: { data: In<typeof preparePublicFileFn> }) => parse(await preparePublicFileFn(o));
 export const prepareTrackFile = async (o: { data: In<typeof prepareTrackFileFn> }) => parse(await prepareTrackFileFn(o));

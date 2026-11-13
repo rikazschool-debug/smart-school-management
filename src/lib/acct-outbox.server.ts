@@ -9,6 +9,7 @@ import { normPhone } from "@/lib/people-import";
 type Row = { id: string; guardian_id: string; params: { name?: string; kids?: string; school?: string }; attempts: number };
 
 export async function drainAcctOutbox(limit = 10): Promise<number> {
+  if (process.env["RIKAZ_OUTBOUND_ENABLED"] === "false") return 0;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const base = process.env["WATI_API_BASE_URL"], token = process.env["WATI_API_TOKEN"], template = process.env["WATI_ACCOUNT_TEMPLATE"]?.trim();
   const ready = !!(base && token && template);

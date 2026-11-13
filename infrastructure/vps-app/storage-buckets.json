@@ -1,0 +1,5 @@
+[
+  { "id": "rikaz-files", "public": false, "file_size_limit": 26214400 },
+  { "id": "avatars", "public": false, "file_size_limit": 2097152 },
+  { "id": "school-logos", "public": false, "file_size_limit": 2097152 }
+]

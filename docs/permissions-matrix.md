@@ -539,3 +539,6 @@ Calls with no branch: owner only. Deny overrides grant. Revoking listen stops an
 | Turn attendance processing from bridge events on/off | Org owner only (`adms_processing_set`); default off |
 | Event intake, page apply, processing internals | Service only (`_adms_ingest`, `_adms_apply_page`, `_adms_process`) |
 | Read/write adms_* tables directly | Nobody (RLS on, no grants to anon/authenticated) |
+## VPS stage 2 review — 2026-11-13
+
+The owner form accepts an email but only reads the authenticated user's own platform_admins row; it grants no role. Server functions return 401 for missing/invalid sessions and preserve the verified RLS client. VPS CSRF origin is server-side; unset preview defaults remain request-based. Global event-outbox flush has no remote endpoint; explicit VPS pauses precede queue claims. No database grants, policies, owners or migrations change. See docs/vps-stage2-review.md for isolated tests and the deliberate queue-flush compatibility limit.

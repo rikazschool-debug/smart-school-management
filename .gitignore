@@ -16,6 +16,11 @@ dist-ssr
 .nitro
 *.local
 
+# VPS credentials belong outside the checkout. Only blank examples are tracked.
+/infrastructure/vps-app/*.env
+!/infrastructure/vps-app/*.env.example
+/infrastructure/vps-app/secrets/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
