@@ -3,6 +3,7 @@
 // and passes a hashed client address — the raw IP is never stored. Nothing here creates an account or a student record.
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const TOKEN = /^[0-9a-f]{36}$/;
 const CODE = /^[0-9a-f]{48}$/;
@@ -13,8 +14,13 @@ async function admin() {
   return supabaseAdmin;
 }
 
-async function flushQuiet() {
-  try { const { drainEvtOutbox } = await import("@/lib/evt-outbox.server"); await drainEvtOutbox(5); } catch (e) { console.error("evt outbox", (e as Error).message); }
+async function flushQuiet(proof: Record<string, string>) {
+  try {
+    const { drainEvtOutbox } = await import("@/lib/evt-outbox.server");
+    await drainEvtOutbox({ proof });
+  } catch {
+    console.error("event delivery deferred");
+  }
 }
 
 async function clientHash(): Promise<string> {
@@ -62,7 +68,7 @@ export const submitPublicCourseFn = createServerFn({ method: "POST" })
     // anti-bot: hidden field must stay empty and a human needs a few seconds to fill the form
     if (data.hp || data.elapsed < 4000) return JSON.stringify({ error: "bot" });
     const r = await call("_evt_public_submit", { _token: data.token, _ip: await clientHash(), _version: data.version, _answers: data.answers, _client_key: data.clientKey });
-    await flushQuiet();
+    if (!JSON.parse(r).error) await flushQuiet({token:data.token,clientKey:data.clientKey});
     return r;
   });
 
@@ -80,7 +86,7 @@ export const updatePublicAppFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     if (!CODE.test(data.code)) return JSON.stringify({ error: "invalid" });
     const r = await call("_evt_public_update", { _code: data.code, _ip: await clientHash(), _rev: data.rev, _action: data.action, _answers: data.answers });
-    await flushQuiet();
+    if (!JSON.parse(r).error) await flushQuiet({code:data.code});
     return r;
   });
 
@@ -147,12 +153,19 @@ export const publicFilesFn = createServerFn({ method: "POST" })
     return JSON.stringify(out);
   });
 
-/** Compatibility for the decision screen: never expose a global queue pump as a server function.
- * Provider activation must add a trusted, tenant-scoped delivery worker; it cannot re-enable this browser entry.
- */
-export async function flushEvtMessagesFn() {
-  return { n: 0, paused: true };
-}
+/** The caller supplies one application; SQL rechecks its apps/decide permission under that caller. */
+export const flushEvtMessagesFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { app: string }) => {
+    if (!UUID.test(d?.app ?? "")) throw Error("طلب غير صالح");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const { drainEvtOutbox } = await import("@/lib/evt-outbox.server");
+    return {
+      n: await drainEvtOutbox({ app: data.app, actor: context.userId }),
+    };
+  });
 
 export const preparePublicFile = async (o: { data: In<typeof preparePublicFileFn> }) => parse(await preparePublicFileFn(o));
 export const prepareTrackFile = async (o: { data: In<typeof prepareTrackFileFn> }) => parse(await prepareTrackFileFn(o));

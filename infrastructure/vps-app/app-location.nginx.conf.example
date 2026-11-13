@@ -3,6 +3,18 @@
 # Do not install as a second server block. No HTTP Basic auth on the app.
 client_max_body_size 30m;
 access_log /var/log/nginx/rikaz-access.log rikaz_safe;
+# Install this exact provider route only with the reviewed application release.
+# WATI's URL capability must never appear in access/error logs.
+location = /api/public/wati/webhook {
+    limit_except POST { deny all; }
+    client_max_body_size 256k;
+    access_log off;
+    error_log /dev/null;
+    include snippets/rikaz-proxy.conf;
+    proxy_pass http://127.0.0.1:3100;
+    proxy_cache off;
+}
+location ^~ /api/internal/ { return 404; }
 location ^~ /api/public/ { return 503; }
 location ^~ /api/integrations/ { return 503; }
 location / {
@@ -11,4 +23,4 @@ location / {
     proxy_cache off;
 }
 # The trusted proxy snippet preserves Authorization/Host and WebSocket headers.
-# Access logs omit query args. Provider intake remains temporarily closed.
+# Other provider intake stays closed. Auth SMS hooks use the private Docker network.

@@ -29,28 +29,31 @@ export function watiOrigin(base: string): string { return new URL(base).origin; 
 export type WatiConfig = { baseUrl: string; token: string; template: string; param: string; channel?: string | undefined };
 
 /** Sends the code with the approved template (v3 messageTemplates/send). Returns accepted only when WATI reports success for this recipient. */
-export async function sendWatiOtp(cfg: WatiConfig, phone: string, code: string, localId: string): Promise<{ ok: boolean; detail: string }> {
-  const url = `${watiOrigin(cfg.baseUrl)}/api/ext/v3/messageTemplates/send`;
-  const body: Record<string, unknown> = {
-    template_name: cfg.template,
-    broadcast_name: "rikaz_login",
-    recipients: [{ phone_number: phone, local_message_id: localId, custom_params: [{ name: cfg.param, value: code }] }],
-  };
-  if (cfg.channel) body["channel"] = cfg.channel;
-  let res: Response;
+export async function sendWatiOtp(
+  cfg: WatiConfig,
+  phone: string,
+  code: string,
+  localId: string,
+): Promise<{ ok: boolean; detail: string }> {
+  if (cfg.template !== "rikaz_login_otp" || cfg.param !== "1")
+    return { ok: false, detail: "template_mismatch" };
+  const { automaticTemplate, sendAutomatic } =
+    await import("./message-delivery.server");
   try {
-    res = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${cfg.token.replace(/^Bearer\s+/i, "")}`, "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(10_000) });
-  } catch { return { ok: false, detail: "network" }; }
-  // keep a short provider reason for diagnosis; the code itself is masked out
-  const text = (await res.text().catch(() => "")).split(code).join("******");
-  if (!res.ok) return { ok: false, detail: `http_${res.status}: ${text.slice(0, 160)}` };
-  const j = (() => { try { return JSON.parse(text); } catch { return null; } })() as { success?: boolean; result?: boolean; error?: unknown; recipients?: { error?: unknown; local_message_id?: string }[] } | null;
-  const success = j?.success ?? j?.result ?? false;
-  const rec = j?.recipients?.find((r) => r.local_message_id === localId) ?? j?.recipients?.[0];
-  if (!success || (rec && rec.error)) return { ok: false, detail: `rejected: ${text.slice(0, 160)}` };
-  return { ok: true, detail: "accepted" };
+    await automaticTemplate("rikaz_login_otp", cfg.baseUrl, cfg.token);
+    const r = await sendAutomatic(
+      cfg.baseUrl,
+      cfg.token,
+      cfg.template,
+      phone,
+      localId,
+      { "1": code },
+    );
+    return { ok: r.status === "accepted", detail: r.status };
+  } catch {
+    return { ok: false, detail: "template_unavailable" };
+  }
 }
-
 /** Maps a WATI status webhook to our delivery status; anything else is ignored. */
 export function watiStatus(ev: Record<string, unknown>): { localId: string; status: "sent" | "delivered" | "read" | "failed"; code?: string; detail?: string } | null {
   const type = String(ev["eventType"] ?? "");

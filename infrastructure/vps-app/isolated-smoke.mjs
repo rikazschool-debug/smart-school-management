@@ -74,7 +74,8 @@ try {
     const text = await readFile(path.join('/app/.output/server', file), 'utf8');
     for (const match of text.matchAll(/([a-f0-9]{24,})["']?\s*:\s*\{\s*functionName\s*:\s*["']([^"']+)/g)) functions[match[2]] = match[1];
   }
-  assert(!Object.keys(functions).some(name => name.startsWith('flushEvtMessagesFn_')));
+  const scopedFlush = Object.entries(functions).find(([name]) => name.startsWith('flushEvtMessagesFn_'))?.[1];
+  assert(scopedFlush, 'Authenticated application-scoped flush missing');
   const publicId = Object.entries(functions).find(([name]) => name.startsWith('trackPublicAppFn_'))?.[1];
   const protectedId = Object.entries(functions).find(([name]) => name.startsWith('provisionAccounts_'))?.[1];
   assert(publicId && protectedId, 'Expected server-function probes missing');
@@ -90,11 +91,17 @@ try {
     method: 'POST', headers: { Origin: 'https://app.example.invalid', 'x-tsr-serverFn': 'true' },
   });
   assert.equal(unauthenticated.status, 401, 'Protected server function accepted no session');
+  const flushDenied = await response('/_serverFn/' + scopedFlush, {
+    method:'POST', headers:{Origin:'https://app.example.invalid','x-tsr-serverFn':'true'},
+  });
+  assert.equal(flushDenied.status,401,'Scoped delivery flush accepted no session');
+  const workerDenied=await response('/api/internal/messages/dispatch',{method:'POST'});
+  assert.equal(workerDenied.status,401,'Message worker accepted no capability');
   console.log(JSON.stringify({
     isolated: true, realBackendUsed: false, providerCredentialsUsed: false,
     pages: results, staticAssetsFetched: Math.min(assets.size, 20),
     publicFilesScanned, admsDisabled: true,
-    globalQueuePumpAbsent: true, sameOriginAccepted: 200, crossOriginRejected: 403, unauthenticatedRejected: 401,
+    globalQueuePumpUnavailable: true, scopedFlushRequiresAuthentication: true, workerRequiresCapability: true, sameOriginAccepted: 200, crossOriginRejected: 403, unauthenticatedRejected: 401,
     authenticatedRlsTests: 'not covered by this no-database packaging test',
   }));
 } finally {

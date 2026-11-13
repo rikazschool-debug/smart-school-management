@@ -1,0 +1,8 @@
+# Reference only: merge with the existing Supabase auth service after release approval.
+# Do not replace its existing environment, JWT secret, database password or redirects.
+services:
+  auth:
+    environment:
+      GOTRUE_HOOK_SEND_SMS_ENABLED: 'true'
+      GOTRUE_HOOK_SEND_SMS_URI: http://rikaz-app-web-1:3000/api/public/auth/send-sms
+      GOTRUE_HOOK_SEND_SMS_SECRETS: ${SEND_SMS_HOOK_SECRET:?private independently generated Standard Webhooks secret}

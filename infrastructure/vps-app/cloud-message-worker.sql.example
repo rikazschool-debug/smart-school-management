@@ -1,0 +1,19 @@
+-- Optional, reviewed setup for the CLOUD TEST environment only. Not executed by a migration.
+-- Existing jobs stay unchanged. Store these independent values using the protected Vault interface:
+--   rikaz_message_worker_url: the cloud application's HTTPS /api/internal/messages/dispatch endpoint
+--   rikaz_message_worker_secret: the same independent value as that cloud app's RIKAZ_MESSAGE_WORKER_SECRET
+-- Configure RIKAZ_MESSAGE_ORG_ALLOWLIST on the cloud app with cloud UUIDs only.
+create or replace function public._rk_cloud_message_tick() returns bigint
+language plpgsql security definer set search_path=public as $$
+declare endpoint text; credential text;
+begin
+  select decrypted_secret into endpoint from vault.decrypted_secrets where name='rikaz_message_worker_url';
+  select decrypted_secret into credential from vault.decrypted_secrets where name='rikaz_message_worker_secret';
+  if endpoint is null or credential is null then return null; end if;
+  if endpoint !~ '^https://[a-zA-Z0-9.-]+/api/internal/messages/dispatch$' or length(credential)<32 then raise exception 'invalid scheduler configuration'; end if;
+  return net.http_post(url:=endpoint,headers:=jsonb_build_object('Authorization','Bearer '||credential,'Content-Type','application/json'),body:='{}'::jsonb,timeout_milliseconds:=240000);
+end $$;
+revoke all on function public._rk_cloud_message_tick() from public,anon,authenticated;
+grant execute on function public._rk_cloud_message_tick() to service_role;
+-- After explicit schedule approval and verifying the independent endpoint/secret:
+-- select cron.schedule('rikaz_messages', '* * * * *', 'select public._rk_cloud_message_tick()');
