@@ -14,7 +14,10 @@ services:
     ports:
       - "127.0.0.1:3100:3000"
     networks:
-      - supabase-existing
+      supabase-existing: {}
+      auth-hook:
+        aliases:
+          - host.docker.internal
     init: true
     restart: unless-stopped
     read_only: true
@@ -37,3 +40,6 @@ networks:
   supabase-existing:
     external: true
     name: rikaz-supabase_default
+  auth-hook:
+    external: true
+    name: rikaz-auth-hook
