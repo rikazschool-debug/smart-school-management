@@ -248,10 +248,12 @@ export type Database = {
         Row: {
           attempts: number
           created_at: string
+          delivery_ref: string | null
           detail: string | null
           guardian_id: string
           id: string
           params: Json
+          provider_ref: string | null
           school_id: string
           sent_at: string | null
           status: string
@@ -260,10 +262,12 @@ export type Database = {
         Insert: {
           attempts?: number
           created_at?: string
+          delivery_ref?: string | null
           detail?: string | null
           guardian_id: string
           id?: string
           params?: Json
+          provider_ref?: string | null
           school_id: string
           sent_at?: string | null
           status?: string
@@ -272,10 +276,12 @@ export type Database = {
         Update: {
           attempts?: number
           created_at?: string
+          delivery_ref?: string | null
           detail?: string | null
           guardian_id?: string
           id?: string
           params?: Json
+          provider_ref?: string | null
           school_id?: string
           sent_at?: string | null
           status?: string
@@ -4705,12 +4711,14 @@ export type Database = {
           attempts: number
           created_at: string
           dedupe_key: string
+          delivery_ref: string | null
           detail: string | null
           id: string
           item_id: string
           kind: string
           params: Json
           phone: string
+          provider_ref: string | null
           sent_at: string | null
           status: string
           updated_at: string
@@ -4720,12 +4728,14 @@ export type Database = {
           attempts?: number
           created_at?: string
           dedupe_key: string
+          delivery_ref?: string | null
           detail?: string | null
           id?: string
           item_id: string
           kind: string
           params?: Json
           phone: string
+          provider_ref?: string | null
           sent_at?: string | null
           status?: string
           updated_at?: string
@@ -4735,12 +4745,14 @@ export type Database = {
           attempts?: number
           created_at?: string
           dedupe_key?: string
+          delivery_ref?: string | null
           detail?: string | null
           id?: string
           item_id?: string
           kind?: string
           params?: Json
           phone?: string
+          provider_ref?: string | null
           sent_at?: string | null
           status?: string
           updated_at?: string
@@ -15390,6 +15402,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rk_delivery_config: {
+        Row: {
+          instance: string
+          not_before: string
+          singleton: boolean
+        }
+        Insert: {
+          instance?: string
+          not_before?: string
+          singleton?: boolean
+        }
+        Update: {
+          instance?: string
+          not_before?: string
+          singleton?: boolean
+        }
+        Relationships: []
+      }
       rooms: {
         Row: {
           capacity: number | null
@@ -18917,12 +18947,14 @@ export type Database = {
           attempts: number
           created_at: string
           dedupe_key: string
+          delivery_ref: string | null
           detail: string | null
           id: string
           item_id: string
           kind: string
           params: Json
           phone: string
+          provider_ref: string | null
           sent_at: string | null
           status: string
           updated_at: string
@@ -20449,6 +20481,48 @@ export type Database = {
       _revise_homework_v0: {
         Args: { _d: Json; _id: string; _note: string }
         Returns: number
+      }
+      _rk_delivery_claim: {
+        Args: {
+          _actor: string
+          _ids: string[]
+          _kind: string
+          _org: string
+          _phones: string[]
+          _proof: Json
+        }
+        Returns: Json
+      }
+      _rk_delivery_done: {
+        Args: {
+          _id: string
+          _kind: string
+          _provider: string
+          _ref: string
+          _status: string
+        }
+        Returns: undefined
+      }
+      _rk_delivery_identity: { Args: never; Returns: Json }
+      _rk_delivery_pending: {
+        Args: { _kind: string; _limit?: number; _org: string }
+        Returns: string[]
+      }
+      _rk_delivery_status: {
+        Args: { _ref: string; _status: string }
+        Returns: boolean
+      }
+      _rk_event_delivery_ids: {
+        Args: { _actor: string; _app: string; _proof?: Json }
+        Returns: string[]
+      }
+      _rk_register_id_otp: {
+        Args: { _challenge: string; _ref: string }
+        Returns: undefined
+      }
+      _rk_wa_status_known: {
+        Args: { _local: string; _wamid: string; _wati: string }
+        Returns: boolean
       }
       _save_homework_v0: { Args: { _d: Json; _id: string }; Returns: string }
       _scope_manager: {
