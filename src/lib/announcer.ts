@@ -3,20 +3,21 @@
 // replayed 3 times; falls back to the browser's Arabic voice only if generation fails.
 import { speakArabic } from "@/lib/announce.functions";
 const REPEAT = 3;
-type Job = { text: string; resolve: () => void; reject: (e: Error) => void };
+type Job = { text: string; school?: string | undefined; pickup?: string | undefined; resolve: () => void; reject: (e: Error) => void };
 const jobs: Job[] = [];
 let running = false;
 const listeners = new Set<(n: number) => void>();
 const emit = () => listeners.forEach((f) => f(jobs.length + (running ? 1 : 0)));
 const cache = new Map<string, string>();
 
-async function clipUrl(text: string) {
-  const hit = cache.get(text); if (hit) return hit;
-  const r = await speakArabic({ data: { text } });
+async function clipUrl(job: Job) {
+  const { text, school, pickup } = job, key = `${school ?? ""}:${pickup ?? ""}:${text}`;
+  const hit = cache.get(key); if (hit) return hit;
+  const r = await speakArabic({ data: { text, school, pickup } });
   const bin = atob(r.audio); const b = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
   const url = URL.createObjectURL(new Blob([b], { type: r.type }));
-  cache.set(text, url); return url;
+  cache.set(key, url); return url;
 }
 function playUrl(url: string) {
   return new Promise<void>((res, rej) => {
@@ -48,7 +49,7 @@ async function run() {
     const j = jobs.shift()!; emit();
     try {
       let url: string | null = null;
-      try { url = await clipUrl(j.text); } catch { url = null; }
+      try { url = await clipUrl(j); } catch { url = null; }
       for (let i = 0; i < REPEAT; i++) { await (url ? playUrl(url) : sayOnce(j.text)); if (i < REPEAT - 1) await pause(900); }
       j.resolve();
     }
@@ -64,8 +65,8 @@ export function announceText(name: string, section?: string | null) {
 }
 
 /** Queue a call (spoken 3 times). Resolves after it has played. */
-export function enqueueCall(text: string) {
-  return new Promise<void>((resolve, reject) => { jobs.push({ text, resolve, reject }); emit(); void run(); });
+export function enqueueCall(text: string, school?: string, pickup?: string) {
+  return new Promise<void>((resolve, reject) => { jobs.push({ text, school, pickup, resolve, reject }); emit(); void run(); });
 }
 export function onQueueSize(f: (n: number) => void) { listeners.add(f); f(jobs.length + (running ? 1 : 0)); return () => { listeners.delete(f); }; }
 export function isQueued(text: string) { return jobs.some((j) => j.text === text); }

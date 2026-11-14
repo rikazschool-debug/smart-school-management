@@ -1,0 +1,39 @@
+{
+  "database_file": "/data/bridge.sqlite",
+  "keys_file": "/run/secrets/keys.json",
+  "public_origin": "https://attendance.kalmalki.com",
+  "admin_username": "KEEP_EXISTING_ADMIN_USERNAME",
+  "admin_hash": "KEEP_EXISTING_SCRYPT_VERIFIER",
+  "admin_socket": "/run/bridge/admin.sock",
+  "intake_socket": "/run/bridge/intake.sock",
+  "intake_enabled": false,
+  "transport_approved": false,
+  "storage_only": true,
+  "managed_ingress": {
+    "enabled": false,
+    "server_ip": "2.25.3.1",
+    "http_port": 80,
+    "https_host": "attendance.kalmalki.com",
+    "https_port": 443
+  },
+  "ip_adms": {
+    "enabled": false,
+    "accept_records": false,
+    "unencrypted_risk_accepted": false,
+    "approved_at": null,
+    "expires_at": null
+  },
+  "direct_adms": {
+    "enabled": false,
+    "server_address": "attendance.kalmalki.com",
+    "server_port": 443,
+    "domain_name": true,
+    "https": true,
+    "verified_at": null
+  },
+  "delivery_enabled": false,
+  "delivery_mode": "disabled",
+  "production_delivery_approved": false,
+  "receiver_allowlist": [],
+  "trusted_proxies": []
+}

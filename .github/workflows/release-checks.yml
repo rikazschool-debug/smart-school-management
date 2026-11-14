@@ -48,12 +48,14 @@ jobs:
       - name: Replay cloud schema without network or user data
         run: python infrastructure/vps-app/release/qa.py --root . --manifest release-artifacts/manifest.json --target cloud --output release-artifacts/cloud-replay.json
       - name: Replay VPS schema with its approved exception
-        run: python infrastructure/vps-app/release/qa.py --root . --manifest release-artifacts/manifest.json --target vps --output release-artifacts/vps-replay.json
+        run: python infrastructure/vps-app/release/qa.py --root . --manifest release-artifacts/manifest.json --target vps --integration-acceptance --output release-artifacts/vps-replay.json
       - name: Existing unit tests and TypeScript
         run: |
           docker build -f infrastructure/vps-app/Dockerfile.verify -t rikaz-release-verify .
           docker run --rm --network none --memory 2g --cpus 2 rikaz-release-verify
-          docker run --rm --network none --memory 2g --cpus 2 rikaz-release-verify node node_modules/typescript/bin/tsc --noEmit --pretty false
+          docker run --rm --network none --memory 3g --cpus 2 rikaz-release-verify node --max-old-space-size=2304 node_modules/typescript/bin/tsc --noEmit --pretty false
+      - name: Existing bridge, raw delivery and WordPress isolated acceptance
+        run: python infrastructure/vps-app/release/integration_qa.py --root . --output release-artifacts/integration-qa --verify-image rikaz-release-verify --php-image php@sha256:e7699f91d3b46283a49bde02379266dd98d87844e08aed1ff7ea6a7d1f031268
       - name: VPS build and isolated runtime
         run: |
           docker build -f infrastructure/vps-app/Dockerfile --build-arg VITE_SUPABASE_URL=http://127.0.0.1:43219 --build-arg VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_RIKAZ_ISOLATED_REVIEW_ONLY -t rikaz-release-node .

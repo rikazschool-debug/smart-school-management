@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireWatiInboxAuth } from "./wati-inbox-auth.server";
+import { inboxPolicy, currentInboxMessage } from "./wati-inbox-policy";
 import { waTplCheck, waTplFromWati, type WaTpl } from "@/lib/wa-template";
 
 /**
@@ -12,7 +13,9 @@ const MAX_UP = 5 * 1024 * 1024;
 const MAX_DOWN = 16 * 1024 * 1024;
 
 function cfg() {
-  const base = process.env["WATI_API_BASE_URL"], token = process.env["WATI_API_TOKEN"];
+  if (!inboxPolicy(process.env).enabled) throw new Error("محادثات WATI غير مفعلة في هذه البيئة");
+  const base = process.env["WATI_API_BASE_URL"],
+    token = process.env["WATI_API_TOKEN"];
   if (!base || !token) throw new Error("ربط WATI غير مُعدّ");
   return { origin: new URL(base).origin, auth: `Bearer ${token.replace(/^Bearer\s+/i, "")}` };
 }
@@ -33,28 +36,52 @@ async function mustAdmin(sb: { rpc: (f: never, a?: never) => PromiseLike<{ data:
 
 /** Pull from WATI: without conv → refresh the conversation list (30 latest); with conv → that chat's last 100 messages. */
 export const waSync = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: { conv?: string }) => { if (d.conv && !UUID.test(d.conv)) throw new Error("bad"); return d; })
+  .middleware([requireWatiInboxAuth])
+  .inputValidator((d: { conv?: string }) => {
+    if (d.conv && !UUID.test(d.conv)) throw new Error("bad");
+    return d;
+  })
   .handler(async ({ data, context }) => {
     await mustAdmin(context.supabase as never);
     const a = await admin();
     if (!data.conv) {
+      if (!inboxPolicy(process.env).history) return { conversations: 0, historicalImport: false };
       const j = await wati("/api/ext/v3/conversations?page_size=30&page_number=1");
       const list = (j["conversation_list"] as Record<string, unknown>[] | undefined) ?? [];
       for (const c of list) {
         if (c["channel_type"] && c["channel_type"] !== "whatsapp") continue;
-        const r = await a.rpc("_wa_pull_save" as never, { _conv: { id: c["id"], contact_name: c["contact_name"], last_updated: c["last_updated"] }, _msgs: [] } as never);
+        const r = await a.rpc(
+          "_wa_pull_save" as never,
+          {
+            _conv: {
+              id: c["id"],
+              contact_name: c["contact_name"],
+              last_updated: c["last_updated"],
+            },
+            _msgs: [],
+          } as never,
+        );
         if (r.error) throw new Error("تعذّر الحفظ");
       }
-      await a.rpc("_wa_recover" as never, { _limit: 20 } as never);
+      // Historical event recovery is a separate reviewed operation, never an effect of opening this tab.
       return { conversations: list.length };
     }
     const ref = await context.supabase.rpc("wa_conv_ref" as never, { _conv: data.conv } as never);
     if (ref.error) throw new Error("غير مصرح");
     const conv = ref.data as unknown as { wati_conv_id: string };
-    const j = await wati(`/api/ext/v3/conversations/${encodeURIComponent(conv.wati_conv_id)}/messages?page_size=100&page_number=1`);
-    const msgs = ((j["message_list"] as Record<string, unknown>[] | undefined) ?? []).filter((m) => !m["event_type"] || m["event_type"] === "message");
-    const r = await a.rpc("_wa_pull_save" as never, { _conv: { id: conv.wati_conv_id }, _msgs: msgs } as never);
+    const j = await wati(
+      `/api/ext/v3/conversations/${encodeURIComponent(conv.wati_conv_id)}/messages?page_size=100&page_number=1`,
+    );
+    const policy = inboxPolicy(process.env);
+    const msgs = ((j["message_list"] as Record<string, unknown>[] | undefined) ?? []).filter(
+      (m) =>
+        (!m["event_type"] || m["event_type"] === "message") &&
+        (policy.history || currentInboxMessage(m, policy)),
+    );
+    const r = await a.rpc(
+      "_wa_pull_save" as never,
+      { _conv: { id: conv.wati_conv_id }, _msgs: msgs } as never,
+    );
     if (r.error) throw new Error("تعذّر الحفظ");
     return { messages: msgs.length };
   });
@@ -63,38 +90,93 @@ export const waSync = createServerFn({ method: "POST" })
 type Adm = Awaited<ReturnType<typeof admin>>;
 /** WATI is the assignment source: pull assignee/team codes (conversations/query, last 90 days) + contact owner/team names. */
 async function pullAssign(a: Adm, maxAgeSec: number) {
+  const policy = inboxPolicy(process.env);
+  let known: Set<string> | null = null;
+  if (!policy.history) {
+    const existing = await a
+      .from("wa_conversations" as never)
+      .select("wati_conv_id")
+      .eq("org_id", policy.org);
+    if (existing.error) throw new Error("تعذّر التحقق من محادثات المؤسسة");
+    known = new Set(
+      ((existing.data ?? []) as { wati_conv_id: string }[]).map((c) => c.wati_conv_id),
+    );
+    if (known.size === 0) return { skipped: true, reason: "waiting_for_new_messages" };
+  }
   const age = (await a.rpc("_wa_assign_age" as never)) as { data: unknown };
   if (typeof age.data === "number" && age.data < maxAgeSec) return { skipped: true };
   try {
-    const now = new Date(); const from = new Date(now.getTime() - 90 * 864e5);
-    const items: unknown[] = []; let cursor = "";
+    const now = new Date();
+    const from = new Date(now.getTime() - 90 * 864e5);
+    const items: unknown[] = [];
+    let cursor = "";
     for (let i = 0; i < 30; i++) {
-      const j = await wati("/api/ext/v3/conversations/query", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ time_range: { from: from.toISOString(), to: new Date(now.getTime() + 864e5).toISOString() }, page: { size: 100, ...(cursor ? { cursor } : {}) }, count: { mode: "none" }, result_mode: "conversations" }) });
+      const j = await wati("/api/ext/v3/conversations/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          time_range: {
+            from: from.toISOString(),
+            to: new Date(now.getTime() + 864e5).toISOString(),
+          },
+          page: { size: 100, ...(cursor ? { cursor } : {}) },
+          count: { mode: "none" },
+          result_mode: "conversations",
+        }),
+      });
       for (const it of (j["items"] as Record<string, unknown>[] | undefined) ?? []) {
+        if (known && !known.has(String(it["conversation_id"] ?? ""))) continue;
         const ch = it["channel"] as Record<string, unknown> | string | undefined;
-        items.push({ conversation_id: it["conversation_id"], contact_id: it["contact_id"], assignee_id: it["assignee_id"] ?? null, team_ids: it["team_ids"] ?? [],
-          assignment: it["assignment"], status: it["status"], channel_type: typeof ch === "object" && ch ? (ch["type"] ?? ch["channel_type"] ?? "whatsapp") : "whatsapp" });
+        items.push({
+          conversation_id: it["conversation_id"],
+          contact_id: it["contact_id"],
+          assignee_id: it["assignee_id"] ?? null,
+          team_ids: it["team_ids"] ?? [],
+          assignment: it["assignment"],
+          status: it["status"],
+          channel_type:
+            typeof ch === "object" && ch
+              ? (ch["type"] ?? ch["channel_type"] ?? "whatsapp")
+              : "whatsapp",
+        });
       }
       const pg = j["page"] as { has_more?: boolean; next_cursor?: string } | undefined;
-      if (!pg?.has_more || !pg.next_cursor) break; cursor = pg.next_cursor;
+      if (!pg?.has_more || !pg.next_cursor) break;
+      cursor = pg.next_cursor;
     }
     const contacts: unknown[] = [];
+    const contactIds = new Set(
+      (items as { contact_id: unknown }[]).map((x) => String(x.contact_id ?? "")),
+    );
     for (let pn = 1; pn <= 20; pn++) {
       const j = await wati(`/api/ext/v3/contacts?page_size=100&page_number=${pn}`);
       const list = (j["contact_list"] as Record<string, unknown>[] | undefined) ?? [];
       for (const c of list) {
+        if (known && !contactIds.has(String(c["id"] ?? ""))) continue;
         const cp = (c["custom_params"] as { name: string; value: string }[] | undefined) ?? [];
-        contacts.push({ id: c["id"], wa_id: c["wa_id"], name: c["name"], owner: cp.find((x) => x.name === "contact_owner")?.value ?? null, teams: c["teams"] ?? [] });
+        contacts.push({
+          id: c["id"],
+          wa_id: c["wa_id"],
+          name: c["name"],
+          owner: cp.find((x) => x.name === "contact_owner")?.value ?? null,
+          teams: c["teams"] ?? [],
+        });
       }
       if (list.length < 100) break;
     }
     // save in batches so one call never hits the database statement timeout
-    let saved = 0, changed = 0; const B = 400;
+    let saved = 0,
+      changed = 0;
+    const B = 400;
     for (let i = 0; i < Math.max(items.length, contacts.length); i += B) {
-      const r = await a.rpc("_wa_assign_save" as never, { _items: items.slice(i, i + B), _contacts: contacts.slice(i, i + B) } as never);
+      const r = await a.rpc(
+        "_wa_assign_save" as never,
+        { _items: items.slice(i, i + B), _contacts: contacts.slice(i, i + B) } as never,
+      );
       if (r.error) throw new Error(r.error.message);
-      const d = r.data as { saved: number; changed: number }; saved += d.saved; changed += d.changed;
+      const d = r.data as { saved: number; changed: number };
+      saved += d.saved;
+      changed += d.changed;
     }
     return { saved, changed };
   } catch (e) {
@@ -106,7 +188,7 @@ async function pullAssign(a: Adm, maxAgeSec: number) {
 
 /** Assignment sync: on tab open and periodically while it is open (throttled server-side to once per 30s). */
 export const waSyncAssign = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { force?: boolean }) => d)
   .handler(async ({ data, context }) => {
     await mustAdmin(context.supabase as never);
@@ -117,7 +199,7 @@ export const waSyncAssign = createServerFn({ method: "POST" })
 
 type SendIn = { conv: string; key: string; text?: string; file?: { name: string; mime: string; b64: string; caption?: string; voice?: boolean } };
 export const waSend = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: SendIn) => {
     if (!UUID.test(d.conv) || !/^[\w-]{8,64}$/.test(d.key)) throw new Error("bad");
     if (!d.file && !(d.text && d.text.trim() && d.text.length <= 4000)) throw new Error("النص مطلوب (حتى 4000 حرف)");
@@ -177,7 +259,7 @@ export const waSend = createServerFn({ method: "POST" })
 
 /** Downloads one attachment through WATI's documented route (GET /api/ext/v3/conversations/messages/file/{message_id}). */
 export const waMedia = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { msg: string }) => { if (!UUID.test(d.msg)) throw new Error("bad"); return d; })
   .handler(async ({ data, context }) => {
     const ref = await context.supabase.rpc("wa_media_ref" as never, { _msg: data.msg } as never);
@@ -203,7 +285,7 @@ export const waMedia = createServerFn({ method: "POST" })
 
 /** Contact attributes straight from WATI (read-only; GET /api/ext/v3/contacts/{target}). */
 export const waContactAttrs = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { conv: string }) => { if (!UUID.test(d.conv)) throw new Error("bad"); return d; })
   .handler(async ({ data, context }) => {
     const ref = await context.supabase.rpc("wa_conv_ref" as never, { _conv: data.conv } as never);
@@ -219,7 +301,7 @@ export const waContactAttrs = createServerFn({ method: "POST" })
 
 /** Tag on/off: saved in Rikaz first (wa_tag_set checks access), then pushed to WATI (which only accepts tags already defined there and cannot list them back). */
 export const waTag = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { conv: string; name: string; on: boolean }) => { if (!UUID.test(d.conv) || !d.name?.trim() || d.name.length > 40) throw new Error("bad"); return { ...d, name: d.name.trim() }; })
   .handler(async ({ data, context }) => {
     const set = await context.supabase.rpc("wa_tag_set" as never, { _conv: data.conv, _name: data.name, _on: data.on } as never);
@@ -284,7 +366,7 @@ async function verifyJob(a: Adm, id: string) {
 }
 
 export const waTransfer = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { conv: string; school: string; kind: "operator" | "team"; code: string; note?: string; key: string }) => {
     if (!UUID.test(d.conv) || !UUID.test(d.school) || !/^[\w-]{8,64}$/.test(d.key) || !/^[0-9a-f]{24}$/i.test(d.code) || !["operator", "team"].includes(d.kind)) throw new Error("bad");
     if (d.note && d.note.length > 1000) throw new Error("الملاحظة طويلة");
@@ -335,7 +417,7 @@ export const waTransfer = createServerFn({ method: "POST" })
 
 /** Re-check an unresolved transfer against WATI (actor or anyone with access to the chat). */
 export const waTransferVerify = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { id: string }) => { if (!UUID.test(d.id)) throw new Error("bad"); return d; })
   .handler(async ({ data, context }) => {
     const g = await context.supabase.rpc("wa_transfer_get" as never, { _id: data.id } as never);
@@ -379,7 +461,7 @@ async function freshAccess(sb: unknown, conv: string) {
 }
 
 export const waTemplates = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { conv: string }) => { if (!UUID.test(d.conv)) throw new Error("bad"); return d; })
   .handler(async ({ data, context }) => {
     if (!(await caps(context.supabase, data.conv)).template) throw new Error("لا تملك صلاحية «إرسال قوالب واتساب» لهذه المحادثة");
@@ -388,7 +470,7 @@ export const waTemplates = createServerFn({ method: "POST" })
   });
 
 export const waSendTemplate = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { conv: string; key: string; name: string; values: Record<string, string> }) => {
     if (!UUID.test(d.conv) || !/^[\w-]{8,64}$/.test(d.key) || !/^[\w.-]{1,200}$/.test(d.name) || typeof d.values !== "object" || !d.values) throw new Error("bad");
     if (Object.keys(d.values).length > 40) throw new Error("bad");
@@ -425,7 +507,7 @@ export const waSendTemplate = createServerFn({ method: "POST" })
   });
 
 export const waBots = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { conv: string }) => { if (!UUID.test(d.conv)) throw new Error("bad"); return d; })
   .handler(async ({ data, context }) => {
     if (!(await caps(context.supabase, data.conv)).bot) throw new Error("لا تملك صلاحية «تشغيل بوت واتساب» لهذه المحادثة");
@@ -437,7 +519,7 @@ export const waBots = createServerFn({ method: "POST" })
   });
 
 export const waRunBot = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireWatiInboxAuth])
   .inputValidator((d: { conv: string; key: string; bot: string }) => { if (!UUID.test(d.conv) || !/^[\w-]{8,64}$/.test(d.key) || !/^[0-9a-f]{24}$/i.test(d.bot)) throw new Error("bad"); return d; })
   .handler(async ({ data, context }) => {
     await freshAccess(context.supabase, data.conv);

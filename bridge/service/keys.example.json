@@ -1,0 +1,8 @@
+{
+  "csrf_key": "KEEP_EXISTING_RANDOM_SERVER_SECRET",
+  "registry_key": "LEGACY_UNUSED_KEEP_FOR_ROLLBACK",
+  "transport_proxy_secret": null,
+  "devices": {},
+  "integrations": {},
+  "delivery": {}
+}

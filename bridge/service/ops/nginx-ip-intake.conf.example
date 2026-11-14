@@ -1,0 +1,24 @@
+# Numeric-IP ADMS. No administration on this virtual host, no TLS assumption.
+# DB-backed authorization is controlled by the authenticated dashboard.
+auth_basic off;
+client_max_body_size 2m;
+auth_request /_adms/check;
+limit_except GET POST { deny all; }
+proxy_http_version 1.1;
+proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $remote_addr;
+proxy_set_header X-Forwarded-Proto http;
+proxy_set_header X-ADMS-Transport ip-http;
+proxy_set_header X-ADMS-HTTPS off;
+include /etc/nginx/snippets/rikaz-adms-edge-key.conf;
+proxy_set_header Authorization "";
+proxy_set_header X-ADMS-Device "";
+proxy_set_header X-ADMS-Timestamp "";
+proxy_set_header X-ADMS-Signature "";
+proxy_set_header X-Original-URL "";
+proxy_set_header X-Rewrite-URL "";
+proxy_connect_timeout 5s;
+proxy_read_timeout 30s;
+proxy_send_timeout 30s;
+proxy_pass http://unix:/run/rikaz-adms/intake.sock:;

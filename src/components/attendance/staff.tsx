@@ -234,7 +234,7 @@ export function PickupsTab({ ctx, canApprove, gate }: { ctx: Ctx; canApprove: bo
           <>{gate && <div className="mb-2"><CallQueueBadge /></div>}<ul className="space-y-2">
             {queue.data.map((r) => (
               <li key={r["id"]} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 text-sm">
-                <span className="min-w-0"><b>{r["student_name"]}</b>{gate && <CallButton name={r["student_name"]} section={r["section"]} />} — {r["section"]} <Badge variant="outline" className="ms-1">{KIND[r["kind"]]}</Badge> <Badge className="ms-1">{PICKUP_STATUS[r["status"]]}</Badge>
+                <span className="min-w-0"><b>{r["student_name"]}</b>{gate && <CallButton name={r["student_name"]} section={r["section"]} school={S!} pickup={r["id"]} />} — {r["section"]} <Badge variant="outline" className="ms-1">{KIND[r["kind"]]}</Badge> <Badge className="ms-1">{PICKUP_STATUS[r["status"]]}</Badge>
                   <span className="block text-muted-foreground">المستلم: {r["pickup_name"]}{r["relationship"] ? ` (${r["relationship"]})` : ""} • {r["delegate_mode"] === "one_time" ? `تفويض لهذا الطلب${r["phone_hint"] ? ` • جوال ${r["phone_hint"]}` : ""} • تحقق بآخر 4 أرقام من الهوية` : r["delegate_mode"] === "authorized" ? `مستلم معتمد${r["pickup_national_id"] ? ` • الهوية: ${r["pickup_national_id"]}` : ""}` : "ولي الأمر نفسه"}</span></span>
                 <span className="flex flex-wrap gap-1">
                   {gate && r["status"] === "approved" && (r["delegate_mode"] === "one_time" && r["delegate_status"] !== "approved"
@@ -480,7 +480,7 @@ export function FollowupTab({ ctx }: { ctx: Ctx }) {
   );
 }
 
-function CallButton({ name, section }: { name: string; section?: string | null }) {
+function CallButton({ name, section, school, pickup }: { name: string; section?: string | null; school: string; pickup: string }) {
   const [busy, setBusy] = useState(false);
   return (
     <Button type="button" size="sm" variant="outline" className="ms-2 h-7 gap-1 px-2" disabled={busy} title="نداء الطالب 3 مرات"
@@ -488,7 +488,7 @@ function CallButton({ name, section }: { name: string; section?: string | null }
         const text = announceText(name, section);
         if (isQueued(text)) return void toast.info("النداء موجود في الطابور");
         setBusy(true); toast.success(`أُضيف نداء ${name} إلى الطابور`);
-        try { await enqueueCall(text); } catch (e) { toast.error(`تعذّر النداء: ${e instanceof Error ? e.message : e}`); } finally { setBusy(false); }
+        try { await enqueueCall(text, school, pickup); } catch (e) { toast.error(`تعذّر النداء: ${e instanceof Error ? e.message : e}`); } finally { setBusy(false); }
       }}>
       <Volume2 className="size-3.5" />{busy ? "يُنادى…" : "نداء"}
     </Button>

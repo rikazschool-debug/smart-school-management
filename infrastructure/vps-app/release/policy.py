@@ -77,15 +77,25 @@ def sql_analysis(source):
             'blocked':sorted(set(blocked)),'execution_sql':body}
 
 def migration_files(root):
-    folder=root/'supabase/migrations';result=[];seen=set()
-    for path in sorted(folder.iterdir()):
-        match=re.fullmatch(r'(\d{14})_([a-zA-Z0-9_-]+)\.sql',path.name)
-        if not match:raise ReleaseError('unexpected_migration_file')
-        if match[1]in seen:raise ReleaseError('duplicate_migration_version')
-        seen.add(match[1]);source=read_sql(path)
-        result.append({'path':path.relative_to(root).as_posix(),'version':match[1],
-                       'name':match[2],'sha256':digest(source),'source_md5':hashlib.md5(source.encode()).hexdigest()})
-    return result
+    result=[];seen=set()
+    for folder,scope in [(root/'supabase/migrations','shared'),(root/'supabase/vps-migrations','vps')]:
+        if not folder.exists()and scope=='vps':continue
+        if folder.is_symlink():raise ReleaseError('migration_folder_not_regular')
+        for path in sorted(folder.iterdir()):
+            match=re.fullmatch(r'(\d{14})_([a-zA-Z0-9_-]+)\.sql',path.name)
+            if not match:raise ReleaseError('unexpected_migration_file')
+            if match[1]in seen:raise ReleaseError('duplicate_migration_version')
+            seen.add(match[1]);source=read_sql(path)
+            item={'path':path.relative_to(root).as_posix(),'version':match[1],
+                  'name':match[2],'sha256':digest(source),'source_md5':hashlib.md5(source.encode()).hexdigest()}
+            if scope=='vps':item['scope']='vps'
+            result.append(item)
+    return sorted(result,key=lambda m:m['version'])
+
+
+def target_migrations(manifest,target):
+    if target not in {'vps','cloud'}:raise ReleaseError('unknown_database_target')
+    return [m for m in manifest['migrations']if target=='vps'or m.get('scope','shared')=='shared']
 
 def make_manifest(root,sha):
     if not re.fullmatch('[0-9a-f]{40}',sha):raise ReleaseError('full_commit_sha_required')
@@ -136,7 +146,7 @@ def validate_history(manifest,base,history,target):
     verify_manifest(manifest)
     actual={m['version']:m for m in history}
     if len(actual)!=len(history):raise ReleaseError('duplicate_history_version')
-    common={m['version']:m for m in manifest['migrations']}
+    common={m['version']:m for m in target_migrations(manifest,target)}
     baseline={m['version']for m in base['common_migrations']}
     required_extras={m['version']for m in base['vps_only']}if target=='vps'else set()
     optional={m['version']:m for m in base.get('optional_vps_only',[])}if target=='vps'else{}
@@ -153,11 +163,13 @@ def validate_history(manifest,base,history,target):
         if version not in baseline and version not in extras:
             if row.get('source_md5')!=common[version]['source_md5']:
                 raise ReleaseError('applied_migration_source_mismatch')
-    pending=[m for m in manifest['migrations']if m['version']not in actual]
-    # Pending files must be a suffix of the shared stream, not holes hidden by a later version.
-    applied_common=sorted(set(actual)&set(common))
-    if pending and applied_common and min(m['version']for m in pending)<max(applied_common):
-        raise ReleaseError('non_suffix_pending_migrations')
+    pending=[m for m in target_migrations(manifest,target)if m['version']not in actual]
+    # Shared and VPS-only ledgers advance independently. Neither stream may hide a hole,
+    # but a later VPS version must not force an unrelated cloud migration to be renamed.
+    for scope in ['shared','vps']:
+        stream={v for v,m in common.items()if m.get('scope','shared')==scope}
+        applied=sorted(set(actual)&stream);missing=[m['version']for m in pending if m['version']in stream]
+        if missing and applied and min(missing)<max(applied):raise ReleaseError('non_suffix_pending_migrations')
     return pending
 
 def require_approval(manifest,approved_id,risk_approval_id):

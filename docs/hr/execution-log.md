@@ -212,3 +212,7 @@ Status: implemented · server-tested · browser-tested with simulated location �
 
 ## 2026-11-12 — ADMS Bridge v1 (Rikaz side)
 Prepared and tested in isolation; not applied or enabled. See docs/integrations/adms-v1.md.
+
+### 2026-11-14 — VPS ADMS raw-delivery completion preparation
+
+Moved the never-applied pending ADMS contract to the VPS-only migration stream; no old migration was edited. Reused the current bridge source and its database. Added independent per-device delivery consent, preserved org/site activation cutoffs, private Unix/HMAC receiver preparation, metadata-only registry worker and authorized paged raw receipt display. Joint isolated test: 57 assertions, including lost ACK, duplicate receipt, cross-org refusal, raw immutability, PIN scope and unchanged mobile punches; existing bridge 54 tests pass. No live device enabled, trial archive preserved, attendance processing remains off and no employees invented. Live installation/acceptance is tracked separately.

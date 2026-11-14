@@ -36,86 +36,378 @@ function status(active: boolean, removed: boolean) {
 
 export function AdmsBridge({ org }: { org: string }) {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["adms-ov", org], retry: false, queryFn: () => rpc<Overview>("adms_overview", { _org: org }) });
+  const q = useQuery({
+    queryKey: ["adms-ov", org],
+    retry: false,
+    queryFn: () => rpc<Overview>("adms_overview", { _org: org }),
+  });
   const inv = () => qc.invalidateQueries({ queryKey: ["adms-ov", org] });
   const err = (e: unknown) => toast.error(arabicError(e));
   const syncFn = useServerFn(admsSyncNow);
   const sync = useMutation({
     mutationFn: () => syncFn({ data: { org } }),
-    onSuccess: (r) => { if (r.ok) toast.success(`طُبّقت ${r.items} تغييرات من الجسر`); else toast.error(SYNC_MSG[r.code] ?? `تعذّرت المزامنة (${r.code})`); inv(); },
+    onSuccess: (r) => {
+      if (r.ok) toast.success(`طُبّقت ${r.items} تغييرات من الجسر`);
+      else toast.error(SYNC_MSG[r.code] ?? `تعذّرت المزامنة (${r.code})`);
+      inv();
+    },
     onError: err,
   });
-  const link = useMutation({ mutationFn: (a: { site: string; v: string }) => rpc("adms_site_link", { _site: a.site, _school: a.v.startsWith("s:") ? a.v.slice(2) : null, _admin_site: a.v.startsWith("a:") ? a.v.slice(2) : null }), onSuccess: () => { toast.success("حُفظ ربط الموقع"); inv(); }, onError: err });
+  const link = useMutation({
+    mutationFn: (a: { site: string; v: string }) =>
+      rpc("adms_site_link", {
+        _site: a.site,
+        _school: a.v.startsWith("s:") ? a.v.slice(2) : null,
+        _admin_site: a.v.startsWith("a:") ? a.v.slice(2) : null,
+      }),
+    onSuccess: () => {
+      toast.success("حُفظ ربط الموقع");
+      inv();
+    },
+    onError: err,
+  });
   const [adm, setAdm] = useState("");
-  const addAdm = useMutation({ mutationFn: () => rpc("adms_admin_site_save", { _org: org, _id: null, _name: adm, _active: true }), onSuccess: () => { setAdm(""); inv(); }, onError: err });
-  const legacy = useMutation({ mutationFn: (a: { dev: string; legacy: string | null }) => rpc("adms_device_legacy_link", { _device: a.dev, _legacy: a.legacy }), onSuccess: () => { toast.success("حُفظ ربط الجهاز القديم"); inv(); }, onError: err });
+  const [eventsPage, setEventsPage] = useState(0);
+  type RawEvents = {
+    total: number;
+    rows: {
+      event_id: string;
+      device_name: string;
+      device_pin: string;
+      raw_device_time: string;
+      received_at: string;
+      state: string;
+      receipt_id: string;
+      quality: string;
+    }[];
+  };
+  const raw = useQuery({
+    queryKey: ["adms-events", org, eventsPage],
+    enabled: !!q.data,
+    queryFn: () =>
+      rpc<RawEvents>("adms_events_list", {
+        _org: org,
+        _device: null,
+        _offset: eventsPage * 30,
+        _limit: 30,
+      }),
+    refetchInterval: 30000,
+  });
+  const addAdm = useMutation({
+    mutationFn: () =>
+      rpc("adms_admin_site_save", { _org: org, _id: null, _name: adm, _active: true }),
+    onSuccess: () => {
+      setAdm("");
+      inv();
+    },
+    onError: err,
+  });
+  const legacy = useMutation({
+    mutationFn: (a: { dev: string; legacy: string | null }) =>
+      rpc("adms_device_legacy_link", { _device: a.dev, _legacy: a.legacy }),
+    onSuccess: () => {
+      toast.success("حُفظ ربط الجهاز القديم");
+      inv();
+    },
+    onError: err,
+  });
 
-  if (q.isLoading) return <p className="mt-3 text-sm text-muted-foreground">جارٍ تحميل أجهزة الجسر…</p>;
-  if (q.error) return (
-    <div className="mt-3 rounded-xl border border-dashed p-3 text-sm">
-      <h3 className="font-bold">أجهزة جسر الحضور (ADMS)</h3>
-      <p className="mt-1 text-muted-foreground">{notInstalled(q.error) ? "التكامل الجديد مُجهّز وغير مفعّل: لم تُطبَّق قاعدة بياناته بعد، ولا يُستقبل أي حضور منه." : arabicError(q.error)}</p>
-    </div>
-  );
+  if (q.isLoading)
+    return <p className="mt-3 text-sm text-muted-foreground">جارٍ تحميل أجهزة الجسر…</p>;
+  if (q.error)
+    return (
+      <div className="mt-3 rounded-xl border border-dashed p-3 text-sm">
+        <h3 className="font-bold">أجهزة جسر الحضور (ADMS)</h3>
+        <p className="mt-1 text-muted-foreground">
+          {notInstalled(q.error)
+            ? "التكامل الجديد مُجهّز وغير مفعّل: لم تُطبَّق قاعدة بياناته بعد، ولا يُستقبل أي حضور منه."
+            : arabicError(q.error)}
+        </p>
+      </div>
+    );
   const o = q.data!;
   const siteName = (id: string) => o.sites.find((s) => s.id === id)?.name ?? "موقع غير مزامن";
   return (
     <div className="mt-3 space-y-3 rounded-xl border p-3">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="flex-1 text-sm font-bold">أجهزة جسر الحضور (ADMS)</h3>
-        <Button size="sm" variant="outline" disabled={sync.isPending} onClick={() => sync.mutate()}><RefreshCw className="size-4" />مزامنة الآن</Button>
+        <Button size="sm" variant="outline" disabled={sync.isPending} onClick={() => sync.mutate()}>
+          <RefreshCw className="size-4" />
+          مزامنة الآن
+        </Button>
       </div>
-      <p className="text-xs text-muted-foreground">المؤسسات والمواقع والأجهزة تُدار في لوحة الجسر فقط. هنا تربط مواقعه بفروع ركاز أو مواقع إدارية وتطابق أرقام الأجهزة بالموظفين. حضور الجوال والموقع الجغرافي مستقل ولا يتأثر.</p>
+      <p className="text-xs text-muted-foreground">
+        المؤسسات والمواقع والأجهزة تُدار في لوحة الجسر فقط. هنا تربط مواقعه بفروع ركاز أو مواقع
+        إدارية وتطابق أرقام الأجهزة بالموظفين. حضور الجوال والموقع الجغرافي مستقل ولا يتأثر.
+      </p>
       <dl className="grid gap-1 text-xs sm:grid-cols-2 lg:grid-cols-4">
-        <div><dt className="inline text-muted-foreground">مؤسسة الجسر: </dt><dd className="inline font-mono" dir="ltr">{o.bridge_org_id ?? "غير مربوطة"}</dd></div>
-        <div><dt className="inline text-muted-foreground">آخر تطبيق ناجح في ركاز: </dt><dd className="inline">{o.last_sync_at ? `${dtm(o.last_sync_at)} · ${o.last_sync_items ?? 0} تغيير · المؤشر ${o.cursor}` : "—"}</dd></div>
-        <div><dt className="inline text-muted-foreground">آخر خطأ في ركاز: </dt><dd className="inline">{o.last_error ? <><span dir="ltr" className="font-mono">{o.last_error}</span> · {dtm(o.last_error_at!)}</> : "لا يوجد"}</dd></div>
-        <div><dt className="inline text-muted-foreground">معالجة الحضور من الجسر: </dt><dd className="inline">{o.processing_enabled ? "مفعّلة" : "متوقفة"}</dd></div>
+        <div>
+          <dt className="inline text-muted-foreground">مؤسسة الجسر: </dt>
+          <dd className="inline font-mono" dir="ltr">
+            {o.bridge_org_id ?? "غير مربوطة"}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline text-muted-foreground">آخر تطبيق ناجح في ركاز: </dt>
+          <dd className="inline">
+            {o.last_sync_at
+              ? `${dtm(o.last_sync_at)} · ${o.last_sync_items ?? 0} تغيير · المؤشر ${o.cursor}`
+              : "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline text-muted-foreground">آخر خطأ في ركاز: </dt>
+          <dd className="inline">
+            {o.last_error ? (
+              <>
+                <span dir="ltr" className="font-mono">
+                  {o.last_error}
+                </span>{" "}
+                · {dtm(o.last_error_at!)}
+              </>
+            ) : (
+              "لا يوجد"
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline text-muted-foreground">معالجة الحضور من الجسر: </dt>
+          <dd className="inline">{o.processing_enabled ? "مفعّلة" : "متوقفة"}</dd>
+        </div>
       </dl>
-      {Object.keys(o.states).length > 0 && <p className="flex flex-wrap gap-1 text-xs">{Object.entries(o.states).map(([k, n]) => <span key={k} className="rounded bg-secondary px-1.5">{STATE[k] ?? k}: {n}</span>)}</p>}
+      {Object.keys(o.states).length > 0 && (
+        <p className="flex flex-wrap gap-1 text-xs">
+          {Object.entries(o.states).map(([k, n]) => (
+            <span key={k} className="rounded bg-secondary px-1.5">
+              {STATE[k] ?? k}: {n}
+            </span>
+          ))}
+        </p>
+      )}
 
       <section>
         <h4 className="text-xs font-bold">مواقع الجسر وربطها</h4>
-        {o.sites.length === 0 ? <p className="text-xs text-muted-foreground">لا توجد مواقع بعد. سجّل الموقع في لوحة الجسر ثم اضغط «مزامنة الآن».</p> : (
-          <ul className="mt-1 space-y-1">{o.sites.map((s) => (
-            <li key={s.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-secondary/40 p-2 text-sm">
-              <span className="flex-1 font-semibold">{s.name}</span>{status(s.active, s.removed)}
-              <select aria-label={`ربط ${s.name}`} className={selectCls("w-full sm:w-56")} value={s.school_id ? "s:" + s.school_id : s.admin_site_id ? "a:" + s.admin_site_id : ""} disabled={link.isPending}
-                onChange={async (e) => { const v = e.target.value; if (await ask("تغيير ربط الموقع لا يغيّر الحركات المعالجة سابقًا. متابعة؟")) link.mutate({ site: s.id, v }); }}>
-                <option value="">— غير مربوط —</option>
-                <optgroup label="الفروع">{o.schools.map((x) => <option key={x.id} value={"s:" + x.id}>{x.name}</option>)}</optgroup>
-                <optgroup label="مواقع إدارية">{o.admin_sites.filter((x) => x.is_active).map((x) => <option key={x.id} value={"a:" + x.id}>{x.name}</option>)}</optgroup>
-              </select>
-            </li>))}</ul>)}
-        <form className="mt-2 flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (adm.trim() && !addAdm.isPending) addAdm.mutate(); }}>
-          <Input aria-label="اسم موقع إداري" placeholder="موقع إداري جديد (بلا مدرسة)" className="w-full sm:w-64" value={adm} onChange={(e) => setAdm(e.target.value)} />
-          <Button size="sm" type="submit" variant="outline" disabled={addAdm.isPending}>إضافة موقع إداري</Button>
+        {o.sites.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            لا توجد مواقع بعد. سجّل الموقع في لوحة الجسر ثم اضغط «مزامنة الآن».
+          </p>
+        ) : (
+          <ul className="mt-1 space-y-1">
+            {o.sites.map((s) => (
+              <li
+                key={s.id}
+                className="flex flex-wrap items-center gap-2 rounded-lg bg-secondary/40 p-2 text-sm"
+              >
+                <span className="flex-1 font-semibold">{s.name}</span>
+                {status(s.active, s.removed)}
+                <select
+                  aria-label={`ربط ${s.name}`}
+                  className={selectCls("w-full sm:w-56")}
+                  value={
+                    s.school_id ? "s:" + s.school_id : s.admin_site_id ? "a:" + s.admin_site_id : ""
+                  }
+                  disabled={link.isPending}
+                  onChange={async (e) => {
+                    const v = e.target.value;
+                    if (await ask("تغيير ربط الموقع لا يغيّر الحركات المعالجة سابقًا. متابعة؟"))
+                      link.mutate({ site: s.id, v });
+                  }}
+                >
+                  <option value="">— غير مربوط —</option>
+                  <optgroup label="الفروع">
+                    {o.schools.map((x) => (
+                      <option key={x.id} value={"s:" + x.id}>
+                        {x.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="مواقع إدارية">
+                    {o.admin_sites
+                      .filter((x) => x.is_active)
+                      .map((x) => (
+                        <option key={x.id} value={"a:" + x.id}>
+                          {x.name}
+                        </option>
+                      ))}
+                  </optgroup>
+                </select>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form
+          className="mt-2 flex flex-wrap gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (adm.trim() && !addAdm.isPending) addAdm.mutate();
+          }}
+        >
+          <Input
+            aria-label="اسم موقع إداري"
+            placeholder="موقع إداري جديد (بلا مدرسة)"
+            className="w-full sm:w-64"
+            value={adm}
+            onChange={(e) => setAdm(e.target.value)}
+          />
+          <Button size="sm" type="submit" variant="outline" disabled={addAdm.isPending}>
+            إضافة موقع إداري
+          </Button>
         </form>
       </section>
 
       <section>
         <h4 className="text-xs font-bold">أجهزة الجسر</h4>
-        {o.devices.length === 0 ? <p className="text-xs text-muted-foreground">لا توجد أجهزة بعد.</p> : (
-          <ul className="mt-1 space-y-2">{o.devices.map((d) => (
-            <li key={d.id} className="rounded-xl border bg-card p-3 text-sm">
-              <div className="flex flex-wrap items-center gap-2"><b className="flex-1">{d.name}</b>{status(d.active, d.removed)}
-                {d.unmatched > 0 && <span className="rounded bg-warning/15 px-1.5 text-xs">{d.unmatched} رقم غير مطابق</span>}</div>
-              <dl className="mt-1 grid gap-1 text-xs text-muted-foreground sm:grid-cols-4">
-                <div><dt className="inline">SN: </dt><dd className="inline font-mono" dir="ltr">{d.serial_no}</dd></div>
-                <div><dt className="inline">الموقع: </dt><dd className="inline">{siteName(d.site_id)}</dd></div>
-                <div><dt className="inline">آخر اتصال موثّق: </dt><dd className="inline">{d.last_contact_at ? dtm(d.last_contact_at) : "—"}</dd></div>
-                <div><dt className="inline">آخر حركة خام: </dt><dd className="inline">{d.last_punch_at ? dtm(d.last_punch_at) : "—"}</dd></div>
-              </dl>
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                <label htmlFor={`lg-${d.id}`}>جهاز قديم في ركاز (ربط صريح للمراجعة):</label>
-                <select id={`lg-${d.id}`} className={selectCls("w-full sm:w-56")} value={d.legacy_device_id ?? ""} disabled={legacy.isPending}
-                  onChange={async (e) => { const v = e.target.value || null; if (await ask(v ? "ربط هذا الجهاز بالجهاز القديم المختار؟ لا تُدمج السجلات القديمة." : "إلغاء ربط الجهاز القديم؟")) legacy.mutate({ dev: d.id, legacy: v }); }}>
-                  <option value="">— لا يوجد —</option>
-                  {o.legacy_devices.filter((x) => !x.linked || x.id === d.legacy_device_id).map((x) => <option key={x.id} value={x.id}>{x.name}{x.serial_no ? ` (${x.serial_no})` : ""}</option>)}
-                </select>
-              </div>
-              <DevicePins org={org} d={d} school={o.sites.find((s) => s.id === d.site_id)?.school_id ?? null} onChange={inv} />
-            </li>))}</ul>)}
+        {o.devices.length === 0 ? (
+          <p className="text-xs text-muted-foreground">لا توجد أجهزة بعد.</p>
+        ) : (
+          <ul className="mt-1 space-y-2">
+            {o.devices.map((d) => (
+              <li key={d.id} className="rounded-xl border bg-card p-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <b className="flex-1">{d.name}</b>
+                  {status(d.active, d.removed)}
+                  {d.unmatched > 0 && (
+                    <span className="rounded bg-warning/15 px-1.5 text-xs">
+                      {d.unmatched} رقم غير مطابق
+                    </span>
+                  )}
+                </div>
+                <dl className="mt-1 grid gap-1 text-xs text-muted-foreground sm:grid-cols-4">
+                  <div>
+                    <dt className="inline">SN: </dt>
+                    <dd className="inline font-mono" dir="ltr">
+                      {d.serial_no}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="inline">الموقع: </dt>
+                    <dd className="inline">{siteName(d.site_id)}</dd>
+                  </div>
+                  <div>
+                    <dt className="inline">آخر اتصال موثّق: </dt>
+                    <dd className="inline">{d.last_contact_at ? dtm(d.last_contact_at) : "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="inline">آخر حركة خام: </dt>
+                    <dd className="inline">{d.last_punch_at ? dtm(d.last_punch_at) : "—"}</dd>
+                  </div>
+                </dl>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                  <label htmlFor={`lg-${d.id}`}>جهاز قديم في ركاز (ربط صريح للمراجعة):</label>
+                  <select
+                    id={`lg-${d.id}`}
+                    className={selectCls("w-full sm:w-56")}
+                    value={d.legacy_device_id ?? ""}
+                    disabled={legacy.isPending}
+                    onChange={async (e) => {
+                      const v = e.target.value || null;
+                      if (
+                        await ask(
+                          v
+                            ? "ربط هذا الجهاز بالجهاز القديم المختار؟ لا تُدمج السجلات القديمة."
+                            : "إلغاء ربط الجهاز القديم؟",
+                        )
+                      )
+                        legacy.mutate({ dev: d.id, legacy: v });
+                    }}
+                  >
+                    <option value="">— لا يوجد —</option>
+                    {o.legacy_devices
+                      .filter((x) => !x.linked || x.id === d.legacy_device_id)
+                      .map((x) => (
+                        <option key={x.id} value={x.id}>
+                          {x.name}
+                          {x.serial_no ? ` (${x.serial_no})` : ""}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <DevicePins
+                  org={org}
+                  d={d}
+                  school={o.sites.find((s) => s.id === d.site_id)?.school_id ?? null}
+                  onChange={inv}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className="space-y-2 border-t pt-3">
+        <h4 className="text-sm font-bold">الحركات الخام المحفوظة في ركاز</h4>
+        <p className="text-xs text-muted-foreground">
+          ظهور الحركة بإيصال يعني حفظها في ركاز، ولا يعني احتسابها حضورًا أو راتبًا. المعالجة
+          مستقلة، ومطابقة رقم الجهاز بالموظف صريحة. أرشيف التجربة المعزول لا يُنقل إلى هنا.
+        </p>
+        {raw.isLoading ? (
+          <p className="text-xs">جارٍ القراءة…</p>
+        ) : raw.error ? (
+          <p className="text-xs text-destructive">{arabicError(raw.error)}</p>
+        ) : !raw.data?.rows.length ? (
+          <p className="text-xs text-muted-foreground">
+            لا توجد حركات مستقبلة على هذه الصفحة؛ لا يوجد اتصال أو حضور افتراضي.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-xs">
+              <thead>
+                <tr>
+                  {[
+                    "الجهاز",
+                    "رقم المستخدم",
+                    "وقت الجهاز",
+                    "الحفظ في ركاز",
+                    "الحالة",
+                    "الإيصال",
+                  ].map((h) => (
+                    <th key={h} className="p-2">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {raw.data.rows.map((e) => (
+                  <tr key={e.event_id} className="border-t">
+                    <td className="p-2">{e.device_name}</td>
+                    <td dir="ltr" className="p-2">
+                      {e.device_pin}
+                    </td>
+                    <td dir="ltr" className="p-2">
+                      {e.raw_device_time}
+                    </td>
+                    <td className="p-2">{dtm(e.received_at)}</td>
+                    <td className="p-2">{STATE[e.state] ?? e.state}</td>
+                    <td dir="ltr" className="max-w-40 truncate p-2" title={e.receipt_id}>
+                      {e.receipt_id}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="flex items-center gap-2 text-xs">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={eventsPage === 0}
+            onClick={() => setEventsPage((p) => p - 1)}
+          >
+            السابق
+          </Button>
+          <span>
+            {raw.data?.total ?? 0} حركة · صفحة {eventsPage + 1}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={(eventsPage + 1) * 30 >= (raw.data?.total ?? 0)}
+            onClick={() => setEventsPage((p) => p + 1)}
+          >
+            التالي
+          </Button>
+        </div>
       </section>
     </div>
   );
