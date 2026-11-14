@@ -15,6 +15,9 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+__pycache__/
+*.pyc
+/release-artifacts/
 
 # VPS credentials belong outside the checkout. Only blank examples are tracked.
 /infrastructure/vps-app/*.env

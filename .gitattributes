@@ -1,1 +1,4 @@
 infrastructure/vps-app/** text eol=lf
+# Preserve the exact reviewed historical dump/replay bytes, including whitespace.
+infrastructure/vps-app/baseline/managed-schema.sql -whitespace
+infrastructure/vps-app/baseline/historical-replay/*.sql -whitespace

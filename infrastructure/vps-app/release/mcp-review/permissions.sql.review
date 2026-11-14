@@ -1,0 +1,28 @@
+-- REVIEW ONLY. Not an active/shared migration. CI may test it in isolation only.
+-- It is never applied to a live target by install.py or the application release runner.
+-- Apply only after the owner explicitly approves the MCP change and gateway patch together.
+-- Current observations: role has CREATE on public, no memberships, no application ownership,
+-- no schema/table read on the standard ledger; list_migrations selects version,name only.
+-- Reserved reviewed bootstrap version: 20261114180000_mcp_metadata_only.
+-- If separately approved, execute and record once through the guarded standard-ledger path.
+BEGIN;
+DO $preconditions$
+BEGIN
+  IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='rikaz_mcp_admin'AND NOT rolsuper AND NOT rolcreaterole AND NOT rolcreatedb AND NOT rolbypassrls)
+     OR EXISTS(SELECT 1 FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname='rikaz_mcp_admin'))
+  THEN RAISE EXCEPTION 'MCP role changed; review required';END IF;
+END $preconditions$;
+
+REVOKE CREATE ON SCHEMA public FROM rikaz_mcp_admin;
+GRANT USAGE ON SCHEMA supabase_migrations TO rikaz_mcp_admin;
+GRANT SELECT(version,name) ON TABLE supabase_migrations.schema_migrations TO rikaz_mcp_admin;
+
+DO $postconditions$
+BEGIN
+  IF has_schema_privilege('rikaz_mcp_admin','public','CREATE')
+     OR NOT has_column_privilege('rikaz_mcp_admin','supabase_migrations.schema_migrations','version','SELECT')
+     OR NOT has_column_privilege('rikaz_mcp_admin','supabase_migrations.schema_migrations','name','SELECT')
+     OR has_column_privilege('rikaz_mcp_admin','supabase_migrations.schema_migrations','statements','SELECT')
+  THEN RAISE EXCEPTION 'MCP metadata boundary not established';END IF;
+END $postconditions$;
+COMMIT;
