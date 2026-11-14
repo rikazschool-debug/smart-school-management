@@ -1,0 +1,3323 @@
+{
+  "format": 1,
+  "baseline_commit": "770aa86a1117f6c3682a1db764507924f1485e95",
+  "common_migrations": [
+    {
+      "path": "supabase/migrations/20261031180053_54e1761e-f7be-4476-a161-a4520d9489c2.sql",
+      "version": "20261031180053",
+      "sha256": "481f40228d49e4aa168bbf31f9915515eac24a23a05e9c81d03da435a215a332"
+    },
+    {
+      "path": "supabase/migrations/20261031180107_069c37b3-5c2c-43c4-920d-925a71b2d361.sql",
+      "version": "20261031180107",
+      "sha256": "5ef7d987c4307496e781f645087cfb88e1373f214db8f59683da81647de2d050"
+    },
+    {
+      "path": "supabase/migrations/20261031180141_a6c40280-9838-43e7-98ca-10547bf8cfcb.sql",
+      "version": "20261031180141",
+      "sha256": "62373d7c335447f0c0578dfd227815912de3f225369e8dcd8a5e2dc1d8728659"
+    },
+    {
+      "path": "supabase/migrations/20261031180928_4634abe1-1311-4915-8ca0-6cea89e0ce80.sql",
+      "version": "20261031180928",
+      "sha256": "33abc007d97ca87728820a16cc0b8b1d23e816b382c2796c15a203cba3d15359"
+    },
+    {
+      "path": "supabase/migrations/20261031182059_a92eb124-442f-4282-be43-d5e52f6cab93.sql",
+      "version": "20261031182059",
+      "sha256": "227c43e781be06d4bcc99a9b65ecbe406bce29430eb7590ac843da2aac1a19cf"
+    },
+    {
+      "path": "supabase/migrations/20261031183113_7c35653d-6211-4cef-8af9-b81ed78d89c1.sql",
+      "version": "20261031183113",
+      "sha256": "9be2c5b6eb3914e238c94c6b042465215f96b3c3c2dbc772d27140c13ecc71a1"
+    },
+    {
+      "path": "supabase/migrations/20261031183331_a37ecfcc-67f3-42b9-9d09-dc98d1358893.sql",
+      "version": "20261031183331",
+      "sha256": "f252dbc1793cb536f3cc9e1a324dd82d88f545f0680dc377a740ed715ea43d8e"
+    },
+    {
+      "path": "supabase/migrations/20261031183418_a5774ec8-6ce7-4317-9238-e869e9260492.sql",
+      "version": "20261031183418",
+      "sha256": "c0cd87680a2921fae7049762c3c6d53f4719914f74fa0b26479c69923d46cf60"
+    },
+    {
+      "path": "supabase/migrations/20261031184404_f4bcd8e3-18f6-4b97-b235-6128b5a5f41b.sql",
+      "version": "20261031184404",
+      "sha256": "a025782442b46ff5dbd74480359cbfb55f04aa700a1a3a9bca108a3e06547656"
+    },
+    {
+      "path": "supabase/migrations/20261101032623_85fe75cb-7d42-4f9b-b998-1b08c4f66a32.sql",
+      "version": "20261101032623",
+      "sha256": "00c62b09a179980355b770d07a8909fd9eeecf2b06c6c10467a52c9c4ed67c71"
+    },
+    {
+      "path": "supabase/migrations/20261101032652_af71f0c1-bf73-457b-8c76-d07aea808c66.sql",
+      "version": "20261101032652",
+      "sha256": "a140d89f4e11cb1f6bed2b6f29aceb33cf31e327d9d83c21df124a6ffc72c00c"
+    },
+    {
+      "path": "supabase/migrations/20261101032950_174ca5e7-232d-4982-ac0e-d3b0ce2fdf3e.sql",
+      "version": "20261101032950",
+      "sha256": "0fb6f4bfc0c43f5a589b1edaa8bb470b2e0c29853d9cf8e07db15be524c02e14"
+    },
+    {
+      "path": "supabase/migrations/20261101033014_a7951b28-f8ba-4081-933a-b22c6c6c51f4.sql",
+      "version": "20261101033014",
+      "sha256": "3bf2073fdc3b84c4d2c65bff02914af09c291b7875ae6b2fe0c9e5611e995dc0"
+    },
+    {
+      "path": "supabase/migrations/20261101040119_225edb9c-2cb5-44ca-a804-e9e9fe707b35.sql",
+      "version": "20261101040119",
+      "sha256": "1d01e48439ad21ea9b2e91839e812c271f0e7516db8935afb2a16fa3a9dbc2d5"
+    },
+    {
+      "path": "supabase/migrations/20261101042201_1881d6ed-6172-4f53-bebb-0165f4c3f2f8.sql",
+      "version": "20261101042201",
+      "sha256": "7550e3410dc4bb1cc3a1d2378b1ac74d9ddbd2fad2288f53bd9267bab15ce65c"
+    },
+    {
+      "path": "supabase/migrations/20261101042215_3ac47885-324d-48eb-a5c7-89da75322ec5.sql",
+      "version": "20261101042215",
+      "sha256": "f9956b6fff136085f2a396c0098b608c6d0ccf6b0860dae9e997ca1f2edfdabe"
+    },
+    {
+      "path": "supabase/migrations/20261101044437_50a6af6e-b78d-4d30-ae38-0afd12fc2d1c.sql",
+      "version": "20261101044437",
+      "sha256": "1542a74b909038a16a2ee1d11be7abb087f60d7ad79ff12b5904706db50057ad"
+    },
+    {
+      "path": "supabase/migrations/20261101051444_7a67929e-a45c-4491-9684-c9d36e488536.sql",
+      "version": "20261101051444",
+      "sha256": "9026559a3fac935d8aba424a2828d4a3c08706d91e470a5efa4a0a94196d2e2d"
+    },
+    {
+      "path": "supabase/migrations/20261101053218_47d13a3a-ae44-4203-aae0-c196005c7396.sql",
+      "version": "20261101053218",
+      "sha256": "adc33aaaafd1912ceedb54c375930279dcaa1330597fee184fdca7316e3e8419"
+    },
+    {
+      "path": "supabase/migrations/20261101053840_fac1c143-67f7-4250-bfc6-74d383aa5e3e.sql",
+      "version": "20261101053840",
+      "sha256": "2edaf51fb76b5ae7122c34f944b385253e041d3949796c8b9475f0aa3a8d8251"
+    },
+    {
+      "path": "supabase/migrations/20261101054427_79ef89dc-0a78-451e-9c80-53d0b1093cab.sql",
+      "version": "20261101054427",
+      "sha256": "641aa1465861e99f756ce86a1817b2d07199a20d8b1810a02e1c0ad20df5d615"
+    },
+    {
+      "path": "supabase/migrations/20261101070918_0deb2e06-e4e1-472b-bbb3-4b5b06c8a01d.sql",
+      "version": "20261101070918",
+      "sha256": "327b09e50bd3c715535bf638a83bfaac72873dd648c13cdbcda705d9a6549476"
+    },
+    {
+      "path": "supabase/migrations/20261101070930_464a55ef-4ebf-4aab-8770-a394a17f3116.sql",
+      "version": "20261101070930",
+      "sha256": "822d154410ee70e35d0256bbbbf18ce46b933014f9d9f5452c13b519da24ce5b"
+    },
+    {
+      "path": "supabase/migrations/20261101073535_2a0f2100-88bc-45a4-92e2-d6e65c43ebf2.sql",
+      "version": "20261101073535",
+      "sha256": "a98979790ed7413f3ef237a639b567a9ff1034852bf74dfafec0721259360dca"
+    },
+    {
+      "path": "supabase/migrations/20261101073548_a46cbd2e-9635-4915-b3bc-5bd2991a3237.sql",
+      "version": "20261101073548",
+      "sha256": "62c94a37f71fc9ba1e1a06dc945437df620aad58f3481fc13ede71e164d3110e"
+    },
+    {
+      "path": "supabase/migrations/20261101075138_69044ae8-6943-42d7-a777-d635581da49f.sql",
+      "version": "20261101075138",
+      "sha256": "7f22ad4474c39a2b3c8692ace708ff08bc2a14209bf58f98dbbf94a8cfeaa9bc"
+    },
+    {
+      "path": "supabase/migrations/20261101075212_6154d2bd-078e-46db-b99d-3c087d3635fd.sql",
+      "version": "20261101075212",
+      "sha256": "a6675327dad9216b6376c6b4806cff9e2d898669476ab85c197bd30a2ce00bd8"
+    },
+    {
+      "path": "supabase/migrations/20261101075326_b31aa91c-8590-4481-ac41-06857ac5ac0f.sql",
+      "version": "20261101075326",
+      "sha256": "6f816eeae09893bcc94ffc294936b27ba6aba6d4bb7778ab593689d52f8ff043"
+    },
+    {
+      "path": "supabase/migrations/20261101084002_3b80ba97-74f7-4ded-96df-cd92cc5e07a5.sql",
+      "version": "20261101084002",
+      "sha256": "a02d0503d80385d7089b31674f502d35c530e938243e1388a49e0b2f0d781e7e"
+    },
+    {
+      "path": "supabase/migrations/20261101084917_a3045726-b1fd-4d95-a0c7-16256553afb3.sql",
+      "version": "20261101084917",
+      "sha256": "e830c8480bd72210d07c5d62aa65dc770c0d9d1ac1f99bac784dd837b302f226"
+    },
+    {
+      "path": "supabase/migrations/20261101091715_a1569b9f-76e8-4317-91a6-6df5e42305bb.sql",
+      "version": "20261101091715",
+      "sha256": "0612b1ecc9930c296a8f93f610f86a6a9f2b9e6d4ed4c5c179ac46cae7963557"
+    },
+    {
+      "path": "supabase/migrations/20261101100533_92a1f8e0-2b7a-44f0-abcf-617da1b6ba78.sql",
+      "version": "20261101100533",
+      "sha256": "42fa390d23e5d73dc84a7fc75d1ed01c3fba7beeeb6eba81dc8d93713cd8d96b"
+    },
+    {
+      "path": "supabase/migrations/20261101110056_40fa1558-b2cd-45bb-b41c-c776706b16e6.sql",
+      "version": "20261101110056",
+      "sha256": "c82b284e4bc0e12309b7e65a0d5f6ffc1345e8b69e7dc417bad23ac798236708"
+    },
+    {
+      "path": "supabase/migrations/20261101110114_70226fde-dc56-4d4f-ab59-78596170c448.sql",
+      "version": "20261101110114",
+      "sha256": "89e1618c84cf5c612e91b2bddb167e86f43ed5f1ba42650b3fd6d4de1e36ff51"
+    },
+    {
+      "path": "supabase/migrations/20261101111610_37bb776b-a7e0-415f-ad59-113abef03e77.sql",
+      "version": "20261101111610",
+      "sha256": "3f835143fe0e62b68b3dc1296201577a516c6fc9240b3220b4ef69d2fab8c577"
+    },
+    {
+      "path": "supabase/migrations/20261102035633_2db0b6f8-636b-47a5-8f3c-4e3b51382997.sql",
+      "version": "20261102035633",
+      "sha256": "1e882572a4dcf3f4c9edb4fa9f4d9009d749c444cf91bb0ef64f169ec5667fcb"
+    },
+    {
+      "path": "supabase/migrations/20261102040407_78adfc9c-5a4a-470e-b49f-d8ba1ae7013c.sql",
+      "version": "20261102040407",
+      "sha256": "eaf7f9769a78709935dd1aadd289ad7ea987bc0d2ea2879962d375db5f3a225f"
+    },
+    {
+      "path": "supabase/migrations/20261102040537_2f108d07-9d7f-4402-9e85-3e96dcd6cc47.sql",
+      "version": "20261102040537",
+      "sha256": "ceb84ed733f6fb4e302fb03b46b2685cf61f4b9000804fb2e2769825f09d4281"
+    },
+    {
+      "path": "supabase/migrations/20261102041226_d9435aca-3608-4f03-8e0a-9411824cf4aa.sql",
+      "version": "20261102041226",
+      "sha256": "7b89a2c17a0ba472c825b0d474d4a8e7e9306c1ed66a5099e210732ed4916feb"
+    },
+    {
+      "path": "supabase/migrations/20261102043019_c632c487-4c8e-44cc-813f-dc823cab274e.sql",
+      "version": "20261102043019",
+      "sha256": "791d0af36c02cc70b84b49aa88119ac71d984e5da70ccf939a51d2f14bc45e0e"
+    },
+    {
+      "path": "supabase/migrations/20261102045735_9ca2f7b5-ed5d-451b-b4c9-6d4d894b919d.sql",
+      "version": "20261102045735",
+      "sha256": "a27b0fee1099447e2b66a528d40699425a3d099f071f5b9f01c837b05df3e39a"
+    },
+    {
+      "path": "supabase/migrations/20261102045823_750e31cc-620a-4a74-90a9-ef347db969da.sql",
+      "version": "20261102045823",
+      "sha256": "53c1a867e899f16bcefc388eb0eea7ff0f4ec35527718aa2e3454d153aacc954"
+    },
+    {
+      "path": "supabase/migrations/20261102051237_56b9aed2-e2e7-40e2-99bd-b1f56695099f.sql",
+      "version": "20261102051237",
+      "sha256": "dae93860db1daae5425ffe24d2b34a934be020b445d7fe9e16a320be7a925c2e"
+    },
+    {
+      "path": "supabase/migrations/20261102051833_2f359dbd-5e43-4357-9b51-b6eb924181da.sql",
+      "version": "20261102051833",
+      "sha256": "24f00209d97c6154e2d49dd7cb73f2a15d1140c122b7699ea30d0d3bc42a2d4f"
+    },
+    {
+      "path": "supabase/migrations/20261102054023_09d13ad2-2653-4cf9-af43-0302bca6db23.sql",
+      "version": "20261102054023",
+      "sha256": "a743fc6d91019408fc35c618f79f5849eaf549cd5024bcd5979df8c59847504d"
+    },
+    {
+      "path": "supabase/migrations/20261102060432_9ccfd1a1-ada6-41d3-afc9-a8e687399f41.sql",
+      "version": "20261102060432",
+      "sha256": "23ac850038b9f9fd18fd3da19714172c5a7687f3313b691ec64f8b4110ed2a76"
+    },
+    {
+      "path": "supabase/migrations/20261102061006_56326c1b-b35a-4220-a2ec-d09e87f61901.sql",
+      "version": "20261102061006",
+      "sha256": "7c50388b865e5f7f19c54c752b8c2b34b1db4da6049abae4242fffebbad76ee2"
+    },
+    {
+      "path": "supabase/migrations/20261102063537_ce3f3ae4-b7bb-453c-a889-4cf7158cde69.sql",
+      "version": "20261102063537",
+      "sha256": "523dc52d17827a6c4fc3bfa1045fb63f02c08d51fcc906cbf251a1e2b8a3f4b4"
+    },
+    {
+      "path": "supabase/migrations/20261102064643_f2aa7e6e-0f6b-4f2a-afa9-415e6ab25bdd.sql",
+      "version": "20261102064643",
+      "sha256": "e3d15dabc4ee216fd3eaf90e41483026b0a3aedff94f95060d57cc75199b1e28"
+    },
+    {
+      "path": "supabase/migrations/20261102064703_b51b70f7-5652-47c4-8664-f1e66f55f2c3.sql",
+      "version": "20261102064703",
+      "sha256": "8e355ffd296bb02408894b40226603ab00f32eff9160f3a9aff3d2394aed581c"
+    },
+    {
+      "path": "supabase/migrations/20261102065249_bdc7caaa-d412-423b-96a3-a479c4216fad.sql",
+      "version": "20261102065249",
+      "sha256": "182b962a949e515c8f4da356615afc65f303a0f8b915a0d6d7d4d9bc61e3e8f7"
+    },
+    {
+      "path": "supabase/migrations/20261102071234_f5dae725-18f6-4bcf-82e7-66d90eb2e9b2.sql",
+      "version": "20261102071234",
+      "sha256": "9ff1d593c4276727d9962a6cacbe491084dfd9c307939f656219b4c740c11f9b"
+    },
+    {
+      "path": "supabase/migrations/20261102082130_5893f03e-a3e0-4dbd-94b7-6017a7571198.sql",
+      "version": "20261102082130",
+      "sha256": "dde4e2b6914ab9eccb6666f17a10d9f32c97e680b8cef8244ec05b749fc2afa2"
+    },
+    {
+      "path": "supabase/migrations/20261102082258_bf161c40-8c88-4606-9031-989caf0854d0.sql",
+      "version": "20261102082258",
+      "sha256": "49bf2ec65b932f2d4c51335247dc954d715533ce67db902c29e98b60b3ac88af"
+    },
+    {
+      "path": "supabase/migrations/20261102093053_85aeb939-ce03-4285-893f-9c8a485aefc6.sql",
+      "version": "20261102093053",
+      "sha256": "3835aeb82190d464ac6e9821f8b1f0066f8d839be028d2e78bcf35d76a6a1c80"
+    },
+    {
+      "path": "supabase/migrations/20261102093147_eb97123b-6b8e-480e-8e6b-d0628e1ff088.sql",
+      "version": "20261102093147",
+      "sha256": "48e685be56c7701647b1198250fc07df6a39b5a2f1844f2b658426958731cd14"
+    },
+    {
+      "path": "supabase/migrations/20261102095453_2a925ea3-409c-4b96-9ef0-7520d8358bd1.sql",
+      "version": "20261102095453",
+      "sha256": "eb2c3f9c8d830df5cce569d96b67928ca91a7778cb0639c8ecff0e4deb9fcad0"
+    },
+    {
+      "path": "supabase/migrations/20261102095514_e2031b1d-2f6b-45d3-9792-ccdf2331d01c.sql",
+      "version": "20261102095514",
+      "sha256": "f4742a81b00e0bc1c10d8d6b048053637a73c893208fe267b875ba4ecf708cb0"
+    },
+    {
+      "path": "supabase/migrations/20261102095646_94d4340f-71af-48bf-b16b-3402f7c92ef2.sql",
+      "version": "20261102095646",
+      "sha256": "0e027b8d12fc9978635f4af40e7a74da21d88cf75ad701351a334e573d1f81fa"
+    },
+    {
+      "path": "supabase/migrations/20261102150942_3ad2a3f5-2b2f-4180-ab24-cc680beecec0.sql",
+      "version": "20261102150942",
+      "sha256": "3f4d0f343534321a3b9bd6abf19f14d491fe765c732f6f6ba12a8bb35ae34ed8"
+    },
+    {
+      "path": "supabase/migrations/20261102154620_1bf573b8-b877-426e-85e9-7d6c586a1308.sql",
+      "version": "20261102154620",
+      "sha256": "04f2a15407665750fe7f7cc54f9fc137a98ae2fed3bb856ac1ee81180b9b1449"
+    },
+    {
+      "path": "supabase/migrations/20261102163504_73a362e2-e378-4c9d-99b4-2b76e5610e41.sql",
+      "version": "20261102163504",
+      "sha256": "3c790df2f55ffa282d50f40cd82bf076cf505ce1e09e5145e94a6ebe4687a776"
+    },
+    {
+      "path": "supabase/migrations/20261102163733_b0ca4389-89b5-4b21-984c-d4d09f0ff1cf.sql",
+      "version": "20261102163733",
+      "sha256": "2d6a43ff92808ff955c0f652099df8a99260f25a6466d071a47a362a3850f70c"
+    },
+    {
+      "path": "supabase/migrations/20261102174454_2f5d9312-6ab8-42ae-9139-ee58fe6b940d.sql",
+      "version": "20261102174454",
+      "sha256": "40389e58f31716117e4fc3d37504bb824d5ea8b20d2ca4faf54282782d8f9b0e"
+    },
+    {
+      "path": "supabase/migrations/20261102175347_3841cefe-c6d8-4fc1-8584-c4c6c730c168.sql",
+      "version": "20261102175347",
+      "sha256": "d1fd858a0d83df007feab0a92e04fb4f06f2cb67fd590961e55cff89c0b57257"
+    },
+    {
+      "path": "supabase/migrations/20261102182805_2469fbb9-a893-49c9-87db-cf886adbfc5e.sql",
+      "version": "20261102182805",
+      "sha256": "17a97887650d4d7f5d6e6a020f2631a40094cc53f3150bc91ff13be6dc5007b8"
+    },
+    {
+      "path": "supabase/migrations/20261102184258_667c4210-e690-4beb-a4f3-51adf0bc8477.sql",
+      "version": "20261102184258",
+      "sha256": "97aa54ee416bd94c5c9f0cf482fc6ca46747932a970962ca4beb6f9e33b84701"
+    },
+    {
+      "path": "supabase/migrations/20261102185637_0623e7aa-5320-479a-ba08-40d969b1ad8d.sql",
+      "version": "20261102185637",
+      "sha256": "1beccd5a467d439388471cca9d11a9dbb47592ab73a9c5b19b8697356c36507e"
+    },
+    {
+      "path": "supabase/migrations/20261102185702_5fa2d753-7418-4ff7-a38b-8d7e067ec1e6.sql",
+      "version": "20261102185702",
+      "sha256": "1770547bf66bc278468b15c5940fae3b8c7c1337185774c1bb66678133a4aec2"
+    },
+    {
+      "path": "supabase/migrations/20261102191732_bb32687f-060a-4a9f-b696-9be372ed797e.sql",
+      "version": "20261102191732",
+      "sha256": "b243f8607e1ad373ecb5ebac8656661e1ed7328d1c3bcb3a661edad0e104972c"
+    },
+    {
+      "path": "supabase/migrations/20261102191750_035fb6bd-3f00-44eb-84c6-f821ce0ad79f.sql",
+      "version": "20261102191750",
+      "sha256": "a60cc17674b7a0f95c0d8b79c735fc1ea7f6e8e06d0d36f4662edaac11fa30a6"
+    },
+    {
+      "path": "supabase/migrations/20261103035244_5906c6f7-56d4-4a41-ac2d-8af38fc146cf.sql",
+      "version": "20261103035244",
+      "sha256": "bd580b9654cde446344855fdbcb1bf6dff71022bc1db6beebca67034924dd544"
+    },
+    {
+      "path": "supabase/migrations/20261103035259_720b65e8-792d-4d25-9922-f82cc20e267d.sql",
+      "version": "20261103035259",
+      "sha256": "b9e23025f4eeb3bd25b95c2d89e16288d5cb54696bead42f2d25920840d42cf0"
+    },
+    {
+      "path": "supabase/migrations/20261103040555_82167a9a-1a4e-4100-bf71-d4b71300ef60.sql",
+      "version": "20261103040555",
+      "sha256": "159c15db56073ff3333bf6621d0b7416172f548340d698c7e47e9e0e3befe503"
+    },
+    {
+      "path": "supabase/migrations/20261103041641_4b4bd543-f047-4e85-bde6-46c51c222d4f.sql",
+      "version": "20261103041641",
+      "sha256": "fd068081f57194561d77b2fe757d9e450ae93e8371500a4b6bcaff7498b93d31"
+    },
+    {
+      "path": "supabase/migrations/20261103043301_7ebc083a-b4f1-4342-9240-4e4f9a526497.sql",
+      "version": "20261103043301",
+      "sha256": "8129c7013f1cee2435a2bbfb8c9e9e24dc8496c17caa71f31b1bb52ddedbd901"
+    },
+    {
+      "path": "supabase/migrations/20261103043326_1df94242-aa4a-4845-b73b-4133ddef759f.sql",
+      "version": "20261103043326",
+      "sha256": "78d6d01216af034b5ed1a7c122d48e2d32205ef3e7113d09d3b331f471ea51fd"
+    },
+    {
+      "path": "supabase/migrations/20261103044054_2ba86ac2-88ab-44b2-ba59-d44b97a3934f.sql",
+      "version": "20261103044054",
+      "sha256": "ebde1618f127dc5c8397bc9dcb50ff05a1f6fe54f5fafcf4fd33c116b71258de"
+    },
+    {
+      "path": "supabase/migrations/20261103044422_c860ee09-ef9a-4ac3-900d-bceee7644b8f.sql",
+      "version": "20261103044422",
+      "sha256": "25dfd462c39d3bd6bcb465afd1234cf6cd443f61feeacecfaf3f4b47e82f17af"
+    },
+    {
+      "path": "supabase/migrations/20261103044827_c43bc029-6f07-4198-a789-40c8e6c3cd3d.sql",
+      "version": "20261103044827",
+      "sha256": "0f01e526fd54d465f1fb7c4e9ef98534a9f1e721d4276b55b13e4d8726a69fd4"
+    },
+    {
+      "path": "supabase/migrations/20261103045001_93c4e43b-20b7-498e-83f9-aa60c4350e26.sql",
+      "version": "20261103045001",
+      "sha256": "b270a78c065d8aa229f24a2444e1fd2839e0052c042358484edbd1161261bfc5"
+    },
+    {
+      "path": "supabase/migrations/20261103051119_b6847eb5-1ad1-4abc-bb2c-e2c43c21c618.sql",
+      "version": "20261103051119",
+      "sha256": "9edd81495a493cfb28d53b7da5d1a9c94c4ba6c8d833c0024c90f5b4b6ed0579"
+    },
+    {
+      "path": "supabase/migrations/20261103051351_08e2c504-12be-4a06-b331-833d0bd23c0e.sql",
+      "version": "20261103051351",
+      "sha256": "719812f392194b9d00937301f6b2907bbd46bf2928f74230a7329a1f170c4e04"
+    },
+    {
+      "path": "supabase/migrations/20261103052933_7a0d9e3e-c9f4-4ba0-9d1a-3fe487ac1960.sql",
+      "version": "20261103052933",
+      "sha256": "736f21e7c89e1cd389d1c048259a414bfa4cd732617aa1bcd6db02da363d5267"
+    },
+    {
+      "path": "supabase/migrations/20261103063148_715bd795-bb1c-44c6-9a50-94194253147b.sql",
+      "version": "20261103063148",
+      "sha256": "b84fd46a28a171ad7eef8027729c69bd8eabf1c05c1d1403abbd40bc697f0322"
+    },
+    {
+      "path": "supabase/migrations/20261103064446_f3618782-b12a-4f68-995f-aa653044edaa.sql",
+      "version": "20261103064446",
+      "sha256": "ad3d7111a48bfd845e0a62a11a021fe754f246cb55002ec99be39f95a35adecf"
+    },
+    {
+      "path": "supabase/migrations/20261103064515_89d6f7e3-999d-4dd2-b33e-2d3bc1ca1cd6.sql",
+      "version": "20261103064515",
+      "sha256": "eb262f85d5a1c6a89b17579bfb0ed08e690584ee97706ede5021501d6c33eb73"
+    },
+    {
+      "path": "supabase/migrations/20261103073636_16ef9dc2-9b70-430e-b274-41cdcc3737c3.sql",
+      "version": "20261103073636",
+      "sha256": "c72a1b89952aa500ce9e177cdbddb31357d9d402d2c2e4bff14ab88f15ae1702"
+    },
+    {
+      "path": "supabase/migrations/20261103073940_d0f1692c-7eb5-41a0-b3f5-136b9e1d5673.sql",
+      "version": "20261103073940",
+      "sha256": "98f24519d5638c00f2bedeff9041716b1bb64c7007722ea19e9a634ad9ab43e2"
+    },
+    {
+      "path": "supabase/migrations/20261103074118_b9a70e1a-03ca-40ea-adf7-462d4a9e5e03.sql",
+      "version": "20261103074118",
+      "sha256": "22069bde7697c56c7668413b93589a22ceef1412167ec14bc5bec2fc46d1cdea"
+    },
+    {
+      "path": "supabase/migrations/20261103074730_5686c19e-e04a-491d-bc2b-94bde8b5e31d.sql",
+      "version": "20261103074730",
+      "sha256": "cc5debc5f333798fdc2a298ecdc3ba37fc0501abfe27bbd3d166f97f9627044c"
+    },
+    {
+      "path": "supabase/migrations/20261103075851_f56a0e4b-a19f-4b61-b73b-3c0dbf7cc5ac.sql",
+      "version": "20261103075851",
+      "sha256": "8a7d2b2f7acad132d3bd1f73c4772c20a8648e8412cb208b26cde295abd5ce8d"
+    },
+    {
+      "path": "supabase/migrations/20261103075949_8d04ec93-4068-4236-a931-73fee1149c26.sql",
+      "version": "20261103075949",
+      "sha256": "0a2ed4b83cb47732e63510b8f4c07d4ac20ef5fac9cf7cbbcafae3b26bc3655c"
+    },
+    {
+      "path": "supabase/migrations/20261103083357_d5cb85c2-63ea-4b3b-a0f7-31f3592562ff.sql",
+      "version": "20261103083357",
+      "sha256": "4e56c60469162eb13ddb626d7d75169dedc41c5beb1616ca26729e1976bf0974"
+    },
+    {
+      "path": "supabase/migrations/20261103083558_6f633d3f-c019-4ccf-8cae-b6c6492e30f4.sql",
+      "version": "20261103083558",
+      "sha256": "60f389b48eed34e542be7b2140bdaf78eefb893c36b28a2ff392eb84d0f687c1"
+    },
+    {
+      "path": "supabase/migrations/20261103084935_52ae1f7d-a14e-45e6-a15f-8da57c7f096a.sql",
+      "version": "20261103084935",
+      "sha256": "2523d6fbc2e738b080d0586520b27d5be4b36ee46d821429f72fab3bc21519a6"
+    },
+    {
+      "path": "supabase/migrations/20261103085144_dfc176b6-36a6-4435-9731-ee24b7a4259b.sql",
+      "version": "20261103085144",
+      "sha256": "0c34ea7b1c029609ac10e8d1d3d8feac235b32da6e6a579b940ea1220963403f"
+    },
+    {
+      "path": "supabase/migrations/20261103091209_99457674-8aeb-4c71-ab80-abdb9cd61413.sql",
+      "version": "20261103091209",
+      "sha256": "829ec4c3f820b9af2ca5f6babf89016b179b9cf7f0b2eff123113a4f84f7a473"
+    },
+    {
+      "path": "supabase/migrations/20261103094135_f9fa044e-8e14-401a-97d8-e760483671bd.sql",
+      "version": "20261103094135",
+      "sha256": "8b312d4bd4157aa030357bcf5e4bc84954548e18c46f02e13bc0c4360cab31f5"
+    },
+    {
+      "path": "supabase/migrations/20261103095117_db078759-a1e2-4fe6-bbb4-72ffe2e1162a.sql",
+      "version": "20261103095117",
+      "sha256": "40138d773d4fbb60cae7d2bbb0bacbdc17182548162976d083e68317caf381e2"
+    },
+    {
+      "path": "supabase/migrations/20261103095129_dc962fd4-c66b-46b4-af4e-0c4713b64f25.sql",
+      "version": "20261103095129",
+      "sha256": "6ca3d61841256773f0eb24ecefefd00c1e924e6da8e14f68137c04b6addd2153"
+    },
+    {
+      "path": "supabase/migrations/20261103095212_dfc97b86-55fc-4a31-8510-1cb012dfdf55.sql",
+      "version": "20261103095212",
+      "sha256": "77cf5ea8e3b7a12025048e5a6f282d30754155fdcc15aa81c27a9c7f0487f9d4"
+    },
+    {
+      "path": "supabase/migrations/20261103102009_3c365746-aeb1-42ca-8bb7-209589b27759.sql",
+      "version": "20261103102009",
+      "sha256": "abe9d959e292590d9c53cde0a89a84be19d1ab6066079ebfc627417aa8a80fd8"
+    },
+    {
+      "path": "supabase/migrations/20261103102308_421f6632-07b9-4efb-a088-3a3efadfcdaa.sql",
+      "version": "20261103102308",
+      "sha256": "1bd4054c4c9341ad6fc7dbaa1e7abf0b5d7100c4178711c28c2448087efc5246"
+    },
+    {
+      "path": "supabase/migrations/20261103105024_c286a76c-79a3-477c-ba5f-7417d599761f.sql",
+      "version": "20261103105024",
+      "sha256": "ea7d980b9a5542e25ef137e0bb26eb3d545285372b60c0401088174898d7d2f4"
+    },
+    {
+      "path": "supabase/migrations/20261103105410_0cbca482-eca6-4c62-95e4-87fa8691a9ac.sql",
+      "version": "20261103105410",
+      "sha256": "3e4a6a1aa11a5a35fb0d60a7592c9761a47daf859e83c64ed6451144ab7095e9"
+    },
+    {
+      "path": "supabase/migrations/20261103112027_6b50def6-5a2c-4795-9c8b-7c83a3c2fa3d.sql",
+      "version": "20261103112027",
+      "sha256": "d607014c4b2ddb35efdc2c0fe1089b4c41e1391851c4e4657a8269cedb7a750b"
+    },
+    {
+      "path": "supabase/migrations/20261103112312_6fa133e0-7c75-4af8-aab9-78c5daf250a9.sql",
+      "version": "20261103112312",
+      "sha256": "738fd31eaa9b9134ea638f03d003ed3f0667b3ec3d7a175a37100dc432c28c19"
+    },
+    {
+      "path": "supabase/migrations/20261103112437_24e0ebbe-a2e9-457e-a08b-83a18ec4b5e5.sql",
+      "version": "20261103112437",
+      "sha256": "af60455dd5712c154b38534ea7d1ae47f0a084709372ac9d0f4921267f0c213f"
+    },
+    {
+      "path": "supabase/migrations/20261103141501_16d3d747-3589-4031-8448-ed5b1683658f.sql",
+      "version": "20261103141501",
+      "sha256": "e492139f1ab8f6efc69b596582bff43563bbd71fb903bbb44fc63570a16bd245"
+    },
+    {
+      "path": "supabase/migrations/20261103144438_dac05d43-39dc-476e-aae8-8b6f39ab1596.sql",
+      "version": "20261103144438",
+      "sha256": "151753ef333a22b4dd2db2ce0d6c00341d3459a1dc17d84819736b4a9d11dede"
+    },
+    {
+      "path": "supabase/migrations/20261103144658_d350cdc6-161f-475b-af0e-fb013e4c24d3.sql",
+      "version": "20261103144658",
+      "sha256": "ba9b202e417dfd810905d3377ee2755d6caf38c440821f0acc94efc2145b5230"
+    },
+    {
+      "path": "supabase/migrations/20261103151021_e0a4e864-efd0-4583-9604-64a14fb44831.sql",
+      "version": "20261103151021",
+      "sha256": "bc284748c2705101d6ec78c74a0904329adac5374c110416073ec34c41e98046"
+    },
+    {
+      "path": "supabase/migrations/20261103152411_383be22c-ca27-4254-9c1e-be03809d0b56.sql",
+      "version": "20261103152411",
+      "sha256": "05d7328e3e0ba63b99ff3b9083fdb8554119d376f8c3bebd6878b579dbebc59e"
+    },
+    {
+      "path": "supabase/migrations/20261103152556_975eaa35-b48f-4bbf-a232-fc745cce5b18.sql",
+      "version": "20261103152556",
+      "sha256": "629a102fb0cd343a1b9abbb630430a2ad86fddb1586d84382a9a1076a84014b1"
+    },
+    {
+      "path": "supabase/migrations/20261103154515_37b3ad8f-42de-442e-ac3e-b8276361af98.sql",
+      "version": "20261103154515",
+      "sha256": "e8364a00fd05a0ecffb5aeb3f50869b2c24a33764b1d68fee7d6538d73febf7f"
+    },
+    {
+      "path": "supabase/migrations/20261103180426_ae11f88d-6372-4530-9820-2002b02c9788.sql",
+      "version": "20261103180426",
+      "sha256": "04dc81e03ca51e182da49c84dd683ff891f454e71cce3804a00f7000b2423442"
+    },
+    {
+      "path": "supabase/migrations/20261103181402_40394edb-af03-4581-963f-288fe7b254cd.sql",
+      "version": "20261103181402",
+      "sha256": "3257e36dae9f81accb057c5ee287a6305944fa9737512370d8d5046ca3591ce4"
+    },
+    {
+      "path": "supabase/migrations/20261103183856_a5961fc9-b1d6-4e08-ba37-5d1332347600.sql",
+      "version": "20261103183856",
+      "sha256": "9d45dc660f5daa228cb3afd27c60ed3fa0ed1bf7115d96b81fc612bbce91df8f"
+    },
+    {
+      "path": "supabase/migrations/20261103183957_e68697b5-af72-455b-b1c5-23a975bda29a.sql",
+      "version": "20261103183957",
+      "sha256": "0b72397e34e8337f6d3d3bb6991c51cb11df95ed77434f5afb4cf06ec2795f3f"
+    },
+    {
+      "path": "supabase/migrations/20261103184036_f92c32cc-efdd-444b-b92f-3b09d7dfcd5e.sql",
+      "version": "20261103184036",
+      "sha256": "14687c403bd2f6f10d31dbc63ca4167a3bab7233c3300cf0901d0318bb60e6d2"
+    },
+    {
+      "path": "supabase/migrations/20261103184430_8682bb61-bb38-45f2-a196-414a6b41df00.sql",
+      "version": "20261103184430",
+      "sha256": "21c7208b72c48509e94bede6a3f0dd13bfb6e4ccbbdf7373cde5a4b8c648bb14"
+    },
+    {
+      "path": "supabase/migrations/20261103184526_7f8393d0-ce63-466b-9046-d274a7be3ef8.sql",
+      "version": "20261103184526",
+      "sha256": "e66c9c457510add421524ddc955f634da82e23a01eedc1ae500e00626338c3cd"
+    },
+    {
+      "path": "supabase/migrations/20261103185904_0d8ebb23-ca76-42bb-a237-4656d640e3b3.sql",
+      "version": "20261103185904",
+      "sha256": "72f4a7ea4157dcd741f8dc8e012c4e46a716c63f23637cc256897146da84fa1e"
+    },
+    {
+      "path": "supabase/migrations/20261103191546_354c0ec9-efd6-43e9-a2d3-1ffbf4234d16.sql",
+      "version": "20261103191546",
+      "sha256": "1ac667c0b8293931ccc315189462e18d53510f84c6ed3aa11c0d5c30f59c6abd"
+    },
+    {
+      "path": "supabase/migrations/20261104034647_ef9c8250-e47b-4907-9388-422ff325b5c4.sql",
+      "version": "20261104034647",
+      "sha256": "4f8109932d58126f44044dd9b965e950593c19fe9a31e60ed794a0aefb8e8565"
+    },
+    {
+      "path": "supabase/migrations/20261104035838_b5d54a8c-23fe-474a-9986-b30deb078083.sql",
+      "version": "20261104035838",
+      "sha256": "e7f046cd579b90f5fffe5aeb4bbc8a450975638317dc8dda741167a962272105"
+    },
+    {
+      "path": "supabase/migrations/20261104035921_74dde0b1-5ea4-46cb-b421-96e01e2fabdb.sql",
+      "version": "20261104035921",
+      "sha256": "d8f7fa867bce195006a1314f42099bcb5fee11547964e4259cd895048f338e21"
+    },
+    {
+      "path": "supabase/migrations/20261104040045_0d8258ee-3759-4f46-8c10-f4dd28751a1d.sql",
+      "version": "20261104040045",
+      "sha256": "12efba6adccea13756202fd7ce13666eac6da3db21f2b2cc700c793a7d947c75"
+    },
+    {
+      "path": "supabase/migrations/20261104040830_7d3f4b0b-25c7-4668-bdf9-8f4a70bcd3e9.sql",
+      "version": "20261104040830",
+      "sha256": "45ef40dd81e2776088db80f78bc9d47b4d16ffe9112b8c07ed48f08e7dd7320f"
+    },
+    {
+      "path": "supabase/migrations/20261104041013_17799818-0202-453f-a7e1-65f1942bf4d8.sql",
+      "version": "20261104041013",
+      "sha256": "841bb9ad9ca369d54b440c3c6bf36219bfdb4e88ee319d8d6b3ff2d844452f4c"
+    },
+    {
+      "path": "supabase/migrations/20261104041124_b2641a73-a101-4bdc-95a0-4f919a7288d5.sql",
+      "version": "20261104041124",
+      "sha256": "1e77384f52f2047e62d0d81c9add4d6e2cca73d8302bea4ee4c7c7d3b46738f7"
+    },
+    {
+      "path": "supabase/migrations/20261104041705_edaad969-2ecd-4022-ac98-a8871effef96.sql",
+      "version": "20261104041705",
+      "sha256": "caca8988d57548dff56d1a7a55f240f0687a79e7e9b5e546974bc00eacac249d"
+    },
+    {
+      "path": "supabase/migrations/20261104043020_6c20cf9e-0600-4df1-ab65-107827524dea.sql",
+      "version": "20261104043020",
+      "sha256": "f2bffdb881f237aa19612af1dc593721fcfc72195bb0d92072e53e8354f26371"
+    },
+    {
+      "path": "supabase/migrations/20261104043052_89e37bce-883b-4650-9ad6-fc366b76161f.sql",
+      "version": "20261104043052",
+      "sha256": "f8f51c7039509f505dd5db38f8c691e0c39ec3c0543234fe9ceb0a96f7f7fba5"
+    },
+    {
+      "path": "supabase/migrations/20261104043419_53699593-e901-4529-9e9d-b0e902d178c0.sql",
+      "version": "20261104043419",
+      "sha256": "cda72bbaf6c30926940254bfa6cc7d65db695544a678a1a3ac2a1806d357b34f"
+    },
+    {
+      "path": "supabase/migrations/20261104044159_686ab42a-5a02-4923-9eab-2cb11fe760fd.sql",
+      "version": "20261104044159",
+      "sha256": "87920be61b2ae96accc976367f05d661edc813b846f93335eb2f86f762f20d94"
+    },
+    {
+      "path": "supabase/migrations/20261104044542_9a1a1653-90c9-4bd7-8ca5-f4f366bc974f.sql",
+      "version": "20261104044542",
+      "sha256": "2132c1a8dd3648c781f783a6f4a5939c1b07a03ca5d5bb10c69f691928dcae1f"
+    },
+    {
+      "path": "supabase/migrations/20261104045651_77c3222c-25a2-4373-9ef8-b2d1afe3991e.sql",
+      "version": "20261104045651",
+      "sha256": "b8d2e12c0aa569e19c24dcfc056222bcaa6518ef6c11f76dbdd4098757cca6ee"
+    },
+    {
+      "path": "supabase/migrations/20261104051857_ff926ba0-9e13-463c-a3ca-4003891f6775.sql",
+      "version": "20261104051857",
+      "sha256": "4086e4eef86b2bc797e8849b5e3f39314deea99f497e4eb063b394e45ef55629"
+    },
+    {
+      "path": "supabase/migrations/20261104052718_58fe7e5e-8ddf-4f16-9e0f-5f52fae6e687.sql",
+      "version": "20261104052718",
+      "sha256": "90f4c4844f827a539e862e3424125fc0b1711e5086a946e9635eda428045b71f"
+    },
+    {
+      "path": "supabase/migrations/20261104053747_00a2489c-9508-4dba-9f74-8c7e6b5f625a.sql",
+      "version": "20261104053747",
+      "sha256": "a1bbe9df971d5216f44348b93068a3cd9c647687bd58bf7a1d6465b91895b0e5"
+    },
+    {
+      "path": "supabase/migrations/20261104054234_e8c0fb0b-aff5-416d-824f-b918d38ee643.sql",
+      "version": "20261104054234",
+      "sha256": "7a338cc35ae56ca917ce2df457672384f0b799701673f79727e62283d0c2b295"
+    },
+    {
+      "path": "supabase/migrations/20261104054304_93c7cdd1-0706-4820-a91c-ef1241b00cc1.sql",
+      "version": "20261104054304",
+      "sha256": "22a4182a8166c210e1ddb6d93cd804c787c3d9e07d4e409a01df7a7e81151353"
+    },
+    {
+      "path": "supabase/migrations/20261104055805_0cfa82ca-2a26-45d5-8bad-cf3e8d83e88f.sql",
+      "version": "20261104055805",
+      "sha256": "ad628d7978c9dd915fbe98c44244c6ea51cca6346dd98d5bb1304efa6bb3106f"
+    },
+    {
+      "path": "supabase/migrations/20261104060704_69a405fd-637b-4dd9-9b71-e33aa1fb79e9.sql",
+      "version": "20261104060704",
+      "sha256": "0c2d01fb642ad7e43cbaacccfac52ffe0782f31e350e1aeb695b125c79e286a1"
+    },
+    {
+      "path": "supabase/migrations/20261104061826_4594b8c1-eca1-4940-87a2-edb3cfc2661a.sql",
+      "version": "20261104061826",
+      "sha256": "e68a1e39d1fc31ae404532b2c18ef7c2ae1586f40fd8d0575e023ce1d567dd20"
+    },
+    {
+      "path": "supabase/migrations/20261104062905_8379a984-d576-4c82-8f77-a78bac6843f0.sql",
+      "version": "20261104062905",
+      "sha256": "ec8b93aafd089bead4f7d9ba6f46da4b77636b47fe3d8274c219db54e2e3842d"
+    },
+    {
+      "path": "supabase/migrations/20261104064942_584b6a93-fc19-45eb-abed-9aad04e8a7a0.sql",
+      "version": "20261104064942",
+      "sha256": "9d3dd9921eea27e7e76079d4f42149bd095aa16568e24b6a3a6b0883f06a8a07"
+    },
+    {
+      "path": "supabase/migrations/20261104073020_0f51d7ab-e654-4f7f-b3bf-de00c782ba63.sql",
+      "version": "20261104073020",
+      "sha256": "72e75aec7ffd634aafa7522b70fb4a86b8e01a0cbd939e7c8efd42be93e9a4c2"
+    },
+    {
+      "path": "supabase/migrations/20261104073036_83b33c27-6fc7-44d1-b47e-a9061a2b74c8.sql",
+      "version": "20261104073036",
+      "sha256": "4e7c0ae9e34b082a5db48d29c744862ccaa7d74b04e5a407dbb73933b7d22b72"
+    },
+    {
+      "path": "supabase/migrations/20261104073748_550931b0-c01e-4829-b1d2-af3eff565415.sql",
+      "version": "20261104073748",
+      "sha256": "12410710e6f9a636ae3cbe0df070006a1647f722d325a770f371b65abbbd555c"
+    },
+    {
+      "path": "supabase/migrations/20261104074731_62c90cfb-f799-4c88-9006-5023b60a2cdd.sql",
+      "version": "20261104074731",
+      "sha256": "2c29ef699cf83f440e4bb64158050e138bc0f5f4bd3e08189dd9e8c75a41d674"
+    },
+    {
+      "path": "supabase/migrations/20261104075208_92f5f595-540b-428d-90fc-995a58925a6f.sql",
+      "version": "20261104075208",
+      "sha256": "8d0df90440758dd68d01589eb034bfdaf3d7c3328236c4f135ab8be5d9391cbf"
+    },
+    {
+      "path": "supabase/migrations/20261104090223_8bd38dd0-ef1e-4b58-8d14-28af5a99095e.sql",
+      "version": "20261104090223",
+      "sha256": "e280c8834e732501e8a30f21d2412e87450839c7c7bd0d44db1a2a93042f6790"
+    },
+    {
+      "path": "supabase/migrations/20261104090303_6cbc5db4-13fc-4619-875a-b8dfe26be842.sql",
+      "version": "20261104090303",
+      "sha256": "4a13c733dc755043560ccc17b0b36b74bdbaa62eb96b4c81af17fdc6a1815687"
+    },
+    {
+      "path": "supabase/migrations/20261104093430_e5c07b04-27b8-4f67-a4dc-334cf2ac3f0d.sql",
+      "version": "20261104093430",
+      "sha256": "fc8248340a27a8a2b6887ec18b97365d93cf1e00f64c743fbf5145ec2a89c488"
+    },
+    {
+      "path": "supabase/migrations/20261104093500_ff1accb4-76a3-41f9-8c54-47c3716e6042.sql",
+      "version": "20261104093500",
+      "sha256": "22d6337a28350e363056368c6109a911df16544e951f4b867d07b3500995673d"
+    },
+    {
+      "path": "supabase/migrations/20261104094022_b7294b14-89cd-47fe-a159-e09895c42547.sql",
+      "version": "20261104094022",
+      "sha256": "885bda8aeeb230b35541ee0fabd54816889a75f8abb29cf9826da86b394386e5"
+    },
+    {
+      "path": "supabase/migrations/20261104095500_7c20b7ac-acb3-4d8f-8824-1a95e4d4e264.sql",
+      "version": "20261104095500",
+      "sha256": "b6cb32a2739eb002013f993e0d8b1d3c8178e002729726c5f762f5450862750d"
+    },
+    {
+      "path": "supabase/migrations/20261104100846_df3bb878-31a2-4b46-b8b9-4ad2d26ce548.sql",
+      "version": "20261104100846",
+      "sha256": "95f96e7c46b9811dc843caa4d41540296a838f5531d62c88b61db562976a351f",
+      "replay_path": "infrastructure/vps-app/baseline/historical-replay/20261104100846_df3bb878-31a2-4b46-b8b9-4ad2d26ce548.sql",
+      "replay_sha256": "56a3b5dbf0dddec55b77d4306ec5eb0e11def15986ad8a54be09a90b07f5e3a0"
+    },
+    {
+      "path": "supabase/migrations/20261104101508_c622a263-fecc-4c1d-ab99-9f7d30bb4c20.sql",
+      "version": "20261104101508",
+      "sha256": "05403e40d263ef178cce6af73e95908a77bd8505aab63164dfddfb3314cdd9ea"
+    },
+    {
+      "path": "supabase/migrations/20261104101524_1c2df245-0fb1-446c-a70e-91cbaed882a6.sql",
+      "version": "20261104101524",
+      "sha256": "84dad6292b9b2e97a09e95beceacb60ceaccdaa170c32f77589cdd21bbd07d1c"
+    },
+    {
+      "path": "supabase/migrations/20261104105003_ff403840-e97f-4544-8797-10cd8f7a8121.sql",
+      "version": "20261104105003",
+      "sha256": "be1b9c63df37e7b310ee739c96cbc65b9c75e8c9384c8d4c76e47eafa0978a60"
+    },
+    {
+      "path": "supabase/migrations/20261104105055_459f68e3-44ca-4ba5-af07-1114915eb22d.sql",
+      "version": "20261104105055",
+      "sha256": "3ac6a95d16d985057791925d2b17000618af8aaea9d63cb47c3a8a8b515d0499"
+    },
+    {
+      "path": "supabase/migrations/20261104105526_e081449d-1223-48c4-95ad-e78d495d46a2.sql",
+      "version": "20261104105526",
+      "sha256": "8c0080def478f93694600e3b77d63b029761dd90df76e129e0db8f2921b23527"
+    },
+    {
+      "path": "supabase/migrations/20261104105601_5c18c29c-f4d9-4203-90fb-3d7e0866a06e.sql",
+      "version": "20261104105601",
+      "sha256": "8dc87b37b74955d80608b01f77c6077e500f14a2cec4142478efdc9eec206976"
+    },
+    {
+      "path": "supabase/migrations/20261104110041_0853ead7-124f-4979-bb2c-458c662c27f1.sql",
+      "version": "20261104110041",
+      "sha256": "6d458d922f9f5bc4b3745c7d1e99e4e1a62a6f6829a10d505affe21324015c23"
+    },
+    {
+      "path": "supabase/migrations/20261104110140_4575b626-3070-4b54-8a3c-691f5c33e9e6.sql",
+      "version": "20261104110140",
+      "sha256": "76c91d63804bc65ad0519b51b1e4012a35a79865cf373fd22506d1c6200e4f11"
+    },
+    {
+      "path": "supabase/migrations/20261104110256_6c29ddb1-843b-498c-b9df-9281556180ec.sql",
+      "version": "20261104110256",
+      "sha256": "1618fc17a22ca8eee836f9e0d6a55f4749973ec93cad7b4f56788df38111b435"
+    },
+    {
+      "path": "supabase/migrations/20261104140246_50256c30-e896-40d7-9388-be248bd2f3da.sql",
+      "version": "20261104140246",
+      "sha256": "7f5d645b7b620d6dcf70e886e24cf7642d7832cd2986d6a6daa0ca8be6766469"
+    },
+    {
+      "path": "supabase/migrations/20261104142919_4a36bbe5-a8ea-478a-86c4-95855626c81a.sql",
+      "version": "20261104142919",
+      "sha256": "70bd9b070e2b4485e2611efd37bf88f4951c795ac6e0452d74f35834766502ff"
+    },
+    {
+      "path": "supabase/migrations/20261104144637_6f8eb4e5-56ce-4a6c-a276-58c4e9278cd9.sql",
+      "version": "20261104144637",
+      "sha256": "b7abaac651ace8eb50fc1f89d5c5806677c5f342e4494c91108806bba0fc2611"
+    },
+    {
+      "path": "supabase/migrations/20261104144652_5ca4e75d-02bf-497a-9738-c1f89ce7b6ff.sql",
+      "version": "20261104144652",
+      "sha256": "0e5a0d7f91612bd9a12ea3e43fd4cc244aaa82f4abce85d4fea670602e2a6b0c"
+    },
+    {
+      "path": "supabase/migrations/20261104150638_c52d35c7-bf7f-4cbf-9d79-9d9390b529b6.sql",
+      "version": "20261104150638",
+      "sha256": "e46369ed015e9969f33e8d8df7afad055d50b103ae4132b36203fe5ebdd59032"
+    },
+    {
+      "path": "supabase/migrations/20261104150911_c5e352d0-a2a0-45a8-adc5-4f3839ddf646.sql",
+      "version": "20261104150911",
+      "sha256": "99fd1ced77c035cceb518a15530fc5b284615d962cf54037802adc4fdcb3edb3"
+    },
+    {
+      "path": "supabase/migrations/20261104151308_89cbaba8-ec42-41df-b224-d757c32cecad.sql",
+      "version": "20261104151308",
+      "sha256": "1a72d3cd3fcc9f1fec28ff642d3599fab9ed296cf9ea2799a178ace62bb40bd0"
+    },
+    {
+      "path": "supabase/migrations/20261104153549_efc3ed91-2c9c-4dad-9397-b53ef7a54db8.sql",
+      "version": "20261104153549",
+      "sha256": "3e5ad4d55d0208b5ed7d8963372ee6e847cddc64d0b477a64d466d9f71716133"
+    },
+    {
+      "path": "supabase/migrations/20261104155545_6e3e3f33-6856-4a13-8915-18d9c5b7f0c4.sql",
+      "version": "20261104155545",
+      "sha256": "688bc6dc13b17d0689c6abdeef753041d554955a018a3676dc32f5a91257eaac"
+    },
+    {
+      "path": "supabase/migrations/20261104155931_641687ec-c70a-42bd-a169-deac0fc1043d.sql",
+      "version": "20261104155931",
+      "sha256": "2bc3d72bafa3bce520e2e934f201e0b80f552783cbaba7c92a97e87c1ff83b83"
+    },
+    {
+      "path": "supabase/migrations/20261104160403_be3400b2-e238-44b9-87d9-58330af628fb.sql",
+      "version": "20261104160403",
+      "sha256": "7cd33cabef1e0d04f7df5e471890cc97b6b66fa623e5f942f12a88a317a4ce0d"
+    },
+    {
+      "path": "supabase/migrations/20261104173710_d26c4a8d-02a4-4fd5-aed7-70e7386235d5.sql",
+      "version": "20261104173710",
+      "sha256": "45b44a49f32e19109a44479e1c03f88459fcced5b9220c6fbddf0c50e04b494a"
+    },
+    {
+      "path": "supabase/migrations/20261104173954_fc54a5ca-1757-4f16-af97-a5d626d204b0.sql",
+      "version": "20261104173954",
+      "sha256": "ec012872a2b2ea4bac19e060a950f3b10a88d1fee67ed3a89cc827016a5c5314"
+    },
+    {
+      "path": "supabase/migrations/20261104182813_aeedcd16-ff68-46bc-a8b9-aa621a042654.sql",
+      "version": "20261104182813",
+      "sha256": "64e431e89a39062dea699b0ddf3fb25c906c56162d1781b5a0efad4592cd068b"
+    },
+    {
+      "path": "supabase/migrations/20261105033510_63589e3a-6e49-4a1d-bdcf-8cfea19bbb93.sql",
+      "version": "20261105033510",
+      "sha256": "0f81372914edae672712e572b91b39c801e64e6842a710472b270948ea7e3822"
+    },
+    {
+      "path": "supabase/migrations/20261105033545_94273ca6-e040-4e4e-b6c1-05288aabeafc.sql",
+      "version": "20261105033545",
+      "sha256": "167b33407db92d7199e87705d4970e1284568b8bbb2d62fa03457aaee4272eb7"
+    },
+    {
+      "path": "supabase/migrations/20261105033608_fe9b05cc-bbf8-420e-86eb-ed150f3cbcdf.sql",
+      "version": "20261105033608",
+      "sha256": "4d19d82bde3d6bc594eb2ab03069b24cabaa2bfd7bfc1c16c66b8ecccf465984"
+    },
+    {
+      "path": "supabase/migrations/20261105033745_b23f888e-cf46-442d-9c46-4a3562b7744d.sql",
+      "version": "20261105033745",
+      "sha256": "d75b9eb32801dd6027b45242ba37179407fc4e33114fb753628e141087e04b14"
+    },
+    {
+      "path": "supabase/migrations/20261105035028_94dc6797-d106-4f33-a2f8-34b2b5fcd43c.sql",
+      "version": "20261105035028",
+      "sha256": "8785a0de0933e74ddca38cca4223d3eb854515b1cd3d396cf206e9830c39dd74"
+    },
+    {
+      "path": "supabase/migrations/20261105040005_82087dcb-b7bc-4d95-8910-0c4026861800.sql",
+      "version": "20261105040005",
+      "sha256": "4ed257b2123b791ab9e0c2431ba8ff4b9a3fdeca5928acf7003cfa57f6334ce6"
+    },
+    {
+      "path": "supabase/migrations/20261105040020_3904763a-be6d-4182-8eb0-a2bff5c71cb9.sql",
+      "version": "20261105040020",
+      "sha256": "ca76b2450f12572191f2294c646ae0e84cd88391245a41b34b4209d811f9e6b5"
+    },
+    {
+      "path": "supabase/migrations/20261105041047_7e3cd2a7-38af-46de-a2ae-518cd4511bdb.sql",
+      "version": "20261105041047",
+      "sha256": "85a1e346f7b3ec7e42370d6c3583034bbed0779e5a745b6d74ba63302e1a1ca4"
+    },
+    {
+      "path": "supabase/migrations/20261105041117_773f809e-0282-40a9-b212-e59ac3e575d9.sql",
+      "version": "20261105041117",
+      "sha256": "22a860e35978f449a6ccadcf4236c1f6ccb49ae005c8f189c0e2ac35a57d5077"
+    },
+    {
+      "path": "supabase/migrations/20261105042220_e1759cee-47cc-437b-aba7-7f1a7f1b0fbc.sql",
+      "version": "20261105042220",
+      "sha256": "c022eea210d3c17361e87c0599de9beae3bb20c3d426e1cb8c3ba15aad371f9a"
+    },
+    {
+      "path": "supabase/migrations/20261105044142_4ca5c2f6-9810-49a5-96b2-20a05db023c0.sql",
+      "version": "20261105044142",
+      "sha256": "0c5390796aa803909647efb1f48dc5f2b8fc8b39e4a4ede4c35b9407d025c570"
+    },
+    {
+      "path": "supabase/migrations/20261105044157_97290436-4338-45df-ab96-c5d4cc2ce46b.sql",
+      "version": "20261105044157",
+      "sha256": "63961583f8675f81f9754ed80e814b793bb6b6443a9d6eec7d86c888c8a054ff"
+    },
+    {
+      "path": "supabase/migrations/20261105044832_da8e0248-2187-4fad-a5a4-5ca3e55b17ab.sql",
+      "version": "20261105044832",
+      "sha256": "415148cb7adb3597cd2d1d1041d57a81c2d1000e8dbea92b3adba4ff6636d3e3"
+    },
+    {
+      "path": "supabase/migrations/20261105050507_9aa76959-a128-4d37-bef9-33fa1899bd29.sql",
+      "version": "20261105050507",
+      "sha256": "c7363efa9ba0eb78255f78141a2ef1945a52c827603ff05512ae8a318017122c"
+    },
+    {
+      "path": "supabase/migrations/20261105050716_e9b25d64-d280-4361-bf6b-b443e6d73a90.sql",
+      "version": "20261105050716",
+      "sha256": "f962c8b2abf950ffe6f99be89295a1656c5718f4af306883b7ab9f7829aa89cb"
+    },
+    {
+      "path": "supabase/migrations/20261105051347_7ba87f6e-49a1-44e1-97a1-f3f73fb7c484.sql",
+      "version": "20261105051347",
+      "sha256": "07ddcce1a50be41f0ba82a71e2b9ad1443c7214e9f1b644999b68560e10e1a28"
+    },
+    {
+      "path": "supabase/migrations/20261105053134_a499faf1-0935-43a6-8453-72d19be01c93.sql",
+      "version": "20261105053134",
+      "sha256": "1b78d019f74d1415b874663633f0f0ab6b0fd001cc9f9d7448057ed08ec0cea1"
+    },
+    {
+      "path": "supabase/migrations/20261105070446_5c259483-f70c-432d-bb8c-c4f5d7e91091.sql",
+      "version": "20261105070446",
+      "sha256": "18e1f34c2f4eba1108b38802f5e1ff3dd2e872ac6dc962d2c524cf3b90c756f7"
+    },
+    {
+      "path": "supabase/migrations/20261105070515_8851e1b6-97d3-4a1a-9259-27cdcadd1a63.sql",
+      "version": "20261105070515",
+      "sha256": "c4b124707ae3508c1d8bebfa62b2761bc9bc4add140c28f736537b9ef093ed4d"
+    },
+    {
+      "path": "supabase/migrations/20261105072018_8328608a-43cb-46a0-8ee7-c64b3039085a.sql",
+      "version": "20261105072018",
+      "sha256": "d51db18bf8359c2d466fab0752a83f1828fe826587796e27552f7deed166f89d"
+    },
+    {
+      "path": "supabase/migrations/20261105072217_60df6f75-ec91-40e5-9a2d-2d8fba05f844.sql",
+      "version": "20261105072217",
+      "sha256": "12f7099854cdf131e8297f60699cb4c08ea07a2f890273017c111afc27e1115c"
+    },
+    {
+      "path": "supabase/migrations/20261105110052_b0fb6c13-149d-480b-957b-432ab10783e4.sql",
+      "version": "20261105110052",
+      "sha256": "7b1688042c811324b3dea9dd73368c7ea1ddab89a7d7c663185234acb0fe601f"
+    },
+    {
+      "path": "supabase/migrations/20261105110114_bc9be220-7873-44b5-a4b2-b9116b6784e8.sql",
+      "version": "20261105110114",
+      "sha256": "41c9098fd2e087cf9a12d73b5b07b0eb502ee9b91cc82928dc9ade17e93c469b"
+    },
+    {
+      "path": "supabase/migrations/20261105110716_eb103a69-28ff-4d33-9ac1-ba62f0a52943.sql",
+      "version": "20261105110716",
+      "sha256": "dacbc2a94f2b2852d916166ab27ad404332496f147de97a025715f7bc549a3c0"
+    },
+    {
+      "path": "supabase/migrations/20261105113042_50af981f-5900-43c8-925f-a3cb6991a365.sql",
+      "version": "20261105113042",
+      "sha256": "12ef4324dd99659711b9f5dc087a4479b9ffb388652a6d87650733f860dd8f61"
+    },
+    {
+      "path": "supabase/migrations/20261105114133_631d762d-dafc-4259-88c7-71a918315059.sql",
+      "version": "20261105114133",
+      "sha256": "dcbabda64efa476c0b1c855807cf9747822af3dba4960771e1140a1cf56c5265"
+    },
+    {
+      "path": "supabase/migrations/20261105114320_ec0f9a23-97b5-4eea-a196-d7404ac32760.sql",
+      "version": "20261105114320",
+      "sha256": "ca65c4e0f7edb6eb4e1cc838504807c12e1eb8764d8470e6f7dffd4ab316454e"
+    },
+    {
+      "path": "supabase/migrations/20261105114539_46000b30-4c81-4121-9c1f-27d07309d82f.sql",
+      "version": "20261105114539",
+      "sha256": "c7c3a1b5f49803eeb66d44eb490108a8512ec3cdc464acf9781a72144dd94378"
+    },
+    {
+      "path": "supabase/migrations/20261105121619_1a1ec788-efa8-4f44-bb0a-93b516e1302d.sql",
+      "version": "20261105121619",
+      "sha256": "f0934b3b12f9d58d6354eecf410f2a561ef5dc1da862b8793a037be689f2f106"
+    },
+    {
+      "path": "supabase/migrations/20261105121636_bf509484-3373-431e-8537-5f89452cae17.sql",
+      "version": "20261105121636",
+      "sha256": "5d3815dc7cf60f98581f5d5ed1900a7dd903c65a0ddad76f4c22a45c45d809ae"
+    },
+    {
+      "path": "supabase/migrations/20261105121822_cab80495-daea-4998-b9b7-8e3894b42bc8.sql",
+      "version": "20261105121822",
+      "sha256": "13f8df5e98ea568dda9c065f315e93adcd41af22cec2eb454b446f4c0016e17b"
+    },
+    {
+      "path": "supabase/migrations/20261105122227_aa255205-4787-44b0-8bce-23cbd76a8b5d.sql",
+      "version": "20261105122227",
+      "sha256": "77691abbd95ce845f4b9b5620760e5acbdd07c8649baf1529d27d56a35aa0ca8"
+    },
+    {
+      "path": "supabase/migrations/20261105162136_2438723e-1573-4957-9d5f-1f6a4847d401.sql",
+      "version": "20261105162136",
+      "sha256": "ef59a9194b758f30bf7e331e829e37b59f0483037e12e4dd1c4675fb7d1194a0"
+    },
+    {
+      "path": "supabase/migrations/20261105162157_d0f31b88-522e-43e2-acde-2a5d88d63bb2.sql",
+      "version": "20261105162157",
+      "sha256": "e6a1b6caa7e8a856b1cb99ec7a90bd3a9d98104a712602221acaf7fd7db37147"
+    },
+    {
+      "path": "supabase/migrations/20261105164352_290ae2eb-780a-46e7-bdaf-8519c53f78e9.sql",
+      "version": "20261105164352",
+      "sha256": "319c2887e16a5814026a4043edf85a5a36828ee8a66da5b79c9e21ec81801dcd"
+    },
+    {
+      "path": "supabase/migrations/20261105164557_f08d940b-d75e-4304-979a-984d128ecab4.sql",
+      "version": "20261105164557",
+      "sha256": "b7a4652d05ecf210d4687bdda4e47f2bba1b42107edd5f17864232e2d6e1eebb"
+    },
+    {
+      "path": "supabase/migrations/20261105164726_fef92b57-ee92-4d73-84a7-1619ecf5b6d9.sql",
+      "version": "20261105164726",
+      "sha256": "b1b5e619965e7e3ebf09ed1701b30a4a3bc9ad6774d93a58585806f7a8a65e10"
+    },
+    {
+      "path": "supabase/migrations/20261105164900_e9fcc874-3b9a-45b9-8061-ef6bdf4b18df.sql",
+      "version": "20261105164900",
+      "sha256": "88a665dbce68cff5a0ba3f54c7e309a2d950fd9fc47082df5b8909a8d3bc6cff"
+    },
+    {
+      "path": "supabase/migrations/20261105165708_7ddc5d3d-8dc6-4ab8-9e8a-2a68d38238b3.sql",
+      "version": "20261105165708",
+      "sha256": "53b4167c8758ba3acbf9cb9dba0b77cae1c6c5a9410255a2ea4fe3b4893c1c8f"
+    },
+    {
+      "path": "supabase/migrations/20261105170007_60c580d6-d6cc-4f25-9fd3-d19b00fa51ad.sql",
+      "version": "20261105170007",
+      "sha256": "c4703cf516d9f4ecbcd79265c7ccc30ad375db66dcfd57043f88b3b2d8b70f96"
+    },
+    {
+      "path": "supabase/migrations/20261106092137_fff35f1d-4829-4c6a-a46d-5f0661fb8fa4.sql",
+      "version": "20261106092137",
+      "sha256": "f3e50342e1f328705fbbc299ac126bc3947a32c03f2697490ee4858a48e4dc80"
+    },
+    {
+      "path": "supabase/migrations/20261106092158_fafa9644-9eaf-4d57-ad41-49373d868cc7.sql",
+      "version": "20261106092158",
+      "sha256": "902fc6bfb7cc2582eb03b10eedde3629f591feba6ee7ebf49ec43461c350dd5d"
+    },
+    {
+      "path": "supabase/migrations/20261106092435_e3300c8e-2b1c-4cb5-a624-daef5f4318b3.sql",
+      "version": "20261106092435",
+      "sha256": "4705070dbaff67c4c0dd243f5c3016a385f222be26b70955802251120a537c70"
+    },
+    {
+      "path": "supabase/migrations/20261106092535_01c1dab2-e18e-4984-b04f-43372cc093ee.sql",
+      "version": "20261106092535",
+      "sha256": "c3ba69c7687ae2bf7278daeca061ddb87f877a4a1a3a6c38c414b85cd6511a4c"
+    },
+    {
+      "path": "supabase/migrations/20261106094649_e598928e-4d02-4579-a7e5-ad8532fc4cd7.sql",
+      "version": "20261106094649",
+      "sha256": "3e11d5d8bb179d484a1a3f67dadede7ba99b6580516dd2257185e26bbc62b7bc"
+    },
+    {
+      "path": "supabase/migrations/20261106094817_b2d4e353-149d-4a36-a076-52c5cd2537d9.sql",
+      "version": "20261106094817",
+      "sha256": "02db1b0172bc93672837644cb8f9915adfd82a90100e1dc0a2dd4e20d1bc6939"
+    },
+    {
+      "path": "supabase/migrations/20261106094916_d17191d9-852e-43d8-813d-bdb7839b7ab7.sql",
+      "version": "20261106094916",
+      "sha256": "5a3ab3f687bbf05f1c9385431037bde2234429cd70060afafd00530a1795385b"
+    },
+    {
+      "path": "supabase/migrations/20261106101306_1873800c-faab-4d75-ad39-b6400245bce3.sql",
+      "version": "20261106101306",
+      "sha256": "961ce9eb8a1301308cc76f0e797911ee00aa36d3513164a4cefe497a41b06baa"
+    },
+    {
+      "path": "supabase/migrations/20261106101321_131dbd40-c109-4ed0-8e6f-a406cd1b9189.sql",
+      "version": "20261106101321",
+      "sha256": "9aab3241d2689948ed081dae6ad2e924776c85cc0d3407bec8f68120d521ac67"
+    },
+    {
+      "path": "supabase/migrations/20261106101401_a3feb7d8-4c9c-4f85-acef-6a7ac65696b9.sql",
+      "version": "20261106101401",
+      "sha256": "615a28bcd22de4e2ba7cd779e30a0c1ab38a7d4749c9c9923c305380053a38d7"
+    },
+    {
+      "path": "supabase/migrations/20261106103418_144e0d3e-77ce-487a-82b1-22010f2504c8.sql",
+      "version": "20261106103418",
+      "sha256": "d5ba4e903e463a64ec771b0a838529f65d1119a2ef8a6cabace6636e97a66662"
+    },
+    {
+      "path": "supabase/migrations/20261106103432_b5e5b1d5-b59b-4039-8117-ec55c53c48cf.sql",
+      "version": "20261106103432",
+      "sha256": "94bce5f2ad4cc20cf2842f25b582d1aa2dc53bd50915f021b7ec556c959bd2b1"
+    },
+    {
+      "path": "supabase/migrations/20261106110738_aeab0f01-604a-47c7-b56e-c992923f06cf.sql",
+      "version": "20261106110738",
+      "sha256": "de8bdc4ff95bfbaf03af55f4d7e36a1d2881d77c5e559a57120b8958f9a1809a"
+    },
+    {
+      "path": "supabase/migrations/20261106110954_ed9451c8-2b5f-40f7-b729-f4d23eb04796.sql",
+      "version": "20261106110954",
+      "sha256": "e6858da65ce0c54319b6d3b1ab7965b1fad7b0b42280974fb091991c6c3763bb"
+    },
+    {
+      "path": "supabase/migrations/20261106112552_1c89df63-c675-4386-b371-3af0f81ffc1f.sql",
+      "version": "20261106112552",
+      "sha256": "e975f4226d7a71c0e18c666d9b5957f3298afda9d06ab125566df6af6f156cec"
+    },
+    {
+      "path": "supabase/migrations/20261106145901_fda83144-fd35-4393-b212-3b0a5da92d0f.sql",
+      "version": "20261106145901",
+      "sha256": "51a5f815f898af2f8ca1e16eb39dfaf0eeba35e7600e741c2eb66ab3edf0f905"
+    },
+    {
+      "path": "supabase/migrations/20261106151853_0ee2066c-e7c5-4f53-b344-9d2355ca492a.sql",
+      "version": "20261106151853",
+      "sha256": "6fbf29a7796bde0bdee537d075ba4c83cec739d3adcb288bd42ed8697ddbc630"
+    },
+    {
+      "path": "supabase/migrations/20261106151915_6bd3f622-36bc-4b32-9e6d-c169fb7a3558.sql",
+      "version": "20261106151915",
+      "sha256": "42e599523a939292861beb23e82a62fcc24623078587659c0bcf705603f1bd19"
+    },
+    {
+      "path": "supabase/migrations/20261106152221_b330ed77-22ec-4a42-8322-10348865f1a3.sql",
+      "version": "20261106152221",
+      "sha256": "d03935a966be8e8afc6c958a8b8bfd614ed8c10c1d2fc651e5621af03422e50d"
+    },
+    {
+      "path": "supabase/migrations/20261106152259_d6b99438-3aba-4420-bcec-7edda62e46f7.sql",
+      "version": "20261106152259",
+      "sha256": "0e4876aa02b79617086007b963bacd9b1472ae046c75d0d4048948a6db669298"
+    },
+    {
+      "path": "supabase/migrations/20261106164046_5b268165-f895-4806-b1f1-d66a3245bc1d.sql",
+      "version": "20261106164046",
+      "sha256": "7898781ce963cb5f47975328b089f3862ff84cc02ca0f83f8a537dba016de46e"
+    },
+    {
+      "path": "supabase/migrations/20261106164158_2319219f-24e4-4f00-941b-79f4ccc6aea2.sql",
+      "version": "20261106164158",
+      "sha256": "36939d9e6d4bb90a6877041ea82b57eff69e9b282a8136216142a0256274e4e6"
+    },
+    {
+      "path": "supabase/migrations/20261106164641_b7aabd69-1f83-4d59-b6d5-c0d888135df5.sql",
+      "version": "20261106164641",
+      "sha256": "6538145ee72e16c2ed79f6e4299e0f0a6807ce8cf6cfac18b34c08bd2bda7013"
+    },
+    {
+      "path": "supabase/migrations/20261106164714_b772a853-f20e-43dd-8b6d-898c562496e8.sql",
+      "version": "20261106164714",
+      "sha256": "3819f98e32e2e3d901005b90b938ec6853ef029a362d55aa3333f5d326abc03f"
+    },
+    {
+      "path": "supabase/migrations/20261106164741_37e1189f-a9de-4719-8634-22ac5cacef41.sql",
+      "version": "20261106164741",
+      "sha256": "04fdb1e68bf97b91f1c80030b9924c7ddd81778343073cca2402694554a47543"
+    },
+    {
+      "path": "supabase/migrations/20261106164958_bdaadf38-9a40-4a17-a805-5bafd14ba819.sql",
+      "version": "20261106164958",
+      "sha256": "5f14b88d12fa7d2a8a2ea4edbeb765164f7d3942d21fc5b607ca9198c05d22c0"
+    },
+    {
+      "path": "supabase/migrations/20261106165455_a1419754-2d54-4ed0-8ce4-d3578ee656f0.sql",
+      "version": "20261106165455",
+      "sha256": "037faa24c05574cf310109a73a14ebb448277acedf25a779ac189e04b5816f3e"
+    },
+    {
+      "path": "supabase/migrations/20261106165625_e38895cb-42aa-45dd-95b0-31227b521bfa.sql",
+      "version": "20261106165625",
+      "sha256": "cb32864262715b4599b0b3a1a6a01b8c36c7bf0de5a0fdb9712c2e6f72dc24b8"
+    },
+    {
+      "path": "supabase/migrations/20261106201234_654fbde3-3625-4be6-8052-89eb1b9b902a.sql",
+      "version": "20261106201234",
+      "sha256": "a463c4d923982a4f1846be67065d097774b894ed52f20155f7884e775acb1aea"
+    },
+    {
+      "path": "supabase/migrations/20261106202242_5a4b6b05-2094-43f4-9b5e-a99c68610b45.sql",
+      "version": "20261106202242",
+      "sha256": "987a22b31c14acf7e8db86b3bfbe36f0ae21053ad9600ad0c5441da920737f70"
+    },
+    {
+      "path": "supabase/migrations/20261106202941_c5f582b9-bf37-4e54-a4fe-3324eeb07830.sql",
+      "version": "20261106202941",
+      "sha256": "ee13addd429aa415f97c3705bc47aed491750997c5cf6f6817dcfb3088b45cae"
+    },
+    {
+      "path": "supabase/migrations/20261106203838_a9b2116a-e31e-4606-8ea4-1ac350f15784.sql",
+      "version": "20261106203838",
+      "sha256": "3609e3f40a95ef7f4f0782ff4fc93652d5f25aca0af3ec56e09060ed8fb5c62e"
+    },
+    {
+      "path": "supabase/migrations/20261107045325_f9f90657-28ff-4781-817c-e60e4441a8ff.sql",
+      "version": "20261107045325",
+      "sha256": "1d8a0eb2848689ba4b1749d1f8349174bc4ddcd7382fff2811b2424f957dfb22"
+    },
+    {
+      "path": "supabase/migrations/20261107045354_47e38604-0dd9-45e8-865c-45bcbcfbb42a.sql",
+      "version": "20261107045354",
+      "sha256": "7f281aff04013ab2988b0755396b7c0ff87a0da5e5a689e0981d44c75c6525a1"
+    },
+    {
+      "path": "supabase/migrations/20261107045639_0bf0a4da-6e37-4f1d-9670-1748bc8ab4b5.sql",
+      "version": "20261107045639",
+      "sha256": "87efe935a1a9a2f6d3c980d747f0f911c56b42e6c0eb44eaadf216444d42bc91"
+    },
+    {
+      "path": "supabase/migrations/20261107052135_f213e3e2-fff3-436c-bc9f-0d48cf0b126c.sql",
+      "version": "20261107052135",
+      "sha256": "7f7886be69c3ac640b67d1a58f296d4397e4014e485c03ed8607988f82d5de11"
+    },
+    {
+      "path": "supabase/migrations/20261107052204_bc70ae3b-a320-4140-8173-1dddb744ef41.sql",
+      "version": "20261107052204",
+      "sha256": "9c297850848bcb25ec6e2c56d2ae54a25a4b5a3eeb6462ce4f54dca7a3b29ff3"
+    },
+    {
+      "path": "supabase/migrations/20261107055222_b06680a5-1b96-4764-9534-cfcb59d973c4.sql",
+      "version": "20261107055222",
+      "sha256": "71512c6fc4b52a68c43b91fa25fa70704a13132f4ac70eb066b2589714bbcf46"
+    },
+    {
+      "path": "supabase/migrations/20261107062924_1db4d9a6-a14b-4302-a8bd-414050b531ab.sql",
+      "version": "20261107062924",
+      "sha256": "08563af909eb1c58ca6a81a38186d1374dd661adc64be1356195690d62bd9e9e"
+    },
+    {
+      "path": "supabase/migrations/20261107063128_d57d7427-661d-4388-99cd-352677b4849a.sql",
+      "version": "20261107063128",
+      "sha256": "9828438a9696a2b2f3f78f2c4ec0c2f13ae1bff99660bcb20f0d28f223b21430"
+    },
+    {
+      "path": "supabase/migrations/20261107063949_1e905a69-c0a5-402d-993b-feda2fb88f60.sql",
+      "version": "20261107063949",
+      "sha256": "1d4dfcda6d227fc3a10a02c213c351ff96f09bc45588de2df9d3a4286ad764df"
+    },
+    {
+      "path": "supabase/migrations/20261107064422_611f48f8-5f60-465b-9487-281c30ea5f96.sql",
+      "version": "20261107064422",
+      "sha256": "23b4cca09e6c7c6e89d8e4c0ecacdc396ffb9474bbed6ec29ca827a666ffe8b4"
+    },
+    {
+      "path": "supabase/migrations/20261107073830_98a0e988-16e6-4310-8d90-44f4043a0ca9.sql",
+      "version": "20261107073830",
+      "sha256": "06260a46dfb84b9b0db735d8c685abac477a429bb165600291de830294cd73be"
+    },
+    {
+      "path": "supabase/migrations/20261107073841_602260f2-afd3-41f7-8cef-98602979dafd.sql",
+      "version": "20261107073841",
+      "sha256": "7d8b48aeb286fc5536ed91f74961cba427f6fc913c3736ae37ddd28877d559b0"
+    },
+    {
+      "path": "supabase/migrations/20261107075323_dfae53bc-66bb-431e-bf5e-4ed1c3431c05.sql",
+      "version": "20261107075323",
+      "sha256": "c4cf9a1216347473eb6ef64bb9530d6718dbb82282d54b8c0f8e0d90ccdfa4dc"
+    },
+    {
+      "path": "supabase/migrations/20261107080355_4522974a-eddf-4ac5-938b-8d516edbc75a.sql",
+      "version": "20261107080355",
+      "sha256": "1ad77a2f566fcb9bae47f480d4f9a93b75f3a5041d43c82dffd9b0a5dbc15c3a"
+    },
+    {
+      "path": "supabase/migrations/20261107080705_10f23b30-14c1-4f7f-9002-37e7027d59e1.sql",
+      "version": "20261107080705",
+      "sha256": "49727b05f0ab549fea615db14cfaa63d134830878fb9ba2639d35dd803f54449"
+    },
+    {
+      "path": "supabase/migrations/20261107082328_0b90466d-9ee9-478c-a9df-6ce915fcd1a6.sql",
+      "version": "20261107082328",
+      "sha256": "a9939c399159cf3eab1dd49037a7278e1918600f01ceb694596071a236fe8cde"
+    },
+    {
+      "path": "supabase/migrations/20261107083120_14ba45a1-d204-44ab-9c8d-c270d13f46ea.sql",
+      "version": "20261107083120",
+      "sha256": "25c012df35fc1d42ed1f7c758bb0b137fcfaf62a5496705623758fbe942d35a4"
+    },
+    {
+      "path": "supabase/migrations/20261107083631_7dfc89c6-06c9-4a47-b682-0b7870bd679c.sql",
+      "version": "20261107083631",
+      "sha256": "fefe281ab1eb6dd877ff36b2673a935fecd7eafdc9ee5c732dcb3bce022cbbd3"
+    },
+    {
+      "path": "supabase/migrations/20261107084947_90a10bf5-d06e-439e-a2ab-77c94470e5fd.sql",
+      "version": "20261107084947",
+      "sha256": "9d2e4899579e4b3a4ca17d150d99d47baf230d173d463574e4bf2eb2ff1070d0"
+    },
+    {
+      "path": "supabase/migrations/20261107085238_bb271d7a-09f7-4924-85ae-910581f7b912.sql",
+      "version": "20261107085238",
+      "sha256": "6d1d75e7cbf34c86d21976730c9645905dffc9b7c308abddfdeef6e6488bdbce"
+    },
+    {
+      "path": "supabase/migrations/20261107085252_f819e9b0-6bac-4ad1-af22-cce30e472d48.sql",
+      "version": "20261107085252",
+      "sha256": "022c95dee35a807f3eecd5772dd8c137365405e1e6bea6353612a0b43bfb8817"
+    },
+    {
+      "path": "supabase/migrations/20261107092234_a22eb162-bbbf-4591-82e9-3ff5f3b33e72.sql",
+      "version": "20261107092234",
+      "sha256": "1b9bc296ca011b1689417c678fc17ca8ed5e44681b8e7707e1234d486a4ee072"
+    },
+    {
+      "path": "supabase/migrations/20261107092413_dcf98897-57e2-4c31-a424-63e0b5aba514.sql",
+      "version": "20261107092413",
+      "sha256": "94b3b195d851b751492fcf15bbad6c7477e7f1e89a7127051dff727a0f69466d"
+    },
+    {
+      "path": "supabase/migrations/20261107092640_3dc77181-3b7b-47b7-bcfd-649da3a8fe04.sql",
+      "version": "20261107092640",
+      "sha256": "a1220812fcd36cbe6e842f56000ca74a15aee5bde916f12acfb1d9dfe5b3ddbb"
+    },
+    {
+      "path": "supabase/migrations/20261107094129_3a3bb8eb-53fe-4ac2-a592-ba2ae7652717.sql",
+      "version": "20261107094129",
+      "sha256": "c41a7c15285562f81c81b64b791b165c8fc3778f73ad314ac603d246949f3de3"
+    },
+    {
+      "path": "supabase/migrations/20261107100945_c141c067-c47e-410d-857b-dd3918704075.sql",
+      "version": "20261107100945",
+      "sha256": "22f7f9dae16f1d4384e14e1878a660d97921af901b6bd9c2c90948585b82a8af"
+    },
+    {
+      "path": "supabase/migrations/20261107101003_20401110-0579-4487-a8dc-35d3678cf054.sql",
+      "version": "20261107101003",
+      "sha256": "d6eb35bf6ee66c62d53c80d9b31e61d28d618d0b5a3d10ae5b99d2c4f2540a8a"
+    },
+    {
+      "path": "supabase/migrations/20261107102644_11f563f5-6dd2-4098-b9a8-e8895082ca07.sql",
+      "version": "20261107102644",
+      "sha256": "28ce786d98e87b28bb462ef79fce229aea62c9773077296c4ca988484bd90714"
+    },
+    {
+      "path": "supabase/migrations/20261107102702_3d80f92f-3def-4dcf-aa86-c5d8cabe991f.sql",
+      "version": "20261107102702",
+      "sha256": "d245b8e64c4ff3b115c255f0ee4fe8871e42356676b3aad45dc4485529b0da7f"
+    },
+    {
+      "path": "supabase/migrations/20261107103937_e927130c-37f9-418d-b406-db44b5382eb6.sql",
+      "version": "20261107103937",
+      "sha256": "5db228a29c52cc541a83dd481b66272c8b931cd80381f81ed5cdcd3f9946289a"
+    },
+    {
+      "path": "supabase/migrations/20261107104716_427b96b1-4bfd-4320-bc25-efa40c03a306.sql",
+      "version": "20261107104716",
+      "sha256": "c281e1afe6d8c6cccb8531f55bb7a3333ae061bd8e1f8b5df8b8d01a873b60ca"
+    },
+    {
+      "path": "supabase/migrations/20261107105430_1aa9b439-0e4d-4118-877b-2d7c9295099b.sql",
+      "version": "20261107105430",
+      "sha256": "77a103dde5ad6352b23f58f06c5d0e9784bdc7472972bad0eb1752bb81584b33"
+    },
+    {
+      "path": "supabase/migrations/20261108061645_3176f446-5274-4a22-b7ec-de44b29af849.sql",
+      "version": "20261108061645",
+      "sha256": "3de1e0fe29252196412f7041b8a9cccf0d59e8efcce24e60e8dc303899639e2b"
+    },
+    {
+      "path": "supabase/migrations/20261108061658_985f956d-316b-4fda-8d7b-2fbd6df7eecd.sql",
+      "version": "20261108061658",
+      "sha256": "36e823df4c59c507d1888c55aaf6d76af6cb64165fa09e83113232bacaac89d9"
+    },
+    {
+      "path": "supabase/migrations/20261108062250_8084f69f-3c7d-4133-ab0c-c06eaf1e00c2.sql",
+      "version": "20261108062250",
+      "sha256": "48f15f384db7295b357f5efa484b3a37768ad28c689173dc02f758ccd26bf4ca"
+    },
+    {
+      "path": "supabase/migrations/20261108062339_ef3f84dd-a61c-4d5b-ba93-34fbee5d6951.sql",
+      "version": "20261108062339",
+      "sha256": "92f6a849e108d493a345d4cadfd43c84e6ae19af2ac2b1c509466bd9cec7b90c"
+    },
+    {
+      "path": "supabase/migrations/20261108062456_c90e1661-3a59-4faa-a1e0-2ac6042b0d0f.sql",
+      "version": "20261108062456",
+      "sha256": "81ca1626c8bc712192ebd3e1cffb4971f098787b778daedcd0d1a8d00b2f9ee5"
+    },
+    {
+      "path": "supabase/migrations/20261108063214_4fbb0868-d81b-4625-9281-1936bab26b3c.sql",
+      "version": "20261108063214",
+      "sha256": "8d5e4eecec88000caaca723348223bea1531dbcb9c2f47ec6de97f4a715e3eed"
+    },
+    {
+      "path": "supabase/migrations/20261108065733_1385430d-3f5c-4abe-8331-9c03bef0259d.sql",
+      "version": "20261108065733",
+      "sha256": "24055ce4f617e242d3887b64b5d51263fd3597ec07b6db81e8dad4c28df978a6"
+    },
+    {
+      "path": "supabase/migrations/20261108065752_60ea4fd0-33bb-4d08-8286-9725b9c8beee.sql",
+      "version": "20261108065752",
+      "sha256": "8b4b504b49527022faa685d7029b4fe05d0ae8d10de5fc6d5d43102ad5f918ca"
+    },
+    {
+      "path": "supabase/migrations/20261108074639_ae0b6bfc-b7f8-4383-84f8-3ca6ff690753.sql",
+      "version": "20261108074639",
+      "sha256": "6cef0f5c811342ed15793eeca0fb53022897fd0f07aaa711417c7875132e9aa8"
+    },
+    {
+      "path": "supabase/migrations/20261108074653_ca786225-53c7-4c2e-8ea1-4a6efa65bf70.sql",
+      "version": "20261108074653",
+      "sha256": "ec0eca711a33f8bde0c0b087c59338c26c9692ee91ccc7e11dc71269bc6a723a"
+    },
+    {
+      "path": "supabase/migrations/20261108080635_b0790999-c3a3-4642-b4d8-7018f2b2a49f.sql",
+      "version": "20261108080635",
+      "sha256": "bda0fcd42553ed4bde421338bb1f412c19ae1aec29bcf787072675281e78af84"
+    },
+    {
+      "path": "supabase/migrations/20261108080649_cfdbfb36-6be9-452f-829b-2a447987a2e5.sql",
+      "version": "20261108080649",
+      "sha256": "6924509b27b07e4788c4febaf15d3d61e1e04f551c9725307dc3bbaf9fe3eac5"
+    },
+    {
+      "path": "supabase/migrations/20261108080829_21793c39-dc0c-483f-929b-0775eb5e0179.sql",
+      "version": "20261108080829",
+      "sha256": "81e21de5a3768a8d0cf8504ff6c8513ded83a250d8749e9139949363f9191c92"
+    },
+    {
+      "path": "supabase/migrations/20261108091014_10f34aab-26bd-487a-afea-a8301538b350.sql",
+      "version": "20261108091014",
+      "sha256": "d67ee15164a2feb6c4e491754958c1e006dd9c7682a68900d417f60d9bf1b61d"
+    },
+    {
+      "path": "supabase/migrations/20261108091302_dbdb688e-95b0-47dd-a65a-9e8f9d544c9b.sql",
+      "version": "20261108091302",
+      "sha256": "d1e7425514c618334fcc92b08998603adeea7167362dcc243fea8a6d995d5506"
+    },
+    {
+      "path": "supabase/migrations/20261108092340_6864930b-f4c9-4f70-a07a-23d8a8ebef09.sql",
+      "version": "20261108092340",
+      "sha256": "63253be6fe43f6024a0fa5077ca81e2669a37f094509e9a1865c53129e379c15"
+    },
+    {
+      "path": "supabase/migrations/20261108095343_a7e8a3de-122e-445c-8aa9-60f5a6cd5cac.sql",
+      "version": "20261108095343",
+      "sha256": "ce26de41946fb62056ec5684630f3747b0b2b80693b688d33e8bbe36f25c3918"
+    },
+    {
+      "path": "supabase/migrations/20261108100622_c9b2aac9-5ca2-4ebf-b857-12b375676b9d.sql",
+      "version": "20261108100622",
+      "sha256": "2ad0f42cb6b9b8a74f57742ed2ac67ace92b276f80361a2dcc7865ff0342a826"
+    },
+    {
+      "path": "supabase/migrations/20261108102042_fc927fa3-8f5a-4599-bab3-11be195953dd.sql",
+      "version": "20261108102042",
+      "sha256": "04f93390e0d5bd244977cb4531cab66ccfc1c81e8764ce5facbc5fc56b8c32e5"
+    },
+    {
+      "path": "supabase/migrations/20261108102100_d0821465-59dc-45b9-8a7b-876346031196.sql",
+      "version": "20261108102100",
+      "sha256": "907d6b7706a1369dfbce3ef89151ca278d451878f0b77e114e24352358d9f9a5"
+    },
+    {
+      "path": "supabase/migrations/20261108102749_0b4c7562-f0ec-4475-88fa-67e21e651d6f.sql",
+      "version": "20261108102749",
+      "sha256": "1c346f3c34d411afde5c6142043d89ea5f5ea3e4851786957e3cda482e8c90f3"
+    },
+    {
+      "path": "supabase/migrations/20261108103516_60fce660-2cde-46d0-a445-e1a83870b4d8.sql",
+      "version": "20261108103516",
+      "sha256": "9d2f5bf8f346c73d571882339f14bafd7ed82831a2a259c12005f6b232bda4e0"
+    },
+    {
+      "path": "supabase/migrations/20261108104844_ff05230c-218b-4f87-be19-3b8a5f5b0c11.sql",
+      "version": "20261108104844",
+      "sha256": "e81b837a24749c98f25790ed545fc5e9e22a810144f2dfda78114531f45138d6"
+    },
+    {
+      "path": "supabase/migrations/20261108104906_f8ccfc81-b1df-44de-b06d-23d684761f11.sql",
+      "version": "20261108104906",
+      "sha256": "772d297535da34673aeeff7a72df80fc7f37d77913c6c26e1448c560e957677a"
+    },
+    {
+      "path": "supabase/migrations/20261108110734_1ffe2a8a-bbad-4c51-9595-1483af17e466.sql",
+      "version": "20261108110734",
+      "sha256": "7e5ffa593a4f99e4f617876d2de55355e8585e7b5d4bd4dcda6618b04ce0422f"
+    },
+    {
+      "path": "supabase/migrations/20261108111342_b1a31876-18ba-4d1f-8ca5-8ca5f97719ce.sql",
+      "version": "20261108111342",
+      "sha256": "add7f27b65d217f02f35591c49c59648f1547c1b975a7135372a1f2c2453c45f"
+    },
+    {
+      "path": "supabase/migrations/20261108113131_abdfbcfa-ca0c-4420-9928-6142406d80e5.sql",
+      "version": "20261108113131",
+      "sha256": "a496e701171303d186cdb19f546bf93bea76a62b7c3600001b2a913486756769"
+    },
+    {
+      "path": "supabase/migrations/20261108113148_bbe894be-7133-454d-8a65-2a30c6cc04d6.sql",
+      "version": "20261108113148",
+      "sha256": "790ef00d18743c1e4caefb5c7c66e797f6d8ada1bd5a34036495a45282796d78"
+    },
+    {
+      "path": "supabase/migrations/20261108113210_de2fd417-b093-4689-bb21-bf6ad0752777.sql",
+      "version": "20261108113210",
+      "sha256": "46ad60ea34b797c736a833772bf73e1d392a23d228f0d71c89f6a4c558874e1e"
+    },
+    {
+      "path": "supabase/migrations/20261108113338_4da4da14-21ba-4d14-b805-cdb349bf1532.sql",
+      "version": "20261108113338",
+      "sha256": "423251cc0b5c256e09de137510edd4fe5a17ac962c078090d49d45c45a06d24e"
+    },
+    {
+      "path": "supabase/migrations/20261108113421_d960ebdb-5d9a-44da-81f6-2c1c30c9f677.sql",
+      "version": "20261108113421",
+      "sha256": "86dc2bfd3d062ae3306907c46df1a1904956818dab8480203e42753875787d15"
+    },
+    {
+      "path": "supabase/migrations/20261108113721_ea6302af-2d13-4314-8b1d-6442a9058755.sql",
+      "version": "20261108113721",
+      "sha256": "9cdfc0ec282f5f8c877a0879cf8c3b3a8fa11b632f354177242aafc12608e1bf"
+    },
+    {
+      "path": "supabase/migrations/20261108114423_a7aecada-8680-4a51-a8d4-8c96efe59a81.sql",
+      "version": "20261108114423",
+      "sha256": "486f3d8f938ec42e6e4bdc95b19b8a34fa2eb8d8819dc9ff1cd268a12bceac60"
+    },
+    {
+      "path": "supabase/migrations/20261108114441_def9c601-cc52-48c0-81d9-7d79fa6034c4.sql",
+      "version": "20261108114441",
+      "sha256": "6b9046790b55b20312ce77530a5681a09ada4c8d8036784d514224d8b1cf53ea"
+    },
+    {
+      "path": "supabase/migrations/20261108114703_12d23ebe-266d-47f6-a3cb-c08f747e9934.sql",
+      "version": "20261108114703",
+      "sha256": "0e5af1b2c9a935ed649342e6d93e40704d7e810e5cc5ac6fc407a3eff59cd262"
+    },
+    {
+      "path": "supabase/migrations/20261108115052_4429e8c1-73dd-4ff7-965e-57929c50ae59.sql",
+      "version": "20261108115052",
+      "sha256": "79225314ba391493fd0854f5400aec2777b8ff65dfc3c03afe568a4b38752c83"
+    },
+    {
+      "path": "supabase/migrations/20261108115544_372d38ac-ecb4-4934-900b-86c903fd1a89.sql",
+      "version": "20261108115544",
+      "sha256": "0e2d5411d0329fd3563c8b913bc6532ab70953f8a3996d1d9116bbb5819f8c8e"
+    },
+    {
+      "path": "supabase/migrations/20261108141641_e2518aea-1eac-4a85-b03f-eddd4c26da6e.sql",
+      "version": "20261108141641",
+      "sha256": "0aa39c471ba089b9d1b12cbb4d6e7ffdec6f6450b7cd5aeb53f6c87369f2e98d"
+    },
+    {
+      "path": "supabase/migrations/20261108141743_7968f227-bb89-4bf7-92b5-6ffb3e2b4c2e.sql",
+      "version": "20261108141743",
+      "sha256": "618a99bfd5cb6e56194cdadf04991e4846fa339df278a76ad4e2161e635ce09e"
+    },
+    {
+      "path": "supabase/migrations/20261108143042_2942ee6c-2d3b-4649-aceb-7db3d27a281d.sql",
+      "version": "20261108143042",
+      "sha256": "3c2fa22f7a2c3e38d4179341e63a389d758cd1910cad0c959a2fd650895f1369"
+    },
+    {
+      "path": "supabase/migrations/20261108143649_558b8df4-e3f1-4d58-ac50-ce50fefd9915.sql",
+      "version": "20261108143649",
+      "sha256": "78f0476784e81e50f4395113527fbc0ffdb2d66ce352600901a4922536f608c9"
+    },
+    {
+      "path": "supabase/migrations/20261108144341_be483c0d-0fdf-4557-9fd1-546d223baad3.sql",
+      "version": "20261108144341",
+      "sha256": "37ed8458017536ddd106558ec524eb9c71cf58d04f890130e47bcd4d747104a7"
+    },
+    {
+      "path": "supabase/migrations/20261108144353_3ee9f924-33c6-4960-bb83-98c3594cfc61.sql",
+      "version": "20261108144353",
+      "sha256": "1c33488c362d07ed024c28ec04d6d92155a99de81be24cb3d5c947e99b5b1c3d"
+    },
+    {
+      "path": "supabase/migrations/20261108162129_60cf1804-ac91-4b85-be6e-711528c8d418.sql",
+      "version": "20261108162129",
+      "sha256": "09ee7b44c291d51910096090d5c89fea9dee9d38c9a7396031b1a1b8fd6e0c5d"
+    },
+    {
+      "path": "supabase/migrations/20261108162507_86c66d89-7a3c-4710-a3d8-d343a0b8c840.sql",
+      "version": "20261108162507",
+      "sha256": "19876b8153820c60e7fe5cc8aba28cd0f836225dc684436c23ed6381ddf0d345"
+    },
+    {
+      "path": "supabase/migrations/20261109044139_1a102302-5c66-4f26-a3c4-6f310bb6ebdc.sql",
+      "version": "20261109044139",
+      "sha256": "de55c644edf56ad34582145170ee2b849c0a4edcd34dd2546316f3880a6f808f"
+    },
+    {
+      "path": "supabase/migrations/20261109044155_6d4d9ae0-2814-45e5-82e3-fa815d9a0bc1.sql",
+      "version": "20261109044155",
+      "sha256": "9826198c8d1a2f09ae1a89bce990eaf975b450dfc18d0f16badf7ad0713ec33b"
+    },
+    {
+      "path": "supabase/migrations/20261109051710_be797c07-a873-4593-8918-80906382dddf.sql",
+      "version": "20261109051710",
+      "sha256": "c9d59f1fa904c867ccfe8c120be5ed6afbbd8518bd3b8e1d8965a286fa520a93"
+    },
+    {
+      "path": "supabase/migrations/20261109051734_2776cbad-e1e0-4cba-a4ed-d5de5367bdca.sql",
+      "version": "20261109051734",
+      "sha256": "3a6666c23b6024b03645c9c38b1fdf7f18f7efb72584cdccd91c7f2d7044df07"
+    },
+    {
+      "path": "supabase/migrations/20261109053103_70a14054-b5bc-4578-b3fa-53679cd3c16d.sql",
+      "version": "20261109053103",
+      "sha256": "05834b6e9799f472097d54b9d83a38f34d4c1a3f40436117a24d1abbdb6a6394"
+    },
+    {
+      "path": "supabase/migrations/20261109053115_65f39c2f-eb47-43dd-b9ac-3a8dfcd1044c.sql",
+      "version": "20261109053115",
+      "sha256": "4e05274b6968124f0a7bbbd907fdc1fcf7f506143b5e7f484a666382d32b23b3"
+    },
+    {
+      "path": "supabase/migrations/20261109054451_98407f0a-819f-4550-960e-ff38cac01b2d.sql",
+      "version": "20261109054451",
+      "sha256": "dd32ed41d1eb2e9cc82bf2ecc2407ce1a65d1f8ca6b7da3572ca1775e6558012"
+    },
+    {
+      "path": "supabase/migrations/20261109061641_18e58060-abe2-4888-8488-6e1b30edcf3b.sql",
+      "version": "20261109061641",
+      "sha256": "f90a83276ecf6e4362491bbd0e825a49be4cc07e542e8a8bdec666c2f47e9bd8"
+    },
+    {
+      "path": "supabase/migrations/20261109061655_fc85053c-9409-49e8-9a33-848b6c90772b.sql",
+      "version": "20261109061655",
+      "sha256": "14f713022866af15c75f746f8e09f5f4c469db95594b57c7b84cdf0b8dada2f2"
+    },
+    {
+      "path": "supabase/migrations/20261109061956_3e59f52d-4da4-47c5-b39c-404e79f2b03f.sql",
+      "version": "20261109061956",
+      "sha256": "ce4ca352b99c1c01b3b0873be112a4a2999b7cb7e82e8a19c55e33a3ef5101b6"
+    },
+    {
+      "path": "supabase/migrations/20261109064030_8910a0ef-ee77-4c06-9802-db9795fa3ddb.sql",
+      "version": "20261109064030",
+      "sha256": "ef24901bdc087cee62a40e7cb4f351f1b8332d8cb64ec88f1d22f1f0b56178f6"
+    },
+    {
+      "path": "supabase/migrations/20261109064526_797394be-7ba9-4d5e-a8c0-e93d88584145.sql",
+      "version": "20261109064526",
+      "sha256": "5d398627e821c91ef97ecf0d02d8953b88a78423bc9e17222c2c43d0bcca98dd"
+    },
+    {
+      "path": "supabase/migrations/20261109064539_38eeb9d5-910b-4ae2-b5b4-f22071ce983f.sql",
+      "version": "20261109064539",
+      "sha256": "2f7d1f9dd01f7c7dd7aa6e076c33cc97e17182563eb8997efb9d8f15d1a68465"
+    },
+    {
+      "path": "supabase/migrations/20261109073434_58adab4d-a850-4245-9fdd-1f7109b4c18b.sql",
+      "version": "20261109073434",
+      "sha256": "876f59a7f0ca8a5b8a9292ed54f92b8df4561646cdb41abfb62b874f285a95f5"
+    },
+    {
+      "path": "supabase/migrations/20261109080610_693c66cf-5d8f-4458-bef2-8600c61275ed.sql",
+      "version": "20261109080610",
+      "sha256": "822ba74aa102e02a29b0e82637569dc7f3e109481e419853d6f2b0c70ea185e6"
+    },
+    {
+      "path": "supabase/migrations/20261109083228_c63de8bf-1cb8-4d8f-a58c-37d1f806e740.sql",
+      "version": "20261109083228",
+      "sha256": "1bf2e92939ee44cc91a44df4982b42013e321f3adfb43e63c2e1f2731c6e9326"
+    },
+    {
+      "path": "supabase/migrations/20261109083900_57245d63-f0f2-43d0-a88a-88674500e694.sql",
+      "version": "20261109083900",
+      "sha256": "e4a2a7653e86f739ad27b9660317173381431154500b904f98a95669ac9ae4ba"
+    },
+    {
+      "path": "supabase/migrations/20261109083913_1602dbac-af8e-4174-b54b-8df7ca943be8.sql",
+      "version": "20261109083913",
+      "sha256": "ba0552eef27be8d7143756e9a8ae961414387604100595121e5998252c1d3882"
+    },
+    {
+      "path": "supabase/migrations/20261109084831_e492257e-4c8d-4d27-9830-79526e5186c2.sql",
+      "version": "20261109084831",
+      "sha256": "01c362a4bde4e68608459dc9d42c9c62eda24380ca1c887f30806d4058c8fb4b"
+    },
+    {
+      "path": "supabase/migrations/20261109085911_a6791a46-e3a3-4518-9caf-c37a98845009.sql",
+      "version": "20261109085911",
+      "sha256": "deadce1481117e126419b5ddbf60ac9401ef214484ccac7facf217cb40a04115"
+    },
+    {
+      "path": "supabase/migrations/20261109085942_d87e9765-de99-446c-a83d-758c5a05edb2.sql",
+      "version": "20261109085942",
+      "sha256": "aaefb030bdcf99d98f71fad97072bcde4d46f98767de7fb55d686750c233fec5"
+    },
+    {
+      "path": "supabase/migrations/20261109090302_59cad53e-158f-4a66-9d9b-36b63f450531.sql",
+      "version": "20261109090302",
+      "sha256": "1792587ac549a247085015c961bd374f47b62a9999c0ba0171b1f54f765c28bd"
+    },
+    {
+      "path": "supabase/migrations/20261109090402_6b6c41a5-b346-45f9-8703-1cb5d31856d9.sql",
+      "version": "20261109090402",
+      "sha256": "6cbafc721fcd524f5d0bb4e338afd46341fdc1cf5552bb75d2c2cc8dbf0bd0d2"
+    },
+    {
+      "path": "supabase/migrations/20261109090953_92c5587b-fdf9-48cd-84e5-722268841c32.sql",
+      "version": "20261109090953",
+      "sha256": "3ef29e2d703d8d333c8cd78e4111592d4a3899b644acb74d5d76bfe6e1da2980"
+    },
+    {
+      "path": "supabase/migrations/20261109091031_69a93343-853a-414c-af78-cde560ec13e7.sql",
+      "version": "20261109091031",
+      "sha256": "e090a402a134b4c1aa563267684b8b4c7d1e082ecb4fe402f25d7ee5cc801858"
+    },
+    {
+      "path": "supabase/migrations/20261109092507_953607eb-c6f4-46b0-b629-2f3319e8a5b5.sql",
+      "version": "20261109092507",
+      "sha256": "4a5d858d2a09ce2a606ff7c82e7a9ae9c8fc2e698a1c627b5f60bf260e471b7f"
+    },
+    {
+      "path": "supabase/migrations/20261109092920_37519895-2106-4f40-bfdd-7ee146ce94aa.sql",
+      "version": "20261109092920",
+      "sha256": "536c75e49b9f3ee0ba585ecce7ea3ed388a86306c9888f2d56a2a7ef8d0374fe"
+    },
+    {
+      "path": "supabase/migrations/20261109094724_0fc35182-81e9-4295-a7c5-82caa25ae0f7.sql",
+      "version": "20261109094724",
+      "sha256": "767fe4c6aea237e54eed7676bf9b049445f730d3e79014fcb8ae53d9419d0b0f",
+      "replay_path": "infrastructure/vps-app/baseline/historical-replay/20261109094724_0fc35182-81e9-4295-a7c5-82caa25ae0f7.sql",
+      "replay_sha256": "5343c5c1aeac6d6f381da4ff4d91d04452a0f3fdb8c8e98e92ff48f9545b1693"
+    },
+    {
+      "path": "supabase/migrations/20261109094742_4e53ab78-bd04-4b2f-867d-6cdda54f5100.sql",
+      "version": "20261109094742",
+      "sha256": "7923fff333c86e4fa6c6279a2ba1d1f07b1698b4b9c4325b66ebbab972241c95"
+    },
+    {
+      "path": "supabase/migrations/20261109095237_769f9a89-cc06-4d0f-8e98-d540af2dbbd9.sql",
+      "version": "20261109095237",
+      "sha256": "cf5285b5679f0537c2c88399791f796cb68fdca8c77d112edde02fa0b0321eaa"
+    },
+    {
+      "path": "supabase/migrations/20261109095343_c356d161-4195-442b-888d-eeb439065292.sql",
+      "version": "20261109095343",
+      "sha256": "7dbc30bb5d0f0cdec8147dd842d2313499e9287c83bed0fcf6eafdaf257be6d6"
+    },
+    {
+      "path": "supabase/migrations/20261109095911_b96dc388-290a-4227-a9a9-7b714adfc1ed.sql",
+      "version": "20261109095911",
+      "sha256": "c650fc9a564365022ab814a78e2b7e947e4f46f8ec0667c8844c2746116f65f2"
+    },
+    {
+      "path": "supabase/migrations/20261109101950_a5b84f91-c735-457e-bba4-5229010160e6.sql",
+      "version": "20261109101950",
+      "sha256": "482da9829c8b4840b78bcc351856e0821b16ee3dfa430245cfedfe8cacbe7fed"
+    },
+    {
+      "path": "supabase/migrations/20261109102133_227b3a38-2285-4789-bcdc-4ac52d50906b.sql",
+      "version": "20261109102133",
+      "sha256": "f5a5dca61d3697748143a051c3f9975db9425376301c53a59a535322fc8a91a1"
+    },
+    {
+      "path": "supabase/migrations/20261109111201_80859c4a-05e2-403b-a47d-e368ec1093a7.sql",
+      "version": "20261109111201",
+      "sha256": "57bd3f724f76cbbc00b2e4b93e3acd852a1fff7a92ff30e689db59249f5d6431",
+      "replay_path": "infrastructure/vps-app/baseline/historical-replay/20261109111201_80859c4a-05e2-403b-a47d-e368ec1093a7.sql",
+      "replay_sha256": "5bab3b154ce1921182d71282644ca778172aee58e81346cc2f8704cc96ec647b"
+    },
+    {
+      "path": "supabase/migrations/20261109114909_df8bbb2a-fb69-4679-96bf-6a960557661b.sql",
+      "version": "20261109114909",
+      "sha256": "5da0513be07b463f34f834a9027a9abe41963de9d92766533c3fa3e123315281"
+    },
+    {
+      "path": "supabase/migrations/20261109120107_8a357071-1146-4d0f-8d94-db8818f70f9f.sql",
+      "version": "20261109120107",
+      "sha256": "af0d64aaf06e6458d390901e754ba131ea32f288f1b13f961942bae415b9dd5c"
+    },
+    {
+      "path": "supabase/migrations/20261109141232_be374221-5179-460e-81db-609f4725d845.sql",
+      "version": "20261109141232",
+      "sha256": "0d2989ad4a8297475d7902ac920febdc51ff52d9b0dda08bf7c519f372d17801"
+    },
+    {
+      "path": "supabase/migrations/20261109141718_40c25fd1-e62c-4af0-b54b-221c8f5a1b4f.sql",
+      "version": "20261109141718",
+      "sha256": "9a78b1e03c5a3179cb5fce553f9c4b3bec1d1186d39b121957ea614c6e2fad3f"
+    },
+    {
+      "path": "supabase/migrations/20261110050542_5d7f16a6-4693-49af-ad7b-b17f8e89b501.sql",
+      "version": "20261110050542",
+      "sha256": "12d1020a6b154be375b216e6f25694735d5eb5f8208f6fdbf5cb34e9c7450da0"
+    },
+    {
+      "path": "supabase/migrations/20261110050558_75a684bb-29eb-4857-ac49-02d31f4c68dc.sql",
+      "version": "20261110050558",
+      "sha256": "d320569f7470acfc2c28aa0808cf269bbf2a02ac1d7dd8cff5d4aba145a474bd"
+    },
+    {
+      "path": "supabase/migrations/20261110051042_8f7d7a9e-1a38-4c48-bdbe-f7c869c2cf1a.sql",
+      "version": "20261110051042",
+      "sha256": "bc1d898bb4d672197d4a77e2884a08c0541f611d0b738d704ac73c9e24f72271"
+    },
+    {
+      "path": "supabase/migrations/20261110060944_62fe6b34-002a-498c-a56c-aa095d149d8d.sql",
+      "version": "20261110060944",
+      "sha256": "15da9265e4ab5293ca378b3da25ef6a4509c0a67d8fbf981702e93ca39736917"
+    },
+    {
+      "path": "supabase/migrations/20261110071525_8d137b78-977c-4a15-b121-5d900573674b.sql",
+      "version": "20261110071525",
+      "sha256": "3a06dcf25eb4064c2c8df3d873f466a5cf99e4d742f385ae7e67187f557f7904"
+    },
+    {
+      "path": "supabase/migrations/20261110075257_c5c1b9eb-78e7-40a5-bbc7-c835a8fd8fc1.sql",
+      "version": "20261110075257",
+      "sha256": "a2e5d279ae37eff0131eb7860d3ff0a00953ea8b915ef7713d69fc4b01362ea8"
+    },
+    {
+      "path": "supabase/migrations/20261110075312_b396dfc5-1312-4a0a-8a0a-6c8093b5e6e9.sql",
+      "version": "20261110075312",
+      "sha256": "5b749a7b6ecca4e555e82f94d7dbd31e1af92364c799e2a12d9287d76d1b5d0d"
+    },
+    {
+      "path": "supabase/migrations/20261110085714_cebe87eb-a5c8-4e9f-8dc6-b1ed93a54e40.sql",
+      "version": "20261110085714",
+      "sha256": "17c264ff17f1b0269863d6a58c239ab177ec864a9535aa0331ecbfd825fa491d"
+    },
+    {
+      "path": "supabase/migrations/20261110085900_1261f8f5-cc56-4987-be0a-9c0cfb950dcf.sql",
+      "version": "20261110085900",
+      "sha256": "8a49b03947091870896107f59a84b037f9c1246b3b0782e296374eb0f87bd430"
+    },
+    {
+      "path": "supabase/migrations/20261110090417_34c3a389-f1bf-4890-bc10-0309a2e82942.sql",
+      "version": "20261110090417",
+      "sha256": "03fbf234fcdbf9515e0806484c25d9996736a069e48cb1b56ae09e37519cb164"
+    },
+    {
+      "path": "supabase/migrations/20261110090436_b1799b72-dd4b-48d6-9942-0a0a60ce1ae3.sql",
+      "version": "20261110090436",
+      "sha256": "4ea9a79a7c6d30c4091789720373b028becbae46ec7e62df7bf249bf164ef024"
+    },
+    {
+      "path": "supabase/migrations/20261110090925_34483480-7e20-420f-909e-ec8632bcbe61.sql",
+      "version": "20261110090925",
+      "sha256": "07d685917b5f811ab233c94e5fab01cf2fa93d0fb890681803e4dbb804eb3a56"
+    },
+    {
+      "path": "supabase/migrations/20261110092355_a602a802-a901-4a6d-aa4f-d2df875917ba.sql",
+      "version": "20261110092355",
+      "sha256": "d9738a3825dcd8ed5e8d68bdc284bf401497f6be22c07f19decc5cf472b55fd4"
+    },
+    {
+      "path": "supabase/migrations/20261110092527_803b0f5f-2a18-4dce-b1ac-a5b02493cf29.sql",
+      "version": "20261110092527",
+      "sha256": "e651f146d69436f78448d38ff00a2c372235ffec6c77eefcff3551e93ee716a9"
+    },
+    {
+      "path": "supabase/migrations/20261110092554_d80f4265-8303-4e93-842e-3ee077c5b9d3.sql",
+      "version": "20261110092554",
+      "sha256": "edce7036eb600373c0afb7aa136e1ae36cddb786d7f22650afac12f93a3543e1"
+    },
+    {
+      "path": "supabase/migrations/20261110092820_a2493cd8-a98e-4bff-9a29-c3dac3034b03.sql",
+      "version": "20261110092820",
+      "sha256": "4f2998c66525e3e0dbe445d33792fe60f4cb2b263cfc4418f9fea9ebf2aacd27",
+      "replay_path": "infrastructure/vps-app/baseline/historical-replay/20261110092820_a2493cd8-a98e-4bff-9a29-c3dac3034b03.sql",
+      "replay_sha256": "2c364c98c7f8af7f8b13810afdab00018eaaf41d750f3b1bbe12634c8237b95b"
+    },
+    {
+      "path": "supabase/migrations/20261110094056_ca2d09b3-6d9f-48ff-ba88-643fa2359cd8.sql",
+      "version": "20261110094056",
+      "sha256": "f2a2ec1c2b4eb1b80419a950cac924ba1621d274e7990196e4771573a52ef49e"
+    },
+    {
+      "path": "supabase/migrations/20261110100115_fd956bb8-46a3-4963-b9fd-10677beed45f.sql",
+      "version": "20261110100115",
+      "sha256": "e08abec590e90e7ab151ee64cec2f529a6e0a4bf22692d523cd43729ef8acab9"
+    },
+    {
+      "path": "supabase/migrations/20261110101628_b4897007-aaf4-47ca-9bf9-07cfee8210e2.sql",
+      "version": "20261110101628",
+      "sha256": "8204fa77e42c7629160c94344a8db0776239810d58a4f0a5d75c2cf6901684a5"
+    },
+    {
+      "path": "supabase/migrations/20261110102729_7e4384ca-46c9-47d5-a61b-9d248c890872.sql",
+      "version": "20261110102729",
+      "sha256": "79100e729e88dc98707b77079063ddf74ce72b6e5a954c2203429bb006af4ec1"
+    },
+    {
+      "path": "supabase/migrations/20261110103512_3ef6c3c8-1685-40ee-b094-71fa6b65678f.sql",
+      "version": "20261110103512",
+      "sha256": "019d62f9fa44a2d1ad67f1f97981e7bf639e597e607ca353b4bde80d0e0fbc0b"
+    },
+    {
+      "path": "supabase/migrations/20261110104848_4d177143-54e3-4afb-a18b-3911d4465c9e.sql",
+      "version": "20261110104848",
+      "sha256": "8c1448180f5f45842fe427e77401dbd696948ecc13a7391ebb08788fd14b9734"
+    },
+    {
+      "path": "supabase/migrations/20261110104911_5d7dc293-ef26-4a04-8f7f-033a0a2de666.sql",
+      "version": "20261110104911",
+      "sha256": "8a39d5c45780e36b8085678bd2f89043164c8ccfc17bffa143a3845efc8b7608"
+    },
+    {
+      "path": "supabase/migrations/20261110112128_55494a7f-5295-49c9-8d1d-db62188e0c0d.sql",
+      "version": "20261110112128",
+      "sha256": "b80da26ef7b57ae33cf7e206fa59bcd24f5d5167dae459930289e94b445c439e"
+    },
+    {
+      "path": "supabase/migrations/20261110112551_521a692b-1a48-49d6-9749-2fda76d6a64d.sql",
+      "version": "20261110112551",
+      "sha256": "82b5a1812faa172eba929c40a866dffe210ee964aae0295884fd33abfc6b8908"
+    },
+    {
+      "path": "supabase/migrations/20261110112841_ab67b744-d390-4c07-bce0-64054a144b90.sql",
+      "version": "20261110112841",
+      "sha256": "c97dbb15171187d54305f06bcb04bde6a3e8dd2cb38405b22b56ac8d2dc57ba0"
+    },
+    {
+      "path": "supabase/migrations/20261110112855_0de2d808-2904-4eb3-b3a0-e8fe103dfbee.sql",
+      "version": "20261110112855",
+      "sha256": "38416d469d4946f6318a60bd34e72a353f7eaae11e012931d36edb633f6322de"
+    },
+    {
+      "path": "supabase/migrations/20261110114705_c4f5eb63-aeb9-4613-af89-969c7a557f91.sql",
+      "version": "20261110114705",
+      "sha256": "c92be8e1381b714f1aa7546378c1228f899d6a930902580bf8e27dcd7693c92a"
+    },
+    {
+      "path": "supabase/migrations/20261110120031_87133edf-3f49-4924-b70a-68ded36478fb.sql",
+      "version": "20261110120031",
+      "sha256": "a98664c0b85fc1614b528ae5a32e1e33f80b33a4a7bb6b2f1f40b95cbd616b4c"
+    },
+    {
+      "path": "supabase/migrations/20261110141659_40a53853-b01a-4c58-8771-91200ac6224c.sql",
+      "version": "20261110141659",
+      "sha256": "2608e52e492225e0cca7ca2f697a871d2d8384f05e520e3802fd01a2ac98a36b"
+    },
+    {
+      "path": "supabase/migrations/20261110144149_a8b22aa7-6463-4519-b476-0393dac76fa0.sql",
+      "version": "20261110144149",
+      "sha256": "802870879338f652264498437c87edf375f9c7c5a5bb3ff249b4de8b585cece1"
+    },
+    {
+      "path": "supabase/migrations/20261110190558_593aa59c-0e6d-4ffa-93bf-d7537e1504d4.sql",
+      "version": "20261110190558",
+      "sha256": "7934de1a75d08da0e0c066451a2d94d3514a5f01cd1b28e382c6a4f13aeca9ab"
+    },
+    {
+      "path": "supabase/migrations/20261110190851_b974e919-b278-4bba-8356-6e18698eb14b.sql",
+      "version": "20261110190851",
+      "sha256": "749ac332a950b617c3cd235ff5d28043207fa08dfcfda3e2a9e4221f707b5937"
+    },
+    {
+      "path": "supabase/migrations/20261110192253_0cd3ab33-3ac3-48c0-ac46-bab64fcbee6d.sql",
+      "version": "20261110192253",
+      "sha256": "9f653c85af3a6d0657cc1873b51fb136c3142e9c1c0e2c42042804711b48d304"
+    },
+    {
+      "path": "supabase/migrations/20261110192633_53e3c7bb-c3d4-4775-8213-fb86d91d1e83.sql",
+      "version": "20261110192633",
+      "sha256": "0e70d458745050a26736fea629dacae513085fe234329a760cce64c1a0a68fc5"
+    },
+    {
+      "path": "supabase/migrations/20261110195936_ffe5b13e-18cf-44cd-8cc5-362c56ed30a9.sql",
+      "version": "20261110195936",
+      "sha256": "27627074f4d5300629386d5c9d4d570dbe194c3fcb5db47670c2730fe1c1c620"
+    },
+    {
+      "path": "supabase/migrations/20261110201304_4a0cea94-bb3f-4d12-becd-96161b664dd3.sql",
+      "version": "20261110201304",
+      "sha256": "8e6f788ec1f66875164ca86ef8b2e554f7b479d22e84f653e94601f45421e29d"
+    },
+    {
+      "path": "supabase/migrations/20261110201654_539af56d-c151-4a1e-9a88-96d8851ac9f1.sql",
+      "version": "20261110201654",
+      "sha256": "c8c9caf1a1ee9809e7ef11cca493f70fe820b15b45b15936e9d01ea2844b873a"
+    },
+    {
+      "path": "supabase/migrations/20261110202011_23cad080-4e9e-4cc7-aac5-32363f990666.sql",
+      "version": "20261110202011",
+      "sha256": "02785ceee6fc987174ea4a461382cac1c69930ebb440cefbe5543410acef92b9"
+    },
+    {
+      "path": "supabase/migrations/20261110202039_1f6682dd-b913-4285-a88a-c96867a3feda.sql",
+      "version": "20261110202039",
+      "sha256": "0f0decce9c771df7e4816c3cf6ee644f03dc37e9bb668ac79a743dc078b07073"
+    },
+    {
+      "path": "supabase/migrations/20261110202549_a09ee93b-b8a1-4ede-a60c-5a188ca9f9f2.sql",
+      "version": "20261110202549",
+      "sha256": "b61a1e7e4cbceb79d060c653b5f8de449489e3b7d9133499bb1228807e668c9e"
+    },
+    {
+      "path": "supabase/migrations/20261110203241_244a1756-36e5-4a2a-a545-e8538a10f424.sql",
+      "version": "20261110203241",
+      "sha256": "0eefc561bc9d8c87ab56b04a44f40c74a9f37eda26368294198ddad37160ada5"
+    },
+    {
+      "path": "supabase/migrations/20261110203352_6088a360-060f-4624-af57-c58b33873376.sql",
+      "version": "20261110203352",
+      "sha256": "70d93876922ae31b1cd2dd1fa7c0afc0ce5993ced3f0a8eaf1ad360f8b1d754f"
+    },
+    {
+      "path": "supabase/migrations/20261111045207_b53d3025-a947-463c-838d-105578290f46.sql",
+      "version": "20261111045207",
+      "sha256": "8a1c83f47dd1d436a125b6d45ac4192c1f96323bfa644530b07d96bcb922d2e5"
+    },
+    {
+      "path": "supabase/migrations/20261111051121_521d0892-8508-41cb-913c-33294cd551f5.sql",
+      "version": "20261111051121",
+      "sha256": "89bcd8e3fc33d189c800563dec733802f9f2c60c139c46438d30627e26183bc9"
+    },
+    {
+      "path": "supabase/migrations/20261111051138_ff1a8f62-bf9c-4f8c-a60a-24b425a20522.sql",
+      "version": "20261111051138",
+      "sha256": "30704b3aeca93ab8e8b4a7516cd145f33c64716519fd2d909688301640128322"
+    },
+    {
+      "path": "supabase/migrations/20261111052305_0859c010-93e4-44b8-b884-903192aa06e5.sql",
+      "version": "20261111052305",
+      "sha256": "7d4ee53b1cd7bb0a8bae449b3973c92aa64d7f8f536b1643031373b405b02465"
+    },
+    {
+      "path": "supabase/migrations/20261111052627_71efec13-3799-4423-abf0-d5c8c705958f.sql",
+      "version": "20261111052627",
+      "sha256": "219e3a91cb36766dc0c5708dc89167cf9205263a2208aa822f5781ea647642da"
+    },
+    {
+      "path": "supabase/migrations/20261111053031_1a2511db-ee49-4cb6-b167-d0eda68d759c.sql",
+      "version": "20261111053031",
+      "sha256": "5c9e078f0fc12a0947fd25ff14a83736c0554a174158baf8ff1cc53f540075f9"
+    },
+    {
+      "path": "supabase/migrations/20261111053324_121f4902-898e-4f03-adb4-7c1043451053.sql",
+      "version": "20261111053324",
+      "sha256": "cb6c5ced9efbb3dc5a3972270bb6d202a60b0c048f603b6e578a00c62f9d0b2d"
+    },
+    {
+      "path": "supabase/migrations/20261111054017_9461a5b3-4993-48a0-a942-86c1384e28ce.sql",
+      "version": "20261111054017",
+      "sha256": "07f165da0bace2708864aab50b1195946ab013f5d033d3cbe2fe26c2c3c2eff1",
+      "replay_path": "infrastructure/vps-app/baseline/historical-replay/20261111054017_9461a5b3-4993-48a0-a942-86c1384e28ce.sql",
+      "replay_sha256": "fbb520b8cb0089221085ec627b9c4d2650981599842fc3e374bdec431dde60ff"
+    },
+    {
+      "path": "supabase/migrations/20261111055618_84badf2a-80a4-464c-a7ce-705855b3da85.sql",
+      "version": "20261111055618",
+      "sha256": "98b809d2c6a88d451acc696d55a736adced58feb891c7efd9355cc3891f8cf43"
+    },
+    {
+      "path": "supabase/migrations/20261111060720_7c9ea121-dafc-42e2-9cad-b56cad80c39d.sql",
+      "version": "20261111060720",
+      "sha256": "c9c82813e931e9952164d9b7244a10c802f557251e46ece34b32a90f7e15c08d"
+    },
+    {
+      "path": "supabase/migrations/20261111062724_c83732fa-108c-4a85-9f7d-0f7b259d2099.sql",
+      "version": "20261111062724",
+      "sha256": "b5610cbc5b1c05270e8f832867b9fd669fbdded2254b28c9b6811fad223f2b3d"
+    },
+    {
+      "path": "supabase/migrations/20261111063718_e69cdc78-48a3-44ee-99a8-b928bd078ef1.sql",
+      "version": "20261111063718",
+      "sha256": "48ae8bb7dc4a57c11b899f437247e80e43c7cc0e8aa99b3ee23cc4c9ed8dea19"
+    },
+    {
+      "path": "supabase/migrations/20261111064619_5752b132-8fd0-4b9a-baae-a4aec08715d9.sql",
+      "version": "20261111064619",
+      "sha256": "0b068e2b66fa2e78c02b7290d6f60db3b33249757793129bfa37b4dbeab14c95"
+    },
+    {
+      "path": "supabase/migrations/20261111064803_005b6fad-8b9a-4fc8-a555-cf38d3830c35.sql",
+      "version": "20261111064803",
+      "sha256": "6b474d0bae0b1875d2dbf2fd954c6d84d6f11f3c0959ab535cfb15c125511af5"
+    },
+    {
+      "path": "supabase/migrations/20261111065032_86eb7328-a460-405c-8f41-af49a9e988a1.sql",
+      "version": "20261111065032",
+      "sha256": "3c401671808b54cf95b16e2a2e0b9c223eecf05a5c5a5f41b422c734b0ac280a"
+    },
+    {
+      "path": "supabase/migrations/20261111070258_a67b94d3-afc5-4873-b663-15ab7a6b599f.sql",
+      "version": "20261111070258",
+      "sha256": "d663d69c60b0158ebc0ce8e49b443e35330659f0a26dca5356ba246244742bd9"
+    },
+    {
+      "path": "supabase/migrations/20261111080105_b2cd1f50-dfc6-44bb-8676-8a9562d89028.sql",
+      "version": "20261111080105",
+      "sha256": "7e1f7bb50eeec8439a6a08a1616e1013a77c766df9524f08c5d56174cd950326"
+    },
+    {
+      "path": "supabase/migrations/20261111080217_1391f568-406e-40d4-b77d-ab629fbbcd1b.sql",
+      "version": "20261111080217",
+      "sha256": "3331d417669395d574d7b62e3dd71851843d98e1f0a309c9ceefa1e257f47a60"
+    },
+    {
+      "path": "supabase/migrations/20261111080410_49e18d8c-abfa-4b67-996c-38aafacc4e09.sql",
+      "version": "20261111080410",
+      "sha256": "6c1ded50d9edbde9b7ff405ab7f593bcceea195e909b7c436aa1f44f782f7688"
+    },
+    {
+      "path": "supabase/migrations/20261111084854_d5d670bd-2f39-47f0-9111-0e54afe76c9b.sql",
+      "version": "20261111084854",
+      "sha256": "e36243d4ab41f5d9d2aef72ff824c4ade63cf1561aa7ac295db7bffaebd209eb"
+    },
+    {
+      "path": "supabase/migrations/20261111085700_d7e3d0eb-59ca-489f-afa0-48cb582f0202.sql",
+      "version": "20261111085700",
+      "sha256": "11b3c1cde7817d57261d05eb97c3438eccd3ce99c60a8f2f5d27f93784f472ce"
+    },
+    {
+      "path": "supabase/migrations/20261111085859_63936c18-524b-40d6-a6b9-8a9ab5c0fba8.sql",
+      "version": "20261111085859",
+      "sha256": "ceb8b4602698aad6c17de0513fccbbf95b514d98b22b08ab0178cbafbfec898c"
+    },
+    {
+      "path": "supabase/migrations/20261111085947_cb8f5b75-9000-4df6-ab31-714c70bafa49.sql",
+      "version": "20261111085947",
+      "sha256": "52b23fc6730d889668a52685bc1329e0a46653538fa297bff3a10fa9b12e48a7"
+    },
+    {
+      "path": "supabase/migrations/20261111090254_2ced8064-0124-47fc-991b-24a7805fa80f.sql",
+      "version": "20261111090254",
+      "sha256": "d2b87d16bcf227251bb2c74b41a0ea37431708f24c3e45b630a51907772bdd63"
+    },
+    {
+      "path": "supabase/migrations/20261111091010_18a5a5df-1064-4d32-8b4e-238a173559b2.sql",
+      "version": "20261111091010",
+      "sha256": "46b94954b49df1b7aa3aa17edf420487224c0f9b093bce4e3137cb49f867a066"
+    },
+    {
+      "path": "supabase/migrations/20261111091849_73396aaa-268d-43c5-9d34-87366d6064ae.sql",
+      "version": "20261111091849",
+      "sha256": "60bdd0fdfb3fcc086fb94c9dd0364791d22da103f889d1972ec6ec8842e47b76"
+    },
+    {
+      "path": "supabase/migrations/20261111091913_6281adc6-966e-471e-8038-4dd1363d0384.sql",
+      "version": "20261111091913",
+      "sha256": "01c0c8c7bda97f1b87f014affc6968c464e15024d0e6a2dfbeb11a40cf8e52b9"
+    },
+    {
+      "path": "supabase/migrations/20261111093510_cc01f78f-f2b3-459c-a758-0e3baadeb6d7.sql",
+      "version": "20261111093510",
+      "sha256": "a432b7c5c79e7c1cde1208792f39bb68f177ee1dfad3ffec6b85a09ea673523d"
+    },
+    {
+      "path": "supabase/migrations/20261111101904_541f7567-4d74-49d7-b3fe-a31d36fcb09f.sql",
+      "version": "20261111101904",
+      "sha256": "82f9435c1c8c6273d4b641ae9d3c4d5c515bdb796dd049e39be55908a627e041"
+    },
+    {
+      "path": "supabase/migrations/20261111101929_7dd1f57e-e15d-41c7-9550-3cbc23f85c17.sql",
+      "version": "20261111101929",
+      "sha256": "746cd8989b4f037f35295d0ed469546ae505f8a0e45f08a1d5adb2c52a5a02ad"
+    },
+    {
+      "path": "supabase/migrations/20261111104656_c4efc565-6b7a-49e1-8fe4-99408f45ffa3.sql",
+      "version": "20261111104656",
+      "sha256": "147a69a13339e3c9bba7691c914af258bae290898f7511c6aa3e896be695ab29"
+    },
+    {
+      "path": "supabase/migrations/20261111105332_33f57a07-b899-4e9a-be43-da408cc4e17f.sql",
+      "version": "20261111105332",
+      "sha256": "33ff32e37130f743c349f3118a8620f0137b961bfbed8ca99fa6403913643dd4"
+    },
+    {
+      "path": "supabase/migrations/20261111105600_fb5a32d8-22ad-4f6d-bd3e-70f9f2598e57.sql",
+      "version": "20261111105600",
+      "sha256": "9e464c23b68d04c0d3dbdb9f17089e62a347f102aff82c5a6f5d83bdf002921a"
+    },
+    {
+      "path": "supabase/migrations/20261111105934_d59dec64-41db-486d-814f-79e113228076.sql",
+      "version": "20261111105934",
+      "sha256": "07aea19be28fcda4d5f234fde46be77fb861c6892610c1c0ca43c94898622115"
+    },
+    {
+      "path": "supabase/migrations/20261111105954_916797fc-0c60-4dad-a4d9-95c510ae2162.sql",
+      "version": "20261111105954",
+      "sha256": "462f46488a1edb5a9a4316c241a0f236b2d85b7e5ff77e7e3c008a0c4425286a"
+    },
+    {
+      "path": "supabase/migrations/20261111112552_c94613dd-f4e1-48a2-b419-b60dce46160e.sql",
+      "version": "20261111112552",
+      "sha256": "48eb276800dfbdee29ddd706fe9bed2feb8905f1de639a305350534505e476ed"
+    },
+    {
+      "path": "supabase/migrations/20261111113558_7bfb9815-c47a-42ff-ad3a-86ff9f9a2662.sql",
+      "version": "20261111113558",
+      "sha256": "7027b47b761081370edea6aa649d6329db70a7703c65b641ebfbf0db7d4f6b7e"
+    },
+    {
+      "path": "supabase/migrations/20261111113628_3b5b4004-10bb-4582-bad9-81fa69f60b11.sql",
+      "version": "20261111113628",
+      "sha256": "1a560353963624b709a28383f65411849a4f603c33f6738888509c445a1dd361"
+    },
+    {
+      "path": "supabase/migrations/20261111113822_649e2a84-181f-4100-99c6-d86ae39383dc.sql",
+      "version": "20261111113822",
+      "sha256": "247094ea7cf3ec554467e8c601366c2aeb470eb6ea75c73d30f8739cc574dfcf"
+    },
+    {
+      "path": "supabase/migrations/20261111114218_33576029-f5be-439e-b6e0-4c056ea92459.sql",
+      "version": "20261111114218",
+      "sha256": "b7223c34dc7f7dc48690db3a50a3e9f4b83b3291534d3609b8f8dc6807a849f8"
+    },
+    {
+      "path": "supabase/migrations/20261111114302_626f1989-2bbe-4adf-a4ee-fbe26e8359b6.sql",
+      "version": "20261111114302",
+      "sha256": "dc14adb118631f4cd47a57fed1dcdfa5c28e54750a490ae7a1263a579648b27e"
+    },
+    {
+      "path": "supabase/migrations/20261111114512_4ea0cc93-4292-420a-8fbf-ac87283954ac.sql",
+      "version": "20261111114512",
+      "sha256": "ab76786e8bb1b84365bf6979db776f4f95890455c0156b0d9c26d0e1202dd0c4"
+    },
+    {
+      "path": "supabase/migrations/20261111114530_ad55d49f-af01-4e16-87c8-0f164b576d86.sql",
+      "version": "20261111114530",
+      "sha256": "9660b01e10e5d7049b48a115e43086a9e342492508563152666bc56644951197"
+    },
+    {
+      "path": "supabase/migrations/20261111114819_23cd4d28-56ae-401b-bf32-ebb1908e59f2.sql",
+      "version": "20261111114819",
+      "sha256": "95ffbf8586c57cd05ed4cd1259fd712b6267d8405a310b925e55076f53249a38"
+    },
+    {
+      "path": "supabase/migrations/20261111114835_f89ce0ae-1aa0-4378-8adf-7f3fedd70370.sql",
+      "version": "20261111114835",
+      "sha256": "922005cb1c80733a992ada41b4b605bb614562b5a055c65205313ae1f480cf92"
+    },
+    {
+      "path": "supabase/migrations/20261111115513_4c07aec4-74a2-4cf0-b149-b619cfc034da.sql",
+      "version": "20261111115513",
+      "sha256": "dd5913a8022e1c35f3d50aa674ee1ba28916a27b475838ae82bc8ba52947cfc0"
+    },
+    {
+      "path": "supabase/migrations/20261111115525_3868d6ab-759d-478d-93fe-8e5c84a59c55.sql",
+      "version": "20261111115525",
+      "sha256": "d0894630dedb33acbf897df75b4620730424f1e71dac37e583e9ae7c9c3f038d"
+    },
+    {
+      "path": "supabase/migrations/20261111162507_870c79c9-39c6-43a5-90cb-770bde22ab44.sql",
+      "version": "20261111162507",
+      "sha256": "3d4f4f32e52b289a3662116a5ba3faf37bcfadaca0f27d719487bbed5ec894fb"
+    },
+    {
+      "path": "supabase/migrations/20261111162729_b198f478-ffb0-4e29-ad5a-3182af62f675.sql",
+      "version": "20261111162729",
+      "sha256": "20a6b07f1b287876b003f8a3166153be1c2d73a4593c05721b930712e54ee25b"
+    },
+    {
+      "path": "supabase/migrations/20261111163125_81fc05b9-6c6a-4d6c-a282-8597066110a0.sql",
+      "version": "20261111163125",
+      "sha256": "2f1328298ae7a95b2d6bed663f25110d911b0c8fc7b196301730b798d3982dec"
+    },
+    {
+      "path": "supabase/migrations/20261113110000_scoped_message_delivery.sql",
+      "version": "20261113110000",
+      "sha256": "ce6b0bd98a98f2f9c95f2a81973c9a4147194f7dfb46908cb4c82b7988b78ed6"
+    }
+  ],
+  "vps_only": [
+    {
+      "path": "infrastructure/vps-app/baseline/vps-only/20261112191931_restrict_client_table_admin_privileges.sql",
+      "version": "20261112191931",
+      "name": "restrict_client_table_admin_privileges",
+      "sha256": "9b6fe5f57dc88ad485ce09933caee048427a5eb748ea1a1de0aca562ab5b3a97",
+      "already_applied": true,
+      "common_stream": false
+    }
+  ],
+  "baseline_history": {
+    "vps": {
+      "20261031180053": "87c9b195dc7340190325d5a50cc4586e",
+      "20261031180107": "7b6b5c20c8f05f9dfa32e7654b837ee7",
+      "20261031180141": "53c1faae684164b249660eaf1523d084",
+      "20261031180928": "29fc505d3ad787c5f9b91041cae1e6c2",
+      "20261031182059": "2363bac7f1e0070fe1ccbbc4dc0e1a14",
+      "20261031183113": "3c7f49fc7fd16a403eef2c1529bd0999",
+      "20261031183331": "3d9a1f1d9ab0cca7705b86e5e4ee2866",
+      "20261031183418": "e2a0389e2efacb24e6b0414d462409c6",
+      "20261031184404": "0bbc499a49d7ba44510c1e54ce8126fc",
+      "20261101032623": "f8d152c7362c5b3951641729ad019502",
+      "20261101032652": "d787eff1d8f4476128ff7214953e30f4",
+      "20261101032950": "a0cd0b5a4a55d44d39e98f55a59cf2e0",
+      "20261101033014": "689e34989e80b03ac816a0d5b2f3a2be",
+      "20261101040119": "c2e0dddd8457864904654b31202da50a",
+      "20261101042201": "15d74d1331993f02ba0e5087971b72d8",
+      "20261101042215": "91f0a0275fe34873608fe006f3562700",
+      "20261101044437": "8c4e21898f3c0b9f0967c7600b1da5e9",
+      "20261101051444": "579157c1aa14dddfe827fc7e75b23316",
+      "20261101053218": "9d5533bfc6e2927a49f07c831c7507e8",
+      "20261101053840": "5b16b18efa4b7f9f867ecae2105a7b05",
+      "20261101054427": "dd4efdec7dac4a5925fb678ff24bdb2a",
+      "20261101070918": "f4f19befcbcc5bd68a0f7d086db28359",
+      "20261101070930": "539ab4c5212a267bc6b8d3f097b0773d",
+      "20261101073535": "7e89886d2c7ca56a5540e41815cbda78",
+      "20261101073548": "cdf41d74d3a862a71a2d98c6a2d2a51a",
+      "20261101075138": "b05d5e1894b373e06a65cbf151e88dc3",
+      "20261101075212": "5244fc038144500d9444d8fffb1fcae4",
+      "20261101075326": "245211bd7e5bbe007b12698965ce98b8",
+      "20261101084002": "09eb4939d65bf1ac2f4b3f9795b3ccd2",
+      "20261101084917": "b0576858a65b82e4b6effa1fae5f54a5",
+      "20261101091715": "3f2e1a552cdc022865d1c19f572a9650",
+      "20261101100533": "528d337fbffc206579535f15c7d635b3",
+      "20261101110056": "c811cf406095ea5ec2e8e4d005e3405a",
+      "20261101110114": "b8c95628c04a42156ff4806ca8986d64",
+      "20261101111610": "26c7583bda18d3b680443675ce947258",
+      "20261102035633": "54084058683f5a4388b5fc281800cc92",
+      "20261102040407": "b38ccbcf033b1eedbc386b66b1988471",
+      "20261102040537": "eb963535ff2c0df87d7ef922978820c2",
+      "20261102041226": "63e2b2b98cc6229d1bba7a20ca20192f",
+      "20261102043019": "c43de1832d9e2744ce4d7528a1dab2a3",
+      "20261102045735": "83a9db6a6a439a6d31c76dc3246b029d",
+      "20261102045823": "e6255cad64572e498eeeaadc97cf4d6c",
+      "20261102051237": "1a55b6b2fab18a9e4a325ed588b3d8cf",
+      "20261102051833": "8e3749bb5adfdc496d807d740c125320",
+      "20261102054023": "3acf93380a663b7b9df9cf8497c1cb67",
+      "20261102060432": "d9f733e4f992c68336313e085775a2fe",
+      "20261102061006": "9d7cb4e5d8362b6d9b27d829d431c95c",
+      "20261102063537": "61fa442efeb4f143842743346506930b",
+      "20261102064643": "e8d5d7c16cc882c9c5fdbe107662a5be",
+      "20261102064703": "3de84109cdd866e0728b3e43687cb926",
+      "20261102065249": "047f12d1151b7f8338dea906f90d920e",
+      "20261102071234": "e4dc0c3097ceaf412a7a8a4134252793",
+      "20261102082130": "2a69637e5cb76051db5449bb1bae3c87",
+      "20261102082258": "f8f6a1a844097d6bf1d5b272b53c4d3d",
+      "20261102093053": "06edce104d5a644d9f25441ba0a4b9d3",
+      "20261102093147": "55b148063366232e8f9303240670f1dc",
+      "20261102095453": "7e86b24ff61a869bd1d224805a435a64",
+      "20261102095514": "323376edfcbf2c8cd4244ad32cd21076",
+      "20261102095646": "85b1677ddfa564e400996aecc082a0b6",
+      "20261102150942": "4088b811fba2ac856b4392957795d8ca",
+      "20261102154620": "4095a7761ea7e6ee5f1caefdd90ee6ae",
+      "20261102163504": "946972ec4062af3538c873f46fc99a96",
+      "20261102163733": "9ed2217de0de0828cb1ba4105b49161f",
+      "20261102174454": "2a574bfc556aead93311acf48fb60d3e",
+      "20261102175347": "a9f903d50bc7f705dcdaaffeebdd5ec2",
+      "20261102182805": "fc1a9e138c7be0ac845d540f924a8fb8",
+      "20261102184258": "a6ee6bae313d0332f1416be46975d370",
+      "20261102185637": "24e6fb71edbc90c79174afecc14a0a6e",
+      "20261102185702": "7d73e4b050531c92c4034fb84ff05498",
+      "20261102191732": "741b7f559b9fd9b531cfca5e7435d720",
+      "20261102191750": "5c76432e2c3d8c165082b6f06f1446ef",
+      "20261103035244": "04dc8d863a5237430cb4eadd2f07e869",
+      "20261103035259": "3493dabc0c5b3b138a6fbccd0322bfb8",
+      "20261103040555": "0dd57e7ab8bf0ec2f2a9a9eadb4b437f",
+      "20261103041641": "88cd88362df22361d45a1560fd9da006",
+      "20261103043301": "01232c3c61d2f5d56e30c3f6af231d0d",
+      "20261103043326": "8f523e428e71b8d1bba4ca6a54464da0",
+      "20261103044054": "27d37a896b5ac921208d203072ff590b",
+      "20261103044422": "1b5eb5af10225594fe7cd82d8410ea59",
+      "20261103044827": "1910fd875f24fd70520f2b05d13e933e",
+      "20261103045001": "d2c2a4e94902969f88030dcb316bb56c",
+      "20261103051119": "02ad27bdefc9e35005426e88b97e5310",
+      "20261103051351": "edfd43e7d4e9e8a4f547a374b360f7b2",
+      "20261103052933": "b56aa6a7c8ff587fdd360234996b52b0",
+      "20261103063148": "96fe934278c069ff2cd293b9c01c0a65",
+      "20261103064446": "87ae19fe0a872050a7b64174548508ee",
+      "20261103064515": "7bbfb16aead21a29829626892867d85b",
+      "20261103073636": "e0b4ee52262e067b7c3cc20a19363806",
+      "20261103073940": "0650c06aee90dd9ecc9df7c310e01a81",
+      "20261103074118": "f036e7575c8aa7f99d635ccc9d695fc8",
+      "20261103074730": "28c138aec02367aa5b610d41985c2331",
+      "20261103075851": "a7ab5781498b2746de7736f32d64a799",
+      "20261103075949": "e4a70daac125e12e9ed7c9fd01b01190",
+      "20261103083357": "80caed7ffb8f946a3ad3f68dc9623bd4",
+      "20261103083558": "2787803afdb6b44787a6fd6af08df625",
+      "20261103084935": "fbf0c339ae342d49e15dfc6ef3a0c0e2",
+      "20261103085144": "c22f7c0b448bcaeecc985db5456a7aee",
+      "20261103091209": "3afa20954273c46465ce8a2245e3b6a5",
+      "20261103094135": "c021214848fa3eff2fa03ab120680570",
+      "20261103095117": "add453cccd057cd5b2acbe35b9477bd2",
+      "20261103095129": "5e21d37626ebd6f74e8b57581d6ae0e1",
+      "20261103095212": "d115908629ae238a41dae5058e1b56ef",
+      "20261103102009": "e81432840b30f3b17ad4aa95ccd13278",
+      "20261103102308": "d686a7eee8660644b083fa53fba073a9",
+      "20261103105024": "977652639dabba80f350ed3dca19a337",
+      "20261103105410": "9754ba9fe16d0417735ff1e3e82a24c4",
+      "20261103112027": "8b07f52a7443ecae13ed62d9eec942e9",
+      "20261103112312": "0d3f2545ed266cc3a743011283314317",
+      "20261103112437": "7535ce5b69b0d723649445ef8a935739",
+      "20261103141501": "1eb17e305f50fefa9f9002939694fe91",
+      "20261103144438": "d6fdbcdca6cb9e860e068691ac843634",
+      "20261103144658": "6b48735c1860e387b1c3c1b4169215aa",
+      "20261103151021": "eef71e898a3555fde3b91aa798017af6",
+      "20261103152411": "949b4424798c6a65e176f4179d72b953",
+      "20261103152556": "2be4b60790e41cbc35eca34d285b9ea5",
+      "20261103154515": "d67a04687dea3a038788d59256d0416e",
+      "20261103180426": "b80d4fb0817b863af9a019d52088e2ae",
+      "20261103181402": "0a46a56438b4c52250ad39d54122aa7e",
+      "20261103183856": "3541d82bec8312da99cb4f624d710714",
+      "20261103183957": "971231749b99348a6badd13dded9b1ba",
+      "20261103184036": "00bff9be45ed771f172f0f526421ff48",
+      "20261103184430": "e57492c893f5bc694419f93f4d4c9598",
+      "20261103184526": "446a66010fce5b1aa381b264a9044544",
+      "20261103185904": "e6a3baa9e87fa07ec8804f8ab954d500",
+      "20261103191546": "6b304fff6a598dce6ad9180a49f6dc9c",
+      "20261104034647": "2c8e7be9adafd9fef4f2d8d19273d2e4",
+      "20261104035838": "9944b7ce700abeb05b510781715df69c",
+      "20261104035921": "a18af727174fd79634e50c943c1f7cba",
+      "20261104040045": "f886b53be33420ee99e1374b500d1a02",
+      "20261104040830": "672e0cc9bc9a9e4b59f5bd6074e34e99",
+      "20261104041013": "273b8ae98f593dc361444059cf59a346",
+      "20261104041124": "522cdfdb19050ddba07fd67180375902",
+      "20261104041705": "341696d6b2fe5a5aa53d5fcdc0207ed9",
+      "20261104043020": "16d6ae2e059f560f63f56321e6f38df0",
+      "20261104043052": "c7d686c33ed07a7fb4ff7cff0cf5fd51",
+      "20261104043419": "138ec8571fafe4071186bbfdb0744dc0",
+      "20261104044159": "76ff8c4624e6bcf63387a1760fb59ee7",
+      "20261104044542": "b64f153f1d89eae3eb60177f5f232b70",
+      "20261104045651": "9fba80940f9bb60a38632da92cd67dfa",
+      "20261104051857": "f6f66e379a62e795c0a3ec8db388da82",
+      "20261104052718": "ca29a5df21f8852f6fbbc8f9a091627d",
+      "20261104053747": "774e7f9a9dd89945127ce0cd56a58125",
+      "20261104054234": "d22587778977815bcc40cb688e4d9a81",
+      "20261104054304": "6e23e4271ee0f140872b36c390679d6f",
+      "20261104055805": "9fb5a773904d1e0527363c097cb68ffb",
+      "20261104060704": "d5fb06fc824fa4eca11bddf764acc623",
+      "20261104061826": "5cc99fa5b45ba242316cc90fb25d7575",
+      "20261104062905": "c46843f37b3a9bc19e0bffcd21ae2ba1",
+      "20261104064942": "4253ffde873e61131fd0aacc3b4d791f",
+      "20261104073020": "b4fac1ed57e3914f5917245decf72257",
+      "20261104073036": "5998fca598b141e5e0428bb04201bd1d",
+      "20261104073748": "03b0bbbdf3bfcca824d1c58f0c0c72be",
+      "20261104074731": "85e425a30a186f96c9457520a4501f81",
+      "20261104075208": "840f1475ffa634d8bc7aa600bf8c0406",
+      "20261104090223": "0e10899207d44679d2743ea148783ba2",
+      "20261104090303": "d6be8e800966e074b2f78b8c00cb692a",
+      "20261104093430": "4120b2e43c6219680b5a6de5b30a524e",
+      "20261104093500": "cd9cffd4cfebb32167e7b1a25d98501b",
+      "20261104094022": "3ed06cc185478ab2437f4177bdda6b34",
+      "20261104095500": "7b9e638b3566839b3a02893c5f6da6fa",
+      "20261104100846": "76cc68f711aa90df0655f789e0db0717",
+      "20261104101508": "a692f3b069d5ca899deebb0b1c01dfd7",
+      "20261104101524": "02991e5868ff16929f79b574353383dd",
+      "20261104105003": "2f86561474ebedddaac5d8db84786cff",
+      "20261104105055": "ae9cfe3f1b88cf1eebe686d05feec533",
+      "20261104105526": "8e82b689e533ab49c61d9572b25df605",
+      "20261104105601": "7f8719aeb7c1e9139dec6f2392cfd5b6",
+      "20261104110041": "259d713d79f25f623a04ba2cd4d41a05",
+      "20261104110140": "0bf4d7f9d39667064b57d4df734ac072",
+      "20261104110256": "8ab3e0f8c321b226846bf81099486765",
+      "20261104140246": "50eeabf867248d6a645860ba344aed70",
+      "20261104142919": "40b322b750e6e13a6c99c66e59c34081",
+      "20261104144637": "7cb1cc48d52dc670f359a1dcc33909ba",
+      "20261104144652": "57dfa1ee7a21d8d87f08ac258df028eb",
+      "20261104150638": "894559f820307c388ffbaebdd7cb55d7",
+      "20261104150911": "26266ce2964f4085a6263a719f9bfcc4",
+      "20261104151308": "a346741371c324fcd3129c352ecee8d8",
+      "20261104153549": "a2c660496449dc4a0ba99d02e33161f5",
+      "20261104155545": "a67d32065a1350f41f9f3d788250bace",
+      "20261104155931": "470e9c22822e82d58a37e0f6d2861453",
+      "20261104160403": "7360dc1236023b67798095f8bbaebb19",
+      "20261104173710": "bae8c671b911e46eec176714c2261035",
+      "20261104173954": "78a5f5f0ed435611ceff8a573c136380",
+      "20261104182813": "490df25d756894ab9de1225b46ada35b",
+      "20261105033510": "81fedd1c183851c39ddf7e93eed9c559",
+      "20261105033545": "2c94c5cf16cc79ec02f2cf9a2ed747d6",
+      "20261105033608": "638185bf18d8ffbc6a3ff1eb981c17d5",
+      "20261105033745": "fa7642e2ea41835e34eb4f2e58c7dbb3",
+      "20261105035028": "ff11ed9fe1379c59c8e80d573ce23ac9",
+      "20261105040005": "750864c9f1f3c6138e084fffd69b492b",
+      "20261105040020": "8a6ea65a9f9e78d15bf8e27b1795d242",
+      "20261105041047": "cd369e07de107a79f714b8d5e41bbad7",
+      "20261105041117": "d942eef2fcb19f300c9b3817a52c2d33",
+      "20261105042220": "6b53d9d3dcd3d12e4c66118511020703",
+      "20261105044142": "a141c9051eb756a18612be476cdfbacf",
+      "20261105044157": "a4b092fba662a7bdc1fa0ce0ee2c40ac",
+      "20261105044832": "d40fe1cad624657a722fdc4b62518199",
+      "20261105050507": "fe2c22c4faa6e6f90f7d84ffc943d1c3",
+      "20261105050716": "847a5bfc1be5a3139835ebb0b581fcc4",
+      "20261105051347": "4e12d5ce542f00deb19aa2d1256453d5",
+      "20261105053134": "f11b0bf99bc8f47626a03ac985cbeea2",
+      "20261105070446": "f5154409255d32ef9403c9395419ae14",
+      "20261105070515": "282e3cf5960c25b1f132efa36906c78b",
+      "20261105072018": "2ce07368bbe7f7fb1c462c391121b6be",
+      "20261105072217": "c6d21f50731dbab1558451cf81896495",
+      "20261105110052": "894eee4072b97a4dd25173f22b041b3a",
+      "20261105110114": "6dddca0b07e3a84130cd1361e60ab563",
+      "20261105110716": "ff5b8b7e25778c1997301b22b1cb5fb1",
+      "20261105113042": "1f0c6c9660e2c8a9879c229e3e29aace",
+      "20261105114133": "f01359e365a5167a6a7292d7b35c6030",
+      "20261105114320": "b6ce3a3d1d5e82d16d3890d05514469b",
+      "20261105114539": "8e9603e9fb6254ffe5673c5611b6b1c1",
+      "20261105121619": "9a50377277fe825bd634009568beceb3",
+      "20261105121636": "04db49cfb27eff92b622d5d5e96147f6",
+      "20261105121822": "d7fa719bf6562fda13d7c89b3a1dac79",
+      "20261105122227": "0a076d033639c525a101b4fc00b53c68",
+      "20261105162136": "881dc2d28470071b9013f9756d3429c4",
+      "20261105162157": "02b463d7e6f1d63c2c769358ffb4f36d",
+      "20261105164352": "1685ba8d1e4b2cc650d5ea816f48064d",
+      "20261105164557": "e823ddbf2ba9be8fe5406efd047b1bfa",
+      "20261105164726": "a52a808f7f265e9e53a55561f5935f7d",
+      "20261105164900": "00021b40d902824bea5bd6864381c97a",
+      "20261105165708": "baee7787a5ceb3db982d24f6c3a356bc",
+      "20261105170007": "6b2c56aa5cf9e0c6fb217b27f7b40036",
+      "20261106092137": "f486c38f2f7a2134b109bb3468ec6a56",
+      "20261106092158": "cd5ae987d88b9cfd6b4bf89a3c3fb185",
+      "20261106092435": "09ad8fc7f28db454c4bc24650606c4a3",
+      "20261106092535": "0b64cb1d31d1bc89ac702589606b0d54",
+      "20261106094649": "ae7ae8ec7a858ead40e1c4330ed5679e",
+      "20261106094817": "b5bdc9a69e865432ccff50dcb8ad2967",
+      "20261106094916": "74d9cbcfb3be79b0742db8ca5cacbf1f",
+      "20261106101306": "91587f2f7ffb522dc69555cec64337db",
+      "20261106101321": "3eea1152af36d5706478e88a179b335b",
+      "20261106101401": "a40a05e86182d8286084582bd68f9a63",
+      "20261106103418": "51e51207b78e30a8286729d7cd4d81c1",
+      "20261106103432": "27394e3107501c8dcd6b8a313c78ded6",
+      "20261106110738": "c18dcfdddaaa1d31f8b60d8a5ad1db6c",
+      "20261106110954": "9671370985f83984c891a81ff17cb776",
+      "20261106112552": "96a80c1dc160263de54aed5fa5094704",
+      "20261106145901": "04b132144eeed983a6287a8a740cbce7",
+      "20261106151853": "0e86a67716e31e3b332ed4503cd734c2",
+      "20261106151915": "e221db2a9814c656958a1f56d93b4a45",
+      "20261106152221": "8398cc0c38bfa0b572d8b4c37fbd9e3f",
+      "20261106152259": "97a71965bdca3706a00f4d2fb63f8ea5",
+      "20261106164046": "7fd42a645fe2065c55079ad743665f0d",
+      "20261106164158": "683e18b75993e278419ccdbe52e61654",
+      "20261106164641": "1eaaedf4ef726e83edeffa4b0dd7574b",
+      "20261106164714": "0bb33c213b8429501e8c6463b913f06d",
+      "20261106164741": "5080ca17eff9cc4cd31c5ed982beec9e",
+      "20261106164958": "92d708c3df59da252eb43ca835b6116e",
+      "20261106165455": "9b5a08ee269c4d4bcd3a2364e1d9e02d",
+      "20261106165625": "c73d8edaef903cfc7c8a1f1240f66472",
+      "20261106201234": "50b7ae33a67df0e1226ed90b685e265e",
+      "20261106202242": "0cbb888ec43406aac48237a410d21d9b",
+      "20261106202941": "2c6028afaa29e4733f4786061bb7d983",
+      "20261106203838": "c0865beb291f7bb2ea29a357d4235c0d",
+      "20261107045325": "204b27cf9bccf4fe4cce2c76acc5df36",
+      "20261107045354": "074f2c14890696b1f24bbdd663a5bdc7",
+      "20261107045639": "f89a43a85884cc265c526cb614ef93bf",
+      "20261107052135": "359482dd2e0dc5ba9a10345e1ebc038e",
+      "20261107052204": "370b3d02af09dad08eb77f539e6541dd",
+      "20261107055222": "5724be492c1a8336ae94edadb7169e50",
+      "20261107062924": "d279967ee62c0b59fc7dbca53673b6b5",
+      "20261107063128": "de9bd6e3da47c7b67586e4ce289c3a36",
+      "20261107063949": "b113a078eb1ed13f112b6cf860d22ac2",
+      "20261107064422": "2d5084b385b2ede9ff8b98cbb983b291",
+      "20261107073830": "4b194ec08c77b93eed463b1ac82e746f",
+      "20261107073841": "1fec06d2438f4b93863cd0e4b62fa360",
+      "20261107075323": "2c77fb3e4bc17125128c761c8fe7f18a",
+      "20261107080355": "a9acff89f786d3d511744e41633e3596",
+      "20261107080705": "c6ac7cff304c140c0f05aa53af754c44",
+      "20261107082328": "99196145d5fcf5c7773a8dc4000a035e",
+      "20261107083120": "2c6317d5b3ce9a3d6c6e3ac8bbb1826b",
+      "20261107083631": "f4dca920748b405dd155e780b30ec2c3",
+      "20261107084947": "589611d0680d5612bf33f1bf6eb63fd8",
+      "20261107085238": "fb9ccd3358aab65a197347b50b2b0565",
+      "20261107085252": "886c98d468a0fbcba324f19d1915b1e3",
+      "20261107092234": "25616322d11d54563686230a21a67477",
+      "20261107092413": "5eaa461f83fbbe90295c7f91dcc5a338",
+      "20261107092640": "f7c42ef40f5e74c39301cdce12fefed3",
+      "20261107094129": "849249a1f5de30193290e14e92144146",
+      "20261107100945": "f47f2f5a11b1d38732e18723c0dabba6",
+      "20261107101003": "316d7b8b337073daeeb0938753081857",
+      "20261107102644": "fd5d3386787501ce8652678e7245c6b0",
+      "20261107102702": "cd52ef7b7ef810e914526f122859e637",
+      "20261107103937": "e4664f392da3e94b59bbbc899b0f88bb",
+      "20261107104716": "abf7c1fbb7f8a3d0c3aa3373e1330a4b",
+      "20261107105430": "61c416d2c9d8ce1f3cd8f17197882578",
+      "20261108061645": "3a3272392d757b32fcbb3042a0f51cb7",
+      "20261108061658": "0fa1c7b0655368ddc23f6be85206b6d5",
+      "20261108062250": "5d53faa7f610050878a489b75447a85d",
+      "20261108062339": "d699af130811ee8431afcc96d1dcfe7b",
+      "20261108062456": "d4d6ea095ca90e2010e649ff1bee43f6",
+      "20261108063214": "8bbf47457a413a91d04ee865844f7dd4",
+      "20261108065733": "345fa587fc9de2a72b96728fe6ebbc77",
+      "20261108065752": "65a401e18e0c19c56a68b15f0c24fb2d",
+      "20261108074639": "08f58de0c25a2f0f62384612a1db8c8a",
+      "20261108074653": "1fc2f30530fc3eb91542310afc57f173",
+      "20261108080635": "21ba3d808f9b689427cda00b252decae",
+      "20261108080649": "c1b1428ef2f6a60374e4ed59f4834502",
+      "20261108080829": "db7d8195803ce19205499e807f3219f9",
+      "20261108091014": "9bca042b8d4b4170b143dc73c17161ea",
+      "20261108091302": "38c2cb3f74eba806dc323611eff12440",
+      "20261108092340": "9a6c9d6e904d3003736b40719109604c",
+      "20261108095343": "d0723d97f5e7c111546819e608551ae9",
+      "20261108100622": "8e2026fa5bdd348b6c1e72579885f804",
+      "20261108102042": "d5ac89c9bb0f220dfa9e327f36af8fbb",
+      "20261108102100": "55707293ac98c96479df1f1be28288d5",
+      "20261108102749": "29cabb58f179abf20a4503df84f6c7ae",
+      "20261108103516": "543e8e6c9bf9bb66927d6f8bcf346b73",
+      "20261108104844": "30c46f95d8b258a3d57edb50f24e1d43",
+      "20261108104906": "8e9462c10bade8613813f012ef238f0e",
+      "20261108110734": "590d43c996ce9314d0ddb05564f3a176",
+      "20261108111342": "15636f564710d2ac3aae59e4562c0151",
+      "20261108113131": "e3c88d9ee01caa377baf8be83629dbf7",
+      "20261108113148": "ab744344d2d55bb0685767715c8124a3",
+      "20261108113210": "fb1ad0117a9fb6a588ced99b0627cb05",
+      "20261108113338": "418a9b8708a37cd78be9b8e17dbbd84c",
+      "20261108113421": "d3d0db14de9053877ee5686d4165464f",
+      "20261108113721": "45566cc7cc76be7a14aae10ef92b4e77",
+      "20261108114423": "568c800626962c072334874962a4c299",
+      "20261108114441": "eda5aef917e95edc91eca5d64feb5262",
+      "20261108114703": "fef4d6100b567d4db57f053f3005f4d3",
+      "20261108115052": "c5cdf9cb187332ef8b92969d04ad8b55",
+      "20261108115544": "30095d51742400b39b94ccb90b197c36",
+      "20261108141641": "0ec43ce5961189ded7634fcca18e848a",
+      "20261108141743": "b99ec4cbfe618a9e82df00adc453b202",
+      "20261108143042": "d8909eec5fa8f1f266d740f7ac090aea",
+      "20261108143649": "f5bf8e1e1dca40c644eb0e09e6ad0485",
+      "20261108144341": "74593ac19edbaeaeb578715bfbc3517d",
+      "20261108144353": "c2ef4b7798a77e31ae00631ac0e3acfb",
+      "20261108162129": "51da56ff699a20861f50a44e17f980e0",
+      "20261108162507": "4d8d9d058a2388954c171069be486587",
+      "20261109044139": "5931c41fee277f3ed5132aaa55a62287",
+      "20261109044155": "5ca7fe4b70c251c236a4f4504417c6e4",
+      "20261109051710": "cf3b06e9297a6ed4ad986f00bb5f1235",
+      "20261109051734": "81dcb0bee3bc76c22764398d4a623ad2",
+      "20261109053103": "be0dd210f7690a747207b59f6281df93",
+      "20261109053115": "8b728d7ec791398c9f93171c8388c9d8",
+      "20261109054451": "5038c49caa22468eb33f499d48b51c37",
+      "20261109061641": "bf2cc898f024f130e00d87c8b6166736",
+      "20261109061655": "dcf0618c4127a12fff0e74361858056f",
+      "20261109061956": "a0803a541cb29796ce29faa70d9ea405",
+      "20261109064030": "148d3265b04b73d6a678328df39192fb",
+      "20261109064526": "b786af150686c1c4131ee077be27828c",
+      "20261109064539": "ec6b75177e2d97410483c777e35c2d0d",
+      "20261109073434": "1af08086df87fac6e9924b1b5141dad7",
+      "20261109080610": "66c38057e33abed74b201751f67f8b83",
+      "20261109083228": "424393a934d6750124a51944622599a9",
+      "20261109083900": "27c1230a3b40aa6c12f3b78bdc6d7825",
+      "20261109083913": "54fb679965f3e7d3e4c500305a43d7d9",
+      "20261109084831": "3c0d78766007c8e31afdeaccc173abd4",
+      "20261109085911": "23ff15bcde1e673f71c50a09641b2c20",
+      "20261109085942": "a1ad0a9645ceea6ac969702afe7f18d3",
+      "20261109090302": "cc3cf96e430746c8a1befc7b6e356db0",
+      "20261109090402": "86a3d2c5dbc60b5cf028c7b3c7876789",
+      "20261109090953": "54198e2d48ea39a8b7ffa81ade9f7bb1",
+      "20261109091031": "3c2ac6b8cc10730ae4147d0fb43efcec",
+      "20261109092507": "ed082376fa1f3de2593fe44e7ff0b2bf",
+      "20261109092920": "798caf368a456b1a50d8ec0551254cd4",
+      "20261109094724": "7574cc95941865cb654b51cf431cdf6c",
+      "20261109094742": "bb03cc8888277e1c8c193d6576a27702",
+      "20261109095237": "cc69477eea32e1d1e69d202834174f1c",
+      "20261109095343": "fd9f8c0985fa61ac55643de48d1b290a",
+      "20261109095911": "37b95a4d46375164d25655a0e5f5769f",
+      "20261109101950": "3ccf5a1de70896a82f417cd826a373e0",
+      "20261109102133": "406575261d334119afa7cdc6f269c44c",
+      "20261109111201": "8c766d200d40bd80e828dca60fa2fb1c",
+      "20261109114909": "228f34fecf6f2d55cd274ecb203c692d",
+      "20261109120107": "11ece6c61676a7ec41b30c8f5cdcdcd8",
+      "20261109141232": "9a9e88cd73bd9ac0c3a46496de15f990",
+      "20261109141718": "87a24ae41b6e04b4dd9af07be62a9913",
+      "20261110050542": "448c305728002f7145b8b2ff5a49c507",
+      "20261110050558": "9aa0f1d537da776c4ab9fbc02995b618",
+      "20261110051042": "4826e6ce93ae94c373f1239bc95337d5",
+      "20261110060944": "81d4698dc289516dc579d87f175226ee",
+      "20261110071525": "a54d84657744dfbd8cc78e87a8212c30",
+      "20261110075257": "d384716596ae6f2d132e9e5ee25aa5dc",
+      "20261110075312": "9ff17af010b84af40df45af263d7c4b3",
+      "20261110085714": "f49118925075de256b2197ec454e901f",
+      "20261110085900": "5e95c07db9535e2a8a709b29d8338bb6",
+      "20261110090417": "7fa3ead18035cf61b6e09a94e863f938",
+      "20261110090436": "a574a188331d697824a4e0e62cd42429",
+      "20261110090925": "8ff26aa4c0fd34dfea795611b382d45a",
+      "20261110092355": "27dac3fbb87f97062f2c3316e2e1d007",
+      "20261110092527": "17e505b8d4ba12af479499f9edeb9102",
+      "20261110092554": "eefa4ae64817fb75a3f4f9e8f874fc91",
+      "20261110092820": "7cf7289ddfe8b6c05f43671f74c88f04",
+      "20261110094056": "bdeec2004e7e81131f0e51b93aaaf97a",
+      "20261110100115": "c5b10a0992d11a1b1a5f446d4132b76b",
+      "20261110101628": "75b60ee3704a727fd1f5d0e8f177b97e",
+      "20261110102729": "088349aafb5599a774ea0ddebe7ace0c",
+      "20261110103512": "0a11fc09ee29c98617b55d896875f438",
+      "20261110104848": "91a5509c1ffa1aa4e40f8342174604b7",
+      "20261110104911": "fbf9fa0426b47ad740f5424150be5136",
+      "20261110112128": "8224dacc3e2941626a855eb8b2c1cf96",
+      "20261110112551": "176bf337749eec3f332166ce31c808b1",
+      "20261110112841": "acd38b1d190669e7648f765d6c8f7a5c",
+      "20261110112855": "348d42a70cae1bef5d74ae0b3df485e6",
+      "20261110114705": "63d4a7b369b892393cebeadc0edc4e6c",
+      "20261110120031": "8bf92cae1e9b8b3cfb3109f9801be50d",
+      "20261110141659": "14412d2900d06b97a276e637f9b8488a",
+      "20261110144149": "2213a2a3f2d32d66ba9a0adf339889c8",
+      "20261110190558": "edc9c772f0fd5e8083bd9503e1137b8c",
+      "20261110190851": "e6ce97d8995e701caf2a8d97c93562d4",
+      "20261110192253": "3f52e9cb7d25d4ca2964b3efded9b31d",
+      "20261110192633": "3c7e736e2ac1315dd6d682dafe12a09f",
+      "20261110195936": "1d8c8db013f3da08ef34969560cf0f76",
+      "20261110201304": "615dd88952df0b32d109f880ef2ddaf2",
+      "20261110201654": "250da37a2f83cc005fee3b20f7c6efec",
+      "20261110202011": "2d81475776b6c8d0ec8c89e48de72d08",
+      "20261110202039": "8dfab56f26ec8dbbd8f8fc36b9bf614b",
+      "20261110202549": "9d46591acdebe911ddeccc99f286ce0f",
+      "20261110203241": "fcf7ca5ec54cf4130f0f59afbfc3a8d5",
+      "20261110203352": "08acedcabbaf95a0044f6aa48e7c9838",
+      "20261111045207": "2a751e4a9e7bcf77785c691d93be1e95",
+      "20261111051121": "349c97d1018d5d1034d4374cf7dddd67",
+      "20261111051138": "1464d975ea5fce7bb600cc28c4104466",
+      "20261111052305": "b59c464067a8f1ba04890d58b143aa89",
+      "20261111052627": "32a0e2009a3cae3753a544cd22e1f432",
+      "20261111053031": "90a9afca0d8dda5597ad73a015975cbc",
+      "20261111053324": "a5da7b4d5111d4c2e6661bd9fffe1cb8",
+      "20261111054017": "e47e128b99c29fa18b263f683dd13f0a",
+      "20261111055618": "4f3363e42993de1b67a108306965de50",
+      "20261111060720": "305a4035991dac62c4ef333921ebe4a2",
+      "20261111062724": "5fbcf88e3873e332097c9a238bf53e78",
+      "20261111063718": "59ec9897471975837ed1cfdb5c7dff11",
+      "20261111064619": "49168aa100004eb123885fd06ea7afd0",
+      "20261111064803": "bfad33dccd61170eff91505ddac88ef7",
+      "20261111065032": "3b584a48e4ab8d621d8f184ed0409464",
+      "20261111070258": "cf98cb5e488e5f2cbcd0cd9bad553b4e",
+      "20261111080105": "e63526185287e043c1e91f94cd8a2ea2",
+      "20261111080217": "1abad6655e0c7b64b757be1e51fef000",
+      "20261111080410": "2965a8dddf48c53da9a59589b9993137",
+      "20261111084854": "9ccb453ecf54ed19550b428737a5435e",
+      "20261111085700": "7302407dd8569c1dc2e50564983e47f1",
+      "20261111085859": "7ea1504545f0f25b767acb48de5d8312",
+      "20261111085947": "10b0440217511fcf4aa9946940dc08ec",
+      "20261111090254": "b311b8a0a2470359331158390a90c054",
+      "20261111091010": "c15b0c68d759b6fc5c3d17453ce16f77",
+      "20261111091849": "7874dde9f3a06c44985493a7d2153f6b",
+      "20261111091913": "8bbe700de189372fb6ee7becc906037e",
+      "20261111093510": "7ddab41523d0b922cb2c84ce942786da",
+      "20261111101904": "1e95517b3449f12792babbbeefd8b52a",
+      "20261111101929": "361cc56c31aa00b92300a0e9307c9ee3",
+      "20261111104656": "5cd78368e390876a617586959f41664f",
+      "20261111105332": "cd869f2bb358b9925edc8c46c2b2f085",
+      "20261111105600": "20894699e5347326714b9a49199e90e2",
+      "20261111105934": "a8b0544ffcb168df1c3f1f9c790ed8f9",
+      "20261111105954": "d4cc2d320ec16d7c2caade83b1ac108d",
+      "20261111112552": "8e772f15c12f3ac4210a9650a42f086d",
+      "20261111113558": "28f0c77ed6974b07b1d3e42198c906b5",
+      "20261111113628": "fb9a3f718e0281c3e97f32ace6f8b772",
+      "20261111113822": "f10c1529b02f9dccae72e323afa1f215",
+      "20261111114218": "13b336b890ef6d1e05a181cf2277f27b",
+      "20261111114302": "660378b8c71584dbcf74d48ca30132a4",
+      "20261111114512": "2174bfab64532b66f5590cbcf9977dad",
+      "20261111114530": "2398a6ddb4fdda80c19a948474397017",
+      "20261111114819": "ea71d9bba2b3c43db5ef50ffc86147bb",
+      "20261111114835": "c64bbd196dd903b72ad22b43e6a3fb38",
+      "20261111115513": "3914039e195cf39a5af1c5b9191a897e",
+      "20261111115525": "264e7499ca6cf607f9fec1b5ed18d48a",
+      "20261111162507": "111d9c139905acc0e45c0466111a9c28",
+      "20261111162729": "603dbf551659f5656cced84e7e72908e",
+      "20261111163125": "f3d850fdf0271c35811d2042d0f5fb40",
+      "20261112191931": "37566608d9d4bbb3d2c8d961d2663680",
+      "20261113110000": "4f90e17487a408f57e7ccfcf503264c2"
+    },
+    "cloud": {
+      "20261031180053": "d5a330d6be57856e4eb958ef984faebd",
+      "20261031180107": "161de6d16de311bbb93b09ba3ebcf6dd",
+      "20261031180141": "a812f737fcadb5408b2e502712161cb5",
+      "20261031180928": "891bdab86496cae7ce7a912be9865a59",
+      "20261031182059": "3ff3f9e306203ac6fa9fc4646dda1be5",
+      "20261031183113": "25a207469e844995b851eb53c898fd6d",
+      "20261031183331": "2e6a8811cdc00f5c9113d07d6a5cab89",
+      "20261031183418": "eea244d7d463c3bdcb608f66c05eb94f",
+      "20261031184404": "7af8f8ab441d37e14e6c992354bd26ae",
+      "20261101032623": "e03313a792c0c546a12b4b09f8d35218",
+      "20261101032652": "ebedaaba6a16a28157b96be7b3f2577c",
+      "20261101032950": "e1c694705a99c8b8a2d380cad9014e59",
+      "20261101033014": "00f09ae3b9e999d5ee66c3f9a0982243",
+      "20261101040119": "69420a9179d624ac7fb1f2aa4752751b",
+      "20261101042201": "0f954d8985fd3f6fefc5ec942981de54",
+      "20261101042215": "2083144117b6a2eb62e5d4a8818468e6",
+      "20261101044437": "a2961a14b659b7cc5d739fac575ed048",
+      "20261101051444": "f94f27ea3149bc362e8b8642cdce459c",
+      "20261101053218": "db532bc3d82144936132227ceb896eee",
+      "20261101053840": "b0231e5d9f476806af2413e4620029a3",
+      "20261101054427": "bcbc382facd3d0770303fb74b48ed16f",
+      "20261101070918": "bb94f9fb4eebfa5bed882cb5c34ca35d",
+      "20261101070930": "1751fe2585c84e7b1a01cce8ba0f1db1",
+      "20261101073535": "741cff0e9379cf7f5d3ddf929146c060",
+      "20261101073548": "b296ffbcae4be657db27be3dec6b5ac2",
+      "20261101075138": "48c9fc264a4aaebc0f2ed81d04a44118",
+      "20261101075212": "c73bbe8b8e509c9bf172e7e6dc4545a7",
+      "20261101075326": "4cdfbc3196e81beab70af11b06608ac6",
+      "20261101084002": "55e8e64e8bb3925d329740952f84e538",
+      "20261101084917": "24d95792f57564f30f8acef7dfebb2c9",
+      "20261101091715": "69dde9a79eef882cfe746539d06e0cf4",
+      "20261101100533": "76ed00faaadbe24cb76d51b43ff362f9",
+      "20261101110056": "27bc0e3dd051bece040c2f3276841897",
+      "20261101110114": "58ce69682fea78f89b2518e756a8a724",
+      "20261101111610": "2ebbad34fe5caa264867826e0352afe4",
+      "20261102035633": "699fa275378457db3fcdd719d8dbbc78",
+      "20261102040407": "b88b16a3eba01c9f7ab1d8af7fb4a699",
+      "20261102040537": "9ca29d4efa531504b146db932ce501be",
+      "20261102041226": "5c04a8702eb0db9a569660746dbcd4cf",
+      "20261102043019": "b472056875724bcfbb4309c98aa52db3",
+      "20261102045735": "acc0a257d3484c90e9688a45fd22971b",
+      "20261102045823": "4c239b3f816b881d5d891f810d6dde71",
+      "20261102051237": "4ff4281e027104aa506f0a8b7859c656",
+      "20261102051833": "54d7339e2439de5eabf473668d4a6fd9",
+      "20261102054023": "e87e18ad03872445b9523476436efb9a",
+      "20261102060432": "c68daad8b9bf17a9cf6667d142d7575d",
+      "20261102061006": "d45f293cb42fd4271980f1a0f827bef1",
+      "20261102063537": "7956380fceca3d8af4ad0e9881d4a2ba",
+      "20261102064643": "9cf95352303203d9c09001b46b388ed0",
+      "20261102064703": "7cf7c57cc7fcacc1cb120f1a9e99a148",
+      "20261102065249": "234296b7ded44a4ea8a27442b65a428f",
+      "20261102071234": "3b3d54cd32419034fb92a6105c993f3b",
+      "20261102082130": "7fb9a2dacb011c1eeba9aea48ee2f549",
+      "20261102082258": "57564ee94f47af459e7300124dbe60e3",
+      "20261102093053": "88fcd607d28a7ed7218028c5e488e74f",
+      "20261102093147": "21ace11fd89124347c566881667f3a3e",
+      "20261102095453": "361045851477c6aef4a2ac185fdd98c2",
+      "20261102095514": "be3612d71edadb86f58ce753c10089ae",
+      "20261102095646": "85272a0e7bb196cd556863b70df55681",
+      "20261102150942": "0a3ee8a39665a728e92967af65508541",
+      "20261102154620": "aa747e5e16b14154dd79bc1ae274ac1c",
+      "20261102163504": "30648c83f40028bf991bf421bde39a20",
+      "20261102163733": "61c98a2835e8d2bea986511f57b2e964",
+      "20261102174454": "ec6bddcd957863ddc3b4b3fcc70876bf",
+      "20261102175347": "1b73877c5f6c71d35d0a97c16f1b14fb",
+      "20261102182805": "1ec4cb983855a8e0aab1225801d4a046",
+      "20261102184258": "03b6b8812c59aed5bba0e5427bb43795",
+      "20261102185637": "97154868c8e1a23bb410e8f393813736",
+      "20261102185702": "d6bfae2e2188e4fd6c3eea83ecbb46e7",
+      "20261102191732": "5d6da3d60460c52ac5b6c41309f3f197",
+      "20261102191750": "5124688df33f065b941e470ca569487a",
+      "20261103035244": "3078f1736decf31b2a807d3003c98ff2",
+      "20261103035259": "bcb28915266677dc670c41dc49720d2d",
+      "20261103040555": "b6a698f28d3794ab060bce43d0933f40",
+      "20261103041641": "4c8f092f59df1a2b35d65cfa61cc8f9d",
+      "20261103043301": "a10d8a5585cfe625026f6a7c9f0f9f0f",
+      "20261103043326": "ec4427a1d29c1131d305dc4ea704df4b",
+      "20261103044054": "c8f9b0d6c29cb02d143fefd6939c686f",
+      "20261103044422": "7be714db1aacc365f73692ee20819f4a",
+      "20261103044827": "c7393a704081ed5e154f0da1c57b1e2b",
+      "20261103045001": "479a7c64212dd11b68db65994139a292",
+      "20261103051119": "6d8e6f184db41216662b68c748680ff4",
+      "20261103051351": "95fa5abc75d73b3c5d4ff9224487c02c",
+      "20261103052933": "ef16ef60c5d8e19449a5af5b1e28e45d",
+      "20261103063148": "fea19c1d681f3bf159fa03a99c88bed7",
+      "20261103064446": "62bc500ccb3daa4e12948b62c64958b0",
+      "20261103064515": "4c3d482f002033a9a65da37a9ae109b4",
+      "20261103073636": "9fc9632ee2c876f4d27703db97ea49bd",
+      "20261103073940": "f5b64435cbb4a85fdb013a4695288b8b",
+      "20261103074118": "c53ff4e940b501fafb0a343f1ed08779",
+      "20261103074730": "0d90365180515b3546ea8bd39df7f18c",
+      "20261103075851": "8b83b7431df0841df3d1c1bfa6dae8e4",
+      "20261103075949": "669a4e72f7d0acff496667a55d429741",
+      "20261103083357": "e57ff0358e9b060ef1d9d5d6c2cd556f",
+      "20261103083558": "c0d65d41d244354928af113a8d38fc74",
+      "20261103084935": "2504a8efb3f7f825ecd2948ebb2d98f0",
+      "20261103085144": "6fb3b14b0d52eebfb061ac64ad47ca15",
+      "20261103091209": "9ed1a1e701ec7ecbf0a88246bdd78321",
+      "20261103094135": "8737ade308361da9664093f60bc5b241",
+      "20261103095117": "2b92189ae96d70c03c0f8b616116f86d",
+      "20261103095129": "6382a8b69f34fe336b18201e15f60f96",
+      "20261103095212": "2bb209bb42149168d40c8f0904b501ce",
+      "20261103102009": "85474bb14928bd7d4fda77d3cb2fcffb",
+      "20261103102308": "ad5a896e23fb3a950bec24c971120a6e",
+      "20261103105024": "66cd24aacf18aa26f7dfd52767c3ca82",
+      "20261103105410": "222d717a2ca65ba81285f686b1e36dbf",
+      "20261103112027": "c262d7ac1d518f92067357496dbd5d00",
+      "20261103112312": "5139bc9706a7adc31e3bb51dc16dc7a9",
+      "20261103112437": "36107aaa6f02e84e584293866399fe75",
+      "20261103141501": "6d1b020255919e3b940974775db77bcf",
+      "20261103144438": "4e8d474163fd72a35efc04dd966fc41d",
+      "20261103144658": "8fb851897d02f00ac020d3141e0c64d8",
+      "20261103151021": "35da8051954ca0ca8df46c8441caf70e",
+      "20261103152411": "2b8dfe52469eb1720d30b1a7c112191c",
+      "20261103152556": "b121f1a87d74493aa7645fb244f483f5",
+      "20261103154515": "b801d31da2b4b58ba7a8dffc91249e5f",
+      "20261103180426": "a9ac0811e56074fea28c99831794959c",
+      "20261103181402": "3669b1b624f35c26f518f6c46447c961",
+      "20261103183856": "4166c22d3d9ce784226c0a73d1bbd505",
+      "20261103183957": "22ac49b0b0b043910d9824c045ce049a",
+      "20261103184036": "39604dfebfd8134b7c2ef47e75206310",
+      "20261103184430": "c9e2875ae301fe171a199b404c27f36a",
+      "20261103184526": "f1cb2dae525a45fcf9a8f4355c65e063",
+      "20261103185904": "e210a52a8d41b5c46e42918f08e70498",
+      "20261103191546": "d5d5ebd98071935f2c5b7b1eff2cbd1a",
+      "20261104034647": "dbc7f97822dc11c69fdc679407c505b6",
+      "20261104035838": "6c78d12e92cd1407364c7f42ddb0646d",
+      "20261104035921": "d7066bdf8b9130bfd0ae11a4d6de24e7",
+      "20261104040045": "7f3dd25f3dc5d7d675e8ea8bd839ee62",
+      "20261104040830": "95d129eefce5fef6cde79219444f8271",
+      "20261104041013": "122085075867856a8079e5d7dae85231",
+      "20261104041124": "851d09058f011be27b4d49d163db335a",
+      "20261104041705": "8eddc3570a8f2c182858e789bb59bee2",
+      "20261104043020": "c66a83cb6dd520ac077834aedabcff94",
+      "20261104043052": "fd58b7f08279ddfdc46a651c78a0ce0c",
+      "20261104043419": "51142f235e928a1010b64e45627482ef",
+      "20261104044159": "8d769f008bd3e3d6488cb0cf96c837c8",
+      "20261104044542": "668b57cea3165f6607e9ad1907335fe6",
+      "20261104045651": "7993bca59a70b6d4f68c8c65f7f4d825",
+      "20261104051857": "e7824dd5a13a961d5f06956248ad78f5",
+      "20261104052718": "8864d2933a501a7fd77ad687a9844035",
+      "20261104053747": "3c968daf3bd073d0dec76bf203302bdb",
+      "20261104054234": "0c8a8ead85579e4f0892a518b41c2b0c",
+      "20261104054304": "2b36db5d2cf8c5723dbc36ba89cd4e62",
+      "20261104055805": "e4da4321fe04fcf0d8dc793d99113551",
+      "20261104060704": "db0933e846aa88436d01d77f66ca6c20",
+      "20261104061826": "c8060be5e5acb995cceacf1b2ab24822",
+      "20261104062905": "9082f43b712b002deaea29971687a3b9",
+      "20261104064942": "de38e382e9e914b43588cd24b019e09f",
+      "20261104073020": "8cfaa8fa29c07c892fed6f96627e2976",
+      "20261104073036": "243a92da65204cd23cf0df4ef48bb285",
+      "20261104073748": "0bedc665e97b1a2387a458b063b48029",
+      "20261104074731": "38da963a55a0d8e1530a157102401f05",
+      "20261104075208": "f38a374e6bcf67a87438446d6bbff7ac",
+      "20261104090223": "7109bbe8181a31dc5d46347bef7d98b9",
+      "20261104090303": "c8d0c498137bd118b8d332f25bcf6b66",
+      "20261104093430": "d4060a67b99120589111784fea34a694",
+      "20261104093500": "5aa8f4f5623b9e917bcc8005c726a0b4",
+      "20261104094022": "15eff713432fd4ee10abbee7bbb56aa3",
+      "20261104095500": "9798168c1aeb6c5ecff645b78ef9d627",
+      "20261104100846": "40c0ef42062ad5e99c06b2ab09bb7eba",
+      "20261104101508": "f7b387fa7e130a8eb23f6656aee556e1",
+      "20261104101524": "512a9bc79f84e13a771e6836a012f2c2",
+      "20261104105003": "165a136d5e98586606d0b0f68d187db6",
+      "20261104105055": "662570c05fb805c5fbc33ac45667da75",
+      "20261104105526": "a1080635d8d941c69719032161069cfd",
+      "20261104105601": "af1a0a76e689caaa47b00ccc9a772a5e",
+      "20261104110041": "1a495046975b72a7ecf2bbe13debdf3d",
+      "20261104110140": "6e2599047e096a75305ab2fab890d766",
+      "20261104110256": "46d519fc421cbf05521f7ad918773c65",
+      "20261104140246": "e1dc4c9b69b676de79d94e387223209e",
+      "20261104142919": "57a1702676e078d81f16e37f36aaf49e",
+      "20261104144637": "3b1e2f54f859bf172d5a7f25c097fc86",
+      "20261104144652": "2646095296d6d9007941978abf6dcbca",
+      "20261104150638": "2e7d16e506b2df3afdca93d7b798006b",
+      "20261104150911": "66f5b6aab399cd2f667a709f053806e4",
+      "20261104151308": "8bda82b6ffa217736594e9ac0a514181",
+      "20261104153549": "ac39ae228ebdf05b4e86dd3bf917d0b5",
+      "20261104155545": "daf0633b5175dbab3c08b18411a3fda3",
+      "20261104155931": "2c45f022d07c3f26cbaeca9bf5448218",
+      "20261104160403": "f493bfcea9f1f529051509fc29e3793c",
+      "20261104173710": "36dcf7d9acbeddaec537b5900a16e1b1",
+      "20261104173954": "ad7846a9556d20c5e2d083452caf164c",
+      "20261104182813": "789e94f49dbd1c8ce14781606c19e018",
+      "20261105033510": "1006aa1d0ba87c8878fdbb26973a96e8",
+      "20261105033545": "bf9f0d210bb6ad8e105a9ae636fb2456",
+      "20261105033608": "500bc077fb668956c71880bb09a0c6f7",
+      "20261105033745": "e107ccb8df66434a1ee5e720430f303c",
+      "20261105035028": "bf467d1b4adfce743ce2fcffd08db831",
+      "20261105040005": "8fda1d999be7d2c7328005e542e4a0bc",
+      "20261105040020": "db15a6af60e06ba80a7d586e26099ec3",
+      "20261105041047": "c9a9708b4a15914d26101460e86bd4e1",
+      "20261105041117": "3c9d565e169c163f09bf3eeaee37581d",
+      "20261105042220": "983fb676258a3ffb0e2a4c10c088cf37",
+      "20261105044142": "7b4cc93e9af9859383c0b2999d25a58c",
+      "20261105044157": "9750bff9e4eda9b2c84a4d85419e9d5c",
+      "20261105044832": "4dbc7a0241d344fcc4f3a5b540e1edd4",
+      "20261105050507": "235e362bde21e695ea368489ba4c3bd6",
+      "20261105050716": "899a61f2b6bb3913a07dcb76cca07f8b",
+      "20261105051347": "7fea975b22cf8452522270f1435cf8f0",
+      "20261105053134": "c0a9986d71a09cb14a82811524fbfb26",
+      "20261105070446": "ca3997e00851184b0077226d11e3af8d",
+      "20261105070515": "9ca6b87f1b69b0803b6db1c92393a104",
+      "20261105072018": "a8a3c7b7955a03f1e26ac9f224189a6b",
+      "20261105072217": "4d51570cd05117eddf96297fb267d52e",
+      "20261105110052": "d26573071cef718eb50ccf832bb44a38",
+      "20261105110114": "874094a8330bb9d9a0b4de40bc77060e",
+      "20261105110716": "b9bbe81c0def9fcb97d5ba06b1cf1111",
+      "20261105113042": "ba9b0636222e05bda07136745a95056d",
+      "20261105114133": "f01359e365a5167a6a7292d7b35c6030",
+      "20261105114320": "539583c79a43ae0640869cd5e30679bd",
+      "20261105114539": "85d76002590eecfb45c7cde2cc39ee7e",
+      "20261105121619": "64ebffd684f682ac9c00b302ea42a108",
+      "20261105121636": "12455722422312019f9ce14b42728b28",
+      "20261105121822": "c6941e12b2eba2fad92ad2430c41e18f",
+      "20261105122227": "609288a7e5efe2a343c9cacaf2adf7c8",
+      "20261105162136": "f48eb379b665e58d186f0f9543e8bcf6",
+      "20261105162157": "ab58f2470d52fd24a927eca5ab700419",
+      "20261105164352": "d579f2ac55f805ba0e5313dda9f80fec",
+      "20261105164557": "5806e5cf07fe57c21fa022ea3225e3ef",
+      "20261105164726": "bb6f980f0e2dfb84193d962ba5baaf1f",
+      "20261105164900": "b6d3f1d85b0cf5ec67ee1542978c579a",
+      "20261105165708": "0e693057d638c272f99f20f89bd10163",
+      "20261105170007": "3498d119f8c90d0006519754ba60cc91",
+      "20261106092137": "a595d205a73c3cba573d308f1c948f0d",
+      "20261106092158": "e6708fc9eccf8fd74bf3ecac7fdb262d",
+      "20261106092435": "e0406f26d0e2946900ed4d171c09a8a0",
+      "20261106092535": "14a5dc3d9395883a363a14c7b8d0899e",
+      "20261106094649": "3b4bbbb7a331d094a62de5994596c6c1",
+      "20261106094817": "36b5924b16cf04885c91882b815a9085",
+      "20261106094916": "ac3ea4f2ede086d0c616615c1a263a36",
+      "20261106101306": "0840d24806e45734bd9a71eeaadc15d4",
+      "20261106101321": "49aa541a19002cf2219aa097a707e86b",
+      "20261106101401": "d99519f4a4ae6cc88f85a57cf376ac7f",
+      "20261106103418": "f9b0a23976a8c7837291fcff0954e202",
+      "20261106103432": "c8f9557c87335f706aad286d69cbea3b",
+      "20261106110738": "b033fcf72783049274ea3348569f8f07",
+      "20261106110954": "adabb21c9f6583c4b793986c219b2dd3",
+      "20261106112552": "29aa0cb56943879a6e4c8704adf0c757",
+      "20261106145901": "6fdf842380de136ce7b5eb4e6c8fbc66",
+      "20261106151853": "d1b1af3ab887155623c7b134e31b6777",
+      "20261106151915": "07a6beb47b6a18f9c6e0b94230f718ed",
+      "20261106152221": "37aab6b06c7f9df0fd9457cb57932936",
+      "20261106152259": "6de1c3c63c55a35e04488e01e7f971a3",
+      "20261106164046": "7fd42a645fe2065c55079ad743665f0d",
+      "20261106164158": "8c6be64fd1b27da2a0b609011742fd33",
+      "20261106164641": "dc269d2e18aa24033e8e011d15befb3c",
+      "20261106164714": "0dd5659f4b17dc29923b89ed62fef720",
+      "20261106164741": "ed2b0286a5409c6e7a9f25011ee7bfd0",
+      "20261106164958": "224808b74ad88dc0daa2a276764e6682",
+      "20261106165455": "7806623b56cad27e67c75164afab8776",
+      "20261106165625": "2b690f210c08e8f11332ba5fc5f06a6d",
+      "20261106201234": "3ea90bc9f6e773b415614d46b6f8a6eb",
+      "20261106202242": "940776269293450ea3961ae8129676f6",
+      "20261106202941": "c5cd021a87e84b9512facb343191af54",
+      "20261106203838": "dd81610e6b6903aff7aad70fc1306790",
+      "20261107045325": "0dd674e018b50a9b65383eb959af3904",
+      "20261107045354": "3b644d04041d927bd5fe8df222b88cef",
+      "20261107045639": "97367dcdc317cc5c65156d3d65468e90",
+      "20261107052135": "e42cdea6a1d9dea478e1ff294c635e9e",
+      "20261107052204": "961196c73f3f51f0de3065024b2993b8",
+      "20261107055222": "60ee51058b0af5674da2baf378f88d41",
+      "20261107062924": "a01f96df7688ff1f992357a3d00a767a",
+      "20261107063128": "bd80113495dec73fdd2e8c1b6a2e6dd8",
+      "20261107063949": "b5489d339a77b48b603e035f7c1fd667",
+      "20261107064422": "cc2925a5a6aebf4e6c7b5ebbb9bb868f",
+      "20261107073830": "3dc69ca640d56f511dbd71c92cb72a7c",
+      "20261107073841": "d4de032ebaf6bdd8804fba232c9b85f0",
+      "20261107075323": "2f8e9cd064848a91f1fdf589cc888f1d",
+      "20261107080355": "ce3635ab480436f90a00afabe700275a",
+      "20261107080705": "b30b78a089bd7da8eb87b1d705110163",
+      "20261107082328": "2b99fe1e2db3cb7b2e15e3fea7cb47ad",
+      "20261107083120": "a58b95d07c9a8c89c8debf2229eca1fc",
+      "20261107083631": "a0f73b1659b700d554d6807a11432e5c",
+      "20261107084947": "9c51d88276f9f175e89f0fc96d6ae6c5",
+      "20261107085238": "4bb1298860c09bc92af8333b8849b2b4",
+      "20261107085252": "3ac9bb3956643dc4727d9d6b33a0d3e9",
+      "20261107092234": "6ff020dc5cd0fd7585a7994a7b86a0ab",
+      "20261107092413": "cfe69608c6e0719a1384580795b40163",
+      "20261107092640": "b110b50df555a20749b9bce617f56f2b",
+      "20261107094129": "f5e98d4ca4c93e2259c75a320683aea6",
+      "20261107100945": "70d4eb9f4d52cab43f8f7c1845879790",
+      "20261107101003": "47bc7916418f6b098a58ddbf706820fd",
+      "20261107102644": "251254b7d327b47488d8e90d6af9cccc",
+      "20261107102702": "2933ed94763ad25975019da7b29c1438",
+      "20261107103937": "9ef1b06e7ae0288a1b32360f09a46161",
+      "20261107104716": "8eb32f9efb7d5cedad93bf34382f428a",
+      "20261107105430": "b7c28a159f9bfed12f5b9fdec7861526",
+      "20261108061645": "b1af7531093a7a6f82bcd44095d14f7a",
+      "20261108061658": "a15ab37b164ea2205d8516589fe0b7d6",
+      "20261108062250": "5d7ee934d589b3312844adeac840aea1",
+      "20261108062339": "a7f1f234ae770c28957375eeaaee14fd",
+      "20261108062456": "5acf695849938328dbf28ebc9f123efd",
+      "20261108063214": "b413c1c8ece9cd3859c1fe147f247d8f",
+      "20261108065733": "6d5c40d7d85e8c5e257d43747d8da3ee",
+      "20261108065752": "d8a8712899610d389434b6c878f15e6c",
+      "20261108074639": "421068db4b53606b0e146e2566c89996",
+      "20261108074653": "ab5e744e8a0e64d5d316cca159f64adb",
+      "20261108080635": "1ee3c1c89126cd79cd86480c8f9202a3",
+      "20261108080649": "8ce1dc4e49180b2ec490bf12690791bd",
+      "20261108080829": "d5730079e239a9286583b1ec80d73fb6",
+      "20261108091014": "48d5e5240b564942b9459d34195066f3",
+      "20261108091302": "fea8589f56d25babf84617175f1b4c61",
+      "20261108092340": "a5bd32ed1e54f0623adc4648cd1d0982",
+      "20261108095343": "0f02d78889d0cf3d4b9d56257eb4abb9",
+      "20261108100622": "a46c5e65827015faece6720f3c3c66ef",
+      "20261108102042": "fb4c6bb1ab4979818f9670bd141c82fa",
+      "20261108102100": "1a1b344381a8d878874e613c78799da2",
+      "20261108102749": "58fa81080d8dfe3e51913ed55550c58a",
+      "20261108103516": "439ca76b28f5d907d0bd1c0fb1ab2057",
+      "20261108104844": "adf3a422add253c0eabf35400e1044a2",
+      "20261108104906": "2b0a7f57628bb0d1f1ef0c9500dba41e",
+      "20261108110734": "3039931a6b4fa05cbd9baaacb222a934",
+      "20261108111342": "d6e8408fe3ae854763f57a8e5c794b6f",
+      "20261108113131": "314251b08eca4c6f3263bc97e4594013",
+      "20261108113148": "01ec3049673bc08b9aaa007a7822ce08",
+      "20261108113210": "9ab427353e7e46dca9c59ff029176bae",
+      "20261108113338": "21c40b406d37740be3a6cc79fae1304c",
+      "20261108113421": "c541791685b08a0e2d95ee56d66ff9c2",
+      "20261108113721": "e58532eeff64d5b66b609198bbaf2bc7",
+      "20261108114423": "8af0624d97775f8b5fdc7febd31ed485",
+      "20261108114441": "b7aaf51008057cd7afabb0ad0edc0228",
+      "20261108114703": "195cccf1e09612a92d5747fefe6cdf19",
+      "20261108115052": "2e4d23bfa6defa94246eb3db65a64040",
+      "20261108115544": "819be5778adced2f1678d589f9e6f101",
+      "20261108141641": "7ece4c7ee88e8662ed445a52b99afb2d",
+      "20261108141743": "adc85661f50c9ff4f05d3ba011c3cd6a",
+      "20261108143042": "78d454e697cd3c5d12571bcd9b8e2ca2",
+      "20261108143649": "9ec384ad1867a2fc4d35d87572214d5b",
+      "20261108144341": "af9e024fd2c63255727bd908dcbfa224",
+      "20261108144353": "44018d337748c46e6c08836ade728618",
+      "20261108162129": "2b35d0e441b45264c2fb201c5ebd267d",
+      "20261108162507": "2d00e88249303fe6909f175f40e53c9d",
+      "20261109044139": "fee7ef83ab4e6faeb5241254335ae49d",
+      "20261109044155": "dc21def89ffebcaab794052e1f62c511",
+      "20261109051710": "f9b7cb10ec9b3fb4f879ded017e22662",
+      "20261109051734": "1bd35e432dffa0199d774dcf4445306f",
+      "20261109053103": "8557afcbfeab308fb9d8d2999c6bf38c",
+      "20261109053115": "c4015a194531b0d14b74fc5c92351769",
+      "20261109054451": "9b90d41b4fd09a5dccdd7dc4e0c59912",
+      "20261109061641": "3e88fa0d86bd3ca19083f9ec36a4873b",
+      "20261109061655": "96a2c4ca85c3d5c9255ed3549ab1b78f",
+      "20261109061956": "bcb9e9ff57ba97f1a4c844fda299df14",
+      "20261109064030": "368dde31997a5f9c65a0d68a3dc07f85",
+      "20261109064526": "3f9ad9be3b9c1f7e0e64e2e82b7d42f5",
+      "20261109064539": "c9bdf5f554fff20125b883cfdbabe898",
+      "20261109073434": "1d9f283899cbd7351fbe63a52cfb411c",
+      "20261109080610": "bff8c630acfeee2f96aab9010fa7fe1f",
+      "20261109083228": "2dc77d4d9d20677b72197ac409aafa27",
+      "20261109083900": "bf2c4997f88fc66fd5046874330b8579",
+      "20261109083913": "4313b548b29ddbbafc8502c046659ac9",
+      "20261109084831": "be62ca8ea68a67afc9c8a2cc2a2f431f",
+      "20261109085911": "e6c28f9094ad958aaca864f4f9ddf0e2",
+      "20261109085942": "0eca0f139bab45f9cad06c27f5f1cfb9",
+      "20261109090302": "9db325643f311c88c06f81777126f856",
+      "20261109090402": "812c58fdb4f84c7ca6f7b35a5ec7ec6e",
+      "20261109090953": "15ee42a8d6010aa79c5a10392d92497c",
+      "20261109091031": "04b21e0c31898523bdf1ee87de8c736e",
+      "20261109092507": "7c5d077be134c4046ac214dd3c6b9243",
+      "20261109092920": "397520049c5f774fd04b9a3f88ce96f7",
+      "20261109094724": "2801bdd3c2b62c54abc87dd17ab3bfe0",
+      "20261109094742": "fa0800734cb3de22bc1c5affe6452f3c",
+      "20261109095237": "0655523160e9e6a44dde66e49d445de9",
+      "20261109095343": "225c37d68fd06396ff7b4b308ff82162",
+      "20261109095911": "a9a3e855cf0206829141dbd11c29b4bd",
+      "20261109101950": "a3f016333c2bcaf34291312418ba9727",
+      "20261109102133": "8cdc5320b7ca1adc6a3f1fa2ace0ff94",
+      "20261109111201": "c99557b6fadd6b6d0331c56c5f09f89d",
+      "20261109114909": "559e34c27bc65e3a59c75d84232136df",
+      "20261109120107": "510906ca38922e73be943eb1e164f47d",
+      "20261109141232": "f7989d909d3e273bb6a736c9e9c8900c",
+      "20261109141718": "74326d3526db70746e4beae6552d9705",
+      "20261110050542": "3e52057c096b2897f3b2c2c48323110f",
+      "20261110050558": "3adb3cc7a6d87d67a3a8590c8e29cc29",
+      "20261110051042": "abf1305a6779de93e1cb5ce8a562bdd7",
+      "20261110060944": "e975add4a30d90974339769b155e2499",
+      "20261110071525": "56dcb9805a7adbbd14ec95b79815bc4b",
+      "20261110075257": "603606397f6a4448de534a320731d823",
+      "20261110075312": "b67be2224c4ab6a733266deb9759a1dd",
+      "20261110085714": "8e3dcad2ad7960fe1050d61d7f165c68",
+      "20261110085900": "025207c5353cd29fa643af5bf43e474b",
+      "20261110090417": "ba68ac342053752ca808597fc2dbcbd0",
+      "20261110090436": "538f0d4dc81c194964be2855ce59b242",
+      "20261110090925": "f1f9f7f1defb8e834d8720ccfac8598f",
+      "20261110092355": "0bf742d0357310497698229ab9a59845",
+      "20261110092527": "9121c80881cc0b094c85bbeddb41318c",
+      "20261110092554": "8822aff623103ccd43bbd080af0fafa4",
+      "20261110092820": "f0176e8bb1054fe33a8f5f399a69ebd8",
+      "20261110094056": "6cb4211078724e8405c8a2433b24875e",
+      "20261110100115": "8a05b17e48fb7ad7e891f9828157ea25",
+      "20261110101628": "ec94d0103105b393c15810813bf201cb",
+      "20261110102729": "8ffe0ad523e246170b2c77218b29d4f9",
+      "20261110103512": "416e5896a703bc7c3fa1e57d06970f59",
+      "20261110104848": "a2ba6e47cbffb678fcdf9d7cf5cde820",
+      "20261110104911": "31e9b392f30729746d20c707786dc686",
+      "20261110112128": "873ff1e5803b129408913f3a6dfa55af",
+      "20261110112551": "e7662b91780fc4272445920ae21c6fdf",
+      "20261110112841": "dfb861c9d6a3451d97ac5e8bc6c017ca",
+      "20261110112855": "5c546abe1c53ffbffcdbdc377b6d5edd",
+      "20261110114705": "b8801f197d6443715bd06f6a9facf3cb",
+      "20261110120031": "6efcabcb0ec40e874ddf3ab74d249215",
+      "20261110141659": "50bff27e30b2581e9acd2aee11120c6b",
+      "20261110144149": "da35d2aef3bead2bc029609a73d78286",
+      "20261110190558": "5091f66fa05719a7dee746ad4d2b7dda",
+      "20261110190851": "2d80926835015b6ee88763c56ba9ef38",
+      "20261110192253": "57fce45eb46471dffb76b18eead43b52",
+      "20261110192633": "e66c1f7be849eb687319899c0162eda5",
+      "20261110195936": "e8c47f948dbd52991002f53f682d6ec7",
+      "20261110201304": "2bdfe9acfebb6ff5735f08396a8895f2",
+      "20261110201654": "7ac70f3395722b8bd263c8e7c5dd4ef3",
+      "20261110202011": "2c1d160705fcad2d94ea2e21a05a9c54",
+      "20261110202039": "ed935eb870591ce2316f91a535d76317",
+      "20261110202549": "e2390e73920f3fac3fad4f5e03b461f3",
+      "20261110203241": "cb4501572f3f33afc7d2592fe6356b28",
+      "20261110203352": "72c65687e8b2c6bb2392c98651891dd9",
+      "20261111045207": "fa1267b8ad2c762dbdb304a964c9ea08",
+      "20261111051121": "3b7ae2f6d6fbe7e9d1de6a96b9ea54eb",
+      "20261111051138": "c396dc2b30bdb3f4c0f1dec9f7219055",
+      "20261111052305": "4e1b204ec44abdfa49dd797fa55206f8",
+      "20261111052627": "a311aa13ee9d0b3268e39880d932f580",
+      "20261111053031": "85436b27df4118428e59d9efc9d537dc",
+      "20261111053324": "18ce3642e1298e3bd627fb04f41bb122",
+      "20261111054017": "da7b6e044c72a7302b6f85a84e38f4a0",
+      "20261111055618": "d9982bae8f0ea37e001129e77390b5ca",
+      "20261111060720": "f2a77e3a6f057f9e8f92545c1b7a7807",
+      "20261111062724": "f7e00aa205ee1923948e4ea1e608ef59",
+      "20261111063718": "4b93efe2501590bde2bc12f20c41fe27",
+      "20261111064619": "b45952933135f08c24c4c5db72867549",
+      "20261111064803": "be609bf2729a6f4d958feb6fe65db97b",
+      "20261111065032": "5c10c5ab65b89c3c54d61659043c1c63",
+      "20261111070258": "1df95d1e807570bc87a660d39a508e1f",
+      "20261111080105": "559cf5505b85131ae67c73a3e2085222",
+      "20261111080217": "83d8264e05930d239fb3dd1be68ca433",
+      "20261111080410": "368745f4db571a341d9eeb8002960414",
+      "20261111084854": "8cd95ef4f993db1135be3bbc13d37c5c",
+      "20261111085700": "1c2dcc8ca851a2d39fe9f2e071567788",
+      "20261111085859": "b41c34741ea584e5b94c16b8a2ecf6f8",
+      "20261111085947": "3b30e1d79494e8dcaee7a68f10a2a98c",
+      "20261111090254": "593727126308c2e8361ba0e94af42995",
+      "20261111091010": "6df06b0e91ef3fc44c39f746e23cd5de",
+      "20261111091849": "07353398667cfac6877515e5efd3771c",
+      "20261111091913": "d120446088aa7976906f99ab5af7a234",
+      "20261111093510": "7f1d22d3decdfb3cfc8b25145cacb771",
+      "20261111101904": "48d7d83564e9596c82602f52ce6d9784",
+      "20261111101929": "9b1116a1341d52ea716c1e363f1b8e53",
+      "20261111104656": "b56995f9bbdac6fd865c91b13c1d8726",
+      "20261111105332": "173d76e8e15201a839c5a07762737622",
+      "20261111105600": "444af2b7098e84ebb3f662ea50280e06",
+      "20261111105934": "a41385fd1ea69715ba9f4f4abe51e9b1",
+      "20261111105954": "3a7e652aa0c2acf13557e36b41cd7e13",
+      "20261111112552": "38285b2d55a4b714a89bb1fe13a300fa",
+      "20261111113558": "7b7cfc418cff8acc1b4370685abde58a",
+      "20261111113628": "62666104e0aee3ebd42bddd174d2e60b",
+      "20261111113822": "cf9704bf54c9794ea13a34064685edb6",
+      "20261111114218": "096bb0d8e3c3dcce0f74654c97c6a517",
+      "20261111114302": "b6a76c367e5345a0718b3021fd16c252",
+      "20261111114512": "7365bb05c256da760849a10de848c73e",
+      "20261111114530": "94fa988cb07a178f5b8f59d856ddf407",
+      "20261111114819": "fc30e3b9b50dc551bc1774201fd6db46",
+      "20261111114835": "20f2f36173a3d05583bf499dd1c93399",
+      "20261111115513": "6370842b9319cfe63cbcdc660b7f68f9",
+      "20261111115525": "fdbdd64dc9e6a77375426008da58464d",
+      "20261111162507": "5a6923521a6382a29fc9031c3bcdfa05",
+      "20261111162729": "53b766f457f0931e89a0fcced6b51db1",
+      "20261111163125": "5a8cba52cc55f3ce13f590ba187ec83c",
+      "20261113110000": "4f90e17487a408f57e7ccfcf503264c2"
+    }
+  },
+  "protected_runtime_files": {
+    "infrastructure/vps-app/Dockerfile": "6d67ade4f7bab8847241eef98cac30875983963fd7a0b157a549204477b3d1cc",
+    "infrastructure/vps-app/compose.stage1.yml": "5028653cbf179ab71f21c27d124c9879d4651ef7c4d4cab127a84c606698de64"
+  },
+  "historical_replay": {
+    "source_approval_plan": "883816198c68c041c27a0151ebd1bc0f59b74b8c006e85d3e6e4a5064a224740",
+    "purpose": "Exact previously approved bootstrap normalizations; QA baseline reconstruction only. Never reapply them to an existing database.",
+    "changed_file_count": 5
+  },
+  "optional_vps_only": [
+    {
+      "version": "20261114180000",
+      "path": "infrastructure/vps-app/release/mcp-review/permissions.sql.review",
+      "source_md5": "0a8fdaa991f98a1c838277a913376b92",
+      "requires_separate_user_approval": true,
+      "sha256": "b8e03278fe2a25f2e69b3c5d155db45baaa7be666285ef219b3ba3ac535a458d",
+      "automatically_applied_to_live_target": false,
+      "name": "mcp_metadata_only",
+      "already_applied": false
+    }
+  ],
+  "fixture_files": {
+    "infrastructure/vps-app/baseline/managed-schema.sql": "8802dab5be521546a33542e4bfc462d4f2324fa8c8077918f69ba6fa662c4e55",
+    "infrastructure/vps-app/baseline/managed-fixture.json": "7fa6e9ecd9705a2f6db6fb5935d5a34127e7145c7258e87019bb4742d14306d9",
+    "infrastructure/vps-app/release/catalog.sql": "bb885e7a1a7e6c2755ab1d56392f3b1afcb3a1855f94e1214c025435c49b3bd6",
+    "infrastructure/vps-app/release/requirements.txt": "acc785350a0d3ff37118dbfd817bb75506d02aa6fe1864148fee3b53adc47b20",
+    "infrastructure/vps-app/release/mcp-review/fixtures/gateway-before.mjs": "e6306648846a797e43b445ec33d80e3e19b87947f40c89886c567348d337666f"
+  }
+}

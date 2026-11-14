@@ -1,0 +1,20 @@
+{
+  "enabled": false,
+  "mcp_write_path_reviewed": false,
+  "public_origin": "https://app.kalmalki.com",
+  "baseline_sha256": "REPLACE_WITH_REVIEWED_BASELINE_DIGEST",
+  "cloud_read_credential_file": "/etc/rikaz/release/cloud-metadata-read.token",
+  "database_identity": {
+    "database": "postgres",
+    "version": "170006",
+    "delivery_namespace_hash": "READ_FROM_THIS_VPS_ONLY",
+    "cron": "off"
+  },
+  "protected_config_files": [
+    "/etc/rikaz/app/server.env",
+    "/etc/rikaz/app/build-public.env",
+    "/etc/rikaz/app/supabase-auth-hook.override.json",
+    "/etc/nginx/sites-available/rikaz-domains.conf",
+    "/opt/rikaz-supabase/.env"
+  ]
+}

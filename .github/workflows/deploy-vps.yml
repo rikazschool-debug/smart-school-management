@@ -1,0 +1,135 @@
+name: اعتماد ونشر ركاز
+run-name: "اعتماد الإصدار المرشح من الفحص #${{ inputs.candidate_run_id }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_run_id:
+        description: "رقم عملية الفحص الناجحة على main؛ يظهر في رابط صفحة الفحص"
+        required: true
+        type: string
+      risk_approval_id:
+        description: "عند وجود مخاطر SQL: معرّف الاعتماد نفسه بعد مراجعة الترحيلات؛ اتركه فارغًا لغير ذلك"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: rikaz-vps-production
+  cancel-in-progress: false
+
+jobs:
+  verify-request:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      commit: ${{ steps.validate.outputs.commit }}
+      manifest: ${{ steps.request.outputs.manifest }}
+    env:
+      CHECKS_RUN: ${{ inputs.candidate_run_id }}
+      RISK_ID: ${{ inputs.risk_approval_id }}
+    steps:
+      - name: Validate fixed release and successful trusted checks
+        id: validate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json,os,re,subprocess
+          assert os.environ['GITHUB_REF']=='refs/heads/main','Dispatch the reviewed main workflow only'
+          run=os.environ['CHECKS_RUN']
+          assert re.fullmatch('[1-9][0-9]*',run),'Invalid check run identifier'
+          data=json.loads(subprocess.check_output(['gh','api','repos/rikazschool-debug/smart-school-management/actions/runs/'+run]))
+          sha=data['head_sha']
+          assert re.fullmatch('[0-9a-f]{40}',sha)and data['conclusion']=='success'and data['head_branch']=='main'and data['head_repository']['full_name']=='rikazschool-debug/smart-school-management'and data['path']=='.github/workflows/release-checks.yml','A successful main check for this exact SHA is required'
+          with open(os.environ['GITHUB_OUTPUT'],'a')as f:f.write('commit='+sha+'\n')
+          PY
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-candidate
+          run-id: ${{ inputs.candidate_run_id }}
+          github-token: ${{ github.token }}
+          path: candidate
+      - name: Validate manifest and prepare non-secret request
+        id: request
+        env:
+          SELECTED_SHA: ${{ steps.validate.outputs.commit }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          m=json.loads(pathlib.Path('candidate/manifest.json').read_text());claimed=m.pop('manifest_id')
+          body=json.dumps(m,sort_keys=True,separators=(',',':'),ensure_ascii=False)
+          assert hashlib.sha256(body.encode()).hexdigest()==claimed and m['commit']==os.environ['SELECTED_SHA'],'The candidate changed'
+          assert not m['risks']or os.environ['RISK_ID']==claimed,'Explicit review of the database risk plan is required'
+          request={'commit':m['commit'],'checks_run_id':int(os.environ['CHECKS_RUN']),'approved_manifest_id':claimed,'risk_approval_id':os.environ['RISK_ID']}
+          pathlib.Path('request.json').write_text(json.dumps(request,separators=(',',':')))
+          with open(os.environ['GITHUB_OUTPUT'],'a')as f:f.write('manifest='+claimed+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a')as f:f.write(pathlib.Path('candidate/summary.md').read_text())
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: approved-request
+          path: request.json
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy:
+    name: "نشر الإصدار ${{ needs.verify-request.outputs.commit }}"
+    needs: verify-request
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment:
+      name: production-vps
+      url: https://app.kalmalki.com
+    permissions:
+      contents: read
+      actions: read
+      deployments: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: approved-request
+          path: request
+      - name: Require explicit one-time operational setup
+        env:
+          READY: ${{ vars.RIKAZ_RELEASE_AUTOMATION_READY }}
+          DEPLOY_KEY: ${{ secrets.VPS_RELEASE_SSH_KEY }}
+          HOST_KEYS: ${{ vars.VPS_RELEASE_KNOWN_HOSTS }}
+        run: |
+          test "$READY" = "true" || { echo 'لم تكتمل تهيئة النشر الآمن؛ لا تغيير على الإنتاج.'; exit 1; }
+          test -n "$DEPLOY_KEY" && test -n "$HOST_KEYS"
+      - name: Invoke the restricted server release coordinator
+        env:
+          DEPLOY_KEY: ${{ secrets.VPS_RELEASE_SSH_KEY }}
+          HOST_KEYS: ${{ vars.VPS_RELEASE_KNOWN_HOSTS }}
+          MANIFEST_ID: ${{ needs.verify-request.outputs.manifest }}
+        run: |
+          set -euo pipefail
+          umask 077
+          key_file=$(mktemp)
+          known_file=$(mktemp)
+          trap 'rm -f "$key_file" "$known_file"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$key_file"
+          printf '%s\n' "$HOST_KEYS" > "$known_file"
+          ssh -i "$key_file" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$known_file" -o ConnectTimeout=15 rikaz-release@2.25.3.1 "rikaz-release-v1 $MANIFEST_ID" < request/request.json > deployment-result.json
+      - name: Record result without credentials or SQL
+        if: always()
+        run: |
+          if [ -f deployment-result.json ]; then
+            printf '\n### نتيجة مشغّل VPS\n```json\n' >> "$GITHUB_STEP_SUMMARY"
+            cat deployment-result.json >> "$GITHUB_STEP_SUMMARY"
+            printf '\n```\n' >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '\nلم تصل نتيجة نشر؛ راجع الخطوة التي توقفت. لا تكرر الترحيلات يدويًا.\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: deployment-result
+          path: deployment-result.json
+          if-no-files-found: ignore
+          retention-days: 30
