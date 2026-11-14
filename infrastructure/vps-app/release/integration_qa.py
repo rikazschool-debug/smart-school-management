@@ -61,6 +61,9 @@ def run(root,output,verify_image,php_image):
         result['passed']=True
     except Exception as error:
         result['passed']=False;result['error']=str(error)
+        bridge_log=output/'bridge.log'
+        if bridge_log.exists():
+            result['failed_bridge_tests']=re.findall(r'^\s*not ok \d+ - (.+)$',bridge_log.read_text(),re.M)
     finally:
         for name in reversed(made):remove_owned(name,nonce)
     (output/'result.json').write_text(json.dumps(result,indent=2));return result

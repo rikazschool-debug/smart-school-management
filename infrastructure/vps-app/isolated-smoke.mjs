@@ -6,6 +6,9 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 
 const marker = 'sb_secret_RIKAZ_RUNTIME_ISOLATED_SENTINEL_ONLY';
+const expectedPublicBackend = process.env.RIKAZ_SMOKE_EXPECTED_PUBLIC_BACKEND || '';
+assert(['', 'https://api.kalmalki.com'].includes(expectedPublicBackend), 'Unexpected compiled public target');
+let productionTargetFiles = 0;
 const server = spawn(process.execPath, ['.output/server/index.mjs'], {
   cwd: '/app',
   env: {
@@ -33,7 +36,12 @@ async function scan(dir) {
     else if (/\.(?:js|mjs|html|json|css|map)$/.test(entry.name)) {
       const text = await readFile(file, 'utf8');
       assert(!text.includes(marker), 'Runtime secret marker leaked into public output');
-      assert(!text.includes('https://api.kalmalki.com'), 'Real production backend in isolated public output');
+      if (expectedPublicBackend) {
+        if (text.includes(expectedPublicBackend)) productionTargetFiles++;
+        assert(!text.includes('czoaudsfbinpkwqsmhrd.supabase.co'), 'Test cloud target in production public output');
+      } else {
+        assert(!text.includes('https://api.kalmalki.com'), 'Real production backend in isolated public output');
+      }
       count++;
     }
   }
@@ -68,6 +76,7 @@ try {
   assert.equal(adms.status, 503, 'ADMS must remain disabled');
   await adms.body?.cancel();
   const publicFilesScanned = await scan('/app/.output/public');
+  if (expectedPublicBackend) assert(productionTargetFiles > 0, 'Expected production target missing from compiled public output');
   const functions = {};
   for (const file of await readdir('/app/.output/server', { recursive: true })) {
     if (!/\.(?:mjs|js)$/.test(file)) continue;
@@ -99,6 +108,7 @@ try {
   assert.equal(workerDenied.status,401,'Message worker accepted no capability');
   console.log(JSON.stringify({
     isolated: true, realBackendUsed: false, providerCredentialsUsed: false,
+    compiledPublicTarget: expectedPublicBackend || 'isolated-fixture',
     pages: results, staticAssetsFetched: Math.min(assets.size, 20),
     publicFilesScanned, admsDisabled: true,
     globalQueuePumpUnavailable: true, scopedFlushRequiresAuthentication: true, workerRequiresCapability: true, sameOriginAccepted: 200, crossOriginRejected: 403, unauthenticatedRejected: 401,
