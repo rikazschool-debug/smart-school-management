@@ -355,7 +355,7 @@ export function AppDetail({ id, onClose }: { id: string; onClose: () => void }) 
   const [note, setNote] = useState("");
   const act = useMutation({
     mutationFn: (p: { action: string; internal?: string | null; message?: string | null }) => rpc<{ already?: boolean }>("evt_app_act", { _id: id, _rev: q.data!.rev, _action: p.action, _internal: p.internal ?? null, _message: p.message ?? null }),
-    onSuccess: (r) => { toast.success(r?.already ? "نُفذ القرار مسبقًا" : "تم"); refresh(); void flushEvtMessagesFn().catch(() => undefined); }, onError: (e) => { toast.error(arabicError(e)); refresh(); },
+    onSuccess: (r) => { toast.success(r?.already ? "نُفذ القرار مسبقًا" : "تم"); refresh(); void flushEvtMessagesFn({data:{app:id}}).catch(() => undefined); }, onError: (e) => { toast.error(arabicError(e)); refresh(); },
   });
   const addNote = useMutation({ mutationFn: () => rpc("evt_app_note", { _id: id, _body: note }), onSuccess: () => { setNote(""); refresh(); }, onError: (e) => toast.error(arabicError(e)) });
   if (q.isLoading) return <LoadingState />;

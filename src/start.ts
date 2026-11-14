@@ -29,6 +29,9 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 // from cross-site requests.
 const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
+  // A fixed server-side origin supports HTTPS termination at Nginx without
+  // trusting an arbitrary forwarded host/protocol. Unset keeps preview defaults.
+  origin: (origin, ctx) => origin === (process.env["RIKAZ_PUBLIC_ORIGIN"] || new URL(ctx.request.url).origin),
 });
 
 export const startInstance = createStart(() => ({

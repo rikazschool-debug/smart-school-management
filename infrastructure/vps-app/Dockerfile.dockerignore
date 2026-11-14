@@ -1,0 +1,22 @@
+# Dockerfile-specific allowlist; never transfer the tracked cloud .env.
+**
+!package.json
+!bun.lock
+!bunfig.toml
+!vite.config.ts
+!tsconfig.json
+!src/
+!src/**
+!public/
+!public/**
+!infrastructure/
+!infrastructure/vps-app/
+!infrastructure/vps-app/Dockerfile
+!infrastructure/vps-app/Dockerfile.dockerignore
+**/.env*
+**/*.pem
+**/*.key
+**/node_modules
+**/.git
+**/*.test.*
+**/__tests__/**

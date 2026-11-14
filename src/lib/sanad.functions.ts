@@ -50,13 +50,16 @@ export const askSanad = createServerFn({ method: "POST" })
 - لا تذكر أرقام الهوية أو الجوال أو المعرفات الداخلية (id).
 السجلات المتاحة (JSON):
 ${JSON.stringify(facts).slice(0, 60000)}`;
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent", {
+    const model=process.env['GEMINI_MODEL'] || 'gemini-3-flash-preview';
+    if(!/^[a-z0-9.-]+$/.test(model))return {error:'إعداد نموذج Gemini غير صالح'};
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: "POST",
+      signal:AbortSignal.timeout(30000),
       headers: { "content-type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: data.messages.map((m) => ({ role: m.role, parts: [{ text: m.text }] })) }),
     });
     if (!res.ok) {
-      console.error("sanad gemini", res.status, (await res.text()).slice(0, 300));
+      console.error("sanad gemini HTTP", res.status);
       return { error: res.status === 429 ? "المساعد مشغول الآن، حاول بعد قليل" : res.status === 403 || res.status === 401 ? "مفتاح Gemini غير صالح أو بلا صلاحية" : "تعذر الوصول إلى المساعد" };
     }
     const j = (await res.json()) as { candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[] };

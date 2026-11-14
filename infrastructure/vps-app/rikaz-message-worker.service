@@ -1,0 +1,24 @@
+[Unit]
+Description=Dispatch new organization-scoped Rikaz messages
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/rikaz-app/message-worker.py
+TimeoutStartSec=300
+DynamicUser=true
+LoadCredential=worker.env:/etc/rikaz/app/message-worker.env
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+CapabilityBoundingSet=
+LockPersonality=true
+UMask=0077

@@ -1,0 +1,45 @@
+# VPS runtime: public access through Nginx; the host port remains loopback-only.
+name: rikaz-app
+services:
+  web:
+    image: ${RIKAZ_APP_IMAGE:?set a unique reviewed release tag}
+    build:
+      context: ../..
+      dockerfile: infrastructure/vps-app/Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:?public build URL required}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:?public build key required}
+    env_file:
+      - /etc/rikaz/app/server.env
+    ports:
+      - "127.0.0.1:3100:3000"
+    networks:
+      supabase-existing: {}
+      auth-hook:
+        aliases:
+          - host.docker.internal
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 2g
+    cpus: 1.0
+    stop_grace_period: 35s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+networks:
+  supabase-existing:
+    external: true
+    name: rikaz-supabase_default
+  auth-hook:
+    external: true
+    name: rikaz-auth-hook

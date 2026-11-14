@@ -55,9 +55,42 @@ export const requestIdCode = createServerFn({ method: "POST" })
     const baseUrl = process.env["WATI_API_BASE_URL"], token = process.env["WATI_API_TOKEN"];
     let sent = false;
     if (baseUrl && token) {
-      const w = await sendWatiOtp({ baseUrl, token, template: process.env["WATI_OTP_TEMPLATE"] || "rikaz_login_otp", param: process.env["WATI_OTP_PARAM"] || "1", channel: process.env["WATI_CHANNEL"]?.trim() || undefined }, res.phone, code, res.challenge);
-      sent = w.ok;
-      if (!w.ok) console.error("id-login wati failed", w.detail);
+      const identity = await sb.rpc("_rk_delivery_identity" as never);
+      const instance = (identity.data as { instance?: string } | null)
+        ?.instance;
+      if (instance) {
+        const ref = `rk-${instance}-otp-${res.challenge}`;
+        const registered = await sb.rpc(
+          "_rk_register_id_otp" as never,
+          { _challenge: res.challenge, _ref: ref } as never,
+        );
+        if (!registered.error) {
+          const w = await sendWatiOtp(
+            {
+              baseUrl,
+              token,
+              template: "rikaz_login_otp",
+              param: "1",
+              channel: process.env["WATI_CHANNEL"]?.trim() || undefined,
+            },
+            res.phone,
+            code,
+            ref,
+          );
+          sent = w.ok;
+          await sb
+            .from("otp_sends" as never)
+            .update({
+              status: sent
+                ? "accepted"
+                : w.detail === "unknown"
+                  ? "unknown"
+                  : "failed",
+              updated_at: new Date().toISOString(),
+            } as never)
+            .eq("local_message_id", ref).eq("status", "requested");
+        }
+      }
     }
     // SMS fallback: no SMS provider is configured for this project yet (external requirement); the code is never sent elsewhere.
     await sb.rpc("_idl_mark_sent" as never, { _challenge: res.challenge, _status: sent ? "accepted" : "failed", _channel: "whatsapp" } as never);

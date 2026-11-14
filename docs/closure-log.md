@@ -889,3 +889,14 @@ Downloaded and opened 7 PDFs: course published sheet (new, reads current publish
 ## 2026-11-12 — ADMS Bridge contract v1, Rikaz side (prompt-341)
 - Receiver /api/integrations/adms/v1/events (off: 503 intake_disabled), signed sync client + admsSyncNow, linking/PIN screen, SQL in supabase/pending/adms_v1.sql (NOT applied).
 - Evidence: vitest src/lib/adms 12/12; scripts/adms-v1-isolated.ts 53/53 on throwaway local Postgres incl. 5 joint checks with the real bridge 2.0.0 Store/Worker/read API. Preview: POST 503, GET 405. No production DB or bridge calls.
+## Stage 2 branch preservation and compatibility review — 2026-11-13
+
+Prepared an independent branch from main 9f85725db0b7b2ace8bd8174d975168dfc1e5fa2 with six application hardening files, focused tests, VPS runtime/reference templates and documentation. Earlier migrations and operational credentials are excluded. All 193 tests (36 files), Node production build/read-only network-none smoke, and Lovable sandbox Cloudflare build passed. The Lovable wrapper ignored a conflicting VPS preset. Existing 14 service identities/configurations and protected configuration hashes stayed unchanged. No merge, deployment, SQL, provider activation or database reconnection occurred. Scope, limits and queue-flush behavior: docs/vps-stage2-review.md.
+
+## Scoped delivery and provider acceptance — 2026-11-13
+
+Added service-only scoped account/event claims, independent database message namespaces, historical queue cutoff, an authenticated per-application decision flush, and a capability-protected organization worker. Matched the three existing WATI templates. Isolated acceptance passed for one account message, one event receipt, ID OTP and single-use verification, in-scope meeting token, and Sanad response; three callback/worker acceptance checks passed separately. User confirmed OTP receipt and actual Agora browser join/leave; no microphone/camera capture was requested. No cloud settings, existing job schedules, deployed runtime or production message queues were changed. The separately authorized real VPS group/bootstrap used the current data model and is excluded from repository artifacts. See docs/vps-integrations-review.md for release prerequisites and limits.
+
+## Auth hook compatibility before deployment — 2026-11-13
+
+The pinned production GoTrue image rejected the reference HTTP URI using the ordinary app service name. Added a dedicated internal Auth/app network with the supported local hostname, phone enabled and SMS auto-confirm disabled. A fresh isolated database, synthetic user and signed hook stub passed native POST /otp (HTTP 200), including signature and OTP presence checks; no production rows or provider calls. Temporary QA containers/network were removed. This correction changes runtime references only; production services, cloud settings and jobs remain unchanged pending coordinated deployment.

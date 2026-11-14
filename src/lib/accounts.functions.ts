@@ -88,20 +88,50 @@ async function provisionCore(ctx: Ctx, kind: Kind, ids: string[]): Promise<ProvO
     }
   }
   for (const id of ids) if (!out.some((o) => o.id === id)) out.push({ id, state: "error", msg: "السجل غير متاح" });
-  if (queued.length) await queueReadyMessages(queued);
+  if (queued.length) await queueReadyMessages(queued, ctx.userId);
   return out;
 }
 
 /** One «account ready» WhatsApp message per guardian (unique guardian_id → never repeated), then a send attempt. */
-async function queueReadyMessages(gids: string[]) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("guardians").select("id, school_id, full_name, schools(name), student_guardians(students(full_name))").in("id", gids);
-  for (const g of (data ?? []) as unknown as { id: string; school_id: string; full_name: string; schools: { name: string } | null; student_guardians: { students: { full_name: string } | null }[] }[]) {
-    const kids = g.student_guardians.map((x) => x.students?.full_name).filter(Boolean).join("، ");
+async function queueReadyMessages(gids: string[], actor: string) {
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("guardians")
+    .select(
+      "id, school_id, full_name, schools(name), student_guardians(students(full_name))",
+    )
+    .in("id", gids);
+  const ids: string[] = [];
+  for (const g of (data ?? []) as unknown as {
+    id: string;
+    school_id: string;
+    full_name: string;
+    schools: { name: string } | null;
+    student_guardians: { students: { full_name: string } | null }[];
+  }[]) {
+    const kids = g.student_guardians
+      .map((x) => x.students?.full_name)
+      .filter(Boolean)
+      .join("، ");
     // unique guardian_id: a retry or a second call finds the row and inserts nothing
-    await supabaseAdmin.from("acct_outbox" as never).insert({ school_id: g.school_id, guardian_id: g.id, params: { name: g.full_name, kids, school: g.schools?.name ?? "" } } as never);
+    const queued = await supabaseAdmin
+      .from("acct_outbox" as never)
+      .insert({
+        school_id: g.school_id,
+        guardian_id: g.id,
+        params: { name: g.full_name, kids, school: g.schools?.name ?? "" },
+      } as never)
+      .select("id");
+    for (const row of (queued.data ?? []) as { id: string }[]) ids.push(row.id);
   }
-  try { const { drainAcctOutbox } = await import("@/lib/acct-outbox.server"); await drainAcctOutbox(10); } catch (e) { console.error("acct outbox", (e as Error).message); }
+  try {
+    const { drainAcctOutbox } = await import("@/lib/acct-outbox.server");
+    for (let i = 0; i < ids.length; i += 20)
+      await drainAcctOutbox({ ids: ids.slice(i, i + 20), actor });
+  } catch {
+    console.error("account delivery deferred");
+  }
 }
 
 /**

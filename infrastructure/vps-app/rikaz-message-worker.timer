@@ -1,0 +1,11 @@
+[Unit]
+Description=Check reviewed Rikaz message scopes every minute
+
+[Timer]
+OnBootSec=120
+OnUnitInactiveSec=60
+RandomizedDelaySec=10
+Unit=rikaz-message-worker.service
+
+[Install]
+WantedBy=timers.target

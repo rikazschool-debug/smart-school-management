@@ -1,0 +1,18 @@
+# Reference only: merge with the existing Supabase auth service after release approval.
+# Do not replace its existing environment, JWT secret, database password or redirects.
+services:
+  auth:
+    environment:
+      GOTRUE_EXTERNAL_PHONE_ENABLED: 'true'
+      GOTRUE_SMS_AUTOCONFIRM: 'false'
+      GOTRUE_HOOK_SEND_SMS_ENABLED: 'true'
+      GOTRUE_HOOK_SEND_SMS_URI: http://host.docker.internal:3000/api/public/auth/send-sms
+      GOTRUE_HOOK_SEND_SMS_SECRETS: ${SEND_SMS_HOOK_SECRET:?private independently generated Standard Webhooks secret}
+    # Preserve the existing Supabase network; add only the private hook network.
+    networks:
+      default: {}
+      auth-hook: {}
+networks:
+  auth-hook:
+    external: true
+    name: rikaz-auth-hook

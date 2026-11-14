@@ -95,6 +95,7 @@ import { Route as AuthenticatedAppHrReportsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppHrTrainingRouteImport } from './routes/_authenticated/app/hr_.training'
 import { Route as AuthenticatedAppNoticeIdRouteImport } from './routes/_authenticated/app/notice.$id'
 import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './routes/_authenticated/app/virtual-classes.index'
+import { Route as ApiInternalMessagesDispatchRouteImport } from './routes/api/internal/messages/dispatch'
 import { Route as ApiPublicAdmissionsWordpressRouteImport } from './routes/api/public/admissions/wordpress'
 import { Route as ApiPublicAuthSendSmsRouteImport } from './routes/api/public/auth/send-sms'
 import { Route as ApiPublicHrAttendanceRouteImport } from './routes/api/public/hr/attendance'
@@ -594,6 +595,12 @@ const AuthenticatedAppVirtualClassesIndexRoute =
     path: '/virtual-classes/',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const ApiInternalMessagesDispatchRoute =
+  ApiInternalMessagesDispatchRouteImport.update({
+    id: '/api/internal/messages/dispatch',
+    path: '/api/internal/messages/dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAdmissionsWordpressRoute =
   ApiPublicAdmissionsWordpressRouteImport.update({
     id: '/api/public/admissions/wordpress',
@@ -751,6 +758,7 @@ export interface FileRoutesByFullPath {
   '/app/hr/reports': typeof AuthenticatedAppHrReportsRoute
   '/app/hr/training': typeof AuthenticatedAppHrTrainingRoute
   '/app/notice/$id': typeof AuthenticatedAppNoticeIdRoute
+  '/api/internal/messages/dispatch': typeof ApiInternalMessagesDispatchRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
@@ -850,6 +858,7 @@ export interface FileRoutesByTo {
   '/app/hr/reports': typeof AuthenticatedAppHrReportsRoute
   '/app/hr/training': typeof AuthenticatedAppHrTrainingRoute
   '/app/notice/$id': typeof AuthenticatedAppNoticeIdRoute
+  '/api/internal/messages/dispatch': typeof ApiInternalMessagesDispatchRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
@@ -952,6 +961,7 @@ export interface FileRoutesById {
   '/_authenticated/app/hr_/reports': typeof AuthenticatedAppHrReportsRoute
   '/_authenticated/app/hr_/training': typeof AuthenticatedAppHrTrainingRoute
   '/_authenticated/app/notice/$id': typeof AuthenticatedAppNoticeIdRoute
+  '/api/internal/messages/dispatch': typeof ApiInternalMessagesDispatchRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
@@ -1054,6 +1064,7 @@ export interface FileRouteTypes {
     | '/app/hr/reports'
     | '/app/hr/training'
     | '/app/notice/$id'
+    | '/api/internal/messages/dispatch'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/hr/attendance'
@@ -1153,6 +1164,7 @@ export interface FileRouteTypes {
     | '/app/hr/reports'
     | '/app/hr/training'
     | '/app/notice/$id'
+    | '/api/internal/messages/dispatch'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/hr/attendance'
@@ -1254,6 +1266,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/hr_/reports'
     | '/_authenticated/app/hr_/training'
     | '/_authenticated/app/notice/$id'
+    | '/api/internal/messages/dispatch'
     | '/api/public/admissions/wordpress'
     | '/api/public/auth/send-sms'
     | '/api/public/hr/attendance'
@@ -1285,6 +1298,7 @@ export interface RootRouteChildren {
   InviteTokenRoute: typeof InviteTokenRoute
   JoinTokenRoute: typeof JoinTokenRoute
   JoinTrackCodeRoute: typeof JoinTrackCodeRoute
+  ApiInternalMessagesDispatchRoute: typeof ApiInternalMessagesDispatchRoute
   ApiPublicAdmissionsWordpressRoute: typeof ApiPublicAdmissionsWordpressRoute
   ApiPublicAuthSendSmsRoute: typeof ApiPublicAuthSendSmsRoute
   ApiPublicHrAttendanceRoute: typeof ApiPublicHrAttendanceRoute
@@ -1897,6 +1911,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppVirtualClassesIndexRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/api/internal/messages/dispatch': {
+      id: '/api/internal/messages/dispatch'
+      path: '/api/internal/messages/dispatch'
+      fullPath: '/api/internal/messages/dispatch'
+      preLoaderRoute: typeof ApiInternalMessagesDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/admissions/wordpress': {
       id: '/api/public/admissions/wordpress'
       path: '/api/public/admissions/wordpress'
@@ -2193,6 +2214,7 @@ const rootRouteChildren: RootRouteChildren = {
   InviteTokenRoute: InviteTokenRoute,
   JoinTokenRoute: JoinTokenRoute,
   JoinTrackCodeRoute: JoinTrackCodeRoute,
+  ApiInternalMessagesDispatchRoute: ApiInternalMessagesDispatchRoute,
   ApiPublicAdmissionsWordpressRoute: ApiPublicAdmissionsWordpressRoute,
   ApiPublicAuthSendSmsRoute: ApiPublicAuthSendSmsRoute,
   ApiPublicHrAttendanceRoute: ApiPublicHrAttendanceRoute,

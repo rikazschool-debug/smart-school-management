@@ -202,25 +202,34 @@ function AuthPage() {
 }
 
 /** Platform owner controls every organization, so it never uses the shared demo password: its own password is typed here. */
-const PLATFORM_OWNER_EMAIL = "owner@platform.rikaz.app";
 function PlatformOwnerLogin({ onDone }: { onDone: () => void }) {
   const [open, setOpen] = useState(false);
+  const [ownerEmail, setOwnerEmail] = useState("");
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   async function login(e: React.FormEvent) {
     e.preventDefault();
+    const email = ownerEmail.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return void toast.error("أدخل بريد مالك المنصة");
     setBusy(true);
     await supabase.auth.signOut();
     localStorage.removeItem("rikaz.activeContext");
-    const { error } = await supabase.auth.signInWithPassword({ email: PLATFORM_OWNER_EMAIL, password: pw });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
     setBusy(false);
     if (error) return void toast.error(arabicError(error));
+    const { data: admin, error: roleError } = await supabase.from("platform_admins").select("user_id").eq("user_id", data.user.id).maybeSingle();
+    if (roleError || !admin) {
+      await supabase.auth.signOut();
+      return void toast.error("هذا الحساب لا يملك صلاحية مالك المنصة");
+    }
     onDone();
   }
   if (!open) return <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setOpen(true)}>مالك المنصة</Button>;
   return (
     <form onSubmit={login} className="space-y-2 rounded-lg border bg-background p-2">
-      <Label htmlFor="po-pw" className="text-xs">كلمة مرور مالك المنصة (خاصة، ليست كلمة المرور التجريبية)</Label>
+      <Label htmlFor="po-email" className="text-xs">البريد الإلكتروني لمالك المنصة</Label>
+      <Input id="po-email" type="email" autoComplete="username" dir="ltr" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} required />
+      <Label htmlFor="po-pw" className="text-xs">كلمة مرور مالك المنصة</Label>
       <PasswordInput id="po-pw" value={pw} onChange={(e) => setPw(e.target.value)} />
       <Button className="w-full" size="sm" disabled={busy || pw.length < 8}>{busy ? "جارٍ…" : "دخول مالك المنصة"}</Button>
     </form>
