@@ -6,13 +6,13 @@ installation, target identity, SSH capability and cloud-read credential live out
 from __future__ import annotations
 import argparse,contextlib,datetime,fcntl,hashlib,io,json,os,pathlib,re,shutil,subprocess,tarfile,time,urllib.request
 from policy import (ReleaseError,canonical,digest,make_manifest,verify_manifest,validate_history,
-                    require_approval,compare_catalog,history_key,read_sql)
+                    require_approval,compare_catalog,history_key,read_sql,target_migrations)
 from database import Database,apply_pending,dump_backup,verify_backup_restore
 from qa import replay
 
 REPOSITORY='rikazschool-debug/smart-school-management'
 CLOUD_PROJECT='czoaudsfbinpkwqsmhrd'
-SOURCE_ALLOWED={'src','public','infrastructure','supabase','package.json','bun.lock','bunfig.toml','vite.config.ts','vitest.config.ts','tsconfig.json'}
+SOURCE_ALLOWED={'src','public','bridge','integrations','infrastructure','supabase','package.json','bun.lock','bunfig.toml','vite.config.ts','vitest.config.ts','tsconfig.json'}
 
 def atomic_json(path,value):
     temporary=path.with_name(path.name+'.tmp');temporary.write_text(canonical(value));temporary.chmod(0o600);os.replace(temporary,path)
@@ -94,7 +94,7 @@ def audit_cloud(trusted_root,work,config):
     history=cloud_read(credential,history_sql)[0]['history']
     # Existing legacy SQL representations stay untouched. For future cloud rows the schema
     # replay is authoritative; their source formatting may differ from CLI's statement arrays.
-    common={m['version']for m in manifest['migrations']}
+    common={m['version']for m in target_migrations(manifest,'cloud')}
     if set(m['version']for m in history)!=common:raise ReleaseError('cloud_history_not_represented_in_git')
     for version,expected in baseline['baseline_history']['cloud'].items():
         if next((m['ledger_md5']for m in history if m['version']==version),None)!=expected:
@@ -158,7 +158,7 @@ class ProductionOperations:
         self.worker_active=subprocess.run(['systemctl','is-active','--quiet','rikaz-message-worker.timer']).returncode==0
     def validate(self,manifest):
         self.cloud=audit_cloud(self.trusted_root,self.work,self.config)
-        self.proof=replay(self.root,manifest,'vps',self.work/'vps-replay.json')
+        self.proof=replay(self.root,manifest,'vps',self.work/'vps-replay.json',applied_versions=[m['version']for m in self.history])
         key=history_key([m['version']for m in self.history])
         if key not in self.proof['states']:raise ReleaseError('production_history_not_supported_by_candidate')
         compare_catalog(self.proof['states'][key]['catalog'],self.db.catalog(self.root))

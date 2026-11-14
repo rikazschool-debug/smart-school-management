@@ -9,6 +9,7 @@ def summary(manifest):
             '- commit: `'+manifest['commit']+'`\n'
             '- معرّف الاعتماد: `'+manifest['manifest_id']+'`\n'
             '- ملفات الترحيلات: '+str(len(manifest['migrations']))+'\n'
+            '- منها خاصة بـVPS ولا تُطلب على السحابة: '+str(sum(m.get('scope')=='vps'for m in manifest['migrations']))+'\n'
             '- الملفات الجديدة منذ baseline: '+str(len(manifest['additions']))+'\n'
             '- مخاطر تحتاج مراجعة صريحة: '+('نعم'if risks else'لا مخاطر مصنفة في الملفات الجديدة')+'\n\n'
             +('\n'.join('- `'+v+'`: '+', '.join(reasons)for v,reasons in risks.items())+'\n\n'if risks else'')+

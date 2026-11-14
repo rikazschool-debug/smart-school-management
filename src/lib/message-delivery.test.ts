@@ -34,6 +34,9 @@ describe("isolated provider delivery boundaries", () => {
     vi.stubEnv("RIKAZ_DELIVERY_MODE", "test");
     vi.stubEnv("RIKAZ_TEST_PHONE_ALLOWLIST", phone);
     vi.stubEnv("WATI_WEBHOOK_SECRET", secret);
+    vi.stubEnv("WATI_INBOX_ENABLED", "true");
+    vi.stubEnv("WATI_INBOX_ORG_ID", "00000000-0000-4000-8000-000000000001");
+    vi.stubEnv("WATI_INBOX_NOT_BEFORE", "2026-01-01T00:00:00Z");
     vi.stubEnv("WATI_API_BASE_URL", "https://example.invalid");
     vi.stubEnv("WATI_API_TOKEN", "synthetic-only");
     m.rpc.mockReset();

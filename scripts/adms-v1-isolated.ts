@@ -1,6 +1,6 @@
 // ADMS contract v1 — Rikaz side acceptance tests on an ISOLATED throwaway Postgres (never the project database).
 // Usage: ADMS_TEST_DB_URL=postgres://postgres@127.0.0.1:55432/postgres [BRIDGE_SRC=/path/bridge/service] NODE_PATH=node_modules bun scripts/adms-v1-isolated.ts
-// Creates database adms_iso, loads scripts/adms/isolated-stubs.sql + supabase/pending/adms_v1.sql, runs the real receiver/sync code
+// Creates database adms_iso, loads scripts/adms/isolated-stubs.sql + supabase/vps-migrations/20261114190000_adms_contract_v1.sql, runs the real receiver/sync code
 // with synthetic keys. With BRIDGE_SRC, also runs the bridge's own Worker + signed read API against this receiver (loopback only).
 import { SQL } from "bun";
 import { readFileSync } from "node:fs";
@@ -20,7 +20,7 @@ await admin.close();
 u.pathname = "/adms_iso";
 const sql = new SQL(u.toString());
 await sql.unsafe(readFileSync("scripts/adms/isolated-stubs.sql", "utf8"));
-await sql.unsafe(readFileSync("supabase/pending/adms_v1.sql", "utf8"));
+await sql.unsafe(readFileSync("supabase/vps-migrations/20261114190000_adms_contract_v1.sql", "utf8"));
 
 let pass = 0, fail = 0;
 const check = (name: string, ok: boolean, info?: unknown) => { if (ok) pass++; else fail++; console.log(`${ok ? "✔" : "✘"} ${name}${ok || info === undefined ? "" : " → " + JSON.stringify(info)}`); };
@@ -222,6 +222,11 @@ if (process.env["BRIDGE_SRC"]) {
   server.stop(true);
 } else console.log("ℹ BRIDGE_SRC not set: joint bridge run skipped");
 
+const rawPage = await asUser<{ total: number; rows: { device_pin: string; receipt_id: string }[] }>(owner, "select adms_events_list($1,null,0,1) v", RA);
+check("raw arrivals: owner reads one paged durable receipt independently of processing", rawPage.ok && rawPage.v.total > 1 && rawPage.v.rows.length === 1 && rawPage.v.rows[0]!.receipt_id.startsWith("rz1-"), rawPage);
+check("raw arrivals: other organization owner is refused", !(await asUser(ownerB, "select adms_events_list($1) v", RA)).ok);
+check("raw arrivals: unprivileged person is refused", !(await asUser(outsider, "select adms_events_list($1) v", RA)).ok);
+check("raw arrivals: unbounded page is refused", !(await asUser(owner, "select adms_events_list($1,null,0,10000) v", RA)).ok);
 console.log(`\n${pass} passed, ${fail} failed`);
 await sql.close();
 process.exit(fail ? 1 : 0);

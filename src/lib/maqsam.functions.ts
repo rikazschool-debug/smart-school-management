@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { maqsamCutoff, maqsamSince, currentMaqsamCalls } from "./maqsam-window";
 
 /**
  * Maqsam (call center) — server side only. The access key/secret are project secrets bound to the one organization that has a
@@ -7,19 +8,24 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * Sync pulls the call log (overlapping window, idempotent upsert by Maqsam call id) — calls are never placed from here.
  */
 const UUID = /^[0-9a-f-]{36}$/i;
+/** VPS-only setup capability; Lovable keeps its existing API and database contract. */
+export const mqPreparation = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(() => ({ manualNumbers: process.env["MAQSAM_NEW_ONLY"] === "true" }));
 /** The project Maqsam keys belong to this organization only (مجموعة المالكي التعليمية). */
 export const MAQSAM_ORG = "a9a4b7e2-ab44-4bcf-a1bf-ebce6489f074";
 
 async function mq(base: string, auth: string, path: string) {
   const res = await fetch(`https://api.${base}${path}`, { headers: { Authorization: auth } });
   const text = await res.text();
-  if (!res.ok) throw new Error(`Maqsam ${res.status}: ${text.slice(0, 160)}`);
+  if (!res.ok) throw new Error(`Maqsam HTTP ${res.status}`);
   const j = JSON.parse(text) as { result?: string; message?: unknown };
   if (j.result !== "success") throw new Error("Maqsam: استجابة غير متوقعة");
   return j.message as Record<string, unknown>[];
 }
 
 export async function runSync(orgId: string, force: boolean) {
+  const cutoff = maqsamCutoff(process.env);
   const { orgCreds } = await import("./maqsam-creds.server");
   const cr = await orgCreds(orgId);
   if (!cr) return { skipped: true, busy: false, fresh: false };
@@ -30,9 +36,10 @@ export async function runSync(orgId: string, force: boolean) {
   if (!st.ok) return { skipped: true, busy: !!st.busy, fresh: !!st.fresh };
   try {
     const agents = await mq(cr.base, cr.auth, "/v1/agents");
-    let total = 0;
+    let total = 0, heldHistorical = 0;
     for (let page = 1; page <= 30; page++) {
-      const calls = await mq(cr.base, cr.auth, `/v1/calls/page/${page}?start_time=${st.since}`);
+      const batch = await mq(cr.base, cr.auth, `/v1/calls/page/${page}?start_time=${maqsamSince(st.since, cutoff)}`);
+      const calls = currentMaqsamCalls(batch, cutoff); heldHistorical += batch.length - calls.length;
       if (calls.length) {
         const r = await supabaseAdmin.rpc("_mq_ingest" as never, { _org: orgId, _calls: calls, _agents: page === 1 ? agents : [] } as never);
         if (r.error) throw new Error("تعذّر حفظ المكالمات");
@@ -40,10 +47,10 @@ export async function runSync(orgId: string, force: boolean) {
       } else if (page === 1) {
         await supabaseAdmin.rpc("_mq_ingest" as never, { _org: orgId, _calls: [], _agents: agents } as never);
       }
-      if (calls.length < 100) break;
+      if (batch.length < 100) break;
     }
     await supabaseAdmin.rpc("_mq_sync_end" as never, { _org: orgId, _ok: true, _err: null, _n: total } as never);
-    return { skipped: false, count: total };
+    return { skipped: false, count: total, heldHistorical };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "خطأ";
     await supabaseAdmin.rpc("_mq_sync_end" as never, { _org: orgId, _ok: false, _err: msg, _n: 0 } as never);

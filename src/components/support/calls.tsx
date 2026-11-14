@@ -13,7 +13,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Pill, fmt } from "@/components/admin/shared";
 import { arabicError } from "@/lib/session";
 import { exportXlsx } from "@/lib/export";
-import { mqSaveCreds, mqSync, mqTest } from "@/lib/maqsam.functions";
+import { mqSaveCreds, mqSync, mqTest, mqPreparation } from "@/lib/maqsam.functions";
 import { PRIO, useCategories } from "@/components/support/support";
 import { MQ_LABEL, useMqCaps, mqSections, type MqCaps, type MqSection } from "@/components/support/calls-caps";
 export { MQ_LABEL, useMqCaps, mqSections, type MqCaps, type MqSection };
@@ -368,8 +368,13 @@ function LinkCard({ orgId, info }: { orgId: string; info: Row }) {
 function MqLinkedSettings({ orgId }: { orgId: string }) {
   const qc = useQueryClient();
   const sync = useServerFn(mqSync);
+  const preparation = useServerFn(mqPreparation);
+  const setup = useQuery({ queryKey: ["mq", "preparation", orgId], queryFn: () => preparation() });
   const q = useQuery({ queryKey: ["mq", "settings", orgId], queryFn: () => rpc("mq_settings", { _org: orgId }) as Promise<Row> });
   const [mic, setMic] = useState<string>("");
+  const [number, setNumber] = useState("");
+  const [numberSchool, setNumberSchool] = useState("");
+  const [numberBusy, setNumberBusy] = useState(false);
   const run = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); } catch (e) { toast.error(arabicError(e)); } finally { qc.invalidateQueries({ queryKey: ["mq"] }); qc.invalidateQueries({ queryKey: ["mq-caps", orgId] }); } };
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} />;
@@ -383,7 +388,7 @@ function MqLinkedSettings({ orgId }: { orgId: string }) {
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={() => run(() => sync({ data: { orgId, force: true } }), "تمت المزامنة")}><RefreshCw className="size-4" /> مزامنة الآن</Button>
         </div>
-        <p className="text-xs text-muted-foreground">تتم المزامنة تلقائيًا عند فتح شاشة المكالمات (مرة كل دقيقة على الأكثر) مع تداخل زمني لاستدراك أي انقطاع؛ تكرار السجل لا يضيف مكالمة.</p>
+        <p className="text-xs text-muted-foreground">{setup.data?.manualNumbers ? "تُحفظ المكالمات الجديدة منذ بدء الربط فقط؛ لا يُستورد تاريخ الحساب تلقائيًا. تكرار السجل لا يضيف مكالمة." : "تتم المزامنة تلقائيًا عند فتح شاشة المكالمات (مرة كل دقيقة على الأكثر) مع تداخل زمني لاستدراك أي انقطاع؛ تكرار السجل لا يضيف مكالمة."}</p>
       </section>
 
       <section className="space-y-2 rounded-xl border bg-card p-4 text-sm">
@@ -400,6 +405,16 @@ function MqLinkedSettings({ orgId }: { orgId: string }) {
 
       <section className="space-y-2 rounded-xl border bg-card p-4 text-sm">
         <h3 className="font-semibold">أرقام الخدمة ↔ الفروع</h3>
+        {setup.data?.manualNumbers && <form className="grid gap-2 sm:grid-cols-3" onSubmit={async (e) => {
+          e.preventDefault(); setNumberBusy(true);
+          try { await rpc("mq_number_register", { _org: orgId, _number: number.trim(), _school: numberSchool || null, _label: null }); setNumber(""); toast.success("حُفظ رقم الخدمة دون إجراء مكالمة"); qc.invalidateQueries({ queryKey: ["mq"] }); }
+          catch (error) { toast.error(arabicError(error)); } finally { setNumberBusy(false); }
+        }}>
+          <Input aria-label="رقم الخدمة الدولي" dir="ltr" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="رقم الخدمة الدولي المملوك للمؤسسة" required maxLength={16} />
+          <select aria-label="فرع رقم الخدمة الجديد" className={selectCls()} value={numberSchool} onChange={(e) => setNumberSchool(e.target.value)}><option value="">رقم مشترك — بلا فرع</option>{s.schools.map((x: Row) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
+          <Button size="sm" disabled={numberBusy || !number.trim()} type="submit">إضافة رقم خدمة</Button>
+          <p className="text-xs text-muted-foreground sm:col-span-3">أضف الرقم الفعلي من حساب مقسم. هذه الخطوة تسجله في ركاز فقط ولا تشتري رقمًا أو تغيّر توجيه المكالمات.</p>
+        </form>}
         {!s.numbers.length && <p className="text-muted-foreground">تظهر الأرقام بعد أول مزامنة.</p>}
         {s.numbers.map((n: Row) => (
           <div key={n.number} className="grid items-center gap-2 sm:grid-cols-3">

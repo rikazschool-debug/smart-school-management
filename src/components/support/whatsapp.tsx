@@ -13,6 +13,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { waMedia, waSend, waSync, waSyncAssign } from "@/lib/wa-inbox.functions";
 import { Composer, ContactCard } from "@/components/support/whatsapp-extras";
 import { ActionBar } from "@/components/support/whatsapp-actions";
+import { waInboxRuntime } from "@/lib/wati-inbox-status.functions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -25,74 +26,234 @@ export function WhatsAppInbox() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
   const [links, setLinks] = useState(false);
-  const sync = useServerFn(waSync); const syncAssign = useServerFn(waSyncAssign);
+  const sync = useServerFn(waSync);
+  const syncAssign = useServerFn(waSyncAssign);
   const qc = useQueryClient();
-  const me = useQuery({ queryKey: ["wa-me"], queryFn: async () => { const r = await supabase.rpc("wa_me" as never); if (r.error) throw r.error; return r.data as Row; }, refetchInterval: 30_000 });
-  const boxes: { k: string; l: string }[] = me.data ? [
-    ...(me.data.owner ? [{ k: "", l: "كل المحادثات" }] : []),
-    ...(me.data.owner || me.data.mine ? [{ k: "mine", l: "محادثاتي" }] : []),
-    ...(me.data.owner || me.data.branch ? [{ k: "branch", l: "محادثات الفرع" }] : []),
-    ...(me.data.owner ? [{ k: "unmapped", l: "أكواد غير مربوطة" }] : []),
-  ] : [];
+  const me = useQuery({
+    queryKey: ["wa-me"],
+    queryFn: async () => {
+      const r = await supabase.rpc("wa_me" as never);
+      if (r.error) throw r.error;
+      return r.data as Row;
+    },
+    refetchInterval: 30_000,
+  });
+  const runtimeFn = useServerFn(waInboxRuntime);
+  const runtime = useQuery({
+    queryKey: ["wa-runtime"],
+    enabled: !!me.data,
+    queryFn: () => runtimeFn(),
+  });
+  const boxes: { k: string; l: string }[] = me.data
+    ? [
+        ...(me.data.owner ? [{ k: "", l: "كل المحادثات" }] : []),
+        ...(me.data.owner || me.data.mine ? [{ k: "mine", l: "محادثاتي" }] : []),
+        ...(me.data.owner || me.data.branch ? [{ k: "branch", l: "محادثات الفرع" }] : []),
+        ...(me.data.owner ? [{ k: "unmapped", l: "أكواد غير مربوطة" }] : []),
+      ]
+    : [];
   const [box, setBox] = useState<string | null>(null);
   const b = box ?? boxes[0]?.k ?? "";
   const list = useQuery({
     queryKey: ["wa-convs", q, b],
-    enabled: !!me.data,
-    queryFn: async () => { const r = await supabase.rpc("wa_conversations_list" as never, { _q: q || null, _box: b || null } as never); if (r.error) throw r.error; return (r.data ?? []) as Row[]; },
+    enabled: !!me.data && runtime.data?.enabled === true,
+    queryFn: async () => {
+      const r = await supabase.rpc(
+        "wa_conversations_list" as never,
+        { _q: q || null, _box: b || null } as never,
+      );
+      if (r.error) throw r.error;
+      return (r.data ?? []) as Row[];
+    },
     refetchInterval: 30_000,
   });
   const [busy, setBusy] = useState(false);
-  const refreshAll = () => Promise.all([qc.invalidateQueries({ queryKey: ["wa-convs"] }), qc.invalidateQueries({ queryKey: ["wa-me"] })]);
+  const refreshAll = () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: ["wa-convs"] }),
+      qc.invalidateQueries({ queryKey: ["wa-me"] }),
+    ]);
   const pull = async (force = false) => {
     setBusy(true);
-    try { await sync({ data: {} }); await syncAssign({ data: { force } }); await refreshAll(); }
-    catch (e) { toast.error((e as Error).message); await refreshAll(); } finally { setBusy(false); }
+    try {
+      await sync({ data: {} });
+      await syncAssign({ data: { force } });
+      await refreshAll();
+    } catch (e) {
+      toast.error((e as Error).message);
+      await refreshAll();
+    } finally {
+      setBusy(false);
+    }
   };
-  useEffect(() => { void pull(); const t = setInterval(() => { void syncAssign({ data: {} }).then(refreshAll).catch(() => void refreshAll()); }, 60_000); return () => clearInterval(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!runtime.data?.enabled) return;
+    void pull();
+    const t = setInterval(() => {
+      void syncAssign({ data: {} })
+        .then(refreshAll)
+        .catch(() => void refreshAll());
+    }, 60_000);
+    return () => clearInterval(t);
+  }, [runtime.data?.enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (me.isLoading) return <LoadingState />;
   if (me.error) return <ErrorState message="لا تملك صلاحية محادثات واتساب" />;
-  if (links) return <WaLinks onBack={() => { setLinks(false); void refreshAll(); }} />;
+  if (runtime.isLoading) return <LoadingState />;
+  if (runtime.error)
+    return (
+      <ErrorState
+        message="تعذّر التحقق من إعداد صندوق واتساب"
+        onRetry={() => void runtime.refetch()}
+      />
+    );
+  if (!runtime.data?.enabled)
+    return (
+      <EmptyState
+        title="المحادثات الحقيقية مخصصة لنسخة الإنتاج"
+        hint="رموز الدخول ورسائل اختبار هذه البيئة مستقلة. لم تُسحب محادثات أو سجلات تاريخية."
+      />
+    );
+  if (links)
+    return (
+      <WaLinks
+        onBack={() => {
+          setLinks(false);
+          void refreshAll();
+        }}
+      />
+    );
   return (
     <div className="space-y-2">
+      {!runtime.data.history && (
+        <p className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+          يُعرض الوارد الجديد منذ {when(runtime.data.notBefore)} فقط. السجلات السابقة محفوظة ولا
+          تُستورد أو تُعاد معالجتها تلقائيًا.
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div role="tablist" className="flex flex-wrap gap-1">
           {boxes.map((x) => (
-            <button key={x.k} role="tab" aria-selected={b === x.k} onClick={() => { setBox(x.k); setOpen(null); }}
-              className={`rounded-full border px-3 py-1 text-sm ${b === x.k ? "border-primary bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:text-foreground"}`}>{x.l}</button>
+            <button
+              key={x.k}
+              role="tab"
+              aria-selected={b === x.k}
+              onClick={() => {
+                setBox(x.k);
+                setOpen(null);
+              }}
+              className={`rounded-full border px-3 py-1 text-sm ${b === x.k ? "border-primary bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {x.l}
+            </button>
           ))}
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>آخر مزامنة للإسناد من WATI: {me.data.synced_at ? when(me.data.synced_at) : "لم تتم بعد"}</span>
-          {me.data.sync_error && <span className="text-destructive">({/abort|timeout/i.test(String(me.data.sync_error)) ? "تأخر رد WATI في آخر محاولة، وستُعاد المزامنة تلقائيًا" : String(me.data.sync_error).slice(0, 60)})</span>}
-          {me.data.owner && <Button size="sm" variant="outline" onClick={() => setLinks(true)}><Link2 className="size-4" /> ربط موظفي وفرق واتساب</Button>}
+          <span>
+            آخر مزامنة للإسناد من WATI: {me.data.synced_at ? when(me.data.synced_at) : "لم تتم بعد"}
+          </span>
+          {me.data.sync_error && (
+            <span className="text-destructive">
+              (
+              {/abort|timeout/i.test(String(me.data.sync_error))
+                ? "تأخر رد WATI في آخر محاولة، وستُعاد المزامنة تلقائيًا"
+                : String(me.data.sync_error).slice(0, 60)}
+              )
+            </span>
+          )}
+          {me.data.owner && (
+            <Button size="sm" variant="outline" onClick={() => setLinks(true)}>
+              <Link2 className="size-4" /> ربط موظفي وفرق واتساب
+            </Button>
+          )}
         </div>
       </div>
       <div className="grid min-w-0 gap-3 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div className="rounded-lg border bg-card">
           <div className="flex items-center gap-2 border-b p-2">
-            <div className="relative flex-1"><Search className="absolute right-2 top-2.5 size-4 text-muted-foreground" /><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم أو الرقم" className="pr-8" /></div>
-            <Button size="icon" variant="outline" onClick={() => pull(true)} disabled={busy} aria-label="تحديث من WATI"><RefreshCw className={`size-4 ${busy ? "animate-spin" : ""}`} /></Button>
+            <div className="relative flex-1">
+              <Search className="absolute right-2 top-2.5 size-4 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="بحث بالاسم أو الرقم"
+                className="pr-8"
+              />
+            </div>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => pull(true)}
+              disabled={busy}
+              aria-label="تحديث من WATI"
+            >
+              <RefreshCw className={`size-4 ${busy ? "animate-spin" : ""}`} />
+            </Button>
           </div>
-          {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message="تعذّر تحميل المحادثات" onRetry={() => void list.refetch()} /> : !list.data?.length ? <EmptyState title="لا توجد محادثات هنا" /> : (
+          {list.isLoading ? (
+            <LoadingState />
+          ) : list.error ? (
+            <ErrorState message="تعذّر تحميل المحادثات" onRetry={() => void list.refetch()} />
+          ) : !list.data?.length ? (
+            <EmptyState title="لا توجد محادثات هنا" />
+          ) : (
             <ul className="max-h-[70vh] divide-y overflow-y-auto">
               {list.data.map((c) => (
                 <li key={c.id}>
-                  <button onClick={() => setOpen(c.id)} className={`w-full p-3 text-right hover:bg-muted ${open === c.id ? "bg-muted" : ""}`}>
+                  <button
+                    onClick={() => setOpen(c.id)}
+                    className={`w-full p-3 text-right hover:bg-muted ${open === c.id ? "bg-muted" : ""}`}
+                  >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="truncate font-medium">{c.contact_name || c.wa_id || "بدون اسم"}</span>
-                      {c.unread > 0 && <span className="rounded-full bg-primary px-2 text-xs text-primary-foreground">{c.unread}</span>}
+                      <span className="truncate font-medium">
+                        {c.contact_name || c.wa_id || "بدون اسم"}
+                      </span>
+                      {c.unread > 0 && (
+                        <span className="rounded-full bg-primary px-2 text-xs text-primary-foreground">
+                          {c.unread}
+                        </span>
+                      )}
                     </div>
-                    <div className="truncate text-xs text-muted-foreground">{c.last_text ?? ""}</div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {c.last_text ?? ""}
+                    </div>
                     <div className="flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
                       <span>{when(c.last_at)}</span>
-                      {c.mine && <span className="rounded bg-primary/10 px-1 text-primary">مسندة إليّ</span>}
-                      {!c.mine && c.assignee_name && <span className="rounded bg-muted px-1">{c.assignee_name}</span>}
-                      {(c.branches ?? []).map((n: string) => <span key={n} className="rounded bg-muted px-1">{n}</span>)}
-                      {c.bot_branch && <span className="rounded bg-accent px-1 text-accent-foreground" title="اختيار العميل في البوت — لا يمنح صلاحية">اختار: {c.bot_branch}</span>}
-                      {c.unmapped_op && <span className="rounded bg-destructive/10 px-1 text-destructive" title={`كود موظف WATI ${c.assignee_code ?? ""} غير مربوط بحساب في ركاز`}>موظف WATI غير مربوط</span>}
-                      {c.unmapped_team && <span className="rounded bg-destructive/10 px-1 text-destructive" title="أحد فرق WATI لهذه المحادثة غير مربوط بفرع">فريق WATI غير مربوط</span>}
+                      {c.mine && (
+                        <span className="rounded bg-primary/10 px-1 text-primary">مسندة إليّ</span>
+                      )}
+                      {!c.mine && c.assignee_name && (
+                        <span className="rounded bg-muted px-1">{c.assignee_name}</span>
+                      )}
+                      {(c.branches ?? []).map((n: string) => (
+                        <span key={n} className="rounded bg-muted px-1">
+                          {n}
+                        </span>
+                      ))}
+                      {c.bot_branch && (
+                        <span
+                          className="rounded bg-accent px-1 text-accent-foreground"
+                          title="اختيار العميل في البوت — لا يمنح صلاحية"
+                        >
+                          اختار: {c.bot_branch}
+                        </span>
+                      )}
+                      {c.unmapped_op && (
+                        <span
+                          className="rounded bg-destructive/10 px-1 text-destructive"
+                          title={`كود موظف WATI ${c.assignee_code ?? ""} غير مربوط بحساب في ركاز`}
+                        >
+                          موظف WATI غير مربوط
+                        </span>
+                      )}
+                      {c.unmapped_team && (
+                        <span
+                          className="rounded bg-destructive/10 px-1 text-destructive"
+                          title="أحد فرق WATI لهذه المحادثة غير مربوط بفرع"
+                        >
+                          فريق WATI غير مربوط
+                        </span>
+                      )}
                     </div>
                   </button>
                 </li>
@@ -100,7 +261,13 @@ export function WhatsAppInbox() {
             </ul>
           )}
         </div>
-        {open ? <Thread key={open} id={open} owner={!!me.data.owner} /> : <div className="rounded-lg border bg-card p-8"><EmptyState title="اختر محادثة" /></div>}
+        {open ? (
+          <Thread key={open} id={open} owner={!!me.data.owner} />
+        ) : (
+          <div className="rounded-lg border bg-card p-8">
+            <EmptyState title="اختر محادثة" />
+          </div>
+        )}
       </div>
     </div>
   );

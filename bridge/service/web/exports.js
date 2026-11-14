@@ -1,0 +1,39 @@
+'use strict';
+// Uses the same typed SheetJS cells and browser-shaped Cairo/RTL PDF approach
+// as Rikaz's src/lib/export.ts. Assets are pinned and served locally, never CDN at runtime.
+(()=>{
+ const scripts=new Map();
+ function load(name){if(scripts.has(name))return scripts.get(name);const promise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='/assets/vendor/'+name;s.onload=resolve;s.onerror=()=>{scripts.delete(name);s.remove();reject(Error('تعذّر تحميل أداة التصدير المحلية. أعد المحاولة.'));};document.head.append(s);});scripts.set(name,promise);return promise;}
+ const escape=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const date=report=>new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{timeZone:'Asia/Riyadh',dateStyle:'medium',timeStyle:'short'}).format(new Date(report.generated_at));
+ const filename=(report,ext)=>'ركاز-'+report.title.replace(/[\\/:*?"<>|]/g,'-')+'-'+new Date(Date.parse(report.generated_at)+10800000).toISOString().slice(0,10)+'.'+ext;
+ function download(data,name,mime){const url=URL.createObjectURL(new Blob([data],{type:mime})),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+ function workbook(report){const XLSX=window.XLSX,book=XLSX.utils.book_new();book.Workbook={Views:[{RTL:true}]};book.Props={Title:report.title,Author:'ركاز — إدارة أجهزة الحضور',Company:report.brand,Subject:report.filters.join('، '),CreatedDate:new Date(report.generated_at)};const names=new Set();
+  for(const section of report.sections){let name=section.title.replace(/[\\/*?:[\]]/g,'').slice(0,27),suffix=1;while(names.has(name))name=section.title.slice(0,25)+' '+suffix++;names.add(name);const metadata=[['ركاز | '+report.brand],[section.title],['تاريخ الاستخراج — الرياض: '+date(report)],['الفلاتر: '+report.filters.join('، ')],['عدد السجلات: '+section.rows.length],[report.date_basis],[],section.columns],all=[...metadata,...section.rows],sheet={};
+   const widths=section.columns.map(h=>Math.max(13,h.length+3));for(const [r,row]of all.entries())for(const [c,v]of row.entries()){const n=typeof v==='number'&&Number.isFinite(v);sheet[XLSX.utils.encode_cell({r,c})]={t:n?'n':'s',v:n?v:String(v??''),...(n?{z:'0'}:{})};if(r>=8)widths[c]=Math.min(48,Math.max(widths[c]||13,String(v??'').length+2));}
+   sheet['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:all.length-1,c:Math.max(0,section.columns.length-1)}});sheet['!cols']=widths.map(wch=>({wch}));sheet['!rows']=metadata.map((_,i)=>({hpt:i===0?26:i===5?38:21}));sheet['!merges']=metadata.slice(0,6).map((_,r)=>({s:{r,c:0},e:{r,c:section.columns.length-1}}));if(section.rows.length)sheet['!autofilter']={ref:XLSX.utils.encode_range({s:{r:7,c:0},e:{r:all.length-1,c:section.columns.length-1}})};XLSX.utils.book_append_sheet(book,sheet,name);
+  }return book;
+ }
+ const cell=x=>'<bdi dir="'+(/^[0-9A-Za-z]/.test(String(x??''))?'ltr':'auto')+'">'+escape(x)+'</bdi>';
+ function header(report,section){return '<div class="export-letterhead"><div><div class="export-brand-name">'+escape(report.brand)+'</div><div class="export-origin">مركز إدارة الحضور · تقرير إداري</div></div><div class="export-wordmark">ركاز</div></div><h1 class="export-title">'+escape(section.title)+'</h1><div class="export-meta">تاريخ الاستخراج — الرياض: '+escape(date(report))+' · عدد السجلات: '+section.rows.length+'</div><div class="export-meta">'+escape(report.filters.join(' · '))+'</div><div class="export-meta">'+escape(report.date_basis)+'</div>';}
+ function tableHead(section){return '<thead><tr>'+section.columns.map(c=>'<th scope="col">'+escape(c)+'</th>').join('')+'</tr></thead>';}
+ const rowHTML=row=>'<tr>'+row.map(v=>'<td>'+cell(v)+'</td>').join('')+'</tr>';
+ function pageHTML(report,section,rows,page,total){return header(report,section)+'<table>'+tableHead(section)+'<tbody>'+(rows.length?rows.map(rowHTML).join(''):'<tr><td colspan="'+section.columns.length+'" class="export-empty">لا توجد سجلات مطابقة للفلاتر المحددة</td></tr>')+'</tbody></table><div class="export-footer"><span>ركاز · تقرير إداري لا يعتمد حضورًا أو رواتب</span><span>صفحة '+page+' من '+total+'</span></div>';}
+ async function pdf(report,progress){
+  const count=report.sections.reduce((n,s)=>n+s.rows.length,0);if(count>5000)throw Error('ملف PDF يتجاوز 5000 صف. ضيّق الفترة أو استخدم Excel لكامل البيانات.');
+  await Promise.all([load('jspdf.umd.min.js'),load('html-to-image.js')]);await Promise.all([document.fonts.load('400 12px Cairo','العربية'),document.fonts.load('700 18px Cairo','العربية')]);await document.fonts.ready;
+  const host=document.createElement('div');host.className='export-host';host.setAttribute('aria-hidden','true');document.body.append(host);const pages=[];
+  function mount(section,rows,page,total){const node=document.createElement('div');node.className='export-page';node.innerHTML=pageHTML(report,section,rows,page,total);host.replaceChildren(node);return node;}
+  try{for(const section of report.sections){const node=mount(section,section.rows,1,1),table=node.querySelector('table'),top=table.offsetTop+node.querySelector('thead').offsetHeight,available=794-66-top,heights=[...node.querySelectorAll('tbody tr')].map(r=>r.offsetHeight);let rows=[],used=0;
+    if(!section.rows.length){pages.push({section,rows:[]});continue;}for(let i=0;i<section.rows.length;i++){if(heights[i]>available)throw Error('يوجد سجل طويل لا يتسع لصفحة التقرير. استخدم Excel لحفظه كاملًا.');if(rows.length&&used+heights[i]>available){pages.push({section,rows});rows=[];used=0;}rows.push(section.rows[i]);used+=heights[i];}if(rows.length)pages.push({section,rows});}
+   const doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'px',format:[1123,794],hotfixes:['px_scaling'],compress:true});doc.setProperties({title:report.title,author:'ركاز — '+report.brand,subject:report.filters.join('، ')});
+   // Explicit local fonts avoid stylesheet scanners adding a <base> element;
+   // the administration site's strict base-uri 'none' remains in place.
+   const fontCSS=(await Promise.all([['cairo-regular.ttf','400 600'],['cairo-bold.ttf','700 900']].map(async([file,weight])=>{const response=await fetch('/assets/vendor/'+file,{credentials:'same-origin'});if(!response.ok)throw Error('تعذر تحميل الخط العربي المحلي للتقرير.');const blob=await response.blob(),url=await new Promise((ok,no)=>{const reader=new FileReader();reader.onload=()=>ok(reader.result);reader.onerror=no;reader.readAsDataURL(blob);});return '@font-face{font-family:Cairo;font-style:normal;font-weight:'+weight+';src:url("'+url+'") format("truetype");}';}))).join('\n');
+   for(let p=0;p<pages.length;p++){progress('إنشاء صفحة '+(p+1)+' من '+pages.length+'…');const {section,rows}=pages[p],node=mount(section,rows,p+1,pages.length);const image=await window.htmlToImage.toJpeg(node,{width:1123,height:794,pixelRatio:2,quality:.94,backgroundColor:'#ffffff',fontEmbedCSS:fontCSS});if(p)doc.addPage([1123,794],'landscape');doc.addImage(image,'JPEG',0,0,1123,794,undefined,'FAST');}
+   download(doc.output('arraybuffer'),filename(report,'pdf'),'application/pdf');return {pages:pages.length};
+  }finally{host.remove();}
+ }
+ async function run(format,report,progress=()=>{}){if(!report.sections.length)throw Error('لا يوجد قسم متاح للتصدير.');if(format==='xlsx'){progress('إعداد ملف Excel لجميع الصفوف المطابقة…');await load('xlsx.full.min.js');const data=window.XLSX.write(workbook(report),{bookType:'xlsx',type:'array',compression:true,cellStyles:true});download(data,filename(report,'xlsx'),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');return {sheets:report.sections.length};}if(format==='pdf')return pdf(report,progress);throw Error('صيغة غير مدعومة.');}
+ window.BridgeExport={run,workbook};
+})();

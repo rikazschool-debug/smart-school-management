@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh Rikaz ADMS registry every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+RandomizedDelaySec=20
+Persistent=false
+Unit=adms-registry-sync.service
+
+[Install]
+WantedBy=timers.target

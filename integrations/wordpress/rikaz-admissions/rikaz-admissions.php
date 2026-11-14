@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ركاز — مزامنة طلبات التسجيل
  * Description: يرسل طلبات التسجيل المحفوظة (almalki_registration) إلى قسم «القبول والتسجيل» في ركاز بتوقيع سري، مع قائمة انتظار وإعادة محاولة ومنع التكرار. لا يغيّر النموذج أو البريد أو فتح واتساب.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Requires at least: 5.6
  * Requires PHP: 7.4
  * Text Domain: rikaz-admissions
@@ -18,7 +18,13 @@ define( 'RIKAZ_ADM_MAX', 12 );
 /* ---------- settings ---------- */
 function rikaz_adm_settings() {
 	$s = get_option( RIKAZ_ADM_OPT, array() );
-	return wp_parse_args( is_array( $s ) ? $s : array(), array( 'endpoint' => '', 'source' => '', 'secret' => '', 'activated_at' => 0, 'year' => '' ) );
+	return wp_parse_args( is_array( $s ) ? $s : array(), array( 'endpoint' => '', 'source' => '', 'secret' => '', 'activated_at' => 0, 'year' => '', 'enabled' => false, 'not_before' => 0, 'last_tick' => 0 ) );
+}
+
+function rikaz_adm_current( $post_id, $settings ) {
+	$p = get_post( $post_id );
+	return $p && $p->post_type === RIKAZ_ADM_PT && (int) $settings['not_before'] > 0
+		&& strtotime( $p->post_date_gmt . ' UTC' ) >= (int) $settings['not_before'];
 }
 
 register_activation_hook( __FILE__, function () {
@@ -40,7 +46,7 @@ add_filter( 'cron_schedules', function ( $s ) {
 add_action( 'wp_after_insert_post', function ( $post_id, $post, $update ) {
 	if ( $update || ! $post || $post->post_type !== RIKAZ_ADM_PT || $post->post_status !== 'publish' ) { return; }
 	$s = rikaz_adm_settings();
-	if ( empty( $s['activated_at'] ) || strtotime( $post->post_date_gmt . ' UTC' ) < (int) $s['activated_at'] - 5 ) { return; }
+	if ( empty( $s['enabled'] ) || ! rikaz_adm_current( $post_id, $s ) ) { return; }
 	rikaz_adm_enqueue( $post_id );
 	// Try once at the end of this request without delaying the visitor's WhatsApp redirect noticeably.
 	add_action( 'shutdown', function () use ( $post_id ) { rikaz_adm_send( $post_id ); } );
@@ -77,8 +83,13 @@ function rikaz_adm_sign( $secret, $ts, $nonce, $body ) {
 /** Sends one queued post. Success is recorded only when Rikaz answers ok with a reference. */
 function rikaz_adm_send( $post_id ) {
 	$s = rikaz_adm_settings();
+	if ( empty( $s['enabled'] ) ) { return; }
 	$status = get_post_meta( $post_id, '_rikaz_status', true );
 	if ( $status === 'success' || $status === '' ) { return; }
+	if ( ! rikaz_adm_current( $post_id, $s ) && ! get_post_meta( $post_id, '_rikaz_history_approved', true ) ) {
+		update_post_meta( $post_id, '_rikaz_status', 'held' );
+		update_post_meta( $post_id, '_rikaz_error', 'طلب سابق لحد التشغيل — محفوظ للمراجعة دون إرسال' ); return;
+	}
 	if ( ! $s['endpoint'] || ! $s['source'] || ! $s['secret'] ) { rikaz_adm_fail( $post_id, 'الإعدادات غير مكتملة', false ); return; }
 	$lock = 'rikaz_adm_lock_' . $post_id;
 	if ( get_transient( $lock ) ) { return; }
@@ -88,7 +99,7 @@ function rikaz_adm_send( $post_id ) {
 	$body  = wp_json_encode( $p, JSON_UNESCAPED_UNICODE );
 	$ts    = (string) time();
 	$nonce = wp_generate_uuid4();
-	$res = wp_remote_post( $s['endpoint'], array(
+	$res = wp_safe_remote_post( $s['endpoint'], array(
 		'timeout' => 8,
 		'headers' => array(
 			'Content-Type'      => 'application/json; charset=utf-8',
@@ -130,6 +141,8 @@ function rikaz_adm_fail( $post_id, $why, $retry ) {
 }
 
 add_action( RIKAZ_ADM_CRON, function () {
+	$s = rikaz_adm_settings(); if ( empty( $s['enabled'] ) ) { return; }
+	$s['last_tick'] = time(); update_option( RIKAZ_ADM_OPT, $s, false );
 	$q = get_posts( array( 'post_type' => RIKAZ_ADM_PT, 'post_status' => 'any', 'posts_per_page' => 20, 'fields' => 'ids', 'orderby' => 'date', 'order' => 'ASC',
 		'meta_query' => array( 'relation' => 'AND', array( 'key' => '_rikaz_status', 'value' => 'pending' ), array( 'key' => '_rikaz_next', 'value' => time(), 'compare' => '<=', 'type' => 'NUMERIC' ) ) ) );
 	foreach ( $q as $id ) { rikaz_adm_send( $id ); }
@@ -144,12 +157,21 @@ add_action( 'admin_post_rikaz_adm_save', function () {
 	if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'غير مصرح' ); }
 	check_admin_referer( 'rikaz_adm_save' );
 	$s = rikaz_adm_settings();
+	$was_enabled = ! empty( $s['enabled'] );
 	$s['endpoint'] = esc_url_raw( wp_unslash( $_POST['endpoint'] ?? '' ), array( 'https' ) );
 	$src = sanitize_text_field( wp_unslash( $_POST['source'] ?? '' ) );
 	if ( preg_match( '/^[0-9a-f-]{36}$/i', $src ) ) { $s['source'] = $src; }
 	$sec = trim( (string) wp_unslash( $_POST['secret'] ?? '' ) );
 	$s['year'] = sanitize_text_field( wp_unslash( $_POST['year'] ?? '' ) );
 	if ( $sec !== '' && preg_match( '/^[0-9a-f]{64}$/', $sec ) ) { $s['secret'] = $sec; } // empty field keeps the saved key
+	$enabled = ! empty( $_POST['enabled'] );
+	$target = wp_parse_url( $s['endpoint'] );
+	if ( $enabled && ( empty( $s['source'] ) || empty( $s['secret'] ) || ! $target || ( $target['scheme'] ?? '' ) !== 'https'
+		|| ( $target['path'] ?? '' ) !== '/api/public/admissions/wordpress' || ! empty( $target['query'] ) || ! empty( $target['user'] ) || ! empty( $target['fragment'] ) ) ) {
+		wp_die( 'أكمل وجهة HTTPS ومعرّف المصدر والمفتاح قبل التفعيل.' );
+	}
+	$s['enabled'] = $enabled;
+	if ( $enabled && ! $was_enabled ) { $s['not_before'] = time(); }
 	update_option( RIKAZ_ADM_OPT, $s, false );
 	wp_safe_redirect( admin_url( 'options-general.php?page=rikaz-admissions&saved=1' ) ); exit;
 } );
@@ -158,8 +180,11 @@ add_action( 'admin_post_rikaz_adm_retry', function () {
 	if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'غير مصرح' ); }
 	check_admin_referer( 'rikaz_adm_retry' );
 	$ids = array_map( 'absint', (array) ( $_POST['ids'] ?? array() ) );
+	$history = ! empty( $_POST['history'] );
+	if ( $history && empty( $_POST['confirm_history'] ) ) { wp_die( 'يلزم اعتماد صريح للطلبات التاريخية المختارة.' ); }
 	foreach ( $ids as $id ) {
 		if ( get_post_type( $id ) !== RIKAZ_ADM_PT ) { continue; }
+		if ( $history ) { update_post_meta( $id, '_rikaz_history_approved', time() ); }
 		update_post_meta( $id, '_rikaz_attempts', 0 );
 		rikaz_adm_enqueue( $id );
 		rikaz_adm_send( $id );
@@ -171,8 +196,9 @@ function rikaz_adm_page() {
 	if ( ! current_user_can( 'manage_options' ) ) { return; }
 	$s = rikaz_adm_settings();
 	$tab = isset( $_GET['tab'] ) && $_GET['tab'] === 'history' ? 'history' : 'main';
-	$labels = array( 'pending' => 'معلّق', 'success' => 'نجح', 'failed' => 'فشل' );
+	$labels = array( 'pending' => 'معلّق', 'success' => 'نجح', 'failed' => 'فشل', 'held' => 'محفوظ للمراجعة' );
 	echo '<div class="wrap" dir="rtl"><h1>ربط طلبات التسجيل مع ركاز</h1>';
+	echo '<p>التسليم: <strong>' . ( ! empty( $s['enabled'] ) ? 'مفعّل للجديد فقط' : 'متوقف — حفظ نموذج الموقع لا يتأثر' ) . '</strong> · آخر نبضة: ' . esc_html( $s['last_tick'] ? wp_date( 'Y-m-d H:i', (int) $s['last_tick'] ) : 'لم تثبت بعد' ) . '</p>';
 	if ( isset( $_GET['saved'] ) ) { echo '<div class="notice notice-success"><p>حُفظت الإعدادات.</p></div>'; }
 	if ( isset( $_GET['retried'] ) ) { echo '<div class="notice notice-info"><p>أُعيدت محاولة ' . (int) $_GET['retried'] . ' طلب.</p></div>'; }
 	echo '<h2 class="nav-tab-wrapper"><a class="nav-tab ' . ( $tab === 'main' ? 'nav-tab-active' : '' ) . '" href="' . esc_url( admin_url( 'options-general.php?page=rikaz-admissions' ) ) . '">الإعدادات والحالة</a>';
@@ -185,6 +211,7 @@ function rikaz_adm_page() {
 		echo '<tr><th>معرّف الربط</th><td><input class="regular-text ltr" dir="ltr" name="source" value="' . esc_attr( $s['source'] ) . '"></td></tr>';
 		echo '<tr><th>المفتاح السري</th><td><input type="password" autocomplete="new-password" class="regular-text ltr" dir="ltr" name="secret" value="" placeholder="' . ( $s['secret'] ? esc_attr( '•••• ' . substr( $s['secret'], -4 ) . ' (محفوظ — اتركه فارغًا للإبقاء)' ) : 'الصقه من ركاز' ) . '"></td></tr>';
 		echo '<tr><th>عام التقديم</th><td><input class="regular-text" name="year" value="' . esc_attr( $s['year'] ) . '" placeholder="مثال 1448"><p class="description">يُستخدم في القالب المعدّل لمنع التكرار داخل العام نفسه فقط.</p></td></tr></table>';
+		echo '<p><label><input type="checkbox" name="enabled" value="1" ' . checked( ! empty( $s['enabled'] ), true, false ) . '> تفعيل إرسال الطلبات الجديدة فقط من وقت الاعتماد. لا تُرسل الطلبات القديمة أو تُغيّر الصفحة والبريد الحاليان.</label></p>';
 		submit_button( 'حفظ' );
 		echo '</form><h2>آخر الطلبات المرسلة</h2>';
 		$q = get_posts( array( 'post_type' => RIKAZ_ADM_PT, 'post_status' => 'any', 'posts_per_page' => 50, 'meta_key' => '_rikaz_status' ) );
@@ -209,6 +236,7 @@ function rikaz_adm_page() {
 			echo '<tr><td><input type="checkbox" name="ids[]" value="' . (int) $p->ID . '"></td><td>#' . (int) $p->ID . '</td><td>' . esc_html( get_post_meta( $p->ID, 'reg_student_name', true ) ) . '</td><td>' . esc_html( get_post_meta( $p->ID, 'reg_school', true ) ) . '</td><td>' . esc_html( get_post_meta( $p->ID, 'reg_date', true ) ) . '</td></tr>';
 		}
 		echo '</tbody></table>';
+		echo '<p><label><input type="checkbox" name="confirm_history" value="1" required> راجعت الطلبات القديمة المحددة وأوافق على إرسالها صراحة؛ لا يوجد إرسال جماعي تلقائي.</label></p>';
 		submit_button( 'إرسال المحدد إلى ركاز', 'secondary' );
 		echo '</form>';
 	}

@@ -1,7 +1,7 @@
 """Replay reviewed SQL in same-image, network-none PostgreSQL. Never targets production."""
 from __future__ import annotations
 import argparse,hashlib,json,pathlib,subprocess,time,uuid,os
-from policy import ReleaseError,canonical,digest,make_manifest,read_sql,history_key,sql_analysis
+from policy import ReleaseError,canonical,digest,make_manifest,read_sql,history_key,sql_analysis,target_migrations
 from database import Database
 
 IMAGE='supabase/postgres@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00'
@@ -64,7 +64,7 @@ def bootstrap(sandbox,root):
     # No production roles/passwords or application data are loaded. Role attributes reproduce
     # the reviewed empty installation only; all listeners and outgoing networks stay disabled.
 
-def replay(root,manifest,target='vps',output=None):
+def replay(root,manifest,target='vps',output=None,applied_versions=None,integration_acceptance=False):
     base=json.loads((root/'infrastructure/vps-app/baseline/manifest.json').read_text());states={};versions=[]
     extra=base['vps_only']if target=='vps'else[]
     optional=base.get('optional_vps_only',[])if target=='vps'else[]
@@ -72,7 +72,12 @@ def replay(root,manifest,target='vps',output=None):
     # Bootstrap exceptions have their own approved chronology. Apply the known optional
     # overlay before new shared releases, even if its reserved timestamp is later.
     historical_stream=sorted([x for x in manifest['migrations']if x['version']in common_versions]+extra,key=lambda x:x['version'])
-    stream=historical_stream+sorted(optional,key=lambda x:x['version'])+sorted([x for x in manifest['migrations']if x['version']not in common_versions],key=lambda x:x['version'])
+    additions=[x for x in target_migrations(manifest,target)if x['version']not in common_versions]
+    if applied_versions is None:additions.sort(key=lambda x:x['version'])
+    else:
+        applied=set(applied_versions)
+        additions.sort(key=lambda x:(x['version']not in applied,x['version']))
+    stream=historical_stream+sorted(optional,key=lambda x:x['version'])+additions
     historical={x['version']:x for x in base['common_migrations']}
     baseline_versions=common_versions|{x['version']for x in extra}
     with Sandbox(root)as sandbox:
@@ -114,18 +119,22 @@ def replay(root,manifest,target='vps',output=None):
             versions.append(item['version']);versions.sort()
             if baseline_versions.issubset(versions):
                 states[history_key(versions)]={'versions':list(versions),'catalog':db.catalog(root)}
+        acceptance=None
+        if integration_acceptance:
+            if target!='vps' or not sandbox.name.startswith('rk-release-qa-'):raise ReleaseError('integration_acceptance_requires_isolated_vps')
+            acceptance=db.json((root/'infrastructure/vps-app/release/integration-acceptance.sql').read_text(),readonly=False)
         counts=db.json("SELECT jsonb_build_object('users',(SELECT count(*)FROM auth.users),'schools',(SELECT count(*)FROM schools),'accounts',(SELECT count(*)FROM acct_outbox),'events',(SELECT count(*)FROM evt_outbox),'cron',current_setting('cron.launch_active_jobs'))")
         if counts['users']or counts['schools']or counts['accounts']or counts['events']or counts['cron']!='off':
             raise ReleaseError('replay_contains_business_data_or_active_jobs')
-        proof={'passed':True,'target':target,'source_commit':manifest['commit'],'manifest_id':manifest['manifest_id'],'migrations_replayed':len(versions),'optional_bootstrap_tested_in_qa':len(optional),'states':states,'network':'none','public_ports':False,'real_provider_calls':False,'production_data_copied':False,'counts':counts}
+        proof={'passed':True,'target':target,'source_commit':manifest['commit'],'manifest_id':manifest['manifest_id'],'migrations_replayed':len(versions),'optional_bootstrap_tested_in_qa':len(optional),'states':states,'network':'none','public_ports':False,'real_provider_calls':False,'production_data_copied':False,'counts':counts,'integration_acceptance':acceptance}
     proof['temporary_container_removed']=True
     if output:output.write_text(canonical(proof))
     return proof
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--manifest',type=pathlib.Path,required=True);p.add_argument('--target',choices=['vps','cloud'],required=True);p.add_argument('--output',type=pathlib.Path,required=True);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--manifest',type=pathlib.Path,required=True);p.add_argument('--target',choices=['vps','cloud'],required=True);p.add_argument('--output',type=pathlib.Path,required=True);p.add_argument('--integration-acceptance',action='store_true');a=p.parse_args()
     try:
-        result=replay(a.root.resolve(),json.loads(a.manifest.read_text()),a.target,a.output)
+        result=replay(a.root.resolve(),json.loads(a.manifest.read_text()),a.target,a.output,integration_acceptance=a.integration_acceptance)
         print(canonical({k:v for k,v in result.items()if k!='states'}))
     except ReleaseError as e:
         print(canonical({'passed':False,'error':str(e),'production_touched':False}));raise SystemExit(1)

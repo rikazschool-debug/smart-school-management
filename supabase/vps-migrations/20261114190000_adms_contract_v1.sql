@@ -507,3 +507,23 @@ revoke all on function public.adms_can_sync(uuid), public.adms_overview(uuid), p
 grant execute on function public.adms_can_sync(uuid), public.adms_overview(uuid), public.adms_admin_site_save(uuid, uuid, text, boolean),
   public.adms_site_link(uuid, uuid, uuid), public.adms_device_legacy_link(uuid, uuid), public.adms_unmatched_list(uuid), public.adms_pins_list(uuid),
   public.adms_pin_link(uuid, text, uuid), public.adms_pin_unlink(uuid, text), public.adms_process_now(uuid, int), public.adms_processing_set(uuid, boolean) to authenticated;
+
+-- Raw delivery acceptance is visible independently of matching/attendance/payroll processing.
+CREATE FUNCTION public.adms_events_list(_org uuid,_device uuid DEFAULT NULL,_offset integer DEFAULT 0,_limit integer DEFAULT 30)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public AS $$
+DECLARE result jsonb; total bigint;
+BEGIN
+  IF NOT _adms_ok(_org) THEN RAISE EXCEPTION 'forbidden'; END IF;
+  IF _offset<0 OR _limit<1 OR _limit>100 THEN RAISE EXCEPTION 'invalid_page'; END IF;
+  SELECT count(*) INTO total FROM adms_events WHERE org_id=_org AND (_device IS NULL OR device_id=_device);
+  SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x.received_at DESC,x.event_id),'[]'::jsonb) INTO result FROM (
+    SELECT e.event_id,e.device_id,coalesce(d.name,'جهاز ينتظر المزامنة')device_name,e.device_pin,e.raw_device_time,
+      e.occurred_at,e.received_at,e.state,e.quality,e.receipt_id
+    FROM adms_events e LEFT JOIN adms_devices d ON d.id=e.device_id AND d.bridge_org_id=e.bridge_org_id
+    WHERE e.org_id=_org AND (_device IS NULL OR e.device_id=_device)
+    ORDER BY e.received_at DESC,e.event_id LIMIT _limit OFFSET _offset
+  )x;
+  RETURN jsonb_build_object('total',total,'rows',result,'processing_independent',true);
+END $$;
+REVOKE ALL ON FUNCTION public.adms_events_list(uuid,uuid,integer,integer) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.adms_events_list(uuid,uuid,integer,integer) TO authenticated;

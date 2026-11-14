@@ -35,6 +35,30 @@ class ReleasePolicyTests(unittest.TestCase):
     def test_safe_addition_is_pending(self):
         self.add('ALTER TABLE public.example ADD COLUMN note text;')
         m=self.manifest();self.assertFalse(m['risks']);self.assertEqual(m['additions'],['20260201000000'])
+    def add_vps(self,version='20260301000000'):
+        folder=self.root/'supabase/vps-migrations';folder.mkdir(exist_ok=True)
+        (folder/(version+'_vps_feature.sql')).write_text('CREATE TABLE public.vps_feature(id integer);')
+    def test_vps_addition_is_not_pending_or_required_on_cloud(self):
+        self.add_vps();m=self.manifest();history=[{'version':'20260101000000'}]
+        self.assertEqual(validate_history(m,self.base,history,'cloud'),[])
+        pending=validate_history(m,self.base,history+[{'version':'20260102000000'}],'vps')
+        self.assertEqual([x['scope']for x in pending],['vps'])
+        self.assertEqual(len(target_migrations(m,'cloud')),1)
+    def test_vps_applied_source_still_frozen(self):
+        self.add_vps();m=self.manifest()
+        history=[{'version':'20260101000000'},{'version':'20260102000000'},{'version':'20260301000000','source_md5':'changed'}]
+        with self.assertRaisesRegex(ReleaseError,'source_mismatch'):validate_history(m,self.base,history,'vps')
+    def test_cloud_rejects_a_vps_only_applied_row(self):
+        self.add_vps();m=self.manifest()
+        with self.assertRaisesRegex(ReleaseError,'foreign_migration'):validate_history(m,self.base,[{'version':'20260101000000'},{'version':'20260301000000'}],'cloud')
+    def test_duplicate_version_across_scopes_is_rejected(self):
+        self.add('SELECT 1;',version='20260301000000');self.add_vps()
+        with self.assertRaisesRegex(ReleaseError,'duplicate_migration'):self.manifest()
+    def test_shared_pending_before_a_vps_version_is_not_a_shared_hole(self):
+        self.add_vps();self.add('ALTER TABLE public.example ADD COLUMN note text;');m=self.manifest()
+        vps=next(x for x in m['migrations']if x.get('scope')=='vps')
+        history=[{'version':'20260101000000'},{'version':'20260102000000'},{'version':vps['version'],'source_md5':vps['source_md5']}]
+        self.assertEqual([x['version']for x in validate_history(m,self.base,history,'vps')],['20260201000000'])
     def test_drop_requires_explicit_risk_review(self):
         self.add('DROP TABLE public.example;');m=self.manifest()
         with self.assertRaisesRegex(ReleaseError,'risk_review'):require_approval(m,m['manifest_id'],'')

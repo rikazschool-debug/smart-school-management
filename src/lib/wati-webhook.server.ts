@@ -1,4 +1,5 @@
 import { safeEqual, watiStatus } from "./wati-otp";
+import { inboxPolicy, currentInboxMessage } from "./wati-inbox-policy";
 export async function handleWatiWebhook(request: Request) {
   const secret = process.env["WATI_WEBHOOK_SECRET"],
     key = new URL(request.url).searchParams.get("key") ?? "";
@@ -34,8 +35,7 @@ export async function handleWatiWebhook(request: Request) {
   }
   if (!ev || Array.isArray(ev) || typeof ev["eventType"] !== "string")
     return new Response("bad payload", { status: 400 });
-  const { supabaseAdmin: a } =
-    await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin: a } = await import("@/integrations/supabase/client.server");
   const local = String(ev["localMessageId"] ?? ""),
     status = watiStatus(ev);
   if (local.startsWith("rk-")) {
@@ -53,6 +53,13 @@ export async function handleWatiWebhook(request: Request) {
     if (updated.error) return new Response("retry", { status: 500 });
     if (updated.data === true) return new Response("ok", { status: 200 });
   }
+  const policy = inboxPolicy(process.env);
+  if (!policy.enabled) return new Response("ignored", { status: 200 });
+  const inbound = ["message", "message_bsuid", "newContactMessageReceived"].includes(
+    ev["eventType"],
+  );
+  if (inbound && (!currentInboxMessage(ev, policy) || !ev["conversationId"]))
+    return new Response("ignored", { status: 200 });
   // Delivery events enter the support inbox only if this database already owns the outgoing message.
   const delivery = /sent|delivered|read|failed/i.test(ev["eventType"]);
   if (delivery) {
@@ -76,19 +83,23 @@ export async function handleWatiWebhook(request: Request) {
   ]
     .map((x) => String(x ?? ""))
     .join("|");
-  const source =
-    ev["id"] || ev["whatsappMessageId"] ? basis : JSON.stringify(ev);
+  const source = ev["id"] || ev["whatsappMessageId"] ? basis : JSON.stringify(ev);
   const hash = Array.from(
-    new Uint8Array(
-      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source)),
-    ),
+    new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source))),
     (b) => b.toString(16).padStart(2, "0"),
   ).join("");
   const r = await a.rpc(
-    "_wa_ingest" as never,
-    { _key: hash, _type: ev["eventType"].slice(0, 80), _payload: ev } as never,
+    "_rk_wa_ingest_live" as never,
+    {
+      _org: policy.org,
+      _not_before: policy.notBefore,
+      _key: hash,
+      _type: ev["eventType"].slice(0, 80),
+      _payload: ev,
+    } as never,
   );
-  return new Response(r.error ? "retry" : "ok", {
-    status: r.error ? 500 : 200,
+  const pending = !r.error && (r.data as { done?: boolean } | null)?.done === false;
+  return new Response(r.error || pending ? "retry" : "ok", {
+    status: r.error || pending ? 500 : 200,
   });
 }

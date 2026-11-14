@@ -1,0 +1,20 @@
+[Unit]
+Description=Rikaz ADMS registry metadata refresh (no attendance processing)
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+DynamicUser=yes
+LoadCredential=registry.env:/etc/rikaz/adms/registry-worker.env
+ExecStart=/usr/bin/python3 /usr/local/lib/rikaz/adms-registry-worker.py
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET
+IPAddressDeny=any
+IPAddressAllow=127.0.0.1
+TimeoutStartSec=5min
