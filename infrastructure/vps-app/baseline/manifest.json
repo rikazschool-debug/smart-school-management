@@ -3315,7 +3315,7 @@
   ],
   "fixture_files": {
     "infrastructure/vps-app/baseline/managed-schema.sql": "8802dab5be521546a33542e4bfc462d4f2324fa8c8077918f69ba6fa662c4e55",
-    "infrastructure/vps-app/baseline/managed-fixture.json": "7fa6e9ecd9705a2f6db6fb5935d5a34127e7145c7258e87019bb4742d14306d9",
+    "infrastructure/vps-app/baseline/managed-fixture.json": "ca567824ffc607159b90eb7ca3ffe82f0f45054ccaacc0b55d5955c033fcb3f3",
     "infrastructure/vps-app/release/catalog.sql": "bb885e7a1a7e6c2755ab1d56392f3b1afcb3a1855f94e1214c025435c49b3bd6",
     "infrastructure/vps-app/release/requirements.txt": "acc785350a0d3ff37118dbfd817bb75506d02aa6fe1864148fee3b53adc47b20",
     "infrastructure/vps-app/release/mcp-review/fixtures/gateway-before.mjs": "e6306648846a797e43b445ec33d80e3e19b87947f40c89886c567348d337666f"

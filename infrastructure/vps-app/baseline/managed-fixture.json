@@ -376,5 +376,9 @@
     "cron.schedule(text,text,text)",
     "cron.schedule(text,text)",
     "cron.alter_job(bigint,text,text,text,text,boolean)"
+  ],
+  "vps_existing_public_schema_grants": [
+    "USAGE",
+    "CREATE"
   ]
 }

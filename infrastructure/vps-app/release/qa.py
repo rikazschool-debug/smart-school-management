@@ -79,6 +79,12 @@ def replay(root,manifest,target='vps',output=None):
         bootstrap(sandbox,root)
         # Ordinary application owner, exactly as in the approved migration path.
         db=Database(sandbox.name,'postgres','/tmp')
+        if target=='vps':
+            # Existing MCP setup predates the release ledger; reproduce its observed grants
+            # in QA only. This does not grant anything on a live database.
+            grants=json.loads((root/'infrastructure/vps-app/baseline/managed-fixture.json').read_text())['vps_existing_public_schema_grants']
+            if grants!=['USAGE','CREATE']:raise ReleaseError('unknown_existing_mcp_schema_grants')
+            db.sql('GRANT USAGE,CREATE ON SCHEMA public TO rikaz_mcp_admin;')
         for item in stream:
             print(canonical({'phase':'replay','target':target,'version':item['version']}),flush=True)
             source=read_sql(root/item['path'])
