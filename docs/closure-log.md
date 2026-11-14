@@ -3,6 +3,12 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-15 — ADMS parity for Lovable, prepared for review only
+- Read-only inspection found the same cf8ed37 source on GitHub, the Lovable project and VPS. Thirteen source hashes and the nine-table/twenty-function contract definitions match the production reference. The external test Supabase has no new ADMS objects; its existing eight legacy devices, 56 punches and 50 employees are preserved.
+- Added an additive, reproducibly generated migration based on the immutable VPS contract. Empty installations get exactly the contract; matching installations are checked without replacement, and partial/different/unsafe installations stop. New table administrative client grants are removed without changing existing tables or global defaults.
+- Nineteen in-memory PostgreSQL checks passed with synthetic dependencies and no live connections. Full native PostgreSQL replay, a fresh restore-verified cloud backup, cloud migration application, independent local bridge secrets/fixtures and authenticated preview acceptance remain pending approval/execution. No cloud or production mutation, fixture seed, local tunnel or real-device connection occurred.
+- See docs/integrations/adms-lovable-parity-20261115.md. No published history, existing applied SQL, application build target, production runner or integration settings were changed.
+
 ## 2026-11-12 — تنظيم الموارد البشرية (prompt-338)
 - Grouped the existing HR links into four named groups; replaced crowded employee cards with a desktop table and mobile rows, retaining names, employee numbers, branches, status and account indicators.
 - File tools are expandable; bulk commands appear only after selection. Existing search, branch/status filters, add/import, exports and employee opening remain connected to the same RPCs and permission checks.

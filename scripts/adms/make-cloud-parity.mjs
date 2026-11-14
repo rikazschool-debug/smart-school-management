@@ -1,0 +1,92 @@
+// Build the additive parity migration from the immutable, already deployed contract.
+// Local files only. This program never opens a database or reads credentials.
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
+const sourcePath='supabase/vps-migrations/20261114190000_adms_contract_v1.sql';
+const outputPath='supabase/migrations/20261115010000_adms_cloud_contract_parity.sql';
+const referenceSha='76f70cc08bfb096024480e372ba0dc1fd4c9b7c520c19792e5100ee775d2e7f3';
+const source=fs.readFileSync(path.join(root,sourcePath),'utf8').replaceAll('\r\n','\n');
+if(crypto.createHash('sha256').update(source).digest('hex')!==referenceSha)throw Error('Immutable production reference changed');
+const literal=s=>"'"+s.replaceAll("'","''")+"'";
+const type=t=>({int:'integer',timestamptz:'timestamp with time zone',bool:'boolean'}[t.toLowerCase()]??t.toLowerCase());
+const tables={};
+for(const m of source.matchAll(/create table public\.(adms_\w+) \(([\s\S]*?)\n\);/gi)){
+ const columns=[];
+ for(const line of m[2].split('\n')){
+  const c=line.match(/^\s{2}(\w+)\s+(uuid|text|boolean|bigint|int|integer|jsonb|timestamptz)\b(.*)/i);
+  if(c)columns.push({name:c[1],type:type(c[2]),not_null:/\bnot null\b|\bprimary key\b/i.test(c[3])});
+ }
+ tables[m[1]]=columns;
+}
+const functions={};
+for(const m of source.matchAll(/create (?:or replace )?function public\.((?:_)?adms_\w+)\(([^)]*)\)([\s\S]*?)\bas\s+\$\$([\s\S]*?)\$\$;/gi)){
+ const header=m[3];const args=m[2].trim()?m[2].split(',').map(a=>{const q=a.trim().match(/^\w+\s+(uuid|text|boolean|bigint|int|integer|jsonb)\b/i);if(!q)throw Error('Unrecognized reference argument');return type(q[1]);}).join(', '):'';
+ const ret=header.match(/\breturns\s+(\w+)/i);const search=header.match(/\bset\s+search_path\s*=\s*([\w,\s]+)$/i);
+ if(!ret||!search)throw Error('Unrecognized reference function metadata');
+ functions[m[1]]={args,returns:type(ret[1]),body_md5:crypto.createHash('md5').update(m[4]).digest('hex'),security_definer:/security\s+definer/i.test(header),volatility:/\bimmutable\b/i.test(header)?'i':/\bstable\b/i.test(header)?'s':'v',search_path:'search_path='+search[1].trim().split(',').map(x=>x.trim()).join(', ')};
+}
+if(Object.keys(tables).length!==9||Object.keys(functions).length!==20)throw Error('Reference contract discovery did not find 9 tables and 20 functions');
+const expected=JSON.stringify({tables,functions});
+if(source.includes('$rk_adms_reference$'))throw Error('Unexpected source delimiter');
+const validation=`
+  SELECT jsonb_object_agg(name,shape) INTO actual_tables FROM (
+    SELECT c.relname name,jsonb_agg(jsonb_build_object('name',a.attname,'type',format_type(a.atttypid,a.atttypmod),'not_null',a.attnotnull)ORDER BY a.attnum)shape
+    FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_attribute a ON a.attrelid=c.oid
+    WHERE n.nspname='public'AND c.relkind='r'AND expected->'tables'?c.relname AND a.attnum>0 AND NOT a.attisdropped GROUP BY c.relname
+  )q;
+  SELECT jsonb_object_agg(p.proname,jsonb_build_object('args',oidvectortypes(p.proargtypes),'returns',format_type(p.prorettype,NULL),'body_md5',md5(p.prosrc),'security_definer',p.prosecdef,'volatility',p.provolatile::text,'search_path',coalesce((SELECT v FROM unnest(p.proconfig)v WHERE v LIKE 'search_path=%'),'')))INTO actual_functions
+  FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public'AND expected->'functions'?p.proname;
+  IF actual_tables IS DISTINCT FROM expected->'tables' OR actual_functions IS DISTINCT FROM expected->'functions' THEN
+    RAISE EXCEPTION 'ADMS contract differs from reviewed production reference; stop for review';
+  END IF;
+  IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public'AND expected->'tables'?c.relname AND NOT c.relrowsecurity)
+     OR EXISTS(SELECT 1 FROM pg_policies WHERE schemaname='public'AND expected->'tables'?tablename)
+     OR EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace CROSS JOIN unnest(ARRAY['anon','authenticated'])role_name WHERE n.nspname='public'AND c.relkind='r'AND expected->'tables'?c.relname AND has_table_privilege(role_name,c.oid,'TRUNCATE, TRIGGER, REFERENCES, MAINTAIN'))THEN
+    RAISE EXCEPTION 'ADMS security boundary differs from reviewed reference';
+  END IF;`;
+const sql=`-- Add the missing ADMS contract to the Lovable test database after explicit approval.
+-- Reference: ${sourcePath}
+-- Reference SHA-256: ${referenceSha}
+-- New objects only; no fixture data, HR writes, historical migration edits or environment changes.
+-- An already installed, exactly matching contract is checked and left unchanged.
+-- This does not authorize executing anything on VPS. The approved cloud runner verifies
+-- project czoaudsfbinpkwqsmhrd before opening the migration transaction.
+-- Generated by scripts/adms/make-cloud-parity.mjs; --check verifies reproducibility.
+DO $rk_adms_parity$
+DECLARE
+  expected constant jsonb := ${literal(expected)}::jsonb;
+  actual_tables jsonb;
+  actual_functions jsonb;
+  present_objects integer;
+BEGIN
+  PERFORM pg_advisory_xact_lock(73195640281141);
+  SELECT (SELECT count(*)FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public'AND c.relkind='r'AND expected->'tables'?c.relname)
+       + (SELECT count(*)FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public'AND expected->'functions'?p.proname)
+  INTO present_objects;
+  IF present_objects>0 THEN
+    IF present_objects<>29 THEN RAISE EXCEPTION 'Partial ADMS installation; stop for review';END IF;
+${validation}
+    RETURN;
+  END IF;
+
+  -- Exact frozen contract, including its RLS and scoped RPC grants.
+  EXECUTE $rk_adms_reference$
+${source}
+$rk_adms_reference$;
+
+  -- Cloud's defaults are broader. Match the existing VPS boundary on NEW tables only.
+  REVOKE TRUNCATE,TRIGGER,REFERENCES,MAINTAIN ON TABLE
+    ${Object.keys(tables).map(n=>'public.'+n).join(',\n    ')}
+    FROM anon,authenticated;
+${validation}
+  PERFORM pg_notify('pgrst','reload schema');
+END
+$rk_adms_parity$;
+`;
+const destination=path.join(root,outputPath);
+if(process.argv.includes('--check')){if(fs.readFileSync(destination,'utf8').replaceAll('\r\n','\n')!==sql)throw Error('Generated migration is stale');}
+else fs.writeFileSync(destination,sql);
+console.log(JSON.stringify({generated:!process.argv.includes('--check'),reproducible:true,path:outputPath,tables:9,functions:20,reference_sha256:referenceSha,cloud_applied:false,production_touched:false}));
