@@ -1,5 +1,5 @@
 --- server.mjs
 +++ server.mjs
-@@ -6,1 +6,1 @@ -6,1 +6,1 @@
+@@ -6,1 +6,1 @@
 -const db=new Database(dbConfig),ALLOWED=new Set(['list_tables','list_extensions','list_migrations','execute_sql','apply_migration','get_advisors']);let outstanding=0,stopping=false;
 +const db=new Database(dbConfig),ALLOWED=new Set(['list_tables','list_extensions','list_migrations','get_advisors']);let outstanding=0,stopping=false;
