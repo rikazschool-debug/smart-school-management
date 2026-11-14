@@ -30,8 +30,8 @@ def deployment_lock(path):
         try:yield
         finally:fcntl.flock(lock,fcntl.LOCK_UN)
 
-def command(args,log=None):
-    p=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+def command(args,log=None,input_data=None):
+    p=subprocess.run(args,input=input_data,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     if log:
         log.write_bytes(p.stdout+b'\n'+p.stderr);log.chmod(0o600)
     if p.returncode:raise ReleaseError('release_subprocess_failed')
@@ -157,18 +157,25 @@ class ProductionOperations:
         if self.previous['State'].get('Health',{}).get('Status')!='healthy':raise ReleaseError('current_application_unhealthy')
         self.worker_active=subprocess.run(['systemctl','is-active','--quiet','rikaz-message-worker.timer']).returncode==0
     def validate(self,manifest):
-        self.cloud=audit_cloud(self.trusted_root,self.work,self.config)
-        self.proof=replay(self.root,manifest,'vps',self.work/'vps-replay.json',applied_versions=[m['version']for m in self.history])
-        key=history_key([m['version']for m in self.history])
-        if key not in self.proof['states']:raise ReleaseError('production_history_not_supported_by_candidate')
-        compare_catalog(self.proof['states'][key]['catalog'],self.db.catalog(self.root))
-        self._build_image(manifest)
+        # SSH stdout is the single final JSON receipt, not hundreds of replay events.
+        with(self.work/'isolated-validation.log').open('a')as progress:
+            os.chmod(progress.name,0o600)
+            with contextlib.redirect_stdout(progress):
+                self.cloud=audit_cloud(self.trusted_root,self.work,self.config)
+                self.proof=replay(self.root,manifest,'vps',self.work/'vps-replay.json',applied_versions=[m['version']for m in self.history])
+                key=history_key([m['version']for m in self.history])
+                if key not in self.proof['states']:raise ReleaseError('production_history_not_supported_by_candidate')
+                compare_catalog(self.proof['states'][key]['catalog'],self.db.catalog(self.root))
+                self._build_image(manifest)
     def _build_image(self,manifest):
         values=env_values(pathlib.Path('/etc/rikaz/app/build-public.env'))
         if values.get('VITE_SUPABASE_URL')!='https://api.kalmalki.com':raise ReleaseError('production_public_build_target_mismatch')
         self.next_image='rikaz-app:release-'+manifest['commit']
         command(['docker','build','--label','org.opencontainers.image.revision='+manifest['commit'],'--label','rikaz.release.manifest='+manifest['manifest_id'],'-f',str(self.root/'infrastructure/vps-app/Dockerfile'),'--build-arg','VITE_SUPABASE_URL='+values['VITE_SUPABASE_URL'],'--build-arg','VITE_SUPABASE_PUBLISHABLE_KEY='+values['VITE_SUPABASE_PUBLISHABLE_KEY'],'-t',self.next_image,str(self.root)],self.work/'image-build.log')
-        command(['docker','run','--rm','--network','none','--read-only','--tmpfs','/tmp:rw,noexec,nosuid,size=64m','--cap-drop','ALL','--security-opt','no-new-privileges','--mount','type=bind,src='+str(self.root/'infrastructure/vps-app/isolated-smoke.mjs')+',dst=/verify/smoke.mjs,readonly','--entrypoint','node',self.next_image,'/verify/smoke.mjs'],self.work/'isolated-runtime.log')
+        # The root-owned checkout is intentionally 0600. Feed the test through stdin
+        # rather than exposing a root-only bind mount to the unprivileged runtime user.
+        smoke=(self.root/'infrastructure/vps-app/isolated-smoke.mjs').read_bytes()
+        command(['docker','run','--rm','-i','--network','none','--read-only','--tmpfs','/tmp:rw,noexec,nosuid,size=64m','--cap-drop','ALL','--security-opt','no-new-privileges','-e','RIKAZ_SMOKE_EXPECTED_PUBLIC_BACKEND=https://api.kalmalki.com','--entrypoint','node',self.next_image,'--input-type=module'],self.work/'isolated-runtime.log',input_data=smoke)
     def backup(self):
         self.backup_receipt=dump_backup(self.db,self.work/'backup')if self.pending else{'database_changed':False}
         if self.pending:self.backup_receipt.update(verify_backup_restore(pathlib.Path(self.backup_receipt['file']),self.root))
