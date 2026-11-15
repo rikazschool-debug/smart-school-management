@@ -1,0 +1,1 @@
+alter function public._health_calendar_ok(uuid) security invoker; alter function public.health_calendar_list(uuid,integer) security invoker;
