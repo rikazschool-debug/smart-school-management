@@ -1,0 +1,31 @@
+name: فحص نسخة ملخصات الاختبار دون اتصال بالقاعدة
+on:
+  push:
+    branches: [codex/adms-backup-inspection-20261115]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  offline-cache:
+    if: github.repository == 'rikazschool-debug/smart-school-management'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Download existing encrypted backup only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 43682025333 --repo rikazschool-debug/smart-school-management --name adms-cloud-test-backup-43682025333 --dir encrypted-backup
+      - name: Fetch fixed offline PostgreSQL utility
+        run: docker pull supabase/postgres@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00
+      - name: Extract encrypted baseline without connecting to any database
+        env:
+          RK_ADMS_TEST_BACKUP_KEY_20261115: ${{ secrets.RK_ADMS_TEST_BACKUP_KEY_20261115 }}
+        run: node scripts/adms/inspect-backup-cache.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: test-cache-baseline-${{ github.run_id }}
+          path: cache-inspection-artifact/
+          retention-days: 7
