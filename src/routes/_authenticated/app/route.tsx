@@ -3,6 +3,8 @@ import { createFileRoute, Link, Outlet, useCanGoBack, useNavigate, useRouter, us
 import { ConfirmHost } from "@/components/confirm";
 import { SchoolLogo } from "@/components/school-logo";
 import { ExportBrandSync } from "@/components/export-brand-sync";
+import { NavigationSection } from "@/components/navigation-section";
+import { navigationGroups } from "@/lib/navigation-groups";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOpsStaff } from "@/lib/ops-staff";
@@ -39,7 +41,7 @@ import { MQ_LABEL, mqSections, useMqCaps } from "@/components/support/calls-caps
 import { ArrowRight, Inbox, Send } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app")({
-  head: () => ({ meta: [{ title: "لوحة ركاز" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "لوحة ركاز — إدارة المدرسة" }, { name: "description", content: "إدارة شؤون المدرسة وأقسامها في منصة ركاز." }, { property: "og:title", content: "لوحة ركاز — إدارة المدرسة" }, { property: "og:description", content: "إدارة شؤون المدرسة وأقسامها في منصة ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: AppLayout,
 });
 
@@ -114,21 +116,6 @@ const AD_SUB = [["apps", "الطلاب المحتملون"], ["students", "ال�
 const EVT_SUB = [["summary", "الملخص والتقويم"], ["trip", "الرحلات المدرسية"], ["general", "الفعاليات العامة"], ["course", "الدورات"], ["apps", "طلبات التسجيل"], ["forms", "إعدادات النماذج"], ["reports", "التقارير"]] as const;
 const EV_SUB = [["summary", "الملخص والمؤشرات"], ["guardians", "تقييمات أولياء الأمور"], ["visits", "الزيارات الصفية"], ["monthly", "التقييم الشهري"], ["forms", "النماذج والإعدادات"]] as const;
 const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary";
-
-const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
-  { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
-  { label: "المنصة والمؤسسة", keys: ["platform", "platform_subs", "signup_requests", "platform_notices", "schools", "members", "permissions"] },
-  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "org_docs", "family_visits", "health", "events"] },
-  { label: "الكادر التعليمي والإداري", keys: ["teachers"] },
-  { label: "القبول والتسجيل", keys: ["admissions", "students", "guardians", "family_requests"] },
-  { label: "الوسوم", keys: ["tags"] },
-  { label: "التعاون", keys: ["collaboration"] },
-  { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
-  { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
-  { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings"] },
-  { label: "إدارة الإشعارات", keys: ["hub_notices", "hub_circulars"] },
-  { label: "التنبيهات والدعم", keys: ["notifications", "support", "calls"] },
-];
 
 function AppLayout() {
   const { user } = Route.useRouteContext();
@@ -242,7 +229,14 @@ function Shell() {
   if (active.role === "platform_admin") nav = nav.filter((k) => ["home", "profile", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", "notifications", "support", "collaboration"].includes(k));
   // class visits live under the evaluation sub-menu for roles that have both
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
-  const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
+  const groups = navigationGroups(nav);
+  const navActive = (k: NavKey) => {
+    const n = NAV[k];
+    if (k === "home") return cleanPath === n.to;
+    if (k === "admissions" && ["/app/students", "/app/guardians", "/app/family-requests"].includes(cleanPath)) return true;
+    if (k === "evaluation" && cleanPath === "/app/visits") return true;
+    return cleanPath === n.to || cleanPath.startsWith(n.to + "/");
+  };
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (
     <nav aria-label="القائمة الرئيسية" className="flex h-full flex-col">
@@ -254,27 +248,28 @@ function Shell() {
         </div>
       </div>
       {owner && section && <p className="mx-3 mb-3 rounded-lg bg-secondary px-3 py-2 text-sm font-bold text-primary">{OWNER_SECTION_LABELS[section]}</p>}
-      <div className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
-        {groups.map((g) => (
-          <div key={g.label}>
-            {g.label && <p className="mb-1.5 flex items-center gap-2 border-r-[3px] border-primary px-3 py-1 text-[13px] font-bold text-primary">{g.label}</p>}
-            <div className="space-y-0.5">
+      <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-4">
+        {groups.map((g) => {
+          const content = <div className="space-y-0.5">
               {g.keys.map((k) => {
                 const n = NAV[k];
-                return (
-                  <Fragment key={k}>
-                  <Link
+                const hasSubmenu = ["collaboration", "procurement", "admissions"].includes(k) ||
+                  (k === "evaluation" && evStaff) || (k === "support" && inSupport && !platformHelp && (active.role === "platform_admin" || !!sCaps.data)) ||
+                  (k === "calls" && mqSecs.length > 0) || (k === "classrooms" && path.startsWith("/app/classrooms/section/")) ||
+                  (k === "events" && !["guardian", "student"].includes(active.role));
+                const link = <Link
                     to={n.to}
                     {...(n.tab ? { search: { tab: n.tab } } : k === "support" && owner && section && section !== "support" ? { search: { tab: "mine", p: "1" } } : {})}
-                    activeOptions={{ exact: k === "home" || k === "admin", includeSearch: k === "communication" || !!n.tab }}
+                    activeOptions={{ exact: k === "home" || k === "admin" || hasSubmenu, includeSearch: k === "communication" || !!n.tab }}
                     onClick={() => setOpen(false)}
                     className={"group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary" + (k === "students" || k === "guardians" ? " mr-6 border-r border-sidebar-border" : "")}
                   >
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
-                    <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{k === "schedule" && active ? scheduleLabel(active.role) : k === "teachers" && active ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
-                  </Link>
+                    <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="min-w-0 whitespace-normal py-2 leading-5">{k === "schedule" && active ? scheduleLabel(active.role) : k === "teachers" && active ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
+                  </Link>;
+                const submenu = <>
                   {k === "collaboration" && <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">{([["community", "المجتمع المهني"], ["library", "المكتبة الرقمية"]] as const).map(([t, label]) => <Link key={t} to="/app/collaboration" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>)}</div>}
-                  {k === "procurement" && path.startsWith("/app/procurement") && (
+                  {k === "procurement" && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {PC_SUB.filter(([t]) => (pcNeedsOnly ? t === "needs" : t !== "settings" || owner || pc.data?.caps.settings === "org")).map(([t, label]) => (
                         <Link key={t} to="/app/procurement" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)}
@@ -301,7 +296,7 @@ function Shell() {
                       ))}
                     </div>
                   )}
-                  {k === "calls" && path === "/app/calls" && (
+                  {k === "calls" && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {mqSecs.map((t, i) => (
                         <Link key={t} to="/app/calls" search={{ mq: t }} onClick={() => setOpen(false)} className={SUB_CLS + (mqTab === t || (!mqTab && i === 0) ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>{MQ_LABEL[t]}</Link>
@@ -315,7 +310,7 @@ function Shell() {
                       ))}
                     </div>
                   )}
-                  {k === "events" && path.startsWith("/app/events") && !["guardian", "student"].includes(active.role) && (
+                  {k === "events" && !["guardian", "student"].includes(active.role) && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {EVT_SUB.filter(([t]) => t === "summary" || !pcRole || ["principal", "vice_principal"].includes(active.role) || hasEvents(evt.data)).map(([t, label]) => (
                         <Link key={t} to="/app/events" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>
@@ -330,12 +325,12 @@ function Shell() {
                       ))}
                     </div>
                   )}
-                  </Fragment>
-                );
+                  </>;
+                return hasSubmenu ? <NavigationSection key={k} label={n.label} active={navActive(k)} routeKey={path + supTab} trigger={link}>{submenu}</NavigationSection> : <Fragment key={k}>{link}</Fragment>;
               })}
-            </div>
-          </div>
-        ))}
+            </div>;
+          return g.label && g.keys.length > 1 ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} routeKey={path + supTab}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
+        })}
       </div>
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
