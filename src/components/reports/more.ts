@@ -14,7 +14,7 @@ const FAM: Record<string, string> = { processing: "جارٍ المعالجة", a
 const CIRC: Record<string, string> = { draft: "مسودة", published: "منشور", archived: "مؤرشف" };
 const CORR: Record<string, string> = { pending: "بانتظار القرار", approved: "معتمد", rejected: "مرفوض" };
 const POST: Record<string, string> = { draft: "مسودة", published: "منشور", archived: "مؤرشف", hidden: "مخفي" };
-const CV: Record<string, string> = { draft: "مسودة", submitted: "مرسلة", approved: "معتمدة", returned: "معادة", final: "نهائية" };
+const CV: Record<string, string> = { draft: "مسودة", submitted: "بانتظار اعتماد المدير", approved: "معتمدة", returned: "معادة للتعديل" };
 const yes = (v: unknown) => (v ? "نعم" : "لا");
 const n = (v: unknown) => (v == null || v === "" ? "" : Number(v));
 
@@ -115,7 +115,7 @@ export const MORE_REPORTS: Record<string, Def> = {
     group: "المعلمون والجدول", label: "الزيارات الصفية", summary: "حسب نوع الزيارة والحالة", note: "حسب تاريخ الزيارة",
     run: async (p, detail) => {
       const rows = (await allRpc(async () => db.rpc("cv_list" as never, { _school: p.school } as never), 100000)).filter((r) => inPeriod(r["visit_date"] ?? r["created_at"], p));
-      if (detail) return { headers: ["التاريخ", "المعلم", "المادة", "الشعبة", "نوع الزيارة", "الحالة"], rows: rows.map((r) => [rday(r["visit_date"]), r["teacher_name"] ?? "", r["subject"] ?? "", r["section"] ?? "", r["visit_type"] ?? "", lbl(CV, r["status"])]) };
+      if (detail) return { headers: ["التاريخ", "المعلم", "المادة", "الشعبة", "نوع الزيارة", "الحالة"], rows: rows.map((r) => [rday(r["visit_date"]), r["teacher"] ?? "", r["subject"] ?? "", r["section"] ?? "", r["visit_type"] ?? "", lbl(CV, r["status"])]) };
       return groupCount(rows, ["نوع الزيارة", "الحالة"], (r) => [String(r["visit_type"] ?? ""), lbl(CV, r["status"])]);
     },
   },

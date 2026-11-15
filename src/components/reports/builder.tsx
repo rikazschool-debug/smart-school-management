@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { selectCls } from "@/components/ui/native-select";
-import { all, within, d10, type Def, type Row, db } from "@/components/reports/core";
+import { all, within, d10, type Def, db } from "@/components/reports/core";
 import { MORE_REPORTS } from "@/components/reports/more";
 import { EmptyState, PageHeader } from "@/components/states";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
