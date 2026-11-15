@@ -982,3 +982,6 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 
 ## 15 Nov 2026 — Grade presets: single stage field
 - Removed the duplicate «مرحلة الصف الجاهز» selector; ready grades are one list grouped by stage and fill the form's own stage field. Test: academic-preset-picker (2 passed).
+
+## 15 Nov 2026 — Grades follow chosen stage
+- Add-grade form: choose «المرحلة», then «الصف» lists only that stage's approved grades; removed the separate ready-grade box. New migration: _academic_stage_key makes «المرحلة X» = «X» in _academic_grade_guard. Test: grade-name-select.

@@ -34,6 +34,8 @@ export type Field = {
   resetFields?: string[];
   transient?: boolean;
   initialPath?: string[];
+  /** custom input; `set` merges a patch into the form values */
+  custom?: (p: { value: unknown; values: Row; set: (patch: Row) => void }) => ReactNode;
 };
 
 /** `text` gives the plain value for export when `render` returns JSX. */
@@ -154,7 +156,7 @@ export function RecordForm({
                     {f.label}
                     {f.required && <span className="text-destructive"> *</span>}
                   </Label>
-                  {f.type === "select" ? (
+                  {f.custom ? f.custom({ value: v[f.key], values: v, set: (patch) => setV((x) => ({ ...x, ...patch })) }) : f.type === "select" ? (
                     <SelectField f={f} schoolId={schoolId} value={v[f.key] ?? ""} values={v} onChange={(x) => change(f.key, x)} />
                   ) : (
                     <Input

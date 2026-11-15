@@ -12,7 +12,7 @@ import { AcademicAllocation, AcademicCatalogEditor } from "@/components/academic
 import { useQuery } from "@tanstack/react-query";
 import { db, type Row } from "@/components/crud-page";
 import { SubjectPresetPicker } from "@/components/subject-preset-picker";
-import { AcademicPresetPicker } from "@/components/academic-preset-picker";
+import { AcademicPresetPicker, GradeNameSelect } from "@/components/academic-preset-picker";
 
 export const Route = createFileRoute("/_authenticated/app/academic")({
   head: () => ({ meta: [{ title: "الهيكل الدراسي — ركاز" }, { name: "description", content: "محددات الدراسة المعتمدة من المالك وتخصيصها للفروع وتكوين الشعب للوكيل." }, { property: "og:title", content: "الهيكل الدراسي — ركاز" }, { property: "og:description", content: "محددات المؤسسة والشعب المتاحة للفرع." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -86,10 +86,9 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   fields={[{ key: "name", label: "الاسم", required: true }, { key: "sort_order", label: "الترتيب", type: "number" }, { key: "available", label: "متاح للفرع", type: "checkbox" }]}
                   columns={[{ label: "المرحلة", render: (r) => r["name"] }, { label: "الترتيب", render: (r) => r["sort_order"] }]} />}
                 {access("academic_grades") && <CrudTable title="الصفوف" table="grades" schoolId={s} defaults={{ available: true }} filter={owner ? {} : { available: true }} canDelete={false} canWrite={edit("academic_grades")} order="sort_order" select="*, stages(name)" searchKeys={["name"]}
-                  formExtra={ctx.orgId ? (fill) => <AcademicPresetPicker kind="grade" org={ctx.orgId ?? ""} school={s} onSelect={fill} /> : undefined}
                   fields={[
-                    { key: "stage_id", label: "المرحلة", type: "select", required: true, options: { table: "stages", label: "name" } },
-                    { key: "name", label: "الاسم", required: true },
+                    { key: "stage_id", label: "المرحلة", type: "select", required: true, options: { table: "stages", label: "name" }, resetFields: ["name", "sort_order"] },
+                    { key: "name", label: "الصف", required: true, custom: (p) => <GradeNameSelect org={ctx.orgId ?? ""} school={s} {...p} /> },
                     { key: "sort_order", label: "الترتيب", type: "number" },
                     { key: "available", label: "متاح للفرع", type: "checkbox" },
                   ]}
