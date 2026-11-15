@@ -183,7 +183,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
           ) : (
             <ul className="space-y-2.5">
               {list.map((m) => (
-                <Message key={m["id"]} domId={`msg-${id}-${m["seq"]}`} m={m} mine={!!m["mine"]} name={names[m["id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
+                <Message mentionNames={mentionNames} key={m["id"]} domId={`msg-${id}-${m["seq"]}`} m={m} mine={!!m["mine"]} name={names[m["id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
                   files={(files.data ?? []).filter((f) => f["source_id"] === m["id"])} receipt={receipt(m)} canAct={!block} isGroup={isGroup} canReply={canReply} isMod={isMod}
                   onReply={() => setReply(m)} onChanged={() => qc.invalidateQueries({ queryKey: ["msgs", id] })} />
               ))}
@@ -219,7 +219,8 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   );
 }
 
-function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup, canReply, isMod, onReply, onChanged }: {
+function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup, canReply, isMod, onReply, onChanged, mentionNames }: {
+  mentionNames?: string[];
   domId: string; m: Row; mine: boolean; name: string; parent: Row | undefined; files: Row[]; receipt: string | null; canAct: boolean; isGroup: boolean; canReply: boolean; isMod: boolean; onReply: () => void; onChanged: () => void;
 }) {
   const [editing, setEditing] = useState(false);
