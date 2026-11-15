@@ -14,6 +14,7 @@ import { filterPeople, insertMention, mentionQuery, type MentionPerson } from "@
 import { MentionMenu } from "@/components/comm/mention-menu";
 import { KIND_LABEL, SafeText, cleanupStalePending, discardPendingFile, openFile, timeLabel, uploadMessageFile, type PendingFile } from "@/lib/comm";
 import { GroupPanel } from "@/components/comm/group-panel";
+import { ImageThumb, LocalThumb } from "@/components/comm/image-thumb";
 import { AttachmentsSheet, RepliesButton, RepliesMenu, VoicePlayer, VoiceRecorder, fillReply, filterReplies, slashQuery, uploadVoice, useConvLimits, useSavedReplies, type Saved, type VoiceClip } from "@/components/comm/chat-extras";
 import { Images } from "lucide-react";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
@@ -244,7 +245,7 @@ function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup
       ) : m["body"] && <SafeText text={m["body"]} mentions={mentionNames} />}
       {!deleted && files.length > 0 && (
         <ul className="mt-2 flex flex-wrap gap-1">
-          {files.map((f) => String(f["mime"] ?? "").startsWith("audio/") ? <li key={f["id"]}><VoicePlayer file={f} seconds={f["duration"]} /></li> : <li key={f["id"]}><button onClick={() => openFile(f)} className="flex max-w-full items-center gap-1 rounded-full border bg-background px-3 py-1 text-xs hover:bg-muted"><Paperclip className="size-3 shrink-0" /><span className="truncate">{f["name"]}</span> ({Math.ceil(f["size_bytes"] / 1024)} ك.ب)</button></li>)}
+          {files.map((f) => String(f["mime"] ?? "").startsWith("audio/") ? <li key={f["id"]}><VoicePlayer file={f} seconds={f["duration"]} /></li> : String(f["mime"] ?? "").startsWith("image/") ? <li key={f["id"]}><ImageThumb file={f} /></li> : <li key={f["id"]}><button onClick={() => openFile(f)} className="flex max-w-full items-center gap-1 rounded-full border bg-background px-3 py-1 text-xs hover:bg-muted"><Paperclip className="size-3 shrink-0" /><span className="truncate">{f["name"]}</span> ({Math.ceil(f["size_bytes"] / 1024)} ك.ب)</button></li>)}
         </ul>
       )}
       <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
@@ -361,7 +362,7 @@ function Composer({ userId, conv, reply, names, people, onCancelReply, onSend }:
         <ul className="flex flex-wrap gap-1">
           {pending.map((p) => (
             <li key={p.key} className={`flex max-w-full items-center gap-1 rounded-full border px-2 py-1 text-xs ${p.status === "failed" ? "border-destructive text-destructive" : ""}`}>
-              {p.status === "uploading" ? <Loader2 className="size-3 animate-spin" /> : <Paperclip className="size-3" />}
+              {p.file.type.startsWith("image/") ? <LocalThumb file={p.file} /> : p.status === "uploading" ? <Loader2 className="size-3 animate-spin" /> : <Paperclip className="size-3" />}
               <span className="max-w-40 truncate">{p.file.name}</span>
               <span>{p.status === "uploading" ? "جارٍ الرفع…" : p.status === "ready" ? "جاهز" : p.error}</span>
               {p.status === "failed" && <button type="button" className="underline" onClick={() => start(p)}>إعادة</button>}
