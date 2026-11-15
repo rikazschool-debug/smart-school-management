@@ -34,7 +34,8 @@ export function AdmissionsPage({ sp, go }: { sp: AdSearch; go: (s: AdSearch) => 
   const c = me.data.caps!;
   const canStudents = c.students.length > 0 || !!me.data.owner;
   const canSettings = !!me.data.org_level || c.settings.length > 0;
-  if (!hasAdmissions(me.data) && !canStudents) return <ForbiddenState />;
+  // «الطلاب الحاليون» tab removed (prompt-389): without admissions rights there is nothing left to open here
+  if (!hasAdmissions(me.data) && !me.data.owner) return <ForbiddenState />;
   const tabs: [NonNullable<AdSearch["tab"]>, string, typeof Users][] = [["summary", "الملخص والأعداد", BarChart3], ["apps", "الطلاب المحتملون", UserPlus], ["family_requests", "طلبات ولي الأمر", Users],
     ...(canSettings ? [["settings", "الإعدادات والربط", Settings2] as [NonNullable<AdSearch["tab"]>, string, typeof Users]] : [])];
   const tab = sp.r || sp.new ? "apps" : sp.tab && tabs.some((t) => t[0] === sp.tab) ? sp.tab : "summary";
