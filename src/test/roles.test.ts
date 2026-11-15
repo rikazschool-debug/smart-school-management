@@ -70,10 +70,8 @@ describe("role rules", () => {
     for (const r of Object.keys(NAV_BY_ROLE) as (keyof typeof NAV_BY_ROLE)[]) expect(NAV_BY_ROLE[r] as string[]).not.toContain("calendar");
     expect(NAV_BY_ROLE.org_owner).toContain("admin");
   });
-  it("owner sees meetings and the events calendar but not duties", () => {
-    expect(NAV_BY_ROLE.org_owner).toContain("meetings");
-    expect(NAV_BY_ROLE.org_owner).toContain("events");
-    expect(NAV_BY_ROLE.org_owner).not.toContain("duties");
+  it("owner sees every school section, duties included (prompt-385)", () => {
+    for (const k of ["meetings", "events", "duties", "classrooms", "homework", "attendance", "pickup", "station", "health", "results"] as const) expect(NAV_BY_ROLE.org_owner).toContain(k);
   });
   it("staff meetings tab in communication never shows for students or guardians", () => {
     expect(commTabs("student")).not.toContain("meetings");
