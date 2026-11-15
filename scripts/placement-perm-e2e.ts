@@ -13,6 +13,21 @@ const run = Date.now(), password = `Placement-test-${run}`;
 let org = "", failed = 0, passed = 0;
 const check = (label: string, yes: boolean) => { if (yes) passed++; else failed++; console.log(yes ? "PASS" : "FAIL", label); };
 const must = <T,>(r: { data: T; error: { message: string } | null }): T => { if (r.error) throw new Error(r.error.message); return r.data; };
+if (process.argv.includes("--teardown")) {
+  const fixture = JSON.parse(readFileSync("/tmp/browser/perm332/fixture.json", "utf8"));
+  const registry = JSON.parse(readFileSync("/tmp/browser/perm332/cleanup.json", "utf8"));
+  for (const s of registry.schools) tr.addSchool(s);
+  for (const u of registry.users) tr.addUser(u);
+  const c = createClient(url, pk, { auth: { persistSession: false } });
+  must(await c.auth.setSession(fixture.users.owner.session));
+  for (const school of tr.schools) {
+    for (const table of ["enrollments", "classrooms", "sections"]) must(await admin.from(table).delete().eq("school_id", school));
+    for (const table of ["grades", "stages", "terms", "academic_years"]) must(await c.from(table).delete().eq("school_id", school));
+  }
+  if (!await tr.purgeOrg(registry.org)) throw new Error("Test cleanup incomplete");
+  for (const id of tr.users) must(await admin.auth.admin.deleteUser(id));
+  console.log("Registered browser fixture removed"); process.exit(0);
+}
 async function user(label: string) {
   const email = `plp-${label}-${run}@rikaz.test`;
   const created = must(await admin.auth.admin.createUser({ email, password, email_confirm: true }));
