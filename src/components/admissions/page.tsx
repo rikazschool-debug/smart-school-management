@@ -36,7 +36,6 @@ export function AdmissionsPage({ sp, go }: { sp: AdSearch; go: (s: AdSearch) => 
   const canSettings = !!me.data.org_level || c.settings.length > 0;
   if (!hasAdmissions(me.data) && !canStudents) return <ForbiddenState />;
   const tabs: [NonNullable<AdSearch["tab"]>, string, typeof Users][] = [["summary", "الملخص والأعداد", BarChart3], ["apps", "الطلاب المحتملون", UserPlus], ["family_requests", "طلبات ولي الأمر", Users],
-    ...(canStudents ? [["students", "الطلاب الحاليون", GraduationCap] as [NonNullable<AdSearch["tab"]>, string, typeof Users]] : []),
     ...(canSettings ? [["settings", "الإعدادات والربط", Settings2] as [NonNullable<AdSearch["tab"]>, string, typeof Users]] : [])];
   const tab = sp.r || sp.new ? "apps" : sp.tab && tabs.some((t) => t[0] === sp.tab) ? sp.tab : "summary";
   const orgId = active.orgId!;
