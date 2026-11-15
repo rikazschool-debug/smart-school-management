@@ -42,6 +42,8 @@ export type FilterDef = {
   options?: { value: string; label: string }[];
   remote?: { table: string; label: string; filter?: Record<string, unknown>; order?: string };
   path?: string; inner?: string; extra?: Record<string, unknown>;
+  /** Maps a presentation option to several persisted values; applies to paging and exports alike. */
+  valueGroups?: Record<string, string[]>;
 };
 
 const PAGE = 25;
@@ -230,7 +232,7 @@ export function CrudTable({
     for (const f of active) if (f.inner) sel = sel.replace(new RegExp(`\\b${f.inner}\\(`), `${f.inner}!inner(`);
     let qq = db.from(table).select(sel, { count: "exact", head }).eq("school_id", schoolId);
     for (const [k, v] of Object.entries(filter ?? {})) qq = qq.eq(k, v);
-    for (const f of active) { const col = f.path ?? f.key; qq = fv[f.key] === "__none" ? qq.or(`${col}.is.null,${col}.eq.لا يوجد`) : qq.eq(col, fv[f.key]); for (const [k, v] of Object.entries(f.extra ?? {})) qq = qq.eq(k, v); }
+    for (const f of active) { const col = f.path ?? f.key; const grouped = f.valueGroups?.[fv[f.key] ?? ""]; qq = grouped ? qq.in(col, grouped) : fv[f.key] === "__none" ? qq.or(`${col}.is.null,${col}.eq.لا يوجد`) : qq.eq(col, fv[f.key]); for (const [k, v] of Object.entries(f.extra ?? {})) qq = qq.eq(k, v); }
     if (search && searchKeys.length) qq = qq.or(searchKeys.map((k) => `${k}.ilike.*${search}*`).join(","));
     if (tagF) qq = qq.in("id", tagIds.data?.length ? tagIds.data : ["00000000-0000-0000-0000-000000000000"]);
     if (onlyIds) qq = qq.in("id", onlyIds);

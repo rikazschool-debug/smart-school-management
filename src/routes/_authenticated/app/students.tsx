@@ -19,6 +19,7 @@ import { GuardianQuickAdd, autoSummary } from "@/components/guardian-quick-add";
 import { autoAccounts } from "@/lib/accounts.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { studentReadiness } from "@/lib/people-import";
+import { studentPresence, STUDENT_PRESENCE, STUDENT_PRESENCE_VALUES } from "@/lib/student-presence";
 import { arabicError, type AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/students")({ component: Page, head: () => ({ meta: [{ title: "الطلاب والتسكين — ركاز" }, { name: "description", content: "سجلات الطلاب وتسكينهم في الشعب حسب الصلاحيات." }, { property: "og:title", content: "الطلاب والتسكين — ركاز" }, { property: "og:description", content: "سجلات الطلاب وتسكينهم في الشعب حسب الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }) });
@@ -79,7 +80,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         select="*, enrollments(status, sections(name, grades(name))), student_guardians(id)"
         searchKeys={["full_name", "display_name", "national_id", "csmart_no"]}
         filters={[
-          { key: "status", label: "الحالة", options: STATUS },
+          { key: "status", label: "الحالة", options: STUDENT_PRESENCE, valueGroups: STUDENT_PRESENCE_VALUES },
           { key: "gender", label: "الجنس", options: [{ value: "male", label: "ذكر" }, { value: "female", label: "أنثى" }] },
           { key: "contract_year", label: "العام الدراسي (العقد)", options: ctVals.data?.year ?? [{ value: "__none", label: "لا يوجد" }] },
           { key: "contract_status", label: "حالة العقد", options: ctVals.data?.status ?? [{ value: "__none", label: "لا يوجد" }] },
@@ -110,7 +111,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : <span className="text-muted-foreground">غير مسكّن</span>;
           } },
           { label: "أولياء الأمور", render: (r) => r["student_guardians"]?.length ?? 0 },
-          { label: "الحالة", render: (r) => STATUS.find((s) => s.value === r["status"])?.label },
+          { label: "الحالة", text: (r) => studentPresence(r["status"]), render: (r) => studentPresence(r["status"]) },
           { label: "جاهزية الدخول", text: (r) => { const m = studentReadiness(r); return m.length ? `ينقص: ${m.join("، ")}` : "جاهز"; }, render: (r) => {
             const m = studentReadiness(r);
             return m.length ? <span className="text-xs text-destructive">ينقص: {m.join("، ")}</span> : <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز</span>;

@@ -25,7 +25,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   guardian: "ولي الأمر",
   student: "الطالب",
   counselor: "المرشد الطلابي",
-  nurse: "المرشدة الصحية",
+  nurse: "التوجيه الصحي",
   security: "الأمن والاستقبال",
 };
 
