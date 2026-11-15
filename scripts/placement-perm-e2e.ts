@@ -13,6 +13,24 @@ const run = Date.now(), password = `Placement-test-${run}`;
 let org = "", failed = 0, passed = 0;
 const check = (label: string, yes: boolean) => { if (yes) passed++; else failed++; console.log(yes ? "PASS" : "FAIL", label); };
 const must = <T,>(r: { data: T; error: { message: string } | null }): T => { if (r.error) throw new Error(r.error.message); return r.data; };
+if (process.argv.includes("--teardown")) {
+  const fixture = JSON.parse(readFileSync("/tmp/browser/perm332/fixture.json", "utf8"));
+  const registry = JSON.parse(readFileSync("/tmp/browser/perm332/cleanup.json", "utf8"));
+  for (const s of registry.schools) tr.addSchool(s);
+  for (const u of registry.users) tr.addUser(u);
+  const c = createClient(url, pk, { auth: { persistSession: false } });
+  must(await c.auth.setSession(fixture.users.owner.session));
+  await tr.deleteNotifications();
+  must(await admin.from("conversations").delete().eq("org_id", registry.org));
+  for (const school of tr.schools) {
+    for (const table of ["enrollments", "classrooms"]) must(await admin.from(table).delete().eq("school_id", school));
+    must(await c.from("sections").delete().eq("school_id", school));
+    for (const table of ["grades", "stages", "terms", "academic_years"]) must(await c.from(table).delete().eq("school_id", school));
+  }
+  if (!await tr.purgeOrg(registry.org)) throw new Error("Test cleanup incomplete");
+  for (const id of tr.users) must(await admin.auth.admin.deleteUser(id));
+  console.log("Registered browser fixture removed"); process.exit(0);
+}
 async function user(label: string) {
   const email = `plp-${label}-${run}@rikaz.test`;
   const created = must(await admin.auth.admin.createUser({ email, password, email_confirm: true }));
@@ -30,16 +48,21 @@ try {
   const b = must(await admin.from("schools").insert({ org_id: org, name: "فرع خارج التفويض" }).select("id").single()).id;
   tr.addSchool(a); tr.addSchool(b);
   must(await admin.from("memberships").insert([{ org_id: org, school_id: a, user_id: vp.id, role: "vice_principal" }, { org_id: org, school_id: a, user_id: other.id, role: "vice_principal" }, { org_id: org, school_id: a, user_id: teacher.id, role: "teacher" }]));
-  const year = must(await admin.from("academic_years").insert({ school_id: a, name: "سنة التجربة", start_date: "2026-08-01", end_date: "2027-07-31", is_current: true }).select("id").single()).id;
-  const stage = must(await admin.from("stages").insert({ school_id: a, name: "مرحلة التجربة" }).select("id").single()).id;
-  const grade = must(await admin.from("grades").insert({ school_id: a, stage_id: stage, name: "صف التجربة" }).select("id").single()).id;
-  const sec = async (name: string, capacity: number) => must(await admin.from("sections").insert({ school_id: a, year_id: year, grade_id: grade, name, capacity }).select("id").single()).id;
+  const year = must(await owner.c.from("academic_years").insert({ school_id: a, name: "1448/1449", start_date: "2026-08-01", end_date: "2027-07-31", is_current: true }).select("id").single()).id;
+  const stage = must(await owner.c.from("stages").insert({ school_id: a, name: "المتوسطة" }).select("id").single()).id;
+  const grade = must(await owner.c.from("grades").insert({ school_id: a, stage_id: stage, name: "أول" }).select("id").single()).id;
+  const term = must(await owner.c.from("terms").insert({ school_id: a, year_id: year, name: "الفصل الدراسي الأول", available: true }).select("id").single()).id;
+  const sec = async (name: string, capacity: number) => must(await owner.c.from("sections").insert({ school_id: a, year_id: year, term_id: term, grade_id: grade, name, capacity }).select("id").single()).id;
   const s1 = await sec("شعبة أولى", 5), s2 = await sec("شعبة ثانية", 5), full = await sec("شعبة مكتملة", 1);
   const kid = must(await admin.from("students").insert({ school_id: a, full_name: "طالب تفويض التسكين" }).select("id").single()).id;
   const kid2 = must(await admin.from("students").insert({ school_id: a, full_name: "طالب المقعد الوحيد" }).select("id").single()).id;
   const foreign = must(await admin.from("students").insert({ school_id: b, full_name: "طالب الفرع الآخر" }).select("id").single()).id;
+  const staff = must(await owner.c.from("teachers").insert({ school_id: a, full_name: "معلم اختبار صلاحيات الوكيل", status: "active" }).select("id").single()).id;
   const place = (c: SupabaseClient, student: string, section: string) => c.rpc("student_place", { _student: student, _section: section });
-  check("vice cannot place by default", !!(await place(vp.c, kid, s1)).error);
+  check("vice places in own branch by default", !(await place(vp.c, kid, s1)).error);
+  check("vice default placement is visible in permissions", must(await vp.c.rpc("perm_my_school", { _school: a }))["people_family.place"] === true);
+  check("vice reads own branch teachers", must(await vp.c.from("teachers").select("id").eq("id", staff)).some(x => x.id === staff));
+  check("vice reads own branch students", must(await vp.c.from("students").select("id").eq("id", kid)).some(x => x.id === kid));
   const grants = [{ section: "people_family", action: "place", scope: "branch" }, { section: "people", action: "view", scope: "branch" }, { section: "people", action: "tags_assign", scope: "branch" }];
   const role = must(await owner.c.rpc("perm_role_save", { _org: org, _id: null, _name: "تسكين ووسوم فقط", _description: "لا تعديل للملفات", _grants: grants, _reason: "تجربة تفويض" }));
   must(await owner.c.rpc("perm_assign", { _org: org, _user: vp.id, _role: role, _assign: true, _school_ids: [a], _limit: null, _reason: "تجربة تفويض" }));
@@ -55,7 +78,7 @@ try {
   const edit = await vp.c.from("students").update({ full_name: "غير مسموح" }).eq("id", kid).select("id");
   check("placement grant cannot edit student records", !!edit.error || edit.data?.length === 0);
   check("placement grant cannot create guardians", !!(await vp.c.from("guardians").insert({ school_id: a, full_name: "غير مسموح" })).error);
-  check("other vice stays unable to place", !!(await place(other.c, kid, s1)).error);
+  check("another vice also inherits default placement", !(await place(other.c, kid, s1)).error);
   check("cross branch student is refused", !!(await place(vp.c, foreign, s1)).error);
   const tag = must(await owner.c.rpc("pp_tag_save", { _org: org, _id: null, _name: "متابعة التسكين", _color: "green", _kinds: ["student"], _active: true }));
   check("vice assigns tag without record edit", !(await vp.c.rpc("pp_tag_set", { _kind: "student", _id: kid, _tag: tag, _on: true })).error);

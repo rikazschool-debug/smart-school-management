@@ -21,7 +21,7 @@ import { arabicError } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/teachers")({
   component: Page,
-  head: () => ({ meta: [{ title: "الكادر التعليمي — ركاز" }, { name: "description", content: "دليل الكادر التعليمي والإداري وسجلات المعلمين" }] }),
+  head: () => ({ meta: [{ title: "الكادر التعليمي — ركاز" }, { name: "description", content: "دليل الكادر التعليمي والإداري وسجلات المعلمين" }, { property: "og:title", content: "الكادر التعليمي — ركاز" }, { property: "og:description", content: "سجلات المعلمين وعرضها وطباعتها وتصديرها حسب الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 // national_id is not selectable directly; read through teacher_id_status (people_identity.view)

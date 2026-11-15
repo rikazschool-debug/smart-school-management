@@ -984,4 +984,10 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Removed the duplicate «مرحلة الصف الجاهز» selector; ready grades are one list grouped by stage and fill the form's own stage field. Test: academic-preset-picker (2 passed).
 
 ## 15 Nov 2026 — Grades follow chosen stage
+## 15 Nov 2026 — Vice placement and subject form (prompt-382)
+- New migration 20261115161433_c26b2eea-58d1-48fc-adaf-419758e75352.sql adds default vice placement to the existing permission resolver; explicit deny and school/org membership checks remain. Teacher/student editing is unchanged.
+- Subject creation now uses one stage → grade → subject form; changing a parent clears the child, only matching subject options appear, and selectors remain transient. Grades list gains a stage filter; section stage options use sort_order.
+- 24 signed-in placement permission checks and 22 Vitest checks passed. Browser with synthetic owner/vice accounts: placement saved and read back, teacher row and print control visible, KG1 excludes physics, الحلقة saved and read back. Preview build OK. Printing/export file output was not exercised.
+- General rls-e2e attempted but stopped on obsolete grade fixture (أول متوسط); not counted as passed. Initial failed synthetic runs left cleanup blocked by owner-only academic guards; no real accounts were modified. New browser fixture teardown uses its recorded owner session for academic deletion before TestRun.purgeOrg. 1167 prior security findings unchanged; no new migration findings, production, messages or publishing.
+
 - Add-grade form: choose «المرحلة», then «الصف» lists only that stage's approved grades; removed the separate ready-grade box. New migration: _academic_stage_key makes «المرحلة X» = «X» in _academic_grade_guard. Test: grade-name-select.
