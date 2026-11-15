@@ -112,7 +112,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
 const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "تسجيل المشتريات"], ["invoices", "الفواتير المسجلة"], ["requests", "الطلبات"], ["reports", "التقارير"], ["archive", "الأرشيف"], ["settings", "الإعدادات"]] as const;
 
 /** Admissions sub-sections; "settings" (website connection) only for org-level/settings holders — the page and RPCs re-check. */
-const AD_SUB = [["apps", "طلبات القبول"], ["students", "الطلاب المحتملون"], ["family_requests", "طلبات ولي الأمر"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
+const AD_SUB = [["apps", "طلبات القبول"], ["students", "الطلاب الحاليون"], ["family_requests", "طلبات ولي الأمر"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
 
 /** Evaluation sub-sections (owner/principal/granted platform); class visits is its own page. "forms" needs owner or evaluation.forms — the page and RPCs re-check. */
 /** Events sub-sections (the page shows only tabs the server allows). */
