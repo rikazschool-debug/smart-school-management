@@ -120,7 +120,7 @@ def main():
  after=json.loads(local_sql(inventory_sql));same=before==after
  if not same:raise ValueError('restored_data_differs')
  if local_sql("select current_setting('cron.launch_active_jobs');")!='off':raise ValueError('qa_cron_guard')
- 
+
  # Rehearse the exact approved migration only in the restored network-isolated copy.
  inventory_without_history=[r for r in before if r['name']!='supabase_migrations.schema_migrations']
  baseline_version=local_sql("SELECT count(*)FROM supabase_migrations.schema_migrations;")
