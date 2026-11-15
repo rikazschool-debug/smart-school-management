@@ -8,7 +8,7 @@ export function PdfPages({ blob }: { blob: Blob }) {
     void (async () => {
       const pdfjs = await import("pdfjs-dist"); const worker = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
       pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-      const task = pdfjs.getDocument({ data: await blob.arrayBuffer(), isEvalSupported: false }); destroy = () => { void task.destroy(); };
+      const task = pdfjs.getDocument({ data: await blob.arrayBuffer() }); destroy = () => { void task.destroy(); };
       const pdf = await task.promise;
       for (let n = 1; n <= pdf.numPages && !stopped; n++) {
         const page = await pdf.getPage(n); const canvas = document.createElement("canvas"); const viewport = page.getViewport({ scale: 1.3 });

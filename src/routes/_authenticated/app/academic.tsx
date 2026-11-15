@@ -52,7 +52,7 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                 {tabs.includes("scopes") && <TabsTrigger value="scopes">نطاق الوكلاء والمشرفين</TabsTrigger>}
               </TabsList>
               <TabsContent value="years" className="space-y-10">
-                {access("academic_years") && <CrudTable title="السنوات الدراسية" table="academic_years" schoolId={s} defaults={{ available: true }} filter={owner ? undefined : { available: true }} canDelete={false} canWrite={edit("academic_years")} order="start_date" searchKeys={["name"]}
+                {access("academic_years") && <CrudTable title="السنوات الدراسية" table="academic_years" schoolId={s} defaults={{ available: true }} filter={owner ? {} : { available: true }} canDelete={false} canWrite={edit("academic_years")} order="start_date" searchKeys={["name"]}
                   fields={[
                     { key: "name", label: "الاسم", required: true },
                     { key: "start_date", label: "البداية", type: "date", required: true },
@@ -65,7 +65,7 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                     { label: "الفترة", render: (r) => `${r["start_date"]} ← ${r["end_date"]}` },
                     { label: "الحالة", render: (r) => (r["is_current"] ? "حالية" : "—") },
                   ]} />}
-                {access("academic_terms") && <CrudTable title="الفصول الدراسية" table="terms" schoolId={s} defaults={{ available: true }} filter={owner ? undefined : { available: true }} canDelete={false} canWrite={edit("academic_terms")} select="*, academic_years(name)" searchKeys={["name"]}
+                {access("academic_terms") && <CrudTable title="الفصول الدراسية" table="terms" schoolId={s} defaults={{ available: true }} filter={owner ? {} : { available: true }} canDelete={false} canWrite={edit("academic_terms")} select="*, academic_years(name)" searchKeys={["name"]}
                   fields={[
                     { key: "year_id", label: "السنة", type: "select", required: true, options: { table: "academic_years", label: "name" } },
                     { key: "name", label: "الاسم", required: true },
@@ -79,10 +79,10 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   ]} />}
               </TabsContent>
               <TabsContent value="structure" className="space-y-10">
-                {access("academic_stages") && <CrudTable title="المراحل" table="stages" schoolId={s} defaults={{ available: true }} filter={owner ? undefined : { available: true }} canDelete={false} canWrite={edit("academic_stages")} order="sort_order" searchKeys={["name"]}
+                {access("academic_stages") && <CrudTable title="المراحل" table="stages" schoolId={s} defaults={{ available: true }} filter={owner ? {} : { available: true }} canDelete={false} canWrite={edit("academic_stages")} order="sort_order" searchKeys={["name"]}
                   fields={[{ key: "name", label: "الاسم", required: true }, { key: "sort_order", label: "الترتيب", type: "number" }, { key: "available", label: "متاح للفرع", type: "checkbox" }]}
                   columns={[{ label: "المرحلة", render: (r) => r["name"] }, { label: "الترتيب", render: (r) => r["sort_order"] }]} />}
-                {access("academic_grades") && <CrudTable title="الصفوف" table="grades" schoolId={s} defaults={{ available: true }} filter={owner ? undefined : { available: true }} canDelete={false} canWrite={edit("academic_grades")} order="sort_order" select="*, stages(name)" searchKeys={["name"]}
+                {access("academic_grades") && <CrudTable title="الصفوف" table="grades" schoolId={s} defaults={{ available: true }} filter={owner ? {} : { available: true }} canDelete={false} canWrite={edit("academic_grades")} order="sort_order" select="*, stages(name)" searchKeys={["name"]}
                   fields={[
                     { key: "stage_id", label: "المرحلة", type: "select", required: true, options: { table: "stages", label: "name" } },
                     { key: "name", label: "الاسم", required: true },

@@ -9,7 +9,7 @@ import { arabicError } from "@/lib/session";
 import { filePreviewKind, deliverPrivateBlob } from "@/lib/private-file-delivery";
 import { PdfPages } from "./pdf-pages";
 
-export function MaterialFileViewer({ file, onRemove }: { file: Row; onRemove?: () => void }) {
+export function MaterialFileViewer({ file, onRemove }: { file: Row; onRemove?: (() => void) | undefined }) {
   const [open, setOpen] = useState(false);
   const kind = filePreviewKind(String(file["mime_type"] ?? ""));
   const q = useQuery({ queryKey: ["co-file-blob", file["id"]], enabled: open, staleTime: 0, gcTime: 0, retry: false, queryFn: async () => {
