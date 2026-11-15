@@ -109,7 +109,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   const pinned = list.filter((m) => m["pinned_at"] && !m["deleted_at"]);
   const others = (people.data ?? []).filter((p) => p["user_id"] !== user.id);
   const pres = usePresenceConv(isGroup ? null : id);
-  const peer: Presence | undefined = !isGroup && pres.data ? (() => { const ps = others.map((o) => pres.data!.get(o["user_id"])).filter(Boolean) as Presence[]; return ps.length ? { online: ps.some((x) => x.online), last_seen: ps.map((x) => x.last_seen).filter(Boolean).sort().pop() ?? null } : undefined; })() : undefined;
+  const peer: Presence | undefined = !isGroup && pres.data ? (() => { const ps = others.map((o) => pres.data?.get(o["user_id"])).filter(Boolean) as Presence[]; return ps.length ? { online: ps.some((x) => x.online), last_seen: ps.map((x) => x.last_seen).filter(Boolean).sort().pop() ?? null } : undefined; })() : undefined;
 
   async function send(l: Local) {
     setLocals((x) => [...x.filter((y) => y.clientId !== l.clientId), { ...l, status: "sending" }]);
