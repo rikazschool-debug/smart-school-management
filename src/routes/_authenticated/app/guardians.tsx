@@ -22,7 +22,7 @@ import { GuardianImport } from "@/components/guardian-import-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/guardians")({
   component: Page,
-  head: () => ({ meta: [{ title: "أولياء الأمور — ركاز" }, { name: "description", content: "سجلات أولياء الأمور وأبناؤهم وحالة الدخول" }] }),
+  head: () => ({ meta: [{ title: "أولياء الأمور — ركاز" }, { name: "description", content: "سجلات أولياء الأمور وأبناؤهم وحالة الدخول" }, { property: "og:title", content: "أولياء الأمور — ركاز" }, { property: "og:description", content: "سجلات أولياء الأمور وأبناؤهم وحالة الدخول" }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 const REL: Record<string, string> = { father: "الأب", mother: "الأم", brother: "الأخ", sister: "الأخت", other: "أخرى" };
