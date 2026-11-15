@@ -10,6 +10,7 @@ RUN bun install --frozen-lockfile --ignore-scripts
 COPY vite.config.ts vitest.config.ts tsconfig.json ./
 COPY src ./src
 COPY public ./public
+COPY supabase/migrations ./supabase/migrations
 ENV VITE_SUPABASE_URL=http://127.0.0.1:43219 \
     VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_RIKAZ_ISOLATED_REVIEW_ONLY \
     DO_NOT_TRACK=1

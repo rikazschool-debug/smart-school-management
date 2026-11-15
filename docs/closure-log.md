@@ -3,6 +3,11 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-15 — Include migration fixtures in the isolated verification image
+- Main runs 43692626832 and 43693191478 stopped in the existing unit-test step: admissions-current-students.test.ts reads its versioned migration, but Dockerfile.verify copied only src/public and omitted supabase/migrations. The migration is present in GitHub; this is a verification-image packaging failure, before TypeScript runs.
+- Copy versioned SQL migrations into the verification image. Keep the admissions SQL test, synthetic PostgreSQL setup and assertions unchanged; copying SQL does not execute it against any database. Runtime images, workflows, deployment gates, application behavior, credentials and database contents are unchanged.
+- Validation uses the existing failing admissions suite and full release checks on the review branch. No test is disabled and no live accounts, provider messages, database migration application or VPS deployment is part of this fix.
+
 ## 2026-11-15 — Student actions and notification display (prompt-370)
 - Student bulk actions stop at placement; owner account-access commands remain available on other people lists, with their existing server permissions unchanged.
 - Sidebar and students/guardians gates use the existing school-scoped staff_view RPC, including admissions staff with existing read authorization. No role, permission, RLS, membership or database change; admissions permission alone does not grant family-record access.
