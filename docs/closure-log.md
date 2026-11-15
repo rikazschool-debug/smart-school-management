@@ -998,6 +998,11 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Added behavioral tests for grouping preservation across all roles and expansion/navigation behavior. Authenticated acceptance is not claimed without a usable external Supabase session.
 - Verification: 48 targeted Vitest tests passed; preview build OK. Desktop/mobile browser reached /auth, no runtime errors; this is not authenticated sidebar acceptance. Root AGENTS.md rule save was refused by its size budget; existing rules were not shortened.
 
+## prompt-388 (Nov 15 2026)
+- Reordered shared navigation into home, students/admissions, education, student affairs, activities, school administration, communication/collaboration, reports and settings; extra authorised workspaces remain visible.
+- Account menu contains profile and authorised own employment, including the owner's central screen. Labels and activity tab order updated without changing URLs, records or permissions. Student placement stays in the existing student bulk actions; activity registration stays inside each activity.
+- 55 targeted checks passed for all 14 role menus, independent family access, collapsible sections and notification mapping. Signed-in acceptance unavailable: external unmanaged Supabase has no sandbox session. No migrations, sends or publication.
+
 ## prompt-385 (Nov 15 2026)
 - Migrations: owner checks in is_course_teacher, is_teacher_of_student, _gb_teacher, _health_calendar_ok, adm_can_read_meeting via service-only _owner_of_school; linter warning closed by revoking it from signed-in users.
 - Evidence: rolled-back check as a real org owner (no writes): own course/student true, other group's course/student false.

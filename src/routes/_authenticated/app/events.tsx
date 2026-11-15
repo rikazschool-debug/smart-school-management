@@ -25,9 +25,9 @@ import {
 } from "@/components/events/shared";
 
 type Tab = "summary" | "trip" | "general" | "course" | "apps" | "forms" | "reports" | "family";
-const TABS: Tab[] = ["summary", "trip", "general", "course", "apps", "forms", "reports", "family"];
+const TABS: Tab[] = ["summary", "general", "trip", "course", "apps", "forms", "reports", "family"];
 export const Route = createFileRoute("/_authenticated/app/events")({
-  head: () => ({ meta: [{ title: "الفعاليات — ركاز" }, { name: "description", content: "الرحلات المدرسية والفعاليات العامة والدورات وطلبات التسجيل والحضور." }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "الأنشطة والفعاليات — ركاز" }, { name: "description", content: "تقويم الأنشطة والفعاليات العامة والرحلات المدرسية والدورات وطلبات المشاركة حسب صلاحيات المستخدم." }, { property: "og:title", content: "الأنشطة والفعاليات — ركاز" }, { property: "og:description", content: "تقويم الأنشطة والرحلات والدورات وطلبات المشاركة في ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   validateSearch: (s: Record<string, unknown>): { tab?: Tab | undefined; item?: string | undefined; app?: string | undefined } => ({
     tab: TABS.includes(s["tab"] as Tab) ? (s["tab"] as Tab) : undefined,
     item: typeof s["item"] === "string" && s["item"] ? (s["item"] as string) : undefined,
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/app/events")({
 });
 
 const sm = selectCls("", true);
-const EVT_TAB_LABELS: Record<Tab, string> = { summary: "الملخص والتقويم", trip: "الرحلات المدرسية", general: "الفعاليات العامة", course: "الدورات", apps: "طلبات التسجيل", forms: "إعدادات النماذج", reports: "التقارير", family: "فعاليات أبنائي" };
+const EVT_TAB_LABELS: Record<Tab, string> = { summary: "تقويم الأنشطة", trip: "الرحلات المدرسية", general: "الفعاليات العامة", course: "الدورات", apps: "طلبات المشاركة", forms: "إعدادات النماذج", reports: "التقارير", family: "فعاليات أبنائي" };
 
 function Page() {
   const { tab, item, app } = Route.useSearch();
@@ -61,7 +61,7 @@ function Page() {
   if (!staff && !family && !personalOnly) return <ForbiddenState />;
   const tabs = (personalOnly ? (["summary", ...(c.family ? ["family"] : [])] as Tab[]) : family && !staff ? (["family"] as Tab[]) : ([
     "summary",
-    ...(["trip", "general", "course"] as Kind[]).filter((k) => canAny(c, k, "view") || (k === "course" && c.delegated > 0)),
+    ...(["general", "trip", "course"] as Kind[]).filter((k) => canAny(c, k, "view") || (k === "course" && c.delegated > 0)),
     ...(canAny(c, "course", "apps") || c.delegated > 0 ? (["apps"] as Tab[]) : []),
     ...(c.tpl_view ? (["forms"] as Tab[]) : []),
     ...(c.schools.some((s) => s.trip["export"] || s.general["export"] || s.course["export"]) ? (["reports"] as Tab[]) : []),
@@ -75,7 +75,7 @@ function Page() {
   const kindTab = cur === "trip" || cur === "general" || cur === "course" ? (cur as Kind) : null;
   return (
     <div>
-      <PageHeader eyebrow={personalOnly ? active.schoolName : family && !staff ? (active.role === "guardian" ? "ولي الأمر" : "الطالب") : `إدارة المدارس · ${c.owner ? active.orgName : active.schoolName}`} title="الفعاليات"
+      <PageHeader eyebrow={personalOnly ? active.schoolName : family && !staff ? (active.role === "guardian" ? "ولي الأمر" : "الطالب") : `إدارة المدارس · ${c.owner ? active.orgName : active.schoolName}`} title="الأنشطة والفعاليات"
         desc={personalOnly ? "تقويمك الموحّد: تكليفاتك وقراراتك المسندة ومناوباتك المنشورة والاجتماعات التي دُعيت إليها." : family && !staff ? "الرحلات والفعاليات الموجهة إليك وإلى أبنائك، والدورات المتاحة للتسجيل." : "الرحلات المدرسية والفعاليات العامة والدورات. الزيارات ما زالت في قسمها، ولقاءات أولياء الأمور في «الاجتماعات»."}
         action={staff && <div className="flex flex-wrap items-center gap-2">
           {c.schools.length > 1 && (

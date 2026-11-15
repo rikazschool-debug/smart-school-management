@@ -31,6 +31,7 @@ import { useMyAvatar } from "@/lib/my-avatar";
 import { setOwnerInSchool, useOwnerInSchool } from "@/lib/owner-scope";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, teachersLabel, type NavKey, type OwnerSection } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingState, ErrorState } from "@/components/states";
@@ -48,7 +49,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: "groups" | "manage" | "notices" | "meetings" | "circulars" }> = {
-  collaboration: { to: "/app/collaboration", label: "التعاون", icon: UsersRound },
+  collaboration: { to: "/app/collaboration", label: "المجتمع المهني والمكتبة", icon: UsersRound },
   family_requests: { to: "/app/family-requests", label: "طلبات ولي الأمر", icon: ClipboardList },
   home: { to: "/app", label: "لوحة التحكم المركزية", icon: Home },
   platform: { to: "/app/platform", label: "المجموعات والصلاحيات", icon: ShieldCheck },
@@ -57,10 +58,10 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   platform_subs: { to: "/app/platform-subs", label: "الاشتراكات والصلاحيات", icon: ShieldCheck },
   schools: { to: "/app/schools", label: "المدارس والفروع", icon: Building2 },
   members: { to: "/app/members", label: "المستخدمون والأدوار", icon: UserCog },
-  academic: { to: "/app/academic", label: "الإعداد الأكاديمي", icon: Network },
+  academic: { to: "/app/academic", label: "الفصول والشعب والهيكل الدراسي", icon: Network },
   teachers: { to: "/app/teachers", label: "الكادر التعليمي", icon: UsersRound },
-  courses: { to: "/app/courses", label: "المقررات والتكليفات", icon: BookOpen },
-  students: { to: "/app/students", label: "الطلاب والتسكين", icon: GraduationCap },
+  courses: { to: "/app/courses", label: "المقررات الدراسية وإسنادها", icon: BookOpen },
+  students: { to: "/app/students", label: "الطلاب", icon: GraduationCap },
   guardians: { to: "/app/guardians", label: "أولياء الأمور", icon: Users },
   tags: { to: "/app/tags", label: "الوسوم", icon: Tags },
   chat_settings: { to: "/app/chat-settings", label: "ضبط المحادثات", icon: MessagesSquare },
@@ -70,13 +71,13 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   grades: { to: "/app/grades", label: "أرشيف الدرجات الفصلية", icon: Award },
   results: { to: "/app/results", label: "النتائج", icon: Award },
   schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
-  attendance: { to: "/app/attendance", label: "الحضور والخروج", icon: ScanLine },
+  attendance: { to: "/app/attendance", label: "الحضور والانصراف", icon: ScanLine },
   station: { to: "/app/attendance-station", label: "المسح والبوابة والنداء", icon: ScanLine },
   pickup: { to: "/app/pickup", label: "الخروج والاستئذان", icon: DoorOpen },
   admin: { to: "/app/admin", label: "التكليفات والطلبات", icon: Briefcase },
   duties: { to: "/app/admin/duties", label: "المناوبات", icon: ShieldCheck },
   meetings: { to: "/app/admin/meetings", label: "الاجتماعات", icon: UsersRound },
-  communication: { to: "/app/communication", label: "التواصل", icon: MessagesSquare },
+  communication: { to: "/app/communication", label: "المحادثات", icon: MessagesSquare },
   comm_groups: { to: "/app/communication", label: "المجموعات", icon: Users, tab: "groups" },
   circulars: { to: "/app/circulars", label: "التعاميم", icon: Megaphone },
   comm_manage: { to: "/app/communication", label: "إدارة المجموعات", icon: UserCog, tab: "manage" },
@@ -94,13 +95,13 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   transport: { to: "/app/transport", label: "النقل المدرسي", icon: Construction },
   maintenance: { to: "/app/maintenance", label: "إدارة صيانة المباني", icon: Wrench },
   bus_maintenance: { to: "/app/bus-maintenance", label: "إدارة تشغيل وصيانة الباصات", icon: Bus },
-  admissions: { to: "/app/admissions", label: "القبول والتسجيل", icon: UserPlus },
+  admissions: { to: "/app/admissions", label: "طلبات القبول والتسجيل", icon: UserPlus },
   org_docs: { to: "/app/org-docs", label: "الوثائق والعقود", icon: FileText },
   hr_training: { to: "/app/hr/training", label: "التدريب والتطوير", icon: GraduationCap },
   visits: { to: "/app/visits", label: "الزيارات الصفية", icon: ClipboardList },
   family_visits: { to: "/app/family-visits", label: "الزيارات", icon: CalendarDays },
   health: { to: "/app/health", label: "الصحة المدرسية", icon: HeartPulse },
-  events: { to: "/app/events", label: "الفعاليات", icon: PartyPopper },
+  events: { to: "/app/events", label: "الأنشطة والفعاليات", icon: PartyPopper },
   evaluation: { to: "/app/evaluation", label: "نظام التقييم الشامل", icon: Award },
   hub_notices: { to: "/app/hub", tab: "notices", label: "الإشعارات", icon: Megaphone },
   hub_meetings: { to: "/app/hub", tab: "meetings", label: "الاجتماعات", icon: CalendarDays },
@@ -111,11 +112,11 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
 const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "تسجيل المشتريات"], ["invoices", "الفواتير المسجلة"], ["requests", "الطلبات"], ["reports", "التقارير"], ["archive", "الأرشيف"], ["settings", "الإعدادات"]] as const;
 
 /** Admissions sub-sections; "settings" (website connection) only for org-level/settings holders — the page and RPCs re-check. */
-const AD_SUB = [["apps", "الطلاب المحتملون"], ["students", "الطلاب الحاليون"], ["family_requests", "طلبات ولي الأمر"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
+const AD_SUB = [["apps", "طلبات القبول"], ["students", "الطلاب الحاليون"], ["family_requests", "طلبات ولي الأمر"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
 
 /** Evaluation sub-sections (owner/principal/granted platform); class visits is its own page. "forms" needs owner or evaluation.forms — the page and RPCs re-check. */
 /** Events sub-sections (the page shows only tabs the server allows). */
-const EVT_SUB = [["summary", "الملخص والتقويم"], ["trip", "الرحلات المدرسية"], ["general", "الفعاليات العامة"], ["course", "الدورات"], ["apps", "طلبات التسجيل"], ["forms", "إعدادات النماذج"], ["reports", "التقارير"]] as const;
+const EVT_SUB = [["summary", "تقويم الأنشطة"], ["general", "الفعاليات العامة"], ["trip", "الرحلات المدرسية"], ["course", "الدورات"], ["apps", "طلبات المشاركة"], ["forms", "إعدادات النماذج"], ["reports", "التقارير"]] as const;
 const EV_SUB = [["summary", "الملخص والمؤشرات"], ["guardians", "تقييمات أولياء الأمور"], ["visits", "الزيارات الصفية"], ["monthly", "التقييم الشهري"], ["forms", "النماذج والإعدادات"]] as const;
 const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary";
 
@@ -232,7 +233,7 @@ function Shell() {
   if (active.role === "platform_admin") nav = nav.filter((k) => ["home", "profile", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", "notifications", "support", "collaboration"].includes(k));
   // class visits live under the evaluation sub-menu for roles that have both
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
-  const groups = navigationGroups(nav);
+  const groups = navigationGroups(nav.filter((k) => k !== "profile" && k !== "my_hr"));
   // red per-section counters: unread notifications grouped by the visible menu entry their link opens
   const navEntries = nav.map((k) => ({ key: k, to: NAV[k].to, tab: NAV[k].tab }));
   const secIds = countsBySection(unread.data ?? [], navEntries);
@@ -270,7 +271,7 @@ function Shell() {
                     {...(n.tab ? { search: { tab: n.tab } } : k === "support" && owner && section && section !== "support" ? { search: { tab: "mine", p: "1" } } : {})}
                     activeOptions={{ exact: k === "home" || k === "admin" || hasSubmenu, includeSearch: k === "communication" || !!n.tab }}
                     onClick={() => setOpen(false)}
-                    className={"group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary" + (k === "students" || k === "guardians" ? " mr-6 border-r border-sidebar-border" : "")}
+                    className="group relative flex min-h-10 items-center gap-3 rounded-md px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
                   >
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
                     <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="min-w-0 whitespace-normal py-2 leading-5">{k === "schedule" && active ? scheduleLabel(active.role) : k === "teachers" && active ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
@@ -338,7 +339,7 @@ function Shell() {
                 return hasSubmenu ? <NavigationSection key={k} label={n.label} active={navActive(k)} routeKey={path + supTab} trigger={link}>{submenu}</NavigationSection> : <Fragment key={k}>{link}</Fragment>;
               })}
             </div>;
-          return g.label && g.keys.length > 1 ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} routeKey={path + supTab} badge={<SectionBadge n={g.keys.reduce((a, k) => a + secCount(k), 0)} label={g.label} />}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
+          return g.label && g.label !== "التنبيهات والدعم" ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} routeKey={path + supTab} badge={<SectionBadge n={g.keys.reduce((a, k) => a + secCount(k), 0)} label={g.label} />}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
         })}
       </div>
       <div className="border-t border-sidebar-border p-3">
@@ -398,7 +399,17 @@ function Shell() {
             <NotificationBell />
             <NotificationToasts list={unread.data} />
             <SectionReadSync ids={hereKey ? secIds[hereKey] ?? [] : []} />
-            {noSidebar && <Button variant="ghost" size="icon" onClick={signOut} aria-label="تسجيل الخروج" title="تسجيل الخروج"><LogOut className="size-4" /></Button>}
+            <DropdownMenu dir="rtl">
+              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="قائمة الحساب" title="قائمة الحساب"><UserCircle className="size-5" /></Button></DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>{ROLE_LABELS[active.role]}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild><Link to="/app/profile"><UserCircle />الملف الشخصي</Link></DropdownMenuItem>
+                {nav.includes("my_hr") && <DropdownMenuItem asChild><Link to="/app/my-employment"><IdCard />ملفي الوظيفي</Link></DropdownMenuItem>}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={signOut}><LogOut />تسجيل الخروج</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 md:py-8">
