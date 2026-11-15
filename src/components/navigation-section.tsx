@@ -24,7 +24,7 @@ export function NavigationSection({ label, active, routeKey, children, trigger, 
           aria-label={`${expanded ? "طي" : "فتح"} ${label}`} aria-expanded={expanded} aria-controls={id}
           title={`${expanded ? "طي" : "فتح"} ${label}`}
           onClick={() => setExpanded((value) => !value)}
-          className={trigger ? "size-8 shrink-0 text-muted-foreground" : "mb-1 w-full justify-between whitespace-normal text-start text-primary"}>
+          className={trigger ? "size-8 shrink-0 text-muted-foreground" : "mb-1 h-auto min-h-11 w-full justify-between whitespace-normal rounded-lg px-3 py-2 text-start text-[15px] font-bold leading-6 text-primary hover:bg-sidebar-accent"}>
           {!trigger && <span className="min-w-0 flex-1">{label}</span>}
           {!trigger && !expanded && badge}
           <Chevron className="size-4 shrink-0" />
