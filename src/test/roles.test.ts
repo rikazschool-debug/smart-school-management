@@ -70,10 +70,8 @@ describe("role rules", () => {
     for (const r of Object.keys(NAV_BY_ROLE) as (keyof typeof NAV_BY_ROLE)[]) expect(NAV_BY_ROLE[r] as string[]).not.toContain("calendar");
     expect(NAV_BY_ROLE.org_owner).toContain("admin");
   });
-  it("owner sees meetings and the events calendar but not duties", () => {
-    expect(NAV_BY_ROLE.org_owner).toContain("meetings");
-    expect(NAV_BY_ROLE.org_owner).toContain("events");
-    expect(NAV_BY_ROLE.org_owner).not.toContain("duties");
+  it("owner sees every school section, duties included (prompt-385)", () => {
+    for (const k of ["meetings", "events", "duties", "classrooms", "homework", "attendance", "pickup", "station", "health", "results"] as const) expect(NAV_BY_ROLE.org_owner).toContain(k);
   });
   it("staff meetings tab in communication never shows for students or guardians", () => {
     expect(commTabs("student")).not.toContain("meetings");
@@ -103,7 +101,7 @@ describe("staff scope rules (package next, item 1)", () => {
   });
   it("card scanning and the scanning station are for the gate account only", () => {
     expect(ALL.filter(canScanAttendance)).toEqual(["security"]);
-    expect(ALL.filter((r) => NAV_BY_ROLE[r].includes("station"))).toEqual(["security"]);
+    expect(ALL.filter((r) => NAV_BY_ROLE[r].includes("station")).sort()).toEqual(["org_owner", "security"]); // owner sees every section (prompt-385)
   });
   it("tasks: principal, vice and supervisor create; meetings: principal and owner organize", () => {
     expect(ALL.filter(canCreateTask).sort()).toEqual(["principal", "supervisor", "vice_principal"]);

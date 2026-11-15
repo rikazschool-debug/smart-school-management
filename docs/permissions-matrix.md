@@ -584,3 +584,9 @@ Vice principals retain scoped teacher/student read, print and export. `people_fa
 Both owners have a collaboration entry with professional-community and digital-library links. The platform owner must select an active organization/branch and pass is_platform_admin plus matching server context; no business membership is provisioned. Original professional staff retain access; student/guardian/foreign-org access stays denied. Permission catalog entries are informational, not grants. Test-only migration 20261115110518_96faddb1-3d40-4bc1-9cfa-1042594d93ae.sql; prior migrations unchanged.
 
 The `other` request kind uses the same verified-child access, school/org scope, admissions decision permission and append-only history as the original three kinds. Free-text details retain the existing validation limits; acceptance has no automatic downstream action. No role or membership changes.
+
+## Group owner full access (prompt-385, Nov 15 2026)
+- Group owner (and platform admin acting as owner) passes every person-only teaching check inside its own group's active schools: course teacher, teacher of student, gradebook teacher (archive writes stay revoked), health calendar (nurse), and reads all its group's administrative meetings including private ones.
+- Section/permission-tree checks already allowed the owner; unchanged. Other roles unchanged; no cross-group access.
+- Private direct chats remain member-only (not opened by this change).
+- Owner menu now includes duties, pickup, gate station, health and results.

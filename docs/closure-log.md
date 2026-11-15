@@ -997,3 +997,9 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Existing role/delegation filtering, owner sections, people access, destinations and server permissions are unchanged. No SQL, accounts, messages, production or publish changes. React is already explicitly imported by use-mobile; no hook modification is required.
 - Added behavioral tests for grouping preservation across all roles and expansion/navigation behavior. Authenticated acceptance is not claimed without a usable external Supabase session.
 - Verification: 48 targeted Vitest tests passed; preview build OK. Desktop/mobile browser reached /auth, no runtime errors; this is not authenticated sidebar acceptance. Root AGENTS.md rule save was refused by its size budget; existing rules were not shortened.
+
+## prompt-385 (Nov 15 2026)
+- Migrations: owner checks in is_course_teacher, is_teacher_of_student, _gb_teacher, _health_calendar_ok, adm_can_read_meeting via service-only _owner_of_school; linter warning closed by revoking it from signed-in users.
+- Evidence: rolled-back check as a real org owner (no writes): own course/student true, other group's course/student false.
+- UI: bottom-left notification pop-up (click opens section, marks read); red per-section unread counters cleared on opening the section. 156 vitest passed, typecheck clean.
+- Not verified: signed-in browser run (external Supabase, no session).
