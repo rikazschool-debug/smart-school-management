@@ -3,6 +3,12 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-15 — Security findings remediation
+- Applied test-only migration `20261115115859_bc5455f8-2d87-4641-9453-5ba5fbe8041a.sql`: academic_catalog_read now requires platform-admin identity or approved live membership in an active organization/school. No records, memberships, old migrations, provider settings, production/VPS or deployment changes.
+- Hosted quick rescan at 11:59:24 UTC no longer reports the academic_catalog exposure; leaked-password protection remains active and unresolved because it is an external Supabase Auth setting, not a browser-code fix. No paid upgrade was initiated. The migration introduced no linter findings; 1167 pre-existing linter findings remain outside this selected remediation.
+- Added actual-migration isolated PostgreSQL role tests in src/test/academic-catalog-security.test.ts. These do not substitute for authenticated hosted UI acceptance, which remains unavailable for external unmanaged Supabase. Existing root/mobile code contains no reported malformed symbol and was not edited. Latest observed preview build: OK at 11:59:13 UTC.
+- Verification: 10 new academic-catalog role tests and 13 existing package database tests passed (23 total). Hosted policy readback matches the applied migration. Marked only the verified catalog exposure as fixed; leaked-password finding remains active.
+
 ## 2026-11-15 — Completion review (not final authenticated acceptance)
 - Completed library PDF/image/plain-text previews, native PDF print opening, image/text print, blob download/share, unsupported-format notice and author file removal. Completed central organization catalog add/edit and branch allocation; immutable historic branch IDs remain intact. Added community message-time sender snapshot/read helper and reconnection refetch. Fixed section edit stage initialization, new availability defaults and owner-only branch list visibility; completed request body/response search, status filtering and export-capability display.
 - New migration only: `20261115104258_58a413f9-93aa-4711-a83e-bd6ecd480434.sql`. Prior 11 migrations were not edited or reset. No production/VPS/configuration/account/provider changes. Linter baseline still 1167; no new migration findings.
