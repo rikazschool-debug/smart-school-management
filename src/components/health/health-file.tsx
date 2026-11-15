@@ -68,7 +68,7 @@ export function HealthFile({ studentId }: { studentId: string }) {
           </div>
         )}
       </section>
-      {!staff && <p className="rounded-xl border bg-secondary/40 p-3 text-sm">ما تدخله هنا يصل مباشرة إلى المرشدة الصحية في المدرسة. تستطيع تعديل أو حذف ما أضفته أنت فقط.</p>}
+      {!staff && <p className="rounded-xl border bg-secondary/40 p-3 text-sm">ما تدخله هنا يصل مباشرة إلى التوجيه الصحي في المدرسة. تستطيع تعديل أو حذف ما أضفته أنت فقط.</p>}
       <div className="grid gap-5 lg:grid-cols-2">
         <ProfileCard f={f} />
         <Conditions f={f} />
@@ -118,7 +118,7 @@ function ProfileCard({ f }: { f: HFile }) {
           <div className="sm:col-span-2"><Label>ملاحظات</Label><Textarea value={v["notes"]} onChange={(e) => setV({ ...v, notes: e.target.value })} /></div>
           <div className="flex gap-2 sm:col-span-2"><Button type="submit">حفظ</Button><Button type="button" variant="ghost" onClick={() => setEdit(false)}>إلغاء</Button></div>
         </form>
-      ) : !f.profile ? <EmptyState title="لم تُعبّأ البطاقة الصحية بعد" hint={f.viewer === "guardian" ? "أضف فصيلة الدم وجهة الطوارئ والحساسية." : "بانتظار إدخال ولي الأمر أو المرشدة الصحية."} /> : (
+      ) : !f.profile ? <EmptyState title="لم تُعبّأ البطاقة الصحية بعد" hint={f.viewer === "guardian" ? "أضف فصيلة الدم وجهة الطوارئ والحساسية." : "بانتظار إدخال ولي الأمر أو التوجيه الصحي."} /> : (
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           {[["فصيلة الدم", p["blood_type"]], ...P_FIELDS.map(([k, l]) => [l, p[k]]), ["الحساسية", p["allergies"]], ["النظام الغذائي", p["diet"]], ["ملاحظات", p["notes"]]].map(([l, val]) => (
             <div key={String(l)}><dt className="text-xs text-muted-foreground">{l}</dt><dd className="font-medium">{val == null || val === "" ? "—" : String(val)}</dd></div>
@@ -185,7 +185,7 @@ function Meds({ f }: { f: HFile }) {
           <div className="sm:col-span-2"><Label>المواعيد (ساعة:دقيقة، افصل بفاصلة)</Label><Input dir="ltr" placeholder="08:00, 11:30" value={form.timesText ?? form.times?.join(", ") ?? ""} onChange={(e) => setForm({ ...form, timesText: e.target.value })} /></div>
           <div><Label>من تاريخ</Label><Input type="date" value={form.start_date ?? ""} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>
           <div><Label>إلى تاريخ</Label><Input type="date" value={form.end_date ?? ""} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
-          <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={!!form.at_school} onChange={(e) => setForm({ ...form, at_school: e.target.checked })} />يُعطى في المدرسة خلال الدوام (يظهر في جدول المرشدة الصحية اليومي)</label>
+          <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={!!form.at_school} onChange={(e) => setForm({ ...form, at_school: e.target.checked })} />يُعطى في المدرسة خلال الدوام (يظهر في جدول التوجيه الصحي اليومي)</label>
           <div className="sm:col-span-2"><Label>تعليمات</Label><Textarea value={form.instructions ?? ""} onChange={(e) => setForm({ ...form, instructions: e.target.value })} /></div>
           <div className="flex gap-2 sm:col-span-2"><Button type="submit">حفظ</Button><Button type="button" variant="ghost" onClick={() => setForm(null)}>إلغاء</Button></div>
         </form>

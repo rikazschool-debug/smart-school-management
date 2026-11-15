@@ -12940,6 +12940,9 @@ export type Database = {
           auto_rule_id: string | null
           body: string
           client_id: string
+          co_sender_branch: string | null
+          co_sender_name: string | null
+          co_sender_role: string | null
           conversation_id: string
           created_at: string
           deleted_at: string | null
@@ -12959,6 +12962,9 @@ export type Database = {
           auto_rule_id?: string | null
           body?: string
           client_id: string
+          co_sender_branch?: string | null
+          co_sender_name?: string | null
+          co_sender_role?: string | null
           conversation_id: string
           created_at?: string
           deleted_at?: string | null
@@ -12978,6 +12984,9 @@ export type Database = {
           auto_rule_id?: string | null
           body?: string
           client_id?: string
+          co_sender_branch?: string | null
+          co_sender_name?: string | null
+          co_sender_role?: string | null
           conversation_id?: string
           created_at?: string
           deleted_at?: string | null
@@ -22876,6 +22885,15 @@ export type Database = {
       }
       co_community: { Args: { _org: string }; Returns: Json }
       co_remove_file: { Args: { _id: string }; Returns: undefined }
+      co_sender_labels: {
+        Args: { _conv: string }
+        Returns: {
+          branch: string
+          message_id: string
+          name: string
+          role: string
+        }[]
+      }
       conv_access_ok: { Args: { _conv: string }; Returns: boolean }
       conv_files: {
         Args: { _before: string; _conv: string; _limit?: number; _tab: string }
