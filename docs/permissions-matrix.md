@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-15 (verification image): Versioned migration SQL is included in the isolated unit-test image so the existing admissions scope tests can read their fixture. No role, RLS policy, RPC permission, database setting or production runtime image changes.
+
 2026-11-15 (prompt-370): Student bulk UI no longer exposes school/org login suspension commands; server rights remain unchanged. Family navigation and page gates mirror staff_view for the active school, not admissions titles or permissions. Edit, placement and account actions retain independent capabilities. General notifications and unread counts hide wa: inbox alerts without deleting them or changing WhatsApp access.
 
 2026-11-15 (prompt-369): Students/guardians navigation is grouped under admissions without changing their route guards or record permissions. Student bulk commands retain independent tags_assign, owner-only accounts and can_place_students checks; placement invokes atomic student_place individually. ad_students now requires an accepted application linked to the same student, school and organization, while the academic student list remains unfiltered. No membership or record-writing grant was added.
