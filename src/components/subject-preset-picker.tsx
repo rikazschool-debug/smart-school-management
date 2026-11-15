@@ -4,8 +4,8 @@ import { selectCls } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 
 export function SubjectNameSelect({ value, values, set }: { value: unknown; values: Record<string, unknown>; set: (patch: Record<string, unknown>) => void }) {
-  const stage = String(values._subjectStage ?? "");
-  const grade = String(values._subjectGrade ?? "");
+  const stage = String(values["_subjectStage"] ?? "");
+  const grade = String(values["_subjectGrade"] ?? "");
   const names = subjectPresets(stage, grade);
   const current = String(value ?? "");
   return <select id="name" className={selectCls("w-full")} value={current} disabled={!stage || !grade} onChange={e => set({ name: e.target.value })}>
