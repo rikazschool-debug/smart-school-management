@@ -9,6 +9,9 @@
 !src/**
 !public/
 !public/**
+!supabase/
+!supabase/migrations/
+!supabase/migrations/*.sql
 !infrastructure/
 !infrastructure/vps-app/
 !infrastructure/vps-app/Dockerfile.verify
