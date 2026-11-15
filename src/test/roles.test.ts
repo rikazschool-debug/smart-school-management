@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { NAV_BY_ROLE, attTabs, canCreateGroup, canCreateTask, canEditSchedule, canManageAcademic, canManageUsers, canOrganizeMeeting, canScanAttendance, commTabs, invitableRoles, type Role, scheduleTabs, scheduleLabel, seesStaffDirectory, teachersLabel } from "@/lib/roles";
 const ALL = Object.keys(NAV_BY_ROLE) as Role[];
+it("both owners can open collaboration and it has its own owner section", async () => {
+  const { ownerSection, ownerSectionNav } = await import("@/lib/roles");
+  expect(NAV_BY_ROLE.platform_admin).toContain("collaboration");
+  expect(NAV_BY_ROLE.org_owner).toContain("collaboration");
+  expect(ownerSection("/app/collaboration")).toBe("collaboration");
+  expect(ownerSectionNav("collaboration", NAV_BY_ROLE.org_owner)).toContain("collaboration");
+  expect(ownerSectionNav("collaboration", NAV_BY_ROLE.org_owner)).not.toContain("academic");
+  expect(NAV_BY_ROLE.guardian).not.toContain("collaboration");
+  expect(NAV_BY_ROLE.student).not.toContain("collaboration");
+});
 
 describe("attendance roles", () => {
   it("only the owner and principal see attendance settings", () => {

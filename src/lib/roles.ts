@@ -89,9 +89,10 @@ export type NavKey =
   | "hub_circulars";
 
 /** Owner home is split into four sections; each section shows only its own side menu. */
-export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support" | "calls";
-export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة", calls: "المكالمات الهاتفية" };
+export type OwnerSection = "collaboration" | "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support" | "calls";
+export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { collaboration: "التعاون", school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة", calls: "المكالمات الهاتفية" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
+  collaboration: ["collaboration"],
   school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "health", "events", "collaboration"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
@@ -115,6 +116,7 @@ const OWNER_SHARED = ["/app/profile", "/app/notifications"];
 export function ownerSection(path: string, prev: OwnerSection | null = null): OwnerSection | null {
   const p = path.replace(/\/+$/, "") || "/";
   if (p === "/app") return null;
+  if (p.startsWith("/app/collaboration")) return "collaboration";
   if (OWNER_SHARED.some((s) => p === s || p.startsWith(s + "/"))) return prev;
   if (p.startsWith("/app/finance") || p.startsWith("/app/procurement")) return "finance";
   if (p.startsWith("/app/hr")) return "hr";
@@ -163,7 +165,7 @@ const MANAGE: NavKey[] = [
 export const HIDDEN_NAV: NavKey[] = ["virtual", "grades"];
 
 const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
-  platform_admin: ["home", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && !ADMIN_KEYS.includes(k))],
+  platform_admin: ["home", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", "collaboration", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && !ADMIN_KEYS.includes(k))],
   // owner: branch counts on the admin page + own (multi-branch) meetings and calendar — no duties
   org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k !== "duties"), "visits", "evaluation", "family_visits", "events", "collaboration"],
   // class visits: principal-level (all branch teachers) and supervisor (assigned teachers) only — mirrors _cv_can_eval
