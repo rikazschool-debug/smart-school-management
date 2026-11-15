@@ -3262,6 +3262,86 @@ export type Database = {
         }
         Relationships: []
       }
+      co_materials: {
+        Row: {
+          author: string
+          category: string
+          created_at: string
+          description: string
+          id: string
+          org_id: string
+          school_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          category: string
+          created_at?: string
+          description?: string
+          id?: string
+          org_id: string
+          school_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          org_id?: string
+          school_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "co_materials_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "co_materials_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      co_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          material_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          material_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          material_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "co_reactions_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "co_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comm_audit: {
         Row: {
           action: string
@@ -19148,6 +19228,7 @@ export type Database = {
         Args: { _org: string; _school: string }
         Returns: boolean
       }
+      _can_read_file_before_co: { Args: { _file: string }; Returns: boolean }
       _cg_admin: {
         Args: { _conv: string }
         Returns: {
@@ -19245,6 +19326,7 @@ export type Database = {
           uid: string
         }[]
       }
+      _co_ok: { Args: { _org: string }; Returns: boolean }
       _complete_account_setup: {
         Args: { _password_changed: boolean; _uid: string }
         Returns: string
@@ -19253,7 +19335,9 @@ export type Database = {
         Args: { _r: Database["public"]["Enums"]["app_role"] }
         Returns: string
       }
+      _conv_access_before_co: { Args: { _conv: string }; Returns: boolean }
       _conv_link: { Args: { _conv: string }; Returns: string }
+      _conv_send_before_co: { Args: { _conv: string }; Returns: string }
       _conv_send_block_v1: { Args: { _conv: string }; Returns: string }
       _copy_homework_template_v0: {
         Args: {
@@ -22681,6 +22765,12 @@ export type Database = {
       }
       classroom_regroup: { Args: { _school?: string }; Returns: Json }
       cleanup_health: { Args: never; Returns: Json }
+      co_add_file: {
+        Args: { _material: string; _mime: string; _name: string; _size: number }
+        Returns: Json
+      }
+      co_community: { Args: { _org: string }; Returns: Json }
+      co_remove_file: { Args: { _id: string }; Returns: undefined }
       conv_access_ok: { Args: { _conv: string }; Returns: boolean }
       conv_files: {
         Args: { _before: string; _conv: string; _limit?: number; _tab: string }
