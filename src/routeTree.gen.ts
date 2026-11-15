@@ -30,6 +30,7 @@ import { Route as AuthenticatedAppCallsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppChatSettingsRouteImport } from './routes/_authenticated/app/chat-settings'
 import { Route as AuthenticatedAppChooseRoleRouteImport } from './routes/_authenticated/app/choose-role'
 import { Route as AuthenticatedAppCircularsRouteImport } from './routes/_authenticated/app/circulars'
+import { Route as AuthenticatedAppCollaborationRouteImport } from './routes/_authenticated/app/collaboration'
 import { Route as AuthenticatedAppCommunicationRouteImport } from './routes/_authenticated/app/communication'
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
 import { Route as AuthenticatedAppEvaluationRouteImport } from './routes/_authenticated/app/evaluation'
@@ -223,6 +224,12 @@ const AuthenticatedAppCircularsRoute =
   AuthenticatedAppCircularsRouteImport.update({
     id: '/circulars',
     path: '/circulars',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppCollaborationRoute =
+  AuthenticatedAppCollaborationRouteImport.update({
+    id: '/collaboration',
+    path: '/collaboration',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppCommunicationRoute =
@@ -710,6 +717,7 @@ export interface FileRoutesByFullPath {
   '/app/chat-settings': typeof AuthenticatedAppChatSettingsRoute
   '/app/choose-role': typeof AuthenticatedAppChooseRoleRoute
   '/app/circulars': typeof AuthenticatedAppCircularsRoute
+  '/app/collaboration': typeof AuthenticatedAppCollaborationRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/evaluation': typeof AuthenticatedAppEvaluationRoute
@@ -812,6 +820,7 @@ export interface FileRoutesByTo {
   '/app/chat-settings': typeof AuthenticatedAppChatSettingsRoute
   '/app/choose-role': typeof AuthenticatedAppChooseRoleRoute
   '/app/circulars': typeof AuthenticatedAppCircularsRoute
+  '/app/collaboration': typeof AuthenticatedAppCollaborationRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/evaluation': typeof AuthenticatedAppEvaluationRoute
@@ -917,6 +926,7 @@ export interface FileRoutesById {
   '/_authenticated/app/chat-settings': typeof AuthenticatedAppChatSettingsRoute
   '/_authenticated/app/choose-role': typeof AuthenticatedAppChooseRoleRoute
   '/_authenticated/app/circulars': typeof AuthenticatedAppCircularsRoute
+  '/_authenticated/app/collaboration': typeof AuthenticatedAppCollaborationRoute
   '/_authenticated/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/evaluation': typeof AuthenticatedAppEvaluationRoute
@@ -1022,6 +1032,7 @@ export interface FileRouteTypes {
     | '/app/chat-settings'
     | '/app/choose-role'
     | '/app/circulars'
+    | '/app/collaboration'
     | '/app/communication'
     | '/app/courses'
     | '/app/evaluation'
@@ -1124,6 +1135,7 @@ export interface FileRouteTypes {
     | '/app/chat-settings'
     | '/app/choose-role'
     | '/app/circulars'
+    | '/app/collaboration'
     | '/app/communication'
     | '/app/courses'
     | '/app/evaluation'
@@ -1228,6 +1240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/chat-settings'
     | '/_authenticated/app/choose-role'
     | '/_authenticated/app/circulars'
+    | '/_authenticated/app/collaboration'
     | '/_authenticated/app/communication'
     | '/_authenticated/app/courses'
     | '/_authenticated/app/evaluation'
@@ -1480,6 +1493,13 @@ declare module '@tanstack/react-router' {
       path: '/circulars'
       fullPath: '/app/circulars'
       preLoaderRoute: typeof AuthenticatedAppCircularsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/collaboration': {
+      id: '/_authenticated/app/collaboration'
+      path: '/collaboration'
+      fullPath: '/app/collaboration'
+      preLoaderRoute: typeof AuthenticatedAppCollaborationRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/communication': {
@@ -2063,6 +2083,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppChatSettingsRoute: typeof AuthenticatedAppChatSettingsRoute
   AuthenticatedAppChooseRoleRoute: typeof AuthenticatedAppChooseRoleRoute
   AuthenticatedAppCircularsRoute: typeof AuthenticatedAppCircularsRoute
+  AuthenticatedAppCollaborationRoute: typeof AuthenticatedAppCollaborationRoute
   AuthenticatedAppCommunicationRoute: typeof AuthenticatedAppCommunicationRoute
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppEvaluationRoute: typeof AuthenticatedAppEvaluationRoute
@@ -2150,6 +2171,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppChatSettingsRoute: AuthenticatedAppChatSettingsRoute,
   AuthenticatedAppChooseRoleRoute: AuthenticatedAppChooseRoleRoute,
   AuthenticatedAppCircularsRoute: AuthenticatedAppCircularsRoute,
+  AuthenticatedAppCollaborationRoute: AuthenticatedAppCollaborationRoute,
   AuthenticatedAppCommunicationRoute: AuthenticatedAppCommunicationRoute,
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppEvaluationRoute: AuthenticatedAppEvaluationRoute,
