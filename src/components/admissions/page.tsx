@@ -14,6 +14,7 @@ import { Field, Pager, Panel, SearchBox, Stat, StatGrid, TableCard, Toolbar, TD,
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { arabicError, useSession } from "@/lib/session";
 import { validateAdSearch, type AdSearch } from "@/components/admissions/search";
+import { FamilyRequests } from "@/components/family/requests";
 export { validateAdSearch, type AdSearch };
 import { ACTION, CHANNEL, ENR, OUTCOME, STATUS, hasAdmissions, tone, useAdMe, type AdMe, type Sch } from "@/components/admissions/shared";
 
@@ -34,7 +35,7 @@ export function AdmissionsPage({ sp, go }: { sp: AdSearch; go: (s: AdSearch) => 
   const canStudents = c.students.length > 0 || !!me.data.owner;
   const canSettings = !!me.data.org_level || c.settings.length > 0;
   if (!hasAdmissions(me.data) && !canStudents) return <ForbiddenState />;
-  const tabs: [NonNullable<AdSearch["tab"]>, string, typeof Users][] = [["summary", "الملخص والأعداد", BarChart3], ["apps", "الطلاب المحتملون", UserPlus],
+  const tabs: [NonNullable<AdSearch["tab"]>, string, typeof Users][] = [["summary", "الملخص والأعداد", BarChart3], ["apps", "الطلاب المحتملون", UserPlus], ["family_requests", "طلبات ولي الأمر", Users],
     ...(canStudents ? [["students", "الطلاب الحاليون", GraduationCap] as [NonNullable<AdSearch["tab"]>, string, typeof Users]] : []),
     ...(canSettings ? [["settings", "الإعدادات والربط", Settings2] as [NonNullable<AdSearch["tab"]>, string, typeof Users]] : [])];
   const tab = sp.r || sp.new ? "apps" : sp.tab && tabs.some((t) => t[0] === sp.tab) ? sp.tab : "summary";
@@ -45,6 +46,7 @@ export function AdmissionsPage({ sp, go }: { sp: AdSearch; go: (s: AdSearch) => 
   else if (tab === "summary") body = <Summary orgId={orgId} me={me.data} go={go} />;
   else if (tab === "apps") body = <AppList key={JSON.stringify(sp)} orgId={orgId} orgName={active.orgName ?? ""} me={me.data} sp={sp} go={go} />;
   else if (tab === "students") body = <Students orgId={orgId} orgName={active.orgName ?? ""} me={me.data} />;
+  else if (tab === "family_requests") body = <FamilyRequests staff />;
   else body = <SettingsTab orgId={orgId} />;
   return (
     <div className="space-y-5">

@@ -44,6 +44,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: "groups" | "manage" | "notices" | "meetings" | "circulars" }> = {
+  family_requests: { to: "/app/family-requests", label: "طلبات ولي الأمر", icon: ClipboardList },
   home: { to: "/app", label: "لوحة التحكم المركزية", icon: Home },
   platform: { to: "/app/platform", label: "المجموعات والصلاحيات", icon: ShieldCheck },
   signup_requests: { to: "/app/signup-requests", label: "طلبات التسجيل", icon: Inbox },
@@ -105,7 +106,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
 const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "تسجيل المشتريات"], ["invoices", "الفواتير المسجلة"], ["requests", "الطلبات"], ["reports", "التقارير"], ["archive", "الأرشيف"], ["settings", "الإعدادات"]] as const;
 
 /** Admissions sub-sections; "settings" (website connection) only for org-level/settings holders — the page and RPCs re-check. */
-const AD_SUB = [["apps", "الطلاب المحتملون"], ["students", "الطلاب الحاليون"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
+const AD_SUB = [["apps", "الطلاب المحتملون"], ["students", "الطلاب الحاليون"], ["family_requests", "طلبات ولي الأمر"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
 
 /** Evaluation sub-sections (owner/principal/granted platform); class visits is its own page. "forms" needs owner or evaluation.forms — the page and RPCs re-check. */
 /** Events sub-sections (the page shows only tabs the server allows). */
@@ -118,7 +119,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "المنصة والمؤسسة", keys: ["platform", "platform_subs", "signup_requests", "platform_notices", "schools", "members", "permissions"] },
   { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "org_docs", "family_visits", "health", "events"] },
   { label: "الكادر التعليمي والإداري", keys: ["teachers"] },
-  { label: "القبول والتسجيل", keys: ["admissions", "students", "guardians"] },
+  { label: "القبول والتسجيل", keys: ["admissions", "students", "guardians", "family_requests"] },
   { label: "الوسوم", keys: ["tags"] },
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },

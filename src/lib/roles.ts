@@ -30,6 +30,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 };
 
 export type NavKey =
+  | "family_requests"
   | "home"
   | "hr_training"
   | "org_docs"
@@ -172,7 +173,7 @@ const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
   dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
   supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "visits", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
   teacher: ["home", "classrooms", "virtual", "homework", "schedule", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
-  guardian: ["home", "classrooms", "homework", "schedule", "evaluation", "pickup", "communication", "notifications", "family_visits", "events"],
+  guardian: ["home", "classrooms", "homework", "schedule", "evaluation", "pickup", "communication", "notifications", "family_visits", "events", "family_requests"],
   student: ["home", "classrooms", "virtual", "homework", "schedule", "pickup", "communication", "notifications", "events"],
   counselor: ["home", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
   nurse: ["home", "health", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
@@ -183,6 +184,7 @@ export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).ma
 
 /** Menu labels (same as the side menu) for previewing a base role's dashboard. */
 export const NAV_LABELS: Partial<Record<NavKey, string>> = {
+  family_requests: "طلبات ولي الأمر",
   org_docs: "الوثائق والعقود",
   family_visits: "الزيارات",
   events: "الفعاليات",
