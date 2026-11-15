@@ -30,6 +30,16 @@ async function choosePlacement() {
   fireEvent.change(screen.getByLabelText("شعبة التسكين الجماعي"), { target: { value: "section" } });
 }
 describe("confirmed bulk student flow with no live accounts or provider requests", () => {
+  it("account creation uses a mocked provider and preserves already linked accounts", async () => {
+    mocks.ask.mockResolvedValue(true);
+    mocks.provision.mockResolvedValue([{ id: "first", state: "already" }, { id: "second", state: "missing_id" }]);
+    open(true);
+    fireEvent.change(screen.getByLabelText("الإجراء الجماعي"), { target: { value: "login_create" } });
+    fireEvent.click(screen.getByRole("button", { name: "تنفيذ" }));
+    await waitFor(() => expect(screen.getByText("نجح 1 · رُفض 1 · تعذّر 0")).toBeInTheDocument());
+    expect(mocks.provision).toHaveBeenCalledExactlyOnceWith({ data: { kind: "student", ids: ["first", "second"] } });
+    expect(screen.getByText("له حساب مسبقًا")).toBeInTheDocument();
+  });
   it("cancelled confirmation never places any student", async () => {
     mocks.ask.mockResolvedValue(false); open(); await choosePlacement();
     fireEvent.click(screen.getByRole("button", { name: "تنفيذ" }));

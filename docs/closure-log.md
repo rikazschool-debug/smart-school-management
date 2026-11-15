@@ -3,6 +3,13 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-15 — Admissions and student bulk actions (prompt-369)
+- Existing students/guardians routes are grouped under admissions in the shared sidebar, including the owner admissions menu. Direct links and independent page permissions remain unchanged.
+- Bulk placement reuses student_place per student; confirmations and per-record reports cover success/failure. Manual login option requires owner account capability; existing account provisioning is reused without password replacement. Selection pagination no longer silently stops at 2,000 records.
+- Applied new test-project migration 20261115075851_d2b1c82b-f72e-4619-9721-3f6fbad78438.sql: ad_students requires an accepted same-school/same-org linked application; lateral selection prevents duplicate students. Export uses the same query. No student/application data was changed.
+- Isolated PostgreSQL and mocked interface tests cover accepted/reopened/unlinked records, school/org isolation, export, preserved academic rows, placement cancellation/results and tag commands. No real accounts, messages or provider calls were used. Authenticated live-preview acceptance and Git provider synchronization cannot be verified for this external unmanaged session/inaccessible sync status.
+- The reported mobile hook already imports React; preview reports build OK. Pre-existing database lint findings are unrelated and unchanged. No VPS deployment or connection change occurred.
+
 ## 2026-11-15 — ADMS parity for Lovable, prepared for review only
 - Read-only inspection found the same cf8ed37 source on GitHub, the Lovable project and VPS. Thirteen source hashes and the nine-table/twenty-function contract definitions match the production reference. The external test Supabase has no new ADMS objects; its existing eight legacy devices, 56 punches and 50 employees are preserved.
 - Added an additive, reproducibly generated migration based on the immutable VPS contract. Empty installations get exactly the contract; matching installations are checked without replacement, and partial/different/unsafe installations stop. New table administrative client grants are removed without changing existing tables or global defaults.
