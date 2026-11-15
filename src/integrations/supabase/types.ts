@@ -5446,6 +5446,120 @@ export type Database = {
           },
         ]
       }
+      family_request_history: {
+        Row: {
+          actor: string
+          created_at: string
+          id: string
+          rejection_reason: string | null
+          request_id: string
+          response: string | null
+          status: string
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          request_id: string
+          response?: string | null
+          status: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          request_id?: string
+          response?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_request_history_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "family_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_requests: {
+        Row: {
+          body: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          kind: string
+          org_id: string
+          ref: string
+          rejection_reason: string | null
+          requested_by: string
+          response: string | null
+          school_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          ref?: string
+          rejection_reason?: string | null
+          requested_by?: string
+          response?: string | null
+          school_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          ref?: string
+          rejection_reason?: string | null
+          requested_by?: string
+          response?: string | null
+          school_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       file_cleanup_config: {
         Row: {
           id: boolean
@@ -23220,6 +23334,20 @@ export type Database = {
           relationship: string
         }[]
       }
+      family_request_create: {
+        Args: { _body: string; _kind: string; _student: string }
+        Returns: string
+      }
+      family_request_decide: {
+        Args: {
+          _id: string
+          _reason?: string
+          _response: string
+          _status: string
+        }
+        Returns: undefined
+      }
+      family_request_detail: { Args: { _id: string }; Returns: Json }
       fin_pay_get: { Args: { _school: string }; Returns: Json }
       fin_pay_save: { Args: { _p: Json; _school: string }; Returns: Json }
       gb_approve: {
