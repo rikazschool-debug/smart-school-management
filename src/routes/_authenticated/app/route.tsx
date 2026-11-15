@@ -104,7 +104,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
 const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "تسجيل المشتريات"], ["invoices", "الفواتير المسجلة"], ["requests", "الطلبات"], ["reports", "التقارير"], ["archive", "الأرشيف"], ["settings", "الإعدادات"]] as const;
 
 /** Admissions sub-sections; "settings" (website connection) only for org-level/settings holders — the page and RPCs re-check. */
-const AD_SUB = [["apps", "الطلاب المحتملون"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
+const AD_SUB = [["apps", "الطلاب المحتملون"], ["students", "الطلاب الحاليون"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
 
 /** Evaluation sub-sections (owner/principal/granted platform); class visits is its own page. "forms" needs owner or evaluation.forms — the page and RPCs re-check. */
 /** Events sub-sections (the page shows only tabs the server allows). */
@@ -115,9 +115,9 @@ const SUB_CLS = "flex min-h-8 items-center rounded-md px-3 text-[13px] text-side
 const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "", keys: ["home", "school_home", "finance", "operations", "hr", "hr_training", "profile", "my_hr"] },
   { label: "المنصة والمؤسسة", keys: ["platform", "platform_subs", "signup_requests", "platform_notices", "schools", "members", "permissions"] },
-  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "admissions", "org_docs", "family_visits", "health", "events"] },
+  { label: "منطقة العمل", keys: ["academic", "courses", "admin", "duties", "schedule", "visits", "evaluation", "procurement", "transport", "maintenance", "bus_maintenance", "org_docs", "family_visits", "health", "events"] },
   { label: "الكادر التعليمي والإداري", keys: ["teachers"] },
-  { label: "أولياء الأمور والطلاب", keys: ["students", "guardians"] },
+  { label: "القبول والتسجيل", keys: ["admissions", "students", "guardians"] },
   { label: "الوسوم", keys: ["tags"] },
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
@@ -263,7 +263,7 @@ function Shell() {
                     {...(n.tab ? { search: { tab: n.tab } } : k === "support" && owner && section && section !== "support" ? { search: { tab: "mine", p: "1" } } : {})}
                     activeOptions={{ exact: k === "home" || k === "admin", includeSearch: k === "communication" || !!n.tab }}
                     onClick={() => setOpen(false)}
-                    className="group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
+                    className={"group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary" + (k === "students" || k === "guardians" ? " mr-6 border-r border-sidebar-border" : "")}
                   >
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
                     <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{k === "schedule" && active ? scheduleLabel(active.role) : k === "teachers" && active ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
@@ -318,7 +318,7 @@ function Shell() {
                   )}
                   {k === "admissions" && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
-                      {AD_SUB.filter(([t]) => t !== "settings" || !!ad.data?.org_level || !!ad.data?.caps?.settings.length).map(([t, label]) => (
+                      {AD_SUB.filter(([t]) => t === "students" ? owner || !!ad.data?.caps?.students.length : t !== "settings" || owner || !!ad.data?.org_level || !!ad.data?.caps?.settings.length).map(([t, label]) => (
                         <Link key={t} to="/app/admissions" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)}
                           className="flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary">{label}</Link>
                       ))}

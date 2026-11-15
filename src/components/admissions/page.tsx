@@ -102,7 +102,7 @@ function Summary({ orgId, me, go }: { orgId: string; me: AdMe; go: (s: AdSearch)
         <p className="text-sm">متوسط زمن الاستلام: <b>{d["avg_take_h"] ?? "—"}</b> ساعة · أول تواصل: <b>{d["avg_contact_h"] ?? "—"}</b> ساعة · الوصول للقرار: <b>{d["avg_decide_d"] ?? "—"}</b> يوم</p>
       </Panel>
       {st && (
-        <Panel title="الطلاب الحاليون (من سجل الطلاب الأكاديمي)">
+        <Panel title="إجمالي المدرسة وسعة الشعب">
           <p className="mb-2 text-xs text-muted-foreground">عدد الطلبات ليس عدد الطلاب: الطلب المقبول لا يُحسب طالبًا ولا يُخصم من السعة.</p>
           <StatGrid cols={4}>
             <Stat label="طالب مسجل" value={Number(st["total"] ?? 0)} />
@@ -304,7 +304,7 @@ function Students({ orgId, orgName, me }: { orgId: string; orgName: string; me: 
   const canExp = me.caps!.export.length > 0 || !!me.owner;
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">قراءة فقط من سجل الطلاب الأكاديمي — الإضافة والتعديل من قسم «الطلاب والتسكين» حسب صلاحيتك.</p>
+      <p className="text-xs text-muted-foreground">الطلاب المرتبطون بطلبات قبول معتمدة فقط؛ جميع سجلات المدرسة متاحة في «الطلاب والتسكين» حسب صلاحيتك.</p>
       <Toolbar actions={canExp ? <><Button variant="outline" size="sm" onClick={() => void exp("x")}><FileDown className="size-4" />Excel</Button><Button variant="outline" size="sm" onClick={() => void exp("p")}><Printer className="size-4" />PDF</Button></> : undefined}>
         <SearchBox value={q} onChange={(v) => { setQ(v); setPage(1); }} placeholder="اسم الطالب" />
         {me.caps!.students.length > 1 && <Field label="الفرع"><select className={selectCls("w-44", true)} value={school} onChange={(e) => { setSchool(e.target.value); setPage(1); }}><option value="">الكل</option>{me.caps!.students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>}

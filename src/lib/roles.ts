@@ -93,7 +93,7 @@ const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "health", "events"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
-  admissions: ["admissions"],
+  admissions: ["admissions", "students", "guardians"],
   finance: ["finance", "procurement"],
   operations: ["operations", "transport", "bus_maintenance"],
   maintenance: ["maintenance"],
