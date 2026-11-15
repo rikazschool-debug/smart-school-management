@@ -7,6 +7,7 @@ Updated: 2026-11-01.
 - Added the exact supplied kindergarten, primary and middle-school subject lists as reusable presets; lower-primary computer enrichment and third-middle critical thinking retain their exact distinctions. No secondary-school subjects were invented.
 - The existing «المواد» create dialog now offers stage → grade/level → subject selectors, filling the name without manual typing. Existing manual add/edit, department/code fields, school scope and RLS save path remain unchanged. No automatic inserts, course creation, record updates, migrations, accounts, provider calls or publishing.
 - Authenticated hosted creation cannot be verified with external unmanaged Supabase; isolated selector and exact-list tests are recorded separately from that missing acceptance.
+- Verification: 22 tests passed across exact subject lists (13), selector interaction (1), existing form interactions (3), and academic permissions (5). Latest preview build OK at 12:06:26 UTC. Root AGENTS.md remains over its size budget; the focused form architecture rule is recorded in src/components/AGENTS.md.
 
 ## 2026-11-15 — Security findings remediation
 - Applied test-only migration `20261115115859_bc5455f8-2d87-4641-9453-5ba5fbe8041a.sql`: academic_catalog_read now requires platform-admin identity or approved live membership in an active organization/school. No records, memberships, old migrations, provider settings, production/VPS or deployment changes.
