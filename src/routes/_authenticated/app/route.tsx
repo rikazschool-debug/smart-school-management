@@ -22,7 +22,7 @@ import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { workspacePages } from "@/lib/workspace-perms";
-import { HeartPulse, FileText, IdCard, Tags, PartyPopper, UserPlus } from "lucide-react";
+import { HeartPulse, FileText, IdCard, Tags, PartyPopper, UserPlus, FileBarChart } from "lucide-react";
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { ROOM_TABS, roomTabsForRole } from "@/components/classroom-room-tabs";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
@@ -106,13 +106,14 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   hub_notices: { to: "/app/hub", tab: "notices", label: "الإشعارات", icon: Megaphone },
   hub_meetings: { to: "/app/hub", tab: "meetings", label: "الاجتماعات", icon: CalendarDays },
   hub_circulars: { to: "/app/hub", tab: "circulars", label: "التعاميم", icon: Megaphone },
+  reports: { to: "/app/reports", label: "منشئ التقارير", icon: FileBarChart },
 };
 
 /** Procurement sub-sections shown under its menu entry (the page re-checks each tab). */
 const PC_SUB = [["summary", "الملخص"], ["needs", "طلبات الاحتياج"], ["custodies", "العهد"], ["expenses", "تسجيل المشتريات"], ["invoices", "الفواتير المسجلة"], ["requests", "الطلبات"], ["reports", "التقارير"], ["archive", "الأرشيف"], ["settings", "الإعدادات"]] as const;
 
 /** Admissions sub-sections; "settings" (website connection) only for org-level/settings holders — the page and RPCs re-check. */
-const AD_SUB = [["apps", "طلبات القبول"], ["students", "الطلاب الحاليون"], ["family_requests", "طلبات ولي الأمر"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
+const AD_SUB = [["apps", "طلبات القبول"], ["family_requests", "طلبات ولي الأمر"], ["settings", "الإعدادات والربط (WordPress)"]] as const;
 
 /** Evaluation sub-sections (owner/principal/granted platform); class visits is its own page. "forms" needs owner or evaluation.forms — the page and RPCs re-check. */
 /** Events sub-sections (the page shows only tabs the server allows). */
@@ -207,7 +208,7 @@ function Shell() {
   const groupView = owner && !ownerInSchool && !(cleanPath === "/app/school-home" && schoolPicked);
   // Owner home has no side menu; inside a section only that section's menu shows; shared pages (profile…) keep the last section.
   const noSidebar = owner && section === null;
-  const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && (hasAdmissions(ad.data) || !!ad.data?.caps?.students.length) ? ["admissions"] : []),
+  const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && hasAdmissions(ad.data) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
     ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] || sp?.["attendance.view"] || sp?.["attendance.record"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(!owner && (sp?.["notices.view"] || sp?.["notices.send"]) ? ["hub_notices"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["health.view"] || sp?.["health.record"] || sp?.["health.manage"] ? ["health"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(owner || ["view", "replies", "autoreply", "media"].some((a) => sp?.[`chat_settings.${a}`]) ? ["chat_settings"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
   // base-role tools the owner stopped for this person (perm_my_school bt_*; the server blocks them too)
@@ -329,7 +330,7 @@ function Shell() {
                   )}
                   {k === "admissions" && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
-                      {AD_SUB.filter(([t]) => t === "students" ? owner || !!ad.data?.caps?.students.length : t !== "settings" || owner || !!ad.data?.org_level || !!ad.data?.caps?.settings.length).map(([t, label]) => (
+                      {AD_SUB.filter(([t]) => t !== "settings" || owner || !!ad.data?.org_level || !!ad.data?.caps?.settings.length).map(([t, label]) => (
                         <Link key={t} to="/app/admissions" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)}
                           className="flex min-h-8 items-center rounded-md px-3 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary">{label}</Link>
                       ))}
@@ -339,7 +340,9 @@ function Shell() {
                 return hasSubmenu ? <NavigationSection key={k} label={n.label} active={navActive(k)} routeKey={path + supTab} trigger={link}>{submenu}</NavigationSection> : <Fragment key={k}>{link}</Fragment>;
               })}
             </div>;
-          return g.label && g.label !== "التنبيهات والدعم" ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} routeKey={path + supTab} badge={<SectionBadge n={g.keys.reduce((a, k) => a + secCount(k), 0)} label={g.label} />}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
+          // a group holding one entry of the same name, «الرئيسية» and alerts show their links directly (no second fold)
+          const flat = !g.label || g.label === "التنبيهات والدعم" || g.label === "الرئيسية" || (g.keys.length === 1 && NAV[g.keys[0]!].label === g.label);
+          return !flat ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} routeKey={path + supTab} badge={<SectionBadge n={g.keys.reduce((a, k) => a + secCount(k), 0)} label={g.label} />}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
         })}
       </div>
       <div className="border-t border-sidebar-border p-3">

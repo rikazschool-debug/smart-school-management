@@ -1008,3 +1008,8 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Evidence: rolled-back check as a real org owner (no writes): own course/student true, other group's course/student false.
 - UI: bottom-left notification pop-up (click opens section, marks read); red per-section unread counters cleared on opening the section. 156 vitest passed, typecheck clean.
 - Not verified: signed-in browser run (external Supabase, no session).
+
+## prompt-389 — menu tidy + report builder (2026-11-15)
+- Sidebar: single-entry groups with the same name (الأنشطة والفعاليات) and «الرئيسية» render their links directly; main group headings larger/bold. Presentation only.
+- Admissions sub-menu/tabs: «الطلاب الحاليون» removed (students stay under their own page); remaining: طلبات القبول، طلبات ولي الأمر، الإعدادات والربط.
+- New /app/reports «منشئ التقارير» (nav key reports: owner, principal, vice, student affairs): report type + from/to period + summary/detail, PDF/Excel/print via src/lib/export.ts. Reads only through the RLS client, so each user sees only permitted rows. Test: src/test/report-builder.test.ts.

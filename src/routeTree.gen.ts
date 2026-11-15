@@ -55,6 +55,7 @@ import { Route as AuthenticatedAppPlatformNoticesRouteImport } from './routes/_a
 import { Route as AuthenticatedAppPlatformSubsRouteImport } from './routes/_authenticated/app/platform-subs'
 import { Route as AuthenticatedAppProcurementRouteImport } from './routes/_authenticated/app/procurement'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app/profile'
+import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app/reports'
 import { Route as AuthenticatedAppResultsRouteImport } from './routes/_authenticated/app/results'
 import { Route as AuthenticatedAppScheduleRouteImport } from './routes/_authenticated/app/schedule'
 import { Route as AuthenticatedAppSchoolDayRouteImport } from './routes/_authenticated/app/school-day'
@@ -364,6 +365,11 @@ const AuthenticatedAppProcurementRoute =
 const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppReportsRoute = AuthenticatedAppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
 const AuthenticatedAppResultsRoute = AuthenticatedAppResultsRouteImport.update({
@@ -742,6 +748,7 @@ export interface FileRoutesByFullPath {
   '/app/platform-subs': typeof AuthenticatedAppPlatformSubsRoute
   '/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/app/school-day': typeof AuthenticatedAppSchoolDayRoute
@@ -845,6 +852,7 @@ export interface FileRoutesByTo {
   '/app/platform-subs': typeof AuthenticatedAppPlatformSubsRoute
   '/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/app/school-day': typeof AuthenticatedAppSchoolDayRoute
@@ -951,6 +959,7 @@ export interface FileRoutesById {
   '/_authenticated/app/platform-subs': typeof AuthenticatedAppPlatformSubsRoute
   '/_authenticated/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
+  '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/app/results': typeof AuthenticatedAppResultsRoute
   '/_authenticated/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/_authenticated/app/school-day': typeof AuthenticatedAppSchoolDayRoute
@@ -1057,6 +1066,7 @@ export interface FileRouteTypes {
     | '/app/platform-subs'
     | '/app/procurement'
     | '/app/profile'
+    | '/app/reports'
     | '/app/results'
     | '/app/schedule'
     | '/app/school-day'
@@ -1160,6 +1170,7 @@ export interface FileRouteTypes {
     | '/app/platform-subs'
     | '/app/procurement'
     | '/app/profile'
+    | '/app/reports'
     | '/app/results'
     | '/app/schedule'
     | '/app/school-day'
@@ -1265,6 +1276,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/platform-subs'
     | '/_authenticated/app/procurement'
     | '/_authenticated/app/profile'
+    | '/_authenticated/app/reports'
     | '/_authenticated/app/results'
     | '/_authenticated/app/schedule'
     | '/_authenticated/app/school-day'
@@ -1668,6 +1680,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/app/profile'
       preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/reports': {
+      id: '/_authenticated/app/reports'
+      path: '/reports'
+      fullPath: '/app/reports'
+      preLoaderRoute: typeof AuthenticatedAppReportsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/results': {
@@ -2108,6 +2127,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppPlatformSubsRoute: typeof AuthenticatedAppPlatformSubsRoute
   AuthenticatedAppProcurementRoute: typeof AuthenticatedAppProcurementRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
+  AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppResultsRoute: typeof AuthenticatedAppResultsRoute
   AuthenticatedAppScheduleRoute: typeof AuthenticatedAppScheduleRoute
   AuthenticatedAppSchoolDayRoute: typeof AuthenticatedAppSchoolDayRoute
@@ -2196,6 +2216,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppPlatformSubsRoute: AuthenticatedAppPlatformSubsRoute,
   AuthenticatedAppProcurementRoute: AuthenticatedAppProcurementRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
+  AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppResultsRoute: AuthenticatedAppResultsRoute,
   AuthenticatedAppScheduleRoute: AuthenticatedAppScheduleRoute,
   AuthenticatedAppSchoolDayRoute: AuthenticatedAppSchoolDayRoute,
