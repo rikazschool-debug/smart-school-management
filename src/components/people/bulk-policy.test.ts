@@ -14,6 +14,9 @@ describe("student bulk permissions", () => {
   it("placement does not apply to guardian records", () => {
     expect(bulkActions("guardian", { bulk: true, accounts: false, tags_assign: false }, true, true)).toEqual([]);
   });
+  it("keeps existing owner access commands outside the student list", () => {
+    expect(bulkActions("guardian", { bulk: true, accounts: true, tags_assign: false }, false, false)).toEqual(["login_create", "account_off", "account_on", "org_login_off", "org_login_on"]);
+  });
   it("reports each student and continues after refusal, without duplicate calls", async () => {
     const place = vi.fn(async (id: string) => { if (id === "foreign-school") throw Error("school denied"); });
     const result = await placeSelected(["first", "foreign-school", "last", "first"], place, (e) => String(e));
