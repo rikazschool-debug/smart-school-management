@@ -1,0 +1,1 @@
+create or replace function public.can_read_conv_at(_conv uuid,_at timestamptz) returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from conversation_members m where m.conversation_id=_conv and m.user_id=auth.uid() and m.left_at is null and _at>=m.visible_from) and public.conv_access_ok(_conv) $$;
