@@ -30,6 +30,8 @@ export type Field = {
   required?: boolean;
   options?: { table: string; label: string; filter?: Record<string, unknown>; order?: string } | { value: string; label: string }[];
   hideInForm?: boolean;
+  dependsOn?: { field: string; column: string };
+  resetFields?: string[];
 };
 
 /** `text` gives the plain value for export when `render` returns JSX. */
@@ -63,10 +65,11 @@ export function useOptions(table: string, label: string, schoolId: string | null
   });
 }
 
-function SelectField({ f, schoolId, value, onChange }: { f: Field; schoolId: string; value: string; onChange: (v: string) => void }) {
+function SelectField({ f, schoolId, value, values, onChange }: { f: Field; schoolId: string; value: string; values: Row; onChange: (v: string) => void }) {
   const o = f.options;
   const remote = o && !Array.isArray(o) ? o : null;
-  const q = useOptions(remote?.table ?? "schools", remote?.label ?? "name", remote ? schoolId : null, remote?.filter, remote?.order);
+  const dependent = f.dependsOn ? { [f.dependsOn.column]: values[f.dependsOn.field] || "00000000-0000-0000-0000-000000000000" } : {};
+  const q = useOptions(remote?.table ?? "schools", remote?.label ?? "name", remote ? schoolId : null, { ...remote?.filter, ...dependent }, remote?.order);
   const opts = Array.isArray(o) ? o : (q.data ?? []);
   return (
     <select
@@ -106,7 +109,8 @@ export function RecordForm({
   const [dnTouched, setDnTouched] = useState(() => !!initial["display_name"] && initial["display_name"] !== autoDn(initial["full_name"]));
   const change = (key: string, val: unknown) => {
     if (key === "display_name") setDnTouched(true);
-    setV((x) => ({ ...x, [key]: val, ...(hasDn && key === "full_name" && !dnTouched ? { display_name: autoDn(val) } : {}) }));
+    const resets = Object.fromEntries((fields.find((f) => f.key === key)?.resetFields ?? []).map((k) => [k, ""]));
+    setV((x) => ({ ...x, ...resets, [key]: val, ...(hasDn && key === "full_name" && !dnTouched ? { display_name: autoDn(val) } : {}) }));
   };
   return (
     <form
@@ -145,7 +149,7 @@ export function RecordForm({
                     {f.required && <span className="text-destructive"> *</span>}
                   </Label>
                   {f.type === "select" ? (
-                    <SelectField f={f} schoolId={schoolId} value={v[f.key] ?? ""} onChange={(x) => setV({ ...v, [f.key]: x })} />
+                    <SelectField f={f} schoolId={schoolId} value={v[f.key] ?? ""} values={v} onChange={(x) => change(f.key, x)} />
                   ) : (
                     <Input
                       id={f.key}
