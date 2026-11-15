@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-15 (current package): Health calendar checks live nurse membership + matching active context via invoker RPC/RLS; no recurrence without year verification. Parent requests require a verified follow link and keep immutable school/org/student identity; admissions view/decide capabilities apply per school, acceptance never performs a downstream record action. Collaboration limits reads/sends/private files to owner/principal/vice/supervisor/teacher in the active org/context; author manages material, owner can delete, one reaction per user/material. Central academic lists have owner guards; sections have owner/own-school vice guards and validate available year/term/stage/grade. Synthetic tests cover parent scope; authenticated collaboration/academic acceptance remains unverified.
+
 2026-11-15 (verification image): Versioned migration SQL is included in the isolated unit-test image so the existing admissions scope tests can read their fixture. No role, RLS policy, RPC permission, database setting or production runtime image changes.
 
 2026-11-15 (prompt-370): Student bulk UI no longer exposes school/org login suspension commands; server rights remain unchanged. Family navigation and page gates mirror staff_view for the active school, not admissions titles or permissions. Edit, placement and account actions retain independent capabilities. General notifications and unread counts hide wa: inbox alerts without deleting them or changing WhatsApp access.
