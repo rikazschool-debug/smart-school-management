@@ -65,7 +65,13 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   const files = { data: list.flatMap((m) => ((m["files"] ?? []) as Row[]).map((f) => ({ ...f, source_id: m["id"] }))) };
   void ids;
   const senderLabels = useQuery({ queryKey: ["co-sender-labels", id, list.length], enabled: !!conv["professional"], queryFn: async () => { const { data, error } = await db.rpc("co_sender_labels", { _conv: id }); if (error) throw error; return data as Row[]; } });
-  const names = useMemo(() => Object.fromEntries(list.map((m) => { const label = senderLabels.data?.find((r) => r["message_id"] === m["id"]); return [m["id"], label?.["name"] ? `${label["name"]} · ${ROLE_LABELS[label["role"] as Role] ?? label["role"]} · ${label["branch"]}` : m["sender_label"] ? `${m["sender_name"]} · ${m["sender_label"]}` : m["sender_name"]; })), [list, senderLabels.data]);
+  const names = useMemo(() => Object.fromEntries(list.map((m) => {
+    const label = senderLabels.data?.find((r) => r["message_id"] === m["id"]);
+    const value = label?.["name"]
+      ? [label["name"], ROLE_LABELS[label["role"] as Role] ?? label["role"], label["branch"]].join(" · ")
+      : [m["sender_name"], m["sender_label"]].filter(Boolean).join(" · ");
+    return [m["id"], value];
+  })), [list, senderLabels.data]);
   const maxSeq = list.at(-1)?.["seq"] ?? 0;
 
   // realtime: RLS still applies, so removed members stop receiving events
