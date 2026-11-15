@@ -8,7 +8,7 @@ import { useSchoolPerms } from "@/lib/school-perms";
 import { ACADEMIC_PARTS, academicAccess } from "@/lib/workspace-perms";
 import type { AppContext } from "@/lib/session";
 import { ForbiddenState, LoadingState } from "@/components/states";
-import { AcademicAllocation } from "@/components/academic-allocation";
+import { AcademicAllocation, AcademicCatalogEditor } from "@/components/academic-allocation";
 import { useQuery } from "@tanstack/react-query";
 import { db, type Row } from "@/components/crud-page";
 
@@ -42,7 +42,7 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         return (
           <>
             <PageHeader title="الإعداد الأكاديمي" desc={`${ctx.schoolName} — السنوات، المراحل، الصفوف، الشعب، الأقسام والمواد`} />
-            {owner && ctx.orgId && <AcademicAllocation school={s} org={ctx.orgId} />}
+            {owner && ctx.orgId && <><AcademicCatalogEditor org={ctx.orgId} /><AcademicAllocation school={s} org={ctx.orgId} /></>}
             <Tabs defaultValue={firstTab} key={tabs.join(",")} dir="rtl">
               <TabsList className="mb-6 flex-wrap">
                 {tabs.includes("years") && <TabsTrigger value="years">السنوات والفصول</TabsTrigger>}
@@ -52,7 +52,7 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                 {tabs.includes("scopes") && <TabsTrigger value="scopes">نطاق الوكلاء والمشرفين</TabsTrigger>}
               </TabsList>
               <TabsContent value="years" className="space-y-10">
-                {access("academic_years") && <CrudTable title="السنوات الدراسية" table="academic_years" schoolId={s} canWrite={edit("academic_years")} order="start_date" searchKeys={["name"]}
+                {access("academic_years") && <CrudTable title="السنوات الدراسية" table="academic_years" schoolId={s} defaults={{ available: true }} filter={owner ? undefined : { available: true }} canDelete={false} canWrite={edit("academic_years")} order="start_date" searchKeys={["name"]}
                   fields={[
                     { key: "name", label: "الاسم", required: true },
                     { key: "start_date", label: "البداية", type: "date", required: true },
@@ -65,7 +65,7 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                     { label: "الفترة", render: (r) => `${r["start_date"]} ← ${r["end_date"]}` },
                     { label: "الحالة", render: (r) => (r["is_current"] ? "حالية" : "—") },
                   ]} />}
-                {access("academic_terms") && <CrudTable title="الفصول الدراسية" table="terms" schoolId={s} canWrite={edit("academic_terms")} select="*, academic_years(name)" searchKeys={["name"]}
+                {access("academic_terms") && <CrudTable title="الفصول الدراسية" table="terms" schoolId={s} defaults={{ available: true }} filter={owner ? undefined : { available: true }} canDelete={false} canWrite={edit("academic_terms")} select="*, academic_years(name)" searchKeys={["name"]}
                   fields={[
                     { key: "year_id", label: "السنة", type: "select", required: true, options: { table: "academic_years", label: "name" } },
                     { key: "name", label: "الاسم", required: true },
@@ -79,10 +79,10 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   ]} />}
               </TabsContent>
               <TabsContent value="structure" className="space-y-10">
-                {access("academic_stages") && <CrudTable title="المراحل" table="stages" schoolId={s} canWrite={edit("academic_stages")} order="sort_order" searchKeys={["name"]}
+                {access("academic_stages") && <CrudTable title="المراحل" table="stages" schoolId={s} defaults={{ available: true }} filter={owner ? undefined : { available: true }} canDelete={false} canWrite={edit("academic_stages")} order="sort_order" searchKeys={["name"]}
                   fields={[{ key: "name", label: "الاسم", required: true }, { key: "sort_order", label: "الترتيب", type: "number" }, { key: "available", label: "متاح للفرع", type: "checkbox" }]}
                   columns={[{ label: "المرحلة", render: (r) => r["name"] }, { label: "الترتيب", render: (r) => r["sort_order"] }]} />}
-                {access("academic_grades") && <CrudTable title="الصفوف" table="grades" schoolId={s} canWrite={edit("academic_grades")} order="sort_order" select="*, stages(name)" searchKeys={["name"]}
+                {access("academic_grades") && <CrudTable title="الصفوف" table="grades" schoolId={s} defaults={{ available: true }} filter={owner ? undefined : { available: true }} canDelete={false} canWrite={edit("academic_grades")} order="sort_order" select="*, stages(name)" searchKeys={["name"]}
                   fields={[
                     { key: "stage_id", label: "المرحلة", type: "select", required: true, options: { table: "stages", label: "name" } },
                     { key: "name", label: "الاسم", required: true },
@@ -93,11 +93,11 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
               </TabsContent>
               <TabsContent value="sections">
                 {access("academic_sections") && <CrudTable title="الشعب" table="sections" schoolId={s} canWrite={edit("academic_sections")} order="name"
-                  select="*, grades(name), academic_years(name), enrollments(count)" searchKeys={["name"]}
+                  select="*, grades(name,stage_id), academic_years(name), enrollments(count)" searchKeys={["name"]}
                   fields={[
                     { key: "year_id", label: "السنة", type: "select", required: true, options: { table: "academic_years", label: "name", filter: { available: true } }, resetFields: ["term_id"] },
                     { key: "term_id", label: "الفصل الدراسي", type: "select", required: true, options: { table: "terms", label: "name", filter: { available: true } }, dependsOn: { field: "year_id", column: "year_id" } },
-                    { key: "_stage", label: "المرحلة", type: "select", transient: true, required: false, options: (stages.data ?? []).map((r) => ({ value: r["id"] as string, label: r["name"] as string })), resetFields: ["grade_id"] },
+                    { key: "_stage", label: "المرحلة", type: "select", transient: true, initialPath: ["grades", "stage_id"], required: true, options: (stages.data ?? []).map((r) => ({ value: r["id"] as string, label: r["name"] as string })), resetFields: ["grade_id"] },
                     { key: "grade_id", label: "الصف", type: "select", required: true, options: { table: "grades", label: "name", order: "sort_order", filter: { available: true } }, dependsOn: { field: "_stage", column: "stage_id" } },
                     { key: "name", label: "اسم الشعبة", required: true },
                     { key: "capacity", label: "السعة", type: "number", required: true },
