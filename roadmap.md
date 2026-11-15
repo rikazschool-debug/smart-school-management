@@ -101,5 +101,5 @@
 - [ ] اختبار مشترك عبر الشبكة — بانتظار بيئة ركاز معزولة (مشروع Supabase اختباري)
 - [ ] فحص الشاشة بحساب حقيقي — غير متاح من هنا
 - [x] prompt-385: bottom-left notification pop-up (click opens its section) + red per-section menu counters cleared on opening the section; 8 tests, typecheck clean.
-- [ ] prompt-385: «جميع الإجراءات مفتوحة / مالك المجموعة كامل الصلاحيات لكل الأدوار» — awaiting user's choice of scope (security-sensitive).
+- [x] prompt-385: owner views+executes all sections on behalf of any role (teacher/nurse/meetings checks); private DMs stay member-only.
 - [ ] prompt-385: signed-in check of pop-up/counters blocked (external Supabase, no session).
