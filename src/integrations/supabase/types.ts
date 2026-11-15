@@ -3292,6 +3292,9 @@ export type Database = {
       co_materials: {
         Row: {
           author: string
+          author_branch: string
+          author_name: string
+          author_role: string
           category: string
           created_at: string
           description: string
@@ -3303,6 +3306,9 @@ export type Database = {
         }
         Insert: {
           author?: string
+          author_branch?: string
+          author_name?: string
+          author_role?: string
           category: string
           created_at?: string
           description?: string
@@ -3314,6 +3320,9 @@ export type Database = {
         }
         Update: {
           author?: string
+          author_branch?: string
+          author_name?: string
+          author_role?: string
           category?: string
           created_at?: string
           description?: string
