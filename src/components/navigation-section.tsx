@@ -3,12 +3,14 @@ import { ChevronDown, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /** Presentation state only: callers supply already-authorized links. */
-export function NavigationSection({ label, active, routeKey, children, trigger }: {
+export function NavigationSection({ label, active, routeKey, children, trigger, badge }: {
   label: string;
   active: boolean;
   routeKey: string;
   children: ReactNode;
   trigger?: ReactNode;
+  /** optional counter shown beside a heading (presentation only) */
+  badge?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(active);
   const id = useId();
@@ -24,6 +26,7 @@ export function NavigationSection({ label, active, routeKey, children, trigger }
           onClick={() => setExpanded((value) => !value)}
           className={trigger ? "size-8 shrink-0 text-muted-foreground" : "mb-1 w-full justify-between whitespace-normal text-start text-primary"}>
           {!trigger && <span className="min-w-0 flex-1">{label}</span>}
+          {!trigger && !expanded && badge}
           <Chevron className="size-4 shrink-0" />
         </Button>
       </div>

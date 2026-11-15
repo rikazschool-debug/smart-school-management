@@ -35,6 +35,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingState, ErrorState } from "@/components/states";
 import { NotificationBell } from "@/components/notification-bell";
+import { NotificationToasts, SectionBadge, SectionReadSync, useUnreadNotifications } from "@/components/notification-toasts";
+import { countsBySection, sectionForLink } from "@/lib/notification-sections";
 import { useSupportCaps } from "@/components/support/caps";
 import { useWaOrgOk } from "@/components/support/whatsapp";
 import { MQ_LABEL, mqSections, useMqCaps } from "@/components/support/calls-caps";
@@ -129,6 +131,7 @@ function AppLayout() {
 function Shell() {
   const { contexts, active, setActive, loading, user } = useSession();
   usePresenceBeat(user.id);
+  const unread = useUnreadNotifications(!!active);
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
   // Staff granted procurement permissions get a workspace entry; the server (pc_me → perm_scope) is the only source.
@@ -230,6 +233,11 @@ function Shell() {
   // class visits live under the evaluation sub-menu for roles that have both
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
   const groups = navigationGroups(nav);
+  // red per-section counters: unread notifications grouped by the visible menu entry their link opens
+  const navEntries = nav.map((k) => ({ key: k, to: NAV[k].to, tab: NAV[k].tab }));
+  const secIds = countsBySection(unread.data ?? [], navEntries);
+  const secCount = (k: NavKey) => secIds[k]?.length ?? 0;
+  const hereKey = sectionForLink(cleanPath + (supTab ? `?tab=${supTab}` : ""), navEntries);
   const navActive = (k: NavKey) => {
     const n = NAV[k];
     if (k === "home") return cleanPath === n.to;
@@ -266,6 +274,7 @@ function Shell() {
                   >
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
                     <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="min-w-0 whitespace-normal py-2 leading-5">{k === "schedule" && active ? scheduleLabel(active.role) : k === "teachers" && active ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
+                    <SectionBadge n={secCount(k)} label={n.label} />
                   </Link>;
                 const submenu = <>
                   {k === "collaboration" && <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">{([["community", "المجتمع المهني"], ["library", "المكتبة الرقمية"]] as const).map(([t, label]) => <Link key={t} to="/app/collaboration" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>)}</div>}
@@ -329,7 +338,7 @@ function Shell() {
                 return hasSubmenu ? <NavigationSection key={k} label={n.label} active={navActive(k)} routeKey={path + supTab} trigger={link}>{submenu}</NavigationSection> : <Fragment key={k}>{link}</Fragment>;
               })}
             </div>;
-          return g.label && g.keys.length > 1 ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} routeKey={path + supTab}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
+          return g.label && g.keys.length > 1 ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} routeKey={path + supTab} badge={<SectionBadge n={g.keys.reduce((a, k) => a + secCount(k), 0)} label={g.label} />}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
         })}
       </div>
       <div className="border-t border-sidebar-border p-3">
@@ -387,6 +396,8 @@ function Shell() {
           </div>
           <div className="ms-auto flex shrink-0 items-center gap-1">
             <NotificationBell />
+            <NotificationToasts list={unread.data} />
+            <SectionReadSync ids={hereKey ? secIds[hereKey] ?? [] : []} />
             {noSidebar && <Button variant="ghost" size="icon" onClick={signOut} aria-label="تسجيل الخروج" title="تسجيل الخروج"><LogOut className="size-4" /></Button>}
           </div>
         </header>

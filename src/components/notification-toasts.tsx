@@ -65,3 +65,16 @@ export function SectionBadge({ n, label }: { n: number; label?: string }) {
   if (!n) return null;
   return <span aria-label={`${n} إشعار جديد${label ? ` في ${label}` : ""}`} className="ms-auto min-w-5 shrink-0 rounded-full bg-destructive px-1.5 text-center text-[11px] font-bold leading-5 text-destructive-foreground">{n > 99 ? "99+" : n}</span>;
 }
+
+/** Opening a section clears its counter: marks that section's unread notifications read once. */
+export function SectionReadSync({ ids }: { ids: string[] }) {
+  const markRead = useMarkRead();
+  const key = ids.join(",");
+  const done = useRef("");
+  useEffect(() => {
+    if (!key || done.current === key) return;
+    done.current = key;
+    void markRead(key.split(","));
+  }, [key, markRead]);
+  return null;
+}
