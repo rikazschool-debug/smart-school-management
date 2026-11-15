@@ -1,5 +1,5 @@
 /** Pure mapping of a notification's link to the menu entry that owns it (presentation only — no access decisions). */
-export type NavEntry = { key: string; to: string; tab?: string };
+export type NavEntry = { key: string; to: string; tab?: string | undefined };
 export type UnreadNotice = { id: string; link: string | null };
 
 /** Best (longest path, then matching tab) visible entry for a link; null when no visible entry owns it. */
