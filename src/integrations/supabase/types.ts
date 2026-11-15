@@ -40,6 +40,7 @@ export type Database = {
       }
       academic_years: {
         Row: {
+          available: boolean
           created_at: string
           end_date: string
           id: string
@@ -50,6 +51,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available?: boolean
           created_at?: string
           end_date: string
           id?: string
@@ -60,6 +62,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available?: boolean
           created_at?: string
           end_date?: string
           id?: string
@@ -6778,6 +6781,7 @@ export type Database = {
       }
       grades: {
         Row: {
+          available: boolean
           created_at: string
           id: string
           name: string
@@ -6787,6 +6791,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available?: boolean
           created_at?: string
           id?: string
           name: string
@@ -6796,6 +6801,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available?: boolean
           created_at?: string
           id?: string
           name?: string
@@ -14049,6 +14055,47 @@ export type Database = {
           },
         ]
       }
+      org_academic_catalog: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          org_id: string
+          sort_order: number
+          stage: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          name: string
+          org_id: string
+          sort_order?: number
+          stage?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          org_id?: string
+          sort_order?: number
+          stage?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_academic_catalog_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_contractors: {
         Row: {
           contact_name: string | null
@@ -16354,6 +16401,7 @@ export type Database = {
           id: string
           name: string
           school_id: string
+          term_id: string | null
           updated_at: string
           year_id: string
         }
@@ -16364,6 +16412,7 @@ export type Database = {
           id?: string
           name: string
           school_id: string
+          term_id?: string | null
           updated_at?: string
           year_id: string
         }
@@ -16374,6 +16423,7 @@ export type Database = {
           id?: string
           name?: string
           school_id?: string
+          term_id?: string | null
           updated_at?: string
           year_id?: string
         }
@@ -16390,6 +16440,13 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sections_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
             referencedColumns: ["id"]
           },
           {
@@ -16498,6 +16555,7 @@ export type Database = {
       }
       stages: {
         Row: {
+          available: boolean
           created_at: string
           id: string
           name: string
@@ -16506,6 +16564,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available?: boolean
           created_at?: string
           id?: string
           name: string
@@ -16514,6 +16573,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available?: boolean
           created_at?: string
           id?: string
           name?: string
@@ -17772,6 +17832,7 @@ export type Database = {
       }
       terms: {
         Row: {
+          available: boolean
           created_at: string
           end_date: string | null
           id: string
@@ -17782,6 +17843,7 @@ export type Database = {
           year_id: string
         }
         Insert: {
+          available?: boolean
           created_at?: string
           end_date?: string | null
           id?: string
@@ -17792,6 +17854,7 @@ export type Database = {
           year_id: string
         }
         Update: {
+          available?: boolean
           created_at?: string
           end_date?: string | null
           id?: string
@@ -21778,6 +21841,17 @@ export type Database = {
       }
       _ws_view_schools: { Args: { _section: string }; Returns: string[] }
       _xb_ok: { Args: { _org: string; _user: string }; Returns: boolean }
+      academic_allocate: {
+        Args: {
+          _end?: string
+          _kind: string
+          _name: string
+          _parent?: string
+          _school: string
+          _start?: string
+        }
+        Returns: string
+      }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
       account_status: {
