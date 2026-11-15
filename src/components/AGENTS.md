@@ -1,2 +1,3 @@
 - Central academic catalog edits are organization-owned entries layered over fixed defaults; branch allocation preserves existing IDs and history, so editing a catalog cannot silently rewrite prior school records.
 - RecordForm may derive transient selectors from joined initial values; transient fields never enter the persisted payload, preserving existing column contracts.
+- Academic subject presets fill the existing CrudTable create form; stage/grade choices are selectors only, never persisted links or automatic course assignments, preserving the school-scoped RLS write path.

@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-15 (prompt-375): User-supplied subject presets are stage/grade-filtered choices inside the existing academic subject creation form. Saving still uses the existing academic_subjects.edit capability and school-scoped subjects RLS; no additional write grants, automatic courses, teacher assignments, or persisted stage/grade associations.
+
 2026-11-15 (security remediation): Shared academic_catalog references require platform-admin identity or a live, unsuspended membership in an active organization and (for branch memberships) an active school of that organization. Authentication alone grants no reads. Shared base entries intentionally contain no organization-specific or personal data; org_academic_catalog policies and all write rights remain unchanged.
 
 2026-11-15 (completion review): Community sender name/role/branch are fixed by an insert trigger and read through co_sender_labels with live org access. Central catalog owner edits use org_academic_catalog guards; invalid grade/stage associations and duplicate custom entries are rejected. RecordForm initializes the section's transient stage from its joined grade and never persists that selector. Nonowners see available branch lists; central delete buttons are suppressed to retain historic links. Private previews use Storage downloads under RLS, no public URL or external Office viewer; exports in family requests mirror admissions export schools, independently of read/decide rights.

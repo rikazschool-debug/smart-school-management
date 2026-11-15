@@ -11,6 +11,7 @@ import { ForbiddenState, LoadingState } from "@/components/states";
 import { AcademicAllocation, AcademicCatalogEditor } from "@/components/academic-allocation";
 import { useQuery } from "@tanstack/react-query";
 import { db, type Row } from "@/components/crud-page";
+import { SubjectPresetPicker } from "@/components/subject-preset-picker";
 
 export const Route = createFileRoute("/_authenticated/app/academic")({
   head: () => ({ meta: [{ title: "الهيكل الدراسي — ركاز" }, { name: "description", content: "محددات الدراسة المعتمدة من المالك وتخصيصها للفروع وتكوين الشعب للوكيل." }, { property: "og:title", content: "الهيكل الدراسي — ركاز" }, { property: "og:description", content: "محددات المؤسسة والشعب المتاحة للفرع." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -115,6 +116,7 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   fields={[{ key: "name", label: "اسم القسم", required: true }]}
                   columns={[{ label: "القسم", render: (r) => r["name"] }]} />}
                 {access("academic_subjects") && <CrudTable title="المواد" table="subjects" schoolId={s} canWrite={edit("academic_subjects")} order="name" select="*, departments(name)" searchKeys={["name", "code"]}
+                  formExtra={(fill) => <SubjectPresetPicker onSelect={(name) => fill({ name })} />}
                   fields={[
                     { key: "name", label: "اسم المادة", required: true },
                     { key: "code", label: "الرمز" },
