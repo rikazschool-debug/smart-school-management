@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { ImageIcon } from "lucide-react";
-import { supabase as db } from "@/integrations/supabase/client";
+import { db, type Row } from "@/components/crud-page";
 import { openFile } from "@/lib/comm";
 
-type Row = Record<string, any>;
 
 /** Image preview in a message: short-lived signed URL (private bucket); click opens full size. */
 export function ImageThumb({ file }: { file: Row }) {
