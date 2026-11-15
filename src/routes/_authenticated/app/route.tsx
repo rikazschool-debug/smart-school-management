@@ -273,7 +273,7 @@ function Shell() {
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
                     <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{k === "schedule" && active ? scheduleLabel(active.role) : k === "teachers" && active ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
                   </Link>
-                  {k === "collaboration" && <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">{[["community", "المجتمع المهني"], ["library", "المكتبة الرقمية"]].map(([t, label]) => <Link key={t} to="/app/collaboration" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>)}</div>}
+                  {k === "collaboration" && <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">{([["community", "المجتمع المهني"], ["library", "المكتبة الرقمية"]] as const).map(([t, label]) => <Link key={t} to="/app/collaboration" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>)}</div>}
                   {k === "procurement" && path.startsWith("/app/procurement") && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {PC_SUB.filter(([t]) => (pcNeedsOnly ? t === "needs" : t !== "settings" || owner || pc.data?.caps.settings === "org")).map(([t, label]) => (
