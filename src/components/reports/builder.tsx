@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { arabicError } from "@/lib/session";
 import { FileSpreadsheet, FileText, Play, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { selectCls } from "@/components/ui/native-select";
-import { db, type Row } from "@/components/crud-page";
+import { all, within, d10, type Def, db } from "@/components/reports/core";
+import { MORE_REPORTS } from "@/components/reports/more";
 import { EmptyState, PageHeader } from "@/components/states";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { DAY_STATUS } from "@/lib/attendance";
@@ -13,37 +15,13 @@ import { ENR } from "@/components/admissions/shared";
 import { KIND as EVT_KIND } from "@/components/events/shared";
 import { groupCount, overlaps, periodBounds, periodLabel, type ReportTable } from "@/lib/report-builder";
 
-type P = { school: string; from: string | null; to: string | null };
-type Def = { label: string; note: string; summary: string; run: (p: P, detail: boolean) => Promise<ReportTable> };
-
 const ACTIVE: Record<string, string> = { active: "نشط", inactive: "غير نشط" };
 const HW: Record<string, string> = { draft: "مسودة", published: "منشور", closed: "مغلق", cancelled: "ملغى" };
 const EVS: Record<string, string> = { draft: "مسودة", published: "منشور", closed: "مغلق", cancelled: "ملغى", done: "منتهٍ" };
-const d10 = (v: unknown) => (typeof v === "string" ? v.slice(0, 10) : "");
 
-/** Reads every visible row in pages of 1000 (RLS decides what is visible). */
-async function all(build: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }>, cap = 20000) {
-  const out: Row[] = [];
-  for (let i = 0; i < cap; i += 1000) {
-    const { data, error } = await build(i, i + 999);
-    if (error) throw error;
-    const rows = (data ?? []) as Row[];
-    out.push(...rows);
-    if (rows.length < 1000) break;
-  }
-  return out;
-}
-/** Applies the chosen period to a date/timestamp column (end day inclusive). */
-function within<Q extends { gte: (c: string, v: string) => Q; lte: (c: string, v: string) => Q }>(q: Q, col: string, p: P, ts = true) {
-  let r = q;
-  if (p.from) r = r.gte(col, p.from);
-  if (p.to) r = r.lte(col, ts ? `${p.to}T23:59:59.999+03:00` : p.to);
-  return r;
-}
-
-const REPORTS: Record<string, Def> = {
+const BASE: Record<string, Def> = {
   students_count: {
-    label: "أعداد الطلاب حسب الصف والشعبة", summary: "حسب الصف والشعبة", note: "الطلاب المسكّنون خلال الفترة",
+    group: "الطلاب", label: "أعداد الطلاب حسب الصف والشعبة", summary: "حسب الصف والشعبة", note: "الطلاب المسكّنون خلال الفترة",
     run: async (p, detail) => {
       const rows = (await all((a, b) => db.from("enrollments").select("status, start_date, end_date, sections(name, grades(name, sort_order)), students(full_name, national_id)").eq("school_id", p.school).range(a, b)))
         .filter((r) => overlaps(r["start_date"], r["end_date"], p.from, p.to));
@@ -52,7 +30,7 @@ const REPORTS: Record<string, Def> = {
     },
   },
   students: {
-    label: "سجل الطلاب", summary: "حسب الحالة والجنس", note: "حسب تاريخ الإضافة",
+    group: "الطلاب", label: "سجل الطلاب", summary: "حسب الحالة والجنس", note: "حسب تاريخ الإضافة",
     run: async (p, detail) => {
       const rows = await all((a, b) => within(db.from("students").select("full_name, national_id, gender, status, created_at").eq("school_id", p.school), "created_at", p).order("full_name").range(a, b));
       const g = (v: string) => (v === "male" ? "ذكر" : v === "female" ? "أنثى" : v ?? "");
@@ -61,7 +39,7 @@ const REPORTS: Record<string, Def> = {
     },
   },
   attendance: {
-    label: "الحضور اليومي", summary: "حسب الحالة", note: "حسب تاريخ اليوم الدراسي",
+    group: "الحضور والغياب", label: "الحضور اليومي", summary: "حسب الحالة", note: "حسب تاريخ اليوم الدراسي",
     run: async (p, detail) => {
       const rows = await all((a, b) => within(db.from("attendance_days").select("date, status, late_minutes, students(full_name)").eq("school_id", p.school), "date", p, false).order("date").range(a, b));
       if (detail) return { headers: ["التاريخ", "الطالب", "الحالة", "دقائق التأخر"], rows: rows.map((r) => [r["date"], r["students"]?.full_name, DAY_STATUS[r["status"]] ?? r["status"], r["late_minutes"] ?? ""]) };
@@ -69,7 +47,7 @@ const REPORTS: Record<string, Def> = {
     },
   },
   teachers: {
-    label: "الكادر التعليمي", summary: "حسب التخصص والحالة", note: "حسب تاريخ الإضافة",
+    group: "المعلمون والجدول", label: "الكادر التعليمي", summary: "حسب التخصص والحالة", note: "حسب تاريخ الإضافة",
     run: async (p, detail) => {
       const rows = await all((a, b) => within(db.from("teachers").select("full_name, specialization, status, created_at").eq("school_id", p.school), "created_at", p).order("full_name").range(a, b));
       if (detail) return { headers: ["المعلم", "التخصص", "الحالة", "تاريخ الإضافة"], rows: rows.map((r) => [r["full_name"], r["specialization"], ACTIVE[r["status"]] ?? r["status"], d10(r["created_at"])]) };
@@ -77,7 +55,7 @@ const REPORTS: Record<string, Def> = {
     },
   },
   guardians: {
-    label: "أولياء الأمور", summary: "حسب صلة القرابة", note: "روابط الطلاب المضافة خلال الفترة",
+    group: "الطلاب", label: "أولياء الأمور", summary: "حسب صلة القرابة", note: "روابط الطلاب المضافة خلال الفترة",
     run: async (p, detail) => {
       const rows = await all((a, b) => within(db.from("student_guardians").select("relationship, verified, created_at, guardians(full_name), students(full_name)").eq("school_id", p.school), "created_at", p).range(a, b));
       if (detail) return { headers: ["ولي الأمر", "الطالب", "الصلة", "موثّق", "تاريخ الربط"], rows: rows.map((r) => [r["guardians"]?.full_name, r["students"]?.full_name, r["relationship"], r["verified"] ? "نعم" : "لا", d10(r["created_at"])]) };
@@ -85,7 +63,7 @@ const REPORTS: Record<string, Def> = {
     },
   },
   homework: {
-    label: "الواجبات والاختبارات", summary: "حسب النوع والحالة", note: "حسب تاريخ الإنشاء",
+    group: "الشؤون التعليمية", label: "الواجبات والاختبارات", summary: "حسب النوع والحالة", note: "حسب تاريخ الإنشاء",
     run: async (p, detail) => {
       const rows = await all((a, b) => within(db.from("homework").select("title, kind, status, created_at, due_at").eq("school_id", p.school), "created_at", p).order("created_at").range(a, b));
       const k = (v: string) => (v === "test" ? "اختبار" : "واجب");
@@ -94,7 +72,7 @@ const REPORTS: Record<string, Def> = {
     },
   },
   events: {
-    label: "الأنشطة والفعاليات", summary: "حسب النوع والحالة", note: "حسب تاريخ الإنشاء",
+    group: "الأنشطة والفعاليات", label: "الأنشطة والفعاليات", summary: "حسب النوع والحالة", note: "حسب تاريخ الإنشاء",
     run: async (p, detail) => {
       const rows = await all((a, b) => within(db.from("evt_items").select("title, kind, status, location, created_at").eq("school_id", p.school), "created_at", p).order("created_at").range(a, b));
       const k = (v: string) => EVT_KIND[v as keyof typeof EVT_KIND] ?? v;
@@ -104,8 +82,11 @@ const REPORTS: Record<string, Def> = {
   },
 };
 
+const REPORTS: Record<string, Def> = { ...BASE, ...MORE_REPORTS };
+const GROUPS = [...new Set(Object.values(REPORTS).map((r) => r.group))];
+
 /** One builder for any section: pick a report, a period and a layout; output through the shared export helpers. */
-export function ReportBuilder({ schoolId, schoolName }: { schoolId: string; schoolName: string }) {
+export function ReportBuilder({ schoolId, orgId, schoolName }: { schoolId: string; orgId: string; schoolName: string }) {
   const [kind, setKind] = useState("students_count");
   const [detail, setDetail] = useState(false);
   const month = new Date().toISOString().slice(0, 8);
@@ -120,9 +101,9 @@ export function ReportBuilder({ schoolId, schoolName }: { schoolId: string; scho
     if (b.error) return void toast.error(b.error);
     setBusy(true);
     try {
-      const t = await def.run({ school: schoolId, from: b.from, to: b.to }, detail);
+      const t = await def.run({ school: schoolId, org: orgId, from: b.from, to: b.to }, detail);
       setOut({ title: def.label, filters: [periodLabel(b.from, b.to), detail ? "قائمة تفصيلية" : `ملخص ${def.summary}`, def.note], t });
-    } catch { toast.error("تعذر إعداد التقرير، حاول مرة أخرى"); } finally { setBusy(false); }
+    } catch (e) { const m = e && typeof e === "object" && "message" in e ? String((e as { message: unknown }).message) : ""; toast.error(/permission|denied|forbidden|غير مصرح|صلاحية|not allowed/i.test(m) ? "لا تملك صلاحية عرض بيانات هذا القسم" : arabicError(e) || "تعذر إعداد التقرير، حاول مرة أخرى"); } finally { setBusy(false); }
   };
   const meta = out ? { title: out.title, school: schoolName, filters: out.filters } : null;
   const save = async (k: "xlsx" | "pdf" | "print") => {
@@ -138,7 +119,7 @@ export function ReportBuilder({ schoolId, schoolName }: { schoolId: string; scho
       <div className="grid gap-4 rounded-xl border bg-card p-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1.5 lg:col-span-2"><Label htmlFor="rb-kind" className="font-semibold">نوع التقرير</Label>
           <select id="rb-kind" className={selectCls()} value={kind} onChange={(e) => { setKind(e.target.value); setOut(null); }}>
-            {Object.entries(REPORTS).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}
+            {GROUPS.map((g) => <optgroup key={g} label={g}>{Object.entries(REPORTS).filter(([, r]) => r.group === g).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}</optgroup>)}
           </select></div>
         <div className="space-y-1.5"><Label htmlFor="rb-from" className="font-semibold">من تاريخ</Label><Input id="rb-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
         <div className="space-y-1.5"><Label htmlFor="rb-to" className="font-semibold">إلى تاريخ</Label><Input id="rb-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>

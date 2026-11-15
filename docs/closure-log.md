@@ -1013,3 +1013,9 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Sidebar: single-entry groups with the same name (الأنشطة والفعاليات) and «الرئيسية» render their links directly; main group headings larger/bold. Presentation only.
 - Admissions sub-menu/tabs: «الطلاب الحاليون» removed (students stay under their own page); remaining: طلبات القبول، طلبات ولي الأمر، الإعدادات والربط.
 - New /app/reports «منشئ التقارير» (nav key reports: owner, principal, vice, student affairs): report type + from/to period + summary/detail, PDF/Excel/print via src/lib/export.ts. Reads only through the RLS client, so each user sees only permitted rows. Test: src/test/report-builder.test.ts.
+
+## 2026-11-15 — Report builder: more report types (prompt-390)
+- Report types are grouped by section (الطلاب، الحضور والغياب، المعلمون والجدول، الشؤون التعليمية، التواصل، إدارة المدرسة، الموارد والخدمات).
+- New: إشغال الشعب، المفوّضون بالاستلام، طلبات أولياء الأمور، طلبات القبول (ad_list)، تصحيح الحضور، الاستئذان والاستلام، حركة البوابة، غياب المعلمين، حصص الانتظار، إسناد المواد، الزيارات الصفية (cv_list)، تسليمات الواجبات، منشورات الفصول، التعاميم، التكليفات والطلبات الإدارية (adm_*_list)، صيانة المدارس/الباصات (mt_list)، المشتريات والعهد (pc_request_list)، تذاكر الدعم (support_list).
+- Protected sections are read only through their own list RPCs, so each person sees only what that section already allows; a refusal shows «لا تملك صلاحية عرض بيانات هذا القسم». No new SQL.
+- Evidence: typecheck clean; report-builder tests 3/3; all direct selects validated against the test DB. Not covered yet: health, HR.
