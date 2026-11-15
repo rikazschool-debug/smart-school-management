@@ -20,6 +20,8 @@ if (process.argv.includes("--teardown")) {
   for (const u of registry.users) tr.addUser(u);
   const c = createClient(url, pk, { auth: { persistSession: false } });
   must(await c.auth.setSession(fixture.users.owner.session));
+  await tr.deleteNotifications();
+  must(await admin.from("conversations").delete().eq("org_id", registry.org));
   for (const school of tr.schools) {
     for (const table of ["enrollments", "classrooms"]) must(await admin.from(table).delete().eq("school_id", school));
     must(await c.from("sections").delete().eq("school_id", school));
