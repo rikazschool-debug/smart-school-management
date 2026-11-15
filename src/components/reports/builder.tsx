@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { arabicError } from "@/lib/session";
 import { FileSpreadsheet, FileText, Play, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,7 +103,7 @@ export function ReportBuilder({ schoolId, orgId, schoolName }: { schoolId: strin
     try {
       const t = await def.run({ school: schoolId, org: orgId, from: b.from, to: b.to }, detail);
       setOut({ title: def.label, filters: [periodLabel(b.from, b.to), detail ? "قائمة تفصيلية" : `ملخص ${def.summary}`, def.note], t });
-    } catch (e) { const m = e && typeof e === "object" && "message" in e ? String((e as { message: unknown }).message) : ""; toast.error(/permission|denied|forbidden|غير مصرح|صلاحية|not allowed/i.test(m) ? "لا تملك صلاحية عرض بيانات هذا القسم" : "تعذر إعداد التقرير، حاول مرة أخرى"); } finally { setBusy(false); }
+    } catch (e) { const m = e && typeof e === "object" && "message" in e ? String((e as { message: unknown }).message) : ""; toast.error(/permission|denied|forbidden|غير مصرح|صلاحية|not allowed/i.test(m) ? "لا تملك صلاحية عرض بيانات هذا القسم" : arabicError(e) || "تعذر إعداد التقرير، حاول مرة أخرى"); } finally { setBusy(false); }
   };
   const meta = out ? { title: out.title, school: schoolName, filters: out.filters } : null;
   const save = async (k: "xlsx" | "pdf" | "print") => {
