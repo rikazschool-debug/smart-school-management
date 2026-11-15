@@ -11,7 +11,7 @@ import { arabicError } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { PersonCard } from "@/components/people/person-card";
@@ -100,12 +100,14 @@ export function RecordForm({
   initial,
   onSubmit,
   submitting,
+  onCancel,
 }: {
   fields: Field[];
   schoolId: string;
   initial: Row;
   onSubmit: (v: Row) => void;
   submitting: boolean;
+  onCancel?: (() => void) | undefined;
 }) {
   const autoDn = (n: unknown) => { const w = String(n ?? "").trim().split(/\s+/).filter(Boolean); return w.length > 1 ? `${w[0]} ${w[w.length - 1]}` : (w[0] ?? ""); };
   const hasDn = fields.some((f) => f.key === "display_name" && !f.hideInForm) && fields.some((f) => f.key === "full_name");
@@ -123,7 +125,7 @@ export function RecordForm({
   };
   return (
     <form
-      className="space-y-4"
+      className="space-y-5"
       onSubmit={(e): void => {
         e.preventDefault();
         for (const f of fields)
@@ -145,15 +147,15 @@ export function RecordForm({
         {fields
           .filter((f) => !f.hideInForm)
           .map((f) => (
-            <div key={f.key} className={f.type === "checkbox" ? "flex items-center gap-2 pt-6" : "space-y-1.5"}>
+            <div key={f.key} className={f.type === "checkbox" ? "sm:col-span-2" : "space-y-1.5"}>
               {f.type === "checkbox" ? (
-                <>
-                  <input id={f.key} type="checkbox" checked={!!v[f.key]} onChange={(e) => setV({ ...v, [f.key]: e.target.checked })} />
-                  <Label htmlFor={f.key}>{f.label}</Label>
-                </>
+                <label htmlFor={f.key} className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border bg-muted/40 px-4 py-3 transition-colors hover:bg-muted">
+                  <span className="text-sm font-medium">{f.label}</span>
+                  <input id={f.key} type="checkbox" className="size-4 accent-primary" checked={!!v[f.key]} onChange={(e) => setV({ ...v, [f.key]: e.target.checked })} />
+                </label>
               ) : (
                 <>
-                  <Label htmlFor={f.key}>
+                  <Label htmlFor={f.key} className="text-[13px] font-semibold text-foreground/80">
                     {f.label}
                     {f.required && <span className="text-destructive"> *</span>}
                   </Label>
@@ -172,10 +174,11 @@ export function RecordForm({
             </div>
           ))}
       </div>
-      <DialogFooter>
-        <Button type="submit" disabled={submitting}>
+      <DialogFooter className="-mx-6 -mb-6 mt-2 gap-2 border-t bg-muted/30 px-6 py-3 sm:justify-start">
+        <Button type="submit" disabled={submitting} className="min-w-28">
           {submitting ? "جارٍ الحفظ…" : "حفظ"}
         </Button>
+        {onCancel && <Button type="button" variant="outline" onClick={onCancel}>إلغاء</Button>}
       </DialogFooter>
     </form>
   );
@@ -453,8 +456,14 @@ export function CrudTable({
       </>)}
       {person && <PersonCard kind={person.kind} id={openId} org={org} onClose={() => setOpenId(null)} />}
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent dir="rtl" className="max-w-2xl">
-          <DialogHeader><DialogTitle>{editing?.["id"] ? "تعديل" : "إضافة"} — {title}</DialogTitle></DialogHeader>
+        <DialogContent dir="rtl" className="max-h-[90vh] max-w-2xl gap-5 overflow-y-auto">
+          <DialogHeader className="-mx-6 -mt-6 border-b bg-muted/30 px-6 py-4 text-start sm:text-start">
+            <DialogTitle className="flex items-center gap-3 text-lg">
+              <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">{editing?.["id"] ? <Pencil className="size-4" /> : <Plus className="size-4" />}</span>
+              <span>{editing?.["id"] ? "تعديل" : "إضافة"} {title}</span>
+            </DialogTitle>
+            <DialogDescription className="pe-12 text-xs">أدخل البيانات ثم اضغط «حفظ». الحقول المميزة بعلامة <span className="text-destructive">*</span> مطلوبة.</DialogDescription>
+          </DialogHeader>
           {editing && person && editing["id"] && caps?.tags_assign && (
             <div className="space-y-1.5 rounded-lg border p-3">
               <Label>الوسوم <span className="text-xs font-normal text-muted-foreground">(تُحفظ فور الضغط)</span></Label>
@@ -474,7 +483,7 @@ export function CrudTable({
             </div>
           )}
           {editing && !editing["id"] && formExtra?.((v) => { setEditing((e) => ({ ...(e ?? {}), ...v })); setFormKey((k) => k + 1); }, () => { setEditing(null); void qc.invalidateQueries(); })}
-          {editing && <RecordForm key={formKey} fields={fields} schoolId={schoolId} initial={editing} onSubmit={(v) => save.mutate(v)} submitting={save.isPending} />}
+          {editing && <RecordForm key={formKey} fields={fields} schoolId={schoolId} initial={editing} onSubmit={(v) => save.mutate(v)} submitting={save.isPending} onCancel={() => setEditing(null)} />}
         </DialogContent>
       </Dialog>
     </section>
