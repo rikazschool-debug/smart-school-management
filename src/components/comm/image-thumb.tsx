@@ -10,7 +10,7 @@ export function ImageThumb({ file }: { file: Row }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     let live = true;
-    db.storage.from("rikaz-files").createSignedUrl(file["storage_path"], 300).then(({ data, error }) => {
+    db.storage.from("rikaz-files").createSignedUrl(file["storage_path"], 300).then(({ data, error }: { data: { signedUrl: string } | null; error: unknown }) => {
       if (!live) return; if (error || !data) setFailed(true); else setSrc(data.signedUrl);
     });
     return () => { live = false; };
