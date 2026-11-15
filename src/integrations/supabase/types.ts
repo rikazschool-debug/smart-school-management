@@ -19228,7 +19228,6 @@ export type Database = {
         Args: { _org: string; _school: string }
         Returns: boolean
       }
-      _can_read_file_before_co: { Args: { _file: string }; Returns: boolean }
       _cg_admin: {
         Args: { _conv: string }
         Returns: {
@@ -19335,9 +19334,7 @@ export type Database = {
         Args: { _r: Database["public"]["Enums"]["app_role"] }
         Returns: string
       }
-      _conv_access_before_co: { Args: { _conv: string }; Returns: boolean }
       _conv_link: { Args: { _conv: string }; Returns: string }
-      _conv_send_before_co: { Args: { _conv: string }; Returns: string }
       _conv_send_block_v1: { Args: { _conv: string }; Returns: string }
       _copy_homework_template_v0: {
         Args: {
