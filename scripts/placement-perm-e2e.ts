@@ -39,7 +39,10 @@ try {
   const kid2 = must(await admin.from("students").insert({ school_id: a, full_name: "طالب المقعد الوحيد" }).select("id").single()).id;
   const foreign = must(await admin.from("students").insert({ school_id: b, full_name: "طالب الفرع الآخر" }).select("id").single()).id;
   const place = (c: SupabaseClient, student: string, section: string) => c.rpc("student_place", { _student: student, _section: section });
-  check("vice cannot place by default", !!(await place(vp.c, kid, s1)).error);
+  check("vice places in own branch by default", !(await place(vp.c, kid, s1)).error);
+  check("vice default placement is visible in permissions", must(await vp.c.rpc("perm_my_school", { _school: a }))["people_family.place"] === true);
+  check("vice reads own branch teachers", !(await vp.c.from("teachers").select("id").eq("school_id", a)).error);
+  check("vice reads own branch students", must(await vp.c.from("students").select("id").eq("id", kid)).some(x => x.id === kid));
   const grants = [{ section: "people_family", action: "place", scope: "branch" }, { section: "people", action: "view", scope: "branch" }, { section: "people", action: "tags_assign", scope: "branch" }];
   const role = must(await owner.c.rpc("perm_role_save", { _org: org, _id: null, _name: "تسكين ووسوم فقط", _description: "لا تعديل للملفات", _grants: grants, _reason: "تجربة تفويض" }));
   must(await owner.c.rpc("perm_assign", { _org: org, _user: vp.id, _role: role, _assign: true, _school_ids: [a], _limit: null, _reason: "تجربة تفويض" }));
@@ -55,7 +58,7 @@ try {
   const edit = await vp.c.from("students").update({ full_name: "غير مسموح" }).eq("id", kid).select("id");
   check("placement grant cannot edit student records", !!edit.error || edit.data?.length === 0);
   check("placement grant cannot create guardians", !!(await vp.c.from("guardians").insert({ school_id: a, full_name: "غير مسموح" })).error);
-  check("other vice stays unable to place", !!(await place(other.c, kid, s1)).error);
+  check("another vice also inherits default placement", !(await place(other.c, kid, s1)).error);
   check("cross branch student is refused", !!(await place(vp.c, foreign, s1)).error);
   const tag = must(await owner.c.rpc("pp_tag_save", { _org: org, _id: null, _name: "متابعة التسكين", _color: "green", _kinds: ["student"], _active: true }));
   check("vice assigns tag without record edit", !(await vp.c.rpc("pp_tag_set", { _kind: "student", _id: kid, _tag: tag, _on: true })).error);

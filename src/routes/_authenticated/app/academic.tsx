@@ -11,7 +11,9 @@ import { ForbiddenState, LoadingState } from "@/components/states";
 import { AcademicAllocation, AcademicCatalogEditor } from "@/components/academic-allocation";
 import { useQuery } from "@tanstack/react-query";
 import { db, type Row } from "@/components/crud-page";
-import { SubjectPresetPicker } from "@/components/subject-preset-picker";
+import { SubjectNameSelect } from "@/components/subject-preset-picker";
+import { SUBJECT_PRESETS } from "@/lib/subject-presets";
+import { selectCls } from "@/components/ui/native-select";
 import { AcademicPresetPicker, GradeNameSelect } from "@/components/academic-preset-picker";
 
 export const Route = createFileRoute("/_authenticated/app/academic")({
@@ -33,7 +35,7 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         const vice = ctx.role === "vice_principal";
         const principal = ctx.role === "principal";
         const central = ["academic_years", "academic_terms", "academic_stages", "academic_grades"];
-        const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], queryFn: async () => { const { data, error } = await db.from("stages").select("id,name").eq("school_id", ctx.schoolId).eq("available", true); if (error) throw error; return data as Row[]; } });
+const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], queryFn: async () => { const { data, error } = await db.from("stages").select("id,name").eq("school_id", ctx.schoolId).eq("available", true).order("sort_order"); if (error) throw error; return data as Row[]; } });
         if (!p) return <LoadingState />;
         const access = (key: string) => vice ? key === "academic_sections" : (owner || (principal && central.includes(key)) || academicAccess(p, key));
         const edit = (key: string) => central.includes(key) ? owner : key === "academic_sections" ? owner || vice : !!p[`${key}.edit`];
@@ -86,6 +88,7 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   fields={[{ key: "name", label: "الاسم", required: true }, { key: "sort_order", label: "الترتيب", type: "number" }, { key: "available", label: "متاح للفرع", type: "checkbox" }]}
                   columns={[{ label: "المرحلة", render: (r) => r["name"] }, { label: "الترتيب", render: (r) => r["sort_order"] }]} />}
                 {access("academic_grades") && <CrudTable title="الصفوف" table="grades" schoolId={s} defaults={{ available: true }} filter={owner ? {} : { available: true }} canDelete={false} canWrite={edit("academic_grades")} order="sort_order" select="*, stages(name)" searchKeys={["name"]}
+                  filters={[{ key: "stage_id", label: "المرحلة", remote: { table: "stages", label: "name" } }]}
                   fields={[
                     { key: "stage_id", label: "المرحلة", type: "select", required: true, options: { table: "stages", label: "name" }, resetFields: ["name", "sort_order"] },
                     { key: "name", label: "الصف", required: true, custom: (p) => <GradeNameSelect org={ctx.orgId ?? ""} school={s} {...p} /> },
@@ -118,9 +121,10 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   fields={[{ key: "name", label: "اسم القسم", required: true }]}
                   columns={[{ label: "القسم", render: (r) => r["name"] }]} />}
                 {access("academic_subjects") && <CrudTable title="المواد" table="subjects" schoolId={s} canWrite={edit("academic_subjects")} order="name" select="*, departments(name)" searchKeys={["name", "code"]}
-                  formExtra={(fill) => <SubjectPresetPicker onSelect={(name) => fill({ name })} />}
                   fields={[
-                    { key: "name", label: "اسم المادة", required: true },
+                    { key: "_subjectStage", label: "المرحلة", type: "select", transient: true, options: Object.keys(SUBJECT_PRESETS).map(value => ({ value, label: value })), resetFields: ["_subjectGrade", "name"] },
+                    { key: "_subjectGrade", label: "الصف / المستوى", transient: true, custom: ({ value, values, set }) => <select id="_subjectGrade" className={selectCls("w-full")} disabled={!values["_subjectStage"]} value={String(value ?? "")} onChange={e => set({ _subjectGrade: e.target.value, name: "" })}><option value="">{values["_subjectStage"] ? "اختر الصف / المستوى" : "اختر المرحلة أولًا"}</option>{Object.keys(SUBJECT_PRESETS[String(values["_subjectStage"] ?? "")] ?? {}).map(g => <option key={g} value={g}>{g}</option>)}</select> },
+                    { key: "name", label: "المادة", required: true, custom: (p) => <SubjectNameSelect {...p} /> },
                     { key: "code", label: "الرمز" },
                     { key: "department_id", label: "القسم", type: "select", options: { table: "departments", label: "name" } },
                   ]}
