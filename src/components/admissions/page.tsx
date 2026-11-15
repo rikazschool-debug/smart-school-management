@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BarChart3, FileDown, GraduationCap, Plus, Printer, Settings2, UserPlus, Users } from "lucide-react";
+import { BarChart3, FileDown, Plus, Printer, Settings2, UserPlus, Users } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, ForbiddenState, LoadingState, PageHeader, EmptyState } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";

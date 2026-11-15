@@ -137,7 +137,7 @@ export function ReportBuilder({ schoolId, schoolName }: { schoolId: string; scho
       <PageHeader eyebrow="التقارير" title="منشئ التقارير" desc="اختر التقرير والفترة وشكل العرض، ثم اعرضه أو صدّره PDF أو Excel أو اطبعه. يظهر فقط ما تسمح لك صلاحياتك برؤيته." />
       <div className="grid gap-4 rounded-xl border bg-card p-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1.5 lg:col-span-2"><Label htmlFor="rb-kind" className="font-semibold">نوع التقرير</Label>
-          <select id="rb-kind" className={selectCls} value={kind} onChange={(e) => { setKind(e.target.value); setOut(null); }}>
+          <select id="rb-kind" className={selectCls()} value={kind} onChange={(e) => { setKind(e.target.value); setOut(null); }}>
             {Object.entries(REPORTS).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}
           </select></div>
         <div className="space-y-1.5"><Label htmlFor="rb-from" className="font-semibold">من تاريخ</Label><Input id="rb-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
