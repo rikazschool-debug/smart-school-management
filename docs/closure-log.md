@@ -991,3 +991,9 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - General rls-e2e attempted but stopped on obsolete grade fixture (أول متوسط); not counted as passed. Initial failed synthetic runs left cleanup blocked by owner-only academic guards; no real accounts were modified. New browser fixture teardown uses its recorded owner session for academic deletion before TestRun.purgeOrg. 1167 prior security findings unchanged; no new migration findings, production, messages or publishing.
 
 - Add-grade form: choose «المرحلة», then «الصف» lists only that stage's approved grades; removed the separate ready-grade box. New migration: _academic_stage_key makes «المرحلة X» = «X» in _academic_grade_guard. Test: grade-name-select.
+
+## 15 Nov 2026 — Navigation organization (prompt-383)
+- Split the long workspace list into academic, school administration, care/activities and resources/services groups. Groups and page subsections can collapse; navigating into them opens the active branch. Single-entry categories show one page label instead of duplicate headings; long page names wrap.
+- Existing role/delegation filtering, owner sections, people access, destinations and server permissions are unchanged. No SQL, accounts, messages, production or publish changes. React is already explicitly imported by use-mobile; no hook modification is required.
+- Added behavioral tests for grouping preservation across all roles and expansion/navigation behavior. Authenticated acceptance is not claimed without a usable external Supabase session.
+- Verification: 48 targeted Vitest tests passed; preview build OK. Desktop/mobile browser reached /auth, no runtime errors; this is not authenticated sidebar acceptance. Root AGENTS.md rule save was refused by its size budget; existing rules were not shortened.
