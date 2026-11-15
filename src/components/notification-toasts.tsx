@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Bell } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Toaster } from "@/components/ui/sonner";
 import { GENERAL_NOTIFICATIONS_FILTER } from "@/lib/notification-filter";
@@ -43,16 +44,21 @@ export function NotificationToasts({ list }: { list: UnreadRow[] | undefined }) 
     const fresh = newArrivals(seen.current, list).slice(0, 3);
     seen.current = new Set([...(seen.current ?? []), ...list.map((n) => n.id)]);
     for (const n of fresh) {
-      toast(n.title, {
-        toasterId: TOASTER,
-        id: `notif-${n.id}`,
-        description: n.body ?? undefined,
-        duration: 6000,
-        action: { label: "فتح", onClick: () => { void markRead([n.id]); navigate({ href: n.link ?? "/app/notifications" }); } },
-      });
+      toast.custom((t) => (
+        <button type="button" dir="rtl"
+          onClick={() => { toast.dismiss(t); void markRead([n.id]); navigate({ href: n.link ?? "/app/notifications" }); }}
+          className="flex w-[356px] max-w-[calc(100vw-2rem)] items-start gap-3 rounded-xl border border-border bg-background p-4 text-start text-foreground shadow-lg transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Bell className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold leading-6">{n.title}</span>
+            {n.body && <span className="mt-0.5 line-clamp-3 block text-sm text-muted-foreground">{n.body}</span>}
+            <span className="mt-1 block text-xs text-primary">اضغط لفتح القسم</span>
+          </span>
+        </button>
+      ), { toasterId: TOASTER, id: `notif-${n.id}`, duration: 6000 });
     }
   }, [list, navigate, markRead]);
-  return <Toaster id={TOASTER} dir="rtl" position="bottom-left" closeButton />;
+  return <Toaster id={TOASTER} dir="rtl" position="bottom-left" />;
 }
 
 export function SectionBadge({ n, label }: { n: number; label?: string }) {
