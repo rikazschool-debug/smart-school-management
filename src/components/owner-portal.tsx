@@ -61,10 +61,6 @@ type Feature = { icon: LucideIcon; label: string; to: string; search?: Record<st
 type Card = { key: string; section?: SectionKey; title: string; desc: string; to: string; icon: LucideIcon; note?: string; features: Feature[]; open: string };
 
 const CARDS: Card[] = [
-  { key: "collaboration", title: "التعاون", icon: UsersRound, to: "/app/collaboration", open: "فتح التعاون", desc: "المجتمع المهني والمكتبة الرقمية للمجموعة التعليمية.", features: [
-    { icon: MessagesSquare, label: "المجتمع المهني", to: "/app/collaboration", search: { tab: "community" } },
-    { icon: BookOpen, label: "المكتبة الرقمية", to: "/app/collaboration", search: { tab: "library" } },
-  ] },
   {
     key: "schools", section: "school_admin", title: "إدارة المدارس", icon: Building2, to: "/app/school-home", open: "فتح إدارة المدارس",
     desc: "مدارس المؤسسة وفروعها، وتشغيلها اليومي: الإعداد الأكاديمي والطلاب والجداول والحضور والتواصل.",
@@ -77,6 +73,8 @@ const CARDS: Card[] = [
       { icon: Link2, label: "الوثائق والعقود", to: "/app/org-docs", search: { tab: "docs" } },
       { icon: Link2, label: "زيارات أولياء الأمور", to: "/app/family-visits", search: {} },
       { icon: CalendarDays, label: "الاجتماعات", to: "/app/admin/meetings" },
+      { icon: MessagesSquare, label: "المجتمع المهني", to: "/app/collaboration", search: { tab: "community" } },
+      { icon: BookOpen, label: "المكتبة الرقمية", to: "/app/collaboration", search: { tab: "library" } },
     ],
   },
   {
