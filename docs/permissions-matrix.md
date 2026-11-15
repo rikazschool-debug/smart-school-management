@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-15 (proposed, not applied): Lovable ADMS parity uses the production contract's owner/HR attendance-settings RPC checks and service-only ingest/sync functions. RLS stays enabled on all nine new tables; new-table TRUNCATE/TRIGGER/REFERENCES/MAINTAIN grants to anon/authenticated are revoked to match the VPS boundary. Existing table privileges, global defaults, memberships and production permissions remain unchanged. The local test plan uses fresh keys and a synthetic QA institution only; attendance processing remains off. See docs/integrations/adms-lovable-parity-20261115.md and scripts/adms/cloud-parity-qa.mjs (19 isolated checks).
+
 2026-11-12 (prompt-338): HR overview presentation reorganized into grouped navigation, desktop employee table/mobile list, and expandable file tools. No capability, role, scope, RPC or field-masking change; existing create/export/edit/print checks are retained.
 
 | Capability | Org owner | Principal | Vice principal | Dept head | Supervisor | Student affairs | Teacher | Guardian / Student | Counselor / Nurse / Security | Platform admin |
