@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { filePreviewKind, deliverPrivateBlob } from "@/lib/private-file-delivery";
+import { PdfPages } from "./pdf-pages";
 
 export function MaterialFileViewer({ file, onRemove }: { file: Row; onRemove?: () => void }) {
   const [open, setOpen] = useState(false);
@@ -34,7 +35,7 @@ export function MaterialFileViewer({ file, onRemove }: { file: Row; onRemove?: (
     if (kind === "pdf") { w.location.href = url; return; }
     const doc = w.document; doc.title = String(file["name"]); doc.documentElement.dir = "rtl";
     const content = doc.createElement(kind === "image" ? "img" : "pre");
-    if (content instanceof w.HTMLImageElement) { content.src = url; content.style.maxWidth = "100%"; content.onload = () => { w.focus(); w.print(); }; }
+    if (kind === "image") { const image = content as HTMLImageElement; image.src = url; image.style.maxWidth = "100%"; image.onload = () => { w.focus(); w.print(); }; }
     else { content.textContent = text; content.style.whiteSpace = "pre-wrap"; }
     doc.body.append(content);
     if (kind === "text") { w.focus(); w.print(); }
@@ -47,7 +48,7 @@ export function MaterialFileViewer({ file, onRemove }: { file: Row; onRemove?: (
       <div className="flex flex-wrap gap-2"><Button onClick={() => void deliverPrivateBlob(q.data, String(file["name"]))}><Download className="size-4" />تنزيل</Button>{kind !== "unsupported" && <Button variant="outline" disabled={!url} onClick={print}><Printer className="size-4" />{kind === "pdf" ? "فتح للطباعة" : "طباعة"}</Button>}</div>
       {kind === "image" && url && <img src={url} alt={String(file["name"])} className="max-h-[65vh] max-w-full object-contain" />}
       {kind === "text" && <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded border p-4 text-sm">{text}</pre>}
-      {kind === "pdf" && <p className="text-sm text-muted-foreground">يتاح الملف بكامل صفحاته عند فتحه للطباعة؛ اختر «طباعة» من عارض PDF.</p>}
+      {kind === "pdf" && <PdfPages blob={q.data} />}
       {kind === "unsupported" && <p role="status" className="text-sm text-muted-foreground">لا تتوفر معاينة لهذا النوع؛ نزّل الملف وافتحه واطبعه بالبرنامج المناسب.</p>}
     </>}
   </DialogContent></Dialog></>;

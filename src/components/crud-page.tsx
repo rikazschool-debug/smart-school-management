@@ -33,6 +33,7 @@ export type Field = {
   dependsOn?: { field: string; column: string };
   resetFields?: string[];
   transient?: boolean;
+  initialPath?: string[];
 };
 
 /** `text` gives the plain value for export when `render` returns JSX. */
@@ -105,7 +106,11 @@ export function RecordForm({
 }) {
   const autoDn = (n: unknown) => { const w = String(n ?? "").trim().split(/\s+/).filter(Boolean); return w.length > 1 ? `${w[0]} ${w[w.length - 1]}` : (w[0] ?? ""); };
   const hasDn = fields.some((f) => f.key === "display_name" && !f.hideInForm) && fields.some((f) => f.key === "full_name");
-  const [v, setV] = useState<Row>(() => hasDn && !initial["display_name"] && initial["full_name"] ? { ...initial, display_name: autoDn(initial["full_name"]) } : initial);
+  const [v, setV] = useState<Row>(() => {
+    const derived = { ...initial };
+    for (const f of fields) if (f.initialPath) derived[f.key] = f.initialPath.reduce((value, key) => value?.[key], initial) ?? "";
+    return hasDn && !derived["display_name"] && derived["full_name"] ? { ...derived, display_name: autoDn(derived["full_name"]) } : derived;
+  });
   // display name follows first + last word of the full name until the user edits it
   const [dnTouched, setDnTouched] = useState(() => !!initial["display_name"] && initial["display_name"] !== autoDn(initial["full_name"]));
   const change = (key: string, val: unknown) => {

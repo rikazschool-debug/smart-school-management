@@ -14,6 +14,7 @@ import { KIND_LABEL, SafeText, cleanupStalePending, discardPendingFile, openFile
 import { GroupPanel } from "@/components/comm/group-panel";
 import { AttachmentsSheet, RepliesButton, RepliesMenu, VoicePlayer, VoiceRecorder, fillReply, filterReplies, slashQuery, uploadVoice, useConvLimits, useSavedReplies, type Saved, type VoiceClip } from "@/components/comm/chat-extras";
 import { Images } from "lucide-react";
+import { ROLE_LABELS, type Role } from "@/lib/roles";
 
 const PAGE = 30;
 /** Drafts stay with their own conversation AND signed-in user (memory only, never stored on the device,
@@ -49,7 +50,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
       if (error) throw error;
       return data as Row[];
     },
-    getNextPageParam: (last) => (last.length < PAGE ? null : (last[last.length - 1]!["seq"] as number)),
+    getNextPageParam: (last) => last.length < PAGE ? null : last.at(-1)?.["seq"] as number | undefined,
   });
   const people = useQuery({
     queryKey: ["people", id],
@@ -63,8 +64,9 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   const ids = list.map((m) => m["id"]);
   const files = { data: list.flatMap((m) => ((m["files"] ?? []) as Row[]).map((f) => ({ ...f, source_id: m["id"] }))) };
   void ids;
-  const names = useMemo(() => Object.fromEntries(list.map((m) => [m["id"], m["sender_label"] ? `${m["sender_name"]} · ${m["sender_label"]}` : m["sender_name"]])), [list]);
-  const maxSeq = list.length ? list[list.length - 1]!["seq"] : 0;
+  const senderLabels = useQuery({ queryKey: ["co-sender-labels", id, list.length], enabled: !!conv["professional"], queryFn: async () => { const { data, error } = await db.rpc("co_sender_labels", { _conv: id }); if (error) throw error; return data as Row[]; } });
+  const names = useMemo(() => Object.fromEntries(list.map((m) => { const label = senderLabels.data?.find((r) => r["message_id"] === m["id"]); return [m["id"], label?.["name"] ? `${label["name"]} · ${ROLE_LABELS[label["role"] as Role] ?? label["role"]} · ${label["branch"]}` : m["sender_label"] ? `${m["sender_name"]} · ${m["sender_label"]}` : m["sender_name"]; })), [list, senderLabels.data]);
+  const maxSeq = list.at(-1)?.["seq"] ?? 0;
 
   // realtime: RLS still applies, so removed members stop receiving events
   useEffect(() => {
@@ -76,7 +78,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "conversation_members", filter: `conversation_id=eq.${id}` }, () => {
         qc.invalidateQueries({ queryKey: ["people", id] });
       })
-      .subscribe();
+      .subscribe((status) => { if (status === "SUBSCRIBED") void qc.invalidateQueries({ queryKey: ["msgs", id] }); });
     return () => { supabase.removeChannel(ch); };
   }, [id, qc]);
 
