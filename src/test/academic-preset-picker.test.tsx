@@ -7,7 +7,7 @@ vi.mock("@/components/crud-page", () => ({
   db: { from: () => ({ select: () => ({ order: () => Promise.resolve({ data: [], error: null }), eq: () => ({ order: () => Promise.resolve({ data: [], error: null }) }) }) }) },
   useOptions: () => ({ data: [{ value: "school-kg", label: "رياض الأطفال" }, { value: "school-primary", label: "الابتدائية" }], isLoading: false }),
 }));
-function mount(kind: "stage" | "grade", onSelect: ReturnType<typeof vi.fn>) {
+function mount(kind: "stage" | "grade", onSelect: (values: Record<string, unknown>) => void) {
   const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, retry: false } } });
   client.setQueryData(["academic-catalog", "org-test"], [
     { id: "kg", kind: "stage", name: "رياض الأطفال", sort_order: 1 },
