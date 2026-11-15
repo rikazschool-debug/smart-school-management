@@ -5,7 +5,7 @@ export type UnreadNotice = { id: string; link: string | null };
 /** Best (longest path, then matching tab) visible entry for a link; null when no visible entry owns it. */
 export function sectionForLink(link: string | null, entries: NavEntry[]): string | null {
   if (!link || !link.startsWith("/app")) return null;
-  const [rawPath, query = ""] = link.split("?");
+  const [rawPath = "", query = ""] = link.split("?");
   const path = rawPath.replace(/\/+$/, "") || "/";
   const tab = new URLSearchParams(query).get("tab");
   let best: NavEntry | null = null;
