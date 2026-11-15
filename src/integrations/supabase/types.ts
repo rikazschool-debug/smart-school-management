@@ -1723,6 +1723,488 @@ export type Database = {
           },
         ]
       }
+      adms_admin_sites: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adms_admin_sites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adms_conflicts: {
+        Row: {
+          at: string
+          bridge_org_id: string
+          event_id: string
+          fingerprint: string
+          id: number
+          key_id: string
+          payload: Json
+          request_id: string
+        }
+        Insert: {
+          at?: string
+          bridge_org_id: string
+          event_id: string
+          fingerprint: string
+          id?: never
+          key_id: string
+          payload: Json
+          request_id: string
+        }
+        Update: {
+          at?: string
+          bridge_org_id?: string
+          event_id?: string
+          fingerprint?: string
+          id?: never
+          key_id?: string
+          payload?: Json
+          request_id?: string
+        }
+        Relationships: []
+      }
+      adms_devices: {
+        Row: {
+          active: boolean
+          bridge_org_id: string
+          bridge_updated_at: string | null
+          first_seen: string
+          id: string
+          last_contact_at: string | null
+          last_punch_at: string | null
+          last_seq: number
+          legacy_device_id: string | null
+          legacy_linked_at: string | null
+          legacy_linked_by: string | null
+          model: string
+          name: string
+          removed_at: string | null
+          serial_no: string
+          site_id: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          active: boolean
+          bridge_org_id: string
+          bridge_updated_at?: string | null
+          first_seen?: string
+          id: string
+          last_contact_at?: string | null
+          last_punch_at?: string | null
+          last_seq: number
+          legacy_device_id?: string | null
+          legacy_linked_at?: string | null
+          legacy_linked_by?: string | null
+          model: string
+          name: string
+          removed_at?: string | null
+          serial_no: string
+          site_id: string
+          timezone: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bridge_org_id?: string
+          bridge_updated_at?: string | null
+          first_seen?: string
+          id?: string
+          last_contact_at?: string | null
+          last_punch_at?: string | null
+          last_seq?: number
+          legacy_device_id?: string | null
+          legacy_linked_at?: string | null
+          legacy_linked_by?: string | null
+          model?: string
+          name?: string
+          removed_at?: string | null
+          serial_no?: string
+          site_id?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adms_devices_bridge_org_id_fkey"
+            columns: ["bridge_org_id"]
+            isOneToOne: false
+            referencedRelation: "adms_orgs"
+            referencedColumns: ["bridge_org_id"]
+          },
+          {
+            foreignKeyName: "adms_devices_legacy_device_id_fkey"
+            columns: ["legacy_device_id"]
+            isOneToOne: true
+            referencedRelation: "hr_att_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adms_events: {
+        Row: {
+          bridge_org_id: string
+          device_id: string
+          device_pin: string
+          employee_id: string | null
+          event_id: string
+          fingerprint: string
+          key_id: string
+          occurred_at: string
+          org_id: string
+          processed_at: string | null
+          punch_key: string | null
+          quality: string
+          raw_device_time: string
+          receipt_id: string
+          received_at: string
+          request_id: string
+          site_id: string
+          state: string
+          state_note: string | null
+          status: string | null
+          stored_at: string
+          timezone: string
+          verification: string | null
+          work_code: string | null
+        }
+        Insert: {
+          bridge_org_id: string
+          device_id: string
+          device_pin: string
+          employee_id?: string | null
+          event_id: string
+          fingerprint: string
+          key_id: string
+          occurred_at: string
+          org_id: string
+          processed_at?: string | null
+          punch_key?: string | null
+          quality: string
+          raw_device_time: string
+          receipt_id: string
+          received_at: string
+          request_id: string
+          site_id: string
+          state?: string
+          state_note?: string | null
+          status?: string | null
+          stored_at?: string
+          timezone: string
+          verification?: string | null
+          work_code?: string | null
+        }
+        Update: {
+          bridge_org_id?: string
+          device_id?: string
+          device_pin?: string
+          employee_id?: string | null
+          event_id?: string
+          fingerprint?: string
+          key_id?: string
+          occurred_at?: string
+          org_id?: string
+          processed_at?: string | null
+          punch_key?: string | null
+          quality?: string
+          raw_device_time?: string
+          receipt_id?: string
+          received_at?: string
+          request_id?: string
+          site_id?: string
+          state?: string
+          state_note?: string | null
+          status?: string | null
+          stored_at?: string
+          timezone?: string
+          verification?: string | null
+          work_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adms_events_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adms_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adms_log: {
+        Row: {
+          action: string
+          actor: string | null
+          at: string
+          details: Json
+          entity_id: string | null
+          id: number
+          org_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          at?: string
+          details?: Json
+          entity_id?: string | null
+          id?: never
+          org_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          at?: string
+          details?: Json
+          entity_id?: string | null
+          id?: never
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adms_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adms_nonces: {
+        Row: {
+          expires_at: string
+          key_id: string
+          nonce: string
+        }
+        Insert: {
+          expires_at: string
+          key_id: string
+          nonce: string
+        }
+        Update: {
+          expires_at?: string
+          key_id?: string
+          nonce?: string
+        }
+        Relationships: []
+      }
+      adms_orgs: {
+        Row: {
+          bound_at: string
+          bridge_org_id: string
+          cursor: number
+          high_watermark: number | null
+          last_error: string | null
+          last_error_at: string | null
+          last_health_at: string | null
+          last_sync_at: string | null
+          last_sync_items: number | null
+          org_id: string
+          processing_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          bound_at?: string
+          bridge_org_id: string
+          cursor?: number
+          high_watermark?: number | null
+          last_error?: string | null
+          last_error_at?: string | null
+          last_health_at?: string | null
+          last_sync_at?: string | null
+          last_sync_items?: number | null
+          org_id: string
+          processing_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          bound_at?: string
+          bridge_org_id?: string
+          cursor?: number
+          high_watermark?: number | null
+          last_error?: string | null
+          last_error_at?: string | null
+          last_health_at?: string | null
+          last_sync_at?: string | null
+          last_sync_items?: number | null
+          org_id?: string
+          processing_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adms_orgs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adms_pins: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          device_id: string
+          employee_id: string
+          id: string
+          org_id: string
+          pin: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          device_id: string
+          employee_id: string
+          id?: string
+          org_id: string
+          pin: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          device_id?: string
+          employee_id?: string
+          id?: string
+          org_id?: string
+          pin?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adms_pins_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "adms_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adms_pins_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adms_pins_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adms_sites: {
+        Row: {
+          active: boolean
+          admin_site_id: string | null
+          bridge_org_id: string
+          bridge_updated_at: string | null
+          first_seen: string
+          id: string
+          last_seq: number
+          linked_at: string | null
+          linked_by: string | null
+          mode: string
+          name: string
+          removed_at: string | null
+          school_id: string | null
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          active: boolean
+          admin_site_id?: string | null
+          bridge_org_id: string
+          bridge_updated_at?: string | null
+          first_seen?: string
+          id: string
+          last_seq: number
+          linked_at?: string | null
+          linked_by?: string | null
+          mode: string
+          name: string
+          removed_at?: string | null
+          school_id?: string | null
+          timezone: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          admin_site_id?: string | null
+          bridge_org_id?: string
+          bridge_updated_at?: string | null
+          first_seen?: string
+          id?: string
+          last_seq?: number
+          linked_at?: string | null
+          linked_by?: string | null
+          mode?: string
+          name?: string
+          removed_at?: string | null
+          school_id?: string | null
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adms_sites_admin_site_id_fkey"
+            columns: ["admin_site_id"]
+            isOneToOne: false
+            referencedRelation: "adms_admin_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adms_sites_bridge_org_id_fkey"
+            columns: ["bridge_org_id"]
+            isOneToOne: false
+            referencedRelation: "adms_orgs"
+            referencedColumns: ["bridge_org_id"]
+          },
+          {
+            foreignKeyName: "adms_sites_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       att_daily_settings: {
         Row: {
           school_id: string
@@ -18334,6 +18816,36 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _adms_apply_page: {
+        Args: { _bridge_org: string; _from: number; _org: string; _page: Json }
+        Returns: Json
+      }
+      _adms_ingest: {
+        Args: {
+          _bridge_org: string
+          _events: Json
+          _key_id: string
+          _nonce: string
+          _request_id: string
+          _rikaz_org: string
+        }
+        Returns: Json
+      }
+      _adms_log: {
+        Args: { _action: string; _details: Json; _id: string; _org: string }
+        Returns: undefined
+      }
+      _adms_ok: { Args: { _org: string }; Returns: boolean }
+      _adms_process: { Args: { _limit?: number; _org: string }; Returns: Json }
+      _adms_sync_note: {
+        Args: {
+          _bridge_org: string
+          _error: string
+          _health: boolean
+          _org: string
+        }
+        Returns: undefined
+      }
       _apply_invitation: {
         Args: {
           _em: string
@@ -21568,6 +22080,47 @@ export type Database = {
         }
         Returns: number
       }
+      adms_admin_site_save: {
+        Args: { _active: boolean; _id: string; _name: string; _org: string }
+        Returns: string
+      }
+      adms_can_sync: { Args: { _org: string }; Returns: boolean }
+      adms_device_legacy_link: {
+        Args: { _device: string; _legacy: string }
+        Returns: undefined
+      }
+      adms_events_list: {
+        Args: {
+          _device?: string
+          _limit?: number
+          _offset?: number
+          _org: string
+        }
+        Returns: Json
+      }
+      adms_overview: { Args: { _org: string }; Returns: Json }
+      adms_pin_link: {
+        Args: { _device: string; _emp: string; _pin: string }
+        Returns: Json
+      }
+      adms_pin_unlink: {
+        Args: { _device: string; _pin: string }
+        Returns: undefined
+      }
+      adms_pins_list: { Args: { _device: string }; Returns: Json }
+      adms_process_now: {
+        Args: { _limit?: number; _org: string }
+        Returns: Json
+      }
+      adms_processing_set: {
+        Args: { _on: boolean; _org: string }
+        Returns: undefined
+      }
+      adms_site_link: {
+        Args: { _admin_site: string; _school: string; _site: string }
+        Returns: undefined
+      }
+      adms_unmatched_list: { Args: { _device: string }; Returns: Json }
       affected_slots: {
         Args: { _absence: string }
         Returns: {
