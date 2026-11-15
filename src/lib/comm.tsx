@@ -1,3 +1,4 @@
+import { splitMentions } from "@/lib/mentions";
 import { Fragment } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
@@ -15,7 +16,7 @@ export const ROLE_AR: Record<string, string> = {
 
 const URL_RE = /(https?:\/\/[^\s<>"']+)/g;
 /** Renders user text safely: React escapes everything; only http(s) URLs become links (no HTML is ever interpreted). */
-export function SafeText({ text }: { text: string }) {
+export function SafeText({ text, mentions }: { text: string; mentions?: string[] | undefined }) {
   const parts = text.split(URL_RE);
   return (
     <span className="whitespace-pre-wrap break-words">
@@ -23,11 +24,12 @@ export function SafeText({ text }: { text: string }) {
         i % 2 === 1 ? (
           <a key={i} href={p} target="_blank" rel="noopener noreferrer nofollow" className="text-primary underline" dir="ltr">{p}</a>
         ) : (
-          <Fragment key={i}>{p}</Fragment>
+          <Fragment key={i}>{splitMentions(p, mentions ?? []).map((x, j) => x.m ? <span key={j} className="rounded bg-primary/10 px-1 font-semibold text-primary">{x.t}</span> : <Fragment key={j}>{x.t}</Fragment>)}</Fragment>
         ),
       )}
     </span>
   );
+}
 }
 
 export function timeLabel(iso: string) {
