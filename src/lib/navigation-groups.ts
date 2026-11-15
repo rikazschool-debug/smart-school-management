@@ -5,7 +5,7 @@ const NAVIGATION_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "الطلاب والقبول", keys: ["admissions", "students", "guardians", "family_requests"] },
   { label: "الشؤون التعليمية", keys: ["academic", "courses", "schedule", "classrooms", "virtual", "homework"] },
   { label: "شؤون الطلاب", keys: ["attendance", "pickup", "station", "health", "family_visits"] },
-  { label: "الأنشطة والفعاليات", keys: ["events", "hr_training"] },
+  { label: "الأنشطة والفعاليات", keys: ["events"] },
   { label: "إدارة المدرسة", keys: ["teachers", "admin", "duties", "org_docs", "schools"] },
   { label: "التواصل والتعاون", keys: ["communication", "comm_groups", "meetings", "collaboration", "circulars", "hub_notices", "hub_meetings", "hub_circulars"] },
   { label: "التقارير", keys: ["results", "grades", "visits", "evaluation"] },

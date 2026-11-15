@@ -15,6 +15,16 @@ describe("navigation grouping preserves authorized entries", () => {
     expect(keys).toEqual(["students", "guardians"]);
     expect(keys).not.toContain("admissions");
   });
+  it("keeps the requested main order without losing additional workspaces", () => {
+    const allowed: NavKey[] = ["home", "students", "courses", "health", "events", "admin", "communication", "results", "tags", "hr", "profile", "support"];
+    expect(navigationGroups(allowed).map((group) => group.keys[0])).toEqual(["home", "students", "courses", "health", "events", "admin", "communication", "results", "tags", "hr", "profile", "support"]);
+  });
+  it("keeps family tools separate from staff administration", () => {
+    const groups = navigationGroups(NAV_BY_ROLE.guardian);
+    expect(groups.flatMap((group) => group.keys)).toContain("family_requests");
+    expect(groups.flatMap((group) => group.keys)).not.toContain("academic");
+    expect(groups.flatMap((group) => group.keys)).not.toContain("students");
+  });
   it("keeps all supplied shared and delegated pages exactly once", () => {
     const allowed: NavKey[] = ["home", "school_home", "finance", "operations", "hr", "hr_training", "my_hr", "permissions", "procurement", "maintenance", "bus_maintenance", "org_docs", "health", "tags", "chat_settings", "hub_meetings", "hub_notices", "hub_circulars", "family_requests", "calls", "profile", "support"];
     expect(navigationGroups(allowed).flatMap((group) => group.keys).sort()).toEqual([...allowed].sort());
