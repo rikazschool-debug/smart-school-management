@@ -18991,6 +18991,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _academic_stage_key: { Args: { _n: string }; Returns: string }
       _access_audit: {
         Args: {
           _action: string
