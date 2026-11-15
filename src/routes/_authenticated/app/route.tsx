@@ -44,6 +44,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: "groups" | "manage" | "notices" | "meetings" | "circulars" }> = {
+  collaboration: { to: "/app/collaboration", label: "التعاون", icon: UsersRound },
   family_requests: { to: "/app/family-requests", label: "طلبات ولي الأمر", icon: ClipboardList },
   home: { to: "/app", label: "لوحة التحكم المركزية", icon: Home },
   platform: { to: "/app/platform", label: "المجموعات والصلاحيات", icon: ShieldCheck },
@@ -121,6 +122,7 @@ const NAV_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "الكادر التعليمي والإداري", keys: ["teachers"] },
   { label: "القبول والتسجيل", keys: ["admissions", "students", "guardians", "family_requests"] },
   { label: "الوسوم", keys: ["tags"] },
+  { label: "التعاون", keys: ["collaboration"] },
   { label: "التعليم", keys: ["classrooms", "virtual", "homework", "grades", "results"] },
   { label: "الحضور والمواظبة", keys: ["attendance", "pickup", "station"] },
   { label: "التواصل والمحادثات", keys: ["communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings"] },
@@ -235,7 +237,7 @@ function Shell() {
   let nav = owner && section ? ownerSectionNav(section, [...new Set(baseNav)]) : [...new Set(baseNav)];
   // owner's branch list (no school opened yet): only the owner's general account menu (communication, notices, support)
   if (groupView && section === "school_admin")
-    nav = [...new Set(baseNav)].filter((k) => ["home", "profile", "communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings", "notifications", "support", "calls"].includes(k));
+    nav = [...new Set(baseNav)].filter((k) => ["home", "profile", "communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings", "notifications", "support", "calls", "collaboration"].includes(k));
   // platform owner on the platform account: platform menu only; picking a branch switches to the group context (full group menu)
   if (active.role === "platform_admin") nav = nav.filter((k) => ["home", "profile", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", "notifications", "support"].includes(k));
   // class visits live under the evaluation sub-menu for roles that have both

@@ -9,5 +9,5 @@ export const STUDENT_PRESENCE_VALUES: Record<string, string[]> = {
 };
 export function studentPresence(status: unknown) {
   if (status === "active") return "موجود";
-  return typeof status === "string" && STUDENT_PRESENCE_VALUES.absent?.includes(status) ? "غير موجود" : "—";
+  return typeof status === "string" && STUDENT_PRESENCE_VALUES["absent"]?.includes(status) ? "غير موجود" : "—";
 }
