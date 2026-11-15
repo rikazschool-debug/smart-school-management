@@ -13,7 +13,10 @@ it.each(["رابع", "خامس", "سادس"])("upper primary %s has eleven suppl
 it.each(["أول", "ثاني", "ثالث"])("middle %s adds critical thinking only for third grade", grade => {
   expect(subjectPresets("المتوسطة", grade)).toEqual(["التربية الإسلامية", "لغتي", "الرياضيات", "العلوم", "اللغة الإنجليزية", "الدراسات الاجتماعية", "التربية البدنية", "التربية الفنية", "المهارات الحياتية", "النشاط", "الحاسب الآلي", ...(grade === "ثالث" ? ["التفكير الناقد"] : [])]);
 });
-it("does not invent secondary or invalid grade subjects", () => {
-  expect(subjectPresets("الثانوية", "أول")).toEqual([]);
+it("offers secondary subjects for all three grades", () => {
+  for (const g of ["أول", "ثاني", "ثالث"]) expect(subjectPresets("الثانوية", g)).toContain("الفيزياء");
+});
+
+it("returns nothing for invalid grade subjects", () => {
   expect(subjectPresets("رياض الأطفال", "سادس")).toEqual([]);
 });
