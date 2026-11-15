@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_catalog: {
+        Row: {
+          id: string
+          kind: string
+          name: string
+          sort_order: number
+          stage: string | null
+        }
+        Insert: {
+          id?: string
+          kind: string
+          name: string
+          sort_order?: number
+          stage?: string | null
+        }
+        Update: {
+          id?: string
+          kind?: string
+          name?: string
+          sort_order?: number
+          stage?: string | null
+        }
+        Relationships: []
+      }
       academic_years: {
         Row: {
           created_at: string
@@ -21285,6 +21309,7 @@ export type Database = {
         Args: { _guardians: boolean; _section: string; _year: string }
         Returns: string[]
       }
+      _section_vice_ok: { Args: { _school: string }; Returns: boolean }
       _set_homework_kind_v0: {
         Args: { _id: string; _kind: string }
         Returns: undefined
