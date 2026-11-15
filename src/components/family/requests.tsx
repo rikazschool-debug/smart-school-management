@@ -13,7 +13,7 @@ import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/s
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { useAdMe } from "@/components/admissions/shared";
-export const FAMILY_REQUEST_KINDS: Record<string, string> = { mother_account: "إضافة حساب دخول للأم", withdrawal: "طلب انسحاب", data_change: "طلب تعديل بيانات" };
+export const FAMILY_REQUEST_KINDS: Record<string, string> = { mother_account: "إضافة حساب دخول للأم", withdrawal: "طلب انسحاب", data_change: "طلب تعديل بيانات", other: "أخرى" };
 const states: Record<string, string> = { processing: "جارٍ المعالجة", accepted: "مقبول", rejected: "مرفوض" };
 const date = (v: unknown) => v ? new Date(String(v)).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" }) : "—";
 export function FamilyRequests({ staff = false }: { staff?: boolean }) {
