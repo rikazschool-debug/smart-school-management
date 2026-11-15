@@ -25,11 +25,13 @@ export const ROLE_LABELS: Record<Role, string> = {
   guardian: "ولي الأمر",
   student: "الطالب",
   counselor: "المرشد الطلابي",
-  nurse: "المرشدة الصحية",
+  nurse: "التوجيه الصحي",
   security: "الأمن والاستقبال",
 };
 
 export type NavKey =
+  | "collaboration"
+  | "family_requests"
   | "home"
   | "hr_training"
   | "org_docs"
@@ -90,7 +92,7 @@ export type NavKey =
 export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support" | "calls";
 export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة", calls: "المكالمات الهاتفية" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
-  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "health", "events"],
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "health", "events", "collaboration"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
   admissions: ["admissions", "students", "guardians"],
@@ -163,16 +165,16 @@ export const HIDDEN_NAV: NavKey[] = ["virtual", "grades"];
 const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
   platform_admin: ["home", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", ...MANAGE.slice(1).filter((k) => k !== "homework" && k !== "grades" && k !== "attendance" && !ADMIN_KEYS.includes(k))],
   // owner: branch counts on the admin page + own (multi-branch) meetings and calendar — no duties
-  org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k !== "duties"), "visits", "evaluation", "family_visits", "events"],
+  org_owner: ["home", "schools", "members", ...MANAGE.slice(1).filter((k) => k !== "duties"), "visits", "evaluation", "family_visits", "events", "collaboration"],
   // class visits: principal-level (all branch teachers) and supervisor (assigned teachers) only — mirrors _cv_can_eval
-  principal: [...MANAGE, "visits", "evaluation", "family_visits", "events"],
+  principal: [...MANAGE, "visits", "evaluation", "family_visits", "events", "collaboration"],
   // vice: no academic setup (principal only) and no scanning station (gate account only); timetable view limited to the vice's scope
-  vice_principal: [...MANAGE.filter((k) => k !== "academic" && k !== "attendance"), "family_visits", "events"],
+  vice_principal: [...MANAGE.filter((k) => k !== "attendance"), "family_visits", "events", "collaboration"],
   student_affairs: ["home", "students", "guardians", "schedule", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
   dept_head: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
-  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "visits", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
-  teacher: ["home", "classrooms", "virtual", "homework", "schedule", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
-  guardian: ["home", "classrooms", "homework", "schedule", "evaluation", "pickup", "communication", "notifications", "family_visits", "events"],
+  supervisor: ["home", "teachers", "courses", "classrooms", "homework", "schedule", "visits", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits", "collaboration"],
+  teacher: ["home", "classrooms", "virtual", "homework", "schedule", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits", "collaboration"],
+  guardian: ["home", "classrooms", "homework", "schedule", "evaluation", "pickup", "communication", "notifications", "family_visits", "events", "family_requests"],
   student: ["home", "classrooms", "virtual", "homework", "schedule", "pickup", "communication", "notifications", "events"],
   counselor: ["home", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
   nurse: ["home", "health", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
@@ -183,6 +185,8 @@ export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).ma
 
 /** Menu labels (same as the side menu) for previewing a base role's dashboard. */
 export const NAV_LABELS: Partial<Record<NavKey, string>> = {
+  collaboration: "التعاون",
+  family_requests: "طلبات ولي الأمر",
   org_docs: "الوثائق والعقود",
   family_visits: "الزيارات",
   events: "الفعاليات",

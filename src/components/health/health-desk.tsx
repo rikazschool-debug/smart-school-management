@@ -37,7 +37,7 @@ export function HealthDesk() {
   };
   return (
     <div>
-      <PageHeader eyebrow="المرشدة الصحية" title="الصحة المدرسية" desc="الملفات الصحية لجميع طلاب المدرسة، جدول أدوية اليوم، وسجل العيادة."
+      <PageHeader eyebrow="التوجيه الصحي" title="الصحة المدرسية" desc="الملفات الصحية لجميع طلاب المدرسة، جدول أدوية اليوم، وسجل العيادة."
         action={t.can_export ? <div className="flex gap-2"><Button variant="outline" size="sm" onClick={() => doExport("xlsx")}><Download className="size-4" />Excel</Button><Button variant="outline" size="sm" onClick={() => doExport("pdf")}><Download className="size-4" />PDF</Button></div> : undefined} />
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi icon={Pill} label="جرعات اليوم المتبقية" value={pending} tone={pending ? "warn" : "ok"} />

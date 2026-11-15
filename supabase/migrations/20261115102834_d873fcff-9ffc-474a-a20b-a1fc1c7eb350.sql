@@ -1,0 +1,10 @@
+create schema if not exists private;
+grant usage on schema private to authenticated,service_role;
+alter function public._conv_access_before_co(uuid) set schema private;
+alter function public._conv_send_before_co(uuid) set schema private;
+alter function public._can_read_file_before_co(uuid) set schema private;
+create or replace function public.conv_access_ok(_conv uuid) returns boolean language sql stable security definer set search_path=public as $$ select private._conv_access_before_co(_conv) and not exists(select 1 from conversations c where c.id=_conv and c.dedupe_key like 'co:%' and not _co_ok(c.org_id)) $$;
+create or replace function public.conv_send_block(_conv uuid) returns text language plpgsql stable security definer set search_path=public as $$ declare o uuid; begin select org_id into o from conversations where id=_conv and dedupe_key like 'co:%'; if o is not null and not _co_ok(o) then return 'غير مصرح بالمجتمع المهني'; end if; return private._conv_send_before_co(_conv); end $$;
+create or replace function public.can_read_file(_file uuid) returns boolean language sql stable security definer set search_path=public as $$ select private._can_read_file_before_co(_file) or exists(select 1 from files f join co_materials m on m.id=f.source_id where f.id=_file and f.source_type='co_material' and f.school_id=m.school_id and _co_ok(m.org_id)) $$;
+revoke all on function public.co_community(uuid),public.co_add_file(uuid,text,text,bigint),public.co_remove_file(uuid) from authenticated;
+grant execute on function public.co_community(uuid),public.co_add_file(uuid,text,text,bigint),public.co_remove_file(uuid) to service_role;

@@ -83,10 +83,10 @@ describe("role rules", () => {
 });
 
 describe("staff scope rules (package next, item 1)", () => {
-  it("academic setup and timetable editing are principal level only — never the vice", () => {
+  it("vice has section setup without granting central academic or timetable management", () => {
     expect(ALL.filter(canManageAcademic).sort()).toEqual(["org_owner", "platform_admin", "principal"]);
     expect(canEditSchedule("vice_principal")).toBe(false);
-    expect(NAV_BY_ROLE.vice_principal).not.toContain("academic");
+    expect(NAV_BY_ROLE.vice_principal).toContain("academic");
   });
   it("the vice views the published timetable and keeps daily substitutes, without settings", () => {
     expect(scheduleTabs("vice_principal")).toEqual(["timetable", "subs"]);

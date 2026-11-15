@@ -1,0 +1,18 @@
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { db, type Row } from "@/components/crud-page";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { selectCls } from "@/components/ui/native-select";
+import { arabicError } from "@/lib/session";
+const kinds: Record<string, string> = { year: "عام دراسي", term: "فصل دراسي", stage: "مرحلة", grade: "صف" };
+export function AcademicAllocation({ school, org }: { school: string; org: string }) {
+  const qc = useQueryClient(); const [kind, setKind] = useState("year"); const [name, setName] = useState(""); const [parent, setParent] = useState(""); const [start, setStart] = useState(""); const [end, setEnd] = useState(""); const [busy, setBusy] = useState(false);
+  const catalog = useQuery({ queryKey: ["academic-catalog", org], queryFn: async () => { const [base, own] = await Promise.all([db.from("academic_catalog").select("*").order("sort_order"), db.from("org_academic_catalog").select("*").eq("org_id", org).order("sort_order")]); if (base.error) throw base.error; if (own.error) throw own.error; return [...base.data, ...own.data] as Row[]; } });
+  const parents = useQuery({ queryKey: ["academic-parents", school, kind], queryFn: async () => { if (kind !== "grade" && kind !== "term") return [] as Row[]; const { data, error } = await db.from(kind === "grade" ? "stages" : "academic_years").select("id,name").eq("school_id", school).eq("available", true); if (error) throw error; return data as Row[]; } });
+  const stage = parents.data?.find((r) => r["id"] === parent)?.["name"];
+  const names = [...new Set((catalog.data ?? []).filter((r) => r["kind"] === kind && (kind !== "grade" || r["stage"] === stage)).map((r) => r["name"] as string))];
+  const save = async () => { setBusy(true); const { error } = await db.rpc("academic_allocate", { _school: school, _kind: kind, _name: name, _start: start || null, _end: end || null, _parent: parent || null }); setBusy(false); if (error) return void toast.error(arabicError(error)); toast.success("تم تخصيص المحدد للفرع"); void qc.invalidateQueries(); };
+  return <section className="mb-6 space-y-3 border-b pb-5"><h2 className="font-bold">تخصيص محددات المؤسسة لهذا الفرع</h2><div className="flex flex-wrap gap-2"><select aria-label="نوع المحدد" className={selectCls("w-auto")} value={kind} onChange={(e) => { setKind(e.target.value); setName(""); setParent(""); }}>{Object.entries(kinds).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>{(kind === "grade" || kind === "term") && <select aria-label={kind === "grade" ? "المرحلة" : "العام"} className={selectCls("w-auto")} value={parent} onChange={(e) => { setParent(e.target.value); setName(""); }}><option value="">اختر {kind === "grade" ? "المرحلة" : "العام"}</option>{parents.data?.map((r) => <option key={r["id"]} value={r["id"]}>{r["name"]}</option>)}</select>}<select aria-label="المحدد" className={selectCls("w-auto")} value={name} onChange={(e) => setName(e.target.value)}><option value="">اختر المحدد</option>{names.map((n) => <option key={n}>{n}</option>)}</select>{(kind === "year" || kind === "term") && <><Input aria-label="تاريخ البداية" className="w-auto" type="date" value={start} onChange={(e) => setStart(e.target.value)} /><Input aria-label="تاريخ النهاية" className="w-auto" type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></>}<Button disabled={busy || !name || (kind === "year" && (!start || !end))} onClick={() => void save()}>تخصيص للفرع</Button></div></section>;
+}

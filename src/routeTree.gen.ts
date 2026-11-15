@@ -30,10 +30,12 @@ import { Route as AuthenticatedAppCallsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppChatSettingsRouteImport } from './routes/_authenticated/app/chat-settings'
 import { Route as AuthenticatedAppChooseRoleRouteImport } from './routes/_authenticated/app/choose-role'
 import { Route as AuthenticatedAppCircularsRouteImport } from './routes/_authenticated/app/circulars'
+import { Route as AuthenticatedAppCollaborationRouteImport } from './routes/_authenticated/app/collaboration'
 import { Route as AuthenticatedAppCommunicationRouteImport } from './routes/_authenticated/app/communication'
 import { Route as AuthenticatedAppCoursesRouteImport } from './routes/_authenticated/app/courses'
 import { Route as AuthenticatedAppEvaluationRouteImport } from './routes/_authenticated/app/evaluation'
 import { Route as AuthenticatedAppEventsRouteImport } from './routes/_authenticated/app/events'
+import { Route as AuthenticatedAppFamilyRequestsRouteImport } from './routes/_authenticated/app/family-requests'
 import { Route as AuthenticatedAppFamilyVisitsRouteImport } from './routes/_authenticated/app/family-visits'
 import { Route as AuthenticatedAppFinanceRouteImport } from './routes/_authenticated/app/finance'
 import { Route as AuthenticatedAppGradesRouteImport } from './routes/_authenticated/app/grades'
@@ -224,6 +226,12 @@ const AuthenticatedAppCircularsRoute =
     path: '/circulars',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppCollaborationRoute =
+  AuthenticatedAppCollaborationRouteImport.update({
+    id: '/collaboration',
+    path: '/collaboration',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppCommunicationRoute =
   AuthenticatedAppCommunicationRouteImport.update({
     id: '/communication',
@@ -246,6 +254,12 @@ const AuthenticatedAppEventsRoute = AuthenticatedAppEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
+const AuthenticatedAppFamilyRequestsRoute =
+  AuthenticatedAppFamilyRequestsRouteImport.update({
+    id: '/family-requests',
+    path: '/family-requests',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppFamilyVisitsRoute =
   AuthenticatedAppFamilyVisitsRouteImport.update({
     id: '/family-visits',
@@ -703,10 +717,12 @@ export interface FileRoutesByFullPath {
   '/app/chat-settings': typeof AuthenticatedAppChatSettingsRoute
   '/app/choose-role': typeof AuthenticatedAppChooseRoleRoute
   '/app/circulars': typeof AuthenticatedAppCircularsRoute
+  '/app/collaboration': typeof AuthenticatedAppCollaborationRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/evaluation': typeof AuthenticatedAppEvaluationRoute
   '/app/events': typeof AuthenticatedAppEventsRoute
+  '/app/family-requests': typeof AuthenticatedAppFamilyRequestsRoute
   '/app/family-visits': typeof AuthenticatedAppFamilyVisitsRoute
   '/app/finance': typeof AuthenticatedAppFinanceRoute
   '/app/grades': typeof AuthenticatedAppGradesRoute
@@ -804,10 +820,12 @@ export interface FileRoutesByTo {
   '/app/chat-settings': typeof AuthenticatedAppChatSettingsRoute
   '/app/choose-role': typeof AuthenticatedAppChooseRoleRoute
   '/app/circulars': typeof AuthenticatedAppCircularsRoute
+  '/app/collaboration': typeof AuthenticatedAppCollaborationRoute
   '/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/app/courses': typeof AuthenticatedAppCoursesRoute
   '/app/evaluation': typeof AuthenticatedAppEvaluationRoute
   '/app/events': typeof AuthenticatedAppEventsRoute
+  '/app/family-requests': typeof AuthenticatedAppFamilyRequestsRoute
   '/app/family-visits': typeof AuthenticatedAppFamilyVisitsRoute
   '/app/finance': typeof AuthenticatedAppFinanceRoute
   '/app/grades': typeof AuthenticatedAppGradesRoute
@@ -908,10 +926,12 @@ export interface FileRoutesById {
   '/_authenticated/app/chat-settings': typeof AuthenticatedAppChatSettingsRoute
   '/_authenticated/app/choose-role': typeof AuthenticatedAppChooseRoleRoute
   '/_authenticated/app/circulars': typeof AuthenticatedAppCircularsRoute
+  '/_authenticated/app/collaboration': typeof AuthenticatedAppCollaborationRoute
   '/_authenticated/app/communication': typeof AuthenticatedAppCommunicationRoute
   '/_authenticated/app/courses': typeof AuthenticatedAppCoursesRoute
   '/_authenticated/app/evaluation': typeof AuthenticatedAppEvaluationRoute
   '/_authenticated/app/events': typeof AuthenticatedAppEventsRoute
+  '/_authenticated/app/family-requests': typeof AuthenticatedAppFamilyRequestsRoute
   '/_authenticated/app/family-visits': typeof AuthenticatedAppFamilyVisitsRoute
   '/_authenticated/app/finance': typeof AuthenticatedAppFinanceRoute
   '/_authenticated/app/grades': typeof AuthenticatedAppGradesRoute
@@ -1012,10 +1032,12 @@ export interface FileRouteTypes {
     | '/app/chat-settings'
     | '/app/choose-role'
     | '/app/circulars'
+    | '/app/collaboration'
     | '/app/communication'
     | '/app/courses'
     | '/app/evaluation'
     | '/app/events'
+    | '/app/family-requests'
     | '/app/family-visits'
     | '/app/finance'
     | '/app/grades'
@@ -1113,10 +1135,12 @@ export interface FileRouteTypes {
     | '/app/chat-settings'
     | '/app/choose-role'
     | '/app/circulars'
+    | '/app/collaboration'
     | '/app/communication'
     | '/app/courses'
     | '/app/evaluation'
     | '/app/events'
+    | '/app/family-requests'
     | '/app/family-visits'
     | '/app/finance'
     | '/app/grades'
@@ -1216,10 +1240,12 @@ export interface FileRouteTypes {
     | '/_authenticated/app/chat-settings'
     | '/_authenticated/app/choose-role'
     | '/_authenticated/app/circulars'
+    | '/_authenticated/app/collaboration'
     | '/_authenticated/app/communication'
     | '/_authenticated/app/courses'
     | '/_authenticated/app/evaluation'
     | '/_authenticated/app/events'
+    | '/_authenticated/app/family-requests'
     | '/_authenticated/app/family-visits'
     | '/_authenticated/app/finance'
     | '/_authenticated/app/grades'
@@ -1469,6 +1495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCircularsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/collaboration': {
+      id: '/_authenticated/app/collaboration'
+      path: '/collaboration'
+      fullPath: '/app/collaboration'
+      preLoaderRoute: typeof AuthenticatedAppCollaborationRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/communication': {
       id: '/_authenticated/app/communication'
       path: '/communication'
@@ -1495,6 +1528,13 @@ declare module '@tanstack/react-router' {
       path: '/events'
       fullPath: '/app/events'
       preLoaderRoute: typeof AuthenticatedAppEventsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/family-requests': {
+      id: '/_authenticated/app/family-requests'
+      path: '/family-requests'
+      fullPath: '/app/family-requests'
+      preLoaderRoute: typeof AuthenticatedAppFamilyRequestsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/family-visits': {
@@ -2043,10 +2083,12 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppChatSettingsRoute: typeof AuthenticatedAppChatSettingsRoute
   AuthenticatedAppChooseRoleRoute: typeof AuthenticatedAppChooseRoleRoute
   AuthenticatedAppCircularsRoute: typeof AuthenticatedAppCircularsRoute
+  AuthenticatedAppCollaborationRoute: typeof AuthenticatedAppCollaborationRoute
   AuthenticatedAppCommunicationRoute: typeof AuthenticatedAppCommunicationRoute
   AuthenticatedAppCoursesRoute: typeof AuthenticatedAppCoursesRoute
   AuthenticatedAppEvaluationRoute: typeof AuthenticatedAppEvaluationRoute
   AuthenticatedAppEventsRoute: typeof AuthenticatedAppEventsRoute
+  AuthenticatedAppFamilyRequestsRoute: typeof AuthenticatedAppFamilyRequestsRoute
   AuthenticatedAppFamilyVisitsRoute: typeof AuthenticatedAppFamilyVisitsRoute
   AuthenticatedAppFinanceRoute: typeof AuthenticatedAppFinanceRoute
   AuthenticatedAppGradesRoute: typeof AuthenticatedAppGradesRoute
@@ -2129,10 +2171,12 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppChatSettingsRoute: AuthenticatedAppChatSettingsRoute,
   AuthenticatedAppChooseRoleRoute: AuthenticatedAppChooseRoleRoute,
   AuthenticatedAppCircularsRoute: AuthenticatedAppCircularsRoute,
+  AuthenticatedAppCollaborationRoute: AuthenticatedAppCollaborationRoute,
   AuthenticatedAppCommunicationRoute: AuthenticatedAppCommunicationRoute,
   AuthenticatedAppCoursesRoute: AuthenticatedAppCoursesRoute,
   AuthenticatedAppEvaluationRoute: AuthenticatedAppEvaluationRoute,
   AuthenticatedAppEventsRoute: AuthenticatedAppEventsRoute,
+  AuthenticatedAppFamilyRequestsRoute: AuthenticatedAppFamilyRequestsRoute,
   AuthenticatedAppFamilyVisitsRoute: AuthenticatedAppFamilyVisitsRoute,
   AuthenticatedAppFinanceRoute: AuthenticatedAppFinanceRoute,
   AuthenticatedAppGradesRoute: AuthenticatedAppGradesRoute,

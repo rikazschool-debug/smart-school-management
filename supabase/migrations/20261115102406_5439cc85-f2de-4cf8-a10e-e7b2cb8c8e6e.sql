@@ -1,0 +1,5 @@
+revoke insert on public.family_request_history from authenticated;
+alter function public._family_request_log() security definer;
+revoke all on function public._family_request_log() from public,anon,authenticated;
+create or replace function public.family_request_detail(_id uuid) returns jsonb language plpgsql security invoker set search_path=public as $$ declare r family_requests; begin select * into r from family_requests where id=_id; if not found then raise exception 'غير مصرح أو الطلب غير موجود'; end if; return jsonb_build_object('request',to_jsonb(r),'student',(select full_name from students where id=r.student_id),'history',coalesce((select jsonb_agg(to_jsonb(h)||jsonb_build_object('actor_name',(select full_name from profiles where id=h.actor)) order by h.created_at,h.id) from family_request_history h where request_id=r.id),'[]'::jsonb)); end $$;
+revoke all on function public.family_request_detail(uuid) from public,anon; grant execute on function public.family_request_detail(uuid) to authenticated,service_role;

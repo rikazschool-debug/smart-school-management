@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { Collaboration } from "@/components/comm/collaboration";
+export const Route = createFileRoute("/_authenticated/app/collaboration")({ head: () => ({ meta: [{ title: "التعاون — ركاز" }, { name: "description", content: "المجتمع المهني والمكتبة الرقمية داخل المجموعة التعليمية." }, { property: "og:title", content: "التعاون — ركاز" }, { property: "og:description", content: "المشاركة المهنية والمكتبة الرقمية المحمية بين فروع المؤسسة." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Collaboration });

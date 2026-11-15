@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { FamilyRequests } from "@/components/family/requests";
+export const Route = createFileRoute("/_authenticated/app/family-requests")({ head: () => ({ meta: [{ title: "طلبات ولي الأمر — ركاز" }, { name: "description", content: "طلبات ولي الأمر لأبنائه الموثقين وردود الإدارة وسجل المعالجة." }, { property: "og:title", content: "طلبات ولي الأمر — ركاز" }, { property: "og:description", content: "متابعة الطلبات وردود الإدارة ضمن المدرسة الصحيحة." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: FamilyRequests });

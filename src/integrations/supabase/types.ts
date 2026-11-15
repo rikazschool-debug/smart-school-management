@@ -14,8 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_catalog: {
+        Row: {
+          id: string
+          kind: string
+          name: string
+          sort_order: number
+          stage: string | null
+        }
+        Insert: {
+          id?: string
+          kind: string
+          name: string
+          sort_order?: number
+          stage?: string | null
+        }
+        Update: {
+          id?: string
+          kind?: string
+          name?: string
+          sort_order?: number
+          stage?: string | null
+        }
+        Relationships: []
+      }
       academic_years: {
         Row: {
+          available: boolean
           created_at: string
           end_date: string
           id: string
@@ -26,6 +51,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available?: boolean
           created_at?: string
           end_date: string
           id?: string
@@ -36,6 +62,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available?: boolean
           created_at?: string
           end_date?: string
           id?: string
@@ -3262,6 +3289,95 @@ export type Database = {
         }
         Relationships: []
       }
+      co_materials: {
+        Row: {
+          author: string
+          author_branch: string
+          author_name: string
+          author_role: string
+          category: string
+          created_at: string
+          description: string
+          id: string
+          org_id: string
+          school_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          author_branch?: string
+          author_name?: string
+          author_role?: string
+          category: string
+          created_at?: string
+          description?: string
+          id?: string
+          org_id: string
+          school_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          author_branch?: string
+          author_name?: string
+          author_role?: string
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          org_id?: string
+          school_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "co_materials_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "co_materials_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      co_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          material_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          material_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          material_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "co_reactions_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "co_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comm_audit: {
         Row: {
           action: string
@@ -5446,6 +5562,120 @@ export type Database = {
           },
         ]
       }
+      family_request_history: {
+        Row: {
+          actor: string
+          created_at: string
+          id: string
+          rejection_reason: string | null
+          request_id: string
+          response: string | null
+          status: string
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          request_id: string
+          response?: string | null
+          status: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          request_id?: string
+          response?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_request_history_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "family_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_requests: {
+        Row: {
+          body: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          kind: string
+          org_id: string
+          ref: string
+          rejection_reason: string | null
+          requested_by: string
+          response: string | null
+          school_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          ref?: string
+          rejection_reason?: string | null
+          requested_by?: string
+          response?: string | null
+          school_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          ref?: string
+          rejection_reason?: string | null
+          requested_by?: string
+          response?: string | null
+          school_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       file_cleanup_config: {
         Row: {
           id: boolean
@@ -6560,6 +6790,7 @@ export type Database = {
       }
       grades: {
         Row: {
+          available: boolean
           created_at: string
           id: string
           name: string
@@ -6569,6 +6800,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available?: boolean
           created_at?: string
           id?: string
           name: string
@@ -6578,6 +6810,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available?: boolean
           created_at?: string
           id?: string
           name?: string
@@ -6938,6 +7171,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      health_calendar: {
+        Row: {
+          created_at: string
+          description: string
+          ends_on: string
+          id: string
+          recurrence_verified: boolean
+          source_url: string
+          source_year: number
+          starts_on: string
+          title: string
+          updated_at: string
+          verified_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          ends_on: string
+          id?: string
+          recurrence_verified?: boolean
+          source_url: string
+          source_year: number
+          starts_on: string
+          title: string
+          updated_at?: string
+          verified_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          ends_on?: string
+          id?: string
+          recurrence_verified?: boolean
+          source_url?: string
+          source_year?: number
+          starts_on?: string
+          title?: string
+          updated_at?: string
+          verified_at?: string
+        }
+        Relationships: []
       }
       health_conditions: {
         Row: {
@@ -13789,6 +14064,47 @@ export type Database = {
           },
         ]
       }
+      org_academic_catalog: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          org_id: string
+          sort_order: number
+          stage: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          name: string
+          org_id: string
+          sort_order?: number
+          stage?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          org_id?: string
+          sort_order?: number
+          stage?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_academic_catalog_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_contractors: {
         Row: {
           contact_name: string | null
@@ -16094,6 +16410,7 @@ export type Database = {
           id: string
           name: string
           school_id: string
+          term_id: string | null
           updated_at: string
           year_id: string
         }
@@ -16104,6 +16421,7 @@ export type Database = {
           id?: string
           name: string
           school_id: string
+          term_id?: string | null
           updated_at?: string
           year_id: string
         }
@@ -16114,6 +16432,7 @@ export type Database = {
           id?: string
           name?: string
           school_id?: string
+          term_id?: string | null
           updated_at?: string
           year_id?: string
         }
@@ -16130,6 +16449,13 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sections_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
             referencedColumns: ["id"]
           },
           {
@@ -16238,6 +16564,7 @@ export type Database = {
       }
       stages: {
         Row: {
+          available: boolean
           created_at: string
           id: string
           name: string
@@ -16246,6 +16573,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available?: boolean
           created_at?: string
           id?: string
           name: string
@@ -16254,6 +16582,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available?: boolean
           created_at?: string
           id?: string
           name?: string
@@ -17512,6 +17841,7 @@ export type Database = {
       }
       terms: {
         Row: {
+          available: boolean
           created_at: string
           end_date: string | null
           id: string
@@ -17522,6 +17852,7 @@ export type Database = {
           year_id: string
         }
         Insert: {
+          available?: boolean
           created_at?: string
           end_date?: string | null
           id?: string
@@ -17532,6 +17863,7 @@ export type Database = {
           year_id: string
         }
         Update: {
+          available?: boolean
           created_at?: string
           end_date?: string | null
           id?: string
@@ -19089,6 +19421,7 @@ export type Database = {
           uid: string
         }[]
       }
+      _co_ok: { Args: { _org: string }; Returns: boolean }
       _complete_account_setup: {
         Args: { _password_changed: boolean; _uid: string }
         Returns: string
@@ -19739,6 +20072,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _health_calendar_ok: { Args: { _school: string }; Returns: boolean }
       _health_editor: { Args: { _student: string }; Returns: string }
       _health_log: {
         Args: { _action: string; _d: Json; _school: string; _student: string }
@@ -21047,6 +21381,7 @@ export type Database = {
         Args: { _guardians: boolean; _section: string; _year: string }
         Returns: string[]
       }
+      _section_vice_ok: { Args: { _school: string }; Returns: boolean }
       _set_homework_kind_v0: {
         Args: { _id: string; _kind: string }
         Returns: undefined
@@ -21515,6 +21850,17 @@ export type Database = {
       }
       _ws_view_schools: { Args: { _section: string }; Returns: string[] }
       _xb_ok: { Args: { _org: string; _user: string }; Returns: boolean }
+      academic_allocate: {
+        Args: {
+          _end?: string
+          _kind: string
+          _name: string
+          _parent?: string
+          _school: string
+          _start?: string
+        }
+        Returns: string
+      }
       accept_invitation: { Args: { _token: string }; Returns: string }
       accept_my_invitations: { Args: never; Returns: number }
       account_status: {
@@ -22524,6 +22870,12 @@ export type Database = {
       }
       classroom_regroup: { Args: { _school?: string }; Returns: Json }
       cleanup_health: { Args: never; Returns: Json }
+      co_add_file: {
+        Args: { _material: string; _mime: string; _name: string; _size: number }
+        Returns: Json
+      }
+      co_community: { Args: { _org: string }; Returns: Json }
+      co_remove_file: { Args: { _id: string }; Returns: undefined }
       conv_access_ok: { Args: { _conv: string }; Returns: boolean }
       conv_files: {
         Args: { _before: string; _conv: string; _limit?: number; _tab: string }
@@ -23177,6 +23529,20 @@ export type Database = {
           relationship: string
         }[]
       }
+      family_request_create: {
+        Args: { _body: string; _kind: string; _student: string }
+        Returns: string
+      }
+      family_request_decide: {
+        Args: {
+          _id: string
+          _reason?: string
+          _response: string
+          _status: string
+        }
+        Returns: undefined
+      }
+      family_request_detail: { Args: { _id: string }; Returns: Json }
       fin_pay_get: { Args: { _school: string }; Returns: Json }
       fin_pay_save: { Args: { _p: Json; _school: string }; Returns: Json }
       gb_approve: {
@@ -23406,6 +23772,10 @@ export type Database = {
           _school: string
         }
         Returns: boolean
+      }
+      health_calendar_list: {
+        Args: { _school: string; _year: number }
+        Returns: Json
       }
       health_condition_save: {
         Args: { _id: string; _p: Json; _student: string }
