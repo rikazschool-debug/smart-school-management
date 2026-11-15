@@ -3,6 +3,10 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-15 — Ready stages and grades in their add dialogs (prompt-376)
+- Added AcademicPresetPicker to both «المراحل ← إضافة» and «الصفوف ← إضافة», reading existing base and organization catalog entries, with grades filtered by available school stage and correctly filling stage_id/name/order. Existing manual fields, owner-only save path and data remain unchanged; no migration or deployment.
+- Added isolated picker interactions; hosted authenticated saving remains unverified because external Supabase has no available test session.
+
 ## 2026-11-15 — Ready academic subject choices (prompt-375)
 - Added the exact supplied kindergarten, primary and middle-school subject lists as reusable presets; lower-primary computer enrichment and third-middle critical thinking retain their exact distinctions. No secondary-school subjects were invented.
 - The existing «المواد» create dialog now offers stage → grade/level → subject selectors, filling the name without manual typing. Existing manual add/edit, department/code fields, school scope and RLS save path remain unchanged. No automatic inserts, course creation, record updates, migrations, accounts, provider calls or publishing.
