@@ -23,6 +23,7 @@ function Page() {
     await db.rpc("mark_notifications_read", { _ids: ids });
     qc.invalidateQueries({ queryKey: ["notifications"] });
     qc.invalidateQueries({ queryKey: ["notif-unread"] });
+    qc.invalidateQueries({ queryKey: ["notif-unread-list"] });
   }
   const unread = q.data?.filter((n) => !n["read_at"]).length ?? 0;
   return (

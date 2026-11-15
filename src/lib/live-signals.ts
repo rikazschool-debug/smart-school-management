@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 // One realtime subscription per tab on live_signals (RLS: own rows or school staff). A signal carries only a topic;
 // we refetch the matching screens through their normal RLS-bound queries — no data travels in the signal.
 export const LIVE_TOPICS: Record<string, string[]> = {
-  notif: ["notifications", "notif-unread"],
+  notif: ["notifications", "notif-unread", "notif-unread-list"],
   "adm-requests": ["adm-requests", "adm-request", "adm-summary"],
   "adm-decisions": ["adm-decisions", "adm-summary"],
   pickup: ["att-pk-pending", "att-pk-queue", "att-mine"],
@@ -40,7 +40,7 @@ export function useLiveSignals() {
       })
       .subscribe((status) => {
         // after a dropped connection comes back, refetch what may have been missed
-        if (status === "SUBSCRIBED") { if (joined) qc.invalidateQueries({ predicate: (q) => ["msgs", "convs", "notifications", "notif-unread"].includes(String(q.queryKey[0] ?? "")) }); joined = true; }
+        if (status === "SUBSCRIBED") { if (joined) qc.invalidateQueries({ predicate: (q) => ["msgs", "convs", "notifications", "notif-unread", "notif-unread-list"].includes(String(q.queryKey[0] ?? "")) }); joined = true; }
       });
     return () => { if (timer) clearTimeout(timer); supabase.removeChannel(ch); };
   }, [qc]);

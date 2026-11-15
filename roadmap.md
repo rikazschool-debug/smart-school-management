@@ -100,3 +100,6 @@
 - [ ] أسرار ADMS_REGISTRY_KEYS / ADMS_INGEST_KEYS / ADMS_EVENTS_INTAKE — بانتظار مفاتيح حقيقية
 - [ ] اختبار مشترك عبر الشبكة — بانتظار بيئة ركاز معزولة (مشروع Supabase اختباري)
 - [ ] فحص الشاشة بحساب حقيقي — غير متاح من هنا
+- [x] prompt-385: bottom-left notification pop-up (click opens its section) + red per-section menu counters cleared on opening the section; 8 tests, typecheck clean.
+- [ ] prompt-385: «جميع الإجراءات مفتوحة / مالك المجموعة كامل الصلاحيات لكل الأدوار» — awaiting user's choice of scope (security-sensitive).
+- [ ] prompt-385: signed-in check of pop-up/counters blocked (external Supabase, no session).
