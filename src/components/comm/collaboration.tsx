@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,8 +19,11 @@ import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { MaterialFileViewer } from "./material-file-viewer";
 const categories: Record<string, string> = { activities: "أنشطة", teaching: "مواد تعليمية", worksheets: "أوراق عمل", notes: "مذكرات", summaries: "ملخصات", courses: "دورات" };
 export function Collaboration() {
-  const { active } = useSession(); const [tab, setTab] = useState("community");
+  const { active, contexts, setActive } = useSession(); const navigate = useNavigate();
+  const tab = useRouterState({ select: (r) => (r.location.search as Record<string, unknown>)["tab"] === "library" ? "library" : "community" });
+  const setTab = (next: string) => void navigate({ to: "/app/collaboration", search: { tab: next === "library" ? "library" : "community" } });
   const ok = useQuery({ queryKey: ["co-access", active?.orgId, active?.role, active?.schoolId], enabled: !!active?.orgId, queryFn: async () => { const { data, error } = await db.rpc("_co_ok", { _org: active?.orgId }); if (error) throw error; return !!data; } });
+  if (active?.role === "platform_admin") return <div className="space-y-5"><PageHeader title="التعاون" /><select aria-label="المجموعة والفرع" className={selectCls()} value="" onChange={(e) => { if (e.target.value) setActive(e.target.value); }}><option value="">اختر المجموعة والفرع</option>{contexts.filter((c) => c.role === "org_owner" && c.orgId && c.schoolId).map((c) => <option key={c.key} value={c.key}>{c.orgName} — {c.schoolName}</option>)}</select><EmptyState title="اختر مجموعة لفتح المجتمع المهني والمكتبة الرقمية" /></div>;
   if (ok.isLoading) return <LoadingState />; if (ok.error) return <ErrorState message={arabicError(ok.error)} />; if (!ok.data || !active?.orgId) return <ForbiddenState />;
   return <div className="space-y-5"><PageHeader title="التعاون" /><Tabs value={tab} onValueChange={setTab} dir="rtl"><TabsList><TabsTrigger value="community">المجتمع المهني</TabsTrigger><TabsTrigger value="library">المكتبة الرقمية</TabsTrigger></TabsList><TabsContent value="community"><Community org={active.orgId} /></TabsContent><TabsContent value="library"><Library org={active.orgId} school={active.schoolId} /></TabsContent></Tabs></div>;
 }

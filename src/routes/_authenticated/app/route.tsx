@@ -239,7 +239,7 @@ function Shell() {
   if (groupView && section === "school_admin")
     nav = [...new Set(baseNav)].filter((k) => ["home", "profile", "communication", "comm_groups", "meetings", "circulars", "comm_manage", "chat_settings", "notifications", "support", "calls", "collaboration"].includes(k));
   // platform owner on the platform account: platform menu only; picking a branch switches to the group context (full group menu)
-  if (active.role === "platform_admin") nav = nav.filter((k) => ["home", "profile", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", "notifications", "support"].includes(k));
+  if (active.role === "platform_admin") nav = nav.filter((k) => ["home", "profile", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", "notifications", "support", "collaboration"].includes(k));
   // class visits live under the evaluation sub-menu for roles that have both
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
   const groups = NAV_GROUPS.map((g) => ({ ...g, keys: g.keys.filter((k) => nav.includes(k)) })).filter((g) => g.keys.length);
@@ -273,6 +273,7 @@ function Shell() {
                     <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
                     <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="truncate">{k === "schedule" && active ? scheduleLabel(active.role) : k === "teachers" && active ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
                   </Link>
+                  {k === "collaboration" && <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">{[["community", "المجتمع المهني"], ["library", "المكتبة الرقمية"]].map(([t, label]) => <Link key={t} to="/app/collaboration" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>)}</div>}
                   {k === "procurement" && path.startsWith("/app/procurement") && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {PC_SUB.filter(([t]) => (pcNeedsOnly ? t === "needs" : t !== "settings" || owner || pc.data?.caps.settings === "org")).map(([t, label]) => (

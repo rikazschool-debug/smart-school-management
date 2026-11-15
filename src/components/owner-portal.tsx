@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Star, ArrowLeft, Building2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy, Phone } from "lucide-react";
+import { BookOpen, MessagesSquare, UsersRound, Star, ArrowLeft, Building2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy, Phone } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -61,6 +61,10 @@ type Feature = { icon: LucideIcon; label: string; to: string; search?: Record<st
 type Card = { key: string; section?: SectionKey; title: string; desc: string; to: string; icon: LucideIcon; note?: string; features: Feature[]; open: string };
 
 const CARDS: Card[] = [
+  { key: "collaboration", title: "التعاون", icon: UsersRound, to: "/app/collaboration", open: "فتح التعاون", desc: "المجتمع المهني والمكتبة الرقمية للمجموعة التعليمية.", features: [
+    { icon: MessagesSquare, label: "المجتمع المهني", to: "/app/collaboration", search: { tab: "community" } },
+    { icon: BookOpen, label: "المكتبة الرقمية", to: "/app/collaboration", search: { tab: "library" } },
+  ] },
   {
     key: "schools", section: "school_admin", title: "إدارة المدارس", icon: Building2, to: "/app/school-home", open: "فتح إدارة المدارس",
     desc: "مدارس المؤسسة وفروعها، وتشغيلها اليومي: الإعداد الأكاديمي والطلاب والجداول والحضور والتواصل.",
