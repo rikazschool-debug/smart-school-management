@@ -101,7 +101,7 @@ describe("staff scope rules (package next, item 1)", () => {
   });
   it("card scanning and the scanning station are for the gate account only", () => {
     expect(ALL.filter(canScanAttendance)).toEqual(["security"]);
-    expect(ALL.filter((r) => NAV_BY_ROLE[r].includes("station"))).toEqual(["security"]);
+    expect(ALL.filter((r) => NAV_BY_ROLE[r].includes("station")).sort()).toEqual(["org_owner", "security"]); // owner sees every section (prompt-385)
   });
   it("tasks: principal, vice and supervisor create; meetings: principal and owner organize", () => {
     expect(ALL.filter(canCreateTask).sort()).toEqual(["principal", "supervisor", "vice_principal"]);
