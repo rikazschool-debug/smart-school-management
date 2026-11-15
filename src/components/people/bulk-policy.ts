@@ -5,7 +5,7 @@ export function bulkActions(kind: string, caps: BulkPermissions, hasTags: boolea
     ...(caps.tags_assign && hasTags ? ["tag_add", "tag_remove"] : []),
     ...(caps.accounts && kind !== "employee" ? ["login_create"] : []),
     ...(kind === "student" && canPlace ? ["place"] : []),
-    ...(caps.accounts ? ["account_off", "account_on", "org_login_off", "org_login_on"] : []),
+    ...(caps.accounts && kind !== "student" ? ["account_off", "account_on", "org_login_off", "org_login_on"] : []),
   ];
 }
 

@@ -6,13 +6,16 @@ describe("student bulk permissions", () => {
     expect(bulkActions("student", { bulk: true, accounts: false, tags_assign: false }, true, false)).not.toContain("login_create");
   });
   it("owner account capability and placement produce the four requested actions", () => {
-    expect(bulkActions("student", { bulk: true, accounts: true, tags_assign: true }, true, true).slice(0, 4)).toEqual(["tag_add", "tag_remove", "login_create", "place"]);
+    expect(bulkActions("student", { bulk: true, accounts: true, tags_assign: true }, true, true)).toEqual(["tag_add", "tag_remove", "login_create", "place"]);
   });
   it("independent placement does not grant tags or account creation", () => {
     expect(bulkActions("student", { bulk: false, accounts: false, tags_assign: false }, true, true)).toEqual(["place"]);
   });
   it("placement does not apply to guardian records", () => {
     expect(bulkActions("guardian", { bulk: true, accounts: false, tags_assign: false }, true, true)).toEqual([]);
+  });
+  it("keeps existing owner access commands outside the student list", () => {
+    expect(bulkActions("guardian", { bulk: true, accounts: true, tags_assign: false }, false, false)).toEqual(["login_create", "account_off", "account_on", "org_login_off", "org_login_on"]);
   });
   it("reports each student and continues after refusal, without duplicate calls", async () => {
     const place = vi.fn(async (id: string) => { if (id === "foreign-school") throw Error("school denied"); });

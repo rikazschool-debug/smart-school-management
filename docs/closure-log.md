@@ -3,6 +3,12 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-15 — Student actions and notification display (prompt-370)
+- Student bulk actions stop at placement; owner account-access commands remain available on other people lists, with their existing server permissions unchanged.
+- Sidebar and students/guardians gates use the existing school-scoped staff_view RPC, including admissions staff with existing read authorization. No role, permission, RLS, membership or database change; admissions permission alone does not grant family-record access.
+- General notification feed and unread count exclude WhatsApp dedupe keys (wa:) before paging/counting; read-all affects only displayed unread IDs. WhatsApp inbox messages and stored alerts are retained.
+- Seven test files, 53 tests passed with synthetic/mocked data, including scope changes, permission-check failure, student action limits and notification filtering. Preview build OK; browser redirected to /auth with zero runtime errors. Authenticated navigation remains unverified because the external Supabase session is unavailable. No accounts, messages, migration or publish operation.
+
 ## 2026-11-15 — Admissions and student bulk actions (prompt-369)
 - Existing students/guardians routes are grouped under admissions in the shared sidebar, including the owner admissions menu. Direct links and independent page permissions remain unchanged.
 - Bulk placement reuses student_place per student; confirmations and per-record reports cover success/failure. Manual login option requires owner account capability; existing account provisioning is reused without password replacement. Selection pagination no longer silently stops at 2,000 records.

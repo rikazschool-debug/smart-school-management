@@ -29,7 +29,7 @@ const REL: Record<string, string> = { father: "الأب", mother: "الأم", br
 
 function Page() {
   return (
-    <RequireSchool nav="guardians" extra={(p) => !!p["people_family.view"] || !!p["people_family.edit"]}>
+    <RequireSchool nav="guardians" peopleRead extra={(p) => !!p["people_family.view"] || !!p["people_family.edit"]}>
       {(ctx) => <Guardians schoolId={ctx.schoolId} role={ctx.role} />}
     </RequireSchool>
   );
