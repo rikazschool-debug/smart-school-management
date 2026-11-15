@@ -32,6 +32,7 @@ export type Field = {
   hideInForm?: boolean;
   dependsOn?: { field: string; column: string };
   resetFields?: string[];
+  transient?: boolean;
 };
 
 /** `text` gives the plain value for export when `render` returns JSX. */
@@ -122,7 +123,7 @@ export function RecordForm({
             return void toast.error(`حقل «${f.label}» مطلوب`);
         const out: Row = {};
         for (const f of fields) {
-          if (f.hideInForm) continue;
+          if (f.hideInForm || f.transient) continue;
           let val = v[f.key];
           if (val === "" || val === undefined) val = null;
           if (f.type === "number" && val !== null) val = Number(val);

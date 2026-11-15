@@ -97,7 +97,7 @@ function Academic({ ctx }: { ctx: AppContext & { schoolId: string } }) {
                   fields={[
                     { key: "year_id", label: "السنة", type: "select", required: true, options: { table: "academic_years", label: "name", filter: { available: true } }, resetFields: ["term_id"] },
                     { key: "term_id", label: "الفصل الدراسي", type: "select", required: true, options: { table: "terms", label: "name", filter: { available: true } }, dependsOn: { field: "year_id", column: "year_id" } },
-                    { key: "_stage", label: "المرحلة", type: "select", required: false, options: (stages.data ?? []).map((r) => ({ value: r["id"] as string, label: r["name"] as string })), resetFields: ["grade_id"] },
+                    { key: "_stage", label: "المرحلة", type: "select", transient: true, required: false, options: (stages.data ?? []).map((r) => ({ value: r["id"] as string, label: r["name"] as string })), resetFields: ["grade_id"] },
                     { key: "grade_id", label: "الصف", type: "select", required: true, options: { table: "grades", label: "name", order: "sort_order", filter: { available: true } }, dependsOn: { field: "_stage", column: "stage_id" } },
                     { key: "name", label: "اسم الشعبة", required: true },
                     { key: "capacity", label: "السعة", type: "number", required: true },
