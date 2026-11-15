@@ -6939,6 +6939,48 @@ export type Database = {
           },
         ]
       }
+      health_calendar: {
+        Row: {
+          created_at: string
+          description: string
+          ends_on: string
+          id: string
+          recurrence_verified: boolean
+          source_url: string
+          source_year: number
+          starts_on: string
+          title: string
+          updated_at: string
+          verified_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          ends_on: string
+          id?: string
+          recurrence_verified?: boolean
+          source_url: string
+          source_year: number
+          starts_on: string
+          title: string
+          updated_at?: string
+          verified_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          ends_on?: string
+          id?: string
+          recurrence_verified?: boolean
+          source_url?: string
+          source_year?: number
+          starts_on?: string
+          title?: string
+          updated_at?: string
+          verified_at?: string
+        }
+        Relationships: []
+      }
       health_conditions: {
         Row: {
           active: boolean
@@ -19739,6 +19781,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _health_calendar_ok: { Args: { _school: string }; Returns: boolean }
       _health_editor: { Args: { _student: string }; Returns: string }
       _health_log: {
         Args: { _action: string; _d: Json; _school: string; _student: string }
@@ -23406,6 +23449,10 @@ export type Database = {
           _school: string
         }
         Returns: boolean
+      }
+      health_calendar_list: {
+        Args: { _school: string; _year: number }
+        Returns: Json
       }
       health_condition_save: {
         Args: { _id: string; _p: Json; _student: string }

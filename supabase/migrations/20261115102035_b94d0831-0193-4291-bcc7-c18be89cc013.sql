@@ -1,0 +1,26 @@
+create or replace function public._health_calendar_ok(_school uuid) returns boolean language sql stable security definer set search_path=public as $$
+select auth.uid() is not null and _health_ok(_school,'view') and exists(select 1 from memberships m join schools s on s.id=m.school_id where m.user_id=auth.uid() and m.school_id=_school and m.org_id=s.org_id and m.role='nurse' and m.is_active and not m.branch_suspended and s.is_active and exists(select 1 from user_active_context c where c.user_id=auth.uid() and c.role='nurse' and c.school_id=_school and c.org_id=m.org_id)) $$;
+revoke all on function public._health_calendar_ok(uuid) from public,anon; grant execute on function public._health_calendar_ok(uuid) to authenticated,service_role;
+create table public.health_calendar (id uuid primary key default gen_random_uuid(), title text not null, starts_on date not null, ends_on date not null, source_year integer not null, source_url text not null, description text not null default '', verified_at timestamptz not null default now(), recurrence_verified boolean not null default false, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), unique(source_year,title));
+grant select on public.health_calendar to authenticated; grant all on public.health_calendar to service_role;
+alter table public.health_calendar enable row level security;
+create policy health_calendar_nurse_read on public.health_calendar for select to authenticated using(exists(select 1 from user_active_context c where c.user_id=auth.uid() and _health_calendar_ok(c.school_id)));
+create trigger health_calendar_touch before update on public.health_calendar for each row execute function public.touch_updated_at();
+create or replace function public.health_calendar_list(_school uuid,_year integer) returns jsonb language plpgsql stable security definer set search_path=public as $$ begin if not _health_calendar_ok(_school) then raise exception 'غير مصرح'; end if; return coalesce((select jsonb_agg(to_jsonb(h) order by starts_on,title) from health_calendar h where source_year=_year),'[]'::jsonb); end $$;
+revoke all on function public.health_calendar_list(uuid,integer) from public,anon; grant execute on function public.health_calendar_list(uuid,integer) to authenticated,service_role;
+insert into public.health_calendar(title,starts_on,ends_on,source_year,source_url,description) values
+('اليوم العالمي للسرطان','2026-02-04','2026-02-04',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','مناسبة توعوية للوقاية من السرطان والكشف المبكر.'),
+('اليوم العالمي للسمع','2026-03-03','2026-03-03',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية بصحة السمع والوقاية من فقدانه.'),
+('اليوم العالمي للسمنة','2026-03-04','2026-03-04',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية بالوقاية من السمنة والعادات الصحية.'),
+('اليوم العالمي لمتلازمة داون','2026-03-21','2026-03-21',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','تعزيز الوعي والدعم والدمج.'),
+('اليوم العالمي للتوعية بالتوحد','2026-04-02','2026-04-02',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية بالتوحد والدمج والدعم.'),
+('يوم الصحة العالمي','2026-04-07','2026-04-07',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','تعزيز الصحة والوقاية.'),
+('الأسبوع العالمي للتحصين','2026-04-26','2026-04-30',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية بأهمية التحصين.'),
+('اليوم العالمي للامتناع عن التدخين','2026-05-31','2026-05-31',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية بمخاطر التدخين والوقاية.'),
+('اليوم العالمي لسلامة الغذاء','2026-06-07','2026-06-07',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية بسلامة الغذاء.'),
+('اليوم العالمي للإسعافات الأولية','2026-09-12','2026-09-12',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية بالإسعافات الأولية.'),
+('اليوم العالمي للقلب','2026-09-29','2026-09-29',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية بصحة القلب.'),
+('شهر التوعية بسرطان الثدي','2026-10-01','2026-10-31',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية والكشف المبكر.'),
+('اليوم العالمي للصحة النفسية','2026-10-10','2026-10-10',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','تعزيز الوعي بالصحة النفسية.'),
+('اليوم العالمي لغسل اليدين','2026-10-15','2026-10-15',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/default.aspx','التوعية بغسل اليدين والوقاية من العدوى.'),
+('اليوم العالمي للسكري','2026-11-14','2026-11-14',2026,'https://www.moh.gov.sa/en/healthawareness/healthday/2026/pages/healthday-2026-11-14-001.aspx','التوعية بالسكري والوقاية والرعاية.');
