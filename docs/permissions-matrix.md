@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-15 (prompt-376): Ready stage/grade selection is now inside each existing create dialog, sourced from base + organization catalogs. Grade selection resolves an available stage in the current school. Central owner-only writing, existing manual editing, catalog validation and prior records remain unchanged.
+
 2026-11-15 (prompt-375): User-supplied subject presets are stage/grade-filtered choices inside the existing academic subject creation form. Saving still uses the existing academic_subjects.edit capability and school-scoped subjects RLS; no additional write grants, automatic courses, teacher assignments, or persisted stage/grade associations.
 
 2026-11-15 (security remediation): Shared academic_catalog references require platform-admin identity or a live, unsuspended membership in an active organization and (for branch memberships) an active school of that organization. Authentication alone grants no reads. Shared base entries intentionally contain no organization-specific or personal data; org_academic_catalog policies and all write rights remain unchanged.
