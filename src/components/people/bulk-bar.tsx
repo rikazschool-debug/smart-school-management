@@ -2,13 +2,15 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { provisionAccounts } from "@/lib/accounts.functions";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { selectCls } from "@/components/ui/native-select";
 import { ask, askText } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { pp, type PersonKind, type PpCaps, type Tag } from "./shared";
+import { supabase } from "@/integrations/supabase/client";
+import { bulkActions, placeSelected } from "./bulk-policy";
 
 type Result = { id: string; status: "ok" | "refused" | "failed"; reason: string | null };
 type Out = { repeat: boolean; ok: number; refused: number; failed: number; results: Result[] };
@@ -16,7 +18,7 @@ const ACTION: Record<string, string> = {
   tag_add: "إسناد وسم", tag_remove: "إزالة وسم",
   account_off: "تعليق الوصول لهذه المدرسة", account_on: "إعادة الوصول لهذه المدرسة",
   org_login_off: "إيقاف الدخول على مستوى المؤسسة", org_login_on: "إعادة الدخول على مستوى المؤسسة",
-  login_create: "إنشاء حساب دخول",
+  login_create: "إنشاء حسابات دخول", place: "التسكين",
 };
 const STATE: Record<string, string> = { linked: "أُنشئ/رُبط", pending_phone: "بانتظار تأكيد الجوال", already: "له حساب مسبقًا", missing_id: "ينقص رقم الهوية", missing_phone: "ينقص الجوال", error: "تعذّر" };
 type Preview = { records: number; with_login: number; without_login: number; memberships: number; other_schools: number; other_roles: number };
@@ -40,26 +42,53 @@ export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCo
   const qc = useQueryClient();
   const [action, setAction] = useState("");
   const [tag, setTag] = useState("");
+  const [section, setSection] = useState("");
+  const placement = useQuery({ queryKey: ["can-place-students", schoolId], enabled: kind === "student", queryFn: async () => {
+    const { data, error } = await supabase.rpc("can_place_students", { _school: schoolId });
+    if (error) throw error; return !!data;
+  } });
+  const sections = useQuery({ queryKey: ["bulk-placement-sections", schoolId], enabled: kind === "student" && placement.data === true && action === "place", queryFn: async () => {
+    const { data, error } = await supabase.from("sections").select("id, name, grades(name), academic_years(name)").eq("school_id", schoolId).order("name");
+    if (error) throw error; return data;
+  } });
   const [busy, setBusy] = useState(false);
   const [fmt, setFmt] = useState<"xlsx" | "pdf" | "print">("xlsx");
   const provision = useServerFn(provisionAccounts);
   const [report, setReport] = useState<{ title: string; out: Out } | null>(null);
   const usable = tags.filter((t) => t.kinds.includes(kind));
   async function run() {
-    if (!action) return;
+    if (!action || busy) return;
+    if (!bulkActions(kind, caps, usable.length > 0, placement.data === true).includes(action)) return void toast.error("لا تملك هذا الإجراء");
     if (action.startsWith("tag") && !tag) return void toast.error("اختر الوسم");
     const label = `${ACTION[action]}${action.startsWith("tag") ? ` «${usable.find((t) => t.id === tag)?.name}»` : ""}`;
     const n = mode === "all" ? total : count;
     let reason: string | null = null;
     let ids: string[] | null = null;
+    if (action === "place") {
+      const target = sections.data?.find((s) => s.id === section);
+      if (!target) return void toast.error("اختر الشعبة");
+      if (!(await ask(`تسكين ${n} طالب في ${target.grades?.name ?? ""} / ${target.name}؟\nيُنهي التسكين السابق في السنة نفسها؛ يُرفض الطالب غير المصرح به أو عند امتلاء الشعبة دون فقد تسكينه السابق.`, { ok: "تنفيذ" }))) return;
+      setBusy(true);
+      try {
+        const results = await placeSelected(await resolveIds(), async (id) => {
+          const { error } = await supabase.rpc("student_place", { _student: id, _section: section });
+          if (error) throw error;
+        }, arabicError);
+        setReport({ title: label, out: { repeat: false, ok: results.filter((r) => r.status === "ok").length, refused: 0, failed: results.filter((r) => r.status === "failed").length, results } });
+        void qc.invalidateQueries();
+      } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
+      return;
+    }
     if (action === "login_create") {
       if (!(await ask(`${label} لـ ${n} سجل؟\nالسجلات التي لها حساب تُربط دون تغيير كلمة المرور، والناقصة (هوية/جوال) تُرفض مع السبب.`, { ok: "تنفيذ" }))) return;
       setBusy(true);
       try {
-        const all = await resolveIds();
+        const all = [...new Set(await resolveIds())];
         const res: Result[] = [];
         for (let i = 0; i < all.length; i += 200) {
-          const part = await provision({ data: { kind: kind as "student" | "teacher" | "guardian", ids: all.slice(i, i + 200) } });
+          let part: { id: string; state: string; msg?: string }[];
+          try { part = await provision({ data: { kind: kind as "student" | "teacher" | "guardian", ids: all.slice(i, i + 200) } }); }
+          catch (error) { res.push(...all.slice(i, i + 200).map((id) => ({ id, status: "failed" as const, reason: arabicError(error) }))); continue; }
           for (const r of part as { id: string; state: string; msg?: string }[]) {
             const ok = ["linked", "pending_phone", "already"].includes(r.state);
             res.push({ id: r.id, status: ok ? "ok" : r.state === "error" ? "failed" : "refused", reason: r.msg ?? STATE[r.state] ?? r.state });
@@ -92,11 +121,7 @@ export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCo
     try { const ids = await resolveIds(); await onExport(ids, fmt); void pp("pp_export_log", { _key: crypto.randomUUID(), _school: schoolId, _kind: kind, _count: ids.length }); }
     catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
   }
-  const actions = [
-    ...(caps.tags_assign && usable.length ? ["tag_add", "tag_remove"] : []),
-    ...((caps.accounts || caps.bulk) && kind !== "employee" ? ["login_create"] : []),
-    ...(caps.accounts ? ["account_off", "account_on", "org_login_off", "org_login_on"] : []),
-  ];
+  const actions = bulkActions(kind, caps, usable.length > 0, placement.data === true);
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 p-2 text-sm" role="region" aria-label="التحديد">
       <strong>{mode === "all" ? `جميع النتائج (${total})` : `${count} محدد`}</strong>
@@ -111,10 +136,14 @@ export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCo
           <Button size="sm" variant="outline" disabled={busy} onClick={() => void exp()}>تصدير المحددين</Button>
         </>}
         {actions.length > 0 && <>
-          <select aria-label="الإجراء الجماعي" className={selectCls()} value={action} onChange={(e) => setAction(e.target.value)}>
-            <option value="">إجراء…</option>
+          <select aria-label="الإجراء الجماعي" disabled={busy} className={selectCls()} value={action} onChange={(e) => setAction(e.target.value)}>
+            <option value="">اتخاذ إجراء</option>
             {actions.map((a) => <option key={a} value={a}>{ACTION[a]}</option>)}
           </select>
+          {action === "place" && <select aria-label="شعبة التسكين الجماعي" disabled={busy || sections.isLoading} className={selectCls()} value={section} onChange={(e) => setSection(e.target.value)}>
+            <option value="">{sections.error ? "تعذّر تحميل الشعب" : "اختر الشعبة"}</option>
+            {sections.data?.map((s) => <option key={s.id} value={s.id}>{s.academic_years?.name} · {s.grades?.name} / {s.name}</option>)}
+          </select>}
           {action.startsWith("tag") && (
             <select aria-label="الوسم" className={selectCls()} value={tag} onChange={(e) => setTag(e.target.value)}>
               <option value="">الوسم…</option>

@@ -221,7 +221,8 @@ export function CrudTable({
   const [selAll, setSelAll] = useState(false);
   const names = useRef(new Map<string, string>());
   useEffect(() => { setSel(new Set()); setSelAll(false); }, [search, fv, tagF, schoolId]);
-  const selecting = person ? !!caps && (caps.bulk || caps.export) : exportable;
+  const placement = useQuery({ queryKey: ["can-place-students", schoolId], enabled: person?.kind === "student", queryFn: async () => { const { data, error } = await db.rpc("can_place_students", { _school: schoolId }); if (error) throw error; return !!data; } });
+  const selecting = person ? !!caps && (caps.bulk || caps.export || caps.tags_assign || caps.accounts || placement.data === true) : exportable;
   const [selFmt, setSelFmt] = useState<"xlsx" | "pdf" | "print">("xlsx");
 
   const build = (head = false, onlyIds?: string[], pick?: string) => {
@@ -298,7 +299,7 @@ export function CrudTable({
   async function resolveIds(): Promise<string[]> {
     if (!selAll) return [...sel];
     const out: string[] = [];
-    for (let p = 0; p < 2; p++) {
+    for (let p = 0; ; p++) {
       const { data, error } = await build(false, undefined, "id, full_name, display_name").range(p * 1000, p * 1000 + 999);
       if (error) throw error;
       for (const r of data as Row[]) { out.push(r["id"]); names.current.set(r["id"], r["display_name"] || r["full_name"] || ""); }
