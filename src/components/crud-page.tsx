@@ -57,12 +57,13 @@ const clean = (s: string) => s.replace(/[,()*%\\]/g, " ").trim();
 
 export function useOptions(table: string, label: string, schoolId: string | null, filter?: Record<string, unknown>, order?: string) {
   return useQuery({
-    queryKey: ["opts", table, schoolId, filter],
+    queryKey: ["opts", table, schoolId, filter, order],
     enabled: !!schoolId,
     queryFn: async () => {
       let q = db.from(table).select(`id, ${label}`).eq("school_id", schoolId);
       for (const [k, v] of Object.entries(filter ?? {})) q = q.eq(k, v);
-      const { data, error } = await q.order(order ?? label);
+      // stages always list in school order (KG → secondary), never alphabetically
+      const { data, error } = await q.order(order ?? (table === "stages" ? "sort_order" : label));
       if (error) throw error;
       return (data as Row[]).map((r) => ({ value: r["id"] as string, label: String(r[label]) }));
     },
