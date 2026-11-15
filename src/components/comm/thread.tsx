@@ -10,6 +10,8 @@ import { ErrorState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { arabicError, useSession } from "@/lib/session";
+import { filterPeople, insertMention, mentionQuery, type MentionPerson } from "@/lib/mentions";
+import { MentionMenu } from "@/components/comm/mention-menu";
 import { KIND_LABEL, SafeText, cleanupStalePending, discardPendingFile, openFile, timeLabel, uploadMessageFile, type PendingFile } from "@/lib/comm";
 import { GroupPanel } from "@/components/comm/group-panel";
 import { AttachmentsSheet, RepliesButton, RepliesMenu, VoicePlayer, VoiceRecorder, fillReply, filterReplies, slashQuery, uploadVoice, useConvLimits, useSavedReplies, type Saved, type VoiceClip } from "@/components/comm/chat-extras";
@@ -108,6 +110,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   const canReply = conv["allow_replies"] !== false || isMod;
   const pinned = list.filter((m) => m["pinned_at"] && !m["deleted_at"]);
   const others = (people.data ?? []).filter((p) => p["user_id"] !== user.id);
+  const mentionNames = (people.data ?? []).map((p) => String(p["full_name"] ?? "")).filter(Boolean);
   const pres = usePresenceConv(isGroup ? null : id);
   const peer: Presence | undefined = !isGroup && pres.data ? (() => { const ps = others.map((o) => pres.data?.get(o["user_id"])).filter(Boolean) as Presence[]; return ps.length ? { online: ps.some((x) => x.online), last_seen: ps.map((x) => x.last_seen).filter(Boolean).sort().pop() ?? null } : undefined; })() : undefined;
 
@@ -180,13 +183,13 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
           ) : (
             <ul className="space-y-2.5">
               {list.map((m) => (
-                <Message key={m["id"]} domId={`msg-${id}-${m["seq"]}`} m={m} mine={!!m["mine"]} name={names[m["id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
+                <Message mentionNames={mentionNames} key={m["id"]} domId={`msg-${id}-${m["seq"]}`} m={m} mine={!!m["mine"]} name={names[m["id"]] ?? "عضو سابق"} parent={m["reply_to"] ? list.find((x) => x["id"] === m["reply_to"]) : undefined}
                   files={(files.data ?? []).filter((f) => f["source_id"] === m["id"])} receipt={receipt(m)} canAct={!block} isGroup={isGroup} canReply={canReply} isMod={isMod}
                   onReply={() => setReply(m)} onChanged={() => qc.invalidateQueries({ queryKey: ["msgs", id] })} />
               ))}
               {locals.map((l) => (
                 <li key={l.clientId} className="ms-auto max-w-[85%] break-words rounded-2xl rounded-se-sm bg-primary/10 p-3 text-sm">
-                  {l.body && <SafeText text={l.body} />}
+                  {l.body && <SafeText text={l.body} mentions={mentionNames} />}
                   {l.fileIds.length > 0 && <p className="text-xs text-muted-foreground">📎 {l.fileIds.length} مرفق</p>}
                   <p className="mt-1 flex items-center gap-2 text-xs">
                     {l.status === "sending" ? <><Loader2 className="size-3 animate-spin" /> جارٍ الإرسال…</> : (
@@ -206,7 +209,7 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
       {!panel && (block ? (
         <p className="border-t bg-muted/50 p-3 text-center text-sm text-muted-foreground">{block}</p>
       ) : (
-        <Composer userId={user.id} conv={conv} reply={reply} names={names} onCancelReply={() => setReply(null)} onSend={(body, fileIds) => {
+        <Composer userId={user.id} conv={conv} reply={reply} names={names} people={(people.data ?? []) as MentionPerson[]} onCancelReply={() => setReply(null)} onSend={(body, fileIds) => {
           const l: Local = { clientId: crypto.randomUUID(), body, replyTo: reply, fileIds, status: "sending" };
           setReply(null);
           return send(l);
@@ -216,7 +219,8 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   );
 }
 
-function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup, canReply, isMod, onReply, onChanged }: {
+function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup, canReply, isMod, onReply, onChanged, mentionNames }: {
+  mentionNames?: string[];
   domId: string; m: Row; mine: boolean; name: string; parent: Row | undefined; files: Row[]; receipt: string | null; canAct: boolean; isGroup: boolean; canReply: boolean; isMod: boolean; onReply: () => void; onChanged: () => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -237,7 +241,7 @@ function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup
           <Textarea aria-label="تعديل الرسالة" value={text} onChange={(e) => setText(e.target.value)} maxLength={4000} />
           <div className="flex gap-1"><Button size="sm">حفظ</Button><Button size="sm" type="button" variant="ghost" onClick={() => setEditing(false)}>إلغاء</Button></div>
         </form>
-      ) : m["body"] && <SafeText text={m["body"]} />}
+      ) : m["body"] && <SafeText text={m["body"]} mentions={mentionNames} />}
       {!deleted && files.length > 0 && (
         <ul className="mt-2 flex flex-wrap gap-1">
           {files.map((f) => String(f["mime"] ?? "").startsWith("audio/") ? <li key={f["id"]}><VoicePlayer file={f} seconds={f["duration"]} /></li> : <li key={f["id"]}><button onClick={() => openFile(f)} className="flex max-w-full items-center gap-1 rounded-full border bg-background px-3 py-1 text-xs hover:bg-muted"><Paperclip className="size-3 shrink-0" /><span className="truncate">{f["name"]}</span> ({Math.ceil(f["size_bytes"] / 1024)} ك.ب)</button></li>)}
@@ -273,7 +277,7 @@ function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup
   );
 }
 
-function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userId: string; conv: Row; reply: Row | null; names: Record<string, string>; onCancelReply: () => void; onSend: (body: string, fileIds: string[]) => Promise<void> }) {
+function Composer({ userId, conv, reply, names, people, onCancelReply, onSend }: { userId: string; conv: Row; reply: Row | null; names: Record<string, string>; people: MentionPerson[]; onCancelReply: () => void; onSend: (body: string, fileIds: string[]) => Promise<void> }) {
   const cid = draftKey(userId, conv["id"] as string);
   const [restored] = useState(() => hasDraft(userId, conv["id"]));
   const [body, setBody] = useState(() => DRAFTS.get(cid)?.body ?? "");
@@ -295,6 +299,15 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
   const [act, setAct] = useState(0);
   const menuItems = filterReplies(saved, menuAll ? "" : slash?.q ?? "");
   const menuOpen = (!!slash || menuAll) && saved.length > 0;
+  const [at, setAt] = useState<{ start: number; q: string } | null>(null);
+  const atItems = at ? filterPeople(people, at.q, userId) : [];
+  const atOpen = !!at && atItems.length > 0;
+  function pickPerson(p: MentionPerson) {
+    const el = ta.current; const caret = el?.selectionStart ?? body.length;
+    const r = insertMention(body, at!, caret, p.full_name);
+    setBody(r.body); setAt(null); setAct(0);
+    setTimeout(() => { el?.focus(); el?.setSelectionRange(r.caret, r.caret); }, 0);
+  }
   const [clip, setClip] = useState<VoiceClip | null>(null);
   const [voiceBusy, setVoiceBusy] = useState(false);
   const me = useQuery({ queryKey: ["my-profile-name", userId], staleTime: 600_000, queryFn: async () => { const { data } = await db.from("profiles").select("full_name").eq("id", userId).maybeSingle(); return (data?.["full_name"] as string | undefined) ?? ""; } });
@@ -364,10 +377,17 @@ function Composer({ userId, conv, reply, names, onCancelReply, onSend }: { userI
           <Button type="button" size="sm" variant="ghost" disabled={voiceBusy} onClick={() => setClip(null)}>إلغاء</Button>
         </div>
       )}
-      {menuOpen && <RepliesMenu items={menuItems} active={act} onHover={setAct} onPick={pick} />}
+      {atOpen && <MentionMenu items={atItems} active={act} onHover={setAct} onPick={pickPerson} />}
+      {!atOpen && menuOpen && <RepliesMenu items={menuItems} active={act} onHover={setAct} onPick={pick} />}
       <div className="flex items-end gap-2 rounded-xl border bg-background p-1.5 focus-within:ring-2 focus-within:ring-ring">
-        <Textarea aria-label="نص الرسالة" placeholder="اكتب رسالتك…" rows={2} maxLength={4000} className="min-h-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0" onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.scrollIntoView({ block: "nearest" }), 300); }} ref={ta} value={body} onChange={(e) => { setBody(e.target.value); setMenuAll(false); setSlash(slashQuery(e.target.value, e.target.selectionStart ?? e.target.value.length)); setAct(0); }}
+        <Textarea aria-label="نص الرسالة" placeholder="اكتب رسالتك…" rows={2} maxLength={4000} className="min-h-0 flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0" onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.scrollIntoView({ block: "nearest" }), 300); }} ref={ta} value={body} onChange={(e) => { setBody(e.target.value); setMenuAll(false); setSlash(slashQuery(e.target.value, e.target.selectionStart ?? e.target.value.length)); setAt(mentionQuery(e.target.value, e.target.selectionStart ?? e.target.value.length)); setAct(0); }}
           onKeyDown={(e) => {
+            if (atOpen) {
+              if (e.key === "ArrowDown") { e.preventDefault(); setAct((a) => (a + 1) % atItems.length); return; }
+              if (e.key === "ArrowUp") { e.preventDefault(); setAct((a) => (a - 1 + atItems.length) % atItems.length); return; }
+              if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); pickPerson(atItems[Math.min(act, atItems.length - 1)]!); return; }
+              if (e.key === "Escape") { e.preventDefault(); setAt(null); return; }
+            }
             if (menuOpen && menuItems.length) {
               if (e.key === "ArrowDown") { e.preventDefault(); setAct((a) => (a + 1) % menuItems.length); return; }
               if (e.key === "ArrowUp") { e.preventDefault(); setAct((a) => (a - 1 + menuItems.length) % menuItems.length); return; }
