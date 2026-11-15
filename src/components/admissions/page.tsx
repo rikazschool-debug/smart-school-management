@@ -32,7 +32,6 @@ export function AdmissionsPage({ sp, go }: { sp: AdSearch; go: (s: AdSearch) => 
   if (me.error) return <ErrorState message={arabicError(me.error)} onRetry={() => void me.refetch()} />;
   if (!me.data?.enabled) return <><PageHeader title="القبول والتسجيل" /><SectionLocked /></>;
   const c = me.data.caps!;
-  const canStudents = c.students.length > 0 || !!me.data.owner;
   const canSettings = !!me.data.org_level || c.settings.length > 0;
   // «الطلاب الحاليون» tab removed (prompt-389): without admissions rights there is nothing left to open here
   if (!hasAdmissions(me.data) && !me.data.owner) return <ForbiddenState />;
