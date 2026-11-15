@@ -594,3 +594,4 @@ The `other` request kind uses the same verified-child access, school/org scope, 
 - Owner menu now includes duties, pickup, gate station, health and results.
 
 - منشئ التقارير (reports): مالك المجموعة، المدير، الوكيل، شؤون الطلاب — قراءة فقط عبر RLS؛ لا يمنح أي صلاحية بيانات جديدة.
+- تقارير الأقسام المحمية (القبول، الصيانة، المشتريات، الدعم، الإدارة، الزيارات الصفية) تُقرأ عبر دوال القوائم الخاصة بكل قسم بنفس صلاحياتها؛ لا وصول إضافي.
