@@ -21,7 +21,8 @@ if (process.argv.includes("--teardown")) {
   const c = createClient(url, pk, { auth: { persistSession: false } });
   must(await c.auth.setSession(fixture.users.owner.session));
   for (const school of tr.schools) {
-    for (const table of ["enrollments", "classrooms", "sections"]) must(await admin.from(table).delete().eq("school_id", school));
+    for (const table of ["enrollments", "classrooms"]) must(await admin.from(table).delete().eq("school_id", school));
+    must(await c.from("sections").delete().eq("school_id", school));
     for (const table of ["grades", "stages", "terms", "academic_years"]) must(await c.from(table).delete().eq("school_id", school));
   }
   if (!await tr.purgeOrg(registry.org)) throw new Error("Test cleanup incomplete");
