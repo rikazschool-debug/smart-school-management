@@ -31,7 +31,7 @@ const STATUS = [
 ];
 
 function Page() {
-  return <RequireSchool nav="students" extra={(p) => !!p["people_family.view"] || !!p["people_family.edit"]}>{(ctx) => <Students ctx={ctx} />}</RequireSchool>;
+  return <RequireSchool nav="students" peopleRead extra={(p) => !!p["people_family.view"] || !!p["people_family.edit"]}>{(ctx) => <Students ctx={ctx} />}</RequireSchool>;
 }
 
 function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {

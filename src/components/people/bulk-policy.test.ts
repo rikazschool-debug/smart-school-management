@@ -6,7 +6,7 @@ describe("student bulk permissions", () => {
     expect(bulkActions("student", { bulk: true, accounts: false, tags_assign: false }, true, false)).not.toContain("login_create");
   });
   it("owner account capability and placement produce the four requested actions", () => {
-    expect(bulkActions("student", { bulk: true, accounts: true, tags_assign: true }, true, true).slice(0, 4)).toEqual(["tag_add", "tag_remove", "login_create", "place"]);
+    expect(bulkActions("student", { bulk: true, accounts: true, tags_assign: true }, true, true)).toEqual(["tag_add", "tag_remove", "login_create", "place"]);
   });
   it("independent placement does not grant tags or account creation", () => {
     expect(bulkActions("student", { bulk: false, accounts: false, tags_assign: false }, true, true)).toEqual(["place"]);

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { useLiveSignals } from "@/lib/live-signals";
+import { GENERAL_NOTIFICATIONS_FILTER } from "@/lib/notification-filter";
 
 export function NotificationBell() {
   useLiveSignals(); // mounted once in the app layout
@@ -10,7 +11,7 @@ export function NotificationBell() {
     queryKey: ["notif-unread"],
     refetchInterval: 60_000,
     queryFn: async () => {
-      const { count, error } = await db.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null);
+      const { count, error } = await db.from("notifications").select("id", { count: "exact", head: true }).or(GENERAL_NOTIFICATIONS_FILTER).is("read_at", null);
       if (error) throw error;
       return count ?? 0;
     },

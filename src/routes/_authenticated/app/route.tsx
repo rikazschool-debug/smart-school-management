@@ -24,6 +24,7 @@ import { HeartPulse, FileText, IdCard, Tags, PartyPopper, UserPlus } from "lucid
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { ROOM_TABS, roomTabsForRole } from "@/components/classroom-room-tabs";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
+import { usePeopleRead } from "@/lib/people-read";
 import { useMyAvatar } from "@/lib/my-avatar";
 import { setOwnerInSchool, useOwnerInSchool } from "@/lib/owner-scope";
 import { NAV_BY_ROLE, OWNER_SECTION_LABELS, ROLE_LABELS, SUPPORT_TAB_LABELS, supportTabs, commTabs, ownerSection, ownerSectionNav, scheduleLabel, teachersLabel, type NavKey, type OwnerSection } from "@/lib/roles";
@@ -146,6 +147,7 @@ function Shell() {
   const sp = useSchoolPerms(pcRole ? active?.schoolId : null);
   const mt = useMtMe(active?.orgId ?? null, pcRole);
   const ad = useAdMe(active?.orgId ?? null, pcRole);
+  const peopleRead = usePeopleRead(pcRole ? active?.schoolId ?? null : null);
   // events: base roles have it in NAV_BY_ROLE; other staff get it from granted evt_* perms or a course delegation (evt_caps re-checks)
   const evt = useEvtCaps(active?.orgId ?? null, pcRole && !["principal", "vice_principal"].includes(active?.role ?? ""));
   const ops = useOpsStaff(active ?? null, user.id);
@@ -215,7 +217,7 @@ function Shell() {
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
     ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] || sp?.["attendance.view"] || sp?.["attendance.record"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(!owner && (sp?.["notices.view"] || sp?.["notices.send"]) ? ["hub_notices"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["health.view"] || sp?.["health.record"] || sp?.["health.manage"] ? ["health"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(owner || ["view", "replies", "autoreply", "media"].some((a) => sp?.[`chat_settings.${a}`]) ? ["chat_settings"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
   // base-role tools the owner stopped for this person (perm_my_school bt_*; the server blocks them too)
-  if (sp?.["people_family.view"] || sp?.["people_family.edit"]) baseNav.push("students", "guardians");
+  if (peopleRead.data === true || sp?.["people_family.view"] || sp?.["people_family.edit"]) baseNav.push("students", "guardians");
   const delegatedPages = workspacePages(sp);
   baseNav.push(...delegatedPages);
   const btOff: [string, NavKey][] = [["bt_schedule.view", "schedule"], ["bt_classroom.view", "classrooms"], ["bt_homework.view", "homework"]];
@@ -224,7 +226,7 @@ function Shell() {
   }
   const opsOnly = ops.opsOnly;
   if (ops.central) baseNav.push("hr");
-  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events", ...delegatedPages, ...(sp?.["people_family.view"] || sp?.["people_family.edit"] ? ["students", "guardians"] : []), ...(sp?.["people.view"] ? ["tags"] : []), ...(ops.asst ? ["schedule", "attendance"] : [])].includes(k)));
+  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events", ...delegatedPages, ...(peopleRead.data === true || sp?.["people_family.view"] || sp?.["people_family.edit"] ? ["students", "guardians"] : []), ...(sp?.["people.view"] ? ["tags"] : []), ...(ops.asst ? ["schedule", "attendance"] : [])].includes(k)));
   if (ops.asst && !sp?.["school_schedule.view"] && !delegatedPages.includes("schedule")) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => k !== "schedule"));
   if (ops.asst && !(sp?.["attendance.view"] || sp?.["attendance.record"])) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => k !== "attendance"));
   if (mqSecs.length) baseNav.push("calls");

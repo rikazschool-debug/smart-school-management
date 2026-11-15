@@ -4,8 +4,9 @@ import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { arabicError } from "@/lib/session";
+import { GENERAL_NOTIFICATIONS_FILTER } from "@/lib/notification-filter";
 
-export const Route = createFileRoute("/_authenticated/app/notifications")({ component: Page });
+export const Route = createFileRoute("/_authenticated/app/notifications")({ component: Page, head: () => ({ meta: [{ title: "الإشعارات — ركاز" }, { name: "description", content: "إشعارات المدرسة داخل ركاز." }, { property: "og:title", content: "الإشعارات — ركاز" }, { property: "og:description", content: "إشعارات المدرسة داخل ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }) });
 
 function Page() {
   const qc = useQueryClient();
@@ -13,7 +14,7 @@ function Page() {
   const q = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const { data, error } = await db.from("notifications").select("*").order("created_at", { ascending: false }).limit(100);
+      const { data, error } = await db.from("notifications").select("*").or(GENERAL_NOTIFICATIONS_FILTER).order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
       return data as Row[];
     },
@@ -26,8 +27,8 @@ function Page() {
   const unread = q.data?.filter((n) => !n["read_at"]).length ?? 0;
   return (
     <>
-      <PageHeader title="الإشعارات" desc="إشعارات داخل التطبيق فقط؛ لا تُرسل رسائل بريد أو جوال." />
-      {unread > 0 && <Button variant="outline" size="sm" className="mb-4" onClick={() => markRead(null)}>تعليم الكل كمقروء ({unread})</Button>}
+      <PageHeader title="الإشعارات" />
+      {unread > 0 && <Button variant="outline" size="sm" className="mb-4" onClick={() => markRead((q.data ?? []).filter((n) => !n["read_at"]).map((n) => n["id"]))}>تعليم الكل كمقروء ({unread})</Button>}
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? <EmptyState title="لا توجد إشعارات" /> : (
         <ul className="space-y-2">
           {q.data.map((n) => (
