@@ -1,0 +1,22 @@
+import { describe, expect, it } from "vitest";
+import { navigationGroups } from "@/lib/navigation-groups";
+import { NAV_BY_ROLE, type NavKey } from "@/lib/roles";
+
+describe("navigation grouping preserves authorized entries", () => {
+  for (const [role, allowed] of Object.entries(NAV_BY_ROLE)) {
+    it(`keeps exactly the authorized keys for ${role}`, () => {
+      const keys = navigationGroups(allowed).flatMap((group) => group.keys);
+      expect(keys.slice().sort()).toEqual([...new Set(allowed)].sort());
+      expect(new Set(keys).size).toBe(keys.length);
+    });
+  }
+  it("does not infer admissions access from permission to read students", () => {
+    const keys = navigationGroups(["students", "guardians"]).flatMap((group) => group.keys);
+    expect(keys).toEqual(["students", "guardians"]);
+    expect(keys).not.toContain("admissions");
+  });
+  it("keeps all supplied shared and delegated pages exactly once", () => {
+    const allowed: NavKey[] = ["home", "school_home", "finance", "operations", "hr", "hr_training", "my_hr", "permissions", "procurement", "maintenance", "bus_maintenance", "org_docs", "health", "tags", "chat_settings", "hub_meetings", "hub_notices", "hub_circulars", "family_requests", "calls", "profile", "support"];
+    expect(navigationGroups(allowed).flatMap((group) => group.keys).sort()).toEqual([...allowed].sort());
+  });
+});

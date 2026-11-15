@@ -574,6 +574,9 @@ Existing owner/delegation checks remain authoritative. WhatsApp runtime requires
 Runtime-driver correction (2026-11-14): no role, grant, RLS, SSH or MCP change. Runtime validation keeps the unprivileged container, network=none and synthetic credentials; source reaches Node through stdin without making root checkout files readable to other users. The compiled public backend is checked separately from network access.
 
 ## Other guardian requests — 2026-11-15
+## Navigation organization — 2026-11-15 (prompt-383)
+Sidebar groups and subsection expand/collapse controls are presentation only. They consume the existing authorized navigation keys without adding permissions or requiring admissions access for the separate student/guardian pages. Existing role, delegation, owner-context and server checks are unchanged.
+
 ## Vice default placement — 2026-11-15 (prompt-382)
 Vice principals retain scoped teacher/student read, print and export. `people_family.place` now defaults to true only for active vice membership in the same active branch/org; owner deny still wins. No people-file edits, account provisioning or broader branch access are added. New test migration 20261115161433_c26b2eea-58d1-48fc-adaf-419758e75352.sql.
 
