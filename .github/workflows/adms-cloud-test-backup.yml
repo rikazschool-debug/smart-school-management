@@ -1,0 +1,44 @@
+name: نسخة اختبار ADMS واستعادة معزولة
+
+on:
+  push:
+    branches: [codex/adms-backup-execution-20261115]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rikaz-adms-cloud-test-backup
+  cancel-in-progress: false
+
+jobs:
+  test-backup:
+    if: github.repository == 'rikazschool-debug/smart-school-management' && github.ref == 'refs/heads/codex/adms-backup-execution-20261115'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate isolated backup code
+        run: python -m py_compile scripts/adms/cloud-backup-restore.py
+      - name: Fetch fixed PostgreSQL test image
+        run: docker pull supabase/postgres@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00
+      - name: Read-only cloud backup and isolated restore rehearsal
+        env:
+          RK_ADMS_TEST_BACKUP_INPUT_20261115: ${{ secrets.RK_ADMS_TEST_BACKUP_INPUT_20261115 }}
+        run: python scripts/adms/cloud-backup-restore.py
+      - name: Encrypt backup and private diagnostics
+        if: always()
+        env:
+          RK_ADMS_TEST_BACKUP_KEY_20261115: ${{ secrets.RK_ADMS_TEST_BACKUP_KEY_20261115 }}
+        run: node scripts/adms/seal-cloud-backup.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: adms-cloud-test-backup-${{ github.run_id }}
+          path: |
+            cloud-test-artifacts/cloud-test-backup.enc
+            cloud-test-artifacts/proof.json
+          if-no-files-found: error
+          retention-days: 30
