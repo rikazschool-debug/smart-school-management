@@ -30,7 +30,6 @@ export function SafeText({ text, mentions }: { text: string; mentions?: string[]
     </span>
   );
 }
-}
 
 export function timeLabel(iso: string) {
   const d = new Date(iso);
