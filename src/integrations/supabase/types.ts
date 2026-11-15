@@ -20952,6 +20952,7 @@ export type Database = {
       }
       _od_status: { Args: { _exp: string }; Returns: string }
       _otp_may_send: { Args: { _phone: string; _uid: string }; Returns: string }
+      _owner_of_school: { Args: { _school: string }; Returns: boolean }
       _pc_bal: {
         Args: { _custody: string; _exclude?: string }
         Returns: {
