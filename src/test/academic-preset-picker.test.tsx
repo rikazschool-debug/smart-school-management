@@ -22,13 +22,11 @@ it("fills a catalog stage without changing any record", () => {
   fireEvent.change(screen.getByLabelText("المرحلة الجاهزة"), { target: { value: "primary" } });
   expect(fill).toHaveBeenCalledExactlyOnceWith({ name: "الابتدائية", sort_order: 2 });
 });
-it("fills a grade with the school stage ID and clears stale grade when switching stages", () => {
+it("fills a grade with its matching school stage from one list, without a second stage picker", () => {
   const fill = vi.fn(); mount("grade", fill);
-  fireEvent.change(screen.getByLabelText("مرحلة الصف الجاهز"), { target: { value: "school-kg" } });
+  expect(screen.queryByLabelText("مرحلة الصف الجاهز")).toBeNull();
   fireEvent.change(screen.getByLabelText("الصف الجاهز"), { target: { value: "kg1" } });
   expect(fill).toHaveBeenLastCalledWith({ name: "KG1", sort_order: 1, stage_id: "school-kg" });
-  fireEvent.change(screen.getByLabelText("مرحلة الصف الجاهز"), { target: { value: "school-primary" } });
-  expect(fill).toHaveBeenLastCalledWith({ name: "", sort_order: null, stage_id: "school-primary" });
   fireEvent.change(screen.getByLabelText("الصف الجاهز"), { target: { value: "six" } });
   expect(fill).toHaveBeenLastCalledWith({ name: "سادس", sort_order: 6, stage_id: "school-primary" });
 });
