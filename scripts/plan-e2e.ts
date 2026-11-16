@@ -128,6 +128,23 @@ async function main() {
   const p3 = must(await t1.c.rpc("edu_save", { _school: S, _id: null, _rev: null, _p: P({ title: "خطة بلا قياس", status: "ready", description: "x", goals: ["هدف"], plan }) }), "p3") as string;
   const c3 = must(await t1.c.rpc("edu_detail", { _id: p3 }), "c3") as any; must(await t1.c.rpc("edu_save", { _school: S, _id: p3, _rev: c3.rev, _p: { ...c3, kind: "student_plan", status: "active" } }), "act3");
   check("mastery refused without a measure", !!(await t1.c.rpc("edu_mark", { _id: p3, _goal: 0, _mark: "mastery", _done: true, _note: "" })).error);
+
+  // ---- stage 3: evidence files + links
+  const png = new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,6,0,0,0,31,21,196,137,0,0,0,10,73,68,65,84,120,156,99,0,1,0,0,5,0,1,13,10,45,180,0,0,0,0,73,69,78,68,174,66,96,130]);
+  const evr = await t1.c.rpc("edu_evidence_add", { _id: p2, _p: { kind: "upload", title: "ورقة الاختبار القصير", goal_index: 0, files: [{ name: "p1.png", mime: "image/png", size: png.length }, { name: "p2.png", mime: "image/png", size: png.length }] } });
+  check("teacher adds 2-page evidence", !evr.error && evr.data.files.length === 2, evr.error);
+  for (const f of evr.data?.files ?? []) check("page uploads to private storage", !(await t1.c.storage.from("rikaz-files").upload(f.path, png, { contentType: "image/png" })).error);
+  const path0 = evr.data?.files?.[0]?.path;
+  check("teacher opens a page by signed link", !!(await t1.c.storage.from("rikaz-files").createSignedUrl(path0, 60)).data?.signedUrl);
+  check("guardian cannot open an unshared evidence file", !(await g1.c.storage.from("rikaz-files").createSignedUrl(path0, 60)).data?.signedUrl);
+  check("other teacher cannot open the file", !(await t2.c.storage.from("rikaz-files").createSignedUrl(path0, 60)).data?.signedUrl);
+  check("other teacher cannot upload into the evidence path", !!(await t2.c.storage.from("rikaz-files").upload(path0.replace(/[^/]+$/, crypto.randomUUID()), png, { contentType: "image/png" })).error);
+  check("non image/PDF refused", !!(await t1.c.rpc("edu_evidence_add", { _id: p2, _p: { kind: "upload", title: "ملف", files: [{ name: "x.exe", mime: "application/x-msdownload", size: 10 }] } })).error);
+  check("link to an item outside the course refused", !!(await t1.c.rpc("edu_evidence_add", { _id: p2, _p: { kind: "link", title: "واجب", link_type: "homework", link_id: crypto.randomUUID() } })).error);
+  check("evidence on a draft refused", !!(await t1.c.rpc("edu_evidence_add", { _id: d2, _p: { kind: "upload", title: "ورقة", files: [{ name: "p.png", mime: "image/png", size: 10 }] } })).error);
+  const c4 = must(await t1.c.rpc("edu_detail", { _id: p2 }), "c4") as any;
+  check("evidence pages kept in order with goal link", c4.evidence[0]?.files.map((f: any) => f.name).join() === "p1.png,p2.png" && c4.evidence[0].goal_index === 0, c4.evidence);
+  check("guardian detail lists no unshared evidence", (must(await g1.c.rpc("edu_detail", { _id: p2 }), "g4") as any).evidence.length === 0);
   console.log(`\n${ok} passed, ${bad} failed`);
   const fx = { run, pw, org, school: S, plan: id, draft: d2, users: Object.fromEntries(Object.entries({ owner, t1, t2, g1 }).map(([k, v]) => [k, v.email])) };
   if (process.argv.includes("--keep")) { mkdirSync("/tmp/browser/plan", { recursive: true }); writeFileSync("/tmp/browser/plan/fixture.json", JSON.stringify(fx, null, 2)); console.log("kept fixture"); }
