@@ -1,3 +1,4 @@
+import { CalendarDays, Layers, LayoutGrid, BookOpen, UserCog } from "lucide-react";
 import { OrgYears } from "@/components/org-years";
 import { createFileRoute } from "@tanstack/react-router";
 import { CrudTable } from "@/components/crud-page";
@@ -16,6 +17,14 @@ import { SubjectNameSelect } from "@/components/subject-preset-picker";
 import { SUBJECT_PRESETS } from "@/lib/subject-presets";
 import { selectCls } from "@/components/ui/native-select";
 import { AcademicPresetPicker, GradeNameSelect } from "@/components/academic-preset-picker";
+
+const ACAD_TABS = [
+  { v: "years", label: "السنوات والفصول", hint: "التقويم الدراسي", icon: CalendarDays },
+  { v: "structure", label: "المراحل والصفوف", hint: "هيكل المدرسة", icon: Layers },
+  { v: "sections", label: "الشعب", hint: "الفصول والسعة", icon: LayoutGrid },
+  { v: "subjects", label: "الأقسام والمقررات", hint: "المواد الدراسية", icon: BookOpen },
+  { v: "scopes", label: "نطاق الوكلاء والمشرفين", hint: "توزيع المسؤوليات", icon: UserCog },
+];
 
 export const Route = createFileRoute("/_authenticated/app/academic")({
   head: () => ({ meta: [{ title: "الهيكل الدراسي — ركاز" }, { name: "description", content: "محددات الدراسة المعتمدة من المالك وتخصيصها للفروع وتكوين الشعب للوكيل." }, { property: "og:title", content: "الهيكل الدراسي — ركاز" }, { property: "og:description", content: "محددات المؤسسة والشعب المتاحة للفرع." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -49,12 +58,13 @@ const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], qu
             <PageHeader title="الإعداد الأكاديمي" desc={`${ctx.schoolName} — السنوات، المراحل، الصفوف، الشعب، الأقسام والمقررات`} />
             {owner && ctx.orgId && <><AcademicCatalogEditor org={ctx.orgId} /><AcademicAllocation school={s} org={ctx.orgId} /></>}
             <Tabs defaultValue={firstTab} key={tabs.join(",")} dir="rtl">
-              <TabsList className="mb-6 flex-wrap">
-                {tabs.includes("years") && <TabsTrigger value="years">السنوات والفصول</TabsTrigger>}
-                {tabs.includes("structure") && <TabsTrigger value="structure">المراحل والصفوف</TabsTrigger>}
-                {tabs.includes("sections") && <TabsTrigger value="sections">الشعب</TabsTrigger>}
-                {tabs.includes("subjects") && <TabsTrigger value="subjects">الأقسام والمقررات</TabsTrigger>}
-                {tabs.includes("scopes") && <TabsTrigger value="scopes">نطاق الوكلاء والمشرفين</TabsTrigger>}
+              <TabsList className="mb-6 flex h-auto w-full justify-start gap-2 overflow-x-auto rounded-2xl border bg-card p-2 shadow-sm [scrollbar-width:none] lg:grid lg:grid-cols-5">
+                {ACAD_TABS.filter((t) => (tabs as string[]).includes(t.v)).map((t) => (
+                  <TabsTrigger key={t.v} value={t.v} aria-label={t.label} className="group flex min-w-[11rem] shrink-0 items-center justify-start gap-3 rounded-xl border border-transparent px-3 py-2.5 text-start transition-all hover:bg-muted data-[state=active]:border-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md lg:min-w-0">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary group-data-[state=active]:bg-primary-foreground/15 group-data-[state=active]:text-primary-foreground"><t.icon className="size-4" /></span>
+                    <span className="min-w-0"><span className="block truncate text-sm font-bold">{t.label}</span><span className="block truncate text-xs font-normal opacity-70">{t.hint}</span></span>
+                  </TabsTrigger>
+                ))}
               </TabsList>
               <TabsContent value="years" className="space-y-10">
                 {ctx.orgId && <OrgYears org={ctx.orgId} owner={owner} />}
