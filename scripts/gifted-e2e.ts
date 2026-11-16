@@ -147,6 +147,31 @@ async function main() {
   a = await pp(st[0].id); check("statuses stay separate", a.nom === "approved" && a.reg === "registered" && a.att === "attending" && a.done === "completed" && a.consent === "granted", a);
   const gcn = await admin.from("notifications").select("user_id").like("dedupe_key", `gt_consent:${G}:${st[0].id}%`); check("guardian got in-app consent request", (gcn.data ?? []).some((r: any) => r.user_id === g1.id), gcn);
   for (const [n, u] of [["teacher", t1], ["guardian", g1], ["other org", x]] as const) check(`${n} cannot list programs`, !!(await u.c.rpc("gt_prog_list", { _school: S })).error);
+  // ---- stage 4: works, evidence files, verification
+  const ach = { kind: "achievement", title: "تحدي الابتكار", domain: "creative", event_name: "تحدي الابتكار المدرسي", organizer: "إدارة المدرسة", event_date: today, level: "school", result: "المركز الأول", members: [{ student_id: st[0].id, role: "قائدة الفريق" }, { student_id: st[1].id, role: "مصممة" }] };
+  check("teacher cannot document work", !!(await t1.c.rpc("gt_work_save", { _school: S, _id: null, _rev: null, _p: ach })).error);
+  check("achievement without result refused", !!(await co.c.rpc("gt_work_save", { _school: S, _id: null, _rev: null, _p: { ...ach, result: "" } })).error);
+  check("future achievement refused", !!(await co.c.rpc("gt_work_save", { _school: S, _id: null, _rev: null, _p: { ...ach, event_date: "2099-01-01" } })).error);
+  const W = must(await co.c.rpc("gt_work_save", { _school: S, _id: null, _rev: null, _p: ach }), "work") as string;
+  const part = must(await co.c.rpc("gt_work_save", { _school: S, _id: null, _rev: null, _p: { ...ach, kind: "participation", title: "مشاركة في معرض", level: "", result: "", members: [{ student_id: st[0].id }] } }), "part") as string;
+  check("verify without evidence refused", !!(await co.c.rpc("gt_work_verify", { _id: W, _rev: 1, _verify: "verified" })).error);
+  const att = await co.c.rpc("gt_work_attach", { _id: W, _files: [{ name: "cert.pdf", mime: "application/pdf", size: 9, title: "شهادة" }] }); check("attach evidence", !att.error, att.error);
+  const path = (att.data as any).files[0].path as string;
+  const up = await co.c.storage.from("rikaz-files").upload(path, new Blob(["%PDF-1.4\n"], { type: "application/pdf" }), { contentType: "application/pdf" }); check("upload to private storage", !up.error, up.error);
+  check("bad file type refused", !!(await co.c.rpc("gt_work_attach", { _id: W, _files: [{ name: "x.exe", mime: "application/x-msdownload", size: 9 }] })).error);
+  const sgn = await co.c.storage.from("rikaz-files").createSignedUrl(path, 60); check("coord opens signed url", !sgn.error && !!sgn.data?.signedUrl, sgn.error);
+  if (sgn.data?.signedUrl) { const res = await fetch(sgn.data.signedUrl); check("signed url downloads file", res.ok, res.status); }
+  for (const [n, u] of [["teacher", t1], ["guardian", g1], ["student", s1], ["other org", x]] as const) { const r = await u.c.storage.from("rikaz-files").createSignedUrl(path, 60); check(`${n} cannot open evidence`, !!r.error || !r.data?.signedUrl); }
+  check("verified with evidence", !(await co.c.rpc("gt_work_verify", { _id: W, _rev: 2, _verify: "verified" })).error);
+  const wl = (await co.c.rpc("gt_work_list", { _school: S })).data as any[]; const w0 = wl.find((w) => w.id === W);
+  check("verification stored with verifier", w0.verify === "verified" && !!w0.verifier && w0.files.length === 1 && w0.members.length === 2, w0);
+  const achCount = wl.filter((w) => w.kind === "achievement").length, partCount = wl.filter((w) => w.kind === "participation").length;
+  check("group achievement stored once; participation separate", achCount === 1 && partCount === 1 && wl.some((w) => w.id === part), [achCount, partCount]);
+  const ed = await co.c.rpc("gt_work_save", { _school: S, _id: W, _rev: 3, _p: { ...ach, result: "المركز الأول مكرر" } }); const w1 = ((await co.c.rpc("gt_work_list", { _school: S })).data as any[]).find((w) => w.id === W);
+  check("editing verified work returns it to pending", !ed.error && w1.verify === "pending", [ed.error, w1?.verify]);
+  check("stale work rev refused", !!(await co.c.rpc("gt_work_save", { _school: S, _id: W, _rev: 3, _p: ach })).error);
+  check("kind cannot change", !!(await co.c.rpc("gt_work_save", { _school: S, _id: W, _rev: 4, _p: { ...ach, kind: "project" } })).error);
+  for (const [n, u] of [["teacher", t1], ["guardian", g1], ["other org", x]] as const) check(`${n} cannot list works`, !!(await u.c.rpc("gt_work_list", { _school: S })).error);
   console.log(`\n${ok} passed, ${bad} failed`);
   if (!process.argv.includes("--keep")) await teardown();
   process.exit(bad ? 1 : 0);
