@@ -1,6 +1,30 @@
 export const QUESTION_TYPES: Record<string, string> = { single: "اختيار من متعدد", multiple: "اختيارات متعددة", truefalse: "صح أو خطأ", short: "إجابة قصيرة", essay: "مقالي", fill: "إكمال الفراغ", match: "توصيل", numeric: "إجابة عددية", order: "ترتيب" };
 export type ExamQuestion = { type: string; prompt: string; points: number; options: string[]; correct: number[]; answer: string };
 export const blankQuestion = (): ExamQuestion => ({ type: "single", prompt: "", points: 1, options: ["", "", "", ""], correct: [0], answer: "" });
+export const EXAM_DELIVERY = { online: "اختبار إلكتروني", paper: "اختبار ورقي", bubble: "اختبار تظليل" };
+export type ExamDelivery = keyof typeof EXAM_DELIVERY;
+export type ExamForm = { id: string; questions: ExamQuestion[] };
+export function validateQuestions(questions: ExamQuestion[], delivery: ExamDelivery): string | null {
+  if (!questions.length) return "أضف سؤالًا واحدًا على الأقل";
+  if (delivery === "bubble" && questions.length > 35) return "ورقة التظليل تستوعب 35 سؤالًا كحد أقصى";
+  for (const [i, q] of questions.entries()) {
+    if (!q.prompt.trim() || !Number.isFinite(q.points) || q.points <= 0) return `أكمل نص ودرجة السؤال ${i + 1}`;
+    if (delivery === "bubble" && !["single", "truefalse"].includes(q.type)) return "التظليل يحتاج إجابة واحدة لكل سؤال";
+    if (["single", "multiple", "truefalse"].includes(q.type)) {
+      if (q.options.length < 2 || q.options.length > 6 || q.options.some(o => !o.trim())) return `أكمل بدائل السؤال ${i + 1}`;
+      if (!q.correct.length || new Set(q.correct).size !== q.correct.length || q.correct.some(n => !Number.isInteger(n) || n < 0 || n >= q.options.length) || (q.type !== "multiple" && q.correct.length !== 1)) return `حدد الإجابة الصحيحة للسؤال ${i + 1}`;
+    } else if (!q.answer.trim()) return `أكمل الإجابة النموذجية للسؤال ${i + 1}`;
+  }
+  return null;
+}
+export function rotateForm(questions: ExamQuestion[], shift: number): ExamQuestion[] {
+  return questions.map((_, i) => {
+    const q = questions[(i + shift) % questions.length];
+    if (!q) return blankQuestion();
+    if (!["single", "multiple"].includes(q.type)) return { ...q, options: [...q.options], correct: [...q.correct] };
+    return { ...q, options: q.options.map((_, j) => q.options[(j + shift) % q.options.length] ?? ""), correct: q.correct.map(j => (j - shift % q.options.length + q.options.length) % q.options.length) };
+  });
+}
 export function scoreChoices(questions: ExamQuestion[], answers: (number | null)[]) { return questions.reduce((total, q, i) => total + (answers[i] !== null && answers[i] !== undefined && q.correct.length === 1 && q.correct[0] === answers[i] ? q.points : 0), 0); }
 export function sheetIdentity(text: string, hw: string, roster: { id: string }[]) { try { const p = JSON.parse(text); return p.v === 1 && p.hw === hw && typeof p.student === "string" && roster.some((r) => r.id === p.student) ? p.student as string : null; } catch { return null; } }
 export const BUBBLE_SHEET = { width: 1000, height: 1400, left: 70, right: 930, top: 320, bottom: 1300, firstX: 270, stepX: 110, firstY: 380, stepY: 25, radius: 8 };
