@@ -53,9 +53,9 @@ function NewRecord({ org, me, onDone }: { org: string; me: SvMe; onDone: (id?: s
   return <div className="rounded-2xl border bg-card p-4">
     <h3 className="mb-3 font-bold">نموذج جديد</h3>
     <div className="grid gap-3 md:grid-cols-3">
-      <label className="text-sm">الفرع<select className={selectCls("mt-1 w-full")} value={school} onChange={(e) => { setSchool(e.target.value); setKey(""); setTeacher(""); }}>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-      <label className="text-sm">النموذج<select className={selectCls("mt-1 w-full")} value={key} onChange={(e) => { setKey(e.target.value); setTeacher(""); }}><option value="">— اختر —</option>{options.map((f) => <option key={f.key} value={f.key}>{f.title}</option>)}</select></label>
-      {form?.spec.teacher && <label className="text-sm">المعلم<select className={selectCls("mt-1 w-full")} value={teacher} onChange={(e) => setTeacher(e.target.value)}><option value="">— اختر —</option>{(teachers.data ?? []).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
+      <label className="text-sm">الفرع<select aria-label="الفرع" className={selectCls("mt-1 w-full")} value={school} onChange={(e) => { setSchool(e.target.value); setKey(""); setTeacher(""); }}>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+      <label className="text-sm">النموذج<select aria-label="النموذج" className={selectCls("mt-1 w-full")} value={key} onChange={(e) => { setKey(e.target.value); setTeacher(""); }}><option value="">— اختر —</option>{options.map((f) => <option key={f.key} value={f.key}>{f.title}</option>)}</select></label>
+      {form?.spec.teacher && <label className="text-sm">المعلم<select aria-label="المعلم" className={selectCls("mt-1 w-full")} value={teacher} onChange={(e) => setTeacher(e.target.value)}><option value="">— اختر —</option>{(teachers.data ?? []).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
         {teachers.data && !teachers.data.length && <span className="mt-1 block text-xs text-muted-foreground">لا يوجد معلمون ضمن نطاقك الحالي في هذا الفرع.</span>}</label>}
     </div>
     {!options.length && !forms.isLoading && <p className="mt-2 text-sm text-muted-foreground">لا توجد نماذج يمكنك إنشاؤها في هذا الفرع الآن. المشرف يحتاج إسنادًا ساريًا.</p>}
