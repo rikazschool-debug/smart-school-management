@@ -4377,6 +4377,72 @@ export type Database = {
           },
         ]
       }
+      edu_evidence: {
+        Row: {
+          actor: string
+          created_at: string
+          file_ids: string[]
+          goal_index: number | null
+          id: string
+          kind: string
+          link_id: string | null
+          link_type: string | null
+          note: string
+          record_id: string
+          session_id: string | null
+          shared: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          file_ids?: string[]
+          goal_index?: number | null
+          id?: string
+          kind: string
+          link_id?: string | null
+          link_type?: string | null
+          note?: string
+          record_id: string
+          session_id?: string | null
+          shared?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          file_ids?: string[]
+          goal_index?: number | null
+          id?: string
+          kind?: string
+          link_id?: string | null
+          link_type?: string | null
+          note?: string
+          record_id?: string
+          session_id?: string | null
+          shared?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_evidence_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edu_evidence_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "edu_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edu_followups: {
         Row: {
           actor: string
@@ -4384,6 +4450,7 @@ export type Database = {
           created_at: string
           goal_index: number | null
           id: string
+          mark: string
           note: string
           record_id: string
           updated_at: string
@@ -4394,6 +4461,7 @@ export type Database = {
           created_at?: string
           goal_index?: number | null
           id?: string
+          mark?: string
           note: string
           record_id: string
           updated_at?: string
@@ -4404,6 +4472,7 @@ export type Database = {
           created_at?: string
           goal_index?: number | null
           id?: string
+          mark?: string
           note?: string
           record_id?: string
           updated_at?: string
@@ -4411,6 +4480,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "edu_followups_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edu_measures: {
+        Row: {
+          actor: string
+          created_at: string
+          goal_index: number | null
+          id: string
+          level: string
+          measured_on: string
+          note: string
+          phase: string
+          record_id: string
+          sample: number | null
+          scale: string
+          scale_label: string
+          score: number | null
+          tool: string
+          total: number | null
+          updated_at: string
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          goal_index?: number | null
+          id?: string
+          level?: string
+          measured_on: string
+          note?: string
+          phase: string
+          record_id: string
+          sample?: number | null
+          scale: string
+          scale_label?: string
+          score?: number | null
+          tool: string
+          total?: number | null
+          updated_at?: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          goal_index?: number | null
+          id?: string
+          level?: string
+          measured_on?: string
+          note?: string
+          phase?: string
+          record_id?: string
+          sample?: number | null
+          scale?: string
+          scale_label?: string
+          score?: number | null
+          tool?: string
+          total?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_measures_record_id_fkey"
             columns: ["record_id"]
             isOneToOne: false
             referencedRelation: "edu_records"
@@ -4524,6 +4658,53 @@ export type Database = {
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edu_sessions: {
+        Row: {
+          achieved: string
+          activity: string
+          actor: string
+          created_at: string
+          goal_index: number | null
+          id: string
+          note: string
+          record_id: string
+          session_date: string
+          updated_at: string
+        }
+        Insert: {
+          achieved?: string
+          activity: string
+          actor?: string
+          created_at?: string
+          goal_index?: number | null
+          id?: string
+          note?: string
+          record_id: string
+          session_date: string
+          updated_at?: string
+        }
+        Update: {
+          achieved?: string
+          activity?: string
+          actor?: string
+          created_at?: string
+          goal_index?: number | null
+          id?: string
+          note?: string
+          record_id?: string
+          session_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_sessions_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
             referencedColumns: ["id"]
           },
         ]
@@ -23631,6 +23812,8 @@ export type Database = {
       edu_ack: { Args: { _id: string; _rev: number }; Returns: undefined }
       edu_courses: { Args: { _student: string }; Returns: Json }
       edu_detail: { Args: { _id: string }; Returns: Json }
+      edu_evidence_add: { Args: { _id: string; _p: Json }; Returns: Json }
+      edu_evidence_links: { Args: { _id: string }; Returns: Json }
       edu_find: {
         Args: {
           _f?: Json
@@ -23655,6 +23838,17 @@ export type Database = {
         Args: { _kind: string; _offset?: number; _q?: string; _school: string }
         Returns: Json
       }
+      edu_mark: {
+        Args: {
+          _done: boolean
+          _goal: number
+          _id: string
+          _mark: string
+          _note: string
+        }
+        Returns: string
+      }
+      edu_measure_add: { Args: { _id: string; _p: Json }; Returns: string }
       edu_pool: {
         Args: { _kind: string; _q?: string; _school: string }
         Returns: Json
@@ -23663,6 +23857,7 @@ export type Database = {
         Args: { _id: string; _p: Json; _rev: number; _school: string }
         Returns: string
       }
+      edu_session_add: { Args: { _id: string; _p: Json }; Returns: string }
       edu_staff_presence: { Args: { _school: string }; Returns: Json }
       edu_stats: {
         Args: { _f?: Json; _kind: string; _school: string }

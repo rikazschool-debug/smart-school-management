@@ -22,3 +22,13 @@ describe("student plan readiness", () => {
   it("baseline correct answers cannot exceed the total, even in a draft", () => { const p = full(); p.plan.baseline = { type: "count", score: "6", total: "5" }; expect(planIssues(p, "draft")).toHaveLength(1); });
   it("closing needs an outcome with evidence", () => { expect(planIssues(full(), "closed")).toHaveLength(1); const p = full(); p.plan.outcome = "partial"; p.plan.outcome_note = "القياس البعدي 3 من 5"; expect(planIssues(p, "closed")).toEqual([]); });
 });
+import { compareMeasures, type Measure } from "@/components/education/model";
+const M = (p: Partial<Measure>): Measure => ({ id: Math.random().toString(), goal_index: 0, phase: "formative", scale: "count", score: 1, total: 5, level: "", scale_label: "", tool: "اختبار قصير", sample: 5, measured_on: "2026-11-01", note: "", actor_name: "م", created_at: "2026-11-01T08:00:00Z", ...p });
+describe("plan measurement comparison", () => {
+  it("one measure gives no change", () => { expect(compareMeasures([M({ phase: "pre" })]).change).toBeUndefined(); });
+  it("pre and post on the same tool and total show points and percentage points", () => { expect(compareMeasures([M({ phase: "pre" }), M({ phase: "post", score: 4, measured_on: "2026-11-20" })]).change).toBe("+3 من 5 (+60 نقطة مئوية)"); });
+  it("different totals are not compared", () => { const c = compareMeasures([M({ phase: "pre" }), M({ total: 10, score: 8, measured_on: "2026-11-20" })]); expect(c.change).toBeUndefined(); expect(c.reason).toContain("الإجمالي"); });
+  it("different tools are not compared", () => { expect(compareMeasures([M({ phase: "pre" }), M({ tool: "ملاحظة", score: 4, measured_on: "2026-11-20" })]).change).toBeUndefined(); });
+  it("rating scales never get a percentage", () => { expect(compareMeasures([M({ phase: "pre", scale: "scale", level: "1" }), M({ scale: "scale", level: "3", measured_on: "2026-11-20" })]).change).toBeUndefined(); });
+  it("without a pre measure, change is points only", () => { expect(compareMeasures([M({}), M({ score: 3, measured_on: "2026-11-20" })]).change).toBe("+2 من 5"); });
+});

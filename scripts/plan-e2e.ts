@@ -99,6 +99,35 @@ async function main() {
   check("guardian cannot read an unshared draft", !!(await g1.c.rpc("edu_detail", { _id: d2 })).error);
   const st2 = must(await t1.c.rpc("edu_stats", { _school: S, _kind: "student_plan", _f: {} }), "stats") as any;
   check("stats count by new statuses", st2.by_status.closed === 1 && st2.by_status.draft === 1, st2.by_status);
+
+  // ---- stage 2: sessions, measures, activity vs mastery marks
+  const p2 = must(await t1.c.rpc("edu_save", { _school: S, _id: null, _rev: null, _p: P({ title: "خطة المرحلة 2", status: "ready", shared: true, description: "يخطئ في المقامات", goals: ["يجمع كسرين"], plan }) }), "p2") as string;
+  check("session refused while plan only ready", !!(await t1.c.rpc("edu_session_add", { _id: p2, _p: { activity: "تدريب" } })).error);
+  check("pre measure allowed when ready", !(await t1.c.rpc("edu_measure_add", { _id: p2, _p: { phase: "pre", goal_index: 0, scale: "count", score: "1", total: "5", tool: "اختبار قصير", sample: 5 } })).error);
+  check("formative measure refused when ready", !!(await t1.c.rpc("edu_measure_add", { _id: p2, _p: { phase: "formative", goal_index: 0, scale: "count", score: "2", total: "5", tool: "اختبار قصير" } })).error);
+  let c2 = must(await t1.c.rpc("edu_detail", { _id: p2 }), "c2") as any;
+  must(await t1.c.rpc("edu_save", { _school: S, _id: p2, _rev: c2.rev, _p: { ...c2, kind: "student_plan", status: "active" } }), "activate");
+  check("teacher logs a session", !(await t1.c.rpc("edu_session_add", { _id: p2, _p: { goal_index: 0, activity: "تدريب موجه", achieved: "3 مسائل", note: "تحسن" } })).error);
+  check("future session date refused", !!(await t1.c.rpc("edu_session_add", { _id: p2, _p: { activity: "تدريب", session_date: "2099-01-01" } })).error);
+  check("other teacher cannot log a session", !!(await t2.c.rpc("edu_session_add", { _id: p2, _p: { activity: "تدريب" } })).error);
+  check("measure score above total refused", !!(await t1.c.rpc("edu_measure_add", { _id: p2, _p: { phase: "post", goal_index: 0, scale: "count", score: "6", total: "5", tool: "اختبار قصير" } })).error);
+  check("activity mark", !(await t1.c.rpc("edu_mark", { _id: p2, _goal: 0, _mark: "activity", _done: true, _note: "" })).error);
+  check("duplicate mark refused", !!(await t1.c.rpc("edu_mark", { _id: p2, _goal: 0, _mark: "activity", _done: true, _note: "" })).error);
+  check("undo without reason refused", !!(await t1.c.rpc("edu_mark", { _id: p2, _goal: 0, _mark: "activity", _done: false, _note: "" })).error);
+  check("undo with reason recorded", !(await t1.c.rpc("edu_mark", { _id: p2, _goal: 0, _mark: "activity", _done: false, _note: "لم تكتمل الأنشطة" })).error);
+  check("mastery mark", !(await t1.c.rpc("edu_mark", { _id: p2, _goal: 0, _mark: "mastery", _done: true, _note: "" })).error);
+  c2 = must(await t1.c.rpc("edu_detail", { _id: p2 }), "c2b") as any;
+  const last = (m: string) => c2.followups.filter((f: any) => f.mark === m).at(-1);
+  check("activity undone keeps who/why; mastery separate", last("activity")?.completed === false && last("activity")?.note === "لم تكتمل الأنشطة" && last("mastery")?.completed === true && !!last("activity")?.actor_name, c2.followups);
+  check("teacher sees sessions, measures and action log", c2.sessions.length === 1 && c2.measures.length === 1 && c2.events.some((e: any) => e.action === "unmark"), { s: c2.sessions.length, m: c2.measures.length });
+  const gd = must(await g1.c.rpc("edu_detail", { _id: p2 }), "gd") as any;
+  check("guardian sees no sessions, measures or log", gd.sessions.length === 0 && gd.measures.length === 0 && gd.events.length === 0);
+  check("guardian ack still valid after a session (rev unchanged)", c2.rev === gd.rev);
+  const st3 = must(await t1.c.rpc("edu_find", { _school: S, _kind: "student_plan", _f: { q: "خطة المرحلة 2" }, _offset: 0, _limit: 5 }), "find") as any;
+  check("list progress counts activity marks only (mastery ignored)", st3.rows[0]?.goals_done === 0, st3.rows[0]);
+  const p3 = must(await t1.c.rpc("edu_save", { _school: S, _id: null, _rev: null, _p: P({ title: "خطة بلا قياس", status: "ready", description: "x", goals: ["هدف"], plan }) }), "p3") as string;
+  const c3 = must(await t1.c.rpc("edu_detail", { _id: p3 }), "c3") as any; must(await t1.c.rpc("edu_save", { _school: S, _id: p3, _rev: c3.rev, _p: { ...c3, kind: "student_plan", status: "active" } }), "act3");
+  check("mastery refused without a measure", !!(await t1.c.rpc("edu_mark", { _id: p3, _goal: 0, _mark: "mastery", _done: true, _note: "" })).error);
   console.log(`\n${ok} passed, ${bad} failed`);
   const fx = { run, pw, org, school: S, plan: id, draft: d2, users: Object.fromEntries(Object.entries({ owner, t1, t2, g1 }).map(([k, v]) => [k, v.email])) };
   if (process.argv.includes("--keep")) { mkdirSync("/tmp/browser/plan", { recursive: true }); writeFileSync("/tmp/browser/plan/fixture.json", JSON.stringify(fx, null, 2)); console.log("kept fixture"); }

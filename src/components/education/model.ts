@@ -29,12 +29,17 @@ export const EDU_TEXT: Record<EduKind, { description: string; actions: string; g
   teacher_plan: { description: "جانب الاحتياج المهني", actions: "أساليب التطوير والدعم", goals: "المستهدفات المهنية", hint: "خطة يعدّها المشرف التربوي للمعلم: الاحتياج ← المستهدفات ← أسلوب التطوير ← المتابعة ← قياس الأثر." },
   supervision: { description: "الملاحظات", actions: "نقاط القوة وفرص التحسين", goals: "التوصيات", hint: "جدولة الزيارة ← تنفيذها وتقديرها (1–5) ← التوصيات ← موعد زيارة المتابعة للتحقق من الأثر." },
 };
-export type Follow = { id: string; goal_index: number | null; completed: boolean | null; note: string; actor_name: string; created_at: string };
-export type EduRecord = { id: string; kind: EduKind; category: string; student_id: string | null; teacher_id: string | null; course_id: string | null; person: string; course?: string; title: string; description: string; record_date: string; goals: string[]; shared: boolean; status: string; rev: number; can_edit: boolean; can_ack?: boolean; priority: string; due_date: string | null; area: string; actions: string; level: string; rating: number | null; goals_done?: number; followups?: Follow[]; acks?: { name: string; user_id: string; created_at: string }[]; plan?: PlanData };
+export type Follow = { id: string; goal_index: number | null; completed: boolean | null; note: string; actor_name: string; created_at: string; mark?: "activity" | "mastery" };
+export type Session = { id: string; goal_index: number | null; session_date: string; activity: string; achieved: string; note: string; actor_name: string; created_at: string };
+export type Measure = { id: string; goal_index: number | null; phase: "pre" | "formative" | "post"; scale: "count" | "scale"; score: number | null; total: number | null; level: string; scale_label: string; tool: string; sample: number | null; measured_on: string; note: string; actor_name: string; created_at: string };
+export type Evidence = { id: string; goal_index: number | null; session_id: string | null; title: string; note: string; kind: "upload" | "link"; link_type: "homework" | "exam" | null; link_id: string | null; link_title?: string | null; shared: boolean; actor_name: string; created_at: string; files: { id: string; name: string; mime: string; size: number; path: string }[] };
+export type EduEvent = { action: string; details: Record<string, unknown>; created_at: string; actor_name: string };
+export type EduRecord = { id: string; kind: EduKind; category: string; student_id: string | null; teacher_id: string | null; course_id: string | null; person: string; course?: string; title: string; description: string; record_date: string; goals: string[]; shared: boolean; status: string; rev: number; can_edit: boolean; can_ack?: boolean; priority: string; due_date: string | null; area: string; actions: string; level: string; rating: number | null; goals_done?: number; followups?: Follow[]; acks?: { name: string; user_id: string; created_at: string }[]; plan?: PlanData; sessions?: Session[]; measures?: Measure[]; events?: EduEvent[]; evidence?: Evidence[] };
 export type EduStats = { total: number; open: number; overdue: number; urgent: number; this_month: number; shared: number; avg_rating: number | null; goals_total: number; goals_done: number; people: number; by_status: Record<string, number>; by_category: Record<string, number>; by_priority: Record<string, number>; by_area: Record<string, number>; by_month: { month: string; n: number }[]; top_people: { name: string; n: number }[] };
 export type EduFilter = { q: string; category: string; area: string; status: string; priority: string; from: string; to: string; overdue: boolean };
 export const EMPTY_FILTER: EduFilter = { q: "", category: "", area: "", status: "", priority: "", from: "", to: "", overdue: false };
-export function goalDone(followups: Follow[], index: number) { return followups.filter((f) => f.goal_index === index).at(-1)?.completed === true; }
+export function goalDone(followups: Follow[], index: number, mark: "activity" | "mastery" = "activity") { return followups.filter((f) => f.goal_index === index && (f.mark ?? "activity") === mark).at(-1)?.completed === true; }
+export function goalMark(followups: Follow[], index: number, mark: "activity" | "mastery") { return followups.filter((f) => f.goal_index === index && (f.mark ?? "activity") === mark).at(-1); }
 export function planProgress(goals: string[], followups: Follow[]) { return { done: goals.filter((_, i) => goalDone(followups, i)).length, total: goals.length }; }
 export function isOverdue(r: Pick<EduRecord, "due_date" | "status">, today: string) { return !!r.due_date && r.due_date < today && r.status !== "completed" && r.status !== "closed"; }
 export function filterLabels(kind: EduKind, f: EduFilter) {
@@ -84,3 +89,17 @@ export const GOAL_TEMPLATES: Record<string, { goal: string; activity: string; ve
   skills: [{ goal: "يتقن الطالب مهارة المقرر المحددة", activity: "شرح مختصر ثم تطبيق موجه ثم تطبيق مستقل", verify: "مهمة أداء أو اختبار قصير" }],
   learning_behavior: [{ goal: "ينجز الطالب المهام الصفية المطلوبة في الوقت المحدد", activity: "تقسيم المهمة إلى خطوات مع تعزيز فوري", verify: "سجل إنجاز المهام" }],
 };
+
+export const PHASES: Record<string, string> = { pre: "قبلي", formative: "تكويني", post: "بعدي" };
+export function measureText(m: Pick<Measure, "scale" | "score" | "total" | "level" | "scale_label">) { return m.scale === "count" ? `${Number(m.score)} من ${Number(m.total)}` : `${m.level}${m.scale_label ? ` (${m.scale_label})` : ""}`; }
+/** Start vs latest for one goal. Change is shown only when both use the same count scale, total and tool; a percentage only with a pre measure and a later one on that same basis. */
+export function compareMeasures(ms: Measure[]): { start?: Measure; latest?: Measure; change?: string; reason?: string } {
+  const sorted = [...ms].sort((a, b) => (a.measured_on + a.created_at).localeCompare(b.measured_on + b.created_at));
+  const start = sorted.find((m) => m.phase === "pre") ?? sorted[0]; const latest = sorted.at(-1);
+  if (!start || !latest) return { reason: "لا توجد قياسات بعد" };
+  if (start === latest) return { start, latest, reason: "قياس واحد فقط؛ لا يمكن حساب التغير" };
+  if (start.scale !== "count" || latest.scale !== "count") return { start, latest, reason: "سلم تقدير؛ يُعرض المستوى دون نسبة" };
+  if (Number(start.total) !== Number(latest.total) || start.tool.trim() !== latest.tool.trim()) return { start, latest, reason: "اختلف الإجمالي أو أداة القياس؛ لا تصح المقارنة" };
+  const d = Number(latest.score) - Number(start.score); const pts = `${d > 0 ? "+" : ""}${d} من ${Number(start.total)}`;
+  return { start, latest, change: start.phase === "pre" ? `${pts} (${d > 0 ? "+" : ""}${Math.round((d / Number(start.total)) * 100)} نقطة مئوية)` : pts };
+}
