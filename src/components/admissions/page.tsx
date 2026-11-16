@@ -37,7 +37,7 @@ export function AdmissionsPage({ sp, go }: { sp: AdSearch; go: (s: AdSearch) => 
   if (!hasAdmissions(me.data) && !me.data.owner) return <ForbiddenState />;
   const tabs: [NonNullable<AdSearch["tab"]>, string, typeof Users][] = [["summary", "الملخص والأعداد", BarChart3], ["apps", "الطلاب المحتملون", UserPlus], ["family_requests", "طلبات ولي الأمر", Users],
     ...(canSettings ? [["settings", "الإعدادات والربط", Settings2] as [NonNullable<AdSearch["tab"]>, string, typeof Users]] : [])];
-  const tab = sp.r || sp.new ? "apps" : sp.tab && tabs.some((t) => t[0] === sp.tab) ? sp.tab : "summary";
+  const tab = sp.r || sp.new ? "apps" : sp.tab && tabs.some((t) => t[0] === sp.tab) ? sp.tab : "apps";
   const orgId = active.orgId!;
   let body: React.ReactNode;
   if (sp.r) body = <AppDetail id={sp.r} back={() => go({ tab: "apps" })} />;
@@ -49,15 +49,7 @@ export function AdmissionsPage({ sp, go }: { sp: AdSearch; go: (s: AdSearch) => 
   else body = <SettingsTab orgId={orgId} />;
   return (
     <div className="space-y-5">
-      <PageHeader eyebrow="القبول والتسجيل" title="القبول والتسجيل" desc="مرحلة قبول مستقلة: قبول الطلب لا ينشئ سجل طالب أو حسابًا أو حجز مقعد. إضافة الطالب تتم يدويًا من قسم الطلاب." />
-      {!sp.r && !sp.new && (
-        <div role="tablist" className="flex flex-wrap gap-1 rounded-xl border bg-card p-1">
-          {tabs.map(([k, label, Icon]) => (
-            <button key={k} role="tab" aria-selected={tab === k} onClick={() => go({ tab: k })}
-              className={"flex min-h-9 items-center gap-2 rounded-lg px-4 text-sm " + (tab === k ? "bg-primary font-semibold text-primary-foreground" : "hover:bg-muted")}><Icon className="size-4" />{label}</button>
-          ))}
-        </div>
-      )}
+      <PageHeader title={tab === "apps" ? "طلبات القبول والتسجيل" : tabs.find(([k]) => k === tab)?.[1] ?? "القبول والتسجيل"} />
       {body}
     </div>
   );
