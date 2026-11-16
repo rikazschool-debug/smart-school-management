@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/app/child/$id")({
 
 function Page() {
   const { id } = Route.useParams();
-  const { tab } = Route.useSearch();
+  const { tab } = validateChildSearch(Route.useSearch() as Record<string, unknown>);
   const { active } = useSession();
   if (!active) return null;
   if (active.role !== "guardian") return <ForbiddenState />;
