@@ -128,10 +128,10 @@ export function PlanWizard({ school, row, close }: { school: string; row?: EduRe
         {issues.length ? <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"><p className="mb-2 flex items-center gap-2 font-semibold text-destructive"><AlertTriangle className="size-4" />يمكن حفظها مسودة الآن. لتصبح جاهزة للتنفيذ أكمل:</p><ul className="list-disc space-y-1 ps-6">{issues.map((x) => <li key={x}>{x}</li>)}</ul></div> : <p className="rounded-lg bg-primary/10 p-3 text-sm text-primary">الخطة مكتملة وجاهزة للتنفيذ.</p>}
       </div>}
     </div>
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <Button variant="outline" disabled={step === 0} onClick={() => setStep(step - 1)}><ArrowRight className="size-4" />السابق</Button>
+    <div className="flex flex-wrap items-center justify-start gap-2 pb-20 sm:pb-0">
       {step < 4 ? <Button disabled={!canNext} onClick={() => setStep(step + 1)}>التالي<ArrowLeft className="size-4" /></Button>
         : <Button disabled={busy || issues.length > 0} onClick={() => void save(status === "draft" ? "ready" : status)}><Check className="size-4" />{busy ? "جارٍ الحفظ…" : status === "draft" ? "حفظ وجعلها جاهزة للتنفيذ" : "حفظ التعديلات"}</Button>}
+      <Button variant="outline" disabled={step === 0} onClick={() => setStep(step - 1)}><ArrowRight className="size-4" />السابق</Button>
     </div>
   </div>;
 }

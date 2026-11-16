@@ -120,3 +120,9 @@
 - [x] prompt-385: bottom-left notification pop-up (click opens its section) + red per-section menu counters cleared on opening the section; 8 tests, typecheck clean.
 - [x] prompt-385: owner views+executes all sections on behalf of any role (teacher/nurse/meetings checks); private DMs stay member-only.
 - [ ] prompt-385: signed-in check of pop-up/counters blocked (external Supabase, no session).
+- [x] prompt-401 المرحلة 1 (الخطط العلاجية): إنشاء خطة الطالب بخمس خطوات، اختيار متدرج مع C-Smart، مسودة وتنبيه المغادرة، تشخيص موثّق، أهداف مرقّمة مفصّلة وقوالب، خمس حالات وإغلاق بنتيجة؛ 25 فحصًا خادميًا + 13 فحص متصفح (حاسب وجوال).
+- [ ] prompt-401 المرحلة 2: تبويبات الخطة، جلسات متابعة سريعة، تراجع موثّق عن الإنجاز، قياسات قبلية/تكوينية/بعدية دون نسبة تحسن مضللة.
+- [ ] prompt-401 المرحلة 3: الأدلة والتصوير/الرفع وربطها بالهدف أو الجلسة بتخزين خاص.
+- [ ] prompt-401 المرحلة 4: اختيار ما يُشارك مع ولي الأمر، ملاحظات منزلية، فصل الملاحظات الداخلية.
+- [ ] prompt-401 المرحلة 5: نموذج خطط المعلمين الخاص بالمشرف (ما زال النموذج العام حاليًا مع الحالات الجديدة).
+- [ ] prompt-401 المرحلة 6: لوحة المتابعة (خططي/الجارية/تحتاج متابعة/المغلقة)، فلاتر المرحلة والصف والشعبة والمعلم، تقرير خطة فردية.
