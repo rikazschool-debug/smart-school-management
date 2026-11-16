@@ -9,7 +9,7 @@ export function SubjectNameSelect({ value, values, set }: { value: unknown; valu
   const names = subjectPresets(stage, grade);
   const current = String(value ?? "");
   return <select id="name" className={selectCls("w-full")} value={current} disabled={!stage || !grade} onChange={e => set({ name: e.target.value })}>
-    <option value="">{!stage ? "اختر المرحلة أولًا" : !grade ? "اختر الصف أولًا" : "اختر المادة"}</option>
+    <option value="">{!stage ? "اختر المرحلة أولًا" : !grade ? "اختر الصف أولًا" : "اختر المقرر"}</option>
     {!stage && current && <option value={current}>{current}</option>}
     {names.map(name => <option key={name} value={name}>{name}</option>)}
   </select>;
@@ -21,7 +21,7 @@ export function SubjectPresetPicker({ onSelect }: { onSelect: (name: string) => 
   const [subject, setSubject] = useState("");
   const grades = Object.keys(SUBJECT_PRESETS[stage] ?? {});
   return <section className="space-y-3 border-b pb-4">
-    <h3 className="font-semibold">المواد حسب المرحلة والصف</h3>
+    <h3 className="font-semibold">المقررات حسب المرحلة والصف</h3>
     <div className="grid gap-3 sm:grid-cols-3">
       <div className="space-y-1.5"><Label htmlFor="preset-stage">المرحلة</Label>
         <select id="preset-stage" className={selectCls("w-full")} value={stage} onChange={e => { setStage(e.target.value); setGrade(""); setSubject(""); onSelect(""); }}>
