@@ -67,6 +67,7 @@ import { Route as AuthenticatedAppSignupRequestsRouteImport } from './routes/_au
 import { Route as AuthenticatedAppStudentGuidanceRouteImport } from './routes/_authenticated/app/student-guidance'
 import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenticated/app/students'
 import { Route as AuthenticatedAppSubstitutionsRouteImport } from './routes/_authenticated/app/substitutions'
+import { Route as AuthenticatedAppSupervisionRouteImport } from './routes/_authenticated/app/supervision'
 import { Route as AuthenticatedAppSupervisionVisitsRouteImport } from './routes/_authenticated/app/supervision-visits'
 import { Route as AuthenticatedAppSupportRouteImport } from './routes/_authenticated/app/support'
 import { Route as AuthenticatedAppTagsRouteImport } from './routes/_authenticated/app/tags'
@@ -441,6 +442,12 @@ const AuthenticatedAppSubstitutionsRoute =
     path: '/substitutions',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppSupervisionRoute =
+  AuthenticatedAppSupervisionRouteImport.update({
+    id: '/supervision',
+    path: '/supervision',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppSupervisionVisitsRoute =
   AuthenticatedAppSupervisionVisitsRouteImport.update({
     id: '/supervision-visits',
@@ -794,6 +801,7 @@ export interface FileRoutesByFullPath {
   '/app/student-guidance': typeof AuthenticatedAppStudentGuidanceRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
+  '/app/supervision': typeof AuthenticatedAppSupervisionRoute
   '/app/supervision-visits': typeof AuthenticatedAppSupervisionVisitsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/tags': typeof AuthenticatedAppTagsRoute
@@ -903,6 +911,7 @@ export interface FileRoutesByTo {
   '/app/student-guidance': typeof AuthenticatedAppStudentGuidanceRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
+  '/app/supervision': typeof AuthenticatedAppSupervisionRoute
   '/app/supervision-visits': typeof AuthenticatedAppSupervisionVisitsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/tags': typeof AuthenticatedAppTagsRoute
@@ -1015,6 +1024,7 @@ export interface FileRoutesById {
   '/_authenticated/app/student-guidance': typeof AuthenticatedAppStudentGuidanceRoute
   '/_authenticated/app/students': typeof AuthenticatedAppStudentsRoute
   '/_authenticated/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
+  '/_authenticated/app/supervision': typeof AuthenticatedAppSupervisionRoute
   '/_authenticated/app/supervision-visits': typeof AuthenticatedAppSupervisionVisitsRoute
   '/_authenticated/app/support': typeof AuthenticatedAppSupportRoute
   '/_authenticated/app/tags': typeof AuthenticatedAppTagsRoute
@@ -1127,6 +1137,7 @@ export interface FileRouteTypes {
     | '/app/student-guidance'
     | '/app/students'
     | '/app/substitutions'
+    | '/app/supervision'
     | '/app/supervision-visits'
     | '/app/support'
     | '/app/tags'
@@ -1236,6 +1247,7 @@ export interface FileRouteTypes {
     | '/app/student-guidance'
     | '/app/students'
     | '/app/substitutions'
+    | '/app/supervision'
     | '/app/supervision-visits'
     | '/app/support'
     | '/app/tags'
@@ -1347,6 +1359,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/student-guidance'
     | '/_authenticated/app/students'
     | '/_authenticated/app/substitutions'
+    | '/_authenticated/app/supervision'
     | '/_authenticated/app/supervision-visits'
     | '/_authenticated/app/support'
     | '/_authenticated/app/tags'
@@ -1830,6 +1843,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSubstitutionsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/supervision': {
+      id: '/_authenticated/app/supervision'
+      path: '/supervision'
+      fullPath: '/app/supervision'
+      preLoaderRoute: typeof AuthenticatedAppSupervisionRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/supervision-visits': {
       id: '/_authenticated/app/supervision-visits'
       path: '/supervision-visits'
@@ -2238,6 +2258,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppStudentGuidanceRoute: typeof AuthenticatedAppStudentGuidanceRoute
   AuthenticatedAppStudentsRoute: typeof AuthenticatedAppStudentsRoute
   AuthenticatedAppSubstitutionsRoute: typeof AuthenticatedAppSubstitutionsRoute
+  AuthenticatedAppSupervisionRoute: typeof AuthenticatedAppSupervisionRoute
   AuthenticatedAppSupervisionVisitsRoute: typeof AuthenticatedAppSupervisionVisitsRoute
   AuthenticatedAppSupportRoute: typeof AuthenticatedAppSupportRoute
   AuthenticatedAppTagsRoute: typeof AuthenticatedAppTagsRoute
@@ -2332,6 +2353,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppStudentGuidanceRoute: AuthenticatedAppStudentGuidanceRoute,
   AuthenticatedAppStudentsRoute: AuthenticatedAppStudentsRoute,
   AuthenticatedAppSubstitutionsRoute: AuthenticatedAppSubstitutionsRoute,
+  AuthenticatedAppSupervisionRoute: AuthenticatedAppSupervisionRoute,
   AuthenticatedAppSupervisionVisitsRoute:
     AuthenticatedAppSupervisionVisitsRoute,
   AuthenticatedAppSupportRoute: AuthenticatedAppSupportRoute,
