@@ -4307,6 +4307,206 @@ export type Database = {
           },
         ]
       }
+      edu_acks: {
+        Row: {
+          created_at: string
+          record_id: string
+          rev: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          record_id: string
+          rev: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          record_id?: string
+          rev?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_acks_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edu_events: {
+        Row: {
+          action: string
+          actor: string
+          created_at: string
+          details: Json
+          id: string
+          record_id: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          actor?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          record_id: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          record_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_events_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edu_followups: {
+        Row: {
+          actor: string
+          completed: boolean | null
+          created_at: string
+          goal_index: number | null
+          id: string
+          note: string
+          record_id: string
+          updated_at: string
+        }
+        Insert: {
+          actor?: string
+          completed?: boolean | null
+          created_at?: string
+          goal_index?: number | null
+          id?: string
+          note: string
+          record_id: string
+          updated_at?: string
+        }
+        Update: {
+          actor?: string
+          completed?: boolean | null
+          created_at?: string
+          goal_index?: number | null
+          id?: string
+          note?: string
+          record_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_followups_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edu_records: {
+        Row: {
+          category: string
+          course_id: string | null
+          created_at: string
+          created_by: string
+          description: string
+          goals: Json
+          id: string
+          kind: string
+          record_date: string
+          rev: number
+          school_id: string
+          shared: boolean
+          status: string
+          student_id: string | null
+          teacher_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          course_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          goals?: Json
+          id?: string
+          kind: string
+          record_date?: string
+          rev?: number
+          school_id: string
+          shared?: boolean
+          status?: string
+          student_id?: string | null
+          teacher_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          course_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          goals?: Json
+          id?: string
+          kind?: string
+          record_date?: string
+          rev?: number
+          school_id?: string
+          shared?: boolean
+          status?: string
+          student_id?: string | null
+          teacher_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_records_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edu_records_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edu_records_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edu_records_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enrollments: {
         Row: {
           created_at: string
@@ -19662,6 +19862,20 @@ export type Database = {
       }
       _duty_snapshot: { Args: { _roster: string }; Returns: number }
       _duty_study_days: { Args: { _school: string }; Returns: number[] }
+      _edu_manage: {
+        Args: { r: Database["public"]["Tables"]["edu_records"]["Row"] }
+        Returns: boolean
+      }
+      _edu_ok: {
+        Args: { _action: string; _kind: string; _school: string }
+        Returns: boolean
+      }
+      _edu_read: {
+        Args: { r: Database["public"]["Tables"]["edu_records"]["Row"] }
+        Returns: boolean
+      }
+      _edu_section: { Args: { _kind: string }; Returns: string }
+      _edu_validate: { Args: { _p: Json }; Returns: undefined }
       _eligible_staff: {
         Args: { _org: string; _school: string; _user: string }
         Returns: boolean
@@ -23317,6 +23531,32 @@ export type Database = {
       delete_message: { Args: { _id: string }; Returns: undefined }
       dept_teacher_ids: { Args: never; Returns: string[] }
       edit_message: { Args: { _body: string; _id: string }; Returns: undefined }
+      edu_ack: { Args: { _id: string; _rev: number }; Returns: undefined }
+      edu_courses: { Args: { _student: string }; Returns: Json }
+      edu_detail: { Args: { _id: string }; Returns: Json }
+      edu_follow: {
+        Args: {
+          _completed: boolean
+          _goal: number
+          _id: string
+          _note: string
+          _rev: number
+        }
+        Returns: string
+      }
+      edu_list: {
+        Args: { _kind: string; _offset?: number; _q?: string; _school: string }
+        Returns: Json
+      }
+      edu_pool: {
+        Args: { _kind: string; _q?: string; _school: string }
+        Returns: Json
+      }
+      edu_save: {
+        Args: { _id: string; _p: Json; _rev: number; _school: string }
+        Returns: string
+      }
+      edu_staff_presence: { Args: { _school: string }; Returns: Json }
       end_assignment: { Args: { _id: string }; Returns: undefined }
       ensure_classroom: { Args: { _course: string }; Returns: string }
       escalate_absence: {
