@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { HeartHandshake, HeartPulse, BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
+import { HeartHandshake, HeartPulse, Sparkles, BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { StatusPill } from "@/components/family-visits/shared";
@@ -11,6 +11,7 @@ import { arabicError } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { HealthFile } from "@/components/health/health-file";
 import { FamilyGuidance } from "@/components/guidance/family-summaries";
+import { FamilyGifted } from "@/components/gifted/family";
 import type { ChildTab } from "./search";
 
 /** One child's (or the student's own) overview. Everything comes from family_child, which checks the link on the server. */
@@ -56,6 +57,7 @@ export function ChildOverview({ studentId, initialTab }: { studentId: string; in
     { k: "schedule", label: "الجدول", icon: CalendarDays },
     { k: "classrooms", label: "الفصل الرقمي", icon: School },
     { k: "homework", label: "الواجبات", icon: ClipboardList },
+    { k: "gifted", label: "رعاية الموهبة", icon: Sparkles },
     ...(guardian ? [{ k: "visits" as Tab, label: "الزيارات", icon: UserRound }, { k: "finance" as Tab, label: "البيانات المالية", icon: Landmark }, { k: "health" as Tab, label: "الملف الصحي", icon: HeartPulse }, { k: "guidance" as Tab, label: "رسائل المتابعة", icon: HeartHandshake }] : []),
   ];
   const tab: Tab = tabs.some((t) => t.k === want) ? want : "attendance";
@@ -79,6 +81,7 @@ export function ChildOverview({ studentId, initialTab }: { studentId: string; in
       </div>
       {tab === "attendance" && <Attendance studentId={d.student.id} />}
       {tab === "schedule" && <Timetable rows={d.timetable} />}
+      {tab === "gifted" && <FamilyGifted studentId={d.student.id} />}
       {tab === "guidance" && guardian && <FamilyGuidance studentId={d.student.id} />}
       {tab === "classrooms" && (!d.room || !d.classrooms.length ? <EmptyState title="لا يوجد فصل رقمي لشعبته بعد" /> : (
         <div className="rounded-xl border bg-card p-4">

@@ -135,3 +135,4 @@
 - scripts/exam-scan-journey.py: photo grading of a rotated, faded synthetic bubble sheet (auto-rotation, clean-up, marked preview, blank left for manual decision); needs exam-e2e.ts --keep.
 - guidance-e2e.ts and plan-e2e.ts both tear down every rpx- user: run guidance browser journeys right after `guidance-e2e.ts --keep`, never after plan-e2e. guidance-run-journey.py covers stage 3 (37 checks).
 - scripts/guidance-accept-journey.py: guidance stage 5 (direct links per role + back button, offline save keeps text, two-person conflict; 33 checks, desktop+phone; needs guidance-e2e.ts --keep). guidance-run-journey.py needs /tmp/browser/guidance/page.png (any synthetic image). Journeys change fixture state: re-run guidance-e2e --keep before guidance-reports-journey.
+- scripts/gifted-e2e.ts: gifted care stages 1–5 (125 checks); --keep writes /tmp/browser/gifted/fixture.json for scripts/gifted-family-journey.py (40 checks desk+phone); --teardown removes rpx- data.
