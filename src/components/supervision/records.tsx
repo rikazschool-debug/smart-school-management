@@ -44,7 +44,7 @@ function NewRecord({ org, me, onDone }: { org: string; me: SvMe; onDone: (id?: s
   const schools = me.schools.filter((s) => s.supervisor || s.principal || s.teacher || s.dept_head);
   const [school, setSchool] = useState(schools[0]?.id ?? ""); const [key, setKey] = useState(""); const [teacher, setTeacher] = useState(""); const [busy, setBusy] = useState(false);
   const sc = me.schools.find((s) => s.id === school);
-  const options = useMemo(() => { const pub = (forms.data ?? []).filter((f) => f.status === "published" && (!f.school_id || f.school_id === school));
+  const options = useMemo(() => { const pub = (forms.data ?? []).filter((f) => f.status === "published" && f.org_id && (!f.school_id || f.school_id === school));
     const best = new Map<string, SvForm>(); for (const f of pub) { const b = best.get(f.key); const rank = (x: SvForm) => (x.school_id ? 2 : x.org_id ? 1 : 0) * 1000 + x.version; if (!b || rank(f) > rank(b)) best.set(f.key, f); }
     return [...best.values()].filter((f) => canCreate(f.spec, sc)); }, [forms.data, school, sc]);
   const form = options.find((f) => f.key === key);

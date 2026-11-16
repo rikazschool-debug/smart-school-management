@@ -19248,6 +19248,8 @@ export type Database = {
       sv_forms: {
         Row: {
           acceptance: string
+          adopted_at: string | null
+          adopted_by: string | null
           archived_at: string | null
           based_on: string | null
           created_at: string
@@ -19275,6 +19277,8 @@ export type Database = {
         }
         Insert: {
           acceptance?: string
+          adopted_at?: string | null
+          adopted_by?: string | null
           archived_at?: string | null
           based_on?: string | null
           created_at?: string
@@ -19302,6 +19306,8 @@ export type Database = {
         }
         Update: {
           acceptance?: string
+          adopted_at?: string | null
+          adopted_by?: string | null
           archived_at?: string | null
           based_on?: string | null
           created_at?: string
@@ -28577,6 +28583,10 @@ export type Database = {
       sv_form_act: {
         Args: { _action: string; _id: string; _reason: string; _rev: number }
         Returns: undefined
+      }
+      sv_form_adopt: {
+        Args: { _org: string; _template: string }
+        Returns: string
       }
       sv_form_draft: {
         Args: { _from: string; _org: string; _school: string }

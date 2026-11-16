@@ -58,7 +58,13 @@ async def main():
         # owner: delegations tab
         c, p, errs = await ctx(b, "owner", path="/app/supervision?tab=deleg")
         check("owner sees delegations", await p.get_by_text("اعتماد بديل").count() > 0)
-        await p.screenshot(path=OUT + "5_owner_deleg.png"); check("no page errors (owner)", not errs); await c.close()
+        await p.screenshot(path=OUT + "5_owner_deleg.png")
+        await p.goto(BASE + "/app/supervision?tab=forms"); await p.wait_for_timeout(2500)
+        check("library labels unadopted templates view-only", await p.get_by_text("قالب للاطلاع — غير معتمد للمؤسسة").count() > 0)
+        check("library labels adopted forms", await p.get_by_text("معتمد للمؤسسة", exact=True).count() > 0)
+        await p.get_by_text("قالب للاطلاع — غير معتمد للمؤسسة").first.click(); await p.wait_for_timeout(1200)
+        check("owner sees adopt button on a template", await p.get_by_role("button", name="اعتماد للمؤسسة").count() > 0)
+        await p.screenshot(path=OUT + "6_owner_template.png"); check("no page errors (owner)", not errs); await c.close()
         # principal of branch B: direct link to branch A record refused
         c, p, errs = await ctx(b, "prB", path=f"/app/supervision?tab=records&id={FX['visit']}")
         await p.wait_for_timeout(4000); await p.screenshot(path=OUT + "6_prB.png"); print((await p.inner_text("main"))[-300:]); check("other-branch principal refused by direct link", await p.get_by_text("لا تملك صلاحية عرضه").count() > 0)

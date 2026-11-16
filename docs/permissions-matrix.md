@@ -652,3 +652,4 @@ The `other` request kind uses the same verified-child access, school/org scope, 
 | اطلاع وتعقيب | — | صاحب السجل بعد الإرسال | — | — | — | — |
 | إصدار النماذج المشتركة | — | — | يقترح تخصيص فرعه (مسودة) | — | مفوَّض النماذج ينشر ما لم يُعدّه | يعدّ ويرسل؛ لا ينشر ما أعدّه |
 | بعد انتهاء الإسناد | لا وصول (إلا تفويض قراءة محدد) | — | يسلّم المتابعات | — | — | يسلّم ويمنح قراءة |
+- Educational supervision forms: base templates are view/preview only; only the org owner or a forms delegate adopts one (sv_form_adopt) into a fixed org version (adopter + date) before any record can use it — enforced server-side.

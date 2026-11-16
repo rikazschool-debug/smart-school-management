@@ -83,6 +83,17 @@ async function main() {
   const prAsg = await pr.c.rpc("sv_asg_save", { _id: null, _rev: null, _p: P({ supervisor_id: sup2.id, teacher_ids: [te2.id], course_ids: [course2.id], subject_ids: [] }) }); check("delegated principal assigns supervisor 2", !prAsg.error, prAsg.error);
   const prB2 = await pr.c.rpc("sv_asg_save", { _id: null, _rev: null, _p: P({ school_id: B, teacher_ids: [teB.id], course_ids: [], subject_ids: [] }) }); check("delegated principal cannot assign in branch B", err(prB2, /صلاحية/), prB2.error);
 
+  // ---- 2b. base templates are view-only until the owner adopts them ----
+  const preAdopt = await sup.c.rpc("sv_rec_save", { _id: null, _rev: null, _p: { school_id: A, form_key: "support_visit", teacher_id: te1.id, data: {} } }); check("base template unusable before owner adoption (server)", err(preAdopt, /منشور/), preAdopt.error);
+  const tpl = must(await owner.c.rpc("sv_form_list", { _org: org }), "tpl") as any[];
+  check("templates flagged view-only", tpl.filter((f) => f.is_template && !f.usable).length === 17, tpl.length);
+  const vb = tpl.find((f) => f.key === "support_visit");
+  const prAdopt = await pr.c.rpc("sv_form_adopt", { _org: org, _template: vb.id }); check("principal cannot adopt a template", err(prAdopt, /مالك/), prAdopt.error);
+  for (const k of ["support_visit", "work_review", "program", "minutes", "pd_need", "teacher_ack"]) { const t = tpl.find((f) => f.key === k); const a = await owner.c.rpc("sv_form_adopt", { _org: org, _template: t.id }); check("owner adopts " + k, !a.error, a.error); }
+  const twice = await owner.c.rpc("sv_form_adopt", { _org: org, _template: vb.id }); check("adopting twice refused", err(twice, /إصدار معتمد/), twice.error);
+  const ad = (must(await owner.c.rpc("sv_form_list", { _org: org }), "ad") as any[]).find((f) => f.key === "support_visit" && f.org_id === org);
+  check("adopted copy is fixed, records adopter and date", ad.status === "published" && ad.version === 2 && ad.adopter && ad.adopted_at && ad.based_on === vb.id, ad);
+
   // ---- 3. branch isolation ----
   const recB = await sup.c.rpc("sv_rec_save", { _id: null, _rev: null, _p: { school_id: B, form_key: "support_visit", teacher_id: teB.id, data: {} } }); check("supervisor refused in branch B (server call)", err(recB, /صلاحية/), recB.error);
   const listX = await x.c.rpc("sv_asg_list", { _org: org }); check("other org owner sees no assignments", !listX.error && (listX.data as any[]).length === 0, listX);
@@ -129,8 +140,8 @@ async function main() {
   const inPlace = await admin.from("sv_forms").update({ title: "تغيير" }).eq("id", draft); check("published version cannot change in place (even service)", !!inPlace.error, inPlace.error);
   const r2 = must(await sup.c.rpc("sv_rec_save", { _id: null, _rev: null, _p: { school_id: A, form_key: "support_visit", teacher_id: te1.id, data: {} } }), "v2rec") as string;
   const g1 = must(await sup.c.rpc("sv_rec_get", { _id: r1 }), "g1") as any, g2 = must(await sup.c.rpc("sv_rec_get", { _id: r2 }), "g2") as any;
-  check("old record keeps version 1 and its labels", g1.form_version === 1 && g1.form_snapshot.spec.sections[0].fields[2].label === "الدرس أو الحصة", g1.form_version);
-  check("new record uses version 2", g2.form_version === 2 && g2.form_snapshot.spec.sections[0].fields[2].label === "الدرس (إصدار 2)", g2.form_version);
+  check("old record keeps adopted version 2 and its labels", g1.form_version === 2 && g1.form_snapshot.spec.sections[0].fields[2].label === "الدرس أو الحصة", g1.form_version);
+  check("new record uses version 3", g2.form_version === 3 && g2.form_snapshot.spec.sections[0].fields[2].label === "الدرس (إصدار 2)", g2.form_version);
   const prProp = must(await pr.c.rpc("sv_form_draft", { _org: org, _from: visitBase.id, _school: A }), "prop") as string;
   const propRow = (must(await pr.c.rpc("sv_form_list", { _org: org }), "l") as any[]).find((f) => f.id === prProp);
   check("principal branch proposal stays draft (not in force)", propRow?.status === "draft" && propRow.school_id === A, propRow?.status);

@@ -1083,3 +1083,10 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Gap: base 17 forms are seeded published and directly usable via _sv_form_for fallback; owner adoption before use is not enforced yet (proposed fix pending approval).
 - Leftover synthetic orgs (test DB, 0 memberships, no teachers/students/courses/sv_* rows): 08c69bf0-b6bc-40e6-9e42-efd3a505e14c (schools c34877e7…, 26456b34…), 36e2db77-a959-441e-a63b-f1305314fd8d (schools d4cbe8d4…, 97882bf1…); each holds 2 academic_years rows. Not deleted.
 - Stage 3 scope includes private attachments (upload/preview/download permissions, linked to record).
+
+### Stage 2 closure — template adoption fix (2026-11-16, test DB)
+- New migration: sv_forms.adopted_by/adopted_at, sv_form_adopt, _sv_form_for without base fallback, sv_form_list flags (is_template/usable/can_adopt). Old migrations and existing records untouched.
+- supervision-e2e 91/91 (adds: base unusable before adoption, principal cannot adopt, adopt twice refused, adopted copy fixed with adopter/date). vitest supervision-model 11/11.
+- Browser journey (with new owner template/adopt checks): NOT VERIFIED — test Auth returned 504 on password sign-in and admin listUsers; same cause left svx- data from the --keep run un-torn-down (run --teardown when Auth recovers).
+- Branch suspension of the 4 leftover branches NOT done: org_school_set_active needs an owner/platform-admin session (owners deleted) and refuses suspending the last active branch of an org, so 2 of 4 cannot be suspended by the approved path; no bypass used.
+- platform_overview counts all organizations and active schools, so the 2 leftover orgs (+4 active branches) still inflate platform-owner statistics; suspension would not remove the org count.
