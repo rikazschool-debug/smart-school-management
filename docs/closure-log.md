@@ -1090,3 +1090,8 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Browser journey (with new owner template/adopt checks): NOT VERIFIED — test Auth returned 504 on password sign-in and admin listUsers; same cause left svx- data from the --keep run un-torn-down (run --teardown when Auth recovers).
 - Branch suspension of the 4 leftover branches NOT done: org_school_set_active needs an owner/platform-admin session (owners deleted) and refuses suspending the last active branch of an org, so 2 of 4 cannot be suspended by the approved path; no bypass used.
 - platform_overview counts all organizations and active schools, so the 2 leftover orgs (+4 active branches) still inflate platform-owner statistics; suspension would not remove the org count.
+
+## 2026-11-17 — Test DB cleanup (Disk IO exhaustion)
+- Test project moved to Micro compute (Pro plan). Removed 113 synthetic orgs (_purge_test_org) and 523 synthetic auth users in batches of 25 with protected-set re-check per batch; 0 failures.
+- Kept: مجموعة المالكي التعليمية (4 branches, 476 memberships), مجموعة ركاز التجريبية + 20 demo accounts, platform owner, gmail account. Before/after counts identical; 0 orphan memberships/logins.
+- Left: one ADMS test org (adms_events append-only by design).
