@@ -1,3 +1,4 @@
+import { OfflineNote } from "./offline-note";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useBlocker } from "@tanstack/react-router";
@@ -63,6 +64,7 @@ export function PlanWizard({ school, row, close }: { school: string; row?: EduRe
   const canNext = step !== 0 || (!!student && !!course);
   const ta = "min-h-20";
   return <div className="space-y-5">
+    <OfflineNote />
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="min-w-0"><h1 className="truncate text-xl font-bold">{row ? "استكمال الخطة العلاجية" : "إنشاء خطة علاجية لطالب"}</h1><p className="text-sm text-muted-foreground">{studentName ? `${studentName}${courseName ? ` · ${courseName}` : ""}` : "معالجة تعثر أكاديمي في مقرر ومهارات محددة"} · {PLAN_STATUS[status]}</p></div>
       <div className="flex gap-2"><Button variant="outline" disabled={busy || !student || !course || (status !== "draft")} onClick={() => void save("draft")}><Save className="size-4" />حفظ كمسودة</Button><Button variant="ghost" onClick={() => close(saved?.id)}><X className="size-4" />إغلاق</Button></div>

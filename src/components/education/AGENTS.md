@@ -7,3 +7,4 @@
 - Guardian rows/details come only from private._edu_guardian_row (share choices in plan.share); internal fields never reach guardians.
 - Teacher plans use teacher-plan.tsx (not the student wizard); readiness in private.edu_tplan_check mirrored by tPlanIssues(); a linked visit stays under its own read rules.
 - Plan dashboards use plan-board.tsx over edu_find/edu_stats tab filters (mine/active/attention/closed) and edu_plan_filters; "attention" is defined only in private._edu_attention. Tests: scripts/plan-board-journey.py, plan-teacher-journey.py.
+- Plan forms show OfflineNote and never queue writes offline: saves fail with a clear arabicError message and the typed text stays; stale rev is refused server-side (no silent overwrite). Test: scripts/plan-conflict-journey.py.

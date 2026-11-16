@@ -1,3 +1,4 @@
+import { OfflineNote } from "./offline-note";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useBlocker } from "@tanstack/react-router";
@@ -45,6 +46,7 @@ export function TeacherPlanEditor({ school, row, close }: { school: string; row?
   const ta = "min-h-20";
   const f = (i: number, k: keyof TGoal, label: string, ph = "", type = "text") => <div className="space-y-1"><Label htmlFor={`t${i}-${k}`} className="text-xs">{label}</Label><Input id={`t${i}-${k}`} type={type} disabled={locked} placeholder={ph} value={det[i]?.[k] ?? ""} maxLength={1000} onChange={(e) => setGoal(i, { [k]: e.target.value })} /></div>;
   return <div className="space-y-5 pb-20 sm:pb-0">
+    <OfflineNote />
     <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><h1 className="text-xl font-bold">{row ? "خطة تحسين الأداء المهني" : "إنشاء خطة تحسين لمعلم"}</h1><p className="text-sm text-muted-foreground">{row?.person ?? pool.data?.find((t) => t.id === teacher)?.name ?? "يُعدّها المشرف التربوي للمعلم المسند إليه"} · {PLAN_STATUS[status]}</p></div>
       <div className="flex gap-2"><Button variant="outline" disabled={busy || !teacher || status !== "draft"} onClick={() => void save("draft")}><Save className="size-4" />حفظ كمسودة</Button><Button variant="ghost" onClick={() => close(savedId)}><X className="size-4" />إغلاق</Button></div></div>
     <p className="flex gap-2 rounded-lg border-s-4 border-primary bg-muted/40 p-3 text-sm leading-7"><ShieldCheck className="mt-1 size-4 shrink-0" />خطة دعم مهني سرية بين المشرف والمعلم ومن له الصلاحية. ليست جزاءً ولا تقييمًا وظيفيًا، ولا تُشارك مع أولياء الأمور.</p>

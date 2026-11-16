@@ -1,3 +1,4 @@
+import { OfflineNote } from "./offline-note";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, ClipboardCheck, FileDown, FileSpreadsheet, Plus, ShieldCheck, Printer, RotateCcw } from "lucide-react";
@@ -51,6 +52,7 @@ export function PlanDetail({ id, school, schoolName, changed, openWizard }: { id
   // Blank follow-up sheet: one block of empty rows per goal, to fill by hand during sessions.
   const sheet = async (fmt: "pdf" | "print") => { const h = ["الهدف", "التاريخ", "النشاط المنفذ", "ما تحقق / الملاحظة", "التوقيع"]; const rows = r.goals.flatMap((g, i) => [[`${i + 1}. ${g}`, "", "", "", ""], ["", "", "", "", ""], ["", "", "", "", ""]]); const m = meta("ورقة متابعة"); if (fmt === "pdf") await exportPdf(m, h, rows); else printReport(m, h, rows); };
   return <div className="space-y-4">
+    <OfflineNote />
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3"><div className="min-w-0"><h2 className="truncate text-lg font-bold">{r.title}</h2><p className="mt-1 text-sm text-muted-foreground">{r.person}{r.course ? ` · ${r.course}` : ""} · <span className="rounded bg-secondary px-1.5">{PLAN_STATUS[r.status] ?? r.status}</span>{isOverdue(r, today()) && r.status !== "draft" && <span className="ms-2 text-destructive">متأخرة عن موعد المراجعة</span>}</p></div>
       <div className="flex flex-wrap justify-end gap-2">{!r.guardian_view && <><Button variant="outline" size="sm" onClick={() => void report("pdf")}><FileDown className="size-4" />تقرير PDF</Button><Button variant="outline" size="sm" onClick={() => void report("xlsx")}><FileSpreadsheet className="size-4" />Excel</Button><Button variant="outline" size="sm" onClick={() => void report("print")}><Printer className="size-4" />طباعة</Button>{r.goals.length > 0 && <Button variant="outline" size="sm" onClick={() => void sheet("pdf")}><ClipboardCheck className="size-4" />ورقة متابعة</Button>}</>}{edit && r.status !== "closed" && <Button variant="outline" size="sm" onClick={() => openWizard(r)}>{r.status === "draft" ? "استكمال الخطة" : "تعديل"}</Button>}</div></div>
     {edit && <PlanStatusBar r={r} school={school} changed={() => void refresh()} />}

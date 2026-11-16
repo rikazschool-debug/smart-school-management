@@ -140,5 +140,7 @@ export function arabicError(e: unknown): string {
   if (msg.includes("Invalid login credentials")) return "بيانات الدخول غير صحيحة.";
   if (/rate limit|too many/i.test(msg)) return "محاولات كثيرة؛ انتظر قليلًا ثم حاول مجددًا.";
   if (msg.includes("Email not confirmed")) return "لم يتم تأكيد البريد الإلكتروني بعد.";
+  if (/Failed to fetch|NetworkError|Load failed|network request failed/i.test(msg)) return "تعذّر الاتصال بالإنترنت، ولم يُحفظ شيء. ما كتبته باقٍ في الصفحة؛ أعد المحاولة بعد عودة الاتصال.";
+  if (msg.includes("عُدل السجل")) return "عدّل شخص آخر هذا السجل بعد فتحك له، فلم تُحفظ تعديلاتك حتى لا تُمحى تعديلاته. انسخ ما كتبته ثم أعد فتح السجل.";
   return msg;
 }
