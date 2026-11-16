@@ -62,3 +62,30 @@ export function planProgress(p: Pick<Plan, "goals" | "activities">, s: Pick<Plan
 export function planActions(status: string): { a: string; label: string }[] {
   return ({ draft: [{ a: "ready", label: "جاهزة للتنفيذ" }], ready: [{ a: "start", label: "بدء التنفيذ" }, { a: "draft", label: "إعادة لمسودة" }], running: [{ a: "review", label: "طلب مراجعة" }, { a: "close", label: "إغلاق بنتيجة" }], review: [{ a: "resume", label: "استئناف" }, { a: "close", label: "إغلاق بنتيجة" }] } as Record<string, { a: string; label: string }[]>)[status] ?? [];
 }
+
+export const PROG_STATUS: Record<string, string> = { draft: "مسودة", open: "مفتوح", closed: "مغلق", cancelled: "ملغى" };
+export const PART_LABELS = {
+  nom: { nominated: "مرشّح", approved: "مُقرّ", declined: "غير مُقرّ" },
+  reg: { none: "غير مسجّل", registered: "مسجّل", withdrawn: "منسحب" },
+  att: { none: "لم يُوثّق", attending: "حضر", absent: "غاب" },
+  done: { none: "لم يُوثّق", completed: "أتمّ", incomplete: "لم يتمّ" },
+  consent: { not_needed: "غير مطلوبة", pending: "بانتظار ولي الأمر", granted: "وافق", refused: "رفض" },
+} as const;
+export type Participant = { student_id: string; name: string; grade: string | null; section: string | null; nom: string; reg: string; att: string; done: string; consent: string; consent_at: string | null; ack_at: string | null; note: string | null; rev: number };
+export type Program = { id: string; no: number; kind: "school" | "external"; title: string; domain: string; organizer: string | null; audience: string | null; description: string | null; owner_name: string | null; starts_on: string; ends_on: string | null; apply_by: string | null; seats: number | null; needs_consent: boolean; source_url: string | null; verified_on: string | null; status: string; rev: number; counts: { total: number; approved: number; registered: number; attending: number; completed: number; consent_pending: number }; participants: Participant[] };
+
+/** Mirrors gt_part_act registration rule. */
+export function canRegister(p: Pick<Participant, "nom" | "consent" | "reg">, prog: Pick<Program, "status" | "seats" | "counts">): string | null {
+  if (prog.status !== "open") return "البرنامج غير مفتوح للتسجيل";
+  if (p.nom !== "approved") return "يُسجَّل الطالب بعد إقرار ترشيحه للبرنامج";
+  if (!["granted", "not_needed"].includes(p.consent)) return "بانتظار موافقة ولي الأمر";
+  if (prog.seats != null && prog.counts.registered >= prog.seats) return "اكتملت المقاعد";
+  return null;
+}
+export type CalItem = { date: string; label: string; kind: "program" | "deadline" | "goal" | "plan_end"; ref: string };
+export function calendarItems(progs: Pick<Program, "id" | "title" | "starts_on" | "ends_on" | "apply_by" | "status">[], plans: Pick<Plan, "id" | "title" | "end_date" | "status" | "goals">[]): CalItem[] {
+  const out: CalItem[] = [];
+  for (const p of progs) { if (p.status === "cancelled") continue; out.push({ date: p.starts_on, label: `بدء: ${p.title}`, kind: "program", ref: p.id }); if (p.apply_by) out.push({ date: p.apply_by, label: `آخر موعد تسجيل: ${p.title}`, kind: "deadline", ref: p.id }); if (p.ends_on && p.ends_on !== p.starts_on) out.push({ date: p.ends_on, label: `انتهاء: ${p.title}`, kind: "program", ref: p.id }); }
+  for (const p of plans) { if (p.status === "closed") continue; if (p.end_date) out.push({ date: p.end_date, label: `نهاية خطة: ${p.title}`, kind: "plan_end", ref: p.id }); p.goals.forEach((g, i) => g.due && out.push({ date: g.due, label: `موعد هدف ${i + 1}: ${p.title}`, kind: "goal", ref: p.id })); }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}

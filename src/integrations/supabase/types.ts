@@ -7878,6 +7878,75 @@ export type Database = {
           },
         ]
       }
+      gt_participants: {
+        Row: {
+          ack_at: string | null
+          ack_by: string | null
+          added_at: string
+          att_status: string
+          consent: string
+          consent_at: string | null
+          consent_by: string | null
+          done_status: string
+          nom_status: string
+          note: string | null
+          program_id: string
+          reg_status: string
+          rev: number
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          ack_at?: string | null
+          ack_by?: string | null
+          added_at?: string
+          att_status?: string
+          consent?: string
+          consent_at?: string | null
+          consent_by?: string | null
+          done_status?: string
+          nom_status?: string
+          note?: string | null
+          program_id: string
+          reg_status?: string
+          rev?: number
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          ack_at?: string | null
+          ack_by?: string | null
+          added_at?: string
+          att_status?: string
+          consent?: string
+          consent_at?: string | null
+          consent_by?: string | null
+          done_status?: string
+          nom_status?: string
+          note?: string | null
+          program_id?: string
+          reg_status?: string
+          rev?: number
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gt_participants_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "gt_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gt_participants_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gt_plan_students: {
         Row: {
           acts_done: number[]
@@ -7990,6 +8059,89 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "gt_plans_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gt_programs: {
+        Row: {
+          apply_by: string | null
+          audience: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          domain: string
+          ends_on: string | null
+          id: string
+          kind: string
+          needs_consent: boolean
+          no: number
+          organizer: string | null
+          owner_name: string | null
+          rev: number
+          school_id: string
+          seats: number | null
+          source_url: string | null
+          starts_on: string | null
+          status: string
+          title: string
+          updated_at: string
+          verified_on: string | null
+        }
+        Insert: {
+          apply_by?: string | null
+          audience?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          domain?: string
+          ends_on?: string | null
+          id?: string
+          kind?: string
+          needs_consent?: boolean
+          no?: number
+          organizer?: string | null
+          owner_name?: string | null
+          rev?: number
+          school_id: string
+          seats?: number | null
+          source_url?: string | null
+          starts_on?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          verified_on?: string | null
+        }
+        Update: {
+          apply_by?: string | null
+          audience?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          domain?: string
+          ends_on?: string | null
+          id?: string
+          kind?: string
+          needs_consent?: boolean
+          no?: number
+          organizer?: string | null
+          owner_name?: string | null
+          rev?: number
+          school_id?: string
+          seats?: number | null
+          source_url?: string | null
+          starts_on?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          verified_on?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gt_programs_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
@@ -25117,6 +25269,10 @@ export type Database = {
         }
         Returns: number
       }
+      gt_consent: {
+        Args: { _decision: string; _program: string; _student: string }
+        Returns: undefined
+      }
       gt_me: { Args: { _school: string }; Returns: Json }
       gt_measure_save: {
         Args: { _p: Json; _school: string; _student: string }
@@ -25135,6 +25291,17 @@ export type Database = {
         Args: { _id: string; _p: Json; _rev: number; _school: string }
         Returns: string
       }
+      gt_part_act: {
+        Args: {
+          _field: string
+          _note?: string
+          _program: string
+          _rev: number
+          _student: string
+          _value: string
+        }
+        Returns: undefined
+      }
       gt_plan_act: {
         Args: { _action: string; _id: string; _note?: string; _rev: number }
         Returns: undefined
@@ -25149,11 +25316,22 @@ export type Database = {
         Args: { _id: string; _p: Json; _rev: number; _school: string }
         Returns: string
       }
+      gt_prog_act: {
+        Args: { _action: string; _id: string; _rev: number }
+        Returns: undefined
+      }
+      gt_prog_list: { Args: { _school: string }; Returns: Json }
+      gt_prog_save: {
+        Args: { _id: string; _p: Json; _rev: number; _school: string }
+        Returns: string
+      }
+      gt_prog_target: { Args: { _id: string; _p: Json }; Returns: number }
       gt_student_file: {
         Args: { _school: string; _student: string }
         Returns: Json
       }
       gt_students: { Args: { _school: string }; Returns: Json }
+      gt_targets: { Args: { _school: string }; Returns: Json }
       guardian_contacts: {
         Args: { _student: string }
         Returns: {

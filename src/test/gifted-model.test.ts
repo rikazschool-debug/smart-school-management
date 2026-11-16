@@ -18,3 +18,11 @@ describe("gifted plans", () => {
   it("all activities done does not mean goals achieved", () => expect(planProgress(base as any, { goal_status: {}, acts_done: [0] })).toMatchObject({ achieved: 0, actsDone: 1 }));
   it("closed plan has no actions", () => expect(planActions("closed")).toEqual([]));
 });
+import { canRegister, calendarItems } from "@/components/gifted/model";
+describe("gifted programs", () => {
+  const prog = { status: "open", seats: 2, counts: { total: 3, approved: 3, registered: 1, attending: 0, completed: 0, consent_pending: 0 } };
+  it("needs approved nomination", () => expect(canRegister({ nom: "nominated", consent: "not_needed", reg: "none" }, prog)).toBe("يُسجَّل الطالب بعد إقرار ترشيحه للبرنامج"));
+  it("acknowledgement is not consent", () => expect(canRegister({ nom: "approved", consent: "pending", reg: "none" }, prog)).toBe("بانتظار موافقة ولي الأمر"));
+  it("full seats refused", () => expect(canRegister({ nom: "approved", consent: "granted", reg: "none" }, { ...prog, counts: { ...prog.counts, registered: 2 } })).toBe("اكتملت المقاعد"));
+  it("calendar skips cancelled programs and closed plans", () => expect(calendarItems([{ id: "a", title: "x", starts_on: "2026-11-01", ends_on: null, apply_by: null, status: "cancelled" }], [{ id: "p", title: "y", end_date: "2026-12-01", status: "closed", goals: [] }])).toEqual([]));
+});
