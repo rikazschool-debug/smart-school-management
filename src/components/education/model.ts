@@ -49,7 +49,9 @@ export function filterLabels(kind: EduKind, f: EduFilter) {
 /** Plan statuses for student_plan/teacher_plan; must match public._edu_validate. Overdue is derived from due_date, never a status. */
 export const PLAN_STATUS: Record<string, string> = { draft: "مسودة", ready: "جاهزة للتنفيذ", active: "جارية", review: "بانتظار المراجعة", closed: "مغلقة" };
 export const isPlanKind = (k: EduKind) => k === "student_plan" || k === "teacher_plan";
-export const statusOptions = (k: EduKind) => (isPlanKind(k) ? PLAN_STATUS : EDU_STATUS);
+/** Referral statuses mirror public._edu_validate (see src/components/guidance/model.ts REF_STATUS). */
+export const REFERRAL_STATUS: Record<string, string> = { draft: "مسودة", sent: "مرسلة", triage: "قيد الفرز", accepted: "قُبلت للمتابعة", needs_info: "تحتاج استكمالًا", closed: "مغلقة" };
+export const statusOptions = (k: EduKind) => (isPlanKind(k) ? PLAN_STATUS : k === "referral" ? REFERRAL_STATUS : EDU_STATUS);
 /** Must match private.edu_plan_check evidence list. */
 export const EVIDENCE_SOURCES: Record<string, string> = { diagnostic: "اختبار تشخيصي", prior_test: "نتائج اختبار سابق", homework: "الواجبات", observation: "ملاحظة صفية", work_sample: "عينة من عمل الطالب" };
 export const OUTCOMES: Record<string, string> = { achieved: "تحقق المستهدف", partial: "تحسن جزئي", revise: "يحتاج تعديل الخطة" };

@@ -609,3 +609,11 @@ The `other` request kind uses the same verified-child access, school/org scope, 
 - Student plans: assigned course teacher/owner writes; observer reads stay student-scoped. Only an explicitly shared student plan can be read/acknowledged by its verified guardian with active same-school membership. Cases and teacher plans cannot share with guardians. Guardians see only the chosen parts (private._edu_guardian_row), only shared evidence, and may add home notes; dashboard filter lists (edu_plan_filters) are empty for them.
 - Teacher plans: assigned supervisor/owner writes; teacher self reads and adds own notes (edu_self_note) only; linking a supervision visit requires the writer to read that visit and never widens who can read it; never shared with guardians. Supervision visits: principal/assigned supervisor/owner writes; visited teacher reads own visit. All updates are edu_* RPC-only and follow-ups append history.
 - Exam author/key/photo grading: current course teacher or verified owner override only. Other authorized readers get questions without answer keys. Grade save retains existing assignment, target, paper submission, maximum score, criteria and revision checks; scanner cannot widen access or bypass review.
+
+## التوجيه الطلابي — الإحالات (2026-11-16)
+| الدور | الإحالة | الفرز وفتح الحالة | الحالة السرية | لوحة العمل |
+| --- | --- | --- | --- | --- |
+| معلم مسند للطالب | ينشئ مسودة ويرسل؛ يستكمل عند الطلب فقط؛ يرى المرحلة والتوصيات الصفية وسبب الإغلاق | لا | لا | لا |
+| الموجّه الطلابي / من مُنح إدارة التوجيه | يقرأ كل إحالات الفرع | نعم | نعم | نعم |
+| مالك المجموعة | كالموجّه (قرار المستخدم) | نعم | نعم | نعم |
+| المدير، معلم غير مسند، ولي الأمر، الطالب، مؤسسة أخرى | لا | لا | لا | لا |

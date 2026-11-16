@@ -1,0 +1,4 @@
+- Student guidance hub (guidance/hub.tsx) shows tabs by edu_guidance_me; counselor = private._edu_counselor (owner, counselor role, or student_guidance manage grant) — principal/admin role alone never opens cases.
+- Referral statuses draft/sent/triage/accepted/needs_info/closed; teachers only save draft or send via edu_save (private._edu_ref_check); every triage step goes through edu_ref_act, which never auto-creates a case. refIssues/refActions in model.ts mirror the server.
+- Counselor-owned referral fields (class_tips, request_note, close_reason, case_id) are never writable by the teacher; teachers read referrals only through private._edu_ref_limited (no case link, no internal notes, no case-opening event).
+- Board and notifications show counts, REF/CASE numbers and names only to counselors; never categories in boards or student names in notifications. Tests: scripts/guidance-e2e.ts, scripts/guidance-journey.py, src/test/guidance-model.test.ts.

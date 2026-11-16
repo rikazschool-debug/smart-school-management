@@ -1,0 +1,1 @@
+ALTER FUNCTION private._edu_ref_keys() SET search_path TO 'public';

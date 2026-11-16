@@ -34,11 +34,11 @@ function rowCells(kind: EduKind, r: EduRecord) {
 }
 const HEADERS = (kind: EduKind) => [teacherKind(kind) ? "المعلم" : "الطالب", "العنوان", "التصنيف", EDU_AREAS[kind].label, "الأولوية", "التاريخ", "موعد المراجعة", "الحالة", kind === "supervision" ? "التقدير" : "الإنجاز", "المقرر"];
 
-export function EducationDesk({ title, kinds }: { title: string; kinds: EduKind[] }) {
+export function EducationDesk({ title, kinds, openId }: { title: string; kinds: EduKind[]; openId?: string | undefined }) {
   const { active } = useSession(); const school = active?.schoolId; const qc = useQueryClient();
   const [kind, setKind] = useState<EduKind>(kinds[0] ?? "case"); const [f, setF] = useState<EduFilter>(EMPTY_FILTER); const [page, setPage] = useState(0);
-  const [view, setView] = useState<"dashboard" | "records">("dashboard"); const [showGuide, setShowGuide] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null); const [creating, setCreating] = useState(false); const [exporting, setExporting] = useState(false); const [wizard, setWizard] = useState<"new" | EduRecord | null>(null);
+  const [view, setView] = useState<"dashboard" | "records">(openId ? "records" : "dashboard"); const [showGuide, setShowGuide] = useState(false);
+  const [selected, setSelected] = useState<string | null>(openId ?? null); const [creating, setCreating] = useState(false); const [exporting, setExporting] = useState(false); const [wizard, setWizard] = useState<"new" | EduRecord | null>(null);
   const list = useQuery({ queryKey: ["edu-list", school, kind, f, page], enabled: !!school, queryFn: () => rpc<List>("edu_find", { _school: school, _kind: kind, _f: f, _offset: page * 25, _limit: 25 }) });
   const stats = useQuery({ queryKey: ["edu-stats", school, kind, f], enabled: !!school, queryFn: () => rpc<EduStats>("edu_stats", { _school: school, _kind: kind, _f: f }) });
   if (!school) return <EmptyState title="اختر مدرسة أولًا" />;

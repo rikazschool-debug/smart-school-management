@@ -4605,6 +4605,7 @@ export type Database = {
           priority: string
           rating: number | null
           record_date: string
+          ref_no: string | null
           rev: number
           school_id: string
           shared: boolean
@@ -4631,6 +4632,7 @@ export type Database = {
           priority?: string
           rating?: number | null
           record_date?: string
+          ref_no?: string | null
           rev?: number
           school_id: string
           shared?: boolean
@@ -4657,6 +4659,7 @@ export type Database = {
           priority?: string
           rating?: number | null
           record_date?: string
+          ref_no?: string | null
           rev?: number
           school_id?: string
           shared?: boolean
@@ -23911,6 +23914,8 @@ export type Database = {
         }
         Returns: string
       }
+      edu_guidance_board: { Args: { _school: string }; Returns: Json }
+      edu_guidance_me: { Args: { _school: string }; Returns: Json }
       edu_home_note: { Args: { _id: string; _note: string }; Returns: string }
       edu_list: {
         Args: { _kind: string; _offset?: number; _q?: string; _school: string }
@@ -23933,6 +23938,10 @@ export type Database = {
       }
       edu_pool: {
         Args: { _kind: string; _q?: string; _school: string }
+        Returns: Json
+      }
+      edu_ref_act: {
+        Args: { _action: string; _id: string; _p?: Json; _rev: number }
         Returns: Json
       }
       edu_save: {
