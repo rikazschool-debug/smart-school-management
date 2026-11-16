@@ -26,3 +26,9 @@ for (const k of ["minutes", "pd_need", "program", "work_review"]) {
 }
 writeFileSync("/tmp/browser/supervision/fixture2.json", JSON.stringify({ r2: r2.data, tpl_title: tpl?.title, tpl_key: tpl?.key, adopted: [...orgKeys], own, ownErr }, null, 1));
 console.log({ r2: r2.data, tpl: tpl?.title, own, ownErr });
+// fill + submit the principal's own minutes so the self-approval check has a submitted record
+if (own) {
+  const g = (await pr.rpc("sv_rec_get", { _id: own })).data as any;
+  const d = { meeting_kind: "اجتماع مدرسي", held_at: iso(-7200), attendees: "المديرة، الوكيلة، المشرفة", items: "مراجعة خطة الزيارات", decisions: "اعتماد جدول الزيارات" };
+  if (g.status === "draft") { await pr.rpc("sv_rec_save", { _id: own, _rev: g.rev, _p: { data: d } }); await pr.rpc("sv_rec_act", { _id: own, _rev: g.rev + 1, _action: "submit", _text: null }); }
+}
