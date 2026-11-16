@@ -26058,6 +26058,19 @@ export type Database = {
       }
       org_sections_get: { Args: { _org: string }; Returns: Json }
       org_subscription: { Args: { _org: string }; Returns: Json }
+      org_year_list: { Args: { _org: string }; Returns: Json }
+      org_year_save: {
+        Args: {
+          _current: boolean
+          _end: string
+          _name: string
+          _old: string
+          _org: string
+          _start: string
+          _terms: Json
+        }
+        Returns: number
+      }
       pc_ack: { Args: { _move: string }; Returns: undefined }
       pc_alerts_tick: { Args: never; Returns: number }
       pc_branch_overview: { Args: { _org: string }; Returns: Json }
