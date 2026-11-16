@@ -20,7 +20,7 @@ async def main():
                 await o.goto(f"{G}?tab=cases&id={F['case']}")
                 await expect(o.get_by_role("navigation", name="أقسام الحالة")).to_be_visible(timeout=20000); await expect(o.get_by_role("heading", name="سارة المحالة")).to_be_visible()
                 check(f"{tag}: counselor direct case link opens the case", True)
-                await o.get_by_role("button", name="الحالات", exact=True).click(); await expect(o.get_by_label("بحث في الحالات")).to_be_visible()
+                await o.get_by_role("button", name="الحالات", exact=True).click(); await expect(o.get_by_label("بحث في الحالات")).to_be_visible(); await o.wait_for_function("!location.search.includes('id=')", timeout=10000)
                 check(f"{tag}: back to list clears the link", "id=" not in o.url, o.url)
                 await o.go_back(); await expect(o.get_by_role("navigation", name="أقسام الحالة")).to_be_visible(timeout=20000); check(f"{tag}: browser back reopens the case", True)
                 await o.goto(f"{G}?tab=referrals&id={F['referral']}"); await expect(o.get_by_text("REF-").first).to_be_visible(timeout=20000)
