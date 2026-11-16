@@ -1,0 +1,9 @@
+ALTER FUNCTION public.edu_case_session_save(jsonb) SET search_path=public;
+ALTER FUNCTION public.edu_case_session_record(uuid,jsonb) SET search_path=public;
+ALTER FUNCTION public.edu_case_follow(uuid,integer,jsonb) SET search_path=public;
+ALTER FUNCTION public.edu_guidance_agenda(uuid,date,date) SET search_path=public;
+ALTER FUNCTION public.edu_case_attach(uuid,jsonb) SET search_path=public;
+ALTER FUNCTION public.edu_case_share(uuid,jsonb) SET search_path=public;
+ALTER FUNCTION public.edu_case_share_withdraw(uuid,text) SET search_path=public;
+ALTER FUNCTION public.edu_family_guidance(uuid) SET search_path=public;
+ALTER FUNCTION public.edu_family_guidance_read(uuid) SET search_path=public;

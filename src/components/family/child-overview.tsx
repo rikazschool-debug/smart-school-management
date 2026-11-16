@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { HeartPulse, BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
+import { HeartHandshake, HeartPulse, BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { StatusPill } from "@/components/family-visits/shared";
@@ -10,6 +10,7 @@ import { DAYS_AR } from "@/lib/timetable-model";
 import { arabicError } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { HealthFile } from "@/components/health/health-file";
+import { FamilyGuidance } from "@/components/guidance/family-summaries";
 
 /** One child's (or the student's own) overview. Everything comes from family_child, which checks the link on the server. */
 export type ChildData = {
@@ -38,7 +39,7 @@ export function useChild(studentId: string) {
   });
 }
 
-type Tab = "attendance" | "schedule" | "classrooms" | "homework" | "visits" | "finance" | "health";
+type Tab = "attendance" | "schedule" | "classrooms" | "homework" | "visits" | "finance" | "health" | "guidance";
 
 export function ChildOverview({ studentId }: { studentId: string }) {
   const q = useChild(studentId);
@@ -54,7 +55,7 @@ export function ChildOverview({ studentId }: { studentId: string }) {
     { k: "schedule", label: "الجدول", icon: CalendarDays },
     { k: "classrooms", label: "الفصل الرقمي", icon: School },
     { k: "homework", label: "الواجبات", icon: ClipboardList },
-    ...(guardian ? [{ k: "visits" as Tab, label: "الزيارات", icon: UserRound }, { k: "finance" as Tab, label: "البيانات المالية", icon: Landmark }, { k: "health" as Tab, label: "الملف الصحي", icon: HeartPulse }] : []),
+    ...(guardian ? [{ k: "visits" as Tab, label: "الزيارات", icon: UserRound }, { k: "finance" as Tab, label: "البيانات المالية", icon: Landmark }, { k: "health" as Tab, label: "الملف الصحي", icon: HeartPulse }, { k: "guidance" as Tab, label: "رسائل المتابعة", icon: HeartHandshake }] : []),
   ];
   return (
     <div className="space-y-5">
@@ -76,6 +77,7 @@ export function ChildOverview({ studentId }: { studentId: string }) {
       </div>
       {tab === "attendance" && <Attendance studentId={d.student.id} />}
       {tab === "schedule" && <Timetable rows={d.timetable} />}
+      {tab === "guidance" && guardian && <FamilyGuidance studentId={d.student.id} />}
       {tab === "classrooms" && (!d.room || !d.classrooms.length ? <EmptyState title="لا يوجد فصل رقمي لشعبته بعد" /> : (
         <div className="rounded-xl border bg-card p-4">
           <Link to="/app/classrooms/section/$id" params={{ id: d.room.id }} className="font-semibold text-primary">فصل {d.room.title} ←</Link>

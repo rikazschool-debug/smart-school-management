@@ -1,3 +1,4 @@
+import { CaseFiles } from "./case-run";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ClipboardList, FolderOpen, Lightbulb, Lock, Pencil, Plus, Search } from "lucide-react";
@@ -74,6 +75,7 @@ function ReferralView({ id, counselor, back, edit, changed, openCase }: { id: st
       <div className="sm:col-span-3"><p className="text-muted-foreground">الملاحظات الواقعية</p><p className="whitespace-pre-wrap">{r.description || "—"}</p></div>
       <div className="sm:col-span-3"><p className="text-muted-foreground">الدعم السابق</p><p className="whitespace-pre-wrap">{p.prior_support || "—"}</p></div>
     </section>
+    <section className="space-y-3 rounded-2xl border bg-card p-5"><h3 className="font-semibold">مرفقات الإحالة</h3>{!counselor && ["draft", "sent", "needs_info"].includes(r.status) && <p className="text-xs text-muted-foreground">أرفق عينة عمل أو ملاحظة موثقة تدعم الإحالة (صور أو PDF). تُغلق الإضافة بعد قرار الفرز.</p>}<CaseFiles r={r as Parameters<typeof CaseFiles>[0]["r"]} canAdd={!counselor && ["draft", "sent", "needs_info"].includes(r.status)} sessions={false} refresh={async () => { await d.refetch(); }} /></section>
     {r.can_edit && <Button onClick={() => edit(r)}><Pencil className="size-4" />{r.status === "needs_info" ? "استكمال وإعادة الإرسال" : "متابعة المسودة"}</Button>}
     {counselor && <section className="space-y-3 rounded-2xl border bg-card p-5"><h3 className="flex items-center gap-2 font-semibold"><ClipboardList className="size-4" />قرار الموجّه</h3>
       <p className="text-xs text-muted-foreground">لا تتحول الإحالة إلى دراسة حالة تلقائيًا؛ اختر الإجراء المناسب.</p>

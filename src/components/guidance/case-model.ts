@@ -17,3 +17,27 @@ export function caseIssues(d: { description: string; goals: string[]; plan: Case
   if (status === "closed" && (!p.outcome || (p.close_reason ?? "").trim().length < 3)) o.push("سجّل نتيجة الحالة وسبب الإغلاق");
   return o;
 }
+export const SESSION_STATUS: Record<string, string> = { planned: "موعد قادم", done: "منفّذة", missed: "لم يحضر", cancelled: "أُلغيت" };
+export const SESSION_MODE: Record<string, string> = { individual: "فردية", group: "جماعية" };
+export const PROGRESS: Record<string, string> = { in_progress: "قيد العمل", partial: "تحقق جزئي", achieved: "تحقق المؤشر", not_achieved: "لم يتحقق" };
+export const DOC_TYPE: Record<string, string> = { report: "تقرير", observation: "ملاحظة موثقة", work_sample: "عينة عمل", correspondence: "مراسلة", other: "أخرى" };
+/** Mirrors private.edu_case_follow: activity never counts as improvement. */
+export function followIssues(f: { goal: string; progress: string; note: string }): string[] {
+  const o: string[] = []; const n = f.note.trim();
+  if (f.goal !== "" && !PROGRESS[f.progress]) o.push("اختر مستوى التقدم في الهدف");
+  if (n.length < 3) o.push("اكتب ملاحظة المتابعة");
+  if (f.goal !== "" && f.progress === "achieved" && n.length < 15) o.push("تحقق الهدف يحتاج دليلًا مكتوبًا على مؤشر التحقق، لا مجرد حضور الجلسات");
+  return o;
+}
+/** Mirrors private.edu_case_session_save date/topic rules. */
+export function sessionIssues(s: { mode: string; caseCount: number; status: string; date: string; topic: string; activity: string }, today: string): string[] {
+  const o: string[] = [];
+  if (s.mode === "individual" && s.caseCount !== 1) o.push("الجلسة الفردية لحالة واحدة");
+  if (s.mode === "group" && (s.caseCount < 2 || s.caseCount > 30)) o.push("الجلسة الجماعية تحتاج حالتين إلى 30 حالة");
+  if (s.mode === "group" && s.topic.trim().length < 2) o.push("اكتب موضوع الجلسة الجماعية");
+  if (!s.date) o.push("حدد تاريخ الجلسة");
+  else if (s.status === "planned" && s.date < today) o.push("الموعد لا يكون في تاريخ مضى؛ سجّل الجلسة المنفذة بدلًا من ذلك");
+  else if (s.status === "done" && s.date > today) o.push("لا تُسجل جلسة منفذة بتاريخ مستقبلي");
+  if (s.activity.trim().length < 2) o.push("اكتب هدف الجلسة أو النشاط");
+  return o;
+}

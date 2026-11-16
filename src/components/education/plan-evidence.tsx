@@ -12,11 +12,11 @@ import { schoolTime } from "@/lib/homework";
 import type { EduRecord, Evidence } from "./model";
 
 const BUCKET = "rikaz-files"; const TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-type Page = { key: string; file: File; rot: number; url: string };
+export type Page = { key: string; file: File; rot: number; url: string };
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> { const r = await db.rpc(name, args); if (r.error) throw r.error; return r.data as T; }
 
 /** Applies the chosen rotation to an image page before upload (PDF pages are uploaded as-is). */
-async function rotated(p: Page): Promise<{ blob: Blob; mime: string; name: string }> {
+export async function rotated(p: Page): Promise<{ blob: Blob; mime: string; name: string }> {
   if (!p.file.type.startsWith("image/") || p.rot % 360 === 0) return { blob: p.file, mime: p.file.type, name: p.file.name };
   const img = await createImageBitmap(p.file); const c = document.createElement("canvas"); const q = ((p.rot % 360) + 360) % 360;
   c.width = q % 180 ? img.height : img.width; c.height = q % 180 ? img.width : img.height; const x = c.getContext("2d")!;

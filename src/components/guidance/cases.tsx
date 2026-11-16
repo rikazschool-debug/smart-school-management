@@ -12,10 +12,11 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ask, askText } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { OfflineNote } from "@/components/education/offline-note";
-import { EDU_CATEGORIES, EDU_PRIORITY, type EduRecord } from "@/components/education/model";
+import { EDU_CATEGORIES, EDU_PRIORITY } from "@/components/education/model";
+import { CaseFiles, CaseFollow, CaseSessions, CaseShares, type CaseRow } from "./case-run";
 import { CASE_OUTCOME, CASE_SOURCE, CASE_STATUS, CASE_TRACK, caseIssues, type CaseGoal, type CasePlan } from "./case-model";
 
-type Row = EduRecord & { ref_no?: string; school_id: string };
+type Row = CaseRow;
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> { const r = await db.rpc(name, args); if (r.error) throw r.error; return r.data as T; }
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date());
 const CATS = EDU_CATEGORIES.case;
@@ -102,12 +103,17 @@ function CaseWizard({ school, row, close }: { school: string; row?: Row | undefi
 }
 
 const TABS = ["ملخص مقيد", "دراسة الحالة", "خطة التدخل", "الجلسات", "المتابعات والمواعيد", "الإحالات والتواصل", "المرفقات", "سجل الإجراءات"] as const;
-const EV: Record<string, string> = { create: "إنشاء", update: "تعديل", status: "تغيير الحالة" };
+const EV: Record<string, string> = { create: "إنشاء", update: "تعديل", status: "تغيير الحالة", session_planned: "حجز موعد جلسة", session_done: "تسجيل جلسة منفذة", session_missed: "عدم حضور جلسة", session_cancelled: "إلغاء موعد", case_follow: "متابعة هدف", attach: "إضافة مرفق", share_summary: "مشاركة ملخص مع ولي الأمر", share_withdraw: "سحب ملخص من ولي الأمر" };
+function ReferralFiles({ id }: { id: string }) {
+  const q = useQuery({ queryKey: ["edu-detail", id], queryFn: () => rpc<Row & { evidence?: CaseRow["evidence"] }>("edu_detail", { _id: id }) });
+  if (q.isLoading) return <LoadingState />; if (q.error || !q.data) return <p className="text-muted-foreground">تعذر فتح الإحالة المرتبطة.</p>;
+  return <div className="space-y-2"><p>{q.data.ref_no} · أرسلها {q.data.owner_name ?? "المعلم"} · {q.data.record_date}</p><p className="text-xs text-muted-foreground">مرفقات المعلم مع الإحالة:</p><CaseFiles r={q.data} canAdd={false} sessions={false} refresh={async () => { await q.refetch(); }} /></div>;
+}
 function CasePage({ id, back, edit }: { id: string; back: () => void; edit: (r: Row) => void }) {
   const d = useQuery({ queryKey: ["edu-detail", id], queryFn: () => rpc<Row>("edu_detail", { _id: id }) });
   const [tab, setTab] = useState<(typeof TABS)[number]>("ملخص مقيد"); const [busy, setBusy] = useState(false);
   if (d.isLoading) return <LoadingState />; if (d.error || !d.data) return <ErrorState message={arabicError(d.error)} onRetry={() => d.refetch()} />;
-  const r = d.data; const p = (r.plan ?? {}) as unknown as CasePlan;
+  const r = d.data; const p = (r.plan ?? {}) as unknown as CasePlan; const refresh = async () => { await d.refetch(); };
   async function setStatus(status: string) {
     let plan: CasePlan = { ...p };
     if (status === "closed") { const oc = await askText(`نتيجة الحالة: اكتب رقمًا — ${Object.values(CASE_OUTCOME).map((l, i) => `${i + 1}) ${l}`).join("، ")}`, { required: true }); if (!oc) return; const key = Object.keys(CASE_OUTCOME)[Number(oc.trim()) - 1]; if (!key) { toast.error("اختر رقم النتيجة من القائمة"); return; } const why = await askText("سبب الإغلاق", { required: true, long: true }); if (!why) return; plan = { ...plan, outcome: key, close_reason: why }; }
@@ -129,8 +135,10 @@ function CasePage({ id, back, edit }: { id: string; back: () => void; edit: (r: 
       {tab === "دراسة الحالة" && <div className="grid gap-4"><F l="وصف الاحتياج" v={r.description} /><F l="الوقائع المشاهدة" v={p.facts} /><F l="إفادات الأطراف" v={p.statements} /><F l="التقدير المهني" v={p.assessment} /><F l="نقاط القوة" v={p.strengths} /><F l="العوامل الداعمة" v={p.supports} />
         <div><p className="text-xs text-muted-foreground">التقارير التخصصية</p>{(p.reports ?? []).length ? <ul className="list-disc ps-5 text-sm">{p.reports!.map((x, i) => <li key={i}>{x.source} · {x.date}{x.recommendations ? ` — ${x.recommendations}` : ""}</li>)}</ul> : <p className="text-sm">—</p>}</div></div>}
       {tab === "خطة التدخل" && (r.goals.length ? <ol className="space-y-3">{r.goals.map((g, i) => { const x = p.goal_details?.[i]; return <li key={i} className="rounded-xl border p-3"><p className="font-medium">{i + 1}. {g}</p><p className="text-sm text-muted-foreground">الإجراء: {x?.actions || "—"} · المسؤول: {x?.owner || "—"} · الموعد: {x?.due || "—"} · مؤشر التحقق: {x?.indicator || "—"}</p></li>; })}</ol> : <p className="text-sm text-muted-foreground">لم تُضف أهداف بعد.</p>)}
-      {(tab === "الجلسات" || tab === "المتابعات والمواعيد" || tab === "المرفقات") && <EmptyState title="غير مكتمل" hint="يُبنى في المرحلة الثالثة (الجلسات والمتابعات والمرفقات)." />}
-      {tab === "الإحالات والتواصل" && <div className="space-y-2 text-sm">{p.referral_id ? <p>الحالة مفتوحة من إحالة مرتبطة (المصدر: {CASE_SOURCE["referral"]}).</p> : <p>لا توجد إحالة مرتبطة.</p>}<p className="text-muted-foreground">التواصل مع ولي الأمر بملخص محدد يُبنى في المرحلة الثالثة.</p></div>}
+      {tab === "الجلسات" && <CaseSessions r={r} refresh={refresh} />}
+      {tab === "المتابعات والمواعيد" && <CaseFollow r={r} refresh={refresh} />}
+      {tab === "المرفقات" && <CaseFiles r={r} canAdd={r.can_edit && r.status !== "closed"} refresh={refresh} />}
+      {tab === "الإحالات والتواصل" && <div className="space-y-5"><div className="space-y-2 text-sm"><h4 className="font-semibold">الإحالة المرتبطة</h4>{p.referral_id ? <ReferralFiles id={p.referral_id} /> : <p className="text-muted-foreground">لا توجد إحالة مرتبطة.</p>}</div><CaseShares r={r} refresh={refresh} /></div>}
       {tab === "سجل الإجراءات" && <ol className="space-y-2 border-s ps-4 text-sm">{(r.events ?? []).map((e, i) => <li key={i}><p>{EV[e.action] ?? e.action}{typeof e.details?.["status"] === "string" ? ` ← ${CASE_STATUS[e.details["status"] as string] ?? ""}` : ""}</p><p className="text-xs text-muted-foreground">{e.actor_name} · {new Date(e.created_at).toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh" })}</p></li>)}</ol>}
     </section>
   </div>;

@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/s
 import { arabicError, useSession } from "@/lib/session";
 import { Cases } from "./cases";
 import { GuidanceBoard } from "./board";
+import { GuidanceAgenda } from "./agenda";
 import { Referrals } from "./referrals";
 
 type Me = { counselor: boolean; can_refer: boolean; can_export: boolean };
@@ -20,7 +21,6 @@ const TABS: { id: Tab; label: string; icon: typeof Send; counselor: boolean }[] 
   { id: "reports", label: "التقارير", icon: BarChart3, counselor: true },
 ];
 const LATER: Partial<Record<Tab, string>> = {
-  sessions: "توثيق الجلسات الفردية والجماعية والمتابعات والمواعيد — قيد البناء في المرحلة الثالثة؛ لم يكتمل بعد.",
   plans: "خطط التدخل تُعدّ داخل كل حالة (تبويب «خطة التدخل»)؛ القائمة المجمّعة للخطط تُبنى مع التقارير في المرحلة الرابعة.",
   programs: "البرامج الوقائية والإنمائية والخطة السنوية — قيد البناء في المرحلة الرابعة؛ لم يكتمل بعد.",
   reports: "التقارير التشغيلية والإحصائية المنفصلة — قيد البناء في المرحلة الرابعة؛ لم يكتمل بعد.",
@@ -43,6 +43,7 @@ export function GuidanceHub() {
     {cur === "board" && <GuidanceBoard school={school} go={(t, o) => go(t, o)} />}
     {cur === "referrals" && <ReferralsTab key={nonce} school={school} m={m} status={refStatus} openId={openId} openCase={(id) => go("cases", { id })} />}
     {cur === "cases" && <Cases key={nonce} school={school} initialId={openId} />}
+    {cur === "sessions" && <GuidanceAgenda school={school} openCase={(id) => go("cases", { id })} />}
     {LATER[cur] && <EmptyState title="غير مكتمل" hint={LATER[cur]} />}
   </div>;
 }

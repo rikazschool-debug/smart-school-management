@@ -1,5 +1,5 @@
 # Guidance stage 2 in the browser: counselor opens a new case via the 5-step wizard, saves a draft, approves, views case tabs; phone (needs guidance-e2e.ts --keep).
-import asyncio, json, sys, os
+import asyncio, json, sys, os, re
 from playwright.async_api import async_playwright, expect
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib')); from session_login import sign_in
 B = "http://localhost:8080"; F = json.load(open("/tmp/browser/guidance/fixture.json")); SH = "/tmp/browser/guidance/shots/"; ok = bad = 0
@@ -30,7 +30,9 @@ async def main():
                 await expect(o.get_by_role("button", name="بدء المتابعة")).to_be_visible(timeout=20000); check(f"{tag}: case approved", True)
                 await o.reload(); await o.get_by_role("button", name="الحالات ودراسة الحالة").click()
                 await o.get_by_role("tab", name="مفتوحة").click(); await expect(o.get_by_role("button", name="ليان").first).to_be_visible(timeout=20000); check(f"{tag}: open case persists after reload", True)
-                await o.get_by_role("button", name="ليان").first.click(); await o.get_by_role("button", name="دراسة الحالة", exact=True).click()
+                bs = o.get_by_role("button", name="ليان"); txt = [await bs.nth(i).inner_text() for i in range(await bs.count())]
+                newest = max(range(len(txt)), key=lambda i: int((re.search(r"CASE-(\d+)", txt[i]) or [0, "0"])[1]))  # the e2e fixture already has an older case for ليان
+                await bs.nth(newest).click(); await o.get_by_role("button", name="دراسة الحالة", exact=True).click()
                 await expect(o.get_by_text("يحتاج جدولًا منزليًا")).to_be_visible(); check(f"{tag}: study tab shows assessment separately", True)
                 await o.get_by_role("button", name="خطة التدخل").click(); await expect(o.get_by_text("مؤشر التحقق: تسليم 4 واجبات متتالية")).to_be_visible(); check(f"{tag}: plan tab shows goal details", True)
                 await o.screenshot(path=SH + f"case_page_{tag}.png")

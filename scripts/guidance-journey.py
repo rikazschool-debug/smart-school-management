@@ -27,7 +27,7 @@ async def main():
             check("referral page shows history and decision tools", "سجل الإجراءات" in await co.locator("main").inner_text())
             await co.screenshot(path=SH + "referral_counselor.png")
             await co.get_by_role("button", name="فتح الحالة المرتبطة").click()
-            await expect(co.get_by_role("dialog")).to_be_visible(timeout=20000); check("linked case opens in cases tab", True)
+            await expect(co.get_by_text("ملف سري").first).to_be_visible(timeout=20000); check("linked case opens in cases tab", True)
             await co.screenshot(path=SH + "case_from_referral.png")
             check("counselor: no page errors", not co.errs, co.errs)
         except Exception:

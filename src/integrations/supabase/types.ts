@@ -4339,6 +4339,108 @@ export type Database = {
           },
         ]
       }
+      edu_case_share_reads: {
+        Row: {
+          created_at: string
+          read_at: string
+          share_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          read_at?: string
+          share_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          read_at?: string
+          share_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_case_share_reads_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "edu_case_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edu_case_shares: {
+        Row: {
+          created_at: string
+          id: string
+          recommendations: string
+          record_id: string
+          school_id: string
+          shared_by: string
+          status: string
+          student_id: string
+          summary: string
+          updated_at: string
+          withdraw_reason: string
+          withdrawn_at: string | null
+          withdrawn_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recommendations?: string
+          record_id: string
+          school_id: string
+          shared_by?: string
+          status?: string
+          student_id: string
+          summary: string
+          updated_at?: string
+          withdraw_reason?: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recommendations?: string
+          record_id?: string
+          school_id?: string
+          shared_by?: string
+          status?: string
+          student_id?: string
+          summary?: string
+          updated_at?: string
+          withdraw_reason?: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_case_shares_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edu_case_shares_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edu_case_shares_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edu_events: {
         Row: {
           action: string
@@ -4381,6 +4483,7 @@ export type Database = {
         Row: {
           actor: string
           created_at: string
+          doc_type: string
           file_ids: string[]
           goal_index: number | null
           id: string
@@ -4397,6 +4500,7 @@ export type Database = {
         Insert: {
           actor?: string
           created_at?: string
+          doc_type?: string
           file_ids?: string[]
           goal_index?: number | null
           id?: string
@@ -4413,6 +4517,7 @@ export type Database = {
         Update: {
           actor?: string
           created_at?: string
+          doc_type?: string
           file_ids?: string[]
           goal_index?: number | null
           id?: string
@@ -4452,6 +4557,7 @@ export type Database = {
           id: string
           mark: string
           note: string
+          progress: string | null
           record_id: string
           updated_at: string
         }
@@ -4463,6 +4569,7 @@ export type Database = {
           id?: string
           mark?: string
           note: string
+          progress?: string | null
           record_id: string
           updated_at?: string
         }
@@ -4474,6 +4581,7 @@ export type Database = {
           id?: string
           mark?: string
           note?: string
+          progress?: string | null
           record_id?: string
           updated_at?: string
         }
@@ -4745,10 +4853,19 @@ export type Database = {
           actor: string
           created_at: string
           goal_index: number | null
+          group_id: string | null
           id: string
+          mode: string
+          next_step: string
           note: string
+          place: string
+          reason: string
           record_id: string
+          recorded_at: string | null
           session_date: string
+          start_time: string | null
+          status: string
+          topic: string
           updated_at: string
         }
         Insert: {
@@ -4757,10 +4874,19 @@ export type Database = {
           actor?: string
           created_at?: string
           goal_index?: number | null
+          group_id?: string | null
           id?: string
+          mode?: string
+          next_step?: string
           note?: string
+          place?: string
+          reason?: string
           record_id: string
+          recorded_at?: string | null
           session_date: string
+          start_time?: string | null
+          status?: string
+          topic?: string
           updated_at?: string
         }
         Update: {
@@ -4769,10 +4895,19 @@ export type Database = {
           actor?: string
           created_at?: string
           goal_index?: number | null
+          group_id?: string | null
           id?: string
+          mode?: string
+          next_step?: string
           note?: string
+          place?: string
+          reason?: string
           record_id?: string
+          recorded_at?: string | null
           session_date?: string
+          start_time?: string | null
+          status?: string
+          topic?: string
           updated_at?: string
         }
         Relationships: [
@@ -23886,6 +24021,21 @@ export type Database = {
       dept_teacher_ids: { Args: never; Returns: string[] }
       edit_message: { Args: { _body: string; _id: string }; Returns: undefined }
       edu_ack: { Args: { _id: string; _rev: number }; Returns: undefined }
+      edu_case_attach: { Args: { _id: string; _p: Json }; Returns: Json }
+      edu_case_follow: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      edu_case_session_record: {
+        Args: { _p: Json; _sid: string }
+        Returns: Json
+      }
+      edu_case_session_save: { Args: { _p: Json }; Returns: Json }
+      edu_case_share: { Args: { _id: string; _p: Json }; Returns: string }
+      edu_case_share_withdraw: {
+        Args: { _reason: string; _share: string }
+        Returns: undefined
+      }
       edu_courses: { Args: { _student: string }; Returns: Json }
       edu_detail: { Args: { _id: string }; Returns: Json }
       edu_evidence_add: { Args: { _id: string; _p: Json }; Returns: Json }
@@ -23894,6 +24044,8 @@ export type Database = {
         Args: { _ev: string; _shared: boolean }
         Returns: undefined
       }
+      edu_family_guidance: { Args: { _student: string }; Returns: Json }
+      edu_family_guidance_read: { Args: { _share: string }; Returns: undefined }
       edu_find: {
         Args: {
           _f?: Json
@@ -23913,6 +24065,10 @@ export type Database = {
           _rev: number
         }
         Returns: string
+      }
+      edu_guidance_agenda: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: Json
       }
       edu_guidance_board: { Args: { _school: string }; Returns: Json }
       edu_guidance_me: { Args: { _school: string }; Returns: Json }
