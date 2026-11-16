@@ -23,6 +23,7 @@ function Entry() {
   const { edit, kind } = Route.useSearch();
   const existing = useQuery({ queryKey: ["creation-kind", edit], enabled: !!edit, queryFn: async () => { const r = await db.from("homework").select("kind").eq("id", edit).single(); if (r.error) throw r.error; return r.data as Row; } });
   if (edit && existing.isLoading) return <LoadingState />;
+  if (existing.error) return <ErrorState message={arabicError(existing.error)} onRetry={() => existing.refetch()} />;
   return kind === "test" || existing.data?.["kind"] === "test" ? <ExamCreate edit={edit} /> : <Page />;
 }
 
@@ -41,7 +42,7 @@ function Page() {
       const { data, error } = await db.from("courses").select("id, section_id, year_id, subjects(name), sections(name)").eq("school_id", schoolId);
       if (error) throw error;
       const rows = data as Row[];
-      const mine = await Promise.all(rows.map(async (c) => ((await db.rpc("is_course_teacher", { _course: c["id"] })).data ? c : null)));
+      const mine = await Promise.all(rows.map(async (c) => { const r = await db.rpc("is_course_teacher", { _course: c["id"] }); if (r.error) throw r.error; return r.data ? c : null; }));
       return mine.filter(Boolean) as Row[];
     },
   });

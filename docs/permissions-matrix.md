@@ -3,6 +3,7 @@
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
 2026-11-16 (targeting empty roster): No permissions changed. Exam roster remains scoped to the chosen authorized course's section/year and active enrollments through the browser RLS client. Search is disabled before course selection; no-selection, empty enrollment and no matches are distinguished.
+Follow-up: homework creation uses the same scoped cache dimensions and explicit loading/error/no-selection/empty states; family lookups expose retrieval failure instead of pretending there is no linked student. Bubble scan is disabled until targets load successfully and are nonempty. Existing target, publication, join and history rules were read and left unchanged.
 
 2026-11-16 (prompt-394): Tests alone use preliminary grading → reviewed revision → approved revision → explicit publication. Course teacher/verified org owner performs these actions; student submits own targeted electronic attempt, guardian never submits. Variants persist remapped keys; exam_get strips keys from base and every variant for non-teachers. Direct access to prior grade/correction/publish implementations is revoked, including correct_result's test path. Homework still shows final grading immediately. Existing grade RLS keeps unpublished test grades hidden from students/guardians. Hosted authenticated acceptance remains unverified; isolated tests do not establish full hosted RLS or guardian readback.
 
