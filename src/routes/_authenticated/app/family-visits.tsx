@@ -18,6 +18,7 @@ import { PeoplePicker } from "@/components/people-picker";
 import { DAYS, EVENT, REASONS, SOURCE, STATUS, SlotPicker, CalendarSlotPicker, StatusPill, awaitingText, type Caps, type Visit, type VisitDetail } from "@/components/family-visits/shared";
 
 type Tab = "calendar" | "mine" | "school" | "reception" | "settings";
+const TAB_ICON: Record<Tab, typeof CalendarDays> = { calendar: CalendarDays, mine: UserRound, school: School, reception: DoorOpen, settings: Settings2 };
 const TABS: Tab[] = ["calendar", "mine", "school", "reception", "settings"];
 export const Route = createFileRoute("/_authenticated/app/family-visits")({
   head: () => ({ meta: [{ title: "زيارات أولياء الأمور — ركاز" }, { name: "description", content: "استدعاء أولياء الأمور وطلبات الزيارة والتقويم والاستقبال وسجل الزيارات." }, { name: "robots", content: "noindex" }] }),
