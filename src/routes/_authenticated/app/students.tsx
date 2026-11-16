@@ -55,14 +55,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   } });
   const ctCan = useQuery({ queryKey: ["ct-can", ctx.schoolId], queryFn: async () => { const { data } = await db.rpc("ct_can", { _school: ctx.schoolId }); return !!data; } });
 
-  const link = useMutation({
-    mutationFn: async (v: Row) => {
-      const { error } = await db.from("student_guardians").insert({ ...v, student_id: linking?.["id"], school_id: ctx.schoolId });
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("تم الربط — وثّق العلاقة ليتمكن ولي الأمر من المتابعة"); const sid = linking?.["id"] as string | undefined; setLinking(null); qc.invalidateQueries(); if (sid) void auto({ data: { studentId: sid } }).then((r) => toast.info(autoSummary(r))).catch(() => undefined); },
-    onError: (e) => toast.error(arabicError(e)),
-  });
+
   const place = useMutation({
     mutationFn: async (v: Row) => {
       const sid = placing?.["id"];
