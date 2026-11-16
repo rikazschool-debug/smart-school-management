@@ -145,8 +145,34 @@ async function main() {
   const c4 = must(await t1.c.rpc("edu_detail", { _id: p2 }), "c4") as any;
   check("evidence pages kept in order with goal link", c4.evidence[0]?.files.map((f: any) => f.name).join() === "p1.png,p2.png" && c4.evidence[0].goal_index === 0, c4.evidence);
   check("guardian detail lists no unshared evidence", (must(await g1.c.rpc("edu_detail", { _id: p2 }), "g4") as any).evidence.length === 0);
+
+  // ---- stage 4: guardian sharing
+  const secret = "ملاحظة-داخلية-سرية";
+  check("guardian home note refused before teacher allows it", !!(await g1.c.rpc("edu_home_note", { _id: p2, _note: "تابعنا في البيت" })).error);
+  let c5 = must(await t1.c.rpc("edu_detail", { _id: p2 }), "c5") as any;
+  const upd5 = await t1.c.rpc("edu_save", { _school: S, _id: p2, _rev: c5.rev, _p: { ...c5, kind: "student_plan", actions: secret, plan: { ...c5.plan, notes: secret, strengths: secret, home_activities: "حل 3 مسائل يوميًا", share: { goals: true, home: true, dates: false, progress: true, home_notes: true } } } });
+  check("teacher sets what the guardian sees", !upd5.error, upd5.error);
+  let gv5 = must(await g1.c.rpc("edu_detail", { _id: p2 }), "gv5") as any; const gj = JSON.stringify(gv5);
+  check("guardian view hides internal notes, sessions, measures and log", !gj.includes(secret) && !gj.includes("تحسن") && gv5.sessions.length === 0 && gv5.events.length === 0 && gv5.guardian_view === true, gj.slice(0, 300));
+  check("guardian sees goals, home activities and progress as chosen", gv5.goals.length === 1 && gv5.plan.home_activities === "حل 3 مسائل يوميًا" && gv5.progress[0]?.mastery === true && gv5.progress[0]?.latest === "1 من 5", gv5.progress);
+  check("dates hidden when not shared", gv5.due_date == null && gv5.record_date == null && gv5.plan.goal_details[0].start == null);
+  const gl = must(await g1.c.rpc("edu_find", { _school: S, _kind: "student_plan", _f: {}, _offset: 0, _limit: 50 }), "gl") as any;
+  check("guardian list rows carry no internal notes", !JSON.stringify(gl.rows).includes(secret) && gl.rows.every((x: any) => x.guardian_view), gl.rows.length);
+  check("guardian list shows only own child's shared plans", gl.rows.every((x: any) => x.student_id === st[0].id) && !gl.rows.some((x: any) => x.status === "draft"));
+  check("other guardian sees no plans", ((must(await g2.c.rpc("edu_find", { _school: S, _kind: "student_plan", _f: {}, _offset: 0, _limit: 50 }), "g2l") as any).rows ?? []).length === 0);
+  check("teacher shares one evidence item", !(await t1.c.rpc("edu_evidence_share", { _ev: evr.data.id, _shared: true })).error);
+  check("guardian cannot share evidence", !!(await g1.c.rpc("edu_evidence_share", { _ev: evr.data.id, _shared: false })).error);
+  gv5 = must(await g1.c.rpc("edu_detail", { _id: p2 }), "gv5b") as any;
+  check("guardian sees the shared evidence and can open it", gv5.evidence.length === 1 && !!(await g1.c.storage.from("rikaz-files").createSignedUrl(path0, 60)).data?.signedUrl);
+  check("other guardian still cannot open it", !(await g2.c.storage.from("rikaz-files").createSignedUrl(path0, 60)).data?.signedUrl);
+  check("guardian adds a home note", !(await g1.c.rpc("edu_home_note", { _id: p2, _note: "تابعنا 3 أيام في البيت" })).error);
+  check("other guardian cannot add a note", !!(await g2.c.rpc("edu_home_note", { _id: p2, _note: "ملاحظة" })).error);
+  check("guardian ack is dated and tied to the current version", !(await g1.c.rpc("edu_ack", { _id: p2, _rev: gv5.rev })).error && (must(await g1.c.rpc("edu_detail", { _id: p2 }), "ack") as any).acks.length === 1);
+  const tv5 = must(await t1.c.rpc("edu_detail", { _id: p2 }), "tv5") as any;
+  check("teacher sees the home note and ack", tv5.home_notes.length === 1 && tv5.acks.length === 1);
+  check("teacher plan cannot be shared", !!(await owner.c.rpc("edu_save", { _school: S, _id: null, _rev: null, _p: { kind: "teacher_plan", title: "خطة معلم", category: "planning", teacher_id: te1.id, status: "draft", shared: true, goals: [], plan: {} } })).error);
   console.log(`\n${ok} passed, ${bad} failed`);
-  const fx = { run, pw, org, school: S, plan: id, draft: d2, users: Object.fromEntries(Object.entries({ owner, t1, t2, g1 }).map(([k, v]) => [k, v.email])) };
+  const fx = { run, pw, org, school: S, plan: id, draft: d2, p2, users: Object.fromEntries(Object.entries({ owner, t1, t2, g1, g2 }).map(([k, v]) => [k, v.email])) };
   if (process.argv.includes("--keep")) { mkdirSync("/tmp/browser/plan", { recursive: true }); writeFileSync("/tmp/browser/plan/fixture.json", JSON.stringify(fx, null, 2)); console.log("kept fixture"); }
   else await teardown();
   if (bad) process.exit(1);

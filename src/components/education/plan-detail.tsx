@@ -11,15 +11,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { selectCls } from "@/components/ui/native-select";
 import { ErrorState, LoadingState } from "@/components/states";
 import { askText } from "@/components/confirm";
-import { EvidenceTab } from "./plan-evidence";
+import { EvidenceTab, openEvidenceFile } from "./plan-evidence";
 import { arabicError } from "@/lib/session";
 import { printReport } from "@/lib/export";
 import { schoolTime } from "@/lib/homework";
-import { EDU_AREAS, EDU_CATEGORIES, EDU_LABELS, EDU_PRIORITY, EVIDENCE_SOURCES, OUTCOMES, PHASES, PLAN_STATUS, baselineText, compareMeasures, goalDone, goalMark, isOverdue, measureText, type EduRecord, type Measure } from "./model";
+import { DEFAULT_SHARE, SHARE_LABELS, type Share, EDU_AREAS, EDU_CATEGORIES, EDU_LABELS, EDU_PRIORITY, EVIDENCE_SOURCES, OUTCOMES, PHASES, PLAN_STATUS, baselineText, compareMeasures, goalDone, goalMark, isOverdue, measureText, type EduRecord, type Measure } from "./model";
 
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> { const r = await db.rpc(name, args); if (r.error) throw r.error; return r.data as T; }
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-const EVENT_LABEL: Record<string, string> = { create: "إنشاء الخطة", update: "تعديل الخطة / تغيير الحالة", session: "تسجيل جلسة متابعة", measure: "تسجيل قياس", evidence: "إضافة دليل", mark: "تأكيد علامة", unmark: "تراجع موثّق عن علامة", follow: "ملاحظة متابعة", ack: "إقرار اطلاع" };
+const EVENT_LABEL: Record<string, string> = { create: "إنشاء الخطة", update: "تعديل الخطة / تغيير الحالة", session: "تسجيل جلسة متابعة", measure: "تسجيل قياس", evidence: "إضافة دليل", evidence_share: "مشاركة دليل مع ولي الأمر", evidence_unshare: "إلغاء مشاركة دليل", home_note: "ملاحظة منزلية من ولي الأمر", mark: "تأكيد علامة", unmark: "تراجع موثّق عن علامة", follow: "ملاحظة متابعة", ack: "إقرار اطلاع" };
 const goalName = (r: EduRecord, g: number | null) => (g === null || g === undefined ? "الخطة عامة" : `الهدف ${g + 1}: ${r.goals[g] ?? ""}`);
 
 export function PlanDetail({ id, school, schoolName, changed, openWizard }: { id: string; school: string; schoolName?: string | undefined; changed: () => void; openWizard: (r: EduRecord) => void }) {
@@ -27,6 +27,7 @@ export function PlanDetail({ id, school, schoolName, changed, openWizard }: { id
   const [busy, setBusy] = useState(false);
   if (detail.isLoading) return <LoadingState />; if (detail.error) return <ErrorState message={arabicError(detail.error)} />; const r = detail.data; if (!r) return null;
   const refresh = async () => { changed(); await detail.refetch(); };
+  if (r.guardian_view) return <GuardianPlan r={r} busy={busy} setBusy={setBusy} refresh={refresh} />;
   const live = r.status === "active" || r.status === "review"; const edit = r.can_edit;
   const fu = r.followups ?? []; const ms = r.measures ?? []; const ss = r.sessions ?? []; const det = r.plan?.goal_details ?? [];
   const actDone = r.goals.filter((_, i) => goalDone(fu, i, "activity")).length; const mastered = r.goals.filter((_, i) => goalDone(fu, i, "mastery")).length;
@@ -78,6 +79,8 @@ export function PlanDetail({ id, school, schoolName, changed, openWizard }: { id
       <TabsContent value="guardian" className="space-y-2 pt-3 text-sm">
         <p>{r.shared ? "الخطة مشتركة مع ولي الأمر الموثّق." : "الخطة غير مشتركة مع ولي الأمر."} الجلسات والقياسات والملاحظات الداخلية لا تظهر له.</p>
         {r.can_ack && <Button variant="outline" disabled={busy || !!r.acks?.length} onClick={() => void act(() => rpc("edu_ack", { _id: r.id, _rev: r.rev }), "سُجل إقرار الاطلاع")}><ClipboardCheck className="size-4" />{r.acks?.length ? "تم إقرار الاطلاع" : "أقر باطلاعي على الخطة"}</Button>}
+        {r.shared && <p className="text-xs text-muted-foreground">يظهر له: {(Object.keys(SHARE_LABELS) as (keyof Share)[]).filter((k) => (r.plan?.share ?? DEFAULT_SHARE)[k]).map((k) => SHARE_LABELS[k]).join("، ")} · الأدلة المشتركة: {(r.evidence ?? []).filter((e) => e.shared).length}. يُعدّل ذلك من «تعديل» ← المتابعة والمشاركة.</p>}
+        {(r.home_notes ?? []).length > 0 && <div className="space-y-1"><p className="font-medium">ملاحظات ولي الأمر المنزلية</p>{(r.home_notes ?? []).map((h) => <p key={h.id} className="rounded bg-muted/40 p-2">{h.note}<span className="block text-xs text-muted-foreground">{h.name} · {schoolTime(h.created_at)}</span></p>)}</div>}
         {edit && r.shared && <p className="text-xs text-muted-foreground">{r.acks?.length ? r.acks.map((a) => `أقر ${a.name} بالاطلاع — ${schoolTime(a.created_at)}`).join(" · ") : "لم يُقر ولي الأمر بالاطلاع على النسخة الحالية بعد"}</p>}
       </TabsContent>
       <TabsContent value="log" className="pt-3">{!(r.events ?? []).length ? <p className="text-sm text-muted-foreground">لا يوجد سجل.</p> : <ol className="space-y-2 border-s ps-4 text-sm">{(r.events ?? []).map((e, k) => <li key={k}><p>{EVENT_LABEL[e.action] ?? e.action}{typeof e.details?.["status"] === "string" ? ` — ${PLAN_STATUS[e.details["status"] as string] ?? String(e.details["status"])}` : ""}{typeof e.details?.["goal"] === "number" ? ` — الهدف ${Number(e.details["goal"]) + 1}` : ""}</p><p className="text-xs text-muted-foreground">{e.actor_name} · {schoolTime(e.created_at)}</p></li>)}</ol>}</TabsContent>
@@ -135,5 +138,20 @@ export function PlanFacts({ r }: { r: EduRecord }) {
   return <div className="space-y-3">
     <dl className="grid gap-2 rounded-lg border p-3 text-sm sm:grid-cols-2">{([["المهارات غير المتقنة", (p.skills ?? []).join("، ")], ["الوحدة / الموضوع", p.unit], ["نقاط القوة", p.strengths], ["مصدر الاستدلال", (p.evidence ?? []).map((e) => EVIDENCE_SOURCES[e] ?? e).join("، ")], ["مستوى البداية", baselineText(p.baseline)], ["ملاحظات تربوية", p.notes], ["نتيجة الإغلاق", p.outcome ? `${OUTCOMES[p.outcome] ?? p.outcome} — ${p.outcome_note ?? ""}` : ""], ["الخطوة التالية", p.next_step ?? ""]] as [string, string | undefined][]).filter(([, x]) => x).map(([k, x]) => <div key={k}><dt className="text-xs text-muted-foreground">{k}</dt><dd className="whitespace-pre-wrap">{x}</dd></div>)}</dl>
     {det.length > 0 && <ol className="space-y-2">{r.goals.map((g, i) => { const d = det[i]; return <li key={i} className="rounded-lg bg-muted/40 p-3 text-sm"><p className="font-semibold">{i + 1}. {g}</p>{d && <p className="mt-1 text-xs leading-6 text-muted-foreground">{[d.skill && `المهارة: ${d.skill}`, d.baseline && `البداية: ${d.baseline}`, d.target && `المستهدف: ${d.target}`, d.mastery && `الإتقان: ${d.mastery}`, d.activity && `النشاط: ${d.activity}`, d.strategy && `الاستراتيجية: ${d.strategy}`, d.owner && `المسؤول: ${d.owner}`, d.verify && `التحقق: ${d.verify}`, d.review && `المراجعة: ${d.review}`].filter(Boolean).join(" · ")}</p>}</li>; })}</ol>}
+  </div>;
+}
+
+function GuardianPlan({ r, busy, setBusy, refresh }: { r: EduRecord; busy: boolean; setBusy: (b: boolean) => void; refresh: () => Promise<void> }) {
+  const [note, setNote] = useState(""); const det = r.plan?.goal_details ?? []; const pr = r.progress ?? [];
+  async function act(fn: () => Promise<unknown>, ok: string) { setBusy(true); try { await fn(); toast.success(ok); await refresh(); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } }
+  return <div className="space-y-4">
+    <div><h2 className="text-lg font-bold">{r.title}</h2><p className="text-sm text-muted-foreground">{r.person}{r.course ? ` · ${r.course}` : ""} · {PLAN_STATUS[r.status] ?? r.status}{r.due_date ? ` · موعد المراجعة ${r.due_date}` : ""}</p></div>
+    {r.description && <section><h3 className="mb-1 text-sm font-semibold">الاحتياج</h3><p className="text-sm leading-7">{r.description}</p>{(r.plan?.skills ?? []).length > 0 && <p className="mt-1 text-xs text-muted-foreground">المهارات: {(r.plan?.skills ?? []).join("، ")}</p>}</section>}
+    {r.goals.length > 0 && <section className="space-y-2"><h3 className="text-sm font-semibold">الأهداف</h3>{r.goals.map((g, i) => { const d = det[i]; const p = pr[i]; return <div key={i} className="rounded-lg border p-3 text-sm"><p className="font-medium">{i + 1}. {g}</p><p className="text-xs text-muted-foreground">{[d?.target && `المستهدف: ${d.target}`, d?.start && `من ${d.start}`, d?.review && `مراجعة ${d.review}`, d?.end && `إلى ${d.end}`].filter(Boolean).join(" · ")}</p>{p && <p className="mt-1 text-xs">الأنشطة: {p.activity ? "منفذة" : "قيد التنفيذ"} · الإتقان: {p.mastery ? "متحقق" : "لم يتأكد بعد"}{p.latest ? ` · آخر قياس: ${p.latest}` : ""}</p>}</div>; })}</section>}
+    {r.plan?.home_activities && <section><h3 className="mb-1 text-sm font-semibold">الأنشطة المنزلية</h3><p className="whitespace-pre-wrap text-sm leading-7">{r.plan.home_activities}</p></section>}
+    {(r.evidence ?? []).length > 0 && <section className="space-y-1"><h3 className="text-sm font-semibold">مرفقات مشتركة</h3>{(r.evidence ?? []).map((e) => <div key={e.id} className="flex flex-wrap items-center gap-2 text-sm"><span>{e.title}</span>{e.files.map((f, i) => <Button key={f.id} size="sm" variant="outline" onClick={() => void openEvidenceFile(f.path, f.name)}>صفحة {i + 1}</Button>)}</div>)}</section>}
+    {r.can_ack && <div className="space-y-1 border-t pt-3"><Button variant="outline" disabled={busy || !!r.acks?.length} onClick={() => void act(() => rpc("edu_ack", { _id: r.id, _rev: r.rev }), "سُجل إقرار الاطلاع")}><ClipboardCheck className="size-4" />{r.acks?.length ? `تم إقرار الاطلاع — ${schoolTime(r.acks[0]!.created_at)}` : "أقر باطلاعي على الخطة"}</Button><p className="text-xs text-muted-foreground">الإقرار يعني الاطلاع فقط، وليس موافقة علاجية أو إثبات إنجاز.</p></div>}
+    {(r.can_home_note || (r.home_notes ?? []).length > 0) && <section className="space-y-2 border-t pt-3"><h3 className="text-sm font-semibold">ملاحظات المتابعة المنزلية</h3>{(r.home_notes ?? []).map((h) => <p key={h.id} className="rounded bg-muted/40 p-2 text-sm">{h.note}<span className="block text-xs text-muted-foreground">{schoolTime(h.created_at)}</span></p>)}
+      {r.can_home_note && <><Textarea aria-label="ملاحظة المتابعة المنزلية" maxLength={2000} placeholder="مثال: حل المسائل المنزلية ثلاثة أيام هذا الأسبوع" value={note} onChange={(e) => setNote(e.target.value)} /><Button size="sm" variant="outline" disabled={busy || note.trim().length < 2} onClick={() => void act(async () => { await rpc("edu_home_note", { _id: r.id, _note: note }); setNote(""); }, "أُرسلت الملاحظة")}><Plus className="size-4" />إضافة ملاحظة</Button></>}</section>}
   </div>;
 }

@@ -12,7 +12,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { ErrorState, LoadingState } from "@/components/states";
 import { ask } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
-import { EDU_AREAS, EDU_CATEGORIES, EDU_PRIORITY, EMPTY_GOAL, EVIDENCE_SOURCES, GOAL_TEMPLATES, PLAN_STATUS, baselineText, emptyPlan, planIssues, type EduRecord, type GoalDetail, type PlanData } from "./model";
+import { DEFAULT_SHARE, SHARE_LABELS, type Share, EDU_AREAS, EDU_CATEGORIES, EDU_PRIORITY, EMPTY_GOAL, EVIDENCE_SOURCES, GOAL_TEMPLATES, PLAN_STATUS, baselineText, emptyPlan, planIssues, type EduRecord, type GoalDetail, type PlanData } from "./model";
 
 type Student = { id: string; name: string; csmart: string | null; section_id: string | null; section: string | null; grade_id: string | null; grade: string | null; stage_id: string | null; stage: string | null };
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> { const r = await db.rpc(name, args); if (r.error) throw r.error; return r.data as T; }
@@ -47,7 +47,7 @@ export function PlanWizard({ school, row, close }: { school: string; row?: EduRe
   const addGoal = (t?: { goal: string; activity: string; verify: string }) => { setDirty(true); setGoals([...goals, t?.goal ?? ""]); setPlan((o) => ({ ...o, goal_details: [...o.goal_details, { ...EMPTY_GOAL, skill: o.skills[0] ?? "", baseline: baselineText(o.baseline), activity: t?.activity ?? "", verify: t?.verify ?? "", start: v.record_date }] })); };
   const delGoal = (i: number) => { setDirty(true); setGoals(goals.filter((_, j) => j !== i)); setPlan((o) => ({ ...o, goal_details: o.goal_details.filter((_, j) => j !== i) })); };
 
-  const payload = (st: string) => ({ kind: "student_plan", ...v, status: st, due_date: v.due_date || null, title: v.title.trim() || (courseName ? `خطة علاجية — ${courseName.split(" — ")[0]}` : ""), shared: st !== "draft" && v.shared, student_id: student, teacher_id: null, course_id: course, goals: goals.map((g) => g.trim()), plan: { ...plan, share_intent: v.shared } });
+  const payload = (st: string) => ({ kind: "student_plan", ...v, status: st, due_date: v.due_date || null, title: v.title.trim() || (courseName ? `خطة علاجية — ${courseName.split(" — ")[0]}` : ""), shared: st !== "draft" && v.shared, student_id: student, teacher_id: null, course_id: course, goals: goals.map((g) => g.trim()), plan: { ...plan, share: plan.share ?? DEFAULT_SHARE, share_intent: v.shared } });
   const issues = planIssues({ description: v.description, goals: goals.map((g) => g.trim()).filter(Boolean), plan }, status === "draft" ? "ready" : status);
   async function save(st: string) {
     if (!student || !course) { toast.error("اختر الطالب والمقرر أولًا"); setStep(0); return; }
@@ -120,7 +120,10 @@ export function PlanWizard({ school, row, close }: { school: string; row?: EduRe
         <div className="space-y-2"><Label htmlFor="plan-due">موعد مراجعة الخطة</Label><Input id="plan-due" type="date" value={v.due_date} onChange={(e) => upd({ due_date: e.target.value })} /></div>
         <div className="space-y-2 sm:col-span-2"><Label htmlFor="plan-actions">ترتيبات المتابعة</Label><Textarea id="plan-actions" className={ta} placeholder="مثال: جلسة أسبوعية يوم الأحد في الحصة الخامسة، وقياس تكويني كل أسبوعين" value={v.actions} maxLength={8000} onChange={(e) => upd({ actions: e.target.value })} /></div>
         <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={v.shared} onChange={(e) => upd({ shared: e.target.checked })} />مشاركة الخطة مع ولي الأمر الموثّق وطلب إقرار الاطلاع</label>
-        <p className="text-xs text-muted-foreground sm:col-span-2">إقرار الاطلاع لا يعني موافقة علاجية ولا إثبات إنجاز. اختيار ما يُشارك تفصيليًا يأتي في مرحلة مشاركة ولي الأمر.</p>
+        {v.shared && <fieldset className="space-y-2 rounded-lg border p-3 sm:col-span-2"><legend className="px-1 text-sm font-medium">ما يظهر لولي الأمر</legend><div className="grid gap-2 sm:grid-cols-2">{(Object.keys(SHARE_LABELS) as (keyof Share)[]).map((k) => <label key={k} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={(plan.share ?? DEFAULT_SHARE)[k]} onChange={(e) => updPlan({ share: { ...(plan.share ?? DEFAULT_SHARE), [k]: e.target.checked } })} />{SHARE_LABELS[k]}</label>)}</div>
+          {(plan.share ?? DEFAULT_SHARE).home && <div className="space-y-1"><Label htmlFor="plan-home" className="text-xs">الأنشطة المنزلية المقترحة</Label><Textarea id="plan-home" className={ta} maxLength={3000} placeholder="مثال: حل 3 مسائل كسور يوميًا مع مراجعة ولي الأمر" value={plan.home_activities ?? ""} onChange={(e) => updPlan({ home_activities: e.target.value })} /></div>}
+          <p className="text-xs text-muted-foreground">لا يرى ولي الأمر أبدًا: الملاحظات التربوية والداخلية، الجلسات، تفاصيل القياسات، سجل الإجراءات، أو الأدلة غير المشتركة. تُشارك الأدلة كلًّا على حدة من تبويب الأدلة.</p></fieldset>}
+        <p className="text-xs text-muted-foreground sm:col-span-2">إقرار الاطلاع لا يعني موافقة علاجية ولا إثبات إنجاز.</p>
       </div>}
       {step === 4 && <div className="space-y-4">
         <div className="space-y-2"><Label htmlFor="plan-title">عنوان الخطة</Label><Input id="plan-title" placeholder={courseName ? `خطة علاجية — ${courseName.split(" — ")[0]}` : "عنوان الخطة"} value={v.title} maxLength={200} onChange={(e) => upd({ title: e.target.value })} /></div>

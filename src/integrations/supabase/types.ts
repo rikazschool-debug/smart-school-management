@@ -4487,6 +4487,41 @@ export type Database = {
           },
         ]
       }
+      edu_home_notes: {
+        Row: {
+          created_at: string
+          id: string
+          note: string
+          record_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note: string
+          record_id: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string
+          record_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_home_notes_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edu_measures: {
         Row: {
           actor: string
@@ -23814,6 +23849,10 @@ export type Database = {
       edu_detail: { Args: { _id: string }; Returns: Json }
       edu_evidence_add: { Args: { _id: string; _p: Json }; Returns: Json }
       edu_evidence_links: { Args: { _id: string }; Returns: Json }
+      edu_evidence_share: {
+        Args: { _ev: string; _shared: boolean }
+        Returns: undefined
+      }
       edu_find: {
         Args: {
           _f?: Json
@@ -23834,6 +23873,7 @@ export type Database = {
         }
         Returns: string
       }
+      edu_home_note: { Args: { _id: string; _note: string }; Returns: string }
       edu_list: {
         Args: { _kind: string; _offset?: number; _q?: string; _school: string }
         Returns: Json
