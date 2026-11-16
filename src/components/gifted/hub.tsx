@@ -5,7 +5,7 @@ import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/s
 import { arabicError, useSession } from "@/lib/session";
 import { EducationDesk } from "@/components/education/desk";
 import { OfflineNote } from "@/components/education/offline-note";
-import { GT_STATUS, type GtMe, type GtSearch, type GtTab } from "./model";
+import type { GtMe, GtSearch, GtTab } from "./model";
 import { Board } from "./board";
 import { Reports } from "./reports";
 import { Nominations } from "./nominations";
