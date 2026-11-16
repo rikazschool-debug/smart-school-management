@@ -8,3 +8,4 @@
 - Hosted acceptance: scripts/exam-e2e.ts (39 checks, synthetic exx- accounts) and scripts/exam-journey.py (browser, needs --keep fixture).
 - Printed tests carry a student info table (name, C-Smart, stage, grade, section, course, model, score) from homework.sections→grades→stages; teacher picks the student or prints a blank-name copy.
 - Paper/bubble tests: exam_get returns no questions/models to non-staff (hidden=true); students see hand-in steps only. Online tests: students see questions only inside ExamSolve.
+- Answer key = each question's correct option per model (no uploaded key sheet). Photos are cleaned (enhanceSheet: grayscale, auto-levels, brightness/contrast), tried in all four rotations, and the preview marks read/unclear bubbles; unclear always stays a manual decision.

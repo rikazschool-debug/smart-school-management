@@ -44,10 +44,27 @@ export function findSheetCorners(image: ImageData): Point[] {
   const candidates = squares.filter((p) => p.y > h * .2); if (candidates.length !== 4) throw new Error("تعذر تحديد علامات الورقة الأربع؛ صوّر الورقة كاملة وبإضاءة واضحة");
   const sorted = candidates.sort((a, b) => a.y - b.y); const top = sorted.slice(0, 2).sort((a, b) => a.x - b.x); const bottom = sorted.slice(2).sort((a, b) => a.x - b.x); return [...top, ...bottom];
 }
+/** Image position of bubble j of question i, interpolated from the four sheet markers. */
+export function bubblePoint(corners: Point[], i: number, j: number): Point {
+  const [tl, tr, bl, br] = corners; if (!tl || !tr || !bl || !br) throw new Error("علامات الورقة غير مكتملة"); const t = BUBBLE_SHEET;
+  const u = (t.firstX + j * t.stepX - t.left) / (t.right - t.left), v = (t.firstY + i * t.stepY - t.top) / (t.bottom - t.top);
+  return { x: tl.x*(1-u)*(1-v)+tr.x*u*(1-v)+bl.x*(1-u)*v+br.x*u*v, y: tl.y*(1-u)*(1-v)+tr.y*u*(1-v)+bl.y*(1-u)*v+br.y*u*v };
+}
+export type SheetAdjust = { auto: boolean; brightness: number; contrast: number };
+/** In-place clean-up of a photographed sheet: grayscale, optional auto-levels (0.2nd–98th percentile; ink covers little of a sheet), then brightness (-100..100) and contrast (-100..100). */
+export function enhanceSheet(image: ImageData, a: SheetAdjust): ImageData {
+  const d = image.data, n = d.length / 4, gray = new Uint8ClampedArray(n);
+  for (let i = 0; i < n; i++) gray[i] = 0.299 * (d[i*4] ?? 0) + 0.587 * (d[i*4+1] ?? 0) + 0.114 * (d[i*4+2] ?? 0);
+  let lo = 0, hi = 255;
+  if (a.auto) { const hist = new Array<number>(256).fill(0); for (let i = 0; i < n; i++) hist[gray[i] ?? 0]!++; let c = 0; lo = -1; hi = 255; for (let v = 0; v < 256; v++) { c += hist[v]!; if (lo < 0 && c >= n * .002) lo = v; if (c >= n * .98) { hi = v; break; } } if (lo < 0) lo = 0; if (hi - lo < 30) { lo = 0; hi = 255; } }
+  const k = (259 * (a.contrast + 255)) / (255 * (259 - a.contrast));
+  for (let i = 0; i < n; i++) { let v = ((gray[i] ?? 0) - lo) * 255 / (hi - lo); v = k * (v - 128) + 128 + a.brightness * 1.28; const o = Math.max(0, Math.min(255, Math.round(v))); d[i*4] = d[i*4+1] = d[i*4+2] = o; }
+  return image;
+}
 export function readBubbles(image: ImageData, corners: Point[], questions: ExamQuestion[]): (number | null)[] {
   const [tl, tr, bl, br] = corners; if (!tl || !tr || !bl || !br) throw new Error("علامات الورقة غير مكتملة"); const t = BUBBLE_SHEET;
   return questions.map((q, i) => {
-    const densities = q.options.map((_, j) => { const u = (t.firstX + j * t.stepX - t.left) / (t.right - t.left), v = (t.firstY + i * t.stepY - t.top) / (t.bottom - t.top); const x = tl.x * (1-u)*(1-v)+tr.x*u*(1-v)+bl.x*(1-u)*v+br.x*u*v, y = tl.y*(1-u)*(1-v)+tr.y*u*(1-v)+bl.y*(1-u)*v+br.y*u*v;
+    const densities = q.options.map((_, j) => { const { x, y } = bubblePoint(corners, i, j);
       const radius = Math.max(2, (tr.x - tl.x) / (t.right - t.left) * 5); let dark = 0, pixels = 0;
       for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) { if (dx*dx+dy*dy>radius*radius) continue; const px = Math.round(x+dx), py = Math.round(y+dy); if(px<0||py<0||px>=image.width||py>=image.height) continue; const n=(py*image.width+px)*4; pixels++; if ((image.data[n] ?? 255)+(image.data[n+1] ?? 255)+(image.data[n+2] ?? 255)<450) dark++; } return pixels ? dark/pixels : 0;
     });

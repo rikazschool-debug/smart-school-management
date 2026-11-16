@@ -3,6 +3,10 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-16 — prompt-399 answer key + photo improvements
+- Teacher bubble panel shows the per-model key (from question correct answers) and prints a model answer sheet; no key upload needed.
+- Photo grading: auto clarify, brightness/contrast, rotate, auto-orientation, marked preview. Evidence: exam-model tests (dim sheet unreadable before, read after); exam-scan-journey on a rotated faded synthetic photo → 3/5, blank Q3 left for teacher. Real phone camera on paper: غير متحقق.
+
 ## 2026-11-16 — prompt-398 paper/bubble tests for students
 - exam_get hides questions/models from students and guardians for paper/bubble delivery; student page explains hand-in steps (no online submission). exam-e2e 41/41, exam-journey 20/20 (desktop + phone).
 
