@@ -49,7 +49,8 @@ async def main():
             await t1.screenshot(path=SH + "wizard_review.png")
             await t1.get_by_role("button", name="إرسال إلى الموجّه").click()
             await expect(t1.get_by_text("ملف التوجيه سري")).to_be_visible(timeout=20000)
-            await t1.reload(); await expect(t1.get_by_role("button", name="إحالة جديدة")).to_be_visible(timeout=30000)
+            await t1.reload(); await expect(t1.get_by_text("ملف التوجيه سري")).to_be_visible(timeout=30000)  # the open referral is in the address, so reload keeps it open
+            await t1.get_by_role("button", name="الإحالات", exact=True).click(); await expect(t1.get_by_role("button", name="إحالة جديدة")).to_be_visible(timeout=30000)
             await expect(t1.get_by_role("button", name="ليان").first).to_be_visible(timeout=20000); check("sent referral persists after reload", True)
             check("teacher: no page errors", not t1.errs, t1.errs)
         except Exception:

@@ -11,6 +11,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ask, askText } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { EDU_CATEGORIES, EDU_PRIORITY, type EduRecord } from "@/components/education/model";
+import { isDenied } from "./search";
 import { REF_CONTEXT, REF_EVENT, REF_FREQUENCY, REF_STATUS, REF_TONE, refActions, type RefPlan } from "./model";
 import { ReferralWizard } from "./referral-wizard";
 
@@ -20,9 +21,10 @@ async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
 const CATS = EDU_CATEGORIES.referral;
 export const RefBadge = ({ s }: { s: string }) => <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${REF_TONE[s] ?? "bg-muted"}`}>{REF_STATUS[s] ?? s}</span>;
 
-export function Referrals({ school, counselor, canRefer, openCase, initialStatus, initialId }: { school: string; counselor: boolean; canRefer: boolean; openCase?: (id: string) => void; initialStatus?: string | undefined; initialId?: string | undefined }) {
+export function Referrals({ school, counselor, canRefer, openCase, initialStatus, initialId, onSel }: { school: string; counselor: boolean; canRefer: boolean; openCase?: (id: string) => void; initialStatus?: string | undefined; initialId?: string | undefined; onSel?: (id: string | null) => void }) {
   const qc = useQueryClient(); const [status, setStatus] = useState(initialStatus ?? (counselor ? "sent" : "")); const [q, setQ] = useState(""); const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState<string | null>(initialId ?? null); const [wizard, setWizard] = useState<"new" | Row | null>(null);
+  const [own, setOwn] = useState<string | null>(initialId ?? null);
+  const selected = onSel ? initialId ?? null : own; const setSelected = (id: string | null) => (onSel ? onSel(id) : setOwn(id)); const [wizard, setWizard] = useState<"new" | Row | null>(null);
   const list = useQuery({ queryKey: ["edu-list", school, "referral", status, q, page], queryFn: () => rpc<List>("edu_find", { _school: school, _kind: "referral", _f: { q, status }, _offset: page * 25, _limit: 25 }) });
   const refresh = () => { for (const k of ["edu-list", "edu-detail", "guidance-board"]) void qc.invalidateQueries({ queryKey: [k] }); };
   if (wizard) return <ReferralWizard school={school} row={wizard === "new" ? undefined : wizard} close={(id) => { setWizard(null); refresh(); if (id) setSelected(id); }} />;
@@ -49,7 +51,9 @@ const ACTION_LABEL: Record<string, string> = { triage: "بدء الفرز", acce
 function ReferralView({ id, counselor, back, edit, changed, openCase }: { id: string; counselor: boolean; back: () => void; edit: (r: Row) => void; changed: () => void; openCase?: ((id: string) => void) | undefined }) {
   const d = useQuery({ queryKey: ["edu-detail", id], queryFn: () => rpc<Row & { events?: { action: string; created_at: string; actor_name: string; details: Record<string, unknown> }[] }>("edu_detail", { _id: id }) });
   const [busy, setBusy] = useState(false); const [caseCat, setCaseCat] = useState("");
-  if (d.isLoading) return <LoadingState />; if (d.error || !d.data) return <ErrorState message={arabicError(d.error)} onRetry={() => d.refetch()} />;
+  if (d.isLoading) return <LoadingState />;
+  if (isDenied(d.error) || (d.data && d.data.kind !== "referral")) return <div className="space-y-3"><Button variant="ghost" onClick={back}><ArrowRight className="size-4" />الإحالات</Button><EmptyState title="لا يمكن فتح هذه الإحالة" hint="الرابط غير صحيح أو لا تملك صلاحية الاطلاع عليها." /></div>;
+  if (d.error || !d.data) return <ErrorState message={arabicError(d.error)} onRetry={() => d.refetch()} />;
   const r = d.data; const p = (r.plan ?? {}) as RefPlan;
   async function act(action: string) {
     let payload: Record<string, unknown> = {};

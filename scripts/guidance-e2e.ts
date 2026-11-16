@@ -119,7 +119,8 @@ async function main() {
   check("reopen keeps history", !(await co.c.rpc("edu_ref_act", { _id: id, _rev: c.rev, _action: "reopen", _p: { note: "تكرر التأخر" } })).error);
   c = must(await co.c.rpc("edu_detail", { _id: id }), "co d7") as any;
   check("event history kept in order", ["ref_close", "ref_reopen"].every((a) => c.events.some((e: any) => e.action === a)) && c.status === "triage", c.events.map((e: any) => e.action));
-  const { data: ns } = await admin.from("notifications").select("title,body").eq("user_id", t1.id);
+  const { data: ns } = await admin.from("notifications").select("title,body,link").eq("user_id", t1.id);
+  check("teacher notification opens that exact referral", (ns ?? []).filter((n: any) => n.link).every((n: any) => n.link === `/app/student-guidance?tab=referrals&id=${id}`) && (ns ?? []).some((n: any) => n.link), (ns ?? []).map((n: any) => n.link));
   check("teacher notified without student name or category", (ns ?? []).length >= 3 && (ns ?? []).every((n: any) => !`${n.title}${n.body}`.includes("سارة") && !`${n.title}${n.body}`.includes("سلوك")), ns);
   // stage 2: case study
   check("case from referral starts as draft", kase.status === "draft", kase.status);
@@ -203,7 +204,8 @@ async function main() {
   check("guardian sees nothing for a child not linked", famOther.length === 0, famOther);
   const tch = must(await t1.c.rpc("edu_family_guidance", { _student: st[0].id }), "fam t") as any[];
   check("teacher gets nothing from the family view", tch.length === 0, tch);
-  const { data: gn } = await admin.from("notifications").select("title,body").eq("user_id", g1.id).like("dedupe_key", "edu-share:%");
+  const { data: gn } = await admin.from("notifications").select("title,body,link").eq("user_id", g1.id).like("dedupe_key", "edu-share:%");
+  check("guardian notification opens the child's follow-up tab", (gn ?? []).length === 1 && gn![0]!.link === `/app/child/${st[0].id}?tab=guidance`, gn);
   check("guardian notified without category or case number", (gn ?? []).length === 1 && (gn ?? []).every((n: any) => !/CASE-|سلوك|انضباط/.test(`${n.title}${n.body}`)), gn);
   check("guardian marks it read", !(await g1.c.rpc("edu_family_guidance_read", { _share: shId })).error);
   k = must(await co.c.rpc("edu_detail", { _id: caseId }), "k8") as any;
@@ -264,6 +266,15 @@ async function main() {
   check("repeated opens within 10 minutes not duplicated", acc2.filter((l: any) => l.name === "مالك التوجيه").length === n1, n1);
   check("teacher cannot read the access log", !!(await t1.c.rpc("edu_access_view", { _school: S, _record: caseId })).error);
   check("principal cannot read the access log", !!(await pr.c.rpc("edu_access_view", { _school: S, _record: caseId })).error);
+  // stage 5: direct links and concurrent edits — an id alone opens nothing, and the same refusal covers missing ids
+  const dTeacher = await t1.c.rpc("edu_detail", { _id: caseId }); const dMissing = await t1.c.rpc("edu_detail", { _id: "00000000-0000-4000-8000-000000000000" });
+  check("direct case link refused for the teacher with the same answer as a missing id", dTeacher.error?.code === "42501" && dMissing.error?.code === "42501" && dTeacher.error?.message === dMissing.error?.message, [dTeacher.error, dMissing.error]);
+  check("direct case link refused for the principal", (await pr.c.rpc("edu_detail", { _id: caseId })).error?.code === "42501");
+  check("direct case link refused for the guardian", (await g1.c.rpc("edu_detail", { _id: caseId })).error?.code === "42501");
+  check("other teacher cannot open the referral link", (await t2.c.rpc("edu_detail", { _id: id })).error?.code === "42501");
+  const cur = must(await co.c.rpc("edu_detail", { _id: id }), "cc") as any;
+  const [a1, a2] = await Promise.all([co.c.rpc("edu_ref_act", { _id: id, _rev: cur.rev, _action: "tips", _p: { class_tips: "اجلسه قرب السبورة" } }), owner.c.rpc("edu_ref_act", { _id: id, _rev: cur.rev, _action: "tips", _p: { class_tips: "امنحه مهمة قيادية" } })]);
+  check("two simultaneous edits on the same revision: exactly one saved, the other told to reopen", [a1, a2].filter((x) => !x.error).length === 1 && [a1, a2].some((x) => /عُدل السجل/.test(x.error?.message ?? "")), [a1.error, a2.error]);
   console.log(`\n${ok} passed, ${bad} failed`);
   const fx = { run, pw, org, school: S, referral: id, case: caseId, student: st[0].id, users: Object.fromEntries(Object.entries({ owner, co, t1, t2, g1, pr }).map(([k, v]) => [k, v.email])) };
   if (process.argv.includes("--keep")) { mkdirSync("/tmp/browser/guidance", { recursive: true }); writeFileSync("/tmp/browser/guidance/fixture.json", JSON.stringify(fx, null, 2)); console.log("kept fixture"); }

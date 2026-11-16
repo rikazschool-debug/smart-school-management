@@ -11,6 +11,7 @@ import { arabicError } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { HealthFile } from "@/components/health/health-file";
 import { FamilyGuidance } from "@/components/guidance/family-summaries";
+import type { ChildTab } from "./search";
 
 /** One child's (or the student's own) overview. Everything comes from family_child, which checks the link on the server. */
 export type ChildData = {
@@ -39,11 +40,11 @@ export function useChild(studentId: string) {
   });
 }
 
-type Tab = "attendance" | "schedule" | "classrooms" | "homework" | "visits" | "finance" | "health" | "guidance";
+type Tab = ChildTab;
 
-export function ChildOverview({ studentId }: { studentId: string }) {
+export function ChildOverview({ studentId, initialTab }: { studentId: string; initialTab?: ChildTab | undefined }) {
   const q = useChild(studentId);
-  const [tab, setTab] = useState<Tab>("attendance");
+  const [want, setTab] = useState<Tab>(initialTab ?? "attendance");
   if (q.isLoading) return <LoadingState />;
   if (q.error) return (q.error as { code?: string }).code === "42501" || /not_allowed/.test(String((q.error as Error).message))
     ? <EmptyState title="لا يمكنك فتح هذا الملف" hint="يظهر فقط الأبناء المرتبطون بحسابك بعلاقة موثقة من المدرسة." />
@@ -57,6 +58,7 @@ export function ChildOverview({ studentId }: { studentId: string }) {
     { k: "homework", label: "الواجبات", icon: ClipboardList },
     ...(guardian ? [{ k: "visits" as Tab, label: "الزيارات", icon: UserRound }, { k: "finance" as Tab, label: "البيانات المالية", icon: Landmark }, { k: "health" as Tab, label: "الملف الصحي", icon: HeartPulse }, { k: "guidance" as Tab, label: "رسائل المتابعة", icon: HeartHandshake }] : []),
   ];
+  const tab: Tab = tabs.some((t) => t.k === want) ? want : "attendance";
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border bg-card p-5" aria-label="الابن المختار">
