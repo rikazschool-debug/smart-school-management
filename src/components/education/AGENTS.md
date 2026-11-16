@@ -1,0 +1,3 @@
+- Educational care uses edu_* RPCs and RLS only; all person/course pools come from edu_pool/edu_courses, never a privileged directory.
+- Confidential cases never share with guardians; only explicitly shared student plans expose guardian acknowledgements, keyed to record revision.
+- Follow-ups are append-only and goals cannot change after goal tracking starts; progress uses the latest recorded completion per goal.
