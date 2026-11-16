@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, MapPin } from "lucide-react";
+import { BadgeCheck, MapPin, Users } from "lucide-react";
 import { CrudTable, db, RecordForm, type Row } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
@@ -97,29 +97,41 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         onCreated={w ? (r) => setGuarding(r) : undefined}
         onUpdated={(sid) => { void auto({ data: { studentId: sid } }).then((r) => { if (r.student && r.student.state !== "linked") toast.info(autoSummary(r)); }).catch(() => undefined); }}
         columns={[
-          { label: "الاسم", text: (r) => r["full_name"], render: (r) => <><button className="text-primary hover:underline" onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>}</> },
-          { label: "الهوية", render: (r) => <span dir="ltr">{r["national_id"] ?? "—"}</span> },
-          { label: "رقم C‑Smart", text: (r) => r["csmart_no"] ?? "", render: (r) => r["csmart_no"] ? <span dir="ltr">{r["csmart_no"]}</span> : <span className="text-muted-foreground">غير مسجّل</span> },
-          { label: "الشعبة", text: (r) => { const e = (r["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active"); return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : "غير مسكّن"; }, render: (r) => {
+          { label: "الطالب", text: (r) => r["full_name"], render: (r) => (
+            <div className="flex min-w-[13rem] items-center gap-3">
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">{String(r["display_name"] || r["full_name"] || "؟").trim().charAt(0)}</span>
+              <div className="min-w-0">
+                <button className="block max-w-[16rem] truncate text-start font-semibold text-primary hover:underline" title={r["full_name"]} onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>
+                {r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block max-w-[16rem] truncate text-xs text-muted-foreground" title={r["full_name"]}>{r["full_name"]}</span>}
+              </div>
+            </div>) },
+          { label: "الهوية / C‑Smart", text: (r) => r["national_id"] ?? "", render: (r) => (
+            <div className="space-y-0.5 whitespace-nowrap text-xs" dir="ltr"><div className="font-medium text-foreground">{r["national_id"] ?? "—"}</div><div className="text-muted-foreground">{r["csmart_no"] ? `C‑Smart ${r["csmart_no"]}` : "C‑Smart —"}</div></div>) },
+          { label: "رقم C‑Smart", exportOnly: true, text: (r) => r["csmart_no"] ?? "", render: () => null },
+          { label: "الصف والشعبة", text: (r) => { const e = (r["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active"); return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : "غير مسكّن"; }, render: (r) => {
             const e = (r["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active");
-            return e ? `${e["sections"]?.grades?.name} / ${e["sections"]?.name}` : <span className="text-muted-foreground">غير مسكّن</span>;
+            return e ? <div className="whitespace-nowrap text-xs"><div className="font-medium">{e["sections"]?.grades?.name}</div><span className="mt-0.5 inline-block rounded-md bg-muted px-1.5 py-0.5">شعبة {e["sections"]?.name}</span></div> : <span className="whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">غير مسكّن</span>;
           } },
-          { label: "أولياء الأمور", render: (r) => r["student_guardians"]?.length ?? 0 },
-          { label: "الحالة", text: (r) => studentPresence(r["status"]), render: (r) => studentPresence(r["status"]) },
+          { label: "أولياء الأمور", text: (r) => r["student_guardians"]?.length ?? 0, render: (r) => { const n = r["student_guardians"]?.length ?? 0; return <span className={`inline-flex min-w-7 justify-center rounded-full px-2 py-0.5 text-xs font-bold ${n ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>{n}</span>; } },
+          { label: "الحالة", text: (r) => studentPresence(r["status"]), render: (r) => <span className="whitespace-nowrap rounded-full bg-secondary px-2 py-0.5 text-xs font-medium">{studentPresence(r["status"])}</span> },
           { label: "جاهزية الدخول", text: (r) => { const m = studentReadiness(r); return m.length ? `ينقص: ${m.join("، ")}` : "جاهز"; }, render: (r) => {
             const m = studentReadiness(r);
-            return m.length ? <span className="text-xs text-destructive">ينقص: {m.join("، ")}</span> : <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز</span>;
+            return m.length ? <span className="text-xs text-destructive">ينقص: {m.join("، ")}</span> : <span className="flex items-center gap-1 whitespace-nowrap text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز</span>;
           } },
-          { label: "العام الدراسي", text: (r) => r["contract_year"] ?? "لا يوجد", render: (r) => <span className={r["contract_year"] === "يحتاج تحديث" ? "text-xs text-destructive" : "text-xs"}>{r["contract_year"] ?? "لا يوجد"}</span> },
-          { label: "آخر حالة العقد", text: (r) => r["contract_status"] ?? "لا يوجد", render: (r) => <span className="text-xs">{r["contract_status"] ?? "لا يوجد"}</span> },
-          { label: "آخر نوع العقد", text: (r) => r["contract_type"] ?? "لا يوجد", render: (r) => <span className="text-xs">{r["contract_type"] ?? "لا يوجد"}</span> },
+          { label: "العقد", text: (r) => r["contract_year"] ?? "لا يوجد", render: (r) => {
+            const none = !r["contract_year"] && !r["contract_status"] && !r["contract_type"];
+            if (none) return <span className="whitespace-nowrap text-xs text-muted-foreground">لا يوجد عقد</span>;
+            return <div className="min-w-[8rem] space-y-0.5 text-xs"><div className={r["contract_year"] === "يحتاج تحديث" ? "font-medium text-destructive" : "font-medium"}>{r["contract_year"] ?? "—"}</div><div className="text-muted-foreground">{[r["contract_status"], r["contract_type"]].filter(Boolean).join(" · ") || "—"}</div></div>;
+          } },
+          { label: "آخر حالة العقد", exportOnly: true, text: (r) => r["contract_status"] ?? "لا يوجد", render: () => null },
+          { label: "آخر نوع العقد", exportOnly: true, text: (r) => r["contract_type"] ?? "لا يوجد", render: () => null },
         ]}
         extraActions={(r) => w || ctCan.data || placeCan.data ? (
           <>
             {ctCan.data && <ContractEdit row={r} schoolId={ctx.schoolId} />}
-            {placeCan.data && <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>}
+            {placeCan.data && <Button variant="ghost" size="icon" title="تسكين" aria-label="تسكين" onClick={() => setPlacing(r)}><MapPin className="size-4" /></Button>}
             {w && <>
-            <Button variant="ghost" size="sm" onClick={() => setLinking(r)}>أولياء الأمر المرتبطون</Button>
+            <Button variant="ghost" size="icon" title="أولياء الأمر المرتبطون" aria-label="أولياء الأمر المرتبطون" onClick={() => setLinking(r)}><Users className="size-4" /></Button>
             </>}
           </>
         ) : null} />

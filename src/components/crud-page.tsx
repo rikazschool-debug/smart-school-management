@@ -39,7 +39,7 @@ export type Field = {
 };
 
 /** `text` gives the plain value for export when `render` returns JSX. */
-export type Column = { label: string; render: (r: Row) => ReactNode; text?: (r: Row) => string | number | null | undefined };
+export type Column = { label: string; render: (r: Row) => ReactNode; text?: (r: Row) => string | number | null | undefined; /** included in exports only, not shown on screen */ exportOnly?: boolean };
 
 /** Server-side filter. `path` defaults to key; `inner` names an embed made !inner while the filter is active
  *  (e.g. filter students by enrollments.section_id); `extra` adds fixed conditions with it. */
@@ -415,7 +415,7 @@ export function CrudTable({
             <TableHeader><TableRow>
               {selecting && <TableHead className="w-8"><input type="checkbox" aria-label="تحديد هذه الصفحة" className="size-4 accent-primary"
                 checked={rows.length > 0 && rows.every((r) => isSel(r["id"]))} onChange={(e) => { setSelAll(false); setSel((x) => { const n = new Set(x); for (const r of rows) e.target.checked ? n.add(r["id"]) : n.delete(r["id"]); return n; }); }} /></TableHead>}
-              {columns.map((c) => <TableHead key={c.label} className="text-start">{c.label}</TableHead>)}
+              {columns.filter((c) => !c.exportOnly).map((c) => <TableHead key={c.label} className="text-start">{c.label}</TableHead>)}
               {showTags && <TableHead className="text-start">الوسوم</TableHead>}
               {(canWrite || extraActions) && <TableHead className="text-start">إجراءات</TableHead>}
             </TableRow></TableHeader>
@@ -423,7 +423,7 @@ export function CrudTable({
               {rows.map((r) => (
                 <TableRow key={r["id"]} data-state={isSel(r["id"]) ? "selected" : undefined}>
                   {selecting && <TableCell><input type="checkbox" aria-label={`تحديد ${names.current.get(r["id"]) ?? ""}`} className="size-4 accent-primary" checked={isSel(r["id"])} onChange={() => toggle(r["id"])} /></TableCell>}
-                  {columns.map((c, i) => <TableCell key={c.label}>{cell(c, i, r)}</TableCell>)}
+                  {columns.map((c, i) => c.exportOnly ? null : <TableCell key={c.label}>{cell(c, i, r)}</TableCell>)}
                   {showTags && <TableCell>{tagsCell(r)}</TableCell>}
                   {(canWrite || extraActions) && <TableCell className="whitespace-nowrap"><Actions r={r} /></TableCell>}
                 </TableRow>
