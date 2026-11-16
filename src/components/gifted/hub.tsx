@@ -8,17 +8,19 @@ import { EducationDesk } from "@/components/education/desk";
 import { OfflineNote } from "@/components/education/offline-note";
 import { GT_STATUS, type GtMe, type GtSearch, type GtTab } from "./model";
 import { Nominations, nomQuery } from "./nominations";
+import { Plans } from "./plans";
+import { GtStudents } from "./students";
 
 const TABS: { id: GtTab; label: string; hint: string; icon: typeof Send }[] = [
   { id: "board", label: "لوحة العمل", hint: "ما ينتظرك اليوم", icon: LayoutDashboard },
   { id: "nominations", label: "الترشيحات", hint: "ترشيح ومراجعة", icon: Send },
-  { id: "students", label: "سجل الطلبة", hint: "السجلات الحالية", icon: Users },
+  { id: "students", label: "سجل الطلبة", hint: "ملف كل طالب", icon: Users },
   { id: "plans", label: "خطط الرعاية", hint: "فردية وجماعية", icon: ListChecks },
   { id: "programs", label: "البرامج والمشاركات", hint: "مدرسية وخارجية", icon: ClipboardList },
   { id: "works", label: "المشروعات والإنجازات", hint: "ملف الأعمال", icon: Award },
   { id: "reports", label: "التقارير", hint: "حصر وإحصاء", icon: BarChart3 },
 ];
-const NEXT: Partial<Record<GtTab, string>> = { plans: "المرحلة الثانية", programs: "المرحلة الثالثة", works: "المرحلة الرابعة", reports: "المرحلة الخامسة" };
+const NEXT: Partial<Record<GtTab, string>> = { programs: "المرحلة الثالثة", works: "المرحلة الرابعة", reports: "المرحلة الخامسة" };
 
 export function GiftedHub({ sp, go }: { sp: GtSearch; go: (s: GtSearch, replace?: boolean) => void }) {
   const { active } = useSession(); const school = active?.schoolId;
@@ -42,8 +44,10 @@ export function GiftedHub({ sp, go }: { sp: GtSearch; go: (s: GtSearch, replace?
       </div></nav>}
     {cur === "board" && <Board school={school} go={(id) => go({ tab: "nominations", ...(id ? { id } : {}) })} />}
     {cur === "nominations" && <Nominations school={school} me={m} openId={sp.tab === "nominations" ? sp.id : undefined} onSel={(id) => go({ tab: "nominations", ...(id ? { id } : {}) }, false)} />}
-    {cur === "students" && <div className="space-y-2"><p className="rounded-lg border bg-muted/30 p-3 text-sm">هذه سجلات رعاية الموهوبين المحفوظة سابقًا، باقية كما هي. سيُجمع ملف كل طالب (الترشيحات والخطط والبرامج والإنجازات) هنا في المرحلة الثانية.</p><EducationDesk title="السجلات الحالية" kinds={["talent"]} /></div>}
-    {NEXT[cur] && <EmptyState title={`قيد التنفيذ — ${NEXT[cur]}`} hint="لم يُبنَ هذا القسم بعد؛ السجلات القديمة متاحة في «سجل الطلبة»." />}
+    {cur === "students" && <div className="space-y-4"><GtStudents school={school} openId={sp.tab === "students" ? sp.id : undefined} onSel={(id) => go({ tab: "students", ...(id ? { id } : {}) }, false)} openPlan={(id) => go({ tab: "plans", id }, false)} />
+      <details className="rounded-2xl border bg-card p-4"><summary className="cursor-pointer text-sm font-semibold">السجلات السابقة لرعاية الموهوبين (محفوظة كما هي)</summary><div className="mt-3"><EducationDesk title="السجلات السابقة" kinds={["talent"]} /></div></details></div>}
+    {cur === "plans" && <Plans school={school} me={m} openId={sp.tab === "plans" ? sp.id : undefined} onSel={(id) => go({ tab: "plans", ...(id ? { id } : {}) }, false)} />}
+    {NEXT[cur] && <EmptyState title={`قيد التنفيذ — ${NEXT[cur]}`} hint="لم يُبنَ هذا القسم بعد؛ السجلات السابقة متاحة أسفل «سجل الطلبة»." />}
   </div>;
 }
 
