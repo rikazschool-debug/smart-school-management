@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hrab-) for the HR attendance browser journey: setup | teardown. Writes /tmp/browser/hra/fixture.json.
 // Owner, branch HR approver, direct manager, teacher employee (linked teachers row), colleague, vice principal. No leave settings — the journey enters them.
 import { createClient } from "@supabase/supabase-js";

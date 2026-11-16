@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR P1+P2: permission section, employee ↔ login/teacher linking without duplicates, dated assignments, scopes, sensitive fields,
 // self-service, direct manager, isolation, platform switch, audit. Isolated data (hre-). Run: NODE_PATH=node_modules bun scripts/hr-e2e.ts
 import { createClient } from "@supabase/supabase-js";

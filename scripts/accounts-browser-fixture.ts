@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (acb-) for the account/import browser journey + synthetic XLSX files in /tmp/browser/acc (fake names/IDs only).
 // Run: NODE_PATH=node_modules bun scripts/accounts-browser-fixture.ts setup|teardown
 import { createClient } from "@supabase/supabase-js";

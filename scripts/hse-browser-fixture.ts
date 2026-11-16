@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hseb-) for the principal personal file browser journey: setup | teardown. Writes /tmp/browser/hse/fixture.json.
 import { createClient } from "@supabase/supabase-js";
 import { mkdirSync, readFileSync, writeFileSync } from "fs";

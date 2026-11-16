@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Live WhatsApp code test on ONE consenting number (owner-approved). Never touches existing accounts:
 // it uses a separate test login (metadata otp_live_test) staged with account_setup in the model school and no membership.
 //   setup    — create/reuse the isolated test login for --phone

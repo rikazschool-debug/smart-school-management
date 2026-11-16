@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated 4-school org (h4x-) for the owner hub journey: setup | teardown. Writes /tmp/browser/h4/fixture.json.
 // Per school: teacher + admin staff; S1 has a guardian and a principal; S1 and S2 each have a group with the same title
 // (one non-member teacher per school as decoy); a second org owner tests isolation.

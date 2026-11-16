@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated fixture for the cross-branch chat browser journey (xbj- prefix): org with 2 branches, two staff (one with an HR job title).
 // Setup:    NODE_PATH=node_modules bun scripts/xb-browser-fixture.ts setup   > writes /tmp/browser/xb/fixture.json
 // Teardown: NODE_PATH=node_modules bun scripts/xb-browser-fixture.ts teardown

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Principal staff directory (school_staff_directory): HR records of the school, each employee once, account status,
 // no sensitive fields; vice/teacher/guardian refused; other branch not listed. Isolated sdx- data.
 // Run: NODE_PATH=node_modules bun scripts/staff-dir-e2e.ts

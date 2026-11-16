@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated idb- data for identity browser journeys. Usage: bun scripts/identity-browser-fixture.ts setup|teardown
 // Writes /tmp/browser/idb/fixture.json. Always run teardown after.
 import { createClient } from "@supabase/supabase-js";

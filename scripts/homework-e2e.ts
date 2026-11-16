@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Package-5 homework acceptance (server): lifecycle, deadlines, attempts, idempotency, privacy of drafts/grades,
 // role scope, paper hand-in, concurrency, result publish/correction, transfer, notifications. Cleanup scoped to this run.
 // Run: NODE_PATH=node_modules bun scripts/homework-e2e.ts

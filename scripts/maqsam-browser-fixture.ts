@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // setup|teardown: isolated mqb- org (owner + branch-A viewer) linked to Maqsam only for the test, with synthetic calls.
 // Writes /tmp/browser/mq/fixture.json. Run: NODE_PATH=node_modules bun scripts/maqsam-browser-fixture.ts setup
 import { createClient } from "@supabase/supabase-js";

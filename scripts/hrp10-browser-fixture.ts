@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hpb-) for the P10 browser journey (hourly permission, address, opening balances): setup | teardown.
 // Writes /tmp/browser/hp10/fixture.json and /tmp/browser/hp10/opening.xlsx.
 import { createClient } from "@supabase/supabase-js";

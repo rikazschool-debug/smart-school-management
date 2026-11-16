@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // B14: direct manager chosen per Excel row (owner account with login only, employee, manager added in the same batch),
 // server checks (self, other org, chain loop, inactive), only the target row changes, leave goes to the chosen manager first.
 // Run: NODE_PATH=node_modules bun scripts/b14-e2e.ts   (synthetic b14- data, removed at the end)

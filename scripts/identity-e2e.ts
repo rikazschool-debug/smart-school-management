@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Identity closure: one C-Smart rule (entry/import/sign-in), ID permission from the permission tree,
 // HR sign-in readiness for non-teacher staff, teacher↔HR ID/phone conflicts keep the existing link.
 // Run: NODE_PATH=node_modules bun scripts/identity-e2e.ts

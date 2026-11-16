@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Teacher ID for ID+OTP sign-in: column hidden from direct reads, status/save via people_identity perm, conflicts, HR reuse.
 // Run: NODE_PATH=node_modules bun scripts/teacher-id-e2e.ts
 import { createClient } from "@supabase/supabase-js";

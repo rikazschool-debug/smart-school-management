@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // ID/iqama sign-in (staff/teacher/guardian code + student ID + C-Smart number). Exercises the service-only SQL the server
 // functions call, plus the one-time sign-in token, on isolated data. Real WhatsApp sending is NOT exercised here.
 // Run: NODE_PATH=node_modules bun scripts/idl-e2e.ts

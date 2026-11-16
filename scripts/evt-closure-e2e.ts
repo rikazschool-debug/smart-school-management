@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Events closure: form attachments (public/no account + tracking), event attachments, file access, abandoned-upload cleanup,
 // trip consent change/deadline/renewal, general event attendance, applicant message queue (dedupe + no-template log).
 // Self-contained: creates its own evx- orgs/users and removes them at the end (also on failure).

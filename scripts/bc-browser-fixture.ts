@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (bcb-) for the notifications hub browser journey: setup | teardown. Writes /tmp/browser/bc/fixture.json.
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated workspace delegation; --keep enables browser verification, --teardown cleans only this run.
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";

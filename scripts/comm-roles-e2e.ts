@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Role-scoped communication (server): subject groups per course, membership on transfer/teacher change,
 // who may create/manage groups, student restrictions, circulars never reach students. Cleanup scoped to this run.
 // Run: NODE_PATH=node_modules bun scripts/comm-roles-e2e.ts

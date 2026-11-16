@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Full procurement journey: principal need → officer, invoices on a custody, settlement sheet (reviewer edit, per-invoice decisions),
 // settlement approval closes a zero-balance custody, notifications, branch overview scope.
 // Run: NODE_PATH=node_modules bun scripts/pc-journey-e2e.ts

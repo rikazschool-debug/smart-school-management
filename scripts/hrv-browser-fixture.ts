@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hrvb-) for the HR leave browser journey: setup | teardown. Writes /tmp/browser/hrv/fixture.json.
 // Owner, branch HR approver, direct manager, teacher employee (linked teachers row), colleague, vice principal. No leave settings — the journey enters them.
 import { createClient } from "@supabase/supabase-js";

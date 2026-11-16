@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Admissions (القبول والتسجيل): officer role, separate grants, branch/org isolation, lifecycle, no student/account on accept, link, withdrawal in open session.
 // Run: NODE_PATH=node_modules bun scripts/admissions-e2e.ts
 import { createClient } from "@supabase/supabase-js";

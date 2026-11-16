@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // End-to-end permission tests for the communication section (package 3).
 // Creates its own org/school/users and deletes them at the end.
 // Run: NODE_PATH=node_modules bun scripts/comm-e2e.ts

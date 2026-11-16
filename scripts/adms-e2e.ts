@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // ZKTeco ADMS link: real bridge process (bridge/adms-bridge.mjs) + simulated device HTTP pushes → signed intake → punches.
 // Checks: serial binding, attendance-only forwarding, PIN = employee number, unmatched review + link moves rows,
 // other-school PIN, resend idempotency, wrong serial at bridge and server, status fields, key rotation, permissions.

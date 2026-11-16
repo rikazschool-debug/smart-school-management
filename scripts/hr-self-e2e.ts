@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Principal (and any employee) personal HR file: HR links the file to the existing account, then separately switches access on/off.
 // Linking/import alone never grants access; only authorized HR (not the person) toggles it; every step audited; server-side checks.
 // Synthetic data only. Run: NODE_PATH=node_modules bun scripts/hr-self-e2e.ts

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated fixture for grades browser journeys ("gbx-" prefix): one course, 3 students, teacher, dept head, principal,
 // guardian with two children, approved plan (أعمال 50/30 + اختبار 100/70), open period, and two import files.
 // Setup:    NODE_PATH=node_modules bun scripts/grades-browser-fixture.ts setup   (writes /tmp/browser/gb/fixture.json)

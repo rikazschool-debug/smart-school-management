@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // School administration part 2: duty rosters, meetings, minutes, decisions, calendar — server acceptance on isolated data.
 // Run: NODE_PATH=node_modules bun scripts/admin2-e2e.ts
 import { createClient } from "@supabase/supabase-js";

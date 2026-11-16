@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // WhatsApp assignment access: WATI assignee/team codes → Rikaz links → «محادثاتي» / «محادثات الفرع».
 // Creates two isolated test staff logins in two branches of the WATI-linked org, links real codes temporarily, removes everything at the end.
 import { createClient } from "@supabase/supabase-js";

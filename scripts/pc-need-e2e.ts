@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Purchase needs: principal need → linked officer → invoices with line links (partial, remaining, no over-quantity), separation of duties.
 // Run: NODE_PATH=node_modules bun scripts/pc-need-e2e.ts
 import { createClient } from "@supabase/supabase-js";

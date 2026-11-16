@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Proves test cleanup is scoped to the run: cleaning run A never deletes
 // notifications of run B or of a non-test user, and refuses when the run's
 // schools contain rows of outsiders.

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Hub meetings permissions: hub_meetings.create/start/attend on the server, revoke mid-session, revoke create, org isolation.
 // Run: NODE_PATH=node_modules bun scripts/hub-meet-e2e.ts
 import { createClient } from "@supabase/supabase-js";

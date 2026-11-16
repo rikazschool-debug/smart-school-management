@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Section form settings (evt_tpl_*): four forms editable before any item exists, draft not applied before publish,
 // newest published version auto-applied to new trips/events/courses, registration form version bound per course
 // (public link keeps it until explicit update), old items/applications keep their versions, version-change guard,

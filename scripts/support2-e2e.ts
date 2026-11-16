@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Support tickets phase 2: assignment, info requests (partial view), cross-branch transfer, private/team notes, escalation to platform.
 // Two orgs, isolated data only. Run: NODE_PATH=node_modules bun scripts/support2-e2e.ts
 import { createClient } from "@supabase/supabase-js";

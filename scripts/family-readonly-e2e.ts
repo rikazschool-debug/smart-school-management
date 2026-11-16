@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Guardian/student accounts are read-only for displayed records: direct writes and staff RPCs are refused by the server,
 // own actions (profile photo) stay available as separate rows, and the owner keeps full edit rights inside the org.
 // Isolated frx- data, cleaned through TestRun. Run: NODE_PATH=node_modules bun scripts/family-readonly-e2e.ts

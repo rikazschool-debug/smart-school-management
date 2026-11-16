@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Guardian & student overview + branch payment settings (family_children / family_child / fin_pay_*).
 // Self-contained isolated data (fmx-): org with two schools, owner, principal, guardian g1 with two children in two schools,
 // guardian g2 with one child, an unverified link, and a student login. Cleans up through TestRun at the end.

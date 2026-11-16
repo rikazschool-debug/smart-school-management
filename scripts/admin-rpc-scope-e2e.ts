@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Role / scope / input checks over every signed-in-callable duty, meeting, minutes, decision, calendar and live-room RPC.
 // Run: NODE_PATH=node_modules bun scripts/admin-rpc-scope-e2e.ts
 import { createClient } from "@supabase/supabase-js";

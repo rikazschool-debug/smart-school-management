@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Vice principal + attendance: no default access; owner grants view/actions separately per branch; individual grants survive the template change.
 // Run: NODE_PATH=node_modules bun scripts/vice-att-e2e.ts
 import { createClient } from "@supabase/supabase-js";

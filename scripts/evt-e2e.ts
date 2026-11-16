@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Events (evt_*): courses with versioned forms + public link, review/capacity/concurrency, delegation and revocation,
 // attendance, internal course from a guardian account, trips with per-child guardian consent, org isolation, rate limit.
 // Self-contained: creates its own evx- orgs/users and removes them at the end (also on failure).

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Whole-category meeting invitations + platform switch for the comm hub (comm_hub).
 // Run: NODE_PATH=node_modules bun scripts/hub-aud-e2e.ts
 import { createClient } from "@supabase/supabase-js";

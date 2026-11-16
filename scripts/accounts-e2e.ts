@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Package-next item 3: automatic fixed-role accounts (account_setup). Mirrors the server functions' service-role steps and checks that
 // the database itself withholds access until the first-login step, links existing accounts without changes, and one guardian account
 // serves two children. Isolated data only. Run: NODE_PATH=node_modules bun scripts/accounts-e2e.ts

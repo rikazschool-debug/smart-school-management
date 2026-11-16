@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (pbx-) for the people-management browser journey: owner, two principals, view-only, teacher, guardian, student,
 // 30 teachers in branch A (two pages), 3 in branch B, one tag. Usage: NODE_PATH=node_modules bun scripts/people-browser-fixture.ts setup|teardown
 import { createClient } from "@supabase/supabase-js";

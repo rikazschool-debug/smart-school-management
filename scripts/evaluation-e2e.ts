@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Comprehensive evaluation (ev_*): guardian ratings, monthly staff evaluation, forms/versions, teacher file, visit correction, scopes.
 // Isolated data (evx-), two orgs. Run: NODE_PATH=node_modules bun scripts/evaluation-e2e.ts
 import { createClient } from "@supabase/supabase-js";

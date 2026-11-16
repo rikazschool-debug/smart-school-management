@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR "add employee + new ID/OTP login": roles within caller rights, duplicate ID/phone refused, pending-login proof, no duplicates,
 // teacher record for teachers, ID-login resolves, school isolation. Synthetic data only (hlg-). Run: NODE_PATH=node_modules bun scripts/hr-login-e2e.ts
 import { createClient } from "@supabase/supabase-js";

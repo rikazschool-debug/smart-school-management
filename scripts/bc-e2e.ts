@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Notifications hub (bc_*): targeting by branch × category × department, all vs picked people, preview fingerprint,
 // send once per account (guardian with two children, double send), scope per branch, history/read counts, copy, isolation.
 // Synthetic data only. Run: NODE_PATH=node_modules bun scripts/bc-e2e.ts

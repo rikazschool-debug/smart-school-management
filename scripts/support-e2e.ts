@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Support tickets phase 1: scopes (requester / principal / org owner / platform admin), workflow, immutable replies, guardian child link,
 // concurrency + idempotency, files and isolation between two orgs. Isolated data only.
 // Run: NODE_PATH=node_modules bun scripts/support-e2e.ts

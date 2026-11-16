@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated student placement and tags delegation; no real accounts or messages.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";

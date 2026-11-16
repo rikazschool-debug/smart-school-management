@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Owner-created staff logins (username + initial password). Mirrors createStaffAccount/resetStaffPassword service steps.
 // Run: NODE_PATH=node_modules bun scripts/staff-e2e.ts
 import { createClient } from "@supabase/supabase-js";

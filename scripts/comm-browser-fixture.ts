@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated fixture for the communication browser journeys (deleted reply, mute/read on two devices,
 // notification after revoke, report review, drafts). Creates its own org and users ("cbx-" prefix).
 // Setup:    NODE_PATH=node_modules bun scripts/comm-browser-fixture.ts setup  > writes /tmp/browser/c7/fixture.json

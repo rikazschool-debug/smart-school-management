@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Procurement closure: correction/refund effect on a custody-based purchase need, open-session permission withdrawal and
 // finance suspension (direct RPC, files, export), alert re-arming (new due date, new low after top-up), real cron run.
 // Run: NODE_PATH=node_modules bun scripts/pc-closure-e2e.ts            (controlled checks, self-cleaning)

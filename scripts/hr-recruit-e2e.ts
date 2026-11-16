@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR P8.1 recruitment: owner switch, need → approved vacancy (other person) → candidate (sensitive gated) → interview → versioned offer
 // (approved by other person, frozen) → candidate accepts with reference → convert once (no duplicate file, no login, no academic assignment).
 // Synthetic data only. Run: NODE_PATH=node_modules bun scripts/hr-recruit-e2e.ts

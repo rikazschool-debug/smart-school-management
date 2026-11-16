@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // «تحويل المحادثة» permissions (no WATI call): branch vs cross-branch scope, one unresolved transfer at a time,
 // access moves only when the verified result is recorded, failed keeps the assignment, log + audit, service-only internals.
 // Uses a temporary fake conversation and fake WATI codes; removes everything at the end.

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // People management batch 1, parts 3–7: side card + timeline, internal notes, tags, bulk actions, permissions, and the verified-link rule for display names.
 // Synthetic data only (isolated org). Run: NODE_PATH=node_modules bun scripts/people2-e2e.ts
 import { createClient } from "@supabase/supabase-js";

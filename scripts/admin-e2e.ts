@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // School administration (forms/requests/tasks) server acceptance on isolated data. Run: NODE_PATH=node_modules bun scripts/admin-e2e.ts
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // setup|teardown: assistant in the timetable fixture school + a b13x- org with a central HR director, for browser journeys.
 // Needs /tmp/browser/tt/fixture.json (timetable-e2e --keep). Writes /tmp/browser/b13/fixture.json.
 import { createClient } from "@supabase/supabase-js";

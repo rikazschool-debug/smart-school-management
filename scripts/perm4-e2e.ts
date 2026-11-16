@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Package-4 permission acceptance (owner-only user management, group creation, department scope,
 // circular publisher identity, multi-role scope). Creates its own orgs/users; cleanup is scoped to this run.
 // Run: NODE_PATH=node_modules bun scripts/perm4-e2e.ts

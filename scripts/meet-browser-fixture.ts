@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated fixture (mbx- prefix) for virtual-meeting browser journeys: org with two branches, a sent cross-branch virtual meeting starting now.
 // setup → /tmp/browser/meet/fixture.json; teardown removes only mbx- users/orgs.
 import { createClient } from "@supabase/supabase-js";

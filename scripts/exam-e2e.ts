@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Tests section acceptance on the hosted TEST database with synthetic exx- accounts only (no real users, messages or publishing).
 // Online: create (types+forms) → target selected student → publish → targeted solves, untargeted refused → review → approve → publish → student + verified guardian read, others not.
 // Paper/bubble: server-side scoring by form, duplicate refusal, unresolved marks refused, wrong form/untargeted refused.

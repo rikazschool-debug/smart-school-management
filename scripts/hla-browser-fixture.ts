@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hlab-) for the location punch + asset custody browser journey: setup | teardown. Writes /tmp/browser/hla/fixture.json.
 import { createClient } from "@supabase/supabase-js";
 import { mkdirSync, readFileSync, writeFileSync } from "fs";

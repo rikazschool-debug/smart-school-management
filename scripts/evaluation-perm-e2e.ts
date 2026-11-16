@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Evaluation × flexible permissions: catalog, base = previous rules, grants/deny/revoke per action, scopes (assigned/branch/org),
 // self-evaluation blocks, outside org / anon / unauthorised refusals, preview sources, section people, monthly reminders (controlled clock).
 // Isolated data (evp-). Run: NODE_PATH=node_modules bun scripts/evaluation-perm-e2e.ts   (add --cron to also wait for the real scheduled run)

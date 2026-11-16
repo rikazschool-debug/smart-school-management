@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Owner limits + branch suspension: owner is bound by platform section suspension, org isolation and no self-custody;
 // suspending one branch blocks only that branch (open session included), reactivation restores only branch-paused links.
 // Run: NODE_PATH=node_modules bun scripts/bounds-e2e.ts

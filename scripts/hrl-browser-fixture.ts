@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hrlb-) for the HR letters browser journey: setup | teardown. Writes /tmp/browser/hrl/fixture.json.
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";

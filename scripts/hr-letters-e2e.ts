@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR letters: templates (known variables, no HTML, versions), employee request → review (not employee, not requester) → issue (ref no, frozen text),
 // pay privacy (comp permission for template/review/issue/view), missing data blocks issue, return/resubmit, stale rev, reissue keeps parent, cancel keeps record, isolation.
 // Run: NODE_PATH=node_modules bun scripts/hr-letters-e2e.ts

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Meetings package 2: owner multi-branch meetings, invitee scope, virtual room access/moderation (DB side), comm/calendar from one record.
 // Run: NODE_PATH=node_modules bun scripts/meetings-live-e2e.ts
 import { createClient } from "@supabase/supabase-js";

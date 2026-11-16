@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Employee file print (hr_employee_print): view + print + branch scope per employee, sensitive masking same as the view,
 // out-of-scope employees refused (counted, not returned), no secrets, each print logged. Isolated hpx- data.
 // Run: NODE_PATH=node_modules bun scripts/hr-print-e2e.ts

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Educational supervision stage 2 (assignment, form versions, records, review/approval, delegation) on the hosted TEST database, synthetic svx- accounts only.
 // Run: NODE_PATH=node_modules bun scripts/supervision-e2e.ts  (--keep leaves data + /tmp/browser/supervision/fixture.json; --teardown removes svx- data)
 import { createClient } from "@supabase/supabase-js";

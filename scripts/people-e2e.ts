@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // People picker (package-next item 2): one authorized search (people_pick / people_pick_facets) for groups, tasks,
 // duties, meetings and meeting decisions. Isolated data only. Run: NODE_PATH=node_modules bun scripts/people-e2e.ts
 import { createClient } from "@supabase/supabase-js";

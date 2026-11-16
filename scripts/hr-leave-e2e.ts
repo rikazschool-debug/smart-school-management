@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR leave (P4): owner-entered work days/types/dated policies, ledger balances (grant idempotent, adjust, immutable moves),
 // employee request → direct manager → HR, return/edit, stale rev, overlap/balance/max/cross-year checks, concurrency,
 // change (extend) through the same chain, early return, cancel with reversal, teacher absences for cover, notifications, isolation.

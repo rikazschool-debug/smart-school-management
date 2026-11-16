@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Owner schools & branches: owner-only add/edit/suspend via RPCs, suspension pauses branch accounts and blocks re-activation/joining,
 // reactivation restores only branch-paused accounts, last active branch protected, audit logged, org isolation.
 // Run: NODE_PATH=node_modules bun scripts/schools-e2e.ts

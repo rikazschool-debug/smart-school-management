@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR P9/P10 closure: addresses (R04), hourly permissions (R14, five branches, manager → HR), opening balances for leave and advances
 // (server preview, source totals, maker ≠ approver, re-import idempotent), R28 paid/remaining from the ledger, principal and outsider refusals.
 // Synthetic data only. Run: NODE_PATH=node_modules bun scripts/hr-p10-e2e.ts

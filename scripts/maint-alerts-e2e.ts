@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // M8: daily maintenance alerts (overdue once per due date, unassigned, bus service date/km, dedupe, operations switch).
 // Run: NODE_PATH=node_modules bun scripts/maint-e2e.ts
 import { createClient } from "@supabase/supabase-js";

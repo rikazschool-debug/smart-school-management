@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Support desk run by the platform owner: every ticket goes to platform admins; school managers don't see it; the assignee replies and changes status.
 // Run: NODE_PATH=node_modules bun scripts/support-platform-e2e.ts
 import { createClient } from "@supabase/supabase-js";

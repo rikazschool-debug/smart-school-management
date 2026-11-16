@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Lesson attendance (la_*): isolated lae- school with a published timetable slot today.
 // Checks: draft opens with everyone present, only the assigned teacher (or the day's substitute) can open/mark/approve,
 // approval locks plain saves, corrections need a reason and are logged, staff read the day, guardians read only their child.

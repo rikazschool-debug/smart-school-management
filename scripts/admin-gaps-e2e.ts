@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Closing earlier admin gaps: scheduled reminders (scoped run on isolated schools) and old notifications after a request transfer.
 // Run: NODE_PATH=node_modules bun scripts/admin-gaps-e2e.ts
 import { createClient } from "@supabase/supabase-js";

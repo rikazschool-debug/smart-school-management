@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // One-time, idempotent setup of the real organization «مجموعة المالكي التعليمية» and its owner.
 // The owner password is random and never printed; the owner sets their own via the reset email.
 // Run: NODE_PATH=node_modules bun scripts/setup-almalki-org.ts

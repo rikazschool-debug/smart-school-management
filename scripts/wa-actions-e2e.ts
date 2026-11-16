@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // «إرسال قالب» / «تشغيل بوت» permissions (no WATI call, no message sent): owner vs granted staff in two branches, chat access
 // still required, duplicate guards, log + audit, service-only internals. Temporary fake conversation; removes everything at the end.
 import { createClient } from "@supabase/supabase-js";

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hdb-) for the documents browser journey: setup | teardown. Writes /tmp/browser/hrd/fixture.json + a synthetic PDF.
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
