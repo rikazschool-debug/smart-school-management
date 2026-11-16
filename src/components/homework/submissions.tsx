@@ -69,6 +69,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
   const current = rows.find((r) => r["student_id"] === sel) ?? null;
   const idx = shown.findIndex((r) => r["student_id"] === sel);
   const readyCount = rows.filter(fns.to_publish).length;
+  const isTest = h["kind"] === "test";
   return (
     <section className="space-y-3 rounded-2xl border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -76,10 +77,10 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
         {editable && h["max_score"] !== undefined && readyCount > 0 && (
           <Button size="sm" variant="outline" onClick={async () => {
             const names = rows.filter(fns.to_publish).map((r) => `• ${r["students"]?.["full_name"]}${r["grade"]?.["score"] != null ? ` — ${r["grade"]["score"]}/${h["max_score"]}` : ""}`).join("\n");
-            if (!(await ask(`تصحيحات حُفظت قبل التبسيط ولم تظهر بعد. ستظهر هذه الدرجات (${readyCount}) للطلاب وأولياء أمورهم:\n${names}`, { ok: "إظهار الدرجات" }))) return;
+            if (!(await ask(`${isTest ? "نشر نتائج الاختبارات المعتمدة" : "إظهار التصحيحات السابقة"} (${readyCount}) للطلاب وأولياء أمورهم:\n${names}`, { ok: "نشر النتائج" }))) return;
             const { data: n, error } = await db.rpc("publish_results", { _hw: h["id"], _subs: null });
             if (error) toast.error(arabicError(error)); else { toast.success(`ظهرت ${n} درجة`); qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] }); }
-          }}>إظهار التصحيحات السابقة ({readyCount})</Button>
+          }}>{isTest ? "نشر النتائج المعتمدة" : "إظهار التصحيحات السابقة"} ({readyCount})</Button>
         )}
       </div>
       <Input placeholder="ابحث باسم الطالب" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
@@ -120,8 +121,8 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
       {!shown.length && <p className="p-3 text-sm text-muted-foreground">{rows.length ? "لا نتائج مطابقة للبحث أو التصنيف." : "لا يوجد طلاب مستهدفون."}</p>}
       {current && (
         <StudentReview key={`${current["student_id"]}-${current["grade"] ? 1 : 0}-${current["sub"]?.["attempt_count"] ?? 0}`} h={h} r={current} editable={editable} onDirty={(d) => { dirty.current = d; }}
-          prev={idx > 0 ? () => setSel(shown[idx - 1]!["student_id"]) : undefined}
-          next={idx >= 0 && idx < shown.length - 1 ? () => setSel(shown[idx + 1]!["student_id"]) : undefined}
+          prev={idx > 0 ? () => setSel(shown[idx - 1]?.["student_id"]) : undefined}
+          next={idx >= 0 && idx < shown.length - 1 ? () => setSel(shown[idx + 1]?.["student_id"]) : undefined}
           refresh={() => qc.invalidateQueries({ queryKey: ["hw-subs", h["id"]] })} />
       )}
     </section>
@@ -160,6 +161,7 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
   const sub = r["sub"];
   const graded = h["max_score"] != null;
   const published = !!g?.["published_at"];
+  const isTest = h["kind"] === "test";
   async function call(fn: string, args: Row, ok: string) {
     const { error } = await db.rpc(fn, args);
     if (error) {
@@ -221,9 +223,13 @@ function StudentReview({ h, r, editable, prev, next, refresh, onDirty }: { h: Ro
             </div>
           )}
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" onClick={() => call("grade_submission", { ...gradeArgs(), _final: true }, published || conflict ? "حُفظ التعديل وسُجل القديم والجديد" : "حُفظ التصحيح وظهرت الدرجة للطالب وولي أمره")}>{conflict ? "اعتماد إدخالي على النسخة الأحدث" : published ? "حفظ التعديل وتحديث الدرجة" : "حفظ التصحيح وإظهار الدرجة"}</Button>
-            {g?.["status"] === "graded" && !g["needs_review"] && <Button size="sm" variant="outline" onClick={() => call("publish_results", { _hw: h["id"], _subs: [sub["id"]] }, "ظهرت الدرجة المحفوظة سابقًا")}>إظهار التصحيح المحفوظ سابقًا</Button>}
-            <span className="text-xs text-muted-foreground">{published ? "الدرجة ظاهرة؛ أي تعديل يُسجل في السجل ويُبلغ الطالب وولي أمره." : "تظهر الدرجة والملاحظات ومرفقاتها للطالب وولي أمره فور الحفظ."}</span>
+            <Button size="sm" onClick={() => call("grade_submission", { ...gradeArgs(), _final: !isTest }, isTest ? "حُفظت النتيجة الأولية للمراجعة دون نشر" : published || conflict ? "حُفظ التعديل وسُجل القديم والجديد" : "حُفظ التصحيح وظهرت الدرجة للطالب وولي أمره")}>{isTest ? "حفظ نتيجة أولية" : conflict ? "اعتماد إدخالي على النسخة الأحدث" : published ? "حفظ التعديل وتحديث الدرجة" : "حفظ التصحيح وإظهار الدرجة"}</Button>
+            {isTest && g && !published && !g["needs_review"] && <>
+              {!g["exam_reviewed_at"] && <Button size="sm" variant="outline" disabled={isDirty} onClick={() => call("exam_result_action", { _sub: sub["id"], _action: "review", _rev: g["rev"] }, "تمت مراجعة النتيجة")}>تأكيد المراجعة</Button>}
+              {g["exam_reviewed_at"] && !g["exam_approved_at"] && <Button size="sm" variant="outline" disabled={isDirty} onClick={() => call("exam_result_action", { _sub: sub["id"], _action: "approve", _rev: g["rev"] }, "اعتمدت النتيجة دون نشر")}>اعتماد النتيجة</Button>}
+            </>}
+            {g?.["status"] === "graded" && !g["needs_review"] && <Button size="sm" variant="outline" disabled={isTest && (!g["exam_approved_at"] || isDirty)} onClick={() => call("publish_results", { _hw: h["id"], _subs: [sub["id"]] }, "نُشرت النتيجة")}>{isTest ? "نشر النتيجة" : "إظهار التصحيح المحفوظ سابقًا"}</Button>}
+            <span className="text-xs text-muted-foreground">{isTest ? "أولية ← مراجعة ← اعتماد ← نشر؛ التعديل يعيد النتيجة للمراجعة." : published ? "الدرجة ظاهرة؛ أي تعديل يُسجل في السجل ويُبلغ الطالب وولي أمره." : "تظهر الدرجة والملاحظات ومرفقاتها للطالب وولي أمره فور الحفظ."}</span>
           </div>
           <div className="flex flex-wrap gap-2 border-t pt-2">
             <Input className="flex-1" placeholder="سبب الإعادة للاستكمال (مطلوب)" value={retReason} onChange={(e) => setRetReason(e.target.value)} />

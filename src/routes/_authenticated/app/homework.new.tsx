@@ -11,12 +11,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { arabicError, useSchool } from "@/lib/session";
 import { LATE_LABEL, TYPE_LABEL, fromLocalInput, schoolTime, toLocalInput } from "@/lib/homework";
+import { ExamCreate } from "@/components/homework/exam-create";
 
 export const Route = createFileRoute("/_authenticated/app/homework/new")({
   head: () => ({ meta: [{ title: "إعداد واجب أو اختبار — ركاز" }, { name: "description", content: "إعداد المقرر والمستهدفين والتسليم والدرجة." }, { property: "og:title", content: "إعداد واجب أو اختبار — ركاز" }, { property: "og:description", content: "إنشاء الواجب والاختبار وحفظ المسودة." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   validateSearch: (s: Record<string, unknown>): { edit?: string; kind?: "homework" | "test" } => ({ ...(s["edit"] ? { edit: String(s["edit"]) } : {}), ...(s["kind"] === "test" ? { kind: "test" } : {}) }),
-  component: Page,
+  component: Entry,
 });
+
+function Entry() {
+  const { edit, kind } = Route.useSearch();
+  const existing = useQuery({ queryKey: ["creation-kind", edit], enabled: !!edit, queryFn: async () => { const r = await db.from("homework").select("kind").eq("id", edit).single(); if (r.error) throw r.error; return r.data as Row; } });
+  if (edit && existing.isLoading) return <LoadingState />;
+  return kind === "test" || existing.data?.["kind"] === "test" ? <ExamCreate edit={edit} /> : <Page />;
+}
 
 type Crit = { label: string; max: string };
 
