@@ -51,6 +51,9 @@ export class TestRun {
     if (foreign.length) throw new Error(`[${this.label} ${this.id}] refusing purge of org ${orgId}: schools not created by this run: ${foreign.join(",")}`);
     const bySchool = ["grade_results", "gradebooks", "grade_periods", "grade_plans", "homework", "files", "post_comments", "classroom_posts", "substitutions", "teacher_absences", "timetable_slots", "timetables", "teacher_unavailability", "teacher_loads", "vice_scopes", "supervisor_teachers", "rooms", "periods", "school_day_settings", "file_policies",
       "circulars", "comm_settings", "classrooms", "enrollments", "student_guardians", "teacher_assignments", "courses", "students", "guardians", "teachers", "subjects", "departments", "sections", "grades", "stages", "terms", "academic_years"];
+    // service-only SQL purge handles owner-only guards and append-only HR rows in one transaction
+    const pr = await this.admin.rpc("_purge_test_org", { _org: orgId, _confirm: "purge:" + orgId });
+    if (!pr.error && (pr.data as any)?.ok) return true;
     let last = "";
     for (let pass = 0; pass < 3; pass++) {
       for (const t of ["comm_audit", "message_reports", "conversations", "account_requests", "access_audit", "invitations"]) await this.admin.from(t).delete().eq("org_id", orgId);
