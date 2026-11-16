@@ -9,3 +9,10 @@ describe("exam authoring and model safety", () => {
   it("does not mutate the source key when creating a variant", () => { rotateForm([q], 1); expect(q.correct).toEqual([1]); expect(q.options).toEqual(["3", "4", "5", "6"]); });
   it("rejects another form even for the correct test and target student", () => { const text = JSON.stringify({ v: 1, hw: "exam", student: "student", form: "B" }); expect(sheetIdentity(text, "exam", [{ id: "student" }], "A")).toBeNull(); expect(sheetIdentity(text, "exam", [{ id: "student" }], "B")).toBe("student"); });
 });
+import { examAnswersText } from "@/components/homework/exam-model";
+describe("stored test attempt text", () => {
+  it("shows the model and letters, marking blank answers", () => {
+    expect(examAnswersText(JSON.stringify({ form: "B", answers: [[0], [], [2]] }))).toBe("النموذج B\n1: A\n2: بدون إجابة\n3: C");
+  });
+  it("leaves ordinary homework text unchanged", () => { expect(examAnswersText("إجابة نصية")).toBe("إجابة نصية"); });
+});

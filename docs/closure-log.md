@@ -3,6 +3,13 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-16 — prompt-396 tests acceptance (test DB, synthetic exx- accounts)
+- New: exam_paper_grade (server-side paper/bubble scoring by model; refuses untargeted, unknown model, unresolved marks, second sheet; retry-safe). Photo screen now calls it; unclear marks must be resolved manually.
+- Student solve form hidden after submission; test history/answers shown with Arabic labels.
+- Evidence: scripts/exam-e2e.ts 39/39 PASS; scripts/exam-journey.py 18/18 PASS (teacher, targeted/untargeted student, guardian; 1280 + 390). Vitest exam suites 22/22.
+- غير متحقق: real phone camera on a printed sheet; GitHub checks for this commit. غير مكتملة: model assignment per student, multi-section, server timer, signed QR, stored sheet image.
+- Cleanup leaves empty synthetic orgs (academic_years owner guard) — existing issue.
+
 ## 2026-11-16 — Missing students in exam targeting
 - Follow-up flow sweep: read ExamCreate, homework creation/edit Entry/Page, ExamPaper/PhotoReview, SubmissionsPanel/StudentReview, ExamSolve, homework detail/late-joiner/student detail, HomeworkList family/staff paths and StudentHomework. Corrected homework no-selection/loading/error/empty differentiation and roster cache scope, family lookup errors formerly shown as absent records, and bubble camera access before target loading. Other inspected panels already distinguish drafts, no targets and filter misses, or submit through server target validation. 16 targeted checks passed; no permissions or settled rows changed.
 - Read live SQL definitions: save_homework/_save_homework_v0, exam_draft_save, publish_homework/_publish_homework_v0, hw_tick, _hw_join_trg, _hw_enrollment_trg, late_joiners, decide_late_joiner, student_homework, hw_state, exam_submit and record_paper_submission. Creation validates selected active section/year; publication freezes only eligible targets and rejects zero targets; scheduled/reminder jobs use those targets; join/transfer handling follows existing settings and preserves history. These paths were read, not executed. No missing-course creation query was introduced there. Existing job notification wording and settled records were deliberately left unchanged.

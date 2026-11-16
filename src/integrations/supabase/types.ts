@@ -23903,6 +23903,16 @@ export type Database = {
         Returns: string
       }
       exam_get: { Args: { _hw: string }; Returns: Json }
+      exam_paper_grade: {
+        Args: {
+          _answers: Json
+          _client: string
+          _form: string
+          _hw: string
+          _student: string
+        }
+        Returns: string
+      }
       exam_result_action: {
         Args: { _action: string; _rev: number; _sub: string }
         Returns: number

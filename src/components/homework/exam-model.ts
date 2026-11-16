@@ -54,3 +54,12 @@ export function readBubbles(image: ImageData, corners: Point[], questions: ExamQ
     const marked = densities.map((d,j) => d > .55 ? j : -1).filter((j) => j >= 0); return marked.length === 1 ? marked[0] ?? null : null;
   });
 }
+/** Readable text for a stored test attempt ({form, answers}); other bodies are returned unchanged. */
+export function examAnswersText(body: string): string {
+  try {
+    const v = JSON.parse(body) as { form?: unknown; answers?: unknown };
+    if (typeof v?.form !== "string" || !Array.isArray(v.answers)) return body;
+    const one = (a: unknown) => Array.isArray(a) ? (a.length ? a.map((j) => String.fromCharCode(65 + Number(j))).join("، ") : "بدون إجابة") : a === null ? "غير محسومة" : String(a);
+    return `النموذج ${v.form}\n` + v.answers.map((a, i) => `${i + 1}: ${one(a)}`).join("\n");
+  } catch { return body; }
+}

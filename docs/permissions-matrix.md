@@ -47,6 +47,9 @@ Follow-up: homework creation uses the same scoped cache dimensions and explicit 
 
 Protections: the last active owner cannot be deactivated or demoted; ownership changes are not possible through role change; roles never carry across organizations; invitations issued by a role that is no longer authorized are flagged `needs_review` and grant nothing until the owner re-issues them; each change is written to `access_audit` (before/after/reason). Open screens re-check the user's roles every 30 s and on focus; when they change, cached data and live subscriptions are dropped.
 
+## 2026-11-16 — exam_paper_grade
+- Course teacher (incl. verified owner via is_course_teacher) only; students/other teachers refused. Paper grades stay preliminary until review → approval → publication.
+
 ## Homework (package 5)
 | Action | Course teacher | Principal / VP / Owner | Dept head (own dept) | Supervisor (assigned) | Student (target) | Guardian (verified) | Platform admin |
 |---|---|---|---|---|---|---|---|

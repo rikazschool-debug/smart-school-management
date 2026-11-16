@@ -131,3 +131,4 @@
 - scripts/wa-card-e2e.ts: WhatsApp card/notes/tags/quick replies for owner, authorized and unauthorized staff (21 checks).
 - scripts/wa-transfer-e2e.ts: WhatsApp chat transfer scope/branch vs cross-branch, unresolved blocking, access handover, failed keeps assignment, log+audit (25 checks; fake chat, no WATI call).
 - scripts/placement-perm-e2e.ts: independent student placement/tag delegation, deny precedence, atomic capacity rollback, cross-branch refusal, no record edit or self-grant (21 checks); --keep writes isolated browser data to /tmp/browser/perm332.
+- scripts/exam-e2e.ts: tests-section acceptance on the test DB (online solve/targeting/review→approve→publish/guardian readback, paper scoring by model, duplicate + unresolved refusal; 39 checks). `--keep` writes /tmp/browser/exam/fixture.json for scripts/exam-journey.py (18 checks, desktop+phone); `--teardown` removes exx- data.

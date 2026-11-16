@@ -16,6 +16,7 @@ import { FeedbackFiles, SubmissionsPanel } from "@/components/homework/submissio
 import { arabicError, useSchool } from "@/lib/session";
 import { HW_STATUS, LATE_LABEL, SUB_STATUS, TYPE_LABEL, fromLocalInput, safeHref, schoolTime, statusTone, toLocalInput } from "@/lib/homework";
 import { ExamPaper } from "@/components/homework/exam-paper";
+import { examAnswersText } from "@/components/homework/exam-model";
 
 export const Route = createFileRoute("/_authenticated/app/homework/$id")({
   head: () => ({ meta: [{ title: "تفاصيل الواجب والاختبار — ركاز" }, { name: "description", content: "التعليمات والأسئلة والتسليم والتصحيح والنتائج." }, { property: "og:title", content: "تفاصيل الواجب والاختبار — ركاز" }, { property: "og:description", content: "أسئلة الاختبار والتسليم والنتائج ضمن الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -59,7 +60,7 @@ function Page() {
         </div>
         <aside className="space-y-4">
           {h["isTeacher"] && <TeacherActions h={h} />}
-          <Activity id={id} />
+          <Activity id={id} test={h["kind"] === "test"} />
         </aside>
       </div>
     </>
@@ -240,18 +241,20 @@ function LateJoiners({ h }: { h: Row }) {
   );
 }
 
-function Activity({ id }: { id: string }) {
+function Activity({ id, test = false }: { id: string; test?: boolean }) {
   const ev = useQuery({
     queryKey: ["hw-events", id],
     queryFn: async () => (await db.from("homework_events").select("*").eq("homework_id", id).order("created_at", { ascending: false }).limit(30)).data as Row[],
   });
   const LBL: Record<string, string> = { created: "إنشاء", published: "نشر", scheduled: "جدولة", revised: "تعديل بعد النشر", extended_all: "تمديد للجميع", extended_student: "تمديد لطالب",
     submitted: "تسليم", returned: "إعادة للاستكمال", paper_recorded: "تسجيل تسليم ورقي", result_published: "حفظ تصحيح وإظهار الدرجة", result_corrected: "تعديل درجة ظاهرة", legacy_revealed: "إظهار تصحيح محفوظ قبل التبسيط", copied: "نسخ", late_join_added: "إلحاق طالب منضم", late_join_pending: "طالب منضم بانتظار القرار", late_join_declined: "عدم إلحاق منضم", join_policy: "تغيير سياسة المنضمين", feedback_file_added_after_publish: "إضافة مرفق ملاحظات بعد ظهور الدرجة", feedback_file_removed_after_publish: "حذف مرفق ملاحظات بعد ظهور الدرجة", feedback_file_removed: "حذف مرفق ملاحظات",
-    "status:closed": "إغلاق", "status:archived": "أرشفة", "status:cancelled": "إلغاء" };
+    "status:closed": "إغلاق", "status:archived": "أرشفة", "status:cancelled": "إلغاء",
+    exam_questions_saved: "حفظ الأسئلة", exam_forms_saved: "إعداد النماذج", exam_result_draft: "نتيجة أولية", exam_result_review: "مراجعة النتيجة", exam_result_approve: "اعتماد النتيجة", exam_paper_recorded: "رصد ورقة اختبار" };
+  if (test) LBL["legacy_revealed"] = "نشر النتيجة";
   if (!ev.data?.length) return null;
   return (
     <section className="rounded-2xl border bg-card p-5">
-      <h3 className="mb-2 font-semibold">سجل الواجب</h3>
+      <h3 className="mb-2 font-semibold">{test ? "سجل الاختبار" : "سجل الواجب"}</h3>
       <ul className="space-y-1 text-xs">
         {ev.data.map((e) => <li key={e["id"]}>{schoolTime(e["created_at"])} — {LBL[e["action"]] ?? e["action"]}{e["details"]?.["reason"] ? `: ${e["details"]["reason"]}` : e["details"]?.["note"] ? `: ${e["details"]["note"]}` : ""}</li>)}
       </ul>
@@ -299,7 +302,7 @@ function Attempts({ d, h }: { d: NonNullable<ReturnType<typeof useStudentData>["
           {d.attempts.map((a) => (
             <div key={a["id"]} className="rounded-lg border p-3 text-sm">
               <p className="text-xs text-muted-foreground">المحاولة {a["attempt_no"]} · {a["kind"] === "paper" ? "تسليم ورقي سجله المعلم" : "إلكتروني"} · {schoolTime(a["submitted_at"])} {a["is_late"] && <span className="text-destructive">· متأخر</span>}</p>
-              {a["body"] && <p className="mt-1 whitespace-pre-wrap">{a["body"]}</p>}
+              {a["body"] && <p className="mt-1 whitespace-pre-wrap">{examAnswersText(a["body"])}</p>}
               {safeHref(a["link_url"]) && <a href={safeHref(a["link_url"])!} target="_blank" rel="noopener noreferrer nofollow" className="text-primary underline">{a["link_url"]}</a>}
               {a["note"] && <p className="text-xs">ملاحظة: {a["note"]}</p>}
               <FileList files={d.files.filter((f) => f["attempt_no"] === a["attempt_no"]).map((f) => f["files"])} />

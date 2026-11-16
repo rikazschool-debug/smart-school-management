@@ -4,4 +4,5 @@
 - Exam variants are persisted with remapped keys by exam_config_save and cleared when source questions change; exam_get strips keys from every variant for non-teachers, and QR matching includes the variant ID.
 - Photo grading uses QR roster verification and four fixed sheet markers; blank/ambiguous marks require manual review, and no grade is written before explicit confirmation.
 - The optical reader supports only this generated single-choice sheet (up to 35 questions); other question types are teacher-marked, never guessed by the scanner.
-- Exam targeting loads the roster only for a selected authorized course and its section/year; distinguish no selection, empty enrollment and no search matches without broadening RLS.
+- Exam targeting loads the roster only for a selected authorized course and its section/year; distinguish no selection, empty enrollment and no search matches without broadening RLS.- Paper/bubble test sheets are recorded only via exam_paper_grade: server checks target + model, scores from the stored form key, refuses unresolved marks and a second sheet per student (same client id = retry); result stays preliminary.
+- Hosted acceptance: scripts/exam-e2e.ts (39 checks, synthetic exx- accounts) and scripts/exam-journey.py (browser, needs --keep fixture).
