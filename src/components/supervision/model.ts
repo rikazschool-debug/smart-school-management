@@ -32,9 +32,9 @@ export function missingFields(spec: SvSpec, data: Record<string, unknown>): stri
   for (const sec of spec.sections ?? []) for (const f of sec.fields ?? []) {
     if (!shown(f, data) || !f.required) continue;
     const v = data[f.key]; const arr = Array.isArray(v) ? (v as Record<string, unknown>[]) : null;
-    if (f.type === "goals") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (!s(it.goal) || !s(it.indicator) || !s(it.baseline) || !s(it.target)) out.push(`${f.label} ${i + 1}: الهدف والمؤشر وخط الأساس والمستهدف`); }); }
-    else if (f.type === "actions") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (!s(it.action) || !s(it.owner) || !s(it.due) || !s(it.evidence)) out.push(`${f.label} ${i + 1}: الإجراء والمسؤول والموعد والشاهد`); }); }
-    else if (f.type === "recs") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (!s(it.text) || !s(it.follow_due)) out.push(`${f.label} ${i + 1}: التوصية وموعد متابعتها`); }); }
+    if (f.type === "goals") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (!s(it["goal"]) || !s(it["indicator"]) || !s(it["baseline"]) || !s(it["target"])) out.push(`${f.label} ${i + 1}: الهدف والمؤشر وخط الأساس والمستهدف`); }); }
+    else if (f.type === "actions") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (!s(it["action"]) || !s(it["owner"]) || !s(it["due"]) || !s(it["evidence"])) out.push(`${f.label} ${i + 1}: الإجراء والمسؤول والموعد والشاهد`); }); }
+    else if (f.type === "recs") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (!s(it["text"]) || !s(it["follow_due"])) out.push(`${f.label} ${i + 1}: التوصية وموعد متابعتها`); }); }
     else if (f.type === "list") { if (!Array.isArray(v) || !(v as unknown[]).some((x) => s(x) !== "")) out.push(f.label); }
     else if (f.type === "indicators") {
       const m = (v ?? {}) as Record<string, { level?: string; state?: string; reason?: string }>;
@@ -63,7 +63,7 @@ export function riyadhText(iso: string | null | undefined): string {
 export type SvTab = "records" | "assign" | "forms" | "deleg";
 export type SvSearch = { tab?: SvTab; id?: string };
 export function svSearch(raw: Record<string, unknown>): SvSearch {
-  const tab = ["records", "assign", "forms", "deleg"].includes(String(raw.tab)) ? (raw.tab as SvTab) : undefined;
-  const id = typeof raw.id === "string" && /^[0-9a-f-]{36}$/i.test(raw.id) ? raw.id : undefined;
+  const tab = ["records", "assign", "forms", "deleg"].includes(String(raw["tab"])) ? (raw["tab"] as SvTab) : undefined;
+  const id = typeof raw["id"] === "string" && /^[0-9a-f-]{36}$/i.test(raw["id"]) ? raw["id"] : undefined;
   return { ...(tab ? { tab } : {}), ...(id ? { id } : {}) };
 }

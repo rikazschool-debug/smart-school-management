@@ -39,7 +39,7 @@ function FormDetail({ f, all, me, org, onBack, onOpen, refresh }: { f: SvForm; a
   const [preview, setPreview] = useState<Record<string, unknown>>({}); const [busy, setBusy] = useState(false);
   const versions = all.filter((x) => x.key === f.key).sort((a, b) => b.version - a.version);
   const principalOf = me.schools.filter((s) => s.principal);
-  async function run(p: Promise<{ error: unknown; data?: unknown }>, msg: string) { setBusy(true); try { const r = await p; if (r.error) throw r.error; toast.success(msg); refresh(); return r.data; } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } }
+  async function run(p: Promise<{ error: unknown; data?: unknown }>, msg: string) { setBusy(true); try { const r = await p; if (r.error) throw r.error; toast.success(msg); refresh(); return r.data; } catch (e) { toast.error(arabicError(e)); return undefined; } finally { setBusy(false); } }
   async function newVersion(school: string | null) { const id = await run(db.rpc("sv_form_draft", { _org: org, _from: f.id, _school: school }), school ? "أُنشئ اقتراح تخصيص للفرع (مسودة غير نافذة)" : "أُنشئت مسودة إصدار جديد"); if (typeof id === "string") onOpen(id); }
   const src = f.source;
   return <div className="space-y-4">

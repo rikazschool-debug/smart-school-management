@@ -21,7 +21,7 @@ export function Assignments({ org, me }: { org: string; me: SvMe }) {
   if (q.isLoading) return <LoadingState />; if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const all = q.data ?? []; const rows = all.filter((a) => (st === "ended" ? a.state === "ended" || a.state === "cancelled" : a.state === st));
   async function end(a: SvAssignment) { const why = await askText(a.state === "future" ? "سبب إلغاء الإسناد قبل بدايته" : "سبب إنهاء الإسناد الآن (يتوقف وصول المشرف فورًا)", { required: true, ok: "تأكيد" }); if (!why) return;
-    const r = await db.rpc("sv_asg_end", { _id: a.id, _rev: a.rev, _reason: why }); if (r.error) return toast.error(arabicError(r.error)); toast.success("انتهى الإسناد"); q.refetch(); }
+    const r = await db.rpc("sv_asg_end", { _id: a.id, _rev: a.rev, _reason: why }); if (r.error) { toast.error(arabicError(r.error)); return; } toast.success("انتهى الإسناد"); q.refetch(); }
   return <div className="space-y-4">
     <p className="text-sm text-muted-foreground">الإسناد بمدة يخص المشرف وحده؛ صلاحيات المعلم والمدير والمالك الأصلية لا تحتاج إسنادًا. الأوقات بتوقيت الرياض.</p>
     <div className="flex flex-wrap gap-2">{(["current", "future", "ended"] as const).map((k) => <Button key={k} size="sm" variant={st === k ? "default" : "outline"} onClick={() => setSt(k)}>{k === "current" ? "الحالية" : k === "future" ? "المستقبلية" : "المنتهية"} ({all.filter((a) => (k === "ended" ? a.state === "ended" || a.state === "cancelled" : a.state === k)).length})</Button>)}

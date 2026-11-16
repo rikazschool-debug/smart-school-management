@@ -18,7 +18,7 @@ export function Delegations({ org, me }: { org: string; me: SvMe }) {
   const q = useQuery({ queryKey: ["sv-deleg", org], queryFn: async () => { const r = await db.rpc("sv_deleg_list", { _org: org }); if (r.error) throw r.error; return r.data as SvDelegation[]; } });
   const [adding, setAdding] = useState(false);
   if (q.isLoading) return <LoadingState />; if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
-  async function revoke(d: SvDelegation) { const why = await askText("سبب إلغاء التفويض", { required: true, ok: "إلغاء التفويض" }); if (!why) return; const r = await db.rpc("sv_deleg_revoke", { _id: d.id, _reason: why }); if (r.error) return toast.error(arabicError(r.error)); toast.success("أُلغي التفويض"); q.refetch(); }
+  async function revoke(d: SvDelegation) { const why = await askText("سبب إلغاء التفويض", { required: true, ok: "إلغاء التفويض" }); if (!why) return; const r = await db.rpc("sv_deleg_revoke", { _id: d.id, _reason: why }); if (r.error) { toast.error(arabicError(r.error)); return; } toast.success("أُلغي التفويض"); q.refetch(); }
   const rows = q.data ?? [];
   return <div className="space-y-4">
     <p className="text-sm text-muted-foreground">التفويض محدد بالعمل والنطاق والمدة، ويمنحه مالك المجموعة فقط. لا يعتمد المفوَّض عملًا كتبه، ولا يحصل على صلاحية عامة.</p>

@@ -112,7 +112,7 @@ function RecordView({ id, org, onBack }: { id: string; org: string; onBack: () =
       {r.needs_handover && <Handover r={r} org={org} onDone={refresh} />}
     </div>
     <details className="rounded-2xl border bg-card p-4"><summary className="cursor-pointer text-sm font-semibold">سجل الإجراءات ({r.events.length})</summary>
-      <ol className="mt-3 space-y-1 text-sm">{r.events.map((e, i) => <li key={i} className="flex flex-wrap gap-2"><span className="font-medium">{ACTION_LABEL[e.action] ?? e.action}</span><span className="text-muted-foreground">{e.actor} · {riyadhText(e.at)}</span>{typeof e.details?.text === "string" && <span className="text-muted-foreground">— {e.details.text}</span>}</li>)}</ol></details>
+      <ol className="mt-3 space-y-1 text-sm">{r.events.map((e, i) => <li key={i} className="flex flex-wrap gap-2"><span className="font-medium">{ACTION_LABEL[e.action] ?? e.action}</span><span className="text-muted-foreground">{e.actor} · {riyadhText(e.at)}</span>{typeof e.details?.["text"] === "string" && <span className="text-muted-foreground">— {e.details["text"]}</span>}</li>)}</ol></details>
   </div>;
 }
 
@@ -121,6 +121,6 @@ function Handover({ r, org, onDone }: { r: SvRecordFull; org: string; onDone: ()
   const cands = (asg.data ?? []).filter((a) => a.state === "current" && a.school_id === r.school_id && (!r.teacher_id || a.teacher_ids.includes(r.teacher_id)));
   const [to, setTo] = useState("");
   async function go() { const why = await askText("سبب التسليم", { required: true, ok: "تسليم" }); if (!why) return;
-    const x = await db.rpc("sv_handover", { _id: r.id, _to: to === "me" ? (await db.auth.getUser()).data.user?.id : to, _reason: why }); if (x.error) return toast.error(arabicError(x.error)); toast.success("سُلّم السجل"); onDone(); }
+    const x = await db.rpc("sv_handover", { _id: r.id, _to: to === "me" ? (await db.auth.getUser()).data.user?.id : to, _reason: why }); if (x.error) { toast.error(arabicError(x.error)); return; } toast.success("سُلّم السجل"); onDone(); }
   return <div className="flex items-center gap-2"><select aria-label="المسؤول المستلم" className={selectCls("", true)} value={to} onChange={(e) => setTo(e.target.value)}><option value="">— المستلم —</option><option value="me">أنا (مدير الفرع)</option>{cands.map((a) => <option key={a.id} value={a.supervisor_id}>{a.supervisor} (مسند إليه المعلم)</option>)}</select><Button size="sm" variant="outline" disabled={!to} onClick={go}>تسليم المتابعة</Button></div>;
 }
