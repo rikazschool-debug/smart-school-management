@@ -49,7 +49,7 @@ async def main():
                 pr = await pp.value; await pr.wait_for_load_state(); check(f"{tag}: print view opens RTL", (await pr.evaluate("document.documentElement.dir")) == "rtl"); await pr.close()
             except Exception as e: check(f"{tag}: print view opens RTL", False, e)
             await step(f"{tag}: coordinator inbox shows guardian note", expect(o.get_by_text(note)).to_be_visible(timeout=20000))
-            item = o.locator("li").filter(has_text=note); await item.get_by_role("button", name="قبول").click()
+            item = o.locator("li").filter(has_text=note); await item.get_by_role("button", name="قبول", exact=True).click()
             await step(f"{tag}: coordinator accepts note", expect(item.get_by_text("قُبلت")).to_be_visible(timeout=20000))
             await o.screenshot(path=SH + f"reports_{tag}.png")
             for n, e in [("guardian", ge), ("student", se), ("coordinator", oe)]: check(f"{tag}: no page errors ({n})", not e, e)
