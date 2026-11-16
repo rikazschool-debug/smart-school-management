@@ -3,8 +3,8 @@ export type GtSearch = { tab?: GtTab; id?: string };
 const TABS: GtTab[] = ["board", "nominations", "students", "plans", "programs", "works", "reports"];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function gtSearch(s: Record<string, unknown>): GtSearch {
-  const tab = TABS.includes(s.tab as GtTab) ? (s.tab as GtTab) : undefined;
-  const id = typeof s.id === "string" && UUID.test(s.id) ? s.id : undefined;
+  const tab = TABS.includes(s["tab"] as GtTab) ? (s["tab"] as GtTab) : undefined;
+  const id = typeof s["id"] === "string" && UUID.test(s["id"]) ? s["id"] : undefined;
   return { ...(tab ? { tab } : {}), ...(id ? { id } : {}) };
 }
 export const GT_DOMAINS: Record<string, string> = { intellectual: "قدرات عقلية", academic: "تفوق أكاديمي", scientific: "علمي وبحثي", technology: "تقنية وبرمجة", creative: "إبداع وابتكار", linguistic: "لغوي وأدبي", artistic: "فنون", leadership: "قيادة", sports: "رياضة", other: "مجال آخر" };
