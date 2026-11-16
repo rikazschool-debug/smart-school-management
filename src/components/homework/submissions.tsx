@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FileList, Uploader } from "@/components/homework/files";
 import { arabicError } from "@/lib/session";
 import { GRADE_STATUS, SUB_STATUS, fromLocalInput, safeHref, schoolTime, statusTone } from "@/lib/homework";
+import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 
 type Filter = "all" | "missing" | "late" | "returned" | "to_grade" | "to_publish";
 
@@ -61,15 +62,18 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
     late: (r) => r["atts"].some((a: Row) => a["is_late"]),
     returned: (r) => r["sub"]?.["status"] === "returned",
     to_grade: needsGrade,
-    to_publish: (r) => r["grade"]?.["status"] === "graded" && !r["grade"]["needs_review"],
+    to_publish: (r) => r["grade"]?.["status"] === "graded" && !r["grade"]["needs_review"] && (h["kind"] !== "test" || !!r["grade"]["exam_approved_at"]),
   };
-  const labels: Record<Filter, string> = { all: "الكل", missing: "لم يسلّم", late: "متأخر", returned: "معاد", to_grade: "يحتاج تصحيحًا", to_publish: "محفوظ سابقًا وغير ظاهر" };
+  const labels: Record<Filter, string> = { all: "الكل", missing: "لم يسلّم", late: "متأخر", returned: "معاد", to_grade: "يحتاج تصحيحًا", to_publish: h["kind"] === "test" ? "معتمد للنشر" : "محفوظ سابقًا وغير ظاهر" };
   const term = search.trim();
   const shown = rows.filter(fns[filter]).filter((r) => !term || (r["students"]?.["full_name"] ?? "").includes(term));
   const current = rows.find((r) => r["student_id"] === sel) ?? null;
   const idx = shown.findIndex((r) => r["student_id"] === sel);
   const readyCount = rows.filter(fns.to_publish).length;
   const isTest = h["kind"] === "test";
+  const report = () => ({ title: `كشف نتائج ${h["title"]}`, filters: [labels[filter], ...(term ? [`الاسم: ${term}`] : [])] });
+  const reportHeaders = ["الطالب", "التسليم", "الدرجة", "من", "حالة النتيجة", "المراجعة", "الاعتماد", "النشر"];
+  const reportRows = () => shown.map(r => [r["students"]?.["full_name"] ?? "", SUB_STATUS[r["sub"]?.["status"] ?? "none"], r["grade"]?.["score"] ?? null, h["max_score"], GRADE_STATUS[r["grade"]?.["status"] ?? "none"], schoolTime(r["grade"]?.["exam_reviewed_at"]), schoolTime(r["grade"]?.["exam_approved_at"]), schoolTime(r["grade"]?.["published_at"])]);
   return (
     <section className="space-y-3 rounded-2xl border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -84,6 +88,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
         )}
       </div>
       <Input placeholder="ابحث باسم الطالب" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+      {isTest && <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => exportXlsx(report(), reportHeaders, reportRows())}>Excel</Button><Button size="sm" variant="outline" onClick={() => void exportPdf(report(), reportHeaders, reportRows()).catch(e => toast.error(arabicError(e)))}>PDF</Button><Button size="sm" variant="outline" onClick={() => printReport(report(), reportHeaders, reportRows())}>طباعة كشف النتائج</Button></div>}
       <div className="flex flex-wrap gap-2">
         {(Object.keys(labels) as Filter[]).map((k) => <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k)}>{labels[k]} ({rows.filter(fns[k]).length})</Button>)}
       </div>
