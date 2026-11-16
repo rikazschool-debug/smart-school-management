@@ -7688,6 +7688,69 @@ export type Database = {
           },
         ]
       }
+      gt_family_notes: {
+        Row: {
+          body: string
+          by_role: string
+          by_user: string
+          created_at: string
+          id: string
+          kind: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school_id: string
+          status: string
+          student_id: string
+          url: string | null
+        }
+        Insert: {
+          body: string
+          by_role: string
+          by_user: string
+          created_at?: string
+          id?: string
+          kind?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id: string
+          status?: string
+          student_id: string
+          url?: string | null
+        }
+        Update: {
+          body?: string
+          by_role?: string
+          by_user?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string
+          status?: string
+          student_id?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gt_family_notes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gt_family_notes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gt_followups: {
         Row: {
           changes: Json
@@ -25403,6 +25466,26 @@ export type Database = {
       }
       gt_consent: {
         Args: { _decision: string; _program: string; _student: string }
+        Returns: undefined
+      }
+      gt_export_log: {
+        Args: {
+          _filters: Json
+          _format: string
+          _report: string
+          _rows: number
+          _school: string
+        }
+        Returns: undefined
+      }
+      gt_family: { Args: { _student: string }; Returns: Json }
+      gt_family_inbox: { Args: { _school: string }; Returns: Json }
+      gt_family_note: {
+        Args: { _body: string; _kind: string; _student: string; _url: string }
+        Returns: string
+      }
+      gt_family_review: {
+        Args: { _decision: string; _id: string; _note: string }
         Returns: undefined
       }
       gt_me: { Args: { _school: string }; Returns: Json }
