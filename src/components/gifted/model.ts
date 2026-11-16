@@ -89,3 +89,14 @@ export function calendarItems(progs: Pick<Program, "id" | "title" | "starts_on" 
   for (const p of plans) { if (p.status === "closed") continue; if (p.end_date) out.push({ date: p.end_date, label: `نهاية خطة: ${p.title}`, kind: "plan_end", ref: p.id }); p.goals.forEach((g, i) => g.due && out.push({ date: g.due, label: `موعد هدف ${i + 1}: ${p.title}`, kind: "goal", ref: p.id })); }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
+
+export const WORK_KIND: Record<string, string> = { project: "مشروع", participation: "مشاركة", achievement: "إنجاز" };
+export const WORK_LEVEL: Record<string, string> = { school: "مدرسي", district: "مكتب تعليم", region: "منطقة", national: "وطني", international: "دولي" };
+export const VERIFY: Record<string, string> = { pending: "بانتظار التحقق", verified: "متحقَّق", rejected: "غير متحقَّق" };
+export type Work = { id: string; no: number; kind: string; title: string; domain: string; description: string | null; supervisor: string | null; stages: { title: string; done?: boolean }[]; outputs: string | null; event_name: string | null; organizer: string | null; event_date: string | null; level: string | null; result: string | null; program_id: string | null; program: string | null; links: { title: string; url: string }[]; verify: string; verify_note: string | null; verifier: string | null; verified_at: string | null; by: string | null; rev: number; members: { student_id: string; name: string; role: string | null }[]; files: { id: string; name: string; mime: string; path: string; title: string | null }[] };
+
+/** Group achievements count once; per-student counts are a separate figure. */
+export function workStats(ws: Pick<Work, "kind" | "verify" | "members">[]) {
+  const ach = ws.filter((w) => w.kind === "achievement");
+  return { achievements: ach.length, verified: ach.filter((w) => w.verify === "verified").length, participations: ws.filter((w) => w.kind === "participation").length, projects: ws.filter((w) => w.kind === "project").length, students: new Set(ach.flatMap((w) => w.members.map((m) => m.student_id))).size };
+}
