@@ -1,3 +1,4 @@
+import { OrgYears } from "@/components/org-years";
 import { createFileRoute } from "@tanstack/react-router";
 import { CrudTable } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
@@ -56,31 +57,7 @@ const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], qu
                 {tabs.includes("scopes") && <TabsTrigger value="scopes">نطاق الوكلاء والمشرفين</TabsTrigger>}
               </TabsList>
               <TabsContent value="years" className="space-y-10">
-                {access("academic_years") && <CrudTable title="السنوات الدراسية" table="academic_years" schoolId={s} defaults={{ available: true }} filter={owner ? {} : { available: true }} canDelete={false} canWrite={edit("academic_years")} order="start_date" searchKeys={["name"]}
-                  fields={[
-                    { key: "name", label: "الاسم", required: true },
-                    { key: "start_date", label: "البداية", type: "date", required: true },
-                    { key: "end_date", label: "النهاية", type: "date", required: true },
-                    { key: "is_current", label: "السنة الحالية", type: "checkbox" },
-                    { key: "available", label: "متاح للفرع", type: "checkbox" },
-                  ]}
-                  columns={[
-                    { label: "الاسم", render: (r) => r["name"] },
-                    { label: "الفترة", render: (r) => `${r["start_date"]} ← ${r["end_date"]}` },
-                    { label: "الحالة", render: (r) => (r["is_current"] ? "حالية" : "—") },
-                  ]} />}
-                {access("academic_terms") && <CrudTable title="الفصول الدراسية" table="terms" schoolId={s} defaults={{ available: true }} filter={owner ? {} : { available: true }} canDelete={false} canWrite={edit("academic_terms")} select="*, academic_years(name)" searchKeys={["name"]}
-                  fields={[
-                    { key: "year_id", label: "السنة", type: "select", required: true, options: { table: "academic_years", label: "name" } },
-                    { key: "name", label: "الاسم", required: true },
-                    { key: "start_date", label: "البداية", type: "date" },
-                    { key: "end_date", label: "النهاية", type: "date" },
-                    { key: "available", label: "متاح للفرع", type: "checkbox" },
-                  ]}
-                  columns={[
-                    { label: "الفصل", render: (r) => r["name"] },
-                    { label: "السنة", render: (r) => r["academic_years"]?.name },
-                  ]} />}
+                {ctx.orgId && <OrgYears org={ctx.orgId} owner={owner} />}
               </TabsContent>
               <TabsContent value="structure" className="space-y-10">
                 {access("academic_stages") && <CrudTable title="المراحل" table="stages" schoolId={s} defaults={{ available: true }} filter={owner ? {} : { available: true }} canDelete={false} canWrite={edit("academic_stages")} order="sort_order" searchKeys={["name"]}
