@@ -72,6 +72,7 @@ import { Route as AuthenticatedAppSupportRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppTagsRouteImport } from './routes/_authenticated/app/tags'
 import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
 import { Route as AuthenticatedAppTeamLeaveRouteImport } from './routes/_authenticated/app/team-leave'
+import { Route as AuthenticatedAppTestsRouteImport } from './routes/_authenticated/app/tests'
 import { Route as AuthenticatedAppTransportRouteImport } from './routes/_authenticated/app/transport'
 import { Route as AuthenticatedAppVisitsRouteImport } from './routes/_authenticated/app/visits'
 import { Route as JoinTrackCodeRouteImport } from './routes/join.track.$code'
@@ -468,6 +469,11 @@ const AuthenticatedAppTeamLeaveRoute =
     path: '/team-leave',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppTestsRoute = AuthenticatedAppTestsRouteImport.update({
+  id: '/tests',
+  path: '/tests',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
 const AuthenticatedAppTransportRoute =
   AuthenticatedAppTransportRouteImport.update({
     id: '/transport',
@@ -793,6 +799,7 @@ export interface FileRoutesByFullPath {
   '/app/tags': typeof AuthenticatedAppTagsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
+  '/app/tests': typeof AuthenticatedAppTestsRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app/visits': typeof AuthenticatedAppVisitsRoute
   '/join/track/$code': typeof JoinTrackCodeRoute
@@ -901,6 +908,7 @@ export interface FileRoutesByTo {
   '/app/tags': typeof AuthenticatedAppTagsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
+  '/app/tests': typeof AuthenticatedAppTestsRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app/visits': typeof AuthenticatedAppVisitsRoute
   '/join/track/$code': typeof JoinTrackCodeRoute
@@ -1012,6 +1020,7 @@ export interface FileRoutesById {
   '/_authenticated/app/tags': typeof AuthenticatedAppTagsRoute
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/_authenticated/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
+  '/_authenticated/app/tests': typeof AuthenticatedAppTestsRoute
   '/_authenticated/app/transport': typeof AuthenticatedAppTransportRoute
   '/_authenticated/app/visits': typeof AuthenticatedAppVisitsRoute
   '/join/track/$code': typeof JoinTrackCodeRoute
@@ -1123,6 +1132,7 @@ export interface FileRouteTypes {
     | '/app/tags'
     | '/app/teachers'
     | '/app/team-leave'
+    | '/app/tests'
     | '/app/transport'
     | '/app/visits'
     | '/join/track/$code'
@@ -1231,6 +1241,7 @@ export interface FileRouteTypes {
     | '/app/tags'
     | '/app/teachers'
     | '/app/team-leave'
+    | '/app/tests'
     | '/app/transport'
     | '/app/visits'
     | '/join/track/$code'
@@ -1341,6 +1352,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/tags'
     | '/_authenticated/app/teachers'
     | '/_authenticated/app/team-leave'
+    | '/_authenticated/app/tests'
     | '/_authenticated/app/transport'
     | '/_authenticated/app/visits'
     | '/join/track/$code'
@@ -1853,6 +1865,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppTeamLeaveRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/tests': {
+      id: '/_authenticated/app/tests'
+      path: '/tests'
+      fullPath: '/app/tests'
+      preLoaderRoute: typeof AuthenticatedAppTestsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/transport': {
       id: '/_authenticated/app/transport'
       path: '/transport'
@@ -2224,6 +2243,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppTagsRoute: typeof AuthenticatedAppTagsRoute
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
   AuthenticatedAppTeamLeaveRoute: typeof AuthenticatedAppTeamLeaveRoute
+  AuthenticatedAppTestsRoute: typeof AuthenticatedAppTestsRoute
   AuthenticatedAppTransportRoute: typeof AuthenticatedAppTransportRoute
   AuthenticatedAppVisitsRoute: typeof AuthenticatedAppVisitsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
@@ -2318,6 +2338,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppTagsRoute: AuthenticatedAppTagsRoute,
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
   AuthenticatedAppTeamLeaveRoute: AuthenticatedAppTeamLeaveRoute,
+  AuthenticatedAppTestsRoute: AuthenticatedAppTestsRoute,
   AuthenticatedAppTransportRoute: AuthenticatedAppTransportRoute,
   AuthenticatedAppVisitsRoute: AuthenticatedAppVisitsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
