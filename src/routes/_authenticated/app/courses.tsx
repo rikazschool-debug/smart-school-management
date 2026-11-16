@@ -88,7 +88,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           {canAssign && <MultiSectionAssign schoolId={ctx.schoolId} canCreateCourses={create} canApprove={approve} />}
         </div>
         {pending.isLoading ? <LoadingState /> : pending.error ? <ErrorState message={arabicError(pending.error)} onRetry={() => pending.refetch()} /> : visible.length === 0 ? (
-          <EmptyState title="لا توجد تكليفات" hint={ctx.role === "dept_head" ? "تظهر هنا تكليفات مواد قسمك فقط." : undefined} />
+          <EmptyState title="لا توجد تكليفات" hint={ctx.role === "dept_head" ? "تظهر هنا تكليفات مقررات قسمك فقط." : undefined} />
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
             {visible.map((a) => (
@@ -118,7 +118,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         select="*, academic_years(name), subjects(name, department_id), sections(name, grades(name)), teacher_assignments(status, teachers(full_name))"
         fields={[
           { key: "year_id", label: "السنة", type: "select", required: true, options: { table: "academic_years", label: "name" } },
-          { key: "subject_id", label: "المادة", type: "select", required: true, options: { table: "subjects", label: "name" } },
+          { key: "subject_id", label: "المقرر", type: "select", required: true, options: { table: "subjects", label: "name" } },
           { key: "section_id", label: "الشعبة", type: "select", required: true, options: { table: "sections", label: "name" } },
           { key: "weekly_periods", label: "الحصص الأسبوعية", type: "number" },
         ]}

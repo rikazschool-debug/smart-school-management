@@ -56,7 +56,7 @@ export function SubstitutionsTab({ ctx }: { ctx: AppContext & { schoolId: string
         <div className="space-y-1"><Label htmlFor="d">التاريخ</Label><Input id="d" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></div>
         <span className="pb-2 text-sm text-muted-foreground">{DAY_NAMES[dow]} — {todays.length} حصة في الجدول الساري — {uncovered.length} بلا تغطية</span>
         {(subs.data?.length ?? 0) + (absences.data?.length ?? 0) > 0 && <ExportButtons title={`تقرير التبديل — ${date}`} school={ctx.schoolName} filters={[`التاريخ: ${date}`]}
-          headers={["المعلم الغائب", "الحصة", "المادة", "الشعبة", "البديل", "الحالة", "السبب"]}
+          headers={["المعلم الغائب", "الحصة", "المقرر", "الشعبة", "البديل", "الحالة", "السبب"]}
           rows={() => todays.filter((sl) => absentIds.has(sl["teacher_id"])).flatMap((sl) => {
             const l = slotLabel(sl); const hist = (subs.data ?? []).filter((x) => x["slot_id"] === sl["id"]);
             const base = [l.teacher, sl["periods"]?.name ?? "", l.subject, l.section];

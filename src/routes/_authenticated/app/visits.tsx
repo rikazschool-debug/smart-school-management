@@ -71,7 +71,7 @@ function Page() {
           <div><Label>المعلم</Label><select className={selectCls("w-full")} value={edit.teacher_id ?? ""} onChange={(e) => setEdit({ ...edit, teacher_id: e.target.value })}><option value="">— اختر —</option>{(teachers.data ?? []).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
           <div><Label>تاريخ الزيارة</Label><Input type="date" max={today()} value={edit.visit_date ?? today()} onChange={(e) => setEdit({ ...edit, visit_date: e.target.value })} /></div>
           <div><Label>الحصة / الدرس</Label><Input value={edit.lesson ?? ""} onChange={(e) => setEdit({ ...edit, lesson: e.target.value })} /></div>
-          <div><Label>المادة</Label><Input value={edit.subject ?? ""} onChange={(e) => setEdit({ ...edit, subject: e.target.value })} /></div>
+          <div><Label>المقرر</Label><Input value={edit.subject ?? ""} onChange={(e) => setEdit({ ...edit, subject: e.target.value })} /></div>
           <div><Label>الشعبة</Label><Input value={edit.section ?? ""} onChange={(e) => setEdit({ ...edit, section: e.target.value })} /></div>
           <div><Label>نوع الزيارة</Label><select className={selectCls("w-full")} value={edit.visit_type ?? ""} onChange={(e) => setEdit({ ...edit, visit_type: e.target.value })}><option value="">—</option><option>مجدولة</option><option>مفاجئة</option><option>متابعة</option><option>تبادلية</option></select></div>
         </div>

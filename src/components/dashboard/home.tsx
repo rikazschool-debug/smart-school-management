@@ -254,8 +254,8 @@ function TeacherHome({ schoolId }: { schoolId: string }) {
         <Panel title="واجباتي حسب الحالة" to="/app/homework">{!h ? <LoadingState rows={3} /> : <Donut data={h.byStatus} center="عنصر" />}</Panel>
         <Panel title="الواجبات مقابل الاختبارات" to="/app/homework">{!h ? <LoadingState rows={3} /> : <Bars data={h.byKind} color={2} height={160} />}</Panel>
       </div>
-      <Panel title="موادي وشعبي" to="/app/classrooms" cta="الفصول الرقمية">
-        {!q.data?.length ? <EmptyState title="لا توجد مقررات مكلف بها" hint="تظهر هنا المواد والشعب بعد اعتماد تكليفك." /> : (
+      <Panel title="مقرراتي وشعبي" to="/app/classrooms" cta="الفصول الرقمية">
+        {!q.data?.length ? <EmptyState title="لا توجد مقررات مكلف بها" hint="تظهر هنا المقررات والشعب بعد اعتماد تكليفك." /> : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {q.data.map((a) => {
               const c = a["courses"];

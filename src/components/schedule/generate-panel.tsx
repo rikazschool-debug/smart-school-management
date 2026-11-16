@@ -20,7 +20,7 @@ const STATUS: Record<SolveResult["status"], { label: string; tone: string }> = {
   timeout: { label: "انتهى وقت البحث", tone: "bg-accent text-accent-foreground" },
 };
 const PRIORITY: Record<string, { label: string; w: Partial<Weights> }> = {
-  spread: { label: "توزيع المادة على الأسبوع", w: { spread: 10, soft: 6, dayPrefs: 3 } },
+  spread: { label: "توزيع المقرر على الأسبوع", w: { spread: 10, soft: 6, dayPrefs: 3 } },
   teacher: { label: "رغبات المعلمين (التفضيلات)", w: { soft: 14, spread: 5, dayPrefs: 4 } },
   balance: { label: "توازن حمل المعلم وتقليل الفراغات", w: { balance: 4, gaps: 6, spread: 5, soft: 6 } },
 };

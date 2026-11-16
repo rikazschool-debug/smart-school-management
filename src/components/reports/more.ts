@@ -100,22 +100,22 @@ export const MORE_REPORTS: Record<string, Def> = {
     },
   },
   assignments: {
-    group: "المعلمون والجدول", label: "إسناد المواد للمعلمين", summary: "حسب المعلم", note: "الإسنادات السارية خلال الفترة",
+    group: "المعلمون والجدول", label: "إسناد المقررات للمعلمين", summary: "حسب المعلم", note: "الإسنادات السارية خلال الفترة",
     run: async (p, detail) => {
       const rows = (await all((a, b) => db.from("teacher_assignments").select("status, start_date, end_date, teachers(full_name), courses(weekly_periods, subjects(name), sections(name, grades(name)))").eq("school_id", p.school).eq("status", "approved").range(a, b)))
         .filter((r) => (!p.to || !r["start_date"] || r["start_date"] <= p.to) && (!p.from || !r["end_date"] || r["end_date"] >= p.from));
-      if (detail) return { headers: ["المعلم", "المادة", "الصف", "الشعبة", "الحصص الأسبوعية", "من", "إلى"], rows: rows.map((r) => [r["teachers"]?.full_name, r["courses"]?.subjects?.name, r["courses"]?.sections?.grades?.name, r["courses"]?.sections?.name, n(r["courses"]?.weekly_periods), r["start_date"] ?? "", r["end_date"] ?? "مفتوح"]) };
+      if (detail) return { headers: ["المعلم", "المقرر", "الصف", "الشعبة", "الحصص الأسبوعية", "من", "إلى"], rows: rows.map((r) => [r["teachers"]?.full_name, r["courses"]?.subjects?.name, r["courses"]?.sections?.grades?.name, r["courses"]?.sections?.name, n(r["courses"]?.weekly_periods), r["start_date"] ?? "", r["end_date"] ?? "مفتوح"]) };
       const by = new Map<string, { c: number; w: number }>();
       for (const r of rows) { const k = r["teachers"]?.full_name ?? ""; const v = by.get(k) ?? { c: 0, w: 0 }; v.c += 1; v.w += Number(r["courses"]?.weekly_periods ?? 0); by.set(k, v); }
       const list = [...by.entries()].sort((a, b) => a[0].localeCompare(b[0], "ar")).map(([k, v]) => [k, v.c, v.w]);
-      return { headers: ["المعلم", "عدد المواد/الشعب", "الحصص الأسبوعية"], rows: list.length ? [...list, ["الإجمالي", rows.length, list.reduce((t, r) => t + Number(r[2]), 0)]] : [] };
+      return { headers: ["المعلم", "عدد المقررات/الشعب", "الحصص الأسبوعية"], rows: list.length ? [...list, ["الإجمالي", rows.length, list.reduce((t, r) => t + Number(r[2]), 0)]] : [] };
     },
   },
   class_visits: {
     group: "المعلمون والجدول", label: "الزيارات الصفية", summary: "حسب نوع الزيارة والحالة", note: "حسب تاريخ الزيارة",
     run: async (p, detail) => {
       const rows = (await allRpc(async () => db.rpc("cv_list" as never, { _school: p.school } as never), 100000)).filter((r) => inPeriod(r["visit_date"] ?? r["created_at"], p));
-      if (detail) return { headers: ["التاريخ", "المعلم", "المادة", "الشعبة", "نوع الزيارة", "الحالة"], rows: rows.map((r) => [rday(r["visit_date"]), r["teacher"] ?? "", r["subject"] ?? "", r["section"] ?? "", r["visit_type"] ?? "", lbl(CV, r["status"])]) };
+      if (detail) return { headers: ["التاريخ", "المعلم", "المقرر", "الشعبة", "نوع الزيارة", "الحالة"], rows: rows.map((r) => [rday(r["visit_date"]), r["teacher"] ?? "", r["subject"] ?? "", r["section"] ?? "", r["visit_type"] ?? "", lbl(CV, r["status"])]) };
       return groupCount(rows, ["نوع الزيارة", "الحالة"], (r) => [String(r["visit_type"] ?? ""), lbl(CV, r["status"])]);
     },
   },

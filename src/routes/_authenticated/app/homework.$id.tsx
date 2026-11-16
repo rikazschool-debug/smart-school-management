@@ -413,14 +413,14 @@ function FamilyPanel({ h }: { h: Row }) {
   );
 }
 
-/** "أعدّه" = author (kept even after teacher change); "معلم المادة" = current approved assignment. Never swapped silently. */
+/** "أعدّه" = author (kept even after teacher change); "معلم المقرر" = current approved assignment. Never swapped silently. */
 function peopleLine(p: Row | null) {
   if (!p) return " · تعذر تحميل اسم المعلم";
   const cur = (p["current_teachers"] ?? []) as string[];
   const author = p["author_name"] as string | null;
   const parts: string[] = [];
-  if (cur.length) parts.push(`معلم المادة: ${cur.join("، ")}`);
-  else parts.push("معلم المادة: لا يوجد تكليف ساري حاليًا");
+  if (cur.length) parts.push(`معلم المقرر: ${cur.join("، ")}`);
+  else parts.push("معلم المقرر: لا يوجد تكليف ساري حاليًا");
   if (author && !(p["author_is_current"] && cur.length === 1 && cur[0] === author)) parts.push(`أعدّه: ${author}`);
   else if (!author) parts.push("أعدّه: غير مسجل في هذا السجل القديم");
   return " · " + parts.join(" · ");
@@ -431,7 +431,7 @@ function Hero({ h }: { h: Row }) {
   const cur = ((p?.["current_teachers"] ?? []) as string[]);
   const author = p?.["author_name"] as string | null | undefined;
   const facts: [string, React.ReactNode][] = [
-    ["معلم المادة", !p ? "تعذر التحميل" : cur.length ? cur.join("، ") : "لا يوجد تكليف ساري"],
+    ["معلم المقرر", !p ? "تعذر التحميل" : cur.length ? cur.join("، ") : "لا يوجد تكليف ساري"],
     ["أعدّه", author ?? "غير مسجل"],
     ["موعد التسليم", schoolTime(h["due_at"])],
     ["سياسة التأخر", <>{LATE_LABEL[h["late_policy"]]}{h["late_until"] && ` — حتى ${schoolTime(h["late_until"])}`}</>],

@@ -31,11 +31,11 @@ function Page() {
   if (!active || (!NAV_BY_ROLE[active.role].includes("classrooms") && !permissions?.["bt_classroom.view"]) || permissions?.["bt_classroom.view"] === false) return <ForbiddenState />;
   return (
     <>
-      <PageHeader title="الفصول الرقمية" desc="فصل رقمي واحد لكل صف وشعبة، وداخله المواد ومعلموها ومشاركاتها. تظهر لك الفصول والمواد التي تخصك فقط." />
+      <PageHeader title="الفصول الرقمية" desc="فصل رقمي واحد لكل صف وشعبة، وداخله المقررات ومعلموها ومشاركاتها. تظهر لك الفصول والمقررات التي تخصك فقط." />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !q.data?.length ? (
         <EmptyState title="لا توجد فصول رقمية" hint="يُنشأ الفصل تلقائيًا لكل شعبة فور إنشائها." />
       ) : (() => { const rows = applyListTools(t, q.data, (c) => c["title"] ?? ""); return <>
-        <ListTools s={t} placeholder="ابحث باسم الصف أو الشعبة" count={rows.length} exp={{ title: "الفصول الرقمية", school: active.schoolName, headers: ["الفصل", "المواد", "المعلمون", "الطلاب", "المشاركات"], rows: () => rows.map((c) => [c["title"], c["subjects"], c["teachers"], c["students"] ?? "—", c["posts"]]) }} />
+        <ListTools s={t} placeholder="ابحث باسم الصف أو الشعبة" count={rows.length} exp={{ title: "الفصول الرقمية", school: active.schoolName, headers: ["الفصل", "المقررات", "المعلمون", "الطلاب", "المشاركات"], rows: () => rows.map((c) => [c["title"], c["subjects"], c["teachers"], c["students"] ?? "—", c["posts"]]) }} />
         {rows.length ? <ClassroomGrid rows={rows} /> : <EmptyState title="لا نتائج مطابقة" hint="غيّر كلمة البحث." />}
       </>; })()}
     </>
@@ -70,13 +70,13 @@ function ClassroomGrid({ rows }: { rows: Row[] }) {
             {c["mine"] && <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">فصلي</span>}
           </div>
           <div className="grid grid-cols-4 gap-2 p-4 pt-3">
-            <Stat icon={BookOpen} n={c["subjects"]} label="مادة" />
+            <Stat icon={BookOpen} n={c["subjects"]} label="مقرر" />
             <Stat icon={GraduationCap} n={c["teachers"]} label="معلم" />
             <Stat icon={Users} n={c["students"]} label="طالب" />
             <Stat icon={MessageSquare} n={c["posts"]} label="مشاركة" />
           </div>
           <div className="mt-auto flex items-center justify-between border-t px-4 py-2.5 text-sm text-primary">
-            <span>{Number(c["subjects"]) ? "دخول الفصل" : "فصل جديد — لم تُضف مواد بعد"}</span>
+            <span>{Number(c["subjects"]) ? "دخول الفصل" : "فصل جديد — لم تُضف مقررات بعد"}</span>
             <ArrowLeft className="size-4 transition group-hover:-translate-x-1" />
           </div>
         </Link>

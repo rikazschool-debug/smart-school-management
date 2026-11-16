@@ -60,7 +60,7 @@ export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = fa
   function toggle(id: string) { const n = new Set(picked); if (n.has(id)) n.delete(id); else n.add(id); setPicked(n); }
 
   async function save() {
-    if ((!teacher && !isCourse) || !subject || !yearId) return void toast.error(isCourse ? "اختر المادة والسنة" : "اختر المعلم والمادة والسنة");
+    if ((!teacher && !isCourse) || !subject || !yearId) return void toast.error(isCourse ? "اختر المقرر والسنة" : "اختر المعلم والمقرر والسنة");
     if (!picked.size) return void toast.error("اختر شعبة واحدة على الأقل");
     if (end && end < start) return void toast.error("نهاية السريان قبل بدايته");
     setBusy(true);
@@ -70,7 +70,7 @@ export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = fa
       try {
         let cid = courseOf(sec)?.["id"] as string | undefined;
         if (!cid) {
-          if (!canCreateCourses) throw new Error("لا يوجد مقرر لهذه المادة في الشعبة؛ تطلب إنشاءه من الإدارة");
+          if (!canCreateCourses) throw new Error("هذا المقرر غير مُنشأ لهذه الشعبة؛ تطلب إنشاءه من الإدارة");
           const c = await db.from("courses").insert({ school_id: schoolId, year_id: yearId, subject_id: subject, section_id: sec, weekly_periods: Number(periods) || null }).select("id").single();
           if (c.error) throw c.error; cid = c.data.id as string; made++;
         }
@@ -100,15 +100,15 @@ export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = fa
       <Dialog open={open} onOpenChange={(o) => !busy && setOpen(o)}>
         <DialogContent dir="rtl" className="max-h-[90dvh] max-w-2xl overflow-y-auto">
           <DialogHeader><DialogTitle>{isCourse ? "إضافة مقرر لعدة شعب" : "تكليف معلم بعدة شعب"}</DialogTitle></DialogHeader>
-          <p className="text-xs text-muted-foreground">{isCourse ? "اختر السنة والمادة ثم الشعب، ويُنشأ مقرر لكل شعبة. اختر المعلم الآن ليُكلَّف بها كلها ويظهر في الفصل الرقمي لكل شعبة، أو اتركه وكلّفه لاحقًا." : "اختر المعلم والمادة ثم كل الشعب التي يدرّسها. يُنشأ تكليف مستقل لكل شعبة، وبعد الاعتماد يظهر المعلم في الفصل الرقمي لكل شعبة."}</p>
+          <p className="text-xs text-muted-foreground">{isCourse ? "اختر السنة والمقرر ثم الشعب، ويُنشأ مقرر لكل شعبة. اختر المعلم الآن ليُكلَّف بها كلها ويظهر في الفصل الرقمي لكل شعبة، أو اتركه وكلّفه لاحقًا." : "اختر المعلم والمقرر ثم كل الشعب التي يدرّسها. يُنشأ تكليف مستقل لكل شعبة، وبعد الاعتماد يظهر المعلم في الفصل الرقمي لكل شعبة."}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1"><Label htmlFor="ma-t">{isCourse ? "المعلم (اختياري)" : "المعلم *"}</Label>
               <select id="ma-t" className={sel} disabled={!canAssign} value={teacher} onChange={(e) => { setTeacher(e.target.value); setPicked(new Set()); }}>
                 <option value="">{isCourse ? "— بدون تكليف الآن —" : "— اختر المعلم —"}</option>{data.data?.teachers.map((t) => <option key={t["id"]} value={t["id"]}>{t["full_name"]}</option>)}
               </select></div>
-            <div className="space-y-1"><Label htmlFor="ma-s">المادة *</Label>
+            <div className="space-y-1"><Label htmlFor="ma-s">المقرر *</Label>
               <select id="ma-s" className={sel} value={subject} onChange={(e) => { setSubject(e.target.value); setPicked(new Set()); }}>
-                <option value="">— اختر المادة —</option>{data.data?.subjects.map((t) => <option key={t["id"]} value={t["id"]}>{t["name"]}</option>)}
+                <option value="">— اختر المقرر —</option>{data.data?.subjects.map((t) => <option key={t["id"]} value={t["id"]}>{t["name"]}</option>)}
               </select></div>
             <div className="space-y-1"><Label htmlFor="ma-y">السنة الدراسية</Label>
               <select id="ma-y" className={sel} value={yearId} onChange={(e) => { setYear(e.target.value); setPicked(new Set()); }}>
@@ -121,7 +121,7 @@ export function MultiSectionAssign({ schoolId, canCreateCourses, canApprove = fa
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between"><Label>الشعب *</Label><span className="text-xs text-muted-foreground">المختار: {picked.size}</span></div>
-            {!subject ? <p className="text-sm text-muted-foreground">اختر المادة أولًا لعرض الشعب.</p> : !groups.length ? <p className="text-sm text-muted-foreground">لا توجد شعب في هذه السنة.</p> : groups.map((g) => (
+            {!subject ? <p className="text-sm text-muted-foreground">اختر المقرر أولًا لعرض الشعب.</p> : !groups.length ? <p className="text-sm text-muted-foreground">لا توجد شعب في هذه السنة.</p> : groups.map((g) => (
               <fieldset key={g.label} className="rounded-lg border p-3">
                 <legend className="px-1 text-sm font-semibold">{g.label}</legend>
                 <div className="flex flex-wrap gap-2">
