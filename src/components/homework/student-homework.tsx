@@ -12,7 +12,7 @@ const Badge = ({ s, map }: { s: string; map: Record<string, string> }) => (
 );
 
 /** A student's own homework list (student page, guardian page, child overview). Lives outside the route file so routes stay split. */
-export function StudentHomework({ studentId, guardian }: { studentId: string; guardian?: boolean }) {
+export function StudentHomework({ studentId, guardian, kind }: { studentId: string; guardian?: boolean; kind?: "homework" | "test" }) {
   const [tab, setTab] = useState<"due" | "late" | "done" | "returned" | "all">("due");
   const list = useQuery({
     queryKey: ["hw-student", studentId],
@@ -25,7 +25,7 @@ export function StudentHomework({ studentId, guardian }: { studentId: string; gu
   if (list.isLoading) return <LoadingState />;
   if (list.error) return <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} />;
   const now = Date.now();
-  const rows = list.data ?? [];
+  const rows = (list.data ?? []).filter((r) => !kind || (r["kind"] ?? "homework") === kind);
   const pending = (r: Row) => ["none", "draft"].includes(r["sub_status"]) && !r["removed"] && r["status"] !== "archived";
   const groups = {
     due: rows.filter((r) => pending(r) && new Date(r["effective_due"]).getTime() >= now),

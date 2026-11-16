@@ -18,6 +18,7 @@ import { PeopleImport } from "@/components/people-import-dialog";
 import { AccountPanel } from "@/components/account-panel";
 import { localPhone } from "@/lib/people-import";
 import { arabicError } from "@/lib/session";
+import { StaffPresence, useStaffPresence } from "@/components/education/staff-presence";
 
 export const Route = createFileRoute("/_authenticated/app/teachers")({
   component: Page,
@@ -33,6 +34,7 @@ function Page() {
 }
 
 function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeof canManageAcademic>[0] }) {
+  const presence = useStaffPresence(schoolId);
   const perms0 = useSchoolPerms(schoolId);
   // edit = owner or people_staff.edit (owner-grantable); principal views only — server re-checks (can_edit_staff)
   const w = role === "org_owner" || !!perms0?.["people_staff.edit"];
@@ -89,6 +91,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
           { label: "الاسم", text: (r) => r["display_name"] || r["full_name"], render: (r) => <>{r["display_name"] || r["full_name"]}{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>}</> },
           ...(idView ? [{ label: "الهوية / الإقامة", text: (r: Row) => st(r)?.national_id ?? "", render: (r: Row) => <span dir="ltr">{st(r)?.national_id ?? "—"}</span> }] : []),
           { label: "التخصص", render: (r) => r["specialization"] ?? "—" },
+          { label: "الحالة", render: (r) => <StaffPresence data={presence.data?.get(r["id"])} /> },
           { label: "القسم", render: (r) => r["departments"]?.name ?? "—" },
           { label: "الجوال", render: (r) => <span dir="ltr">{localPhone(r["phone"]) || "—"}</span> },
           ...(idView ? [{ label: "الدخول بالهوية", text: (r: Row) => { const s = st(r); return !s ? "" : s.state === "ready" ? "جاهز" : s.problem ?? ""; }, render: (r: Row) => {

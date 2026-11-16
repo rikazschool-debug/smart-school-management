@@ -14,7 +14,7 @@ import { LATE_LABEL, TYPE_LABEL, fromLocalInput, schoolTime, toLocalInput } from
 
 export const Route = createFileRoute("/_authenticated/app/homework/new")({
   head: () => ({ meta: [{ title: "إعداد واجب — ركاز" }, { name: "description", content: "إنشاء واجب أو تعديل مسودته." }] }),
-  validateSearch: (s: Record<string, unknown>): { edit?: string } => (s["edit"] ? { edit: String(s["edit"]) } : {}),
+  validateSearch: (s: Record<string, unknown>): { edit?: string; kind?: "homework" | "test" } => ({ ...(s["edit"] ? { edit: String(s["edit"]) } : {}), ...(s["kind"] === "test" ? { kind: "test" } : {}) }),
   component: Page,
 });
 
@@ -22,7 +22,7 @@ type Crit = { label: string; max: string };
 
 function Page() {
   const ctx = useSchool();
-  const { edit } = Route.useSearch();
+  const { edit, kind } = Route.useSearch();
   const nav = useNavigate();
   const schoolId = ctx?.schoolId ?? "";
   const permissions = useSchoolPerms(schoolId);
@@ -45,7 +45,7 @@ function Page() {
   const [f, setF] = useState({
     course_id: "", title: "", instructions: "", grading_notes: "", types: ["text"] as string[], available_from: "", due_at: "",
     late_policy: "none", late_until: "", graded: true, max_score: "10", allow_resubmit: false, max_attempts: "2", audience: "all",
-    students: [] as string[], remind_hours: "", file_max_mb: "", kind: "homework",
+    students: [] as string[], remind_hours: "", file_max_mb: "", kind: kind ?? "homework",
   });
   const [crit, setCrit] = useState<Crit[]>([]);
   const [preview, setPreview] = useState(false);

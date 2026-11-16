@@ -8,6 +8,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Input } from "@/components/ui/input";
 import { selectCls } from "@/components/ui/native-select";
 import { arabicError } from "@/lib/session";
+import { StaffPresence, useStaffPresence } from "@/components/education/staff-presence";
 
 export type StaffRow = { employee_id: string; full_name: string; employee_no: string | null; job_title: string | null; kind: string; category: string | null; school_name: string | null; account: "linked" | "inactive" | "none" };
 
@@ -16,6 +17,8 @@ export const ACCOUNT_LABEL: Record<StaffRow["account"], string> = { linked: "ح�
 
 /** Read-only staff directory from HR records (school_staff_directory: principal-level only, no salary/ID/docs/bank). */
 export function StaffDirectory({ schoolId }: { schoolId: string }) {
+  const presence = useStaffPresence(schoolId);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const q = useQuery({
     queryKey: ["staff-directory", schoolId],
     queryFn: async () => {
@@ -31,7 +34,7 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const all = q.data ?? [];
   const meta = () => ({ title: "الكادر التعليمي والإداري", school: all[0]?.school_name ?? undefined, filters: [s && `بحث: ${s}`, kind, acc && ACCOUNT_LABEL[acc as StaffRow["account"]]].filter(Boolean) as string[] });
-  const body = () => rows.map((r) => [r.full_name, r.employee_no, r.job_title, r.kind, r.category, r.school_name, ACCOUNT_LABEL[r.account]]);
+  const body = () => rows.filter((r) => !selected.size || selected.has(r.employee_id)).map((r) => [r.full_name, r.employee_no, r.job_title, r.kind, r.category, r.school_name, ACCOUNT_LABEL[r.account]]);
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
@@ -52,10 +55,11 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
       {!rows.length ? <EmptyState title={all.length ? "لا نتائج مطابقة" : "لا يوجد موظفون مكلّفون بهذه المدرسة في الموارد البشرية"} /> : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-muted-foreground"><tr>{["الاسم", "الرقم الوظيفي", "المسمى الوظيفي", "النوع", "التصنيف", "الفرع", "حساب الدخول"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
+            <thead className="bg-muted/50 text-muted-foreground"><tr><th className="px-3 py-2"><input type="checkbox" aria-label="تحديد الكادر المعروض" checked={rows.length > 0 && rows.every((r) => selected.has(r.employee_id))} onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.employee_id)) : new Set())} /></th>{["الاسم", "الرقم الوظيفي", "المسمى الوظيفي", "النوع", "التصنيف", "الفرع", "حساب الدخول", "الحالة"].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}</tr></thead>
             <tbody className="divide-y">
               {rows.map((r) => (
                 <tr key={r.employee_id}>
+                  <td className="px-3 py-2"><input type="checkbox" aria-label={`تحديد ${r.full_name}`} checked={selected.has(r.employee_id)} onChange={(e) => setSelected((old) => { const next = new Set(old); if (e.target.checked) next.add(r.employee_id); else next.delete(r.employee_id); return next; })} /></td>
                   <td className="px-3 py-2 font-medium">{r.full_name}</td>
                   <td className="px-3 py-2" dir="ltr" style={{ textAlign: "right" }}>{r.employee_no || "—"}</td>
                   <td className="px-3 py-2">{r.job_title || "—"}</td>
@@ -65,6 +69,7 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
                   <td className="px-3 py-2">{r.account === "linked"
                     ? <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" />{ACCOUNT_LABEL.linked}</span>
                     : <span className="flex items-center gap-1 text-xs text-muted-foreground"><UserX className="size-3.5" />{ACCOUNT_LABEL[r.account]}</span>}</td>
+                  <td className="px-3 py-2"><StaffPresence data={presence.data?.get(r.employee_id)} /></td>
                 </tr>
               ))}
             </tbody>
