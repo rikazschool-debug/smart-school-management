@@ -595,3 +595,9 @@ The `other` request kind uses the same verified-child access, school/org scope, 
 
 - منشئ التقارير (reports): مالك المجموعة، المدير، الوكيل، شؤون الطلاب — قراءة فقط عبر RLS؛ لا يمنح أي صلاحية بيانات جديدة.
 - تقارير الأقسام المحمية (القبول، الصيانة، المشتريات، الدعم، الإدارة، الزيارات الصفية) تُقرأ عبر دوال القوائم الخاصة بكل قسم بنفس صلاحياتها؛ لا وصول إضافي.
+
+## Educational care and examinations — prompt-391
+- Owner: all new care records within own active group; no cross-group access. Guidance cases: counselor or explicitly delegated manage only; teacher sees own referrals, never all confidential cases. Gifted records: counselor/owner manage, authorized observers read their scoped students.
+- Student plans: assigned course teacher/owner writes; observer reads stay student-scoped. Only an explicitly shared student plan can be read/acknowledged by its verified guardian with active same-school membership. Cases and teacher plans cannot share with guardians.
+- Teacher plans: assigned supervisor/owner writes; teacher self reads. Supervision visits: principal/assigned supervisor/owner writes; visited teacher reads own visit. All updates are edu_* RPC-only and follow-ups append history.
+- Exam author/key/photo grading: current course teacher or verified owner override only. Other authorized readers get questions without answer keys. Grade save retains existing assignment, target, paper submission, maximum score, criteria and revision checks; scanner cannot widen access or bypass review.

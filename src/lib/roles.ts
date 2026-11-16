@@ -311,9 +311,9 @@ export function canStartFamilyChat(role: Role) {
   return role === "teacher" || ["principal", "vice_principal", "student_affairs"].includes(role);
 }
 
-/** Homework: only the course's current teacher creates/grades (mirrors is_course_teacher in SQL); listed roles only view. */
+/** Homework authoring mirrors current course teacher or the group's verified owner override in SQL. */
 export function canAuthorHomework(role: Role) {
-  return role === "teacher";
+  return role === "teacher" || role === "org_owner" || role === "platform_admin";
 }
 
 export type AttTab = "lessons" | "today" | "gate" | "pickups" | "calls" | "cards" | "records" | "followup" | "settings" | "compare";

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BadgeCheck, FileDown, FileSpreadsheet, Search, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportPdf, exportXlsx } from "@/lib/export";
@@ -28,6 +28,7 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
     },
   });
   const [s, setS] = useState(""); const [kind, setKind] = useState(""); const [acc, setAcc] = useState("");
+  useEffect(() => setSelected(new Set()), [schoolId, s, kind, acc]);
   const rows = useMemo(() => (q.data ?? []).filter((r) => (!kind || r.kind === kind) && (!acc || r.account === acc)
     && (!s.trim() || [r.full_name, r.employee_no, r.job_title, r.category].some((v) => (v ?? "").includes(s.trim())))), [q.data, s, kind, acc]);
   if (q.isLoading) return <LoadingState />;

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { NAV_BY_ROLE, attTabs, canCreateGroup, canCreateTask, canEditSchedule, canManageAcademic, canManageUsers, canOrganizeMeeting, canScanAttendance, commTabs, invitableRoles, type Role, scheduleTabs, scheduleLabel, seesStaffDirectory, teachersLabel } from "@/lib/roles";
 const ALL = Object.keys(NAV_BY_ROLE) as Role[];
+it("homework authoring includes the verified owner override but not observer roles", async () => {
+ const {canAuthorHomework}=await import("@/lib/roles");
+ expect(ALL.filter(canAuthorHomework).sort()).toEqual(["org_owner","platform_admin","teacher"]);
+});
 it("both owners can open collaboration inside school administration", async () => {
   const { ownerSection, ownerSectionNav } = await import("@/lib/roles");
   expect(NAV_BY_ROLE.platform_admin).toContain("collaboration");
