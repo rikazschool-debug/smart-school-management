@@ -57,7 +57,7 @@ async function main() {
     return { year, sec, subj, course, dep };
   };
   const a = await mk(A), b = await mk(B);
-  const course2 = await ins(A, "courses", { year_id: a.year.id, subject_id: a.subj.id, section_id: a.sec.id });
+  const subj2 = await ins(A, "subjects", { name: "رياضيات", department_id: a.dep.id }); const course2 = await ins(A, "courses", { year_id: a.year.id, subject_id: subj2.id, section_id: a.sec.id });
   const te1 = await ins(A, "teachers", { full_name: "أ. نورة المعلمة", email: t1.email }), te2 = await ins(A, "teachers", { full_name: "أ. هند", email: t2.email });
   const teB = await ins(B, "teachers", { full_name: "معلم الفرع ب" });
   await admin.from("teachers").update({ user_id: t1.id }).eq("id", te1.id); await admin.from("teachers").update({ user_id: t2.id }).eq("id", te2.id);
