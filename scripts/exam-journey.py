@@ -30,6 +30,8 @@ async def main():
             check(f"[{tag}] teacher results list shows the targeted student only", "سارة المستهدفة" in x and "ليان غير المستهدفة" not in x, x[:400])
             s = await page_for(br, "s1", phone); x = await open_hw(s, F["hw_online"], "الدرجة: 5 من 5"); await s.get_by_text("سلّمت هذا الاختبار").first.wait_for(timeout=20000); x = await body(s); await s.screenshot(path=SH + f"student_result_{tag}.png")
             check(f"[{tag}] targeted student sees the test, no answer key, and no second solve form after submitting", "اختبار إلكتروني" in x and "سلّمت هذا الاختبار" in x and await s.get_by_role("button", name="تسليم الاختبار").count() == 0 and "الدرجة: 5 من 5" in x and "النموذج B" in x and "الصحيح:" not in x, x[:500])
+            x = await open_hw(s, F["hw_bubble"], "كيف يتم التسليم"); await s.screenshot(path=SH + f"student_bubble_{tag}.png")
+            check(f"[{tag}] student sees how to hand in a bubble test, without its questions, models or print", "كيف يتم التسليم" in x and "ناتج 2+3" not in x and await s.locator("select[aria-label='النموذج للطباعة والتصحيح']").count() == 0 and await s.get_by_role("button", name="طباعة الاختبار").count() == 0, x[:500])
             u = await page_for(br, "s2", phone); x = await open_hw(u, F["hw_online"], "غير"); await u.screenshot(path=SH + f"untargeted_{tag}.png")
             check(f"[{tag}] untargeted student cannot open the test", "ناتج 2+3" not in x and "عاصمة السعودية" not in x, x[:300])
             g = await page_for(br, "g1", phone); x = await open_hw(g, F["hw_online"], "اختبار إلكتروني"); await g.screenshot(path=SH + f"guardian_{tag}.png")

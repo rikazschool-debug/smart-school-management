@@ -117,6 +117,8 @@ async function main() {
   must(await t1.c.rpc("publish_homework", { _id: bq }), "publish bubble");
   const bv = must(await t1.c.rpc("exam_get", { _hw: bq }), "bget") as any; const kA = keyOf(bv.forms[0]), kB = keyOf(bv.forms[1]);
   const c1 = crypto.randomUUID();
+  { const r = await s1.c.rpc("exam_get", { _hw: bq }); const d = r.data as any; check("targeted student gets no questions or models for a bubble test", !r.error && d?.hidden === true && !d.questions.length && !d.forms.length, r.error ?? d); }
+  { const r = await g1.c.rpc("exam_get", { _hw: bq }); const d = r.data as any; check("guardian gets no questions for a bubble test", !!r.error || (d?.hidden === true && !d.questions.length), r.error ?? d); }
   check("student cannot record a paper sheet", !!(await s1.c.rpc("exam_paper_grade", { _hw: bq, _student: st[0].id, _form: "A", _answers: kA, _client: c1 })).error);
   check("untargeted student's sheet refused", !!(await t1.c.rpc("exam_paper_grade", { _hw: bq, _student: st[2].id, _form: "A", _answers: kA, _client: crypto.randomUUID() })).error);
   check("unknown model C refused", !!(await t1.c.rpc("exam_paper_grade", { _hw: bq, _student: st[0].id, _form: "C", _answers: kA, _client: crypto.randomUUID() })).error);

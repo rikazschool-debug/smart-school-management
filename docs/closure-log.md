@@ -3,6 +3,9 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-16 — prompt-398 paper/bubble tests for students
+- exam_get hides questions/models from students and guardians for paper/bubble delivery; student page explains hand-in steps (no online submission). exam-e2e 41/41, exam-journey 20/20 (desktop + phone).
+
 ## 2026-11-16 — prompt-396 tests acceptance (test DB, synthetic exx- accounts)
 - New: exam_paper_grade (server-side paper/bubble scoring by model; refuses untargeted, unknown model, unresolved marks, second sheet; retry-safe). Photo screen now calls it; unclear marks must be resolved manually.
 - Student solve form hidden after submission; test history/answers shown with Arabic labels.
