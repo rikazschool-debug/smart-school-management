@@ -18,6 +18,7 @@ import { guardianReadiness, localPhone, maskTail } from "@/lib/people-import";
 import { CreateAccountButton, MSG_STATE, autoSummary } from "@/components/guardian-quick-add";
 import { autoAccounts } from "@/lib/accounts.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { StudentMultiPick } from "@/components/guardian-link-panel";
 import { GuardianImport } from "@/components/guardian-import-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/guardians")({
@@ -159,14 +160,20 @@ function GuardianDetail({ g, canManage }: { g: Row; canManage: boolean }) {
 function HrPick({ schoolId, onDone }: { schoolId: string; onDone: () => void }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  async function pick(e: Row) {
+  const [chosen, setChosen] = useState<Row | null>(null);
+  const [kids, setKids] = useState<{ id: string; name: string; rel: string }[]>([]);
+  async function save() {
+    if (!chosen) return;
     setBusy(true);
-    const { data, error } = await db.rpc("hr_guardian_from_employee", { _school: schoolId, _emp: e["id"] });
-    setBusy(false);
-    if (error) return void toast.error(arabicError(error));
-    const st = (data as { state: string }).state;
-    toast.success(st === "exists" ? "ولي الأمر مسجّل مسبقًا في هذه المدرسة — لم يُكرَّر" : st === "linked" ? "أُضيف ولي الأمر بحساب الموظف نفسه — يدخل بوابة أولياء الأمور بنفس حسابه" : "أُضيف ولي الأمر من ملف الموارد البشرية");
-    onDone();
+    try {
+      const { data, error } = await db.rpc("hr_guardian_from_employee", { _school: schoolId, _emp: chosen["id"] });
+      if (error) throw error;
+      const r = data as { id: string; state: string };
+      let fail = 0;
+      for (const k of kids) { const { error: e2 } = await db.from("student_guardians").insert({ student_id: k.id, guardian_id: r.id, school_id: schoolId, relationship: k.rel, can_follow: true, can_pickup: false }); if (e2) { fail++; toast.error(`${k.name}: ${arabicError(e2)}`); } }
+      toast.success((r.state === "exists" ? "ولي الأمر مسجّل مسبقًا — لم يُكرَّر" : r.state === "linked" ? "أُضيف ولي الأمر بحساب الموظف نفسه" : "أُضيف ولي الأمر من ملف الموارد البشرية") + (kids.length ? ` · رُبط بـ ${kids.length - fail} من الأبناء` : ""));
+      onDone();
+    } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
   }
   const [q, setQ] = useState("");
   const res = useQuery({ enabled: open && q.trim().length >= 2, queryKey: ["hr-guardian-cand", schoolId, q.trim()], queryFn: async () => {
@@ -175,13 +182,22 @@ function HrPick({ schoolId, onDone }: { schoolId: string; onDone: () => void }) 
   return (
     <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-sm">
       <label className="flex items-center gap-2 font-medium"><input type="checkbox" className="size-4 accent-primary" checked={open} onChange={(e) => setOpen(e.target.checked)} /> ولي الأمر موظف لدينا في الموارد البشرية — استورد بياناته</label>
-      {open && <>
+      {open && chosen && (
+        <div className="space-y-3">
+          <div className="grid gap-2 rounded-md border bg-background p-3 sm:grid-cols-2">
+            {[["الاسم", chosen["full_name"]], ["الرقم الوظيفي", chosen["employee_no"]], ["الوظيفة", chosen["job_title"]], ["الهوية", chosen["national_id"]], ["الجوال", chosen["phone"]], ["البريد", chosen["email"]]].map(([k, v]) => <div key={k as string}><span className="block text-xs text-muted-foreground">{k}</span><span className="font-medium" dir={k === "الاسم" || k === "الوظيفة" ? undefined : "ltr"}>{v || "—"}</span></div>)}
+          </div>
+          <div className="space-y-1"><p className="text-xs font-bold">ربطه بأبنائه (اختياري، يمكن أكثر من ابن)</p><StudentMultiPick schoolId={schoolId} value={kids} onChange={setKids} /></div>
+          <div className="flex gap-2"><Button type="button" disabled={busy} onClick={() => void save()}>حفظ ولي الأمر{kids.length ? ` وربط ${kids.length}` : ""}</Button><Button type="button" variant="outline" disabled={busy} onClick={() => { setChosen(null); setKids([]); }}>اختيار موظف آخر</Button></div>
+        </div>
+      )}
+      {open && !chosen && <>
         <input className="w-full rounded-md border bg-background px-3 py-2" placeholder="ابحث بالاسم أو الرقم الوظيفي أو الهوية…" value={q} onChange={(e) => setQ(e.target.value)} />
         {res.error && <p className="text-xs text-destructive">{arabicError(res.error)}</p>}
         {res.data && res.data.length === 0 && <p className="text-xs text-muted-foreground">لا يوجد موظف مطابق.</p>}
         <ul className="max-h-48 divide-y overflow-y-auto">
           {(res.data ?? []).map((e) => (
-            <li key={e["id"]}><button type="button" className="w-full py-1.5 text-start hover:text-primary" disabled={busy} onClick={() => void pick(e)}>
+            <li key={e["id"]}><button type="button" className="w-full py-1.5 text-start hover:text-primary" onClick={() => setChosen(e)}>
               {e["full_name"]} <span className="text-xs text-muted-foreground">{[e["employee_no"], e["job_title"]].filter(Boolean).join(" · ")}</span>
             </button></li>
           ))}
