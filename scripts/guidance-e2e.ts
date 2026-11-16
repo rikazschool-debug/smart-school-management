@@ -121,6 +121,28 @@ async function main() {
   check("event history kept in order", ["ref_close", "ref_reopen"].every((a) => c.events.some((e: any) => e.action === a)) && c.status === "triage", c.events.map((e: any) => e.action));
   const { data: ns } = await admin.from("notifications").select("title,body").eq("user_id", t1.id);
   check("teacher notified without student name or category", (ns ?? []).length >= 3 && (ns ?? []).every((n: any) => !`${n.title}${n.body}`.includes("سارة") && !`${n.title}${n.body}`.includes("سلوك")), ns);
+  // stage 2: case study
+  check("case from referral starts as draft", kase.status === "draft", kase.status);
+  const C = (k: any, extra: any = {}) => ({ kind: "case", status: "open", student_id: st[0].id, teacher_id: null, course_id: null, category: "behavioral", title: k.title, description: k.description, priority: k.priority, due_date: null, record_date: k.record_date, goals: [], area: k.area, plan: k.plan, ...extra });
+  let k = must(await co.c.rpc("edu_detail", { _id: caseId }), "k") as any;
+  check("opening without need/assessment/goals refused", !!(await co.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k) })).error);
+  const goal = { actions: "جلسة فردية أسبوعية", owner: "الموجّه", due: "2026-12-15", indicator: "حضور منتظم 4 أسابيع" };
+  check("goal missing indicator refused", !!(await co.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k, { description: "يحتاج دعمًا في الانضباط الصباحي", goals: ["الانتظام الصباحي"], plan: { ...k.plan, assessment: "تقدير: ظرف نقل مؤقت", goal_details: [{ ...goal, indicator: "" }] } }) })).error);
+  check("report without source/date refused", !!(await co.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k, { status: "draft", plan: { ...k.plan, reports: [{ source: "", date: "" }] } }) })).error);
+  const full = { description: "يحتاج دعمًا في الانضباط الصباحي", goals: ["الانتظام الصباحي"], plan: { ...k.plan, facts: "تأخر 4 مرات", statements: "الطالب: النقل يتأخر", assessment: "تقدير: ظرف نقل مؤقت", track: "school", reports: [{ source: "مستشفى (اصطناعي)", date: "2026-11-01", recommendations: "متابعة" }], goal_details: [goal] } };
+  check("complete case is approved (open)", !(await co.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k, full) })).error);
+  k = must(await co.c.rpc("edu_detail", { _id: caseId }), "k2") as any;
+  check("facts, statements and assessment stored separately", k.status === "open" && k.plan.facts && k.plan.statements && k.plan.assessment, k.plan);
+  check("approved case cannot go back to draft", !!(await co.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k, { ...full, status: "draft" }) })).error);
+  check("teacher cannot edit the case", !!(await t1.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k, full) })).error);
+  check("close without outcome refused", !!(await co.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k, { ...full, status: "closed" }) })).error);
+  check("close with outcome and reason", !(await co.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k, { ...full, status: "closed", plan: { ...full.plan, outcome: "improved", close_reason: "انتظم أربعة أسابيع" } }) })).error);
+  k = must(await co.c.rpc("edu_detail", { _id: caseId }), "k3") as any;
+  check("reopen without reason refused", !!(await co.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k, { ...full, status: "following", plan: k.plan }) })).error);
+  check("reopen with reason", !(await co.c.rpc("edu_save", { _school: S, _id: caseId, _rev: k.rev, _p: C(k, { ...full, status: "following", plan: { ...k.plan, reopen_reason: "عاد التأخر" } }) })).error);
+  k = must(await co.c.rpc("edu_detail", { _id: caseId }), "k4") as any;
+  check("history keeps close and reopen", k.events.filter((e: any) => e.action === "update").length >= 3 && k.status === "following", k.events.length);
+  check("teacher still cannot read the case", !!(await t1.c.rpc("edu_detail", { _id: caseId })).error);
   console.log(`\n${ok} passed, ${bad} failed`);
   const fx = { run, pw, org, school: S, referral: id, case: caseId, users: Object.fromEntries(Object.entries({ owner, co, t1, t2, g1, pr }).map(([k, v]) => [k, v.email])) };
   if (process.argv.includes("--keep")) { mkdirSync("/tmp/browser/guidance", { recursive: true }); writeFileSync("/tmp/browser/guidance/fixture.json", JSON.stringify(fx, null, 2)); console.log("kept fixture"); }

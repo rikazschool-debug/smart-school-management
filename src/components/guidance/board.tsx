@@ -20,7 +20,7 @@ export function GuidanceBoard({ school, go }: { school: string; go: (tab: "refer
     { icon: Inbox, label: "إحالات جديدة", n: s.new_referrals, def: "إحالات أرسلها المعلمون ولم يبدأ فرزها", on: () => go("referrals", { status: "sent" }) },
     { icon: Send, label: "قيد الفرز", n: s.in_triage, def: "إحالات بدأ فرزها دون قرار بعد", on: () => go("referrals", { status: "triage" }) },
     { icon: MessageSquareWarning, label: "تنتظر استكمال المعلم", n: s.needs_info, def: "طُلب من المعلم استكمال بياناتها", on: () => go("referrals", { status: "needs_info" }) },
-    { icon: FolderOpen, label: "حالات مفتوحة", n: s.open_cases, def: "حالات خاصة حالتها مفتوحة أو قيد المتابعة", on: () => go("cases") },
+    { icon: FolderOpen, label: "حالات مفتوحة", n: s.open_cases, def: "حالات مسودة أو مفتوحة أو قيد المتابعة", on: () => go("cases") },
     { icon: CalendarClock, label: "مواعيد اليوم", n: s.due_today, def: "إحالات أو حالات موعد مراجعتها اليوم", on: () => go("cases") },
     { icon: CalendarX, label: "مواعيد متأخرة", n: s.overdue, def: "موعد المراجعة مضى ولم تُغلق", on: () => go("cases") },
   ];

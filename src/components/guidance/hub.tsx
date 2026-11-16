@@ -4,7 +4,7 @@ import { BarChart3, CalendarCheck, ClipboardList, FolderLock, LayoutDashboard, L
 import { db } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { arabicError, useSession } from "@/lib/session";
-import { EducationDesk } from "@/components/education/desk";
+import { Cases } from "./cases";
 import { GuidanceBoard } from "./board";
 import { Referrals } from "./referrals";
 
@@ -21,7 +21,7 @@ const TABS: { id: Tab; label: string; icon: typeof Send; counselor: boolean }[] 
 ];
 const LATER: Partial<Record<Tab, string>> = {
   sessions: "توثيق الجلسات الفردية والجماعية والمتابعات والمواعيد — قيد البناء في المرحلة الثالثة؛ لم يكتمل بعد.",
-  plans: "خطط التدخل وتعديل السلوك بأهداف ومسؤولين ومؤشرات تحقق — قيد البناء في المرحلة الثانية؛ لم يكتمل بعد.",
+  plans: "خطط التدخل تُعدّ داخل كل حالة (تبويب «خطة التدخل»)؛ القائمة المجمّعة للخطط تُبنى مع التقارير في المرحلة الرابعة.",
   programs: "البرامج الوقائية والإنمائية والخطة السنوية — قيد البناء في المرحلة الرابعة؛ لم يكتمل بعد.",
   reports: "التقارير التشغيلية والإحصائية المنفصلة — قيد البناء في المرحلة الرابعة؛ لم يكتمل بعد.",
 };
@@ -42,7 +42,7 @@ export function GuidanceHub() {
     {tabs.length > 1 && <nav aria-label="أقسام التوجيه الطلابي" className="flex gap-2 overflow-x-auto pb-1">{tabs.map((t) => <button key={t.id} type="button" aria-current={cur === t.id ? "page" : undefined} onClick={() => go(t.id)} className={`flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-sm ${cur === t.id ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}><t.icon className="size-4" />{t.label}</button>)}</nav>}
     {cur === "board" && <GuidanceBoard school={school} go={(t, o) => go(t, o)} />}
     {cur === "referrals" && <ReferralsTab key={nonce} school={school} m={m} status={refStatus} openId={openId} openCase={(id) => go("cases", { id })} />}
-    {cur === "cases" && <EducationDesk key={nonce} title="الحالات الخاصة" kinds={["case"]} openId={openId} />}
+    {cur === "cases" && <Cases key={nonce} school={school} initialId={openId} />}
     {LATER[cur] && <EmptyState title="غير مكتمل" hint={LATER[cur]} />}
   </div>;
 }
