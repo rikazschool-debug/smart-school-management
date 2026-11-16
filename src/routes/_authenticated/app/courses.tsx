@@ -80,7 +80,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
 
   return (
     <>
-      <PageHeader title="المقررات والتكليفات" desc="المقرر = مادة + شعبة + سنة. يُكلَّف به معلم ثم يعتمده رئيس القسم أو الإدارة." />
+      <PageHeader title="المقررات والتكليفات" desc="كل مقرر يرتبط بشعبة وسنة دراسية. يُكلَّف به معلم ثم يعتمده رئيس القسم أو الإدارة." />
       <section className="mb-10 space-y-3">
         {assignmentsView && <>
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -88,7 +88,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           {canAssign && <MultiSectionAssign schoolId={ctx.schoolId} canCreateCourses={create} canApprove={approve} />}
         </div>
         {pending.isLoading ? <LoadingState /> : pending.error ? <ErrorState message={arabicError(pending.error)} onRetry={() => pending.refetch()} /> : visible.length === 0 ? (
-          <EmptyState title="لا توجد تكليفات" hint={ctx.role === "dept_head" ? "تظهر هنا تكليفات مواد قسمك فقط." : undefined} />
+          <EmptyState title="لا توجد تكليفات" hint={ctx.role === "dept_head" ? "تظهر هنا تكليفات مقررات قسمك فقط." : undefined} />
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
             {visible.map((a) => (
@@ -118,7 +118,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         select="*, academic_years(name), subjects(name, department_id), sections(name, grades(name)), teacher_assignments(status, teachers(full_name))"
         fields={[
           { key: "year_id", label: "السنة", type: "select", required: true, options: { table: "academic_years", label: "name" } },
-          { key: "subject_id", label: "المادة", type: "select", required: true, options: { table: "subjects", label: "name" } },
+          { key: "subject_id", label: "المقرر", type: "select", required: true, options: { table: "subjects", label: "name" } },
           { key: "section_id", label: "الشعبة", type: "select", required: true, options: { table: "sections", label: "name" } },
           { key: "weekly_periods", label: "الحصص الأسبوعية", type: "number" },
         ]}

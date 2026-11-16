@@ -132,7 +132,7 @@ export function LessonsSchoolTab({ schoolId }: { schoolId: string }) {
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : !rows.length ? <EmptyState title="لا حصص في الجدول المنشور لهذا اليوم" /> : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-muted-foreground"><tr><th className="p-2 text-start">الحصة</th><th className="p-2 text-start">المادة</th><th className="p-2 text-start">الشعبة</th><th className="p-2 text-start">المعلم</th><th className="p-2 text-start">الحالة</th><th className="p-2 text-start">غائب/متأخر</th><th /></tr></thead>
+            <thead className="bg-muted/50 text-muted-foreground"><tr><th className="p-2 text-start">الحصة</th><th className="p-2 text-start">المقرر</th><th className="p-2 text-start">الشعبة</th><th className="p-2 text-start">المعلم</th><th className="p-2 text-start">الحالة</th><th className="p-2 text-start">غائب/متأخر</th><th /></tr></thead>
             <tbody>{rows.map((r) => (
               <tr key={r.slot_id} className="border-t">
                 <td className="p-2">{r.period} <span className="text-xs text-muted-foreground">{String(r.start).slice(0, 5)}</span></td>

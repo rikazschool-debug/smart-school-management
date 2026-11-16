@@ -88,7 +88,7 @@ function Filter({ slots, value, onChange, sectionsOnly, withRooms, names }: { sl
 }
 function ScheduleExport({ rows, school, title, week, subBySlot, filters = [] }: { rows: Row[]; school: string; title: string; week?: string[]; subBySlot?: Map<string, Row>; filters?: string[] }) {
   const sorted = [...rows].sort((a, b) => a["day"] - b["day"] || String(a["periods"]?.start_time ?? "").localeCompare(String(b["periods"]?.start_time ?? "")));
-  return <ExportButtons title={title} school={school} filters={filters} headers={["اليوم", "الحصة", "الوقت", "المادة", "الشعبة", "المعلم", "البديل", "القاعة", "مثبتة"]}
+  return <ExportButtons title={title} school={school} filters={filters} headers={["اليوم", "الحصة", "الوقت", "المقرر", "الشعبة", "المعلم", "البديل", "القاعة", "مثبتة"]}
     rows={() => sorted.map((s) => { const l = slotLabel(s); const sub = week && subBySlot?.get(`${s["id"]}|${week[s["day"]]}`); return [DAY_NAMES[s["day"]], s["periods"]?.name ?? "", `من ${String(s["periods"]?.start_time ?? "").slice(0, 5)} إلى ${String(s["periods"]?.end_time ?? "").slice(0, 5)}`, l.subject, l.section, l.teacher, sub ? (sub["teachers"]?.full_name ?? "بديل") : "", l.room ?? "", s["pinned"] ? "نعم" : ""]; })} />;
 }
 /** day|period -> slots, so each grid cell is a lookup instead of a scan over every slot */

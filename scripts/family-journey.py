@@ -33,7 +33,7 @@ async def main():
             await g.get_by_role("tab", name="الفصل الرقمي").click(); await g.wait_for_timeout(800); t = await text(g)
             check(f"[{tag}] child classroom tab shows the section room + subjects", "فصل الرابع — شعبة أ" in t and "الرياضيات" in t and "تتابع الآن" in t, t[:400])
             await g.get_by_role("link", name="الرياضيات").first.click(); await g.wait_for_timeout(3500); t = await text(g); await g.screenshot(path=SH + f"2b_section_room_{tag}.png")
-            check(f"[{tag}] section room opens with subject tab, teachers and students", "/app/classrooms/section/" in g.url and "المواد والمعلمون" in t and "معلم الرياضيات" in t and "سالم الأسرة" in t, t[:500])
+            check(f"[{tag}] section room opens with subject tab, teachers and students", "/app/classrooms/section/" in g.url and "المقررات والمعلمون" in t and "معلم الرياضيات" in t and "سالم الأسرة" in t, t[:500])
             await g.go_back(); await g.wait_for_timeout(3000)
             await g.get_by_role("tab", name="البيانات المالية").click(); await g.wait_for_timeout(800); t = await text(g)
             await g.screenshot(path=SH + f"3_child_finance_{tag}.png")

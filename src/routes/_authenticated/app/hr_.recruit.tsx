@@ -64,7 +64,7 @@ function Workspace({ org, d }: { org: string; d: Ext }) {
   const vact = async (v: Vac, action: string) => { const r = action === "approve" ? null : await askText(action === "reject" ? "سبب الرفض" : "سبب الإغلاق", { required: true }); if (action !== "approve" && !r) return; actV.mutate({ v, action, reason: r }); };
   const exp = () => {
     const rows = vq.data ?? [];
-    exportXlsx({ title: "الاحتياجات والشواغر", filters: [st ? VS[st]! : "كل الحالات"], note: `${rows.length} سجل` }, ["المرجع", "المدرسة", "المسمى", "المادة", "المرحلة", "الشواغر", "المرشحون", "المعينون", "الحالة"],
+    exportXlsx({ title: "الاحتياجات والشواغر", filters: [st ? VS[st]! : "كل الحالات"], note: `${rows.length} سجل` }, ["المرجع", "المدرسة", "المسمى", "المقرر", "المرحلة", "الشواغر", "المرشحون", "المعينون", "الحالة"],
       rows.map((v) => [v.ref, v.school, v.job_title, v.subject ?? "", v.stage ?? "", v.seats, v.candidates, v.hired, VS[v.status] ?? v.status]));
   };
   return (
@@ -78,7 +78,7 @@ function Workspace({ org, d }: { org: string; d: Ext }) {
         <div><Label htmlFor="v-sc">المدرسة</Label><select id="v-sc" className={selectCls("w-full")} value={nv.school_id} onChange={(e) => setNv({ ...nv, school_id: e.target.value })}>{d.recruit_schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
         <div><Label htmlFor="v-jt">المسمى الوظيفي</Label><Input id="v-jt" value={nv.job_title} onChange={(e) => setNv({ ...nv, job_title: e.target.value })} /></div>
         <div><Label htmlFor="v-se">عدد الشواغر</Label><Input id="v-se" inputMode="numeric" dir="ltr" value={nv.seats} onChange={(e) => setNv({ ...nv, seats: e.target.value })} /></div>
-        <div><Label htmlFor="v-su">التخصص/المادة (اختياري)</Label><Input id="v-su" value={nv.subject} onChange={(e) => setNv({ ...nv, subject: e.target.value })} /></div>
+        <div><Label htmlFor="v-su">التخصص/المقرر (اختياري)</Label><Input id="v-su" value={nv.subject} onChange={(e) => setNv({ ...nv, subject: e.target.value })} /></div>
         <div><Label htmlFor="v-st">المرحلة (اختياري)</Label><Input id="v-st" value={nv.stage} onChange={(e) => setNv({ ...nv, stage: e.target.value })} /></div>
         <div><Label htmlFor="v-re">مبرر الاحتياج</Label><Input id="v-re" value={nv.reason} onChange={(e) => setNv({ ...nv, reason: e.target.value })} /></div>
         <div className="flex gap-2 sm:col-span-3"><Button type="submit" disabled={saveV.isPending}>إرسال للاعتماد</Button><Button type="button" variant="ghost" onClick={() => setNv(null)}>إلغاء</Button></div>

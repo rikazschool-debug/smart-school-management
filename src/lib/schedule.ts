@@ -81,7 +81,7 @@ export function useCurrentTimetable(schoolId: string, date: string) {
 
 export function slotLabel(s: Row) {
   return {
-    subject: s["courses"]?.subjects?.name ?? "مادة",
+    subject: s["courses"]?.subjects?.name ?? "مقرر",
     section: `${s["sections"]?.grades?.name ?? ""} / ${s["sections"]?.name ?? ""}`,
     teacher: s["teachers"]?.full_name ?? "",
     room: s["rooms"]?.name ?? "",

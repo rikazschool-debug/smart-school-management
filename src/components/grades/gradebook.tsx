@@ -34,7 +34,7 @@ export function OverviewTab({ S, school, period, onOpen, canOpen }: { S: string;
   return (
     <Section title={`سجلات الدرجات — ${period["name"]}`} desc="المتوسط يُحسب من النتائج المكتملة فقط، ولا تُعدّ الخانات غير المرصودة أصفارًا؛ يظهر بجانبه عدد الطلاب الداخلين فيه.">
       <div className="mb-3 flex flex-wrap items-end gap-2">
-        <Input placeholder="ابحث بالمادة أو الشعبة أو المعلم" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+        <Input placeholder="ابحث بالمقرر أو الشعبة أو المعلم" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
         <select aria-label="الحالة" className={selectCls("w-44")} value={st} onChange={(e) => setSt(e.target.value)}><option value="">كل الحالات</option>{Object.entries(GB_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <ExportButtons title={`اكتمال الرصد — ${period["name"]}`} school={school} filters={[st ? GB_STATUS[st]! : "كل الحالات", search].filter(Boolean)} headers={cols} rows={() => rows.map(line)} />
       </div>

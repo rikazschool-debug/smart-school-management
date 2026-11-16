@@ -1,7 +1,7 @@
 /** Sections of a digital classroom (section room). The server (section_room_get) decides what each viewer actually receives. */
 export type RoomTab = "subjects" | "students" | "guardians" | "group";
 export type RoomView = "staff" | "teacher" | "family";
-export const ROOM_TABS: [RoomTab, string][] = [["subjects", "المواد والمعلمون"], ["students", "الطلاب"], ["guardians", "أولياء الأمور"], ["group", "مجموعة الفصل"]];
+export const ROOM_TABS: [RoomTab, string][] = [["subjects", "المقررات والمعلمون"], ["students", "الطلاب"], ["guardians", "أولياء الأمور"], ["group", "مجموعة الفصل"]];
 
 /** staff (principal/owner/vice/affairs…): all four; teacher: no guardians list; guardian/student: subjects/teachers and the class group (no rosters). */
 export function roomTabsFor(view: RoomView): RoomTab[] {

@@ -206,7 +206,7 @@ function CourseReqs({ S, year, term }: { S: string; year: string; term: string }
   return (
     <Group title="متطلبات المقررات" hint={q.data ? `${q.data.length} مقرر${missing ? ` — ${missing} بلا تكليف ساري` : ""}` : ""}>
       <p className="mb-2 text-xs text-muted-foreground">المعلم من التكليف المعتمد الساري فقط؛ لا يختار التوليد معلمًا غير مسند.</p>
-      <Input className="mb-3 sm:w-72" placeholder="بحث بالمادة أو الشعبة" aria-label="بحث المقررات" value={f} onChange={(e) => setF(e.target.value)} />
+      <Input className="mb-3 sm:w-72" placeholder="بحث بالمقرر أو الشعبة" aria-label="بحث المقررات" value={f} onChange={(e) => setF(e.target.value)} />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-sm">
