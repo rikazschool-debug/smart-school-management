@@ -4,3 +4,4 @@
 - Exam variants are persisted with remapped keys by exam_config_save and cleared when source questions change; exam_get strips keys from every variant for non-teachers, and QR matching includes the variant ID.
 - Photo grading uses QR roster verification and four fixed sheet markers; blank/ambiguous marks require manual review, and no grade is written before explicit confirmation.
 - The optical reader supports only this generated single-choice sheet (up to 35 questions); other question types are teacher-marked, never guessed by the scanner.
+- Exam targeting loads the roster only for a selected authorized course and its section/year; distinguish no selection, empty enrollment and no search matches without broadening RLS.
