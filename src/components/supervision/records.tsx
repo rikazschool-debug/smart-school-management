@@ -66,7 +66,7 @@ function NewRecord({ org, me, onDone }: { org: string; me: SvMe; onDone: (id?: s
 
 function RecordView({ id, org, onBack }: { id: string; org: string; onBack: () => void }) {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["sv-rec", id], queryFn: async () => { const r = await db.rpc("sv_rec_get", { _id: id }); if (r.error) throw r.error; return r.data as SvRecordFull; } });
+  const q = useQuery({ queryKey: ["sv-rec", id], retry: false, queryFn: async () => { const r = await db.rpc("sv_rec_get", { _id: id }); if (r.error) throw r.error; return r.data as SvRecordFull; } });
   const [data, setData] = useState<Record<string, unknown> | null>(null); const [busy, setBusy] = useState(false); const [comment, setComment] = useState("");
   const dirty = data !== null && JSON.stringify(data) !== JSON.stringify(q.data?.data ?? {});
   useEffect(() => { if (!dirty) return; const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; }; window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h); }, [dirty]);
