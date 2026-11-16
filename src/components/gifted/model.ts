@@ -100,3 +100,69 @@ export function workStats(ws: Pick<Work, "kind" | "verify" | "members">[]) {
   const ach = ws.filter((w) => w.kind === "achievement");
   return { achievements: ach.length, verified: ach.filter((w) => w.verify === "verified").length, participations: ws.filter((w) => w.kind === "participation").length, projects: ws.filter((w) => w.kind === "project").length, students: new Set(ach.flatMap((w) => w.members.map((m) => m.student_id))).size };
 }
+
+// ---- Stage 5: board, reports, family ----
+export type GtStudentRow = { id: string; name: string; csmart: string | null; grade: string | null; section: string | null; stage: string | null; domains: string[]; care: string; last: string | null };
+export const CARE_LABEL: Record<string, string> = { nominated: "مرشّح قيد الدراسة", approved: "مُقرّ للرعاية", active: "في خطة جارية" };
+const addDays = (d: string, n: number) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+
+/** Board figures. Every student is counted once per figure; follow-up is due when a running plan has no follow-up for `gap` days. */
+export function boardStats(plans: Pick<Plan, "status" | "start_date" | "students">[], progs: Pick<Program, "status" | "starts_on" | "apply_by">[], works: Pick<Work, "kind" | "verify" | "members">[], today: string, gap = 14) {
+  const live = plans.filter((p) => p.status === "running" || p.status === "review");
+  const inPlan = new Set(live.flatMap((p) => p.students.map((s) => s.id)));
+  const due = new Set<string>();
+  for (const p of live.filter((x) => x.status === "running")) for (const s of p.students) { const ref = s.last ?? p.start_date ?? today; if (ref <= addDays(today, -gap)) due.add(s.id); }
+  const soon = addDays(today, gap);
+  const near = progs.filter((p) => p.status === "open" && [p.apply_by, p.starts_on].some((d) => !!d && d >= today && d <= soon)).length;
+  const ver = works.filter((w) => w.verify === "verified");
+  return { inPlan: inPlan.size, dueFollow: due.size, dueIds: [...due], near, participations: ver.filter((w) => w.kind === "participation").length, achievements: ver.filter((w) => w.kind === "achievement").length };
+}
+
+/** Owner shown on the board = owner_name of the student's latest live plan. */
+export function ownerOf(plans: Pick<Plan, "status" | "owner_name" | "start_date" | "students">[], sid: string): string | null {
+  const p = plans.filter((x) => ["running", "review", "ready"].includes(x.status) && x.students.some((s) => s.id === sid)).sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? ""))[0];
+  return p?.owner_name ?? null;
+}
+
+export type ReportId = "inventory" | "plans" | "programs" | "attendance" | "participations" | "achievements";
+export const REPORTS: Record<ReportId, { title: string; def: string }> = {
+  inventory: { title: "حصر الطلبة في الرعاية", def: "كل طالب له ترشيح مُرسل أو خطة، مرة واحدة مهما تعددت مجالاته. لا تظهر نتائج المقاييس." },
+  plans: { title: "خطط الرعاية", def: "سطر لكل خطة؛ الأهداف المتحققة تُحسب بشاهد مكتوب، والأنشطة المنفذة رقم مستقل لا يعني تحقق الهدف." },
+  programs: { title: "البرامج والفرص", def: "سطر لكل برنامج مع أعداد المُقرّين والمسجلين والحاضرين والمتمّين؛ الطالب يُحسب مرة في كل برنامج." },
+  attendance: { title: "الحضور والإتمام", def: "سطر لكل طالب في كل برنامج: التسجيل والحضور والإتمام وموافقة ولي الأمر منفصلة." },
+  participations: { title: "المشاركات", def: "المشاركات المتحقق منها فقط؛ المشاركة لا تعني فوزًا." },
+  achievements: { title: "الإنجازات", def: "الإنجازات المتحقق منها؛ الإنجاز الجماعي يُحسب مرة واحدة، وعدد الطلبة أصحاب الإنجاز يُحسب كل طالب مرة." },
+};
+type Cell = string | number;
+export function buildReport(id: ReportId, d: { students: GtStudentRow[]; plans: Plan[]; progs: Program[]; works: Work[] }): { headers: string[]; rows: Cell[][]; summary: string } {
+  const dom = (k: string) => GT_DOMAINS[k] ?? k;
+  if (id === "inventory") return { headers: ["الطالب", "C‑Smart", "المرحلة", "الصف", "الشعبة", "المجالات المقرّة", "حالة الرعاية", "آخر متابعة"], rows: d.students.map((s) => [s.name, s.csmart ?? "", s.stage ?? "", s.grade ?? "", s.section ?? "", s.domains.map(dom).join("، "), CARE_LABEL[s.care] ?? s.care, s.last ?? ""]), summary: `${new Set(d.students.map((s) => s.id)).size} طالب` };
+  if (id === "plans") return { headers: ["الخطة", "النوع", "المجال", "الحالة", "المسؤول", "الطلبة", "الأهداف", "أهداف متحققة", "الأنشطة", "أنشطة منفذة"], rows: d.plans.map((p) => [p.title, p.kind === "group" ? "جماعية" : "فردية", dom(p.domain), PLAN_STATUS[p.status] ?? p.status, p.owner_name ?? "", p.students.length, p.goals.length * p.students.length, p.students.reduce((n, s) => n + planProgress(p, s).achieved, 0), p.activities.length * p.students.length, p.students.reduce((n, s) => n + s.acts_done.length, 0)]), summary: `${d.plans.length} خطة · ${new Set(d.plans.flatMap((p) => p.students.map((s) => s.id))).size} طالب` };
+  if (id === "programs") return { headers: ["البرنامج", "النوع", "الجهة", "البدء", "الحالة", "المقاعد", "مُقرّون", "مسجلون", "حضروا", "أتمّوا", "موافقات معلقة"], rows: d.progs.map((p) => [p.title, p.kind === "external" ? "فرصة خارجية" : "مدرسي", p.organizer ?? "", p.starts_on, PROG_STATUS[p.status] ?? p.status, p.seats ?? "", p.counts.approved, p.counts.registered, p.counts.attending, p.counts.completed, p.counts.consent_pending]), summary: `${d.progs.length} برنامج` };
+  if (id === "attendance") { const rows = d.progs.flatMap((p) => (p.participants ?? []).map((s) => [p.title, s.name, s.grade ?? "", s.section ?? "", PART_LABELS.nom[s.nom as keyof typeof PART_LABELS.nom] ?? s.nom, PART_LABELS.reg[s.reg as keyof typeof PART_LABELS.reg] ?? s.reg, PART_LABELS.att[s.att as keyof typeof PART_LABELS.att] ?? s.att, PART_LABELS.done[s.done as keyof typeof PART_LABELS.done] ?? s.done, PART_LABELS.consent[s.consent as keyof typeof PART_LABELS.consent] ?? s.consent] as Cell[])); return { headers: ["البرنامج", "الطالب", "الصف", "الشعبة", "الترشيح", "التسجيل", "الحضور", "الإتمام", "موافقة ولي الأمر"], rows, summary: `${rows.length} مشاركة طالب في برنامج` }; }
+  const kind = id === "participations" ? "participation" : "achievement";
+  const ws = d.works.filter((w) => w.kind === kind && w.verify === "verified");
+  return { headers: ["العنوان", "الفعالية", "الجهة", "التاريخ", ...(kind === "achievement" ? ["المستوى", "النتيجة"] : []), "الطلبة", "فردي/جماعي"], rows: ws.map((w) => [w.title, w.event_name ?? "", w.organizer ?? "", w.event_date ?? "", ...(kind === "achievement" ? [WORK_LEVEL[w.level ?? ""] ?? "", w.result ?? ""] : []), w.members.map((m) => m.name).join("، "), w.members.length > 1 ? "جماعي" : "فردي"]), summary: `${ws.length} ${kind === "achievement" ? "إنجاز" : "مشاركة"} · ${new Set(ws.flatMap((w) => w.members.map((m) => m.student_id))).size} طالب` };
+}
+
+export type FamilyFile = {
+  viewer: "student" | "guardian"; domains: string[]; can_send: boolean;
+  plans: { id: string; title: string; kind: string; domain: string; status: string; start_date: string | null; end_date: string | null; owner_name: string | null; goals: { text: string; due: string; status: string }[]; activities: { title: string; type: string; done: boolean }[]; close_result: string | null }[];
+  programs: { id: string; title: string; kind: string; organizer: string | null; starts_on: string; ends_on: string | null; apply_by: string | null; status: string; needs_consent: boolean; source_url: string | null; verified_on: string | null; reg: string; att: string; done: string; consent: string; consent_at: string | null; ack_at: string | null }[];
+  works: { id: string; kind: string; title: string; domain: string; event_name: string | null; organizer: string | null; event_date: string | null; level: string | null; result: string | null; role: string | null; group: boolean }[];
+  notes: { id: string; kind: string; body: string; url: string | null; by_role: string; status: string; review_note: string | null; at: string }[];
+};
+export const NOTE_STATUS: Record<string, string> = { pending: "بانتظار مراجعة المدرسة", accepted: "قُبلت", rejected: "لم تُقبل" };
+/** Mirrors gt_family_note validation. */
+export function familyNoteIssues(kind: string, body: string, url: string): string[] {
+  const o: string[] = [];
+  const b = body.trim();
+  if (b.length < 10 || b.length > 2000) o.push("اكتب وصفًا من 10 إلى 2000 حرف");
+  if (kind === "evidence" && !/^https:\/\//.test(url.trim())) o.push("الشاهد يحتاج رابطًا آمنًا يبدأ بـ https://");
+  else if (url.trim() && !/^https:\/\//.test(url.trim())) o.push("رابط غير صالح");
+  return o;
+}
+/** Guardian may decide consent only when needed, still pending/decided-not-registered, and program open. */
+export function consentOpen(p: Pick<FamilyFile["programs"][number], "needs_consent" | "status" | "reg">) {
+  return p.needs_consent && p.status === "open" && p.reg !== "registered";
+}
