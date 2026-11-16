@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Org-wide (cross-branch) circulars: permissions, targeting, versions, reports, archive.
 // Creates its own orgs/users; cleanup is scoped to this run (scripts/lib/test-run.ts).
 // Run: NODE_PATH=node_modules bun scripts/circ-org-e2e.ts

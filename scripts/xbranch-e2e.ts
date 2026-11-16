@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Cross-branch staff messaging («التواصل بين الفروع»): settings scope, directory, chat, reply, notification, cross-org block.
 // Run: NODE_PATH=node_modules bun scripts/xbranch-e2e.ts
 import { createClient } from "@supabase/supabase-js";

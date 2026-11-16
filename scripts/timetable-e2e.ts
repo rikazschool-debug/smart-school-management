@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Timetable package acceptance on isolated data (run-registered org/users; cleaned by TestRun):
 // 5 sections, 10 teachers (+1 without login, +1 without assignment), 5 days, 7/6 lessons + break, lab room, loads, constraints.
 // Generation uses the same solver the browser worker runs; results are verified independently from the database.

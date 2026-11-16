@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Package-next item 5: meetings inside Communication (adm_my_meetings) + accept / reject / excuse with reasons.
 // Run: NODE_PATH=node_modules bun scripts/meet-comm-e2e.ts
 import { createClient } from "@supabase/supabase-js";

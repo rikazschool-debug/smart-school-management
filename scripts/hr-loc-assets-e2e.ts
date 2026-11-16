@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR P5 location punch + asset custody: school site settings, distance/accuracy/freshness/assignment checks on the server,
 // asset hand/ack/transfer/return/loss, one open custody per asset, own-only views, principal has no default HR access.
 // Synthetic data only. Run: NODE_PATH=node_modules bun scripts/hr-loc-assets-e2e.ts

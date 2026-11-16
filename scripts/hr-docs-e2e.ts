@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR documents center: requirements/missing, private upload → review (not uploader, not employee) → reject/reupload/accept,
 // version history, branch + confidential + download scopes, file access through storage RLS, alerts once, contract settings permission.
 // Run: NODE_PATH=node_modules bun scripts/hr-docs-e2e.ts

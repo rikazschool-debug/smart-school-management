@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Class virtual sessions (vc_*): who schedules, who hosts/joins, isolation from admin meetings, attendance timings, reports, cancel/end.
 // Run: NODE_PATH=node_modules bun scripts/vc-e2e.ts
 import { createClient } from "@supabase/supabase-js";

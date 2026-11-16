@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Support working hours: holidays skipped, branch/department hour exceptions, pause needs a reason (shown, cleared on resume),
 // settings RPCs owner-only and org-isolated. Run: NODE_PATH=node_modules bun scripts/support9-e2e.ts
 import { createClient } from "@supabase/supabase-js";

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Support tickets phase 3: working-hour targets per priority, overdue filter + one-time alerts (designated person or managers),
 // assignee filter, scoped KPIs. Two orgs, isolated data only. Run: NODE_PATH=node_modules bun scripts/support3-e2e.ts
 import { createClient } from "@supabase/supabase-js";

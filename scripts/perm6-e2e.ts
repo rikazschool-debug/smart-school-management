@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Flexible permissions for school sections (meetings, circulars, groups, attendance, gate): base role rule unchanged,
 // owner grants add, explicit deny wins, templates mirror base roles, branch/org scope, isolation, real RPC enforcement.
 // Run: NODE_PATH=node_modules bun scripts/perm6-e2e.ts

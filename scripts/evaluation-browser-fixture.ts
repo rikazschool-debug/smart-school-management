@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (evb-) for evaluation browser journeys: setup | teardown. Writes /tmp/browser/ev/fixture.json.
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";

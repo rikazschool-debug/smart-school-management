@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Student guidance stage 1 (referrals + permissions) on the hosted TEST database with synthetic rpx- accounts only.
 // Run: NODE_PATH=node_modules bun scripts/guidance-e2e.ts  (--keep leaves data + /tmp/browser/guidance/fixture.json; --teardown removes rpx- data)
 import { createClient } from "@supabase/supabase-js";

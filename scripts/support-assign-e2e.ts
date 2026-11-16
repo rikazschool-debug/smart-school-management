@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Internal tickets with branch-only assignment + tickets from the live Maqsam panel (pending call link → linked later).
 // Run: NODE_PATH=node_modules bun scripts/support-assign-e2e.ts
 import { createClient } from "@supabase/supabase-js";

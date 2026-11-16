@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Package-7 homework completion (server): feedback attachments, copy as template with files, late joiners, report export scope.
 // Run: NODE_PATH=node_modules bun scripts/homework2-e2e.ts
 import { createClient } from "@supabase/supabase-js";

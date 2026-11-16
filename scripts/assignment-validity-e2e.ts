@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Assignment validity boundaries (start/end dates, school timezone) on isolated data only.
 // Run: NODE_PATH=node_modules bun scripts/assignment-validity-e2e.ts
 import { createClient } from "@supabase/supabase-js";

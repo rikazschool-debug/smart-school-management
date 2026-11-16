@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated fixture (abm- prefix) for school-administration browser journeys.
 // setup → /tmp/browser/adm/fixture.json; teardown removes only abm- users/orgs.
 import { createClient } from "@supabase/supabase-js";

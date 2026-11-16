@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Attendance / gate / pickup lifecycle and permissions on isolated data only.
 // Run: NODE_PATH=node_modules bun scripts/attendance-e2e.ts
 import { createClient } from "@supabase/supabase-js";

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Live refresh signals (live_signals): who receives which "something changed" note, and that it arrives over Realtime.
 // Isolated lse- org A (principal, teacher, guardian) + org B (principal). Run: NODE_PATH=node_modules bun scripts/live-signals-e2e.ts
 import { createClient } from "@supabase/supabase-js";

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Cleanup monitor test (safe simulation): NODE_PATH=node_modules bun scripts/cleanup-monitor-e2e.ts
 // Uses a private channel "e2e:<run>" for fake runs/alerts and notifies only a run-created user,
 // so the live cleanup job, live alerts and real platform admins are never touched.

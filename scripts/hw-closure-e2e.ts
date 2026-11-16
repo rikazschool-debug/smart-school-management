@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Homework/tests closure after simplification (server): vice-principal scope, stale-revision conflict, notification/history
 // dedupe, expiry while open, legacy hidden grades (single reveal, observer denial, reveal audit), term-gradebook archive
 // (read for authorized staff, all writes denied, student/guardian denied, data unchanged), set_homework_kind / homework_list review.

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Maintenance roles (step M1): templates assignable per branch, follow-up variants, principal base rule,
 // branch scope, platform suspension of the operations area, revocation, isolation.
 // Run: NODE_PATH=node_modules bun scripts/maint-roles-e2e.ts

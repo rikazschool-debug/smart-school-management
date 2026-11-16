@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Idempotent: creates the Al-Malki admissions officer login (username "admissions") under users & permissions,
 // all four branches, role «مسؤول القبول والتسجيل». Password is random and never printed; the account stays pending
 // first login until the owner issues a temporary password from «المستخدمون» (reset), then the officer must change it.

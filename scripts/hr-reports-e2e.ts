@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // P9 HR reports: catalog visibility by permission, branch scope, sensitive masking, view/print/export separation,
 // logging, extension switch, revocation mid-session, tampered keys and org isolation.
 // Synthetic data only. Run: NODE_PATH=node_modules bun scripts/hr-reports-e2e.ts

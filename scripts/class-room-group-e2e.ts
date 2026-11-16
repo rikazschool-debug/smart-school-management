@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Class group inside the digital classroom + family/student contact rules (administration and counselor only).
 // New and existing room, guardian with two children in one class (one member), transfer, student/guardian/teacher access,
 // unauthorized room, guardian/student cannot message teachers (start, send, attachments), cross-school contacts rejected.

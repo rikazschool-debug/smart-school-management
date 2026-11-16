@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Creates demo accounts for every dashboard + a demo school with linked data.
 // Run: NODE_PATH=node_modules bun scripts/seed-demo.ts   (idempotent-ish: skips existing users)
 import { createClient } from "@supabase/supabase-js";

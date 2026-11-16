@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated two-branch data (acx-) for the attendance closure browser journeys. Usage: bun scripts/att-closure-fixture.ts setup|teardown
 // Branch A: on-time scans (day starts later today), guardian with two children, revoked card, delegation.
 // Branch B: late scans (day started 00:01), absence review due now, a future enrollment that must not be expected.

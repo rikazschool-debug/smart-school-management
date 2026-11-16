@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated admissions data (abx-adm) for browser journeys: owner, officer, follow-up, principal, 2 branches, 3 applications.
 // Run: NODE_PATH=node_modules bun scripts/adm-browser-fixture.ts setup|teardown   (state in /tmp/browser/admj/fixture.json)
 import { createClient } from "@supabase/supabase-js";

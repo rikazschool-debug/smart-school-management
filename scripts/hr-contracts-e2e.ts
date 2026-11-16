@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR contracts: draft → independent issue → employee ack, frozen versions, comp separation, amendments with effective dates,
 // overlap, self-approval, double decision, own-contract only, cancel/terminate, template change keeps issued text.
 // Run: NODE_PATH=node_modules bun scripts/hr-contracts-e2e.ts

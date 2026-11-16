@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // WordPress → Rikaz admissions path: runs the real plugin PHP (scripts/wp/harness.php) against the local signed receiver.
 // Run: NODE_PATH=node_modules bun scripts/wp-e2e.ts   (needs the dev server on :8080)
 import { createClient } from "@supabase/supabase-js";

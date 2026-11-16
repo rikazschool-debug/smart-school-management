@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated fixture for homework browser journeys (feedback files, template copy, late joiner, 5 reports).
 // Creates its own org/users ("hbx-" prefix). Data: published homework with attachment, 2 submissions,
 // one graded (unpublished) with a feedback file, a review-policy late joiner, a guardian.

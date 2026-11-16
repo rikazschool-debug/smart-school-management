@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Identity privacy in section groups (prompt-193): students/guardians see other students/guardians only as «طالب»/«ولي أمر».
 // Section groups base: one per section+year, automatic members with reasons, principal moderator,
 // principal-only manual edits respected by resync, guardian multi-section, transfers, revoked links, other-school denial.

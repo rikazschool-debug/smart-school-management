@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // One digital classroom per class+section (section_rooms): regroup report + re-run, teacher posts only in own subjects,
 // student/guardian reach their section room, student transfer, teacher change revokes access, regroup permissions.
 // Self-contained isolated data (crx-); cleans up through TestRun. Run: NODE_PATH=node_modules bun scripts/classroom-room-e2e.ts

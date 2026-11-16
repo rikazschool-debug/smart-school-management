@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // People management batch 1, parts 1–2: staff job categories (separate from role/permissions) and org-wide unique display names.
 // Synthetic data only (isolated org). Run: NODE_PATH=node_modules bun scripts/people1-e2e.ts
 import { createClient } from "@supabase/supabase-js";

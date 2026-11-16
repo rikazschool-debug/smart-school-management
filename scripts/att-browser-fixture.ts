@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (abx-) for attendance browser journeys. Usage: bun scripts/att-browser-fixture.ts setup|teardown
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync } from "fs";

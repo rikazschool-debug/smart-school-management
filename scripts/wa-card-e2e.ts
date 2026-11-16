@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // WhatsApp contact card, internal notes, tags, quick replies: access = the same chat permissions as the inbox.
 // Creates two isolated staff logins (authorized «محادثاتي» / unauthorized) + uses the platform owner in an org_owner session; removes everything at the end.
 import { createClient } from "@supabase/supabase-js";

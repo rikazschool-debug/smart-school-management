@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Section groups (group_type='class'): one per section+year, automatic members with reasons, principal moderator,
 // principal-only manual edits respected by resync, guardian multi-section, transfers, revoked links, other-school denial.
 // Run: bun scripts/class-groups-e2e.ts   (`teardown` removes only cge- users/orgs)

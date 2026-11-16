@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR import server checks: same-row retry is idempotent, number/ID conflict, out-of-scope school, sensitive without grant, audit masking.
 // Run: NODE_PATH=node_modules bun scripts/hr-import-e2e.ts
 import { createClient } from "@supabase/supabase-js";

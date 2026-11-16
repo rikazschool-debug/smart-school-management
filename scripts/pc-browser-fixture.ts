@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated procurement data (pcb-) for browser journeys. setup writes /tmp/browser/pc/fixture.json; teardown removes everything.
 // Run: NODE_PATH=node_modules bun scripts/pc-browser-fixture.ts setup|teardown
 import { createClient } from "@supabase/supabase-js";

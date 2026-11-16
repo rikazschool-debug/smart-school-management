@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Attachments in cross-branch (org-level) groups: upload, list, download, denial.
 // Run: NODE_PATH=node_modules bun scripts/xbranch-files-e2e.ts
 import { createClient } from "@supabase/supabase-js";

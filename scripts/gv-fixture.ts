@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Guardian visits fixture (gvx-): setup | teardown. Writes /tmp/browser/gv/fixture.json.
 // Org with two schools: owner; principal p1 (S1) and p2 (S2, "other school"); reception r1 (security, S1); host teacher h1 (S1);
 // guardian g1 with two children (k1 in S1, k2 in S2); guardian g2 with child k3 (S1). Visit settings are saved by the tests.

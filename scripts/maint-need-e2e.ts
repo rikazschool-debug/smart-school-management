@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // M7: maintenance request → purchase need (no money rights for maintenance; one live need; amounts principal/owner only).
 // Run: NODE_PATH=node_modules bun scripts/maint-e2e.ts
 import { createClient } from "@supabase/supabase-js";

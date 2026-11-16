@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Flexible permissions + section availability (owner-only roles/assignments/overrides, deny wins, no self-escalation,
 // students/guardians excluded, platform suspension wins, org isolation). Run: NODE_PATH=node_modules bun scripts/perm5-e2e.ts
 import { createClient } from "@supabase/supabase-js";

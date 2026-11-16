@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Guardians template import (import_guardian_row): dry run vs write, create/link/exists/conflict, re-import idempotent,
 // links unverified, C‑Smart leading zeros, non-manager rejected. Isolated data (gix-), cleaned up through TestRun.
 // Run: NODE_PATH=node_modules bun scripts/guardian-import-e2e.ts

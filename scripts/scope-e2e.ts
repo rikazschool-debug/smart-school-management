@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Staff scope (package-next item 1): vice scope by departments/teachers, supervisor by assigned teachers,
 // principal-only academic setup and timetable, gate-only scanning, scoped task creation, meeting organizers.
 // Isolated data only. Run: NODE_PATH=node_modules bun scripts/scope-e2e.ts

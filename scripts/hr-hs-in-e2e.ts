@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR P8 housing + medical insurance: extension switch, branch scope, capacity/conflict rules, move/vacate history,
 // insurance policies/classes/members/dependents, sensitive masking, renewal carry-over, own-only views, no money effect.
 // Synthetic data only. Run: NODE_PATH=node_modules bun scripts/hr-hs-in-e2e.ts

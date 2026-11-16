@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated sbx- data for support browser journeys (exports, multi-account). setup writes /tmp/browser/sup/fixture.json; teardown removes it.
 // Run: NODE_PATH=node_modules bun scripts/support-browser-fixture.ts setup|teardown
 import { createClient } from "@supabase/supabase-js";

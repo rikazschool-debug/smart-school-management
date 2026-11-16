@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Users & permissions reorganisation: preview rollback, atomic apply, multi-role retention, deny, section people, session revocation.
 // Run: NODE_PATH=node_modules bun scripts/perm7-e2e.ts
 import { createClient } from "@supabase/supabase-js";

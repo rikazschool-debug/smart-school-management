@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR contract expiry alerts: 60/30/7 days + expired, recipients = draft/approve holders of that branch + owner,
 // never view-only or the employee, one notice per stage, renewal stops alerts, platform switch stops alerts.
 // Run: NODE_PATH=node_modules bun scripts/hrc-alerts-e2e.ts

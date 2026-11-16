@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Online status (presence_*): server-clock beats, multi-tab, sign-out end, 90s timeout, owner/conversation scope, no manual writes.
 // Run: NODE_PATH=node_modules bun scripts/presence-e2e.ts
 import { createClient } from "@supabase/supabase-js";

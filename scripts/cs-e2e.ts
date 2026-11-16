@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Chat settings (ضبط المحادثات): permissions, saved replies, auto replies, voice limits, attachments gallery.
 // Run: bun scripts/cs-e2e.ts   (`teardown` removes only csx- users/orgs)
 import { createClient } from "@supabase/supabase-js";

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Guardian access follows two live facts only: a verified guardian↔student link and the student's active enrollment.
 // Imported (unverified) link → nothing; verify → child, section classroom, posts and files; transfer → access moves;
 // revoke → access gone (incl. direct file/post reads). Isolated fax- data, cleaned through TestRun.

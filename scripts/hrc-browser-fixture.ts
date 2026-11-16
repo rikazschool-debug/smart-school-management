@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hcb-) for the contracts browser journey: setup | teardown. Writes /tmp/browser/hrc/fixture.json.
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";

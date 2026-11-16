@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Class visits & teacher evaluation: supervisor (assigned teachers) / principal evaluate, principal approves or returns, teacher never sees.
 // Isolated data. Run: NODE_PATH=node_modules bun scripts/visits-e2e.ts
 import { createClient } from "@supabase/supabase-js";

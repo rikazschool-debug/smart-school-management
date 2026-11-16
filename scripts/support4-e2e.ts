@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Support closure checks: resolve clock pause while waiting on the requester, re-alerts after priority change / transfer / reopen,
 // cross-branch info request privacy, private notes absent from search/notifications/exports, platform admin scope, direct-table denial.
 // Run: NODE_PATH=node_modules bun scripts/support4-e2e.ts   (--cron waits for the real scheduled job instead of calling the tick)

@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated fixture (abd- prefix) for duty/meeting browser journeys: published timetable with t1 teaching 09:30 today.
 // setup → /tmp/browser/adm2/fixture.json; teardown removes only abd- users/orgs.
 import { createClient } from "@supabase/supabase-js";

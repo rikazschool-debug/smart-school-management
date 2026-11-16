@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Closure checks (Nov 3): teachers without a login appear in loads/availability but never as chat members, invitees or circular
 // recipients; the staff name list is not exposed to platform admins of other orgs. Isolated data only.
 // Run: NODE_PATH=node_modules bun scripts/closure-e2e.ts

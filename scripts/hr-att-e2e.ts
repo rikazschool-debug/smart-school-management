@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR attendance (P5): owner-entered shifts (no defaults), dated assignments w/o overlap, night shift, raw punches immutable,
 // duplicate/missing punches, computed day separate from raw log, approved leave, holidays, corrections (self-request → HR apply),
 // close/reopen with reason, device intake idempotent + after-close, self-punch switch, manager minimal view, branch/colleague/org isolation.

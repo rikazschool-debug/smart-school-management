@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Procurement phase 4: requests (top-up, settlement, pre-purchase, adjust, transfer), cash return, carry-over, settlement/close,
 // form versions, alerts, reports and server-side export guard. Run: NODE_PATH=node_modules bun scripts/pc2-e2e.ts
 import { createClient } from "@supabase/supabase-js";

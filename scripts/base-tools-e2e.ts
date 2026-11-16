@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Base-role tools are grantable; grants never replace course/record identity checks.
 // Run: NODE_PATH=node_modules bun scripts/base-tools-e2e.ts
 import { createClient } from "@supabase/supabase-js";

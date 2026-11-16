@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Maqsam calls inside support: org binding, branch/own scopes, separate listen/download/export/link rights, direct-call isolation,
 // ticket create/link without status change, follow-up reminder once, and that tickets keep working without Maqsam.
 // Uses synthetic call rows on an isolated test org (no real Maqsam calls). Run: NODE_PATH=node_modules bun scripts/maqsam-e2e.ts

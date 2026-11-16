@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hrrb-) for the recruitment browser journey: setup | teardown. Writes /tmp/browser/hrr/fixture.json.
 import { createClient } from "@supabase/supabase-js";
 import { mkdirSync, readFileSync, writeFileSync } from "fs";

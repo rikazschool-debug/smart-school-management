@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // B13: administrative assistant (school timetable + attendance view + manual recording), central HR director (no school,
 // group-wide HR), named group-owner direct manager (leave: owner first, then a separate HR approver), no self-manager,
 // importing an employee who already has a guardian account (link after ID+phone match, guardian role/children kept).

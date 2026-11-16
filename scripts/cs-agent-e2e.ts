@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Customer service agent role: owner-only login role + title mapping; agent handles only tickets assigned to him; no HR/payroll/other tickets.
 // Run: NODE_PATH=node_modules bun scripts/cs-agent-e2e.ts
 import { createClient } from "@supabase/supabase-js";

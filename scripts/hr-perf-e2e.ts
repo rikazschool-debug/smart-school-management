@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR P8 performance: versioned forms, cycles, evaluator assignment (evaluate perm in school, never self), scoring, evidence from
 // authorized class visits, review/return, publish freeze, employee ack/objection, resolution, separated permissions, own-only view.
 // Synthetic data only. Run: NODE_PATH=node_modules bun scripts/hr-perf-e2e.ts

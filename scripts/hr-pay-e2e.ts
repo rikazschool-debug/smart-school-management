@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // HR P6 (pay items, decisions, advances, custody link) + P7 payroll (HR prepares → finance reviews → management approves the reviewed version;
 // posting/payment pending finance link; payslips only after publish; self-service sees own data only; isolation).
 // Synthetic data only. Run: NODE_PATH=node_modules bun scripts/hr-pay-e2e.ts

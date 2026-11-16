@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // B4.8 acceptance fixture (b48-): setup | teardown. Writes /tmp/browser/b48/fixture.json.
 // One school: principal pr, reception r1 (security), teachers h1 (host, invited) and t2 (not invited), guardian g1 with child k1,
 // student account for k1. Every account has an ID number + mobile in its school/HR record so the journey signs in by ID.

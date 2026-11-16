@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Scheduled absence review (att_tick) on isolated schools with a controlled clock.
 // Morning school, evening school, holiday, cutoff changed by a new policy version, retry/idempotency, scope (_only).
 // Optional real-cron check: `bun scripts/attendance-tick-e2e.ts --cron` waits for the pg_cron run (≤ 11 min).

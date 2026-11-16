@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hrx-) for the unified employee-data journey: 4 schools, owner + data-entry user without sensitive/bank access.
 // Run: NODE_PATH=node_modules bun scripts/hrx-browser-fixture.ts setup|teardown. Writes /tmp/browser/hrx/fixture.json.
 import { createClient } from "@supabase/supabase-js";

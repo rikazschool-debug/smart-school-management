@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Creates the four maintenance demo accounts in the demo owner's org (every branch), assigned by the owner via perm_assign.
 // Run: NODE_PATH=node_modules bun scripts/seed-maint-demo.ts   (idempotent)
 import { createClient } from "@supabase/supabase-js";

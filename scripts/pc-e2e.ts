@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Procurement & custody (phase 3): custody lifecycle, disbursement proof + ack, multi-line VAT invoices, derived balances,
 // separation of duties, approval limits, scopes, duplicates, corrections, refunds, concurrency/idempotency, suspension, isolation.
 // Run: NODE_PATH=node_modules bun scripts/pc-e2e.ts

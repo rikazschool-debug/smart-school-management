@@ -1,3 +1,4 @@
+import "./lib/user-pool.ts";
 // Isolated data (hrpb-) for the payroll browser journey: setup | teardown. Writes /tmp/browser/hrp/fixture.json.
 // Synthetic only: one employee with an accepted contract, approved bonus, approved+paid advance (synthetic finance link), one custody.
 import { createClient } from "@supabase/supabase-js";
