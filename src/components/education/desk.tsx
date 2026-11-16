@@ -53,7 +53,7 @@ export function EducationDesk({ title, kinds }: { title: string; kinds: EduKind[
       if (format === "xlsx") exportXlsx(meta, HEADERS(kind), rows); else if (format === "pdf") await exportPdf(meta, HEADERS(kind), rows); else printReport(meta, HEADERS(kind), rows);
     } catch (e) { toast.error(arabicError(e)); } finally { setExporting(false); }
   }
-  const done = () => { for (const k of ["edu-list", "edu-detail", "edu-stats"]) void qc.invalidateQueries({ queryKey: [k] }); };
+  const done = () => { for (const k of ["edu-list", "edu-detail", "edu-stats", "edu-plan-filters"]) void qc.invalidateQueries({ queryKey: [k] }); };
   const t = today(); const filtered = filterLabels(kind, f).length > 0;
   if (wizard && kind === "teacher_plan") return <TeacherPlanEditor school={school} row={wizard === "new" ? undefined : wizard} close={(id) => { setWizard(null); done(); if (id) { setView("records"); setSelected(id); } }} />;
   if (wizard) return <PlanWizard school={school} row={wizard === "new" ? undefined : wizard} close={(id) => { setWizard(null); done(); if (id) { setView("records"); setSelected(id); } }} />;

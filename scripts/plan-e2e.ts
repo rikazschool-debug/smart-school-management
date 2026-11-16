@@ -198,6 +198,27 @@ async function main() {
   check("guardian cannot read teacher plans", !!(await g1.c.rpc("edu_detail", { _id: tp })).error);
   const sv = must(await sup.c.rpc("edu_detail", { _id: tp }), "sv") as any;
   check("supervisor sees teacher note and visible visit link", sv.self_notes.length === 1 && sv.visit?.visible === true, { n: sv.self_notes, v: sv.visit });
+
+  // ---- stage 6: dashboard tabs, filters, stats
+  const find = async (c: any, f: any, kind = "student_plan") => must(await c.rpc("edu_find", { _school: S, _kind: kind, _f: f, _offset: 0, _limit: 100 }), "find") as any;
+  const all6 = await find(t1.c, {}); const ids = (x: any) => x.rows.map((r: any) => r.id);
+  check("mine tab lists the teacher's own plans", (await find(t1.c, { tab: "mine" })).total === all6.total && all6.total >= 3, all6.total);
+  const act6 = await find(t1.c, { tab: "active" }); check("active tab excludes drafts", !ids(act6).includes(d2) && act6.rows.every((r: any) => ["ready","active","review"].includes(r.status)), act6.rows.map((r: any) => r.status));
+  check("closed tab only closed plans", (await find(t1.c, { tab: "closed" })).rows.every((r: any) => r.status === "closed"));
+  const att = await find(t1.c, { tab: "attention" }); check("attention tab = active/review needing follow-up", att.rows.every((r: any) => ["active","review"].includes(r.status) && r.attention === true), att.rows.map((r: any) => [r.status, r.attention]));
+  check("course/section/grade/stage filters keep the course's plans", (await find(t1.c, { course: course.id })).total === all6.total && (await find(t1.c, { section: secA.id })).total === all6.total);
+  check("course filter with another id returns none", (await find(t1.c, { course: crypto.randomUUID() })).total === 0);
+  check("teacher filter matches plans the teacher created", (await find(owner.c, { teacher: te1.id })).total === all6.total && (await find(owner.c, { teacher: te2.id })).total === 0);
+  check("search by C-Smart number", (await find(t1.c, { q: `CS${run}1` })).total === all6.total);
+  const row6 = all6.rows.find((r: any) => r.id === p2); check("row carries owner, section, last session and separate mastery count", !!row6?.owner_name && !!row6?.section_label && "last_session" in row6 && typeof row6.mastered === "number", row6 && { o: row6.owner_name, s: row6.section_label, l: row6.last_session, m: row6.mastered });
+  const st6 = must(await t1.c.rpc("edu_stats", { _school: S, _kind: "student_plan", _f: {} }), "st6") as any;
+  check("stats give active/attention/closed/mine and mastery separate from activities", ["active","attention","closed","mine","goals_mastered","goals_done"].every((k) => typeof st6[k] === "number") && st6.goals_mastered <= st6.goals_total, st6);
+  const fo = must(await t1.c.rpc("edu_plan_filters", { _school: S, _kind: "student_plan" }), "fo") as any;
+  check("filter options list only the plans' course/section/teacher", fo.courses.length === 1 && fo.sections.length === 1 && fo.teachers.some((x: any) => x.id === te1.id), fo);
+  const gfo = must(await g1.c.rpc("edu_plan_filters", { _school: S, _kind: "student_plan" }), "gfo") as any;
+  check("guardian gets no internal filter lists", gfo.teachers.length === 0 && gfo.courses.length === 0, gfo);
+  const g6 = await find(g1.c, { tab: "active" }); check("guardian rows carry no internal fields", g6.rows.length > 0 && g6.rows.every((r: any) => !("owner_name" in r) && !("responsible" in r) && r.actions === "" && !("last_session" in r)), g6.rows[0] && Object.keys(g6.rows[0]));
+  check("other teacher sees none of these plans", (await find(t2.c, {})).total === 0);
   console.log(`\n${ok} passed, ${bad} failed`);
   const fx = { run, pw, org, school: S, plan: id, draft: d2, p2, tp, users: Object.fromEntries(Object.entries({ owner, t1, t2, g1, g2, sup, sup2 }).map(([k, v]) => [k, v.email])) };
   if (process.argv.includes("--keep")) { mkdirSync("/tmp/browser/plan", { recursive: true }); writeFileSync("/tmp/browser/plan/fixture.json", JSON.stringify(fx, null, 2)); console.log("kept fixture"); }

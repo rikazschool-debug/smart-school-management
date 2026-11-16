@@ -3,3 +3,7 @@
 - Follow-ups are append-only and goals cannot change after goal tracking starts; progress uses the latest recorded completion per goal.- Education desks list/stats only through edu_find/edu_stats with server option lists in private.edu_options; client labels in model.ts must mirror them.
 
 - Student/teacher plans use statuses draft/ready/active/review/closed (public._edu_validate); overdue is derived from due_date, never a status. Structured diagnosis and per-goal details live in edu_records.plan; goals[] stays the list of goal texts so follow-ups keep goal_index. Readiness rules live in private.edu_plan_check and are mirrored by planIssues() in model.ts. Drafts are never shared (share intent kept in plan.share_intent). Tests: scripts/plan-e2e.ts, scripts/plan-journey.py.
+- Plan running data (edu_sessions, edu_measures, edu_evidence, edu_home_notes, edu_self_notes) is RPC-only; activity marks and mastery marks are separate (edu_followups.mark) and mastery needs a measure — never derive mastery from activity.
+- Guardian rows/details come only from private._edu_guardian_row (share choices in plan.share); internal fields never reach guardians.
+- Teacher plans use teacher-plan.tsx (not the student wizard); readiness in private.edu_tplan_check mirrored by tPlanIssues(); a linked visit stays under its own read rules.
+- Plan dashboards use plan-board.tsx over edu_find/edu_stats tab filters (mine/active/attention/closed) and edu_plan_filters; "attention" is defined only in private._edu_attention. Tests: scripts/plan-board-journey.py, plan-teacher-journey.py.

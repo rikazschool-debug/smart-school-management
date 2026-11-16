@@ -10,7 +10,7 @@ async def main():
     async with async_playwright() as pw:
         br = await pw.chromium.launch(headless=True); ctx = await br.new_context(viewport={"width": 390, "height": 844}); o = await ctx.new_page(); errs = []; o.on("pageerror", lambda e: errs.append(str(e)))
         await sign_in(o, B, F["users"]["g1"], F["pw"]); await o.wait_for_function("location.pathname.startsWith('/app')", timeout=30000)
-        await o.goto(B + "/app/remedial-plans"); await o.get_by_role("button", name="السجلات").click()
+        await o.goto(B + "/app/remedial-plans")
         row = o.get_by_text("خطة المرحلة 2").first; await row.wait_for(timeout=30000); await row.click()
         d = o.get_by_role("dialog"); await d.get_by_text("الأنشطة المنزلية").first.wait_for(timeout=20000); t = await d.inner_text()
         check("guardian sees goals, home activities, progress and shared attachment", "يجمع كسرين" in t and "حل 3 مسائل يوميًا" in t and "آخر قياس" in t and "صفحة 1" in t, t[:600])

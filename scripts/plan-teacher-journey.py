@@ -24,7 +24,7 @@ async def main():
         check("supervisor sees saved plan with linked visit and indicator", "زيارة صفية" in x and "المؤشر: ملاحظة في زيارتين" in x and "مشاركة ولي الأمر" not in x, x[:600])
         await d.get_by_role("button", name="بدء التنفيذ").click(); await d.get_by_role("button", name="إرسال للمراجعة").wait_for(timeout=20000)
         check("supervisor pages have no errors", not o.errs, o.errs)
-        t1 = await login(br, "t1"); await t1.get_by_role("tab", name="خطط المعلمين").click(); await t1.get_by_role("button", name="السجلات").click()
+        t1 = await login(br, "t1"); await t1.get_by_role("tab", name="خطط المعلمين").click()
         await t1.get_by_text("خطة تحسين الأداء المهني").first.click(); d = t1.get_by_role("dialog"); await d.get_by_role("tab", name="ملاحظات المعلم").first.click()
         await d.get_by_label("ملاحظة المعلم").fill("نفذت الورشة وأحتاج نموذج درس"); await d.get_by_role("button", name="إضافة ملاحظتي").click()
         await d.get_by_text("نفذت الورشة وأحتاج نموذج درس").wait_for(timeout=20000); check("teacher adds own note to the plan", True); await t1.screenshot(path=SH + "teacher_self_note.png")
