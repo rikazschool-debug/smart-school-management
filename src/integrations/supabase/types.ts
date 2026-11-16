@@ -19847,6 +19847,10 @@ export type Database = {
         Returns: Json
       }
       _ad_label: { Args: { _s: string }; Returns: string }
+      _ad_me_ok: {
+        Args: { _action: string; _school: string }
+        Returns: boolean
+      }
       _ad_new_ref: { Args: { _org: string }; Returns: string }
       _ad_notify: {
         Args: {
