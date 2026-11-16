@@ -16,14 +16,14 @@ import type { GuidanceSearch, GuidanceTab } from "./search";
 type Me = { counselor: boolean; can_refer: boolean; can_export: boolean; stats: boolean; stats_export: boolean };
 type Tab = GuidanceTab;
 /** who: counselor-only, anyone who may refer, or statistics viewers (counselor, principal, vice principal). */
-const TABS: { id: Tab; label: string; icon: typeof Send; who: "counselor" | "refer" | "stats" }[] = [
-  { id: "board", label: "لوحة العمل والمواعيد", icon: LayoutDashboard, who: "counselor" },
-  { id: "referrals", label: "الإحالات الطلابية", icon: Send, who: "refer" },
-  { id: "cases", label: "الحالات ودراسة الحالة", icon: FolderLock, who: "counselor" },
-  { id: "sessions", label: "الجلسات والمتابعات", icon: CalendarCheck, who: "counselor" },
-  { id: "plans", label: "خطط التدخل", icon: ListChecks, who: "counselor" },
-  { id: "programs", label: "البرامج والخطة السنوية", icon: ClipboardList, who: "stats" },
-  { id: "reports", label: "التقارير", icon: BarChart3, who: "stats" },
+const TABS: { id: Tab; label: string; hint: string; icon: typeof Send; who: "counselor" | "refer" | "stats" }[] = [
+  { id: "board", hint: "اليوم والمواعيد", label: "لوحة العمل والمواعيد", icon: LayoutDashboard, who: "counselor" },
+  { id: "referrals", hint: "طلبات المعلمين", label: "الإحالات الطلابية", icon: Send, who: "refer" },
+  { id: "cases", hint: "الملفات السرية", label: "الحالات ودراسة الحالة", icon: FolderLock, who: "counselor" },
+  { id: "sessions", hint: "الجلسات والسجل", label: "الجلسات والمتابعات", icon: CalendarCheck, who: "counselor" },
+  { id: "plans", hint: "الأهداف والتقدم", label: "خطط التدخل", icon: ListChecks, who: "counselor" },
+  { id: "programs", hint: "الخطة والبرامج", label: "البرامج والخطة السنوية", icon: ClipboardList, who: "stats" },
+  { id: "reports", hint: "تشغيلي وإحصائي", label: "التقارير", icon: BarChart3, who: "stats" },
 ];
 
 /** Tab and open record live in the URL (?tab=&id=) so notifications and shared links open the exact screen; the server still checks every id. */
@@ -43,7 +43,15 @@ export function GuidanceHub({ sp, go: nav }: { sp: GuidanceSearch; go: (s: Guida
     <p className="flex items-center gap-2 text-sm text-muted-foreground"><ShieldCheck className="size-4" />السجلات سرية؛ يظهر لكل مستخدم ما تسمح به صلاحيته فقط، ويُتحقق من ذلك في الخادم.</p>
     <OfflineNote />
     {sp.tab && sp.tab !== cur && <p role="status" className="rounded-lg border bg-muted/40 p-3 text-sm">هذا الرابط يخص قسمًا غير متاح لحسابك، فعُرض لك أول قسم متاح.</p>}
-    {tabs.length > 1 && <nav aria-label="أقسام التوجيه الطلابي" className="rounded-2xl border bg-card p-1.5 shadow-sm"><div className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap">{tabs.map((t) => { const on = cur === t.id; return <button key={t.id} type="button" aria-current={on ? "page" : undefined} onClick={() => go(t.id)} className={`group relative flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all lg:flex-1 lg:justify-center ${on ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}><span className={`grid size-7 shrink-0 place-items-center rounded-lg transition-colors ${on ? "bg-primary-foreground/15" : "bg-muted group-hover:bg-background"}`}><t.icon className="size-4" /></span><span className="whitespace-nowrap">{t.label}</span></button>; })}</div></nav>}
+    {tabs.length > 1 && <nav aria-label="أقسام التوجيه الطلابي" className="rounded-2xl border bg-gradient-to-b from-card to-muted/40 p-2 shadow-sm">
+      <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:overflow-visible" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
+        {tabs.map((t) => { const on = cur === t.id; return <button key={t.id} type="button" aria-label={t.label} aria-current={on ? "page" : undefined} onClick={() => go(t.id)} className={`group relative flex min-w-[9.5rem] shrink-0 items-center gap-2.5 overflow-hidden rounded-xl px-3 py-2.5 text-start transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:min-w-0 ${on ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" : "text-foreground hover:-translate-y-0.5 hover:bg-card hover:shadow-md"}`}>
+          <span className={`grid size-9 shrink-0 place-items-center rounded-lg transition-colors ${on ? "bg-primary-foreground/15" : "bg-primary/10 text-primary group-hover:bg-primary/15"}`}><t.icon className="size-[1.1rem]" /></span>
+          <span className="min-w-0"><span className="block truncate text-sm font-semibold">{t.label}</span><span className={`block truncate text-[11px] ${on ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{t.hint}</span></span>
+          {on && <span aria-hidden className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-primary-foreground/60" />}
+        </button>; })}
+      </div>
+    </nav>}
     {cur === "board" && <GuidanceBoard school={school} go={(t, o) => go(t, o)} />}
     {cur === "referrals" && <ReferralsTab key={refStatus ?? ""} school={school} m={m} status={refStatus} openId={openId} onSel={sel("referrals")} openCase={(id) => go("cases", { id })} />}
     {cur === "cases" && <Cases school={school} initialId={openId} onSel={sel("cases")} />}
