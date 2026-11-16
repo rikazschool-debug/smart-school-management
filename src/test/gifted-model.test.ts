@@ -8,3 +8,13 @@ describe("gifted nominations", () => {
   it("review can no longer go back to review", () => expect(nomActions("review")).not.toContain("review"));
   it("drops unknown tab and bad id", () => expect(gtSearch({ tab: "x", id: "1" })).toEqual({}));
 });
+import { planIssues, planProgress, planActions } from "@/components/gifted/model";
+const base = { kind: "individual" as const, title: "خطة إثراء", domain: "creative", need: "تعميق مهارات التصميم", owner_name: "أ. منى", start_date: "2026-11-01", end_date: "2026-12-01", strengths: "", resources: "", outputs: "", students: ["a"], goals: [{ text: "يصمم نموذجًا أوليًا", criteria: "نموذج يعمل", owner: "أ. منى", due: "2026-11-20" }], activities: [{ type: "applied", title: "مشروع" }] };
+describe("gifted plans", () => {
+  it("complete plan has no issues", () => expect(planIssues(base)).toEqual([]));
+  it("individual plan with two students refused", () => expect(planIssues({ ...base, students: ["a", "b"] })).toContain("الخطة الفردية لطالب واحد"));
+  it("goal without criteria refused", () => expect(planIssues({ ...base, goals: [{ ...base.goals[0]!, criteria: "" }] })).toContain("لكل هدف نص ومعيار تحقق ومسؤول وموعد"));
+  it("end before start refused", () => expect(planIssues({ ...base, end_date: "2026-10-01" })).toContain("حدّد مدة صحيحة للخطة"));
+  it("all activities done does not mean goals achieved", () => expect(planProgress(base as any, { goal_status: {}, acts_done: [0] })).toMatchObject({ achieved: 0, actsDone: 1 }));
+  it("closed plan has no actions", () => expect(planActions("closed")).toEqual([]));
+});

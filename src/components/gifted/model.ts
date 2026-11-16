@@ -29,3 +29,36 @@ export function nomActions(status: string): ("review" | "needs_info" | "approve"
   if (status === "review") return ["needs_info", "approve", "reject"];
   return [];
 }
+
+export const PLAN_STATUS: Record<string, string> = { draft: "مسودة", ready: "جاهزة للتنفيذ", running: "جارية", review: "بانتظار المراجعة", closed: "مغلقة" };
+export const GOAL_STATUS: Record<string, string> = { open: "لم يبدأ", progress: "قيد التقدم", achieved: "تحقق", not_achieved: "لم يتحقق" };
+export const ACT_TYPES: Record<string, string> = { research: "مشروع بحثي", applied: "مشروع تطبيقي", workshop: "ورشة", challenge: "تحدٍّ أو مسابقة", enrichment: "إثراء معرفي", mentoring: "إرشاد فردي", other: "نشاط آخر" };
+export type Goal = { text: string; criteria: string; owner: string; due: string };
+export type Activity = { type: string; title: string };
+export type PlanStudent = { id: string; name: string; goal_status: Record<string, { status: string; evidence?: string; on?: string }>; acts_done: number[]; last: string | null };
+export type Followup = { id: string; student_id: string; on_date: string; feedback: string; student_note: string | null; changes: { goal: number; status: string; evidence?: string }[]; by: string | null };
+export type Plan = { id: string; no: number; kind: "individual" | "group"; title: string; domain: string; strengths: string | null; need: string | null; resources: string | null; outputs: string | null; owner_name: string | null; start_date: string | null; end_date: string | null; goals: Goal[]; activities: Activity[]; status: string; close_result: string | null; rev: number; students: PlanStudent[]; followups: Followup[] };
+export type PlanDraft = Pick<Plan, "kind" | "title" | "domain" | "goals" | "activities"> & { need: string; owner_name: string; start_date: string; end_date: string; strengths: string; resources: string; outputs: string; students: string[] };
+
+/** Mirrors private._gt_plan_check (required before ready/running). */
+export function planIssues(p: PlanDraft): string[] {
+  const o: string[] = [];
+  if (p.title.trim().length < 3) o.push("اكتب عنوان الخطة");
+  if (!p.students.length) o.push("أضف طالبًا واحدًا على الأقل");
+  if (p.kind === "individual" && p.students.length > 1) o.push("الخطة الفردية لطالب واحد");
+  if (!p.need.trim()) o.push("اكتب الاحتياج");
+  if (!p.owner_name.trim()) o.push("حدّد المسؤول عن الخطة");
+  if (!p.start_date || !p.end_date || p.end_date < p.start_date) o.push("حدّد مدة صحيحة للخطة");
+  if (!p.goals.length) o.push("أضف هدفًا واحدًا على الأقل");
+  if (p.goals.some((g) => g.text.trim().length < 5 || !g.criteria.trim() || !g.owner.trim() || !g.due)) o.push("لكل هدف نص ومعيار تحقق ومسؤول وموعد");
+  if (!p.activities.length) o.push("أضف نشاطًا إثرائيًا واحدًا على الأقل");
+  return o;
+}
+/** Activities done and goals achieved are reported separately — finishing activities never marks a goal achieved. */
+export function planProgress(p: Pick<Plan, "goals" | "activities">, s: Pick<PlanStudent, "goal_status" | "acts_done">) {
+  const achieved = Object.values(s.goal_status).filter((g) => g.status === "achieved").length;
+  return { goals: `${achieved}/${p.goals.length}`, acts: `${s.acts_done.length}/${p.activities.length}`, achieved, actsDone: s.acts_done.length };
+}
+export function planActions(status: string): { a: string; label: string }[] {
+  return ({ draft: [{ a: "ready", label: "جاهزة للتنفيذ" }], ready: [{ a: "start", label: "بدء التنفيذ" }, { a: "draft", label: "إعادة لمسودة" }], running: [{ a: "review", label: "طلب مراجعة" }, { a: "close", label: "إغلاق بنتيجة" }], review: [{ a: "resume", label: "استئناف" }, { a: "close", label: "إغلاق بنتيجة" }] } as Record<string, { a: string; label: string }[]>)[status] ?? [];
+}
