@@ -60,4 +60,4 @@
 - Permission catalog informational entries remain locked; workspace sections and bt_* tools are grantable through owner-only templates/person edits. Tool grants never replace course assignment, participant, or private self-record identity checks.
 - Export branding: every PDF/print/Excel export carries the active school (or group) name + logo via src/lib/export-brand.ts (synced by ExportBrandSync in the app layout) — never a per-screen header.
 - Use one PermTree per editor to avoid duplicate controls.
-- Educational supervision (sv_*): RPC-only; scope from dated sv_assignments, owner-only delegations, immutable published form versions; see src/components/supervision/AGENTS.md.
+- Supervision (sv_*): src/components/supervision/AGENTS.md.
