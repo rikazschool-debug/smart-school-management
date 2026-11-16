@@ -46,7 +46,7 @@ async function main() {
   must(await x.c.rpc("create_organization", { _org_name: `مؤسسة أخرى ${run}`, _school_name: "فرع آخر" }), "org2");
   const A = must(await owner.c.from("schools").select("id").eq("org_id", org).single(), "school")!.id as string;
   const B = (must(await admin.from("schools").insert({ org_id: org, name: "الفرع ب" }).select().single(), "schoolB") as any).id as string;
-  const ins = async (S: string, t: string, v: any) => must(await admin.from(t).insert({ ...v, school_id: S }).select().single(), t) as any;
+  const ins = async (S: string, t: string, v: any) => must(await (["teachers"].includes(t) ? admin : owner.c).from(t).insert({ ...v, school_id: S }).select().single(), t) as any;
   const mk = async (S: string) => {
     const year = await ins(S, "academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
     const term = await ins(S, "terms", { year_id: year.id, name: "الأول", start_date: "2026-08-20", end_date: "2027-01-10" });
