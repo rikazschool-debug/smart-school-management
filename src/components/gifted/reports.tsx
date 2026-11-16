@@ -80,7 +80,7 @@ function FamilyInbox({ school }: { school: string }) {
   const q = useQuery({ queryKey: ["gt-fam-inbox", school], queryFn: async () => { const r = await db.rpc("gt_family_inbox", { _school: school }); if (r.error) throw r.error; return r.data as Note[]; } });
   async function decide(id: string, d: "accepted" | "rejected") {
     let note = "";
-    if (d === "rejected") { const t = await askText({ title: "سبب عدم القبول", label: "يظهر السبب للأسرة", required: true }); if (t == null) return; note = t; }
+    if (d === "rejected") { const t = await askText("سبب عدم القبول (يظهر للأسرة)", { required: true, long: true, ok: "تسجيل" }); if (t == null) return; note = t; }
     const r = await db.rpc("gt_family_review", { _id: id, _decision: d, _note: note });
     if (r.error) toast.error(arabicError(r.error)); else { toast.success(d === "accepted" ? "قُبلت المشاركة — القبول لا يُنشئ إنجازًا؛ وثّقه من «المشروعات والإنجازات» إن لزم" : "سُجّل عدم القبول"); void qc.invalidateQueries({ queryKey: ["gt-fam-inbox", school] }); }
   }
