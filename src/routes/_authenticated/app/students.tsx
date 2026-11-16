@@ -1,3 +1,4 @@
+import { StudentGuardianLinks } from "@/components/guardian-link-panel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -54,14 +55,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   } });
   const ctCan = useQuery({ queryKey: ["ct-can", ctx.schoolId], queryFn: async () => { const { data } = await db.rpc("ct_can", { _school: ctx.schoolId }); return !!data; } });
 
-  const link = useMutation({
-    mutationFn: async (v: Row) => {
-      const { error } = await db.from("student_guardians").insert({ ...v, student_id: linking?.["id"], school_id: ctx.schoolId });
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("تم الربط — وثّق العلاقة ليتمكن ولي الأمر من المتابعة"); const sid = linking?.["id"] as string | undefined; setLinking(null); qc.invalidateQueries(); if (sid) void auto({ data: { studentId: sid } }).then((r) => toast.info(autoSummary(r))).catch(() => undefined); },
-    onError: (e) => toast.error(arabicError(e)),
-  });
+
   const place = useMutation({
     mutationFn: async (v: Row) => {
       const sid = placing?.["id"];
@@ -126,7 +120,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             {placeCan.data && <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>}
             {w && <>
             <Button variant="ghost" size="sm" onClick={() => setGuarding(r)}><Link2 className="size-4" /> ولي الأمر</Button>
-            <Button variant="ghost" size="sm" onClick={() => setLinking(r)}>ربط بولي أمر مسجل</Button>
+            <Button variant="ghost" size="sm" onClick={() => setLinking(r)}>أولياء الأمر المرتبطون</Button>
             </>}
           </>
         ) : null} />
@@ -143,18 +137,9 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       </Dialog>
 
       <Dialog open={!!linking} onOpenChange={(o) => !o && setLinking(null)}>
-        <DialogContent dir="rtl">
-          <DialogHeader><DialogTitle>ربط ولي أمر بـ {linking?.["full_name"]}</DialogTitle></DialogHeader>
-          {linking && (
-            <RecordForm schoolId={ctx.schoolId} initial={{ can_follow: true, can_pickup: false }} submitting={link.isPending} onSubmit={(v) => link.mutate(v)}
-              fields={[
-                { key: "guardian_id", label: "ولي الأمر", type: "select", required: true, options: { table: "guardians", label: "full_name" } },
-                { key: "relationship", label: "صلة القرابة", type: "select", required: true, options: [
-                  { value: "father", label: "الأب" }, { value: "mother", label: "الأم" }, { value: "brother", label: "الأخ" }, { value: "other", label: "أخرى" }] },
-                { key: "can_follow", label: "صلاحية متابعة الطالب", type: "checkbox" },
-                { key: "can_pickup", label: "مفوّض باستلام الطالب", type: "checkbox" },
-              ]} />
-          )}
+        <DialogContent dir="rtl" className="max-w-xl">
+          <DialogHeader><DialogTitle>أولياء أمر {linking?.["full_name"]}</DialogTitle></DialogHeader>
+          {linking && <StudentGuardianLinks schoolId={ctx.schoolId} studentId={linking["id"]} onLinked={() => { void auto({ data: { studentId: linking["id"] } }).then((r) => toast.info(autoSummary(r))).catch(() => undefined); }} />}
         </DialogContent>
       </Dialog>
 
