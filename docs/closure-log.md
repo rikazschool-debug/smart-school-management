@@ -1076,3 +1076,10 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - 2026-11-16 رعاية الموهوبين م4 (الأعمال والإنجازات والشواهد): scripts/gifted-e2e.ts 96/96، gifted-model 17/17. الواجهة والكاميرا غير مجرَّبتين.
 - 2026-11-16 رعاية الموهوبين المرحلة 5: عرض الطالب/ولي الأمر (gt_family)، مشاركات الأسرة بمراجعة المنسق، لوحة عمل بمؤشرات جديدة، تقارير بتعريفات وتصدير PDF/Excel/طباعة مسجّل. أدلة: gifted-e2e 125/125، gifted-model 26/26، gifted-family-journey 40/40 (سطح مكتب + جوال).
 - 2026-11-16 الإشراف التربوي المرحلة 2 (الأساس المشترك): ترحيلتان جديدتان (sv_assignments، sv_delegations، sv_forms، sv_records، sv_record_versions، sv_events + 17 تعريفًا منشورًا إ1). scripts/supervision-e2e.ts 80/80، src/test/supervision-model.test.ts 11/11، scripts/supervision-journey.py 21/21 (مشرف، معلم على الجوال 390px، مدير، مالك، مدير فرع آخر). المرفقات غير ضمن هذه المرحلة. VPS لم يُلمس.
+
+## Supervision stage 2 closure (2026-11-16)
+- Final commit with all stage-2 files: f662b373 (migrations 20261116204251, 20261116204412 landed in 55e40a19, included). Branch main = origin/main (Lovable storage remote).
+- Local release checks on f662b373: release unittest 63 OK (8 skipped: need docker/DB); manifest 23ca7e62…; cloud/VPS schema replay, Dockerfile.verify, VPS build NOT run here (no docker) — needs GitHub Actions «فحص إصدار ركاز» on main.
+- Gap: base 17 forms are seeded published and directly usable via _sv_form_for fallback; owner adoption before use is not enforced yet (proposed fix pending approval).
+- Leftover synthetic orgs (test DB, 0 memberships, no teachers/students/courses/sv_* rows): 08c69bf0-b6bc-40e6-9e42-efd3a505e14c (schools c34877e7…, 26456b34…), 36e2db77-a959-441e-a63b-f1305314fd8d (schools d4cbe8d4…, 97882bf1…); each holds 2 academic_years rows. Not deleted.
+- Stage 3 scope includes private attachments (upload/preview/download permissions, linked to record).
