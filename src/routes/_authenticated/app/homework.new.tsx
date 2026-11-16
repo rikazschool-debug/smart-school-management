@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
-import { EmptyState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
+import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +48,7 @@ function Page() {
   const existing = useQuery({
     queryKey: ["hw", edit],
     enabled: !!edit,
-    queryFn: async () => (await db.from("homework").select("*").eq("id", edit).single()).data as Row,
+    queryFn: async () => { const r = await db.from("homework").select("*").eq("id", edit).single(); if (r.error) throw r.error; return r.data as Row; },
   });
   const [f, setF] = useState({
     course_id: "", title: "", instructions: "", grading_notes: "", types: ["text"] as string[], available_from: "", due_at: "",
@@ -71,7 +71,7 @@ function Page() {
   }, [existing.data]);
   const course = courses.data?.find((c) => c["id"] === f.course_id);
   const roster = useQuery({
-    queryKey: ["hw-roster", f.course_id],
+    queryKey: ["hw-roster", schoolId, f.course_id, course?.["section_id"], course?.["year_id"]],
     enabled: !!course,
     queryFn: async () => {
       if (!course) return [];
@@ -83,6 +83,7 @@ function Page() {
   if (!ctx?.schoolId) return <EmptyState title="اختر مدرسة أولًا" />;
   if (permissions?.["bt_homework.create"] === false || permissions?.["bt_homework.view"] === false) return <ForbiddenState />;
   if (courses.isLoading || (edit && existing.isLoading)) return <LoadingState />;
+  if (courses.error || existing.error) return <ErrorState message={arabicError(courses.error ?? existing.error)} />;
   if (!courses.data?.length) return <EmptyState title="لا توجد مقررات بتكليف ساري لك" hint="يُنشأ الواجب فقط على مقرر اعتُمد تكليفك به." />;
   const set = (k: keyof typeof f, v: unknown) => setF((p) => ({ ...p, [k]: v }));
   const payload = () => ({
@@ -130,7 +131,7 @@ function Page() {
           <div className="space-y-1">
             <Label htmlFor="hw-course">المقرر والشعبة</Label>
             <select id="hw-course" className={`${field} w-full`} value={f.course_id} disabled={!!edit} onChange={(e) => { set("course_id", e.target.value); set("students", []); }}>
-              <option value="">اختر</option>
+              <option value="">اختر المقرر والشعبة لعرض الطلاب</option>
               {courses.data.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]}</option>)}
             </select>
           </div>
@@ -147,19 +148,19 @@ function Page() {
           </div>
           <div className="space-y-1">
             <Label>المستهدفون</Label>
-            <select className={`${field} w-full`} value={f.audience} onChange={(e) => set("audience", e.target.value)}>
+            <select aria-label="المستهدفون" className={`${field} w-full`} value={f.audience} onChange={(e) => set("audience", e.target.value)}>
               <option value="all">جميع طلاب الشعبة</option><option value="selected">طلاب محددون</option>
             </select>
           </div>
           {f.audience === "selected" && (
             <div className="md:col-span-2 flex flex-wrap gap-3 rounded-lg border p-3 text-sm">
-              {roster.data?.map((r) => (
+              {course && !roster.isLoading && !roster.error && roster.data?.map((r) => (
                 <label key={r["student_id"]} className="flex items-center gap-1">
                   <input type="checkbox" checked={f.students.includes(r["student_id"])} onChange={(e) => set("students", e.target.checked ? [...f.students, r["student_id"]] : f.students.filter((x) => x !== r["student_id"]))} />
                   {r["students"]?.["full_name"]}
                 </label>
               ))}
-              {!roster.data?.length && <span className="text-muted-foreground">لا يوجد طلاب نشطون في الشعبة</span>}
+              {!course ? <EmptyState title="اختر المقرر والشعبة لعرض الطلاب" /> : roster.isLoading ? <LoadingState /> : roster.error ? <ErrorState message={arabicError(roster.error)} onRetry={() => roster.refetch()} /> : !roster.data?.length ? <EmptyState title="لا يوجد طلاب مسكّنون نشطون في هذه الشعبة والسنة الدراسية" /> : null}
             </div>
           )}
           <div className="space-y-1"><Label htmlFor="hw-avail">وقت الإتاحة (فارغ = عند النشر)</Label><Input id="hw-avail" type="datetime-local" value={f.available_from} onChange={(e) => set("available_from", e.target.value)} /></div>

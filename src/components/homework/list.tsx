@@ -133,6 +133,7 @@ function StudentList({ schoolId, kind }: { schoolId: string; kind: "homework" | 
     },
   });
   if (me.isLoading) return <LoadingState />;
+  if (me.error) return <ErrorState message={arabicError(me.error)} onRetry={() => me.refetch()} />;
   if (!me.data) return <EmptyState title="حسابك غير مرتبط بسجل طالب في هذه المدرسة" />;
   return (<><PageHeader title={kind === "test" ? "اختباراتي" : "مذكرة واجباتي"} /><StudentHomework studentId={me.data["id"]} kind={kind} /></>);
 }
@@ -151,6 +152,7 @@ function GuardianList({ schoolId, kind }: { schoolId: string; kind: "homework" |
   const [kid, setKid] = useState("");
   useEffect(() => { if (!kid && kids.data?.[0]) setKid(kids.data[0]["id"]); }, [kids.data, kid]);
   if (kids.isLoading) return <LoadingState />;
+  if (kids.error) return <ErrorState message={arabicError(kids.error)} onRetry={() => kids.refetch()} />;
   if (!kids.data?.length) return <EmptyState title="لا يوجد أبناء موثقون للمتابعة" hint="تظهر الواجبات بعد توثيق علاقة ولي الأمر من المدرسة." />;
   return (
     <>
