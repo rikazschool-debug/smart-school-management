@@ -31,7 +31,7 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
     enabled: h["status"] !== "draft",
     queryFn: async () => {
       const [t, s, a, g, f] = await Promise.all([
-        db.from("homework_targets").select("*, students(full_name, user_id)").eq("homework_id", h["id"]),
+        db.from("homework_targets").select("*, students(full_name, user_id, csmart_no)").eq("homework_id", h["id"]),
         db.from("homework_submissions").select("*").eq("homework_id", h["id"]),
         db.from("homework_attempts").select("*").eq("homework_id", h["id"]).order("attempt_no"),
         db.from("homework_grades").select("*").eq("homework_id", h["id"]),
@@ -71,9 +71,9 @@ export function SubmissionsPanel({ h, editable }: { h: Row; editable: boolean })
   const idx = shown.findIndex((r) => r["student_id"] === sel);
   const readyCount = rows.filter(fns.to_publish).length;
   const isTest = h["kind"] === "test";
-  const report = () => ({ title: `كشف نتائج ${h["title"]}`, filters: [labels[filter], ...(term ? [`الاسم: ${term}`] : [])] });
-  const reportHeaders = ["الطالب", "التسليم", "الدرجة", "من", "حالة النتيجة", "المراجعة", "الاعتماد", "النشر"];
-  const reportRows = () => shown.map(r => [r["students"]?.["full_name"] ?? "", SUB_STATUS[r["sub"]?.["status"] ?? "none"], r["grade"]?.["score"] ?? null, h["max_score"], GRADE_STATUS[r["grade"]?.["status"] ?? "none"], schoolTime(r["grade"]?.["exam_reviewed_at"]), schoolTime(r["grade"]?.["exam_approved_at"]), schoolTime(r["grade"]?.["published_at"])]);
+  const report = () => ({ title: `كشف نتائج ${h["title"]}`, filters: [[h["sections"]?.["grades"]?.["stages"]?.["name"], h["sections"]?.["grades"]?.["name"], h["sections"]?.["name"] && `الشعبة ${h["sections"]["name"]}`].filter(Boolean).join(" — "), labels[filter], ...(term ? [`الاسم: ${term}`] : [])] });
+  const reportHeaders = ["الطالب", "رقم C-Smart", "التسليم", "الدرجة", "من", "حالة النتيجة", "المراجعة", "الاعتماد", "النشر"];
+  const reportRows = () => shown.map(r => [r["students"]?.["full_name"] ?? "", r["students"]?.["csmart_no"] ?? "غير مسجل", SUB_STATUS[r["sub"]?.["status"] ?? "none"], r["grade"]?.["score"] ?? null, h["max_score"], GRADE_STATUS[r["grade"]?.["status"] ?? "none"], schoolTime(r["grade"]?.["exam_reviewed_at"]), schoolTime(r["grade"]?.["exam_approved_at"]), schoolTime(r["grade"]?.["published_at"])]);
   return (
     <section className="space-y-3 rounded-2xl border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
