@@ -73,6 +73,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   gifted_care: { to: "/app/gifted-care", label: "رعاية الموهوبين", icon: Award },
   remedial_plans: { to: "/app/remedial-plans", label: "الخطط العلاجية", icon: BookOpen },
   supervision_visits: { to: "/app/supervision-visits", label: "الزيارات الإشرافية", icon: ClipboardList },
+  supervision: { to: "/app/supervision", label: "الإشراف التربوي", icon: ClipboardList },
   grades: { to: "/app/grades", label: "أرشيف الدرجات الفصلية", icon: Award },
   results: { to: "/app/results", label: "النتائج", icon: Award },
   schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
