@@ -7647,6 +7647,129 @@ export type Database = {
           },
         ]
       }
+      gt_events: {
+        Row: {
+          action: string
+          actor: string | null
+          at: string
+          details: Json
+          entity: string
+          entity_id: string
+          id: number
+          school_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          at?: string
+          details?: Json
+          entity: string
+          entity_id: string
+          id?: number
+          school_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          at?: string
+          details?: Json
+          entity?: string
+          entity_id?: string
+          id?: number
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gt_events_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gt_nominations: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          domains: string[]
+          id: string
+          indicators: Json
+          no: number
+          nominated_by: string
+          request_note: string | null
+          rev: number
+          school_id: string
+          source: string
+          status: string
+          student_id: string
+          updated_at: string
+          year_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          domains?: string[]
+          id?: string
+          indicators?: Json
+          no?: number
+          nominated_by: string
+          request_note?: string | null
+          rev?: number
+          school_id: string
+          source?: string
+          status?: string
+          student_id: string
+          updated_at?: string
+          year_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          domains?: string[]
+          id?: string
+          indicators?: Json
+          no?: number
+          nominated_by?: string
+          request_note?: string | null
+          rev?: number
+          school_id?: string
+          source?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+          year_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gt_nominations_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gt_nominations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gt_nominations_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guardian_phone_log: {
         Row: {
           changed_by: string | null
@@ -24766,6 +24889,20 @@ export type Database = {
           _sub: string
         }
         Returns: number
+      }
+      gt_me: { Args: { _school: string }; Returns: Json }
+      gt_nom_act: {
+        Args: { _action: string; _id: string; _reason?: string; _rev: number }
+        Returns: undefined
+      }
+      gt_nom_evidence: {
+        Args: { _id: string; _item: Json; _rev: number }
+        Returns: undefined
+      }
+      gt_nom_list: { Args: { _school: string }; Returns: Json }
+      gt_nom_save: {
+        Args: { _id: string; _p: Json; _rev: number; _school: string }
+        Returns: string
       }
       guardian_contacts: {
         Args: { _student: string }
