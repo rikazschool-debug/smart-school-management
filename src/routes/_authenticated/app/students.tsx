@@ -1,3 +1,5 @@
+import { PlacementHistory, placementLabel } from "@/components/placement-history";
+import { ask } from "@/components/confirm";
 import { StudentGuardianLinks } from "@/components/guardian-link-panel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -60,11 +62,16 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
     mutationFn: async (v: Row) => {
       const sid = placing?.["id"];
       if (!sid || !v["section_id"]) throw new Error("اختر الطالب والشعبة");
+      const { data: cur } = await db.from("enrollments").select("section_id, sections(name, grades(name))").eq("student_id", sid).eq("status", "active").maybeSingle();
+      if (cur) {
+        if (cur["section_id"] === v["section_id"]) throw new Error("الطالب مسكّن في هذه الشعبة نفسها");
+        if (!(await ask(`الطالب مسكّن حاليًا في ${placementLabel(cur as Row)}. هل تريد تعديل التسكين؟ يُنهى التسكين الحالي ويُحفظ في السجل.`, { ok: "نعم، عدّل التسكين" }))) throw new Error("__cancel");
+      }
       const { error } = await db.rpc("student_place", { _student: sid, _section: v["section_id"] });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("تم التسكين"); setPlacing(null); qc.invalidateQueries(); },
-    onError: (e) => toast.error(arabicError(e)),
+    onError: (e) => { if ((e as Error).message !== "__cancel") toast.error(arabicError(e)); },
   });
 
   return (
@@ -137,8 +144,9 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         ) : null} />
 
       <Dialog open={!!placing} onOpenChange={(o) => !o && setPlacing(null)}>
-        <DialogContent dir="rtl">
+        <DialogContent dir="rtl" className="max-w-xl">
           <DialogHeader><DialogTitle>تسكين {placing?.["full_name"]}</DialogTitle></DialogHeader>
+          {placing && <PlacementHistory studentId={placing["id"]} />}
           {placing && (
             <RecordForm schoolId={ctx.schoolId} initial={{}} submitting={place.isPending} onSubmit={(v) => place.mutate(v)}
               fields={[{ key: "section_id", label: "الشعبة", type: "select", required: true, options: { table: "sections", label: "name" } }]} />
