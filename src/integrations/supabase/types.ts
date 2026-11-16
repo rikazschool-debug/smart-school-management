@@ -23348,6 +23348,10 @@ export type Database = {
         Args: { _hw: string; _subs: string[] }
         Returns: number
       }
+      _purge_test_org: {
+        Args: { _confirm: string; _org: string }
+        Returns: Json
+      }
       _regroup_counts: { Args: { _school: string }; Returns: Json }
       _report_reviewer: {
         Args: { _org: string; _school: string }
