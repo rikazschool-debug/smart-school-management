@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, Link2, MapPin } from "lucide-react";
+import { BadgeCheck, MapPin } from "lucide-react";
 import { CrudTable, db, RecordForm, type Row } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
@@ -119,7 +119,6 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             {ctCan.data && <ContractEdit row={r} schoolId={ctx.schoolId} />}
             {placeCan.data && <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>}
             {w && <>
-            <Button variant="ghost" size="sm" onClick={() => setGuarding(r)}><Link2 className="size-4" /> ولي الأمر</Button>
             <Button variant="ghost" size="sm" onClick={() => setLinking(r)}>أولياء الأمر المرتبطون</Button>
             </>}
           </>
