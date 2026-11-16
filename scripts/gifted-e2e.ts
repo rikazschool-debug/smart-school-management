@@ -89,4 +89,4 @@ async function main() {
   if (!process.argv.includes("--keep")) await teardown();
   process.exit(bad ? 1 : 0);
 }
-if (process.argv.includes("--teardown")) teardown().then(() => process.exit(0)); else main().catch(async (e) => { console.error(e); await teardown(); process.exit(1); });
+if (process.argv[2] === "--teardown") await teardown(); else await main().catch(async (e) => { console.error(e); await teardown(); process.exit(1); });
