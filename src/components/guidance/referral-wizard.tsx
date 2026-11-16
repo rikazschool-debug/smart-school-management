@@ -11,7 +11,6 @@ import { selectCls } from "@/components/ui/native-select";
 import { LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { ask } from "@/components/confirm";
-import { OfflineNote } from "@/components/education/offline-note";
 import { EDU_CATEGORIES, type EduRecord } from "@/components/education/model";
 import { REF_CONTEXT, REF_FREQUENCY, refIssues, type RefPlan } from "./model";
 
@@ -45,7 +44,6 @@ export function ReferralWizard({ school, row, close }: { school: string; row?: E
   return <div className="mx-auto max-w-4xl space-y-5 pb-28">
     <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">{row ? "استكمال الإحالة" : "إحالة طالب إلى الموجّه"}</h2><p className="text-sm text-muted-foreground">نموذج مختصر: اكتب ما شاهدته فعلًا، والموجّه يقرر الإجراء المناسب.</p></div><Button variant="ghost" onClick={async () => { if (!dirty || (await ask("ستفقد التغييرات غير المحفوظة. هل تريد الخروج؟"))) close(); }}>إلغاء</Button></div>
     <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4">{STEPS.map((s, i) => <li key={s}><button type="button" disabled={i > step && !canNext} onClick={() => (i <= step || canNext) && (student || i === 0) && setStep(i)} className={`flex w-full items-center gap-2 rounded-xl border p-3 text-start text-sm ${i === step ? "border-primary bg-primary/5 font-semibold" : i < step ? "bg-card" : "bg-muted/30 text-muted-foreground"}`}><span className={`grid size-6 shrink-0 place-items-center rounded-full text-xs ${i < step ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>{i < step ? <Check className="size-3" /> : i + 1}</span><span className="min-w-0 truncate">{s}</span></button></li>)}</ol>
-    <OfflineNote />
     {row?.plan && (row.plan as RefPlan).request_note && <p className="rounded-lg border-s-4 border-accent bg-accent/20 p-3 text-sm"><b>طلب الموجّه: </b>{(row.plan as RefPlan).request_note}</p>}
     <section className="space-y-4 rounded-2xl border bg-card p-5">
       {step === 0 && <>

@@ -11,7 +11,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ask, askText } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
-import { OfflineNote } from "@/components/education/offline-note";
+import { isDenied } from "./search";
 import { EDU_CATEGORIES, EDU_PRIORITY } from "@/components/education/model";
 import { CaseFiles, CaseFollow, CaseSessions, CaseShares, type CaseRow } from "./case-run";
 import { CASE_OUTCOME, CASE_SOURCE, CASE_STATUS, CASE_TRACK, caseIssues, type CaseGoal, type CasePlan } from "./case-model";
@@ -23,9 +23,11 @@ const CATS = EDU_CATEGORIES.case;
 const Badge = ({ s }: { s: string }) => <span className="inline-flex rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium">{CASE_STATUS[s] ?? s}</span>;
 const blankGoal = (): CaseGoal => ({ actions: "", owner: "", due: "", indicator: "" });
 
-export function Cases({ school, initialId }: { school: string; initialId?: string | undefined }) {
+export function Cases({ school, initialId, onSel }: { school: string; initialId?: string | undefined; onSel?: (id: string | null) => void }) {
   const qc = useQueryClient(); const [status, setStatus] = useState(""); const [q, setQ] = useState("");
-  const [sel, setSel] = useState<string | null>(initialId ?? null); const [wiz, setWiz] = useState<"new" | Row | null>(null);
+  const [sel, setSelState] = useState<string | null>(initialId ?? null);
+  useEffect(() => { setSelState(initialId ?? null); }, [initialId]);
+  const setSel = (id: string | null) => { setSelState(id); onSel?.(id); }; const [wiz, setWiz] = useState<"new" | Row | null>(null);
   const list = useQuery({ queryKey: ["edu-list", school, "case", status, q], queryFn: () => rpc<{ rows: Row[]; total: number; can_create: boolean }>("edu_find", { _school: school, _kind: "case", _f: { q, status }, _offset: 0, _limit: 100 }) });
   const refresh = () => { for (const k of ["edu-list", "edu-detail", "guidance-board"]) void qc.invalidateQueries({ queryKey: [k] }); };
   if (wiz) return <CaseWizard school={school} row={wiz === "new" ? undefined : wiz} close={(id) => { setWiz(null); refresh(); if (id) setSel(id); }} />;
@@ -59,7 +61,6 @@ function CaseWizard({ school, row, close }: { school: string; row?: Row | undefi
   return <div className="mx-auto max-w-4xl space-y-5 pb-28">
     <div className="flex items-center justify-between"><div><h2 className="text-xl font-bold">{row ? `تعديل ${row.ref_no ?? "الحالة"}` : "فتح حالة ودراستها"}</h2><p className="text-sm text-muted-foreground">احفظ مسودة في أي خطوة؛ الاعتماد يحتاج الاحتياج والتقدير وخطة بأهداف قابلة للمتابعة.</p></div><Button variant="ghost" onClick={async () => { if (!dirty || (await ask("ستفقد التغييرات غير المحفوظة. هل تريد الخروج؟"))) close(); }}>إلغاء</Button></div>
     <ol className="grid grid-cols-2 gap-2 sm:grid-cols-5">{STEPS.map((s, i) => <li key={s}><button type="button" disabled={!student} onClick={() => setStep(i)} className={`flex w-full items-center gap-2 rounded-xl border p-2.5 text-start text-xs ${i === step ? "border-primary bg-primary/5 font-semibold" : "bg-card"}`}><span className={`grid size-6 shrink-0 place-items-center rounded-full ${i < step ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>{i < step ? <Check className="size-3" /> : i + 1}</span><span className="min-w-0">{s}</span></button></li>)}</ol>
-    <OfflineNote />
     <section className="space-y-4 rounded-2xl border bg-card p-5">
       {step === 0 && <>
         {row ? <p className="font-medium">{row.person}</p> : <><div className="relative"><Search className="absolute start-3 top-3 size-4 text-muted-foreground" /><Input aria-label="بحث عن طالب" className="ps-9" placeholder="اسم الطالب أو C‑Smart" value={q} onChange={(e) => setQ(e.target.value)} /></div>
@@ -116,7 +117,9 @@ function ReferralFiles({ id }: { id: string }) {
 function CasePage({ id, back, edit }: { id: string; back: () => void; edit: (r: Row) => void }) {
   const d = useQuery({ queryKey: ["edu-detail", id], queryFn: () => rpc<Row>("edu_detail", { _id: id }) });
   const [tab, setTab] = useState<(typeof TABS)[number]>("ملخص مقيد"); const [busy, setBusy] = useState(false);
-  if (d.isLoading) return <LoadingState />; if (d.error || !d.data) return <ErrorState message={arabicError(d.error)} onRetry={() => d.refetch()} />;
+  if (d.isLoading) return <LoadingState />;
+  if (isDenied(d.error) || (d.data && d.data.kind !== "case")) return <div className="space-y-3"><Button variant="ghost" onClick={back}><ArrowRight className="size-4" />الحالات</Button><EmptyState title="لا يمكن فتح هذه الحالة" hint="الرابط غير صحيح أو لا تملك صلاحية الاطلاع عليها. لا تظهر الحالات إلا للموجّه المسؤول ومن فُوّض صراحة." /></div>;
+  if (d.error || !d.data) return <ErrorState message={arabicError(d.error)} onRetry={() => d.refetch()} />;
   const r = d.data; const p = (r.plan ?? {}) as unknown as CasePlan; const refresh = async () => { await d.refetch(); };
   async function setStatus(status: string) {
     let plan: CasePlan = { ...p };
