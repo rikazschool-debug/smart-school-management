@@ -362,7 +362,7 @@ function StudentPanel({ h }: { h: Row }) {
         <div className="rounded-lg bg-muted/60 p-3"><p className="text-xs text-muted-foreground">المحاولات</p><p className="font-semibold">{x.state["attempts"]} من {x.state["max_attempts"]}</p></div>
       </div>
       {st === "returned" && <p className="rounded-lg bg-destructive/10 p-3 text-sm">أعاده المعلم للاستكمال: {x.sub?.["returned_reason"]}</p>}
-      {x.state["can_submit"] ? (
+      {h["kind"] === "test" ? <p className="text-sm text-muted-foreground">{types.includes("paper") ? "تسليم الاختبار الورقي لدى المعلم" : "الإجابات وتسليم الاختبار من قسم حل الاختبار الإلكتروني"}</p> : x.state["can_submit"] ? (
         <div className="space-y-3">
           {x.state["is_late_now"] && <p className="text-sm text-destructive">تجاوزت الموعد؛ سيُوسم تسليمك متأخرًا.</p>}
           {types.includes("text") && <Textarea rows={6} placeholder="اكتب إجابتك" value={b} onChange={(e) => setBody(e.target.value)} />}

@@ -19,7 +19,7 @@ export const SUB_STATUS: Record<string, string> = {
 export const GRADE_STATUS: Record<string, string> = {
   none: "لم يبدأ",
   in_progress: "تحت التصحيح",
-  graded: "محفوظ قبل التبسيط وغير ظاهر",
+  graded: "معتمد ولم يُنشر",
   published: "ظاهرة للطالب وولي الأمر",
 };
 export const TYPE_LABEL: Record<string, string> = { text: "نص", file: "ملفات", link: "رابط", paper: "ورقي" };

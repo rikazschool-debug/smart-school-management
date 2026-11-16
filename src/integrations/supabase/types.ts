@@ -5783,18 +5783,27 @@ export type Database = {
       exam_papers: {
         Row: {
           created_at: string
+          delivery: string
+          duration_minutes: number | null
+          forms: Json
           homework_id: string
           questions: Json
           updated_at: string
         }
         Insert: {
           created_at?: string
+          delivery?: string
+          duration_minutes?: number | null
+          forms?: Json
           homework_id: string
           questions?: Json
           updated_at?: string
         }
         Update: {
           created_at?: string
+          delivery?: string
+          duration_minutes?: number | null
+          forms?: Json
           homework_id?: string
           questions?: Json
           updated_at?: string
@@ -8100,6 +8109,10 @@ export type Database = {
         Row: {
           attempt_no: number
           criteria_scores: Json
+          exam_approved_at: string | null
+          exam_approved_by: string | null
+          exam_reviewed_at: string | null
+          exam_reviewed_by: string | null
           feedback: string | null
           graded_at: string
           graded_by: string
@@ -8119,6 +8132,10 @@ export type Database = {
         Insert: {
           attempt_no: number
           criteria_scores?: Json
+          exam_approved_at?: string | null
+          exam_approved_by?: string | null
+          exam_reviewed_at?: string | null
+          exam_reviewed_by?: string | null
           feedback?: string | null
           graded_at?: string
           graded_by: string
@@ -8138,6 +8155,10 @@ export type Database = {
         Update: {
           attempt_no?: number
           criteria_scores?: Json
+          exam_approved_at?: string | null
+          exam_approved_by?: string | null
+          exam_reviewed_at?: string | null
+          exam_reviewed_by?: string | null
           feedback?: string | null
           graded_at?: string
           graded_by?: string
@@ -19703,6 +19724,17 @@ export type Database = {
         Args: { _course: string; _id: string }
         Returns: string
       }
+      _correct_result_before_exam: {
+        Args: {
+          _criteria: Json
+          _feedback: string
+          _reason: string
+          _rev: number
+          _score: number
+          _sub: string
+        }
+        Returns: number
+      }
       _course_members: {
         Args: { _course: string }
         Returns: {
@@ -20307,6 +20339,17 @@ export type Database = {
       _gb_teacher: { Args: { _course: string }; Returns: boolean }
       _gb_total: { Args: { _gb: string; _student: string }; Returns: number }
       _gb_window: { Args: { _gb: string; _student: string }; Returns: boolean }
+      _grade_submission_before_exam: {
+        Args: {
+          _criteria: Json
+          _feedback: string
+          _final: boolean
+          _rev: number
+          _score: number
+          _sub: string
+        }
+        Returns: number
+      }
       _group_admin: { Args: { _conv: string }; Returns: boolean }
       _guardian_org_uid: { Args: { _guardian: string }; Returns: string }
       _gv_host_ok: { Args: { _school: string; _uid: string }; Returns: boolean }
@@ -21591,6 +21634,10 @@ export type Database = {
         Returns: string
       }
       _publish_homework_v0: { Args: { _id: string }; Returns: string }
+      _publish_results_before_exam: {
+        Args: { _hw: string; _subs: string[] }
+        Returns: number
+      }
       _regroup_counts: { Args: { _school: string }; Returns: Json }
       _report_reviewer: {
         Args: { _org: string; _school: string }
@@ -23835,8 +23882,36 @@ export type Database = {
         Args: { _custom: boolean; _kind: string; _school: string }
         Returns: undefined
       }
+      exam_config_save: {
+        Args: {
+          _count: number
+          _delivery: string
+          _duration: number
+          _hw: string
+        }
+        Returns: undefined
+      }
+      exam_draft_save: {
+        Args: {
+          _count: number
+          _d: Json
+          _delivery: string
+          _duration: number
+          _id: string
+          _questions: Json
+        }
+        Returns: string
+      }
       exam_get: { Args: { _hw: string }; Returns: Json }
+      exam_result_action: {
+        Args: { _action: string; _rev: number; _sub: string }
+        Returns: number
+      }
       exam_save: { Args: { _hw: string; _questions: Json }; Returns: undefined }
+      exam_submit: {
+        Args: { _answers: Json; _client: string; _form: string; _hw: string }
+        Returns: string
+      }
       extend_homework: {
         Args: { _due: string; _id: string; _reason: string; _student: string }
         Returns: undefined

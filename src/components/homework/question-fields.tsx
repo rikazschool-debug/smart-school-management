@@ -1,0 +1,19 @@
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { selectCls } from "@/components/ui/native-select";
+import { blankQuestion, type ExamQuestion } from "./exam-model";
+
+const types = { single: "اختيار من متعدد", truefalse: "صح وخطأ", short: "إجابة قصيرة", essay: "مقالي" };
+export function QuestionFields({ questions, onChange, bubble = false }: { questions: ExamQuestion[]; onChange: (q: ExamQuestion[]) => void; bubble?: boolean }) {
+  const update = (i: number, patch: Partial<ExamQuestion>) => onChange(questions.map((q, j) => j === i ? { ...q, ...patch } : q));
+  const move = (i: number, delta: number) => { const copy = [...questions]; const a = copy[i], b = copy[i + delta]; if (!a || !b) return; copy[i] = b; copy[i + delta] = a; onChange(copy); };
+  return <div className="space-y-5">{questions.map((q, i) => <section key={i} className="space-y-3 border-b pb-5">
+    <div className="flex flex-wrap items-center gap-2"><h3 className="me-auto font-semibold">سؤال {i + 1}</h3><select aria-label={`نوع السؤال ${i + 1}`} className={selectCls("w-auto")} value={q.type} onChange={e => update(i, { type: e.target.value, options: e.target.value === "truefalse" ? ["صح", "خطأ"] : ["", "", "", ""], correct: [0], answer: "" })}>{Object.entries(types).filter(([k]) => !bubble || ["single", "truefalse"].includes(k)).map(([k, label]) => <option key={k} value={k}>{label}</option>)}</select>
+      <Input className="w-24" aria-label={`درجة السؤال ${i + 1}`} type="number" min={0.5} step={0.5} value={q.points} onChange={e => update(i, { points: Number(e.target.value) })} />
+      <Button size="icon" variant="ghost" title="نقل لأعلى" aria-label={`نقل السؤال ${i + 1} لأعلى`} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp /></Button><Button size="icon" variant="ghost" title="نقل لأسفل" aria-label={`نقل السؤال ${i + 1} لأسفل`} disabled={i === questions.length - 1} onClick={() => move(i, 1)}><ArrowDown /></Button><Button size="icon" variant="ghost" title="حذف السؤال" aria-label={`حذف السؤال ${i + 1}`} onClick={() => onChange(questions.filter((_, j) => i !== j))}><Trash2 /></Button>
+    </div><Textarea aria-label={`نص السؤال ${i + 1}`} placeholder="نص السؤال" value={q.prompt} onChange={e => update(i, { prompt: e.target.value })} />
+    {["single", "truefalse", "multiple"].includes(q.type) ? <fieldset className="space-y-2"><legend className="mb-2 text-xs text-muted-foreground">البدائل والإجابة الصحيحة</legend>{q.options.map((o, j) => <div key={j} className="flex items-center gap-2"><input type="radio" name={`key-${i}`} aria-label={`الإجابة الصحيحة للسؤال ${i + 1} البديل ${j + 1}`} checked={q.correct.includes(j)} onChange={() => update(i, { correct: [j] })} /><Input aria-label={`البديل ${j + 1} للسؤال ${i + 1}`} value={o} disabled={q.type === "truefalse"} onChange={e => update(i, { options: q.options.map((x, k) => k === j ? e.target.value : x) })} />{q.type !== "truefalse" && q.options.length > 2 && <Button size="icon" variant="ghost" aria-label={`حذف البديل ${j + 1} للسؤال ${i + 1}`} onClick={() => update(i, { options: q.options.filter((_, k) => k !== j), correct: q.correct.filter(k => k !== j).map(k => k > j ? k - 1 : k) })}><Trash2 /></Button>}</div>)}{q.type !== "truefalse" && q.options.length < 6 && <Button size="sm" variant="outline" onClick={() => update(i, { options: [...q.options, ""] })}><Plus />إضافة بديل</Button>}</fieldset> : <Textarea aria-label={`الإجابة النموذجية للسؤال ${i + 1}`} placeholder="الإجابة النموذجية — للمعلم فقط" value={q.answer} onChange={e => update(i, { answer: e.target.value, options: [], correct: [] })} />}
+  </section>)}<Button variant="outline" onClick={() => onChange([...questions, blankQuestion()])}><Plus />إضافة سؤال</Button></div>;
+}
