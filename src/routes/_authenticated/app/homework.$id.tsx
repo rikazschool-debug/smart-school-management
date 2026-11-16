@@ -32,7 +32,7 @@ function Page() {
   const hw = useQuery({
     queryKey: hwKey(id),
     queryFn: async () => {
-      const { data, error } = await db.from("homework").select("*, courses(subjects(name)), sections(name)").eq("id", id).maybeSingle();
+      const { data, error } = await db.from("homework").select("*, courses(subjects(name)), sections(name, grades(name, stages(name)))").eq("id", id).maybeSingle();
       if (error) throw error;
       if (!data) return null;
       const [isT, files, teacher] = await Promise.all([

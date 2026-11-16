@@ -6,3 +6,4 @@
 - The optical reader supports only this generated single-choice sheet (up to 35 questions); other question types are teacher-marked, never guessed by the scanner.
 - Exam targeting loads the roster only for a selected authorized course and its section/year; distinguish no selection, empty enrollment and no search matches without broadening RLS.- Paper/bubble test sheets are recorded only via exam_paper_grade: server checks target + model, scores from the stored form key, refuses unresolved marks and a second sheet per student (same client id = retry); result stays preliminary.
 - Hosted acceptance: scripts/exam-e2e.ts (39 checks, synthetic exx- accounts) and scripts/exam-journey.py (browser, needs --keep fixture).
+- Printed tests carry a student info table (name, C-Smart, stage, grade, section, course, model, score) from homework.sections→grades→stages; teacher picks the student or prints a blank-name copy.
