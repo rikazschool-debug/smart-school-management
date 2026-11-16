@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { selectCls } from "@/components/ui/native-select";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
-import { boardStats, CARE_LABEL, GT_DOMAINS, GT_STATUS, ownerOf, type GtSearch } from "./model";
+import { boardStats, CARE_LABEL, GT_DOMAINS, GT_STATUS, ownerOf, type GtSearch, type GtTab } from "./model";
 import { gtToday } from "./nomination-wizard";
 import { nomQuery } from "./nominations";
 import { planQuery } from "./plans";
@@ -24,7 +24,7 @@ export function Board({ school, go }: { school: string; go: (s: GtSearch, replac
   if (!noms.length && !plans.length && !progs.length && !works.length) return <div className="rounded-2xl border bg-card p-6"><h3 className="mb-3 font-bold">ابدأ من هنا</h3><ol className="list-inside list-decimal space-y-1 text-sm text-muted-foreground"><li>يرشّح المعلم طالبًا من «الترشيحات» مع مؤشرات وتاريخ.</li><li>يراجع المنسق الترشيح ويطلب استكمالًا أو يقرّه للرعاية المدرسية مع السبب.</li><li>تُبنى للطلبة المقرّين خطط رعاية، ويُضافون إلى برامج، وتُوثّق أعمالهم وإنجازاتهم.</li></ol><Button className="mt-4" onClick={() => go({ tab: "nominations" })}>فتح الترشيحات</Button></div>;
   const s = boardStats(plans, progs, works, gtToday());
   const waiting = noms.filter((r) => ["sent", "review"].includes(r.status));
-  const cards: { l: string; v: number; tab: GtSearch["tab"] }[] = [
+  const cards: { l: string; v: number; tab: GtTab }[] = [
     { l: "ترشيحات تنتظر المراجعة", v: waiting.length, tab: "nominations" },
     { l: "طلبة في خطط جارية", v: s.inPlan, tab: "plans" },
     { l: "متابعات مستحقة (14 يومًا بلا متابعة)", v: s.dueFollow, tab: "plans" },
