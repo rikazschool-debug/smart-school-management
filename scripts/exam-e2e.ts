@@ -15,8 +15,8 @@ const check = (n: string, c: boolean, e: unknown = "") => { c ? ok++ : bad++; co
 const must = <T>(r: { data: T; error: any }, what: string): T => { if (r.error) throw new Error(what + ": " + JSON.stringify(r.error)); return r.data; };
 
 async function teardown() {
-  const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  const uids = (list?.users ?? []).filter((u) => u.email?.startsWith("exx-")).map((u) => u.id);
+  const uids: string[] = [];
+  for (let page = 1; ; page++) { const { data } = await admin.auth.admin.listUsers({ page, perPage: 1000 }); const us = data?.users ?? []; us.filter((u) => u.email?.startsWith("exx-")).forEach((u) => uids.push(u.id)); if (us.length < 1000) break; }
   if (!uids.length) return console.log("nothing to clean");
   const { data: os } = await admin.from("organizations").select("id").in("created_by", uids);
   const tr = new TestRun(admin, "exam-e2e"); uids.forEach((u) => tr.addUser(u));
