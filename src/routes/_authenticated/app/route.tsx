@@ -10,7 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOpsStaff } from "@/lib/ops-staff";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Award, Briefcase,
+import { ClipboardCheck, Award, Briefcase,
   Bell, MonitorPlay, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
   ReceiptText, Wallet, Phone, Construction, KeyRound, LayoutDashboard, Wrench, Bus,
 } from "lucide-react";
@@ -67,7 +67,12 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   chat_settings: { to: "/app/chat-settings", label: "ضبط المحادثات", icon: MessagesSquare },
   classrooms: { to: "/app/classrooms", label: "الفصول الرقمية", icon: School },
   virtual: { to: "/app/virtual-classes", label: "الحصص الافتراضية", icon: MonitorPlay },
-  homework: { to: "/app/homework", label: "الواجبات والاختبارات", icon: ClipboardList },
+  homework: { to: "/app/homework", label: "مذكرة الواجبات", icon: ClipboardList },
+  tests: { to: "/app/tests", label: "الاختبارات", icon: ClipboardCheck },
+  student_guidance: { to: "/app/student-guidance", label: "التوجيه الطلابي", icon: UsersRound },
+  gifted_care: { to: "/app/gifted-care", label: "رعاية الموهوبين", icon: Award },
+  remedial_plans: { to: "/app/remedial-plans", label: "الخطط العلاجية", icon: BookOpen },
+  supervision_visits: { to: "/app/supervision-visits", label: "الزيارات الإشرافية", icon: ClipboardList },
   grades: { to: "/app/grades", label: "أرشيف الدرجات الفصلية", icon: Award },
   results: { to: "/app/results", label: "النتائج", icon: Award },
   schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
@@ -217,7 +222,7 @@ function Shell() {
   baseNav.push(...delegatedPages);
   const btOff: [string, NavKey][] = [["bt_schedule.view", "schedule"], ["bt_classroom.view", "classrooms"], ["bt_homework.view", "homework"]];
   for (const [k, n] of btOff) if (sp && sp[k] === false && !(n === "schedule" && delegatedPages.includes("schedule")) && baseNav.includes(n)) {
-    for (let i = baseNav.length - 1; i >= 0; i--) if (baseNav[i] === n) baseNav.splice(i, 1);
+    for (let i = baseNav.length - 1; i >= 0; i--) if (baseNav[i] === n || (n === "homework" && baseNav[i] === "tests")) baseNav.splice(i, 1);
   }
   const opsOnly = ops.opsOnly;
   if (ops.central) baseNav.push("hr");
@@ -337,11 +342,11 @@ function Shell() {
                     </div>
                   )}
                   </>;
-                return hasSubmenu ? <NavigationSection key={k} label={n.label} active={navActive(k)} routeKey={path + supTab} trigger={link}>{submenu}</NavigationSection> : <Fragment key={k}>{link}</Fragment>;
+                return <Fragment key={k}>{hasSubmenu ? <div className="space-y-0.5">{submenu}</div> : link}</Fragment>;
               })}
             </div>;
           // a group holding one entry of the same name, «الرئيسية» and alerts show their links directly (no second fold)
-          const flat = !g.label || g.label === "التنبيهات والدعم" || g.label === "الرئيسية" || (g.keys.length === 1 && NAV[g.keys[0]!].label === g.label);
+          const flat = !g.label || g.label === "التنبيهات والدعم" || g.label === "الرئيسية";
           return !flat ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} routeKey={path + supTab} badge={<SectionBadge n={g.keys.reduce((a, k) => a + secCount(k), 0)} label={g.label} />}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
         })}
       </div>

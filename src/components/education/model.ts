@@ -1,0 +1,8 @@
+export type EduKind = "case" | "referral" | "talent" | "student_plan" | "teacher_plan" | "supervision";
+export const EDU_LABELS: Record<EduKind, string> = { case: "الحالات الخاصة", referral: "الإحالات الطلابية", talent: "رعاية الموهوبين", student_plan: "خطط الطلاب", teacher_plan: "خطط المعلمين", supervision: "الزيارات الإشرافية" };
+export const EDU_STATUS: Record<string, string> = { open: "مفتوح", following: "قيد المتابعة", completed: "مكتمل", closed: "مغلق" };
+export const EDU_CATEGORIES: Partial<Record<EduKind, Record<string, string>>> = { case: { social: "اجتماعية", psychological: "نفسية", behavioral: "سلوكية", borderline: "تقارير الفئة الحدية" }, talent: { inventory: "حصر الموهوبين", care_plan: "خطط الرعاية", program: "البرامج", achievement: "توثيق الإنجازات" }, supervision: { exchange: "زيارة تبادلية", supervision: "زيارة إشرافية" } };
+export type Follow = { id: string; goal_index: number | null; completed: boolean | null; note: string; actor_name: string; created_at: string };
+export type EduRecord = { id: string; kind: EduKind; category: string; student_id: string | null; teacher_id: string | null; course_id: string | null; person: string; course?: string; title: string; description: string; record_date: string; goals: string[]; shared: boolean; status: string; rev: number; can_edit: boolean; can_ack?: boolean; followups?: Follow[]; acks?: { name: string; user_id: string; created_at: string }[] };
+export function goalDone(followups: Follow[], index: number) { return followups.filter((f) => f.goal_index === index).at(-1)?.completed === true; }
+export function planProgress(goals: string[], followups: Follow[]) { return { done: goals.filter((_, i) => goalDone(followups, i)).length, total: goals.length }; }

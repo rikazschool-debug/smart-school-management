@@ -2,11 +2,11 @@ import type { NavKey } from "@/lib/roles";
 
 const NAVIGATION_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "الرئيسية", keys: ["school_home", "home"] },
+  { label: "إدارة المدرسة", keys: ["teachers", "admin", "duties", "supervision_visits", "org_docs", "schools"] },
   { label: "الطلاب والقبول", keys: ["admissions", "students", "guardians", "family_requests"] },
-  { label: "الشؤون التعليمية", keys: ["academic", "courses", "schedule", "classrooms", "virtual", "homework"] },
-  { label: "شؤون الطلاب", keys: ["attendance", "pickup", "station", "health", "family_visits"] },
+  { label: "الشؤون التعليمية", keys: ["academic", "courses", "schedule", "classrooms", "virtual", "homework", "tests", "remedial_plans"] },
+  { label: "شؤون الطلاب", keys: ["attendance", "pickup", "station", "health", "student_guidance", "gifted_care", "family_visits"] },
   { label: "الأنشطة والفعاليات", keys: ["events"] },
-  { label: "إدارة المدرسة", keys: ["teachers", "admin", "duties", "org_docs", "schools"] },
   { label: "التواصل والتعاون", keys: ["communication", "comm_groups", "meetings", "collaboration", "circulars", "hub_notices", "hub_meetings", "hub_circulars"] },
   { label: "التقارير", keys: ["reports", "results", "grades", "visits", "evaluation"] },
   { label: "الإعدادات", keys: ["tags", "chat_settings", "comm_manage", "members", "permissions"] },

@@ -13,8 +13,8 @@ import { arabicError, useSchool } from "@/lib/session";
 import { LATE_LABEL, TYPE_LABEL, fromLocalInput, schoolTime, toLocalInput } from "@/lib/homework";
 
 export const Route = createFileRoute("/_authenticated/app/homework/new")({
-  head: () => ({ meta: [{ title: "إعداد واجب — ركاز" }, { name: "description", content: "إنشاء واجب أو تعديل مسودته." }] }),
-  validateSearch: (s: Record<string, unknown>): { edit?: string } => (s["edit"] ? { edit: String(s["edit"]) } : {}),
+  head: () => ({ meta: [{ title: "إعداد واجب أو اختبار — ركاز" }, { name: "description", content: "إعداد المقرر والمستهدفين والتسليم والدرجة." }, { property: "og:title", content: "إعداد واجب أو اختبار — ركاز" }, { property: "og:description", content: "إنشاء الواجب والاختبار وحفظ المسودة." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  validateSearch: (s: Record<string, unknown>): { edit?: string; kind?: "homework" | "test" } => ({ ...(s["edit"] ? { edit: String(s["edit"]) } : {}), ...(s["kind"] === "test" ? { kind: "test" } : {}) }),
   component: Page,
 });
 
@@ -22,7 +22,7 @@ type Crit = { label: string; max: string };
 
 function Page() {
   const ctx = useSchool();
-  const { edit } = Route.useSearch();
+  const { edit, kind } = Route.useSearch();
   const nav = useNavigate();
   const schoolId = ctx?.schoolId ?? "";
   const permissions = useSchoolPerms(schoolId);
@@ -45,7 +45,7 @@ function Page() {
   const [f, setF] = useState({
     course_id: "", title: "", instructions: "", grading_notes: "", types: ["text"] as string[], available_from: "", due_at: "",
     late_policy: "none", late_until: "", graded: true, max_score: "10", allow_resubmit: false, max_attempts: "2", audience: "all",
-    students: [] as string[], remind_hours: "", file_max_mb: "", kind: "homework",
+    students: [] as string[], remind_hours: "", file_max_mb: "", kind: kind ?? "homework",
   });
   const [crit, setCrit] = useState<Crit[]>([]);
   const [preview, setPreview] = useState(false);
@@ -103,7 +103,7 @@ function Page() {
   const field = "h-9 rounded-md border bg-background px-2 text-sm";
   return (
     <>
-      <Link to="/app/homework" className="text-sm text-primary">→ الواجبات</Link>
+      <Link to={f.kind === "test" ? "/app/tests" : "/app/homework"} className="text-sm text-primary">→ {f.kind === "test" ? "الاختبارات" : "مذكرة الواجبات"}</Link>
       <PageHeader title={edit ? (f.kind === "test" ? "تعديل مسودة الاختبار" : "تعديل مسودة الواجب") : f.kind === "test" ? "اختبار جديد" : "واجب أو اختبار جديد"} desc="الأوقات بتوقيت المدرسة (الرياض)." />
       {preview ? (
         <div className="space-y-3 rounded-2xl border bg-card p-6">
@@ -195,7 +195,7 @@ function Page() {
       <div className="mt-4 flex flex-wrap gap-2">
         <Button variant="outline" onClick={() => setPreview(!preview)}>{preview ? "تعديل" : "معاينة كالطالب"}</Button>
         <Button variant="secondary" disabled={busy || !f.course_id} onClick={() => save(false)}>حفظ مسودة</Button>
-        <Button disabled={busy || !f.course_id} onClick={() => save(true)}>{f.available_from && fromLocalInput(f.available_from)! > new Date().toISOString() ? "جدولة النشر" : "نشر الآن"}</Button>
+        {f.kind !== "test" && <Button disabled={busy || !f.course_id} onClick={() => save(true)}>{(fromLocalInput(f.available_from) ?? "") > new Date().toISOString() ? "جدولة النشر" : "نشر الآن"}</Button>}
       </div>
       <p className="mt-2 text-xs text-muted-foreground">المرفقات تُضاف من صفحة الواجب بعد حفظ المسودة.</p>
     </>

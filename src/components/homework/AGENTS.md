@@ -1,0 +1,4 @@
+- Exam questions and teacher-only keys persist together in exam_papers; exam_get strips answer/correct for every non-author using can_read_homework, preventing exposure through student-visible instructions.
+- Homework and test lists share one component with an explicit kind filter; grades still use the existing submission and grade RPCs so immediate visibility, validation and history remain authoritative.
+- Photo grading uses QR roster verification and four fixed sheet markers; blank/ambiguous marks require manual review, and no grade is written before explicit confirmation.
+- The optical reader supports only this generated single-choice sheet (up to 35 questions); other question types are teacher-marked, never guessed by the scanner.

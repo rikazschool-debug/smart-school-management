@@ -1,0 +1,1 @@
+DO $$ BEGIN IF to_regprocedure('public._hw_event(uuid,uuid,text,jsonb)') IS NULL THEN RAISE NOTICE 'event signature differs'; END IF; END $$;

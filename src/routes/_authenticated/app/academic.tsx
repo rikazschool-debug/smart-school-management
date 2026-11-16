@@ -45,14 +45,14 @@ const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], qu
         const s = ctx.schoolId;
         return (
           <>
-            <PageHeader title="الإعداد الأكاديمي" desc={`${ctx.schoolName} — السنوات، المراحل، الصفوف، الشعب، الأقسام والمواد`} />
+            <PageHeader title="الإعداد الأكاديمي" desc={`${ctx.schoolName} — السنوات، المراحل، الصفوف، الشعب، الأقسام والمقررات`} />
             {owner && ctx.orgId && <><AcademicCatalogEditor org={ctx.orgId} /><AcademicAllocation school={s} org={ctx.orgId} /></>}
             <Tabs defaultValue={firstTab} key={tabs.join(",")} dir="rtl">
               <TabsList className="mb-6 flex-wrap">
                 {tabs.includes("years") && <TabsTrigger value="years">السنوات والفصول</TabsTrigger>}
                 {tabs.includes("structure") && <TabsTrigger value="structure">المراحل والصفوف</TabsTrigger>}
                 {tabs.includes("sections") && <TabsTrigger value="sections">الشعب</TabsTrigger>}
-                {tabs.includes("subjects") && <TabsTrigger value="subjects">الأقسام والمواد</TabsTrigger>}
+                {tabs.includes("subjects") && <TabsTrigger value="subjects">الأقسام والمقررات</TabsTrigger>}
                 {tabs.includes("scopes") && <TabsTrigger value="scopes">نطاق الوكلاء والمشرفين</TabsTrigger>}
               </TabsList>
               <TabsContent value="years" className="space-y-10">
@@ -120,16 +120,16 @@ const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], qu
                 {access("academic_departments") && <CrudTable title="الأقسام التعليمية" table="departments" schoolId={s} canWrite={edit("academic_departments")} order="name" searchKeys={["name"]}
                   fields={[{ key: "name", label: "اسم القسم", required: true }]}
                   columns={[{ label: "القسم", render: (r) => r["name"] }]} />}
-                {access("academic_subjects") && <CrudTable title="المواد" table="subjects" schoolId={s} canWrite={edit("academic_subjects")} order="name" select="*, departments(name)" searchKeys={["name", "code"]}
+                {access("academic_subjects") && <CrudTable title="المقررات" table="subjects" schoolId={s} canWrite={edit("academic_subjects")} order="name" select="*, departments(name)" searchKeys={["name", "code"]}
                   fields={[
                     { key: "_subjectStage", label: "المرحلة", type: "select", transient: true, options: Object.keys(SUBJECT_PRESETS).map(value => ({ value, label: value })), resetFields: ["_subjectGrade", "name"] },
                     { key: "_subjectGrade", label: "الصف / المستوى", transient: true, custom: ({ value, values, set }) => <select id="_subjectGrade" className={selectCls("w-full")} disabled={!values["_subjectStage"]} value={String(value ?? "")} onChange={e => set({ _subjectGrade: e.target.value, name: "" })}><option value="">{values["_subjectStage"] ? "اختر الصف / المستوى" : "اختر المرحلة أولًا"}</option>{Object.keys(SUBJECT_PRESETS[String(values["_subjectStage"] ?? "")] ?? {}).map(g => <option key={g} value={g}>{g}</option>)}</select> },
-                    { key: "name", label: "المادة", required: true, custom: (p) => <SubjectNameSelect {...p} /> },
+                    { key: "name", label: "المقرر", required: true, custom: (p) => <SubjectNameSelect {...p} /> },
                     { key: "code", label: "الرمز" },
                     { key: "department_id", label: "القسم", type: "select", options: { table: "departments", label: "name" } },
                   ]}
                   columns={[
-                    { label: "المادة", render: (r) => r["name"] },
+                    { label: "المقرر", render: (r) => r["name"] },
                     { label: "الرمز", render: (r) => r["code"] ?? "—" },
                     { label: "القسم", render: (r) => r["departments"]?.name ?? "—" },
                   ]} />}

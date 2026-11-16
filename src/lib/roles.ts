@@ -30,6 +30,11 @@ export const ROLE_LABELS: Record<Role, string> = {
 };
 
 export type NavKey =
+  | "student_guidance"
+  | "gifted_care"
+  | "remedial_plans"
+  | "supervision_visits"
+  | "tests"
   | "collaboration"
   | "family_requests"
   | "home"
@@ -93,7 +98,7 @@ export type NavKey =
 export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support" | "calls";
 export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة", calls: "المكالمات الهاتفية" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
-  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "health", "events", "collaboration", "reports"],
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "tests", "student_guidance", "gifted_care", "remedial_plans", "supervision_visits", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "health", "events", "collaboration", "reports"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
   admissions: ["admissions", "students", "guardians"],
@@ -183,10 +188,19 @@ const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
   security: ["home", "attendance", "station", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"],
 };
 
-export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).map(([r, ks]) => [r, ks.filter((k) => !HIDDEN_NAV.includes(k))])) as Record<Role, NavKey[]>;
+export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).map(([r, ks]) => {
+  const extra: NavKey[] = [];
+  if (ks.includes("homework")) extra.push("tests");
+  if (["org_owner", "counselor", "teacher"].includes(r)) extra.push("student_guidance");
+  if (["org_owner", "counselor", "principal", "vice_principal", "teacher", "student_affairs"].includes(r)) extra.push("gifted_care");
+  if (["org_owner", "principal", "vice_principal", "teacher", "supervisor", "guardian"].includes(r)) extra.push("remedial_plans");
+  if (["org_owner", "principal", "supervisor", "teacher"].includes(r)) extra.push("supervision_visits");
+  return [r, [...new Set([...ks, ...extra])].filter((k) => !HIDDEN_NAV.includes(k))];
+})) as Record<Role, NavKey[]>;
 
 /** Menu labels (same as the side menu) for previewing a base role's dashboard. */
 export const NAV_LABELS: Partial<Record<NavKey, string>> = {
+  student_guidance: "التوجيه الطلابي", gifted_care: "رعاية الموهوبين", remedial_plans: "الخطط العلاجية", supervision_visits: "الزيارات الإشرافية", tests: "الاختبارات",
   collaboration: "التعاون",
   reports: "منشئ التقارير",
   family_requests: "طلبات ولي الأمر",
@@ -195,7 +209,7 @@ export const NAV_LABELS: Partial<Record<NavKey, string>> = {
   events: "الفعاليات",
   hr_training: "التدريب والتطوير",
   home: "لوحة التحكم المركزية", academic: "الإعداد الأكاديمي", teachers: "الكادر التعليمي", courses: "المقررات والتكليفات", students: "الطلاب والتسكين", guardians: "أولياء الأمور", tags: "الوسوم", chat_settings: "ضبط المحادثات",
-  classrooms: "الفصول الرقمية", virtual: "الحصص الافتراضية", homework: "الواجبات والاختبارات", grades: "أرشيف الدرجات الفصلية", results: "النتائج", schedule: "الجدول المدرسي",
+  classrooms: "الفصول الرقمية", virtual: "الحصص الافتراضية", homework: "مذكرة الواجبات", grades: "أرشيف الدرجات الفصلية", results: "النتائج", schedule: "الجدول المدرسي",
   attendance: "الحضور والخروج", station: "المسح والبوابة والنداء", pickup: "الخروج والاستئذان", admin: "التكليفات والطلبات", duties: "المناوبات", meetings: "الاجتماعات",
   communication: "التواصل", circulars: "التعاميم", comm_groups: "المجموعات", comm_manage: "إدارة المجموعات", notifications: "الإشعارات", support: "الدعم والمساعدة", calls: "المكالمات الهاتفية",
   procurement: "المشتريات والعهد", school_home: "لوحة المدرسة", maintenance: "إدارة صيانة المباني", bus_maintenance: "إدارة تشغيل وصيانة الباصات", admissions: "القبول والتسجيل",
@@ -297,9 +311,9 @@ export function canStartFamilyChat(role: Role) {
   return role === "teacher" || ["principal", "vice_principal", "student_affairs"].includes(role);
 }
 
-/** Homework: only the course's current teacher creates/grades (mirrors is_course_teacher in SQL); listed roles only view. */
+/** Homework authoring mirrors current course teacher or the group's verified owner override in SQL. */
 export function canAuthorHomework(role: Role) {
-  return role === "teacher";
+  return role === "teacher" || role === "org_owner" || role === "platform_admin";
 }
 
 export type AttTab = "lessons" | "today" | "gate" | "pickups" | "calls" | "cards" | "records" | "followup" | "settings" | "compare";

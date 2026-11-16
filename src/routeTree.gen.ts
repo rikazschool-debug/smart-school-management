@@ -38,6 +38,7 @@ import { Route as AuthenticatedAppEventsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppFamilyRequestsRouteImport } from './routes/_authenticated/app/family-requests'
 import { Route as AuthenticatedAppFamilyVisitsRouteImport } from './routes/_authenticated/app/family-visits'
 import { Route as AuthenticatedAppFinanceRouteImport } from './routes/_authenticated/app/finance'
+import { Route as AuthenticatedAppGiftedCareRouteImport } from './routes/_authenticated/app/gifted-care'
 import { Route as AuthenticatedAppGradesRouteImport } from './routes/_authenticated/app/grades'
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
 import { Route as AuthenticatedAppHrRouteImport } from './routes/_authenticated/app/hr'
@@ -55,6 +56,7 @@ import { Route as AuthenticatedAppPlatformNoticesRouteImport } from './routes/_a
 import { Route as AuthenticatedAppPlatformSubsRouteImport } from './routes/_authenticated/app/platform-subs'
 import { Route as AuthenticatedAppProcurementRouteImport } from './routes/_authenticated/app/procurement'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app/profile'
+import { Route as AuthenticatedAppRemedialPlansRouteImport } from './routes/_authenticated/app/remedial-plans'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app/reports'
 import { Route as AuthenticatedAppResultsRouteImport } from './routes/_authenticated/app/results'
 import { Route as AuthenticatedAppScheduleRouteImport } from './routes/_authenticated/app/schedule'
@@ -62,12 +64,15 @@ import { Route as AuthenticatedAppSchoolDayRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppSchoolHomeRouteImport } from './routes/_authenticated/app/school-home'
 import { Route as AuthenticatedAppSchoolsRouteImport } from './routes/_authenticated/app/schools'
 import { Route as AuthenticatedAppSignupRequestsRouteImport } from './routes/_authenticated/app/signup-requests'
+import { Route as AuthenticatedAppStudentGuidanceRouteImport } from './routes/_authenticated/app/student-guidance'
 import { Route as AuthenticatedAppStudentsRouteImport } from './routes/_authenticated/app/students'
 import { Route as AuthenticatedAppSubstitutionsRouteImport } from './routes/_authenticated/app/substitutions'
+import { Route as AuthenticatedAppSupervisionVisitsRouteImport } from './routes/_authenticated/app/supervision-visits'
 import { Route as AuthenticatedAppSupportRouteImport } from './routes/_authenticated/app/support'
 import { Route as AuthenticatedAppTagsRouteImport } from './routes/_authenticated/app/tags'
 import { Route as AuthenticatedAppTeachersRouteImport } from './routes/_authenticated/app/teachers'
 import { Route as AuthenticatedAppTeamLeaveRouteImport } from './routes/_authenticated/app/team-leave'
+import { Route as AuthenticatedAppTestsRouteImport } from './routes/_authenticated/app/tests'
 import { Route as AuthenticatedAppTransportRouteImport } from './routes/_authenticated/app/transport'
 import { Route as AuthenticatedAppVisitsRouteImport } from './routes/_authenticated/app/visits'
 import { Route as JoinTrackCodeRouteImport } from './routes/join.track.$code'
@@ -272,6 +277,12 @@ const AuthenticatedAppFinanceRoute = AuthenticatedAppFinanceRouteImport.update({
   path: '/finance',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
+const AuthenticatedAppGiftedCareRoute =
+  AuthenticatedAppGiftedCareRouteImport.update({
+    id: '/gifted-care',
+    path: '/gifted-care',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppGradesRoute = AuthenticatedAppGradesRouteImport.update({
   id: '/grades',
   path: '/grades',
@@ -367,6 +378,12 @@ const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
+const AuthenticatedAppRemedialPlansRoute =
+  AuthenticatedAppRemedialPlansRouteImport.update({
+    id: '/remedial-plans',
+    path: '/remedial-plans',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppReportsRoute = AuthenticatedAppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -406,6 +423,12 @@ const AuthenticatedAppSignupRequestsRoute =
     path: '/signup-requests',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppStudentGuidanceRoute =
+  AuthenticatedAppStudentGuidanceRouteImport.update({
+    id: '/student-guidance',
+    path: '/student-guidance',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppStudentsRoute =
   AuthenticatedAppStudentsRouteImport.update({
     id: '/students',
@@ -416,6 +439,12 @@ const AuthenticatedAppSubstitutionsRoute =
   AuthenticatedAppSubstitutionsRouteImport.update({
     id: '/substitutions',
     path: '/substitutions',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSupervisionVisitsRoute =
+  AuthenticatedAppSupervisionVisitsRouteImport.update({
+    id: '/supervision-visits',
+    path: '/supervision-visits',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppSupportRoute = AuthenticatedAppSupportRouteImport.update({
@@ -440,6 +469,11 @@ const AuthenticatedAppTeamLeaveRoute =
     path: '/team-leave',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppTestsRoute = AuthenticatedAppTestsRouteImport.update({
+  id: '/tests',
+  path: '/tests',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
 const AuthenticatedAppTransportRoute =
   AuthenticatedAppTransportRouteImport.update({
     id: '/transport',
@@ -731,6 +765,7 @@ export interface FileRoutesByFullPath {
   '/app/family-requests': typeof AuthenticatedAppFamilyRequestsRoute
   '/app/family-visits': typeof AuthenticatedAppFamilyVisitsRoute
   '/app/finance': typeof AuthenticatedAppFinanceRoute
+  '/app/gifted-care': typeof AuthenticatedAppGiftedCareRoute
   '/app/grades': typeof AuthenticatedAppGradesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/hr': typeof AuthenticatedAppHrRoute
@@ -748,6 +783,7 @@ export interface FileRoutesByFullPath {
   '/app/platform-subs': typeof AuthenticatedAppPlatformSubsRoute
   '/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/remedial-plans': typeof AuthenticatedAppRemedialPlansRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
@@ -755,12 +791,15 @@ export interface FileRoutesByFullPath {
   '/app/school-home': typeof AuthenticatedAppSchoolHomeRoute
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/signup-requests': typeof AuthenticatedAppSignupRequestsRoute
+  '/app/student-guidance': typeof AuthenticatedAppStudentGuidanceRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
+  '/app/supervision-visits': typeof AuthenticatedAppSupervisionVisitsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/tags': typeof AuthenticatedAppTagsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
+  '/app/tests': typeof AuthenticatedAppTestsRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app/visits': typeof AuthenticatedAppVisitsRoute
   '/join/track/$code': typeof JoinTrackCodeRoute
@@ -835,6 +874,7 @@ export interface FileRoutesByTo {
   '/app/family-requests': typeof AuthenticatedAppFamilyRequestsRoute
   '/app/family-visits': typeof AuthenticatedAppFamilyVisitsRoute
   '/app/finance': typeof AuthenticatedAppFinanceRoute
+  '/app/gifted-care': typeof AuthenticatedAppGiftedCareRoute
   '/app/grades': typeof AuthenticatedAppGradesRoute
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/hr': typeof AuthenticatedAppHrRoute
@@ -852,6 +892,7 @@ export interface FileRoutesByTo {
   '/app/platform-subs': typeof AuthenticatedAppPlatformSubsRoute
   '/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/remedial-plans': typeof AuthenticatedAppRemedialPlansRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
@@ -859,12 +900,15 @@ export interface FileRoutesByTo {
   '/app/school-home': typeof AuthenticatedAppSchoolHomeRoute
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/signup-requests': typeof AuthenticatedAppSignupRequestsRoute
+  '/app/student-guidance': typeof AuthenticatedAppStudentGuidanceRoute
   '/app/students': typeof AuthenticatedAppStudentsRoute
   '/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
+  '/app/supervision-visits': typeof AuthenticatedAppSupervisionVisitsRoute
   '/app/support': typeof AuthenticatedAppSupportRoute
   '/app/tags': typeof AuthenticatedAppTagsRoute
   '/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
+  '/app/tests': typeof AuthenticatedAppTestsRoute
   '/app/transport': typeof AuthenticatedAppTransportRoute
   '/app/visits': typeof AuthenticatedAppVisitsRoute
   '/join/track/$code': typeof JoinTrackCodeRoute
@@ -942,6 +986,7 @@ export interface FileRoutesById {
   '/_authenticated/app/family-requests': typeof AuthenticatedAppFamilyRequestsRoute
   '/_authenticated/app/family-visits': typeof AuthenticatedAppFamilyVisitsRoute
   '/_authenticated/app/finance': typeof AuthenticatedAppFinanceRoute
+  '/_authenticated/app/gifted-care': typeof AuthenticatedAppGiftedCareRoute
   '/_authenticated/app/grades': typeof AuthenticatedAppGradesRoute
   '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/_authenticated/app/hr': typeof AuthenticatedAppHrRoute
@@ -959,6 +1004,7 @@ export interface FileRoutesById {
   '/_authenticated/app/platform-subs': typeof AuthenticatedAppPlatformSubsRoute
   '/_authenticated/app/procurement': typeof AuthenticatedAppProcurementRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
+  '/_authenticated/app/remedial-plans': typeof AuthenticatedAppRemedialPlansRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/app/results': typeof AuthenticatedAppResultsRoute
   '/_authenticated/app/schedule': typeof AuthenticatedAppScheduleRoute
@@ -966,12 +1012,15 @@ export interface FileRoutesById {
   '/_authenticated/app/school-home': typeof AuthenticatedAppSchoolHomeRoute
   '/_authenticated/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/_authenticated/app/signup-requests': typeof AuthenticatedAppSignupRequestsRoute
+  '/_authenticated/app/student-guidance': typeof AuthenticatedAppStudentGuidanceRoute
   '/_authenticated/app/students': typeof AuthenticatedAppStudentsRoute
   '/_authenticated/app/substitutions': typeof AuthenticatedAppSubstitutionsRoute
+  '/_authenticated/app/supervision-visits': typeof AuthenticatedAppSupervisionVisitsRoute
   '/_authenticated/app/support': typeof AuthenticatedAppSupportRoute
   '/_authenticated/app/tags': typeof AuthenticatedAppTagsRoute
   '/_authenticated/app/teachers': typeof AuthenticatedAppTeachersRoute
   '/_authenticated/app/team-leave': typeof AuthenticatedAppTeamLeaveRoute
+  '/_authenticated/app/tests': typeof AuthenticatedAppTestsRoute
   '/_authenticated/app/transport': typeof AuthenticatedAppTransportRoute
   '/_authenticated/app/visits': typeof AuthenticatedAppVisitsRoute
   '/join/track/$code': typeof JoinTrackCodeRoute
@@ -1049,6 +1098,7 @@ export interface FileRouteTypes {
     | '/app/family-requests'
     | '/app/family-visits'
     | '/app/finance'
+    | '/app/gifted-care'
     | '/app/grades'
     | '/app/guardians'
     | '/app/hr'
@@ -1066,6 +1116,7 @@ export interface FileRouteTypes {
     | '/app/platform-subs'
     | '/app/procurement'
     | '/app/profile'
+    | '/app/remedial-plans'
     | '/app/reports'
     | '/app/results'
     | '/app/schedule'
@@ -1073,12 +1124,15 @@ export interface FileRouteTypes {
     | '/app/school-home'
     | '/app/schools'
     | '/app/signup-requests'
+    | '/app/student-guidance'
     | '/app/students'
     | '/app/substitutions'
+    | '/app/supervision-visits'
     | '/app/support'
     | '/app/tags'
     | '/app/teachers'
     | '/app/team-leave'
+    | '/app/tests'
     | '/app/transport'
     | '/app/visits'
     | '/join/track/$code'
@@ -1153,6 +1207,7 @@ export interface FileRouteTypes {
     | '/app/family-requests'
     | '/app/family-visits'
     | '/app/finance'
+    | '/app/gifted-care'
     | '/app/grades'
     | '/app/guardians'
     | '/app/hr'
@@ -1170,6 +1225,7 @@ export interface FileRouteTypes {
     | '/app/platform-subs'
     | '/app/procurement'
     | '/app/profile'
+    | '/app/remedial-plans'
     | '/app/reports'
     | '/app/results'
     | '/app/schedule'
@@ -1177,12 +1233,15 @@ export interface FileRouteTypes {
     | '/app/school-home'
     | '/app/schools'
     | '/app/signup-requests'
+    | '/app/student-guidance'
     | '/app/students'
     | '/app/substitutions'
+    | '/app/supervision-visits'
     | '/app/support'
     | '/app/tags'
     | '/app/teachers'
     | '/app/team-leave'
+    | '/app/tests'
     | '/app/transport'
     | '/app/visits'
     | '/join/track/$code'
@@ -1259,6 +1318,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/family-requests'
     | '/_authenticated/app/family-visits'
     | '/_authenticated/app/finance'
+    | '/_authenticated/app/gifted-care'
     | '/_authenticated/app/grades'
     | '/_authenticated/app/guardians'
     | '/_authenticated/app/hr'
@@ -1276,6 +1336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/platform-subs'
     | '/_authenticated/app/procurement'
     | '/_authenticated/app/profile'
+    | '/_authenticated/app/remedial-plans'
     | '/_authenticated/app/reports'
     | '/_authenticated/app/results'
     | '/_authenticated/app/schedule'
@@ -1283,12 +1344,15 @@ export interface FileRouteTypes {
     | '/_authenticated/app/school-home'
     | '/_authenticated/app/schools'
     | '/_authenticated/app/signup-requests'
+    | '/_authenticated/app/student-guidance'
     | '/_authenticated/app/students'
     | '/_authenticated/app/substitutions'
+    | '/_authenticated/app/supervision-visits'
     | '/_authenticated/app/support'
     | '/_authenticated/app/tags'
     | '/_authenticated/app/teachers'
     | '/_authenticated/app/team-leave'
+    | '/_authenticated/app/tests'
     | '/_authenticated/app/transport'
     | '/_authenticated/app/visits'
     | '/join/track/$code'
@@ -1563,6 +1627,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppFinanceRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/gifted-care': {
+      id: '/_authenticated/app/gifted-care'
+      path: '/gifted-care'
+      fullPath: '/app/gifted-care'
+      preLoaderRoute: typeof AuthenticatedAppGiftedCareRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/grades': {
       id: '/_authenticated/app/grades'
       path: '/grades'
@@ -1682,6 +1753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/remedial-plans': {
+      id: '/_authenticated/app/remedial-plans'
+      path: '/remedial-plans'
+      fullPath: '/app/remedial-plans'
+      preLoaderRoute: typeof AuthenticatedAppRemedialPlansRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/reports': {
       id: '/_authenticated/app/reports'
       path: '/reports'
@@ -1731,6 +1809,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSignupRequestsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/student-guidance': {
+      id: '/_authenticated/app/student-guidance'
+      path: '/student-guidance'
+      fullPath: '/app/student-guidance'
+      preLoaderRoute: typeof AuthenticatedAppStudentGuidanceRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/students': {
       id: '/_authenticated/app/students'
       path: '/students'
@@ -1743,6 +1828,13 @@ declare module '@tanstack/react-router' {
       path: '/substitutions'
       fullPath: '/app/substitutions'
       preLoaderRoute: typeof AuthenticatedAppSubstitutionsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/supervision-visits': {
+      id: '/_authenticated/app/supervision-visits'
+      path: '/supervision-visits'
+      fullPath: '/app/supervision-visits'
+      preLoaderRoute: typeof AuthenticatedAppSupervisionVisitsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/support': {
@@ -1771,6 +1863,13 @@ declare module '@tanstack/react-router' {
       path: '/team-leave'
       fullPath: '/app/team-leave'
       preLoaderRoute: typeof AuthenticatedAppTeamLeaveRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/tests': {
+      id: '/_authenticated/app/tests'
+      path: '/tests'
+      fullPath: '/app/tests'
+      preLoaderRoute: typeof AuthenticatedAppTestsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/transport': {
@@ -2110,6 +2209,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppFamilyRequestsRoute: typeof AuthenticatedAppFamilyRequestsRoute
   AuthenticatedAppFamilyVisitsRoute: typeof AuthenticatedAppFamilyVisitsRoute
   AuthenticatedAppFinanceRoute: typeof AuthenticatedAppFinanceRoute
+  AuthenticatedAppGiftedCareRoute: typeof AuthenticatedAppGiftedCareRoute
   AuthenticatedAppGradesRoute: typeof AuthenticatedAppGradesRoute
   AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
   AuthenticatedAppHrRoute: typeof AuthenticatedAppHrRoute
@@ -2127,6 +2227,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppPlatformSubsRoute: typeof AuthenticatedAppPlatformSubsRoute
   AuthenticatedAppProcurementRoute: typeof AuthenticatedAppProcurementRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
+  AuthenticatedAppRemedialPlansRoute: typeof AuthenticatedAppRemedialPlansRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppResultsRoute: typeof AuthenticatedAppResultsRoute
   AuthenticatedAppScheduleRoute: typeof AuthenticatedAppScheduleRoute
@@ -2134,12 +2235,15 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppSchoolHomeRoute: typeof AuthenticatedAppSchoolHomeRoute
   AuthenticatedAppSchoolsRoute: typeof AuthenticatedAppSchoolsRoute
   AuthenticatedAppSignupRequestsRoute: typeof AuthenticatedAppSignupRequestsRoute
+  AuthenticatedAppStudentGuidanceRoute: typeof AuthenticatedAppStudentGuidanceRoute
   AuthenticatedAppStudentsRoute: typeof AuthenticatedAppStudentsRoute
   AuthenticatedAppSubstitutionsRoute: typeof AuthenticatedAppSubstitutionsRoute
+  AuthenticatedAppSupervisionVisitsRoute: typeof AuthenticatedAppSupervisionVisitsRoute
   AuthenticatedAppSupportRoute: typeof AuthenticatedAppSupportRoute
   AuthenticatedAppTagsRoute: typeof AuthenticatedAppTagsRoute
   AuthenticatedAppTeachersRoute: typeof AuthenticatedAppTeachersRoute
   AuthenticatedAppTeamLeaveRoute: typeof AuthenticatedAppTeamLeaveRoute
+  AuthenticatedAppTestsRoute: typeof AuthenticatedAppTestsRoute
   AuthenticatedAppTransportRoute: typeof AuthenticatedAppTransportRoute
   AuthenticatedAppVisitsRoute: typeof AuthenticatedAppVisitsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
@@ -2199,6 +2303,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppFamilyRequestsRoute: AuthenticatedAppFamilyRequestsRoute,
   AuthenticatedAppFamilyVisitsRoute: AuthenticatedAppFamilyVisitsRoute,
   AuthenticatedAppFinanceRoute: AuthenticatedAppFinanceRoute,
+  AuthenticatedAppGiftedCareRoute: AuthenticatedAppGiftedCareRoute,
   AuthenticatedAppGradesRoute: AuthenticatedAppGradesRoute,
   AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,
   AuthenticatedAppHrRoute: AuthenticatedAppHrRoute,
@@ -2216,6 +2321,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppPlatformSubsRoute: AuthenticatedAppPlatformSubsRoute,
   AuthenticatedAppProcurementRoute: AuthenticatedAppProcurementRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
+  AuthenticatedAppRemedialPlansRoute: AuthenticatedAppRemedialPlansRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppResultsRoute: AuthenticatedAppResultsRoute,
   AuthenticatedAppScheduleRoute: AuthenticatedAppScheduleRoute,
@@ -2223,12 +2329,16 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppSchoolHomeRoute: AuthenticatedAppSchoolHomeRoute,
   AuthenticatedAppSchoolsRoute: AuthenticatedAppSchoolsRoute,
   AuthenticatedAppSignupRequestsRoute: AuthenticatedAppSignupRequestsRoute,
+  AuthenticatedAppStudentGuidanceRoute: AuthenticatedAppStudentGuidanceRoute,
   AuthenticatedAppStudentsRoute: AuthenticatedAppStudentsRoute,
   AuthenticatedAppSubstitutionsRoute: AuthenticatedAppSubstitutionsRoute,
+  AuthenticatedAppSupervisionVisitsRoute:
+    AuthenticatedAppSupervisionVisitsRoute,
   AuthenticatedAppSupportRoute: AuthenticatedAppSupportRoute,
   AuthenticatedAppTagsRoute: AuthenticatedAppTagsRoute,
   AuthenticatedAppTeachersRoute: AuthenticatedAppTeachersRoute,
   AuthenticatedAppTeamLeaveRoute: AuthenticatedAppTeamLeaveRoute,
+  AuthenticatedAppTestsRoute: AuthenticatedAppTestsRoute,
   AuthenticatedAppTransportRoute: AuthenticatedAppTransportRoute,
   AuthenticatedAppVisitsRoute: AuthenticatedAppVisitsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,

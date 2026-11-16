@@ -1,0 +1,178 @@
+import { Link } from "@tanstack/react-router";
+import { selectCls } from "@/components/ui/native-select";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
+import { db, type Row } from "@/components/crud-page";
+import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { arabicError, useSchool } from "@/lib/session";
+import { canAuthorHomework } from "@/lib/roles";
+import { useSchoolPerms } from "@/lib/school-perms";
+import { ExportBar } from "@/components/homework/export";
+import { StudentHomework } from "@/components/homework/student-homework";
+import { HW_STATUS, SUB_STATUS, schoolTime, statusTone } from "@/lib/homework";
+
+export function HomeworkList({ kind = "homework", initialCourse = "" }: { kind?: "homework" | "test"; initialCourse?: string }) {
+  const ctx = useSchool();
+  const permissions = useSchoolPerms(ctx?.schoolId);
+  if (!ctx?.schoolId) return <EmptyState title="اختر مدرسة أولًا" />;
+  if (ctx.role === "student") return <StudentList schoolId={ctx.schoolId} kind={kind} />;
+  if (ctx.role === "guardian") return <GuardianList schoolId={ctx.schoolId} kind={kind} />;
+  if (permissions?.["bt_homework.view"] === false) return <ForbiddenState />;
+  return <StaffList kind={kind} initialCourse={initialCourse} schoolId={ctx.schoolId} author={canAuthorHomework(ctx.role) && permissions?.["bt_homework.create"] !== false} />;
+}
+
+const Badge = ({ s, map }: { s: string; map: Record<string, string> }) => (
+  <span className={`rounded-full px-2 py-0.5 text-xs ${statusTone(s)}`}>{map[s] ?? s}</span>
+);
+
+function StaffList({ schoolId, author, kind, initialCourse }: { schoolId: string; author: boolean; kind: "homework" | "test"; initialCourse: string }) {
+  const [course, setCourse] = useState(initialCourse);
+  const [status, setStatus] = useState("");
+
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(0);
+  useEffect(() => setPage(0), [course, status, q, kind]);
+  const courses = useQuery({
+    queryKey: ["hw-courses", schoolId],
+    queryFn: async () => {
+      const { data, error } = await db.from("courses").select("id, subjects(name), sections(name)").eq("school_id", schoolId);
+      if (error) throw error;
+      return data as Row[];
+    },
+  });
+  const list = useQuery({
+    queryKey: ["hw-list", schoolId, course, status, q, page, kind],
+    queryFn: async () => {
+      const { data, error } = await db.rpc("homework_list", { _school: schoolId, _course: course || null, _status: status || null, _q: q || null, _limit: 20, _offset: page * 20, _kind: kind || null });
+      if (error) throw error;
+      return data as Row[];
+    },
+  });
+  const total = Number(list.data?.[0]?.["total"] ?? 0);
+  return (
+    <>
+      <PageHeader title={kind === "test" ? "الاختبارات" : "مذكرة الواجبات"} desc={author ? "واجبات مقرراتك: الإعداد والنشر والتصحيح." : "متابعة الواجبات ضمن نطاق صلاحيتك (اطلاع فقط)."}
+        action={author ? <Button asChild><Link to="/app/homework/new" search={{ kind }}><Plus className="h-4 w-4" /> {kind === "test" ? "اختبار جديد" : "واجب جديد"}</Link></Button> : undefined} />
+      <div className="mb-4 rounded-xl border bg-card p-3">
+        <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <Input className="h-9 sm:w-64" placeholder="بحث بالعنوان" aria-label="بحث بالعنوان" value={q} onChange={(e) => setQ(e.target.value)} />
+          <select className={selectCls("w-full sm:w-auto", true)} value={course} onChange={(e) => setCourse(e.target.value)} aria-label="المقرر">
+            <option value="">كل المقررات</option>
+            {courses.data?.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]}</option>)}
+          </select>
+          <select className={selectCls("w-full sm:w-auto", true)} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
+            <option value="">كل الحالات</option>
+            {Object.entries(HW_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+          {(q || course || status) && <Button variant="ghost" size="sm" onClick={() => { setQ(""); setCourse(""); setStatus("");  }}>مسح الفلاتر</Button>}
+        </div>
+        <div className="mt-3 border-t pt-3">
+          {course ? <ExportBar course={course} kinds={["homework", "submissions", "pending", "results"]} /> : <p className="text-xs text-muted-foreground">اختر مقررًا لتصدير تقاريره.</p>}
+        </div>
+      </div>
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? (
+        <EmptyState title={kind === "test" ? "لا توجد اختبارات" : "لا توجد واجبات"} hint={author ? "أنشئ أول واجب لمقرراتك." : undefined}
+          action={author ? <Button asChild variant="outline"><Link to="/app/homework/new" search={{ kind }}><Plus className="h-4 w-4" /> {kind === "test" ? "اختبار جديد" : "واجب جديد"}</Link></Button> : undefined} />
+      ) : (
+        <>
+          <div className="hidden overflow-x-auto rounded-xl border bg-card md:block">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-muted/40 text-xs text-muted-foreground">
+                <tr>{["الواجب/الاختبار", "الحالة", "موعد التسليم", "التسليم", "يحتاج تصحيحًا", "النتائج"].map((h) => <th key={h} className="px-4 py-3 text-start font-semibold">{h}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y">
+                {list.data.map((r) => (
+                  <tr key={r["id"]} className="hover:bg-muted/30">
+                    <td className="px-4 py-3"><Link to="/app/homework/$id" params={{ id: r["id"] }} className="font-semibold text-foreground hover:text-primary">{r["title"]}</Link><p className="text-xs text-muted-foreground">{r["kind"] === "test" ? "اختبار" : "واجب"} · {r["subject"]} — {r["section"]}</p></td>
+                    <td className="px-4 py-3"><Badge s={r["status"]} map={HW_STATUS} /></td>
+                    <td className="whitespace-nowrap px-4 py-3">{schoolTime(r["due_at"])}</td>
+                    <td className="px-4 py-3"><Progress done={r["submitted"]} total={r["targets"]} late={r["late"]} /></td>
+                    <td className="px-4 py-3">{Number(r["to_grade"]) > 0 ? <span className="rounded-full bg-warning/20 px-2.5 py-0.5 text-xs font-semibold text-warning-foreground">{r["to_grade"]}</span> : <span className="text-muted-foreground">—</span>}</td>
+                    <td className="px-4 py-3 text-xs">{r["max_score"] == null ? "غير مقيّم" : `${r["published_results"]} ظاهرة${r["unpublished"] ? ` · ${r["unpublished"]} تصحيح سابق غير ظاهر` : ""}`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <ul className="space-y-2 md:hidden">
+            {list.data.map((r) => (
+              <li key={r["id"]}>
+                <Link to="/app/homework/$id" params={{ id: r["id"] }} className="block rounded-xl border bg-card p-4">
+                  <div className="flex items-start justify-between gap-2"><p className="min-w-0 font-semibold">{r["title"]}</p><Badge s={r["status"]} map={HW_STATUS} /></div>
+                  <p className="text-xs text-muted-foreground">{r["subject"]} — {r["section"]} · {schoolTime(r["due_at"])}</p>
+                  <div className="mt-3 flex items-center justify-between gap-3"><Progress done={r["submitted"]} total={r["targets"]} late={r["late"]} />{Number(r["to_grade"]) > 0 && <span className="text-xs font-semibold text-warning-foreground">يحتاج تصحيحًا: {r["to_grade"]}</span>}</div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {total > 20 && (
+        <div className="mt-3 flex items-center gap-2 text-sm">
+          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>السابق</Button>
+          <span>{page + 1} / {Math.ceil(total / 20)}</span>
+          <Button variant="outline" size="sm" disabled={(page + 1) * 20 >= total} onClick={() => setPage(page + 1)}>التالي</Button>
+        </div>
+      )}
+      <p className="mt-3 text-xs text-muted-foreground">«متأخر» = عدد الطلاب الذين سلّموا محاولة بعد موعدهم. «لم يسلّم» يشمل المستهدفين الحاليين فقط.</p>
+    </>
+  );
+}
+
+function StudentList({ schoolId, kind }: { schoolId: string; kind: "homework" | "test" }) {
+  const me = useQuery({
+    queryKey: ["me-student", schoolId],
+    queryFn: async () => {
+      const { data: auth } = await db.auth.getUser();
+      const { data, error } = await db.from("students").select("id").eq("school_id", schoolId).eq("user_id", auth.user?.id).maybeSingle();
+      if (error) throw error;
+      return data as Row | null;
+    },
+  });
+  if (me.isLoading) return <LoadingState />;
+  if (!me.data) return <EmptyState title="حسابك غير مرتبط بسجل طالب في هذه المدرسة" />;
+  return (<><PageHeader title={kind === "test" ? "اختباراتي" : "مذكرة واجباتي"} /><StudentHomework studentId={me.data["id"]} kind={kind} /></>);
+}
+
+function GuardianList({ schoolId, kind }: { schoolId: string; kind: "homework" | "test" }) {
+  const kids = useQuery({
+    queryKey: ["hw-kids", schoolId],
+    queryFn: async () => {
+      const { data: auth } = await db.auth.getUser();
+      const { data, error } = await db.from("student_guardians").select("students(id, full_name), guardians!inner(user_id)")
+        .eq("school_id", schoolId).eq("verified", true).eq("can_follow", true).eq("guardians.user_id", auth.user?.id);
+      if (error) throw error;
+      return (data as Row[]).map((r) => r["students"]).filter(Boolean) as Row[];
+    },
+  });
+  const [kid, setKid] = useState("");
+  useEffect(() => { if (!kid && kids.data?.[0]) setKid(kids.data[0]["id"]); }, [kids.data, kid]);
+  if (kids.isLoading) return <LoadingState />;
+  if (!kids.data?.length) return <EmptyState title="لا يوجد أبناء موثقون للمتابعة" hint="تظهر الواجبات بعد توثيق علاقة ولي الأمر من المدرسة." />;
+  return (
+    <>
+      <PageHeader title={kind === "test" ? "اختبارات الأبناء" : "مذكرة واجبات الأبناء"} />
+      <ExportBar course={null} kinds={["family"]} note="يشمل أبناءك الموثّقين فقط، والدرجات التي حفظها المعلم فقط." />
+      <div className="mb-4 flex flex-wrap gap-2">
+        {kids.data.map((k) => (
+          <Button key={k["id"]} variant={kid === k["id"] ? "default" : "outline"} size="sm" onClick={() => setKid(k["id"])}>{k["full_name"]}</Button>
+        ))}
+      </div>
+      {kid && <StudentHomework studentId={kid} kind={kind} guardian />}
+    </>
+  );
+}
+
+function Progress({ done, total, late }: { done: unknown; total: unknown; late: unknown }) {
+  const d = Number(done ?? 0), t = Number(total ?? 0), l = Number(late ?? 0);
+  const pct = t ? Math.round((d / t) * 100) : 0;
+  return (
+    <div className="min-w-32" title={`سلّم ${d} من ${t}${l ? ` · متأخر ${l}` : ""}`}>
+      <div className="flex justify-between text-xs"><span className="font-semibold">{d}/{t}</span>{l > 0 && <span className="text-warning-foreground">متأخر {l}</span>}</div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="نسبة التسليم"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
+    </div>
+  );
+}

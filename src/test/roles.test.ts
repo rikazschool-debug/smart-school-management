@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { NAV_BY_ROLE, attTabs, canCreateGroup, canCreateTask, canEditSchedule, canManageAcademic, canManageUsers, canOrganizeMeeting, canScanAttendance, commTabs, invitableRoles, type Role, scheduleTabs, scheduleLabel, seesStaffDirectory, teachersLabel } from "@/lib/roles";
 const ALL = Object.keys(NAV_BY_ROLE) as Role[];
+it("homework authoring includes the verified owner override but not observer roles", async () => {
+ const {canAuthorHomework}=await import("@/lib/roles");
+ expect(ALL.filter(canAuthorHomework).sort()).toEqual(["org_owner","platform_admin","teacher"]);
+});
 it("both owners can open collaboration inside school administration", async () => {
   const { ownerSection, ownerSectionNav } = await import("@/lib/roles");
   expect(NAV_BY_ROLE.platform_admin).toContain("collaboration");
@@ -47,8 +51,8 @@ describe("role rules", () => {
   it("teachers cannot invite anyone", () => {
     expect(invitableRoles("teacher")).toEqual([]);
   });
-  it("counselor, nurse and security dashboards expose only communication, notifications and visits", () => {
-    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
+  it("counselor gets guidance and gifted care without opening them to nurse or security", () => {
+    expect(NAV_BY_ROLE.counselor).toEqual(["home", "attendance", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits", "student_guidance", "gifted_care"]);
     expect(NAV_BY_ROLE.nurse).toEqual(["home", "health", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
     expect(NAV_BY_ROLE.security).toEqual(["home", "attendance", "station", "admin", "duties", "meetings", "events", "communication", "notifications", "family_visits"]);
   });

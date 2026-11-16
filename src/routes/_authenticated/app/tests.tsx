@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { HomeworkList } from "@/components/homework/list";
+export const Route = createFileRoute("/_authenticated/app/tests")({ head: () => ({ meta: [{ title: "الاختبارات — ركاز" }, { name: "description", content: "اختبارات المقررات والتسليم الورقي والإلكتروني ونتائج الطلاب." }, { property: "og:title", content: "الاختبارات — ركاز" }, { property: "og:description", content: "إعداد الاختبارات ومتابعة تصحيحها ونتائجها." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <HomeworkList kind="test" /> });

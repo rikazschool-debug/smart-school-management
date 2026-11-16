@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { EducationDesk } from "@/components/education/desk";
+export const Route = createFileRoute("/_authenticated/app/student-guidance")({ head: () => ({ meta: [{ title: "التوجيه الطلابي — ركاز" }, { name: "description", content: "الحالات الخاصة والإحالات الطلابية ومتابعتها ضمن الصلاحيات." }, { property: "og:title", content: "التوجيه الطلابي — ركاز" }, { property: "og:description", content: "السجلات السرية والإحالات والمتابعة الطلابية." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <EducationDesk title="التوجيه الطلابي" kinds={["case", "referral"]} /> });
