@@ -25,9 +25,9 @@ const blankGoal = (): CaseGoal => ({ actions: "", owner: "", due: "", indicator:
 
 export function Cases({ school, initialId, onSel }: { school: string; initialId?: string | undefined; onSel?: (id: string | null) => void }) {
   const qc = useQueryClient(); const [status, setStatus] = useState(""); const [q, setQ] = useState("");
-  const [sel, setSelState] = useState<string | null>(initialId ?? null);
-  useEffect(() => { setSelState(initialId ?? null); }, [initialId]);
-  const setSel = (id: string | null) => { setSelState(id); onSel?.(id); }; const [wiz, setWiz] = useState<"new" | Row | null>(null);
+  // With onSel the open case lives only in the URL (back/forward and shared links stay in step); otherwise local state.
+  const [own, setOwn] = useState<string | null>(initialId ?? null);
+  const sel = onSel ? initialId ?? null : own; const setSel = (id: string | null) => (onSel ? onSel(id) : setOwn(id)); const [wiz, setWiz] = useState<"new" | Row | null>(null);
   const list = useQuery({ queryKey: ["edu-list", school, "case", status, q], queryFn: () => rpc<{ rows: Row[]; total: number; can_create: boolean }>("edu_find", { _school: school, _kind: "case", _f: { q, status }, _offset: 0, _limit: 100 }) });
   const refresh = () => { for (const k of ["edu-list", "edu-detail", "guidance-board"]) void qc.invalidateQueries({ queryKey: [k] }); };
   if (wiz) return <CaseWizard school={school} row={wiz === "new" ? undefined : wiz} close={(id) => { setWiz(null); refresh(); if (id) setSel(id); }} />;

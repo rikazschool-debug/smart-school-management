@@ -1,5 +1,5 @@
 import { CaseFiles } from "./case-run";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ClipboardList, FolderOpen, Lightbulb, Lock, Pencil, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -23,9 +23,8 @@ export const RefBadge = ({ s }: { s: string }) => <span className={`inline-flex 
 
 export function Referrals({ school, counselor, canRefer, openCase, initialStatus, initialId, onSel }: { school: string; counselor: boolean; canRefer: boolean; openCase?: (id: string) => void; initialStatus?: string | undefined; initialId?: string | undefined; onSel?: (id: string | null) => void }) {
   const qc = useQueryClient(); const [status, setStatus] = useState(initialStatus ?? (counselor ? "sent" : "")); const [q, setQ] = useState(""); const [page, setPage] = useState(0);
-  const [selected, setSelState] = useState<string | null>(initialId ?? null);
-  useEffect(() => { setSelState(initialId ?? null); }, [initialId]);
-  const setSelected = (id: string | null) => { setSelState(id); onSel?.(id); }; const [wizard, setWizard] = useState<"new" | Row | null>(null);
+  const [own, setOwn] = useState<string | null>(initialId ?? null);
+  const selected = onSel ? initialId ?? null : own; const setSelected = (id: string | null) => (onSel ? onSel(id) : setOwn(id)); const [wizard, setWizard] = useState<"new" | Row | null>(null);
   const list = useQuery({ queryKey: ["edu-list", school, "referral", status, q, page], queryFn: () => rpc<List>("edu_find", { _school: school, _kind: "referral", _f: { q, status }, _offset: page * 25, _limit: 25 }) });
   const refresh = () => { for (const k of ["edu-list", "edu-detail", "guidance-board"]) void qc.invalidateQueries({ queryKey: [k] }); };
   if (wizard) return <ReferralWizard school={school} row={wizard === "new" ? undefined : wizard} close={(id) => { setWizard(null); refresh(); if (id) setSelected(id); }} />;
