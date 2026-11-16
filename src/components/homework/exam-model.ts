@@ -26,7 +26,7 @@ export function rotateForm(questions: ExamQuestion[], shift: number): ExamQuesti
   });
 }
 export function scoreChoices(questions: ExamQuestion[], answers: (number | null)[]) { return questions.reduce((total, q, i) => total + (answers[i] !== null && answers[i] !== undefined && q.correct.length === 1 && q.correct[0] === answers[i] ? q.points : 0), 0); }
-export function sheetIdentity(text: string, hw: string, roster: { id: string }[]) { try { const p = JSON.parse(text); return p.v === 1 && p.hw === hw && typeof p.student === "string" && roster.some((r) => r.id === p.student) ? p.student as string : null; } catch { return null; } }
+export function sheetIdentity(text: string, hw: string, roster: { id: string }[], form?: string) { try { const p = JSON.parse(text); return p.v === 1 && p.hw === hw && (!form || p.form === form) && typeof p.student === "string" && roster.some((r) => r.id === p.student) ? p.student as string : null; } catch { return null; } }
 export const BUBBLE_SHEET = { width: 1000, height: 1400, left: 70, right: 930, top: 320, bottom: 1300, firstX: 270, stepX: 110, firstY: 380, stepY: 25, radius: 8 };
 export type Point = { x: number; y: number };
 /** Dark, disconnected square fiducials surrounding the answer area; QR/header are outside it. */
