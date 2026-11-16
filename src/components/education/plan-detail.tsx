@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, ClipboardCheck, Plus, ShieldCheck, Printer, RotateCcw } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, FileDown, FileSpreadsheet, Plus, ShieldCheck, Printer, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { ErrorState, LoadingState } from "@/components/states";
 import { askText } from "@/components/confirm";
 import { EvidenceTab, openEvidenceFile } from "./plan-evidence";
 import { arabicError } from "@/lib/session";
-import { printReport } from "@/lib/export";
+import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { schoolTime } from "@/lib/homework";
 import { DEFAULT_SHARE, SHARE_LABELS, TEACHER_SOURCES, type Share, type TGoal, EDU_AREAS, EDU_CATEGORIES, EDU_LABELS, EDU_PRIORITY, EVIDENCE_SOURCES, OUTCOMES, PHASES, PLAN_STATUS, baselineText, compareMeasures, goalDone, goalMark, isOverdue, measureText, type EduRecord, type Measure } from "./model";
 
@@ -37,14 +37,22 @@ export function PlanDetail({ id, school, schoolName, changed, openWizard }: { id
     if (!done) { const t = await askText(`سبب التراجع عن علامة «${kind === "activity" ? "تنفيذ الأنشطة" : "تحقق الإتقان"}» للهدف ${i + 1}`, { required: true, long: true, ok: "تسجيل التراجع" }); if (t === null) return; note = t; }
     await act(() => rpc("edu_mark", { _id: r!.id, _goal: i, _mark: kind, _done: done, _note: note }), done ? "سُجلت العلامة" : "سُجل التراجع");
   }
-  const print = () => printReport({ title: `${EDU_LABELS[r.kind]} — ${r.title}`, school: schoolName, filters: [r.person, r.course ?? ""].filter(Boolean) }, ["البند", "القيمة"],
-    ([["الحالة", PLAN_STATUS[r.status] ?? r.status], ["المهارات", (r.plan?.skills ?? []).join("، ")], ["الاحتياج", r.description], ["مستوى البداية", baselineText(r.plan?.baseline)], ["موعد المراجعة", r.due_date ?? ""],
-      ...r.goals.flatMap((g, i) => { const c = compareMeasures(ms.filter((m) => m.goal_index === i)); return [[`${i + 1}. ${g}`, `الأنشطة: ${goalDone(fu, i) ? "منفذة" : "قيد التنفيذ"} · الإتقان: ${goalDone(fu, i, "mastery") ? "متحقق" : "غير مؤكد"}`], [`قياس الهدف ${i + 1}`, c.latest ? `${measureText(c.start!)} ← ${measureText(c.latest)}${c.change ? ` (${c.change})` : ""}` : "لا قياس"]]; }),
-      ...ss.map((x) => [`جلسة ${x.session_date}`, `${x.activity}${x.achieved ? ` — ${x.achieved}` : ""}`]),
-      ["نتيجة الإغلاق", r.plan?.outcome ? `${OUTCOMES[r.plan.outcome]} — ${r.plan.outcome_note ?? ""}` : ""]] as [string, string][]).filter(([, x]) => x));
+  const meta = (t: string) => ({ title: `${t} — ${r.title}`, school: schoolName, filters: [r.person, r.course ?? "", PLAN_STATUS[r.status] ?? r.status].filter(Boolean) });
+  const tdet = (r.plan?.goal_details ?? []) as unknown as Partial<TGoal>[];
+  const reportRows = () => (r.kind === "teacher_plan"
+    ? [["مصدر الاحتياج", TEACHER_SOURCES[r.plan?.source ?? ""] ?? ""], ["الزيارة المرتبطة", r.visit ? (r.visit.visible ? `${r.visit.record_date} · ${r.visit.title}` : "زيارة مرتبطة غير متاحة لك") : ""], ["نقاط القوة", (r.plan as { strengths?: string } | undefined)?.strengths ?? ""], ["فرصة التحسين", r.plan?.opportunity ?? ""], ["الاحتياج", r.description], ["موعد المراجعة", r.due_date ?? ""],
+      ...r.goals.map((g, i) => [`${i + 1}. ${g}`, [tdet[i]?.indicator && `المؤشر: ${tdet[i]?.indicator}`, tdet[i]?.support && `الدعم: ${tdet[i]?.support}`, `الأنشطة: ${goalDone(fu, i) ? "منفذة" : "قيد التنفيذ"}`, `الإتقان: ${goalDone(fu, i, "mastery") ? "متحقق" : "غير مؤكد"}`].filter(Boolean).join(" · ")]),
+      ...(r.self_notes ?? []).map((n) => [`ملاحظة المعلم ${schoolTime(n.created_at)}`, n.note])]
+    : [["المهارات", (r.plan?.skills ?? []).join("، ")], ["الاحتياج", r.description], ["مستوى البداية", baselineText(r.plan?.baseline)], ["موعد المراجعة", r.due_date ?? ""],
+      ...r.goals.flatMap((g, i) => { const c = compareMeasures(ms.filter((m) => m.goal_index === i)); return [[`${i + 1}. ${g}`, `الأنشطة: ${goalDone(fu, i) ? "منفذة" : "قيد التنفيذ"} · الإتقان: ${goalDone(fu, i, "mastery") ? "متحقق" : "غير مؤكد"}`], [`قياس الهدف ${i + 1}`, c.latest ? `${measureText(c.start!)} ← ${measureText(c.latest)}${c.change ? ` (${c.change})` : ""}` : "لا قياس"]]; })])
+    .concat(ss.map((x) => [`جلسة ${x.session_date}`, `${x.activity}${x.achieved ? ` — ${x.achieved}` : ""}`]), [["نتيجة الإغلاق", r.plan?.outcome ? `${OUTCOMES[r.plan.outcome]} — ${r.plan.outcome_note ?? ""}` : ""]])
+    .filter(([, x]) => x) as [string, string][];
+  const report = async (fmt: "pdf" | "xlsx" | "print") => { const m = meta(EDU_LABELS[r.kind]); const h = ["البند", "القيمة"]; const rows = reportRows(); if (fmt === "xlsx") exportXlsx(m, h, rows); else if (fmt === "pdf") await exportPdf(m, h, rows); else printReport(m, h, rows); };
+  // Blank follow-up sheet: one block of empty rows per goal, to fill by hand during sessions.
+  const sheet = async (fmt: "pdf" | "print") => { const h = ["الهدف", "التاريخ", "النشاط المنفذ", "ما تحقق / الملاحظة", "التوقيع"]; const rows = r.goals.flatMap((g, i) => [[`${i + 1}. ${g}`, "", "", "", ""], ["", "", "", "", ""], ["", "", "", "", ""]]); const m = meta("ورقة متابعة"); if (fmt === "pdf") await exportPdf(m, h, rows); else printReport(m, h, rows); };
   return <div className="space-y-4">
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3"><div className="min-w-0"><h2 className="truncate text-lg font-bold">{r.title}</h2><p className="mt-1 text-sm text-muted-foreground">{r.person}{r.course ? ` · ${r.course}` : ""} · <span className="rounded bg-secondary px-1.5">{PLAN_STATUS[r.status] ?? r.status}</span>{isOverdue(r, today()) && r.status !== "draft" && <span className="ms-2 text-destructive">متأخرة عن موعد المراجعة</span>}</p></div>
-      <div className="flex flex-wrap justify-end gap-2"><Button variant="outline" size="sm" onClick={print}><Printer className="size-4" />تقرير الخطة</Button>{edit && r.status !== "closed" && <Button variant="outline" size="sm" onClick={() => openWizard(r)}>{r.status === "draft" ? "استكمال الخطة" : "تعديل"}</Button>}</div></div>
+      <div className="flex flex-wrap justify-end gap-2">{!r.guardian_view && <><Button variant="outline" size="sm" onClick={() => void report("pdf")}><FileDown className="size-4" />تقرير PDF</Button><Button variant="outline" size="sm" onClick={() => void report("xlsx")}><FileSpreadsheet className="size-4" />Excel</Button><Button variant="outline" size="sm" onClick={() => void report("print")}><Printer className="size-4" />طباعة</Button>{r.goals.length > 0 && <Button variant="outline" size="sm" onClick={() => void sheet("pdf")}><ClipboardCheck className="size-4" />ورقة متابعة</Button>}</>}{edit && r.status !== "closed" && <Button variant="outline" size="sm" onClick={() => openWizard(r)}>{r.status === "draft" ? "استكمال الخطة" : "تعديل"}</Button>}</div></div>
     {edit && <PlanStatusBar r={r} school={school} changed={() => void refresh()} />}
     <Tabs defaultValue="summary" dir="rtl"><TabsList className="h-auto w-full flex-wrap justify-start">
       {([["summary", "الملخص"], ["goals", "الأهداف والأنشطة"], ["sessions", `الجلسات والمتابعة (${ss.length})`], ["evidence", `الأدلة (${(r.evidence ?? []).length})`], ["measures", `القياس (${ms.length})`], (r.kind === "teacher_plan" ? ["selfnotes", `ملاحظات المعلم (${(r.self_notes ?? []).length})`] : ["guardian", "مشاركة ولي الأمر"]), ["log", "سجل الإجراءات"]] as [string, string][]).map(([k, l]) => <TabsTrigger key={k} value={k}>{l}</TabsTrigger>)}</TabsList>

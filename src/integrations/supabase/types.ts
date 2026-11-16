@@ -23927,6 +23927,10 @@ export type Database = {
         Returns: string
       }
       edu_measure_add: { Args: { _id: string; _p: Json }; Returns: string }
+      edu_plan_filters: {
+        Args: { _kind: string; _school: string }
+        Returns: Json
+      }
       edu_pool: {
         Args: { _kind: string; _q?: string; _school: string }
         Returns: Json
