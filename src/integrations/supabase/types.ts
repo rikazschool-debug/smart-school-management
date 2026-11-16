@@ -19055,6 +19055,454 @@ export type Database = {
           },
         ]
       }
+      sv_assignments: {
+        Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          course_ids: string[]
+          created_at: string
+          created_by: string | null
+          ends_at: string
+          id: string
+          org_id: string
+          reason: string
+          rev: number
+          school_id: string
+          starts_at: string
+          subject_ids: string[]
+          supervisor_id: string
+          teacher_ids: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          course_ids?: string[]
+          created_at?: string
+          created_by?: string | null
+          ends_at: string
+          id?: string
+          org_id: string
+          reason: string
+          rev?: number
+          school_id: string
+          starts_at: string
+          subject_ids?: string[]
+          supervisor_id: string
+          teacher_ids?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          course_ids?: string[]
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string
+          id?: string
+          org_id?: string
+          reason?: string
+          rev?: number
+          school_id?: string
+          starts_at?: string
+          subject_ids?: string[]
+          supervisor_id?: string
+          teacher_ids?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_assignments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_assignments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_delegations: {
+        Row: {
+          assignment_id: string | null
+          created_at: string
+          delegate_id: string
+          ends_at: string
+          form_key: string | null
+          granted_by: string
+          id: string
+          kind: string
+          org_id: string
+          reason: string
+          record_id: string | null
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          school_id: string | null
+          starts_at: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          created_at?: string
+          delegate_id: string
+          ends_at: string
+          form_key?: string | null
+          granted_by: string
+          id?: string
+          kind: string
+          org_id: string
+          reason: string
+          record_id?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          school_id?: string | null
+          starts_at: string
+        }
+        Update: {
+          assignment_id?: string | null
+          created_at?: string
+          delegate_id?: string
+          ends_at?: string
+          form_key?: string | null
+          granted_by?: string
+          id?: string
+          kind?: string
+          org_id?: string
+          reason?: string
+          record_id?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          school_id?: string | null
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_delegations_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "sv_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_delegations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_delegations_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_events: {
+        Row: {
+          action: string
+          actor: string | null
+          at: string
+          details: Json | null
+          entity: string
+          entity_id: string | null
+          id: number
+          org_id: string | null
+          school_id: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          at?: string
+          details?: Json | null
+          entity: string
+          entity_id?: string | null
+          id?: number
+          org_id?: string | null
+          school_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          at?: string
+          details?: Json | null
+          entity?: string
+          entity_id?: string | null
+          id?: number
+          org_id?: string | null
+          school_id?: string | null
+        }
+        Relationships: []
+      }
+      sv_forms: {
+        Row: {
+          acceptance: string
+          archived_at: string | null
+          based_on: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          key: string
+          kind: string
+          org_id: string | null
+          outputs: string
+          published_at: string | null
+          published_by: string | null
+          purpose: string
+          return_reason: string | null
+          rev: number
+          review_by: string | null
+          roles: Json
+          school_id: string | null
+          source: Json
+          spec: Json
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          acceptance?: string
+          archived_at?: string | null
+          based_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key: string
+          kind: string
+          org_id?: string | null
+          outputs?: string
+          published_at?: string | null
+          published_by?: string | null
+          purpose: string
+          return_reason?: string | null
+          rev?: number
+          review_by?: string | null
+          roles?: Json
+          school_id?: string | null
+          source: Json
+          spec: Json
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          version: number
+        }
+        Update: {
+          acceptance?: string
+          archived_at?: string | null
+          based_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key?: string
+          kind?: string
+          org_id?: string | null
+          outputs?: string
+          published_at?: string | null
+          published_by?: string | null
+          purpose?: string
+          return_reason?: string | null
+          rev?: number
+          review_by?: string | null
+          roles?: Json
+          school_id?: string | null
+          source?: Json
+          spec?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_forms_based_on_fkey"
+            columns: ["based_on"]
+            isOneToOne: false
+            referencedRelation: "sv_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_forms_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_forms_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_record_versions: {
+        Row: {
+          actor: string | null
+          at: string
+          data: Json
+          id: number
+          record_id: string
+          rev: number
+          status: string
+        }
+        Insert: {
+          actor?: string | null
+          at?: string
+          data: Json
+          id?: number
+          record_id: string
+          rev: number
+          status: string
+        }
+        Update: {
+          actor?: string | null
+          at?: string
+          data?: Json
+          id?: number
+          record_id?: string
+          rev?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_record_versions_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "sv_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_records: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          assignment_id: string | null
+          author_id: string
+          created_at: string
+          data: Json
+          form_id: string
+          form_key: string
+          form_snapshot: Json
+          form_version: number
+          handled_by: string | null
+          id: string
+          needs_reason: string | null
+          org_id: string
+          rev: number
+          school_id: string
+          status: string
+          submitted_at: string | null
+          teacher_ack_at: string | null
+          teacher_comment: string | null
+          teacher_comment_at: string | null
+          teacher_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assignment_id?: string | null
+          author_id: string
+          created_at?: string
+          data?: Json
+          form_id: string
+          form_key: string
+          form_snapshot: Json
+          form_version: number
+          handled_by?: string | null
+          id?: string
+          needs_reason?: string | null
+          org_id: string
+          rev?: number
+          school_id: string
+          status?: string
+          submitted_at?: string | null
+          teacher_ack_at?: string | null
+          teacher_comment?: string | null
+          teacher_comment_at?: string | null
+          teacher_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assignment_id?: string | null
+          author_id?: string
+          created_at?: string
+          data?: Json
+          form_id?: string
+          form_key?: string
+          form_snapshot?: Json
+          form_version?: number
+          handled_by?: string | null
+          id?: string
+          needs_reason?: string | null
+          org_id?: string
+          rev?: number
+          school_id?: string
+          status?: string
+          submitted_at?: string | null
+          teacher_ack_at?: string | null
+          teacher_comment?: string | null
+          teacher_comment_at?: string | null
+          teacher_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_records_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "sv_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_records_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "sv_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_records_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_records_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_records_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_absences: {
         Row: {
           created_at: string
@@ -28110,6 +28558,53 @@ export type Database = {
         Returns: Json
       }
       support_summary: { Args: { _school?: string }; Returns: Json }
+      sv_asg_end: {
+        Args: { _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      sv_asg_events: { Args: { _id: string }; Returns: Json }
+      sv_asg_list: { Args: { _org: string }; Returns: Json }
+      sv_asg_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv_deleg_list: { Args: { _org: string }; Returns: Json }
+      sv_deleg_revoke: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      sv_deleg_save: { Args: { _p: Json }; Returns: string }
+      sv_form_act: {
+        Args: { _action: string; _id: string; _reason: string; _rev: number }
+        Returns: undefined
+      }
+      sv_form_draft: {
+        Args: { _from: string; _org: string; _school: string }
+        Returns: string
+      }
+      sv_form_list: { Args: { _org: string }; Returns: Json }
+      sv_form_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: undefined
+      }
+      sv_handover: {
+        Args: { _id: string; _reason: string; _to: string }
+        Returns: undefined
+      }
+      sv_me: { Args: { _org: string }; Returns: Json }
+      sv_pool: { Args: { _school: string }; Returns: Json }
+      sv_rec_act: {
+        Args: { _action: string; _id: string; _rev: number; _text: string }
+        Returns: undefined
+      }
+      sv_rec_get: { Args: { _id: string }; Returns: Json }
+      sv_rec_list: { Args: { _org: string }; Returns: Json }
+      sv_rec_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv_rec_teachers: { Args: { _school: string }; Returns: Json }
+      sv_staff: { Args: { _org: string }; Returns: Json }
       sync_class_group: {
         Args: { _section: string; _year: string }
         Returns: string
