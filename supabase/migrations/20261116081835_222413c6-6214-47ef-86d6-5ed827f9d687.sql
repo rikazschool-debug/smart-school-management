@@ -1,0 +1,1 @@
+CREATE POLICY exam_papers_no_direct_read ON public.exam_papers FOR SELECT TO authenticated USING (false);
