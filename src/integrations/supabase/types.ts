@@ -4307,6 +4307,54 @@ export type Database = {
           },
         ]
       }
+      edu_access_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json
+          id: string
+          record_id: string | null
+          school_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json
+          id?: string
+          record_id?: string | null
+          school_id: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          record_id?: string | null
+          school_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_access_log_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edu_access_log_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edu_acks: {
         Row: {
           created_at: string
@@ -4691,6 +4739,118 @@ export type Database = {
             columns: ["record_id"]
             isOneToOne: false
             referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edu_program_events: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          details: Json
+          id: string
+          program_id: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          program_id: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          program_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_program_events_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "edu_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edu_programs: {
+        Row: {
+          activities: string
+          created_at: string
+          created_by: string
+          domain: string
+          end_date: string
+          id: string
+          indicator: string
+          kind: string
+          objectives: string
+          outcome: string
+          participants: number | null
+          reason: string
+          rev: number
+          school_id: string
+          start_date: string
+          status: string
+          target: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activities?: string
+          created_at?: string
+          created_by?: string
+          domain: string
+          end_date: string
+          id?: string
+          indicator?: string
+          kind: string
+          objectives?: string
+          outcome?: string
+          participants?: number | null
+          reason?: string
+          rev?: number
+          school_id: string
+          start_date: string
+          status?: string
+          target?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activities?: string
+          created_at?: string
+          created_by?: string
+          domain?: string
+          end_date?: string
+          id?: string
+          indicator?: string
+          kind?: string
+          objectives?: string
+          outcome?: string
+          participants?: number | null
+          reason?: string
+          rev?: number
+          school_id?: string
+          start_date?: string
+          status?: string
+          target?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_programs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -24020,6 +24180,10 @@ export type Database = {
       delete_message: { Args: { _id: string }; Returns: undefined }
       dept_teacher_ids: { Args: never; Returns: string[] }
       edit_message: { Args: { _body: string; _id: string }; Returns: undefined }
+      edu_access_view: {
+        Args: { _record: string; _school: string }
+        Returns: Json
+      }
       edu_ack: { Args: { _id: string; _rev: number }; Returns: undefined }
       edu_case_attach: { Args: { _id: string; _p: Json }; Returns: Json }
       edu_case_follow: {
@@ -24071,7 +24235,24 @@ export type Database = {
         Returns: Json
       }
       edu_guidance_board: { Args: { _school: string }; Returns: Json }
+      edu_guidance_export_log: {
+        Args: {
+          _filters: Json
+          _report: string
+          _rows: number
+          _school: string
+        }
+        Returns: string
+      }
       edu_guidance_me: { Args: { _school: string }; Returns: Json }
+      edu_guidance_report: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: Json
+      }
+      edu_guidance_stats: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: Json
+      }
       edu_home_note: { Args: { _id: string; _note: string }; Returns: string }
       edu_list: {
         Args: { _kind: string; _offset?: number; _q?: string; _school: string }
@@ -24095,6 +24276,18 @@ export type Database = {
       edu_pool: {
         Args: { _kind: string; _q?: string; _school: string }
         Returns: Json
+      }
+      edu_prog_act: {
+        Args: { _action: string; _id: string; _p: Json; _rev: number }
+        Returns: undefined
+      }
+      edu_prog_list: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: Json
+      }
+      edu_prog_save: {
+        Args: { _id: string; _p: Json; _rev: number; _school: string }
+        Returns: string
       }
       edu_ref_act: {
         Args: { _action: string; _id: string; _p?: Json; _rev: number }

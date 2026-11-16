@@ -104,6 +104,10 @@ function CaseWizard({ school, row, close }: { school: string; row?: Row | undefi
 
 const TABS = ["ملخص مقيد", "دراسة الحالة", "خطة التدخل", "الجلسات", "المتابعات والمواعيد", "الإحالات والتواصل", "المرفقات", "سجل الإجراءات"] as const;
 const EV: Record<string, string> = { create: "إنشاء", update: "تعديل", status: "تغيير الحالة", session_planned: "حجز موعد جلسة", session_done: "تسجيل جلسة منفذة", session_missed: "عدم حضور جلسة", session_cancelled: "إلغاء موعد", case_follow: "متابعة هدف", attach: "إضافة مرفق", share_summary: "مشاركة ملخص مع ولي الأمر", share_withdraw: "سحب ملخص من ولي الأمر" };
+function AccessLog({ school, id }: { school: string; id: string }) {
+  const q = useQuery({ queryKey: ["edu-access", id], queryFn: () => rpc<{ created_at: string; name: string }[]>("edu_access_view", { _school: school, _record: id }) });
+  return <section className="space-y-2"><h4 className="text-sm font-semibold">سجل الاطلاع على الملف</h4><p className="text-xs text-muted-foreground">من فتح هذه الحالة ومتى (مرة كل 10 دقائق لكل شخص).</p>{q.isLoading ? <LoadingState /> : q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : !(q.data ?? []).length ? <p className="text-sm text-muted-foreground">لا يوجد.</p> : <ul className="space-y-1 text-xs">{q.data!.map((l, i) => <li key={i}>{l.name} · {new Date(l.created_at).toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh" })}</li>)}</ul>}</section>;
+}
 function ReferralFiles({ id }: { id: string }) {
   const q = useQuery({ queryKey: ["edu-detail", id], queryFn: () => rpc<Row & { evidence?: CaseRow["evidence"] }>("edu_detail", { _id: id }) });
   if (q.isLoading) return <LoadingState />; if (q.error || !q.data) return <p className="text-muted-foreground">تعذر فتح الإحالة المرتبطة.</p>;
@@ -139,7 +143,7 @@ function CasePage({ id, back, edit }: { id: string; back: () => void; edit: (r: 
       {tab === "المتابعات والمواعيد" && <CaseFollow r={r} refresh={refresh} />}
       {tab === "المرفقات" && <CaseFiles r={r} canAdd={r.can_edit && r.status !== "closed"} refresh={refresh} />}
       {tab === "الإحالات والتواصل" && <div className="space-y-5"><div className="space-y-2 text-sm"><h4 className="font-semibold">الإحالة المرتبطة</h4>{p.referral_id ? <ReferralFiles id={p.referral_id} /> : <p className="text-muted-foreground">لا توجد إحالة مرتبطة.</p>}</div><CaseShares r={r} refresh={refresh} /></div>}
-      {tab === "سجل الإجراءات" && <ol className="space-y-2 border-s ps-4 text-sm">{(r.events ?? []).map((e, i) => <li key={i}><p>{EV[e.action] ?? e.action}{typeof e.details?.["status"] === "string" ? ` ← ${CASE_STATUS[e.details["status"] as string] ?? ""}` : ""}</p><p className="text-xs text-muted-foreground">{e.actor_name} · {new Date(e.created_at).toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh" })}</p></li>)}</ol>}
+      {tab === "سجل الإجراءات" && <div className="space-y-5"><ol className="space-y-2 border-s ps-4 text-sm">{(r.events ?? []).map((e, i) => <li key={i}><p>{EV[e.action] ?? e.action}{typeof e.details?.["status"] === "string" ? ` ← ${CASE_STATUS[e.details["status"] as string] ?? ""}` : ""}</p><p className="text-xs text-muted-foreground">{e.actor_name} · {new Date(e.created_at).toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh" })}</p></li>)}</ol><AccessLog school={r.school_id} id={r.id} /></div>}
     </section>
   </div>;
 }

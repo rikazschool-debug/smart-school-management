@@ -41,3 +41,26 @@ export function sessionIssues(s: { mode: string; caseCount: number; status: stri
   if (s.activity.trim().length < 2) o.push("اكتب هدف الجلسة أو النشاط");
   return o;
 }
+export const PROGRAM_KIND: Record<string, string> = { preventive: "وقائي", developmental: "إنمائي", remedial: "علاجي" };
+export const PROGRAM_DOMAIN: Record<string, string> = { academic: "دراسي", behavioral: "سلوكي", social: "اجتماعي", psychological: "نفسي", health: "صحي", vocational: "مهني", other: "أخرى" };
+export const PROGRAM_STATUS: Record<string, string> = { planned: "مخطط", in_progress: "قيد التنفيذ", done: "منفّذ", cancelled: "ملغى" };
+export type Program = { id: string; kind: string; domain: string; title: string; target: string; objectives: string; activities: string; indicator: string; start_date: string; end_date: string; status: string; outcome: string; participants: number | null; reason: string; rev: number; owner_name: string; events: { action: string; created_at: string; actor_name: string }[] };
+/** Mirrors private._edu_prog_check. */
+export function programIssues(p: { kind: string; domain: string; title: string; objectives: string; indicator: string; start_date: string; end_date: string }): string[] {
+  const o: string[] = [];
+  if (!PROGRAM_KIND[p.kind]) o.push("اختر نوع البرنامج");
+  if (!PROGRAM_DOMAIN[p.domain]) o.push("اختر مجال البرنامج");
+  if (p.title.trim().length < 3) o.push("اكتب عنوان البرنامج");
+  if (p.objectives.trim().length < 10) o.push("اكتب أهداف البرنامج (10 أحرف على الأقل)");
+  if (p.indicator.trim().length < 3) o.push("حدد مؤشر نجاح البرنامج");
+  if (!p.start_date || !p.end_date || p.end_date < p.start_date) o.push("حدد بداية البرنامج ونهايته (النهاية بعد البداية)");
+  else if ((Date.parse(p.end_date) - Date.parse(p.start_date)) / 86400000 > 366) o.push("مدة البرنامج لا تتجاوز سنة");
+  return o;
+}
+/** School year window (Sep 1 → Aug 31) containing the given date. */
+export function schoolYear(today: string): { from: string; to: string } {
+  const y = Number(today.slice(0, 4)); const start = today.slice(5) >= "09-01" ? y : y - 1;
+  return { from: `${start}-09-01`, to: `${start + 1}-08-31` };
+}
+/** Statistics hide small counts (-1) for non-counselor viewers. */
+export const countLabel = (n: number) => (n === -1 ? "أقل من 3" : String(n));

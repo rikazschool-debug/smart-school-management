@@ -7,3 +7,5 @@
 - Goal progress only via edu_case_follow (progress levels; achieved needs written indicator evidence) — a done session never counts as improvement. followIssues/sessionIssues in case-model.ts mirror the server.
 - Attachments via edu_case_attach (case: counselor; referral: its teacher before triage decision) into private storage, opened only by signed URL; no OCR/AI.
 - Guardians get only counselor-written summaries (edu_case_shares via edu_family_guidance); family links never open the case; withdrawals keep history. Tests: scripts/guidance-run-journey.py, src/test/case-run-model.test.ts.
+- Programs/annual plan: edu_programs via edu_prog_save/act/list (counselor writes; principal/vice read via private._edu_stats_ok); history in edu_program_events; programIssues mirrors _edu_prog_check.
+- Reports stay separate: edu_guidance_report (names, counselor only) vs edu_guidance_stats (counts only; small category/outcome cells = -1 for non-counselors). Every export calls edu_guidance_export_log first (≤1 year, no export-all); case opens are logged inside private.edu_detail (10-min dedupe) and read via edu_access_view. Test: scripts/guidance-reports-journey.py.
