@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { EducationDesk } from "@/components/education/desk";
+export const Route = createFileRoute("/_authenticated/app/remedial-plans")({ head: () => ({ meta: [{ title: "الخطط العلاجية — ركاز" }, { name: "description", content: "خطط الطلاب والمعلمين والتوصيات ومتابعة الإنجاز وإقرار ولي الأمر." }, { property: "og:title", content: "الخطط العلاجية — ركاز" }, { property: "og:description", content: "متابعة الخطط الفردية والمستهدفات وإقرار الاطلاع." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <EducationDesk title="الخطط العلاجية" kinds={["student_plan", "teacher_plan"]} /> });

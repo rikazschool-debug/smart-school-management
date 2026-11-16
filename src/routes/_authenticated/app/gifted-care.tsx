@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { EducationDesk } from "@/components/education/desk";
+export const Route = createFileRoute("/_authenticated/app/gifted-care")({ head: () => ({ meta: [{ title: "رعاية الموهوبين — ركاز" }, { name: "description", content: "حصر الموهوبين وخطط الرعاية والبرامج وتوثيق الإنجازات." }, { property: "og:title", content: "رعاية الموهوبين — ركاز" }, { property: "og:description", content: "سجلات الموهوبين وخططهم وبرامجهم وإنجازاتهم." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <EducationDesk title="رعاية الموهوبين" kinds={["talent"]} /> });

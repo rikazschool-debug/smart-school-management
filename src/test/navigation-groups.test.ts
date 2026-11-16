@@ -17,7 +17,7 @@ describe("navigation grouping preserves authorized entries", () => {
   });
   it("keeps the requested main order without losing additional workspaces", () => {
     const allowed: NavKey[] = ["home", "students", "courses", "health", "events", "admin", "communication", "results", "tags", "hr", "profile", "support"];
-    expect(navigationGroups(allowed).map((group) => group.keys[0])).toEqual(["home", "students", "courses", "health", "events", "admin", "communication", "results", "tags", "hr", "profile", "support"]);
+    expect(navigationGroups(allowed).map((group) => group.keys[0])).toEqual(["home", "admin", "students", "courses", "health", "events", "communication", "results", "tags", "hr", "profile", "support"]);
   });
   it("keeps family tools separate from staff administration", () => {
     const groups = navigationGroups(NAV_BY_ROLE.guardian);

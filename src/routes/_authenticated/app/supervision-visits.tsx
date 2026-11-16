@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { EducationDesk } from "@/components/education/desk";
+export const Route = createFileRoute("/_authenticated/app/supervision-visits")({ head: () => ({ meta: [{ title: "الزيارات الإشرافية — ركاز" }, { name: "description", content: "جدولة الزيارات التبادلية والإشرافية وتوثيق الملاحظات والتوصيات والمتابعة." }, { property: "og:title", content: "الزيارات الإشرافية — ركاز" }, { property: "og:description", content: "زيارات المعلمين والتوصيات والمتابعة." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <EducationDesk title="الزيارات الإشرافية" kinds={["supervision"]} /> });
