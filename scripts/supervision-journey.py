@@ -61,7 +61,7 @@ async def main():
         await p.screenshot(path=OUT + "5_owner_deleg.png"); check("no page errors (owner)", not errs); await c.close()
         # principal of branch B: direct link to branch A record refused
         c, p, errs = await ctx(b, "prB", path=f"/app/supervision?tab=records&id={FX['visit']}")
-        await p.screenshot(path=OUT + "6_prB.png"); print((await p.inner_text("main"))[:400]); check("other-branch principal refused by direct link", await p.get_by_text("لا تملك صلاحية عرضه").count() > 0)
+        await p.wait_for_timeout(4000); await p.screenshot(path=OUT + "6_prB.png"); print((await p.inner_text("main"))[-300:]); check("other-branch principal refused by direct link", await p.get_by_text("لا تملك صلاحية عرضه").count() > 0)
         check("other-branch principal has no deleg tab", await p.get_by_role("button", name="التفويضات").count() == 0)
         await c.close(); await b.close()
     print(f"\n{ok} passed, {bad} failed")
