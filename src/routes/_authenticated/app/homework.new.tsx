@@ -103,7 +103,7 @@ function Page() {
   const field = "h-9 rounded-md border bg-background px-2 text-sm";
   return (
     <>
-      <Link to="/app/homework" className="text-sm text-primary">→ الواجبات</Link>
+      <Link to={f.kind === "test" ? "/app/tests" : "/app/homework"} className="text-sm text-primary">→ {f.kind === "test" ? "الاختبارات" : "مذكرة الواجبات"}</Link>
       <PageHeader title={edit ? (f.kind === "test" ? "تعديل مسودة الاختبار" : "تعديل مسودة الواجب") : f.kind === "test" ? "اختبار جديد" : "واجب أو اختبار جديد"} desc="الأوقات بتوقيت المدرسة (الرياض)." />
       {preview ? (
         <div className="space-y-3 rounded-2xl border bg-card p-6">
@@ -195,7 +195,7 @@ function Page() {
       <div className="mt-4 flex flex-wrap gap-2">
         <Button variant="outline" onClick={() => setPreview(!preview)}>{preview ? "تعديل" : "معاينة كالطالب"}</Button>
         <Button variant="secondary" disabled={busy || !f.course_id} onClick={() => save(false)}>حفظ مسودة</Button>
-        <Button disabled={busy || !f.course_id} onClick={() => save(true)}>{f.available_from && fromLocalInput(f.available_from)! > new Date().toISOString() ? "جدولة النشر" : "نشر الآن"}</Button>
+        {f.kind !== "test" && <Button disabled={busy || !f.course_id} onClick={() => save(true)}>{(fromLocalInput(f.available_from) ?? "") > new Date().toISOString() ? "جدولة النشر" : "نشر الآن"}</Button>}
       </div>
       <p className="mt-2 text-xs text-muted-foreground">المرفقات تُضاف من صفحة الواجب بعد حفظ المسودة.</p>
     </>
