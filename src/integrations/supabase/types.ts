@@ -5762,6 +5762,35 @@ export type Database = {
           },
         ]
       }
+      exam_papers: {
+        Row: {
+          created_at: string
+          homework_id: string
+          questions: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          homework_id: string
+          questions?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          homework_id?: string
+          questions?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_papers_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: true
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_request_history: {
         Row: {
           actor: string
@@ -23774,6 +23803,8 @@ export type Database = {
         Args: { _custom: boolean; _kind: string; _school: string }
         Returns: undefined
       }
+      exam_get: { Args: { _hw: string }; Returns: Json }
+      exam_save: { Args: { _hw: string; _questions: Json }; Returns: undefined }
       extend_homework: {
         Args: { _due: string; _id: string; _reason: string; _student: string }
         Returns: undefined
