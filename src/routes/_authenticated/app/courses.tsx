@@ -80,7 +80,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
 
   return (
     <>
-      <PageHeader title="المقررات والتكليفات" desc="المقرر = مادة + شعبة + سنة. يُكلَّف به معلم ثم يعتمده رئيس القسم أو الإدارة." />
+      <PageHeader title="المقررات والتكليفات" desc="كل مقرر يرتبط بشعبة وسنة دراسية. يُكلَّف به معلم ثم يعتمده رئيس القسم أو الإدارة." />
       <section className="mb-10 space-y-3">
         {assignmentsView && <>
         <div className="flex flex-wrap items-center justify-between gap-2">
