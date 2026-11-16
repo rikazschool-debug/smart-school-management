@@ -34,7 +34,7 @@ export type Session = { id: string; goal_index: number | null; session_date: str
 export type Measure = { id: string; goal_index: number | null; phase: "pre" | "formative" | "post"; scale: "count" | "scale"; score: number | null; total: number | null; level: string; scale_label: string; tool: string; sample: number | null; measured_on: string; note: string; actor_name: string; created_at: string };
 export type Evidence = { id: string; goal_index: number | null; session_id: string | null; title: string; note: string; kind: "upload" | "link"; link_type: "homework" | "exam" | null; link_id: string | null; link_title?: string | null; shared: boolean; actor_name: string; created_at: string; files: { id: string; name: string; mime: string; size: number; path: string }[] };
 export type EduEvent = { action: string; details: Record<string, unknown>; created_at: string; actor_name: string };
-export type EduRecord = { id: string; kind: EduKind; category: string; student_id: string | null; teacher_id: string | null; course_id: string | null; person: string; course?: string; title: string; description: string; record_date: string; goals: string[]; shared: boolean; status: string; rev: number; can_edit: boolean; can_ack?: boolean; priority: string; due_date: string | null; area: string; actions: string; level: string; rating: number | null; goals_done?: number; followups?: Follow[]; acks?: { name: string; user_id: string; created_at: string }[]; plan?: PlanData; sessions?: Session[]; measures?: Measure[]; events?: EduEvent[]; evidence?: Evidence[]; guardian_view?: boolean; can_home_note?: boolean; progress?: { activity: boolean; mastery: boolean; latest: string | null }[]; home_notes?: { id: string; note: string; created_at: string; name: string }[] };
+export type EduRecord = { id: string; kind: EduKind; category: string; student_id: string | null; teacher_id: string | null; course_id: string | null; person: string; course?: string; title: string; description: string; record_date: string; goals: string[]; shared: boolean; status: string; rev: number; can_edit: boolean; can_ack?: boolean; priority: string; due_date: string | null; area: string; actions: string; level: string; rating: number | null; goals_done?: number; followups?: Follow[]; acks?: { name: string; user_id: string; created_at: string }[]; plan?: PlanData; sessions?: Session[]; measures?: Measure[]; events?: EduEvent[]; evidence?: Evidence[]; guardian_view?: boolean; can_self_note?: boolean; self_notes?: { id: string; note: string; goal_index: number | null; created_at: string; name: string }[]; visit?: { id?: string; title?: string; record_date?: string; visible: boolean } | null; can_home_note?: boolean; progress?: { activity: boolean; mastery: boolean; latest: string | null }[]; home_notes?: { id: string; note: string; created_at: string; name: string }[] };
 export type EduStats = { total: number; open: number; overdue: number; urgent: number; this_month: number; shared: number; avg_rating: number | null; goals_total: number; goals_done: number; people: number; by_status: Record<string, number>; by_category: Record<string, number>; by_priority: Record<string, number>; by_area: Record<string, number>; by_month: { month: string; n: number }[]; top_people: { name: string; n: number }[] };
 export type EduFilter = { q: string; category: string; area: string; status: string; priority: string; from: string; to: string; overdue: boolean };
 export const EMPTY_FILTER: EduFilter = { q: "", category: "", area: "", status: "", priority: "", from: "", to: "", overdue: false };
@@ -55,7 +55,7 @@ export const EVIDENCE_SOURCES: Record<string, string> = { diagnostic: "اختب�
 export const OUTCOMES: Record<string, string> = { achieved: "تحقق المستهدف", partial: "تحسن جزئي", revise: "يحتاج تعديل الخطة" };
 export type Baseline = { type: "" | "count" | "scale"; score?: string; total?: string; level?: string; scale?: string };
 export type GoalDetail = { skill: string; baseline: string; target: string; mastery: string; activity: string; strategy: string; resources: string; owner: string; start: string; review: string; end: string; verify: string; evidence: string };
-export type PlanData = { skills: string[]; unit: string; strengths: string; evidence: string[]; baseline: Baseline; notes: string; goal_details: GoalDetail[]; outcome?: string; outcome_note?: string; next_step?: string; share_intent?: boolean; home_activities?: string; share?: Share };
+export type PlanData = { skills: string[]; unit: string; strengths: string; evidence: string[]; baseline: Baseline; notes: string; goal_details: GoalDetail[]; outcome?: string; outcome_note?: string; next_step?: string; share_intent?: boolean; home_activities?: string; share?: Share; source?: string; visit_id?: string; opportunity?: string; support_notes?: string };
 /** What the guardian sees; must match private._edu_share defaults (goals, dates on). */
 export type Share = { goals: boolean; home: boolean; dates: boolean; progress: boolean; home_notes: boolean };
 export const DEFAULT_SHARE: Share = { goals: true, home: false, dates: true, progress: false, home_notes: false };
@@ -106,4 +106,20 @@ export function compareMeasures(ms: Measure[]): { start?: Measure; latest?: Meas
   if (Number(start.total) !== Number(latest.total) || start.tool.trim() !== latest.tool.trim()) return { start, latest, reason: "اختلف الإجمالي أو أداة القياس؛ لا تصح المقارنة" };
   const d = Number(latest.score) - Number(start.score); const pts = `${d > 0 ? "+" : ""}${d} من ${Number(start.total)}`;
   return { start, latest, change: start.phase === "pre" ? `${pts} (${d > 0 ? "+" : ""}${Math.round((d / Number(start.total)) * 100)} نقطة مئوية)` : pts };
+}
+
+/** Teacher improvement plans (supervisor-owned); must match private.edu_tplan_check. */
+export const TEACHER_SOURCES: Record<string, string> = { visit: "زيارة إشرافية", observation: "ملاحظة مهنية", results: "نتائج الطلاب", self: "طلب المعلم / تقييم ذاتي", other: "أخرى" };
+export type TGoal = { indicator: string; support: string; owner: string; start: string; review: string; end: string; evidence: string; feedback: string; impact: string };
+export const EMPTY_TGOAL: TGoal = { indicator: "", support: "", owner: "", start: "", review: "", end: "", evidence: "", feedback: "", impact: "" };
+export function tPlanIssues(p: { description?: string; goals: string[]; plan: { source?: string; opportunity?: string; goal_details?: Partial<TGoal>[] } }, status: string): string[] {
+  if (status === "draft") return [];
+  const out: string[] = []; const d = p.plan.goal_details ?? [];
+  if (!p.plan.source) out.push("حدد مصدر الاحتياج");
+  if (!p.plan.opportunity?.trim()) out.push("اكتب فرصة التحسين");
+  if (p.description !== undefined && !p.description.trim()) out.push("اكتب وصف الاحتياج");
+  if (!p.goals.length) out.push("أضف هدفًا واحدًا على الأقل");
+  if (d.length !== p.goals.length) out.push("أكمل تفاصيل كل هدف");
+  d.forEach((g, i) => { if (!g.indicator?.trim() || !g.support?.trim()) out.push(`الهدف ${i + 1}: أكمل المؤشر وإجراءات الدعم`); if (g.start && g.end && g.end < g.start) out.push(`الهدف ${i + 1}: تاريخ النهاية قبل البداية`); });
+  return out;
 }

@@ -32,3 +32,10 @@ describe("plan measurement comparison", () => {
   it("rating scales never get a percentage", () => { expect(compareMeasures([M({ phase: "pre", scale: "scale", level: "1" }), M({ scale: "scale", level: "3", measured_on: "2026-11-20" })]).change).toBeUndefined(); });
   it("without a pre measure, change is points only", () => { expect(compareMeasures([M({}), M({ score: 3, measured_on: "2026-11-20" })]).change).toBe("+2 من 5"); });
 });
+import { tPlanIssues } from "@/components/education/model";
+describe("teacher plan readiness", () => {
+  const ok = { description: "احتياج", goals: ["هدف"], plan: { source: "visit", opportunity: "فرصة", goal_details: [{ indicator: "مؤشر", support: "دعم" }] } };
+  it("complete plan is ready", () => { expect(tPlanIssues(ok, "ready")).toEqual([]); });
+  it("needs source, opportunity, description, indicator and support", () => { expect(tPlanIssues({ description: "", goals: ["هدف"], plan: { goal_details: [{}] } }, "ready")).toHaveLength(4); });
+  it("drafts are free", () => { expect(tPlanIssues({ goals: [], plan: {} }, "draft")).toEqual([]); });
+});

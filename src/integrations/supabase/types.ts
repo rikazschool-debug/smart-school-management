@@ -4697,6 +4697,44 @@ export type Database = {
           },
         ]
       }
+      edu_self_notes: {
+        Row: {
+          created_at: string
+          goal_index: number | null
+          id: string
+          note: string
+          record_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal_index?: number | null
+          id?: string
+          note: string
+          record_id: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          goal_index?: number | null
+          id?: string
+          note?: string
+          record_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edu_self_notes_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "edu_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edu_sessions: {
         Row: {
           achieved: string
@@ -23897,12 +23935,17 @@ export type Database = {
         Args: { _id: string; _p: Json; _rev: number; _school: string }
         Returns: string
       }
+      edu_self_note: {
+        Args: { _goal: number; _id: string; _note: string }
+        Returns: string
+      }
       edu_session_add: { Args: { _id: string; _p: Json }; Returns: string }
       edu_staff_presence: { Args: { _school: string }; Returns: Json }
       edu_stats: {
         Args: { _f?: Json; _kind: string; _school: string }
         Returns: Json
       }
+      edu_visits: { Args: { _school: string; _teacher: string }; Returns: Json }
       end_assignment: { Args: { _id: string }; Returns: undefined }
       ensure_classroom: { Args: { _course: string }; Returns: string }
       escalate_absence: {

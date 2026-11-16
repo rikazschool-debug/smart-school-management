@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, ClipboardCheck, Plus, Printer, RotateCcw } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, Plus, ShieldCheck, Printer, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,11 @@ import { EvidenceTab, openEvidenceFile } from "./plan-evidence";
 import { arabicError } from "@/lib/session";
 import { printReport } from "@/lib/export";
 import { schoolTime } from "@/lib/homework";
-import { DEFAULT_SHARE, SHARE_LABELS, type Share, EDU_AREAS, EDU_CATEGORIES, EDU_LABELS, EDU_PRIORITY, EVIDENCE_SOURCES, OUTCOMES, PHASES, PLAN_STATUS, baselineText, compareMeasures, goalDone, goalMark, isOverdue, measureText, type EduRecord, type Measure } from "./model";
+import { DEFAULT_SHARE, SHARE_LABELS, TEACHER_SOURCES, type Share, type TGoal, EDU_AREAS, EDU_CATEGORIES, EDU_LABELS, EDU_PRIORITY, EVIDENCE_SOURCES, OUTCOMES, PHASES, PLAN_STATUS, baselineText, compareMeasures, goalDone, goalMark, isOverdue, measureText, type EduRecord, type Measure } from "./model";
 
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> { const r = await db.rpc(name, args); if (r.error) throw r.error; return r.data as T; }
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-const EVENT_LABEL: Record<string, string> = { create: "إنشاء الخطة", update: "تعديل الخطة / تغيير الحالة", session: "تسجيل جلسة متابعة", measure: "تسجيل قياس", evidence: "إضافة دليل", evidence_share: "مشاركة دليل مع ولي الأمر", evidence_unshare: "إلغاء مشاركة دليل", home_note: "ملاحظة منزلية من ولي الأمر", mark: "تأكيد علامة", unmark: "تراجع موثّق عن علامة", follow: "ملاحظة متابعة", ack: "إقرار اطلاع" };
+const EVENT_LABEL: Record<string, string> = { create: "إنشاء الخطة", update: "تعديل الخطة / تغيير الحالة", session: "تسجيل جلسة متابعة", measure: "تسجيل قياس", evidence: "إضافة دليل", evidence_share: "مشاركة دليل مع ولي الأمر", evidence_unshare: "إلغاء مشاركة دليل", home_note: "ملاحظة منزلية من ولي الأمر", self_note: "ملاحظة من المعلم", mark: "تأكيد علامة", unmark: "تراجع موثّق عن علامة", follow: "ملاحظة متابعة", ack: "إقرار اطلاع" };
 const goalName = (r: EduRecord, g: number | null) => (g === null || g === undefined ? "الخطة عامة" : `الهدف ${g + 1}: ${r.goals[g] ?? ""}`);
 
 export function PlanDetail({ id, school, schoolName, changed, openWizard }: { id: string; school: string; schoolName?: string | undefined; changed: () => void; openWizard: (r: EduRecord) => void }) {
@@ -44,13 +44,13 @@ export function PlanDetail({ id, school, schoolName, changed, openWizard }: { id
       ["نتيجة الإغلاق", r.plan?.outcome ? `${OUTCOMES[r.plan.outcome]} — ${r.plan.outcome_note ?? ""}` : ""]] as [string, string][]).filter(([, x]) => x));
   return <div className="space-y-4">
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3"><div className="min-w-0"><h2 className="truncate text-lg font-bold">{r.title}</h2><p className="mt-1 text-sm text-muted-foreground">{r.person}{r.course ? ` · ${r.course}` : ""} · <span className="rounded bg-secondary px-1.5">{PLAN_STATUS[r.status] ?? r.status}</span>{isOverdue(r, today()) && r.status !== "draft" && <span className="ms-2 text-destructive">متأخرة عن موعد المراجعة</span>}</p></div>
-      <div className="flex flex-wrap justify-end gap-2"><Button variant="outline" size="sm" onClick={print}><Printer className="size-4" />تقرير الخطة</Button>{edit && r.status !== "closed" && r.kind === "student_plan" && <Button variant="outline" size="sm" onClick={() => openWizard(r)}>{r.status === "draft" ? "استكمال الخطة" : "تعديل"}</Button>}</div></div>
+      <div className="flex flex-wrap justify-end gap-2"><Button variant="outline" size="sm" onClick={print}><Printer className="size-4" />تقرير الخطة</Button>{edit && r.status !== "closed" && <Button variant="outline" size="sm" onClick={() => openWizard(r)}>{r.status === "draft" ? "استكمال الخطة" : "تعديل"}</Button>}</div></div>
     {edit && <PlanStatusBar r={r} school={school} changed={() => void refresh()} />}
     <Tabs defaultValue="summary" dir="rtl"><TabsList className="h-auto w-full flex-wrap justify-start">
-      {([["summary", "الملخص"], ["goals", "الأهداف والأنشطة"], ["sessions", `الجلسات والمتابعة (${ss.length})`], ["evidence", `الأدلة (${(r.evidence ?? []).length})`], ["measures", `القياس (${ms.length})`], ["guardian", "مشاركة ولي الأمر"], ["log", "سجل الإجراءات"]] as [string, string][]).map(([k, l]) => <TabsTrigger key={k} value={k}>{l}</TabsTrigger>)}</TabsList>
+      {([["summary", "الملخص"], ["goals", "الأهداف والأنشطة"], ["sessions", `الجلسات والمتابعة (${ss.length})`], ["evidence", `الأدلة (${(r.evidence ?? []).length})`], ["measures", `القياس (${ms.length})`], (r.kind === "teacher_plan" ? ["selfnotes", `ملاحظات المعلم (${(r.self_notes ?? []).length})`] : ["guardian", "مشاركة ولي الأمر"]), ["log", "سجل الإجراءات"]] as [string, string][]).map(([k, l]) => <TabsTrigger key={k} value={k}>{l}</TabsTrigger>)}</TabsList>
       <TabsContent value="summary" className="space-y-3 pt-3">
         <div className="grid gap-2 sm:grid-cols-3"><Stat label="تنفيذ الأنشطة" value={`${actDone} / ${r.goals.length}`} hint="أهداف أُكّد تنفيذ أنشطتها" /><Stat label="تحقق الإتقان" value={`${mastered} / ${r.goals.length}`} hint="مؤكد بقياس — منفصل عن التنفيذ" /><Stat label="آخر متابعة" value={ss.at(-1)?.session_date ?? "—"} hint={`${ss.length} جلسة · ${ms.length} قياس`} /></div>
-        <PlanFacts r={r} />
+        {r.kind === "teacher_plan" ? <TeacherFacts r={r} /> : <PlanFacts r={r} />}
         <dl className="grid gap-2 rounded-lg bg-muted/40 p-3 text-sm sm:grid-cols-3">{([["مجال التعثر", EDU_CATEGORIES[r.kind][r.category] ?? r.category], [EDU_AREAS[r.kind].label, EDU_AREAS[r.kind].options[r.area] ?? ""], ["الأولوية", EDU_PRIORITY[r.priority] ?? ""], ["تاريخ الخطة", r.record_date], ["موعد المراجعة", r.due_date ?? ""], ["ترتيبات المتابعة", r.actions]] as [string, string][]).filter(([, x]) => x).map(([k, x]) => <div key={k}><dt className="text-xs text-muted-foreground">{k}</dt><dd className="whitespace-pre-wrap">{x}</dd></div>)}</dl>
       </TabsContent>
       <TabsContent value="goals" className="space-y-3 pt-3">
@@ -76,6 +76,7 @@ export function PlanDetail({ id, school, schoolName, changed, openWizard }: { id
           <tbody>{r.goals.map((g, i) => { const mine = ms.filter((m) => m.goal_index === i); const c = compareMeasures(mine); return <tr key={i} className="border-t"><td className="p-2">{i + 1}. {g}</td><td className="p-2">{det[i]?.target || "—"}</td><td className="whitespace-nowrap p-2">{c.start ? `${measureText(c.start)} · ${PHASES[c.start.phase]}` : "—"}</td><td className="whitespace-nowrap p-2">{c.latest ? `${measureText(c.latest)} · ${c.latest.measured_on}` : "—"}</td><td className="p-2">{c.change ?? <span className="text-xs text-muted-foreground">{c.reason}</span>}</td><td className="p-2">{mine.length} قياس{c.latest?.sample ? ` · ${c.latest.sample} بند` : ""}</td></tr>; })}</tbody></table></div>
         {ms.length > 0 && <ol className="space-y-1 text-sm">{[...ms].reverse().map((m) => <li key={m.id} className="rounded border p-2"><span className="font-medium">{PHASES[m.phase]} · {measureText(m)}</span> — {m.tool} · {goalName(r, m.goal_index)} · {m.measured_on}<span className="block text-xs text-muted-foreground">{m.actor_name}{m.note ? ` — ${m.note}` : ""}</span></li>)}</ol>}
       </TabsContent>
+      <TabsContent value="selfnotes" className="space-y-2 pt-3 text-sm"><SelfNotes r={r} busy={busy} act={act} /></TabsContent>
       <TabsContent value="guardian" className="space-y-2 pt-3 text-sm">
         <p>{r.shared ? "الخطة مشتركة مع ولي الأمر الموثّق." : "الخطة غير مشتركة مع ولي الأمر."} الجلسات والقياسات والملاحظات الداخلية لا تظهر له.</p>
         {r.can_ack && <Button variant="outline" disabled={busy || !!r.acks?.length} onClick={() => void act(() => rpc("edu_ack", { _id: r.id, _rev: r.rev }), "سُجل إقرار الاطلاع")}><ClipboardCheck className="size-4" />{r.acks?.length ? "تم إقرار الاطلاع" : "أقر باطلاعي على الخطة"}</Button>}
@@ -154,4 +155,16 @@ function GuardianPlan({ r, busy, setBusy, refresh }: { r: EduRecord; busy: boole
     {(r.can_home_note || (r.home_notes ?? []).length > 0) && <section className="space-y-2 border-t pt-3"><h3 className="text-sm font-semibold">ملاحظات المتابعة المنزلية</h3>{(r.home_notes ?? []).map((h) => <p key={h.id} className="rounded bg-muted/40 p-2 text-sm">{h.note}<span className="block text-xs text-muted-foreground">{schoolTime(h.created_at)}</span></p>)}
       {r.can_home_note && <><Textarea aria-label="ملاحظة المتابعة المنزلية" maxLength={2000} placeholder="مثال: حل المسائل المنزلية ثلاثة أيام هذا الأسبوع" value={note} onChange={(e) => setNote(e.target.value)} /><Button size="sm" variant="outline" disabled={busy || note.trim().length < 2} onClick={() => void act(async () => { await rpc("edu_home_note", { _id: r.id, _note: note }); setNote(""); }, "أُرسلت الملاحظة")}><Plus className="size-4" />إضافة ملاحظة</Button></>}</section>}
   </div>;
+}
+
+function TeacherFacts({ r }: { r: EduRecord }) {
+  const p = r.plan ?? ({} as NonNullable<EduRecord["plan"]>); const det = (p.goal_details ?? []) as unknown as Partial<TGoal>[];
+  return <div className="space-y-3"><p className="flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4" />خطة دعم مهني سرية؛ ليست جزاءً ولا تقييمًا وظيفيًا.</p>
+    <dl className="grid gap-2 rounded-lg border p-3 text-sm sm:grid-cols-2">{([["مصدر الاحتياج", TEACHER_SOURCES[p.source ?? ""] ?? ""], ["الزيارة المرتبطة", r.visit ? (r.visit.visible ? `${r.visit.record_date} · ${r.visit.title}` : "زيارة مرتبطة غير متاحة لك") : ""], ["نقاط القوة", (p as { strengths?: string }).strengths ?? ""], ["فرصة التحسين", p.opportunity ?? ""], ["نتيجة الإغلاق", p.outcome ? `${OUTCOMES[p.outcome] ?? p.outcome} — ${p.outcome_note ?? ""}` : ""]] as [string, string][]).filter(([, x]) => x).map(([k, x]) => <div key={k}><dt className="text-xs text-muted-foreground">{k}</dt><dd className="whitespace-pre-wrap">{x}</dd></div>)}</dl>
+    {r.goals.length > 0 && <ol className="space-y-2">{r.goals.map((g, i) => { const d = det[i]; return <li key={i} className="rounded-lg bg-muted/40 p-3 text-sm"><p className="font-semibold">{i + 1}. {g}</p>{d && <p className="mt-1 text-xs leading-6 text-muted-foreground">{[d.indicator && `المؤشر: ${d.indicator}`, d.support && `الدعم: ${d.support}`, d.owner && `المسؤول: ${d.owner}`, d.evidence && `الشواهد: ${d.evidence}`, d.impact && `قياس الأثر: ${d.impact}`, d.feedback && `التغذية الراجعة: ${d.feedback}`, d.review && `المراجعة: ${d.review}`].filter(Boolean).join(" · ")}</p>}</li>; })}</ol>}</div>;
+}
+function SelfNotes({ r, busy, act }: { r: EduRecord; busy: boolean; act: (fn: () => Promise<unknown>, ok: string) => Promise<void> }) {
+  const [note, setNote] = useState(""); const [goal, setGoal] = useState("");
+  return <>{!(r.self_notes ?? []).length ? <p className="text-muted-foreground">لا توجد ملاحظات من المعلم بعد.</p> : (r.self_notes ?? []).map((n) => <p key={n.id} className="rounded bg-muted/40 p-2">{n.goal_index !== null ? `الهدف ${n.goal_index + 1}: ` : ""}{n.note}<span className="block text-xs text-muted-foreground">{n.name} · {schoolTime(n.created_at)}</span></p>)}
+    {r.can_self_note && <div className="space-y-2"><select aria-label="الهدف" className={selectCls("w-full sm:w-72")} value={goal} onChange={(e) => setGoal(e.target.value)}><option value="">الخطة عامة</option>{r.goals.map((g, i) => <option key={i} value={i}>{i + 1}. {g.slice(0, 50)}</option>)}</select><Textarea aria-label="ملاحظة المعلم" maxLength={3000} placeholder="ما نفّذته، وما تحتاجه من دعم" value={note} onChange={(e) => setNote(e.target.value)} /><Button size="sm" variant="outline" disabled={busy || note.trim().length < 2} onClick={() => void act(async () => { await rpc("edu_self_note", { _id: r.id, _goal: goal === "" ? null : Number(goal), _note: note }); setNote(""); }, "أُضيفت الملاحظة")}><Plus className="size-4" />إضافة ملاحظتي</Button></div>}</>;
 }

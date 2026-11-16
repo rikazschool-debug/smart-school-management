@@ -171,8 +171,35 @@ async function main() {
   const tv5 = must(await t1.c.rpc("edu_detail", { _id: p2 }), "tv5") as any;
   check("teacher sees the home note and ack", tv5.home_notes.length === 1 && tv5.acks.length === 1);
   check("teacher plan cannot be shared", !!(await owner.c.rpc("edu_save", { _school: S, _id: null, _rev: null, _p: { kind: "teacher_plan", title: "خطة معلم", category: "planning", teacher_id: te1.id, status: "draft", shared: true, goals: [], plan: {} } })).error);
+
+  // ---- stage 5: teacher improvement plans (supervisor-owned)
+  const sup = await user("sup", "مشرف تربوي"); const sup2 = await user("sup2", "مشرف آخر");
+  for (const u of [sup, sup2]) await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: "supervisor" });
+  await admin.from("supervisor_teachers").insert({ school_id: S, supervisor_user_id: sup.id, teacher_id: te1.id });
+  const TP = (x: any = {}) => ({ kind: "teacher_plan", title: "خطة تحسين", category: "assessment", teacher_id: te1.id, status: "draft", goals: [], plan: {}, ...x });
+  const tpool = must(await sup.c.rpc("edu_pool", { _school: S, _kind: "teacher_plan", _q: "" }), "tpool") as any[];
+  check("supervisor pool lists only assigned teachers", tpool.length === 1 && tpool[0].id === te1.id, tpool);
+  check("supervisor without assignment cannot create", !!(await sup2.c.rpc("edu_save", { _school: S, _id: null, _rev: null, _p: TP() })).error);
+  check("teacher cannot create their own improvement plan", !!(await t1.c.rpc("edu_save", { _school: S, _id: null, _rev: null, _p: TP() })).error);
+  const visit = await sup.c.rpc("edu_save", { _school: S, _id: null, _rev: null, _p: { kind: "supervision", title: "زيارة صفية", category: "classroom", teacher_id: te1.id, status: "open", goals: [], rating: 3 } });
+  check("supervisor records a visit", !visit.error, visit.error);
+  const tdraft = await sup.c.rpc("edu_save", { _school: S, _id: null, _rev: null, _p: TP() }); check("supervisor saves teacher-plan draft", !tdraft.error, tdraft.error);
+  const tp = tdraft.data as string; let tr = must(await sup.c.rpc("edu_detail", { _id: tp }), "tr") as any;
+  const tplan = { source: "visit", visit_id: visit.data, strengths: "تمكن من المحتوى", opportunity: "تنويع التقويم التكويني", goal_details: [{ indicator: "ملاحظة في زيارتين", support: "ورشة + زيارة زميل", owner: "المشرف", start: "2026-11-16", review: "2026-12-01", end: "2026-12-30", evidence: "", feedback: "", impact: "" }] };
+  check("ready refused without indicator", !!(await sup.c.rpc("edu_save", { _school: S, _id: tp, _rev: tr.rev, _p: TP({ status: "ready", goals: ["يوظف أدوات تقويم"], plan: { ...tplan, goal_details: [{ ...tplan.goal_details[0], indicator: "" }] } }) })).error);
+  check("link to a visit of another teacher refused", !!(await sup.c.rpc("edu_save", { _school: S, _id: tp, _rev: tr.rev, _p: TP({ goals: ["يوظف"], plan: { ...tplan, visit_id: crypto.randomUUID() } }) })).error);
+  check("teacher plan becomes ready with linked visit", !(await sup.c.rpc("edu_save", { _school: S, _id: tp, _rev: tr.rev, _p: TP({ status: "ready", goals: ["يوظف أدوات تقويم"], description: "احتياج", plan: tplan }) })).error);
+  const tv = await t1.c.rpc("edu_detail", { _id: tp });
+  check("teacher reads own plan", !tv.error && tv.data.guardian_view === false, tv.error);
+  check("teacher adds own note", !(await t1.c.rpc("edu_self_note", { _id: tp, _goal: 0, _note: "نفذت الورشة" })).error);
+  check("supervisor cannot write as the teacher", !!(await sup.c.rpc("edu_self_note", { _id: tp, _goal: null, _note: "ملاحظة" })).error);
+  check("other teacher cannot read the plan", !!(await t2.c.rpc("edu_detail", { _id: tp })).error);
+  check("unassigned supervisor cannot read the plan", !!(await sup2.c.rpc("edu_detail", { _id: tp })).error);
+  check("guardian cannot read teacher plans", !!(await g1.c.rpc("edu_detail", { _id: tp })).error);
+  const sv = must(await sup.c.rpc("edu_detail", { _id: tp }), "sv") as any;
+  check("supervisor sees teacher note and visible visit link", sv.self_notes.length === 1 && sv.visit?.visible === true, { n: sv.self_notes, v: sv.visit });
   console.log(`\n${ok} passed, ${bad} failed`);
-  const fx = { run, pw, org, school: S, plan: id, draft: d2, p2, users: Object.fromEntries(Object.entries({ owner, t1, t2, g1, g2 }).map(([k, v]) => [k, v.email])) };
+  const fx = { run, pw, org, school: S, plan: id, draft: d2, p2, tp, users: Object.fromEntries(Object.entries({ owner, t1, t2, g1, g2, sup, sup2 }).map(([k, v]) => [k, v.email])) };
   if (process.argv.includes("--keep")) { mkdirSync("/tmp/browser/plan", { recursive: true }); writeFileSync("/tmp/browser/plan/fixture.json", JSON.stringify(fx, null, 2)); console.log("kept fixture"); }
   else await teardown();
   if (bad) process.exit(1);
