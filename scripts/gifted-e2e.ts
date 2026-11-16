@@ -197,7 +197,7 @@ async function main() {
   check("second review refused", !!(await co.c.rpc("gt_family_review", { _id: n1.data, _decision: "rejected", _note: "تغيير القرار" })).error);
   const wl2 = (await co.c.rpc("gt_work_list", { _school: S })).data as any[]; check("accepting a family note creates no achievement", wl2.filter((w) => w.kind === "achievement").length === 1, wl2.length);
   const F2 = (await s1.c.rpc("gt_family", { _student: st[0].id })).data as any; check("family sees decisions with reason", F2.notes.some((n: any) => n.status === "accepted") && F2.notes.some((n: any) => n.status === "rejected" && /الرابط/.test(n.review_note)), F2.notes);
-  check("viewer logs export", !(await pr.c.rpc("gt_export_log", { _school: S, _report: "inventory", _format: "xlsx", _rows: 2, _filters: {} })).error || !(await co.c.rpc("gt_export_log", { _school: S, _report: "inventory", _format: "xlsx", _rows: 2, _filters: {} })).error);
+  check("coordinator export logged", !(await co.c.rpc("gt_export_log", { _school: S, _report: "inventory", _format: "xlsx", _rows: 2, _filters: {} })).error);
   check("teacher cannot export", !!(await t1.c.rpc("gt_export_log", { _school: S, _report: "inventory", _format: "pdf", _rows: 1, _filters: {} })).error);
   check("guardian cannot export", !!(await g1.c.rpc("gt_export_log", { _school: S, _report: "inventory", _format: "pdf", _rows: 1, _filters: {} })).error);
   const ex = await admin.from("gt_events").select("details").eq("entity", "export").eq("school_id", S); check("export log keeps no student content", (ex.data ?? []).length >= 1 && !JSON.stringify(ex.data).includes("سارة"), ex.data);

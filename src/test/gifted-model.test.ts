@@ -33,3 +33,16 @@ describe("gifted works", () => {
     expect(workStats([{ kind: "achievement", verify: "verified", members: m(["a", "b", "c"]) }, { kind: "achievement", verify: "pending", members: m(["a"]) }, { kind: "participation", verify: "pending", members: m(["a"]) }])).toEqual({ achievements: 2, verified: 1, participations: 1, projects: 0, students: 3 });
   });
 });
+import { boardStats, buildReport, consentOpen, familyNoteIssues } from "@/components/gifted/model";
+describe("gifted stage 5", () => {
+  const plan = (id: string, status: string, studs: { id: string; last: string | null }[], start = "2026-10-01") => ({ status, start_date: start, students: studs.map((s) => ({ ...s, name: s.id, goal_status: {}, acts_done: [] })) });
+  it("a student in two running plans counts once", () => expect(boardStats([plan("a", "running", [{ id: "s1", last: null }]), plan("b", "running", [{ id: "s1", last: null }])] as never, [], [], "2026-11-16").inPlan).toBe(1));
+  it("follow-up is due after 14 days without one", () => { const s = boardStats([plan("a", "running", [{ id: "s1", last: "2026-11-01" }, { id: "s2", last: "2026-11-10" }])] as never, [], [], "2026-11-16"); expect(s.dueIds).toEqual(["s1"]); });
+  it("only open programs within 14 days are near", () => expect(boardStats([], [{ status: "open", starts_on: "2026-11-20", apply_by: null }, { status: "open", starts_on: "2026-12-30", apply_by: null }, { status: "closed", starts_on: "2026-11-18", apply_by: null }] as never, [], "2026-11-16").near).toBe(1));
+  it("unverified works are not documented", () => expect(boardStats([], [], [{ kind: "achievement", verify: "pending", members: [] }, { kind: "achievement", verify: "verified", members: [] }] as never, "2026-11-16").achievements).toBe(1));
+  it("group achievement is one row; students counted once", () => { const r = buildReport("achievements", { students: [], plans: [], progs: [], works: [{ kind: "achievement", verify: "verified", title: "t", event_name: "e", organizer: "o", event_date: "2026-11-01", level: "school", result: "1", members: [{ student_id: "a", name: "A" }, { student_id: "b", name: "B" }] }, { kind: "achievement", verify: "verified", title: "u", event_name: "e", organizer: "o", event_date: "2026-11-02", level: "school", result: "2", members: [{ student_id: "a", name: "A" }] }] as never }); expect(r.rows.length).toBe(2); expect(r.summary).toBe("2 إنجاز · 2 طالب"); });
+  it("inventory report has no measure column", () => expect(buildReport("inventory", { students: [], plans: [], progs: [], works: [] }).headers.join()).not.toMatch(/مقياس|نتيجة/));
+  it("family evidence needs https", () => expect(familyNoteIssues("evidence", "وصف كافٍ للشاهد", "http://x")).toContain("الشاهد يحتاج رابطًا آمنًا يبدأ بـ https://"));
+  it("short family note refused", () => expect(familyNoteIssues("note", "قصير", "").length).toBe(1));
+  it("consent closed once registered", () => { expect(consentOpen({ needs_consent: true, status: "open", reg: "registered" })).toBe(false); expect(consentOpen({ needs_consent: true, status: "open", reg: "none" })).toBe(true); expect(consentOpen({ needs_consent: false, status: "open", reg: "none" })).toBe(false); });
+});
