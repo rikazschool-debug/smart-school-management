@@ -76,7 +76,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   grades: { to: "/app/grades", label: "أرشيف الدرجات الفصلية", icon: Award },
   results: { to: "/app/results", label: "النتائج", icon: Award },
   schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
-  attendance: { to: "/app/attendance", label: "الحضور والانصراف", icon: ScanLine },
+  attendance: { to: "/app/attendance", label: "الحضور والمواظبة", icon: ScanLine },
   station: { to: "/app/attendance-station", label: "المسح والبوابة والنداء", icon: ScanLine },
   pickup: { to: "/app/pickup", label: "الخروج والاستئذان", icon: DoorOpen },
   admin: { to: "/app/admin", label: "التكليفات والطلبات", icon: Briefcase },

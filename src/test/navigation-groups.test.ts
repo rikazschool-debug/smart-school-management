@@ -29,4 +29,10 @@ describe("navigation grouping preserves authorized entries", () => {
     const allowed: NavKey[] = ["home", "school_home", "finance", "operations", "hr", "hr_training", "my_hr", "permissions", "procurement", "maintenance", "bus_maintenance", "org_docs", "health", "tags", "chat_settings", "hub_meetings", "hub_notices", "hub_circulars", "family_requests", "calls", "profile", "support"];
     expect(navigationGroups(allowed).flatMap((group) => group.keys).sort()).toEqual([...allowed].sort());
   });
+  it("puts the central dashboard first, then the school dashboard and schools for the group owner", () => {
+    const groups = navigationGroups(NAV_BY_ROLE.org_owner);
+    expect(groups[0]?.label).toBe("الرئيسية");
+    expect(groups[0]?.keys).toEqual(["home", "school_home", "schools"].filter((k) => NAV_BY_ROLE.org_owner.includes(k as NavKey)));
+    expect(groups[0]?.keys[0]).toBe("home");
+  });
 });

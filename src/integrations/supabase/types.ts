@@ -4420,14 +4420,20 @@ export type Database = {
       }
       edu_records: {
         Row: {
+          actions: string
+          area: string
           category: string
           course_id: string | null
           created_at: string
           created_by: string
           description: string
+          due_date: string | null
           goals: Json
           id: string
           kind: string
+          level: string
+          priority: string
+          rating: number | null
           record_date: string
           rev: number
           school_id: string
@@ -4439,14 +4445,20 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          actions?: string
+          area?: string
           category?: string
           course_id?: string | null
           created_at?: string
           created_by?: string
           description?: string
+          due_date?: string | null
           goals?: Json
           id?: string
           kind: string
+          level?: string
+          priority?: string
+          rating?: number | null
           record_date?: string
           rev?: number
           school_id: string
@@ -4458,14 +4470,20 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          actions?: string
+          area?: string
           category?: string
           course_id?: string | null
           created_at?: string
           created_by?: string
           description?: string
+          due_date?: string | null
           goals?: Json
           id?: string
           kind?: string
+          level?: string
+          priority?: string
+          rating?: number | null
           record_date?: string
           rev?: number
           school_id?: string
@@ -23563,6 +23581,16 @@ export type Database = {
       edu_ack: { Args: { _id: string; _rev: number }; Returns: undefined }
       edu_courses: { Args: { _student: string }; Returns: Json }
       edu_detail: { Args: { _id: string }; Returns: Json }
+      edu_find: {
+        Args: {
+          _f?: Json
+          _kind: string
+          _limit?: number
+          _offset?: number
+          _school: string
+        }
+        Returns: Json
+      }
       edu_follow: {
         Args: {
           _completed: boolean
@@ -23586,6 +23614,10 @@ export type Database = {
         Returns: string
       }
       edu_staff_presence: { Args: { _school: string }; Returns: Json }
+      edu_stats: {
+        Args: { _f?: Json; _kind: string; _school: string }
+        Returns: Json
+      }
       end_assignment: { Args: { _id: string }; Returns: undefined }
       ensure_classroom: { Args: { _course: string }; Returns: string }
       escalate_absence: {
