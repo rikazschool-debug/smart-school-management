@@ -10,6 +10,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { ask, askText } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { ErrorState, LoadingState } from "@/components/states";
+import { db, type Row } from "@/components/crud-page";
 import { KIND_ONE, TagChip, pp, useTags, type PersonKind, type Tag } from "./shared";
 
 type Note = { id: string; body: string; school: string | null; by: string; at: string; edited: boolean; updated_at: string; can_edit: boolean };
@@ -65,6 +66,8 @@ function Body({ kind, id, org }: { kind: PersonKind; id: string; org: string | n
           {kind === "guardian" && <Link className="text-primary hover:underline" to="/app/guardians">سجل أولياء الأمور</Link>}
         </div>
       </section>
+
+      {(kind === "guardian" || kind === "student") && <Relations kind={kind} id={id} />}
 
       <section className="space-y-2">
         <h3 className="text-sm font-bold">الوسوم <span className="text-xs font-normal text-muted-foreground">(داخلية لا تظهر لصاحب الحساب)</span></h3>
@@ -163,4 +166,29 @@ export function PersonCardButton({ kind, id, org, label = "البطاقة وال
     <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>{label}</Button>
     <PersonCard kind={kind} id={open ? id : null} org={org} onClose={() => setOpen(false)} />
   </>);
+}
+
+const REL: Record<string, string> = { father: "الأب", mother: "الأم", brother: "الأخ", sister: "الأخت", other: "أخرى" };
+/** Linked children (guardian card) or linked guardians (student card); read through the viewer's RLS. */
+function Relations({ kind, id }: { kind: "guardian" | "student"; id: string }) {
+  const g = kind === "guardian";
+  const q = useQuery({ queryKey: ["pp-rel", kind, id], queryFn: async () => {
+    const sel = g ? "id, relationship, can_follow, can_pickup, verified, students(id, full_name, national_id, csmart_no, status, gender, enrollments(status, sections(name, grades(name, stages(name)))))" : "id, relationship, can_follow, can_pickup, verified, guardians(id, full_name, national_id, phone, email, user_id)";
+    const { data, error } = await db.from("student_guardians").select(sel).eq(g ? "guardian_id" : "student_id", id);
+    if (error) throw error; return data as unknown as Row[];
+  } });
+  const F = ({ k, v, ltr }: { k: string; v: unknown; ltr?: boolean }) => <div><span className="block text-[11px] text-muted-foreground">{k}</span><span className="font-medium" dir={ltr ? "ltr" : undefined}>{(v as string) || "—"}</span></div>;
+  return (
+    <section className="space-y-2">
+      <h3 className="text-sm font-bold">{g ? "الأبناء المرتبطون" : "أولياء الأمور المرتبطون"} {q.data && <span className="text-xs font-normal text-muted-foreground">({q.data.length})</span>}</h3>
+      {q.isLoading ? <p className="text-xs text-muted-foreground">جارٍ التحميل…</p> : q.error ? <p className="text-xs text-destructive">{arabicError(q.error)}</p> : !q.data?.length ? <p className="text-xs text-muted-foreground">{g ? "لا يوجد أبناء مرتبطون." : "لا يوجد ولي أمر مرتبط."}</p> : (
+        <ul className="space-y-2">{q.data.map((l) => {
+          const flags = <div className="flex flex-wrap gap-1 text-[11px]"><span className="rounded-full bg-muted px-2 py-0.5">{REL[l["relationship"]] ?? l["relationship"] ?? "—"}</span>{l["verified"] && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">موثّق</span>}{l["can_follow"] && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">متابعة</span>}{l["can_pickup"] && <span className="rounded-full bg-secondary px-2 py-0.5">استلام</span>}</div>;
+          if (g) { const s = l["students"] ?? {}; const e = (s["enrollments"] as Row[] | undefined)?.find((x) => x["status"] === "active"); const sec = e?.["sections"];
+            return <li key={l["id"]} className="space-y-2 rounded-lg border p-3 text-sm"><div className="font-bold">{s["full_name"]}</div>{flags}<div className="grid grid-cols-2 gap-2 text-xs"><F k="المرحلة" v={sec?.grades?.stages?.name} /><F k="الصف" v={sec?.grades?.name} /><F k="الشعبة" v={sec?.name ?? (e ? "" : "غير مسكّن")} /><F k="الحالة" v={STATUS[s["status"]] ?? s["status"]} /><F k="الهوية" v={s["national_id"]} ltr /><F k="رقم C‑Smart" v={s["csmart_no"]} ltr /></div></li>; }
+          const p = l["guardians"] ?? {};
+          return <li key={l["id"]} className="space-y-2 rounded-lg border p-3 text-sm"><div className="font-bold">{p["full_name"]}</div>{flags}<div className="grid grid-cols-2 gap-2 text-xs"><F k="الهوية" v={p["national_id"]} ltr /><F k="الجوال" v={p["phone"]} ltr /><F k="البريد" v={p["email"]} ltr /><F k="الحساب" v={p["user_id"] ? "له حساب" : "بلا حساب"} /></div></li>;
+        })}</ul>)}
+    </section>
+  );
 }

@@ -119,7 +119,6 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             {ctCan.data && <ContractEdit row={r} schoolId={ctx.schoolId} />}
             {placeCan.data && <Button variant="ghost" size="sm" onClick={() => setPlacing(r)}><MapPin className="size-4" /> تسكين</Button>}
             {w && <>
-            <Button variant="ghost" size="sm" onClick={() => setGuarding(r)}><Link2 className="size-4" /> ولي الأمر</Button>
             <Button variant="ghost" size="sm" onClick={() => setLinking(r)}>أولياء الأمر المرتبطون</Button>
             </>}
           </>
