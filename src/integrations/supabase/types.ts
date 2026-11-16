@@ -8149,6 +8149,138 @@ export type Database = {
           },
         ]
       }
+      gt_work_members: {
+        Row: {
+          role: string | null
+          student_id: string
+          work_id: string
+        }
+        Insert: {
+          role?: string | null
+          student_id: string
+          work_id: string
+        }
+        Update: {
+          role?: string | null
+          student_id?: string
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gt_work_members_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gt_work_members_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "gt_works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gt_works: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          domain: string
+          event_date: string | null
+          event_name: string | null
+          id: string
+          kind: string
+          level: string | null
+          links: Json
+          no: number
+          organizer: string | null
+          outputs: string | null
+          program_id: string | null
+          result: string | null
+          rev: number
+          school_id: string
+          stages: Json
+          supervisor: string | null
+          title: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          verify: string
+          verify_note: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          domain?: string
+          event_date?: string | null
+          event_name?: string | null
+          id?: string
+          kind: string
+          level?: string | null
+          links?: Json
+          no?: number
+          organizer?: string | null
+          outputs?: string | null
+          program_id?: string | null
+          result?: string | null
+          rev?: number
+          school_id: string
+          stages?: Json
+          supervisor?: string | null
+          title: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verify?: string
+          verify_note?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          domain?: string
+          event_date?: string | null
+          event_name?: string | null
+          id?: string
+          kind?: string
+          level?: string | null
+          links?: Json
+          no?: number
+          organizer?: string | null
+          outputs?: string | null
+          program_id?: string | null
+          result?: string | null
+          rev?: number
+          school_id?: string
+          stages?: Json
+          supervisor?: string | null
+          title?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verify?: string
+          verify_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gt_works_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "gt_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gt_works_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guardian_phone_log: {
         Row: {
           changed_by: string | null
@@ -25332,6 +25464,16 @@ export type Database = {
       }
       gt_students: { Args: { _school: string }; Returns: Json }
       gt_targets: { Args: { _school: string }; Returns: Json }
+      gt_work_attach: { Args: { _files: Json; _id: string }; Returns: Json }
+      gt_work_list: { Args: { _school: string }; Returns: Json }
+      gt_work_save: {
+        Args: { _id: string; _p: Json; _rev: number; _school: string }
+        Returns: string
+      }
+      gt_work_verify: {
+        Args: { _id: string; _note?: string; _rev: number; _verify: string }
+        Returns: undefined
+      }
       guardian_contacts: {
         Args: { _student: string }
         Returns: {
