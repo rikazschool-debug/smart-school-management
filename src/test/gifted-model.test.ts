@@ -26,3 +26,10 @@ describe("gifted programs", () => {
   it("full seats refused", () => expect(canRegister({ nom: "approved", consent: "granted", reg: "none" }, { ...prog, counts: { ...prog.counts, registered: 2 } })).toBe("اكتملت المقاعد"));
   it("calendar skips cancelled programs and closed plans", () => expect(calendarItems([{ id: "a", title: "x", starts_on: "2026-11-01", ends_on: null, apply_by: null, status: "cancelled" }], [{ id: "p", title: "y", end_date: "2026-12-01", status: "closed", goals: [] }])).toEqual([]));
 });
+import { workStats } from "@/components/gifted/model";
+describe("gifted works", () => {
+  it("group achievement counts once, students counted distinctly", () => {
+    const m = (ids: string[]) => ids.map((student_id) => ({ student_id, name: "", role: null }));
+    expect(workStats([{ kind: "achievement", verify: "verified", members: m(["a", "b", "c"]) }, { kind: "achievement", verify: "pending", members: m(["a"]) }, { kind: "participation", verify: "pending", members: m(["a"]) }])).toEqual({ achievements: 2, verified: 1, participations: 1, projects: 0, students: 3 });
+  });
+});

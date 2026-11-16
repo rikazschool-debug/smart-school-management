@@ -1073,3 +1073,4 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - 2026-11-16 رعاية الموهوبين م1 (الترشيحات): scripts/gifted-e2e.ts 24/24، src/test/gifted-model.test.ts 6/6. الواجهة غير مجرَّبة بالمتصفح.
 - 2026-11-16 رعاية الموهوبين م2 (ملف الطالب والخطط): scripts/gifted-e2e.ts 48/48، gifted-model 12/12. الواجهة غير مجرَّبة بالمتصفح.
 - 2026-11-16 رعاية الموهوبين م3 (البرامج والمشاركات): scripts/gifted-e2e.ts 74/74، gifted-model 16/16. الواجهة غير مجرَّبة بالمتصفح.
+- 2026-11-16 رعاية الموهوبين م4 (الأعمال والإنجازات والشواهد): scripts/gifted-e2e.ts 96/96، gifted-model 17/17. الواجهة والكاميرا غير مجرَّبتين.
