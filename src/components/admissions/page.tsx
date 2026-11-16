@@ -49,7 +49,7 @@ export function AdmissionsPage({ sp, go }: { sp: AdSearch; go: (s: AdSearch) => 
   else body = <SettingsTab orgId={orgId} />;
   return (
     <div className="space-y-5">
-      <PageHeader title={tab === "apps" ? "طلبات القبول والتسجيل" : tabs.find(([k]) => k === tab)?.[1] ?? "القبول والتسجيل"} />
+      {tab !== "family_requests" && <PageHeader title={tab === "apps" ? "طلبات القبول والتسجيل" : tabs.find(([k]) => k === tab)?.[1] ?? "القبول والتسجيل"} />}
       {body}
     </div>
   );
