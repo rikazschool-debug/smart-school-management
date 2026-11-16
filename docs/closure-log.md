@@ -1095,3 +1095,7 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Test project moved to Micro compute (Pro plan). Removed 113 synthetic orgs (_purge_test_org) and 523 synthetic auth users in batches of 25 with protected-set re-check per batch; 0 failures.
 - Kept: مجموعة المالكي التعليمية (4 branches, 476 memberships), مجموعة ركاز التجريبية + 20 demo accounts, platform owner, gmail account. Before/after counts identical; 0 orphan memberships/logins.
 - Left: one ADMS test org (adms_events append-only by design).
+
+## 2026-11-17 — Supervision stage 2 closure (browser)
+- supervision-e2e 91/91; supervision-journey2.py 31/31 (owner adopts template in UI with adopter+date, no repeat; principal/supervisor/teacher no adopt; chooser lists adopted org forms only; submit → request info → resubmit → teacher ack+comment (phone) → principal approves; principal cannot approve own minutes; other-branch principal refused on phone; assignment end → supervisor refused, confirmed via sv_rec_get).
+- Synthetic data kept (not cleaned): مؤسسة إشراف 1794870995767 (2 branches, 9 pooled accounts), مؤسسة أخرى 1794870995767, اختبار ADMS المحلي.
