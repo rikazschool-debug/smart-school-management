@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarPlus, Search, UserPlus, X } from "lucide-react";
+import { CalendarDays, CalendarPlus, DoorOpen, School, Search, Settings2, UserPlus, UserRound, X } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { Button } from "@/components/ui/button";
@@ -72,8 +72,8 @@ function Page() {
       {form === "request" && <RequestForm onDone={(id) => { setForm(""); nav({ search: { tab: "mine", v: id } }); }} onClose={() => setForm("")} />}
       {form === "call" && school && <CallForm school={school} onDone={(id) => { setForm(""); nav({ search: { tab: "school", v: id } }); }} onClose={() => setForm("")} />}
       {v && <Detail id={v} onClose={() => nav({ search: { tab: cur } })} />}
-      <div className="mb-4 flex flex-wrap gap-2" role="tablist">
-        {tabs.map(([k, l]) => <Button key={k} role="tab" aria-selected={cur === k} size="sm" variant={cur === k ? "default" : "outline"} onClick={() => nav({ search: { tab: k } })}>{l}</Button>)}
+      <div className="mb-5 grid gap-1 rounded-xl border bg-card p-1 sm:[grid-template-columns:repeat(var(--n),minmax(0,1fr))]" style={{ ["--n" as string]: tabs.length }} role="tablist" aria-label="أقسام الزيارات">
+        {tabs.map(([k, l]) => { const Icon = TAB_ICON[k]; return <button key={k} type="button" role="tab" aria-selected={cur === k} onClick={() => nav({ search: { tab: k } })} className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${cur === k ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}><Icon className="size-4 shrink-0" /><span className="truncate">{l}</span></button>; })}
       </div>
       {cur === "calendar" && <CalendarTab open={(id) => nav({ search: { tab: cur, v: id } })} />}
       {cur === "mine" && <ListTab view="mine" school={school} open={(id) => nav({ search: { tab: cur, v: id } })} />}
