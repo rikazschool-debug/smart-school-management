@@ -5,3 +5,4 @@
 - Records: draft may be incomplete; submit runs private._sv_missing (mirrored by missingFields in model.ts, test src/test/supervision-model.test.ts). Teacher ack/comment are separate fields and never change status. Stale rev is refused. Approve 'none' forms end at submitted.
 - No scores or weights: _sv_spec_ok rejects score fields/weight keys; «لم يُلاحظ»/«لا ينطبق» exist only on indicator fields.
 - Tests: scripts/supervision-e2e.ts (80 checks; --keep writes /tmp/browser/supervision/fixture.json), browser journey scripts/supervision-journey.py.
+- Base sv_forms rows (org_id null) are view/preview templates only; records are created only from an org-scoped published version. sv_form_adopt (owner/forms delegate) makes the fixed org copy with adopted_by/adopted_at; _sv_form_for never falls back to base.
