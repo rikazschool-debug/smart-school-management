@@ -3,6 +3,11 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-16 — Missing students in exam targeting
+- Uploaded screenshot shows no course/section selected while searching for 1010. The roster query was intentionally disabled until a course was chosen; this is not evidence of an RLS rejection. Existing courses/enrollments/students policies were read without modification.
+- Added explicit selection/empty-enrollment/no-match states, disabled search before selection, clear-search recovery and context-complete roster cache key. Changing stage, grade or course clears stale search. No database, accounts, notifications or publication changes.
+- 13 targeted checks passed, including four synthetic component interactions: atomic save, no unscoped query, exact section/year/active filtering, no-match recovery and no fabricated empty-roster targets. Authenticated hosted readback remains unavailable for external Supabase; these are isolated tests, not account acceptance. React is explicitly imported in use-mobile.tsx; reported TS2686 text is absent from the current hook.
+
 ## 2026-11-16 — prompt-394 examinations (partial, not full acceptance)
 - User explicitly changed tests only to preliminary result → review → approval → publication; homework remains immediate. New test-only migrations add delivery/duration, persisted A/B/C variants, remapped keys, revision-bound review/approval, atomic exam_draft_save and electronic exam_submit over existing attempts/grades. Old correction path also routes tests back into review. No data/account/provider/production changes or site publication.
 - New five-step ExamCreate: delivery, date/instructions, permitted stage/grade/course-section, roster search/individual/all-visible selection, explicit missing C-Smart, question reorder/options/model answers, A/B/C, student preview, atomic draft save. ExamSolve handles MCQ/truefalse/text; manual text marking uses existing grading panel. Test result panel has review/approve/publish and filtered Excel/PDF/print controls.
