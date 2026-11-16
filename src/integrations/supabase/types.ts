@@ -19724,6 +19724,17 @@ export type Database = {
         Args: { _course: string; _id: string }
         Returns: string
       }
+      _correct_result_before_exam: {
+        Args: {
+          _criteria: Json
+          _feedback: string
+          _reason: string
+          _rev: number
+          _score: number
+          _sub: string
+        }
+        Returns: number
+      }
       _course_members: {
         Args: { _course: string }
         Returns: {
@@ -23879,6 +23890,17 @@ export type Database = {
           _hw: string
         }
         Returns: undefined
+      }
+      exam_draft_save: {
+        Args: {
+          _count: number
+          _d: Json
+          _delivery: string
+          _duration: number
+          _id: string
+          _questions: Json
+        }
+        Returns: string
       }
       exam_get: { Args: { _hw: string }; Returns: Json }
       exam_result_action: {
