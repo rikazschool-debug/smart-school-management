@@ -20,7 +20,7 @@ const steps = ["بيانات الاختبار", "الاستهداف", "الأس�
 type PaperData = { questions: ExamQuestion[]; delivery: ExamDelivery; duration_minutes: number | null; forms: { id: string }[] };
 async function rpc<T>(fn: string, args: Row): Promise<T> { const r = await db.rpc(fn, args); if (r.error) throw r.error; return r.data as T; }
 
-export function ExamCreate({ edit }: { edit?: string }) {
+export function ExamCreate({ edit }: { edit?: string | undefined }) {
   const ctx = useSchool(); const school = ctx?.schoolId ?? ""; const perms = useSchoolPerms(school); const navigate = useNavigate();
   const [step, setStep] = useState(0); const [busy, setBusy] = useState(false); const [search, setSearch] = useState(""); const [stage, setStage] = useState(""); const [grade, setGrade] = useState(""); const [previewForm, setPreviewForm] = useState(0);
   const [f, setF] = useState({ course: "", title: "", instructions: "", delivery: "online" as ExamDelivery, from: "", due: "", duration: "45", count: "1", audience: "all", students: [] as string[] });
