@@ -172,6 +172,36 @@ async function main() {
   check("stale work rev refused", !!(await co.c.rpc("gt_work_save", { _school: S, _id: W, _rev: 3, _p: ach })).error);
   check("kind cannot change", !!(await co.c.rpc("gt_work_save", { _school: S, _id: W, _rev: 4, _p: { ...ach, kind: "project" } })).error);
   for (const [n, u] of [["teacher", t1], ["guardian", g1], ["other org", x]] as const) check(`${n} cannot list works`, !!(await u.c.rpc("gt_work_list", { _school: S })).error);
+  // ---- stage 5: family view, family notes, reports export log
+  check("re-verify edited work", !(await co.c.rpc("gt_work_verify", { _id: W, _rev: 4, _verify: "verified" })).error);
+  const fg = await g1.c.rpc("gt_family", { _student: st[0].id }); const F = fg.data as any;
+  check("guardian opens own child's care file", !fg.error && F.viewer === "guardian", fg.error);
+  check("family sees plan, program and verified work", F?.plans?.length >= 1 && F?.programs?.some((p: any) => p.id === G) && F?.works?.some((w: any) => w.id === W), F && [F.plans?.length, F.programs?.length, F.works?.length]);
+  check("family file has no measures, nominations or evidence text", F && !("measures" in F) && !("nominations" in F) && !JSON.stringify(F).includes("evidence\":\"") , Object.keys(F ?? {}));
+  const fs = await s1.c.rpc("gt_family", { _student: st[0].id }); check("student opens own care file", !fs.error && (fs.data as any).viewer === "student", fs.error);
+  check("guardian cannot open another student", !!(await g1.c.rpc("gt_family", { _student: st[1].id })).error);
+  check("student cannot open another student", !!(await s1.c.rpc("gt_family", { _student: st[1].id })).error);
+  for (const [n, u] of [["teacher", t1], ["principal", pr], ["other org", x]] as const) check(`${n} cannot open family view`, !!(await u.c.rpc("gt_family", { _student: st[0].id })).error);
+  const vl = await admin.from("gt_events").select("action,actor").eq("entity", "family").eq("entity_id", st[0].id); check("family view logged once per person per day", (vl.data ?? []).filter((r: any) => r.actor === g1.id).length === 1 && (vl.data ?? []).some((r: any) => r.actor === s1.id), vl.data);
+  await g1.c.rpc("gt_family", { _student: st[0].id }); const vl2 = await admin.from("gt_events").select("id").eq("entity", "family").eq("entity_id", st[0].id).eq("actor", g1.id); check("repeat view not re-logged", (vl2.data ?? []).length === 1);
+  check("short family note refused", !!(await g1.c.rpc("gt_family_note", { _student: st[0].id, _kind: "note", _body: "قصير", _url: "" })).error);
+  check("evidence without https link refused", !!(await s1.c.rpc("gt_family_note", { _student: st[0].id, _kind: "evidence", _body: "صورة مشروعي في المعرض", _url: "http://x.test" })).error);
+  const n1 = await g1.c.rpc("gt_family_note", { _student: st[0].id, _kind: "note", _body: "سارة تقضي وقتًا طويلًا في بناء النماذج في البيت", _url: "" }); check("guardian sends note", !n1.error, n1.error);
+  const n2 = await s1.c.rpc("gt_family_note", { _student: st[0].id, _kind: "evidence", _body: "رابط عرض مشروعي في المعرض", _url: "https://example.org/sara" }); check("student sends evidence link", !n2.error, n2.error);
+  check("guardian cannot send for another student", !!(await g1.c.rpc("gt_family_note", { _student: st[1].id, _kind: "note", _body: "ملاحظة عن طالبة أخرى طويلة", _url: "" })).error);
+  check("teacher cannot read family inbox", !!(await t1.c.rpc("gt_family_inbox", { _school: S })).error);
+  check("guardian cannot review", !!(await g1.c.rpc("gt_family_review", { _id: n1.data, _decision: "accepted", _note: "" })).error);
+  check("reject needs reason", !!(await co.c.rpc("gt_family_review", { _id: n2.data, _decision: "rejected", _note: "" })).error);
+  check("coord accepts note", !(await co.c.rpc("gt_family_review", { _id: n1.data, _decision: "accepted", _note: "" })).error);
+  check("coord rejects with reason", !(await co.c.rpc("gt_family_review", { _id: n2.data, _decision: "rejected", _note: "الرابط لا يفتح، أعيدوا الإرسال" })).error);
+  check("second review refused", !!(await co.c.rpc("gt_family_review", { _id: n1.data, _decision: "rejected", _note: "تغيير القرار" })).error);
+  const wl2 = (await co.c.rpc("gt_work_list", { _school: S })).data as any[]; check("accepting a family note creates no achievement", wl2.filter((w) => w.kind === "achievement").length === 1, wl2.length);
+  const F2 = (await s1.c.rpc("gt_family", { _student: st[0].id })).data as any; check("family sees decisions with reason", F2.notes.some((n: any) => n.status === "accepted") && F2.notes.some((n: any) => n.status === "rejected" && /الرابط/.test(n.review_note)), F2.notes);
+  check("viewer logs export", !(await pr.c.rpc("gt_export_log", { _school: S, _report: "inventory", _format: "xlsx", _rows: 2, _filters: {} })).error || !(await co.c.rpc("gt_export_log", { _school: S, _report: "inventory", _format: "xlsx", _rows: 2, _filters: {} })).error);
+  check("teacher cannot export", !!(await t1.c.rpc("gt_export_log", { _school: S, _report: "inventory", _format: "pdf", _rows: 1, _filters: {} })).error);
+  check("guardian cannot export", !!(await g1.c.rpc("gt_export_log", { _school: S, _report: "inventory", _format: "pdf", _rows: 1, _filters: {} })).error);
+  const ex = await admin.from("gt_events").select("details").eq("entity", "export").eq("school_id", S); check("export log keeps no student content", (ex.data ?? []).length >= 1 && !JSON.stringify(ex.data).includes("سارة"), ex.data);
+  if (process.argv.includes("--keep")) { mkdirSync("/tmp/browser/gifted", { recursive: true }); writeFileSync("/tmp/browser/gifted/fixture.json", JSON.stringify({ pw, co: co.email, g1: g1.email, s1: s1.email, t1: t1.email, student: st[0].id, school: S })); }
   console.log(`\n${ok} passed, ${bad} failed`);
   if (!process.argv.includes("--keep")) await teardown();
   process.exit(bad ? 1 : 0);
