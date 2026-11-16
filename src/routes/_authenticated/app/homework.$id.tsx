@@ -15,14 +15,15 @@ import { FileList, Uploader } from "@/components/homework/files";
 import { FeedbackFiles, SubmissionsPanel } from "@/components/homework/submissions";
 import { arabicError, useSchool } from "@/lib/session";
 import { HW_STATUS, LATE_LABEL, SUB_STATUS, TYPE_LABEL, fromLocalInput, safeHref, schoolTime, statusTone, toLocalInput } from "@/lib/homework";
+import { ExamPaper } from "@/components/homework/exam-paper";
 
 export const Route = createFileRoute("/_authenticated/app/homework/$id")({
-  head: () => ({ meta: [{ title: "تفاصيل الواجب — ركاز" }, { name: "description", content: "تعليمات الواجب والتسليم والتصحيح والنتائج." }] }),
+  head: () => ({ meta: [{ title: "تفاصيل الواجب والاختبار — ركاز" }, { name: "description", content: "التعليمات والأسئلة والتسليم والتصحيح والنتائج." }, { property: "og:title", content: "تفاصيل الواجب والاختبار — ركاز" }, { property: "og:description", content: "أسئلة الاختبار والتسليم والنتائج ضمن الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   validateSearch: (s: Record<string, unknown>): { student?: string } => (s["student"] ? { student: String(s["student"]) } : {}),
   component: Page,
 });
 
-export const hwKey = (id: string) => ["hw-detail", id];
+const hwKey = (id: string) => ["hw-detail", id];
 
 function Page() {
   const { id } = Route.useParams();
@@ -53,6 +54,7 @@ function Page() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Details h={h} />
+          {h["kind"] === "test" && <ExamPaper h={h} />}
           {h["isTeacher"] ? <SubmissionsPanel h={h} editable /> : role === "student" ? <StudentPanel h={h} /> : role === "guardian" ? <FamilyPanel h={h} /> : <SubmissionsPanel h={h} editable={false} />}
         </div>
         <aside className="space-y-4">
@@ -438,7 +440,7 @@ function Hero({ h }: { h: Row }) {
   ];
   return (
     <header className="mb-6 rounded-2xl border bg-card p-5">
-      <Link to="/app/homework" className="inline-flex min-h-8 items-center text-sm text-primary hover:underline">→ الواجبات</Link>
+      <Link to={h["kind"] === "test" ? "/app/tests" : "/app/homework"} className="inline-flex min-h-8 items-center text-sm text-primary hover:underline">→ {h["kind"] === "test" ? "الاختبارات" : "مذكرة الواجبات"}</Link>
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
         <span className="rounded-full bg-secondary px-2.5 py-1 font-semibold text-secondary-foreground">{h["courses"]?.["subjects"]?.["name"]} — شعبة {h["sections"]?.["name"]}</span>
         <span className={`rounded-full px-2.5 py-1 font-medium ${statusTone(h["status"])}`}>{HW_STATUS[h["status"]]}</span>
