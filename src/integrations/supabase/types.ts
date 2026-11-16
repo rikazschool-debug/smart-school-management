@@ -4432,6 +4432,7 @@ export type Database = {
           id: string
           kind: string
           level: string
+          plan: Json
           priority: string
           rating: number | null
           record_date: string
@@ -4457,6 +4458,7 @@ export type Database = {
           id?: string
           kind: string
           level?: string
+          plan?: Json
           priority?: string
           rating?: number | null
           record_date?: string
@@ -4482,6 +4484,7 @@ export type Database = {
           id?: string
           kind?: string
           level?: string
+          plan?: Json
           priority?: string
           rating?: number | null
           record_date?: string

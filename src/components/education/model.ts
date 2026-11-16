@@ -30,7 +30,7 @@ export const EDU_TEXT: Record<EduKind, { description: string; actions: string; g
   supervision: { description: "الملاحظات", actions: "نقاط القوة وفرص التحسين", goals: "التوصيات", hint: "جدولة الزيارة ← تنفيذها وتقديرها (1–5) ← التوصيات ← موعد زيارة المتابعة للتحقق من الأثر." },
 };
 export type Follow = { id: string; goal_index: number | null; completed: boolean | null; note: string; actor_name: string; created_at: string };
-export type EduRecord = { id: string; kind: EduKind; category: string; student_id: string | null; teacher_id: string | null; course_id: string | null; person: string; course?: string; title: string; description: string; record_date: string; goals: string[]; shared: boolean; status: string; rev: number; can_edit: boolean; can_ack?: boolean; priority: string; due_date: string | null; area: string; actions: string; level: string; rating: number | null; goals_done?: number; followups?: Follow[]; acks?: { name: string; user_id: string; created_at: string }[] };
+export type EduRecord = { id: string; kind: EduKind; category: string; student_id: string | null; teacher_id: string | null; course_id: string | null; person: string; course?: string; title: string; description: string; record_date: string; goals: string[]; shared: boolean; status: string; rev: number; can_edit: boolean; can_ack?: boolean; priority: string; due_date: string | null; area: string; actions: string; level: string; rating: number | null; goals_done?: number; followups?: Follow[]; acks?: { name: string; user_id: string; created_at: string }[]; plan?: PlanData };
 export type EduStats = { total: number; open: number; overdue: number; urgent: number; this_month: number; shared: number; avg_rating: number | null; goals_total: number; goals_done: number; people: number; by_status: Record<string, number>; by_category: Record<string, number>; by_priority: Record<string, number>; by_area: Record<string, number>; by_month: { month: string; n: number }[]; top_people: { name: string; n: number }[] };
 export type EduFilter = { q: string; category: string; area: string; status: string; priority: string; from: string; to: string; overdue: boolean };
 export const EMPTY_FILTER: EduFilter = { q: "", category: "", area: "", status: "", priority: "", from: "", to: "", overdue: false };
@@ -38,5 +38,49 @@ export function goalDone(followups: Follow[], index: number) { return followups.
 export function planProgress(goals: string[], followups: Follow[]) { return { done: goals.filter((_, i) => goalDone(followups, i)).length, total: goals.length }; }
 export function isOverdue(r: Pick<EduRecord, "due_date" | "status">, today: string) { return !!r.due_date && r.due_date < today && r.status !== "completed" && r.status !== "closed"; }
 export function filterLabels(kind: EduKind, f: EduFilter) {
-  return [f.q && `بحث: ${f.q}`, f.category && EDU_CATEGORIES[kind][f.category], f.area && EDU_AREAS[kind].options[f.area], f.status && EDU_STATUS[f.status], f.priority && `الأولوية: ${EDU_PRIORITY[f.priority]}`, f.from && `من ${f.from}`, f.to && `إلى ${f.to}`, f.overdue && "المتأخرة فقط"].filter(Boolean) as string[];
+  return [f.q && `بحث: ${f.q}`, f.category && EDU_CATEGORIES[kind][f.category], f.area && EDU_AREAS[kind].options[f.area], f.status && statusOptions(kind)[f.status], f.priority && `الأولوية: ${EDU_PRIORITY[f.priority]}`, f.from && `من ${f.from}`, f.to && `إلى ${f.to}`, f.overdue && "المتأخرة فقط"].filter(Boolean) as string[];
 }
+
+/** Plan statuses for student_plan/teacher_plan; must match public._edu_validate. Overdue is derived from due_date, never a status. */
+export const PLAN_STATUS: Record<string, string> = { draft: "مسودة", ready: "جاهزة للتنفيذ", active: "جارية", review: "بانتظار المراجعة", closed: "مغلقة" };
+export const isPlanKind = (k: EduKind) => k === "student_plan" || k === "teacher_plan";
+export const statusOptions = (k: EduKind) => (isPlanKind(k) ? PLAN_STATUS : EDU_STATUS);
+/** Must match private.edu_plan_check evidence list. */
+export const EVIDENCE_SOURCES: Record<string, string> = { diagnostic: "اختبار تشخيصي", prior_test: "نتائج اختبار سابق", homework: "الواجبات", observation: "ملاحظة صفية", work_sample: "عينة من عمل الطالب" };
+export const OUTCOMES: Record<string, string> = { achieved: "تحقق المستهدف", partial: "تحسن جزئي", revise: "يحتاج تعديل الخطة" };
+export type Baseline = { type: "" | "count" | "scale"; score?: string; total?: string; level?: string; scale?: string };
+export type GoalDetail = { skill: string; baseline: string; target: string; mastery: string; activity: string; strategy: string; resources: string; owner: string; start: string; review: string; end: string; verify: string; evidence: string };
+export type PlanData = { skills: string[]; unit: string; strengths: string; evidence: string[]; baseline: Baseline; notes: string; goal_details: GoalDetail[]; outcome?: string; outcome_note?: string; next_step?: string; share_intent?: boolean };
+export const EMPTY_GOAL: GoalDetail = { skill: "", baseline: "", target: "", mastery: "", activity: "", strategy: "", resources: "", owner: "", start: "", review: "", end: "", verify: "", evidence: "" };
+export const emptyPlan = (): PlanData => ({ skills: [], unit: "", strengths: "", evidence: [], baseline: { type: "" }, notes: "", goal_details: [] });
+export function baselineText(b: Baseline | undefined) {
+  if (!b?.type) return "";
+  return b.type === "count" ? `${b.score ?? ""} صحيحة من ${b.total ?? ""}` : `${b.level ?? ""}${b.scale ? ` (${b.scale})` : ""}`;
+}
+/** Client mirror of private.edu_plan_check: issues that block leaving draft. Empty list = ready. */
+export function planIssues(p: { description: string; goals: string[]; plan: PlanData }, status: string): string[] {
+  const out: string[] = []; const b = p.plan.baseline;
+  if (b.type === "count") { const s = Number(b.score), t = Number(b.total); if (b.score === "" || b.total === "" || !Number.isFinite(s) || !Number.isFinite(t) || t <= 0 || s < 0 || s > t) out.push("مستوى البداية: الصحيح يجب ألا يتجاوز الإجمالي"); }
+  if (status === "draft") return out;
+  if (!p.plan.skills.length) out.push("حدد مهارة غير متقنة واحدة على الأقل");
+  if (!p.description.trim()) out.push("أضف وصف الاحتياج");
+  if (!p.plan.evidence.length) out.push("حدد مصدر الاستدلال");
+  if (!b.type || (b.type === "scale" && !b.level?.trim())) out.push("سجّل مستوى البداية");
+  if (!p.goals.length) out.push("أضف هدفًا واحدًا على الأقل");
+  if (p.plan.goal_details.length !== p.goals.length) out.push("أكمل تفاصيل كل هدف");
+  p.plan.goal_details.forEach((g, i) => {
+    if (!g.target.trim() || !g.mastery.trim() || !g.activity.trim() || !g.verify.trim()) out.push(`الهدف ${i + 1}: أكمل المستهدف ومعيار الإتقان والنشاط وأداة التحقق`);
+    if (g.start && g.end && g.end < g.start) out.push(`الهدف ${i + 1}: تاريخ النهاية قبل البداية`);
+  });
+  if (status === "closed" && (!p.plan.outcome || !OUTCOMES[p.plan.outcome] || !p.plan.outcome_note?.trim())) out.push("سجّل نتيجة الإغلاق والخطوة التالية");
+  return out;
+}
+/** Editable starting points per category — never auto-applied targets or mastery thresholds. */
+export const GOAL_TEMPLATES: Record<string, { goal: string; activity: string; verify: string }[]> = {
+  reading: [{ goal: "يقرأ الطالب نصًا قصيرًا قراءة جهرية سليمة", activity: "قراءة متدرجة مع نموذج من المعلم ثم قراءة مستقلة", verify: "بطاقة ملاحظة القراءة الجهرية" }],
+  writing: [{ goal: "يكتب الطالب كلمات تحتوي المهارة الإملائية المستهدفة كتابة صحيحة", activity: "إملاء منظور ثم غير منظور لكلمات المهارة", verify: "ورقة إملاء قصيرة" }],
+  math: [{ goal: "يحل الطالب مسائل على المهارة الحسابية المستهدفة", activity: "أمثلة محلولة ثم تدريب متدرج بالمحسوسات", verify: "اختبار قصير على المهارة" }],
+  comprehension: [{ goal: "يجيب الطالب عن أسئلة فهم مباشرة واستنتاجية لنص مقروء", activity: "قراءة موجهة بأسئلة قبل النص وأثناءه وبعده", verify: "ورقة أسئلة فهم" }],
+  skills: [{ goal: "يتقن الطالب مهارة المقرر المحددة", activity: "شرح مختصر ثم تطبيق موجه ثم تطبيق مستقل", verify: "مهمة أداء أو اختبار قصير" }],
+  learning_behavior: [{ goal: "ينجز الطالب المهام الصفية المطلوبة في الوقت المحدد", activity: "تقسيم المهمة إلى خطوات مع تعزيز فوري", verify: "سجل إنجاز المهام" }],
+};
