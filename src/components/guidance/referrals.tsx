@@ -1,5 +1,5 @@
 import { CaseFiles } from "./case-run";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ClipboardList, FolderOpen, Lightbulb, Lock, Pencil, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ask, askText } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { EDU_CATEGORIES, EDU_PRIORITY, type EduRecord } from "@/components/education/model";
+import { isDenied } from "./search";
 import { REF_CONTEXT, REF_EVENT, REF_FREQUENCY, REF_STATUS, REF_TONE, refActions, type RefPlan } from "./model";
 import { ReferralWizard } from "./referral-wizard";
 
