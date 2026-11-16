@@ -52,7 +52,7 @@ function Calendar({ items, onOpen }: { items: ReturnType<typeof calendarItems>; 
 
 function ProgramDetail({ school, p, me, onEdit, onDone }: { school: string; p: Program; me: GtMe; onEdit: () => void; onDone: () => void }) {
   const [busy, setBusy] = useState(false); const [target, setTarget] = useState(false);
-  async function run(fn: () => PromiseLike<{ error: unknown; data?: unknown }>, ok: string) { setBusy(true); try { const r = await fn(); if (r.error) throw r.error; toast.success(ok); onDone(); return r.data; } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } }
+  async function run(fn: () => PromiseLike<{ error: unknown; data?: unknown }>, ok: string) { setBusy(true); try { const r = await fn(); if (r.error) throw r.error; toast.success(ok); onDone(); return r.data; } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } return undefined; }
   async function part(s: Participant, field: string, value: string) {
     let note: string | null = null; if (field === "nom" && value === "declined") { note = await askText("سبب عدم الإقرار"); if (!note?.trim()) return; }
     await run(() => db.rpc("gt_part_act", { _program: p.id, _student: s.student_id, _rev: s.rev, _field: field, _value: value, _note: note }), "حُفظ");
@@ -97,7 +97,7 @@ function ProgramForm({ school, row, close }: { school: string; row?: Program | u
   const [d, setD] = useState<Draft>({ kind: row?.kind ?? "school", title: row?.title ?? "", domain: row?.domain ?? "scientific", organizer: row?.organizer ?? "", audience: row?.audience ?? "", description: row?.description ?? "", owner_name: row?.owner_name ?? "", starts_on: row?.starts_on ?? "", ends_on: row?.ends_on ?? "", apply_by: row?.apply_by ?? "", seats: row?.seats ? String(row.seats) : "", needs_consent: row?.needs_consent ?? false, source_url: row?.source_url ?? "", verified_on: row?.verified_on ?? gtToday() });
   const [busy, setBusy] = useState(false); const [dirty, setDirty] = useState(false);
   const set = (p: Partial<Draft>) => { setDirty(true); setD({ ...d, ...p }); };
-  async function save() { setBusy(true); try { const r = await db.rpc("gt_prog_save", { _school: school, _id: row?.id ?? null, _rev: row?.rev ?? null, _p: d }); if (r.error) throw r.error; toast.success("حُفظ البرنامج"); close(r.data as string); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } }
+  async function save() { setBusy(true); try { const r = await db.rpc("gt_prog_save", { _school: school, _id: row?.id ?? null, _rev: row?.rev ?? null, _p: d }); if (r.error) throw r.error; toast.success("حُفظ البرنامج"); close(r.data as string); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } return undefined; }
   const inp = (k: keyof Draft, label: string, type = "text") => <div className="space-y-1"><Label htmlFor={`pg-${k}`}>{label}</Label><Input id={`pg-${k}`} type={type} value={d[k] as string} onChange={(e) => set({ [k]: e.target.value } as Partial<Draft>)} /></div>;
   return <div className="mx-auto max-w-3xl space-y-4">
     <div className="flex items-center justify-between"><h2 className="text-xl font-bold">{row ? "تعديل البرنامج" : "برنامج أو فرصة جديدة"}</h2><Button variant="ghost" onClick={async () => { if (!dirty || (await ask("ستفقد التغييرات غير المحفوظة. هل تريد الخروج؟"))) close(); }}>إلغاء</Button></div>
