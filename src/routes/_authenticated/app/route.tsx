@@ -22,7 +22,7 @@ import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { workspacePages } from "@/lib/workspace-perms";
-import { HeartPulse, FileText, IdCard, Tags, PartyPopper, UserPlus, FileBarChart } from "lucide-react";
+import { HeartPulse, FileText, IdCard, Tags, PartyPopper, UserPlus, FileBarChart, Map as MapIcon } from "lucide-react";
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { ROOM_TABS, roomTabsForRole } from "@/components/classroom-room-tabs";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
