@@ -21191,6 +21191,192 @@ export type Database = {
           },
         ]
       }
+      sv5_resource_files: {
+        Row: {
+          added_at: string
+          added_by: string
+          file_id: string
+          resource_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by: string
+          file_id: string
+          resource_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string
+          file_id?: string
+          resource_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_resource_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_resource_files_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_resource_log: {
+        Row: {
+          action: string
+          actor: string
+          at: string
+          id: string
+          note: string | null
+          resource_id: string
+        }
+        Insert: {
+          action: string
+          actor: string
+          at?: string
+          id?: string
+          note?: string | null
+          resource_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          at?: string
+          id?: string
+          note?: string | null
+          resource_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_resource_log_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_resources: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string
+          domain: string
+          id: string
+          keywords: string[]
+          kind: string
+          no_personal_data: boolean
+          org_id: string
+          published_at: string | null
+          published_by: string | null
+          retired_at: string | null
+          rev: number
+          review_note: string | null
+          school_id: string | null
+          series_id: string
+          source: string
+          stages: string[]
+          status: string
+          subjects: string[]
+          submitted_at: string | null
+          summary: string
+          title: string
+          updated_at: string
+          updated_by: string
+          usage_rights: string
+          version: number
+          version_of: string | null
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          created_by: string
+          domain?: string
+          id?: string
+          keywords?: string[]
+          kind: string
+          no_personal_data?: boolean
+          org_id: string
+          published_at?: string | null
+          published_by?: string | null
+          retired_at?: string | null
+          rev?: number
+          review_note?: string | null
+          school_id?: string | null
+          series_id: string
+          source?: string
+          stages?: string[]
+          status?: string
+          subjects?: string[]
+          submitted_at?: string | null
+          summary?: string
+          title: string
+          updated_at?: string
+          updated_by: string
+          usage_rights?: string
+          version?: number
+          version_of?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string
+          domain?: string
+          id?: string
+          keywords?: string[]
+          kind?: string
+          no_personal_data?: boolean
+          org_id?: string
+          published_at?: string | null
+          published_by?: string | null
+          retired_at?: string | null
+          rev?: number
+          review_note?: string | null
+          school_id?: string | null
+          series_id?: string
+          source?: string
+          stages?: string[]
+          status?: string
+          subjects?: string[]
+          submitted_at?: string | null
+          summary?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string
+          usage_rights?: string
+          version?: number
+          version_of?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_resources_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_resources_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_resources_version_of_fkey"
+            columns: ["version_of"]
+            isOneToOne: false
+            referencedRelation: "sv5_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sv5_result_history: {
         Row: {
           actor: string
@@ -23087,6 +23273,7 @@ export type Database = {
         Returns: boolean
       }
       _can_read_file_before_sv3: { Args: { _file: string }; Returns: boolean }
+      _can_read_file_before_sv5: { Args: { _file: string }; Returns: boolean }
       _cg_admin: {
         Args: { _conv: string }
         Returns: {
@@ -30700,6 +30887,34 @@ export type Database = {
         Returns: string
       }
       sv5_refs: { Args: { _org: string }; Returns: Json }
+      sv5_res_add_file: {
+        Args: { _mime: string; _name: string; _res: string; _size: number }
+        Returns: Json
+      }
+      sv5_res_get: { Args: { _id: string }; Returns: Json }
+      sv5_res_list: { Args: { _org: string }; Returns: Json }
+      sv5_res_new_version: { Args: { _id: string }; Returns: string }
+      sv5_res_remove_file: {
+        Args: { _file: string; _res: string }
+        Returns: undefined
+      }
+      sv5_res_retire: {
+        Args: { _id: string; _note: string; _rev: number }
+        Returns: undefined
+      }
+      sv5_res_review: {
+        Args: { _decision: string; _id: string; _note: string; _rev: number }
+        Returns: undefined
+      }
+      sv5_res_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv5_res_scopes: { Args: { _org: string }; Returns: Json }
+      sv5_res_submit: {
+        Args: { _id: string; _rev: number }
+        Returns: undefined
+      }
       sv5_result_list: { Args: { _measure: string }; Returns: Json }
       sync_class_group: {
         Args: { _section: string; _year: string }
