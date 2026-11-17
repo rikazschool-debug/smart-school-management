@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-17 (prompt-442): Approved plan revisions are separate records with independent no-self approval; original approved status cannot be reopened. Principal/owner handover checks recipient live branch assignment/membership and retains visit author. Visit work uses handler identity+live exact assignment. Supervision Storage direct upload/read is denied; authenticated file server calls first authorize via session-scoped sv3_file_meta, validate/seal pending bytes, and recheck access before returning data; only seal is service-only. No role/member edits or production changes. Already-issued signed links/cached bytes were not retrospectively revoked.
+
 2026-11-17 (prompt-441): No grants or database rules changed. Supervision work filters and plan/visit reports use caller-scoped RPC results only; visit report includes only returned recommendations/reflections/events, never file URLs or a privileged form read. Teacher comment after approved visit is now visible in the UI, matching the existing server rule; acknowledgment and approval remain separate. Ended supervisor direct detail remains refused.
 
 2026-11-16 (targeting empty roster): No permissions changed. Exam roster remains scoped to the chosen authorized course's section/year and active enrollments through the browser RLS client. Search is disabled before course selection; no-selection, empty enrollment and no matches are distinguished.
