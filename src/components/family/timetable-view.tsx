@@ -34,6 +34,7 @@ export function TimetableView({ rows }: { rows: Slot[] }) {
   const [view, setView] = useState<"week" | "day">("week");
   const [day, setDay] = useState<number | null>(null);
   const [sel, setSel] = useState<Slot | null>(null);
+  useEffect(() => { if (window.matchMedia("(max-width: 640px)").matches) setView("day"); }, []);
   if (!rows.length) return <EmptyState title="لا يوجد جدول منشور لشعبته بعد" />;
   const today = now && days.includes(now.day) ? now.day : null;
   const shownDay = day ?? today ?? days[0]!;
@@ -54,10 +55,10 @@ export function TimetableView({ rows }: { rows: Slot[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">الحصة الآن</p><p className="mt-1 font-bold">{current ? `${current.subject} · ${current.period}` : "لا توجد حصة الآن"}</p></div>
-        <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">الحصة التالية اليوم</p><p className="mt-1 font-bold">{next ? `${next.subject} · ${hm(next.start)}` : "—"}</p></div>
-        <div className="rounded-xl border bg-card p-4"><p className="text-xs text-muted-foreground">الأسبوع</p><p className="mt-1 font-bold">{rows.length} حصة · {subjects} مادة</p></div>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="rounded-xl border bg-card p-3 sm:p-4"><p className="text-[11px] text-muted-foreground sm:text-xs">الحصة الآن</p><p className="mt-1 text-sm font-bold sm:text-base">{current ? `${current.subject} · ${current.period}` : "لا توجد حصة الآن"}</p></div>
+        <div className="rounded-xl border bg-card p-3 sm:p-4"><p className="text-[11px] text-muted-foreground sm:text-xs">الحصة التالية اليوم</p><p className="mt-1 text-sm font-bold sm:text-base">{next ? `${next.subject} · ${hm(next.start)}` : "—"}</p></div>
+        <div className="rounded-xl border bg-card p-3 sm:p-4"><p className="text-[11px] text-muted-foreground sm:text-xs">الأسبوع</p><p className="mt-1 text-sm font-bold sm:text-base">{rows.length} حصة · {subjects} مادة</p></div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
