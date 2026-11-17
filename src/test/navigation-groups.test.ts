@@ -36,3 +36,12 @@ describe("navigation grouping preserves authorized entries", () => {
     expect(groups[0]?.keys[0]).toBe("home");
   });
 });
+
+describe("supervision and school map placement", () => {
+  it("lists supervision under educational affairs and the school map right after documents", () => {
+    const g = navigationGroups(["supervision", "org_docs", "school_map", "courses"]);
+    expect(g.find((x) => x.label === "الشؤون التعليمية")?.keys).toContain("supervision");
+    const admin = g.find((x) => x.label === "إدارة المدرسة")?.keys ?? [];
+    expect(admin).toEqual(["org_docs", "school_map"]);
+  });
+});

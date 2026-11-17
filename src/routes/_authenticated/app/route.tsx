@@ -22,7 +22,7 @@ import { usePcMe } from "@/components/procurement/shared";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { workspacePages } from "@/lib/workspace-perms";
-import { HeartPulse, FileText, IdCard, Tags, PartyPopper, UserPlus, FileBarChart } from "lucide-react";
+import { HeartPulse, FileText, IdCard, Tags, PartyPopper, UserPlus, FileBarChart, Map as MapIcon } from "lucide-react";
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { ROOM_TABS, roomTabsForRole } from "@/components/classroom-room-tabs";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
@@ -72,7 +72,6 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   student_guidance: { to: "/app/student-guidance", label: "التوجيه الطلابي", icon: UsersRound },
   gifted_care: { to: "/app/gifted-care", label: "رعاية الموهوبين", icon: Award },
   remedial_plans: { to: "/app/remedial-plans", label: "الخطط العلاجية", icon: BookOpen },
-  supervision_visits: { to: "/app/supervision-visits", label: "الزيارات الإشرافية", icon: ClipboardList },
   supervision: { to: "/app/supervision", label: "الإشراف التربوي", icon: ClipboardList },
   grades: { to: "/app/grades", label: "أرشيف الدرجات الفصلية", icon: Award },
   results: { to: "/app/results", label: "النتائج", icon: Award },
@@ -103,6 +102,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   bus_maintenance: { to: "/app/bus-maintenance", label: "إدارة تشغيل وصيانة الباصات", icon: Bus },
   admissions: { to: "/app/admissions", label: "طلبات القبول والتسجيل", icon: UserPlus },
   org_docs: { to: "/app/org-docs", label: "الوثائق والعقود", icon: FileText },
+  school_map: { to: "/app/school-map", label: "الخريطة المدرسية", icon: MapIcon },
   hr_training: { to: "/app/hr/training", label: "التدريب والتطوير", icon: GraduationCap },
   visits: { to: "/app/visits", label: "الزيارات الصفية", icon: ClipboardList },
   family_visits: { to: "/app/family-visits", label: "الزيارات", icon: CalendarDays },
@@ -216,7 +216,7 @@ function Shell() {
   const noSidebar = owner && section === null;
   const baseNav = [...NAV_BY_ROLE[active.role], "profile", "support", ...(ct.includes("circulars") ? ["circulars"] : []), ...(ct.includes("groups") ? ["comm_groups"] : []), ...(ct.includes("manage") ? ["comm_manage"] : []), ...(pcRole && pc.data?.enabled && (pc.data.caps.view || active.role === "principal") ? ["procurement"] : []), ...(pcRole && hasKind(mt.data, "school") ? ["maintenance"] : []), ...(pcRole && (hasKind(mt.data, "bus") || canFleet(mt.data)) ? ["bus_maintenance"] : []), ...(pcRole && hasAdmissions(ad.data) ? ["admissions"] : []),
     // owner-granted school permissions (perm_my_school) add their pages; the server re-checks every action
-    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] || sp?.["attendance.view"] || sp?.["attendance.record"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(!owner && (sp?.["notices.view"] || sp?.["notices.send"]) ? ["hub_notices"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs"] : []), ...(sp?.["health.view"] || sp?.["health.record"] || sp?.["health.manage"] ? ["health"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(owner || ["view", "replies", "autoreply", "media"].some((a) => sp?.[`chat_settings.${a}`]) ? ["chat_settings"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
+    ...(sp?.["gate.operate"] || sp?.["attendance.approve"] || sp?.["attendance.follow"] || sp?.["attendance.view"] || sp?.["attendance.record"] ? ["attendance"] : []), ...(sp?.["gate.operate"] ? ["station"] : []), ...(!owner && (sp?.["notices.view"] || sp?.["notices.send"]) ? ["hub_notices"] : []), ...(owner || sp?.["org_docs.view"] ? ["org_docs", "school_map"] : []), ...(sp?.["health.view"] || sp?.["health.record"] || sp?.["health.manage"] ? ["health"] : []), ...(owner || sp?.["people.view"] ? ["tags"] : []), ...(owner || ["view", "replies", "autoreply", "media"].some((a) => sp?.[`chat_settings.${a}`]) ? ["chat_settings"] : []), ...(sp?.["groups.create"] ? ["comm_manage"] : []), ...(evGranted && active.role !== "guardian" ? ["evaluation"] : []), ...(hrGranted ? ["hr", "hr_training"] : []), ...(myHr.data && !(myHr.data as { pending?: boolean }).pending ? ["my_hr"] : []), ...(hasEvents(evt.data) ? ["events"] : [])] as NavKey[];
   // base-role tools the owner stopped for this person (perm_my_school bt_*; the server blocks them too)
   if (peopleRead.data === true || sp?.["people_family.view"] || sp?.["people_family.edit"]) baseNav.push("students", "guardians");
   const delegatedPages = workspacePages(sp);

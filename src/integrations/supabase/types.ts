@@ -6823,6 +6823,167 @@ export type Database = {
           },
         ]
       }
+      fm_buildings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          floors: number
+          has_basement: boolean
+          id: string
+          image_file_id: string | null
+          name: string
+          notes: string | null
+          org_id: string
+          school_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          floors?: number
+          has_basement?: boolean
+          id?: string
+          image_file_id?: string | null
+          name: string
+          notes?: string | null
+          org_id: string
+          school_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          floors?: number
+          has_basement?: boolean
+          id?: string
+          image_file_id?: string | null
+          name?: string
+          notes?: string | null
+          org_id?: string
+          school_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fm_buildings_image_file_id_fkey"
+            columns: ["image_file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fm_buildings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fm_buildings_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fm_rooms: {
+        Row: {
+          area: number | null
+          building_id: string
+          capacity: number | null
+          category: string
+          code: string | null
+          created_at: string
+          created_by: string | null
+          equipment: string | null
+          floor: number
+          id: string
+          name: string
+          notes: string | null
+          org_id: string
+          resp_notes: string | null
+          resp_phone: string | null
+          resp_title: string | null
+          resp_user: string | null
+          school_id: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          area?: number | null
+          building_id: string
+          capacity?: number | null
+          category: string
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          equipment?: string | null
+          floor?: number
+          id?: string
+          name: string
+          notes?: string | null
+          org_id: string
+          resp_notes?: string | null
+          resp_phone?: string | null
+          resp_title?: string | null
+          resp_user?: string | null
+          school_id: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          area?: number | null
+          building_id?: string
+          capacity?: number | null
+          category?: string
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          equipment?: string | null
+          floor?: number
+          id?: string
+          name?: string
+          notes?: string | null
+          org_id?: string
+          resp_notes?: string | null
+          resp_phone?: string | null
+          resp_title?: string | null
+          resp_user?: string | null
+          school_id?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fm_rooms_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "fm_buildings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fm_rooms_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fm_rooms_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gate_movements: {
         Row: {
           at: string
@@ -27867,6 +28028,14 @@ export type Database = {
       family_request_detail: { Args: { _id: string }; Returns: Json }
       fin_pay_get: { Args: { _school: string }; Returns: Json }
       fin_pay_save: { Args: { _p: Json; _school: string }; Returns: Json }
+      fm_caps: { Args: { _org: string }; Returns: Json }
+      fm_delete: {
+        Args: { _id: string; _kind: string; _org: string }
+        Returns: undefined
+      }
+      fm_get: { Args: { _org: string; _school: string }; Returns: Json }
+      fm_save_building: { Args: { _org: string; _p: Json }; Returns: string }
+      fm_save_room: { Args: { _org: string; _p: Json }; Returns: string }
       gb_approve: {
         Args: {
           _accept: boolean

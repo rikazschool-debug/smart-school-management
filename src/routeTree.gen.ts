@@ -62,6 +62,7 @@ import { Route as AuthenticatedAppResultsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppScheduleRouteImport } from './routes/_authenticated/app/schedule'
 import { Route as AuthenticatedAppSchoolDayRouteImport } from './routes/_authenticated/app/school-day'
 import { Route as AuthenticatedAppSchoolHomeRouteImport } from './routes/_authenticated/app/school-home'
+import { Route as AuthenticatedAppSchoolMapRouteImport } from './routes/_authenticated/app/school-map'
 import { Route as AuthenticatedAppSchoolsRouteImport } from './routes/_authenticated/app/schools'
 import { Route as AuthenticatedAppSignupRequestsRouteImport } from './routes/_authenticated/app/signup-requests'
 import { Route as AuthenticatedAppStudentGuidanceRouteImport } from './routes/_authenticated/app/student-guidance'
@@ -411,6 +412,12 @@ const AuthenticatedAppSchoolHomeRoute =
   AuthenticatedAppSchoolHomeRouteImport.update({
     id: '/school-home',
     path: '/school-home',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSchoolMapRoute =
+  AuthenticatedAppSchoolMapRouteImport.update({
+    id: '/school-map',
+    path: '/school-map',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppSchoolsRoute = AuthenticatedAppSchoolsRouteImport.update({
@@ -796,6 +803,7 @@ export interface FileRoutesByFullPath {
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/app/school-day': typeof AuthenticatedAppSchoolDayRoute
   '/app/school-home': typeof AuthenticatedAppSchoolHomeRoute
+  '/app/school-map': typeof AuthenticatedAppSchoolMapRoute
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/signup-requests': typeof AuthenticatedAppSignupRequestsRoute
   '/app/student-guidance': typeof AuthenticatedAppStudentGuidanceRoute
@@ -906,6 +914,7 @@ export interface FileRoutesByTo {
   '/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/app/school-day': typeof AuthenticatedAppSchoolDayRoute
   '/app/school-home': typeof AuthenticatedAppSchoolHomeRoute
+  '/app/school-map': typeof AuthenticatedAppSchoolMapRoute
   '/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/app/signup-requests': typeof AuthenticatedAppSignupRequestsRoute
   '/app/student-guidance': typeof AuthenticatedAppStudentGuidanceRoute
@@ -1019,6 +1028,7 @@ export interface FileRoutesById {
   '/_authenticated/app/schedule': typeof AuthenticatedAppScheduleRoute
   '/_authenticated/app/school-day': typeof AuthenticatedAppSchoolDayRoute
   '/_authenticated/app/school-home': typeof AuthenticatedAppSchoolHomeRoute
+  '/_authenticated/app/school-map': typeof AuthenticatedAppSchoolMapRoute
   '/_authenticated/app/schools': typeof AuthenticatedAppSchoolsRoute
   '/_authenticated/app/signup-requests': typeof AuthenticatedAppSignupRequestsRoute
   '/_authenticated/app/student-guidance': typeof AuthenticatedAppStudentGuidanceRoute
@@ -1132,6 +1142,7 @@ export interface FileRouteTypes {
     | '/app/schedule'
     | '/app/school-day'
     | '/app/school-home'
+    | '/app/school-map'
     | '/app/schools'
     | '/app/signup-requests'
     | '/app/student-guidance'
@@ -1242,6 +1253,7 @@ export interface FileRouteTypes {
     | '/app/schedule'
     | '/app/school-day'
     | '/app/school-home'
+    | '/app/school-map'
     | '/app/schools'
     | '/app/signup-requests'
     | '/app/student-guidance'
@@ -1354,6 +1366,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/schedule'
     | '/_authenticated/app/school-day'
     | '/_authenticated/app/school-home'
+    | '/_authenticated/app/school-map'
     | '/_authenticated/app/schools'
     | '/_authenticated/app/signup-requests'
     | '/_authenticated/app/student-guidance'
@@ -1808,6 +1821,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSchoolHomeRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/school-map': {
+      id: '/_authenticated/app/school-map'
+      path: '/school-map'
+      fullPath: '/app/school-map'
+      preLoaderRoute: typeof AuthenticatedAppSchoolMapRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/schools': {
       id: '/_authenticated/app/schools'
       path: '/schools'
@@ -2253,6 +2273,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppScheduleRoute: typeof AuthenticatedAppScheduleRoute
   AuthenticatedAppSchoolDayRoute: typeof AuthenticatedAppSchoolDayRoute
   AuthenticatedAppSchoolHomeRoute: typeof AuthenticatedAppSchoolHomeRoute
+  AuthenticatedAppSchoolMapRoute: typeof AuthenticatedAppSchoolMapRoute
   AuthenticatedAppSchoolsRoute: typeof AuthenticatedAppSchoolsRoute
   AuthenticatedAppSignupRequestsRoute: typeof AuthenticatedAppSignupRequestsRoute
   AuthenticatedAppStudentGuidanceRoute: typeof AuthenticatedAppStudentGuidanceRoute
@@ -2348,6 +2369,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppScheduleRoute: AuthenticatedAppScheduleRoute,
   AuthenticatedAppSchoolDayRoute: AuthenticatedAppSchoolDayRoute,
   AuthenticatedAppSchoolHomeRoute: AuthenticatedAppSchoolHomeRoute,
+  AuthenticatedAppSchoolMapRoute: AuthenticatedAppSchoolMapRoute,
   AuthenticatedAppSchoolsRoute: AuthenticatedAppSchoolsRoute,
   AuthenticatedAppSignupRequestsRoute: AuthenticatedAppSignupRequestsRoute,
   AuthenticatedAppStudentGuidanceRoute: AuthenticatedAppStudentGuidanceRoute,

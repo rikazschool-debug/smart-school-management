@@ -33,7 +33,7 @@ export type NavKey =
   | "student_guidance"
   | "gifted_care"
   | "remedial_plans"
-  | "supervision_visits"
+  | "school_map"
   | "supervision"
   | "tests"
   | "collaboration"
@@ -99,7 +99,7 @@ export type NavKey =
 export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support" | "calls";
 export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة", calls: "المكالمات الهاتفية" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
-  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "tests", "student_guidance", "gifted_care", "remedial_plans", "supervision_visits", "supervision", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "family_visits", "health", "events", "collaboration", "reports"],
+  school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "tests", "student_guidance", "gifted_care", "remedial_plans", "supervision", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "school_map", "family_visits", "health", "events", "collaboration", "reports"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
   admissions: ["admissions", "students", "guardians"],
@@ -139,7 +139,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
 
 /** Side-menu keys an owner sees inside a section (filtered further by what the role may open). */
 export function ownerSectionNav(section: OwnerSection, allowed: NavKey[]): NavKey[] {
-  const own = OWNER_SECTION_KEYS[section].filter((k) => allowed.includes(k) || k === "school_home" || k === "finance" || k === "hr" || k === "permissions" || k === "procurement" || k === "operations" || k === "transport" || k === "maintenance" || k === "bus_maintenance" || k === "admissions" || k === "org_docs" || k === "family_visits" || k === "health" || k === "tags" || k === "chat_settings" || k === "events" || k === "evaluation" || k === "hr_training" || section === "hub");
+  const own = OWNER_SECTION_KEYS[section].filter((k) => allowed.includes(k) || k === "school_home" || k === "finance" || k === "hr" || k === "permissions" || k === "procurement" || k === "operations" || k === "transport" || k === "maintenance" || k === "bus_maintenance" || k === "admissions" || k === "org_docs" || k === "school_map" || k === "family_visits" || k === "health" || k === "tags" || k === "chat_settings" || k === "events" || k === "evaluation" || k === "hr_training" || section === "hub");
   // "calls" is added to `allowed` only when mq_caps grants a section
   return [...new Set([...own, ...OWNER_COMMON])];
 }
@@ -195,18 +195,18 @@ export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).ma
   if (["org_owner", "counselor", "teacher"].includes(r)) extra.push("student_guidance");
   if (["org_owner", "counselor", "principal", "vice_principal", "teacher", "student_affairs"].includes(r)) extra.push("gifted_care");
   if (["org_owner", "principal", "vice_principal", "teacher", "supervisor", "guardian"].includes(r)) extra.push("remedial_plans");
-  if (["org_owner", "principal", "supervisor", "teacher"].includes(r)) extra.push("supervision_visits");
   if (["org_owner", "principal", "supervisor", "teacher", "vice_principal", "dept_head"].includes(r)) extra.push("supervision");
   return [r, [...new Set([...ks, ...extra])].filter((k) => !HIDDEN_NAV.includes(k))];
 })) as Record<Role, NavKey[]>;
 
 /** Menu labels (same as the side menu) for previewing a base role's dashboard. */
 export const NAV_LABELS: Partial<Record<NavKey, string>> = {
-  student_guidance: "التوجيه الطلابي", gifted_care: "رعاية الموهوبين", remedial_plans: "الخطط العلاجية", supervision_visits: "الزيارات الإشرافية", supervision: "الإشراف التربوي", tests: "الاختبارات",
+  student_guidance: "التوجيه الطلابي", gifted_care: "رعاية الموهوبين", remedial_plans: "الخطط العلاجية", supervision: "الإشراف التربوي", tests: "الاختبارات",
   collaboration: "التعاون",
   reports: "منشئ التقارير",
   family_requests: "طلبات ولي الأمر",
   org_docs: "الوثائق والعقود",
+  school_map: "الخريطة المدرسية",
   family_visits: "الزيارات",
   events: "الفعاليات",
   hr_training: "التدريب والتطوير",
