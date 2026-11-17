@@ -660,3 +660,10 @@ The `other` request kind uses the same verified-child access, school/org scope, 
 | بعد انتهاء الإسناد | لا وصول (إلا تفويض قراءة محدد) | — | يسلّم المتابعات | — | — | يسلّم ويمنح قراءة |
 - Educational supervision forms: base templates are view/preview only; only the org owner or a forms delegate adopts one (sv_form_adopt) into a fixed org version (adopter + date) before any record can use it — enforced server-side.
 - Supervision stage 3: sv3_* uses current exact assignment/branch checks. Principal and owner coordinate visits; supervisor works within live assigned teachers/courses/subjects. Peer teacher writes only own reflection, not confidential documentation. Recommendation owner submits; independent coordinator verifies. Internal evidence denied to teachers and other branches, including signed-link creation after assignment ends.
+
+## الإشراف التربوي — المرحلة 4: المعلمون والتطوير المهني (2026-11-17)
+- المشرف: داخل فرعه وإسناده الساري فقط — يقترح احتياجات ويراجع احتياجات غيره، يبني خطط التطوير ويرسلها، يدير البرامج والجلسات والحضور والمتابعات، يتحقق من أنشطة لا يملكها. ينقطع كل ذلك فور انتهاء الإسناد.
+- مدير الفرع: كل ما سبق في فرعه، ويعتمد الخطط أو يعيدها (ليس خطة كتبها)، ويسلّم الخطط يدويًا لمستلم مطابق.
+- المالك: كل الفروع بفلاتر، اعتماد نماذج التقييم الداخلية (أو مفوض النماذج)، ويرى برامج كل الفروع.
+- المعلم: ملفه وما شُورك معه دون الملاحظات الداخلية؛ يسجل احتياجه، يحدّث أنشطته ويرفع شواهدها، يسجل/يعتذر، يقيّم إن حضر، يقدم شاهد التطبيق؛ لا يعتمد ولا يتحقق من نفسه.
+- الموارد البشرية (hr_employees عرض): الساعات الموثقة بالحضور فقط، دون ملاحظات إشرافية.
