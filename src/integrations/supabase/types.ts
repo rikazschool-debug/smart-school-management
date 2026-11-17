@@ -20630,6 +20630,234 @@ export type Database = {
           },
         ]
       }
+      sv5_action_links: {
+        Row: {
+          action_id: string
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          ref_id: string
+        }
+        Insert: {
+          action_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          kind: string
+          ref_id: string
+        }
+        Update: {
+          action_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          ref_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_action_links_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_action_log: {
+        Row: {
+          action_id: string
+          actor: string
+          after: Json | null
+          at: string
+          before: Json | null
+          id: string
+          kind: string
+          note: string | null
+        }
+        Insert: {
+          action_id: string
+          actor: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          id?: string
+          kind: string
+          note?: string | null
+        }
+        Update: {
+          action_id?: string
+          actor?: string
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          id?: string
+          kind?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_action_log_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_actions: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          created_by: string
+          due_on: string | null
+          evidence: string
+          goals: string
+          id: string
+          impact_at: string | null
+          impact_by: string | null
+          impact_measure_id: string | null
+          impact_note: string | null
+          impact_snapshot: Json | null
+          impact_status: string
+          indicators: Json
+          measure_id: string
+          org_id: string
+          owner_id: string | null
+          result_snapshot: Json
+          rev: number
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school_id: string
+          section_ids: string[]
+          status: string
+          student_ids: string[]
+          subject_id: string
+          target_kind: string
+          teacher_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          created_by: string
+          due_on?: string | null
+          evidence?: string
+          goals?: string
+          id?: string
+          impact_at?: string | null
+          impact_by?: string | null
+          impact_measure_id?: string | null
+          impact_note?: string | null
+          impact_snapshot?: Json | null
+          impact_status?: string
+          indicators?: Json
+          measure_id: string
+          org_id: string
+          owner_id?: string | null
+          result_snapshot: Json
+          rev?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id: string
+          section_ids?: string[]
+          status?: string
+          student_ids?: string[]
+          subject_id: string
+          target_kind?: string
+          teacher_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          created_by?: string
+          due_on?: string | null
+          evidence?: string
+          goals?: string
+          id?: string
+          impact_at?: string | null
+          impact_by?: string | null
+          impact_measure_id?: string | null
+          impact_note?: string | null
+          impact_snapshot?: Json | null
+          impact_status?: string
+          indicators?: Json
+          measure_id?: string
+          org_id?: string
+          owner_id?: string | null
+          result_snapshot?: Json
+          rev?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string
+          section_ids?: string[]
+          status?: string
+          student_ids?: string[]
+          subject_id?: string
+          target_kind?: string
+          teacher_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_actions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_actions_impact_measure_id_fkey"
+            columns: ["impact_measure_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_measures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_actions_measure_id_fkey"
+            columns: ["measure_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_measures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_actions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_actions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_actions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_actions_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sv5_imports: {
         Row: {
           actor: string
@@ -30379,6 +30607,48 @@ export type Database = {
       }
       sv4_teacher_list: { Args: { _org: string }; Returns: Json }
       sv4_teacher_profile: { Args: { _teacher: string }; Returns: Json }
+      sv5_act_get: { Args: { _id: string }; Returns: Json }
+      sv5_act_impact: {
+        Args: {
+          _id: string
+          _measure: string
+          _note: string
+          _rev: number
+          _status: string
+          _values: Json
+        }
+        Returns: undefined
+      }
+      sv5_act_link: {
+        Args: {
+          _id: string
+          _kind: string
+          _ref: string
+          _remove: boolean
+          _rev: number
+        }
+        Returns: undefined
+      }
+      sv5_act_link_refs: { Args: { _id: string }; Returns: Json }
+      sv5_act_list: { Args: { _org: string }; Returns: Json }
+      sv5_act_people: { Args: { _measure: string }; Returns: Json }
+      sv5_act_progress: {
+        Args: { _id: string; _kind: string; _note: string; _rev: number }
+        Returns: undefined
+      }
+      sv5_act_review: {
+        Args: { _decision: string; _id: string; _note: string; _rev: number }
+        Returns: undefined
+      }
+      sv5_act_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv5_act_students: { Args: { _measure: string }; Returns: Json }
+      sv5_act_submit: {
+        Args: { _id: string; _rev: number }
+        Returns: undefined
+      }
       sv5_analysis: {
         Args: { _mastery: string; _measure: string; _section: string }
         Returns: Json
