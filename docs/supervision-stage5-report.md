@@ -57,5 +57,19 @@
 - Image preview inside a resource (only PDF and text were attached).
 - Printed paper output.
 
+## Batch 4: الملف المهني — implemented and tested on the test DB
+- Tables sv5_portfolio (reference to the source + frozen summary title/date/description only; year/term derived from academic_years/terms; domain; teacher reflection; proposed/returned/verified/withdrawn) and sv5_portfolio_log (append-only). RPC-only sv5_pf_*.
+- Sources: approved supervision records, present attendance in scheduled PD sessions, approved development plans, done improvement actions owned by the teacher. No files or internal notes are copied; «فتح المصدر» shows only when the caller passes the source's own read rule.
+- Only the teacher proposes, edits or withdraws; verification/return (with reason) by owner, branch principal or a supervisor whose live assignment covers the teacher — never the teacher. Verified items are immutable; withdrawing frees the source again. Stale revisions refused.
+- UI: «الموارد والتقارير ← الملف المهني», grouped by year → term → domain, filters, queue «بانتظار تحققك», per-item log, Excel/PDF/print with the note that item counts do not indicate quality.
+
+### Evidence
+- /tmp/browser/sv449/pf.py (28 PASS): candidates without notes, other teacher/principal cannot propose, domain required, duplicate refused, year/term derived, other teacher / other-branch principal / unassigned supervisor cannot read or verify, return needs reason, stale rev, re-propose, verify, verified immutable, withdraw + hidden + source free again, log order.
+- /tmp/browser/sv449/pfui.py: teacher at 390px proposed a plan (button disabled until domain), no verify button for the teacher, no overflow; supervisor verified from the queue, log shown, print contains the note and rows. Screenshot /mnt/documents/professional-portfolio.png.
+- Unit: src/test/supervision-pf.test.ts (5).
+
+### Not verified
+- Portfolio PDF/Excel file contents (print only); a teacher working in two branches.
+
 ## Remaining stage-5 batches («غير مكتملة»)
-Professional portfolio, periodic reports and dashboard.
+ portfolio, periodic reports and dashboard.

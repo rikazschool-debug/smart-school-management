@@ -165,7 +165,7 @@
 - [x] Stage 5: learning outcomes (sources, Excel import preview, analysis, comparison rules, MCQ analysis) — sv449/lo.py + loui.py
 - [x] Stage 5: analysis → improvement action (sv449/act.py + actui.py)
 - [x] Stage 5: resources/bulletins on existing library, versions, review/publish (sv449/res.py + resui.py)
-- [ ] Stage 5: professional portfolio
+- [x] Stage 5: professional portfolio (sv449/pf.py + pfui.py)
 - [ ] Stage 5: reports & dashboard
 - [ ] Forms library: alignment table + sources (MoE, ETEC, Learning Forward), content for 3 pilot forms then 17
 - [ ] Forms library: cards/filters, owner editor, principal proposal, version compare, A4 print
