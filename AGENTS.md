@@ -60,5 +60,3 @@
 - Permission catalog informational entries remain locked; workspace sections and bt_* tools are grantable through owner-only templates/person edits. Tool grants never replace course assignment, participant, or private self-record identity checks.
 - Export branding: every PDF/print/Excel export carries the active school (or group) name + logo via src/lib/export-brand.ts (synced by ExportBrandSync in the app layout) — never a per-screen header.
 - Use one PermTree per editor to avoid duplicate controls.
-- School map (fm_buildings/fm_rooms): RPC-only (fm_caps/fm_get/fm_save_building/fm_save_room/fm_delete) gated per branch by the org_docs permission (private._fm_ok); building photos reuse the org_doc file flow and are readable via _od_file_ok; room responsible comes from people_pick purpose facility_resp (active branch staff). Model + test: src/components/school-map/model.ts, src/test/school-map-model.test.ts.
-- The old «الزيارات الإشرافية» desk (edu kind supervision) is retired: /app/supervision-visits redirects to /app/supervision and the section is out of perm_catalog; supervision visits live only in sv3_*.

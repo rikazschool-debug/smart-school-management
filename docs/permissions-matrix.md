@@ -393,6 +393,9 @@ Pending-branch applications: owner or settings at org scope only. Platform can p
 
 | hub_meetings.create / start / attend | org owner; principal (organize via meetings.organize); others only if granted (branch or org scope) | server: _adm_can_organize, _adm_live_role, adm_meeting_attendance |
 
+## school_map (الخريطة المدرسية)
+- عرض/إضافة/تعديل المباني والغرف بصلاحيات org_docs نفسها لكل فرع (view/create/edit)؛ المالك دائمًا. المسؤول المخوَّل يُختار من منسوبي الفرع النشطين فقط.
+
 ## org_docs (الوثائق والعقود)
 - مالك المجموعة: كل الإجراءات. غيره: يُمنح عرض/إضافة/تعديل/تنزيل لكل مدرسة أو للمجموعة من شجرة الصلاحيات؛ الوثائق على مستوى المجموعة تتطلب الحق على كل الفروع.
 
