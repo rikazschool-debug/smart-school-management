@@ -1,0 +1,271 @@
+import type React from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarRange, Download, FileText, Handshake, Mail, Paperclip, Pencil, Phone, Plus, School, Search, ShieldCheck, UserRound, X } from "lucide-react";
+import { toast } from "sonner";
+import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { selectCls } from "@/components/ui/native-select";
+import { arabicError, useSession } from "@/lib/session";
+import { rpc } from "@/components/hr/shared";
+import { db } from "@/components/crud-page";
+import { uploadObject } from "@/components/classroom-posts";
+
+export type OrgDocsTab = "docs" | "contractors";
+type Tab = OrgDocsTab;
+type Caps = { owner: boolean; schools: { id: string; name: string; view: boolean; create: boolean; edit: boolean; download: boolean }[]; group: { view: boolean; create: boolean; edit: boolean; download: boolean } };
+type Doc = { id: string; school_id: string | null; school: string | null; kind: string; name: string; doc_no: string | null; issuer: string | null; issued_on: string | null; expires_on: string | null; status: string; file_id: string | null; file_name: string | null };
+type Con = { id: string; name: string; service: string; contact_name: string | null; phone: string | null; email: string | null; school_ids: string[]; schools: string[]; starts_on: string | null; ends_on: string | null; status: string; notes: string | null; community_partner: boolean; files: { id: string; name: string }[] };
+
+const STATUS: Record<string, [string, string]> = {
+  valid: ["سارية", "bg-primary/10 text-primary"], expiring: ["تنتهي خلال 30 يومًا", "bg-accent text-accent-foreground"],
+  expired: ["منتهية", "bg-destructive/10 text-destructive"], none: ["بلا تاريخ انتهاء", "bg-muted text-muted-foreground"],
+};
+const DOC_KINDS = ["سجل تجاري", "ترخيص تعليمي", "شهادة الدفاع المدني", "رخصة بلدية", "عقد إيجار", "شهادة الزكاة والضريبة", "تأمين", "أخرى"];
+const SERVICES = ["المقصف", "الزي المدرسي", "النظافة", "الحراسة", "النقل", "الصيانة", "أخرى"];
+
+function Badge({ s }: { s: string }) { const [l, c] = STATUS[s] ?? STATUS["none"]!; return <span className={`rounded-full px-2 py-0.5 text-xs ${c}`}>{l}</span>; }
+
+async function openOrgFile(id: string) {
+  const { data: f } = await db.from("files").select("storage_path,name").eq("id", id).maybeSingle();
+  const row = f as { storage_path: string; name: string } | null;
+  if (!row) return void toast.error("لا تملك صلاحية تنزيل هذا الملف");
+  const { data, error } = await db.storage.from("rikaz-files").createSignedUrl(row.storage_path, 60, { download: row.name });
+  if (error || !data) return void toast.error("لا تملك صلاحية تنزيل هذا الملف");
+  window.open(data.signedUrl, "_blank", "noopener");
+}
+
+async function uploadDraft(org: string, school: string | null, file: File): Promise<string> {
+  const d = await rpc<{ id: string; storage_path: string }[]>("od_draft_file", { _org: org, _school: school, _name: file.name, _mime: file.type, _size: file.size });
+  const rec = d[0]!;
+  const r = await uploadObject(rec.storage_path, file, new AbortController().signal);
+  if (r !== "ok") throw new Error("فشل رفع الملف، حاول مرة أخرى");
+  return rec.id;
+}
+
+export function OrgDocsPage({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
+  const { active } = useSession();
+  const org = active?.orgId ?? null;
+  const caps = useQuery({ queryKey: ["od-caps", org], enabled: !!org, queryFn: () => rpc<Caps>("od_caps", { _org: org }) });
+  if (!org) return <EmptyState title="اختر المجموعة أولًا" />;
+  if (caps.isLoading) return <LoadingState />;
+  if (caps.error || !caps.data) return <ErrorState message={arabicError(caps.error)} />;
+  const c = caps.data;
+  const canView = c.owner || c.group.view || c.schools.some((s) => s.view);
+  if (!canView) return <ForbiddenState />;
+  return (
+    <div>
+      <PageHeader eyebrow="إدارة المدارس" title="الوثائق والعقود" desc="وثائق المنشأة وعقود المتعهدين. ما تراه وما تستطيع تنزيله أو تعديله محدد بصلاحياتك لكل مدرسة." />
+      <div role="tablist" aria-label="أقسام الوثائق" className="mb-5 grid gap-2 rounded-2xl border bg-muted/40 p-1.5 sm:inline-grid sm:grid-cols-2">
+        {([["docs", "وثائق المنشأة", "السجلات والتراخيص والشهادات", FileText], ["contractors", "المتعهدون", "عقود الخدمات والشراكات المجتمعية", Handshake]] as const).map(([k, l, d, I]) => {
+          const on = tab === k;
+          return (
+            <button key={k} type="button" role="tab" aria-selected={on} onClick={() => setTab(k)}
+              className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-start transition-colors ${on ? "bg-card shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-card/60"}`}>
+              <span className={`grid size-9 shrink-0 place-items-center rounded-lg ${on ? "bg-primary text-primary-foreground" : "bg-muted"}`}><I className="size-4" aria-hidden /></span>
+              <span><span className={`block text-sm font-bold ${on ? "text-foreground" : ""}`}>{l}</span><span className="block text-xs text-muted-foreground">{d}</span></span>
+            </button>
+          );
+        })}
+      </div>
+      {tab === "docs" ? <Docs org={org} caps={c} /> : <Contractors org={org} caps={c} />}
+    </div>
+  );
+}
+
+function Filters({ caps, q, setQ, school, setSchool, status, setStatus }: { caps: Caps; q: string; setQ: (v: string) => void; school: string; setSchool: (v: string) => void; status: string; setStatus: (v: string) => void }) {
+  return (
+    <div className="mb-3 flex flex-wrap gap-2">
+      <div className="relative min-w-56 flex-1"><Search className="absolute end-2 top-2.5 size-4 text-muted-foreground" /><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم أو النوع أو الرقم" /></div>
+      <select className={selectCls()} value={school} onChange={(e) => setSchool(e.target.value)} aria-label="المدرسة">
+        <option value="">كل المدارس</option>{caps.schools.filter((s) => s.view).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+      </select>
+      <select className={selectCls()} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="الحالة">
+        <option value="">كل الحالات</option>{Object.entries(STATUS).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function Docs({ org, caps }: { org: string; caps: Caps }) {
+  const [q, setQ] = useState(""); const [school, setSchool] = useState(""); const [status, setStatus] = useState("");
+  const [edit, setEdit] = useState<Partial<Doc> | null>(null);
+  const list = useQuery({ queryKey: ["od", org, "docs", q, school, status], queryFn: () => rpc<Doc[]>("od_list", { _org: org, _what: "docs", _q: q || null, _school: school || null, _status: status || null }) });
+  const can = (a: "create" | "edit" | "download", sid: string | null) => caps.owner || (sid ? !!caps.schools.find((s) => s.id === sid)?.[a] : caps.group[a]);
+  const canCreate = caps.owner || caps.group.create || caps.schools.some((s) => s.create);
+  return (
+    <div>
+      <div className="mb-3 flex justify-end">{canCreate && <Button size="sm" onClick={() => setEdit({})}><Plus className="size-4" />إضافة وثيقة</Button>}</div>
+      <Filters {...{ caps, q, setQ, school, setSchool, status, setStatus }} />
+      {edit && <DocForm org={org} caps={caps} init={edit} close={() => setEdit(null)} />}
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} /> : !list.data?.length ? <EmptyState title="لا توجد وثائق" hint="أضف وثائق المنشأة مثل السجل التجاري والتراخيص." /> : (
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm"><thead className="bg-muted/50 text-start"><tr>{["النوع", "الاسم", "الرقم", "جهة الإصدار", "النطاق", "الإصدار", "الانتهاء", "الحالة", ""].map((h) => <th key={h} className="p-2 text-start font-semibold">{h}</th>)}</tr></thead>
+            <tbody>{list.data.map((d) => (
+              <tr key={d.id} className="border-t">
+                <td className="p-2">{d.kind}</td><td className="p-2 font-medium">{d.name}</td><td className="p-2">{d.doc_no ?? "—"}</td><td className="p-2">{d.issuer ?? "—"}</td>
+                <td className="p-2">{d.school ?? "المجموعة"}</td><td className="p-2">{d.issued_on ?? "—"}</td><td className="p-2">{d.expires_on ?? "—"}</td><td className="p-2"><Badge s={d.status} /></td>
+                <td className="flex gap-1 p-2">
+                  {d.file_id && can("download", d.school_id) && <Button size="sm" variant="outline" onClick={() => openOrgFile(d.file_id!)} aria-label="تنزيل الملف"><Download className="size-4" /></Button>}
+                  {can("edit", d.school_id) && <Button size="sm" variant="ghost" onClick={() => setEdit(d)} aria-label="تعديل"><Pencil className="size-4" /></Button>}
+                </td>
+              </tr>))}</tbody></table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DocForm({ org, caps, init, close }: { org: string; caps: Caps; init: Partial<Doc>; close: () => void }) {
+  const qc = useQueryClient();
+  const [f, setF] = useState({ kind: init.kind ?? "", name: init.name ?? "", doc_no: init.doc_no ?? "", issuer: init.issuer ?? "", issued_on: init.issued_on ?? "", expires_on: init.expires_on ?? "", school_id: init.school_id ?? "" });
+  const [file, setFile] = useState<File | null>(null);
+  const action = init.id ? "edit" : "create";
+  const scopes = [...(caps.owner || caps.group[action] ? [["", "المجموعة كاملة"]] : []), ...caps.schools.filter((s) => caps.owner || s[action]).map((s) => [s.id, s.name])];
+  const save = useMutation({
+    mutationFn: async () => {
+      const fid = file ? await uploadDraft(org, f.school_id || null, file) : null;
+      return rpc("od_save_doc", { _org: org, _p: { ...f, id: init.id ?? null, file_id: fid ?? init.file_id ?? null, issued_on: f.issued_on || null, expires_on: f.expires_on || null } });
+    },
+    onSuccess: () => { toast.success("حُفظت الوثيقة"); qc.invalidateQueries({ queryKey: ["od", org] }); close(); },
+    onError: (e) => toast.error(arabicError(e)),
+  });
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
+  return (
+    <div className="mb-4 rounded-lg border bg-card p-4">
+      <div className="mb-3 flex items-center justify-between"><h3 className="font-bold">{init.id ? "تعديل وثيقة" : "وثيقة جديدة"}</h3><Button size="sm" variant="ghost" onClick={close} aria-label="إغلاق"><X className="size-4" /></Button></div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div><Label>نوع الوثيقة</Label><Input list="od-kinds" value={f.kind} onChange={set("kind")} /><datalist id="od-kinds">{DOC_KINDS.map((k) => <option key={k} value={k} />)}</datalist></div>
+        <div><Label>اسم الوثيقة</Label><Input value={f.name} onChange={set("name")} /></div>
+        <div><Label>الرقم (إن وجد)</Label><Input value={f.doc_no} onChange={set("doc_no")} /></div>
+        <div><Label>جهة الإصدار</Label><Input value={f.issuer} onChange={set("issuer")} /></div>
+        <div><Label>تاريخ الإصدار</Label><Input type="date" value={f.issued_on} onChange={set("issued_on")} /></div>
+        <div><Label>تاريخ الانتهاء</Label><Input type="date" value={f.expires_on} onChange={set("expires_on")} /></div>
+        <div><Label>النطاق</Label><select className={selectCls()} value={f.school_id} onChange={set("school_id")}>{scopes.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+        <div><Label>ملف PDF</Label><Input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />{init.file_name && !file && <p className="mt-1 text-xs text-muted-foreground"><FileText className="inline size-3" /> {init.file_name}</p>}</div>
+      </div>
+      <div className="mt-3 flex justify-end"><Button disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? "جارٍ الحفظ…" : "حفظ"}</Button></div>
+    </div>
+  );
+}
+
+function Contractors({ org, caps }: { org: string; caps: Caps }) {
+  const [q, setQ] = useState(""); const [school, setSchool] = useState(""); const [status, setStatus] = useState("");
+  const [edit, setEdit] = useState<Partial<Con> | null>(null);
+  const list = useQuery({ queryKey: ["od", org, "contractors", q, school, status], queryFn: () => rpc<Con[]>("od_list", { _org: org, _what: "contractors", _q: q || null, _school: school || null, _status: status || null }) });
+  const all = (a: "edit" | "download", ids: string[]) => caps.owner || ids.every((id) => caps.schools.find((s) => s.id === id)?.[a]);
+  const any = (a: "download", ids: string[]) => caps.owner || ids.some((id) => caps.schools.find((s) => s.id === id)?.[a]);
+  return (
+    <div>
+      <div className="mb-3 flex justify-end">{(caps.owner || caps.schools.some((s) => s.create)) && !edit && <Button size="sm" onClick={() => setEdit({})}><Plus className="size-4" />إضافة متعهد</Button>}</div>
+      {edit && <ConForm org={org} caps={caps} init={edit} close={() => setEdit(null)} />}
+      <Filters {...{ caps, q, setQ, school, setSchool, status, setStatus }} />
+      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} /> : !list.data?.length ? <EmptyState title="لا يوجد متعهدون" hint="أضف متعهدي المقصف والزي وغيرهم مع عقودهم." /> : (
+        <div className="grid gap-3 md:grid-cols-2">{list.data.map((c) => (
+          <article key={c.id} className="flex flex-col rounded-2xl border bg-card p-4 shadow-sm">
+            <div className="mb-3 flex items-start gap-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Handshake className="size-5" aria-hidden /></span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <h3 className="font-bold">{c.name}</h3>
+                  {c.community_partner && <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground"><ShieldCheck className="size-3.5" aria-hidden />موثوق</span>}
+                </div>
+                <p className="text-xs text-muted-foreground">{c.service}{c.community_partner && " · شراكة مجتمعية"}</p>
+              </div>
+              <Badge s={c.status} />
+            </div>
+            <dl className="grid gap-1.5 text-sm">
+              {c.contact_name && <div className="flex items-center gap-2"><UserRound className="size-4 shrink-0 text-muted-foreground" aria-hidden /><dt className="sr-only">المسؤول</dt><dd>{c.contact_name}</dd></div>}
+              {c.phone && <div className="flex items-center gap-2"><Phone className="size-4 shrink-0 text-muted-foreground" aria-hidden /><dt className="sr-only">الجوال</dt><dd dir="ltr">{c.phone}</dd></div>}
+              {c.email && <div className="flex items-center gap-2"><Mail className="size-4 shrink-0 text-muted-foreground" aria-hidden /><dt className="sr-only">البريد</dt><dd dir="ltr" className="truncate">{c.email}</dd></div>}
+              <div className="flex items-center gap-2"><CalendarRange className="size-4 shrink-0 text-muted-foreground" aria-hidden /><dt className="sr-only">السريان</dt><dd>{c.starts_on ?? "—"} ← {c.ends_on ?? "—"}</dd></div>
+              <div className="flex items-start gap-2"><School className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden /><dt className="sr-only">المدارس</dt><dd className="flex flex-wrap gap-1">{c.schools.map((s) => <span key={s} className="rounded-md bg-muted px-1.5 py-0.5 text-xs">{s}</span>)}</dd></div>
+            </dl>
+            {(c.files.length > 0 || all("edit", c.school_ids)) && <div className="mt-3 flex flex-wrap gap-1 border-t pt-3">
+              {any("download", c.school_ids) && c.files.map((f) => <Button key={f.id} size="sm" variant="outline" onClick={() => openOrgFile(f.id)}><Download className="size-3" />{f.name}</Button>)}
+              {all("edit", c.school_ids) && <Button size="sm" variant="ghost" className="ms-auto" onClick={() => setEdit(c)}><Pencil className="size-4" />تعديل</Button>}
+            </div>}
+          </article>))}</div>
+      )}
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return <fieldset className="grid gap-3 rounded-xl border p-3 sm:grid-cols-2"><legend className="px-1 text-sm font-semibold">{title}</legend>{children}</fieldset>;
+}
+
+function ConForm({ org, caps, init, close }: { org: string; caps: Caps; init: Partial<Con>; close: () => void }) {
+  const qc = useQueryClient();
+  const action = init.id ? "edit" : "create";
+  const [f, setF] = useState({ name: init.name ?? "", service: init.service ?? "", contact_name: init.contact_name ?? "", phone: init.phone ?? "", email: init.email ?? "", starts_on: init.starts_on ?? "", ends_on: init.ends_on ?? "", notes: init.notes ?? "" });
+  const [partner, setPartner] = useState(!!init.community_partner);
+  const [schools, setSchools] = useState<string[]>(init.school_ids ?? []);
+  const [files, setFiles] = useState<File[]>([]);
+  const [tried, setTried] = useState(false);
+  const problems = [
+    ...(f.name.trim().length < 2 ? ["اكتب اسم المتعهد"] : []),
+    ...(f.service.trim().length < 2 ? ["اكتب نوع الخدمة"] : []),
+    ...(!schools.length ? ["اختر مدرسة واحدة على الأقل"] : []),
+    ...(f.starts_on && f.ends_on && f.ends_on < f.starts_on ? ["نهاية السريان قبل بدايته"] : []),
+  ];
+  const save = useMutation({
+    mutationFn: async () => {
+      const ids = [...(init.files ?? []).map((x) => x.id)];
+      for (const file of files) ids.push(await uploadDraft(org, schools[0] ?? null, file));
+      return rpc("od_save_contractor", { _org: org, _p: { ...f, id: init.id ?? null, school_ids: schools, file_ids: ids, community_partner: partner, starts_on: f.starts_on || null, ends_on: f.ends_on || null } });
+    },
+    onSuccess: () => { toast.success("حُفظ المتعهد"); void qc.invalidateQueries({ queryKey: ["od", org] }); close(); },
+    onError: (e) => toast.error(arabicError(e)),
+  });
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
+  const pickable = caps.schools.filter((s) => caps.owner || s[action]);
+  return (
+    <form className="mb-5 space-y-4 rounded-2xl border bg-card p-4 shadow-sm sm:p-5" onSubmit={(e) => { e.preventDefault(); setTried(true); if (!problems.length) save.mutate(); }}>
+      <div className="flex items-center gap-3">
+        <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Handshake className="size-5" aria-hidden /></span>
+        <div className="flex-1"><h3 className="font-bold">{init.id ? "تعديل متعهد" : "متعهد جديد"}</h3><p className="text-xs text-muted-foreground">بيانات المتعهد وعقده والمدارس التي يخدمها.</p></div>
+        <Button type="button" size="icon" variant="ghost" onClick={close} aria-label="إغلاق"><X className="size-4" /></Button>
+      </div>
+      <Section title="بيانات المتعهد">
+        <div className="space-y-1"><Label htmlFor="oc-n">اسم المتعهد</Label><Input id="oc-n" value={f.name} onChange={set("name")} placeholder="مؤسسة الريان للتغذية" /></div>
+        <div className="space-y-1"><Label htmlFor="oc-s">نوع الخدمة</Label><Input id="oc-s" list="od-services" value={f.service} onChange={set("service")} placeholder="اختر أو اكتب" /><datalist id="od-services">{SERVICES.map((k) => <option key={k} value={k} />)}</datalist></div>
+      </Section>
+      <Section title="التواصل">
+        <div className="space-y-1 sm:col-span-2"><Label htmlFor="oc-c">اسم المسؤول</Label><Input id="oc-c" value={f.contact_name} onChange={set("contact_name")} /></div>
+        <div className="space-y-1"><Label htmlFor="oc-p">الجوال</Label><Input id="oc-p" value={f.phone} onChange={set("phone")} dir="ltr" inputMode="tel" placeholder="05xxxxxxxx" /></div>
+        <div className="space-y-1"><Label htmlFor="oc-e">البريد</Label><Input id="oc-e" type="email" value={f.email} onChange={set("email")} dir="ltr" placeholder="name@example.com" /></div>
+      </Section>
+      <Section title="العقد">
+        <div className="space-y-1"><Label htmlFor="oc-sd">بداية السريان</Label><Input id="oc-sd" type="date" value={f.starts_on} onChange={set("starts_on")} /></div>
+        <div className="space-y-1"><Label htmlFor="oc-ed">نهاية السريان</Label><Input id="oc-ed" type="date" value={f.ends_on} onChange={set("ends_on")} /></div>
+        <div className="space-y-1 sm:col-span-2">
+          <span className="text-sm font-medium">العقد والمرفقات</span>
+          <label htmlFor="oc-f" className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed bg-muted/30 p-3 text-sm hover:bg-muted/60">
+            <Paperclip className="size-5 text-primary" aria-hidden />
+            <span className="flex-1">{files.length ? files.map((x) => x.name).join("، ") : "اضغط لاختيار ملفات PDF أو صور"}</span>
+            <span className="text-xs text-muted-foreground">حتى 20 ميجابايت</span>
+          </label>
+          <input id="oc-f" type="file" multiple className="sr-only" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setFiles([...(e.target.files ?? [])])} />
+          {!!init.files?.length && <p className="text-xs text-muted-foreground"><FileText className="inline size-3" /> محفوظ: {init.files.map((x) => x.name).join("، ")}</p>}
+        </div>
+      </Section>
+      <fieldset className="rounded-xl border p-3"><legend className="px-1 text-sm font-semibold">المدارس المرتبطة</legend>
+        <div className="flex flex-wrap gap-2">{pickable.map((s) => { const on = schools.includes(s.id); return (
+          <button key={s.id} type="button" aria-pressed={on} onClick={() => setSchools(on ? schools.filter((x) => x !== s.id) : [...schools, s.id])}
+            className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{s.name}</button>); })}</div>
+      </fieldset>
+      <div className="space-y-1"><Label htmlFor="oc-no">ملاحظات</Label><Textarea id="oc-no" rows={2} value={f.notes} onChange={set("notes")} /></div>
+      <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${partner ? "border-primary bg-primary/5" : ""}`}>
+        <input type="checkbox" className="mt-1 size-4 accent-primary" checked={partner} onChange={(e) => setPartner(e.target.checked)} />
+        <span className="flex-1"><span className="flex items-center gap-1.5 font-semibold">شراكات مجتمعية {partner && <ShieldCheck className="size-4 text-primary" aria-hidden />}</span>
+          <span className="block text-xs text-muted-foreground">عند التحديد تظهر علامة «موثوق» بجوار اسم المتعهد في بطاقته.</span></span>
+      </label>
+      {tried && problems.length > 0 && <ul role="alert" className="list-inside list-disc rounded-md bg-destructive/10 p-2 text-sm text-destructive">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}
+      <div className="flex gap-2"><Button type="submit" disabled={save.isPending}>{save.isPending ? "جارٍ الحفظ…" : "حفظ"}</Button><Button type="button" variant="outline" onClick={close}>إلغاء</Button></div>
+    </form>
+  );
+}
