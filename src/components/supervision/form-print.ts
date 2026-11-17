@@ -40,7 +40,7 @@ export function formPrintHtml(spec0: SvSpec, data: Record<string, unknown>, m: P
   const facts: [string, string | null | undefined][] = [["الفرع", m.branch], ["المعلم", m.teacher], ["أعدّه", m.author], ["الحالة", m.status]];
   const secs = spec.sections.map((sec, i) => {
     const fields = sec.fields.filter((f) => m.blank || shown(f, data));
-    return `<section class="sec${spec.print?.section_breaks && i > 0 ? " brk" : ""}"><h2>${i + 1}. ${esc(sec.title)}</h2>${fields.map((f) => `<div class="f"><div class="l">${esc(f.label)}${f.required ? " *" : ""}</div>${value(f, data[f.key], !!m.blank)}</div>`).join("")}</section>`;
+    return `<section class="sec${spec.print?.section_breaks && i > 0 ? " brk" : ""}"><h2>${i + 1}. ${esc(sec.title)}</h2>${fields.map((f) => `<div class="f"><div class="l">${esc(f.label)}${f.required ? " *" : ""}${m.blank && f.when ? ` <span class="hint">(يُعبّأ عند اختيار «${esc(f.when.in ? f.when.in.join(" أو ") : f.when.eq)}»)</span>` : ""}${m.blank && f.private ? ` <span class="hint">(داخلي — لا يُطبع في نسخة المعلم)</span>` : ""}</div>${value(f, data[f.key], !!m.blank)}</div>`).join("")}</section>`;
   }).join("");
   const acts = (m.actions ?? []).length ? `<section class="sec"><h2>الإجراءات الفعلية</h2><table><thead><tr><th>الإجراء</th><th>بواسطة</th><th>التاريخ</th></tr></thead><tbody>${m.actions!.map((a) => `<tr><td>${esc(a.label)}</td><td>${esc(a.who)}</td><td>${esc(a.at)}</td></tr>`).join("")}</tbody></table></section>` : "";
   return `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${esc(m.title)}</title>
