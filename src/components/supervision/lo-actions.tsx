@@ -62,7 +62,7 @@ function listReport(rows: Action[], filters: string[]): [Parameters<typeof expor
     rows.map((a) => [a.title, a.school, a.subject, `${a.measure.title} (${a.measure.measured_on})`, a.owner ?? "—", a.due_on ?? "—", ACT_STATUS[a.status] ?? a.status, IMPACT[a.impact_status] ?? a.impact_status])];
 }
 
-export function ActionsView({ org, me, list, id, open }: { org: string; me: SvMe; list: Action[]; id?: string; open: (id?: string) => void }) {
+export function ActionsView({ me, list, id, open }: { org: string; me: SvMe; list: Action[]; id?: string | undefined; open: (id?: string) => void }) {
   const [f, setF] = useState({ status: "", school: "", impact: "", q: "" });
   if (id) return <ActionDetail id={id} onBack={() => open()} />;
   const t = today();
