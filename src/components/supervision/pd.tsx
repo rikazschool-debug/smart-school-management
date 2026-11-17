@@ -34,7 +34,7 @@ export function TeachersDevelopment({ org, me, sp, go }: { org: string; me: SvMe
     meetings: d.meetings.filter((m) => (!f.school || m.school_id === f.school) && (!f.from || m.starts_at.slice(0, 10) >= f.from) && (!f.to || m.starts_at.slice(0, 10) <= f.to)) };
   const filters = [f.school && `الفرع: ${me.schools.find((s) => s.id === f.school)?.name ?? ""}`, f.specialty && `التخصص: ${f.specialty}`, f.teacher && `المعلم: ${d.teachers.find((t) => t.id === f.teacher)?.name ?? ""}`, f.status && `الحالة: ${f.status}`, (f.from || f.to) && `الفترة: ${f.from ?? "…"} — ${f.to ?? "…"}`].filter(Boolean) as string[];
   function report(kind: "dev" | "needs" | "programs" | "meetings") {
-    const meta = { title: { dev: "تقرير تطوير المعلمين", needs: "تقرير الاحتياجات المهنية", programs: "تقرير البرامج والحضور والساعات", meetings: "تقرير الاجتماعات والإجراءات" }[kind], filters, note: "من السجلات المتاحة لصلاحيتك فقط؛ «غير متاح» يعني عدم توفر البيانات وليس صفرًا. لا درجات ولا ترتيب." };
+    const meta = { title: { dev: "تقرير تطوير المعلمين", needs: "تقرير الاحتياجات المهنية", programs: "تقرير البرامج والحضور والساعات", meetings: "تقرير الاجتماعات والإجراءات" }[kind], filters, note: "من السجلات المتاحة لصلاحيتك فقط (للمشارك: سجله وحده)؛ «غير متاح» يعني عدم توفر البيانات وليس صفرًا. لا درجات ولا ترتيب." };
     if (kind === "dev") return { meta, headers: DEV_HEAD, rows: devReport(fd.teachers, fd.needs, fd.plans, fd.programs, {}) };
     if (kind === "needs") return { meta, headers: NEED_HEAD, rows: needRows(fd.needs) };
     if (kind === "programs") return { meta, headers: PROG_HEAD, rows: programRows(fd.programs) };
@@ -54,7 +54,7 @@ export function TeachersDevelopment({ org, me, sp, go }: { org: string; me: SvMe
       <Input type="date" className="w-40" aria-label="من تاريخ" value={f.from ?? ""} onChange={(e) => setF({ ...f, from: e.target.value })} /><Input type="date" className="w-40" aria-label="إلى تاريخ" value={f.to ?? ""} onChange={(e) => setF({ ...f, to: e.target.value })} />
       <Button variant="ghost" onClick={() => setF({})}>مسح الفلاتر</Button>
     </div>
-    <details className="rounded-lg border p-2 text-sm"><summary className="cursor-pointer font-semibold">التقارير (PDF وExcel وطباعة)</summary>
+    <details className="rounded-lg border p-2 text-sm"><summary className="cursor-pointer font-semibold">التقارير — تصدير وطباعة</summary>
       <ul className="mt-2 space-y-1">{([["dev", "تطوير المعلمين"], ["needs", "الاحتياجات"], ["programs", "البرامج والحضور والساعات"], ["meetings", "الاجتماعات والإجراءات"]] as const).map(([k, l]) => <li key={k} className="flex flex-wrap items-center gap-1"><span className="min-w-40">{l}</span>
         <Button variant="ghost" size="icon" aria-label={`Excel ${l}`} title="Excel" onClick={() => { const r = report(k); exportXlsx(r.meta, r.headers, r.rows); }}><Download /></Button>
         <Button variant="ghost" size="icon" aria-label={`PDF ${l}`} title="PDF" onClick={() => { const r = report(k); void exportPdf(r.meta, r.headers, r.rows); }}><FileText /></Button>
