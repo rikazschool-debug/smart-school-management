@@ -44,7 +44,7 @@ function PlanDetail({ plan, d, me, onBack, onOpen }: { plan: DevPlan; d: PdData;
   const refresh = () => qc.invalidateQueries({ queryKey: ["sv4"] });
   async function act(action: "submit" | "approve" | "return") {
     const text = action === "return" ? await askText("ما المطلوب استكماله؟", { required: true, long: true }) : null; if (action === "return" && !text) return;
-    if (action === "approve" && !(await ask("اعتماد الخطة؟ بعد الاعتماد لا تُعدّل إلا بإصدار جديد."))) return;
+    if (action === "approve" && !(await ask("اعتماد الخطة؟ بعد الاعتماد لا تُعدّل إلا بإصدار جديد.", { ok: "تأكيد الاعتماد" }))) return;
     try { await sv4("sv4_plan_act", { _id: plan.id, _rev: plan.rev, _action: action, _text: text }, { submit: "أُرسلت الخطة للمراجعة", approve: "اعتُمدت الخطة", return: "أُعيدت الخطة للاستكمال" }[action]); void refresh(); } catch { /* shown */ }
   }
   async function revise() { const r = await askText("سبب الإصدار الجديد", { required: true, long: true }); if (!r) return; try { const id = await sv4("sv4_plan_revise", { _id: plan.id, _rev: plan.rev, _reason: r }, "أُنشئ إصدار جديد؛ الإصدار المعتمد باقٍ حتى اعتماد الجديد") as string; await refresh(); onOpen(id); } catch { /* shown */ } }
