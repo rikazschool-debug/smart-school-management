@@ -60,7 +60,7 @@ function PlanDetail({ plan, d, me, onBack, onOpen }: { plan: DevPlan; d: PdData;
       {editable && <Button onClick={() => void act("submit")}>إرسال للمراجعة</Button>}
       {plan.can_approve && <><Button onClick={() => void act("approve")}>اعتماد الخطة</Button><Button variant="outline" onClick={() => void act("return")}>إعادة للاستكمال</Button></>}
       {plan.can_revise && <Button variant="outline" onClick={() => void revise()}>إصدار جديد للتعديل</Button>}
-      {plan.status !== "superseded" && me.schools.some((s) => s.id === plan.school_id && s.principal) || me.owner ? plan.status !== "superseded" && <Handover plan={plan} /> : null}
+      {plan.status !== "superseded" && (me.owner || me.schools.some((s) => s.id === plan.school_id && s.principal)) && <Handover plan={plan} />}
     </div>
     {plan.status === "approved" && <><Activities plan={plan} /><Reviews plan={plan} /></>}
   </div>;
