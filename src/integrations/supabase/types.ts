@@ -19245,6 +19245,106 @@ export type Database = {
         }
         Relationships: []
       }
+      sv_evidence: {
+        Row: {
+          created_at: string
+          file_id: string
+          id: string
+          plan_id: string | null
+          recommendation_id: string | null
+          teacher_visible: boolean
+          visit_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_id: string
+          id?: string
+          plan_id?: string | null
+          recommendation_id?: string | null
+          teacher_visible?: boolean
+          visit_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_id?: string
+          id?: string
+          plan_id?: string | null
+          recommendation_id?: string | null
+          teacher_visible?: boolean
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_evidence_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: true
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_evidence_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "sv_plan_details"
+            referencedColumns: ["record_id"]
+          },
+          {
+            foreignKeyName: "sv_evidence_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "sv_recommendations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_evidence_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "sv_scheduled_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_followup_sessions: {
+        Row: {
+          author_id: string
+          created_at: string
+          evidence: string | null
+          held_on: string
+          id: string
+          impact: string
+          notes: string
+          recommendation_id: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          evidence?: string | null
+          held_on: string
+          id?: string
+          impact?: string
+          notes: string
+          recommendation_id: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          evidence?: string | null
+          held_on?: string
+          id?: string
+          impact?: string
+          notes?: string
+          recommendation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_followup_sessions_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "sv_recommendations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sv_forms: {
         Row: {
           acceptance: string
@@ -21617,6 +21717,7 @@ export type Database = {
         Args: { _org: string; _school: string }
         Returns: boolean
       }
+      _can_read_file_before_sv3: { Args: { _file: string }; Returns: boolean }
       _cg_admin: {
         Args: { _conv: string }
         Returns: {
@@ -23943,6 +24044,19 @@ export type Database = {
       }
       _support_user_school: {
         Args: { _fallback: string; _org: string; _u: string }
+        Returns: string
+      }
+      _sv_rec_act_stage2: {
+        Args: { _action: string; _id: string; _rev: number; _text: string }
+        Returns: undefined
+      }
+      _sv_rec_get_stage2: { Args: { _id: string }; Returns: Json }
+      _sv_rec_save_stage2: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      _sv3_plan_save_impl: {
+        Args: { _id: string; _p: Json; _rev: number }
         Returns: string
       }
       _sync_school_classes: { Args: { _school: string }; Returns: number }
@@ -28932,6 +29046,16 @@ export type Database = {
           _teacher: string
         }
         Returns: Json
+      }
+      sv3_file_create: { Args: { _p: Json }; Returns: Json }
+      sv3_file_list: {
+        Args: { _plan?: string; _visit?: string }
+        Returns: Json
+      }
+      sv3_followup_list: { Args: { _visit: string }; Returns: Json }
+      sv3_followup_save: {
+        Args: { _p: Json; _recommendation: string }
+        Returns: string
       }
       sv3_plan_execution: {
         Args: { _id: string; _rev: number; _state: string }
