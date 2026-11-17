@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Bath, Briefcase, Building2, Coffee, Cpu, Dumbbell, FlaskConical, ImagePlus, Landmark, Library, Package, Pencil, Phone, Plus, Presentation,
+  Bath, Briefcase, Building2, Coffee, Cpu, Dumbbell, FlaskConical, ImagePlus, Landmark, Library, Package, Pencil, Plus, Presentation,
   School, Search, Square, Stethoscope, Trash2, UserRound, UtensilsCrossed, Wrench, Lock, CheckCircle2, type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { selectCls } from "@/components/ui/native-select";
 import { ask } from "@/components/confirm";
-import { PeoplePicker, rolesLabel } from "@/components/people-picker";
+import { PeoplePicker, rolesLabel, usePeopleByIds } from "@/components/people-picker";
 import { rpc } from "@/components/hr/shared";
 import { db } from "@/components/crud-page";
 import { uploadObject } from "@/components/classroom-posts";
