@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Camera, Download, Eye, Paperclip } from "lucide-react";
 import { toast } from "sonner";
@@ -8,22 +9,23 @@ import { selectCls } from "@/components/ui/native-select";
 import { arabicError } from "@/lib/session";
 import { deliverPrivateBlob, filePreviewKind } from "@/lib/private-file-delivery";
 import type { Recommendation } from "./work-model";
+import { readSupervisionEvidence, uploadSupervisionEvidence } from "@/lib/supervision-files.functions";
 type Evidence = { id: string; name: string; path: string; mime: string; size: number; teacher_visible: boolean; recommendation_id: string | null };
 export function EvidencePanel({ plan, visit, canWork, recommendations = [] }: { plan?: string; visit?: string; canWork: boolean; recommendations?: Recommendation[] }) {
+  const uploadFn = useServerFn(uploadSupervisionEvidence); const readFn = useServerFn(readSupervisionEvidence);
   const [busy, setBusy] = useState(false); const [shared, setShared] = useState(false); const [rec, setRec] = useState(""); const [preview, setPreview] = useState<{ url: string; name: string; mime: string } | null>(null);
   const q = useQuery({ queryKey: ["sv3-files", plan, visit], retry: false, queryFn: async () => { const r = await db.rpc("sv3_file_list", { _plan: plan ?? null, _visit: visit ?? null }); if (r.error) throw r.error; return r.data as Evidence[]; } });
   const own = recommendations.filter((r) => r.can_update && r.state !== "completed");
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
   async function upload(file: File | undefined) {
     if (!file) return; setBusy(true);
     try { const r = await db.rpc("sv3_file_create", { _p: { plan_id: plan ?? null, visit_id: visit ?? null, recommendation_id: rec || null, name: file.name, mime: file.type, size: file.size, teacher_visible: shared } }); if (r.error) throw r.error;
-      const f = r.data as { id: string; path: string }; const up = await db.storage.from("rikaz-files").upload(f.path, file, { contentType: file.type }); if (up.error) throw up.error;
+      const f = r.data as { id: string }; const form = new FormData(); form.set("id", f.id); form.set("file", file); await uploadFn({ data: form });
       toast.success("حُفظ الشاهد"); await q.refetch();
     } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
   }
   async function open(f: Evidence, download: boolean) {
-    const r = await db.storage.from("rikaz-files").createSignedUrl(f.path, 30); if (r.error || !r.data) return void toast.error("الملف غير متاح ضمن صلاحيتك الحالية");
-    if (download) { const response = await fetch(r.data.signedUrl); if (!response.ok) return void toast.error("تعذر تنزيل الملف"); await deliverPrivateBlob(await response.blob(), f.name); }
-    else { setPreview({ url: r.data.signedUrl, name: f.name, mime: f.mime }); }
+    try { const r = await readFn({ data: { id: f.id } }); const bytes = Uint8Array.from(atob(r.base64), (c) => c.charCodeAt(0)); const blob = new Blob([bytes], { type: r.mime }); if (download) await deliverPrivateBlob(blob, r.name); else setPreview({ url: URL.createObjectURL(blob), name: r.name, mime: r.mime }); } catch (e) { toast.error(arabicError(e)); }
   }
   return <section className="space-y-3 border-t pt-4">
     <h3 className="font-bold">المرفقات والشواهد</h3>

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Copy, Download, FileText, Printer, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/components/crud-page";
-import { ask } from "@/components/confirm";
+import { ask, askText } from "@/components/confirm";
 import { Button } from "@/components/ui/button";
 import { selectCls } from "@/components/ui/native-select";
 import { LoadingState, ErrorState } from "@/components/states";
@@ -47,6 +47,7 @@ export function PlanEditor({ org, me, plan, plans, onDone, onDocument }: { org: 
     <Button variant="ghost" onClick={back}><ArrowRight />العودة إلى الخطط</Button>
     <header className="border-b pb-3"><h2 className="text-xl font-bold">{plan && !copying ? plan.title : "خطة إشرافية جديدة"}</h2><p className="mt-1 text-sm text-muted-foreground">{plan && !copying ? `${REC_STATUS[plan.status]} · التنفيذ: ${EXECUTION[plan.execution]} · إصدار النموذج ${plan.form_version}` : "مسودة"}</p></header>
     {!editable && plan && <div className="flex flex-wrap gap-2"><Button onClick={document}>المراجعة والاعتماد وسجل التغيير</Button><Button variant="outline" onClick={() => { setData(copyPlanData(plan.data)); setYear(""); setTerm(""); setParent(""); setCopying(true); setStep(0); }}><Copy />نسخ كمسودة جديدة</Button></div>}
+    {plan?.status === "approved" && !copying && <Button variant="outline" onClick={async () => { const reason = await askText("سبب مراجعة الخطة المعتمدة", { required: true, long: true }); if (!reason) return; const r = await db.rpc("sv3_plan_revision", { _id: plan.id, _rev: plan.rev, _reason: reason }); if (r.error) toast.error(arabicError(r.error)); else onDone(r.data as string); }}>مراجعة جديدة مع حفظ النسخة المعتمدة</Button>}
     {plan?.status === "approved" && !copying && <label className="block text-sm">تقدم التنفيذ<select aria-label="تقدم تنفيذ الخطة" className={selectCls("ms-2")} value={plan.execution} onChange={async (e) => { const r = await db.rpc("sv3_plan_execution", { _id: plan.id, _rev: plan.rev, _state: e.target.value }); if (r.error) toast.error(arabicError(r.error)); else { toast.success("حُدث التنفيذ دون تغيير الاعتماد"); onDone(plan.id); } }}>{Object.entries(EXECUTION).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>}
     {editable && <nav aria-label="خطوات الخطة" className="flex flex-wrap gap-2">{["النطاق والفترة", "الاحتياجات والأهداف", "الأنشطة والزيارات", "المراجعة"].map((l, i) => <Button size="sm" key={l} variant={step === i ? "default" : "outline"} onClick={() => setStep(i)}>{i + 1}. {l}</Button>)}</nav>}
     {(step === 0 || !editable) && <div className="grid gap-3 sm:grid-cols-2">
