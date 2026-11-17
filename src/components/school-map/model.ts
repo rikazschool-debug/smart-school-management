@@ -54,12 +54,13 @@ export function filterRooms(rooms: Room[], q: string, cat: string, status: strin
 }
 
 /** Client mirror of fm_save_room checks, so the form explains problems before sending. */
-export function roomProblems(p: { name: string; floor: number; capacity: string; area: string }, b: Pick<Building, "floors" | "has_basement"> | undefined): string[] {
+export function roomProblems(p: { name: string; floor: number; capacity: string; area: string; resp_user?: string; resp_title?: string; resp_notes?: string }, b: Pick<Building, "floors" | "has_basement"> | undefined): string[] {
   const out: string[] = [];
   if (!b) out.push("اختر المبنى");
   if (!p.name.trim()) out.push("اكتب اسم الغرفة");
   if (b && (p.floor >= b.floors || (p.floor < 0 && !b.has_basement) || p.floor < -1)) out.push("الدور غير موجود في هذا المبنى");
   if (p.capacity && (!/^\d+$/.test(p.capacity) || Number(p.capacity) > 5000)) out.push("السعة رقم صحيح من 0 إلى 5000");
   if (p.area && !(Number(p.area) > 0)) out.push("المساحة رقم أكبر من صفر");
+  if (!p.resp_user && (p.resp_title?.trim() || p.resp_notes?.trim())) out.push("اختر اسم المخوَّل من منسوبي الفرع");
   return out;
 }

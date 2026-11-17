@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Bath, Briefcase, Building2, Coffee, Cpu, Dumbbell, FlaskConical, ImagePlus, Landmark, Library, Package, Pencil, Phone, Plus, Presentation,
+  Bath, Briefcase, Building2, Coffee, Cpu, Dumbbell, FlaskConical, ImagePlus, Landmark, Library, Package, Pencil, Plus, Presentation,
   School, Search, Square, Stethoscope, Trash2, UserRound, UtensilsCrossed, Wrench, Lock, CheckCircle2, type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { selectCls } from "@/components/ui/native-select";
 import { ask } from "@/components/confirm";
-import { PeoplePicker, rolesLabel } from "@/components/people-picker";
+import { PeoplePicker, rolesLabel, usePeopleByIds } from "@/components/people-picker";
 import { rpc } from "@/components/hr/shared";
 import { db } from "@/components/crud-page";
 import { uploadObject } from "@/components/classroom-posts";
@@ -251,11 +251,12 @@ function RoomDialog({ org, school, buildings, init, onClose }: { org: string; sc
     floor: init.floor ?? 0, capacity: init.capacity != null ? String(init.capacity) : "", area: init.area != null ? String(init.area) : "", status: init.status ?? "ready",
     resp_user: init.resp_user ?? "", resp_title: init.resp_title ?? "", resp_phone: init.resp_phone ?? "", resp_notes: init.resp_notes ?? "", equipment: init.equipment ?? "", notes: init.notes ?? "",
   });
+  const chosen = usePeopleByIds({ purpose: "facility_resp", school }, f.resp_user ? [f.resp_user] : []);
   const b = buildings.find((x) => x.id === f.building_id);
   const problems = roomProblems(f, b);
   const [tried, setTried] = useState(false);
   const save = useMutation({
-    mutationFn: () => rpc("fm_save_room", { _org: org, _p: { ...f, id: init.id ?? null, resp_user: f.resp_user || null } }),
+    mutationFn: () => rpc("fm_save_room", { _org: org, _p: { ...f, id: init.id ?? null, resp_user: f.resp_user || null, resp_phone: null } }),
     onSuccess: () => { toast.success("حُفظت الغرفة"); void qc.invalidateQueries({ queryKey: ["fm"] }); onClose(); },
     onError: (e) => toast.error(arabicError(e)),
   });
@@ -276,9 +277,12 @@ function RoomDialog({ org, school, buildings, init, onClose }: { org: string; sc
             <div className="space-y-1 sm:col-span-2"><Label htmlFor="fr-eq">التجهيزات</Label><Textarea id="fr-eq" rows={2} value={f.equipment} onChange={set("equipment")} placeholder="سبورة تفاعلية، 24 جهاز حاسب، خزانة مواد…" /></div>
           </fieldset>
           <fieldset className="grid gap-3 rounded-xl border p-3 sm:grid-cols-2"><legend className="px-1 text-sm font-semibold">المسؤول المخوَّل</legend>
-            <div className="sm:col-span-2"><PeoplePicker purpose="facility_resp" school={school} single compact label="من منسوبي الفرع" value={f.resp_user ? [f.resp_user] : []} onChange={(v) => setF({ ...f, resp_user: v[0] ?? "" })} /></div>
-            <div className="space-y-1"><Label htmlFor="fr-rt">صفته أو مسمّاه</Label><Input id="fr-rt" value={f.resp_title} onChange={set("resp_title")} placeholder="محضّر المختبر" /></div>
-            <div className="space-y-1"><Label htmlFor="fr-rp">هاتف التواصل</Label><Input id="fr-rp" dir="ltr" inputMode="tel" value={f.resp_phone} onChange={set("resp_phone")} placeholder="05xxxxxxxx" /></div>
+            <div className="space-y-2 sm:col-span-2">
+              <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm"><UserRound className="size-4 text-primary" aria-hidden /><span className="text-muted-foreground">اسم المخوَّل:</span>
+                {f.resp_user ? <b>{chosen.data?.get(f.resp_user)?.full_name ?? init.resp_name ?? "…"}</b> : <span className="text-muted-foreground">لم يُختر بعد</span>}
+                {f.resp_user && (chosen.data?.get(f.resp_user)?.roles.length ?? 0) > 0 && <span className="text-xs text-muted-foreground">— {rolesLabel(chosen.data!.get(f.resp_user)!.roles)}</span>}</div>
+              <PeoplePicker purpose="facility_resp" school={school} single compact label="اختر اسم المخوَّل من منسوبي الفرع" value={f.resp_user ? [f.resp_user] : []} onChange={(v) => setF({ ...f, resp_user: v[0] ?? "" })} /></div>
+            <div className="space-y-1 sm:col-span-2"><Label htmlFor="fr-rt">صفته أو مسمّاه</Label><Input id="fr-rt" value={f.resp_title} onChange={set("resp_title")} placeholder="محضّر المختبر" /></div>
             <div className="space-y-1 sm:col-span-2"><Label htmlFor="fr-rn">تفاصيل التخويل</Label><Textarea id="fr-rn" rows={2} value={f.resp_notes} onChange={set("resp_notes")} placeholder="أوقات التواجد، من يُسلَّم المفتاح، البديل عند الغياب…" /></div>
           </fieldset>
           <div className="space-y-1"><Label htmlFor="fr-no">ملاحظات</Label><Textarea id="fr-no" rows={2} value={f.notes} onChange={set("notes")} /></div>
@@ -310,9 +314,8 @@ function RoomView({ org, room, building, canEdit, onClose, onEdit }: { org: stri
         <div className="rounded-xl border bg-muted/40 p-3">
           <div className="mb-1 flex items-center gap-2 text-sm font-semibold"><UserRound className="size-4" />المسؤول المخوَّل</div>
           {!room.resp_user && !room.resp_title ? <p className="text-sm text-muted-foreground">لم يُحدَّد مسؤول لهذه الغرفة.</p> : <>
-            {room.resp_name && <div className="text-sm"><b>{room.resp_name}</b>{room.resp_roles.length > 0 && <span className="text-muted-foreground"> — {rolesLabel(room.resp_roles)}</span>}</div>}
-            {room.resp_title && <div className="text-sm">{room.resp_title}</div>}
-            {room.resp_phone && <a dir="ltr" className="inline-flex items-center gap-1 text-sm text-primary" href={`tel:${room.resp_phone}`}><Phone className="size-3.5" />{room.resp_phone}</a>}
+            <div className="text-sm"><span className="text-muted-foreground">الاسم: </span>{room.resp_name ? <><b>{room.resp_name}</b>{room.resp_roles.length > 0 && <span className="text-muted-foreground"> — {rolesLabel(room.resp_roles)}</span>}</> : <span className="text-destructive">لم يُختر اسم المخوَّل — اضغط «تعديل» لاختياره</span>}</div>
+            {room.resp_title && <div className="text-sm"><span className="text-muted-foreground">الصفة: </span>{room.resp_title}</div>}
             {room.resp_notes && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{room.resp_notes}</p>}
           </>}
         </div>
