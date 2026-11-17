@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useUnsaved } from "./use-unsaved";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowRight, CheckCircle2, Eye, FilePlus2, Info, MessageSquare, RotateCcw, Save, Send, ShieldCheck, UserCheck } from "lucide-react";
@@ -68,19 +69,20 @@ function RecordView({ id, org, onBack }: { id: string; org: string; onBack: () =
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["sv-rec", id], retry: false, queryFn: async () => { const r = await db.rpc("sv_rec_get", { _id: id }); if (r.error) throw r.error; return r.data as SvRecordFull; } });
   const [data, setData] = useState<Record<string, unknown> | null>(null); const [busy, setBusy] = useState(false); const [comment, setComment] = useState("");
-  const dirty = data !== null && JSON.stringify(data) !== JSON.stringify(q.data?.data ?? {});
-  useEffect(() => { if (!dirty) return; const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; }; window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h); }, [dirty]);
+  const editRev = useRef<number | null>(null);
+  const dirty = (data !== null && JSON.stringify(data) !== JSON.stringify(q.data?.data ?? {})) || !!comment;
+  const guard = useUnsaved(dirty);
   if (q.isLoading) return <LoadingState />; if (q.error || !q.data) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const r = q.data; const cur = data ?? r.data; const spec = r.form_snapshot.spec; const miss = missingFields(spec, cur);
-  const refresh = async () => { setData(null); await q.refetch(); qc.invalidateQueries({ queryKey: ["sv-recs", org] }); };
-  async function save(): Promise<boolean> { setBusy(true); try { const x = await db.rpc("sv_rec_save", { _id: r.id, _rev: r.rev, _p: { data: cur } }); if (x.error) throw x.error; toast.success("حُفظت المسودة"); await refresh(); return true; } catch (e) { toast.error(arabicError(e)); return false; } finally { setBusy(false); } }
+  const refresh = async () => { editRev.current = null; setData(null); await q.refetch(); qc.invalidateQueries({ queryKey: ["sv-recs", org] }); };
+  async function save(): Promise<boolean> { setBusy(true); try { const x = await db.rpc("sv_rec_save", { _id: r.id, _rev: editRev.current ?? r.rev, _p: { data: cur } }); if (x.error) throw x.error; toast.success("حُفظت المسودة"); await refresh(); return true; } catch (e) { toast.error(arabicError(e)); return false; } finally { setBusy(false); } }
   async function act(action: string, text: string | null = null, rev = r.rev) { setBusy(true); try { const x = await db.rpc("sv_rec_act", { _id: r.id, _rev: rev, _action: action, _text: text }); if (x.error) throw x.error; toast.success(ACTION_LABEL[action] ? `تم: ${ACTION_LABEL[action]}` : "تم"); setComment(""); await refresh(); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } }
   async function submit() {
     if (miss.length) { toast.error(`أكمل قبل الإرسال: ${miss.join("، ")}`); return; }
-    if (dirty) { setBusy(true); const x = await db.rpc("sv_rec_save", { _id: r.id, _rev: r.rev, _p: { data: cur } }); setBusy(false); if (x.error) { toast.error(arabicError(x.error)); return; } await act("submit", null, r.rev + 1); return; }
+    if (dirty) { setBusy(true); const x = await db.rpc("sv_rec_save", { _id: r.id, _rev: editRev.current ?? r.rev, _p: { data: cur } }); setBusy(false); if (x.error) { toast.error(arabicError(x.error)); return; } await act("submit", null, (editRev.current ?? r.rev) + 1); return; }
     await act("submit");
   }
-  async function back() { if (dirty && !(await ask("لديك تغييرات غير محفوظة ستضيع. هل تريد الخروج؟", { destructive: true, ok: "خروج دون حفظ" }))) return; onBack(); }
+  async function back() { await guard.leave(onBack); }
   const editing = r.can_work;
   return <div className="space-y-4">
     <Button variant="ghost" size="sm" onClick={back}><ArrowRight className="size-4" />العودة إلى السجلات</Button>
@@ -93,7 +95,7 @@ function RecordView({ id, org, onBack }: { id: string; org: string; onBack: () =
     </header>
     {editing && <div className={`rounded-xl border p-3 text-sm ${miss.length ? "border-destructive/30 bg-destructive/5" : "border-success/30 bg-success/5"}`}>
       {miss.length ? <><b>يمكن حفظ المسودة ناقصة.</b> قبل الإرسال أكمل: {miss.join("، ")}</> : "اكتملت الحقول المطلوبة، ويمكن الإرسال للمراجعة."}{dirty && <span className="ms-2 font-semibold text-primary">• تغييرات غير محفوظة</span>}</div>}
-    <Filler spec={spec} data={cur} onChange={setData} readOnly={!editing} missing={miss} />
+    <Filler spec={spec} data={cur} onChange={(d) => { if (editRev.current === null) editRev.current = r.rev; guard.changed(); setData(d); }} readOnly={!editing} missing={miss} />
     {r.teacher_id && r.status !== "draft" && <section className="rounded-2xl border bg-card p-4">
       <h3 className="mb-2 flex items-center gap-2 font-bold"><UserCheck className="size-4" />اطلاع المعلم وتعقيبه</h3>
       <p className="text-xs text-muted-foreground">الاطلاع لا يعني الموافقة، ولا يغني عن مراجعة المدير.</p>
@@ -101,14 +103,14 @@ function RecordView({ id, org, onBack }: { id: string; org: string; onBack: () =
       {r.teacher_comment && <p className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/40 p-3 text-sm"><b>تعقيب المعلم:</b> {r.teacher_comment}</p>}
       {r.is_teacher && <div className="mt-3 space-y-2">
         {!r.teacher_ack_at && <Button size="sm" variant="outline" disabled={busy} onClick={() => act("ack")}><Eye className="size-4" />اطلعت</Button>}
-        {(r.status !== "approved" || r.form_key === "support_visit") && <><Textarea aria-label="تعقيبك" placeholder="تعقيبك (اختياري)" value={comment} onChange={(e) => setComment(e.target.value)} rows={2} /><Button size="sm" variant="outline" disabled={busy || comment.trim().length < 3} onClick={() => act("comment", comment)}><MessageSquare className="size-4" />حفظ التعقيب</Button></>}
+        {(r.status !== "approved" || r.form_key === "support_visit") && <><Textarea aria-label="تعقيبك" placeholder="تعقيبك (اختياري)" value={comment} onChange={(e) => { guard.changed(); setComment(e.target.value); }} rows={2} /><Button size="sm" variant="outline" disabled={busy || comment.trim().length < 3} onClick={() => act("comment", comment)}><MessageSquare className="size-4" />حفظ التعقيب</Button></>}
       </div>}
     </section>}
     <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap gap-2 border-t bg-background/95 p-3 backdrop-blur">
       {editing && <><Button variant="outline" disabled={busy || !dirty} onClick={save}><Save className="size-4" />حفظ مسودة</Button><Button disabled={busy} onClick={submit}><Send className="size-4" />إرسال للمراجعة</Button></>}
       {r.can_approve && <><Button variant="outline" disabled={busy} onClick={async () => { const t = await askText("ما المطلوب استكماله؟", { required: true, long: true, ok: "طلب استكمال" }); if (t) act("request_info", t); }}><Info className="size-4" />طلب استكمال</Button>
         <Button disabled={busy} onClick={async () => { if (await ask("اعتماد هذا السجل؟ بعد الاعتماد لا يُعدَّل إلا بإعادة فتح موثّقة.", { ok: "اعتماد" })) act("approve"); }}><CheckCircle2 className="size-4" />اعتماد</Button></>}
-      {r.can_reopen && <Button variant="outline" disabled={busy} onClick={async () => { const t = await askText("سبب إعادة فتح السجل المعتمد", { required: true, long: true, ok: "إعادة فتح" }); if (t) act("reopen", t); }}><RotateCcw className="size-4" />إعادة فتح للتعديل</Button>}
+      {r.can_reopen && !spec.sv3_plan && <Button variant="outline" disabled={busy} onClick={async () => { const t = await askText("سبب إعادة فتح السجل المعتمد", { required: true, long: true, ok: "إعادة فتح" }); if (t) act("reopen", t); }}><RotateCcw className="size-4" />إعادة فتح للتعديل</Button>}
       {r.needs_handover && <Handover r={r} org={org} onDone={refresh} />}
     </div>
     <details className="rounded-2xl border bg-card p-4"><summary className="cursor-pointer text-sm font-semibold">سجل الإجراءات ({r.events.length})</summary>

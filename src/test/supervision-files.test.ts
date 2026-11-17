@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { zipSync, strToU8 } from "fflate";
 import { SV_FILE_LIMIT, validateSupervisionFile } from "@/lib/supervision-file-validation";
 describe("supervision evidence server validation", () => {
+  it("never accepts legacy DOC as a supported upload", () => { expect(() => validateSupervisionFile(new Uint8Array([208,207,17,224]), "application/msword", "legacy.doc")).toThrow(); });
   it("refuses real content beyond 10 MiB regardless of declared size", () => { expect(() => validateSupervisionFile(new Uint8Array(SV_FILE_LIMIT+1), "image/png", "x.png")).toThrow(); });
   it("refuses an executable or renamed file disguised as PDF", () => { expect(() => validateSupervisionFile(strToU8("MZ executable"), "application/pdf", "x.pdf")).toThrow(); expect(() => validateSupervisionFile(strToU8("%PDF-1.7\n%%EOF"), "application/pdf", "x.exe")).toThrow(); });
   it("refuses active PDF content", () => { expect(() => validateSupervisionFile(strToU8("%PDF-1.7 /JavaScript (bad) %%EOF"), "application/pdf", "x.pdf")).toThrow(); });

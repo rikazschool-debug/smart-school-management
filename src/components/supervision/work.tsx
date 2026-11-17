@@ -22,6 +22,7 @@ export function PlansVisits({ org, me, sp, go }: { org: string; me: SvMe; sp: Sv
   const pool = useQuery({ queryKey: ["sv3-pool", school], enabled: !!school && (me.owner || me.schools.some((s) => s.id === school && (s.principal || s.supervisor))), retry: false, queryFn: async () => { const r = await db.rpc("sv3_pool", { _school: school }); if (r.error) throw r.error; return r.data as WorkPool; } });
   const view = sp.view ?? "plans"; const all = view === "plans" ? plans.data ?? [] : visits.data ?? [];
   const filtered = filterWork(all, plans.data ?? [], { school, state, kind, search, from, to, year, term, teacher, course });
+  const indicators = useQuery({ queryKey: ["sv3-indicators", org], retry: false, queryFn: async () => { const r = await db.rpc("sv3_indicators", { _org: org }); if (r.error) throw r.error; return r.data as { open: number; overdue: number; submitted: number; verified: number }; } });
   const canCreate = me.owner || me.schools.some((s) => s.supervisor || s.principal);
   const refresh = () => { setCreating(false); void plans.refetch(); void visits.refetch(); };
   const select = (id?: string) => go({ tab: "work", view, ...(id ? { id } : {}) }, false);
@@ -29,7 +30,7 @@ export function PlansVisits({ org, me, sp, go }: { org: string; me: SvMe; sp: Sv
   const selected = plans.data?.find((p) => p.id === sp.id);
   if (sp.id && view === "plans" && plans.isLoading) return <LoadingState />;
   if (sp.id && view === "plans" && !selected) return <ErrorState message="الخطة غير موجودة أو خارج نطاقك الحالي" onRetry={() => plans.refetch()} />;
-  if ((creating || sp.id) && view === "plans") return <PlanEditor key={selected ? `${selected.id}:${selected.rev}` : "new"} org={org} me={me} plan={selected} plans={plans.data ?? []} onDone={(id) => { refresh(); select(id); }} onDocument={(id) => go({ tab: "records", id }, false)} />;
+  if ((creating || sp.id) && view === "plans") return <PlanEditor key={selected?.id ?? "new"} org={org} me={me} plan={selected} plans={plans.data ?? []} onDone={(id) => { refresh(); select(id); }} onDocument={(id) => go({ tab: "records", id }, false)} />;
   if (creating && view === "visits") return <VisitEditor me={me} plans={plans.data ?? []} onDone={(id) => { refresh(); select(id); }} />;
   const q = view === "plans" ? plans : visits;
   if (q.isLoading) return <LoadingState />;
@@ -37,6 +38,7 @@ export function PlansVisits({ org, me, sp, go }: { org: string; me: SvMe; sp: Sv
   const report = () => ({ meta: { title: view === "plans" ? "كشف الخطط الإشرافية" : "كشف الزيارات الإشرافية", school: me.schools.find((s) => s.id === school)?.name, filters: [search, state, kind, from, to, pool.data?.years.find((y) => y.id === year)?.name, pool.data?.terms.find((t) => t.id === term)?.name, visits.data?.find((v) => v.teacher_id === teacher)?.teacher, visits.data?.find((v) => v.course_id === course)?.course].filter((v): v is string => !!v) }, headers: ["الفرع", "العمل", "النوع", "الحالة", "الموعد", "المعد", "التنفيذ / التوثيق"], rows: filtered.map((r) => "status" in r ? [r.school, r.title, PLAN_KIND[r.kind], REC_STATUS[r.status], String(r.data["period_from"] ?? "—"), r.author, EXECUTION[r.execution] ?? r.execution] : [r.school, r.purpose, r.kind === "peer" ? "تبادلية" : "صفية", VISIT_STATE[r.state], riyadhText(r.starts_at), r.author, r.documentation_status ? REC_STATUS[r.documentation_status as keyof typeof REC_STATUS] : "لم يبدأ التوثيق"]) });
   return <div className="space-y-4">
     <nav aria-label="الخطط والزيارات" className="flex gap-2 border-b pb-3">{(["plans", "visits"] as const).map((v) => <Button key={v} variant={view === v ? "default" : "ghost"} onClick={() => { setState(""); setKind(""); go({ tab: "work", view: v }); }}>{v === "plans" ? <ClipboardList /> : <CalendarDays />}{v === "plans" ? "الخطط" : "الزيارات"}</Button>)}</nav>
+    {indicators.data && <div className="flex flex-wrap gap-4 text-sm"><span>توصيات مفتوحة: {indicators.data.open}</span><span>متأخرة: {indicators.data.overdue}</span><span>مقدمة للتحقق: {indicators.data.submitted}</span><span>متحقق منها: {indicators.data.verified}</span></div>}
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" onClick={() => { go({ tab: "work", view: "visits" }); setFrom(riyadhDay(me.now)); setTo(riyadhDay(me.now)); }}>أعمال اليوم ({(visits.data ?? []).filter((v) => riyadhDay(v.starts_at) === riyadhDay(me.now) && v.state !== "cancelled").length})</Button>
       <Button variant="outline" onClick={() => setState("submitted")}>المراجعات المنتظرة ({(plans.data ?? []).filter((p) => p.status === "submitted").length + (visits.data ?? []).filter((v) => v.documentation_status === "submitted").length})</Button>
