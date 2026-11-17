@@ -63,7 +63,7 @@ const vp = { school_id: school, teacher_id: teacher, course_id: course.id, plan_
 const visit = await rpc("sup2", "sv3_visit_save", { _id: null, _rev: null, _p: vp });
 await denied("sup2", "sv3_visit_save", { _id: null, _rev: null, _p: vp }, "confirmed overlapping visit denied");
 let v = await rpc("sup2", "sv3_visit_get", { _id: visit }); check("missing timetable remains unverified", v.timetable_verified === false);
-await rpc("sup2", "sv3_visit_save", { _id: visit, _rev: v.rev, _p: { ...vp, starts_at: new Date(start.getTime() + 3600000).toISOString(), ends_at: new Date(end.getTime() + 3600000).toISOString(), reason: "تعديل موعد اصطناعي" } }); v = await rpc("sup2", "sv3_visit_get", { _id: visit }); check("reschedule keeps previous time in audit", v.events.some((e: any) => e.action === "reschedule" && e.details.previous.starts_at === vp.starts_at));
+await rpc("sup2", "sv3_visit_save", { _id: visit, _rev: v.rev, _p: { ...vp, starts_at: new Date(start.getTime() + 3600000).toISOString(), ends_at: new Date(end.getTime() + 3600000).toISOString(), reason: "تعديل موعد اصطناعي" } }); v = await rpc("sup2", "sv3_visit_get", { _id: visit }); check("reschedule keeps previous time in audit", v.events.some((e: any) => e.action === "reschedule" && new Date(e.details.previous.starts_at).getTime() === new Date(vp.starts_at).getTime()));
 const document = await rpc("sup2", "sv3_visit_act", { _id: visit, _rev: v.rev, _action: "execute", _text: null });
 rec = await rpc("sup2", "sv_rec_get", { _id: document }); check("execution creates fixed adopted form snapshot", rec.form_version > 1 && rec.status === "draft");
 const obs = Object.fromEntries([1, 2, 3, 4, 5, 6].map((n) => ["o" + n, { state: "nl" }]));
