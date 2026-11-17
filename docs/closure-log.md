@@ -1137,3 +1137,6 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - الإشراف التربوي نُقل إلى «الشؤون التعليمية»؛ «الزيارات الإشرافية» القديم (edu kind supervision، 0 سجلات، 0 صلاحيات) أُزيل من القائمة وشجرة الصلاحيات، ورابطه يحوّل إلى /app/supervision.
 - fm_buildings/fm_rooms + fm_* RPCs بصلاحية org_docs لكل فرع؛ صورة المبنى عبر مسار ملفات الوثائق؛ المسؤول من people_pick facility_resp.
 - الأدلة: /tmp/browser/fm (fm_api 13 فحصًا، fm_ui رحلة المالك: الخريطة، رفع الصورة، تفاصيل المختبر، إضافة غرفة، تحويل الرابط القديم؛ المعلم ممنوع). اختبارات: src/test/school-map-model.test.ts (4)، navigation-groups (+1).
+
+## 2026-11-17 — المتعهدون: شراكات مجتمعية
+- org_contractors.community_partner (od_save_contractor/od_list)؛ شارة «موثوق» في البطاقة؛ نموذج إدخال بأقسام وتبويبات علوية جديدة. الدليل: /tmp/browser/fm/od.py (رفض الحفظ الفارغ، إضافة متعهد بالعلامة وظهور الشارة).
