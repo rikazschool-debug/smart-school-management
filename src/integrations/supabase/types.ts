@@ -20630,6 +20630,431 @@ export type Database = {
           },
         ]
       }
+      sv5_imports: {
+        Row: {
+          actor: string
+          at: string
+          duplicates: number
+          existing: number
+          failed: number
+          file_name: string
+          fp: string
+          id: string
+          imported: number
+          measure_id: string
+          replaced: number
+          total: number
+        }
+        Insert: {
+          actor: string
+          at?: string
+          duplicates: number
+          existing: number
+          failed: number
+          file_name: string
+          fp: string
+          id?: string
+          imported: number
+          measure_id: string
+          replaced: number
+          total: number
+        }
+        Update: {
+          actor?: string
+          at?: string
+          duplicates?: number
+          existing?: number
+          failed?: number
+          file_name?: string
+          fp?: string
+          id?: string
+          imported?: number
+          measure_id?: string
+          replaced?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_imports_measure_id_fkey"
+            columns: ["measure_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_measures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_items: {
+        Row: {
+          answer_key: string | null
+          code: string
+          id: string
+          label: string
+          max_score: number
+          mcq: boolean
+          measure_id: string
+          options: string[]
+          outcome_code: string | null
+          skill: string
+          sort: number
+        }
+        Insert: {
+          answer_key?: string | null
+          code: string
+          id?: string
+          label: string
+          max_score: number
+          mcq?: boolean
+          measure_id: string
+          options?: string[]
+          outcome_code?: string | null
+          skill: string
+          sort?: number
+        }
+        Update: {
+          answer_key?: string | null
+          code?: string
+          id?: string
+          label?: string
+          max_score?: number
+          mcq?: boolean
+          measure_id?: string
+          options?: string[]
+          outcome_code?: string | null
+          skill?: string
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_items_measure_id_fkey"
+            columns: ["measure_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_measures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_mastery: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          levels: Json
+          note: string | null
+          org_id: string
+          published_at: string | null
+          published_by: string | null
+          retired_at: string | null
+          rev: number
+          status: string
+          title: string
+          updated_by: string
+          version: number
+          version_of: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          levels: Json
+          note?: string | null
+          org_id: string
+          published_at?: string | null
+          published_by?: string | null
+          retired_at?: string | null
+          rev?: number
+          status?: string
+          title: string
+          updated_by: string
+          version?: number
+          version_of?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          levels?: Json
+          note?: string | null
+          org_id?: string
+          published_at?: string | null
+          published_by?: string | null
+          retired_at?: string | null
+          rev?: number
+          status?: string
+          title?: string
+          updated_by?: string
+          version?: number
+          version_of?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_mastery_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_mastery_version_of_fkey"
+            columns: ["version_of"]
+            isOneToOne: false
+            referencedRelation: "sv5_mastery"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_measures: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          created_by: string
+          grade_id: string
+          homework_id: string | null
+          id: string
+          items_at: string | null
+          items_by: string | null
+          items_source: string | null
+          kind: string
+          measured_on: string
+          org_id: string
+          origin: string
+          period_label: string
+          rev: number
+          scale_max: number
+          scale_note: string | null
+          school_id: string
+          section_ids: string[]
+          source_note: string
+          stage_id: string | null
+          subject_id: string
+          teacher_id: string | null
+          term_id: string | null
+          title: string
+          updated_at: string
+          year_id: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          created_by: string
+          grade_id: string
+          homework_id?: string | null
+          id?: string
+          items_at?: string | null
+          items_by?: string | null
+          items_source?: string | null
+          kind: string
+          measured_on: string
+          org_id: string
+          origin: string
+          period_label: string
+          rev?: number
+          scale_max: number
+          scale_note?: string | null
+          school_id: string
+          section_ids?: string[]
+          source_note: string
+          stage_id?: string | null
+          subject_id: string
+          teacher_id?: string | null
+          term_id?: string | null
+          title: string
+          updated_at?: string
+          year_id: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          created_by?: string
+          grade_id?: string
+          homework_id?: string | null
+          id?: string
+          items_at?: string | null
+          items_by?: string | null
+          items_source?: string | null
+          kind?: string
+          measured_on?: string
+          org_id?: string
+          origin?: string
+          period_label?: string
+          rev?: number
+          scale_max?: number
+          scale_note?: string | null
+          school_id?: string
+          section_ids?: string[]
+          source_note?: string
+          stage_id?: string | null
+          subject_id?: string
+          teacher_id?: string | null
+          term_id?: string | null
+          title?: string
+          updated_at?: string
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_measures_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_measures_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_measures_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_measures_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_measures_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_measures_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_measures_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_measures_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_measures_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_measures_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_result_history: {
+        Row: {
+          actor: string
+          after: Json
+          at: string
+          before: Json
+          id: string
+          reason: string
+          result_id: string
+        }
+        Insert: {
+          actor: string
+          after: Json
+          at?: string
+          before: Json
+          id?: string
+          reason: string
+          result_id: string
+        }
+        Update: {
+          actor?: string
+          after?: Json
+          at?: string
+          before?: Json
+          id?: string
+          reason?: string
+          result_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_result_history_result_id_fkey"
+            columns: ["result_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_results: {
+        Row: {
+          entered_at: string
+          entered_by: string
+          id: string
+          import_id: string | null
+          items: Json
+          measure_id: string
+          rev: number
+          score: number | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          entered_at?: string
+          entered_by: string
+          id?: string
+          import_id?: string | null
+          items?: Json
+          measure_id: string
+          rev?: number
+          score?: number | null
+          status: string
+          student_id: string
+        }
+        Update: {
+          entered_at?: string
+          entered_by?: string
+          id?: string
+          import_id?: string | null
+          items?: Json
+          measure_id?: string
+          rev?: number
+          score?: number | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_results_measure_id_fkey"
+            columns: ["measure_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_measures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_absences: {
         Row: {
           created_at: string
@@ -29954,6 +30379,58 @@ export type Database = {
       }
       sv4_teacher_list: { Args: { _org: string }; Returns: Json }
       sv4_teacher_profile: { Args: { _teacher: string }; Returns: Json }
+      sv5_analysis: {
+        Args: { _mastery: string; _measure: string; _section: string }
+        Returns: Json
+      }
+      sv5_compare: { Args: { _a: string; _b: string }; Returns: Json }
+      sv5_import_confirm: {
+        Args: {
+          _file: string
+          _fp: string
+          _measure: string
+          _replace: boolean
+          _rows: Json
+        }
+        Returns: Json
+      }
+      sv5_import_preview: {
+        Args: { _measure: string; _replace: boolean; _rows: Json }
+        Returns: Json
+      }
+      sv5_items_save: {
+        Args: { _items: Json; _measure: string; _rev: number; _source: string }
+        Returns: undefined
+      }
+      sv5_mastery_list: { Args: { _org: string }; Returns: Json }
+      sv5_mastery_publish: {
+        Args: { _id: string; _rev: number }
+        Returns: undefined
+      }
+      sv5_mastery_save: {
+        Args: {
+          _from: string
+          _id: string
+          _levels: Json
+          _note: string
+          _org: string
+          _rev: number
+          _title: string
+        }
+        Returns: string
+      }
+      sv5_measure_from_test: {
+        Args: { _homework: string; _kind: string; _period: string }
+        Returns: string
+      }
+      sv5_measure_get: { Args: { _id: string }; Returns: Json }
+      sv5_measure_list: { Args: { _org: string }; Returns: Json }
+      sv5_measure_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv5_refs: { Args: { _org: string }; Returns: Json }
+      sv5_result_list: { Args: { _measure: string }; Returns: Json }
       sync_class_group: {
         Args: { _section: string; _year: string }
         Returns: string

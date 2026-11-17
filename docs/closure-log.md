@@ -1119,3 +1119,4 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - الثالثة: تسليم لمشرفة ثانية بإسناد مطابق، حالات الأثر من الواجهة، إعادة جدولة متزامنة، مطابقة صفوف PDF وتصدير المشرف — منفذة ومختبرة (docs/supervision-stage3-status.md). ترحيلة 20261117070835.
 - الرابعة: ترحيلتان 20261117071849 و20261117072535؛ فحوص خادمية 36+22+9+9+10، رحلات متصفح (مشرف/مدير/معلم، جوال 390)، Vitest 39. التفاصيل والمتبقي في docs/supervision-stage4-report.md. لا نشر ولا تنظيف ولا مساس بالمالكي أو الإنتاج.
 - 2026-11-17 Stage-4 PD reports: Riyadh dates, scoped status filter, honest filter lines; Excel/print rows match records for owner/supervisor/teacher (/tmp/browser/sv449/reports.py, all PASS).
+- 2026-11-17 Stage 5 batch 1 learning outcomes (sv5_*): measures, Excel import preview/confirm, analysis, mastery, comparison; lo.py all PASS, browser loui.py OK. Report docs/supervision-stage5-report.md.
