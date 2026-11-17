@@ -55,6 +55,8 @@ function Measures({ org, me, list, open }: { org: string; me: SvMe; list: Measur
   </div>;
 }
 
+function L({ t, children }: { t: string; children: React.ReactNode }) { return <label className="grid gap-1 text-sm"><span className="font-medium">{t}</span>{children}</label>; }
+
 export function MeasureForm({ org, m, onDone }: { org: string; m?: Measure; onDone: (id?: string) => void }) {
   const refs = useLo<Refs>(["refs", org], "sv5_refs", { _org: org }); const qc = useQueryClient(); const [busy, setBusy] = useState(false);
   const [p, setP] = useState(() => ({ school_id: m?.school_id ?? "", kind: m?.kind ?? "", title: m?.title ?? "", source_note: m?.source_note ?? "", measured_on: m?.measured_on ?? "", year_id: m?.year_id ?? "", term_id: m?.term_id ?? "",
@@ -65,7 +67,6 @@ export function MeasureForm({ org, m, onDone }: { org: string; m?: Measure; onDo
   const secs = by(r.sections).filter((s) => s.grade_id === p.grade_id && s.year_id === p.year_id);
   const courses = by(r.courses).filter((c) => c.subject_id === p.subject_id && (!p.section_ids.length || p.section_ids.includes(c.section_id)));
   async function save() { setBusy(true); try { const id = await call("sv5_measure_save", { _id: m?.id ?? null, _rev: m?.rev ?? null, _p: { ...p, school_id: sch } }, "حُفظ المقياس") as string; await qc.invalidateQueries({ queryKey: ["sv5"] }); onDone(id); } catch { /* shown */ } finally { setBusy(false); } }
-  const L = ({ t, children }: { t: string; children: React.ReactNode }) => <label className="grid gap-1 text-sm"><span className="font-medium">{t}</span>{children}</label>;
   return <section className="space-y-3 rounded-lg border p-3" aria-label="بيانات المقياس">
     <h3 className="font-semibold">{m ? "تعديل بيانات المقياس" : "مقياس جديد بنتائج من ملف موثق"}</h3>
     <div className="grid gap-3 md:grid-cols-3">
