@@ -163,7 +163,7 @@
 - [x] Evaluation privacy: accepted only while open, breakdown only after close with ≥3, honest wording (sv448/fbpriv.py)
 - [ ] Camera / GitHub (external — record blocker)
 - [x] Stage 5: learning outcomes (sources, Excel import preview, analysis, comparison rules, MCQ analysis) — sv449/lo.py + loui.py
-- [ ] Stage 5: analysis → improvement action
+- [x] Stage 5: analysis → improvement action (sv449/act.py + actui.py)
 - [ ] Stage 5: resources/bulletins on existing library, versions, review/publish
 - [ ] Stage 5: professional portfolio
 - [ ] Stage 5: reports & dashboard
