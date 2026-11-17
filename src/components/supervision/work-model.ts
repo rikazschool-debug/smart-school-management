@@ -11,6 +11,7 @@ export const REC_STATE: Record<string, string> = { ...EXECUTION, submitted: "Ù…Ù
 export function copyPlanData(data: Record<string, unknown>): Record<string, unknown> {
   const copy = structuredClone(data);
   delete copy["period_from"]; delete copy["period_to"];
+  if (Array.isArray(copy["goals"])) copy["goals"] = copy["goals"].map((r: Record<string, unknown>) => ({ goal: r["goal"] ?? "", indicator: r["indicator"] ?? "", baseline: r["baseline"] ?? "", target: r["target"] ?? "", owner: "", due: "" }));
   copy["actions"] = (Array.isArray(copy["actions"]) ? copy["actions"] : []).map((r: Record<string, unknown>) => ({ action: r["action"] ?? "", owner: "", due: "", evidence: r["evidence"] ?? "" }));
   return copy;
 }
