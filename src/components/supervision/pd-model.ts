@@ -85,8 +85,15 @@ export function programRows(p: Program[]): Cell[][] {
   return p.map((g) => { const live = g.sessions.filter((s) => s.status === "scheduled"); const pres = g.enrollments.reduce((n, e) => n + e.attendance.filter((a) => a.status === "present").length, 0);
     return [g.title, g.school, PROG_STATUS[g.status] ?? g.status, live.length, g.enrollments.filter((e) => e.status === "registered").length, pres, g.enrollments.reduce((n, e) => n + verifiedHours(g, e.user_id), 0)]; });
 }
-export const MEET_HEAD = ["الاجتماع", "الفرع", "الموعد", "المحضر", "الإجراء", "المسؤول", "الموعد النهائي", "الحالة"];
+export const MEET_HEAD = ["الاجتماع", "الفرع", "الموعد", "المحضر", "مرتبط بـ", "الإجراء", "المسؤول", "الموعد النهائي", "الحالة"];
+const LINK_KIND: Record<string, string> = { plan: "خطة", need: "احتياج", visit: "زيارة", program: "برنامج" };
+/** Counts of linked items per kind, e.g. «خطة 2، زيارة 1»; «لا روابط» when none. */
+export function linkSummary(l: { kind: string }[]): string {
+  const c: Record<string, number> = {}; for (const x of l) c[x.kind] = (c[x.kind] ?? 0) + 1;
+  const out = ["plan", "need", "visit", "program"].filter((k) => c[k]).map((k) => `${LINK_KIND[k]} ${c[k]}`); return out.length ? out.join("، ") : "لا روابط";
+}
 export function meetingRows(m: PdMeeting[]): Cell[][] {
   return m.flatMap((x) => { const mn = x.minutes ? (x.minutes.status === "confirmed" ? `معتمد (إصدار ${x.minutes.version})` : "مسودة محضر") : "لا محضر";
-    return x.tasks.length ? x.tasks.map((t) => [x.title, x.school, x.starts_at.slice(0, 10), mn, t.title, t.assignee, t.due ?? "—", t.status === "done" ? "مغلق" : "مفتوح"]) : [[x.title, x.school, x.starts_at.slice(0, 10), mn, "لا إجراءات", "—", "—", "—"]]; });
+    const ln = linkSummary(x.links);
+    return x.tasks.length ? x.tasks.map((t) => [x.title, x.school, x.starts_at.slice(0, 10), mn, ln, t.title, t.assignee, t.due ?? "—", t.status === "done" ? "مغلق" : "مفتوح"]) : [[x.title, x.school, x.starts_at.slice(0, 10), mn, ln, "لا إجراءات", "—", "—", "—"]]; });
 }
