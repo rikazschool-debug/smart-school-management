@@ -167,5 +167,6 @@
 - [x] Stage 5: resources/bulletins on existing library, versions, review/publish (sv449/res.py + resui.py)
 - [x] Stage 5: professional portfolio (sv449/pf.py + pfui.py)
 - [x] Stage 5: reports & dashboard (sv449/dash.py + dashui.py)
-- [ ] Forms library: alignment table + sources (MoE, ETEC, Learning Forward), content for 3 pilot forms then 17
-- [ ] Forms library: cards/filters, owner editor, principal proposal, version compare, A4 print
+- [x] Forms library: alignment table + sources (docs/supervision-forms-alignment.md); 3 pilot forms v2 (support_visit, pd_plan, program_eval) tested
+- [x] Forms library: cards/filters, owner editor, principal proposal, version compare, step filling, teacher-copy privacy, A4 print (sv460)
+- [ ] Forms library batch 2: develop the remaining 14 forms' content and test them
