@@ -32,7 +32,7 @@ function Page() {
         </div>
       </Section>
       <Section title="ساعات التطوير المهني الموثقة" className="mt-6">
-        <PdHours org={active.orgId} />
+        {active.orgId ? <PdHours org={active.orgId} /> : null}
       </Section>
       <Section title="المرحلة التالية" className="mt-6">
         <EmptyState title="البرامج التدريبية والمدربون الضيوف لم تُبنَ بعد" hint="سيُضاف هنا: البرامج التدريبية وتسجيل الحضور، وسجل المدربين الضيوف وزياراتهم. لا توجد بيانات تدريب حاليًا." />
