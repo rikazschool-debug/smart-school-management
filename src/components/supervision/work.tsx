@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MyActions } from "./work-progress";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, ClipboardList, Download, FileText, Plus, Printer, Search } from "lucide-react";
 import { db } from "@/components/crud-page";
@@ -38,6 +39,7 @@ export function PlansVisits({ org, me, sp, go }: { org: string; me: SvMe; sp: Sv
   const report = () => ({ meta: { title: view === "plans" ? "كشف الخطط الإشرافية" : "كشف الزيارات الإشرافية", school: me.schools.find((s) => s.id === school)?.name, filters: [search, state, kind, from, to, pool.data?.years.find((y) => y.id === year)?.name, pool.data?.terms.find((t) => t.id === term)?.name, visits.data?.find((v) => v.teacher_id === teacher)?.teacher, visits.data?.find((v) => v.course_id === course)?.course].filter((v): v is string => !!v) }, headers: ["الفرع", "العمل", "النوع", "الحالة", "الموعد", "المعد", "التنفيذ / التوثيق"], rows: filtered.map((r) => "status" in r ? [r.school, r.title, PLAN_KIND[r.kind], REC_STATUS[r.status], String(r.data["period_from"] ?? "—"), r.author, EXECUTION[r.execution] ?? r.execution] : [r.school, r.purpose, r.kind === "peer" ? "تبادلية" : "صفية", VISIT_STATE[r.state], riyadhText(r.starts_at), r.author, r.documentation_status ? REC_STATUS[r.documentation_status as keyof typeof REC_STATUS] : "لم يبدأ التوثيق"]) });
   return <div className="space-y-4">
     <nav aria-label="الخطط والزيارات" className="flex gap-2 border-b pb-3">{(["plans", "visits"] as const).map((v) => <Button key={v} variant={view === v ? "default" : "ghost"} onClick={() => { setState(""); setKind(""); go({ tab: "work", view: v }); }}>{v === "plans" ? <ClipboardList /> : <CalendarDays />}{v === "plans" ? "الخطط" : "الزيارات"}</Button>)}</nav>
+    <MyActions org={org} />
     {indicators.data && <div className="flex flex-wrap gap-4 text-sm"><span>توصيات مفتوحة: {indicators.data.open}</span><span>متأخرة: {indicators.data.overdue}</span><span>مقدمة للتحقق: {indicators.data.submitted}</span><span>متحقق منها: {indicators.data.verified}</span></div>}
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" onClick={() => { go({ tab: "work", view: "visits" }); setFrom(riyadhDay(me.now)); setTo(riyadhDay(me.now)); }}>أعمال اليوم ({(visits.data ?? []).filter((v) => riyadhDay(v.starts_at) === riyadhDay(me.now) && v.state !== "cancelled").length})</Button>
