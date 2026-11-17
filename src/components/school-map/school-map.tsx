@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bath, Briefcase, Building2, Coffee, Cpu, Dumbbell, FlaskConical, ImagePlus, Landmark, Library, Package, Pencil, Phone, Plus, Presentation,
@@ -104,7 +104,7 @@ function Board({ org, school, canCreate, canEdit }: { org: string; school: strin
             </div>
             {building && <FloorMap building={building} rooms={shown} filtered={shown.length !== inBuilding.length} onOpen={setView} />}
           </div>
-          {building && <BuildingPanel org={org} building={building} rooms={inBuilding} canEdit={canEdit} onEdit={() => setEditB(building)} />}
+          {building && <BuildingPanel org={org} school={school} building={building} rooms={inBuilding} canEdit={canEdit} onEdit={() => setEditB(building)} />}
         </div>
       )}
       {editB && <BuildingDialog org={org} school={school} init={editB} onClose={() => setEditB(null)} onSaved={(id) => { setBid(id); setEditB(null); }} />}
@@ -167,14 +167,14 @@ function FloorMap({ building, rooms, filtered, onOpen }: { building: Building; r
   );
 }
 
-function BuildingPanel({ org, building, rooms, canEdit, onEdit }: { org: string; building: Building; rooms: Room[]; canEdit: boolean; onEdit: () => void }) {
+function BuildingPanel({ org, school, building, rooms, canEdit, onEdit }: { org: string; school: string; building: Building; rooms: Room[]; canEdit: boolean; onEdit: () => void }) {
   const qc = useQueryClient();
   const img = useQuery({ queryKey: ["fm-img", building.image_file_id], enabled: !!building.image_file_id, queryFn: () => signedUrl(building.image_file_id!), staleTime: 240_000 });
   const up = useMutation({
     mutationFn: async (f: File) => {
       if (!["image/png", "image/jpeg"].includes(f.type)) throw new Error("ارفع صورة PNG أو JPEG");
-      const id = await uploadImage(org, building, f);
-      await rpc("fm_save_building", { _org: org, _p: { ...building, image_file_id: id } });
+      const id = await uploadImage(org, school, f);
+      await rpc("fm_save_building", { _org: org, _p: { ...building, school_id: school, image_file_id: id } });
     },
     onSuccess: () => { toast.success("حُفظت صورة المبنى"); void qc.invalidateQueries({ queryKey: ["fm"] }); },
     onError: (e) => toast.error(arabicError(e)),
@@ -203,10 +203,9 @@ function BuildingPanel({ org, building, rooms, canEdit, onEdit }: { org: string;
   );
 }
 
-async function uploadImage(org: string, b: Pick<Building, "id">, f: File): Promise<string> {
-  void b;
+async function uploadImage(org: string, school: string, f: File): Promise<string> {
   if (f.size > 20 * 1048576) throw new Error("حجم الصورة يتجاوز 20 ميغابايت");
-  const d = await rpc<{ id: string; storage_path: string }[]>("od_draft_file", { _org: org, _school: null, _name: f.name, _mime: f.type, _size: f.size });
+  const d = await rpc<{ id: string; storage_path: string }[]>("od_draft_file", { _org: org, _school: school, _name: f.name, _mime: f.type, _size: f.size });
   const rec = d[0]!;
   if ((await uploadObject(rec.storage_path, f, new AbortController().signal)) !== "ok") throw new Error("فشل رفع الصورة، حاول مرة أخرى");
   return rec.id;
@@ -299,7 +298,7 @@ function RoomView({ org, room, building, canEdit, onClose, onEdit }: { org: stri
     onError: (e) => toast.error(arabicError(e)),
   });
   const I = ICON[room.category] ?? Square;
-  const row = (l: string, v: React.ReactNode) => v ? <div className="flex gap-3 py-1.5 text-sm"><span className="w-28 shrink-0 text-muted-foreground">{l}</span><span className="min-w-0 whitespace-pre-wrap">{v}</span></div> : null;
+  const row = (l: string, v: ReactNode) => v ? <div className="flex gap-3 py-1.5 text-sm"><span className="w-28 shrink-0 text-muted-foreground">{l}</span><span className="min-w-0 whitespace-pre-wrap">{v}</span></div> : null;
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent dir="rtl"><DialogHeader><DialogTitle className="flex items-center gap-2"><span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary"><I className="size-4" /></span>{room.name}</DialogTitle></DialogHeader>
