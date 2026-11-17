@@ -37,5 +37,25 @@
 - Linking to a supervisor plan or a remedial plan (no such records in the test branch's scope); code path untested.
 - PDF file contents of action exports (print view built from the same rows).
 
+## Batch 3: الموارد والنشرات — implemented and tested on the test DB
+- Tables sv5_resources (versioned by series_id/version_of, one open draft per series), sv5_resource_files (file references, reused by later versions without copying), sv5_resource_log (append-only). RPC-only sv5_res_*.
+- Kinds: bulletin, guide, strategy, assessment tool, template, training. Metadata: domain, subjects, stages, keywords, source, usage rights, explicit «no student data / evidence» confirmation.
+- Writers: owner (group-wide), branch principal or supervisor with a live assignment (branch). Only the writer edits a draft. Publisher: owner (group-wide) or branch principal (branch), never the writer or last editor; return needs a reason. Published versions are immutable (trigger); a new version reuses files and needs re-confirmation; publishing it keeps the old one as «إصدار سابق».
+- Readers: published → staff of the group (or of that branch); drafts → writer and publishers. Attachments (text/PDF/PNG/JPEG/WebP only) follow the same rule through can_read_file.
+- Internal content is labelled «نموذج داخلي»; titles/summaries claiming official approval are refused on the server and flagged in the form. Nothing is published automatically; no evidence or student data is pulled in.
+- UI: «الإشراف التربوي ← الموارد والتقارير» (published library with search by keywords, kind, domain, subject, stage; drafts & review queue; detail with preview/download, print, versions, log) and a read-only «الإشراف التربوي» tab inside the existing «المكتبة الرقمية».
+
+### Incident during this batch (test DB only)
+- Renaming can_read_file to add the resource rule left the three file policies (files read, storage read, storage upload) pointing to the renamed function, so file reads/uploads failed on the test DB for a few minutes. Fixed by recreating the three policies; verified no policy still references the old name and that file rows read again. Rule recorded in scripts/supervision AGENTS: recreate those policies whenever can_read_file is wrapped.
+
+### Evidence
+- /tmp/browser/sv449/res.py (RPC + storage, 34 PASS): scopes, writer/teacher/unassigned refusals, official-claim refusal, draft hidden from teacher, file type limit, upload, draft file not downloadable, stale rev, self-publish refused, other-branch principal refused (publish, read, download), return with reason, published readable/downloadable by teacher, published immutable, one open version, v2 reuses file and v1 keeps it, version history, owner cannot publish own group resource, list without body, log.
+- /tmp/browser/sv449/resui.py + resui2.py (browser): supervisor created, attached a PDF, official-claim warning, submit; principal saw review queue and published; teacher at 390px searched by keyword+subject, opened and previewed the PDF, no manage tab, no overflow; library tab shows the shelf. Screenshot /mnt/documents/supervision-library-shelf.png.
+- Unit: src/test/supervision-res.test.ts (7).
+
+### Not verified
+- Image preview inside a resource (only PDF and text were attached).
+- Printed paper output.
+
 ## Remaining stage-5 batches («غير مكتملة»)
-Supervisory resources/bulletins on the existing library, professional portfolio, periodic reports and dashboard.
+Professional portfolio, periodic reports and dashboard.
