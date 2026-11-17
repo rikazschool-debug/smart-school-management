@@ -5,6 +5,7 @@ import { EmptyState, LoadingState, PageHeader, Section } from "@/components/stat
 import { SectionLocked } from "@/components/owner-portal";
 import { useSession } from "@/lib/session";
 import { useHrMe } from "@/components/hr/shared";
+import { PdHours } from "@/components/hr/pd-hours";
 
 export const Route = createFileRoute("/_authenticated/app/hr_/training")({
   head: () => ({ meta: [{ title: "التدريب والتطوير — ركاز" }, { name: "description", content: "البرامج التدريبية وإدارة المدربين الضيوف ضمن الموارد البشرية." }, { property: "og:title", content: "التدريب والتطوير — ركاز" }, { property: "og:description", content: "التدريب والتطوير في الموارد البشرية." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
@@ -29,6 +30,9 @@ function Page() {
             <GraduationCap className="mt-0.5 size-5 text-primary" /><span><span className="block font-bold">تقييم الأداء الوظيفي</span><span className="text-sm text-muted-foreground">دورات تقييم الأداء ونماذجها.</span></span>
           </Link>
         </div>
+      </Section>
+      <Section title="ساعات التطوير المهني الموثقة" className="mt-6">
+        <PdHours org={active.orgId} />
       </Section>
       <Section title="المرحلة التالية" className="mt-6">
         <EmptyState title="البرامج التدريبية والمدربون الضيوف لم تُبنَ بعد" hint="سيُضاف هنا: البرامج التدريبية وتسجيل الحضور، وسجل المدربين الضيوف وزياراتهم. لا توجد بيانات تدريب حاليًا." />
