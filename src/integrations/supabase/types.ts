@@ -29047,6 +29047,10 @@ export type Database = {
         }
         Returns: Json
       }
+      sv3_file_access: {
+        Args: { _file: string; _write?: boolean }
+        Returns: boolean
+      }
       sv3_file_create: { Args: { _p: Json }; Returns: Json }
       sv3_file_list: {
         Args: { _plan?: string; _visit?: string }
