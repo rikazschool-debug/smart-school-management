@@ -29140,6 +29140,7 @@ export type Database = {
         Returns: string
       }
       sv3_indicators: { Args: { _org: string }; Returns: Json }
+      sv3_my_actions: { Args: { _org: string }; Returns: Json }
       sv3_plan_execution: {
         Args: { _id: string; _rev: number; _state: string }
         Returns: undefined
