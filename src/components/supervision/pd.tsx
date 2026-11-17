@@ -35,7 +35,7 @@ export function TeachersDevelopment({ org, me, sp, go }: { org: string; me: SvMe
   const names = { school: me.schools.find((x) => x.id === f.school)?.name, teacher: d.teachers.find((t) => t.id === f.teacher)?.name };
   function report(kind: PdReport) {
     const filters = reportFilters(kind, view, f, names);
-    const meta = { title: { dev: "تقرير تطوير المعلمين", needs: "تقرير الاحتياجات المهنية", programs: "تقرير البرامج والحضور والساعات", meetings: "تقرير الاجتماعات والإجراءات" }[kind], filters, note: "من السجلات المتاحة لصلاحيتك فقط (للمشارك: سجله وحده)؛ «غير متاح» يعني عدم توفر البيانات وليس صفرًا. لا درجات ولا ترتيب." };
+    const meta = { school: names.school ?? "كل الفروع المتاحة لصلاحيتك", title: { dev: "تقرير تطوير المعلمين", needs: "تقرير الاحتياجات المهنية", programs: "تقرير البرامج والحضور والساعات", meetings: "تقرير الاجتماعات والإجراءات" }[kind], filters, note: "من السجلات المتاحة لصلاحيتك فقط (للمشارك: سجله وحده)؛ «غير متاح» يعني عدم توفر البيانات وليس صفرًا. لا درجات ولا ترتيب." };
     if (kind === "dev") return { meta, headers: DEV_HEAD, rows: devReport(fd.teachers, fd.needs, fd.plans, fd.programs, {}) };
     if (kind === "needs") return { meta, headers: NEED_HEAD, rows: needRows(fd.needs) };
     if (kind === "programs") return { meta, headers: PROG_HEAD, rows: programRows(fd.programs) };
