@@ -10,7 +10,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { EmptyState } from "@/components/states";
 import { arabicError, useSession } from "@/lib/session";
 import { printReport } from "@/lib/export";
-import { IMPACT, impactNeedsEvidence } from "./work-model";
+import { IMPACT, impactNeedsEvidence, type Visit } from "./work-model";
 import { riyadhText, type SvMe } from "./model";
 import { ANON_NOTE, ATTEND, ENROLL, INTERNAL_CERT, MODE, OUTCOME_KIND, OUTCOME_STATE, outcomeLine, PROG_STATUS, validMeetingUrl, verifiedHours, type Feedback, type Outcome, type Program } from "./pd-model";
 import { sv4 } from "./pd-api";
@@ -19,7 +19,7 @@ import type { PdData } from "./pd";
 
 const toIso = (local: string) => (local ? new Date(local + ":00+03:00").toISOString() : "");
 
-export function PdPrograms({ me, d, fd }: { me: SvMe; d: PdData; fd: PdData }) {
+export function PdPrograms({ me, d, fd, org }: { me: SvMe; d: PdData; fd: PdData; org: string }) {
   const [open, setOpen] = useState<string | null>(null); const [creating, setCreating] = useState(false);
   const canCreate = me.owner || me.schools.some((s) => s.principal) || me.live.length > 0;
   const cur = d.programs.find((p) => p.id === open);
@@ -31,7 +31,7 @@ export function PdPrograms({ me, d, fd }: { me: SvMe; d: PdData; fd: PdData }) {
         <div className="flex justify-between gap-2"><b>{p.title}</b><span className="text-xs">{PROG_STATUS[p.status]}</span></div>
         <p className="mt-1 text-sm text-muted-foreground">{p.school} · {MODE[p.mode]} · {p.trainer_name} · {p.sessions.filter((s) => s.status === "scheduled").length} جلسات</p>
         <Button size="sm" variant="outline" className="mt-2" onClick={() => setOpen(p.id)}>فتح البرنامج</Button></li>)}</ul>}
-      <Meetings d={d} fd={fd} />
+      <Meetings d={d} fd={fd} org={org} />
     </>}
   </div>;
 }
@@ -151,9 +151,9 @@ function OutcomeRow({ o, p, me, call }: { o: Outcome; p: Program; me: string; ca
   </li>;
 }
 
-function Meetings({ d, fd }: { d: PdData; fd: PdData }) {
+function Meetings({ d, fd, org }: { d: PdData; fd: PdData; org: string }) {
   const qc = useQueryClient(); const [link, setLink] = useState<{ m: string; kind: string; ref: string }>({ m: "", kind: "plan", ref: "" });
-  const visits = useQuery({ queryKey: ["sv3-visits", "pd-link", fd.meetings[0]?.school_id ?? ""], enabled: fd.meetings.length > 0, retry: false, queryFn: async () => { const org = d.programs[0]?.org_id ?? d.plans[0]?.org_id; if (!org) return [] as Visit[]; const r = await db.rpc("sv3_visit_list", { _org: org }); if (r.error) throw r.error; return r.data as Visit[]; } });
+  const visits = useQuery({ queryKey: ["sv3-visits", org], enabled: fd.meetings.length > 0, retry: false, queryFn: async () => { const r = await db.rpc("sv3_visit_list", { _org: org }); if (r.error) throw r.error; return r.data as Visit[]; } });
   const all = [...d.plans.map((p) => ({ kind: "plan", id: p.id, school: p.school_id, name: `خطة ${p.teacher} — إصدار ${p.version}` })), ...d.needs.map((n) => ({ kind: "need", id: n.id, school: n.school_id, name: `احتياج ${n.teacher}: ${n.domain}` })),
     ...(visits.data ?? []).map((v) => ({ kind: "visit", id: v.id, school: v.school_id, name: `زيارة ${v.teacher} — ${riyadhText(v.starts_at)}` })), ...d.programs.map((g) => ({ kind: "program", id: g.id, school: g.school_id, name: `برنامج ${g.title}` }))];
   const mSchool = fd.meetings.find((m) => m.id === link.m)?.school_id;
