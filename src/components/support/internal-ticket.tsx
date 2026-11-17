@@ -12,6 +12,8 @@ import { PRIO, useCategories } from "@/components/support/support";
 import { AssigneePicker, type Assignee } from "@/components/support/assignee-picker";
 import { DraftFiles, type DraftFile } from "@/components/support/draft-files";
 import type { Branch } from "@/components/support/caps";
+import { TicketFields } from "./ticket-fields";
+import { contactSchema, EMPTY_CONTACT, topicName } from "./ticket-model";
 
 // Internal ticket opened by the org owner / principal for one branch: branch → department (optional) → person (optional) + attachments.
 // support_open re-checks branch/department/assignee/files and is idempotent by client key.
@@ -22,6 +24,7 @@ export function InternalTicket({ ctx, branches: allowed, assignable = [], onDone
   const [school, setSchool] = useState<string>(pick ? "" : allowed[0]?.id ?? "");
   const [title, setTitle] = useState(""); const [body, setBody] = useState("");
   const [prio, setPrio] = useState("normal"); const [cat, setCat] = useState("");
+  const [contact, setContact] = useState({ ...EMPTY_CONTACT });
   const dept = ""; const [who, setWho] = useState<Assignee | null>(null);
   const [files, setFiles] = useState<DraftFile[]>([]);
   const [review, setReview] = useState(false); const [busy, setBusy] = useState(false);
@@ -36,6 +39,8 @@ export function InternalTicket({ ctx, branches: allowed, assignable = [], onDone
     if (who) toast.message("أُزيل المسؤول المختار؛ اختره من جديد في الفرع الجديد");
   }
   function check() {
+    const checked = contactSchema.safeParse(contact);
+    if (!checked.success) return void toast.error(checked.error.issues[0]?.message);
     if (!school) return void toast.error("اختر المدرسة أو الفرع أولًا");
     if (title.trim().length < 3) return void toast.error("اكتب عنوانًا واضحًا");
     if (body.trim().length < 5) return void toast.error("اكتب وصفًا للمشكلة");
@@ -44,7 +49,7 @@ export function InternalTicket({ ctx, branches: allowed, assignable = [], onDone
   }
   async function submit() {
     setBusy(true);
-    const { data, error } = await db.rpc("support_open" as never, { _school: school, _title: title, _body: body, _priority: prio, _category: cat || null, _assignee: who?.user_id ?? null, _client_key: key, _dept: dept || null, _files: files.filter((f) => f.id).map((f) => f.id) } as never);
+    const { data, error } = await db.rpc("support_submit", { _data: { mode: "internal", school, title, body, priority: prio, category: cat || null, assignee: who?.user_id ?? null, client_key: key, dept: dept || null, files: files.flatMap(f => f.id ? [f.id] : []), ...contactSchema.parse(contact) } });
     setBusy(false);
     if (error) { setReview(false); return void toast.error(arabicError(error)); }
     toast.success(who ? `أُنشئت التذكرة وأُسندت إلى ${who.name}` : "أُنشئت التذكرة في قائمة غير المسندة");
@@ -59,7 +64,8 @@ export function InternalTicket({ ctx, branches: allowed, assignable = [], onDone
       </div>
       <fieldset disabled={review} className="space-y-4">
         <div className="space-y-1"><Label htmlFor="it-title">العنوان</Label><Input id="it-title" value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} /></div>
-        <div className="space-y-1"><Label htmlFor="it-body">الوصف</Label><Textarea id="it-body" rows={4} value={body} onChange={(e) => setBody(e.target.value)} /></div>
+        <div className="space-y-1"><Label htmlFor="it-body">الوصف</Label><Textarea id="it-body" rows={4} maxLength={8000} value={body} onChange={(e) => setBody(e.target.value)} /></div>
+        <TicketFields prefix="it" value={contact} onChange={setContact} />
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1"><Label htmlFor="it-cat">تصنيف المشكلة</Label><select id="it-cat" className={selectCls()} value={cat} onChange={(e) => setCat(e.target.value)}><option value="">بدون</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
           <div className="space-y-1"><Label htmlFor="it-prio">الأولوية</Label><select id="it-prio" className={selectCls()} value={prio} onChange={(e) => setPrio(e.target.value)}>{Object.entries(PRIO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
@@ -71,6 +77,8 @@ export function InternalTicket({ ctx, branches: allowed, assignable = [], onDone
         <div className="space-y-2 rounded-lg border bg-muted/40 p-3 text-sm" aria-label="ملخص التذكرة">
           <p className="font-semibold">راجع قبل الحفظ</p>
           <p>الفرع: <b>{schoolName ?? "—"}</b></p>
+          <p>التصنيف: <b>{contact.topic ? `${topicName(contact.topic)} — ${contact.subtopic}` : "بدون تصنيف"}</b></p>
+          <p>صاحب التواصل: <b>{contact.contact_name || "—"}</b> · الهاتف: <b dir="ltr">{contact.contact_phone || "—"}</b></p>
           <p>المسؤول: <b>{who ? `${who.name} · ${ROLE_LABELS[who.role as Role] ?? who.role}` : "بلا مسؤول (قائمة غير المسندة)"}</b></p>
           <p>المرفقات: <b>{files.length ? files.map((f) => f.file.name).join("، ") : "لا يوجد"}</b></p>
           <div className="flex flex-wrap gap-2 pt-1"><Button disabled={busy} onClick={submit}>تأكيد وإنشاء التذكرة</Button><Button variant="outline" disabled={busy} onClick={() => setReview(false)}>تعديل</Button></div>

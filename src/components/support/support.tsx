@@ -20,6 +20,8 @@ import { InternalTicket } from "@/components/support/internal-ticket";
 import { FollowersPanel } from "@/components/support/followers";
 import { SupportHoursPanel } from "@/components/support/hours";
 import type { Branch, SupportCaps } from "@/components/support/caps";
+import { TicketFields } from "./ticket-fields";
+import { contactSchema, EMPTY_CONTACT, topicName } from "./ticket-model";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = any;
@@ -123,7 +125,7 @@ export function TicketList({ ctx, box, onOpen, initialStatus, caps }: { ctx: Ctx
   const list = useQuery({
     queryKey: ["support-list", box, ctx.key, q, status, prio, cat, school, from, to, assignee, dept, page],
     queryFn: async () => {
-      const { data, error } = await db.rpc("support_list", args(page * PAGE));
+      const { data, error } = await db.rpc("support_list_details", { _args: args(page * PAGE) });
       if (error) throw error;
       return data as Row[];
     },
@@ -133,9 +135,9 @@ export function TicketList({ ctx, box, onOpen, initialStatus, caps }: { ctx: Ctx
 
   async function doExport(kind: "xlsx" | "pdf") {
     try {
-      const all = (await fetchAllRows((o) => db.rpc("support_list", args(o, 100)))).filter((r) => platform || caps?.owner || exportNames.has(r.school_name));
-      const headers = ["الرقم", "العنوان", "الحالة", "الأولوية", "التصنيف", "الفرع", "القسم", "مقدم الطلب", "الصفة", "المسؤول", "الإنشاء", "آخر تحديث", "موعد الحل", "متأخرة"];
-      const data = all.map((r) => [r.ref, r.title, STATUS[r.status], PRIO[r.priority], r.category, r.school_name, r.department_name ?? "", r.requester_name, roleLabel(r.requester_role), r.assignee_name, fmt(r.created_at), fmt(r.updated_at), r.resolve_due ? fmt(r.resolve_due) : "", r.overdue ? "نعم" : ""]);
+      const all = (await fetchAllRows((o) => db.rpc("support_list_details", { _args: args(o, 100) }))).filter((r) => platform || caps?.owner || exportNames.has(r.school_name));
+      const headers = ["الرقم", "العنوان", "الحالة", "الأولوية", "التصنيف", "الفرع", "القسم", "مقدم الطلب", "الصفة", "المسؤول", "الإنشاء", "آخر تحديث", "موعد الحل", "متأخرة", "التصنيف الرئيسي", "التصنيف الفرعي", "صاحب التواصل", "الهاتف"];
+      const data = all.map((r) => [r.ref, r.title, STATUS[r.status], PRIO[r.priority], r.category, r.school_name, r.department_name ?? "", r.requester_name, roleLabel(r.requester_role), r.assignee_name, fmt(r.created_at), fmt(r.updated_at), r.resolve_due ? fmt(r.resolve_due) : "", r.overdue ? "نعم" : "", topicName(r.topic ?? ""), r.subtopic ?? "", r.contact_name ?? "", r.contact_phone ?? ""]);
       const filters = [q && `بحث: ${q}`, status && `الحالة: ${STATUS[status] ?? "مفتوحة"}`, prio && `الأولوية: ${PRIO[prio]}`, from && `من ${from}`, to && `إلى ${to}`].filter(Boolean) as string[];
       const meta = { title: `تذاكر الدعم — ${TAB_LABEL[box]}`, school: ctx.schoolName, filters };
       if (kind === "xlsx") exportXlsx(meta, headers, data); else await exportPdf(meta, headers, data);
@@ -200,7 +202,7 @@ export function TicketList({ ctx, box, onOpen, initialStatus, caps }: { ctx: Ctx
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {box !== "mine" && <>{r.requester_name ?? "—"} ({roleLabel(r.requester_role)}) · {r.school_name} · </>}
-                  {r.department_name ? <>القسم: {r.department_name} · </> : null}{r.category ?? "بلا تصنيف"} · المسؤول: {r.assignee_name ?? "لم يُستلم بعد"} · آخر تحديث {fmt(r.updated_at)}
+                  {r.department_name ? <>القسم: {r.department_name} · </> : null}{r.topic ? `${topicName(r.topic)} — ${r.subtopic}` : r.category ?? "بلا تصنيف"} · المسؤول: {r.assignee_name ?? "لم يُستلم بعد"} · آخر تحديث {fmt(r.updated_at)}
                 </p>
               </button>
             </li>
@@ -236,6 +238,7 @@ function OwnTicket({ ctx, onDone, onCancel, onInternal }: { ctx: Ctx; onDone: (i
   const [prio, setPrio] = useState("normal");
   const [cat, setCat] = useState("");
   const [student, setStudent] = useState("");
+  const [contact, setContact] = useState({ ...EMPTY_CONTACT });
   const [busy, setBusy] = useState(false);
   const key = useMemo(() => crypto.randomUUID(), []);
   const cats = useCategories(scope, ctx.orgId);
@@ -246,8 +249,11 @@ function OwnTicket({ ctx, onDone, onCancel, onInternal }: { ctx: Ctx; onDone: (i
   });
   async function submit() {
     if (!ctx.schoolId) return void toast.error("اختر مدرسة من شريط السياق أولًا");
+    const checked = contactSchema.safeParse(contact);
+    if (!checked.success) return void toast.error(checked.error.issues[0]?.message);
+    if (title.trim().length < 3 || body.trim().length < 5) return void toast.error("اكتب عنوانًا واضحًا ووصفًا للمشكلة");
     setBusy(true);
-    const { data, error } = await db.rpc("support_create", { _scope: scope, _school: ctx.schoolId, _title: title, _body: body, _priority: prio, _category: cat || null, _student: student || null, _client_key: key });
+    const { data, error } = await db.rpc("support_submit", { _data: { mode: "own", scope, school: ctx.schoolId, title, body, priority: prio, category: cat || null, student: student || null, client_key: key, ...checked.data } });
     setBusy(false);
     if (error) return void toast.error(arabicError(error));
     toast.success("أُرسلت التذكرة");
@@ -266,7 +272,8 @@ function OwnTicket({ ctx, onDone, onCancel, onInternal }: { ctx: Ctx; onDone: (i
         </div>
       )}
       <div className="space-y-1"><Label htmlFor="sp-title">العنوان</Label><Input id="sp-title" value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} /></div>
-      <div className="space-y-1"><Label htmlFor="sp-body">الوصف</Label><Textarea id="sp-body" rows={5} value={body} onChange={(e) => setBody(e.target.value)} /></div>
+      <div className="space-y-1"><Label htmlFor="sp-body">الوصف</Label><Textarea id="sp-body" rows={5} maxLength={8000} value={body} onChange={(e) => setBody(e.target.value)} /></div>
+      <TicketFields prefix="sp" value={contact} onChange={setContact} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1"><Label htmlFor="sp-cat">التصنيف</Label>
           <select id="sp-cat" className={selectCls()} value={cat} onChange={(e) => setCat(e.target.value)}>
@@ -360,6 +367,9 @@ export function TicketDetail({ id, ctx, userId, onBack }: { id: string; ctx: Ctx
           <div><dt className="inline text-muted-foreground">مقدم الطلب: </dt><dd className="inline">{t.requester_name ?? "—"} ({roleLabel(t.requester_role)})</dd></div>
           <div><dt className="inline text-muted-foreground">الفرع: </dt><dd className="inline">{t.school_name}</dd></div>
           <div><dt className="inline text-muted-foreground">التصنيف: </dt><dd className="inline">{t.category ?? "بلا تصنيف"}</dd></div>
+          {t.topic && <div className="sm:col-span-2"><dt className="inline text-muted-foreground">التصنيف الرئيسي والفرعي: </dt><dd className="inline">{topicName(t.topic)} — {t.subtopic}</dd></div>}
+          <div><dt className="inline text-muted-foreground">اسم صاحب التواصل: </dt><dd className="inline font-medium">{t.contact_name || "—"}</dd></div>
+          <div><dt className="inline text-muted-foreground">رقم الهاتف: </dt><dd className="inline" dir="ltr">{t.contact_phone || "—"}</dd></div>
           <div><dt className="inline text-muted-foreground">المسؤول الحالي: </dt><dd className="inline">{t.assignee_name ?? "لم يُستلم بعد"}</dd></div>
           {t.linked && <div><dt className="inline text-muted-foreground">تصعيد من: </dt><dd className="inline font-mono" dir="ltr">{t.linked.ref}</dd></div>}
           {t.student_name && <div><dt className="inline text-muted-foreground">الابن المعني: </dt><dd className="inline">{t.student_name}</dd></div>}

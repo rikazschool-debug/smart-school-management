@@ -1,5 +1,9 @@
 # Rikaz — Closure log (packages 2 + 3 + class groups)
 
+## 2026-11-17 — prompt-473 support classifications/contact
+- Eight main topics and 31 requested subtopics, paired selectors in own/internal forms, contact name/phone, review/detail/list/export readback. Atomic support_submit delegates existing school/requester/assignee/file checks; validation trigger rejects invalid parent/child and phone; retry key preserves the original result. Existing categories/tickets remain unchanged; no operational finance or transport features added.
+- Database linter's two new authenticated SECURITY DEFINER notices are intentional guarded RPC boundaries; anonymous execution revoked, list rechecks support_can_read. Pre-existing linter notices not changed. Verified: 12 model tests, 10 live synthetic checks (taxonomy parity, both creation paths, retained contact, idempotence, bad child/phone and anonymous rejection); browser internal creation → review → submit → hard reload confirms contact/phone/topic. Desktop and 390px screenshots reviewed, no overflow or page errors; preview build OK. Synthetic fixture retained, no cleanup, publishing or protected-group data changes. Call-specific creation screens remain unchanged.
+
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 

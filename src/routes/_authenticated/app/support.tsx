@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/app/support")({
     ...(["live", "calls", "followups", "reports", "settings"].includes(s["mq"] as string) ? { mq: s["mq"] as MqSection } : {}),
     ...(["summary", "mine", "assigned", "following", "info", "manage", "whatsapp", "reports", "settings"].includes(s["tab"] as string) ? { tab: s["tab"] as SupportTab | "settings" } : {}),
   }),
-  head: () => ({ meta: [{ title: "الدعم والمساعدة — ركاز" }, { name: "description", content: "تذاكر الدعم والمساعدة في ركاز." }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "الدعم والمساعدة — ركاز" }, { name: "description", content: "تذاكر الدعم المصنفة وبيانات التواصل والمتابعة في ركاز." }, { property: "og:title", content: "الدعم والمساعدة — ركاز" }, { property: "og:description", content: "تذاكر الدعم المصنفة وبيانات التواصل والمتابعة في ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: Page,
 });
 

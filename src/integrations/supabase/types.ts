@@ -19081,6 +19081,8 @@ export type Database = {
           category_id: string | null
           client_key: string | null
           closed_at: string | null
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string
           department_id: string | null
           first_response_at: string | null
@@ -19105,7 +19107,9 @@ export type Database = {
           scope: string
           status: string
           student_id: string | null
+          subtopic: string | null
           title: string
+          topic: string | null
           updated_at: string
         }
         Insert: {
@@ -19114,6 +19118,8 @@ export type Database = {
           category_id?: string | null
           client_key?: string | null
           closed_at?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           department_id?: string | null
           first_response_at?: string | null
@@ -19138,7 +19144,9 @@ export type Database = {
           scope: string
           status?: string
           student_id?: string | null
+          subtopic?: string | null
           title: string
+          topic?: string | null
           updated_at?: string
         }
         Update: {
@@ -19147,6 +19155,8 @@ export type Database = {
           category_id?: string | null
           client_key?: string | null
           closed_at?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           department_id?: string | null
           first_response_at?: string | null
@@ -19171,7 +19181,9 @@ export type Database = {
           scope?: string
           status?: string
           student_id?: string | null
+          subtopic?: string | null
           title?: string
+          topic?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -30737,6 +30749,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      support_list_details: { Args: { _args: Json }; Returns: Json }
       support_manager: {
         Args: { _t: Database["public"]["Tables"]["support_tickets"]["Row"] }
         Returns: boolean
@@ -30851,7 +30864,9 @@ export type Database = {
         Args: { _from?: string; _school?: string; _to?: string }
         Returns: Json
       }
+      support_submit: { Args: { _data: Json }; Returns: string }
       support_summary: { Args: { _school?: string }; Returns: Json }
+      support_topics: { Args: never; Returns: Json }
       sv_asg_end: {
         Args: { _id: string; _reason: string; _rev: number }
         Returns: undefined

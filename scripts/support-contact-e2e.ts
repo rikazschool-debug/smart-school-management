@@ -1,0 +1,36 @@
+// Synthetic test-only fixture; retained for browser readback, never real accounts or external messages.
+import "./lib/user-pool";
+import { createClient } from "@supabase/supabase-js";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { SUPPORT_TOPICS } from "../src/components/support/ticket-model";
+const env = Object.fromEntries(readFileSync(".env", "utf8").split("\n").filter(l => l.includes("=")).map(l => { const i=l.indexOf("="); return [l.slice(0,i),l.slice(i+1).replace(/^"|"$/g,"")]; }));
+const url=process.env.SUPABASE_URL, secret=process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!url || !secret) throw new Error("Test credentials unavailable");
+const admin=createClient(url,secret,{auth:{persistSession:false}});
+const email=`support473-${Date.now()}@rikaz.test`, password=crypto.randomUUID();
+const created=await admin.auth.admin.createUser({email,password,email_confirm:true});
+if (created.error || !created.data.user) throw new Error("Synthetic account unavailable");
+const c=createClient(env.VITE_SUPABASE_URL,env.VITE_SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:false},global:{fetch:(input,init)=>{const h=new Headers(init?.headers); if(h.get("Authorization")===`Bearer ${env.VITE_SUPABASE_PUBLISHABLE_KEY}`)h.delete("Authorization"); return fetch(input,{...init,headers:h});}}});
+const signed=await c.auth.signInWithPassword({email,password}); if(signed.error)throw signed.error;
+const orgResult=await c.rpc("create_organization",{_org_name:"اختبار تصنيفات الدعم 473",_school_name:"فرع الدعم التجريبي 473"}); if(orgResult.error)throw orgResult.error;
+const org=orgResult.data;
+const sch=await admin.from("schools").select("id").eq("org_id",org).single(); if(sch.error)throw sch.error;
+const school=sch.data.id;
+const base={mode:"internal",school,title:"اختبار حفظ بيانات التواصل",body:"طلب تجريبي معزول للتصنيفات وبيانات صاحب التواصل",priority:"normal",client_key:crypto.randomUUID(),contact_name:"صاحب تواصل تجريبي",contact_phone:"0500000000",topic:"academic",subtopic:"طلب مقابلة مع المعلم/المرشد",files:[]};
+let checks=0;
+function check(ok:unknown,label:string){if(!ok)throw new Error(label);checks++;console.log("PASS",label);}
+const topics=await c.rpc("support_topics");check(JSON.stringify(topics.data)===JSON.stringify(SUPPORT_TOPICS),"server/client taxonomy match all 31 children");
+const t=await c.rpc("support_submit",{_data:base});check(!t.error&&t.data,"atomic internal submission");
+const get=await c.rpc("support_get",{_ticket:t.data}); const ticket=(get.data as any)?.ticket;
+check(ticket?.contact_name===base.contact_name&&ticket?.contact_phone===base.contact_phone&&ticket?.subtopic===base.subtopic,"contact and classification persist through scoped detail");
+const again=await c.rpc("support_submit",{_data:{...base,contact_name:"different"}});check(again.data===t.data,"repeat key returns original ticket");
+const get2=await c.rpc("support_get",{_ticket:t.data});check((get2.data as any)?.ticket?.contact_name===base.contact_name,"repeat never overwrites contact");
+const invalid=await c.rpc("support_submit",{_data:{...base,client_key:crypto.randomUUID(),subtopic:"طلب خروج مبكر"}});check(!!invalid.error,"wrong parent/child refused server-side");
+const badphone=await c.rpc("support_submit",{_data:{...base,client_key:crypto.randomUUID(),contact_phone:"<script>"}});check(!!badphone.error,"invalid phone refused server-side");
+const list=await c.rpc("support_list_details",{_args:{_box:"mine",_limit:20,_offset:0}});check((list.data as any[])?.some(x=>x.id===t.data&&x.contact_phone===base.contact_phone),"scoped list preserves contact");
+const own=await c.rpc("support_submit",{_data:{...base,mode:"own",scope:"platform",client_key:crypto.randomUUID()}});check(!own.error&&own.data,"own platform submission uses same fields");
+const anon=createClient(env.VITE_SUPABASE_URL,env.VITE_SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:false}});
+const denied=await anon.rpc("support_submit",{_data:base});check(!!denied.error,"anonymous submission refused");
+mkdirSync("/tmp/browser/support473",{recursive:true});
+writeFileSync("/tmp/browser/support473/session.json",JSON.stringify({session:signed.data.session,key:`sb-${env.VITE_SUPABASE_PROJECT_ID}-auth-token`,school,org,ticket:t.data}));
+console.log(`${checks} checks passed; synthetic fixture retained`);
