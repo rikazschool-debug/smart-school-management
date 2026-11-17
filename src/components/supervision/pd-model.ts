@@ -32,7 +32,7 @@ export type Outcome = { id: string; user_id: string; name: string; kind: string;
 export type Program = { id: string; school_id: string; school: string; title: string; objectives: string; need_ids: string[]; audience: string; trainer_name: string; mode: string; location: string | null; meeting_url: string | null; status: string; cancel_reason: string | null; creator: string; rev: number; updated_at: string; can_manage: boolean; sessions: Session[]; enrollments: Enrollment[]; my_feedback: string[]; outcomes: Outcome[] };
 export type Feedback = { kind: string; adopted: boolean; attendees: number; responses: number; no_response: number; named: string[]; questions: { key: string; label: string; counts: Record<string, number>; unanswered: number }[] | null };
 export type PdMeeting = { id: string; school_id: string; school: string; title: string; purpose: string | null; starts_at: string; status: string; mode: string; minutes: { status: string; version: number; confirmed_at: string | null } | null; tasks: { id: string; title: string; assignee: string; due: string; status: string }[]; links: { kind: string; ref_id: string }[] };
-export type PdTeacher = { id: string; name: string; school_id: string; school: string; specialization: string | null; self: boolean };
+export type PdTeacher = { id: string; user_id: string | null; name: string; school_id: string; school: string; specialization: string | null; self: boolean };
 
 /** Mirrors private._sv4_plan_missing (submission check; drafts may be incomplete). */
 export function planMissing(d: PlanData): string[] {
@@ -73,7 +73,7 @@ export function devReport(teachers: PdTeacher[], needs: Need[], plans: DevPlan[]
   return teachers.map((t) => {
     const ps = plans.filter((p) => p.teacher_id === t.id && p.status !== "superseded"); const cur = ps.find((p) => p.status === "approved") ?? ps[0];
     const acts = cur?.data.activities ?? []; const done = cur ? acts.filter((_, i) => lastState(cur.progress, i)?.state === "completed").length : 0;
-    const u = users[t.id]; const hours = u ? programs.reduce((n, g) => n + verifiedHours(g, u), 0) : null;
+    const u = t.user_id ?? users[t.id]; const hours = u ? programs.reduce((n, g) => n + verifiedHours(g, u), 0) : null;
     return [t.name, t.school, t.specialization ?? "غير متاح", needs.filter((n) => n.teacher_id === t.id).length, cur ? `${PLAN_STATUS[cur.status]} (إصدار ${cur.version})` : "لا خطة", cur ? `${done} من ${acts.length}` : "غير متاح", hours === null ? "غير متاح" : hours];
   });
 }
