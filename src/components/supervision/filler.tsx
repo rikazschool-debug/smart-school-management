@@ -25,7 +25,7 @@ export function Filler({ spec, data, onChange, readOnly, missing = [] }: { spec:
           const miss = missing.some((m) => m === f.label || m.startsWith(f.label + " ") || m.startsWith(f.label + ":"));
           return <div key={f.key} className={wide ? "md:col-span-2" : ""}>
             <label className="mb-1 flex items-center gap-1 text-sm font-medium" htmlFor={`f-${f.key}`}>{f.label}{f.required && <span className="text-destructive" aria-label="إلزامي">*</span>}{f.when && <span className="text-[11px] font-normal text-muted-foreground">(يظهر حسب الإجابة السابقة)</span>}</label>
-            <FieldInput f={f} v={data[f.key]} set={(v) => set(f.key, v)} ro={!!readOnly} plan={spec.sv3_plan} />
+            <FieldInput f={f} v={data[f.key]} set={(v) => set(f.key, v)} ro={!!readOnly} plan={!!spec.sv3_plan} />
             {f.help && <p className="mt-1 text-xs text-muted-foreground">{f.help}</p>}
             {miss && !readOnly && <p className="mt-1 text-xs text-destructive">مطلوب قبل الإرسال</p>}
           </div>;

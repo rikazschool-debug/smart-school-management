@@ -4,8 +4,8 @@ describe("supervision plans and visits", () => {
   it("copies a plan without old dates, responsible assignments or execution evidence", () => {
     const original = { period_from: "2026-11-01", period_to: "2026-12-01", actions: [{ action: "زيارة", owner: "old-user", due: "2026-11-17", evidence: "ملاحظة متوقعة", state: "completed", proof: "private-file" }] };
     const copy = copyPlanData(original);
-    expect(copy.period_from).toBeUndefined(); expect(copy.period_to).toBeUndefined();
-    expect(copy.actions).toEqual([{ action: "زيارة", owner: "", due: "", evidence: "ملاحظة متوقعة" }]);
+    expect(copy["period_from"]).toBeUndefined(); expect(copy["period_to"]).toBeUndefined();
+    expect(copy["actions"]).toEqual([{ action: "زيارة", owner: "", due: "", evidence: "ملاحظة متوقعة" }]);
     expect(original.actions[0]?.owner).toBe("old-user");
   });
   it("overdue is inferred from the deadline, never cancels blocked recommendations", () => {

@@ -10,8 +10,8 @@ export const VISIT_STATE = { scheduled: "مجدولة", executed: "منفذة", 
 export const REC_STATE: Record<string, string> = { ...EXECUTION, submitted: "مقدمة للتحقق" };
 export function copyPlanData(data: Record<string, unknown>): Record<string, unknown> {
   const copy = structuredClone(data);
-  delete copy.period_from; delete copy.period_to;
-  copy.actions = (Array.isArray(copy.actions) ? copy.actions : []).map((r: Record<string, unknown>) => ({ action: r.action ?? "", owner: "", due: "", evidence: r.evidence ?? "" }));
+  delete copy["period_from"]; delete copy["period_to"];
+  copy["actions"] = (Array.isArray(copy["actions"]) ? copy["actions"] : []).map((r: Record<string, unknown>) => ({ action: r["action"] ?? "", owner: "", due: "", evidence: r["evidence"] ?? "" }));
   return copy;
 }
 export function recommendationOverdue(due: string, state: string, today: string) { return due < today && state !== "completed"; }
