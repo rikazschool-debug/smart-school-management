@@ -1,0 +1,1 @@
+do $$ declare definition text; begin select pg_get_functiondef('public._sv3_plan_save_impl(uuid,integer,jsonb)'::regprocedure) into definition; definition:=replace(definition,'AS $function$','AS $function$'||chr(10)||'#variable_conflict use_variable'); execute definition; end $$;

@@ -19245,6 +19245,106 @@ export type Database = {
         }
         Relationships: []
       }
+      sv_evidence: {
+        Row: {
+          created_at: string
+          file_id: string
+          id: string
+          plan_id: string | null
+          recommendation_id: string | null
+          teacher_visible: boolean
+          visit_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_id: string
+          id?: string
+          plan_id?: string | null
+          recommendation_id?: string | null
+          teacher_visible?: boolean
+          visit_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_id?: string
+          id?: string
+          plan_id?: string | null
+          recommendation_id?: string | null
+          teacher_visible?: boolean
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_evidence_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: true
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_evidence_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "sv_plan_details"
+            referencedColumns: ["record_id"]
+          },
+          {
+            foreignKeyName: "sv_evidence_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "sv_recommendations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_evidence_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "sv_scheduled_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_followup_sessions: {
+        Row: {
+          author_id: string
+          created_at: string
+          evidence: string | null
+          held_on: string
+          id: string
+          impact: string
+          notes: string
+          recommendation_id: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          evidence?: string | null
+          held_on: string
+          id?: string
+          impact?: string
+          notes: string
+          recommendation_id: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          evidence?: string | null
+          held_on?: string
+          id?: string
+          impact?: string
+          notes?: string
+          recommendation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_followup_sessions_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "sv_recommendations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sv_forms: {
         Row: {
           acceptance: string
@@ -19353,6 +19453,130 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_plan_details: {
+        Row: {
+          execution: string
+          kind: string
+          parent_id: string | null
+          record_id: string
+          term_id: string | null
+          updated_at: string
+          year_id: string | null
+        }
+        Insert: {
+          execution?: string
+          kind?: string
+          parent_id?: string | null
+          record_id: string
+          term_id?: string | null
+          updated_at?: string
+          year_id?: string | null
+        }
+        Update: {
+          execution?: string
+          kind?: string
+          parent_id?: string | null
+          record_id?: string
+          term_id?: string | null
+          updated_at?: string
+          year_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_plan_details_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "sv_plan_details"
+            referencedColumns: ["record_id"]
+          },
+          {
+            foreignKeyName: "sv_plan_details_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: true
+            referencedRelation: "sv_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_plan_details_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_plan_details_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_recommendations: {
+        Row: {
+          action: string
+          created_at: string
+          due: string
+          expected_evidence: string
+          id: string
+          no: number
+          reason: string | null
+          responsible_id: string
+          rev: number
+          state: string
+          update_note: string | null
+          updated_at: string
+          verification_note: string | null
+          verified_at: string | null
+          verified_by: string | null
+          visit_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          due: string
+          expected_evidence: string
+          id?: string
+          no: number
+          reason?: string | null
+          responsible_id: string
+          rev?: number
+          state?: string
+          update_note?: string | null
+          updated_at?: string
+          verification_note?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          visit_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          due?: string
+          expected_evidence?: string
+          id?: string
+          no?: number
+          reason?: string | null
+          responsible_id?: string
+          rev?: number
+          state?: string
+          update_note?: string | null
+          updated_at?: string
+          verification_note?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_recommendations_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "sv_scheduled_visits"
             referencedColumns: ["id"]
           },
         ]
@@ -19505,6 +19729,187 @@ export type Database = {
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_scheduled_visits: {
+        Row: {
+          actual_at: string | null
+          assignment_id: string | null
+          author_id: string
+          course_id: string
+          created_at: string
+          ends_at: string
+          focus: string
+          id: string
+          kind: string
+          org_id: string
+          participant_ids: string[]
+          period_id: string | null
+          plan_id: string | null
+          purpose: string
+          reason: string | null
+          record_id: string | null
+          rev: number
+          school_id: string
+          section_id: string
+          starts_at: string
+          state: string
+          teacher_id: string
+          timetable_verified: boolean
+          updated_at: string
+        }
+        Insert: {
+          actual_at?: string | null
+          assignment_id?: string | null
+          author_id: string
+          course_id: string
+          created_at?: string
+          ends_at: string
+          focus?: string
+          id?: string
+          kind?: string
+          org_id: string
+          participant_ids?: string[]
+          period_id?: string | null
+          plan_id?: string | null
+          purpose: string
+          reason?: string | null
+          record_id?: string | null
+          rev?: number
+          school_id: string
+          section_id: string
+          starts_at: string
+          state?: string
+          teacher_id: string
+          timetable_verified?: boolean
+          updated_at?: string
+        }
+        Update: {
+          actual_at?: string | null
+          assignment_id?: string | null
+          author_id?: string
+          course_id?: string
+          created_at?: string
+          ends_at?: string
+          focus?: string
+          id?: string
+          kind?: string
+          org_id?: string
+          participant_ids?: string[]
+          period_id?: string | null
+          plan_id?: string | null
+          purpose?: string
+          reason?: string | null
+          record_id?: string | null
+          rev?: number
+          school_id?: string
+          section_id?: string
+          starts_at?: string
+          state?: string
+          teacher_id?: string
+          timetable_verified?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_scheduled_visits_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "sv_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_scheduled_visits_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_scheduled_visits_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_scheduled_visits_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_scheduled_visits_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "sv_plan_details"
+            referencedColumns: ["record_id"]
+          },
+          {
+            foreignKeyName: "sv_scheduled_visits_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: true
+            referencedRelation: "sv_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_scheduled_visits_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_scheduled_visits_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_scheduled_visits_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv_visit_reflections: {
+        Row: {
+          reflection: string
+          teacher_id: string
+          updated_at: string
+          visit_id: string
+        }
+        Insert: {
+          reflection: string
+          teacher_id: string
+          updated_at?: string
+          visit_id: string
+        }
+        Update: {
+          reflection?: string
+          teacher_id?: string
+          updated_at?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_visit_reflections_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_visit_reflections_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "sv_scheduled_visits"
             referencedColumns: ["id"]
           },
         ]
@@ -21312,6 +21717,7 @@ export type Database = {
         Args: { _org: string; _school: string }
         Returns: boolean
       }
+      _can_read_file_before_sv3: { Args: { _file: string }; Returns: boolean }
       _cg_admin: {
         Args: { _conv: string }
         Returns: {
@@ -23638,6 +24044,19 @@ export type Database = {
       }
       _support_user_school: {
         Args: { _fallback: string; _org: string; _u: string }
+        Returns: string
+      }
+      _sv_rec_act_stage2: {
+        Args: { _action: string; _id: string; _rev: number; _text: string }
+        Returns: undefined
+      }
+      _sv_rec_get_stage2: { Args: { _id: string }; Returns: Json }
+      _sv_rec_save_stage2: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      _sv3_plan_save_impl: {
+        Args: { _id: string; _p: Json; _rev: number }
         Returns: string
       }
       _sync_school_classes: { Args: { _school: string }; Returns: number }
@@ -28619,6 +29038,61 @@ export type Database = {
       }
       sv_rec_teachers: { Args: { _school: string }; Returns: Json }
       sv_staff: { Args: { _org: string }; Returns: Json }
+      sv3_available_slots: {
+        Args: {
+          _course: string
+          _date: string
+          _school: string
+          _teacher: string
+        }
+        Returns: Json
+      }
+      sv3_file_access: {
+        Args: { _file: string; _write?: boolean }
+        Returns: boolean
+      }
+      sv3_file_create: { Args: { _p: Json }; Returns: Json }
+      sv3_file_list: {
+        Args: { _plan?: string; _visit?: string }
+        Returns: Json
+      }
+      sv3_followup_list: { Args: { _visit: string }; Returns: Json }
+      sv3_followup_save: {
+        Args: { _p: Json; _recommendation: string }
+        Returns: string
+      }
+      sv3_plan_execution: {
+        Args: { _id: string; _rev: number; _state: string }
+        Returns: undefined
+      }
+      sv3_plan_list: { Args: { _org: string }; Returns: Json }
+      sv3_plan_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv3_pool: { Args: { _school: string }; Returns: Json }
+      sv3_recommendation_act: {
+        Args: { _id: string; _rev: number; _state: string; _text: string }
+        Returns: undefined
+      }
+      sv3_recommendation_save: {
+        Args: { _p: Json; _visit: string }
+        Returns: string
+      }
+      sv3_reflection_save: {
+        Args: { _text: string; _visit: string }
+        Returns: undefined
+      }
+      sv3_visit_act: {
+        Args: { _action: string; _id: string; _rev: number; _text?: string }
+        Returns: string
+      }
+      sv3_visit_get: { Args: { _id: string }; Returns: Json }
+      sv3_visit_list: { Args: { _org: string }; Returns: Json }
+      sv3_visit_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
       sync_class_group: {
         Args: { _section: string; _year: string }
         Returns: string
