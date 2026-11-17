@@ -1166,3 +1166,10 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 ## 2026-11-18 — Role change to teacher creates the teacher record (prompt-469)
 - change_member_role: switching a branch membership to «معلم» now creates one teachers row linked to the same login (never by name), recorded in access_audit (teacher_record_created). Before, the login became a teacher but was missing from «سجلات المعلمين» and course assignment.
 - Evidence: browser run on an isolated test org (supervisor → teacher, reason, record appears in «سجلات المعلمين»); test org removed. Malki data untouched.
+
+## 2026-11-18 — Exact Replit preview CORS, review only
+- External OPTIONS on all three mobile login endpoints returned 405 without CORS. The actual Replit bundle sends POST JSON with Content-Type and safelisted Accept, without cross-origin credentials.
+- Added an exact-origin, POST/Content-Type-only preflight boundary to the existing mobile HTTP handler; routes load the existing identity service lazily after validation. No shared login flow replacement or Nginx limit changes.
+- Isolated tests cover approved/unapproved origins, method/header refusal, no login-module loading on preflight/rejected input, existing validation/native/web behavior and compiled runtime route isolation. Actual execution results are reported with the review; no live OTP or login is performed here.
+- Executed: 81/81 focused unit tests, TypeScript and local HTTP boundary checks passed. Full baseline already fails two collaboration permission tests (main run 44183352402); local Bun also has three suite-loader failures. Client/SSR build passed locally; final Nitro build was blocked by Windows EPERM readlink, so compiled runtime/Lovable build are not claimed as passed.
+- No deployment, migrations, database/permission/secret changes, messages or tests against real accounts. Production remains on its existing healthy revision; mobile ID-login flag stays 0.

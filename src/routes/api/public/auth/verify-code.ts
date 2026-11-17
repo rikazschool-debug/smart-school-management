@@ -5,9 +5,8 @@ export const Route = createFileRoute("/api/public/auth/verify-code")({
   server: {
     handlers: {
       ANY: async ({ request }) => {
-        // Credentials stay server-only. Validation runs before executing existing identity proof.
-        const service = await import("@/lib/id-login.server");
-        return mobileLoginHandler(request, "verify-code", service);
+        // Preflight/validation finish before loading the existing server-only identity service.
+        return mobileLoginHandler(request, "verify-code", () => import("@/lib/id-login.server"));
       },
     },
   },

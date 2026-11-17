@@ -724,4 +724,7 @@ The `other` request kind uses the same verified-child access, school/org scope, 
 | view | same roles as org_docs view | yes (branch/org) |
 | create | same roles as org_docs create | yes |
 | edit (incl. delete) | same roles as org_docs edit | yes |
+
+### 2026-11-18 — Mobile HTTP CORS (review only)
+Only the three public mobile login routes permit POST JSON from the one exact, user-provided Replit preview origin. OPTIONS never loads identity services. CORS is not authorization: existing `_idl_*` proofs, portal gates, rate limits and RLS remain unchanged; no database grants, new roles, cookies, general server-function access or Supabase CORS changes. See docs/integrations/mobile-auth-replit-cors-20261118.md.
 Guidance / gifted / remedial grants (view/record/manage/export) are now accepted by the server.

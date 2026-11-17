@@ -58,8 +58,32 @@ try {
   assert(ready, 'Server readiness failed');
   // Packaging/HTTP acceptance only. Every request below is rejected before any database/provider call.
   const mobileLogin = [];
+  const mobilePreview = 'https://de465eba-d58f-4044-a96f-e509a0f51668-00-2hirn3vv6u77u.expo.sisko.replit.dev';
   for (const endpoint of ['request-code', 'verify-code', 'student-login']) {
     const p = '/api/public/auth/' + endpoint;
+    const preflightHeaders = { Origin: mobilePreview, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' };
+    const options = await response(p, { method: 'OPTIONS', headers: preflightHeaders });
+    assert.equal(options.status, 204, `${p}: approved preview preflight failed`);
+    assert.equal(options.headers.get('access-control-allow-origin'), mobilePreview);
+    assert.equal(options.headers.get('access-control-allow-methods'), 'POST');
+    assert.equal(options.headers.get('access-control-allow-headers'), 'Content-Type');
+    assert.equal(options.headers.get('access-control-allow-credentials'), null);
+    assert.equal(await options.text(), '');
+    for (const changes of [
+      { Origin: 'https://untrusted.invalid' },
+      { Origin: mobilePreview + '.untrusted.invalid' },
+      { 'Access-Control-Request-Method': 'DELETE' },
+      { 'Access-Control-Request-Headers': 'content-type, authorization' },
+    ]) {
+      const denied = await response(p, { method: 'OPTIONS', headers: { ...preflightHeaders, ...changes } });
+      assert.equal(denied.status, 403, `${p}: unapproved preflight accepted`);
+      assert.equal(denied.headers.get('access-control-allow-origin'), null);
+      await denied.body?.cancel();
+    }
+    const browserInvalid = await response(p, { method: 'POST', headers: { Origin: mobilePreview, 'Content-Type': 'application/json', Accept: 'application/json' }, body: '{}' });
+    assert.equal(browserInvalid.status, 400, `${p}: preview skipped identity validation`);
+    assert.equal(browserInvalid.headers.get('access-control-allow-origin'), mobilePreview);
+    await browserInvalid.body?.cancel();
     const get = await response(p);
     assert.equal(get.status, 405, `${p}: unsupported method must be bounded JSON`);
     assert.equal(get.headers.get('allow'), 'POST');
@@ -78,8 +102,12 @@ try {
     const same = await response(p, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://app.example.invalid' }, body: '{}' });
     assert.equal(same.status, 400, `${p}: approved HTTPS origin rejected behind local HTTP`);
     await same.body?.cancel();
-    mobileLogin.push({ endpoint, method: 405, invalidInput: 400, mediaType: 415, crossOrigin: 403, configuredOrigin: 400 });
+    mobileLogin.push({ endpoint, method: 405, invalidInput: 400, mediaType: 415, crossOrigin: 403, configuredOrigin: 400, approvedPreviewPreflight: 204, deniedPreflight: 403, previewInvalidInput: 400 });
   }
+  const adjacent = await response('/api/public/auth/send-sms', { method: 'OPTIONS', headers: { Origin: mobilePreview, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' } });
+  assert.notEqual(adjacent.status, 204, 'Mobile CORS leaked into an unrelated route');
+  assert.equal(adjacent.headers.get('access-control-allow-origin'), null);
+  await adjacent.body?.cancel();
   const assets = new Set();
   for (const p of ['/', '/auth']) {
     const r = await response(p); const html = await r.text();
@@ -120,6 +148,12 @@ try {
     method: 'POST', headers: { Origin: 'https://untrusted.invalid', 'x-tsr-serverFn': 'true' }, body: new FormData(),
   });
   assert.equal(crossOrigin.status, 403, 'Cross-origin request accepted');
+  const previewServerFn = await response('/_serverFn/' + publicId, {
+    method: 'POST', headers: { Origin: mobilePreview, 'x-tsr-serverFn': 'true' }, body: new FormData(),
+  });
+  assert.equal(previewServerFn.status, 403, 'Preview CORS bypassed existing web CSRF');
+  assert.equal(previewServerFn.headers.get('access-control-allow-origin'), null);
+  await previewServerFn.body?.cancel();
   const unauthenticated = await response('/_serverFn/' + protectedId, {
     method: 'POST', headers: { Origin: 'https://app.example.invalid', 'x-tsr-serverFn': 'true' },
   });
