@@ -60,13 +60,14 @@ export function fromRiyadhInput(v: string): string | null { return v ? new Date(
 export function riyadhText(iso: string | null | undefined): string {
   if (!iso) return "—"; return new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }).format(new Date(iso)) + " (الرياض)";
 }
-export type SvTab = "records" | "assign" | "forms" | "deleg" | "work" | "pd" | "outcomes";
-export type SvSearch = { tab?: SvTab; id?: string; view?: "plans" | "visits"; pd?: "teachers" | "devplans" | "programs"; lo?: "measures" | "compare" | "mastery" | "actions" };
+export type SvTab = "records" | "assign" | "forms" | "deleg" | "work" | "pd" | "outcomes" | "resources";
+export type SvSearch = { tab?: SvTab; id?: string; view?: "plans" | "visits"; pd?: "teachers" | "devplans" | "programs"; lo?: "measures" | "compare" | "mastery" | "actions"; rs?: "library" | "manage" };
 export function svSearch(raw: Record<string, unknown>): SvSearch {
-  const tab = ["records", "assign", "forms", "deleg", "work", "pd", "outcomes"].includes(String(raw["tab"])) ? (raw["tab"] as SvTab) : undefined;
+  const tab = ["records", "assign", "forms", "deleg", "work", "pd", "outcomes", "resources"].includes(String(raw["tab"])) ? (raw["tab"] as SvTab) : undefined;
   const id = typeof raw["id"] === "string" && /^[0-9a-f-]{36}$/i.test(raw["id"]) ? raw["id"] : undefined;
   const view = raw["view"] === "plans" || raw["view"] === "visits" ? raw["view"] : undefined;
   const pd = raw["pd"] === "teachers" || raw["pd"] === "devplans" || raw["pd"] === "programs" ? raw["pd"] : undefined;
   const lo = raw["lo"] === "measures" || raw["lo"] === "compare" || raw["lo"] === "mastery" || raw["lo"] === "actions" ? raw["lo"] : undefined;
-  return { ...(tab ? { tab } : {}), ...(id ? { id } : {}), ...(view ? { view } : {}), ...(pd ? { pd } : {}), ...(lo ? { lo } : {}) };
+  const rs = raw["rs"] === "library" || raw["rs"] === "manage" ? raw["rs"] : undefined;
+  return { ...(rs ? { rs } : {}), ...(tab ? { tab } : {}), ...(id ? { id } : {}), ...(view ? { view } : {}), ...(pd ? { pd } : {}), ...(lo ? { lo } : {}) };
 }
