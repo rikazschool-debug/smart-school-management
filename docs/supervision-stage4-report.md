@@ -40,3 +40,8 @@
 - مطابقة محتوى PDF للمرحلة الرابعة صفًا صفًا: غير متحقق.
 - الكاميرا الفعلية وGitHub: بندان خارجيان مفتوحان — غير متحققين.
 - معرّف النسخة: آخر نسخة مسجلة قبل هذه الجولة ac366b10؛ تُسجَّل تعديلات هذه الجولة في نسخة جديدة تلقائيًا بعد انتهائها، ولم يُتحقق من وصولها إلى GitHub.
+
+## Update (prompt 447) — HR verified hours screen
+- Migration: sv4_hr_hours_org(_org,_from,_to). UI: HR → التدريب والتطوير → «ساعات التطوير المهني الموثقة» (filters period/branch/program/teacher, teacher totals + sessions, Excel/PDF/print).
+- منفّذ ومختبَر: owner sees 2 sessions = 2 hours (no double count), fields contain no notes; teacher, supervisor, other-org and invalid ranges refused (/tmp/browser/sv447/hrh.py). Browser desktop 1280 + mobile 390 (/tmp/browser/sv447/hrui.py).
+- غير متحقق: export file content of this screen; a non-owner HR account (none in the test org).

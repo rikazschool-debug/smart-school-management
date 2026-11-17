@@ -154,3 +154,18 @@
 - [x] prompt-401 المرحلة 6: لوحة المتابعة (خططي/الجارية/تحتاج متابعة/المغلقة)، فلاتر المرحلة والصف والشعبة والمقرر والمعلم، تقرير خطة فردية وورقة متابعة PDF/Excel/طباعة.
 - [x] prompt-403: التعديل المتزامن من جهازين وانقطاع الاتصال مختبَران في المتصفح (رسالة واضحة، لا كتابة فوق تعديل الآخر، النص باقٍ).
 - [ ] prompt-401 غير متحقق: الكاميرا على هاتف حقيقي؛ OCR مؤجَّل بقرار المستخدم (لا الآن).
+
+## Supervision — prompt 447/448 (stage 3/4 closure + stage 5 + forms library)
+- [x] HR verified PD hours screen (/app/hr/training, sv4_hr_hours_org) — tested RPC + browser desktop/mobile
+- [ ] Browser: meeting link to plan/need/visit, save & reopen
+- [ ] Browser: «إفادة داخلية» print with correct hours
+- [ ] Stage 4 reports Arabic print + PDF/Excel row match
+- [ ] Evaluation privacy: named/anonymous wording, inference via details/export
+- [ ] Camera / GitHub (external — record blocker)
+- [ ] Stage 5: learning outcomes (sources, Excel import preview, analysis, comparison rules, MCQ analysis)
+- [ ] Stage 5: analysis → improvement action
+- [ ] Stage 5: resources/bulletins on existing library, versions, review/publish
+- [ ] Stage 5: professional portfolio
+- [ ] Stage 5: reports & dashboard
+- [ ] Forms library: alignment table + sources (MoE, ETEC, Learning Forward), content for 3 pilot forms then 17
+- [ ] Forms library: cards/filters, owner editor, principal proposal, version compare, A4 print

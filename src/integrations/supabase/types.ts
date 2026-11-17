@@ -29877,6 +29877,10 @@ export type Database = {
       sv4_file_list: { Args: { _plan: string }; Returns: Json }
       sv4_handover_pool: { Args: { _plan: string }; Returns: Json }
       sv4_hr_hours: { Args: { _school: string }; Returns: Json }
+      sv4_hr_hours_org: {
+        Args: { _from: string; _org: string; _to: string }
+        Returns: Json
+      }
       sv4_indicators: { Args: { _org: string }; Returns: Json }
       sv4_meeting_link: {
         Args: { _kind: string; _meeting: string; _ref: string }
