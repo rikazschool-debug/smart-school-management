@@ -24,4 +24,10 @@ describe("school map", () => {
     expect(roomProblems({ name: "مختبر", floor: -1, capacity: "", area: "" }, { floors: 2, has_basement: false })).toContain("الدور غير موجود في هذا المبنى");
     expect(roomProblems({ name: "مختبر", floor: 1, capacity: "24", area: "" }, { floors: 2, has_basement: false })).toEqual([]);
   });
+  it("requires the authorized person's name when responsible details are entered", () => {
+    const base = { name: "مختبر", floor: 0, capacity: "", area: "" };
+    expect(roomProblems({ ...base, resp_title: "معلم" }, { floors: 2, has_basement: false })).toContain("اختر اسم المخوَّل من منسوبي الفرع");
+    expect(roomProblems({ ...base, resp_title: "معلم", resp_user: "u1" }, { floors: 2, has_basement: false })).toEqual([]);
+    expect(roomProblems(base, { floors: 2, has_basement: false })).toEqual([]);
+  });
 });
