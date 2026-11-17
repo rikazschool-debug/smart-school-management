@@ -60,4 +60,3 @@
 - Permission catalog informational entries remain locked; workspace sections and bt_* tools are grantable through owner-only templates/person edits. Tool grants never replace course assignment, participant, or private self-record identity checks.
 - Export branding: every PDF/print/Excel export carries the active school (or group) name + logo via src/lib/export-brand.ts (synced by ExportBrandSync in the app layout) — never a per-screen header.
 - Use one PermTree per editor to avoid duplicate controls.
-- Perm tree order = side menu via src/lib/perm-order.ts; place every new catalog section there.
