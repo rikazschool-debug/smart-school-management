@@ -1158,3 +1158,7 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - «الخريطة المدرسية» is its own section (عرض / إضافة / تعديل وحذف); role defaults unchanged from the documents section; menu item follows school_map.view.
 - «الإشراف التربوي» shows as an explained, locked card: its delegations stay inside the section (owner-only, branch/form/time scoped).
 - Evidence: scripts/perm8-e2e.ts 20/20, perm7-e2e 20/20, perm5-e2e 19/20 (check 20 expects platform admins blocked from perm_effective — contradicts the platform-admin-acts-as-owner rule; untouched by this change), vitest perm-order 5/5 + perm-tree 4/4, browser check as an isolated owner (test org removed).
+
+## 2026-11-18 — Role change to teacher creates the teacher record (prompt-469)
+- change_member_role: switching a branch membership to «معلم» now creates one teachers row linked to the same login (never by name), recorded in access_audit (teacher_record_created). Before, the login became a teacher but was missing from «سجلات المعلمين» and course assignment.
+- Evidence: browser run on an isolated test org (supervisor → teacher, reason, record appears in «سجلات المعلمين»); test org removed. Malki data untouched.
