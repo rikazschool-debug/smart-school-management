@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Bath, Briefcase, Building2, Coffee, Cpu, Dumbbell, FlaskConical, ImagePlus, Landmark, Library, Package, Pencil, Plus, Presentation,
+  Bath, Briefcase, Building2, Coffee, Cpu, Dumbbell, FlaskConical, Landmark, Library, Package, Pencil, Plus, Presentation,
   School, Search, Square, Stethoscope, Trash2, UserRound, UtensilsCrossed, Wrench, Lock, CheckCircle2, type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,8 +15,6 @@ import { selectCls } from "@/components/ui/native-select";
 import { ask } from "@/components/confirm";
 import { PeoplePicker, rolesLabel, usePeopleByIds } from "@/components/people-picker";
 import { rpc } from "@/components/hr/shared";
-import { db } from "@/components/crud-page";
-import { uploadObject } from "@/components/classroom-posts";
 import { arabicError, useSession } from "@/lib/session";
 import { CATS, CAT_ORDER, ROOM_STATUS, filterRooms, floorLabel, floorsOf, mapStats, roomProblems, type Building, type Caps, type MapData, type Room, type RoomCat } from "./model";
 
@@ -30,14 +28,6 @@ function StatusTag({ s }: { s: string }) {
   const I = STATUS_ICON[s] ?? CheckCircle2;
   const tone = s === "ready" ? "bg-primary/10 text-primary" : s === "maintenance" ? "bg-accent text-accent-foreground" : "bg-destructive/10 text-destructive";
   return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] ${tone}`}><I className="size-3" aria-hidden />{ROOM_STATUS[s] ?? s}</span>;
-}
-
-async function signedUrl(fileId: string): Promise<string | null> {
-  const { data: f } = await db.from("files").select("storage_path").eq("id", fileId).maybeSingle();
-  const row = f as { storage_path: string } | null;
-  if (!row) return null;
-  const { data } = await db.storage.from("rikaz-files").createSignedUrl(row.storage_path, 300);
-  return data?.signedUrl ?? null;
 }
 
 export function SchoolMap() {
@@ -104,7 +94,7 @@ function Board({ org, school, canCreate, canEdit }: { org: string; school: strin
             </div>
             {building && <FloorMap building={building} rooms={shown} filtered={shown.length !== inBuilding.length} onOpen={setView} />}
           </div>
-          {building && <BuildingPanel org={org} school={school} building={building} rooms={inBuilding} canEdit={canEdit} onEdit={() => setEditB(building)} />}
+          {building && <BuildingPanel building={building} rooms={inBuilding} canEdit={canEdit} onEdit={() => setEditB(building)} />}
         </div>
       )}
       {editB && <BuildingDialog org={org} school={school} init={editB} onClose={() => setEditB(null)} onSaved={(id) => { setBid(id); setEditB(null); }} />}
@@ -167,32 +157,10 @@ function FloorMap({ building, rooms, filtered, onOpen }: { building: Building; r
   );
 }
 
-function BuildingPanel({ org, school, building, rooms, canEdit, onEdit }: { org: string; school: string; building: Building; rooms: Room[]; canEdit: boolean; onEdit: () => void }) {
-  const qc = useQueryClient();
-  const img = useQuery({ queryKey: ["fm-img", building.image_file_id], enabled: !!building.image_file_id, queryFn: () => signedUrl(building.image_file_id!), staleTime: 240_000 });
-  const up = useMutation({
-    mutationFn: async (f: File) => {
-      if (!["image/png", "image/jpeg"].includes(f.type)) throw new Error("ارفع صورة PNG أو JPEG");
-      const id = await uploadImage(org, school, f);
-      await rpc("fm_save_building", { _org: org, _p: { ...building, school_id: school, image_file_id: id } });
-    },
-    onSuccess: () => { toast.success("حُفظت صورة المبنى"); void qc.invalidateQueries({ queryKey: ["fm"] }); },
-    onError: (e) => toast.error(arabicError(e)),
-  });
+function BuildingPanel({ building, rooms, canEdit, onEdit }: { building: Building; rooms: Room[]; canEdit: boolean; onEdit: () => void }) {
   const s = mapStats(rooms);
   return (
     <aside className="space-y-3">
-      <div className="overflow-hidden rounded-2xl border bg-card">
-        <div className="aspect-[4/3] bg-muted">
-          {building.image_file_id
-            ? img.data ? <a href={img.data} target="_blank" rel="noopener"><img src={img.data} alt={`صورة ${building.name}`} className="size-full object-cover" /></a> : <div className="grid size-full place-items-center text-xs text-muted-foreground">{img.isLoading ? "جارٍ تحميل الصورة…" : "تعذّر عرض الصورة"}</div>
-            : <div className="grid size-full place-items-center gap-1 p-4 text-center text-xs text-muted-foreground"><Building2 className="size-8" aria-hidden />لا توجد صورة للمبنى</div>}
-        </div>
-        {canEdit && <label className="flex cursor-pointer items-center justify-center gap-2 border-t p-2 text-sm text-primary hover:bg-muted">
-          <ImagePlus className="size-4" aria-hidden />{up.isPending ? "جارٍ الرفع…" : building.image_file_id ? "تغيير الصورة" : "رفع صورة المبنى"}
-          <input type="file" accept="image/png,image/jpeg" className="sr-only" disabled={up.isPending} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) up.mutate(f); }} />
-        </label>}
-      </div>
       <div className="space-y-2 rounded-2xl border bg-card p-4 text-sm">
         <div className="flex items-center justify-between"><b>{building.name}</b>{canEdit && <Button size="icon" variant="ghost" aria-label="تعديل المبنى" onClick={onEdit}><Pencil className="size-4" /></Button>}</div>
         <div className="text-muted-foreground">{building.floors} {building.floors === 1 ? "دور" : "أدوار"}{building.has_basement ? " + قبو" : ""} · {s.rooms} غرفة</div>
@@ -201,14 +169,6 @@ function BuildingPanel({ org, school, building, rooms, canEdit, onEdit }: { org:
       </div>
     </aside>
   );
-}
-
-async function uploadImage(org: string, school: string, f: File): Promise<string> {
-  if (f.size > 20 * 1048576) throw new Error("حجم الصورة يتجاوز 20 ميغابايت");
-  const d = await rpc<{ id: string; storage_path: string }[]>("od_draft_file", { _org: org, _school: school, _name: f.name, _mime: f.type, _size: f.size });
-  const rec = d[0]!;
-  if ((await uploadObject(rec.storage_path, f, new AbortController().signal)) !== "ok") throw new Error("فشل رفع الصورة، حاول مرة أخرى");
-  return rec.id;
 }
 
 function BuildingDialog({ org, school, init, onClose, onSaved }: { org: string; school: string; init: Partial<Building>; onClose: () => void; onSaved: (id: string) => void }) {
