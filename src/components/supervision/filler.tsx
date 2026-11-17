@@ -14,7 +14,7 @@ const COLS: Record<string, { k: string; l: string; t?: string }[]> = {
 };
 
 /** Renders a form spec in short sections. readOnly = preview or view of a sent record. */
-export function Filler({ spec, data, onChange, readOnly, missing = [], people, only, hidePrivate }: { spec: SvSpec; data: Data; onChange?: (d: Data) => void; readOnly?: boolean; missing?: string[]; people?: { id: string; name: string }[] | undefined; only?: number; hidePrivate?: boolean }) {
+export function Filler({ spec, data, onChange, readOnly, missing = [], people, only, hidePrivate }: { spec: SvSpec; data: Data; onChange?: (d: Data) => void; readOnly?: boolean; missing?: string[]; people?: { id: string; name: string }[] | undefined; only?: number; hidePrivate?: boolean | undefined }) {
   const set = (k: string, v: unknown) => onChange?.({ ...data, [k]: v });
   return <div className="space-y-4">
     {spec.sections.map((sec, si) => (only !== undefined && only !== si) || (hidePrivate && sec.fields.every((f) => f.private)) ? null : <fieldset key={si} className="rounded-2xl border bg-card p-4">

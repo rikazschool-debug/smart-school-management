@@ -23,7 +23,7 @@ export function FormEditor({ f, branch, onSaved }: { f: SvForm; branch: boolean;
   const [spec, setSpec] = useState<SvSpec>(f.spec); const [busy, setBusy] = useState(false); const [open, setOpen] = useState<string | null>(null);
   const secs = spec.sections;
   const setSecs = (s: SvSpec["sections"]) => setSpec({ ...spec, sections: s });
-  const setField = (si: number, fi: number, patch: Partial<SvField>) => setSecs(secs.map((s, i) => (i !== si ? s : { ...s, fields: s.fields.map((x, j) => { if (j !== fi) return x; const n = { ...x, ...patch } as SvField & Record<string, unknown>; for (const k of Object.keys(patch)) if ((patch as Record<string, unknown>)[k] === undefined) delete n[k]; return n; }) })));
+  const setField = (si: number, fi: number, patch: { [K in keyof SvField]?: SvField[K] | undefined }) => setSecs(secs.map((s, i) => (i !== si ? s : { ...s, fields: s.fields.map((x, j) => { if (j !== fi) return x; const n = { ...x, ...patch } as SvField & Record<string, unknown>; for (const k of Object.keys(patch)) if ((patch as Record<string, unknown>)[k] === undefined) delete n[k]; return n; }) })));
   async function save() { setBusy(true); try { const r = await db.rpc("sv_form_save", { _id: f.id, _rev: f.rev, _p: { title, purpose, acceptance: acc, spec } }); if (r.error) throw r.error; toast.success("حُفظت المسودة"); onSaved(); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } }
   const earlier = (si: number, fi: number) => secs.flatMap((s, i) => s.fields.filter((_, j) => i < si || (i === si && j < fi)));
   return <section className="space-y-3 rounded-2xl border border-primary/30 bg-card p-4" aria-label="محرر المسودة">
