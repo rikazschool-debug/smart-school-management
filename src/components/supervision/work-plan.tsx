@@ -12,6 +12,7 @@ import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { Filler } from "./filler";
 import { EvidencePanel } from "./evidence";
+import { ActionProgress } from "./work-progress";
 import { missingFields, REC_STATUS, type SvForm, type SvMe, type SvRecordFull } from "./model";
 import { planReport } from "./work-report";
 import { copyPlanData, EXECUTION, PLAN_KIND, type Plan, type WorkPool } from "./work-model";
@@ -61,6 +62,7 @@ export function PlanEditor({ org, me, plan, plans, onDone, onDocument }: { org: 
     </div>}
     {pool.error && editable && <p className="text-sm text-destructive">{arabicError(pool.error)}</p>}
     {!spec ? <p className="text-sm text-muted-foreground">اعتمد نموذج «خطة التحسين الإشرافية» للمؤسسة من مكتبة النماذج أولًا.</p> : <Filler spec={{ ...spec, sections: spec.sections.filter((_, i) => !editable || step === 3 || (step === 0 && i === 0) || (step === 1 && i === 1) || (step === 2 && i >= 2)) }} data={data} onChange={(d) => { guard.changed(); setData(d); }} people={[...(pool.data?.teachers.filter((t) => t.user_id).map((t) => ({ id: t.user_id ?? "", name: t.name })) ?? []), ...(identity.data ? [{ id: identity.data, name: "أنا" }] : [])]} readOnly={!editable} />}
+    {plan?.status === "approved" && !copying && <ActionProgress plan={plan.id} actions={(Array.isArray(plan.data["actions"]) ? plan.data["actions"] : []) as Record<string, unknown>[]} />}
     {plan && !copying && <EvidencePanel plan={plan.id} canWork={plan.can_work} />}
     {plan && !copying && <div className="flex gap-2 border-t pt-3"><Button variant="outline" size="icon" aria-label="تصدير تقرير الخطة Excel" title="Excel" onClick={() => report("xlsx")}><Download /></Button><Button variant="outline" size="icon" aria-label="تصدير تقرير الخطة PDF" title="PDF" onClick={() => report("pdf")}><FileText /></Button><Button variant="outline" size="icon" aria-label="طباعة تقرير الخطة" title="طباعة" onClick={() => report("print")}><Printer /></Button></div>}
     {editable && <div className="sticky bottom-0 flex flex-wrap gap-2 border-t bg-background p-3"><Button variant="outline" disabled={busy || !spec} onClick={() => save(false)}><Save />حفظ مسودة</Button>{step < 3 ? <Button onClick={() => setStep(step + 1)}>التالي</Button> : <Button disabled={busy || !spec} onClick={() => save(true)}><Send />إرسال للمراجعة</Button>}{plan && <Button variant="ghost" onClick={document}>فتح سجل المراجعة</Button>}</div>}
