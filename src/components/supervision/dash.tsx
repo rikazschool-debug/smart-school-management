@@ -53,7 +53,7 @@ function IndCard({ i, from, to, active, onOpen }: { i: Indicator; from: string; 
 }
 
 function IndRows({ i, go, meta }: { i: Indicator; go: Go; meta: (t: string) => ExportMeta }) {
-  const m = () => ({ ...meta(`مؤشر: ${i.label}`), details: [`القيمة: ${indValue(i)}`, `التعريف: ${i.definition}`, `المقام: ${i.denominator_def ?? "لا يوجد"}`] });
+  const m = () => { const b = meta(`مؤشر: ${i.label}`); return { ...b, details: [...b.filters, `القيمة: ${indValue(i)}`, `التعريف: ${i.definition}`, `المقام: ${i.denominator_def ?? "لا يوجد"}`] }; };
   return <section aria-label={`سجلات ${i.label}`} className="space-y-2 rounded-lg border p-3">
     <div className="flex flex-wrap items-center gap-2"><h4 className="font-semibold">سجلات «{i.label}» ({i.count})</h4>
       <span className="ms-auto flex"><Button variant="ghost" size="icon" aria-label="Excel السجلات" onClick={() => exportXlsx(m(), ROW_HEADERS, detailRows(i, st))}><Download /></Button><Button variant="ghost" size="icon" aria-label="PDF السجلات" onClick={() => void exportPdf(m(), ROW_HEADERS, detailRows(i, st))}><FileText /></Button><Button variant="ghost" size="icon" aria-label="طباعة السجلات" onClick={() => printReport(m(), ROW_HEADERS, detailRows(i, st))}><Printer /></Button></span></div>
