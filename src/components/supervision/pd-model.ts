@@ -16,7 +16,7 @@ export const ENROLL: Record<string, string> = { nominated: "مرشح", registere
 export const ATTEND: Record<string, string> = { present: "حاضر", absent: "غائب", excused: "معتذر" };
 export const OUTCOME_KIND: Record<string, string> = { learning: "تحقق التعلم", application: "التطبيق في العمل", impact: "متابعة الأثر" };
 export const OUTCOME_STATE: Record<string, string> = { pending: "لم يُقدَّم", submitted: "مقدَّم", verified: "متحقق منه" };
-export const ANON_NOTE = "اختيار «غير مسمى» يُخفي اسمك من الملخصات فقط. يحفظ النظام هويتك لمنع تكرار التقييم، وقد يُستنتج صاحب الإجابة إذا قلّ عدد المجيبين؛ لذلك لا تظهر تفاصيل الأسئلة قبل 3 استجابات.";
+export const ANON_NOTE = "قبل الإرسال: «مسماة» تُظهر اسمك لإدارة البرنامج ضمن قائمة من قيّموا فقط، ولا تُعرض إجابة أي شخص منفردة لأحد. «غير مسماة» تُخفي اسمك من الملخصات، لكن النظام يحفظ هويتك لمنع التكرار، فهي ليست مجهولة تمامًا. تُعرض أعداد الإجابات فقط بعد إغلاق البرنامج ومع 3 استجابات فأكثر، ولا تُعرض الإجابات النصية. مع ذلك قد يُستنتج اختيارك إذا اتفق الجميع على الخيار نفسه أو قلّ عدد المجيبين. يُقبل التقييم والبرنامج مفتوح فقط.";
 export const INTERNAL_CERT = "إفادة داخلية — ليست شهادة معتمدة رسميًا";
 
 export type Goal = { goal: string; indicator: string; baseline?: string; target: string; due: string; owner: string };
@@ -30,7 +30,7 @@ export type Session = { id: string; starts_at: string; ends_at: string; hours: n
 export type Enrollment = { user_id: string; name: string; status: string; reason: string | null; hours: number; attendance: { session_id: string; status: string }[] };
 export type Outcome = { id: string; user_id: string; name: string; kind: string; due: string; state: string; tool: string | null; pre: string | null; post: string | null; impact: string | null; evidence: string | null; note: string | null; rev: number; verifier: string | null };
 export type Program = { id: string; school_id: string; school: string; title: string; objectives: string; need_ids: string[]; audience: string; trainer_name: string; mode: string; location: string | null; meeting_url: string | null; status: string; cancel_reason: string | null; creator: string; rev: number; updated_at: string; can_manage: boolean; sessions: Session[]; enrollments: Enrollment[]; my_feedback: string[]; outcomes: Outcome[] };
-export type Feedback = { kind: string; adopted: boolean; attendees: number; responses: number; no_response: number; named: string[]; questions: { key: string; label: string; counts: Record<string, number>; unanswered: number }[] | null };
+export type Feedback = { kind: string; adopted: boolean; attendees: number; responses: number; no_response: number; named: string[]; hidden?: "open" | "few" | null; questions: { key: string; label: string; counts: Record<string, number>; unanswered: number }[] | null };
 export type PdMeeting = { id: string; school_id: string; school: string; title: string; purpose: string | null; starts_at: string; status: string; mode: string; minutes: { status: string; version: number; confirmed_at: string | null } | null; tasks: { id: string; title: string; assignee: string; due: string; status: string }[]; links: { kind: string; ref_id: string }[] };
 export type PdTeacher = { id: string; user_id: string | null; name: string; school_id: string; school: string; specialization: string | null; self: boolean };
 
