@@ -1120,3 +1120,4 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - الرابعة: ترحيلتان 20261117071849 و20261117072535؛ فحوص خادمية 36+22+9+9+10، رحلات متصفح (مشرف/مدير/معلم، جوال 390)، Vitest 39. التفاصيل والمتبقي في docs/supervision-stage4-report.md. لا نشر ولا تنظيف ولا مساس بالمالكي أو الإنتاج.
 - 2026-11-17 Stage-4 PD reports: Riyadh dates, scoped status filter, honest filter lines; Excel/print rows match records for owner/supervisor/teacher (/tmp/browser/sv449/reports.py, all PASS).
 - 2026-11-17 Stage 5 batch 1 learning outcomes (sv5_*): measures, Excel import preview/confirm, analysis, mastery, comparison; lo.py all PASS, browser loui.py OK. Report docs/supervision-stage5-report.md.
+- 2026-11-17 Stage 5 batch 2 improvement actions (sv5_act_*): from result snapshot, principal review without self-approval, execution separate from impact, links by reference; act.py all PASS, browser actui OK. Details docs/supervision-stage5-report.md.

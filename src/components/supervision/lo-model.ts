@@ -1,7 +1,7 @@
 // Stage 5 «نواتج التعلم» — client model. The server (sv5_*) decides scope, checks every row and computes all numbers;
 // this file only maps spreadsheet columns, labels values and keeps «لا توجد بيانات» / «صفر» / «لم يُقس» distinct.
-export type LoView = "measures" | "compare" | "mastery";
-export const LO_VIEWS: Record<LoView, string> = { measures: "المقاييس والنتائج", compare: "المقارنة بين قياسين", mastery: "مستويات الإتقان" };
+export type LoView = "measures" | "compare" | "mastery" | "actions";
+export const LO_VIEWS: Record<LoView, string> = { measures: "المقاييس والنتائج", compare: "المقارنة بين قياسين", mastery: "مستويات الإتقان", actions: "إجراءات التحسين" };
 export const LO_KIND: Record<string, string> = { school: "اختبار مدرسي", diagnostic: "تشخيصي", formative: "تكويني", final: "ختامي", nafes: "نافس", qudrat: "القدرات", tahsili: "التحصيلي" };
 export const STANDARD_KINDS = ["nafes", "qudrat", "tahsili"];
 export const ORIGIN: Record<string, string> = { system: "اختبار في ركاز (الدرجات المنشورة)", external: "نتائج مدخلة/مستوردة من ملف موثق" };
