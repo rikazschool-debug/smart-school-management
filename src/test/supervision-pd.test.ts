@@ -10,7 +10,7 @@ const out = (o: Partial<Outcome>): Outcome => ({ id: "o", user_id: "u", name: ""
 describe("development plan submission", () => {
   it("a draft with only needs is incomplete", () => { expect(planMissing({ need_ids: ["n"] })).toHaveLength(2); });
   it("a goal without an indicator blocks submission", () => { expect(planMissing({ need_ids: ["n"], goals: [{ goal: "هدف واضح", indicator: "", target: "3", due: "2026-12-01", owner: "u" }], activities: [{ type: "training", title: "ورشة", due: "2026-12-01", owner: "u" }] })).toEqual(["هدف كامل: الوصف والمؤشر والمستهدف والموعد والمسؤول"]); });
-  it("a complete plan has nothing missing", () => { expect(planMissing({ need_ids: ["n"], goals: [{ goal: "هدف واضح", indicator: "مؤشر", target: "3", due: "2026-12-01", owner: "u" }], activities: [{ type: "training", title: "ورشة", due: "2026-12-01", owner: "u" }] })).toEqual([]); });
+  it("a complete plan has nothing missing", () => { expect(planMissing({ need_ids: ["n"], goals: [{ goal: "هدف واضح", indicator: "مؤشر", target: "3 حصص", due: "2026-12-01", owner: "u" }], activities: [{ type: "training", title: "ورشة", due: "2026-12-01", owner: "u" }] })).toEqual([]); });
 });
 describe("program hours", () => {
   it("counts only present, non-cancelled sessions", () => { expect(verifiedHours(prog(), "u1")).toBe(1); });
