@@ -160,7 +160,7 @@
 - [ ] Browser: meeting link to plan/need/visit, save & reopen
 - [ ] Browser: «إفادة داخلية» print with correct hours
 - [ ] Stage 4 reports Arabic print + PDF/Excel row match
-- [ ] Evaluation privacy: named/anonymous wording, inference via details/export
+- [x] Evaluation privacy: accepted only while open, breakdown only after close with ≥3, honest wording (sv448/fbpriv.py)
 - [ ] Camera / GitHub (external — record blocker)
 - [ ] Stage 5: learning outcomes (sources, Excel import preview, analysis, comparison rules, MCQ analysis)
 - [ ] Stage 5: analysis → improvement action
