@@ -61,6 +61,6 @@ export function TeachersDevelopment({ org, me, sp, go }: { org: string; me: SvMe
         <Button variant="ghost" size="icon" aria-label={`طباعة ${l}`} title="طباعة" onClick={() => { const r = report(k); printReport(r.meta, r.headers, r.rows); }}><Printer /></Button></li>)}</ul></details>
     {view === "teachers" && <PdTeachers me={me} d={d} fd={fd} />}
     {view === "devplans" && <PdPlans me={me} d={d} fd={fd} openId={sp.id} onOpen={(id) => go({ tab: "pd", pd: "devplans", ...(id ? { id } : {}) }, false)} />}
-    {view === "programs" && <PdPrograms me={me} d={d} fd={fd} />}
+    {view === "programs" && <PdPrograms me={me} d={d} fd={fd} org={org} />}
   </div>;
 }

@@ -10,16 +10,16 @@ import { selectCls } from "@/components/ui/native-select";
 import { EmptyState } from "@/components/states";
 import { arabicError, useSession } from "@/lib/session";
 import { printReport } from "@/lib/export";
-import { IMPACT, impactNeedsEvidence } from "./work-model";
+import { IMPACT, impactNeedsEvidence, type Visit } from "./work-model";
 import { riyadhText, type SvMe } from "./model";
-import { ANON_NOTE, ATTEND, ENROLL, INTERNAL_CERT, MODE, OUTCOME_KIND, OUTCOME_STATE, outcomeLine, PROG_STATUS, validMeetingUrl, verifiedHours, type Feedback, type Outcome, type Program } from "./pd-model";
+import { ANON_NOTE, ATTEND, NEED_STATUS, PLAN_STATUS, ENROLL, INTERNAL_CERT, MODE, OUTCOME_KIND, OUTCOME_STATE, outcomeLine, PROG_STATUS, validMeetingUrl, verifiedHours, type Feedback, type Outcome, type Program } from "./pd-model";
 import { sv4 } from "./pd-api";
 import { useUnsaved } from "./use-unsaved";
 import type { PdData } from "./pd";
 
 const toIso = (local: string) => (local ? new Date(local + ":00+03:00").toISOString() : "");
 
-export function PdPrograms({ me, d, fd }: { me: SvMe; d: PdData; fd: PdData }) {
+export function PdPrograms({ me, d, fd, org }: { me: SvMe; d: PdData; fd: PdData; org: string }) {
   const [open, setOpen] = useState<string | null>(null); const [creating, setCreating] = useState(false);
   const canCreate = me.owner || me.schools.some((s) => s.principal) || me.live.length > 0;
   const cur = d.programs.find((p) => p.id === open);
@@ -31,7 +31,7 @@ export function PdPrograms({ me, d, fd }: { me: SvMe; d: PdData; fd: PdData }) {
         <div className="flex justify-between gap-2"><b>{p.title}</b><span className="text-xs">{PROG_STATUS[p.status]}</span></div>
         <p className="mt-1 text-sm text-muted-foreground">{p.school} · {MODE[p.mode]} · {p.trainer_name} · {p.sessions.filter((s) => s.status === "scheduled").length} جلسات</p>
         <Button size="sm" variant="outline" className="mt-2" onClick={() => setOpen(p.id)}>فتح البرنامج</Button></li>)}</ul>}
-      <Meetings d={d} fd={fd} />
+      <Meetings d={d} fd={fd} org={org} />
     </>}
   </div>;
 }
@@ -151,17 +151,22 @@ function OutcomeRow({ o, p, me, call }: { o: Outcome; p: Program; me: string; ca
   </li>;
 }
 
-function Meetings({ d, fd }: { d: PdData; fd: PdData }) {
+function Meetings({ d, fd, org }: { d: PdData; fd: PdData; org: string }) {
   const qc = useQueryClient(); const [link, setLink] = useState<{ m: string; kind: string; ref: string }>({ m: "", kind: "plan", ref: "" });
-  const refs = link.kind === "plan" ? d.plans.map((p) => ({ id: p.id, name: `${p.teacher} — إصدار ${p.version}` })) : link.kind === "need" ? d.needs.map((n) => ({ id: n.id, name: `${n.teacher}: ${n.domain}` })) : d.programs.map((g) => ({ id: g.id, name: g.title }));
+  const visits = useQuery({ queryKey: ["sv3-visits", org], enabled: fd.meetings.length > 0, retry: false, queryFn: async () => { const r = await db.rpc("sv3_visit_list", { _org: org }); if (r.error) throw r.error; return r.data as Visit[]; } });
+  const all = [...d.plans.map((p) => ({ kind: "plan", id: p.id, school: p.school_id, name: `خطة ${p.teacher} — إصدار ${p.version} (${PLAN_STATUS[p.status] ?? p.status}) · ${p.id.slice(0, 4)}` })), ...d.needs.map((n) => ({ kind: "need", id: n.id, school: n.school_id, name: `احتياج ${n.teacher}: ${n.domain} (${NEED_STATUS[n.status] ?? n.status}) · ${n.id.slice(0, 4)}` })),
+    ...(visits.data ?? []).map((v) => ({ kind: "visit", id: v.id, school: v.school_id, name: `زيارة ${v.teacher} — ${riyadhText(v.starts_at)}` })), ...d.programs.map((g) => ({ kind: "program", id: g.id, school: g.school_id, name: `برنامج ${g.title}` }))];
+  const mSchool = fd.meetings.find((m) => m.id === link.m)?.school_id;
+  const refs = all.filter((r) => r.kind === link.kind && (!mSchool || r.school === mSchool));
+  const nameOf = (k: string, id: string) => all.find((r) => r.kind === k && r.id === id)?.name ?? ({ plan: "خطة", need: "احتياج", visit: "زيارة", program: "برنامج" } as Record<string, string>)[k] + " خارج عرضك";
   async function save() { try { await sv4("sv4_meeting_link", { _meeting: link.m, _kind: link.kind, _ref: link.ref }, "رُبط الاجتماع"); setLink({ ...link, ref: "" }); void qc.invalidateQueries({ queryKey: ["sv4"] }); } catch { /* shown */ } }
   return <section aria-label="الاجتماعات ومجتمعات التعلم" className="space-y-2 rounded-lg border p-3"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-bold">الاجتماعات ومجتمعات التعلم المهني</h3><Link to="/app/admin/meetings" className="text-sm text-primary underline">إنشاء اجتماع ومحضره من قسم الاجتماعات</Link></div>
     <p className="text-xs text-muted-foreground">الاجتماعات والمحاضر والقرارات تُدار في قسم الاجتماعات القائم (مراجعة المحضر واعتماده منفصلان عن اطلاع المشاركين). هنا تُربط بالخطة أو الاحتياج أو البرنامج وتُتابع إجراءاتها حتى الإغلاق.</p>
     {!fd.meetings.length ? <p className="text-sm text-muted-foreground">لا اجتماعات متاحة لك في النطاق.</p> : <ul className="space-y-2 text-sm">{fd.meetings.map((m) => <li key={m.id} className="rounded border p-2"><b>{m.title}</b> · {riyadhText(m.starts_at)} · المحضر: {m.minutes ? (m.minutes.status === "confirmed" ? `معتمد (إصدار ${m.minutes.version})` : "مسودة") : "لا محضر"}
       <ul className="text-xs">{m.tasks.map((t) => <li key={t.id}>إجراء: {t.title} · {t.assignee} · {t.due ?? "—"} · {t.status === "done" ? "مغلق" : "مفتوح"}</li>)}</ul>
-      {m.links.length > 0 && <p className="text-xs">مرتبط بـ: {m.links.map((l) => ({ plan: "خطة", need: "احتياج", visit: "زيارة", program: "برنامج" }[l.kind])).join("، ")}</p>}</li>)}</ul>}
-    {fd.meetings.length > 0 && <div className="flex flex-wrap gap-2"><select aria-label="الاجتماع" className={selectCls()} value={link.m} onChange={(e) => setLink({ ...link, m: e.target.value })}><option value="">الاجتماع</option>{fd.meetings.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}</select>
-      <select aria-label="نوع الربط" className={selectCls()} value={link.kind} onChange={(e) => setLink({ ...link, kind: e.target.value, ref: "" })}><option value="plan">خطة</option><option value="need">احتياج</option><option value="program">برنامج</option></select>
-      <select aria-label="العنصر المرتبط" className={selectCls()} value={link.ref} onChange={(e) => setLink({ ...link, ref: e.target.value })}><option value="">اختر</option>{refs.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select><Button size="sm" disabled={!link.m || !link.ref} onClick={() => void save()}>ربط</Button></div>}
+      {m.links.length > 0 && <ul aria-label={`روابط ${m.title}`} className="text-xs">{m.links.map((l) => <li key={l.kind + l.ref_id}>مرتبط بـ: {nameOf(l.kind, l.ref_id)}</li>)}</ul>}</li>)}</ul>}
+    {fd.meetings.length > 0 && <div className="flex flex-wrap gap-2"><select aria-label="الاجتماع" className={selectCls("min-w-0 max-w-full")} value={link.m} onChange={(e) => setLink({ ...link, m: e.target.value })}><option value="">الاجتماع</option>{fd.meetings.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}</select>
+      <select aria-label="نوع الربط" className={selectCls()} value={link.kind} onChange={(e) => setLink({ ...link, kind: e.target.value, ref: "" })}><option value="plan">خطة</option><option value="need">احتياج</option><option value="visit">زيارة</option><option value="program">برنامج</option></select>
+      <select aria-label="العنصر المرتبط" className={selectCls("w-full min-w-0 sm:w-auto sm:max-w-md")} value={link.ref} onChange={(e) => setLink({ ...link, ref: e.target.value })}><option value="">اختر</option>{refs.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select><Button size="sm" disabled={!link.m || !link.ref} onClick={() => void save()}>ربط</Button></div>}
   </section>;
 }
