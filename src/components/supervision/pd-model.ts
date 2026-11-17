@@ -62,7 +62,25 @@ export function outcomeLine(o: Outcome): string {
 export const validMeetingUrl = (u: string) => /^https:\/\/[A-Za-z0-9.-]+\.[A-Za-z]{2,}(:[0-9]+)?(\/[^\s<>"]*)?$/.test(u.trim()) && u.length <= 500;
 
 export type PdFilter = { school?: string; from?: string; to?: string; teacher?: string; status?: string; specialty?: string };
-const inRange = (d: string | null | undefined, f: PdFilter) => !d || ((!f.from || d.slice(0, 10) >= f.from) && (!f.to || d.slice(0, 10) <= f.to));
+/** Calendar day in Riyadh (YYYY-MM-DD); a UTC slice would move evening/early-morning records to the wrong day. */
+export function riyadhDay(iso: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  const d = new Date(iso); return Number.isNaN(d.getTime()) ? iso.slice(0, 10) : new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+const inRange = (d: string | null | undefined, f: PdFilter) => !d || ((!f.from || riyadhDay(d) >= f.from) && (!f.to || riyadhDay(d) <= f.to));
+const r2 = (n: number) => Math.round(n * 100) / 100;
+export type PdReport = "dev" | "needs" | "programs" | "meetings";
+/** The status filter belongs to the visible list only: needs (teachers view), plans (devplans) or programs. */
+export function statusFor(view: PdView, list: PdView, f: PdFilter): PdFilter { return view === list ? f : { ...f, status: "" }; }
+/** Filter lines printed on a report = only the filters that actually shaped its rows. */
+export function reportFilters(kind: PdReport, view: PdView, f: PdFilter, names: { school?: string | undefined; teacher?: string | undefined }): string[] {
+  const statusList: Record<PdView, [string, Record<string, string>]> = { teachers: ["حالة الاحتياج", NEED_STATUS], devplans: ["حالة الخطة", PLAN_STATUS], programs: ["حالة البرنامج", PROG_STATUS] };
+  const people = kind === "dev" || kind === "needs";
+  const statusApplies = !!f.status && (kind === "dev" || (kind === "needs" && view === "teachers") || (kind === "programs" && view === "programs"));
+  const [sl, sm] = statusList[view];
+  return [f.school && `الفرع: ${names.school ?? ""}`, people && f.specialty && `التخصص: ${f.specialty}`, people && f.teacher && `المعلم: ${names.teacher ?? ""}`,
+    statusApplies && `${sl}: ${sm[f.status!] ?? f.status}`, (f.from || f.to) && `الفترة: ${f.from || "…"} — ${f.to || "…"}`].filter(Boolean) as string[];
+}
 export function filterNeeds(n: Need[], f: PdFilter, spec: Record<string, string | null>) { return n.filter((x) => (!f.school || x.school_id === f.school) && (!f.teacher || x.teacher_id === f.teacher) && (!f.status || x.status === f.status) && (!f.specialty || spec[x.teacher_id] === f.specialty) && inRange(x.created_at, f)); }
 export function filterPlans(p: DevPlan[], f: PdFilter, spec: Record<string, string | null>) { return p.filter((x) => (!f.school || x.school_id === f.school) && (!f.teacher || x.teacher_id === f.teacher) && (!f.status || x.status === f.status) && (!f.specialty || spec[x.teacher_id] === f.specialty) && inRange(x.updated_at, f)); }
 export function filterPrograms(p: Program[], f: PdFilter) { return p.filter((x) => (!f.school || x.school_id === f.school) && (!f.status || x.status === f.status) && (!(f.from || f.to) || x.sessions.some((s) => inRange(s.starts_at, f)))); }
@@ -73,17 +91,17 @@ export function devReport(teachers: PdTeacher[], needs: Need[], plans: DevPlan[]
   return teachers.map((t) => {
     const ps = plans.filter((p) => p.teacher_id === t.id && p.status !== "superseded"); const cur = ps.find((p) => p.status === "approved") ?? ps[0];
     const acts = cur?.data.activities ?? []; const done = cur ? acts.filter((_, i) => lastState(cur.progress, i)?.state === "completed").length : 0;
-    const u = t.user_id ?? users[t.id]; const hours = u ? programs.reduce((n, g) => n + verifiedHours(g, u), 0) : null;
+    const u = t.user_id ?? users[t.id]; const hours = u ? r2(programs.reduce((n, g) => n + verifiedHours(g, u), 0)) : null;
     return [t.name, t.school, t.specialization ?? "غير متاح", needs.filter((n) => n.teacher_id === t.id).length, cur ? `${PLAN_STATUS[cur.status]} (إصدار ${cur.version})` : "لا خطة", cur ? `${done} من ${acts.length}` : "غير متاح", hours === null ? "غير متاح" : hours];
   });
 }
 export const DEV_HEAD = ["المعلم", "الفرع", "التخصص", "الاحتياجات", "الخطة", "الأنشطة المتحقق منها", "الساعات الموثقة"];
 export const NEED_HEAD = ["المعلم", "الفرع", "المجال", "المصدر", "الأولوية", "الحالة", "سجّله", "التاريخ"];
-export function needRows(n: Need[]): Cell[][] { return n.map((x) => [x.teacher, x.school, x.domain, NEED_SOURCE[x.source] ?? x.source, PRIORITY[x.priority] ?? x.priority, NEED_STATUS[x.status] ?? x.status, x.creator, x.created_at.slice(0, 10)]); }
+export function needRows(n: Need[]): Cell[][] { return n.map((x) => [x.teacher, x.school, x.domain, NEED_SOURCE[x.source] ?? x.source, PRIORITY[x.priority] ?? x.priority, NEED_STATUS[x.status] ?? x.status, x.creator, riyadhDay(x.created_at)]); }
 export const PROG_HEAD = ["البرنامج", "الفرع", "الحالة", "الجلسات المنعقدة", "المسجلون", "الحضور (مشارك/جلسة)", "الساعات الموثقة"];
 export function programRows(p: Program[]): Cell[][] {
   return p.map((g) => { const live = g.sessions.filter((s) => s.status === "scheduled"); const pres = g.enrollments.reduce((n, e) => n + e.attendance.filter((a) => a.status === "present").length, 0);
-    return [g.title, g.school, PROG_STATUS[g.status] ?? g.status, live.length, g.enrollments.filter((e) => e.status === "registered").length, pres, g.enrollments.reduce((n, e) => n + verifiedHours(g, e.user_id), 0)]; });
+    return [g.title, g.school, PROG_STATUS[g.status] ?? g.status, live.length, g.enrollments.filter((e) => e.status === "registered").length, pres, r2(g.enrollments.reduce((n, e) => n + verifiedHours(g, e.user_id), 0))]; });
 }
 export const MEET_HEAD = ["الاجتماع", "الفرع", "الموعد", "المحضر", "مرتبط بـ", "الإجراء", "المسؤول", "الموعد النهائي", "الحالة"];
 const LINK_KIND: Record<string, string> = { plan: "خطة", need: "احتياج", visit: "زيارة", program: "برنامج" };
@@ -95,5 +113,5 @@ export function linkSummary(l: { kind: string }[]): string {
 export function meetingRows(m: PdMeeting[]): Cell[][] {
   return m.flatMap((x) => { const mn = x.minutes ? (x.minutes.status === "confirmed" ? `معتمد (إصدار ${x.minutes.version})` : "مسودة محضر") : "لا محضر";
     const ln = linkSummary(x.links);
-    return x.tasks.length ? x.tasks.map((t) => [x.title, x.school, x.starts_at.slice(0, 10), mn, ln, t.title, t.assignee, t.due ?? "—", t.status === "done" ? "مغلق" : "مفتوح"]) : [[x.title, x.school, x.starts_at.slice(0, 10), mn, ln, "لا إجراءات", "—", "—", "—"]]; });
+    return x.tasks.length ? x.tasks.map((t) => [x.title, x.school, riyadhDay(x.starts_at), mn, ln, t.title, t.assignee, t.due ?? "—", t.status === "done" ? "مغلق" : "مفتوح"]) : [[x.title, x.school, riyadhDay(x.starts_at), mn, ln, "لا إجراءات", "—", "—", "—"]]; });
 }

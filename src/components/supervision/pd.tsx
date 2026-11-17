@@ -9,7 +9,7 @@ import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import type { SvMe, SvSearch } from "./model";
-import { DEV_HEAD, devReport, filterNeeds, filterPlans, filterPrograms, MEET_HEAD, meetingRows, NEED_HEAD, NEED_STATUS, needRows, PD_VIEWS, PLAN_STATUS, PROG_HEAD, PROG_STATUS, programRows, type DevPlan, type Need, type PdFilter, type PdMeeting, type PdTeacher, type PdView, type Program } from "./pd-model";
+import { DEV_HEAD, devReport, filterNeeds, filterPlans, filterPrograms, MEET_HEAD, meetingRows, NEED_HEAD, NEED_STATUS, needRows, PD_VIEWS, PLAN_STATUS, PROG_HEAD, PROG_STATUS, programRows, reportFilters, riyadhDay, statusFor, type DevPlan, type Need, type PdFilter, type PdMeeting, type PdTeacher, type PdReport, type PdView, type Program } from "./pd-model";
 import { PdTeachers } from "./pd-teachers";
 import { PdPlans } from "./pd-plans";
 import { PdPrograms } from "./pd-programs";
@@ -29,12 +29,13 @@ export function TeachersDevelopment({ org, me, sp, go }: { org: string; me: SvMe
   if (err) return <ErrorState message={arabicError(err)} onRetry={() => { void teachers.refetch(); void needs.refetch(); void plans.refetch(); void programs.refetch(); }} />;
   const d: PdData = { teachers: teachers.data ?? [], needs: needs.data ?? [], plans: plans.data ?? [], programs: programs.data ?? [], meetings: meetings.data ?? [] };
   const spec = Object.fromEntries(d.teachers.map((t) => [t.id, t.specialization])); const specs = Array.from(new Set(d.teachers.map((t) => t.specialization).filter(Boolean))) as string[];
-  const fd: PdData = { ...d, needs: filterNeeds(d.needs, f, spec), plans: filterPlans(d.plans, f, spec), programs: filterPrograms(d.programs, f),
+  const fd: PdData = { ...d, needs: filterNeeds(d.needs, statusFor(view, "teachers", f), spec), plans: filterPlans(d.plans, statusFor(view, "devplans", f), spec), programs: filterPrograms(d.programs, statusFor(view, "programs", f)),
     teachers: d.teachers.filter((t) => (!f.school || t.school_id === f.school) && (!f.teacher || t.id === f.teacher) && (!f.specialty || t.specialization === f.specialty)),
-    meetings: d.meetings.filter((m) => (!f.school || m.school_id === f.school) && (!f.from || m.starts_at.slice(0, 10) >= f.from) && (!f.to || m.starts_at.slice(0, 10) <= f.to)) };
-  const filters = [f.school && `الفرع: ${me.schools.find((s) => s.id === f.school)?.name ?? ""}`, f.specialty && `التخصص: ${f.specialty}`, f.teacher && `المعلم: ${d.teachers.find((t) => t.id === f.teacher)?.name ?? ""}`, f.status && `الحالة: ${f.status}`, (f.from || f.to) && `الفترة: ${f.from ?? "…"} — ${f.to ?? "…"}`].filter(Boolean) as string[];
-  function report(kind: "dev" | "needs" | "programs" | "meetings") {
-    const meta = { title: { dev: "تقرير تطوير المعلمين", needs: "تقرير الاحتياجات المهنية", programs: "تقرير البرامج والحضور والساعات", meetings: "تقرير الاجتماعات والإجراءات" }[kind], filters, note: "من السجلات المتاحة لصلاحيتك فقط (للمشارك: سجله وحده)؛ «غير متاح» يعني عدم توفر البيانات وليس صفرًا. لا درجات ولا ترتيب." };
+    meetings: d.meetings.filter((m) => (!f.school || m.school_id === f.school) && (!f.from || riyadhDay(m.starts_at) >= f.from) && (!f.to || riyadhDay(m.starts_at) <= f.to)) };
+  const names = { school: me.schools.find((x) => x.id === f.school)?.name, teacher: d.teachers.find((t) => t.id === f.teacher)?.name };
+  function report(kind: PdReport) {
+    const filters = reportFilters(kind, view, f, names);
+    const meta = { school: names.school ?? "كل الفروع المتاحة لصلاحيتك", title: { dev: "تقرير تطوير المعلمين", needs: "تقرير الاحتياجات المهنية", programs: "تقرير البرامج والحضور والساعات", meetings: "تقرير الاجتماعات والإجراءات" }[kind], filters, note: "من السجلات المتاحة لصلاحيتك فقط (للمشارك: سجله وحده)؛ «غير متاح» يعني عدم توفر البيانات وليس صفرًا. لا درجات ولا ترتيب." };
     if (kind === "dev") return { meta, headers: DEV_HEAD, rows: devReport(fd.teachers, fd.needs, fd.plans, fd.programs, {}) };
     if (kind === "needs") return { meta, headers: NEED_HEAD, rows: needRows(fd.needs) };
     if (kind === "programs") return { meta, headers: PROG_HEAD, rows: programRows(fd.programs) };

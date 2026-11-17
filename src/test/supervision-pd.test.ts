@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { learningLine, linkSummary, outcomeLine, planMissing, programRows, validMeetingUrl, verifiedHours, type Outcome, type Program } from "@/components/supervision/pd-model";
+import { learningLine, linkSummary, reportFilters, riyadhDay, statusFor, outcomeLine, planMissing, programRows, validMeetingUrl, verifiedHours, type Outcome, type Program } from "@/components/supervision/pd-model";
 
 const prog = (over: Partial<Program> = {}): Program => ({ id: "g", school_id: "s", school: "فرع", title: "برنامج", objectives: "", need_ids: [], audience: "", trainer_name: "م", mode: "in_person", location: "قاعة", meeting_url: null, status: "open", cancel_reason: null, creator: "", rev: 1, updated_at: "", can_manage: true,
   sessions: [{ id: "s1", starts_at: "", ends_at: "", hours: 1, location: null, status: "scheduled", cancel_reason: null, rev: 1 }, { id: "s2", starts_at: "", ends_at: "", hours: 1.5, location: null, status: "scheduled", cancel_reason: null, rev: 1 }, { id: "s3", starts_at: "", ends_at: "", hours: 2, location: null, status: "cancelled", cancel_reason: "x", rev: 1 }],
@@ -31,4 +31,22 @@ describe("meeting links in reports", () => {
     expect(linkSummary([{ kind: "visit" }, { kind: "plan" }, { kind: "need" }, { kind: "need" }])).toBe("خطة 1، احتياج 2، زيارة 1");
   });
   it("says no links instead of an empty cell", () => { expect(linkSummary([])).toBe("لا روابط"); });
+});
+
+describe("stage-4 report filters and dates", () => {
+  it("uses the Riyadh calendar day, not the UTC day", () => {
+    expect(riyadhDay("2026-11-16T22:30:00Z")).toBe("2026-11-17");
+    expect(riyadhDay("2026-11-17")).toBe("2026-11-17");
+  });
+  it("applies the status filter only to the visible list", () => {
+    expect(statusFor("programs", "teachers", { status: "closed" }).status).toBe("");
+    expect(statusFor("programs", "programs", { status: "closed" }).status).toBe("closed");
+  });
+  it("prints only the filters that shaped each report, with Arabic status labels", () => {
+    const f = { school: "s", teacher: "t", status: "open", from: "2026-11-01" };
+    const n = { school: "فرع أ", teacher: "معلم ب" };
+    expect(reportFilters("programs", "programs", f, n)).toEqual(["الفرع: فرع أ", "حالة البرنامج: التسجيل مفتوح", "الفترة: 2026-11-01 — …"]);
+    expect(reportFilters("meetings", "programs", f, n)).toEqual(["الفرع: فرع أ", "الفترة: 2026-11-01 — …"]);
+    expect(reportFilters("needs", "programs", f, n)).toEqual(["الفرع: فرع أ", "المعلم: معلم ب", "الفترة: 2026-11-01 — …"]);
+  });
 });
