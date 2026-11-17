@@ -19320,6 +19320,7 @@ export type Database = {
           impact: string
           notes: string
           recommendation_id: string
+          teacher_visible: boolean
         }
         Insert: {
           author_id: string
@@ -19330,6 +19331,7 @@ export type Database = {
           impact?: string
           notes: string
           recommendation_id: string
+          teacher_visible?: boolean
         }
         Update: {
           author_id?: string
@@ -19340,6 +19342,7 @@ export type Database = {
           impact?: string
           notes?: string
           recommendation_id?: string
+          teacher_visible?: boolean
         }
         Relationships: [
           {
@@ -29098,6 +29101,7 @@ export type Database = {
         Args: { _p: Json; _recommendation: string }
         Returns: string
       }
+      sv3_indicators: { Args: { _org: string }; Returns: Json }
       sv3_plan_execution: {
         Args: { _id: string; _rev: number; _state: string }
         Returns: undefined
