@@ -169,4 +169,4 @@
 - [x] Stage 5: reports & dashboard (sv449/dash.py + dashui.py)
 - [x] Forms library: alignment table + sources (docs/supervision-forms-alignment.md); 3 pilot forms v2 (support_visit, pd_plan, program_eval) tested
 - [x] Forms library: cards/filters, owner editor, principal proposal, version compare, step filling, teacher-copy privacy, A4 print (sv460)
-- [ ] Forms library batch 2: develop the remaining 14 forms' content and test them
+- [x] Forms library batch 2: v2 content for the remaining 13 forms (teacher_ack embedded, unchanged) — sv461/batch2.py + ui2.py
