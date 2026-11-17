@@ -41,7 +41,7 @@ export function Portfolio({ org, me, go }: { org: string; me: SvMe; go: Go }) {
     </div>
     {adding && <Candidates schools={mySchools} onDone={() => setAdding(false)} />}
     {!!pending.length && <section aria-label="بانتظار تحققك" className="space-y-2"><h4 className="font-semibold">بانتظار تحققك ({pending.length})</h4><ul className="grid gap-2 md:grid-cols-2">{pending.map((x) => <ItemCard key={x.id} x={x} go={go} showTeacher />)}</ul></section>}
-    {!rows.length ? <EmptyState title={all.length ? "لا عناصر تطابق التصفية" : "لا عناصر في الملف المهني بعد"} description={mySchools.length ? "اقترح عنصرًا من سجلاتك المعتمدة أو حضورك الموثّق أو خطتك المعتمدة." : "يقترح المعلم العناصر من عمله، ثم يتحقق منها من يملك نطاقه."} /> :
+    {!rows.length ? <EmptyState title={all.length ? "لا عناصر تطابق التصفية" : "لا عناصر في الملف المهني بعد"} hint={mySchools.length ? "اقترح عنصرًا من سجلاتك المعتمدة أو حضورك الموثّق أو خطتك المعتمدة." : "يقترح المعلم العناصر من عمله، ثم يتحقق منها من يملك نطاقه."} /> :
       groupPf(rows).map((g) => <section key={g.year} aria-label={`العام ${g.year}`} className="space-y-3">
         <h3 className="border-b pb-1 text-lg font-bold">العام {g.year}</h3>
         {g.terms.map((t) => <div key={t.term} className="space-y-2"><h4 className="font-semibold text-primary">الفصل: {t.term}</h4>
