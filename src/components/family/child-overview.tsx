@@ -13,6 +13,7 @@ import { HealthFile } from "@/components/health/health-file";
 import { FamilyGuidance } from "@/components/guidance/family-summaries";
 import { FamilyGifted } from "@/components/gifted/family";
 import type { ChildTab } from "./search";
+import { TimetableView } from "./timetable-view";
 import { AttendanceCalendar, AttendanceReport } from "./attendance";
 
 /** One child's (or the student's own) overview. Everything comes from family_child, which checks the link on the server. */
@@ -65,25 +66,34 @@ export function ChildOverview({ studentId, initialTab }: { studentId: string; in
   const tab: Tab = tabs.some((t) => t.k === want) ? want : "attendance";
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border bg-card p-5" aria-label="الابن المختار">
-        {guardian && <p className="text-xs text-muted-foreground">تتابع الآن</p>}
-        <p className="text-xl font-bold">{d.student.name}</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {d.student.school}{d.student.grade ? ` · ${d.student.grade}` : ""}{d.student.section ? ` / شعبة ${d.student.section}` : " · لم يُسكَّن في شعبة بعد"}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">رقم الطالب في C‑Smart: {d.student.csmart_no ?? "غير مسجّل بعد"}</p>
+      <div className="rounded-2xl border bg-gradient-to-l from-primary/10 via-card to-card p-5" aria-label="الابن المختار">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
+          <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">{d.student.name.trim().charAt(0)}</div>
+          <div className="min-w-0">
+            {guardian && <p className="text-xs text-muted-foreground">تتابع الآن</p>}
+            <p className="truncate text-xl font-bold">{d.student.name}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+              <span className="rounded-full border bg-background px-2.5 py-1">{d.student.school}</span>
+              {d.student.grade && <span className="rounded-full border bg-background px-2.5 py-1">{d.student.grade}</span>}
+              <span className="rounded-full border bg-background px-2.5 py-1">{d.student.section ? `شعبة ${d.student.section}` : "لم يُسكَّن في شعبة بعد"}</span>
+              <span className="rounded-full border bg-background px-2.5 py-1">C‑Smart: {d.student.csmart_no ?? "غير مسجّل"}</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div role="tablist" aria-label="أقسام الابن" className="flex flex-wrap gap-2">
+      <div role="tablist" aria-label="أقسام الابن" className="sticky top-0 z-10 -mx-1 overflow-x-auto rounded-2xl border bg-card/95 p-1.5 backdrop-blur">
+        <div className="flex min-w-max gap-1">
         {tabs.map((t) => (
           <button key={t.k} role="tab" aria-selected={tab === t.k} onClick={() => setTab(t.k)}
-            className={cn("inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm", tab === t.k ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted")}>
-            <t.icon className="size-4" />{t.label}
+            className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm transition", tab === t.k ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+            <t.icon className="size-4 shrink-0" />{t.label}
           </button>
         ))}
+        </div>
       </div>
       {tab === "attendance" && <AttendanceCalendar studentId={d.student.id} />}
       {tab === "att_report" && <AttendanceReport studentId={d.student.id} studentName={d.student.name} />}
-      {tab === "schedule" && <Timetable rows={d.timetable} />}
+      {tab === "schedule" && <TimetableView rows={d.timetable} />}
       {tab === "gifted" && <FamilyGifted studentId={d.student.id} />}
       {tab === "guidance" && guardian && <FamilyGuidance studentId={d.student.id} />}
       {tab === "classrooms" && (!d.room || !d.classrooms.length ? <EmptyState title="لا يوجد فصل رقمي لشعبته بعد" /> : (
@@ -110,25 +120,6 @@ export function ChildOverview({ studentId, initialTab }: { studentId: string; in
       )}
       {tab === "finance" && guardian && d.finance && <Finance f={d.finance} />}
       {tab === "health" && guardian && <HealthFile studentId={d.student.id} />}
-    </div>
-  );
-}
-
-function Timetable({ rows }: { rows: ChildData["timetable"] }) {
-  if (!rows.length) return <EmptyState title="لا يوجد جدول منشور لشعبته بعد" />;
-  const days = [...new Set(rows.map((r) => r.day))].sort();
-  return (
-    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-      {days.map((day) => (
-        <div key={day} className="rounded-xl border bg-card p-4">
-          <p className="mb-2 font-bold">{DAYS_AR[day]}</p>
-          <ul className="space-y-1.5 text-sm">
-            {rows.filter((r) => r.day === day).map((r, i) => (
-              <li key={i} className="flex justify-between gap-2"><span>{r.period} · {r.subject}</span><span className="text-muted-foreground">{r.teacher ?? ""}</span></li>
-            ))}
-          </ul>
-        </div>
-      ))}
     </div>
   );
 }
