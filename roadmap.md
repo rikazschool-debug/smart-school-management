@@ -99,10 +99,10 @@
 
 # المرحلة الثالثة: الإشراف التربوي — الخطط والزيارات (Nov 17 2026)
 - [x] prompt-443: أربع تعارضات ومجاورات، توثيق تبادل واعتماد، مراجعتان مستقلتان، ربط/نسخ حي، رفض النطاق، مؤشرات وتقرير/طباعة أربعة أدوار، خمسة أنواع ملفات وتكرار طلب قديم بعد الانتهاء مرفوض، توثيق/توصية stale دون فقد؛ 27 قاعدة وتقرير موحد، دون نشر/تنظيف/إنتاج.
-- [ ] prompt-444 (current): close stage-3 open items first, then stage 4 (internal eval forms).
-  - [x] activity progress after approval (RPC + UI, tested)
-  - [ ] distinct second supervisor handover; follow-up impact states from UI; reschedule concurrency; PDF row-wise; supervisor full export
-  - [ ] stage 4 (not started)
+- [x] prompt-444/445: stage-3 internal items closed and tested (activity progress, second-supervisor handover, impact states from UI, reschedule concurrency, PDF row match + supervisor export). Stage 3 awaits review; camera and GitHub remain external.
+- [x] Stage 4 «المعلمون والتطوير المهني» built and tested on test DB (docs/supervision-stage4-report.md).
+  - [ ] HR screen for verified hours (service ready); meeting link from UI, internal certificate print and Arabic print of stage-4 reports not verified; stage-4 PDF row match not done.
+  - [ ] Do not start stage 5 before review.
 - [ ] prompt-443: نشاط مستقل بعد اعتماد الخطة، تحقق الملفات القديمة/محتوى أعمق؛ اختبار مشرف مستلم متميز عن المؤلف وكل حالات أثر/إعادة فتح/تعذر، تزامن إعادة الجدولة، PDF صفًا صفًا والمشرف؛ رابط Storage قديم داخل صلاحيته غير متحقق؛ الكاميرا وGitHub خارجيان.
 - [x] prompt-442: إسناد جديد ورحلة مشرف↔مدير، مراجعة مستقلة تحفظ الأصل، زيارة وتوثيق واطلاع ودليل معلم وتحقق، تبادل وتأمل، تسليم للمدير ومنع السابق، تقرير شامل جزئي، نافذتان ونص باقٍ؛ 25 قاعدة وترحيلة 20261117052219، دون إنتاج/تنظيف/نشر.
 - [ ] prompt-442: قبول تعارض الحصص الأربع منفصلة، تقارير PDF/Excel/طباعة كل دور صفًا صفًا، مستندات وصور ومعاينة كاملة، تعميم مغادرة التوثيق وأنشطة وأشخاص ومؤشرات؛ وقف الرابط القديم المطلق غير مستوفى، الكاميرا وGitHub النهائي غير متحققين.

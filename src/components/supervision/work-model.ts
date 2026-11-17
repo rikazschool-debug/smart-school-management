@@ -9,8 +9,9 @@ export const EXECUTION: Record<string, string> = { not_started: "لم تبدأ",
 export const VISIT_STATE = { scheduled: "مجدولة", executed: "منفذة", cancelled: "ملغاة" };
 export const REC_STATE: Record<string, string> = { ...EXECUTION, submitted: "مقدمة للتحقق" };
 // Impact is only what the session evidence shows; «لم يقس» is never read as no improvement or as improvement.
-export const IMPACT: Record<string, string> = { not_measured: "لم يُقس الأثر بعد", not_met: "لم يتحقق الأثر", partial: "تحقق جزئيًا بدليل", met: "تحقق بدليل" };
-export function impactLine(impact: string, evidence: string | null | undefined): string { return impact === "not_measured" ? IMPACT.not_measured : `${IMPACT[impact] ?? impact} — الدليل: ${evidence?.trim() || "—"}`; }
+const NOT_MEASURED = "لم يُقس الأثر بعد";
+export const IMPACT: Record<string, string> = { not_measured: NOT_MEASURED, not_met: "لم يتحقق الأثر", partial: "تحقق جزئيًا بدليل", met: "تحقق بدليل" };
+export function impactLine(impact: string, evidence: string | null | undefined): string { return impact === "not_measured" ? NOT_MEASURED : `${IMPACT[impact] ?? impact} — الدليل: ${evidence?.trim() || "—"}`; }
 export function impactNeedsEvidence(impact: string, evidence: string): boolean { return impact !== "not_measured" && evidence.trim().length < 3; }
 export function copyPlanData(data: Record<string, unknown>): Record<string, unknown> {
   const copy = structuredClone(data);

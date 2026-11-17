@@ -60,11 +60,12 @@ export function fromRiyadhInput(v: string): string | null { return v ? new Date(
 export function riyadhText(iso: string | null | undefined): string {
   if (!iso) return "—"; return new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }).format(new Date(iso)) + " (الرياض)";
 }
-export type SvTab = "records" | "assign" | "forms" | "deleg" | "work";
-export type SvSearch = { tab?: SvTab; id?: string; view?: "plans" | "visits" };
+export type SvTab = "records" | "assign" | "forms" | "deleg" | "work" | "pd";
+export type SvSearch = { tab?: SvTab; id?: string; view?: "plans" | "visits"; pd?: "teachers" | "devplans" | "programs" };
 export function svSearch(raw: Record<string, unknown>): SvSearch {
-  const tab = ["records", "assign", "forms", "deleg", "work"].includes(String(raw["tab"])) ? (raw["tab"] as SvTab) : undefined;
+  const tab = ["records", "assign", "forms", "deleg", "work", "pd"].includes(String(raw["tab"])) ? (raw["tab"] as SvTab) : undefined;
   const id = typeof raw["id"] === "string" && /^[0-9a-f-]{36}$/i.test(raw["id"]) ? raw["id"] : undefined;
   const view = raw["view"] === "plans" || raw["view"] === "visits" ? raw["view"] : undefined;
-  return { ...(tab ? { tab } : {}), ...(id ? { id } : {}), ...(view ? { view } : {}) };
+  const pd = raw["pd"] === "teachers" || raw["pd"] === "devplans" || raw["pd"] === "programs" ? raw["pd"] : undefined;
+  return { ...(tab ? { tab } : {}), ...(id ? { id } : {}), ...(view ? { view } : {}), ...(pd ? { pd } : {}) };
 }
