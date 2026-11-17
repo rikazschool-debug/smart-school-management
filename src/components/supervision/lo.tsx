@@ -70,6 +70,7 @@ export function MeasureForm({ org, m, onDone }: { org: string; m?: Measure; onDo
   async function save() { setBusy(true); try { const id = await call("sv5_measure_save", { _id: m?.id ?? null, _rev: m?.rev ?? null, _p: { ...p, school_id: sch } }, "حُفظ المقياس") as string; await qc.invalidateQueries({ queryKey: ["sv5"] }); onDone(id); } catch { /* shown */ } finally { setBusy(false); } }
   return <section className="space-y-3 rounded-lg border p-3" aria-label="بيانات المقياس">
     <h3 className="font-semibold">{m ? "تعديل بيانات المقياس" : "مقياس جديد بنتائج من ملف موثق"}</h3>
+    <p className="text-sm text-muted-foreground">المقياس على مستوى الصف كله لمدير الفرع أو المالك أو مشرف أُسندت إليه المادة؛ المشرف المسند إليه معلمون يختار مقرر المعلم.</p>
     <div className="grid gap-3 md:grid-cols-3">
       {!m && <L t="الفرع"><select className={selectCls()} value={sch} onChange={(e) => setP({ ...p, school_id: e.target.value, grade_id: "", section_ids: [], subject_id: "", course_id: "", year_id: "", term_id: "" })}><option value="">اختر</option>{r.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></L>}
       <L t="نوع القياس"><select className={selectCls()} value={p.kind} onChange={(e) => set("kind", e.target.value)}><option value="">اختر</option>{Object.entries(LO_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></L>
