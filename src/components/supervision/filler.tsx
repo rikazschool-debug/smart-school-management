@@ -25,7 +25,7 @@ export function Filler({ spec, data, onChange, readOnly, missing = [] }: { spec:
           const miss = missing.some((m) => m === f.label || m.startsWith(f.label + " ") || m.startsWith(f.label + ":"));
           return <div key={f.key} className={wide ? "md:col-span-2" : ""}>
             <label className="mb-1 flex items-center gap-1 text-sm font-medium" htmlFor={`f-${f.key}`}>{f.label}{f.required && <span className="text-destructive" aria-label="إلزامي">*</span>}{f.when && <span className="text-[11px] font-normal text-muted-foreground">(يظهر حسب الإجابة السابقة)</span>}</label>
-            <FieldInput f={f} v={data[f.key]} set={(v) => set(f.key, v)} ro={!!readOnly} />
+            <FieldInput f={f} v={data[f.key]} set={(v) => set(f.key, v)} ro={!!readOnly} plan={spec.sv3_plan} />
             {f.help && <p className="mt-1 text-xs text-muted-foreground">{f.help}</p>}
             {miss && !readOnly && <p className="mt-1 text-xs text-destructive">مطلوب قبل الإرسال</p>}
           </div>;
@@ -35,7 +35,7 @@ export function Filler({ spec, data, onChange, readOnly, missing = [] }: { spec:
   </div>;
 }
 
-function FieldInput({ f, v, set, ro }: { f: SvField; v: unknown; set: (v: unknown) => void; ro: boolean }) {
+function FieldInput({ f, v, set, ro, plan }: { f: SvField; v: unknown; set: (v: unknown) => void; ro: boolean; plan?: boolean }) {
   const id = `f-${f.key}`; const str = typeof v === "string" || typeof v === "number" ? String(v) : "";
   if (ro && ["text", "textarea", "date", "number", "select"].includes(f.type)) return <p className="whitespace-pre-wrap rounded-md bg-muted/40 px-3 py-2 text-sm">{str || "—"}</p>;
   switch (f.type) {
@@ -44,7 +44,7 @@ function FieldInput({ f, v, set, ro }: { f: SvField; v: unknown; set: (v: unknow
     case "number": return <Input id={id} type="number" min={0} inputMode="decimal" value={str} onChange={(e) => set(e.target.value === "" ? "" : Number(e.target.value))} />;
     case "datetime": return ro ? <p className="rounded-md bg-muted/40 px-3 py-2 text-sm">{riyadhText(str || null)}</p> : <Input id={id} type="datetime-local" value={toRiyadhInput(str || null)} onChange={(e) => set(fromRiyadhInput(e.target.value))} />;
     case "select": return <select id={id} className={selectCls("w-full")} value={str} onChange={(e) => set(e.target.value)}><option value="">— اختر —</option>{(f.options ?? []).map((o) => <option key={o}>{o}</option>)}</select>;
-    case "goals": case "actions": case "recs": return <Rows cols={COLS[f.type]!} rows={(Array.isArray(v) ? v : []) as Row[]} set={set} ro={ro} label={f.label} />;
+    case "goals": case "actions": case "recs": return <Rows cols={plan && f.type === "goals" ? [{ k: "goal", l: "وصف الهدف" }, { k: "indicator", l: "مؤشر التحقق" }, { k: "baseline", l: "خط الأساس (عند توفره)" }, { k: "target", l: "المستهدف (عند انطباقه)" }, { k: "owner", l: "المسؤول" }, { k: "due", l: "الموعد", t: "date" }] : (COLS[f.type] ?? [])} rows={(Array.isArray(v) ? v : []) as Row[]} set={set} ro={ro} label={f.label} />;
     case "list": { const items = (Array.isArray(v) ? v : []) as string[];
       return <div className="space-y-2">{items.map((x, i) => <div key={i} className="flex gap-2">{ro ? <p className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-sm">{x}</p> : <><Input aria-label={`${f.label} ${i + 1}`} value={x} onChange={(e) => set(items.map((y, j) => (j === i ? e.target.value : y)))} /><Button type="button" variant="ghost" size="icon" aria-label="حذف" onClick={() => set(items.filter((_, j) => j !== i))}><Trash2 className="size-4" /></Button></>}</div>)}
         {!ro && <Button type="button" variant="outline" size="sm" onClick={() => set([...items, ""])}><Plus className="size-4" />إضافة بند</Button>}{ro && !items.length && <p className="text-sm text-muted-foreground">—</p>}</div>; }

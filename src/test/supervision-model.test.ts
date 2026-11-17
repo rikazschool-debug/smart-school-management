@@ -12,6 +12,11 @@ const spec: SvSpec = { create: ["supervisor"], sections: [{ title: "a", fields: 
 ] }] };
 
 describe("supervision missingFields (mirrors private._sv_missing)", () => {
+  it("stage-3 goals require description, indicator, owner and deadline but no arbitrary numeric target", () => {
+    const plan: SvSpec = { sv3_plan: true, sections: [{ title: "أهداف", fields: [{ key: "goals", label: "الأهداف", type: "goals", required: true }] }] };
+    expect(missingFields(plan, { goals: [{ goal: "تنويع التقويم", indicator: "شاهد صفّي", owner: "المشرف", due: "2026-12-01" }] })).toEqual([]);
+    expect(missingFields(plan, { goals: [{ goal: "تنويع التقويم", indicator: "شاهد صفّي", owner: "", due: "2026-12-01" }] })).toHaveLength(1);
+  });
   it("lists every required item of an empty draft, skipping hidden conditional fields", () => {
     expect(missingFields(spec, {})).toEqual(["النوع", "الأهداف", "الإجراءات", "المؤشرات: م1", "المؤشرات: م2"]);
   });

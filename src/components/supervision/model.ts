@@ -1,7 +1,7 @@
 // Educational supervision (sv_*) — shared client model. missingFields mirrors private._sv_missing on the server.
 export type FieldType = "text" | "textarea" | "date" | "datetime" | "number" | "select" | "goals" | "actions" | "recs" | "list" | "indicators";
 export type SvField = { key: string; label: string; type: FieldType; required?: boolean; options?: string[]; when?: { field: string; eq?: string; in?: string[] }; help?: string; items?: { code: string; label: string }[]; levels?: string[] };
-export type SvSpec = { sections: { title: string; fields: SvField[] }[]; teacher?: boolean; ack?: boolean; embedded?: boolean; create?: string[]; approve?: string; autofill?: string[] };
+export type SvSpec = { sections: { title: string; fields: SvField[] }[]; teacher?: boolean; ack?: boolean; embedded?: boolean; create?: string[]; approve?: string; autofill?: string[]; sv3_plan?: boolean };
 export type SvSource = { type: "official" | "internal"; issuer?: string; title?: string; version?: string; url?: string; checked_on?: string; limits?: string; note?: string };
 export type SvForm = { id: string; org_id: string | null; school_id: string | null; school?: string | null; key: string; version: number; title: string; purpose: string; kind: string; source: SvSource; spec: SvSpec; roles: Record<string, string>; acceptance: string; outputs: string; status: "draft" | "review" | "published" | "archived"; rev: number; creator: string; publisher: string | null; published_at: string | null; return_reason: string | null; can_edit: boolean; can_publish: boolean; created_by: string | null; is_template?: boolean; usable?: boolean; can_adopt?: boolean; adopter?: string | null; adopted_at?: string | null; based_on?: string | null };
 export type SvSchool = { id: string; name: string; principal: boolean; can_assign: boolean; supervisor: boolean; teacher: boolean; dept_head: boolean; approver: boolean };
@@ -32,7 +32,7 @@ export function missingFields(spec: SvSpec, data: Record<string, unknown>): stri
   for (const sec of spec.sections ?? []) for (const f of sec.fields ?? []) {
     if (!shown(f, data) || !f.required) continue;
     const v = data[f.key]; const arr = Array.isArray(v) ? (v as Record<string, unknown>[]) : null;
-    if (f.type === "goals") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (!s(it["goal"]) || !s(it["indicator"]) || !s(it["baseline"]) || !s(it["target"])) out.push(`${f.label} ${i + 1}: الهدف والمؤشر وخط الأساس والمستهدف`); }); }
+    if (f.type === "goals") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (spec.sv3_plan) { if (!s(it["goal"]) || !s(it["indicator"]) || !s(it["owner"]) || !s(it["due"])) out.push(`${f.label} ${i + 1}: الوصف والمؤشر والمسؤول والموعد`); } else if (!s(it["goal"]) || !s(it["indicator"]) || !s(it["baseline"]) || !s(it["target"])) out.push(`${f.label} ${i + 1}: الهدف والمؤشر وخط الأساس والمستهدف`); }); }
     else if (f.type === "actions") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (!s(it["action"]) || !s(it["owner"]) || !s(it["due"]) || !s(it["evidence"])) out.push(`${f.label} ${i + 1}: الإجراء والمسؤول والموعد والشاهد`); }); }
     else if (f.type === "recs") { if (!arr?.length) out.push(f.label); else arr.forEach((it, i) => { if (!s(it["text"]) || !s(it["follow_due"])) out.push(`${f.label} ${i + 1}: التوصية وموعد متابعتها`); }); }
     else if (f.type === "list") { if (!Array.isArray(v) || !(v as unknown[]).some((x) => s(x) !== "")) out.push(f.label); }
@@ -60,10 +60,11 @@ export function fromRiyadhInput(v: string): string | null { return v ? new Date(
 export function riyadhText(iso: string | null | undefined): string {
   if (!iso) return "—"; return new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }).format(new Date(iso)) + " (الرياض)";
 }
-export type SvTab = "records" | "assign" | "forms" | "deleg";
-export type SvSearch = { tab?: SvTab; id?: string };
+export type SvTab = "records" | "assign" | "forms" | "deleg" | "work";
+export type SvSearch = { tab?: SvTab; id?: string; view?: "plans" | "visits" };
 export function svSearch(raw: Record<string, unknown>): SvSearch {
-  const tab = ["records", "assign", "forms", "deleg"].includes(String(raw["tab"])) ? (raw["tab"] as SvTab) : undefined;
+  const tab = ["records", "assign", "forms", "deleg", "work"].includes(String(raw["tab"])) ? (raw["tab"] as SvTab) : undefined;
   const id = typeof raw["id"] === "string" && /^[0-9a-f-]{36}$/i.test(raw["id"]) ? raw["id"] : undefined;
-  return { ...(tab ? { tab } : {}), ...(id ? { id } : {}) };
+  const view = raw["view"] === "plans" || raw["view"] === "visits" ? raw["view"] : undefined;
+  return { ...(tab ? { tab } : {}), ...(id ? { id } : {}), ...(view ? { view } : {}) };
 }
