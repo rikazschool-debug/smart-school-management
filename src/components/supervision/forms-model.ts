@@ -69,10 +69,8 @@ export function diffSpecs(a: SvSpec, b: SvSpec): Change[] {
     if (cond(p) !== cond(f)) d.push(`شرط الظهور: ${cond(p)} ← ${cond(f)}`);
     if (list(p.options) !== list(f.options)) d.push(`الخيارات: ${list(p.options)} ← ${list(f.options)}`);
     if (list(p.levels) !== list(f.levels)) d.push(`مستويات السلّم: ${list(p.levels)} ← ${list(f.levels)}`);
-    const ia = (p.items ?? []).map((i) => `${i.code}:${i.label}`), ib = (f.items ?? []).map((i) => `${i.code}:${i.label}`);
     for (const it of f.items ?? []) { const x = (p.items ?? []).find((y) => y.code === it.code); if (!x) d.push(`بند جديد: ${it.label}`); else if (x.label !== it.label) d.push(`بند «${x.label}» ← «${it.label}»`); }
     for (const it of p.items ?? []) if (!(f.items ?? []).some((y) => y.code === it.code)) d.push(`حُذف البند: ${it.label}`);
-    void ia; void ib;
     if ((p.evidence ?? "") !== (f.evidence ?? "")) d.push(f.evidence === "required" ? "الشاهد لكل بند أصبح مطلوبًا" : f.evidence ? "الشاهد لكل بند اختياري" : "أُلغي ربط الشاهد بالبند");
     if (!!p.private !== !!f.private) d.push(f.private ? "أصبح داخليًا (لا يظهر للمعلم)" : "أصبح ظاهرًا للمعلم");
     if ((p.help ?? "") !== (f.help ?? "")) d.push("تغيّرت التعليمات");
