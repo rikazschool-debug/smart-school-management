@@ -11,6 +11,7 @@ export const REC_STATE: Record<string, string> = { ...EXECUTION, submitted: "Ù…Ù
 export function copyPlanData(data: Record<string, unknown>): Record<string, unknown> {
   const copy = structuredClone(data);
   delete copy["period_from"]; delete copy["period_to"];
+  if (Array.isArray(copy["goals"])) copy["goals"] = copy["goals"].map((r: Record<string, unknown>) => ({ goal: r["goal"] ?? "", indicator: r["indicator"] ?? "", baseline: r["baseline"] ?? "", target: r["target"] ?? "", owner: "", due: "" }));
   copy["actions"] = (Array.isArray(copy["actions"]) ? copy["actions"] : []).map((r: Record<string, unknown>) => ({ action: r["action"] ?? "", owner: "", due: "", evidence: r["evidence"] ?? "" }));
   return copy;
 }
@@ -23,3 +24,18 @@ export function calendarDays(anchor: string, mode: "week" | "month"): string[] {
   return Array.from({ length: count }, (_, i) => { const d = new Date(date); d.setUTCDate(d.getUTCDate() + i); return d.toISOString().slice(0, 10); });
 }
 export const riyadhDay = (iso: string) => new Date(new Date(iso).getTime() + 3 * 3600000).toISOString().slice(0, 10);
+
+export type WorkFilters = { school: string; state: string; kind: string; search: string; from: string; to: string; year: string; term: string; teacher: string; course: string };
+export function filterWork(rows: (Plan | Visit)[], plans: Plan[], f: WorkFilters) {
+  return rows.filter((r) => {
+    const p = "status" in r ? r : plans.find((p) => p.id === r.plan_id);
+    const start = "starts_at" in r ? riyadhDay(r.starts_at) : String(r.data["period_from"] ?? "");
+    const end = "starts_at" in r ? start : String(r.data["period_to"] ?? start);
+    const state = "status" in r ? r.status : f.state === "submitted" ? r.documentation_status : r.state;
+    return (!f.school || r.school_id === f.school) && (!f.state || state === f.state) && (!f.kind || r.kind === f.kind)
+      && (!f.year || p?.year_id === f.year) && (!f.term || p?.term_id === f.term)
+      && (!f.teacher || r.teacher_id === f.teacher) && (!f.course || ("course_id" in r && r.course_id === f.course))
+      && (!f.from || (!!end && end >= f.from)) && (!f.to || (!!start && start <= f.to))
+      && (!f.search || JSON.stringify([r.school, "purpose" in r ? r.purpose : r.title, "teacher" in r ? r.teacher : "", "course" in r ? r.course : "", r.author]).includes(f.search));
+  });
+}
