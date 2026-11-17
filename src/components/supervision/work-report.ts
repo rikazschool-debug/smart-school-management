@@ -1,7 +1,6 @@
-import { impactLine } from "./work-model";
 import type { SvRecordFull } from "./model";
 import { ACTION_LABEL, REC_STATUS, riyadhText } from "./model";
-import { EXECUTION, PLAN_KIND, REC_STATE, VISIT_STATE, type Plan, type VisitFull } from "./work-model";
+import { EXECUTION, PLAN_KIND, REC_STATE, VISIT_STATE, impactLine, type Plan, type VisitFull } from "./work-model";
 const labels: Record<string, string> = { goal: "وصف الهدف", indicator: "مؤشر التحقق", baseline: "خط الأساس", target: "المستهدف", owner: "المسؤول", due: "الموعد", action: "الإجراء", evidence: "الشاهد المتوقع", text: "التوصية", follow_due: "موعد المتابعة" };
 const events: Record<string, string> = { ...ACTION_LABEL, schedule: "جدولة", reschedule: "إعادة جدولة", execute: "تنفيذ", recommendation: "إضافة توصية", recommendation_state: "تحديث توصية", attachment: "إرفاق شاهد", followup: "جلسة متابعة", reflection: "تأمل مشارك" };
 

@@ -15,7 +15,7 @@ import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { EvidencePanel } from "./evidence";
 import { fromRiyadhInput, REC_STATUS, riyadhText, toRiyadhInput, type SvMe, type SvAssignment, type SvRecordFull } from "./model";
-import { REC_STATE, VISIT_STATE, riyadhDay, type Plan, type Recommendation, type Visit, type VisitFull, type WorkPool } from "./work-model";
+import { IMPACT, REC_STATE, VISIT_STATE, impactLine, impactNeedsEvidence, riyadhDay, type Plan, type Recommendation, type Visit, type VisitFull, type WorkPool } from "./work-model";
 import { fullVisitReport, type FollowupReportRow } from "./work-report";
 
 export function VisitEditor({ me, plans, visit, onDone }: { me: SvMe; plans: Plan[]; visit?: Visit; onDone: (id?: string) => void }) {
