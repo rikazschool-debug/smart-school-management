@@ -2,7 +2,7 @@ import { useUnsaved } from "./use-unsaved";
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowRight, CheckCircle2, Eye, FilePlus2, Info, MessageSquare, RotateCcw, Save, Send, ShieldCheck, UserCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Eye, FilePlus2, Info, MessageSquare, Printer, RotateCcw, Save, Send, ShieldCheck, UserCheck } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,14 +11,17 @@ import { ask, askText } from "@/components/confirm";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { Filler } from "./filler";
+import { formPrintHtml } from "./form-print";
+import { PrintPreview, StepFiller } from "./form-ui";
+import { recordNo } from "./forms-model";
 import { ACTION_LABEL, canCreate, missingFields, REC_STATUS, riyadhText, type Named, type SvAssignment, type SvForm, type SvMe, type SvRecord, type SvRecordFull } from "./model";
 
 const tone: Record<string, string> = { draft: "bg-muted text-foreground", submitted: "bg-primary/10 text-primary", needs_info: "bg-destructive/10 text-destructive", approved: "bg-success/15 text-success" };
 export const StatusPill = ({ s }: { s: keyof typeof REC_STATUS }) => <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${tone[s] ?? ""}`}>{REC_STATUS[s]}</span>;
 
-export function Records({ org, me, openId, onSel }: { org: string; me: SvMe; openId?: string | undefined; onSel: (id?: string) => void }) {
+export function Records({ org, me, openId, use, onSel }: { org: string; me: SvMe; openId?: string | undefined; use?: string | undefined; onSel: (id?: string) => void }) {
   const q = useQuery({ queryKey: ["sv-recs", org], queryFn: async () => { const r = await db.rpc("sv_rec_list", { _org: org }); if (r.error) throw r.error; return r.data as SvRecord[]; } });
-  const [f, setF] = useState<"all" | "mine" | "review" | "teacher" | "handover">("all"); const [creating, setCreating] = useState(false);
+  const [f, setF] = useState<"all" | "mine" | "review" | "teacher" | "handover">("all"); const [creating, setCreating] = useState(!!use);
   if (openId) return <RecordView id={openId} org={org} onBack={() => onSel()} />;
   if (q.isLoading) return <LoadingState />; if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const all = q.data ?? [];
@@ -29,7 +32,7 @@ export function Records({ org, me, openId, onSel }: { org: string; me: SvMe; ope
       {([["all", "الكل"], ["mine", "بانتظار عملي"], ["review", "بانتظار اعتمادي"], ["teacher", "تخصّني كمعلم"], ["handover", "تحتاج تسليمًا"]] as const).map(([k, l]) => <Button key={k} size="sm" variant={f === k ? "default" : "outline"} onClick={() => setF(k)}>{l} <span className="text-xs opacity-70">({all.filter((r) => k === "all" || (k === "mine" && r.can_work) || (k === "review" && r.can_approve) || (k === "teacher" && r.is_teacher) || (k === "handover" && r.needs_handover)).length})</span></Button>)}
       {creatable && <Button size="sm" className="ms-auto" onClick={() => setCreating(true)}><FilePlus2 className="size-4" />نموذج جديد</Button>}
     </div>
-    {creating && <NewRecord org={org} me={me} onDone={(id) => { setCreating(false); if (id) { q.refetch(); onSel(id); } }} />}
+    {creating && <NewRecord org={org} me={me} preset={use} onDone={(id) => { setCreating(false); if (id) { q.refetch(); onSel(id); } }} />}
     {!rows.length ? <EmptyState title={all.length ? "لا سجلات في هذا التصنيف" : "لا توجد سجلات إشرافية بعد"} hint={creatable ? "ابدأ من «نموذج جديد»: اختر النموذج والمعلم، واحفظه مسودة، ثم أكمله وأرسله للمراجعة." : me.owner ? "ابدأ بإسناد مشرف إلى فرع ومعلمين من تبويب «الإسناد الإشرافي»." : "تظهر هنا السجلات التي تخصك بعد إرسالها."} />
       : <ul className="grid gap-3 md:grid-cols-2">{rows.map((r) => <li key={r.id}><button type="button" onClick={() => onSel(r.id)} className="w-full rounded-2xl border bg-card p-4 text-start transition hover:border-primary hover:shadow-md">
         <div className="flex items-start justify-between gap-2"><span className="font-bold">{r.title}</span><StatusPill s={r.status} /></div>
@@ -40,10 +43,10 @@ export function Records({ org, me, openId, onSel }: { org: string; me: SvMe; ope
   </div>;
 }
 
-function NewRecord({ org, me, onDone }: { org: string; me: SvMe; onDone: (id?: string) => void }) {
+function NewRecord({ org, me, preset, onDone }: { org: string; me: SvMe; preset?: string | undefined; onDone: (id?: string) => void }) {
   const forms = useQuery({ queryKey: ["sv-forms", org], queryFn: async () => { const r = await db.rpc("sv_form_list", { _org: org }); if (r.error) throw r.error; return r.data as SvForm[]; } });
   const schools = me.schools.filter((s) => s.supervisor || s.principal || s.teacher || s.dept_head);
-  const [school, setSchool] = useState(schools[0]?.id ?? ""); const [key, setKey] = useState(""); const [teacher, setTeacher] = useState(""); const [busy, setBusy] = useState(false);
+  const [school, setSchool] = useState(schools[0]?.id ?? ""); const [key, setKey] = useState(preset ?? ""); const [teacher, setTeacher] = useState(""); const [busy, setBusy] = useState(false);
   const sc = me.schools.find((s) => s.id === school);
   const options = useMemo(() => { const pub = (forms.data ?? []).filter((f) => f.status === "published" && f.org_id && (!f.school_id || f.school_id === school));
     const best = new Map<string, SvForm>(); for (const f of pub) { const b = best.get(f.key); const rank = (x: SvForm) => (x.school_id ? 2 : x.org_id ? 1 : 0) * 1000 + x.version; if (!b || rank(f) > rank(b)) best.set(f.key, f); }
@@ -59,6 +62,7 @@ function NewRecord({ org, me, onDone }: { org: string; me: SvMe; onDone: (id?: s
       {form?.spec.teacher && <label className="text-sm">المعلم<select aria-label="المعلم" className={selectCls("mt-1 w-full")} value={teacher} onChange={(e) => setTeacher(e.target.value)}><option value="">— اختر —</option>{(teachers.data ?? []).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
         {teachers.data && !teachers.data.length && <span className="mt-1 block text-xs text-muted-foreground">لا يوجد معلمون ضمن نطاقك الحالي في هذا الفرع.</span>}</label>}
     </div>
+    {preset && !forms.isLoading && !options.some((f) => f.key === preset) && <p className="mt-2 text-sm text-destructive">النموذج المختار غير متاح لك للإنشاء في هذا الفرع (يحتاج اعتمادًا للمؤسسة ودورًا مناسبًا أو إسنادًا ساريًا).</p>}
     {!options.length && !forms.isLoading && <p className="mt-2 text-sm text-muted-foreground">لا توجد نماذج يمكنك إنشاؤها في هذا الفرع الآن. المشرف يحتاج إسنادًا ساريًا.</p>}
     {form && <p className="mt-2 text-xs text-muted-foreground">{form.purpose} — الإصدار {form.version}</p>}
     <div className="mt-3 flex gap-2"><Button disabled={busy || !form || (!!form.spec.teacher && !teacher)} onClick={create}><FilePlus2 className="size-4" />إنشاء مسودة</Button><Button variant="ghost" onClick={() => onDone()}>إلغاء</Button></div>
@@ -68,7 +72,7 @@ function NewRecord({ org, me, onDone }: { org: string; me: SvMe; onDone: (id?: s
 function RecordView({ id, org, onBack }: { id: string; org: string; onBack: () => void }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["sv-rec", id], retry: false, queryFn: async () => { const r = await db.rpc("sv_rec_get", { _id: id }); if (r.error) throw r.error; return r.data as SvRecordFull; } });
-  const [data, setData] = useState<Record<string, unknown> | null>(null); const [busy, setBusy] = useState(false); const [comment, setComment] = useState("");
+  const [data, setData] = useState<Record<string, unknown> | null>(null); const [busy, setBusy] = useState(false); const [comment, setComment] = useState(""); const [mode, setMode] = useState<"fill" | "preview" | "print">("fill"); const [copy, setCopy] = useState<"full" | "teacher">("full");
   const editRev = useRef<number | null>(null);
   const dirty = (data !== null && JSON.stringify(data) !== JSON.stringify(q.data?.data ?? {})) || !!comment;
   const guard = useUnsaved(dirty);
@@ -84,18 +88,28 @@ function RecordView({ id, org, onBack }: { id: string; org: string; onBack: () =
   }
   async function back() { await guard.leave(onBack); }
   const editing = r.can_work;
+  const teacherOnly = !!r.private_hidden || (r.is_teacher && !r.can_work && !r.can_approve);
+  const acts = [...r.events].reverse().filter((e) => ["submit", "request_info", "approve", "reopen", "ack", "handover"].includes(e.action)).map((e) => ({ label: ACTION_LABEL[e.action] ?? e.action, who: e.actor, at: riyadhText(e.at) }));
+  const html = mode === "print" ? formPrintHtml(spec, cur, { title: r.title, version: r.form_version, branch: r.school, recordId: r.id, teacher: r.teacher, author: r.author, status: REC_STATUS[r.status], source: r.form_snapshot.source.type === "official" ? `مستند إلى: ${r.form_snapshot.source.title} — ${r.form_snapshot.source.issuer}` : "نموذج داخلي — لا يدّعي اعتمادًا رسميًا.", actions: acts, teacherCopy: teacherOnly || copy === "teacher" }) : "";
+  const stages: [string, boolean][] = [["مسودة", true], ["أُرسل للمراجعة", !!r.submitted_at], [r.status === "needs_info" ? "مطلوب استكماله" : "اعتماد المدير", r.status === "approved"], ...(r.teacher_id ? [["اطلاع المعلم", !!r.teacher_ack_at] as [string, boolean]] : [])];
   return <div className="space-y-4">
     <Button variant="ghost" size="sm" onClick={back}><ArrowRight className="size-4" />العودة إلى السجلات</Button>
     <header className="rounded-2xl border bg-card p-4">
-      <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">{r.title}</h2><StatusPill s={r.status} /><span className="text-xs text-muted-foreground">الإصدار {r.form_version}</span></div>
+      <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">{r.title}</h2><StatusPill s={r.status} /><span className="text-xs text-muted-foreground">الإصدار {r.form_version} · رقم السجل <bdi dir="ltr">{recordNo(r.id)}</bdi></span></div>
       <p className="mt-1 text-sm text-muted-foreground">{r.school}{r.teacher ? ` — المعلم: ${r.teacher}` : ""} · أعدّه {r.author}{r.handler ? ` · يتابعه ${r.handler}` : ""}{r.approver ? ` · اعتمده ${r.approver}` : ""}</p>
       <p className="mt-2 flex items-start gap-1 text-xs text-muted-foreground"><ShieldCheck className="mt-0.5 size-3.5 shrink-0" />{r.form_snapshot.source.type === "official" ? <>مستند إلى: {r.form_snapshot.source.title} — {r.form_snapshot.source.issuer}، {r.form_snapshot.source.version} (تحقق {r.form_snapshot.source.checked_on}). {r.form_snapshot.source.limits}</> : "نموذج داخلي مقترح — لا يستند إلى وثيقة رسمية متحقق منها."}</p>
+      <ol aria-label="مراحل السجل" className="mt-3 flex flex-wrap gap-1.5 text-xs">{stages.map(([l, ok], i) => <li key={i} className={`flex items-center gap-1 rounded-full border px-2 py-0.5 ${ok ? "border-success/40 bg-success/10" : "text-muted-foreground"}`}>{ok ? <CheckCircle2 className="size-3.5 text-success" /> : <span aria-hidden className="size-3.5 rounded-full border" />}{l}<span className="sr-only">{ok ? " (تم)" : " (لم يتم)"}</span></li>)}</ol>
+      {r.private_hidden && <p className="mt-2 text-xs text-muted-foreground">بعض البنود الداخلية لا تظهر في نسختك.</p>}
       {r.needs_reason && r.status === "needs_info" && <p className="mt-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive"><b>المطلوب استكماله:</b> {r.needs_reason}</p>}
       {r.needs_handover && <p className="mt-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">انتهى إسناد المشرف الذي أعدّ هذا السجل. يحدد المدير أو المالك مسؤولًا مخوّلًا لمتابعته.</p>}
     </header>
     {editing && <div className={`rounded-xl border p-3 text-sm ${miss.length ? "border-destructive/30 bg-destructive/5" : "border-success/30 bg-success/5"}`}>
       {miss.length ? <><b>يمكن حفظ المسودة ناقصة.</b> قبل الإرسال أكمل: {miss.join("، ")}</> : "اكتملت الحقول المطلوبة، ويمكن الإرسال للمراجعة."}{dirty && <span className="ms-2 font-semibold text-primary">• تغييرات غير محفوظة</span>}</div>}
-    <Filler spec={spec} data={cur} onChange={(d) => { if (editRev.current === null) editRev.current = r.rev; guard.changed(); setData(d); }} readOnly={!editing} missing={miss} />
+    <nav aria-label="طريقة العرض" className="flex flex-wrap gap-1">{([["fill", editing ? "التعبئة" : "عرض السجل"], ...(editing ? [["preview", "معاينة قبل الإرسال"]] : []), ["print", "شكل الطباعة"]] as [typeof mode, string][]).map(([k, l]) => <Button key={k} size="sm" variant={mode === k ? "default" : "outline"} onClick={() => setMode(k)}>{k === "print" ? <Printer className="size-4" /> : k === "preview" ? <Eye className="size-4" /> : null}{l}</Button>)}
+      {mode === "print" && !teacherOnly && <select aria-label="نسخة الطباعة" className={selectCls("", true)} value={copy} onChange={(e) => setCopy(e.target.value as "full" | "teacher")}><option value="full">نسخة كاملة</option><option value="teacher">نسخة المعلم (دون البنود الداخلية)</option></select>}</nav>
+    {mode === "fill" && (editing ? <StepFiller spec={spec} data={cur} onChange={(d) => { if (editRev.current === null) editRev.current = r.rev; guard.changed(); setData(d); }} missing={miss} /> : <Filler spec={spec} data={cur} readOnly hidePrivate={teacherOnly} />)}
+    {mode === "preview" && <div className="space-y-2"><p className="text-sm text-muted-foreground">هكذا سيظهر السجل للمراجع بعد الإرسال. لم يُحفظ أي تغيير بعد{dirty ? " (لديك تغييرات غير محفوظة)" : ""}.</p><Filler spec={spec} data={cur} readOnly />{miss.length > 0 && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">ناقص قبل الإرسال: {miss.join("، ")}</p>}</div>}
+    {mode === "print" && <PrintPreview html={html} title={r.title} />}
     {r.teacher_id && r.status !== "draft" && <section className="rounded-2xl border bg-card p-4">
       <h3 className="mb-2 flex items-center gap-2 font-bold"><UserCheck className="size-4" />اطلاع المعلم وتعقيبه</h3>
       <p className="text-xs text-muted-foreground">الاطلاع لا يعني الموافقة، ولا يغني عن مراجعة المدير.</p>
