@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-17 (prompt-441): No grants or database rules changed. Supervision work filters and plan/visit reports use caller-scoped RPC results only; visit report includes only returned recommendations/reflections/events, never file URLs or a privileged form read. Teacher comment after approved visit is now visible in the UI, matching the existing server rule; acknowledgment and approval remain separate. Ended supervisor direct detail remains refused.
+
 2026-11-16 (targeting empty roster): No permissions changed. Exam roster remains scoped to the chosen authorized course's section/year and active enrollments through the browser RLS client. Search is disabled before course selection; no-selection, empty enrollment and no matches are distinguished.
 Follow-up: homework creation uses the same scoped cache dimensions and explicit loading/error/no-selection/empty states; family lookups expose retrieval failure instead of pretending there is no linked student. Bubble scan is disabled until targets load successfully and are nonempty. Existing target, publication, join and history rules were read and left unchanged.
 

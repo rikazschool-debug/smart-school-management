@@ -3,6 +3,11 @@
 Status values: **done** (server + browser evidence), **partial** (built, some tests missing), **open** (not built), **blocked** (external).
 Updated: 2026-11-01.
 
+## 2026-11-17 — prompt-441 supervision continuation (partial)
+- Added year/term and teacher/course filters, plan-period date overlap, clear filters, snapshot plan report and caller-scoped visit-summary report via common Excel/PDF/Arabic print. Added visit exit warning, plan-scope dirty tracking, review-navigation confirmation, copy-goal responsible/deadline reset, and exposed the already-authorized teacher comment after approved visit.
+- 21 isolated checks pass. Real sequential browser: principal incomplete draft save/leave/readback; principal full plan submit → owner reasoned return → principal correction/resubmit → owner independent approval/readback (execution not started); principal self-approval refused; schedule/reschedule/reasoned cancellation with reload; plan/visit Excel and PDF downloaded, Arabic PDF rendered and print inspected; teacher mobile comment persisted after reload with approved status; owner and both teachers scoped detail without overflow; ended supervisor direct RPC refused. No database timeout or automatic retry. Two selector mismatches corrected against the same state; do not label them database pressure.
+- Previous 2a9a0e3d content verified in git tree; GitHub commit exists (200) but zero Actions runs matched. Continuation code a68a0797 absent on GitHub at read (422); report saving creates a later identifier. No publish/VPS/messages/new accounts/membership changes/cleanup/migrations or Malki writes. Full stage-3 acceptance remains open; see docs/supervision-stage3-status.md for missing implementation versus unverified journeys.
+
 ## 2026-11-16 — prompt-399 answer key + photo improvements
 - Teacher bubble panel shows the per-model key (from question correct answers) and prints a model answer sheet; no key upload needed.
 - Photo grading: auto clarify, brightness/contrast, rotate, auto-orientation, marked preview. Evidence: exam-model tests (dim sheet unreadable before, read after); exam-scan-journey on a rotated faded synthetic photo → 3/5, blank Q3 left for teacher. Real phone camera on paper: غير متحقق.
