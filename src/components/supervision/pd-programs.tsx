@@ -12,7 +12,7 @@ import { arabicError, useSession } from "@/lib/session";
 import { printReport } from "@/lib/export";
 import { IMPACT, impactNeedsEvidence, type Visit } from "./work-model";
 import { riyadhText, type SvMe } from "./model";
-import { ANON_NOTE, ATTEND, ENROLL, INTERNAL_CERT, MODE, OUTCOME_KIND, OUTCOME_STATE, outcomeLine, PROG_STATUS, validMeetingUrl, verifiedHours, type Feedback, type Outcome, type Program } from "./pd-model";
+import { ANON_NOTE, ATTEND, NEED_STATUS, PLAN_STATUS, ENROLL, INTERNAL_CERT, MODE, OUTCOME_KIND, OUTCOME_STATE, outcomeLine, PROG_STATUS, validMeetingUrl, verifiedHours, type Feedback, type Outcome, type Program } from "./pd-model";
 import { sv4 } from "./pd-api";
 import { useUnsaved } from "./use-unsaved";
 import type { PdData } from "./pd";
@@ -154,7 +154,7 @@ function OutcomeRow({ o, p, me, call }: { o: Outcome; p: Program; me: string; ca
 function Meetings({ d, fd, org }: { d: PdData; fd: PdData; org: string }) {
   const qc = useQueryClient(); const [link, setLink] = useState<{ m: string; kind: string; ref: string }>({ m: "", kind: "plan", ref: "" });
   const visits = useQuery({ queryKey: ["sv3-visits", org], enabled: fd.meetings.length > 0, retry: false, queryFn: async () => { const r = await db.rpc("sv3_visit_list", { _org: org }); if (r.error) throw r.error; return r.data as Visit[]; } });
-  const all = [...d.plans.map((p) => ({ kind: "plan", id: p.id, school: p.school_id, name: `خطة ${p.teacher} — إصدار ${p.version}` })), ...d.needs.map((n) => ({ kind: "need", id: n.id, school: n.school_id, name: `احتياج ${n.teacher}: ${n.domain}` })),
+  const all = [...d.plans.map((p) => ({ kind: "plan", id: p.id, school: p.school_id, name: `خطة ${p.teacher} — إصدار ${p.version} (${PLAN_STATUS[p.status] ?? p.status}) · ${p.id.slice(0, 4)}` })), ...d.needs.map((n) => ({ kind: "need", id: n.id, school: n.school_id, name: `احتياج ${n.teacher}: ${n.domain} (${NEED_STATUS[n.status] ?? n.status}) · ${n.id.slice(0, 4)}` })),
     ...(visits.data ?? []).map((v) => ({ kind: "visit", id: v.id, school: v.school_id, name: `زيارة ${v.teacher} — ${riyadhText(v.starts_at)}` })), ...d.programs.map((g) => ({ kind: "program", id: g.id, school: g.school_id, name: `برنامج ${g.title}` }))];
   const mSchool = fd.meetings.find((m) => m.id === link.m)?.school_id;
   const refs = all.filter((r) => r.kind === link.kind && (!mSchool || r.school === mSchool));
