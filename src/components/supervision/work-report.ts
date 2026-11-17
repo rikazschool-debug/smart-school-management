@@ -27,3 +27,23 @@ export function visitReport(v: VisitFull) {
   for (const e of v.events) rows.push(["سجل الإجراءات", events[e.action] ?? e.action, `${e.actor} · ${riyadhText(e.at)}`]);
   return { meta: { title: `تقرير الزيارة — ${v.teacher}`, school: v.school, filters: [riyadhText(v.starts_at), v.course], note: "التنفيذ واعتماد التوثيق واطلاع المعلم حالات مستقلة؛ التقرير ضمن نطاق الاطلاع الحالي" }, headers: ["القسم", "البند", "القيمة"], rows };
 }
+
+export type FollowupReportRow = { held_on: string; notes: string; evidence: string | null; impact: string; author: string };
+export function fullVisitReport(v: VisitFull, record: SvRecordFull | null, sessions: FollowupReportRow[]) {
+  const report = visitReport(v);
+  if (record) {
+    for (const section of record.form_snapshot.spec.sections) for (const field of section.fields) {
+      const value = record.data[field.key];
+      if (field.type === "indicators" && value && typeof value === "object") {
+        for (const item of field.items ?? []) {
+          const entry = (value as Record<string, { state?: string; level?: string; reason?: string }>)[item.code];
+          report.rows.push(["نموذج الزيارة", item.label, entry?.state === "nl" ? "لم يُلاحظ" : entry?.state === "na" ? `لا ينطبق — ${entry.reason ?? ""}` : entry?.level ?? "—"]);
+        }
+      } else if (Array.isArray(value)) for (const [i, row] of value.entries()) report.rows.push(["نموذج الزيارة", `${field.label} ${i+1}`, row && typeof row === "object" ? Object.entries(row).map(([k,v]) => `${labels[k] ?? k}: ${String(v ?? "")}`).join(" · ") : String(row)]);
+      else report.rows.push(["نموذج الزيارة", field.label, field.type === "datetime" ? riyadhText(typeof value === "string" ? value : null) : String(value ?? "—")]);
+    }
+    if (record.teacher_comment) report.rows.push(["المعلم", "التعقيب", record.teacher_comment]);
+  }
+  for (const s of sessions) report.rows.push(["جلسة متابعة", `${s.held_on} · ${s.author}`, `${s.notes} · ${s.impact === "not_measured" ? "لم يقس الأثر" : s.evidence ?? "—"}`]);
+  return report;
+}

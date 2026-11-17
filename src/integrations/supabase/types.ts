@@ -19253,6 +19253,8 @@ export type Database = {
           plan_id: string | null
           recommendation_id: string | null
           teacher_visible: boolean
+          validated_at: string | null
+          validation_hash: string | null
           visit_id: string | null
         }
         Insert: {
@@ -19262,6 +19264,8 @@ export type Database = {
           plan_id?: string | null
           recommendation_id?: string | null
           teacher_visible?: boolean
+          validated_at?: string | null
+          validation_hash?: string | null
           visit_id?: string | null
         }
         Update: {
@@ -19271,6 +19275,8 @@ export type Database = {
           plan_id?: string | null
           recommendation_id?: string | null
           teacher_visible?: boolean
+          validated_at?: string | null
+          validation_hash?: string | null
           visit_id?: string | null
         }
         Relationships: [
@@ -19463,6 +19469,7 @@ export type Database = {
           kind: string
           parent_id: string | null
           record_id: string
+          revises_id: string | null
           term_id: string | null
           updated_at: string
           year_id: string | null
@@ -19472,6 +19479,7 @@ export type Database = {
           kind?: string
           parent_id?: string | null
           record_id: string
+          revises_id?: string | null
           term_id?: string | null
           updated_at?: string
           year_id?: string | null
@@ -19481,6 +19489,7 @@ export type Database = {
           kind?: string
           parent_id?: string | null
           record_id?: string
+          revises_id?: string | null
           term_id?: string | null
           updated_at?: string
           year_id?: string | null
@@ -19499,6 +19508,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "sv_records"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv_plan_details_revises_id_fkey"
+            columns: ["revises_id"]
+            isOneToOne: false
+            referencedRelation: "sv_plan_details"
+            referencedColumns: ["record_id"]
           },
           {
             foreignKeyName: "sv_plan_details_term_id_fkey"
@@ -19742,6 +19758,7 @@ export type Database = {
           created_at: string
           ends_at: string
           focus: string
+          handled_by: string | null
           id: string
           kind: string
           org_id: string
@@ -19768,6 +19785,7 @@ export type Database = {
           created_at?: string
           ends_at: string
           focus?: string
+          handled_by?: string | null
           id?: string
           kind?: string
           org_id: string
@@ -19794,6 +19812,7 @@ export type Database = {
           created_at?: string
           ends_at?: string
           focus?: string
+          handled_by?: string | null
           id?: string
           kind?: string
           org_id?: string
@@ -24054,6 +24073,10 @@ export type Database = {
       _sv_rec_save_stage2: {
         Args: { _id: string; _p: Json; _rev: number }
         Returns: string
+      }
+      _sv3_file_seal: {
+        Args: { _file: string; _hash: string }
+        Returns: undefined
       }
       _sv3_plan_save_impl: {
         Args: { _id: string; _p: Json; _rev: number }
@@ -29056,6 +29079,20 @@ export type Database = {
         Args: { _plan?: string; _visit?: string }
         Returns: Json
       }
+      sv3_file_meta: {
+        Args: { _file: string; _write?: boolean }
+        Returns: Json
+      }
+      sv3_followup_handover: {
+        Args: {
+          _assignment: string
+          _reason: string
+          _rev: number
+          _to: string
+          _visit: string
+        }
+        Returns: undefined
+      }
       sv3_followup_list: { Args: { _visit: string }; Returns: Json }
       sv3_followup_save: {
         Args: { _p: Json; _recommendation: string }
@@ -29066,6 +29103,10 @@ export type Database = {
         Returns: undefined
       }
       sv3_plan_list: { Args: { _org: string }; Returns: Json }
+      sv3_plan_revision: {
+        Args: { _id: string; _reason: string; _rev: number }
+        Returns: string
+      }
       sv3_plan_save: {
         Args: { _id: string; _p: Json; _rev: number }
         Returns: string
