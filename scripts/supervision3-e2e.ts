@@ -21,14 +21,13 @@ const getUser = (who: string) => { const u = users[who]; if (!u) throw Error("mi
 const rpc = async (who: string, fn: string, args: Record<string, unknown>) => must(await getUser(who).c.rpc(fn, args), fn);
 const denied = async (who: string, fn: string, args: Record<string, unknown>, label: string) => { const r = await getUser(who).c.rpc(fn, args); check(label, !!r.error); };
 const owner = getUser("owner").c;
-const resume = process.argv.includes("--resume-setup");
-const org = resume ? "f3dbd494-9699-4f50-842e-8366f6fb1d36" : await rpc("owner", "create_organization", { _org_name: `إشراف المرحلة الثالثة ${Date.now()}`, _school_name: "فرع اختبار الخطط والزيارات" });
+const org = await rpc("owner", "create_organization", { _org_name: `إشراف المرحلة الثالثة ${Date.now()}`, _school_name: "فرع اختبار الخطط والزيارات" });
 const school = must(await owner.from("schools").select("id").eq("org_id", org).single(), "new school").id;
 for (const [who, role] of [["pr", "principal"], ["sup2", "supervisor"], ["t1", "teacher"], ["t2", "teacher"]]) {
   if (!who || !role) throw Error("fixture membership");
-  if (!resume) must(await admin.from("memberships").insert({ user_id: getUser(who).id, org_id: org, school_id: school, role }), "new synthetic membership");
+  must(await admin.from("memberships").insert({ user_id: getUser(who).id, org_id: org, school_id: school, role }), "new synthetic membership");
 }
-const ins = async (table: string, data: object) => resume ? must(await owner.from(table).select("*").eq("school_id", school).limit(1).single(), table) : must(await owner.from(table).insert({ ...data, school_id: school }).select().single(), table);
+const ins = async (table: string, data: object) => must(await owner.from(table).insert({ ...data, school_id: school }).select().single(), table);
 const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
 const term = await ins("terms", { name: "الأول", year_id: year.id, start_date: "2026-08-20", end_date: "2027-01-10" });
 const stage = await ins("stages", { name: "المتوسطة" }); const grade = await ins("grades", { name: "ثاني", stage_id: stage.id });
@@ -37,8 +36,8 @@ const dep = await ins("departments", { name: "العلوم" }); const subject = 
 const course = await ins("courses", { year_id: year.id, subject_id: subject.id, section_id: section.id });
 const teachers: string[] = [];
 for (const who of ["t1", "t2"]) {
-  const t = resume ? must(await admin.from("teachers").select("*").eq("school_id", school).eq("user_id", getUser(who).id).single(), "fixture teacher") : must(await admin.from("teachers").insert({ school_id: school, full_name: who === "t1" ? "معلم الزيارة الاصطناعي" : "معلم التبادل الاصطناعي", user_id: getUser(who).id, email: getUser(who).email }).select().single(), "fixture teacher"); teachers.push(t.id);
-  if (!resume && who === "t1") must(await admin.from("teacher_assignments").insert({ school_id: school, teacher_id: t.id, course_id: course.id, start_date: "2026-08-20", status: "approved" }), "fixture course assignment");
+  const t = must(await admin.from("teachers").insert({ school_id: school, full_name: who === "t1" ? "معلم الزيارة الاصطناعي" : "معلم التبادل الاصطناعي", user_id: getUser(who).id, email: getUser(who).email }).select().single(), "fixture teacher"); teachers.push(t.id);
+  if (who === "t1") must(await admin.from("teacher_assignments").insert({ school_id: school, teacher_id: t.id, course_id: course.id, start_date: "2026-08-20", status: "approved" }), "fixture course assignment");
 }
 const teacher = teachers[0], peer = teachers[1]; if (!teacher || !peer) throw Error("teachers missing");
 const assignment = await rpc("owner", "sv_asg_save", { _id: null, _rev: null, _p: { school_id: school, supervisor_id: getUser("sup2").id, teacher_ids: teachers, course_ids: [course.id], subject_ids: [subject.id], starts_at: new Date(Date.now() - 60000).toISOString(), ends_at: new Date(Date.now() + 86400000).toISOString(), reason: "اختبار المرحلة الثالثة فقط" } });
