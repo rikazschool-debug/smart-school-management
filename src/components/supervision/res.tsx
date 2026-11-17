@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, BookMarked, BriefcaseBusiness, FilePlus2, Inbox, Printer } from "lucide-react";
+import { ArrowRight, BarChart3, BookMarked, BriefcaseBusiness, FilePlus2, Inbox, Printer } from "lucide-react";
 import { Portfolio } from "./pf";
+import { Dashboard } from "./dash";
 import { db, type Row } from "@/components/crud-page";
 import { Uploader } from "@/components/homework/files";
 import { MaterialFileViewer } from "@/components/comm/material-file-viewer";
@@ -32,8 +33,9 @@ export function Resources({ org, me, sp, go }: { org: string; me: SvMe; sp: SvSe
       <Button variant={view === "library" ? "default" : "ghost"} onClick={() => go({ tab: "resources", rs: "library" })}><BookMarked />النشرات والموارد المنشورة</Button>
       {(canWrite || lead) && <Button variant={view === "manage" ? "default" : "ghost"} onClick={() => go({ tab: "resources", rs: "manage" })}><Inbox />المسودات والمراجعة</Button>}
       <Button variant={view === "portfolio" ? "default" : "ghost"} onClick={() => go({ tab: "resources", rs: "portfolio" })}><BriefcaseBusiness />الملف المهني</Button>
+      <Button variant={view === "dashboard" ? "default" : "ghost"} onClick={() => go({ tab: "resources", rs: "dashboard" })}><BarChart3 />لوحة المؤشرات</Button>
     </nav>
-    {view === "portfolio" ? <Portfolio org={org} me={me} go={go} /> : <>
+    {view === "portfolio" ? <Portfolio org={org} me={me} go={go} /> : view === "dashboard" ? <Dashboard org={org} go={go} /> : <>
     <p className="text-sm text-muted-foreground">{INTERNAL_NOTE} يُكتب المصدر وحقوق الاستخدام لكل مورد، ولا تُنشر الشواهد أو بيانات الطلاب تلقائيًا. تظهر الموارد المنشورة أيضًا في «المكتبة الرقمية».</p>
     {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> :
       sp.id ? <ResourceDetailView id={sp.id} onBack={() => open()} onOpen={(id) => open(id)} /> :

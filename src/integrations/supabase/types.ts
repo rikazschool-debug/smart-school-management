@@ -30970,6 +30970,10 @@ export type Database = {
         Returns: Json
       }
       sv5_compare: { Args: { _a: string; _b: string }; Returns: Json }
+      sv5_dash: {
+        Args: { _from: string; _org: string; _school: string; _to: string }
+        Returns: Json
+      }
       sv5_import_confirm: {
         Args: {
           _file: string

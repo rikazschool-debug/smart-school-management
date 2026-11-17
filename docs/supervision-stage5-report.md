@@ -71,5 +71,19 @@
 ### Not verified
 - Portfolio PDF/Excel file contents (print only); a teacher working in two branches.
 
+## Batch 5: التقارير ولوحة المؤشرات — implemented and tested on the test DB
+- RPC sv5_dash(_org,_school,_from,_to) (read-only, ≤ 1 year): nine indicators computed only over rows the caller may read through each source's own read rule (records, visits, dev plans, PD attendance, measures, actions, impact, portfolio, resources). Scope per branch is reported (owner / principal / supervisor with live assignment / teacher own data).
+- Each indicator returns definition, denominator definition, numerator, denominator, period, last update and its rows (max 300 shown, totals over all). States: value / «صفر» (denominator > 0, numerator 0) / «لا توجد بيانات» / «لم يُقس» (measures, impact). The UI never prints 0 for the last two.
+- Guidance/psychological/social cases (edu_*) are never read by the dashboard, including for the owner. No ranking of teachers or branches.
+- UI «الموارد والتقارير ← لوحة المؤشرات»: period and branch filters, cards, drill-down table with links to each record, Excel/PDF/print for the summary and each indicator carrying period, branch and scope.
+
+### Evidence
+- /tmp/browser/sv449/dash.py (16 PASS): numerator/denominator equal listed rows, hours equal listed sessions, teachers see only own rows, supervisor scope ⊆ principal and limited to assigned branch, user without live assignment gets no supervision scope, other-branch principal refused, period limits, empty period gives «لا توجد بيانات» vs «لم يُقس», no guidance cases.
+- /tmp/browser/sv449/dashui.py: supervisor card 1 من 1 matches its one row, row opens the record, indicator print carries period and note; owner Excel matches server values (10 من 11, «لا توجد بيانات», 8); teacher at 390px shows «لا توجد بيانات»/«لم يُقس», no overflow. Screenshot /mnt/documents/supervision-dashboard.png.
+- Unit: src/test/supervision-dash.test.ts (5).
+
+### Not verified
+- «صفر» state with live data (covered by unit test only); PDF file contents of the dashboard.
+
 ## Remaining stage-5 batches («غير مكتملة»)
  portfolio, periodic reports and dashboard.

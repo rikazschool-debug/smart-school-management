@@ -1,5 +1,5 @@
 // Stage 5 supervisory resources and bulletins — client mirror. sv5_res_* on the server decides who writes, reviews, publishes and reads.
-export type ResView = "library" | "manage" | "portfolio";
+export type ResView = "library" | "manage" | "portfolio" | "dashboard";
 export const RES_KIND: Record<string, string> = { bulletin: "نشرة إشرافية", guide: "دليل", strategy: "استراتيجية تدريس", assessment_tool: "أداة تقويم", template: "قالب", training: "مادة تدريبية" };
 export const RES_STATUS: Record<string, string> = { draft: "مسودة", review: "بانتظار المراجعة", published: "منشور", retired: "إصدار سابق" };
 /** Shown on every resource: internal content is never presented as officially approved. */
