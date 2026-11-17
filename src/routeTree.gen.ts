@@ -108,7 +108,10 @@ import { Route as AuthenticatedAppVirtualClassesIndexRouteImport } from './route
 import { Route as ApiInternalAdmsSyncRouteImport } from './routes/api/internal/adms/sync'
 import { Route as ApiInternalMessagesDispatchRouteImport } from './routes/api/internal/messages/dispatch'
 import { Route as ApiPublicAdmissionsWordpressRouteImport } from './routes/api/public/admissions/wordpress'
+import { Route as ApiPublicAuthRequestCodeRouteImport } from './routes/api/public/auth/request-code'
 import { Route as ApiPublicAuthSendSmsRouteImport } from './routes/api/public/auth/send-sms'
+import { Route as ApiPublicAuthStudentLoginRouteImport } from './routes/api/public/auth/student-login'
+import { Route as ApiPublicAuthVerifyCodeRouteImport } from './routes/api/public/auth/verify-code'
 import { Route as ApiPublicHrAttendanceRouteImport } from './routes/api/public/hr/attendance'
 import { Route as ApiPublicMaqsamRecordingRouteImport } from './routes/api/public/maqsam/recording'
 import { Route as ApiPublicWatiWebhookRouteImport } from './routes/api/public/wati/webhook'
@@ -681,9 +684,26 @@ const ApiPublicAdmissionsWordpressRoute =
     path: '/api/public/admissions/wordpress',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAuthRequestCodeRoute =
+  ApiPublicAuthRequestCodeRouteImport.update({
+    id: '/api/public/auth/request-code',
+    path: '/api/public/auth/request-code',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAuthSendSmsRoute = ApiPublicAuthSendSmsRouteImport.update({
   id: '/api/public/auth/send-sms',
   path: '/api/public/auth/send-sms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAuthStudentLoginRoute =
+  ApiPublicAuthStudentLoginRouteImport.update({
+    id: '/api/public/auth/student-login',
+    path: '/api/public/auth/student-login',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAuthVerifyCodeRoute = ApiPublicAuthVerifyCodeRouteImport.update({
+  id: '/api/public/auth/verify-code',
+  path: '/api/public/auth/verify-code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHrAttendanceRoute = ApiPublicHrAttendanceRouteImport.update({
@@ -845,7 +865,10 @@ export interface FileRoutesByFullPath {
   '/api/internal/adms/sync': typeof ApiInternalAdmsSyncRoute
   '/api/internal/messages/dispatch': typeof ApiInternalMessagesDispatchRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
+  '/api/public/auth/request-code': typeof ApiPublicAuthRequestCodeRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
+  '/api/public/auth/student-login': typeof ApiPublicAuthStudentLoginRoute
+  '/api/public/auth/verify-code': typeof ApiPublicAuthVerifyCodeRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
   '/api/public/maqsam/recording': typeof ApiPublicMaqsamRecordingRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
@@ -956,7 +979,10 @@ export interface FileRoutesByTo {
   '/api/internal/adms/sync': typeof ApiInternalAdmsSyncRoute
   '/api/internal/messages/dispatch': typeof ApiInternalMessagesDispatchRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
+  '/api/public/auth/request-code': typeof ApiPublicAuthRequestCodeRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
+  '/api/public/auth/student-login': typeof ApiPublicAuthStudentLoginRoute
+  '/api/public/auth/verify-code': typeof ApiPublicAuthVerifyCodeRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
   '/api/public/maqsam/recording': typeof ApiPublicMaqsamRecordingRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
@@ -1070,7 +1096,10 @@ export interface FileRoutesById {
   '/api/internal/adms/sync': typeof ApiInternalAdmsSyncRoute
   '/api/internal/messages/dispatch': typeof ApiInternalMessagesDispatchRoute
   '/api/public/admissions/wordpress': typeof ApiPublicAdmissionsWordpressRoute
+  '/api/public/auth/request-code': typeof ApiPublicAuthRequestCodeRoute
   '/api/public/auth/send-sms': typeof ApiPublicAuthSendSmsRoute
+  '/api/public/auth/student-login': typeof ApiPublicAuthStudentLoginRoute
+  '/api/public/auth/verify-code': typeof ApiPublicAuthVerifyCodeRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
   '/api/public/maqsam/recording': typeof ApiPublicMaqsamRecordingRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
@@ -1184,7 +1213,10 @@ export interface FileRouteTypes {
     | '/api/internal/adms/sync'
     | '/api/internal/messages/dispatch'
     | '/api/public/admissions/wordpress'
+    | '/api/public/auth/request-code'
     | '/api/public/auth/send-sms'
+    | '/api/public/auth/student-login'
+    | '/api/public/auth/verify-code'
     | '/api/public/hr/attendance'
     | '/api/public/maqsam/recording'
     | '/api/public/wati/webhook'
@@ -1295,7 +1327,10 @@ export interface FileRouteTypes {
     | '/api/internal/adms/sync'
     | '/api/internal/messages/dispatch'
     | '/api/public/admissions/wordpress'
+    | '/api/public/auth/request-code'
     | '/api/public/auth/send-sms'
+    | '/api/public/auth/student-login'
+    | '/api/public/auth/verify-code'
     | '/api/public/hr/attendance'
     | '/api/public/maqsam/recording'
     | '/api/public/wati/webhook'
@@ -1408,7 +1443,10 @@ export interface FileRouteTypes {
     | '/api/internal/adms/sync'
     | '/api/internal/messages/dispatch'
     | '/api/public/admissions/wordpress'
+    | '/api/public/auth/request-code'
     | '/api/public/auth/send-sms'
+    | '/api/public/auth/student-login'
+    | '/api/public/auth/verify-code'
     | '/api/public/hr/attendance'
     | '/api/public/maqsam/recording'
     | '/api/public/wati/webhook'
@@ -1441,7 +1479,10 @@ export interface RootRouteChildren {
   ApiInternalAdmsSyncRoute: typeof ApiInternalAdmsSyncRoute
   ApiInternalMessagesDispatchRoute: typeof ApiInternalMessagesDispatchRoute
   ApiPublicAdmissionsWordpressRoute: typeof ApiPublicAdmissionsWordpressRoute
+  ApiPublicAuthRequestCodeRoute: typeof ApiPublicAuthRequestCodeRoute
   ApiPublicAuthSendSmsRoute: typeof ApiPublicAuthSendSmsRoute
+  ApiPublicAuthStudentLoginRoute: typeof ApiPublicAuthStudentLoginRoute
+  ApiPublicAuthVerifyCodeRoute: typeof ApiPublicAuthVerifyCodeRoute
   ApiPublicHrAttendanceRoute: typeof ApiPublicHrAttendanceRoute
   ApiPublicMaqsamRecordingRoute: typeof ApiPublicMaqsamRecordingRoute
   ApiPublicWatiWebhookRoute: typeof ApiPublicWatiWebhookRoute
@@ -2143,11 +2184,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAdmissionsWordpressRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/auth/request-code': {
+      id: '/api/public/auth/request-code'
+      path: '/api/public/auth/request-code'
+      fullPath: '/api/public/auth/request-code'
+      preLoaderRoute: typeof ApiPublicAuthRequestCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/auth/send-sms': {
       id: '/api/public/auth/send-sms'
       path: '/api/public/auth/send-sms'
       fullPath: '/api/public/auth/send-sms'
       preLoaderRoute: typeof ApiPublicAuthSendSmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/auth/student-login': {
+      id: '/api/public/auth/student-login'
+      path: '/api/public/auth/student-login'
+      fullPath: '/api/public/auth/student-login'
+      preLoaderRoute: typeof ApiPublicAuthStudentLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/auth/verify-code': {
+      id: '/api/public/auth/verify-code'
+      path: '/api/public/auth/verify-code'
+      fullPath: '/api/public/auth/verify-code'
+      preLoaderRoute: typeof ApiPublicAuthVerifyCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hr/attendance': {
@@ -2456,7 +2518,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiInternalAdmsSyncRoute: ApiInternalAdmsSyncRoute,
   ApiInternalMessagesDispatchRoute: ApiInternalMessagesDispatchRoute,
   ApiPublicAdmissionsWordpressRoute: ApiPublicAdmissionsWordpressRoute,
+  ApiPublicAuthRequestCodeRoute: ApiPublicAuthRequestCodeRoute,
   ApiPublicAuthSendSmsRoute: ApiPublicAuthSendSmsRoute,
+  ApiPublicAuthStudentLoginRoute: ApiPublicAuthStudentLoginRoute,
+  ApiPublicAuthVerifyCodeRoute: ApiPublicAuthVerifyCodeRoute,
   ApiPublicHrAttendanceRoute: ApiPublicHrAttendanceRoute,
   ApiPublicMaqsamRecordingRoute: ApiPublicMaqsamRecordingRoute,
   ApiPublicWatiWebhookRoute: ApiPublicWatiWebhookRoute,
@@ -2467,11 +2532,15 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
+
 import type { startInstance } from './start.ts'
+
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
+
     router: Awaited<ReturnType<typeof getRouter>>
+
     config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

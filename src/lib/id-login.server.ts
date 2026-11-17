@@ -1,0 +1,143 @@
+// Sign-in by national ID / iqama. Public endpoints (no session yet): every check runs in service-only SQL (_idl_*),
+// errors returned to the browser are generic, and the phone number is only shown masked. Success returns a one-time
+// magic-link token hash for an EXISTING account — no account is ever created here.
+import { sendWatiOtp } from "@/lib/wati-otp";
+import { idLoginMessage, maskPhone } from "@/lib/id-login";
+
+const UUID = /^[0-9a-f-]{36}$/i;
+
+async function admin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
+async function tokenFor(uid: string): Promise<{ token?: string; error?: string }> {
+  const sb = await admin();
+  const { data: u } = await sb.auth.admin.getUserById(uid);
+  const email = u?.user?.email;
+  if (!email) return { error: idLoginMessage("no_account") };
+  const { data, error } = await sb.auth.admin.generateLink({ type: "magiclink", email });
+  if (error || !data?.properties?.hashed_token) return { error: idLoginMessage("server") };
+  return { token: data.properties.hashed_token };
+}
+
+function code6() {
+  const b = new Uint32Array(1);
+  crypto.getRandomValues(b);
+  return String(b[0]! % 1_000_000).padStart(6, "0");
+}
+
+type Portal = "guardian" | "staff";
+async function portalOk(uid: string, portal: Portal) {
+  const sb = await admin();
+  const { data } = await sb.rpc("_idl_portal_ok" as never, { _uid: uid, _portal: portal } as never);
+  return data === true;
+}
+const WRONG_PORTAL = {
+  guardian: "هذا الحساب ليس حساب ولي أمر. استخدم بوابة «الإدارة والموظفون».",
+  staff: "هذا الحساب ليس حساب موظف. استخدم بوابة «ولي الأمر» أو «الطالب».",
+};
+
+export async function requestIdCode(data: { nid: string; portal: Portal }) {
+  if (!/^[12]\d{9}$/.test(data.nid)) return { error: idLoginMessage("invalid") };
+  const sb = await admin();
+  const code = code6();
+  const { data: r, error } = await sb.rpc(
+    "_idl_issue" as never,
+    { _nid: data.nid, _code: code } as never,
+  );
+  if (error) return { error: idLoginMessage("server") };
+  const res = r as { error?: string; challenge?: string; phone?: string; user_id?: string };
+  if (res.error || !res.challenge || !res.phone)
+    return { error: idLoginMessage(res.error ?? "server") };
+  if (!res.user_id || !(await portalOk(res.user_id, data.portal))) {
+    await sb.rpc(
+      "_idl_mark_sent" as never,
+      { _challenge: res.challenge, _status: "failed", _channel: "portal" } as never,
+    );
+    return { error: WRONG_PORTAL[data.portal] };
+  }
+
+  const baseUrl = process.env["WATI_API_BASE_URL"],
+    token = process.env["WATI_API_TOKEN"];
+  let sent = false;
+  if (baseUrl && token) {
+    const identity = await sb.rpc("_rk_delivery_identity" as never);
+    const instance = (identity.data as { instance?: string } | null)?.instance;
+    if (instance) {
+      const ref = `rk-${instance}-otp-${res.challenge}`;
+      const registered = await sb.rpc(
+        "_rk_register_id_otp" as never,
+        { _challenge: res.challenge, _ref: ref } as never,
+      );
+      if (!registered.error) {
+        const w = await sendWatiOtp(
+          {
+            baseUrl,
+            token,
+            template: "rikaz_login_otp",
+            param: "1",
+            channel: process.env["WATI_CHANNEL"]?.trim() || undefined,
+          },
+          res.phone,
+          code,
+          ref,
+        );
+        sent = w.ok;
+        await sb
+          .from("otp_sends" as never)
+          .update({
+            status: sent ? "accepted" : w.detail === "unknown" ? "unknown" : "failed",
+            updated_at: new Date().toISOString(),
+          } as never)
+          .eq("local_message_id", ref)
+          .eq("status", "requested");
+      }
+    }
+  }
+  // SMS fallback: no SMS provider is configured for this project yet (external requirement); the code is never sent elsewhere.
+  await sb.rpc(
+    "_idl_mark_sent" as never,
+    {
+      _challenge: res.challenge,
+      _status: sent ? "accepted" : "failed",
+      _channel: "whatsapp",
+    } as never,
+  );
+  if (!sent) return { error: idLoginMessage("send_failed") };
+  return { challenge: res.challenge, masked: maskPhone(res.phone) };
+}
+
+export async function verifyIdCode(data: { challenge: string; code: string; portal: Portal }) {
+  if (!UUID.test(data.challenge) || data.code.length !== 6)
+    return { error: idLoginMessage("wrong") };
+  const sb = await admin();
+  const { data: r, error } = await sb.rpc(
+    "_idl_verify" as never,
+    { _challenge: data.challenge, _code: data.code } as never,
+  );
+  if (error) return { error: idLoginMessage("server") };
+  const res = r as { error?: string; user_id?: string };
+  if (res.error || !res.user_id) return { error: idLoginMessage(res.error ?? "server") };
+  if (!(await portalOk(res.user_id, data.portal))) return { error: WRONG_PORTAL[data.portal] };
+  return tokenFor(res.user_id);
+}
+
+export async function studentSignIn(data: { nid: string; csmart: string }) {
+  const sb = await admin();
+  const { data: r, error } = await sb.rpc(
+    "_idl_student" as never,
+    { _nid: data.nid, _csmart: data.csmart } as never,
+  );
+  if (error) return { error: idLoginMessage("server") };
+  const res = r as { error?: string; user_id?: string };
+  if (res.error || !res.user_id)
+    return { error: idLoginMessage(res.error === "locked" ? "locked" : "student_mismatch") };
+  // ID + C-Smart is the student's credential: no initial-password page, the portal opens directly.
+  const { error: fe } = await sb.rpc(
+    "_idl_student_finish" as never,
+    { _uid: res.user_id } as never,
+  );
+  if (fe) return { error: idLoginMessage("server") };
+  return tokenFor(res.user_id);
+}
