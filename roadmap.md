@@ -158,7 +158,7 @@
 ## Supervision — prompt 447/448 (stage 3/4 closure + stage 5 + forms library)
 - [x] HR verified PD hours screen (/app/hr/training, sv4_hr_hours_org) — tested RPC + browser desktop/mobile
 - [x] Browser: meeting link to plan/need/visit, save & reopen (sv448/meetui.py; visit option added, names shown, mobile overflow fixed)
-- [ ] Browser: «إفادة داخلية» print with correct hours
+- [x] Browser: «إفادة داخلية» print with correct hours (sv448/cert.py)
 - [ ] Stage 4 reports Arabic print + PDF/Excel row match
 - [x] Evaluation privacy: accepted only while open, breakdown only after close with ≥3, honest wording (sv448/fbpriv.py)
 - [ ] Camera / GitHub (external — record blocker)
