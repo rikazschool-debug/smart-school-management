@@ -19,13 +19,15 @@ export function PlansVisits({ org, me, sp, go }: { org: string; me: SvMe; sp: Sv
   const [creating, setCreating] = useState(false); const [school, setSchool] = useState(""); const [search, setSearch] = useState(""); const [state, setState] = useState(""); const [calendar, setCalendar] = useState<"list" | "week" | "month">("list"); const [date, setDate] = useState(riyadhDay(me.now));
   const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [kind, setKind] = useState("");
   const view = sp.view ?? "plans"; const all = view === "plans" ? plans.data ?? [] : visits.data ?? [];
-  const filtered = all.filter((r) => (!school || r.school_id === school) && (!state || ("status" in r ? r.status : r.state) === state) && (!kind || r.kind === kind) && (!search || JSON.stringify([r.school, "purpose" in r ? r.purpose : r.title, "teacher" in r ? r.teacher : "", "course" in r ? r.course : "", r.author]).includes(search)) && (!("starts_at" in r) || ((!from || riyadhDay(r.starts_at) >= from) && (!to || riyadhDay(r.starts_at) <= to))));
+  const filtered = all.filter((r) => (!school || r.school_id === school) && (!state || ("status" in r ? r.status : state === "submitted" ? r.documentation_status : r.state) === state) && (!kind || r.kind === kind) && (!search || JSON.stringify([r.school, "purpose" in r ? r.purpose : r.title, "teacher" in r ? r.teacher : "", "course" in r ? r.course : "", r.author]).includes(search)) && (!("starts_at" in r) || ((!from || riyadhDay(r.starts_at) >= from) && (!to || riyadhDay(r.starts_at) <= to))));
   const canCreate = me.owner || me.schools.some((s) => s.supervisor || s.principal);
   const refresh = () => { setCreating(false); void plans.refetch(); void visits.refetch(); };
   const select = (id?: string) => go({ tab: "work", view, ...(id ? { id } : {}) }, false);
   if (sp.id && view === "visits") return <VisitDetail id={sp.id} org={org} me={me} onBack={() => select()} onDocument={(id) => go({ tab: "records", id }, false)} />;
   const selected = plans.data?.find((p) => p.id === sp.id);
-  if ((creating || sp.id) && view === "plans") return <PlanEditor org={org} me={me} plan={selected} plans={plans.data ?? []} onDone={(id) => { refresh(); select(id); }} onDocument={(id) => go({ tab: "records", id }, false)} />;
+  if (sp.id && view === "plans" && plans.isLoading) return <LoadingState />;
+  if (sp.id && view === "plans" && !selected) return <ErrorState message="الخطة غير موجودة أو خارج نطاقك الحالي" onRetry={() => plans.refetch()} />;
+  if ((creating || sp.id) && view === "plans") return <PlanEditor key={selected ? `${selected.id}:${selected.rev}` : "new"} org={org} me={me} plan={selected} plans={plans.data ?? []} onDone={(id) => { refresh(); select(id); }} onDocument={(id) => go({ tab: "records", id }, false)} />;
   if (creating && view === "visits") return <VisitEditor me={me} plans={plans.data ?? []} onDone={(id) => { refresh(); select(id); }} />;
   const q = view === "plans" ? plans : visits;
   if (q.isLoading) return <LoadingState />;
