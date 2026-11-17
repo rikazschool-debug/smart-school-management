@@ -116,7 +116,7 @@ function Board({ org, school, canCreate, canEdit }: { org: string; school: strin
 }
 
 function StatsPanel({ stats, buildings, cat, onCat }: { stats: ReturnType<typeof mapStats>; buildings: number; cat: string; onCat: (c: string) => void }) {
-  const tiles: [string, string, string?][] = [
+  const tiles: [string, string, (string | undefined)?][] = [
     ["المباني", String(buildings)], ["الغرف", String(stats.rooms)],
     ["السعة المسجّلة", stats.withCapacity ? `${stats.capacity} مقعد` : "لم تُسجَّل", stats.withCapacity && stats.withCapacity < stats.rooms ? `من ${stats.withCapacity} غرفة فقط` : undefined],
     ["بلا مسؤول", String(stats.noResp)], ["تحت الصيانة", String(stats.maintenance)], ["مغلقة", String(stats.closed)],
