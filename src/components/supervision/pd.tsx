@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpenCheck, Download, FileText, GraduationCap, Presentation, Printer, Users } from "lucide-react";
-import { toast } from "sonner";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +14,6 @@ import { PdTeachers } from "./pd-teachers";
 import { PdPlans } from "./pd-plans";
 import { PdPrograms } from "./pd-programs";
 
-export async function sv4(fn: string, args: Record<string, unknown>, okMsg?: string): Promise<unknown> {
-  const r = await db.rpc(fn, args); if (r.error) { toast.error(arabicError(r.error)); throw r.error; } if (okMsg) toast.success(okMsg); return r.data;
-}
 function useList<T>(key: string, fn: string, org: string) { return useQuery({ queryKey: ["sv4", key, org], retry: false, queryFn: async () => { const r = await db.rpc(fn, { _org: org }); if (r.error) throw r.error; return r.data as T; } }); }
 export type PdData = { teachers: PdTeacher[]; needs: Need[]; plans: DevPlan[]; programs: Program[]; meetings: PdMeeting[] };
 
