@@ -14,7 +14,7 @@ const COLS: Record<string, { k: string; l: string; t?: string }[]> = {
 };
 
 /** Renders a form spec in short sections. readOnly = preview or view of a sent record. */
-export function Filler({ spec, data, onChange, readOnly, missing = [], people }: { spec: SvSpec; data: Data; onChange?: (d: Data) => void; readOnly?: boolean; missing?: string[]; people?: { id: string; name: string }[] }) {
+export function Filler({ spec, data, onChange, readOnly, missing = [], people }: { spec: SvSpec; data: Data; onChange?: (d: Data) => void; readOnly?: boolean; missing?: string[]; people?: { id: string; name: string }[] | undefined }) {
   const set = (k: string, v: unknown) => onChange?.({ ...data, [k]: v });
   return <div className="space-y-4">
     {spec.sections.map((sec, si) => <fieldset key={si} className="rounded-2xl border bg-card p-4">
@@ -35,7 +35,7 @@ export function Filler({ spec, data, onChange, readOnly, missing = [], people }:
   </div>;
 }
 
-function FieldInput({ f, v, set, ro, plan, people }: { f: SvField; v: unknown; set: (v: unknown) => void; ro: boolean; plan?: boolean; people?: { id: string; name: string }[] }) {
+function FieldInput({ f, v, set, ro, plan, people }: { f: SvField; v: unknown; set: (v: unknown) => void; ro: boolean; plan?: boolean; people?: { id: string; name: string }[] | undefined }) {
   const id = `f-${f.key}`; const str = typeof v === "string" || typeof v === "number" ? String(v) : "";
   if (ro && ["text", "textarea", "date", "number", "select"].includes(f.type)) return <p className="whitespace-pre-wrap rounded-md bg-muted/40 px-3 py-2 text-sm">{str || "—"}</p>;
   switch (f.type) {
@@ -44,7 +44,7 @@ function FieldInput({ f, v, set, ro, plan, people }: { f: SvField; v: unknown; s
     case "number": return <Input id={id} type="number" min={0} inputMode="decimal" value={str} onChange={(e) => set(e.target.value === "" ? "" : Number(e.target.value))} />;
     case "datetime": return ro ? <p className="rounded-md bg-muted/40 px-3 py-2 text-sm">{riyadhText(str || null)}</p> : <Input id={id} type="datetime-local" value={toRiyadhInput(str || null)} onChange={(e) => set(fromRiyadhInput(e.target.value))} />;
     case "select": return <select id={id} className={selectCls("w-full")} value={str} onChange={(e) => set(e.target.value)}><option value="">— اختر —</option>{(f.options ?? []).map((o) => <option key={o}>{o}</option>)}</select>;
-    case "goals": case "actions": case "recs": return <Rows cols={plan && f.type === "goals" ? [{ k: "goal", l: "وصف الهدف" }, { k: "indicator", l: "مؤشر التحقق" }, { k: "baseline", l: "خط الأساس (عند توفره)" }, { k: "target", l: "المستهدف (عند انطباقه)" }, { k: "owner", l: "المسؤول" }, { k: "due", l: "الموعد", t: "date" }] : plan && f.type === "actions" ? [...(COLS.actions ?? []), { k: "state", l: "الحالة" }, { k: "proof", l: "دليل التنفيذ أو سبب التعذر" }] : (COLS[f.type] ?? [])} rows={(Array.isArray(v) ? v : []) as Row[]} set={set} ro={ro} label={f.label} people={plan ? people : undefined} />;
+    case "goals": case "actions": case "recs": return <Rows cols={plan && f.type === "goals" ? [{ k: "goal", l: "وصف الهدف" }, { k: "indicator", l: "مؤشر التحقق" }, { k: "baseline", l: "خط الأساس (عند توفره)" }, { k: "target", l: "المستهدف (عند انطباقه)" }, { k: "owner", l: "المسؤول" }, { k: "due", l: "الموعد", t: "date" }] : plan && f.type === "actions" ? [...(COLS["actions"] ?? []), { k: "state", l: "الحالة" }, { k: "proof", l: "دليل التنفيذ أو سبب التعذر" }] : (COLS[f.type] ?? [])} rows={(Array.isArray(v) ? v : []) as Row[]} set={set} ro={ro} label={f.label} people={plan ? people : undefined} />;
     case "list": { const items = (Array.isArray(v) ? v : []) as string[];
       return <div className="space-y-2">{items.map((x, i) => <div key={i} className="flex gap-2">{ro ? <p className="flex-1 rounded-md bg-muted/40 px-3 py-2 text-sm">{x}</p> : <><Input aria-label={`${f.label} ${i + 1}`} value={x} onChange={(e) => set(items.map((y, j) => (j === i ? e.target.value : y)))} /><Button type="button" variant="ghost" size="icon" aria-label="حذف" onClick={() => set(items.filter((_, j) => j !== i))}><Trash2 className="size-4" /></Button></>}</div>)}
         {!ro && <Button type="button" variant="outline" size="sm" onClick={() => set([...items, ""])}><Plus className="size-4" />إضافة بند</Button>}{ro && !items.length && <p className="text-sm text-muted-foreground">—</p>}</div>; }
@@ -64,7 +64,7 @@ function FieldInput({ f, v, set, ro, plan, people }: { f: SvField; v: unknown; s
   }
 }
 
-function Rows({ cols, rows, set, ro, label, people }: { cols: { k: string; l: string; t?: string }[]; rows: Row[]; set: (v: unknown) => void; ro: boolean; label: string; people?: { id: string; name: string }[] }) {
+function Rows({ cols, rows, set, ro, label, people }: { cols: { k: string; l: string; t?: string }[]; rows: Row[]; set: (v: unknown) => void; ro: boolean; label: string; people?: { id: string; name: string }[] | undefined }) {
   return <div className="space-y-2">
     {rows.map((r, i) => <div key={i} className="rounded-xl border bg-muted/20 p-3">
       <div className="mb-2 flex items-center justify-between text-xs font-semibold text-muted-foreground"><span>{label} {i + 1}</span>{!ro && <Button type="button" variant="ghost" size="sm" onClick={() => set(rows.filter((_, j) => j !== i))}><Trash2 className="size-4" />حذف</Button>}</div>
