@@ -15797,6 +15797,7 @@ export type Database = {
       }
       org_contractors: {
         Row: {
+          community_partner: boolean
           contact_name: string | null
           created_at: string
           created_by: string | null
@@ -15815,6 +15816,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          community_partner?: boolean
           contact_name?: string | null
           created_at?: string
           created_by?: string | null
@@ -15833,6 +15835,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          community_partner?: boolean
           contact_name?: string | null
           created_at?: string
           created_by?: string | null
