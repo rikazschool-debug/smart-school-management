@@ -27,7 +27,7 @@ export function workspacePages(p: SchoolPerms | undefined): NavKey[] {
   if (anyPermission(p, ["school_schedule.view", "schedule_drafts.view", "schedule_drafts.create", "schedule_drafts.edit", "schedule_drafts.generate", "schedule_drafts.publish", "schedule_drafts.revise", "schedule_day.view", "schedule_day.edit", "schedule_rooms.view", "schedule_rooms.edit", "schedule_loads.view", "schedule_loads.edit", "schedule_availability.view", "schedule_availability.edit", "schedule_requirements.view", "schedule_requirements.edit", "schedule_sub_policy.view", "schedule_sub_policy.edit", "bt_schedule.view"])) pages.push("schedule");
   if (p?.["bt_classroom.view"]) pages.push("classrooms");
   if (p?.["bt_homework.view"]) pages.push("homework", "tests");
-  for (const section of ["student_guidance", "gifted_care", "remedial_plans", "supervision_visits"] as const) if (anyPermission(p, [`${section}.view`, `${section}.record`, `${section}.manage`])) pages.push(section);
+  for (const section of ["student_guidance", "gifted_care", "remedial_plans"] as const) if (anyPermission(p, [`${section}.view`, `${section}.record`, `${section}.manage`])) pages.push(section);
   if (p?.["bt_chat_direct.use"] || p?.["bt_chat_groups.use"]) pages.push("communication");
   return pages;
 }

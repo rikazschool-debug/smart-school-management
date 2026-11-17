@@ -2,9 +2,9 @@ import type { NavKey } from "@/lib/roles";
 
 const NAVIGATION_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "الرئيسية", keys: ["home", "school_home", "schools"] },
-  { label: "إدارة المدرسة", keys: ["teachers", "admin", "duties", "supervision", "supervision_visits", "org_docs"] },
+  { label: "إدارة المدرسة", keys: ["teachers", "admin", "duties", "org_docs", "school_map"] },
   { label: "الطلاب والقبول", keys: ["admissions", "students", "guardians", "family_requests"] },
-  { label: "الشؤون التعليمية", keys: ["academic", "courses", "schedule", "classrooms", "virtual", "homework", "tests", "remedial_plans"] },
+  { label: "الشؤون التعليمية", keys: ["academic", "courses", "schedule", "classrooms", "virtual", "homework", "tests", "remedial_plans", "supervision"] },
   { label: "شؤون الطلاب", keys: ["attendance", "pickup", "station", "health", "student_guidance", "gifted_care", "family_visits"] },
   { label: "الأنشطة والفعاليات", keys: ["events"] },
   { label: "التواصل والتعاون", keys: ["communication", "comm_groups", "meetings", "collaboration", "circulars", "hub_notices", "hub_meetings", "hub_circulars"] },
