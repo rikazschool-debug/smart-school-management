@@ -13,6 +13,6 @@ describe("family attendance calendar", () => {
     expect(g.filter(Boolean).length).toBe(30);
   });
   it("unrecorded days are never counted as absent", () => {
-    expect(countBy([{ date: "2026-11-01", status: "present", note: null, recorded_at: "", updated_at: "" }]).absent).toBeUndefined();
+    expect(countBy([{ date: "2026-11-01", status: "present", note: null, recorded_at: "", updated_at: "" }])["absent"]).toBeUndefined();
   });
 });
