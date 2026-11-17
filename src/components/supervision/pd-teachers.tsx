@@ -40,7 +40,7 @@ function TeacherProfile({ id, me }: { id: string; me: SvMe }) {
       <p className="mt-1 text-sm">المقررات الحالية: {t.courses.length ? t.courses.map((c) => c.name).join("، ") : "لا إسناد ساري"}</p>
       <p className="mt-1 text-xs text-muted-foreground">{t.internal_visible ? "الملاحظات الداخلية تظهر للمشرف والإدارة فقط." : "تعرض ما يخصك وما شُورك معك."} شواهد خطط التطوير: {t.evidence}</p></header>
     <div className="grid gap-3 md:grid-cols-2">
-      <Sec title="الزيارات" n={t.visits.length}><ul className="space-y-1 text-sm">{t.visits.map((v) => <li key={v.id}>{riyadhText(v.starts_at)} · {v.kind === "peer" ? "تبادلية" : "صفية"} · {VISIT_STATE[v.state] ?? v.state}</li>)}</ul></Sec>
+      <Sec title="الزيارات" n={t.visits.length}><ul className="space-y-1 text-sm">{t.visits.map((v) => <li key={v.id}>{riyadhText(v.starts_at)} · {v.kind === "peer" ? "تبادلية" : "صفية"} · {(VISIT_STATE as Record<string, string>)[v.state] ?? v.state}</li>)}</ul></Sec>
       <Sec title="التوصيات" n={t.recommendations.length}><ul className="space-y-1 text-sm">{t.recommendations.map((r) => <li key={r.id}>{r.no}. {r.action} — {REC_STATE[r.state] ?? r.state}</li>)}</ul></Sec>
       <Sec title="خطط التطوير" n={t.plans.length}><ul className="space-y-1 text-sm">{t.plans.map((x) => <li key={x.id}>إصدار {x.version} · {PLAN_STATUS[x.status]} · {x.goals} أهداف · {x.activities} أنشطة</li>)}</ul></Sec>
       <Sec title="البرامج والساعات الموثقة" n={t.programs.length}><ul className="space-y-1 text-sm">{t.programs.map((g) => <li key={g.id}>{g.title} · {ENROLL[g.status]} · {g.hours} ساعة موثقة بالحضور</li>)}</ul></Sec>
