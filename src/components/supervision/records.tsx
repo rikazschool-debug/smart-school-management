@@ -101,7 +101,7 @@ function RecordView({ id, org, onBack }: { id: string; org: string; onBack: () =
       {r.teacher_comment && <p className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/40 p-3 text-sm"><b>تعقيب المعلم:</b> {r.teacher_comment}</p>}
       {r.is_teacher && <div className="mt-3 space-y-2">
         {!r.teacher_ack_at && <Button size="sm" variant="outline" disabled={busy} onClick={() => act("ack")}><Eye className="size-4" />اطلعت</Button>}
-        {r.status !== "approved" && <><Textarea aria-label="تعقيبك" placeholder="تعقيبك (اختياري)" value={comment} onChange={(e) => setComment(e.target.value)} rows={2} /><Button size="sm" variant="outline" disabled={busy || comment.trim().length < 3} onClick={() => act("comment", comment)}><MessageSquare className="size-4" />حفظ التعقيب</Button></>}
+        {(r.status !== "approved" || spec.key === "support_visit") && <><Textarea aria-label="تعقيبك" placeholder="تعقيبك (اختياري)" value={comment} onChange={(e) => setComment(e.target.value)} rows={2} /><Button size="sm" variant="outline" disabled={busy || comment.trim().length < 3} onClick={() => act("comment", comment)}><MessageSquare className="size-4" />حفظ التعقيب</Button></>}
       </div>}
     </section>}
     <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap gap-2 border-t bg-background/95 p-3 backdrop-blur">

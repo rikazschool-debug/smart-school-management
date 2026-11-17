@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarClock, CheckCircle2, FileText, Plus, Send, StopCircle } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/components/crud-page";
-import { askText } from "@/components/confirm";
+import { ask, askText } from "@/components/confirm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,15 +14,19 @@ import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { EvidencePanel } from "./evidence";
 import { fromRiyadhInput, REC_STATUS, riyadhText, toRiyadhInput, type SvMe } from "./model";
 import { REC_STATE, VISIT_STATE, riyadhDay, type Plan, type Recommendation, type Visit, type VisitFull, type WorkPool } from "./work-model";
+import { visitReport } from "./work-report";
 
 export function VisitEditor({ me, plans, visit, onDone }: { me: SvMe; plans: Plan[]; visit?: Visit; onDone: (id?: string) => void }) {
   const schools = me.schools.filter((s) => me.owner || s.principal || s.supervisor);
   const [school, setSchool] = useState(visit?.school_id ?? schools[0]?.id ?? ""); const [teacher, setTeacher] = useState(visit?.teacher_id ?? ""); const [course, setCourse] = useState(visit?.course_id ?? ""); const [kind, setKind] = useState(visit?.kind ?? "classroom"); const [plan, setPlan] = useState(visit?.plan_id ?? ""); const [peers, setPeers] = useState<string[]>(visit?.participant_ids ?? []);
   const [date, setDate] = useState(riyadhDay(visit?.starts_at ?? me.now)); const [start, setStart] = useState(toRiyadhInput(visit?.starts_at)); const [end, setEnd] = useState(toRiyadhInput(visit?.ends_at)); const [period, setPeriod] = useState(visit?.period_id ?? ""); const [purpose, setPurpose] = useState(visit?.purpose ?? ""); const [focus, setFocus] = useState(visit?.focus ?? ""); const [reason, setReason] = useState(""); const [busy, setBusy] = useState(false);
+  const dirty = school !== (visit?.school_id ?? schools[0]?.id ?? "") || teacher !== (visit?.teacher_id ?? "") || course !== (visit?.course_id ?? "") || kind !== (visit?.kind ?? "classroom") || plan !== (visit?.plan_id ?? "") || JSON.stringify(peers) !== JSON.stringify(visit?.participant_ids ?? []) || date !== riyadhDay(visit?.starts_at ?? me.now) || start !== toRiyadhInput(visit?.starts_at) || end !== toRiyadhInput(visit?.ends_at) || period !== (visit?.period_id ?? "") || purpose !== (visit?.purpose ?? "") || focus !== (visit?.focus ?? "") || !!reason;
+  useEffect(() => { if (!dirty) return; const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; }; window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h); }, [dirty]);
+  async function back() { if (!dirty || await ask("لديك تغييرات غير محفوظة. الخروج دون حفظ؟", { destructive: true, ok: "خروج دون حفظ" })) onDone(); }
   const pool = useQuery({ queryKey: ["sv3-pool", school], enabled: !!school, retry: false, queryFn: async () => { const r = await db.rpc("sv3_pool", { _school: school }); if (r.error) throw r.error; return r.data as WorkPool; } });
   const slots = useQuery({ queryKey: ["sv3-slots", school, teacher, course, date], enabled: !!school && !!teacher && !!course && !!date, retry: false, queryFn: async () => { const r = await db.rpc("sv3_available_slots", { _school: school, _teacher: teacher, _course: course, _date: date }); if (r.error) throw r.error; return r.data as { period_id: string; name: string; starts_at: string; ends_at: string }[]; } });
   async function save() { setBusy(true); try { const r = await db.rpc("sv3_visit_save", { _id: visit?.id ?? null, _rev: visit?.rev ?? null, _p: { school_id: school, teacher_id: teacher, course_id: course, kind, plan_id: plan || null, participant_ids: peers, starts_at: fromRiyadhInput(start), ends_at: fromRiyadhInput(end), period_id: period || null, purpose, focus, reason } }); if (r.error) throw r.error; toast.success(visit ? "حُفظت إعادة الجدولة والتاريخ السابق" : "جُدولت الزيارة"); onDone(r.data as string); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } }
-  return <div className="space-y-4"><Button variant="ghost" onClick={() => onDone()}><ArrowRight />العودة</Button><h2 className="text-xl font-bold">{visit ? "إعادة جدولة الزيارة" : "جدولة زيارة"}</h2>
+  return <div className="space-y-4"><Button variant="ghost" onClick={back}><ArrowRight />العودة</Button><h2 className="text-xl font-bold">{visit ? "إعادة جدولة الزيارة" : "جدولة زيارة"}</h2>
     <div className="grid gap-3 sm:grid-cols-2">
       <label className="text-sm">الفرع<select aria-label="فرع الزيارة" className={selectCls("mt-1 w-full")} disabled={!!visit} value={school} onChange={(e) => { setSchool(e.target.value); setTeacher(""); setCourse(""); }}>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
       <label className="text-sm">المعلم<select aria-label="معلم الزيارة" className={selectCls("mt-1 w-full")} value={teacher} onChange={(e) => { setTeacher(e.target.value); setCourse(""); setPeriod(""); }}><option value="">اختر المعلم</option>{pool.data?.teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
@@ -53,6 +57,7 @@ export function VisitDetail({ id, org, me, onBack, onDocument }: { id: string; o
   const report = { title: `تقرير الزيارة — ${v.teacher}`, school: v.school, filters: [riyadhText(v.starts_at), v.course], note: `التنفيذ: ${VISIT_STATE[v.state]} · اعتماد التوثيق: ${v.documentation_status ? REC_STATUS[v.documentation_status as keyof typeof REC_STATUS] : "لم يبدأ"}` };
   const rows = v.recommendations.map((r) => [r.no, r.action, r.due, REC_STATE[r.state], r.expected_evidence, r.update_note ?? "", r.verification_note ?? ""]);
   const headers = ["رقم", "الإجراء", "الموعد", "الحالة", "الدليل المتوقع", "تحديث التنفيذ", "التحقق"];
+  const fullReport = visitReport(v);
   return <div className="space-y-4"><Button variant="ghost" onClick={onBack}><ArrowRight />العودة إلى الزيارات</Button>
     <header className="border-b pb-4"><h2 className="text-xl font-bold">{v.purpose}</h2><p className="mt-1 text-sm text-muted-foreground">{v.school} · {v.teacher} · {v.course}</p><p className="mt-2 text-sm">{riyadhText(v.starts_at)} — {VISIT_STATE[v.state]}</p><p className="mt-1 text-sm">اعتماد التوثيق: {v.documentation_status ? REC_STATUS[v.documentation_status as keyof typeof REC_STATUS] : "لم يبدأ"} · اطلاع المعلم: {v.teacher_ack_at ? riyadhText(v.teacher_ack_at) : "لم يسجل بعد"}</p></header>
     <nav aria-label="تفاصيل الزيارة" className="flex flex-wrap gap-2">{[["summary", "الملخص"], ["form", "نموذج الزيارة"], ["followup", "التوصيات والمتابعة"], ["files", "المرفقات"], ["events", "سجل الإجراءات"]].map(([k, l]) => <Button key={k} size="sm" variant={tab === k ? "default" : "outline"} onClick={() => setTab(k ?? "summary")}>{l}</Button>)}</nav>
@@ -63,7 +68,7 @@ export function VisitDetail({ id, org, me, onBack, onDocument }: { id: string; o
     {tab === "followup" && <><Recommendations v={v} onRefresh={() => q.refetch()} /><Followups v={v} /></>}
     {tab === "files" && <EvidencePanel visit={id} canWork={v.can_work} recommendations={v.recommendations} />}
     {tab === "events" && <ol className="space-y-2 text-sm">{v.events.map((e, i) => <li key={i}>{({ schedule: "جدولة", reschedule: "إعادة جدولة", execute: "تنفيذ", cancel: "إلغاء", recommendation: "إضافة توصية", recommendation_state: "تحديث توصية", attachment: "إرفاق شاهد", followup: "جلسة متابعة", reflection: "تأمل مشارك" } as Record<string, string>)[e.action] ?? e.action} · {e.actor} · {riyadhText(e.at)} {typeof e.details?.["reason"] === "string" ? `— ${e.details["reason"]}` : ""}</li>)}</ol>}
-    <div className="flex flex-wrap gap-2 border-t pt-3"><Button variant="outline" onClick={() => exportXlsx(report, headers, rows)}>Excel</Button><Button variant="outline" onClick={() => exportPdf(report, headers, rows)}>PDF</Button><Button variant="outline" onClick={() => printReport(report, headers, rows)}>طباعة كشف التوصيات</Button></div>
+    <div className="flex flex-wrap gap-2 border-t pt-3"><Button variant="outline" onClick={() => exportXlsx(fullReport.meta, fullReport.headers, fullReport.rows)}>تقرير الزيارة Excel</Button><Button variant="outline" onClick={() => exportPdf(fullReport.meta, fullReport.headers, fullReport.rows)}>تقرير الزيارة PDF</Button><Button variant="outline" onClick={() => printReport(fullReport.meta, fullReport.headers, fullReport.rows)}>طباعة تقرير الزيارة</Button><Button variant="ghost" onClick={() => exportXlsx(report, headers, rows)}>كشف التوصيات Excel</Button><Button variant="ghost" onClick={() => exportPdf(report, headers, rows)}>كشف التوصيات PDF</Button><Button variant="ghost" onClick={() => printReport(report, headers, rows)}>طباعة كشف التوصيات</Button></div>
   </div>;
 }
 function Recommendations({ v, onRefresh }: { v: VisitFull; onRefresh: () => unknown }) {
