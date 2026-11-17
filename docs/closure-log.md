@@ -1144,3 +1144,10 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 ## 2026-11-17 — prompt-465: حذف قسم صورة المبنى
 - أزيل عرض صورة المبنى ورفعها من الخريطة المدرسية، دون حذف الملفات المحفوظة أو تغيير بيانات المباني والغرف والصلاحيات.
 - منفّذ ومختبَر: 5 اختبارات قواعد الخريطة؛ رحلة قراءة بحساب المالك الاصطناعي تثبت غياب الصورة وأداة الرفع وبقاء إضافة الغرفة وتعديل بيانات المبنى. الدليل: /tmp/browser/fm465/check_map.py وmap.png؛ build OK.
+
+## 2026-11-17 — Mobile login overlay, review only
+
+- Source `rikazschool-debug/rikaz@4151a6900767244bed0241b7ef5e45de3e1d8274`; integrated against the current running web revision `e0d66d18aaad9c8acb7aec77666f0598b7bf9e30` in a separate review branch.
+- Extracted current handler bodies/helpers and preserved current web validators; shared service retains delivery namespace, registration, portal gates, existing-account issuance and unknown-send handling. Added bounded HTTP routes and isolated HTTP/service/web regression tests, plus compiled runtime rejection probes.
+- Read-only VPS evidence: healthy current image; all eight privileged RPC dependencies exist and remain service-only; `_idl_student` matches ID plus C-Smart student number. Existing Nginx public-route deny explains current HTTP 503. Proposed exact exceptions and rollout/rollback instructions are review artifacts, not active configuration.
+- Full CI evidence is recorded on the review PR. No live messages, login challenge calls, database writes, migrations, server secret/config changes or VPS deployment performed. Mobile flag stays 0; real student/OTP/session acceptance remains pending explicit deployment and test-account authorization.

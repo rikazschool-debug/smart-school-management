@@ -56,6 +56,30 @@ try {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   assert(ready, 'Server readiness failed');
+  // Packaging/HTTP acceptance only. Every request below is rejected before any database/provider call.
+  const mobileLogin = [];
+  for (const endpoint of ['request-code', 'verify-code', 'student-login']) {
+    const p = '/api/public/auth/' + endpoint;
+    const get = await response(p);
+    assert.equal(get.status, 405, `${p}: unsupported method must be bounded JSON`);
+    assert.equal(get.headers.get('allow'), 'POST');
+    assert.equal(get.headers.get('cache-control'), 'no-store');
+    await get.body?.cancel();
+    const invalid = await response(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    assert.equal(invalid.status, 400, `${p}: invalid input reached the login service`);
+    assert.equal(invalid.headers.get('cache-control'), 'no-store');
+    await invalid.body?.cancel();
+    const wrongType = await response(p, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '{}' });
+    assert.equal(wrongType.status, 415, `${p}: form/text input accepted`);
+    await wrongType.body?.cancel();
+    const cross = await response(p, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://untrusted.invalid' }, body: '{}' });
+    assert.equal(cross.status, 403, `${p}: untrusted browser origin accepted`);
+    await cross.body?.cancel();
+    const same = await response(p, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://app.example.invalid' }, body: '{}' });
+    assert.equal(same.status, 400, `${p}: approved HTTPS origin rejected behind local HTTP`);
+    await same.body?.cancel();
+    mobileLogin.push({ endpoint, method: 405, invalidInput: 400, mediaType: 415, crossOrigin: 403, configuredOrigin: 400 });
+  }
   const assets = new Set();
   for (const p of ['/', '/auth']) {
     const r = await response(p); const html = await r.text();
@@ -111,6 +135,7 @@ try {
     compiledPublicTarget: expectedPublicBackend || 'isolated-fixture',
     pages: results, staticAssetsFetched: Math.min(assets.size, 20),
     publicFilesScanned, admsDisabled: true,
+    mobileLogin,
     globalQueuePumpUnavailable: true, scopedFlushRequiresAuthentication: true, workerRequiresCapability: true, sameOriginAccepted: 200, crossOriginRejected: 403, unauthenticatedRejected: 401,
     authenticatedRlsTests: 'not covered by this no-database packaging test',
   }));
