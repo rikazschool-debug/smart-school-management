@@ -32,3 +32,21 @@ describe("meeting links in reports", () => {
   });
   it("says no links instead of an empty cell", () => { expect(linkSummary([])).toBe("لا روابط"); });
 });
+
+describe("stage-4 report filters and dates", () => {
+  it("uses the Riyadh calendar day, not the UTC day", () => {
+    expect(riyadhDay("2026-11-16T22:30:00Z")).toBe("2026-11-17");
+    expect(riyadhDay("2026-11-17")).toBe("2026-11-17");
+  });
+  it("applies the status filter only to the visible list", () => {
+    expect(statusFor("programs", "teachers", { status: "closed" }).status).toBe("");
+    expect(statusFor("programs", "programs", { status: "closed" }).status).toBe("closed");
+  });
+  it("prints only the filters that shaped each report, with Arabic status labels", () => {
+    const f = { school: "s", teacher: "t", status: "open", from: "2026-11-01" };
+    const n = { school: "فرع أ", teacher: "معلم ب" };
+    expect(reportFilters("programs", "programs", f, n)).toEqual(["الفرع: فرع أ", "حالة البرنامج: التسجيل مفتوح", "الفترة: 2026-11-01 — …"]);
+    expect(reportFilters("meetings", "programs", f, n)).toEqual(["الفرع: فرع أ", "الفترة: 2026-11-01 — …"]);
+    expect(reportFilters("needs", "programs", f, n)).toEqual(["الفرع: فرع أ", "المعلم: معلم ب", "الفترة: 2026-11-01 — …"]);
+  });
+});
