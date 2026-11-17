@@ -1,6 +1,6 @@
 import { cloneElement, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, GitCompareArrows, Layers, Plus } from "lucide-react";
+import { BarChart3, GitCompareArrows, Layers, Plus, Target } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import type { SvMe, SvSearch } from "./model";
 import { LO_KIND, LO_VIEWS, ORIGIN, pctChangeText, type Compare, type LoView, type Mastery, type Measure, type Refs } from "./lo-model";
 import { sv4 as call } from "./pd-api";
 import { MeasureDetail } from "./lo-measure";
+import { ActionsView } from "./lo-actions";
+import type { Action } from "./act-model";
 
 export function useLo<T>(key: unknown[], fn: string, args: Record<string, unknown>, enabled = true) {
   return useQuery({ queryKey: ["sv5", ...key], enabled, retry: false, queryFn: async () => { const r = await db.rpc(fn, args); if (r.error) throw r.error; return r.data as T; } });
@@ -20,14 +22,16 @@ export function useLo<T>(key: unknown[], fn: string, args: Record<string, unknow
 export function LearningOutcomes({ org, me, sp, go }: { org: string; me: SvMe; sp: SvSearch; go: (s: SvSearch, replace?: boolean) => void }) {
   const view: LoView = sp.lo ?? "measures";
   const list = useLo<Measure[]>(["list", org], "sv5_measure_list", { _org: org });
-  const icons = { measures: BarChart3, compare: GitCompareArrows, mastery: Layers };
+  const acts = useLo<Action[]>(["acts", org], "sv5_act_list", { _org: org }, view === "actions");
+  const icons = { measures: BarChart3, compare: GitCompareArrows, mastery: Layers, actions: Target };
   return <div className="space-y-4">
     <nav aria-label="نواتج التعلم" className="flex flex-wrap gap-2 border-b pb-3">{(Object.keys(LO_VIEWS) as LoView[]).map((v) => { const I = icons[v]; return <Button key={v} variant={view === v ? "default" : "ghost"} onClick={() => go({ tab: "outcomes", lo: v })}><I />{LO_VIEWS[v]}</Button>; })}</nav>
     <p className="text-sm text-muted-foreground">النتائج من اختبارات ركاز المنشورة أو من ملفات موثقة تُدخل يدويًا (لا ربط رسمي مع نافس أو قياس). الغياب وعدم وجود نتيجة ليسا صفرًا، ولا ترتيب للمعلمين أو المدارس ولا تقييم وظيفي.</p>
     {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : <>
-      {view === "measures" && (sp.id ? <MeasureDetail id={sp.id} org={org} onBack={() => go({ tab: "outcomes", lo: "measures" }, false)} /> : <Measures org={org} me={me} list={list.data ?? []} open={(id) => go({ tab: "outcomes", lo: "measures", id }, false)} />)}
+      {view === "measures" && (sp.id ? <MeasureDetail id={sp.id} org={org} onBack={() => go({ tab: "outcomes", lo: "measures" }, false)} onAction={(id) => go({ tab: "outcomes", lo: "actions", id }, false)} /> : <Measures org={org} me={me} list={list.data ?? []} open={(id) => go({ tab: "outcomes", lo: "measures", id }, false)} />)}
       {view === "compare" && <CompareView list={list.data ?? []} />}
       {view === "mastery" && <MasteryView org={org} me={me} />}
+      {view === "actions" && (acts.isLoading ? <LoadingState /> : acts.error ? <ErrorState message={arabicError(acts.error)} onRetry={() => acts.refetch()} /> : <ActionsView org={org} me={me} list={acts.data ?? []} id={sp.id} open={(id) => go({ tab: "outcomes", lo: "actions", ...(id ? { id } : {}) }, false)} />)}
     </>}
   </div>;
 }

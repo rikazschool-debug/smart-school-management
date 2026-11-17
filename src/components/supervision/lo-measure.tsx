@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import * as XLSX from "xlsx";
-import { ArrowRight, Download, FileText, Printer, Upload } from "lucide-react";
+import { ArrowRight, Download, FileText, Printer, Target, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { selectCls } from "@/components/ui/native-select";
@@ -11,8 +11,9 @@ import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { ACTION, buildRows, countText, FIELD_LABEL, guessField, LO_KIND, mapProblems, meanText, ORIGIN, RES_STATUS, TEMPLATE_HEAD, type Analysis, type Field, type Item, type MeasureDetail as MD, type Preview, type Refs } from "./lo-model";
 import { sv4 as call } from "./pd-api";
 import { MeasureForm, useLo } from "./lo";
+import { ActionForm } from "./lo-actions";
 
-export function MeasureDetail({ id, org, onBack }: { id: string; org: string; onBack: () => void }) {
+export function MeasureDetail({ id, org, onBack, onAction }: { id: string; org: string; onBack: () => void; onAction: (id: string) => void }) {
   const q = useLo<MD>(["measure", id], "sv5_measure_get", { _id: id }); const [editing, setEditing] = useState(false);
   if (q.isLoading) return <LoadingState />; if (q.error || !q.data) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const m = q.data;
@@ -27,7 +28,7 @@ export function MeasureDetail({ id, org, onBack }: { id: string; org: string; on
     {editing && <MeasureForm org={org} m={m} onDone={() => setEditing(false)} />}
     {m.origin === "external" && m.can_edit && <ItemsEditor m={m} />}
     {m.origin === "external" && m.can_edit && <ImportPanel m={m} />}
-    <AnalysisPanel m={m} org={org} />
+    <AnalysisPanel m={m} org={org} onAction={onAction} />
     <ResultsPanel m={m} />
     {!!m.imports.length && <details className="rounded-lg border p-3 text-sm"><summary className="cursor-pointer font-semibold">سجل الاستيراد ({m.imports.length})</summary>
       <ul className="mt-2 space-y-1">{m.imports.map((x, i) => <li key={i}>{x.at.slice(0, 16).replace("T", " ")} · {x.file} · {x.by}: {x.total} صف، أضيف {x.imported}، استُبدل {x.replaced}، رُفض {x.failed} (منها مكرر {x.duplicates})، موجود مسبقًا {x.existing}</li>)}</ul></details>}
@@ -90,7 +91,8 @@ function ImportPanel({ m }: { m: MD }) {
   </section>;
 }
 
-function AnalysisPanel({ m, org }: { m: MD; org: string }) {
+function AnalysisPanel({ m, org, onAction }: { m: MD; org: string; onAction: (id: string) => void }) {
+  const [act, setAct] = useState(false);
   const refs = useLo<Refs>(["refs", org], "sv5_refs", { _org: org }); const [ms, setMs] = useState(""); const [sec, setSec] = useState("");
   const q = useLo<Analysis>(["analysis", m.id, m.rev, ms, sec], "sv5_analysis", { _measure: m.id, _mastery: ms || null, _section: sec || null });
   const secOpts = (refs.data?.sections ?? []).filter((s) => m.section_ids.length ? m.section_ids.includes(s.id) : s.grade_id === m.grade_id && s.year_id === m.year_id);
@@ -106,7 +108,9 @@ function AnalysisPanel({ m, org }: { m: MD; org: string }) {
     <div className="flex flex-wrap items-center gap-2"><h4 className="me-auto font-semibold">التحليل</h4>
       <select className={selectCls(undefined, true)} aria-label="الفصل" value={sec} onChange={(e) => setSec(e.target.value)}><option value="">كل الفصول</option>{secOpts.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
       <select className={selectCls(undefined, true)} aria-label="مستويات الإتقان" value={ms} onChange={(e) => setMs(e.target.value)}><option value="">بلا مستويات إتقان</option>{(refs.data?.mastery ?? []).map((x) => <option key={x.id} value={x.id}>{x.title} (إصدار {x.version})</option>)}</select>
-      {a && <><Button variant="ghost" size="icon" aria-label="Excel التحليل" onClick={() => { const r = report(); exportXlsx(r.meta, r.head, r.rows); }}><Download /></Button><Button variant="ghost" size="icon" aria-label="PDF التحليل" onClick={() => { const r = report(); void exportPdf(r.meta, r.head, r.rows); }}><FileText /></Button><Button variant="ghost" size="icon" aria-label="طباعة التحليل" onClick={() => { const r = report(); printReport(r.meta, r.head, r.rows); }}><Printer /></Button></>}</div>
+      {a && <><Button variant="ghost" size="icon" aria-label="Excel التحليل" onClick={() => { const r = report(); exportXlsx(r.meta, r.head, r.rows); }}><Download /></Button><Button variant="ghost" size="icon" aria-label="PDF التحليل" onClick={() => { const r = report(); void exportPdf(r.meta, r.head, r.rows); }}><FileText /></Button><Button variant="ghost" size="icon" aria-label="طباعة التحليل" onClick={() => { const r = report(); printReport(r.meta, r.head, r.rows); }}><Printer /></Button></>}
+      {a && m.can_edit && a.present > 0 && !act && <Button size="sm" variant="outline" onClick={() => setAct(true)}><Target />إجراء تحسين من هذه النتيجة</Button>}</div>
+    {act && a && <ActionForm measureId={m.id} analysis={a} mastery={ms} section={sec} onDone={(id) => { setAct(false); if (id) onAction(id); }} />}
     {q.isLoading ? <LoadingState rows={2} /> : q.error || !a ? <ErrorState message={arabicError(q.error)} /> : <>
       <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3 lg:grid-cols-6">{([["المستهدفون", T(a.targeted)], ["لهم نتيجة", T(a.present)], ["غائب", T(a.absent)], ["معفى", T(a.exempt)], ["لم يُقس", T(a.missing)], ["المتوسط", meanText(a)]] as const).map(([l, v]) => <div key={l} className="rounded-lg border p-2"><div className="text-xs text-muted-foreground">{l}</div><div className="font-bold">{v}</div></div>)}</div>
       {a.small_sample && a.present > 0 && <p className="text-sm text-muted-foreground">عينة صغيرة ({a.present} أقل من 30): تُقرأ النسب بحذر، ولا يُحسب مؤشر التمييز للأسئلة.</p>}
