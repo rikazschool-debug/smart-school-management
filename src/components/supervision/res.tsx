@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { ArrowRight, BookMarked, FilePlus2, Inbox, Printer } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { Uploader } from "@/components/homework/files";
@@ -147,9 +148,9 @@ function ResourceDetailView({ id, onBack, onOpen }: { id: string; onBack: () => 
 
 /** Read-only shelf of published supervisory resources inside the existing digital library. */
 export function SupervisionShelf({ org }: { org: string }) {
-  const list = useLo<Resource[]>(["res", org], "sv5_res_list", { _org: org });
+  const list = useLo<Resource[]>(["res", org], "sv5_res_list", { _org: org }); const nav = useNavigate();
   if (list.isLoading) return <LoadingState />; if (list.error) return <ErrorState message={arabicError(list.error)} />;
   const rows = (list.data ?? []).filter((r) => r.status === "published");
   return <div className="space-y-3"><p className="text-sm text-muted-foreground">{INTERNAL_NOTE} تُدار هذه الموارد ومراجعتها من «الإشراف التربوي ← الموارد والتقارير».</p>
-    {!rows.length ? <EmptyState title="لا موارد إشرافية منشورة بعد" /> : <ResCards rows={rows} open={(id) => { window.location.assign(`/app/supervision?tab=resources&rs=library&id=${id}`); }} />}</div>;
+    {!rows.length ? <EmptyState title="لا موارد إشرافية منشورة بعد" /> : <ResCards rows={rows} open={(id) => void nav({ to: "/app/supervision", search: { tab: "resources", rs: "library", id } })} />}</div>;
 }
