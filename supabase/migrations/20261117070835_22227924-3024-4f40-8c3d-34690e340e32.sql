@@ -1,0 +1,5 @@
+CREATE OR REPLACE FUNCTION private._sv3_record_read(r sv_records)
+ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $function$ select coalesce(private._sv3_enabled(r.school_id) and private._sv_can_read(r) and (is_org_owner(r.org_id) or private._sv_principal(r.school_id) or private._sv_is_teacher(r.teacher_id) or private._sv_deleg('approve',r.org_id,r.school_id,r.form_key,r.id) or private._sv_deleg('read',r.org_id,r.school_id,null,null,r.assignment_id) or private._sv3_assignment(r.assignment_id,r.school_id,r.teacher_id)
+ -- the current handler of a handed-over visit (live matching assignment) may read that visit's documentation; writing stays with the record rules
+ or exists(select 1 from sv_scheduled_visits v where v.record_id=r.id and v.handled_by=auth.uid() and private._sv3_visit_work(v))),false) $function$;
