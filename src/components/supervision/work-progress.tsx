@@ -40,3 +40,31 @@ export function ActionProgress({ plan, actions }: { plan: string; actions: Recor
       </li>; })}</ol>
   </section>;
 }
+
+type Mine = { record_id: string; index: number; action: string; due: string | null; evidence: string | null; state: string | null };
+/** Activities assigned to the signed-in person in approved plans (owner of the activity only). */
+export function MyActions({ org }: { org: string }) {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["sv3-my-actions", org], retry: false, queryFn: async () => { const r = await db.rpc("sv3_my_actions", { _org: org }); if (r.error) throw r.error; return r.data as Mine[]; } });
+  const [edit, setEdit] = useState<{ key: string; state: string; note: string } | null>(null);
+  const guard = useUnsaved(!!edit && edit.note.trim() !== "");
+  if (!q.data?.length) return null;
+  async function save(m: Mine) {
+    if (!edit) return;
+    const r = await db.rpc("sv3_plan_progress_save", { _record: m.record_id, _index: m.index, _state: edit.state, _note: edit.note });
+    if (r.error) return void toast.error(arabicError(r.error));
+    guard.saved(); setEdit(null); toast.success("سُجّل تقدم نشاطك"); void qc.invalidateQueries({ queryKey: ["sv3-my-actions", org] });
+  }
+  return <section aria-label="أنشطتي في الخطط المعتمدة" className="space-y-2 rounded-lg border p-3">
+    <h3 className="font-bold">أنشطتي في الخطط المعتمدة</h3>
+    <ul className="space-y-2">{q.data.map((m) => { const key = `${m.record_id}:${m.index}`; return <li key={key} className="rounded border p-2 text-sm">
+      <div className="flex flex-wrap justify-between gap-2"><span className="font-medium">{m.action}</span><span>{m.state ? ACTION_STATE[m.state] : "لم يبدأ"}{m.due ? ` · ${m.due}` : ""}</span></div>
+      {m.evidence && <p className="text-muted-foreground">الشاهد المتوقع: {m.evidence}</p>}
+      {m.state === "completed" ? null : edit?.key === key ? <div className="mt-2 space-y-2">
+        <select aria-label={`حالة نشاطي ${m.action}`} className={selectCls("w-full")} value={edit.state} onChange={(e) => setEdit({ ...edit, state: e.target.value })}>{["not_started", "ongoing", "submitted", "blocked"].map((k) => <option key={k} value={k}>{ACTION_STATE[k]}</option>)}</select>
+        <textarea aria-label={`دليل نشاطي ${m.action}`} className="w-full rounded border p-2" rows={2} value={edit.note} onChange={(e) => { guard.changed(); setEdit({ ...edit, note: e.target.value }); }} />
+        <div className="flex gap-2"><Button size="sm" onClick={() => save(m)}>حفظ</Button><Button size="sm" variant="ghost" onClick={() => void guard.leave(() => setEdit(null))}>إلغاء</Button></div>
+      </div> : <Button size="sm" variant="outline" className="mt-2" onClick={() => setEdit({ key, state: m.state && m.state !== "not_started" ? m.state : "ongoing", note: "" })}>تحديث نشاطي</Button>}
+    </li>; })}</ul>
+  </section>;
+}
