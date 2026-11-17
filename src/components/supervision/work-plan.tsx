@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useBlocker } from "@tanstack/react-router";
 import { ArrowRight, Copy, Download, FileText, Printer, Save, Send } from "lucide-react";
@@ -27,8 +27,8 @@ export function PlanEditor({ org, me, plan, plans, onDone, onDocument }: { org: 
   const form = (forms.data ?? []).filter((f) => f.key === "improvement_plan" && f.org_id && f.status === "published" && (!f.school_id || f.school_id === school)).sort((a, b) => Number(!!b.school_id) - Number(!!a.school_id) || b.version - a.version)[0];
   const spec = record.data?.form_snapshot.spec ?? (form ? { ...form.spec, sv3_plan: true } : undefined);
   const dirty = JSON.stringify(data) !== JSON.stringify(plan?.data ?? {}) || copying || school !== (plan?.school_id ?? schools[0]?.id ?? "") || kind !== (plan?.kind ?? "annual") || year !== (plan?.year_id ?? "") || term !== (plan?.term_id ?? "") || parent !== (plan?.parent_id ?? "");
-  const [saved, setSaved] = useState(false);
-  useBlocker({ shouldBlockFn: async () => dirty && !saved && !(await ask("لديك تغييرات غير محفوظة. المغادرة دون حفظ؟", { destructive: true, ok: "مغادرة دون حفظ" })), enableBeforeUnload: () => dirty && !saved });
+  const saved = useRef(false);
+  useBlocker({ shouldBlockFn: async () => dirty && !saved.current && !(await ask("لديك تغييرات غير محفوظة. المغادرة دون حفظ؟", { destructive: true, ok: "مغادرة دون حفظ" })), enableBeforeUnload: () => dirty && !saved.current });
   useEffect(() => { if (!dirty) return; const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; }; window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h); }, [dirty]);
   const editable = !plan || plan.can_work || copying;
   async function document() { if (plan && (!dirty || await ask("لديك تغييرات غير محفوظة. فتح المراجعة دون حفظ؟", { destructive: true, ok: "خروج دون حفظ" }))) onDocument(plan.id); }
@@ -40,7 +40,7 @@ export function PlanEditor({ org, me, plan, plans, onDone, onDocument }: { org: 
     try { const r = await db.rpc("sv3_plan_save", { _id: copying ? null : plan?.id ?? null, _rev: copying ? null : plan?.rev ?? null, _p: { school_id: school, kind, year_id: year || null, term_id: term || null, parent_id: parent || null, data } }); if (r.error) throw r.error;
       const id = r.data as string;
       if (submit) { const g = await db.rpc("sv_rec_get", { _id: id }); if (g.error) throw g.error; const a = await db.rpc("sv_rec_act", { _id: id, _rev: (g.data as { rev: number }).rev, _action: "submit", _text: null }); if (a.error) throw a.error; }
-      setSaved(true); toast.success(submit ? "أُرسلت الخطة للمراجعة" : "حُفظت مسودة الخطة"); onDone(id);
+      saved.current = true; toast.success(submit ? "أُرسلت الخطة للمراجعة" : "حُفظت مسودة الخطة"); onDone(id);
     } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
   }
   async function back() { if (dirty && !(await ask("لديك تغييرات غير محفوظة. الخروج دون حفظ؟", { destructive: true, ok: "خروج دون حفظ" }))) return; onDone(); }
