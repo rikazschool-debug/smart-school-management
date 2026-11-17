@@ -192,6 +192,7 @@ const NAV_BY_ROLE_RAW: Record<Role, NavKey[]> = {
 export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).map(([r, ks]) => {
   const extra: NavKey[] = [];
   if (ks.includes("homework")) extra.push("tests");
+  if (!["guardian", "student"].includes(r)) extra.push("collaboration"); // community + library: default for every staff role
   if (["org_owner", "counselor", "teacher"].includes(r)) extra.push("student_guidance");
   if (["org_owner", "counselor", "principal", "vice_principal", "teacher", "student_affairs"].includes(r)) extra.push("gifted_care");
   if (["org_owner", "principal", "vice_principal", "teacher", "supervisor", "guardian"].includes(r)) extra.push("remedial_plans");
