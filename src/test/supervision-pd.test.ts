@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { learningLine, linkSummary, outcomeLine, planMissing, programRows, validMeetingUrl, verifiedHours, type Outcome, type Program } from "@/components/supervision/pd-model";
+import { learningLine, linkSummary, reportFilters, riyadhDay, statusFor, outcomeLine, planMissing, programRows, validMeetingUrl, verifiedHours, type Outcome, type Program } from "@/components/supervision/pd-model";
 
 const prog = (over: Partial<Program> = {}): Program => ({ id: "g", school_id: "s", school: "فرع", title: "برنامج", objectives: "", need_ids: [], audience: "", trainer_name: "م", mode: "in_person", location: "قاعة", meeting_url: null, status: "open", cancel_reason: null, creator: "", rev: 1, updated_at: "", can_manage: true,
   sessions: [{ id: "s1", starts_at: "", ends_at: "", hours: 1, location: null, status: "scheduled", cancel_reason: null, rev: 1 }, { id: "s2", starts_at: "", ends_at: "", hours: 1.5, location: null, status: "scheduled", cancel_reason: null, rev: 1 }, { id: "s3", starts_at: "", ends_at: "", hours: 2, location: null, status: "cancelled", cancel_reason: "x", rev: 1 }],
