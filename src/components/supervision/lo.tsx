@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { cloneElement, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BarChart3, GitCompareArrows, Layers, Plus } from "lucide-react";
 import { db } from "@/components/crud-page";
@@ -55,7 +55,8 @@ function Measures({ org, me, list, open }: { org: string; me: SvMe; list: Measur
   </div>;
 }
 
-function L({ t, children }: { t: string; children: React.ReactNode }) { return <label className="grid gap-1 text-sm"><span className="font-medium">{t}</span>{children}</label>; }
+/** Field wrapper: the control gets the field name as its accessible name (a wrapping label would also read the options). */
+function L({ t, children }: { t: string; children: React.ReactElement<{ "aria-label"?: string }> }) { return <label className="grid gap-1 text-sm"><span className="font-medium">{t}</span>{cloneElement(children, { "aria-label": t })}</label>; }
 
 export function MeasureForm({ org, m, onDone }: { org: string; m?: Measure; onDone: (id?: string) => void }) {
   const refs = useLo<Refs>(["refs", org], "sv5_refs", { _org: org }); const qc = useQueryClient(); const [busy, setBusy] = useState(false);
