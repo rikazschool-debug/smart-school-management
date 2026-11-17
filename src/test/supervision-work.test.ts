@@ -22,7 +22,7 @@ describe("supervision plans and visits", () => {
     expect(copyPlanData({ goals: [{ goal: "تطبيق استراتيجية", indicator: "ملاحظة صفية", owner: "old-user", due: "2026-11-17", proof: "old-file", state: "completed" }] })["goals"]).toEqual([{ goal: "تطبيق استراتيجية", indicator: "ملاحظة صفية", baseline: "", target: "", owner: "", due: "" }]);
   });
   const filters = { school: "", state: "", kind: "", search: "", from: "", to: "", year: "", term: "", teacher: "", course: "" };
-  const plan = { id: "p1", school_id: "a", kind: "annual", status: "approved", year_id: "y1", term_id: "t1", data: { period_from: "2026-11-01", period_to: "2026-11-30" } } as Plan;
+  const plan: Plan = { id: "p1", record_id: "p1", school_id: "a", school: "فرع أ", form_key: "improvement_plan", form_version: 2, title: "خطة", author: "مشرف", author_id: "u1", handler: null, teacher: null, teacher_id: null, status: "approved", needs_reason: null, submitted_at: null, approved_at: null, approver: null, teacher_ack_at: null, teacher_comment: null, teacher_comment_at: null, rev: 1, updated_at: "2026-11-17", can_work: false, can_approve: false, can_reopen: false, is_teacher: false, needs_handover: false, assignment_id: null, kind: "annual", parent_id: null, execution: "not_started", year_id: "y1", term_id: "t1", data: { period_from: "2026-11-01", period_to: "2026-11-30" } };
   const visit = { id: "v1", school_id: "a", plan_id: "p1", teacher_id: "teacher1", course_id: "course1", kind: "classroom", state: "executed", documentation_status: "submitted", starts_at: "2026-11-16T22:00:00Z" } as Visit;
   it("year and term filters follow the linked plan and never label an unlinked visit", () => {
     const unlinked = { ...visit, id: "v2", plan_id: null };
