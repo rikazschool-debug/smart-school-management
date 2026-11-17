@@ -12,9 +12,9 @@ import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { EvidencePanel } from "./evidence";
-import { fromRiyadhInput, REC_STATUS, riyadhText, toRiyadhInput, type SvMe } from "./model";
+import { fromRiyadhInput, REC_STATUS, riyadhText, toRiyadhInput, type SvMe, type SvAssignment, type SvRecordFull } from "./model";
 import { REC_STATE, VISIT_STATE, riyadhDay, type Plan, type Recommendation, type Visit, type VisitFull, type WorkPool } from "./work-model";
-import { visitReport } from "./work-report";
+import { fullVisitReport, type FollowupReportRow } from "./work-report";
 
 export function VisitEditor({ me, plans, visit, onDone }: { me: SvMe; plans: Plan[]; visit?: Visit; onDone: (id?: string) => void }) {
   const schools = me.schools.filter((s) => me.owner || s.principal || s.supervisor);
@@ -41,7 +41,7 @@ export function VisitEditor({ me, plans, visit, onDone }: { me: SvMe; plans: Pla
       {visit && <label className="text-sm sm:col-span-2">سبب إعادة الجدولة<Textarea aria-label="سبب إعادة الجدولة" value={reason} onChange={(e) => setReason(e.target.value)} /></label>}
     </div>
     {(pool.error || slots.error) && <p className="text-sm text-destructive">{arabicError(pool.error ?? slots.error)}</p>}
-    {!slots.data?.length && teacher && course && <p className="text-sm text-muted-foreground">بيانات الجدول غير مكتملة لهذا الموعد؛ تعارض الجدول المدرسي غير متحقق. التعارض بين الزيارات يُفحص عند الحفظ.</p>}
+    {!slots.data?.length && teacher && course && <p className="text-sm text-muted-foreground">تعذر التحقق من التعارض</p>}
     <Button disabled={busy || !teacher || !course || !start || !end || purpose.trim().length < 3} onClick={save}><CalendarClock />{visit ? "حفظ إعادة الجدولة" : "حفظ الزيارة"}</Button>
   </div>;
 }
@@ -50,6 +50,13 @@ export function VisitDetail({ id, org, me, onBack, onDocument }: { id: string; o
   const q = useQuery({ queryKey: ["sv3-visit", id], retry: false, queryFn: async () => { const r = await db.rpc("sv3_visit_get", { _id: id }); if (r.error) throw r.error; return r.data as VisitFull; } });
   const [edit, setEdit] = useState(false); const [tab, setTab] = useState("summary"); const [reflection, setReflection] = useState(""); const [busy, setBusy] = useState(false);
   const plans = useQuery({ queryKey: ["sv3-plans", org], enabled: edit, retry: false, queryFn: async () => { const r = await db.rpc("sv3_plan_list", { _org: org }); if (r.error) throw r.error; return r.data as Plan[]; } });
+  const reportQuery = useQuery({ queryKey: ["sv3-report", id, q.data?.rev, q.data?.documentation_status], enabled: !!q.data, retry: false, queryFn: async () => {
+    const v = q.data; if (!v) throw Error("الزيارة غير متاحة");
+    let record: SvRecordFull | null = null;
+    if (v.record_id && v.can_document) { const r = await db.rpc("sv_rec_get", { _id: v.record_id }); if (r.error) throw r.error; record = r.data as SvRecordFull; }
+    const f = await db.rpc("sv3_followup_list", { _visit: id }); if (f.error) throw f.error;
+    return fullVisitReport(v, record, f.data as FollowupReportRow[]);
+  } });
   if (q.isLoading) return <LoadingState />; if (!q.data || q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const v = q.data;
   if (edit) return <VisitEditor me={me} plans={plans.data ?? []} visit={v} onDone={() => { setEdit(false); void q.refetch(); }} />;
@@ -57,19 +64,28 @@ export function VisitDetail({ id, org, me, onBack, onDocument }: { id: string; o
   const report = { title: `تقرير الزيارة — ${v.teacher}`, school: v.school, filters: [riyadhText(v.starts_at), v.course], note: `التنفيذ: ${VISIT_STATE[v.state]} · اعتماد التوثيق: ${v.documentation_status ? REC_STATUS[v.documentation_status as keyof typeof REC_STATUS] : "لم يبدأ"}` };
   const rows = v.recommendations.map((r) => [r.no, r.action, r.due, REC_STATE[r.state], r.expected_evidence, r.update_note ?? "", r.verification_note ?? ""]);
   const headers = ["رقم", "الإجراء", "الموعد", "الحالة", "الدليل المتوقع", "تحديث التنفيذ", "التحقق"];
-  const fullReport = visitReport(v);
+  const fullReport = reportQuery.data;
   return <div className="space-y-4"><Button variant="ghost" onClick={onBack}><ArrowRight />العودة إلى الزيارات</Button>
     <header className="border-b pb-4"><h2 className="text-xl font-bold">{v.purpose}</h2><p className="mt-1 text-sm text-muted-foreground">{v.school} · {v.teacher} · {v.course}</p><p className="mt-2 text-sm">{riyadhText(v.starts_at)} — {VISIT_STATE[v.state]}</p><p className="mt-1 text-sm">اعتماد التوثيق: {v.documentation_status ? REC_STATUS[v.documentation_status as keyof typeof REC_STATUS] : "لم يبدأ"} · اطلاع المعلم: {v.teacher_ack_at ? riyadhText(v.teacher_ack_at) : "لم يسجل بعد"}</p></header>
     <nav aria-label="تفاصيل الزيارة" className="flex flex-wrap gap-2">{[["summary", "الملخص"], ["form", "نموذج الزيارة"], ["followup", "التوصيات والمتابعة"], ["files", "المرفقات"], ["events", "سجل الإجراءات"]].map(([k, l]) => <Button key={k} size="sm" variant={tab === k ? "default" : "outline"} onClick={() => setTab(k ?? "summary")}>{l}</Button>)}</nav>
-    {tab === "summary" && <><p className="whitespace-pre-wrap text-sm">{v.focus || "—"}</p><p className="text-sm text-muted-foreground">{v.timetable_verified ? "الحصة مطابقة للجدول المدرسي" : "تعارض الجدول المدرسي غير متحقق"}</p>{v.reason && <p className="text-sm">السبب: {v.reason}</p>}
+    {tab === "summary" && <><p className="whitespace-pre-wrap text-sm">{v.focus || "—"}</p><p className="text-sm text-muted-foreground">{v.timetable_verified ? "الحصة مطابقة للجدول المدرسي" : "تعذر التحقق من التعارض"}</p>{v.reason && <p className="text-sm">السبب: {v.reason}</p>}
       {v.can_work && v.state === "scheduled" && <div className="flex flex-wrap gap-2"><Button disabled={busy} onClick={() => act("execute")}><CheckCircle2 />تنفيذ وفتح التوثيق</Button><Button variant="outline" onClick={() => setEdit(true)}><CalendarClock />إعادة الجدولة</Button><Button variant="outline" disabled={busy} onClick={() => act("cancel")}><StopCircle />إلغاء بسبب</Button></div>}
       {v.kind === "peer" && !v.can_work && v.state === "executed" && <div className="space-y-2"><label className="block text-sm">تأملي في الزيارة<Textarea aria-label="تأمل المعلم المشارك" value={reflection} onChange={(e) => setReflection(e.target.value)} /></label><Button disabled={reflection.trim().length < 3} onClick={async () => { const r = await db.rpc("sv3_reflection_save", { _visit: id, _text: reflection }); if (r.error) toast.error(arabicError(r.error)); else { toast.success("حُفظ التأمل"); setReflection(""); void q.refetch(); } }}>حفظ التأمل</Button></div>}{v.reflections.map((r) => <p key={r.teacher_id} className="text-sm">{r.teacher}: {r.reflection}</p>)}</>}
     {tab === "form" && (v.record_id && v.can_document ? <Button onClick={() => onDocument(v.record_id ?? "")}><FileText />فتح النموذج المثبت والمراجعة واطلاع المعلم</Button> : <p className="text-sm text-muted-foreground">{v.record_id ? "التوثيق الداخلي غير متاح للمعلم المشارك" : "يبدأ النموذج عند تنفيذ الزيارة"}</p>)}
-    {tab === "followup" && <><Recommendations v={v} onRefresh={() => q.refetch()} /><Followups v={v} /></>}
+    {tab === "followup" && <><Recommendations v={v} onRefresh={() => { void reportQuery.refetch(); return q.refetch(); }} /><Followups v={v} /><FollowupHandover v={v} me={me} org={org} onRefresh={() => q.refetch()} /></>}
     {tab === "files" && <EvidencePanel visit={id} canWork={v.can_work} recommendations={v.recommendations} />}
     {tab === "events" && <ol className="space-y-2 text-sm">{v.events.map((e, i) => <li key={i}>{({ schedule: "جدولة", reschedule: "إعادة جدولة", execute: "تنفيذ", cancel: "إلغاء", recommendation: "إضافة توصية", recommendation_state: "تحديث توصية", attachment: "إرفاق شاهد", followup: "جلسة متابعة", reflection: "تأمل مشارك" } as Record<string, string>)[e.action] ?? e.action} · {e.actor} · {riyadhText(e.at)} {typeof e.details?.["reason"] === "string" ? `— ${e.details["reason"]}` : ""}</li>)}</ol>}
-    <div className="flex flex-wrap gap-2 border-t pt-3"><Button variant="outline" onClick={() => exportXlsx(fullReport.meta, fullReport.headers, fullReport.rows)}>تقرير الزيارة Excel</Button><Button variant="outline" onClick={() => exportPdf(fullReport.meta, fullReport.headers, fullReport.rows)}>تقرير الزيارة PDF</Button><Button variant="outline" onClick={() => printReport(fullReport.meta, fullReport.headers, fullReport.rows)}>طباعة تقرير الزيارة</Button><Button variant="ghost" onClick={() => exportXlsx(report, headers, rows)}>كشف التوصيات Excel</Button><Button variant="ghost" onClick={() => exportPdf(report, headers, rows)}>كشف التوصيات PDF</Button><Button variant="ghost" onClick={() => printReport(report, headers, rows)}>طباعة كشف التوصيات</Button></div>
+    {reportQuery.error && <p className="text-destructive">{arabicError(reportQuery.error)}</p>}
+    {fullReport && <details className="border-t pt-3"><summary>عرض تقرير الزيارة</summary><dl className="space-y-2 pt-3">{fullReport.rows.map((r,i) => <div key={i}><dt className="text-sm font-bold">{r[0]} · {r[1]}</dt><dd className="whitespace-pre-wrap text-sm">{r[2]}</dd></div>)}</dl></details>}
+    <div className="flex flex-wrap gap-2 border-t pt-3"><Button disabled={!fullReport} variant="outline" onClick={() => { if (fullReport) exportXlsx(fullReport.meta, fullReport.headers, fullReport.rows); }}>تقرير الزيارة Excel</Button><Button disabled={!fullReport} variant="outline" onClick={() => { if (fullReport) void exportPdf(fullReport.meta, fullReport.headers, fullReport.rows); }}>تقرير الزيارة PDF</Button><Button disabled={!fullReport} variant="outline" onClick={() => { if (fullReport) printReport(fullReport.meta, fullReport.headers, fullReport.rows); }}>طباعة تقرير الزيارة</Button><Button variant="ghost" onClick={() => exportXlsx(report, headers, rows)}>كشف التوصيات Excel</Button><Button variant="ghost" onClick={() => exportPdf(report, headers, rows)}>كشف التوصيات PDF</Button><Button variant="ghost" onClick={() => printReport(report, headers, rows)}>طباعة كشف التوصيات</Button></div>
   </div>;
+}
+function FollowupHandover({ v, me, org, onRefresh }: { v: VisitFull; me: SvMe; org: string; onRefresh: () => unknown }) {
+  const [to, setTo] = useState("me");
+  const allowed = me.owner || me.schools.some((s) => s.id === v.school_id && s.principal);
+  const q = useQuery({ queryKey: ["sv-asg", org], enabled: allowed, retry: false, queryFn: async () => { const r = await db.rpc("sv_asg_list", { _org: org }); if (r.error) throw r.error; return r.data as SvAssignment[]; } });
+  if (!allowed || !v.recommendations.some((r) => r.state !== "completed")) return null;
+  return <div className="flex flex-wrap gap-2 border-t pt-3"><select aria-label="مستلم متابعة التوصيات" className={selectCls()} value={to} onChange={(e) => setTo(e.target.value)}><option value="me">أنا — متابعة إدارية</option>{q.data?.filter((a) => a.state === "current" && a.school_id === v.school_id && a.teacher_ids.includes(v.teacher_id)).map((a) => <option key={a.id} value={a.id}>{a.supervisor}</option>)}</select><Button variant="outline" onClick={async () => { const reason = await askText("سبب تسليم التوصيات المفتوحة", { required: true, long: true }); if (!reason) return; const a = q.data?.find((a) => a.id === to); const u = await db.auth.getUser(); const uid = a?.supervisor_id ?? u.data.user?.id; if (!uid) return; const r = await db.rpc("sv3_followup_handover", { _visit: v.id, _to: uid, _assignment: a?.id ?? null, _rev: v.rev, _reason: reason }); if (r.error) toast.error(arabicError(r.error)); else { toast.success("سُلّمت المتابعة مع حفظ صاحب السجل"); onRefresh(); } }}>تسليم التوصيات المفتوحة</Button></div>;
 }
 function Recommendations({ v, onRefresh }: { v: VisitFull; onRefresh: () => unknown }) {
   const [adding, setAdding] = useState(false); const [action, setAction] = useState(""); const [due, setDue] = useState(""); const [expected, setExpected] = useState(""); const [responsible, setResponsible] = useState("");
