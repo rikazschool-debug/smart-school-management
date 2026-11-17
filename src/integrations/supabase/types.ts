@@ -29855,6 +29855,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      sv4_feedback_form: {
+        Args: { _kind: string; _program: string }
+        Returns: Json
+      }
       sv4_feedback_save: {
         Args: {
           _answers: Json
@@ -29867,6 +29871,7 @@ export type Database = {
       sv4_feedback_summary: { Args: { _program: string }; Returns: Json }
       sv4_file_create: { Args: { _p: Json }; Returns: Json }
       sv4_file_list: { Args: { _plan: string }; Returns: Json }
+      sv4_handover_pool: { Args: { _plan: string }; Returns: Json }
       sv4_hr_hours: { Args: { _school: string }; Returns: Json }
       sv4_indicators: { Args: { _org: string }; Returns: Json }
       sv4_meeting_link: {
