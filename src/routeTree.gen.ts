@@ -16,7 +16,6 @@ import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ZzTtPreviewRouteImport } from './routes/zz-tt-preview'
 import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/app/route'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
@@ -153,11 +152,6 @@ const RegisterRoute = RegisterRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ZzTtPreviewRoute = ZzTtPreviewRouteImport.update({
-  id: '/zz-tt-preview',
-  path: '/zz-tt-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppRouteRoute = AuthenticatedAppRouteRouteImport.update({
@@ -757,7 +751,6 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/zz-tt-preview': typeof ZzTtPreviewRoute
   '/app': typeof AuthenticatedAppRouteRouteWithChildren
   '/invite/$token': typeof InviteTokenRoute
   '/join/$token': typeof JoinTokenRoute
@@ -869,7 +862,6 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/zz-tt-preview': typeof ZzTtPreviewRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$token': typeof JoinTokenRoute
   '/app/academic': typeof AuthenticatedAppAcademicRoute
@@ -982,7 +974,6 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/zz-tt-preview': typeof ZzTtPreviewRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteRouteWithChildren
   '/invite/$token': typeof InviteTokenRoute
   '/join/$token': typeof JoinTokenRoute
@@ -1096,7 +1087,6 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/register'
     | '/reset-password'
-    | '/zz-tt-preview'
     | '/app'
     | '/invite/$token'
     | '/join/$token'
@@ -1208,7 +1198,6 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/register'
     | '/reset-password'
-    | '/zz-tt-preview'
     | '/invite/$token'
     | '/join/$token'
     | '/app/academic'
@@ -1320,7 +1309,6 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/register'
     | '/reset-password'
-    | '/zz-tt-preview'
     | '/_authenticated/app'
     | '/invite/$token'
     | '/join/$token'
@@ -1434,7 +1422,6 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ZzTtPreviewRoute: typeof ZzTtPreviewRoute
   InviteTokenRoute: typeof InviteTokenRoute
   JoinTokenRoute: typeof JoinTokenRoute
   JoinTrackCodeRoute: typeof JoinTrackCodeRoute
@@ -1497,13 +1484,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/zz-tt-preview': {
-      id: '/zz-tt-preview'
-      path: '/zz-tt-preview'
-      fullPath: '/zz-tt-preview'
-      preLoaderRoute: typeof ZzTtPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app': {
@@ -2448,7 +2428,6 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ZzTtPreviewRoute: ZzTtPreviewRoute,
   InviteTokenRoute: InviteTokenRoute,
   JoinTokenRoute: JoinTokenRoute,
   JoinTrackCodeRoute: JoinTrackCodeRoute,
