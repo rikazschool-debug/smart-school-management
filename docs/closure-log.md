@@ -1124,3 +1124,7 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - 2026-11-17 Stage 5 batch 3 resources/bulletins (sv5_res_*): versioned draft→review→publish, file references, library shelf; res.py 34 PASS, browser resui OK. Test-DB incident: file policies briefly pointed to renamed can_read_file; recreated and verified.
 - 2026-11-17 Stage 5 batch 4 professional portfolio (sv5_pf_*): teacher proposes approved/verified own work by reference, in-scope verifier, immutable once verified; pf.py 28 PASS, pfui.py OK.
 - 2026-11-17 Stage 5 batch 5 dashboard (sv5_dash): scoped indicators with definition/denominator/period/last update and drill-down; no_data vs zero vs not measured; no edu cases; dash.py 16 PASS, dashui.py OK.
+
+## 2026-11-17 — مكتبة نماذج الإشراف (الدفعة 1)
+- قوالب إ2 لزيارة الدعم الصفي وخطة التطوير الفردية وتقييم البرنامج؛ تحقق خادمي للمواصفة؛ الشاهد لكل بند؛ حذف البنود الداخلية من نسخة المعلم في الخادم؛ مكتبة بفلاتر ومقارنة إصدارات ومحرر وطباعة A4.
+- الأدلة: /tmp/browser/sv460 (forms 26، priv 3، pilots 5، formsui)، supervision-forms.test.ts (7)، الحزمة الكاملة 549 ناجحًا. المتبقي: محتوى 14 نموذجًا (الدفعة 2).

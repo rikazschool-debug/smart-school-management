@@ -39,13 +39,13 @@ export function SupervisionHub({ sp, go }: { sp: SvSearch; go: (s: SvSearch, rep
           <span className={`grid size-8 shrink-0 place-items-center rounded-lg ${on ? "bg-primary-foreground/15" : "bg-primary/10 text-primary"}`}><t.icon className="size-4" /></span>
           <span className="min-w-0"><span className="block truncate text-sm font-semibold">{t.label}</span><span className={`block truncate text-[11px] ${on ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{t.hint}</span></span></button>; })}
       </div></nav>}
-    {cur === "records" && <Records org={org} me={m} openId={sp.id} onSel={(id) => go({ tab: "records", ...(id ? { id } : {}) }, false)} />}
+    {cur === "records" && <Records org={org} me={m} openId={sp.id} use={sp.use} onSel={(id) => go({ tab: "records", ...(id ? { id } : {}) }, false)} />}
     {cur === "pd" && <TeachersDevelopment org={org} me={m} sp={sp} go={go} />}
     {cur === "outcomes" && <LearningOutcomes org={org} me={m} sp={sp} go={go} />}
     {cur === "resources" && <Resources org={org} me={m} sp={sp} go={go} />}
     {cur === "work" && <PlansVisits org={org} me={m} sp={sp} go={go} />}
     {cur === "assign" && <Assignments org={org} me={m} />}
-    {cur === "forms" && <FormLibrary org={org} me={m} />}
+    {cur === "forms" && <FormLibrary org={org} me={m} go={go} />}
     {cur === "deleg" && <Delegations org={org} me={m} />}
   </div>;
 }
