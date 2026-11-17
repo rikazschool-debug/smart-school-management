@@ -19247,7 +19247,9 @@ export type Database = {
       }
       sv_evidence: {
         Row: {
+          activity_idx: number | null
           created_at: string
+          dev_plan_id: string | null
           file_id: string
           id: string
           plan_id: string | null
@@ -19258,7 +19260,9 @@ export type Database = {
           visit_id: string | null
         }
         Insert: {
+          activity_idx?: number | null
           created_at?: string
+          dev_plan_id?: string | null
           file_id: string
           id?: string
           plan_id?: string | null
@@ -19269,7 +19273,9 @@ export type Database = {
           visit_id?: string | null
         }
         Update: {
+          activity_idx?: number | null
           created_at?: string
+          dev_plan_id?: string | null
           file_id?: string
           id?: string
           plan_id?: string | null
@@ -19280,6 +19286,13 @@ export type Database = {
           visit_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "sv_evidence_dev_plan_id_fkey"
+            columns: ["dev_plan_id"]
+            isOneToOne: false
+            referencedRelation: "sv4_dev_plans"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sv_evidence_file_id_fkey"
             columns: ["file_id"]
@@ -19970,6 +19983,649 @@ export type Database = {
             columns: ["visit_id"]
             isOneToOne: false
             referencedRelation: "sv_scheduled_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_activity_log: {
+        Row: {
+          actor: string
+          at: string
+          id: string
+          idx: number
+          note: string | null
+          plan_id: string
+          state: string
+        }
+        Insert: {
+          actor?: string
+          at?: string
+          id?: string
+          idx: number
+          note?: string | null
+          plan_id: string
+          state: string
+        }
+        Update: {
+          actor?: string
+          at?: string
+          id?: string
+          idx?: number
+          note?: string | null
+          plan_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_activity_log_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "sv4_dev_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_attendance: {
+        Row: {
+          actor: string
+          at: string
+          id: string
+          session_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          actor?: string
+          at?: string
+          id?: string
+          session_id: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          actor?: string
+          at?: string
+          id?: string
+          session_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sv4_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_dev_plans: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          assignment_id: string | null
+          author_id: string
+          created_at: string
+          data: Json
+          handled_by: string | null
+          id: string
+          needs_reason: string | null
+          org_id: string
+          rev: number
+          revision_reason: string | null
+          school_id: string
+          status: string
+          submitted_at: string | null
+          teacher_id: string
+          updated_at: string
+          version: number
+          version_of: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assignment_id?: string | null
+          author_id: string
+          created_at?: string
+          data?: Json
+          handled_by?: string | null
+          id?: string
+          needs_reason?: string | null
+          org_id: string
+          rev?: number
+          revision_reason?: string | null
+          school_id: string
+          status?: string
+          submitted_at?: string | null
+          teacher_id: string
+          updated_at?: string
+          version?: number
+          version_of?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assignment_id?: string | null
+          author_id?: string
+          created_at?: string
+          data?: Json
+          handled_by?: string | null
+          id?: string
+          needs_reason?: string | null
+          org_id?: string
+          rev?: number
+          revision_reason?: string | null
+          school_id?: string
+          status?: string
+          submitted_at?: string | null
+          teacher_id?: string
+          updated_at?: string
+          version?: number
+          version_of?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_dev_plans_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "sv_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv4_dev_plans_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv4_dev_plans_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv4_dev_plans_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv4_dev_plans_version_of_fkey"
+            columns: ["version_of"]
+            isOneToOne: false
+            referencedRelation: "sv4_dev_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_enrollments: {
+        Row: {
+          actor: string
+          at: string
+          id: string
+          program_id: string
+          reason: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          actor?: string
+          at?: string
+          id?: string
+          program_id: string
+          reason?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          actor?: string
+          at?: string
+          id?: string
+          program_id?: string
+          reason?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_enrollments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "sv4_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_feedback: {
+        Row: {
+          answers: Json
+          created_at: string
+          form_id: string
+          form_snapshot: Json
+          form_version: number
+          id: string
+          kind: string
+          named: boolean
+          program_id: string
+          respondent: string
+        }
+        Insert: {
+          answers: Json
+          created_at?: string
+          form_id: string
+          form_snapshot: Json
+          form_version: number
+          id?: string
+          kind: string
+          named: boolean
+          program_id: string
+          respondent?: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          form_id?: string
+          form_snapshot?: Json
+          form_version?: number
+          id?: string
+          kind?: string
+          named?: boolean
+          program_id?: string
+          respondent?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_feedback_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "sv_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv4_feedback_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "sv4_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_meeting_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          meeting_id: string
+          ref_id: string
+          school_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind: string
+          meeting_id: string
+          ref_id: string
+          school_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          meeting_id?: string
+          ref_id?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_meeting_links_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "adm_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv4_meeting_links_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_needs: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          domain: string
+          expected_outcome: string
+          id: string
+          internal_note: string | null
+          org_id: string
+          priority: string
+          priority_reason: string
+          rev: number
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school_id: string
+          source: string
+          source_note: string | null
+          source_ref: string | null
+          status: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description: string
+          domain: string
+          expected_outcome: string
+          id?: string
+          internal_note?: string | null
+          org_id: string
+          priority: string
+          priority_reason: string
+          rev?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id: string
+          source: string
+          source_note?: string | null
+          source_ref?: string | null
+          status?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          domain?: string
+          expected_outcome?: string
+          id?: string
+          internal_note?: string | null
+          org_id?: string
+          priority?: string
+          priority_reason?: string
+          rev?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string
+          source?: string
+          source_note?: string | null
+          source_ref?: string | null
+          status?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_needs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv4_needs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv4_needs_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_outcomes: {
+        Row: {
+          created_at: string
+          created_by: string
+          due: string
+          evidence: string | null
+          id: string
+          impact: string | null
+          kind: string
+          note: string | null
+          post: string | null
+          pre: string | null
+          program_id: string
+          rev: number
+          state: string
+          submitted_at: string | null
+          tool: string | null
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          due: string
+          evidence?: string | null
+          id?: string
+          impact?: string | null
+          kind: string
+          note?: string | null
+          post?: string | null
+          pre?: string | null
+          program_id: string
+          rev?: number
+          state?: string
+          submitted_at?: string | null
+          tool?: string | null
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          due?: string
+          evidence?: string | null
+          id?: string
+          impact?: string | null
+          kind?: string
+          note?: string | null
+          post?: string | null
+          pre?: string | null
+          program_id?: string
+          rev?: number
+          state?: string
+          submitted_at?: string | null
+          tool?: string | null
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_outcomes_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "sv4_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_plan_reviews: {
+        Row: {
+          author_id: string
+          created_at: string
+          evidence: string | null
+          held_on: string
+          id: string
+          impact: string
+          notes: string
+          plan_id: string
+          teacher_visible: boolean
+        }
+        Insert: {
+          author_id?: string
+          created_at?: string
+          evidence?: string | null
+          held_on: string
+          id?: string
+          impact?: string
+          notes: string
+          plan_id: string
+          teacher_visible?: boolean
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          evidence?: string | null
+          held_on?: string
+          id?: string
+          impact?: string
+          notes?: string
+          plan_id?: string
+          teacher_visible?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_plan_reviews_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "sv4_dev_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_programs: {
+        Row: {
+          audience: string
+          cancel_reason: string | null
+          created_at: string
+          created_by: string
+          id: string
+          location: string | null
+          meeting_url: string | null
+          mode: string
+          need_ids: string[]
+          objectives: string
+          org_id: string
+          rev: number
+          school_id: string
+          status: string
+          title: string
+          trainer_name: string
+          trainer_user: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          cancel_reason?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          location?: string | null
+          meeting_url?: string | null
+          mode: string
+          need_ids?: string[]
+          objectives: string
+          org_id: string
+          rev?: number
+          school_id: string
+          status?: string
+          title: string
+          trainer_name: string
+          trainer_user?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          cancel_reason?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          location?: string | null
+          meeting_url?: string | null
+          mode?: string
+          need_ids?: string[]
+          objectives?: string
+          org_id?: string
+          rev?: number
+          school_id?: string
+          status?: string
+          title?: string
+          trainer_name?: string
+          trainer_user?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_programs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv4_programs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv4_sessions: {
+        Row: {
+          cancel_reason: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          location: string | null
+          program_id: string
+          rev: number
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          cancel_reason?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          location?: string | null
+          program_id: string
+          rev?: number
+          starts_at: string
+          status?: string
+        }
+        Update: {
+          cancel_reason?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          location?: string | null
+          program_id?: string
+          rev?: number
+          starts_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv4_sessions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "sv4_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -29182,6 +29838,109 @@ export type Database = {
         Args: { _id: string; _p: Json; _rev: number }
         Returns: string
       }
+      sv4_activity_update: {
+        Args: { _idx: number; _note: string; _plan: string; _state: string }
+        Returns: string
+      }
+      sv4_attend: {
+        Args: { _session: string; _status: string; _user: string }
+        Returns: undefined
+      }
+      sv4_enroll: {
+        Args: {
+          _action: string
+          _program: string
+          _reason: string
+          _user: string
+        }
+        Returns: undefined
+      }
+      sv4_feedback_save: {
+        Args: {
+          _answers: Json
+          _kind: string
+          _named: boolean
+          _program: string
+        }
+        Returns: string
+      }
+      sv4_feedback_summary: { Args: { _program: string }; Returns: Json }
+      sv4_file_create: { Args: { _p: Json }; Returns: Json }
+      sv4_file_list: { Args: { _plan: string }; Returns: Json }
+      sv4_hr_hours: { Args: { _school: string }; Returns: Json }
+      sv4_indicators: { Args: { _org: string }; Returns: Json }
+      sv4_meeting_link: {
+        Args: { _kind: string; _meeting: string; _ref: string }
+        Returns: string
+      }
+      sv4_meeting_list: { Args: { _org: string }; Returns: Json }
+      sv4_need_list: { Args: { _org: string }; Returns: Json }
+      sv4_need_review: {
+        Args: { _decision: string; _id: string; _note: string; _rev: number }
+        Returns: undefined
+      }
+      sv4_need_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv4_outcome_plan: {
+        Args: {
+          _due: string
+          _kind: string
+          _program: string
+          _tool: string
+          _user: string
+        }
+        Returns: string
+      }
+      sv4_outcome_submit: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: undefined
+      }
+      sv4_outcome_verify: {
+        Args: { _id: string; _note: string; _rev: number }
+        Returns: undefined
+      }
+      sv4_plan_act: {
+        Args: { _action: string; _id: string; _rev: number; _text: string }
+        Returns: undefined
+      }
+      sv4_plan_handover: {
+        Args: { _id: string; _reason: string; _to: string }
+        Returns: undefined
+      }
+      sv4_plan_list: { Args: { _org: string }; Returns: Json }
+      sv4_plan_review_save: {
+        Args: { _p: Json; _plan: string }
+        Returns: string
+      }
+      sv4_plan_revise: {
+        Args: { _id: string; _reason: string; _rev: number }
+        Returns: string
+      }
+      sv4_plan_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv4_program_act: {
+        Args: { _action: string; _id: string; _rev: number; _text: string }
+        Returns: undefined
+      }
+      sv4_program_list: { Args: { _org: string }; Returns: Json }
+      sv4_program_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv4_session_cancel: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      sv4_session_save: {
+        Args: { _id: string; _p: Json; _program: string }
+        Returns: string
+      }
+      sv4_teacher_list: { Args: { _org: string }; Returns: Json }
+      sv4_teacher_profile: { Args: { _teacher: string }; Returns: Json }
       sync_class_group: {
         Args: { _section: string; _year: string }
         Returns: string
