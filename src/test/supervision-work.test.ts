@@ -42,3 +42,14 @@ describe("supervision plans and visits", () => {
     expect(filterWork([visit], [plan], { ...filters, from: "2026-11-18" })).toEqual([]);
   });
 });
+import { impactLine, impactNeedsEvidence } from "@/components/supervision/work-model";
+describe("follow-up impact states", () => {
+  it("an unmeasured impact is shown as unmeasured, never as improvement or failure", () => {
+    expect(impactLine("not_measured", "anything")).toBe("لم يُقس الأثر بعد");
+    expect(impactNeedsEvidence("not_measured", "")).toBe(false);
+  });
+  it("met, partial and not met each require documented evidence", () => {
+    for (const s of ["met", "partial", "not_met"]) { expect(impactNeedsEvidence(s, "")).toBe(true); expect(impactNeedsEvidence(s, "  ab ")).toBe(true); expect(impactNeedsEvidence(s, "نتائج اختبار قصير")).toBe(false); }
+    expect(impactLine("partial", "ملاحظة صفية")).toBe("تحقق جزئيًا بدليل — الدليل: ملاحظة صفية");
+  });
+});
