@@ -66,7 +66,7 @@ function ProgramDetail({ p, d, onBack }: { p: Program; d: PdData; onBack: () => 
   const teachers = d.teachers.filter((t) => t.school_id === p.school_id && t.user_id && !p.enrollments.some((e) => e.user_id === t.user_id && (e.status === "registered" || e.status === "nominated")));
   function certificate() {
     const rows = p.sessions.filter((s) => s.status === "scheduled" && mine?.attendance.some((a) => a.session_id === s.id && a.status === "present")).map((s) => [`${riyadhText(s.starts_at).replace(" (الرياض)", "")} — ${(riyadhText(s.ends_at).split("، ").pop() ?? "").replace(" (الرياض)", "")}`, Number(s.hours)] as [string, number]);
-    printReport({ title: INTERNAL_CERT, filters: [`المشارك: ${mine?.name ?? ""}`, `البرنامج: ${p.title}`, `الفرع: ${p.school}`, `المدرب: ${p.trainer_name}`, `نمط التنفيذ: ${MODE[p.mode]}`, `تاريخ الإصدار: ${riyadhText(new Date().toISOString())}`],
+    printReport({ title: INTERNAL_CERT, school: p.school, filters: [], count: false, details: [`المشارك: ${mine?.name ?? ""}`, `البرنامج: ${p.title}`, `الفرع: ${p.school}`, `المدرب: ${p.trainer_name}`, `نمط التنفيذ: ${MODE[p.mode]}`, `عدد الجلسات الموثقة: ${rows.length}`],
       note: "تُحسب الساعات من الجلسات المجدولة التي سُجل حضورك فيها فقط، وكل جلسة مرة واحدة. هذه إفادة داخلية صادرة من النظام وليست شهادة معتمدة رسميًا ولا تحمل توقيعًا أو ختمًا." },
       ["الجلسة (بتوقيت الرياض)", "الساعات"], [...rows, ["مجموع الساعات الموثقة", myHours]]);
   }
