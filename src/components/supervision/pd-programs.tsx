@@ -118,8 +118,8 @@ function FeedbackSummary({ p }: { p: Program }) {
   return <section aria-label="ملخص التقييم" className="space-y-2 rounded-lg border p-3"><h3 className="font-bold">ملخص الرضا (منفصل عن الحضور والتعلم والتطبيق والأثر)</h3>
     {q.error && <p className="text-sm text-destructive">{arabicError(q.error)}</p>}
     {(q.data ?? []).map((s) => <div key={s.kind} className="text-sm"><p className="font-semibold">{s.kind === "program_eval" ? "تقييم البرنامج" : "تقييم المدرب"}: {s.adopted ? "" : "النموذج غير معتمد بعد · "}{s.responses} استجابة من {s.attendees} حاضر · لم يستجب {s.no_response}</p>
-      {s.named.length > 0 && <p className="text-xs">أسماء من اختار الاستجابة المسماة: {s.named.join("، ")}</p>}
-      {s.questions === null ? <p className="text-xs text-muted-foreground">أقل من 3 استجابات؛ لا تُعرض التفاصيل حتى لا يُستنتج صاحب الإجابة.</p>
+      {s.named.length > 0 && <p className="text-xs">من اختار الاستجابة المسماة (ترتيب أبجدي، دون ربط بإجاباتهم): {s.named.join("، ")}</p>}
+      {s.questions === null ? <p className="text-xs text-muted-foreground">{s.hidden === "open" ? "تُعرض أعداد الإجابات بعد إغلاق البرنامج فقط، حتى لا تكشف المقارنة بين عرضين إجابة من قيّم بينهما." : "أقل من 3 استجابات؛ لا تُعرض التفاصيل حتى لا يُستنتج صاحب الإجابة."}</p>
         : <ul className="text-xs">{s.questions.map((x) => <li key={x.key}>{x.label}: {Object.entries(x.counts).map(([o, n]) => `${o} ${n}`).join(" · ")} · بلا إجابة {x.unanswered}</li>)}</ul>}</div>)}
     <p className="text-xs text-muted-foreground">أعداد فقط: لا متوسطات ولا نسب، والإجابة الغائبة ليست صفرًا.</p></section>;
 }
