@@ -19535,6 +19535,44 @@ export type Database = {
           },
         ]
       }
+      sv_plan_progress: {
+        Row: {
+          action_index: number
+          actor: string
+          at: string
+          id: string
+          note: string | null
+          record_id: string
+          state: string
+        }
+        Insert: {
+          action_index: number
+          actor?: string
+          at?: string
+          id?: string
+          note?: string | null
+          record_id: string
+          state: string
+        }
+        Update: {
+          action_index?: number
+          actor?: string
+          at?: string
+          id?: string
+          note?: string | null
+          record_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_plan_progress_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "sv_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sv_recommendations: {
         Row: {
           action: string
@@ -29107,6 +29145,11 @@ export type Database = {
         Returns: undefined
       }
       sv3_plan_list: { Args: { _org: string }; Returns: Json }
+      sv3_plan_progress_list: { Args: { _record: string }; Returns: Json }
+      sv3_plan_progress_save: {
+        Args: { _index: number; _note: string; _record: string; _state: string }
+        Returns: string
+      }
       sv3_plan_revision: {
         Args: { _id: string; _reason: string; _rev: number }
         Returns: string
