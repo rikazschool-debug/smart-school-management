@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { HeartHandshake, HeartPulse, Sparkles, BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
+import { BarChart3, HeartHandshake, HeartPulse, Sparkles, BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { StatusPill } from "@/components/family-visits/shared";
@@ -13,6 +13,7 @@ import { HealthFile } from "@/components/health/health-file";
 import { FamilyGuidance } from "@/components/guidance/family-summaries";
 import { FamilyGifted } from "@/components/gifted/family";
 import type { ChildTab } from "./search";
+import { AttendanceCalendar, AttendanceReport } from "./attendance";
 
 /** One child's (or the student's own) overview. Everything comes from family_child, which checks the link on the server. */
 export type ChildData = {
@@ -54,6 +55,7 @@ export function ChildOverview({ studentId, initialTab }: { studentId: string; in
   const guardian = d.viewer === "guardian";
   const tabs: { k: Tab; label: string; icon: typeof BookOpen }[] = [
     { k: "attendance", label: "الحضور", icon: CalendarCheck },
+    { k: "att_report", label: "تقارير الحضور والمواظبة", icon: BarChart3 },
     { k: "schedule", label: "الجدول", icon: CalendarDays },
     { k: "classrooms", label: "الفصل الرقمي", icon: School },
     { k: "homework", label: "الواجبات", icon: ClipboardList },
@@ -79,7 +81,8 @@ export function ChildOverview({ studentId, initialTab }: { studentId: string; in
           </button>
         ))}
       </div>
-      {tab === "attendance" && <Attendance studentId={d.student.id} />}
+      {tab === "attendance" && <AttendanceCalendar studentId={d.student.id} />}
+      {tab === "att_report" && <AttendanceReport studentId={d.student.id} studentName={d.student.name} />}
       {tab === "schedule" && <Timetable rows={d.timetable} />}
       {tab === "gifted" && <FamilyGifted studentId={d.student.id} />}
       {tab === "guidance" && guardian && <FamilyGuidance studentId={d.student.id} />}
@@ -168,43 +171,3 @@ function Finance({ f }: { f: NonNullable<ChildData["finance"]> }) {
   );
 }
 
-const DAY_ST: Record<string, { label: string; cls: string }> = {
-  present: { label: "حاضر", cls: "bg-primary/10 text-primary" },
-  late: { label: "متأخر", cls: "bg-accent text-accent-foreground" },
-  excused: { label: "غائب بعذر", cls: "bg-muted text-muted-foreground" },
-  absent: { label: "غائب", cls: "bg-destructive/10 text-destructive" },
-  in_school_absent: { label: "دخل المدرسة ولم يحضر الفصل — بانتظار تحقق المدرسة", cls: "bg-destructive/10 text-destructive" },
-  pending_review: { label: "بانتظار تحقق المدرسة", cls: "bg-accent text-accent-foreground" },
-};
-type AttRow = { date?: string; status: string; note: string | null; recorded_at: string; updated_at: string };
-const tm = (s: string) => new Date(s).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh", dateStyle: "short", timeStyle: "short" });
-
-/** Daily attendance from family_attendance (server checks the verified link). */
-function Attendance({ studentId }: { studentId: string }) {
-  const q = useQuery({
-    queryKey: ["family-att", studentId],
-    queryFn: async () => { const { data, error } = await db.rpc("family_attendance", { _student: studentId }); if (error) throw error; return data as { today: string; today_row: AttRow | null; history: AttRow[] }; },
-  });
-  if (q.isLoading) return <LoadingState />;
-  if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
-  const a = q.data!;
-  const pill = (s: string) => { const x = DAY_ST[s] ?? { label: s, cls: "bg-muted" }; return <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", x.cls)}>{x.label}</span>; };
-  return (
-    <div className="space-y-4">
-      <div className="rounded-xl border bg-card p-5" aria-label="حضور اليوم">
-        <p className="text-sm text-muted-foreground">حضور اليوم · {a.today}</p>
-        <div className="mt-2">{a.today_row ? pill(a.today_row.status) : <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs">لم يُرصد بعد</span>}</div>
-        {a.today_row && <p className="mt-2 text-xs text-muted-foreground">وقت الرصد: {tm(a.today_row.recorded_at)} · آخر تحديث: {tm(a.today_row.updated_at)}</p>}
-        {a.today_row?.note && <p className="mt-1 text-sm">{a.today_row.note}</p>}
-      </div>
-      <div className="rounded-xl border bg-card p-5">
-        <p className="mb-2 font-semibold">آخر 30 يومًا</p>
-        {!a.history.length ? <p className="text-sm text-muted-foreground">لا يوجد سجل حضور سابق.</p> : (
-          <ul className="divide-y text-sm">{a.history.map((h) => (
-            <li key={h.date} className="flex flex-wrap items-center justify-between gap-2 py-2"><span>{h.date}</span><span className="flex items-center gap-2">{h.note && <span className="text-xs text-muted-foreground">{h.note}</span>}{pill(h.status)}</span></li>
-          ))}</ul>
-        )}
-      </div>
-    </div>
-  );
-}
