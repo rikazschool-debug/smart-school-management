@@ -19,6 +19,7 @@ import { PasswordInput } from "@/components/password-input";
 import { resetStaffPassword } from "@/lib/accounts.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { BASE_TABS, peopleForTab, type PermPerson } from "@/lib/perm-tabs";
+import { menuOrderedCatalog } from "@/lib/perm-order";
 
 export const Route = createFileRoute("/_authenticated/app/permissions")({
   head: () => ({ meta: [{ title: "إعداد المستخدمين والصلاحيات — ركاز" }, { name: "description", content: "الأدوار والمسميات وصلاحيات الأقسام ونطاقاتها." }, { property: "og:title", content: "إعداد المستخدمين والصلاحيات — ركاز" }, { property: "og:description", content: "إدارة المستخدمين وتخصيص صلاحيات الأقسام والأدوار في ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -101,7 +102,7 @@ function useDisabled(org: string) {
 }
 
 function useCatalog() {
-  return useQuery({ queryKey: ["perm-catalog"], queryFn: async () => (await call("perm_catalog", {})) as Catalog });
+  return useQuery({ queryKey: ["perm-catalog"], queryFn: async () => menuOrderedCatalog((await call("perm_catalog", {})) as never) as unknown as Catalog });
 }
 
 function Roles({ org }: { org: string }) {

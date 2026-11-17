@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { selectCls } from "@/components/ui/native-select";
 
-export type PermSec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean; base_only?: boolean; locked_reason?: string; children?: string[] };
+export type PermSec = { key: string; label: string; parent: string; actions: string[]; scopes: string[]; labels?: Record<string, string>; sensitive?: boolean; base_only?: boolean; locked_reason?: string; children?: string[]; /** server area before menu regrouping */ origin?: string; order?: number };
 export type PermCatalog = { areas: { key: string; label: string; soon?: boolean }[]; sections: PermSec[]; actions: Record<string, string>; scopes: Record<string, string>; locked: string[] };
 export type Grant = { section: string; action: string; scope: string };
 
@@ -86,8 +86,10 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
       {!shown.length && <p className="py-8 text-center text-sm text-muted-foreground">لا توجد صلاحيات مطابقة.</p>}
       <ul className="space-y-4">
         {shown.map(({ ar, secs }) => {
-          const locked = disabledAreas.includes(ar.key);
           const all = c.sections.filter((s) => s.parent === ar.key);
+          const offSec = (s: PermSec) => disabledAreas.includes(s.origin ?? s.parent);
+          const locked = disabledAreas.includes(ar.key) || (all.length > 0 && all.every(offSec));
+          const lockedArea = locked;
           const st = all.map(secState);
           const aState = !all.length || st.every((x) => x === "none") ? "none" : st.every((x) => x !== "none") ? "all" : "some";
           const isOpen = true;
@@ -96,11 +98,11 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
               <div className="flex flex-wrap items-center gap-2 border-b pb-3">
                 <TriBox label={ar.label} state={aState} disabled={readOnly || locked || ar.soon || !all.some((s) => baseAction(s) && s.scopes.length)} onChange={(on) => {
                   if (!on) return void clearArea(ar);
-                  const add = all.flatMap((s) => { const a = baseAction(s); const scope = s.scopes[0]; return a && scope && !has(s.key, a) && (!s.base_only || was(`${s.key}.${a}`)) ? [{ section: s.key, action: a, scope }] : []; });
+                  const add = all.flatMap((s) => { const a = baseAction(s); const scope = s.scopes[0]; return !offSec(s) && a && scope && !has(s.key, a) && (!s.base_only || was(`${s.key}.${a}`)) ? [{ section: s.key, action: a, scope }] : []; });
                   onChange([...value, ...add]); setOpen({ ...open, [ar.key]: true });
                 }} />
                 <span className="min-w-0 flex-1 text-base font-semibold">{ar.label}</span>
-                <Button type="button" variant="outline" size="sm" disabled={readOnly || locked || ar.soon} onClick={() => { const add = all.flatMap((s) => { const a = baseAction(s), scope = s.scopes[0]; return a && scope && !has(s.key, a) && (!s.base_only || was(`${s.key}.${a}`)) ? [{section:s.key, action:a, scope}] : []; }); onChange([...value,...add]); }}><Eye />منح العرض</Button>
+                <Button type="button" variant="outline" size="sm" disabled={readOnly || locked || ar.soon} onClick={() => { const add = all.flatMap((s) => { const a = baseAction(s), scope = s.scopes[0]; return !offSec(s) && a && scope && !has(s.key, a) && (!s.base_only || was(`${s.key}.${a}`)) ? [{section:s.key, action:a, scope}] : []; }); onChange([...value,...add]); }}><Eye />منح العرض</Button>
                 <Button type="button" variant="ghost" size="icon" title={`إلغاء صلاحيات ${ar.label}`} aria-label={`إلغاء صلاحيات ${ar.label}`} disabled={readOnly || locked || ar.soon || aState === "none"} onClick={() => void clearArea(ar)}><X className="text-destructive" /></Button>
                 {ar.soon && <span className="rounded bg-muted px-2 text-xs text-muted-foreground">تحت الإنشاء</span>}
                 {locked && <span className="flex items-center gap-1 rounded bg-muted px-2 text-xs text-muted-foreground"><Lock className="size-3" />معلّق من المنصة</span>}
@@ -109,6 +111,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                 <ul className="mt-3 divide-y">
                   {secs.map((s) => {
                     const so = open[s.key] ?? !!term;
+                    const locked = lockedArea || offSec(s);
                     return (
                       <li key={s.key} className="py-3">
                         <div className="flex items-center gap-2">
@@ -120,6 +123,7 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                           <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{s.actions.filter((a) => has(s.key,a)).length}/{s.actions.length}</span>
                           <Button type="button" size="icon" variant="ghost" className="size-7 shrink-0" aria-label={`إلغاء ${s.label}`} title={`إلغاء ${s.label}`} disabled={readOnly || locked || secState(s) === "none" || (!!s.locked_reason && !s.base_only)} onClick={() => tickSection(s,false)}><X className="text-destructive" /></Button>
                         </div>
+                        {locked && !lockedArea && <p className="ms-8 mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Lock className="size-3" />معلّق من المنصة</p>}
                         {s.locked_reason && <p className="ms-8 mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Lock className="size-3" />{s.locked_reason}</p>}
                         {so && s.children && <ul className="ms-8 mt-2 space-y-1 text-xs text-muted-foreground">{s.children.map((child) => <li key={child}>{child}</li>)}</ul>}
                         {so && !s.locked_reason && !baseAction(s) && secState(s) === "none" && <p className="ms-8 mt-1 text-xs text-muted-foreground">لا عرض مستقلًا لهذا القسم؛ اختر الإجراء المطلوب صراحة.</p>}

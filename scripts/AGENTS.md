@@ -140,3 +140,4 @@
 - Test-DB bulk cleanup: service-only public._purge_test_org(org, "purge:<org>") removes one synthetic org (refuses Malki + demo org); ADMS test orgs stay because adms_events is append-only.
 - Test accounts: every TS test imports scripts/lib/user-pool.ts first; @rikaz.test users are reused from a pool (renamed on create, parked as pool-* on delete) instead of being created/deleted each run — avoids exhausting the test DB disk budget. POOL_OFF=1 disables.
 - Supervision stage-3 acceptance uses six existing synthetic identities and one new isolated org; do not run cleanup while the current request excludes it. Browser/evidence acceptance stops on first failure and never retries network timeouts.
+- scripts/perm8-e2e.ts: guidance/gifted/remedial grants save; school map is its own section (view/create/edit, deny, independence from documents, no self-grant; 20 checks).

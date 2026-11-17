@@ -1151,3 +1151,10 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Extracted current handler bodies/helpers and preserved current web validators; shared service retains delivery namespace, registration, portal gates, existing-account issuance and unknown-send handling. Added bounded HTTP routes and isolated HTTP/service/web regression tests, plus compiled runtime rejection probes.
 - Read-only VPS evidence: healthy current image; all eight privileged RPC dependencies exist and remain service-only; `_idl_student` matches ID plus C-Smart student number. Existing Nginx public-route deny explains current HTTP 503. Proposed exact exceptions and rollout/rollback instructions are review artifacts, not active configuration.
 - Full CI evidence is recorded on the review PR. No live messages, login challenge calls, database writes, migrations, server secret/config changes or VPS deployment performed. Mobile flag stays 0; real student/OTP/session acceptance remains pending explicit deployment and test-account authorization.
+
+## 2026-11-17 — Permissions tree completed (prompt-467)
+- Tree groups and order now mirror the side menu (11 groups); unknown future sections go to «أقسام أخرى», never hidden.
+- Fixed: «التوجيه الطلابي» / «رعاية الموهوبين» / «الخطط العلاجية» were listed but every grant was rejected («صلاحية غير مدعومة»); actions now have Arabic names and branch/org scopes.
+- «الخريطة المدرسية» is its own section (عرض / إضافة / تعديل وحذف); role defaults unchanged from the documents section; menu item follows school_map.view.
+- «الإشراف التربوي» shows as an explained, locked card: its delegations stay inside the section (owner-only, branch/form/time scoped).
+- Evidence: scripts/perm8-e2e.ts 20/20, perm7-e2e 20/20, perm5-e2e 19/20 (check 20 expects platform admins blocked from perm_effective — contradicts the platform-admin-acts-as-owner rule; untouched by this change), vitest perm-order 5/5 + perm-tree 4/4, browser check as an isolated owner (test org removed).

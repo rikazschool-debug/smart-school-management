@@ -715,3 +715,11 @@ The `other` request kind uses the same verified-child access, school/org scope, 
 ### الخريطة المدرسية — prompt-465 (2026-11-17)
 - إزالة قسم صورة المبنى من العرض فقط؛ صلاحيات قراءة وتعديل المباني والغرف لم تتغير، ولا حذف للصور المحفوظة.
 2026-11-17 (mobile auth review only): Three bounded public HTTP login routes delegate to the existing service-only `_idl_*` proof and account-token flow shared with the web. No database/RLS/role grants or account creation were added. Staff/guardian portal checks and VPS/cloud delivery namespaces remain intact. Student credentials are national ID plus `students.csmart_no`, not a Supabase password. Nginx exact-route proposals remain unapplied; see docs/integrations/mobile-auth-overlay-20261117.md.
+
+### school_map (الخريطة المدرسية) — independent since 2026-11-17
+| Action | Default | Grantable |
+|---|---|---|
+| view | same roles as org_docs view | yes (branch/org) |
+| create | same roles as org_docs create | yes |
+| edit (incl. delete) | same roles as org_docs edit | yes |
+Guidance / gifted / remedial grants (view/record/manage/export) are now accepted by the server.
