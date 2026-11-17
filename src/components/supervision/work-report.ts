@@ -1,3 +1,4 @@
+import { impactLine } from "./work-model";
 import type { SvRecordFull } from "./model";
 import { ACTION_LABEL, REC_STATUS, riyadhText } from "./model";
 import { EXECUTION, PLAN_KIND, REC_STATE, VISIT_STATE, type Plan, type VisitFull } from "./work-model";
@@ -44,6 +45,6 @@ export function fullVisitReport(v: VisitFull, record: SvRecordFull | null, sessi
     }
     if (record.teacher_comment) report.rows.push(["المعلم", "التعقيب", record.teacher_comment]);
   }
-  for (const s of sessions) report.rows.push(["جلسة متابعة", `${s.held_on} · ${s.author}`, `${s.notes} · ${s.impact === "not_measured" ? "لم يقس الأثر" : s.evidence ?? "—"}`]);
+  for (const s of sessions) report.rows.push(["جلسة متابعة", `${s.held_on} · ${s.author}`, `${s.notes} · ${impactLine(s.impact, s.evidence)}`]);
   return report;
 }
