@@ -1,0 +1,1 @@
+create index if not exists sv5_portfolio_org on public.sv5_portfolio(org_id);

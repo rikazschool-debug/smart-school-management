@@ -21191,6 +21191,135 @@ export type Database = {
           },
         ]
       }
+      sv5_portfolio: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          org_id: string
+          proposed_by: string
+          reflection: string
+          rev: number
+          review_note: string | null
+          school_id: string
+          source_date: string
+          source_id: string
+          source_kind: string
+          source_snap: Json
+          status: string
+          teacher_id: string
+          term_name: string | null
+          title: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          year_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          org_id: string
+          proposed_by: string
+          reflection?: string
+          rev?: number
+          review_note?: string | null
+          school_id: string
+          source_date: string
+          source_id: string
+          source_kind: string
+          source_snap: Json
+          status?: string
+          teacher_id: string
+          term_name?: string | null
+          title: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          year_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          org_id?: string
+          proposed_by?: string
+          reflection?: string
+          rev?: number
+          review_note?: string | null
+          school_id?: string
+          source_date?: string
+          source_id?: string
+          source_kind?: string
+          source_snap?: Json
+          status?: string
+          teacher_id?: string
+          term_name?: string | null
+          title?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          year_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_portfolio_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_portfolio_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sv5_portfolio_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sv5_portfolio_log: {
+        Row: {
+          action: string
+          actor: string
+          at: string
+          id: string
+          item_id: string
+          note: string | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          at?: string
+          id?: string
+          item_id: string
+          note?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          at?: string
+          id?: string
+          item_id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv5_portfolio_log_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "sv5_portfolio"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sv5_resource_files: {
         Row: {
           added_at: string
@@ -30885,6 +31014,21 @@ export type Database = {
       sv5_measure_save: {
         Args: { _id: string; _p: Json; _rev: number }
         Returns: string
+      }
+      sv5_pf_candidates: { Args: { _school: string }; Returns: Json }
+      sv5_pf_get: { Args: { _id: string }; Returns: Json }
+      sv5_pf_list: { Args: { _org: string }; Returns: Json }
+      sv5_pf_review: {
+        Args: { _decision: string; _id: string; _note: string; _rev: number }
+        Returns: undefined
+      }
+      sv5_pf_save: {
+        Args: { _id: string; _p: Json; _rev: number }
+        Returns: string
+      }
+      sv5_pf_withdraw: {
+        Args: { _id: string; _rev: number }
+        Returns: undefined
       }
       sv5_refs: { Args: { _org: string }; Returns: Json }
       sv5_res_add_file: {
