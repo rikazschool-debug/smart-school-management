@@ -76,6 +76,9 @@ function Manage({ org, list, scopes, open }: { org: string; list: Resource[]; sc
   </div>;
 }
 
+/** Field label at module scope so inputs keep focus while typing. */
+function F({ t, children }: { t: string; children: React.ReactNode }) { return <label className="grid gap-1 text-sm"><span className="font-medium">{t}</span>{children}</label>; }
+
 function ResForm({ org, scopes, r, onDone }: { org: string; scopes?: { id: string | null; name: string }[]; r?: ResourceDetail; onDone: (id?: string) => void }) {
   const qc = useQueryClient(); const [busy, setBusy] = useState(false);
   const [p, setP] = useState(() => ({ school_id: r ? r.school_id ?? "" : (scopes?.[0]?.id ?? ""), kind: r?.kind ?? "bulletin", title: r?.title ?? "", summary: r?.summary ?? "", body: r?.body ?? "", domain: r?.domain ?? "",
@@ -84,7 +87,6 @@ function ResForm({ org, scopes, r, onDone }: { org: string; scopes?: { id: strin
   const claim = OFFICIAL_CLAIM.test(`${p.title} ${p.summary}`);
   const miss = resMissing({ ...p, files: r?.file_list.length ?? 0 });
   async function save() { setBusy(true); try { const id = await call("sv5_res_save", { _id: r?.id ?? null, _rev: r?.rev ?? null, _p: { ...p, org_id: org, school_id: p.school_id || null, subjects: splitList(p.subjects), stages: splitList(p.stages), keywords: splitList(p.keywords) } }, "حُفظت المسودة") as string; await qc.invalidateQueries({ queryKey: ["sv5"] }); onDone(id); } catch { /* shown; text kept */ } finally { setBusy(false); } }
-  const F = ({ t, children }: { t: string; children: React.ReactNode }) => <label className="grid gap-1 text-sm"><span className="font-medium">{t}</span>{children}</label>;
   return <section className="space-y-3 rounded-lg border border-primary/40 p-3" aria-label="بيانات المورد">
     <h4 className="font-semibold">{r ? `تعديل المسودة — إصدار ${r.version}` : "مورد جديد"}</h4>
     <div className="grid gap-3 md:grid-cols-3">
