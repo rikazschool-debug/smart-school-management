@@ -162,7 +162,7 @@
 - [x] Stage 4 reports Arabic print + PDF/Excel row match (sv449/reports.py: owner, sup3, t1 + status filter; Riyadh dates; status filter scoped to its list)
 - [x] Evaluation privacy: accepted only while open, breakdown only after close with ≥3, honest wording (sv448/fbpriv.py)
 - [ ] Camera / GitHub (external — record blocker)
-- [ ] Stage 5: learning outcomes (sources, Excel import preview, analysis, comparison rules, MCQ analysis)
+- [x] Stage 5: learning outcomes (sources, Excel import preview, analysis, comparison rules, MCQ analysis) — sv449/lo.py + loui.py
 - [ ] Stage 5: analysis → improvement action
 - [ ] Stage 5: resources/bulletins on existing library, versions, review/publish
 - [ ] Stage 5: professional portfolio
