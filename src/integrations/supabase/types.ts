@@ -26868,6 +26868,10 @@ export type Database = {
         Returns: undefined
       }
       family_attendance: { Args: { _student: string }; Returns: Json }
+      family_attendance_range: {
+        Args: { _from: string; _student: string; _to: string }
+        Returns: Json
+      }
       family_child: { Args: { _student: string }; Returns: Json }
       family_children: { Args: never; Returns: Json }
       family_contacts: {
