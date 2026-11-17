@@ -8,14 +8,15 @@
 import * as XLSX from "xlsx";
 import { brandHeaderHtml, getExportBrand } from "@/lib/export-brand";
 
-export type ExportMeta = { title: string; school?: string | undefined; filters: string[]; note?: string | undefined };
+/** details: labelled lines for a single-person document (replaces the «الفلاتر» line); count: false hides «عدد السجلات». */
+export type ExportMeta = { title: string; school?: string | undefined; filters: string[]; note?: string | undefined; details?: string[] | undefined; count?: boolean | undefined };
 type Cell = string | number | null | undefined;
 
 const stamp = () => new Date().toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh" });
 const fileName = (t: string, ext: string) => `${t.replace(/[\\/:*?"<>|]/g, "-")}-${new Date().toISOString().slice(0, 10)}.${ext}`;
 const metaLines = (m: ExportMeta, n: number) => [
-  `الجهة: ${m.school ?? "—"}`, `تاريخ التصدير: ${stamp()}`, `الفلاتر: ${m.filters.join("، ") || "بدون"}`,
-  ...(m.note ? [m.note] : []), `عدد السجلات: ${n}`,
+  `الجهة: ${m.school ?? "—"}`, `تاريخ التصدير: ${stamp()}`, ...(m.details ?? [`الفلاتر: ${m.filters.join("، ") || "بدون"}`]),
+  ...(m.note ? [m.note] : []), ...(m.count === false ? [] : [`عدد السجلات: ${n}`]),
 ];
 
 /** Builds the worksheet with typed cells: numbers stay numbers, everything else is a literal string cell. */
