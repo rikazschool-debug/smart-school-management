@@ -213,14 +213,14 @@ export const NAV_LABELS: Partial<Record<NavKey, string>> = {
   hr_training: "التدريب والتطوير",
   home: "لوحة التحكم المركزية", academic: "الإعداد الأكاديمي", teachers: "الكادر التعليمي", courses: "المقررات والتكليفات", students: "الطلاب والتسكين", guardians: "أولياء الأمور", tags: "الوسوم", chat_settings: "ضبط المحادثات",
   classrooms: "الفصول الرقمية", virtual: "الحصص الافتراضية", homework: "مذكرة الواجبات", grades: "أرشيف الدرجات الفصلية", results: "النتائج", schedule: "الجدول المدرسي",
-  attendance: "الحضور والمواظبة", station: "المسح والبوابة والنداء", pickup: "الخروج والاستئذان", admin: "التكليفات والطلبات", duties: "المناوبات", meetings: "الاجتماعات",
+  attendance: "الحضور والمواظبة", station: "المسح والبوابة والنداء", pickup: "الخروج والاستئذان", admin: "التكليفات", duties: "المناوبات", meetings: "الاجتماعات",
   communication: "التواصل", circulars: "التعاميم", comm_groups: "المجموعات", comm_manage: "إدارة المجموعات", notifications: "الإشعارات", support: "الدعم والمساعدة", calls: "المكالمات الهاتفية",
   procurement: "المشتريات والعهد", school_home: "لوحة المدرسة", maintenance: "إدارة صيانة المباني", bus_maintenance: "إدارة تشغيل وصيانة الباصات", admissions: "القبول والتسجيل",
 };
 
 /** Staff menu/page name: principal-level gets the unified HR directory («والإداري»); other roles keep the teaching staff list. */
 export function teachersLabel(role: Role | "platform_admin"): string {
-  return role === "principal" || role === "org_owner" ? "الكادر التعليمي والإداري" : "الكادر التعليمي";
+  return role === "teacher" ? "الكادر التعليمي" : "الكادر التعليمي والإداري";
 }
 /** Principal-level roles see the read-only HR staff directory (mirrors school_staff_directory → is_school_principal). */
 export function seesStaffDirectory(role: Role | "platform_admin"): boolean {

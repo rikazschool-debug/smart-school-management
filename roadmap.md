@@ -175,3 +175,10 @@
 - [x] Forms library batch 2: v2 content for the remaining 13 forms (teacher_ack embedded, unchanged) — sv461/batch2.py + ui2.py
 
 - [x] prompt-467: permissions tree completed (menu order, school map own section, guidance grants fix, supervision card)
+
+## prompt-474 (open)
+- [x] Menu: إدارة المدرسة order, «التكليفات» rename, accordion groups, activities items flat
+- [ ] Students page: stage/grade filters + better search area; guardians: children-count + tags filters
+- [ ] Staff directory: stage column + filters; teacher records: employee no., HR ID import, account status only, «مسمى الإسناد» from HR, school/stage/phone, filters
+- [ ] Digital library add form: description, optional attachments before save, optional stage/grade
+- [ ] Merge attendance + pickup + station into one «الحضور والمواظبة» section

@@ -3,7 +3,7 @@ import { ChevronDown, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /** Presentation state only: callers supply already-authorized links. */
-export function NavigationSection({ label, active, routeKey, children, trigger, badge }: {
+export function NavigationSection({ label, active, routeKey, children, trigger, badge, open, onOpenChange }: {
   label: string;
   active: boolean;
   routeKey: string;
@@ -11,10 +11,15 @@ export function NavigationSection({ label, active, routeKey, children, trigger, 
   trigger?: ReactNode;
   /** optional counter shown beside a heading (presentation only) */
   badge?: ReactNode;
+  /** controlled mode (accordion): parent decides which group is open */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [expanded, setExpanded] = useState(active);
+  const [own, setOwn] = useState(active);
+  const expanded = open ?? own;
+  const setExpanded = (f: (v: boolean) => boolean) => { const v = f(expanded); if (onOpenChange) onOpenChange(v); else setOwn(v); };
   const id = useId();
-  useEffect(() => { if (active) setExpanded(true); }, [active, routeKey]);
+  useEffect(() => { if (active && open === undefined) setOwn(true); }, [active, routeKey, open]);
   const Chevron = expanded ? ChevronDown : ChevronLeft;
   return (
     <div>

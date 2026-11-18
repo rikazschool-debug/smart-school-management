@@ -141,6 +141,8 @@ function Shell() {
   usePresenceBeat(user.id);
   const unread = useUnreadNotifications(!!active);
   const [open, setOpen] = useState(false);
+  // accordion: only one menu group open at a time; follows the current page's group
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const qc = useQueryClient();
   // Staff granted procurement permissions get a workspace entry; the server (pc_me → perm_scope) is the only source.
   const pcRole = !!active?.orgId && !["org_owner", "platform_admin", "student", "guardian"].includes(active.role);
@@ -163,6 +165,7 @@ function Shell() {
   const evCan = (t: string) => { if (evOwner) return true; const c = evMe.data?.caps ?? {}; return t === "summary" ? !!c["ev_summary.view"] : t === "guardians" ? !!c["ev_guardian.view"] : t === "visits" ? !!(c["ev_visits.view"] || c["ev_visits.execute"]) : t === "monthly" ? !!c["ev_monthly.view"] : !!(c["ev_forms.view"] || c["ev_forms.edit"]); };
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
+  useEffect(() => { setOpenGroup(null); }, [path]);
   const supTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "") });
   const evTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "summary") });
   const ownerInSchool = useOwnerInSchool();
@@ -253,6 +256,7 @@ function Shell() {
     if (k === "evaluation" && cleanPath === "/app/visits") return true;
     return cleanPath === n.to || cleanPath.startsWith(n.to + "/");
   };
+  const activeGroup = groups.find((g) => g.keys.some(navActive))?.label ?? null;
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (
     <nav aria-label="القائمة الرئيسية" className="flex h-full flex-col">
@@ -328,9 +332,9 @@ function Shell() {
                     </div>
                   )}
                   {k === "events" && !["guardian", "student"].includes(active.role) && (
-                    <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
+                    <div className="space-y-0.5">
                       {EVT_SUB.filter(([t]) => t === "summary" || !pcRole || ["principal", "vice_principal"].includes(active.role) || hasEvents(evt.data)).map(([t, label]) => (
-                        <Link key={t} to="/app/events" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>
+                        <Link key={t} to="/app/events" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className="flex min-h-10 items-center gap-3 rounded-md px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary">{label}</Link>
                       ))}
                     </div>
                   )}
@@ -348,7 +352,7 @@ function Shell() {
             </div>;
           // a group holding one entry of the same name, «الرئيسية» and alerts show their links directly (no second fold)
           const flat = !g.label || g.label === "التنبيهات والدعم" || g.label === "الرئيسية";
-          return !flat ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} routeKey={path + supTab} badge={<SectionBadge n={g.keys.reduce((a, k) => a + secCount(k), 0)} label={g.label} />}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
+          return !flat ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} open={(openGroup ?? activeGroup) === g.label} onOpenChange={(v) => setOpenGroup(v ? g.label : "")} routeKey={path + supTab} badge={<SectionBadge n={g.keys.reduce((a, k) => a + secCount(k), 0)} label={g.label} />}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
         })}
       </div>
       <div className="border-t border-sidebar-border p-3">
