@@ -152,7 +152,7 @@ export const hm = (t?: string | null) => (t ? t.slice(0, 5) : "");
 export const riyadhDate = (ts: string) => new Date(ts).toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" });
 export const riyadhTime = (ts: string) => new Date(ts).toLocaleTimeString("en-GB", { timeZone: "Asia/Riyadh", hour: "2-digit", minute: "2-digit" });
 
-export const DUTY_KIND: Record<string, string> = { break: "الفسحة", gate: "البوابة", corridor: "الممرات", prayer: "المصلى", bus: "الحافلات", other: "أخرى" };
+export const DUTY_KIND: Record<string, string> = { break: "الفسحة", gate: "البوابة", corridor: "الممرات", prayer: "المصلى", bus: "الحافلات", classroom: "الفصل", other: "أخرى" };
 export const DUTY_STATUS: Record<string, string> = { assigned: "مسندة", replaced: "استُبدلت ببديل", cancelled: "ملغاة" };
 export const EXEC_STATUS: Record<string, string> = { pending: "لم يوثق", done: "نُفذت", not_done: "تعذر التنفيذ" };
 export const MEETING_STATUS: Record<string, string> = { draft: "مسودة", scheduled: "مجدول", cancelled: "ملغى", held: "منعقد" };
