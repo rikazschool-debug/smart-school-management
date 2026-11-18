@@ -1205,3 +1205,5 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - prompt-482: أُضيفت طباعة جميع مباني وأدوار وغرف الفرع دون فلاتر، واستُبدلت المرحلة بقسم التعيين مع اختيار متعدد، وفُصل المسمى الوظيفي عن الإسناد، وأُضيف هاتف ملف الموارد البشرية للمصرّح لهم، وأُخفي الفرع من جدول الكادر والتصدير والتصنيف من ملف الموظف دون حذف بيانات. اجتازت 11 اختبارًا و6 فحوص على الترحيلين ببيانات وصلاحيات اصطناعية محليًا؛ لم يُتحقق من الطباعة أو القائمة بحساب مسجل في المتصفح، ولا نشر.
 
 - prompt-489 (Nov 18 2026): org owner always passes _adm_duty_view/_manage/_setup/_setup_view (no principal role needed); duty post kind «الفصل» (classroom) added. Unverified in a signed-in browser.
+
+- prompt-490 (Nov 18 2026): «مالك المجموعة» displayed as «مدير النظام» (UI + server messages; role unchanged; stored HR job titles untouched). Several people per duty location (required = target, same person twice refused). Quick assignment tab (adm_duty_quick via adm_duty_quick_save/cancel/list; person+date+location, optional grade/section/period/note; managers only, employee notified). Unverified signed-in.

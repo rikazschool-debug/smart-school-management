@@ -971,6 +971,96 @@ export type Database = {
           },
         ]
       }
+      adm_duty_quick: {
+        Row: {
+          cancel_reason: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string
+          date: string
+          grade_id: string | null
+          id: string
+          note: string | null
+          period_id: string | null
+          post_id: string
+          school_id: string
+          section_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          date: string
+          grade_id?: string | null
+          id?: string
+          note?: string | null
+          period_id?: string | null
+          post_id: string
+          school_id: string
+          section_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_reason?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string
+          date?: string
+          grade_id?: string | null
+          id?: string
+          note?: string | null
+          period_id?: string | null
+          post_id?: string
+          school_id?: string
+          section_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adm_duty_quick_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_duty_quick_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_duty_quick_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "adm_duty_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_duty_quick_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adm_duty_quick_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       adm_duty_rosters: {
         Row: {
           created_at: string
@@ -26434,6 +26524,44 @@ export type Database = {
       adm_duty_publish: {
         Args: { _rev: number; _roster: string }
         Returns: number
+      }
+      adm_duty_quick_cancel: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      adm_duty_quick_list: {
+        Args: { _from: string; _mine: boolean; _school: string; _to: string }
+        Returns: {
+          cancel_reason: string
+          created_at: string
+          created_by_name: string
+          date: string
+          grade: string
+          id: string
+          note: string
+          period: string
+          period_time: string
+          post: string
+          post_id: string
+          section: string
+          status: string
+          user_id: string
+          user_name: string
+        }[]
+      }
+      adm_duty_quick_save: {
+        Args: {
+          _client: string
+          _date: string
+          _grade: string
+          _note: string
+          _period: string
+          _post: string
+          _school: string
+          _section: string
+          _user: string
+        }
+        Returns: string
       }
       adm_duty_remove: {
         Args: { _id: string; _reason: string }
