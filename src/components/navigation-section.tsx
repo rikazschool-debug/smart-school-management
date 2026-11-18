@@ -35,7 +35,9 @@ export function NavigationSection({ label, active, routeKey, children, trigger, 
           <Chevron className="size-4 shrink-0" />
         </Button>
       </div>
-      <div id={id} hidden={!expanded} className={trigger ? "mt-0.5" : "space-y-0.5"}>{children}</div>
+      <div id={id} inert={!expanded} aria-hidden={!expanded} className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none ${expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className={`min-h-0 overflow-hidden ${trigger ? "mt-0.5" : "space-y-0.5"}`}>{children}</div>
+      </div>
     </div>
   );
 }

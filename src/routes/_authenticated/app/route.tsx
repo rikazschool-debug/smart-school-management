@@ -76,10 +76,10 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   grades: { to: "/app/grades", label: "أرشيف الدرجات الفصلية", icon: Award },
   results: { to: "/app/results", label: "النتائج", icon: Award },
   schedule: { to: "/app/schedule", label: "الجدول المدرسي", icon: CalendarDays },
-  attendance: { to: "/app/attendance", label: "الحضور والمواظبة", icon: ScanLine },
+  attendance: { to: "/app/attendance", label: "المواظبة والاستئذان", icon: ScanLine },
   station: { to: "/app/attendance-station", label: "المسح والبوابة والنداء", icon: ScanLine },
   pickup: { to: "/app/pickup", label: "الخروج والاستئذان", icon: DoorOpen },
-  admin: { to: "/app/admin", label: "التكليفات والطلبات", icon: Briefcase },
+  admin: { to: "/app/admin", label: "التكليفات", icon: Briefcase },
   duties: { to: "/app/admin/duties", label: "المناوبات", icon: ShieldCheck },
   meetings: { to: "/app/admin/meetings", label: "الاجتماعات", icon: UsersRound },
   communication: { to: "/app/communication", label: "المحادثات", icon: MessagesSquare },
@@ -256,6 +256,7 @@ function Shell() {
     if (k === "home") return cleanPath === n.to;
     if (k === "admissions" && ["/app/students", "/app/guardians", "/app/family-requests"].includes(cleanPath)) return true;
     if (k === "evaluation" && cleanPath === "/app/visits") return true;
+    if (k === "attendance" && (cleanPath === "/app/attendance-station" || cleanPath === "/app/attendance-scan")) return true;
     if (k === "attendance" && attSubs.some((x) => x !== "attendance" && (cleanPath === NAV[x].to || cleanPath.startsWith(NAV[x].to + "/")))) return true;
     return cleanPath === n.to || cleanPath.startsWith(n.to + "/");
   };
@@ -279,7 +280,7 @@ function Shell() {
                 const hasSubmenu = ["collaboration", "procurement", "admissions"].includes(k) ||
                   (k === "evaluation" && evStaff) || (k === "support" && inSupport && !platformHelp && (active.role === "platform_admin" || !!sCaps.data)) ||
                   (k === "calls" && mqSecs.length > 0) || (k === "classrooms" && path.startsWith("/app/classrooms/section/")) ||
-                  (k === "events" && !["guardian", "student"].includes(active.role)) || (k === "attendance" && attSubs.length > 1);
+                  (k === "events" && !["guardian", "student"].includes(active.role));
                 const link = <Link
                     to={n.to}
                     {...(n.tab ? { search: { tab: n.tab } } : k === "support" && owner && section && section !== "support" ? { search: { tab: "mine", p: "1" } } : {})}
@@ -334,7 +335,6 @@ function Shell() {
                       ))}
                     </div>
                   )}
-                  {k === "attendance" && attSubs.length > 1 && <>{link}<div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">{attSubs.map((x) => <Link key={x} to={NAV[x].to} onClick={() => setOpen(false)} className={SUB_CLS}>{x === "attendance" ? "الحضور اليومي" : NAV[x].label}</Link>)}</div></>}
                   {k === "events" && !["guardian", "student"].includes(active.role) && (
                     <div className="space-y-0.5">
                       {EVT_SUB.filter(([t]) => t === "summary" || !pcRole || ["principal", "vice_principal"].includes(active.role) || hasEvents(evt.data)).map(([t, label]) => (

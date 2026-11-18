@@ -20,7 +20,7 @@ import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { FIELD_TYPES, FORM_STATUS, PRIORITY, REQ_STATUS, STAFF_ROLES, TASK_STATUS, isLead, Pill, useStaff, type Field } from "@/components/admin/shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin/")({
-  head: () => ({ meta: [{ title: "الإدارة المدرسية | ركاز" }, { name: "description", content: "التكليفات والطلبات والنماذج والمناوبات والاجتماعات في المدرسة" }] }),
+  head: () => ({ meta: [{ title: "الإدارة المدرسية | ركاز" }, { name: "description", content: "التكليفات والنماذج والمناوبات والاجتماعات في المدرسة" }] }),
   component: Page,
 });
 

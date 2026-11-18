@@ -18,6 +18,14 @@ import { arabicError, useSession } from "@/lib/session";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
 import { MaterialFileViewer } from "./material-file-viewer";
 import { SupervisionShelf } from "@/components/supervision/res";
+const ORD = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+function standardGrades(stage: string): string[] {
+  if (stage.includes("رياض") || stage.includes("طفول")) return ["المستوى الأول (KG1)", "المستوى الثاني (KG2)", "المستوى الثالث (KG3)"];
+  if (stage.includes("ابتدائ")) return ORD.map((o) => `${o} الابتدائي`);
+  if (stage.includes("متوسط")) return ORD.slice(0, 3).map((o) => `${o} المتوسط`);
+  if (stage.includes("ثانو")) return ORD.slice(0, 3).map((o) => `${o} الثانوي`);
+  return [];
+}
 const categories: Record<string, string> = { activities: "أنشطة", teaching: "مواد تعليمية", worksheets: "أوراق عمل", notes: "مذكرات", summaries: "ملخصات", courses: "دورات" };
 export function Collaboration() {
   const { active, contexts, setActive } = useSession();
@@ -59,7 +67,8 @@ function MaterialEditor({ row, org, school, category, done }: { row: Row | null;
     return { stages: (st.data ?? []) as Row[], grades: (gr.data ?? []) as Row[] };
   } });
   const stageId = levels.data?.stages.find((x) => x["name"] === stage)?.["id"];
-  const gradeOpts = [...new Set((levels.data?.grades ?? []).filter((g) => !stageId || g["stage_id"] === stageId).map((g) => g["name"] as string))];
+  // branch grades first, then the standard Saudi grades of the chosen stage (the branch may not have set up every grade yet)
+  const gradeOpts = stage ? [...new Set([...(levels.data?.grades ?? []).filter((g) => g["stage_id"] === stageId).map((g) => g["name"] as string), ...standardGrades(stage)])] : [];
   const save = async () => {
     setBusy(true);
     try {
@@ -84,10 +93,10 @@ function MaterialEditor({ row, org, school, category, done }: { row: Row | null;
     {!row && <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-secondary-foreground">شارك مادة مع زملائك في المجموعة: اكتب عنوانًا واضحًا ووصفًا مختصرًا، واختر التصنيف، ثم أرفق الملفات إن وُجدت. المرحلة والصف والمرفقات اختيارية.</p>}
     <div className="space-y-1"><label className={lab} htmlFor="co-title">عنوان المادة <span className="text-destructive">*</span></label><Input id="co-title" value={title} disabled={!canEdit} maxLength={200} placeholder="مثال: ورقة عمل الكسور العشرية" onChange={(e) => setTitle(e.target.value)} /><p className={hint}>حرفان على الأقل.</p></div>
     <div className="space-y-1"><label className={lab} htmlFor="co-desc">الشرح / الوصف</label><Textarea id="co-desc" rows={4} value={description} disabled={!canEdit} placeholder="ما الذي تحتويه المادة، ولمن تناسب، وكيف تُستخدم؟" onChange={(e) => setDescription(e.target.value)} /></div>
-    <div className="space-y-1"><label className={lab} htmlFor="co-cat">التصنيف</label><select id="co-cat" className={selectCls()} disabled={!canEdit} value={cat} onChange={(e) => setCat(e.target.value)}>{Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+    <div className="space-y-1"><label className={lab} htmlFor="co-cat">التصنيف</label><select id="co-cat" className={selectCls("w-full")} disabled={!canEdit} value={cat} onChange={(e) => setCat(e.target.value)}>{Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
     <div className="grid gap-3 sm:grid-cols-2">
-      <div className="space-y-1"><label className={lab} htmlFor="co-stage">المرحلة <span className="font-normal text-muted-foreground">(اختياري)</span></label><select id="co-stage" className={selectCls()} disabled={!canEdit} value={stage} onChange={(e) => { setStage(e.target.value); setGrade(""); }}><option value="">— غير محددة —</option>{(levels.data?.stages ?? []).map((x) => <option key={x["id"]} value={x["name"]}>{x["name"]}</option>)}{stage && !levels.data?.stages.some((x) => x["name"] === stage) && <option value={stage}>{stage}</option>}</select></div>
-      <div className="space-y-1"><label className={lab} htmlFor="co-grade">الصف <span className="font-normal text-muted-foreground">(اختياري)</span></label><select id="co-grade" className={selectCls()} disabled={!canEdit} value={grade} onChange={(e) => setGrade(e.target.value)}><option value="">— غير محدد —</option>{gradeOpts.map((x) => <option key={x} value={x}>{x}</option>)}{grade && !gradeOpts.includes(grade) && <option value={grade}>{grade}</option>}</select></div>
+      <div className="space-y-1"><label className={lab} htmlFor="co-stage">المرحلة <span className="font-normal text-muted-foreground">(اختياري)</span></label><select id="co-stage" className={selectCls("w-full")} disabled={!canEdit} value={stage} onChange={(e) => { setStage(e.target.value); setGrade(""); }}><option value="">— غير محددة —</option>{(levels.data?.stages ?? []).map((x) => <option key={x["id"]} value={x["name"]}>{x["name"]}</option>)}{stage && !levels.data?.stages.some((x) => x["name"] === stage) && <option value={stage}>{stage}</option>}</select></div>
+      <div className="space-y-1"><label className={lab} htmlFor="co-grade">الصف <span className="font-normal text-muted-foreground">(اختياري)</span></label><select id="co-grade" className={selectCls("w-full")} disabled={!canEdit || !stage} title={!stage ? "اختر المرحلة أولًا" : undefined} value={grade} onChange={(e) => setGrade(e.target.value)}><option value="">{stage ? "— غير محدد —" : "اختر المرحلة أولًا"}</option>{gradeOpts.map((x) => <option key={x} value={x}>{x}</option>)}{grade && !gradeOpts.includes(grade) && <option value={grade}>{grade}</option>}</select></div>
     </div>
     <p className={hint}>تحديد المرحلة والصف غير إلزامي، ويساعد الزملاء في الوصول للمادة المناسبة.</p>
     {canEdit && <div className="space-y-2 rounded-lg border border-dashed p-3">

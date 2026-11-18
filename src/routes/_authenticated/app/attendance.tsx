@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ScanLine } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { AttHubNav, ATT_TAB_CLS } from "@/components/attendance/hub-nav";
 import { useState } from "react";
 import { TickStatus } from "@/components/attendance/tick-status";
 import { PageHeader } from "@/components/states";
@@ -14,7 +14,7 @@ import { useSession } from "@/lib/session";
 import type { AppContext } from "@/lib/session";
 
 export const Route = createFileRoute("/_authenticated/app/attendance")({
-  head: () => ({ meta: [{ title: "الحضور والمواظبة — ركاز" }, { name: "description", content: "الحضور بالباركود، المواظبة، الاستئذان والاستلام، النداء والسجلات." }, { property: "og:title", content: "الحضور والمواظبة — ركاز" }, { property: "og:description", content: "متابعة حضور الطلاب ومواظبتهم والاستئذان." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "المواظبة والاستئذان — ركاز" }, { name: "description", content: "الحضور بالباركود، المواظبة، الاستئذان والاستلام، النداء والسجلات." }, { property: "og:title", content: "المواظبة والاستئذان — ركاز" }, { property: "og:description", content: "متابعة حضور الطلاب ومواظبتهم والاستئذان." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Page,
 });
 
@@ -40,11 +40,11 @@ function Att({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const gate = perms && ctx.role !== "org_owner" ? !!perms["gate.operate"] || canApprove : ctx.role !== "teacher" && ctx.role !== "counselor";
   return (
     <>
-      <PageHeader title={ctx.role === "teacher" && !ops.asst ? "رصد حضور اليوم وطلبات التجهيز" : "الحضور والمواظبة"} desc="الحضور الصباحي بالباركود منفصل عن طلبات الخروج والاستئذان. الطلب أو الموافقة أو النداء لا يعني أن الطالب خرج؛ الخروج يُسجَّل عند التسليم الفعلي فقط." />
-      {station && <Link to="/app/attendance-station" className="mb-4 inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-primary/5 px-4 py-2 font-semibold text-primary hover:bg-primary/10"><ScanLine className="size-5" />حضور الطلاب والنداء بالمسح</Link>}
+      <PageHeader title={ctx.role === "teacher" && !ops.asst ? "رصد حضور اليوم وطلبات التجهيز" : "المواظبة والاستئذان"} desc="الحضور الصباحي بالباركود منفصل عن طلبات الخروج والاستئذان. الطلب أو الموافقة أو النداء لا يعني أن الطالب خرج؛ الخروج يُسجَّل عند التسليم الفعلي فقط." />
+      <AttHubNav current="main" station={station} />
       {tabs.length > 1 && (
-        <div role="tablist" className="mb-5 flex flex-wrap gap-1 rounded-xl border bg-card p-1">
-          {tabs.map((t) => <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`rounded-lg px-3 py-1.5 text-sm font-medium ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>{LABEL[t]}</button>)}
+        <div role="tablist" className="mb-5 flex flex-wrap gap-1 rounded-full border bg-card p-1 shadow-sm">
+          {tabs.map((t) => <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={ATT_TAB_CLS(tab === t)}>{LABEL[t]}</button>)}
         </div>
       )}
       {tab === "lessons" && (ctx.role === "teacher" ? <LessonsTab /> : <LessonsSchoolTab schoolId={ctx.schoolId} />)}

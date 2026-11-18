@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader, EmptyState } from "@/components/states";
+import { AttHubNav, ATT_TAB_CLS } from "@/components/attendance/hub-nav";
 import { RequireSchool } from "@/components/require-school";
 import { AttendanceScanner } from "@/components/attendance/scanner";
 import { StudentSearchCheckin } from "@/components/attendance/student-search";
@@ -38,10 +39,10 @@ function Station({ ctx, picked, setTab }: { ctx: AppContext & { schoolId: string
         const tab: T = picked && tabs.includes(picked) ? picked : tabs[0]!;
         return (
           <>
-            <PageHeader title="حضور الطلاب والنداء بالمسح" desc="الحضور الصباحي بالبطاقة أو بالبحث، وحركة البوابة، وطابور النداء. الوقت والحالة يحددهما الخادم." />
-            <Link to="/app/attendance" className="mb-4 inline-block text-sm text-primary hover:underline">← العودة إلى الحضور والمواظبة</Link>
-            <div role="tablist" className="mb-5 flex flex-wrap gap-1 rounded-xl border bg-card p-1">
-              {tabs.map((t) => <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`rounded-lg px-3 py-1.5 text-sm font-medium ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>{LABEL[t]}</button>)}
+            <PageHeader title="المواظبة والاستئذان" desc="الحضور الصباحي بالبطاقة أو بالبحث، وحركة البوابة، وطابور النداء. الوقت والحالة يحددهما الخادم." />
+            <AttHubNav current="station" station />
+            <div role="tablist" className="mb-5 flex flex-wrap gap-1 rounded-full border bg-card p-1 shadow-sm">
+              {tabs.map((t) => <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={ATT_TAB_CLS(tab === t)}>{LABEL[t]}</button>)}
             </div>
             {tab === "scan" && <div className="space-y-6"><AttendanceScanner schoolId={ctx.schoolId} schoolName={ctx.schoolName} /><StudentSearchCheckin schoolId={ctx.schoolId} /></div>}
             {tab === "gate" && <GateTab ctx={ctx} canApprove={canApprove} />}

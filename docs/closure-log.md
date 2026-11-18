@@ -1185,3 +1185,4 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Students: stage/grade filters (nested inner filter; verified 13 vs 0 rows on test school). Guardians: children-count filter (tags filter already existed). Search box widened.
 - Staff: staff_extra(_school) RPC (owner/people_staff.view/can_edit_staff) → employee no., HR assignment title, school, stages; directory + teacher records columns/filters; account column status only. Not verified in browser (no signed-in session available).
 - Library: co_materials.stage_name/grade_name (optional); form with description, optional stage/grade, files queued before save.
+- prompt-476: «التكليفات» label everywhere; smooth menu-group animation; library grade list follows the chosen stage (branch grades + standard Saudi grades); attendance + gate/scan + pickup are one menu entry «المواظبة والاستئذان» with an in-page section switcher (AttHubNav), no sub-menu.
