@@ -68,8 +68,8 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
   const all = q.data ?? [];
   const picked = rows.filter((r) => selected.has(r.employee_id));
   const meta = () => ({ title: "الكادر التعليمي والإداري", school: all[0]?.school_name ?? undefined, filters: [s && `بحث: ${s}`, kind, departments.size ? `القسم: ${[...departments].map((d) => d ?? "بلا قسم").join("، ")}` : "", title && `الإسناد: ${title}`, tagView && tagOpts.find((t) => t.id === tag)?.name, acc && ACCOUNT_LABEL[acc as StaffRow["account"]], picked.length ? `المحددون: ${picked.length}` : ""].filter((v): v is string => typeof v === "string" && !!v) });
-  const headers = ["الاسم", "الرقم الوظيفي", ...(idView ? ["الهوية / الإقامة"] : []), "رقم الهاتف", "المسمى الوظيفي", "الإسناد", ...(tagView ? ["الوسوم"] : []), "النوع", "القسم", "حساب الدخول"];
-  const body = () => (picked.length ? picked : rows).map((r) => [r.full_name, r.employee_no, ...(idView ? [identity.data?.get(r.employee_id) ?? ""] : []), r.phone, r.job_title, r.assignment_note, ...(tagView ? [employeeTags(r.employee_id).map((t) => t.name).join("، ")] : []), r.kind, r.department, ACCOUNT_LABEL[r.account]]);
+  const headers = ["الاسم", "الرقم الوظيفي", ...(idView ? ["الهوية / الإقامة"] : []), "رقم الهاتف", "المسمى الوظيفي", "الإسناد", ...(tagView ? ["الوسوم"] : []), "القسم", "حساب الدخول"];
+  const body = () => (picked.length ? picked : rows).map((r) => [r.full_name, r.employee_no, ...(idView ? [identity.data?.get(r.employee_id) ?? ""] : []), r.phone, r.job_title, r.assignment_note, ...(tagView ? [employeeTags(r.employee_id).map((t) => t.name).join("، ")] : []), r.department, ACCOUNT_LABEL[r.account]]);
   const ready = rows.length > 0 && !q.isFetching && !(idView && identity.isFetching) && !tools.isFetching;
   const output = async (format: "print" | "excel" | "pdf") => {
     try {
@@ -143,7 +143,6 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
                   <td className="px-3 py-2">{r.job_title || "—"}</td>
                   <td className="px-3 py-2">{r.assignment_note || "—"}</td>
                   {tagView && <td className="px-3 py-2"><div className="flex min-w-20 flex-wrap gap-1">{employeeTags(r.employee_id).map((t) => <span key={t.id} className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">{t.name}</span>)}{!employeeTags(r.employee_id).length && "—"}</div></td>}
-                  <td className="px-3 py-2"><span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">{r.kind}</span></td>
                   <td className="px-3 py-2">{r.department || "—"}</td>
                   <td className="px-3 py-2">{r.account === "linked"
                     ? <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" />{ACCOUNT_LABEL.linked}</span>
