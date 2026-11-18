@@ -1,0 +1,2 @@
+alter table public.co_materials add column if not exists stage_name text, add column if not exists grade_name text;
+alter table public.co_materials add constraint co_materials_stage_len check (stage_name is null or char_length(stage_name) <= 80), add constraint co_materials_grade_len check (grade_name is null or char_length(grade_name) <= 80);

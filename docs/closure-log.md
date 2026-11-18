@@ -1179,3 +1179,9 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Read-only live preflight confirmed c3b14b15, 580 ledger rows, healthy services and no new support columns. Fresh local protected backup restored into a network-none same-image PostgreSQL sandbox; six migrations preserved the data fingerprints of 431 public/auth tables and historical ledger, and added only the intended schema/functions.
 - Resolved a QA-only restore-owner mismatch by matching the containing database's observed live owner inside the disposable sandbox. No production privilege change. Previous function definitions were saved privately and their transactional restore rehearsed in QA.
 - 138 focused local tests and TypeScript passed before upload. Full Linux checks, both builds, fixed-main verification and controlled deployment are mandatory next gates; final results belong to the release receipt and review. No live OTP/messages/calls or historical queue processing are part of acceptance. Plan: docs/releases/20261118-cors-and-six-migrations.md.
+
+## prompt-474/475 (Nov 18 2026)
+- Menu: school-admin order, «التكليفات», single open group, flat activities items, attendance/pickup/station under one «الحضور والمواظبة» entry (pages and permissions unchanged).
+- Students: stage/grade filters (nested inner filter; verified 13 vs 0 rows on test school). Guardians: children-count filter (tags filter already existed). Search box widened.
+- Staff: staff_extra(_school) RPC (owner/people_staff.view/can_edit_staff) → employee no., HR assignment title, school, stages; directory + teacher records columns/filters; account column status only. Not verified in browser (no signed-in session available).
+- Library: co_materials.stage_name/grade_name (optional); form with description, optional stage/grade, files queued before save.

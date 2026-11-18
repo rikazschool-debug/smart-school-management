@@ -15,7 +15,6 @@ import { canManageAcademic, seesStaffDirectory, teachersLabel } from "@/lib/role
 import { StaffDirectory } from "@/components/staff-directory";
 import { AccountButton } from "@/components/account-button";
 import { PeopleImport } from "@/components/people-import-dialog";
-import { AccountPanel } from "@/components/account-panel";
 import { localPhone } from "@/lib/people-import";
 import { arabicError } from "@/lib/session";
 import { StaffPresence, useStaffPresence } from "@/components/education/staff-presence";
@@ -52,6 +51,19 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
     },
   });
   const st = (r: Row) => ids.data?.get(r["id"]);
+  // HR-sourced extras (employee no., assignment title, stages) — staff_extra re-checks access
+  type Extra = { teacher_id: string | null; employee_no: string | null; assignment_title: string | null; school_name: string | null; stages: string | null };
+  const extra = useQuery({ queryKey: ["staff-extra", schoolId, "t"], queryFn: async () => {
+    const { data, error } = await db.rpc("staff_extra" as never, { _school: schoolId } as never); if (error) throw error;
+    return new Map(((data ?? []) as Extra[]).filter((x) => x.teacher_id).map((x) => [x.teacher_id!, x]));
+  } });
+  const ex = (r: Row) => extra.data?.get(r["id"]);
+  const exVals = (k: "assignment_title" | "stages") => [...new Set([...(extra.data?.values() ?? [])].flatMap((x) => (x[k] ?? "").split("، ")).filter(Boolean))].sort().map((v) => ({ value: v, label: v }));
+  const exIds = (k: "assignment_title" | "stages") => async (_s: string, v: string) => {
+    const m = extra.data ?? new Map<string, Extra>();
+    const { data } = await db.from("teachers").select("id").eq("school_id", schoolId).limit(10000);
+    return ((data ?? []) as Row[]).map((t) => t["id"] as string).filter((id) => { const val = m.get(id)?.[k] ?? ""; return v === "__none" ? !val : val.split("، ").includes(v); });
+  };
   const dir = seesStaffDirectory(role) || !!perms0?.["people_staff.view"];
   const [tab, setTab] = useState<"dir" | "teachers">(dir ? "dir" : "teachers");
   return (
@@ -70,8 +82,11 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
       </>) : (<>
       <PageHeader title={dir ? "سجلات المعلمين" : teachersLabel(role)} desc="يدخل المعلم برقم الهوية أو الإقامة ثم رمز تحقق يصل إلى جواله المعتمد لدى الإدارة. التخصصات والأقسام إدارة تعليمية فقط." />
       <CrudTable person={{ kind: "teacher" }} title="المعلمون" table="teachers" schoolId={schoolId} canWrite={w} order="full_name"
-        select={COLS} searchKeys={["full_name", "display_name", "email", "specialization"]}
+        select={COLS} searchKeys={["full_name", "display_name", "email", "phone", "specialization"]}
         filters={[
+          { key: "x_stage", label: "المرحلة", options: [{ value: "__none", label: "بلا مرحلة" }, ...exVals("stages")], ids: exIds("stages") },
+          { key: "x_title", label: "مسمى الإسناد", options: [{ value: "__none", label: "غير مسند في الموارد" }, ...exVals("assignment_title")], ids: exIds("assignment_title") },
+          { key: "x_acc", label: "الحساب", options: [{ value: "yes", label: "حساب مرتبط" }, { value: "no", label: "بلا حساب" }], ids: async (sid, v) => { const { data } = await db.from("teachers").select("id, user_id").eq("school_id", sid).limit(10000); return ((data ?? []) as Row[]).filter((t) => (v === "yes") === !!t["user_id"]).map((t) => t["id"] as string); } },
           { key: "department_id", label: "القسم", remote: { table: "departments", label: "name" } },
           { key: "status", label: "الحالة", options: [{ value: "active", label: "نشط" }, { value: "inactive", label: "موقوف" }] },
         ]}
@@ -89,8 +104,11 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
         defaults={{ status: "active" }}
         columns={[
           { label: "الاسم", text: (r) => r["display_name"] || r["full_name"], render: (r) => <>{r["display_name"] || r["full_name"]}{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>}</> },
-          ...(idView ? [{ label: "الهوية / الإقامة", text: (r: Row) => st(r)?.national_id ?? "", render: (r: Row) => <span dir="ltr">{st(r)?.national_id ?? "—"}</span> }] : []),
-          { label: "التخصص", render: (r) => r["specialization"] ?? "—" },
+          { label: "الرقم الوظيفي", text: (r) => ex(r)?.employee_no ?? "", render: (r) => <span dir="ltr">{ex(r)?.employee_no ?? "—"}</span> },
+          ...(idView ? [{ label: "الهوية / الإقامة", text: (r: Row) => st(r)?.national_id ?? st(r)?.hr_national_id ?? "", render: (r: Row) => { const s = st(r); return s?.national_id ? <span dir="ltr">{s.national_id}</span> : s?.hr_national_id ? <span title="من ملف الموارد البشرية"><span dir="ltr">{s.hr_national_id}</span> <span className="text-xs text-muted-foreground">(الموارد)</span></span> : <>—</>; } }] : []),
+          { label: "مسمى الإسناد", text: (r) => ex(r)?.assignment_title ?? "", render: (r) => ex(r)?.assignment_title ?? <span className="text-xs text-muted-foreground">غير مسند في الموارد</span> },
+          { label: "المدرسة", text: (r) => ex(r)?.school_name ?? "", render: (r) => ex(r)?.school_name ?? "—" },
+          { label: "المرحلة", text: (r) => ex(r)?.stages ?? "", render: (r) => ex(r)?.stages || "—" },
           { label: "الحالة", render: (r) => <StaffPresence data={presence.data?.get(r["id"])} /> },
           { label: "القسم", render: (r) => r["departments"]?.name ?? "—" },
           { label: "الجوال", render: (r) => <span dir="ltr">{localPhone(r["phone"]) || "—"}</span> },
@@ -99,7 +117,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
             if (s.state === "ready") return <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" /> جاهز للدخول بالهوية</span>;
             return <span className={`text-xs ${s.state === "conflict" ? "text-destructive" : "text-muted-foreground"}`}>{s.state === "conflict" ? "تعارض: " : "ينقص: "}{s.problem}</span>;
           } }] : []),
-          { label: "الحساب", render: (r) => <AccountPanel kind="teacher" id={r["id"]} canWrite={role === "org_owner"} /> },
+          { label: "الحساب", text: (r) => r["user_id"] ? "حساب مرتبط" : "بلا حساب", render: (r) => r["user_id"] ? <span className="flex items-center gap-1 whitespace-nowrap text-xs text-primary"><BadgeCheck className="size-3.5" />حساب مرتبط</span> : <span className="whitespace-nowrap text-xs text-muted-foreground">بلا حساب</span> },
         ]}
         extraActions={(r) => w || idEdit ? (
           <>

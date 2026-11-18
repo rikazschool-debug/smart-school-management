@@ -3298,9 +3298,11 @@ export type Database = {
           category: string
           created_at: string
           description: string
+          grade_name: string | null
           id: string
           org_id: string
           school_id: string
+          stage_name: string | null
           title: string
           updated_at: string
         }
@@ -3312,9 +3314,11 @@ export type Database = {
           category: string
           created_at?: string
           description?: string
+          grade_name?: string | null
           id?: string
           org_id: string
           school_id: string
+          stage_name?: string | null
           title: string
           updated_at?: string
         }
@@ -3326,9 +3330,11 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string
+          grade_name?: string | null
           id?: string
           org_id?: string
           school_id?: string
+          stage_name?: string | null
           title?: string
           updated_at?: string
         }
@@ -30475,6 +30481,17 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
           school_name: string
           user_id: string
+        }[]
+      }
+      staff_extra: {
+        Args: { _school: string }
+        Returns: {
+          assignment_title: string
+          employee_id: string
+          employee_no: string
+          school_name: string
+          stages: string
+          teacher_id: string
         }[]
       }
       staff_logins_list: {

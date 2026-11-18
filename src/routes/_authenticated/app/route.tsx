@@ -243,7 +243,9 @@ function Shell() {
   if (active.role === "platform_admin") nav = nav.filter((k) => ["home", "profile", "platform", "platform_subs", "signup_requests", "platform_notices", "schools", "notifications", "support", "collaboration"].includes(k));
   // class visits live under the evaluation sub-menu for roles that have both
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
-  const groups = navigationGroups(nav.filter((k) => k !== "profile" && k !== "my_hr"));
+  // one «الحضور والمواظبة» entry: exit/permission and gate/scan pages become its sub-items (same pages and permissions, no duplicate menu entries)
+  const attSubs = nav.includes("attendance") ? (["attendance", "pickup", "station"] as NavKey[]).filter((k) => nav.includes(k)) : [];
+  const groups = navigationGroups(nav.filter((k) => k !== "profile" && k !== "my_hr" && !(attSubs.length > 1 && (k === "pickup" || k === "station"))));
   // red per-section counters: unread notifications grouped by the visible menu entry their link opens
   const navEntries = nav.map((k) => ({ key: k, to: NAV[k].to, tab: NAV[k].tab }));
   const secIds = countsBySection(unread.data ?? [], navEntries);
@@ -254,6 +256,7 @@ function Shell() {
     if (k === "home") return cleanPath === n.to;
     if (k === "admissions" && ["/app/students", "/app/guardians", "/app/family-requests"].includes(cleanPath)) return true;
     if (k === "evaluation" && cleanPath === "/app/visits") return true;
+    if (k === "attendance" && attSubs.some((x) => x !== "attendance" && (cleanPath === NAV[x].to || cleanPath.startsWith(NAV[x].to + "/")))) return true;
     return cleanPath === n.to || cleanPath.startsWith(n.to + "/");
   };
   const activeGroup = groups.find((g) => g.keys.some(navActive))?.label ?? null;
@@ -276,7 +279,7 @@ function Shell() {
                 const hasSubmenu = ["collaboration", "procurement", "admissions"].includes(k) ||
                   (k === "evaluation" && evStaff) || (k === "support" && inSupport && !platformHelp && (active.role === "platform_admin" || !!sCaps.data)) ||
                   (k === "calls" && mqSecs.length > 0) || (k === "classrooms" && path.startsWith("/app/classrooms/section/")) ||
-                  (k === "events" && !["guardian", "student"].includes(active.role));
+                  (k === "events" && !["guardian", "student"].includes(active.role)) || (k === "attendance" && attSubs.length > 1);
                 const link = <Link
                     to={n.to}
                     {...(n.tab ? { search: { tab: n.tab } } : k === "support" && owner && section && section !== "support" ? { search: { tab: "mine", p: "1" } } : {})}
@@ -331,6 +334,7 @@ function Shell() {
                       ))}
                     </div>
                   )}
+                  {k === "attendance" && attSubs.length > 1 && <>{link}<div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">{attSubs.map((x) => <Link key={x} to={NAV[x].to} onClick={() => setOpen(false)} className={SUB_CLS}>{x === "attendance" ? "الحضور اليومي" : NAV[x].label}</Link>)}</div></>}
                   {k === "events" && !["guardian", "student"].includes(active.role) && (
                     <div className="space-y-0.5">
                       {EVT_SUB.filter(([t]) => t === "summary" || !pcRole || ["principal", "vice_principal"].includes(active.role) || hasEvents(evt.data)).map(([t, label]) => (

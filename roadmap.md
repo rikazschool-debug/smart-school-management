@@ -176,9 +176,9 @@
 
 - [x] prompt-467: permissions tree completed (menu order, school map own section, guidance grants fix, supervision card)
 
-## prompt-474 (open)
+## prompt-474/475
 - [x] Menu: إدارة المدرسة order, «التكليفات» rename, accordion groups, activities items flat
-- [ ] Students page: stage/grade filters + better search area; guardians: children-count + tags filters
-- [ ] Staff directory: stage column + filters; teacher records: employee no., HR ID import, account status only, «مسمى الإسناد» from HR, school/stage/phone, filters
-- [ ] Digital library add form: description, optional attachments before save, optional stage/grade
-- [ ] Merge attendance + pickup + station into one «الحضور والمواظبة» section
+- [x] Students page: stage/grade filters + better search area; guardians: children-count + tags filters
+- [x] Staff directory: stage column + filters; teacher records: employee no., HR ID import, account status only, «مسمى الإسناد» from HR, school/stage/phone, filters
+- [x] Digital library add form: description, optional attachments before save, optional stage/grade
+- [x] Merge attendance + pickup + station into one «الحضور والمواظبة» section

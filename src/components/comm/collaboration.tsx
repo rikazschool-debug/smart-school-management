@@ -5,7 +5,7 @@ import { BookOpen, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
 import { Thread } from "@/components/comm/thread";
-import { Uploader } from "@/components/homework/files";
+import { uploadObject } from "@/components/classroom-posts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,7 +48,55 @@ function MaterialFiles({ id, editable = false }: { id: string; editable?: boolea
  return q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : <>{(q.data ?? []).map((f) => <MaterialFileViewer key={f["id"]} file={f} onRemove={editable ? () => void remove(f) : undefined} />)}</>; }
 
 function MaterialEditor({ row, org, school, category, done }: { row: Row | null; org: string; school: string | null; category: string; done: (r: Row) => void }) {
-  const { user } = useSession(); const qc = useQueryClient(); const [title, setTitle] = useState(row?.["title"] ?? ""); const [description, setDescription] = useState(row?.["description"] ?? ""); const [cat, setCat] = useState(row?.["category"] ?? category); const [busy, setBusy] = useState(false); const canEdit = !row || row["author"] === user.id;
-  const save = async () => { setBusy(true); try { const fields = { title, description, category: cat }; const query = row ? db.from("co_materials").update(fields).eq("id", row["id"]) : db.from("co_materials").insert({ ...fields, org_id: org, school_id: school, author: user.id }); const { data, error } = await query.select().single(); if (error) throw error; done(data as Row); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } };
-  return <div className="space-y-3">{row && <p className="text-sm text-muted-foreground">{row["author_name"]} · {ROLE_LABELS[row["author_role"] as Role] ?? row["author_role"]} · {row["author_branch"]}</p>}<Input aria-label="عنوان المادة" value={title} disabled={!canEdit} onChange={(e) => setTitle(e.target.value)} /><Textarea aria-label="وصف المادة" value={description} disabled={!canEdit} onChange={(e) => setDescription(e.target.value)} /><select aria-label="تصنيف المادة" className={selectCls()} disabled={!canEdit} value={cat} onChange={(e) => setCat(e.target.value)}>{Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>{canEdit && <Button disabled={busy || title.trim().length < 2} onClick={() => void save()}>حفظ</Button>}{row && <><MaterialFiles id={row["id"]} editable={canEdit} />{canEdit && <Uploader create={async (f) => { const { data, error } = await db.rpc("co_add_file", { _material: row["id"], _name: f.name, _mime: f.type, _size: f.size }); if (error) throw error; return data as { id: string; storage_path: string }; }} release={async (id) => { const { error } = await db.rpc("co_remove_file", { _id: id }); if (error) throw error; }} onDone={() => { void qc.invalidateQueries({ queryKey: ["co-files", row["id"]] }); }} />}</>}</div>;
+  const { user } = useSession(); const qc = useQueryClient();
+  const [title, setTitle] = useState<string>(row?.["title"] ?? ""); const [description, setDescription] = useState<string>(row?.["description"] ?? ""); const [cat, setCat] = useState<string>(row?.["category"] ?? category);
+  const [stage, setStage] = useState<string>(row?.["stage_name"] ?? ""); const [grade, setGrade] = useState<string>(row?.["grade_name"] ?? "");
+  const [queued, setQueued] = useState<File[]>([]);
+  const [busy, setBusy] = useState(false); const canEdit = !row || row["author"] === user.id;
+  // optional stage/grade lists come from the current branch's academic setup; stored as names because the library is group-wide
+  const levels = useQuery({ queryKey: ["co-levels", school], enabled: !!school, queryFn: async () => {
+    const [st, gr] = await Promise.all([db.from("stages").select("id, name").eq("school_id", school).order("sort_order"), db.from("grades").select("name, stage_id").eq("school_id", school).order("sort_order")]);
+    return { stages: (st.data ?? []) as Row[], grades: (gr.data ?? []) as Row[] };
+  } });
+  const stageId = levels.data?.stages.find((x) => x["name"] === stage)?.["id"];
+  const gradeOpts = [...new Set((levels.data?.grades ?? []).filter((g) => !stageId || g["stage_id"] === stageId).map((g) => g["name"] as string))];
+  const save = async () => {
+    setBusy(true);
+    try {
+      const fields = { title: title.trim(), description, category: cat, stage_name: stage || null, grade_name: grade || null };
+      const query = row ? db.from("co_materials").update(fields).eq("id", row["id"]) : db.from("co_materials").insert({ ...fields, org_id: org, school_id: school, author: user.id });
+      const { data, error } = await query.select().single(); if (error) throw error;
+      let failed = 0;
+      for (const f of queued) {
+        const rec = await db.rpc("co_add_file", { _material: (data as Row)["id"], _name: f.name, _mime: f.type, _size: f.size });
+        if (rec.error) { failed++; toast.error(`${f.name}: ${arabicError(rec.error)}`); continue; }
+        const r = rec.data as { id: string; storage_path: string };
+        const up = await uploadObject(r.storage_path, f, new AbortController().signal);
+        if (up !== "ok") { failed++; await db.rpc("co_remove_file", { _id: r.id }); toast.error(`تعذّر رفع ${f.name}`); }
+      }
+      setQueued([]); void qc.invalidateQueries({ queryKey: ["co-files", (data as Row)["id"]] });
+      toast.success(failed ? "حُفظت المادة، وبعض المرفقات لم تُرفع" : "حُفظت المادة"); done(data as Row);
+    } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
+  };
+  const lab = "text-sm font-medium"; const hint = "text-xs text-muted-foreground";
+  return <div className="space-y-4">
+    {row && <p className="text-sm text-muted-foreground">{row["author_name"]} · {ROLE_LABELS[row["author_role"] as Role] ?? row["author_role"]} · {row["author_branch"]}</p>}
+    {!row && <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-secondary-foreground">شارك مادة مع زملائك في المجموعة: اكتب عنوانًا واضحًا ووصفًا مختصرًا، واختر التصنيف، ثم أرفق الملفات إن وُجدت. المرحلة والصف والمرفقات اختيارية.</p>}
+    <div className="space-y-1"><label className={lab} htmlFor="co-title">عنوان المادة <span className="text-destructive">*</span></label><Input id="co-title" value={title} disabled={!canEdit} maxLength={200} placeholder="مثال: ورقة عمل الكسور العشرية" onChange={(e) => setTitle(e.target.value)} /><p className={hint}>حرفان على الأقل.</p></div>
+    <div className="space-y-1"><label className={lab} htmlFor="co-desc">الشرح / الوصف</label><Textarea id="co-desc" rows={4} value={description} disabled={!canEdit} placeholder="ما الذي تحتويه المادة، ولمن تناسب، وكيف تُستخدم؟" onChange={(e) => setDescription(e.target.value)} /></div>
+    <div className="space-y-1"><label className={lab} htmlFor="co-cat">التصنيف</label><select id="co-cat" className={selectCls()} disabled={!canEdit} value={cat} onChange={(e) => setCat(e.target.value)}>{Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="space-y-1"><label className={lab} htmlFor="co-stage">المرحلة <span className="font-normal text-muted-foreground">(اختياري)</span></label><select id="co-stage" className={selectCls()} disabled={!canEdit} value={stage} onChange={(e) => { setStage(e.target.value); setGrade(""); }}><option value="">— غير محددة —</option>{(levels.data?.stages ?? []).map((x) => <option key={x["id"]} value={x["name"]}>{x["name"]}</option>)}{stage && !levels.data?.stages.some((x) => x["name"] === stage) && <option value={stage}>{stage}</option>}</select></div>
+      <div className="space-y-1"><label className={lab} htmlFor="co-grade">الصف <span className="font-normal text-muted-foreground">(اختياري)</span></label><select id="co-grade" className={selectCls()} disabled={!canEdit} value={grade} onChange={(e) => setGrade(e.target.value)}><option value="">— غير محدد —</option>{gradeOpts.map((x) => <option key={x} value={x}>{x}</option>)}{grade && !gradeOpts.includes(grade) && <option value={grade}>{grade}</option>}</select></div>
+    </div>
+    <p className={hint}>تحديد المرحلة والصف غير إلزامي، ويساعد الزملاء في الوصول للمادة المناسبة.</p>
+    {canEdit && <div className="space-y-2 rounded-lg border border-dashed p-3">
+      <p className={lab}>المرفقات <span className="font-normal text-muted-foreground">(اختياري)</span></p>
+      <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-muted"><Plus className="size-4" /> إضافة ملفات<input type="file" multiple className="hidden" disabled={busy} onChange={(e) => { const l = [...(e.target.files ?? [])]; e.target.value = ""; setQueued((q) => [...q, ...l]); }} /></label>
+      {queued.length > 0 && <ul className="space-y-1 text-sm">{queued.map((f, n) => <li key={n} className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate">{f.name}</span><Button type="button" variant="ghost" size="icon" aria-label={`إزالة ${f.name}`} onClick={() => setQueued((q) => q.filter((_, k) => k !== n))}><Trash2 className="size-4" /></Button></li>)}</ul>}
+      <p className={hint}>تُرفع الملفات المختارة عند الحفظ.</p>
+    </div>}
+    {canEdit && <Button disabled={busy || title.trim().length < 2} onClick={() => void save()}>{busy ? "جارٍ الحفظ…" : "حفظ"}</Button>}
+    {row && <MaterialFiles id={row["id"]} editable={canEdit} />}
+  </div>;
 }
