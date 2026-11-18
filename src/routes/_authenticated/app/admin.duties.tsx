@@ -34,9 +34,9 @@ function Duties({ ctx }: { ctx: Ctx }) {
   const manage = !!p?.["duty_rosters.edit"];
   const setupView = !!(p?.["duty_setup.view"] || p?.["duty_setup.edit"]);
   const setupEdit = !!p?.["duty_setup.edit"];
-  const tabs = [...(manage ? [["quick", "إسناد سريع"]] : []), ["mine", "مناوباتي"], ...(lead ? [["week", "جدول الأسبوع"], ["list", "القائمة والتقارير"], ["changes", "طلبات الاعتذار والتغيير"]] : []), ...(setupView ? [["setup", "الإعداد والسياسة"]] : [])] as const;
+  const tabs = [["mine", "مناوباتي"], ...(lead ? [["week", "جدول الأسبوع"], ["list", "القائمة والتقارير"], ["changes", "طلبات الاعتذار والتغيير"]] : []), ...(setupView ? [["setup", "الإعداد والسياسة"]] : [])] as const;
   const [picked, setTab] = useState<string | null>(null);
-  const tab = picked && tabs.some(([k]) => k === picked) ? picked : manage ? "quick" : lead ? "week" : "mine";
+  const tab = picked && tabs.some(([k]) => k === picked) ? picked : lead ? "week" : "mine";
   return (
     <div>
       <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
@@ -50,7 +50,6 @@ function Duties({ ctx }: { ctx: Ctx }) {
       {(tab === "week" || tab === "changes" || tab === "setup") && ((tab === "setup" && !setupEdit) || (tab !== "setup" && !manage)) && <p className="mb-3 rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">صلاحيتك هنا للعرض فقط.</p>}
       {tab === "week" && lead && <Week ctx={ctx} manage={manage} />}
       {tab === "list" && lead && <DutyList ctx={ctx} />}
-      {tab === "quick" && manage && <QuickAssign ctx={ctx} />}
       {tab === "changes" && lead && <Changes ctx={ctx} manage={manage} />}
       {tab === "setup" && setupView && <fieldset disabled={!setupEdit} className="min-w-0"><Setup ctx={ctx} /></fieldset>}
     </div>
@@ -495,66 +494,3 @@ function Setup({ ctx }: { ctx: Ctx }) {
   );
 }
 
-// ---------------- quick assignment ----------------
-function QuickAssign({ ctx }: { ctx: Ctx }) {
-  const today = riyadhToday();
-  const { run, busy } = useRun();
-  const empty = { user: "", date: today, post: "", grade: "", section: "", period: "", note: "" };
-  const [f, setF] = useState(empty);
-  const opts = useQuery({
-    queryKey: ["duty", "quick-opts", ctx.schoolId],
-    queryFn: async () => {
-      const [gr, se, pe] = await Promise.all([
-        db.from("grades" as never).select("id,name,sort_order").eq("school_id", ctx.schoolId).order("sort_order"),
-        db.from("sections" as never).select("id,name,grade_id").eq("school_id", ctx.schoolId).order("name"),
-        db.from("periods" as never).select("id,name,sort_order,start_time,end_time").eq("school_id", ctx.schoolId).order("sort_order"),
-      ]);
-      return { grades: (gr.data ?? []) as Row[], sections: (se.data ?? []) as Row[], periods: (pe.data ?? []) as Row[] };
-    },
-  });
-  const list = useQuery({
-    queryKey: ["duty", "quick", ctx.schoolId],
-    queryFn: async () => {
-      const { data, error } = await db.rpc("adm_duty_quick_list" as never, { _school: ctx.schoolId, _from: addDays(today, -30), _to: addDays(today, 60), _mine: false } as never);
-      if (error) throw error;
-      return data as Row[];
-    },
-  });
-  const o = opts.data;
-  const secs = (o?.sections ?? []).filter((s) => !f.grade || s.grade_id === f.grade);
-  async function save() {
-    const r = await run("adm_duty_quick_save", { _school: ctx.schoolId, _user: f.user, _date: f.date, _location: f.post.trim(), _grade: f.grade || null, _section: f.section || null, _period: f.period || null, _note: f.note || null, _client: crypto.randomUUID() }, "تم الإسناد وأُشعر الموظف");
-    if (r) setF({ ...empty, date: f.date, post: f.post });
-  }
-  async function cancel(q: Row) { const r = await askText("سبب الإلغاء (يُبلغ الموظف)", { required: true }); if (r) run("adm_duty_quick_cancel", { _id: q.id, _reason: r }, "أُلغي الإسناد"); }
-  const sel = (id: string, label: string, v: string, on: (v: string) => void, items: [string, string][], ph: string) => (
-    <div><Label htmlFor={id}>{label}</Label><select id={id} className={selectCls("w-full")} value={v} onChange={(e) => on(e.target.value)}><option value="">{ph}</option>{items.map(([k, t]) => <option key={k} value={k}>{t}</option>)}</select></div>
-  );
-  return (
-    <div className="space-y-4">
-      <div className="space-y-3 rounded-xl border bg-card p-4">
-        <PeoplePicker purpose="duty" school={ctx.schoolId} label="الشخص (معلم أو إداري) — اكتب الاسم أو اختر من القائمة" single compact value={f.user ? [f.user] : []} onChange={(v) => setF({ ...f, user: v[0] ?? "" })} />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div><Label htmlFor="qd">التاريخ</Label><Input id="qd" type="date" min={today} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} /></div>
-          <div><Label htmlFor="qp">الموقع</Label><Input id="qp" value={f.post} maxLength={120} placeholder="مثال: الفناء الشمالي" onChange={(e) => setF({ ...f, post: e.target.value })} /></div>
-          {sel("qg", "الصف (اختياري)", f.grade, (v) => setF({ ...f, grade: v, section: "" }), (o?.grades ?? []).map((g) => [g.id, g.name]), "—")}
-          {sel("qs", "الشعبة (اختياري)", f.section, (v) => setF({ ...f, section: v }), secs.map((s) => [s.id, s.name]), "—")}
-          {sel("qe", "الحصة (اختياري)", f.period, (v) => setF({ ...f, period: v }), (o?.periods ?? []).map((p) => [p.id, `${p.name} ${hm(p.start_time)}–${hm(p.end_time)}`]), "—")}
-          <div><Label htmlFor="qn">ملاحظة (اختياري)</Label><Input id="qn" value={f.note} maxLength={500} onChange={(e) => setF({ ...f, note: e.target.value })} /></div>
-        </div>
-        <Button disabled={busy || !f.user || f.post.trim().length < 2 || !f.date} onClick={save}>إسناد</Button>
-      </div>
-      {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? <EmptyState title="لا توجد إسنادات سريعة" hint="الإسنادات التي تضيفها هنا تظهر في هذه القائمة." /> : (
-        <ul className="space-y-2">{list.data.map((q) => (
-          <li key={q.id} className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3 text-sm">
-            <span className="font-semibold">{q.user_name}</span><span>{q.post}</span>
-            <span className="text-muted-foreground">{dayName(q.date)} {q.date}{q.grade ? ` · ${q.grade}` : ""}{q.section ? ` · ${q.section}` : ""}{q.period ? ` · ${q.period} ${q.period_time ?? ""}` : ""}</span>
-            {q.note && <span className="text-muted-foreground">— {q.note}</span>}
-            <Pill tone={q.status === "active" ? "ok" : "muted"}>{q.status === "active" ? "فعّال" : "ملغى"}</Pill>
-            {q.status === "active" && q.date >= today && <Button size="sm" variant="ghost" className="ms-auto text-destructive" disabled={busy} onClick={() => cancel(q)}>إلغاء</Button>}
-          </li>
-        ))}</ul>
-      )}
-    </div>
-  );
-}
