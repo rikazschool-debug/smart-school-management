@@ -16,7 +16,7 @@ import { type Role } from "@/lib/roles";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { AccountButton } from "@/components/account-button";
 import { PeopleImport } from "@/components/people-import-dialog";
-import { ContractMatch, ContractEdit } from "@/components/contract-match";
+import { ContractMatch } from "@/components/contract-match";
 import { AccountPanel } from "@/components/account-panel";
 import { GuardianQuickAdd, autoSummary } from "@/components/guardian-quick-add";
 import { autoAccounts } from "@/lib/accounts.functions";
@@ -137,7 +137,6 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         ]}
         extraActions={(r) => w || ctCan.data || placeCan.data ? (
           <>
-            {ctCan.data && <ContractEdit row={r} schoolId={ctx.schoolId} />}
             {placeCan.data && <Button variant="ghost" size="icon" title="تسكين" aria-label="تسكين" onClick={() => setPlacing(r)}><MapPin className="size-4" /></Button>}
             {w && <>
             <Button variant="ghost" size="icon" title="أولياء الأمر المرتبطون" aria-label="أولياء الأمر المرتبطون" onClick={() => setLinking(r)}><Users className="size-4" /></Button>
