@@ -42,20 +42,19 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
   const assignmentOf = (r: StaffRow) => extra.data?.get(r.employee_id)?.assignment_title ?? r.job_title ?? "";
   const stageOpts = useMemo(() => [...new Set([...(extra.data?.values() ?? [])].flatMap((v) => (v.stages ?? "").split("، ")).filter(Boolean))].sort(), [extra.data]);
   const titleOpts = useMemo(() => [...new Set((q.data ?? []).map(assignmentOf).filter(Boolean))].sort(), [q.data, extra.data]);
-  const catOpts = useMemo(() => [...new Set((q.data ?? []).map((r) => r.category).filter(Boolean) as string[])].sort(), [q.data]);
   const [s, setS] = useState(""); const [kind, setKind] = useState(""); const [acc, setAcc] = useState("");
-  const [stage, setStage] = useState(""); const [title, setTitle] = useState(""); const [cat, setCat] = useState("");
-  useEffect(() => setSelected(new Set()), [schoolId, s, kind, acc, stage, title, cat]);
+  const [stage, setStage] = useState(""); const [title, setTitle] = useState("");
+  useEffect(() => setSelected(new Set()), [schoolId, s, kind, acc, stage, title]);
   const rows = useMemo(() => (q.data ?? []).filter((r) => (!kind || r.kind === kind) && (!acc || r.account === acc)
-    && (!stage || (stage === "__none" ? !stageOf(r) : stageOf(r).split("، ").includes(stage))) && (!title || assignmentOf(r) === title) && (!cat || r.category === cat)
-    && (!s.trim() || [r.full_name, r.employee_no, r.category, assignmentOf(r), idView ? identity.data?.get(r.employee_id) : ""].some((v) => (v ?? "").includes(s.trim())))), [q.data, s, kind, acc, stage, title, cat, extra.data, idView, identity.data]);
+    && (!stage || (stage === "__none" ? !stageOf(r) : stageOf(r).split("، ").includes(stage))) && (!title || assignmentOf(r) === title)
+    && (!s.trim() || [r.full_name, r.employee_no, assignmentOf(r), idView ? identity.data?.get(r.employee_id) : ""].some((v) => (v ?? "").includes(s.trim())))), [q.data, s, kind, acc, stage, title, extra.data, idView, identity.data]);
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   if (extra.error || (idView && identity.error)) return <ErrorState message={arabicError(extra.error ?? identity.error)} onRetry={() => { void extra.refetch(); if (idView) void identity.refetch(); }} />;
   const all = q.data ?? [];
-  const meta = () => ({ title: "الكادر التعليمي والإداري", school: all[0]?.school_name ?? undefined, filters: [s && `بحث: ${s}`, kind, stage && `المرحلة: ${stage === "__none" ? "بلا مرحلة" : stage}`, title, cat, acc && ACCOUNT_LABEL[acc as StaffRow["account"]]].filter(Boolean) as string[] });
-  const headers = ["الاسم", "الرقم الوظيفي", ...(idView ? ["الهوية / الإقامة"] : []), "مسمى الإسناد", "النوع", "التصنيف", "المرحلة الدراسية", "الفرع", "حساب الدخول"];
-  const body = () => rows.filter((r) => !selected.size || selected.has(r.employee_id)).map((r) => [r.full_name, r.employee_no, ...(idView ? [identity.data?.get(r.employee_id) ?? ""] : []), assignmentOf(r), r.kind, r.category, stageOf(r) || "—", r.school_name, ACCOUNT_LABEL[r.account]]);
+  const meta = () => ({ title: "الكادر التعليمي والإداري", school: all[0]?.school_name ?? undefined, filters: [s && `بحث: ${s}`, kind, stage && `المرحلة: ${stage === "__none" ? "بلا مرحلة" : stage}`, title, acc && ACCOUNT_LABEL[acc as StaffRow["account"]]].filter(Boolean) as string[] });
+  const headers = ["الاسم", "الرقم الوظيفي", ...(idView ? ["الهوية / الإقامة"] : []), "مسمى الإسناد", "النوع", "المرحلة الدراسية", "الفرع", "حساب الدخول"];
+  const body = () => rows.filter((r) => !selected.size || selected.has(r.employee_id)).map((r) => [r.full_name, r.employee_no, ...(idView ? [identity.data?.get(r.employee_id) ?? ""] : []), assignmentOf(r), r.kind, stageOf(r) || "—", r.school_name, ACCOUNT_LABEL[r.account]]);
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
@@ -72,8 +71,6 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
           <option value="">كل المراحل</option><option value="__none">بلا مرحلة</option>{stageOpts.map((x) => <option key={x} value={x}>{x}</option>)}</select>
         <select aria-label="مسمى الإسناد" className={selectCls("w-44")} value={title} onChange={(e) => setTitle(e.target.value)}>
           <option value="">كل مسميات الإسناد</option>{titleOpts.map((x) => <option key={x} value={x}>{x}</option>)}</select>
-        <select aria-label="التصنيف" className={selectCls("w-44")} value={cat} onChange={(e) => setCat(e.target.value)}>
-          <option value="">كل التصنيفات</option>{catOpts.map((x) => <option key={x} value={x}>{x}</option>)}</select>
         <Button variant="outline" size="sm" disabled={!rows.length || extra.isFetching || (idView && identity.isFetching)} onClick={() => exportXlsx(meta(), headers, body())}><FileSpreadsheet className="size-4" />Excel</Button>
         <Button variant="outline" size="sm" disabled={!rows.length || extra.isFetching || (idView && identity.isFetching)} onClick={() => void exportPdf(meta(), headers, body())}><FileDown className="size-4" />PDF</Button>
         <select aria-label="حالة الحساب" className={selectCls("w-44")} value={acc} onChange={(e) => setAcc(e.target.value)}>
@@ -92,7 +89,6 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
                   {idView && <td className="px-3 py-2"><bdi dir="ltr">{identity.data?.get(r.employee_id) || "—"}</bdi></td>}
                   <td className="px-3 py-2">{assignmentOf(r) || "—"}</td>
                   <td className="px-3 py-2"><span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">{r.kind}</span></td>
-                  <td className="px-3 py-2">{r.category || "—"}</td>
                   <td className="px-3 py-2">{stageOf(r) || "—"}</td>
                   <td className="px-3 py-2">{r.school_name || "—"}</td>
                   <td className="px-3 py-2">{r.account === "linked"
