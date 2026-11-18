@@ -1,7 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Download, FileText, Handshake, Mail, Paperclip, Pencil, Phone, Plus, School, Search, ShieldCheck, UserRound, X } from "lucide-react";
+import { Archive, CalendarRange, Download, FileText, Handshake, Mail, Paperclip, Pencil, Phone, Plus, Printer, School, Search, ShieldCheck, Trash2, UserRound, X } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,13 @@ import { arabicError, useSession } from "@/lib/session";
 import { rpc } from "@/components/hr/shared";
 import { db } from "@/components/crud-page";
 import { uploadObject } from "@/components/classroom-posts";
+import { ask } from "@/components/confirm";
+import { exportPdf, exportXlsx, printReport } from "@/lib/export";
+import { archiveDay, archiveDetails, filterArchive, recordCategory, recordType, type ArchiveRecord, type Con, type Doc } from "./archive-model";
 
-export type OrgDocsTab = "docs" | "contractors";
+export type OrgDocsTab = "docs" | "contractors" | "archive";
 type Tab = OrgDocsTab;
 type Caps = { owner: boolean; schools: { id: string; name: string; view: boolean; create: boolean; edit: boolean; download: boolean }[]; group: { view: boolean; create: boolean; edit: boolean; download: boolean } };
-type Doc = { id: string; school_id: string | null; school: string | null; kind: string; name: string; doc_no: string | null; issuer: string | null; issued_on: string | null; expires_on: string | null; status: string; file_id: string | null; file_name: string | null };
-type Con = { id: string; name: string; service: string; contact_name: string | null; phone: string | null; email: string | null; school_ids: string[]; schools: string[]; starts_on: string | null; ends_on: string | null; status: string; notes: string | null; community_partner: boolean; files: { id: string; name: string }[] };
 
 const STATUS: Record<string, [string, string]> = {
   valid: ["سارية", "bg-primary/10 text-primary"], expiring: ["تنتهي خلال 30 يومًا", "bg-accent text-accent-foreground"],
@@ -59,8 +60,8 @@ export function OrgDocsPage({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => voi
   return (
     <div>
       <PageHeader eyebrow="إدارة المدارس" title="الوثائق والعقود" desc="وثائق المنشأة وعقود المتعهدين. ما تراه وما تستطيع تنزيله أو تعديله محدد بصلاحياتك لكل مدرسة." />
-      <div role="tablist" aria-label="أقسام الوثائق" className="mb-5 grid gap-2 rounded-2xl border bg-muted/40 p-1.5 sm:inline-grid sm:grid-cols-2">
-        {([["docs", "وثائق المنشأة", "السجلات والتراخيص والشهادات", FileText], ["contractors", "المتعهدون", "عقود الخدمات والشراكات المجتمعية", Handshake]] as const).map(([k, l, d, I]) => {
+      <div role="tablist" aria-label="أقسام الوثائق" className="mb-5 grid gap-2 rounded-2xl border bg-muted/40 p-1.5 sm:inline-grid sm:grid-cols-3">
+        {([["docs", "وثائق المنشأة", "السجلات والتراخيص والشهادات", FileText], ["contractors", "المتعهدون", "عقود الخدمات والشراكات المجتمعية", Handshake], ["archive", "الأرشيف", "الوثائق والمتعهدون المحذوفون", Archive]] as const).map(([k, l, d, I]) => {
           const on = tab === k;
           return (
             <button key={k} type="button" role="tab" aria-selected={on} onClick={() => setTab(k)}
@@ -71,9 +72,70 @@ export function OrgDocsPage({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => voi
           );
         })}
       </div>
-      {tab === "docs" ? <Docs org={org} caps={c} /> : <Contractors org={org} caps={c} />}
+      {tab === "docs" ? <Docs org={org} caps={c} /> : tab === "contractors" ? <Contractors org={org} caps={c} /> : <ArchivePane org={org} />}
     </div>
   );
+}
+
+function ArchiveButton({ org, type, record }: { org: string; type: "docs" | "contractors"; record: Doc | Con }) {
+  const qc = useQueryClient();
+  const archive = useMutation({
+    mutationFn: () => rpc("od_archive", { _org: org, _what: type, _id: record.id }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["od", org] });
+      toast.success("نُقل السجل إلى الأرشيف");
+    },
+    onError: (error) => toast.error(arabicError(error)),
+  });
+  return <Button size="sm" variant="ghost" disabled={archive.isPending} aria-label={`حذف ${record.name}`} onClick={async () => {
+    if (await ask(`نقل «${record.name}» إلى الأرشيف؟`)) archive.mutate();
+  }}><Trash2 className="size-4" /><span className="sr-only">حذف</span></Button>;
+}
+
+const REPORT_FIELDS = ["النوع", "الاسم", "التصنيف", "تاريخ الأرشفة", "الحالة", "النطاق", "رقم الوثيقة", "جهة الإصدار", "تاريخ الإصدار", "تاريخ الانتهاء", "المدارس", "المسؤول", "الجوال", "البريد", "بداية السريان", "نهاية السريان", "شراكات مجتمعية", "الملاحظات", "المرفقات"];
+
+function ArchivePane({ org }: { org: string }) {
+  const [filters, setFilters] = useState({ type: "", category: "", from: "", to: "" });
+  const list = useQuery({ queryKey: ["od", org, "archive"], queryFn: () => rpc<ArchiveRecord[]>("od_archive_list", { _org: org }) });
+  if (list.isLoading) return <LoadingState />;
+  if (list.error) return <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} />;
+  const records = list.data ?? [];
+  const categories = [...new Set(records.filter((r) => !filters.type || r.record_type === filters.type).map(recordCategory))].sort((a, b) => a.localeCompare(b, "ar"));
+  const rows = filterArchive(records, filters);
+  const report = (format: "excel" | "pdf" | "print") => {
+    const meta = { title: "أرشيف الوثائق والعقود", filters: [filters.category, filters.from && `من ${filters.from}`, filters.to && `إلى ${filters.to}`].filter(Boolean) };
+    const data = rows.map((r) => {
+      const details = new Map(archiveDetails(r));
+      return [recordType(r), r.name, recordCategory(r), archiveDay(r), STATUS[r.status]?.[0] ?? "—", ...REPORT_FIELDS.slice(5).map((k) => details.get(k) ?? "")];
+    });
+    if (format === "excel") return exportXlsx(meta, REPORT_FIELDS, data);
+    if (format === "pdf") return exportPdf(meta, REPORT_FIELDS, data);
+    return printReport(meta, REPORT_FIELDS, data);
+  };
+  return <section aria-label="الأرشيف" className="space-y-4">
+    <div className="flex flex-wrap items-end gap-2">
+      <label className="grid gap-1 text-sm">النوع<select className={selectCls()} value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value, category: "" })}><option value="">الكل</option><option value="docs">الوثائق</option><option value="contractors">المتعهدون</option></select></label>
+      <label className="grid gap-1 text-sm">التصنيف<select className={selectCls()} value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}><option value="">كل التصنيفات</option>{categories.map((c) => <option key={c}>{c}</option>)}</select></label>
+      <label className="grid gap-1 text-sm">الأرشفة من<Input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /></label>
+      <label className="grid gap-1 text-sm">الأرشفة إلى<Input type="date" min={filters.from || undefined} value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /></label>
+      <div className="flex flex-wrap gap-1 sm:ms-auto">
+        <Button size="sm" variant="outline" disabled={!rows.length} onClick={() => report("excel")}><Download className="size-4" />Excel</Button>
+        <Button size="sm" variant="outline" disabled={!rows.length} onClick={() => void report("pdf")}><FileText className="size-4" />PDF</Button>
+        <Button size="sm" variant="outline" disabled={!rows.length} onClick={() => report("print")}><Printer className="size-4" />طباعة</Button>
+      </div>
+    </div>
+    {!rows.length ? <EmptyState title={records.length ? "لا توجد سجلات تطابق الفلاتر" : "لا توجد سجلات مؤرشفة"} /> : rows.map((r) => {
+      const files = r.record_type === "docs" ? (r.file_id ? [{ id: r.file_id, name: r.file_name ?? "الملف" }] : []) : r.files;
+      return <details key={`${r.record_type}:${r.id}`} className="rounded-lg border bg-card">
+        <summary className="cursor-pointer p-3"><strong>{r.name}</strong><span className="ms-3 break-words text-sm text-muted-foreground">{recordType(r)} · {recordCategory(r)} · <bdi>{archiveDay(r)}</bdi></span></summary>
+        <div className="space-y-3 border-t p-3">
+          <Badge s={r.status} />
+          <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">{archiveDetails(r).map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-muted-foreground">{label}</dt><dd className="break-words">{value || "—"}</dd></div>)}</dl>
+          {r.can_download && files.length > 0 && <div className="flex flex-wrap gap-1">{files.map((f) => <Button key={f.id} size="sm" variant="outline" onClick={() => openOrgFile(f.id)}><Download className="size-4" />{f.name}</Button>)}</div>}
+        </div>
+      </details>;
+    })}
+  </section>;
 }
 
 function Filters({ caps, q, setQ, school, setSchool, status, setStatus }: { caps: Caps; q: string; setQ: (v: string) => void; school: string; setSchool: (v: string) => void; status: string; setStatus: (v: string) => void }) {
@@ -111,6 +173,7 @@ function Docs({ org, caps }: { org: string; caps: Caps }) {
                 <td className="flex gap-1 p-2">
                   {d.file_id && can("download", d.school_id) && <Button size="sm" variant="outline" onClick={() => openOrgFile(d.file_id!)} aria-label="تنزيل الملف"><Download className="size-4" /></Button>}
                   {can("edit", d.school_id) && <Button size="sm" variant="ghost" onClick={() => setEdit(d)} aria-label="تعديل"><Pencil className="size-4" /></Button>}
+                  {can("edit", d.school_id) && <ArchiveButton org={org} type="docs" record={d} />}
                 </td>
               </tr>))}</tbody></table>
         </div>
@@ -171,9 +234,9 @@ function Contractors({ org, caps }: { org: string; caps: Caps }) {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <h3 className="font-bold">{c.name}</h3>
-                  {c.community_partner && <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground"><ShieldCheck className="size-3.5" aria-hidden />موثوق</span>}
+                  {c.community_partner && <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground"><ShieldCheck className="size-3.5" aria-hidden />شراكات مجتمعية</span>}
                 </div>
-                <p className="text-xs text-muted-foreground">{c.service}{c.community_partner && " · شراكة مجتمعية"}</p>
+                <p className="text-xs text-muted-foreground">{c.service}</p>
               </div>
               <Badge s={c.status} />
             </div>
@@ -187,6 +250,7 @@ function Contractors({ org, caps }: { org: string; caps: Caps }) {
             {(c.files.length > 0 || all("edit", c.school_ids)) && <div className="mt-3 flex flex-wrap gap-1 border-t pt-3">
               {any("download", c.school_ids) && c.files.map((f) => <Button key={f.id} size="sm" variant="outline" onClick={() => openOrgFile(f.id)}><Download className="size-3" />{f.name}</Button>)}
               {all("edit", c.school_ids) && <Button size="sm" variant="ghost" className="ms-auto" onClick={() => setEdit(c)}><Pencil className="size-4" />تعديل</Button>}
+              {all("edit", c.school_ids) && <ArchiveButton org={org} type="contractors" record={c} />}
             </div>}
           </article>))}</div>
       )}
@@ -262,7 +326,7 @@ function ConForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
       <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${partner ? "border-primary bg-primary/5" : ""}`}>
         <input type="checkbox" className="mt-1 size-4 accent-primary" checked={partner} onChange={(e) => setPartner(e.target.checked)} />
         <span className="flex-1"><span className="flex items-center gap-1.5 font-semibold">شراكات مجتمعية {partner && <ShieldCheck className="size-4 text-primary" aria-hidden />}</span>
-          <span className="block text-xs text-muted-foreground">عند التحديد تظهر علامة «موثوق» بجوار اسم المتعهد في بطاقته.</span></span>
+        </span>
       </label>
       {tried && problems.length > 0 && <ul role="alert" className="list-inside list-disc rounded-md bg-destructive/10 p-2 text-sm text-destructive">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}
       <div className="flex gap-2"><Button type="submit" disabled={save.isPending}>{save.isPending ? "جارٍ الحفظ…" : "حفظ"}</Button><Button type="button" variant="outline" onClick={close}>إلغاء</Button></div>

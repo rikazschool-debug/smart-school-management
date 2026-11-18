@@ -740,3 +740,4 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 - Staff type is used by the existing filter and counts; it is no longer a column in the directory, printout, or export. No access rules changed.
 - HR assignment presentation omits job category and assignment-specific title; the existing save payload and authorization are unchanged. The employee file calls the school field «الفرع».
 - The HR employee file no longer shows the assignments block. Iqama profession is guarded by the existing profile edit and sensitive permissions, and returned only for resident IDs to sensitive readers (including authorized employees reading their own files).
+- Documents and contractors: archiving requires the existing edit permission at the record scope (all linked branches for a contractor). Archive metadata, print and export use the existing view scope; opening private attachments uses the separate download scope. Archived records cannot be edited.

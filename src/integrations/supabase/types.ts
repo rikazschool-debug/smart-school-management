@@ -15806,6 +15806,8 @@ export type Database = {
       }
       org_contractors: {
         Row: {
+          archived_at: string | null
+          archived_by: string | null
           community_partner: boolean
           contact_name: string | null
           created_at: string
@@ -15825,6 +15827,8 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
           community_partner?: boolean
           contact_name?: string | null
           created_at?: string
@@ -15844,6 +15848,8 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          archived_at?: string | null
+          archived_by?: string | null
           community_partner?: boolean
           contact_name?: string | null
           created_at?: string
@@ -15874,6 +15880,8 @@ export type Database = {
       }
       org_docs: {
         Row: {
+          archived_at: string | null
+          archived_by: string | null
           created_at: string
           created_by: string | null
           doc_no: string | null
@@ -15890,6 +15898,8 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
           created_at?: string
           created_by?: string | null
           doc_no?: string | null
@@ -15906,6 +15916,8 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          archived_at?: string | null
+          archived_by?: string | null
           created_at?: string
           created_by?: string | null
           doc_no?: string | null
@@ -29548,6 +29560,11 @@ export type Database = {
       }
       my_teacher_ids: { Args: never; Returns: string[] }
       norm_phone: { Args: { _p: string }; Returns: string }
+      od_archive: {
+        Args: { _id: string; _org: string; _what: string }
+        Returns: undefined
+      }
+      od_archive_list: { Args: { _org: string }; Returns: Json }
       od_caps: { Args: { _org: string }; Returns: Json }
       od_draft_file: {
         Args: {
