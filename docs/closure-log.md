@@ -1194,3 +1194,4 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - prompt-476: «التكليفات» label everywhere; smooth menu-group animation; library grade list follows the chosen stage (branch grades + standard Saudi grades); attendance + gate/scan + pickup are one menu entry «المواظبة والاستئذان» with an in-page section switcher (AttHubNav), no sub-menu.
 
 - prompt-478: عمود المرحلة للموظف بلا إسناد تدريسي يعرض «جميع مراحل الفرع» (أو اسم المرحلة الوحيدة) بدل سرد كل المراحل؛ staff_extra فقط، دون تغيير صلاحيات. منفّذ دون اختبار متصفح.
+- prompt-479: الكادر — حُذف عمود «المسمى الوظيفي» (يُكتفى بمسمى الإسناد، والفلتر صار على الإسناد)، نُقلت الهوية بعد الرقم الوظيفي في الجدول والتصدير، والمرحلة للإداري تُستنتج من مرحلة الفرع المذكورة في مسمى الإسناد (staff_extra + _stage_key) وإلا «جميع مراحل الفرع». مطابقة المسمى مختبرة بـSQL؛ الواجهة دون اختبار متصفح.

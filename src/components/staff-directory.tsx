@@ -13,7 +13,6 @@ import { useSchoolPerms } from "@/lib/school-perms";
 
 export type StaffRow = { employee_id: string; full_name: string; employee_no: string | null; job_title: string | null; kind: string; category: string | null; school_name: string | null; account: "linked" | "inactive" | "none" };
 
-const HEAD = ["الاسم", "الرقم الوظيفي", "المسمى الوظيفي", "النوع", "التصنيف", "المرحلة الدراسية", "الفرع", "حساب الدخول"];
 export const ACCOUNT_LABEL: Record<StaffRow["account"], string> = { linked: "حساب مرتبط", inactive: "حساب موقوف", none: "لا يوجد حساب مرتبط" };
 
 /** Read-only staff directory from HR records (school_staff_directory: principal-level only, no salary/ID/docs/bank). */
@@ -42,21 +41,21 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
   const stageOf = (r: StaffRow) => extra.data?.get(r.employee_id)?.stages ?? "";
   const assignmentOf = (r: StaffRow) => extra.data?.get(r.employee_id)?.assignment_title ?? r.job_title ?? "";
   const stageOpts = useMemo(() => [...new Set([...(extra.data?.values() ?? [])].flatMap((v) => (v.stages ?? "").split("، ")).filter(Boolean))].sort(), [extra.data]);
-  const titleOpts = useMemo(() => [...new Set((q.data ?? []).map((r) => r.job_title).filter(Boolean) as string[])].sort(), [q.data]);
+  const titleOpts = useMemo(() => [...new Set((q.data ?? []).map(assignmentOf).filter(Boolean))].sort(), [q.data, extra.data]);
   const catOpts = useMemo(() => [...new Set((q.data ?? []).map((r) => r.category).filter(Boolean) as string[])].sort(), [q.data]);
   const [s, setS] = useState(""); const [kind, setKind] = useState(""); const [acc, setAcc] = useState("");
   const [stage, setStage] = useState(""); const [title, setTitle] = useState(""); const [cat, setCat] = useState("");
   useEffect(() => setSelected(new Set()), [schoolId, s, kind, acc, stage, title, cat]);
   const rows = useMemo(() => (q.data ?? []).filter((r) => (!kind || r.kind === kind) && (!acc || r.account === acc)
-    && (!stage || (stage === "__none" ? !stageOf(r) : stageOf(r).split("، ").includes(stage))) && (!title || r.job_title === title) && (!cat || r.category === cat)
-    && (!s.trim() || [r.full_name, r.employee_no, r.job_title, r.category, assignmentOf(r), idView ? identity.data?.get(r.employee_id) : ""].some((v) => (v ?? "").includes(s.trim())))), [q.data, s, kind, acc, stage, title, cat, extra.data, idView, identity.data]);
+    && (!stage || (stage === "__none" ? !stageOf(r) : stageOf(r).split("، ").includes(stage))) && (!title || assignmentOf(r) === title) && (!cat || r.category === cat)
+    && (!s.trim() || [r.full_name, r.employee_no, r.category, assignmentOf(r), idView ? identity.data?.get(r.employee_id) : ""].some((v) => (v ?? "").includes(s.trim())))), [q.data, s, kind, acc, stage, title, cat, extra.data, idView, identity.data]);
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   if (extra.error || (idView && identity.error)) return <ErrorState message={arabicError(extra.error ?? identity.error)} onRetry={() => { void extra.refetch(); if (idView) void identity.refetch(); }} />;
   const all = q.data ?? [];
   const meta = () => ({ title: "الكادر التعليمي والإداري", school: all[0]?.school_name ?? undefined, filters: [s && `بحث: ${s}`, kind, stage && `المرحلة: ${stage === "__none" ? "بلا مرحلة" : stage}`, title, cat, acc && ACCOUNT_LABEL[acc as StaffRow["account"]]].filter(Boolean) as string[] });
-  const headers = [...HEAD, "مسمى الإسناد", ...(idView ? ["الهوية / الإقامة"] : [])];
-  const body = () => rows.filter((r) => !selected.size || selected.has(r.employee_id)).map((r) => [r.full_name, r.employee_no, r.job_title, r.kind, r.category, stageOf(r) || "—", r.school_name, ACCOUNT_LABEL[r.account], assignmentOf(r), ...(idView ? [identity.data?.get(r.employee_id) ?? ""] : [])]);
+  const headers = ["الاسم", "الرقم الوظيفي", ...(idView ? ["الهوية / الإقامة"] : []), "مسمى الإسناد", "النوع", "التصنيف", "المرحلة الدراسية", "الفرع", "حساب الدخول"];
+  const body = () => rows.filter((r) => !selected.size || selected.has(r.employee_id)).map((r) => [r.full_name, r.employee_no, ...(idView ? [identity.data?.get(r.employee_id) ?? ""] : []), assignmentOf(r), r.kind, r.category, stageOf(r) || "—", r.school_name, ACCOUNT_LABEL[r.account]]);
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
@@ -66,13 +65,13 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-56 flex-1"><Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input aria-label="بحث في الكادر" placeholder="بحث بالاسم أو الرقم الوظيفي أو المسمى" value={s} onChange={(e) => setS(e.target.value)} className="pr-9" /></div>
+          <Input aria-label="بحث في الكادر" placeholder="بحث بالاسم أو الرقم الوظيفي أو الإسناد" value={s} onChange={(e) => setS(e.target.value)} className="pr-9" /></div>
         <select aria-label="النوع" className={selectCls("w-36")} value={kind} onChange={(e) => setKind(e.target.value)}>
           <option value="">كل الأنواع</option><option value="تعليمي">تعليمي</option><option value="إداري">إداري</option></select>
 <select aria-label="المرحلة الدراسية" className={selectCls("w-44")} value={stage} onChange={(e) => setStage(e.target.value)}>
           <option value="">كل المراحل</option><option value="__none">بلا مرحلة</option>{stageOpts.map((x) => <option key={x} value={x}>{x}</option>)}</select>
-        <select aria-label="المسمى الوظيفي" className={selectCls("w-44")} value={title} onChange={(e) => setTitle(e.target.value)}>
-          <option value="">كل المسميات</option>{titleOpts.map((x) => <option key={x} value={x}>{x}</option>)}</select>
+        <select aria-label="مسمى الإسناد" className={selectCls("w-44")} value={title} onChange={(e) => setTitle(e.target.value)}>
+          <option value="">كل مسميات الإسناد</option>{titleOpts.map((x) => <option key={x} value={x}>{x}</option>)}</select>
         <select aria-label="التصنيف" className={selectCls("w-44")} value={cat} onChange={(e) => setCat(e.target.value)}>
           <option value="">كل التصنيفات</option>{catOpts.map((x) => <option key={x} value={x}>{x}</option>)}</select>
         <Button variant="outline" size="sm" disabled={!rows.length || extra.isFetching || (idView && identity.isFetching)} onClick={() => exportXlsx(meta(), headers, body())}><FileSpreadsheet className="size-4" />Excel</Button>
@@ -90,7 +89,8 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
                   <td className="px-3 py-2"><input type="checkbox" aria-label={`تحديد ${r.full_name}`} checked={selected.has(r.employee_id)} onChange={(e) => setSelected((old) => { const next = new Set(old); if (e.target.checked) next.add(r.employee_id); else next.delete(r.employee_id); return next; })} /></td>
                   <td className="px-3 py-2 font-medium">{r.full_name}</td>
                   <td className="px-3 py-2" dir="ltr" style={{ textAlign: "right" }}>{r.employee_no || "—"}</td>
-                  <td className="px-3 py-2">{r.job_title || "—"}</td>
+                  {idView && <td className="px-3 py-2"><bdi dir="ltr">{identity.data?.get(r.employee_id) || "—"}</bdi></td>}
+                  <td className="px-3 py-2">{assignmentOf(r) || "—"}</td>
                   <td className="px-3 py-2"><span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">{r.kind}</span></td>
                   <td className="px-3 py-2">{r.category || "—"}</td>
                   <td className="px-3 py-2">{stageOf(r) || "—"}</td>
@@ -98,8 +98,6 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
                   <td className="px-3 py-2">{r.account === "linked"
                     ? <span className="flex items-center gap-1 text-xs text-primary"><BadgeCheck className="size-3.5" />{ACCOUNT_LABEL.linked}</span>
                     : <span className="flex items-center gap-1 text-xs text-muted-foreground"><UserX className="size-3.5" />{ACCOUNT_LABEL[r.account]}</span>}</td>
-                  <td className="px-3 py-2">{assignmentOf(r) || "—"}</td>
-                  {idView && <td className="px-3 py-2"><bdi dir="ltr">{identity.data?.get(r.employee_id) || "—"}</bdi></td>}
                   <td className="px-3 py-2"><StaffPresence data={presence.data?.get(r.employee_id)} /></td>
                 </tr>
               ))}

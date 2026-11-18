@@ -25742,6 +25742,7 @@ export type Database = {
         Args: { _role: string; _school: string; _uid: string }
         Returns: string
       }
+      _stage_key: { Args: { _t: string }; Returns: string }
       _stage_student_password: {
         Args: { _actor: string; _student: string; _uid: string }
         Returns: undefined
