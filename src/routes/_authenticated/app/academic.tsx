@@ -27,7 +27,7 @@ const ACAD_TABS = [
 ];
 
 export const Route = createFileRoute("/_authenticated/app/academic")({
-  head: () => ({ meta: [{ title: "الهيكل الدراسي — ركاز" }, { name: "description", content: "محددات الدراسة المعتمدة من المالك وتخصيصها للفروع وتكوين الشعب للوكيل." }, { property: "og:title", content: "الهيكل الدراسي — ركاز" }, { property: "og:description", content: "محددات المؤسسة والشعب المتاحة للفرع." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "الهيكل الأكاديمي — ركاز" }, { name: "description", content: "محددات الدراسة المعتمدة من المالك وتخصيصها للفروع وتكوين الشعب للوكيل." }, { property: "og:title", content: "الهيكل الأكاديمي — ركاز" }, { property: "og:description", content: "محددات المؤسسة والشعب المتاحة للفرع." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Page,
 });
 
