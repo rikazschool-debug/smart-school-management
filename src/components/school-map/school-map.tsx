@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bath, Briefcase, Building2, Coffee, Cpu, Dumbbell, FlaskConical, Landmark, Library, Package, Pencil, Plus, Presentation,
-  School, Search, Square, Stethoscope, Trash2, UserRound, UtensilsCrossed, Wrench, Lock, CheckCircle2, type LucideIcon,
+  School, Search, Square, Stethoscope, Trash2, UserRound, UtensilsCrossed, Wrench, Lock, CheckCircle2, Printer, type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
@@ -16,6 +16,7 @@ import { ask } from "@/components/confirm";
 import { PeoplePicker, rolesLabel, usePeopleByIds } from "@/components/people-picker";
 import { rpc } from "@/components/hr/shared";
 import { arabicError, useSession } from "@/lib/session";
+import { printReport } from "@/lib/export";
 import { CATS, CAT_ORDER, ROOM_STATUS, filterRooms, floorLabel, floorsOf, mapStats, roomProblems, type Building, type Caps, type MapData, type Room, type RoomCat } from "./model";
 
 const ICON: Record<RoomCat, LucideIcon> = {
@@ -49,12 +50,12 @@ export function SchoolMap() {
     <div>
       <PageHeader eyebrow="إدارة المدرسة" title="الخريطة المدرسية" desc="مباني الفرع وأدوارها وكل غرفها مصنّفة، مع المسؤول المخوَّل عن كل غرفة. الصلاحيات نفسها التي تحكم «الوثائق والعقود» لكل فرع."
         action={visible.length > 1 ? <select aria-label="الفرع" className={selectCls("w-56")} value={school} onChange={(e) => setSchool(e.target.value)}>{visible.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select> : undefined} />
-      {cap && <Board org={org} school={cap.id} canCreate={cap.create} canEdit={cap.edit} />}
+      {cap && <Board org={org} school={cap.id} schoolName={cap.name} canCreate={cap.create} canEdit={cap.edit} />}
     </div>
   );
 }
 
-function Board({ org, school, canCreate, canEdit }: { org: string; school: string; canCreate: boolean; canEdit: boolean }) {
+function Board({ org, school, schoolName, canCreate, canEdit }: { org: string; school: string; schoolName: string; canCreate: boolean; canEdit: boolean }) {
   const q = useQuery({ queryKey: ["fm", org, school], queryFn: () => rpc<MapData>("fm_get", { _org: org, _school: school }) });
   const [bid, setBid] = useState("");
   const [search, setSearch] = useState("");
@@ -74,6 +75,9 @@ function Board({ org, school, canCreate, canEdit }: { org: string; school: strin
 
   return (
     <div className="space-y-5">
+      {!!data.buildings.length && <div className="flex justify-end"><Button variant="outline" onClick={() => {
+        try { printMap(data, schoolName); } catch (error) { toast.error(arabicError(error)); }
+      }}><Printer className="size-4" />طباعة الخريطة كاملة</Button></div>}
       <StatsPanel stats={stats} buildings={data.buildings.length} onCat={(c) => setCat(c === cat ? "" : c)} cat={cat} />
       {!data.buildings.length ? (
         <EmptyState title="لا توجد مبانٍ مسجّلة لهذا الفرع" hint={canCreate ? "ابدأ بإضافة المبنى وعدد أدواره، ثم أضف الغرف." : "لم تُسجَّل خريطة الفرع بعد."}
@@ -103,6 +107,26 @@ function Board({ org, school, canCreate, canEdit }: { org: string; school: strin
         onClose={() => setView(null)} onEdit={() => { setEditR(view); setView(null); }} />}
     </div>
   );
+}
+
+function printMap(data: MapData, school: string) {
+  const stats = mapStats(data.rooms);
+  const rows = data.buildings.flatMap((b) => floorsOf(b).flatMap((floor) => {
+    const location = [b.name, floorLabel(floor)];
+    const rooms = data.rooms.filter((r) => r.building_id === b.id && r.floor === floor);
+    return rooms.length ? rooms.map((r) => [
+      ...location, [r.name, r.code, CATS[r.category]].filter(Boolean).join(" · "), ROOM_STATUS[r.status] ?? r.status,
+      [r.capacity != null && `السعة: ${r.capacity} مقعد`, r.area != null && `المساحة: ${r.area} م²`].filter(Boolean).join(" · ") || "—",
+      [r.resp_name, r.resp_roles.length > 0 && rolesLabel(r.resp_roles), r.resp_title, r.resp_notes && `التخويل: ${r.resp_notes}`].filter(Boolean).join(" · ") || "—",
+      [r.equipment && `التجهيزات: ${r.equipment}`, r.notes && `ملاحظات: ${r.notes}`].filter(Boolean).join(" · ") || "—",
+    ]) : [[...location, "لا توجد غرف مسجّلة", "—", "—", "—", "—"]];
+  }));
+  printReport({ title: "الخريطة المدرسية", school, filters: [], count: false, details: [
+    `المباني: ${data.buildings.length} · الغرف: ${stats.rooms} · تحت الصيانة: ${stats.maintenance} · مغلقة: ${stats.closed} · بلا مسؤول: ${stats.noResp}`,
+    `السعة المسجّلة: ${stats.withCapacity ? `${stats.capacity} مقعد في ${stats.withCapacity} غرفة` : "لم تُسجَّل"}`,
+    ...stats.byCat.map(({ cat, count }) => `${CATS[cat]}: ${count}`),
+    ...data.buildings.map((b) => `${b.name}: ${b.floors} دور${b.has_basement ? " + قبو" : ""}${b.notes ? ` · ملاحظات المبنى: ${b.notes}` : ""}`),
+  ] }, ["المبنى", "الدور", "الغرفة / الرمز / التصنيف", "الحالة", "السعة والمساحة", "المسؤول والتخويل", "التجهيزات والملاحظات"], rows);
 }
 
 function StatsPanel({ stats, buildings, cat, onCat }: { stats: ReturnType<typeof mapStats>; buildings: number; cat: string; onCat: (c: string) => void }) {
