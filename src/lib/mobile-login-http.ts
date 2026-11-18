@@ -6,7 +6,18 @@ type Service = {
   studentSignIn: (data: { nid: string; csmart: string }) => Promise<Result>;
 };
 type Path = "request-code" | "verify-code" | "student-login";
-const headers = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
+type ServiceSource = Service | (() => Promise<Service>);
+
+// Public, reviewed preview origin. No suffix matching, wildcards, or forwarded-host trust.
+// Replace/remove this exact entry in review when the temporary Replit preview changes/ends.
+export const MOBILE_LOGIN_PREVIEW_ORIGIN =
+  "https://de465eba-d58f-4044-a96f-e509a0f51668-00-2hirn3vv6u77u.expo.sisko.replit.dev";
+const headers = {
+  "Cache-Control": "no-store",
+  "X-Content-Type-Options": "nosniff",
+  Vary: "Origin",
+};
+const preflightVary = "Origin, Access-Control-Request-Method, Access-Control-Request-Headers";
 const reply = (body: Result, status: number) =>
   Response.json(body, {
     status,
@@ -17,7 +28,48 @@ const invalid = () => reply({ error: "بيانات الطلب غير صحيحة.
 export async function mobileLoginHandler(
   request: Request,
   path: Path,
-  service: Service,
+  service: ServiceSource,
+): Promise<Response> {
+  // This policy belongs only to the three mobile routes, not server functions or Supabase.
+  const origin = request.headers.get("origin");
+  const publicOrigin = process.env["RIKAZ_PUBLIC_ORIGIN"] || new URL(request.url).origin;
+  const preview = origin === MOBILE_LOGIN_PREVIEW_ORIGIN;
+  if (origin && origin !== publicOrigin && !preview) {
+    const denied = reply({ error: "الطلب غير مسموح." }, 403);
+    if (request.method === "OPTIONS") denied.headers.set("Vary", preflightVary);
+    return denied;
+  }
+  if (request.method === "OPTIONS" && preview) {
+    // The actual Expo Web fetch uses JSON + safelisted Accept, without cross-origin cookies.
+    // Do not load the login module, read a body, look up an account, or issue/send a code here.
+    if (
+      request.headers.get("access-control-request-method") !== "POST" ||
+      request.headers.get("access-control-request-headers")?.trim().toLowerCase() !== "content-type"
+    ) {
+      const denied = reply({ error: "الطلب غير مسموح." }, 403);
+      denied.headers.set("Vary", preflightVary);
+      return denied;
+    }
+    return new Response(null, {
+      status: 204,
+      headers: {
+        ...headers,
+        Vary: preflightVary,
+        "Access-Control-Allow-Origin": MOBILE_LOGIN_PREVIEW_ORIGIN,
+        "Access-Control-Allow-Methods": "POST",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
+  const response = await handleMobileLoginPost(request, path, service);
+  if (preview) response.headers.set("Access-Control-Allow-Origin", MOBILE_LOGIN_PREVIEW_ORIGIN);
+  return response;
+}
+
+async function handleMobileLoginPost(
+  request: Request,
+  path: Path,
+  service: ServiceSource,
 ): Promise<Response> {
   if (request.method !== "POST") return reply({ error: "طريقة الطلب غير مسموحة." }, 405);
   if (
@@ -25,11 +77,6 @@ export async function mobileLoginHandler(
   ) {
     return reply({ error: "نوع الطلب غير مسموح." }, 415);
   }
-  // Native callers omit Origin. Browser callers must be same-origin; this is not identity authorization.
-  const origin = request.headers.get("origin");
-  // Match the existing web CSRF boundary behind HTTPS termination. Never trust client forwarded headers.
-  const publicOrigin = process.env["RIKAZ_PUBLIC_ORIGIN"] || new URL(request.url).origin;
-  if (origin && origin !== publicOrigin) return reply({ error: "الطلب غير مسموح." }, 403);
   if (Number(request.headers.get("content-length")) > 2048) return invalid();
   const reader = request.body?.getReader();
   if (!reader) return invalid();
@@ -67,6 +114,7 @@ export async function mobileLoginHandler(
         : ["challenge", "code", "portal"];
   if (Object.keys(body).some((key) => !allowed.includes(key))) return invalid();
   const { nid, csmart, portal, challenge, code } = body;
+  const getService = () => (typeof service === "function" ? service() : Promise.resolve(service));
   let result: Result;
   try {
     if (path === "student-login") {
@@ -78,12 +126,12 @@ export async function mobileLoginHandler(
         csmart.length > 40
       )
         return invalid();
-      result = await service.studentSignIn({ nid, csmart: csmart.trim() });
+      result = await (await getService()).studentSignIn({ nid, csmart: csmart.trim() });
     } else {
       if (portal !== "guardian" && portal !== "staff") return invalid();
       if (path === "request-code") {
         if (typeof nid !== "string" || !/^[12]\d{9}$/.test(nid)) return invalid();
-        result = await service.requestIdCode({ nid, portal });
+        result = await (await getService()).requestIdCode({ nid, portal });
       } else {
         if (
           typeof challenge !== "string" ||
@@ -92,7 +140,9 @@ export async function mobileLoginHandler(
           !/^\d{6}$/.test(code)
         )
           return invalid();
-        result = await service.verifyIdCode({
+        result = await (
+          await getService()
+        ).verifyIdCode({
           challenge,
           code,
           portal,

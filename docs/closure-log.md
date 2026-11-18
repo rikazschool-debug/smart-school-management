@@ -1166,3 +1166,16 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 ## 2026-11-18 — Role change to teacher creates the teacher record (prompt-469)
 - change_member_role: switching a branch membership to «معلم» now creates one teachers row linked to the same login (never by name), recorded in access_audit (teacher_record_created). Before, the login became a teacher but was missing from «سجلات المعلمين» and course assignment.
 - Evidence: browser run on an isolated test org (supervisor → teacher, reason, record appears in «سجلات المعلمين»); test org removed. Malki data untouched.
+
+## 2026-11-18 — Exact Replit preview CORS, review only
+- External OPTIONS on all three mobile login endpoints returned 405 without CORS. The actual Replit bundle sends POST JSON with Content-Type and safelisted Accept, without cross-origin credentials.
+- Added an exact-origin, POST/Content-Type-only preflight boundary to the existing mobile HTTP handler; routes load the existing identity service lazily after validation. No shared login flow replacement or Nginx limit changes.
+- Isolated tests cover approved/unapproved origins, method/header refusal, no login-module loading on preflight/rejected input, existing validation/native/web behavior and compiled runtime route isolation. Actual execution results are reported with the review; no live OTP or login is performed here.
+- Executed: 81/81 focused unit tests, TypeScript and local HTTP boundary checks passed. Full baseline already fails two collaboration permission tests (main run 44183352402); local Bun also has three suite-loader failures. Client/SSR build passed locally; final Nitro build was blocked by Windows EPERM readlink, so compiled runtime/Lovable build are not claimed as passed.
+- No deployment, migrations, database/permission/secret changes, messages or tests against real accounts. Production remains on its existing healthy revision; mobile ID-login flag stays 0.
+
+## 2026-11-18 — CORS and six accumulated migrations, approved deployment preparation
+- User authorized compatible migration application and deployment after review/backup/full tests. Updated two stale collaboration navigation assertions to the new documented staff-wide policy, without altering roles to hide test failures; added actual SQL context-gate and rolled-back synthetic support/teacher acceptance checks.
+- Read-only live preflight confirmed c3b14b15, 580 ledger rows, healthy services and no new support columns. Fresh local protected backup restored into a network-none same-image PostgreSQL sandbox; six migrations preserved the data fingerprints of 431 public/auth tables and historical ledger, and added only the intended schema/functions.
+- Resolved a QA-only restore-owner mismatch by matching the containing database's observed live owner inside the disposable sandbox. No production privilege change. Previous function definitions were saved privately and their transactional restore rehearsed in QA.
+- 138 focused local tests and TypeScript passed before upload. Full Linux checks, both builds, fixed-main verification and controlled deployment are mandatory next gates; final results belong to the release receipt and review. No live OTP/messages/calls or historical queue processing are part of acceptance. Plan: docs/releases/20261118-cors-and-six-migrations.md.
