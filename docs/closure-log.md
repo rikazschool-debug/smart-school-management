@@ -1207,3 +1207,5 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - prompt-489 (Nov 18 2026): org owner always passes _adm_duty_view/_manage/_setup/_setup_view (no principal role needed); duty post kind «الفصل» (classroom) added. Unverified in a signed-in browser.
 
 - prompt-490 (Nov 18 2026): «مالك المجموعة» displayed as «مدير النظام» (UI + server messages; role unchanged; stored HR job titles untouched). Several people per duty location (required = target, same person twice refused). Quick assignment tab (adm_duty_quick via adm_duty_quick_save/cancel/list; person+date+location, optional grade/section/period/note; managers only, employee notified). Unverified signed-in.
+
+- prompt-491: manual contract edit removed (ct_set revoked; only contract matching changes contract fields); quick duty location is free text (adm_duty_quick.location); quick tab first.

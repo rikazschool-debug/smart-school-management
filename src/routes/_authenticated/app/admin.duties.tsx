@@ -34,9 +34,9 @@ function Duties({ ctx }: { ctx: Ctx }) {
   const manage = !!p?.["duty_rosters.edit"];
   const setupView = !!(p?.["duty_setup.view"] || p?.["duty_setup.edit"]);
   const setupEdit = !!p?.["duty_setup.edit"];
-  const tabs = [["mine", "مناوباتي"], ...(lead ? [["week", "جدول الأسبوع"], ["list", "القائمة والتقارير"], ["changes", "طلبات الاعتذار والتغيير"], ...(manage ? [["quick", "إسناد سريع"]] : [])] : []), ...(setupView ? [["setup", "الإعداد والسياسة"]] : [])] as const;
+  const tabs = [...(manage ? [["quick", "إسناد سريع"]] : []), ["mine", "مناوباتي"], ...(lead ? [["week", "جدول الأسبوع"], ["list", "القائمة والتقارير"], ["changes", "طلبات الاعتذار والتغيير"]] : []), ...(setupView ? [["setup", "الإعداد والسياسة"]] : [])] as const;
   const [picked, setTab] = useState<string | null>(null);
-  const tab = picked && tabs.some(([k]) => k === picked) ? picked : lead ? "week" : "mine";
+  const tab = picked && tabs.some(([k]) => k === picked) ? picked : manage ? "quick" : lead ? "week" : "mine";
   return (
     <div>
       <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
@@ -504,13 +504,12 @@ function QuickAssign({ ctx }: { ctx: Ctx }) {
   const opts = useQuery({
     queryKey: ["duty", "quick-opts", ctx.schoolId],
     queryFn: async () => {
-      const [po, gr, se, pe] = await Promise.all([
-        db.from("adm_duty_posts" as never).select("id,name,active").eq("school_id", ctx.schoolId).order("name"),
+      const [gr, se, pe] = await Promise.all([
         db.from("grades" as never).select("id,name,sort_order").eq("school_id", ctx.schoolId).order("sort_order"),
         db.from("sections" as never).select("id,name,grade_id").eq("school_id", ctx.schoolId).order("name"),
         db.from("periods" as never).select("id,name,sort_order,start_time,end_time").eq("school_id", ctx.schoolId).order("sort_order"),
       ]);
-      return { posts: (po.data ?? []) as Row[], grades: (gr.data ?? []) as Row[], sections: (se.data ?? []) as Row[], periods: (pe.data ?? []) as Row[] };
+      return { grades: (gr.data ?? []) as Row[], sections: (se.data ?? []) as Row[], periods: (pe.data ?? []) as Row[] };
     },
   });
   const list = useQuery({
@@ -524,7 +523,7 @@ function QuickAssign({ ctx }: { ctx: Ctx }) {
   const o = opts.data;
   const secs = (o?.sections ?? []).filter((s) => !f.grade || s.grade_id === f.grade);
   async function save() {
-    const r = await run("adm_duty_quick_save", { _school: ctx.schoolId, _user: f.user, _date: f.date, _post: f.post, _grade: f.grade || null, _section: f.section || null, _period: f.period || null, _note: f.note || null, _client: crypto.randomUUID() }, "تم الإسناد وأُشعر الموظف");
+    const r = await run("adm_duty_quick_save", { _school: ctx.schoolId, _user: f.user, _date: f.date, _location: f.post.trim(), _grade: f.grade || null, _section: f.section || null, _period: f.period || null, _note: f.note || null, _client: crypto.randomUUID() }, "تم الإسناد وأُشعر الموظف");
     if (r) setF({ ...empty, date: f.date, post: f.post });
   }
   async function cancel(q: Row) { const r = await askText("سبب الإلغاء (يُبلغ الموظف)", { required: true }); if (r) run("adm_duty_quick_cancel", { _id: q.id, _reason: r }, "أُلغي الإسناد"); }
@@ -537,13 +536,13 @@ function QuickAssign({ ctx }: { ctx: Ctx }) {
         <PeoplePicker purpose="duty" school={ctx.schoolId} label="الشخص (معلم أو إداري) — اكتب الاسم أو اختر من القائمة" single compact value={f.user ? [f.user] : []} onChange={(v) => setF({ ...f, user: v[0] ?? "" })} />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div><Label htmlFor="qd">التاريخ</Label><Input id="qd" type="date" min={today} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} /></div>
-          {sel("qp", "الموقع", f.post, (v) => setF({ ...f, post: v }), (o?.posts ?? []).filter((p) => p.active !== false).map((p) => [p.id, p.name]), "اختر الموقع")}
+          <div><Label htmlFor="qp">الموقع</Label><Input id="qp" value={f.post} maxLength={120} placeholder="مثال: الفناء الشمالي" onChange={(e) => setF({ ...f, post: e.target.value })} /></div>
           {sel("qg", "الصف (اختياري)", f.grade, (v) => setF({ ...f, grade: v, section: "" }), (o?.grades ?? []).map((g) => [g.id, g.name]), "—")}
           {sel("qs", "الشعبة (اختياري)", f.section, (v) => setF({ ...f, section: v }), secs.map((s) => [s.id, s.name]), "—")}
           {sel("qe", "الحصة (اختياري)", f.period, (v) => setF({ ...f, period: v }), (o?.periods ?? []).map((p) => [p.id, `${p.name} ${hm(p.start_time)}–${hm(p.end_time)}`]), "—")}
           <div><Label htmlFor="qn">ملاحظة (اختياري)</Label><Input id="qn" value={f.note} maxLength={500} onChange={(e) => setF({ ...f, note: e.target.value })} /></div>
         </div>
-        <Button disabled={busy || !f.user || !f.post || !f.date} onClick={save}>إسناد</Button>
+        <Button disabled={busy || !f.user || f.post.trim().length < 2 || !f.date} onClick={save}>إسناد</Button>
       </div>
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} onRetry={() => list.refetch()} /> : !list.data?.length ? <EmptyState title="لا توجد إسنادات سريعة" hint="الإسنادات التي تضيفها هنا تظهر في هذه القائمة." /> : (
         <ul className="space-y-2">{list.data.map((q) => (

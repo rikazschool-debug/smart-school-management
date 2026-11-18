@@ -980,9 +980,10 @@ export type Database = {
           date: string
           grade_id: string | null
           id: string
+          location: string | null
           note: string | null
           period_id: string | null
-          post_id: string
+          post_id: string | null
           school_id: string
           section_id: string | null
           status: string
@@ -997,9 +998,10 @@ export type Database = {
           date: string
           grade_id?: string | null
           id?: string
+          location?: string | null
           note?: string | null
           period_id?: string | null
-          post_id: string
+          post_id?: string | null
           school_id: string
           section_id?: string | null
           status?: string
@@ -1014,9 +1016,10 @@ export type Database = {
           date?: string
           grade_id?: string | null
           id?: string
+          location?: string | null
           note?: string | null
           period_id?: string | null
-          post_id?: string
+          post_id?: string | null
           school_id?: string
           section_id?: string | null
           status?: string
@@ -26554,9 +26557,9 @@ export type Database = {
           _client: string
           _date: string
           _grade: string
+          _location: string
           _note: string
           _period: string
-          _post: string
           _school: string
           _section: string
           _user: string
