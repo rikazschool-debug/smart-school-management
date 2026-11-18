@@ -30499,6 +30499,18 @@ export type Database = {
           user_id: string
         }[]
       }
+      staff_directory_tools: { Args: { _school: string }; Returns: Json }
+      staff_directory_update: {
+        Args: {
+          _action: string
+          _ids: string[]
+          _reason?: string
+          _school: string
+          _tag?: string
+          _value?: string
+        }
+        Returns: number
+      }
       staff_extra: {
         Args: { _school: string }
         Returns: {

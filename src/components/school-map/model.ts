@@ -53,6 +53,14 @@ export function filterRooms(rooms: Room[], q: string, cat: string, status: strin
     && (!s || [r.name, r.code, r.resp_name, r.resp_title, r.equipment].some((v) => v?.includes(s))));
 }
 
+/** Print all branch buildings unless a room category is selected. */
+export function mapPrintScope(data: MapData, category: RoomCat | ""): MapData {
+  if (!category) return data;
+  const rooms = data.rooms.filter((room) => room.category === category);
+  const occupied = new Set(rooms.map((room) => room.building_id));
+  return { rooms, buildings: data.buildings.filter((building) => occupied.has(building.id)) };
+}
+
 /** Client mirror of fm_save_room checks, so the form explains problems before sending. */
 export function roomProblems(p: { name: string; floor: number; capacity: string; area: string; resp_user?: string; resp_title?: string; resp_notes?: string }, b: Pick<Building, "floors" | "has_basement"> | undefined): string[] {
   const out: string[] = [];

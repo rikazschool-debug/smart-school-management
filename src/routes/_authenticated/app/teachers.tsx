@@ -21,7 +21,7 @@ import { StaffPresence, useStaffPresence } from "@/components/education/staff-pr
 
 export const Route = createFileRoute("/_authenticated/app/teachers")({
   component: Page,
-  head: () => ({ meta: [{ title: "الكادر التعليمي — ركاز" }, { name: "description", content: "دليل الكادر التعليمي والإداري وسجلات المعلمين" }, { property: "og:title", content: "الكادر التعليمي — ركاز" }, { property: "og:description", content: "سجلات المعلمين وعرضها وطباعتها وتصديرها حسب الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "الكادر التعليمي والإداري — ركاز" }, { name: "description", content: "دليل الكادر التعليمي والإداري في مدارس ركاز." }, { property: "og:title", content: "الكادر التعليمي والإداري — ركاز" }, { property: "og:description", content: "عرض الكادر وتصفية الإسناد والوسوم حسب الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 // national_id is not selectable directly; read through teacher_id_status (people_identity.view)
@@ -29,7 +29,16 @@ const COLS = "id, school_id, user_id, full_name, display_name, email, phone, spe
 type IdState = { teacher_id: string; national_id: string | null; hr_national_id: string | null; state: "ready" | "missing" | "conflict"; problem: string | null };
 
 function Page() {
-  return <RequireSchool nav="teachers">{(ctx) => <Teachers schoolId={ctx.schoolId} role={ctx.role} />}</RequireSchool>;
+  return <RequireSchool nav="teachers" extra={(p) => !!p["people_staff.view"]}>{(ctx) => <StaffPage schoolId={ctx.schoolId} role={ctx.role} />}</RequireSchool>;
+}
+
+function StaffPage({ schoolId, role }: { schoolId: string; role: Parameters<typeof canManageAcademic>[0] }) {
+  const perms = useSchoolPerms(schoolId);
+  if (seesStaffDirectory(role) || perms?.["people_staff.view"]) return <>
+    <PageHeader title="الكادر التعليمي والإداري" desc="الكادر التابع لمدرستك من سجلات الموارد البشرية، كل موظف مرة واحدة مع حالة حساب الدخول." />
+    <StaffDirectory key={schoolId} schoolId={schoolId} />
+  </>;
+  return <Teachers schoolId={schoolId} role={role} />;
 }
 
 function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeof canManageAcademic>[0] }) {
@@ -70,23 +79,9 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
     const { data } = await db.from("teachers").select("id").eq("school_id", schoolId).limit(10000);
     return ((data ?? []) as Row[]).map((t) => t["id"] as string).filter((id) => { const val = m.get(id)?.[k] ?? ""; return v === "__none" ? !val : val.split("، ").includes(v); });
   };
-  const dir = seesStaffDirectory(role) || !!perms0?.["people_staff.view"];
-  const [tab, setTab] = useState<"dir" | "teachers">(dir ? "dir" : "teachers");
   return (
     <>
-      {dir && (
-        <div role="tablist" className="mb-4 inline-flex rounded-xl border bg-card p-1">
-          {([["dir", "الكادر التعليمي والإداري"], ["teachers", "سجلات المعلمين"]] as const).map(([k, l]) => (
-            <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-              className={`min-h-9 rounded-lg px-4 text-sm ${tab === k ? "bg-primary font-semibold text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}>{l}</button>
-          ))}
-        </div>
-      )}
-      {tab === "dir" ? (<>
-        <PageHeader title={teachersLabel(role)} desc="الكادر التابع لمدرستك من سجلات الموارد البشرية، كل موظف مرة واحدة مع حالة حساب الدخول." />
-        <StaffDirectory schoolId={schoolId} />
-      </>) : (<>
-      <PageHeader title={dir ? "سجلات المعلمين" : teachersLabel(role)} desc="يدخل المعلم برقم الهوية أو الإقامة ثم رمز تحقق يصل إلى جواله المعتمد لدى الإدارة. التخصصات والأقسام إدارة تعليمية فقط." />
+      <PageHeader title={teachersLabel(role)} desc="يدخل المعلم برقم الهوية أو الإقامة ثم رمز تحقق يصل إلى جواله المعتمد لدى الإدارة. التخصصات والأقسام إدارة تعليمية فقط." />
       <CrudTable person={{ kind: "teacher" }} title="المعلمون" table="teachers" schoolId={schoolId} canWrite={w} order="full_name"
         select={COLS} searchKeys={["full_name", "display_name", "email", "phone", "specialization"]}
         filters={[
@@ -137,7 +132,6 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
           {editing && <NidForm key={editing["id"]} teacherId={editing["id"]} state={st(editing)} onDone={() => setEditing(null)} />}
         </DialogContent>
       </Dialog>
-      </>)}
     </>
   );
 }

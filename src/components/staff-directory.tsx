@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCheck, ChevronDown, FileDown, FileSpreadsheet, Search, UserX } from "lucide-react";
+import { BadgeCheck, ChevronDown, FileDown, FileSpreadsheet, Pencil, Printer, Search, Tags, UserX } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { exportPdf, exportXlsx } from "@/lib/export";
+import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { db } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,8 @@ import { StaffPresence, useStaffPresence } from "@/components/education/staff-pr
 import { useSchoolPerms } from "@/lib/school-perms";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { matchesStaffDepartment } from "@/components/staff-department-filter";
+import { StaffDirectoryAction, type StaffTools } from "@/components/staff-directory-actions";
+import { supabase } from "@/integrations/supabase/client";
 
 export type StaffRow = { employee_id: string; full_name: string; employee_no: string | null; job_title: string | null; assignment_note: string | null; department: string | null; phone: string | null; kind: string; school_name: string | null; account: "linked" | "inactive" | "none" };
 
@@ -35,22 +38,52 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
       return (data ?? []) as StaffRow[];
     },
   });
+  const tools = useQuery({ queryKey: ["staff-directory-tools", schoolId], queryFn: async () => {
+    const { data, error } = await supabase.rpc("staff_directory_tools", { _school: schoolId });
+    if (error) throw error;
+    return data as unknown as StaffTools;
+  } });
+  const [tag, setTag] = useState("");
+  const [action, setAction] = useState<{ mode: "assignment" | "tags"; ids: string[]; initial: string } | null>(null);
+  const staffTools = tools.data;
+  const tagView = staffTools?.tag_view === true;
+  const tagOpts = staffTools?.tags ?? [];
+  const employeeTags = (id: string) => {
+    const ids = staffTools?.employees[id]?.tags ?? [];
+    return tagOpts.filter((t) => ids.includes(t.id));
+  };
   const departmentOpts = useMemo(() => [...new Set((q.data ?? []).map((r) => r.department))].sort((a, b) => a === null ? 1 : b === null ? -1 : a.localeCompare(b, "ar")), [q.data]);
   const titleOpts = useMemo(() => [...new Set((q.data ?? []).flatMap((r) => r.assignment_note ? [r.assignment_note] : []))].sort(), [q.data]);
   const [s, setS] = useState(""); const [kind, setKind] = useState(""); const [acc, setAcc] = useState("");
   const [departments, setDepartments] = useState<Set<string | null>>(new Set()); const [title, setTitle] = useState("");
   useEffect(() => setDepartments(new Set()), [schoolId]);
-  useEffect(() => setSelected(new Set()), [schoolId, s, kind, acc, departments, title]);
+  useEffect(() => setSelected(new Set()), [schoolId, s, kind, acc, departments, title, tag]);
   const rows = useMemo(() => (q.data ?? []).filter((r) => (!kind || r.kind === kind) && (!acc || r.account === acc)
     && matchesStaffDepartment(r.department, departments) && (!title || r.assignment_note === title)
-    && (!s.trim() || [r.full_name, r.employee_no, r.job_title, r.assignment_note, idView ? identity.data?.get(r.employee_id) : ""].some((v) => (v ?? "").includes(s.trim())))), [q.data, s, kind, acc, departments, title, idView, identity.data]);
+    && (!tagView || !tag || (staffTools?.employees[r.employee_id]?.tags ?? []).includes(tag))
+    && (!s.trim() || [r.full_name, r.employee_no, r.job_title, r.assignment_note, idView ? identity.data?.get(r.employee_id) : ""].some((v) => (v ?? "").includes(s.trim())))), [q.data, s, kind, acc, departments, title, idView, identity.data, tag, tagView, staffTools]);
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   if (idView && identity.error) return <ErrorState message={arabicError(identity.error)} onRetry={() => identity.refetch()} />;
   const all = q.data ?? [];
-  const meta = () => ({ title: "الكادر التعليمي والإداري", school: all[0]?.school_name ?? undefined, filters: [s && `بحث: ${s}`, kind, departments.size ? `القسم: ${[...departments].map((d) => d ?? "بلا قسم").join("، ")}` : "", title, acc && ACCOUNT_LABEL[acc as StaffRow["account"]]].filter(Boolean) as string[] });
-  const headers = ["الاسم", "الرقم الوظيفي", ...(idView ? ["الهوية / الإقامة"] : []), "رقم الهاتف", "المسمى الوظيفي", "مسمى الإسناد", "النوع", "القسم", "حساب الدخول"];
-  const body = () => rows.filter((r) => !selected.size || selected.has(r.employee_id)).map((r) => [r.full_name, r.employee_no, ...(idView ? [identity.data?.get(r.employee_id) ?? ""] : []), r.phone, r.job_title, r.assignment_note, r.kind, r.department, ACCOUNT_LABEL[r.account]]);
+  const picked = rows.filter((r) => selected.has(r.employee_id));
+  const meta = () => ({ title: "الكادر التعليمي والإداري", school: all[0]?.school_name ?? undefined, filters: [s && `بحث: ${s}`, kind, departments.size ? `القسم: ${[...departments].map((d) => d ?? "بلا قسم").join("، ")}` : "", title && `الإسناد: ${title}`, tagView && tagOpts.find((t) => t.id === tag)?.name, acc && ACCOUNT_LABEL[acc as StaffRow["account"]], picked.length ? `المحددون: ${picked.length}` : ""].filter((v): v is string => typeof v === "string" && !!v) });
+  const headers = ["الاسم", "الرقم الوظيفي", ...(idView ? ["الهوية / الإقامة"] : []), "رقم الهاتف", "المسمى الوظيفي", "الإسناد", ...(tagView ? ["الوسوم"] : []), "النوع", "القسم", "حساب الدخول"];
+  const body = () => (picked.length ? picked : rows).map((r) => [r.full_name, r.employee_no, ...(idView ? [identity.data?.get(r.employee_id) ?? ""] : []), r.phone, r.job_title, r.assignment_note, ...(tagView ? [employeeTags(r.employee_id).map((t) => t.name).join("، ")] : []), r.kind, r.department, ACCOUNT_LABEL[r.account]]);
+  const ready = rows.length > 0 && !q.isFetching && !(idView && identity.isFetching) && !tools.isFetching;
+  const output = async (format: "print" | "excel" | "pdf") => {
+    try {
+      if (format === "print") printReport(meta(), headers, body());
+      else if (format === "excel") exportXlsx(meta(), headers, body());
+      else await exportPdf(meta(), headers, body());
+    } catch (error) { toast.error(arabicError(error)); }
+  };
+  const exportMenu = <Popover><PopoverTrigger asChild><Button variant="outline" size="sm" disabled={!ready}><FileDown className="size-4" />تصدير<ChevronDown className="size-4" /></Button></PopoverTrigger>
+    <PopoverContent dir="rtl" align="start" className="w-40 space-y-1 p-2">
+      <Button className="w-full justify-start" variant="ghost" size="sm" onClick={() => void output("excel")}><FileSpreadsheet className="size-4" />Excel</Button>
+      <Button className="w-full justify-start" variant="ghost" size="sm" onClick={() => void output("pdf")}><FileDown className="size-4" />PDF</Button>
+    </PopoverContent></Popover>;
+  const openAction = (mode: "assignment" | "tags") => setAction({ mode, ids: picked.map((r) => r.employee_id), initial: picked.length === 1 ? picked[0]?.assignment_note ?? "" : "" });
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
@@ -78,13 +111,23 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
             </div>
           </PopoverContent>
         </Popover>
-        <select aria-label="مسمى الإسناد" className={selectCls("w-44")} value={title} onChange={(e) => setTitle(e.target.value)}>
-          <option value="">كل مسميات الإسناد</option>{titleOpts.map((x) => <option key={x} value={x}>{x}</option>)}</select>
-        <Button variant="outline" size="sm" disabled={!rows.length || q.isFetching || (idView && identity.isFetching)} onClick={() => exportXlsx(meta(), headers, body())}><FileSpreadsheet className="size-4" />Excel</Button>
-        <Button variant="outline" size="sm" disabled={!rows.length || q.isFetching || (idView && identity.isFetching)} onClick={() => void exportPdf(meta(), headers, body())}><FileDown className="size-4" />PDF</Button>
+        <select aria-label="الإسناد" className={selectCls("w-44")} value={title} onChange={(e) => setTitle(e.target.value)}>
+          <option value="">كل الإسنادات</option>{titleOpts.map((x) => <option key={x} value={x}>{x}</option>)}</select>
+        {tagView && <select aria-label="الوسوم" className={selectCls("w-40")} value={tag} onChange={(e) => setTag(e.target.value)}>
+          <option value="">كل الوسوم</option>{tagOpts.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>}
         <select aria-label="حالة الحساب" className={selectCls("w-44")} value={acc} onChange={(e) => setAcc(e.target.value)}>
           <option value="">كل الحسابات</option>{Object.entries(ACCOUNT_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+        {!picked.length && exportMenu}
       </div>
+      {tools.error && <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">تعذّر تحميل الوسوم وإجراءات التعديل <Button variant="outline" size="sm" onClick={() => void tools.refetch()}>إعادة المحاولة</Button></div>}
+      {picked.length > 0 && <div aria-label="إجراءات المحددين" className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2">
+        <span className="px-2 text-sm font-medium" aria-live="polite">المحددون: {picked.length}</span>
+        <Button variant="outline" size="sm" disabled={!ready} onClick={() => void output("print")}><Printer className="size-4" />طباعة</Button>
+        {exportMenu}
+        {picked.every((r) => staffTools?.employees[r.employee_id]?.assignment_edit) && <Button variant="outline" size="sm" onClick={() => openAction("assignment")}><Pencil className="size-4" />الإسناد</Button>}
+        {picked.every((r) => staffTools?.employees[r.employee_id]?.tags_edit) && <Button variant="outline" size="sm" onClick={() => openAction("tags")}><Tags className="size-4" />الوسوم</Button>}
+        <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setSelected(new Set())}>إلغاء التحديد</Button>
+      </div>}
       {!rows.length ? <EmptyState title={all.length ? "لا نتائج مطابقة" : "لا يوجد موظفون مكلّفون بهذه المدرسة في الموارد البشرية"} /> : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
@@ -99,6 +142,7 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
                   <td className="px-3 py-2"><bdi dir="ltr">{r.phone || "—"}</bdi></td>
                   <td className="px-3 py-2">{r.job_title || "—"}</td>
                   <td className="px-3 py-2">{r.assignment_note || "—"}</td>
+                  {tagView && <td className="px-3 py-2"><div className="flex min-w-20 flex-wrap gap-1">{employeeTags(r.employee_id).map((t) => <span key={t.id} className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">{t.name}</span>)}{!employeeTags(r.employee_id).length && "—"}</div></td>}
                   <td className="px-3 py-2"><span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">{r.kind}</span></td>
                   <td className="px-3 py-2">{r.department || "—"}</td>
                   <td className="px-3 py-2">{r.account === "linked"
@@ -111,6 +155,7 @@ export function StaffDirectory({ schoolId }: { schoolId: string }) {
           </table>
         </div>
       )}
+      {action && <StaffDirectoryAction {...action} schoolId={schoolId} tags={tagOpts} onClose={() => setAction(null)} />}
     </div>
   );
 }

@@ -184,3 +184,7 @@
 - [x] Staff directory: stage column + filters; teacher records: employee no., HR ID import, account status only, «مسمى الإسناد» from HR, school/stage/phone, filters
 - [x] Digital library add form: description, optional attachments before save, optional stage/grade
 - [x] Merge attendance + pickup + station into one «الحضور والمواظبة» section
+
+## prompt-483
+- [x] طباعة تصنيف الغرف المختار فقط، أو الخريطة كاملة دون تصنيف.
+- [x] تبويب الكادر: الإسناد والوسوم، فلترة الوسوم وطباعة وتصدير وتعديل المحددين، وإزالة تبويب سجلات المعلمين من دليل الكادر.

@@ -17,7 +17,7 @@ import { PeoplePicker, rolesLabel, usePeopleByIds } from "@/components/people-pi
 import { rpc } from "@/components/hr/shared";
 import { arabicError, useSession } from "@/lib/session";
 import { printReport } from "@/lib/export";
-import { CATS, CAT_ORDER, ROOM_STATUS, filterRooms, floorLabel, floorsOf, mapStats, roomProblems, type Building, type Caps, type MapData, type Room, type RoomCat } from "./model";
+import { CATS, CAT_ORDER, ROOM_STATUS, filterRooms, floorLabel, floorsOf, mapPrintScope, mapStats, roomProblems, type Building, type Caps, type MapData, type Room, type RoomCat } from "./model";
 
 const ICON: Record<RoomCat, LucideIcon> = {
   classroom: School, lab: FlaskConical, workshop: Cpu, hall: Presentation, library: Library, office: Briefcase, staff: Coffee, clinic: Stethoscope,
@@ -59,7 +59,7 @@ function Board({ org, school, schoolName, canCreate, canEdit }: { org: string; s
   const q = useQuery({ queryKey: ["fm", org, school], queryFn: () => rpc<MapData>("fm_get", { _org: org, _school: school }) });
   const [bid, setBid] = useState("");
   const [search, setSearch] = useState("");
-  const [cat, setCat] = useState("");
+  const [cat, setCat] = useState<RoomCat | "">("");
   const [status, setStatus] = useState("");
   const [editB, setEditB] = useState<Partial<Building> | null>(null);
   const [editR, setEditR] = useState<Partial<Room> | null>(null);
@@ -75,9 +75,9 @@ function Board({ org, school, schoolName, canCreate, canEdit }: { org: string; s
 
   return (
     <div className="space-y-5">
-      {!!data.buildings.length && <div className="flex justify-end"><Button variant="outline" onClick={() => {
-        try { printMap(data, schoolName); } catch (error) { toast.error(arabicError(error)); }
-      }}><Printer className="size-4" />طباعة الخريطة كاملة</Button></div>}
+      {!!data.buildings.length && <div className="flex justify-end"><Button variant="outline" disabled={!!cat && !stats.byCat.some((c) => c.cat === cat)} onClick={() => {
+        try { printMap(mapPrintScope(data, cat), schoolName, cat); } catch (error) { toast.error(arabicError(error)); }
+      }}><Printer className="size-4" />{cat ? `طباعة ${CATS[cat]}` : "طباعة الخريطة كاملة"}</Button></div>}
       <StatsPanel stats={stats} buildings={data.buildings.length} onCat={(c) => setCat(c === cat ? "" : c)} cat={cat} />
       {!data.buildings.length ? (
         <EmptyState title="لا توجد مبانٍ مسجّلة لهذا الفرع" hint={canCreate ? "ابدأ بإضافة المبنى وعدد أدواره، ثم أضف الغرف." : "لم تُسجَّل خريطة الفرع بعد."}
@@ -93,7 +93,7 @@ function Board({ org, school, schoolName, canCreate, canEdit }: { org: string; s
             </div>
             <div className="flex flex-wrap gap-2">
               <div className="relative min-w-48 flex-1"><Search className="absolute start-3 top-3 size-4 text-muted-foreground" /><Input aria-label="بحث في الغرف" className="ps-9" placeholder="اسم الغرفة أو رقمها أو المسؤول" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-              <select aria-label="التصنيف" className={selectCls("w-44")} value={cat} onChange={(e) => setCat(e.target.value)}><option value="">كل التصنيفات</option>{CAT_ORDER.map((k) => <option key={k} value={k}>{CATS[k]}</option>)}</select>
+              <select aria-label="التصنيف" className={selectCls("w-44")} value={cat} onChange={(e) => setCat(CAT_ORDER.find((k) => k === e.target.value) ?? "")}><option value="">كل التصنيفات</option>{CAT_ORDER.map((k) => <option key={k} value={k}>{CATS[k]}</option>)}</select>
               <select aria-label="الحالة" className={selectCls("w-36")} value={status} onChange={(e) => setStatus(e.target.value)}><option value="">كل الحالات</option>{Object.entries(ROOM_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
             </div>
             {building && <FloorMap building={building} rooms={shown} filtered={shown.length !== inBuilding.length} onOpen={setView} />}
@@ -109,7 +109,7 @@ function Board({ org, school, schoolName, canCreate, canEdit }: { org: string; s
   );
 }
 
-function printMap(data: MapData, school: string) {
+function printMap(data: MapData, school: string, category: RoomCat | "") {
   const stats = mapStats(data.rooms);
   const rows = data.buildings.flatMap((b) => floorsOf(b).flatMap((floor) => {
     const location = [b.name, floorLabel(floor)];
@@ -119,9 +119,9 @@ function printMap(data: MapData, school: string) {
       [r.capacity != null && `السعة: ${r.capacity} مقعد`, r.area != null && `المساحة: ${r.area} م²`].filter(Boolean).join(" · ") || "—",
       [r.resp_name, r.resp_roles.length > 0 && rolesLabel(r.resp_roles), r.resp_title, r.resp_notes && `التخويل: ${r.resp_notes}`].filter(Boolean).join(" · ") || "—",
       [r.equipment && `التجهيزات: ${r.equipment}`, r.notes && `ملاحظات: ${r.notes}`].filter(Boolean).join(" · ") || "—",
-    ]) : [[...location, "لا توجد غرف مسجّلة", "—", "—", "—", "—"]];
+    ]) : category ? [] : [[...location, "لا توجد غرف مسجّلة", "—", "—", "—", "—"]];
   }));
-  printReport({ title: "الخريطة المدرسية", school, filters: [], count: false, details: [
+  printReport({ title: "الخريطة المدرسية", school, filters: category ? [CATS[category]] : [], count: false, details: [
     `المباني: ${data.buildings.length} · الغرف: ${stats.rooms} · تحت الصيانة: ${stats.maintenance} · مغلقة: ${stats.closed} · بلا مسؤول: ${stats.noResp}`,
     `السعة المسجّلة: ${stats.withCapacity ? `${stats.capacity} مقعد في ${stats.withCapacity} غرفة` : "لم تُسجَّل"}`,
     ...stats.byCat.map(({ cat, count }) => `${CATS[cat]}: ${count}`),
@@ -129,7 +129,7 @@ function printMap(data: MapData, school: string) {
   ] }, ["المبنى", "الدور", "الغرفة / الرمز / التصنيف", "الحالة", "السعة والمساحة", "المسؤول والتخويل", "التجهيزات والملاحظات"], rows);
 }
 
-function StatsPanel({ stats, buildings, cat, onCat }: { stats: ReturnType<typeof mapStats>; buildings: number; cat: string; onCat: (c: string) => void }) {
+function StatsPanel({ stats, buildings, cat, onCat }: { stats: ReturnType<typeof mapStats>; buildings: number; cat: string; onCat: (c: RoomCat) => void }) {
   const tiles: [string, string, (string | undefined)?][] = [
     ["المباني", String(buildings)], ["الغرف", String(stats.rooms)],
     ["السعة المسجّلة", stats.withCapacity ? `${stats.capacity} مقعد` : "لم تُسجَّل", stats.withCapacity && stats.withCapacity < stats.rooms ? `من ${stats.withCapacity} غرفة فقط` : undefined],
