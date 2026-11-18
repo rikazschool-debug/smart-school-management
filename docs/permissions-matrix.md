@@ -727,4 +727,7 @@ The `other` request kind uses the same verified-child access, school/org scope, 
 
 ### 2026-11-18 — Mobile HTTP CORS (review only)
 Only the three public mobile login routes permit POST JSON from the one exact, user-provided Replit preview origin. OPTIONS never loads identity services. CORS is not authorization: existing `_idl_*` proofs, portal gates, rate limits and RLS remain unchanged; no database grants, new roles, cookies, general server-function access or Supabase CORS changes. See docs/integrations/mobile-auth-replit-cors-20261118.md.
+
+### 2026-11-18 — Approved six-migration release
+Supersedes the November 15 narrow collaboration role list: all active staff roles have collaboration navigation; SQL `_co_ok` additionally requires the matching active organization/role/branch context, rejects suspended/inactive memberships, students, guardians and foreign organizations, and separately proves the platform-admin owner context. Tests exercise the real SQL gate in a local PostgreSQL fixture; navigation alone is never authorization. New support RPCs remain authenticated/session-scoped through existing support rules, with anonymous and direct trigger execution denied. No people grants or existing records are rewritten by the six migrations. See docs/releases/20261118-cors-and-six-migrations.md.
 Guidance / gifted / remedial grants (view/record/manage/export) are now accepted by the server.

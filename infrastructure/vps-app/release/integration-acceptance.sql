@@ -52,5 +52,37 @@ SELECT att_tick(); SELECT adm_daily_reminders(); SELECT pc_alerts_tick(); SELECT
 SELECT ad_alerts_tick(); SELECT hr_contract_alerts_tick(); SELECT hr_doc_alerts_tick(); SELECT hr_in_alerts_tick(); SELECT sanad_alerts_tick();
 SELECT pg_temp.verify(NOT EXISTS(SELECT 1 FROM acct_outbox) AND NOT EXISTS(SELECT 1 FROM evt_outbox),'scheduled commands do not enqueue external historical messages');
 SELECT pg_temp.verify(current_setting('cron.launch_active_jobs')='off','QA scheduler remains off');
-SELECT jsonb_build_object('passed',true,'current_inbox',true,'historical_events_held',true,'duplicate_blocked',true,'cross_org_denied',true,'maqsam_setup_without_calls',true,'scheduled_commands',15,'network','none','transaction_rolled_back',true);
+-- Six November 17 migrations: run on synthetic fixtures only, inside this rolled-back sandbox.
+SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+INSERT INTO user_active_context(user_id,org_id,school_id,role) VALUES
+('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001','org_owner')
+ON CONFLICT(user_id) DO UPDATE SET org_id=excluded.org_id,school_id=excluded.school_id,role=excluded.role;
+SELECT pg_temp.verify(_co_ok('20000000-0000-4000-8000-000000000001'),'collaboration permits owner in matching branch context');
+SELECT pg_temp.verify(NOT _co_ok('20000000-0000-4000-8000-000000000002'),'collaboration denies foreign organization');
+SELECT pg_temp.verify(_perm_valid('gifted_care','view','branch') AND _perm_valid('school_map','edit','org'),'new catalog entries can be delegated');
+SELECT pg_temp.verify(NOT _perm_valid('school_map','delete_everything','org'),'unsupported map action denied');
+SELECT pg_temp.verify(jsonb_typeof(perm_effective('20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001')->'effective')='array','optimized permission result preserves public contract');
+SELECT pg_temp.verify(jsonb_array_length(support_topics())=8,'support topic catalog complete');
+SELECT pg_temp.verify(NOT has_function_privilege('anon','support_submit(jsonb)','execute') AND NOT has_function_privilege('anon','support_list_details(jsonb)','execute') AND NOT has_function_privilege('anon','support_topics()','execute'),'new support RPCs deny anonymous callers');
+SELECT pg_temp.verify(has_function_privilege('authenticated','support_submit(jsonb)','execute') AND NOT has_function_privilege('authenticated','_support_contact_check()','execute'),'support capability uses public RPC, not trigger execution');
+DO $$ DECLARE t uuid; t2 uuid; payload jsonb; BEGIN
+ payload:=jsonb_build_object('mode','own','scope','school','school','30000000-0000-4000-8000-000000000001','title','QA support contact','body','Synthetic isolated support check','priority','normal','client_key','qa-six-support','contact_name','Synthetic contact','contact_phone','+966500000009','topic','attendance','subtopic','الاستفسار عن تأخر أو غياب الطالب');
+ t:=support_submit(payload);t2:=support_submit(payload);
+ PERFORM pg_temp.verify(t=t2,'support client key prevents duplicate ticket');
+ PERFORM pg_temp.verify((SELECT contact_name='Synthetic contact' AND contact_phone='+966500000009' AND topic='attendance' FROM support_tickets WHERE id=t),'contact fields persisted on authorized ticket');
+ PERFORM pg_temp.verify(EXISTS(SELECT 1 FROM jsonb_array_elements(support_list_details(jsonb_build_object('_box','mine','_school','30000000-0000-4000-8000-000000000001'))) r WHERE r->>'id'=t::text AND r->>'contact_name'='Synthetic contact'),'scoped support list exposes new fields');
+ BEGIN
+  PERFORM support_submit(payload||jsonb_build_object('client_key','qa-six-bad-phone','contact_phone','not-a-phone'));
+  RAISE EXCEPTION 'QA invalid phone unexpectedly accepted';
+ EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM<>'اكتب رقم هاتف صحيحًا من 7 إلى 15 رقمًا' THEN RAISE; END IF;
+ END;
+END $$;
+INSERT INTO auth.users(id,email,raw_app_meta_data,raw_user_meta_data) VALUES('10000000-0000-4000-8000-000000000003','staff@six-qa.invalid','{}','{"full_name":"Synthetic Staff Six"}');
+DO $$ DECLARE m uuid; BEGIN
+ INSERT INTO memberships(user_id,org_id,school_id,role) VALUES('10000000-0000-4000-8000-000000000003','20000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001','counselor') RETURNING id INTO m;
+ PERFORM change_member_role(m,'teacher');PERFORM change_member_role(m,'teacher');
+ PERFORM pg_temp.verify((SELECT count(*)=1 FROM teachers WHERE user_id='10000000-0000-4000-8000-000000000003' AND school_id='30000000-0000-4000-8000-000000000001'),'role change creates exactly one same-login teacher');
+END $$;
+SELECT jsonb_build_object('passed',true,'current_inbox',true,'historical_events_held',true,'duplicate_blocked',true,'cross_org_denied',true,'maqsam_setup_without_calls',true,'scheduled_commands',15,'collaboration_context',true,'support_contacts',true,'teacher_record_idempotency',true,'network','none','transaction_rolled_back',true);
 ROLLBACK;
