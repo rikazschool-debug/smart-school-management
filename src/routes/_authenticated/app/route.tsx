@@ -58,7 +58,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   platform_subs: { to: "/app/platform-subs", label: "الاشتراكات والصلاحيات", icon: ShieldCheck },
   schools: { to: "/app/schools", label: "المدارس والفروع", icon: Building2 },
   members: { to: "/app/members", label: "المستخدمون والأدوار", icon: UserCog },
-  academic: { to: "/app/academic", label: "الفصول والشعب والهيكل الدراسي", icon: Network },
+  academic: { to: "/app/academic", label: "الهيكل الأكاديمي", icon: Network },
   teachers: { to: "/app/teachers", label: "الكادر التعليمي", icon: UsersRound },
   courses: { to: "/app/courses", label: "المقررات الدراسية وإسنادها", icon: BookOpen },
   students: { to: "/app/students", label: "الطلاب", icon: GraduationCap },
