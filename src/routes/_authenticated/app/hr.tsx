@@ -30,7 +30,7 @@ import type { SheetAccount } from "@/lib/hr-sheet";
 import { useServerFn } from "@tanstack/react-start";
 import { createHrEmployeeLogin } from "@/lib/accounts.functions";
 import { HrBulkActions, EmpChildren } from "@/components/hr/bulk-actions";
-import { CENTRAL, GENDER, HR_DIRECTOR, STATUS, roleLabel, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
+import { CENTRAL, GENDER, HR_DIRECTOR, STATUS, roleLabel, rpc, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 import { employeeSchoolDefault } from "@/lib/staff-context";
 import { db } from "@/components/crud-page";
 
@@ -136,14 +136,13 @@ type Cand = { accounts: { user_id: string; name: string; roles: string[]; school
 /** Login role label: base roles, or «tpl:<template>» = operations staff with that permission template. */
 /** same phone rule as the Excel import (05 / 9665 / +9665 → +9665…) */
 function fixPhone<T extends Record<string, unknown>>(p: T): T { const v = String(p["phone"] ?? ""); if (!v) return p; const c = cleanValue(HR_FIELDS.find((f) => f.key === "phone")!, v); if (c.err) throw new Error(c.err); return { ...p, phone: c.v }; }
-const EMPTY = { employee_no: "", full_name: "", display_name: "", category_id: "", user_id: "", school_id: "", teacher_id: "", job_title: "", department: "", hire_date: "", phone: "", email: "", gender: "", national_id: "", nationality: "", birth_date: "" };
+const EMPTY = { employee_no: "", full_name: "", display_name: "", user_id: "", school_id: "", teacher_id: "", job_title: "", department: "", hire_date: "", phone: "", email: "", gender: "", national_id: "", nationality: "", birth_date: "" };
 
 function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClose: () => void; onDone: (id: string) => void }) {
   const qc = useQueryClient();
   const { active } = useSession();
   const cand = useQuery({ queryKey: ["hr-cand", org], queryFn: () => rpc<Cand>("hr_candidates", { _org: org }) });
   const [f, setF] = useState({ ...EMPTY, school_id: employeeSchoolDefault(m.schools, active?.schoolId ?? null) });
-  const cats = useHrCats(org);
   const set = (k: keyof typeof EMPTY, v: string) => setF((x) => ({ ...x, [k]: v }));
   const [px, setPx] = useState<Record<string, string>>(() => profileForm({ sensitive: m.caps.sensitive }));
   const extra = () => { const r = profilePayload(px, m.caps.sensitive); if (r.err) throw new Error(r.err); return r.p; };
@@ -248,10 +247,6 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
                     {m.owner && mode === "new" && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}
                   </select>{central && <p className="mt-1 text-xs text-muted-foreground">للإدارة المركزية دور «مدير إدارة الموارد البشرية» فقط.</p>}</div>
                 <div><Label>المرحلة الدراسية</Label><p className="mt-2 text-sm">{central ? "—" : stages.isFetching ? "…" : stages.error ? arabicError(stages.error) : stages.data || "غير محددة في إعداد المدرسة"}</p></div>
-                <div><Label htmlFor="hr-cat">{bi("category", "التصنيف الوظيفي")}</Label>
-                  <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
-                    <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select><p className="mt-1 text-xs text-muted-foreground">التصنيف وصف وظيفي فقط ولا يمنح صلاحيات أو دور دخول.</p></div>
               </div>
               <EmpFields only="job" withNo f={f} set={(k: never, v: string) => set(k, v)} sensitive={sens} />
               <ProfileFields only="job" f={px} set={setP} sensitive={sens} org={org} />
@@ -291,7 +286,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
               <div><p className="mb-1 text-sm font-semibold">ملخص البيانات الشخصية</p>
                 <Sum rows={[["الاسم باللغة العربية", f.full_name], ["الاسم باللغة الإنجليزية", px["name_en"]], ["الاسم المعروض", f.display_name], ["الجنس", GENDER[f.gender as keyof typeof GENDER]], ...(sens ? [["الجنسية", f.nationality], ["تاريخ الميلاد", f.birth_date]] as [string, string][] : []), ["الحالة الاجتماعية", px["marital_status"]], ["الديانة", px["religion"]]]} /></div>
               <div><p className="mb-1 text-sm font-semibold">ملخص البيانات الوظيفية</p>
-                <Sum rows={[["الفرع", <span className="font-semibold">{schoolName}</span>], ["المرحلة الدراسية", central ? "—" : stages.data || "غير محددة في إعداد المدرسة"], ["التصنيف الوظيفي", (cats.data ?? []).find((c) => c.id === f.category_id)?.name], ["المسمى الوظيفي", f.job_title], ["الرقم الوظيفي", f.employee_no || "يُولَّد تلقائيًا"], ["تاريخ الالتحاق", f.hire_date], ["المسؤول المباشر", mgrLabel],
+                <Sum rows={[["الفرع", <span className="font-semibold">{schoolName}</span>], ["المرحلة الدراسية", central ? "—" : stages.data || "غير محددة في إعداد المدرسة"], ["المسمى الوظيفي", f.job_title], ["الرقم الوظيفي", f.employee_no || "يُولَّد تلقائيًا"], ["تاريخ الالتحاق", f.hire_date], ["المسؤول المباشر", mgrLabel],
                   ["نوع الحساب", mode === "new" ? (noId ? "بلا حساب (لا توجد هوية)" : "إنشاء حساب جديد") : f.user_id ? `ربط بحساب: ${accName ?? ""}` : "بلا حساب دخول"], ...(mode === "new" && !noId ? [["دور المستخدم", base ? roleLabel(base) : ""], ["الجوال المعتمد", <bdi dir="ltr">{localPhone(f.phone)}</bdi>]] as [string, React.ReactNode][] : [])]} /></div>
               <div className="rounded-lg border p-3 text-sm">
                 <p className="mb-1 font-semibold">التحقق من اكتمال الحقول الإلزامية</p>
@@ -447,9 +442,8 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
   const prof = useQuery({ queryKey: ["hr-prof", id], queryFn: () => rpc<Prof>("hr_employee_profile_get", { _emp: id }) });
   const [px, setPx] = useState<Record<string, string>>({});
   const [asg, setAsg] = useState<Record<string, string> | null>(null);
-  const cats = useHrCats(org);
   const others = useQuery({ queryKey: ["hr-list", org, "", "", "active"], enabled: !!asg, queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: null, _q: null, _status: "active" }) });
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["hr-emp", id] }); qc.invalidateQueries({ queryKey: ["hr-list"] }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["hr-emp", id] }); qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["staff-directory"] }); };
   const saveEmp = useMutation({
     mutationFn: async (v: Record<string, string>) => {
       const e = d.data!.employee;
@@ -470,7 +464,7 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
       const reason = ending ? await askText("سبب إنهاء التعيين", { required: true, ok: "حفظ" }) : null;
       if (ending && !reason) throw new Error("أُلغي");
       const { id: aid, ...p0 } = v; const p = p0["school_id"] === CENTRAL ? { ...p0, school_id: "", central: "true" } : p0;
-      return rpc("hr_assignment_save", { _employee: id, _id: aid || null, _p: { ...Object.fromEntries(Object.entries(p).filter(([, x]) => x !== "")), category_id: p["category_id"] ?? "" }, _reason: reason });
+      return rpc("hr_assignment_save", { _employee: id, _id: aid || null, _p: Object.fromEntries(Object.entries(p).filter(([, x]) => x !== "")), _reason: reason });
     },
     onSuccess: () => { toast.success("حُفظ التعيين"); setAsg(null); refresh(); },
     onError: (e) => { if ((e as Error).message !== "أُلغي") toast.error(arabicError(e)); },
@@ -505,11 +499,10 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
         <EmployeeSheetView item={{ employee: e as never, assignments, profile: (prof.data ?? null) as never, account: acc.data ?? null }} />
       )}
       <div>
-        <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", category_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
+        <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
         {asg && (
           <div className="mb-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-3">
             <div><Label htmlFor="as-sch">{bi("school", "المدرسة")}</Label><select id="as-sch" className={selectCls("mt-1 w-full")} value={asg["school_id"]} onChange={(ev) => setAsg({ ...asg, school_id: ev.target.value })}><option value="">اختر</option>{m.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}{m.owner && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}{asg["school_id"] && asg["school_id"] !== CENTRAL && !m.schools.some((s) => s.id === asg["school_id"]) && <option value={asg["school_id"]}>{assignments.find((a) => a.school_id === asg["school_id"])?.school ?? "المدرسة الحالية"}</option>}</select></div>
-            <div><Label htmlFor="as-cat">{bi("category", "التصنيف الوظيفي")}</Label><select id="as-cat" className={selectCls("mt-1 w-full")} value={asg["category_id"] ?? ""} onChange={(ev) => setAsg({ ...asg, category_id: ev.target.value })}><option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active || c.id === asg["category_id"]).map((c) => <option key={c.id} value={c.id}>{c.name}{c.is_active ? "" : " (معطل)"}</option>)}</select></div>
             <div><Label htmlFor="as-job">{bi("job_title", "الوظيفة في هذا التعيين")}</Label><Input id="as-job" className="mt-1" value={asg["job_title"]} onChange={(ev) => setAsg({ ...asg, job_title: ev.target.value })} /><EnHint k="job_title" v={asg["job_title"]} /></div>
             <div><Label htmlFor="as-dep">{bi("department", "القسم")}</Label><Input id="as-dep" className="mt-1" value={asg["department"]} onChange={(ev) => setAsg({ ...asg, department: ev.target.value })} /><EnHint k="department" v={asg["department"]} /></div>
             <div><Label htmlFor="as-mgr">{bi("manager", "المدير المباشر")}</Label><select id="as-mgr" className={selectCls("mt-1 w-full")} value={asg["manager_id"]} onChange={(ev) => setAsg({ ...asg, manager_id: ev.target.value })}><option value="">الموارد البشرية (افتراضي)</option>{mgrs.map((x) => <option key={x.id} value={x.id}>{x.full_name}</option>)}</select></div>
@@ -525,10 +518,10 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
               <li key={a.id} className={"flex flex-wrap items-center gap-2 rounded-lg border p-2 text-sm " + (a.active ? "" : "opacity-70")}>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{a.school}{a.is_primary && <span className="ms-2 rounded bg-secondary px-1.5 text-xs font-normal">أساسي</span>}{!a.active && <span className="ms-2 rounded bg-muted px-1.5 text-xs font-normal">منتهٍ</span>}</span>
-                  <span className="block text-xs text-muted-foreground">{[a.category, a.job_title, a.department, a.manager && `المدير: ${a.manager}`, a.teacher && `سجل المعلم: ${a.teacher}`].filter(Boolean).join(" · ")}</span>
+                  <span className="block text-xs text-muted-foreground">{[a.job_title, a.department, a.manager && `المدير: ${a.manager}`, a.teacher && `سجل المعلم: ${a.teacher}`].filter(Boolean).join(" · ")}</span>
                   <span className="block text-xs text-muted-foreground"><bdi dir="ltr">{a.start_date}</bdi> ← {a.end_date ? <bdi dir="ltr">{a.end_date}</bdi> : "مستمر"}</span>
                 </span>
-                {can_edit && a.active && !asg && <Button size="sm" variant="ghost" onClick={() => setAsg({ id: a.id, school_id: a.school_id ?? CENTRAL, category_id: a.category_id ?? "", job_title: a.job_title ?? "", department: a.department ?? "", manager_id: a.manager_id ?? "", start_date: a.start_date, end_date: a.end_date ?? "", ...(a.teacher_id ? { teacher_id: a.teacher_id } : {}) })}>تعديل / إنهاء</Button>}
+                {can_edit && a.active && !asg && <Button size="sm" variant="ghost" onClick={() => setAsg({ id: a.id, school_id: a.school_id ?? CENTRAL, job_title: a.job_title ?? "", department: a.department ?? "", manager_id: a.manager_id ?? "", start_date: a.start_date, end_date: a.end_date ?? "", ...(a.teacher_id ? { teacher_id: a.teacher_id } : {}) })}>تعديل / إنهاء</Button>}
               </li>
             ))}
           </ul>

@@ -21,7 +21,7 @@ const STATUS: Record<string, string> = { active: "على رأس العمل", sus
 const ORDER: Record<string, string[]> = {
   personal: ["full_name", "display_name", "name_en", "gender", "birth_date", "nationality", "marital_status", "religion", "address"],
   docs: ["id_type", "national_id", "id_version", "id_expiry", "passport_no", "passport_issue", "passport_expiry", "passport_place", "sponsor_name", "sponsor_no", "has_licence", "licence_type", "licence_expiry"],
-  job: ["employee_no", "job_title", "@category", "@schools", "department", "team", "@manager", "hire_date", "assignment_note", "@status", "@end_date"],
+  job: ["employee_no", "job_title", "@schools", "department", "team", "@manager", "hire_date", "assignment_note", "@status", "@end_date"],
   qual: ["education", "specialization"],
   contact: ["phone", "email"],
   pay: ["pay_method", "bank_name", "iban", "mid_name", "mid_id", "mid_bank", "mid_iban"],
@@ -39,7 +39,6 @@ export function buildSheet(it: SheetItem, roleLabel: (r: string) => string = (r)
   const field = (k: string) => HR_FIELDS.find((f) => f.key === k);
   const one = (k: string): SheetRow | null => {
     if (SECRET.test(k)) return null;
-    if (k === "@category") return { label: "التصنيف الوظيفي", value: primary?.category ?? "" };
     if (k === "@schools") return { label: "الفرع / المدرسة", value: asg.map((a) => a.school).join("، ") };
     if (k === "@manager") return { label: "المسؤول المباشر", value: str(p["manager"]) ? `${str(p["manager"])}${str(p["manager_no"]) ? ` (${str(p["manager_no"])})` : ""}` : p["manager_kind"] === "owner" ? "مالك المجموعة" : "الموارد البشرية (افتراضي)" };
     if (k === "@status") return { label: "الحالة", value: STATUS[str(e["status"])] ?? str(e["status"]) };

@@ -30377,6 +30377,21 @@ export type Database = {
           school_name: string
         }[]
       }
+      school_staff_directory_details: {
+        Args: { _school: string }
+        Returns: {
+          account: string
+          assignment_note: string
+          department: string
+          employee_id: string
+          employee_no: string
+          full_name: string
+          job_title: string
+          kind: string
+          phone: string
+          school_name: string
+        }[]
+      }
       school_today: { Args: never; Returns: string }
       school_today_org: { Args: { _org: string }; Returns: string }
       search_messages: {
