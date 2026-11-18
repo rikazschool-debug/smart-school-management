@@ -50,6 +50,8 @@ export type FilterDef = {
   path?: string; inner?: string; extra?: Record<string, unknown>;
   /** Maps a presentation option to several persisted values; applies to paging and exports alike. */
   valueGroups?: Record<string, string[]>;
+  /** resolves the matching row ids for a value (RLS client); used when the condition is not a column, e.g. a count */
+  ids?: (schoolId: string, value: string) => Promise<string[]>;
 };
 
 const PAGE = 25;
@@ -216,6 +218,12 @@ export function CrudTable({
   const kindTags = person ? tagList.filter((t) => t.kinds.includes(person.kind)) : [];
   const [openId, setOpenId] = useState<string | null>(null);
   const [tagF, setTagF] = useState("");
+  const idDefs = active.filter((f) => f.ids);
+  const idSets = useQuery({ enabled: idDefs.length > 0, queryKey: ["crud-ids", table, schoolId, idDefs.map((f) => `${f.key}=${fv[f.key]}`).join("&")], queryFn: async () => {
+    let acc: string[] | null = null;
+    for (const f of idDefs) { const l = await f.ids!(schoolId, fv[f.key]!); acc = acc ? acc.filter((x) => l.includes(x)) : l; }
+    return acc ?? [];
+  } });
   const tagIds = useQuery({ enabled: !!person && !!tagF, queryKey: ["pp-tag-ids", schoolId, person?.kind, tagF], queryFn: async () => {
     const { data, error } = await db.rpc("pp_tag_ids", { _school: schoolId, _kind: person!.kind, _tag: tagF }); if (error) throw error; return data as string[];
   } });
@@ -245,10 +253,11 @@ export function CrudTable({
 
   const build = (head = false, onlyIds?: string[], pick?: string) => {
     let sel = pick ?? select;
-    for (const f of active) if (f.inner) sel = sel.replace(new RegExp(`\\b${f.inner}\\(`), `${f.inner}!inner(`);
+    for (const f of active) for (const inn of (f.inner ?? "").split(",").filter(Boolean)) sel = sel.replace(new RegExp(`\\b${inn}\\(`), `${inn}!inner(`);
     let qq = db.from(table).select(sel, { count: "exact", head }).eq("school_id", schoolId);
     for (const [k, v] of Object.entries(filter ?? {})) qq = qq.eq(k, v);
-    for (const f of active) { const col = f.path ?? f.key; const grouped = f.valueGroups?.[fv[f.key] ?? ""]; qq = grouped ? qq.in(col, grouped) : fv[f.key] === "__none" ? qq.or(`${col}.is.null,${col}.eq.لا يوجد`) : qq.eq(col, fv[f.key]); for (const [k, v] of Object.entries(f.extra ?? {})) qq = qq.eq(k, v); }
+    if (idDefs.length) qq = qq.in("id", idSets.data?.length ? idSets.data : ["00000000-0000-0000-0000-000000000000"]);
+    for (const f of active) { if (f.ids) continue; const col = f.path ?? f.key; const grouped = f.valueGroups?.[fv[f.key] ?? ""]; qq = grouped ? qq.in(col, grouped) : fv[f.key] === "__none" ? qq.or(`${col}.is.null,${col}.eq.لا يوجد`) : qq.eq(col, fv[f.key]); for (const [k, v] of Object.entries(f.extra ?? {})) qq = qq.eq(k, v); }
     if (search && searchKeys.length) qq = qq.or(searchKeys.map((k) => `${k}.ilike.*${search}*`).join(","));
     if (tagF) qq = qq.in("id", tagIds.data?.length ? tagIds.data : ["00000000-0000-0000-0000-000000000000"]);
     if (onlyIds) qq = qq.in("id", onlyIds);
@@ -256,8 +265,8 @@ export function CrudTable({
   };
   // the key carries every parameter, so a slow older response can never overwrite the newer one
   const q = useQuery({
-    queryKey: [table, schoolId, select, filter, search, fv, page, tagF, tagIds.data],
-    enabled: !tagF || !!tagIds.data,
+    queryKey: [table, schoolId, select, filter, search, fv, page, tagF, tagIds.data, idSets.data],
+    enabled: (!tagF || !!tagIds.data) && (idDefs.length === 0 || !!idSets.data),
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const { data, error, count } = await build().range(page * PAGE, page * PAGE + PAGE - 1);
@@ -352,9 +361,9 @@ export function CrudTable({
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
-        <div className="relative min-w-0 flex-1 sm:max-w-xs">
+        <div className="relative min-w-0 basis-full lg:min-w-[22rem] lg:flex-1 lg:basis-auto">
           <Search className="absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pe-9" placeholder="بحث…" aria-label={`بحث في ${title}`} value={input} onChange={(e) => setInput(e.target.value)} />
+          <Input className="h-10 pe-9" placeholder={`ابحث في ${title}…`} aria-label={`بحث في ${title}`} value={input} onChange={(e) => setInput(e.target.value)} />
         </div>
         {person && caps?.view && (
           <select aria-label="الوسم" disabled={kindTags.length === 0} title={kindTags.length === 0 ? "لا توجد وسوم بعد — أضفها من صفحة المدارس (قاموس الوسوم)" : undefined}

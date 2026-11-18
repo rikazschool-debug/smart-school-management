@@ -57,6 +57,10 @@ function Guardians({ schoolId, role }: { schoolId: string; role: Parameters<type
         formExtra={(_fill, close) => <HrPick schoolId={schoolId} onDone={close} />}
         toolbar={w ? <GuardianImport schoolId={schoolId} /> : undefined}
         select="*, student_guardians(id, verified)" searchKeys={["full_name", "display_name", "phone", "email", "national_id"]}
+        filters={[{ key: "kids", label: "عدد الأبناء", options: [{ value: "0", label: "بلا أبناء" }, { value: "1", label: "ابن واحد" }, { value: "2", label: "ابنان" }, { value: "3", label: "3 أبناء" }, { value: "4", label: "4 أبناء فأكثر" }], ids: async (sid, v) => {
+          const { data, error } = await db.from("guardians").select("id, student_guardians(id)").eq("school_id", sid).limit(10000); if (error) throw error;
+          const n = Number(v); return ((data ?? []) as Row[]).filter((g) => { const c = (g["student_guardians"] as Row[] | null)?.length ?? 0; return n >= 4 ? c >= 4 : c === n; }).map((g) => g["id"] as string);
+        } }]}
         fields={[
           { key: "full_name", label: "الاسم الرسمي الكامل", required: true },
           { key: "display_name", label: "الاسم المعروض (يُملأ تلقائيًا إن تُرك فارغًا)" },

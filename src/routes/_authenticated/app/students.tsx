@@ -86,6 +86,8 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           { key: "contract_year", label: "العام الدراسي (العقد)", options: ctVals.data?.year ?? [{ value: "__none", label: "لا يوجد" }] },
           { key: "contract_status", label: "حالة العقد", options: ctVals.data?.status ?? [{ value: "__none", label: "لا يوجد" }] },
           { key: "contract_type", label: "نوع العقد", options: ctVals.data?.type ?? [{ value: "__none", label: "لا يوجد" }] },
+          { key: "stage", label: "المرحلة", remote: { table: "stages", label: "name", order: "sort_order" }, path: "enrollments.sections.grades.stage_id", inner: "enrollments,sections,grades", extra: { "enrollments.status": "active" } },
+          { key: "grade", label: "الصف", remote: { table: "grades", label: "name", order: "sort_order" }, path: "enrollments.sections.grade_id", inner: "enrollments,sections", extra: { "enrollments.status": "active" } },
           { key: "section", label: "الشعبة", remote: { table: "sections", label: "name" }, path: "enrollments.section_id", inner: "enrollments", extra: { "enrollments.status": "active" } },
         ]}
         canCreate={false}
