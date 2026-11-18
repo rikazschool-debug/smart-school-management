@@ -10,7 +10,7 @@ export const KIND_LABEL: Record<string, string> = { family: "تواصل أسرة
 export const GROUP_TYPE_LABEL: Record<string, string> = { committee: "لجنة", department: "قسم", team: "فريق عمل", custom: "مجموعة مخصصة", section: "مجموعة فصل (قديمة)", class: "مجموعة الشعبة", course: "مجموعة مادة (مؤرشفة)" };
 export const PRIORITY_LABEL: Record<string, string> = { normal: "عادي", important: "مهم", urgent: "عاجل" };
 export const ROLE_AR: Record<string, string> = {
-  org_owner: "مالك المجموعة", principal: "مدير المدرسة", vice_principal: "الوكيل", dept_head: "رئيس قسم", supervisor: "مشرف تربوي",
+  org_owner: "مدير النظام", principal: "مدير المدرسة", vice_principal: "الوكيل", dept_head: "رئيس قسم", supervisor: "مشرف تربوي",
   student_affairs: "شؤون الطلاب", teacher: "معلم", guardian: "ولي أمر", student: "طالب", counselor: "مرشد", nurse: "التوجيه الصحي", security: "الأمن",
 };
 

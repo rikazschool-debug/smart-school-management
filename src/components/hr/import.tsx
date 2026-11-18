@@ -161,7 +161,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
     const ownEmp = new Set(owners.map((o) => o.employee_id).filter(Boolean));
     const branch = (e: HrEmp) => (e.assignments ?? []).find((a) => a.is_primary && a.active)?.school ?? (e.assignments ?? [])[0]?.school ?? "";
     return [
-      ...owners.map((o) => ({ v: `o:${o.user_id}`, name: o.name, role: "مالك المجموعة", branch: "", no: existing.find((e) => e.id === o.employee_id)?.employee_no ?? "", emp: o.employee_id ?? undefined })),
+      ...owners.map((o) => ({ v: `o:${o.user_id}`, name: o.name, role: "مدير النظام", branch: "", no: existing.find((e) => e.id === o.employee_id)?.employee_no ?? "", emp: o.employee_id ?? undefined })),
       ...existing.filter((e) => e.status === "active" && !ownEmp.has(e.id)).map((e) => ({ v: `e:${e.id}`, name: e.full_name, role: e.job_title ?? "", branch: branch(e), no: e.employee_no, emp: e.id })),
       ...base.filter((r) => r.state === "new" || r.state === "bad").map((r) => ({ v: `b:${r.i}`, name: r.p["full_name"] ?? "", role: r.p["job_title"] ?? "", branch: r.p["school_id"] === CENTRAL ? "الإدارة المركزية" : schools.find((x) => x.id === r.p["school_id"])?.name ?? r.schoolName, no: r.p["employee_no"] ?? "", batch: r.i })),
     ];

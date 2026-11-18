@@ -41,7 +41,7 @@ async function provisionCore(ctx: Ctx, kind: Kind, ids: string[]): Promise<ProvO
     const id = r["id"]!, school = r["school_id"]!;
     try {
       if (!allowed.has(school)) allowed.set(school, await mayProvision(ctx, kind, school));
-      if (!allowed.get(school)) throw new Error(kind === "teacher" ? "إنشاء حسابات الكادر لمالك المجموعة" : "لا تملك صلاحية تعديل بيانات الطلاب وأولياء الأمور");
+      if (!allowed.get(school)) throw new Error(kind === "teacher" ? "إنشاء حسابات الكادر لمدير النظام" : "لا تملك صلاحية تعديل بيانات الطلاب وأولياء الأمور");
       if (r["user_id"]) { out.push({ id, state: "linked" }); continue; }
       let email: string | null = null, phone: string | null = null;
       let uid: string | null = null, pending = true, createdNew = false;
@@ -190,7 +190,7 @@ export const issueStudentPassword = createServerFn({ method: "POST" })
     if (!s) throw new Error("الطالب غير موجود");
     const { data: sc } = await context.supabase.from("schools").select("org_id").eq("id", s.school_id).maybeSingle();
     const { data: ok } = sc ? await context.supabase.rpc("is_org_owner" as never, { _org: (sc as { org_id: string }).org_id } as never) : { data: false };
-    if (!ok) throw new Error("إصدار كلمات المرور لمالك المجموعة فقط");
+    if (!ok) throw new Error("إصدار كلمات المرور لمدير النظام فقط");
     const nid = String(s.national_id ?? "").replace(/\D/g, "");
     if (!nid) throw new Error("رقم هوية الطالب مطلوب");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

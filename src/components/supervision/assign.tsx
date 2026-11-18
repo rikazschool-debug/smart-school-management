@@ -27,7 +27,7 @@ export function Assignments({ org, me }: { org: string; me: SvMe }) {
     <div className="flex flex-wrap gap-2">{(["current", "future", "ended"] as const).map((k) => <Button key={k} size="sm" variant={st === k ? "default" : "outline"} onClick={() => setSt(k)}>{k === "current" ? "الحالية" : k === "future" ? "المستقبلية" : "المنتهية"} ({all.filter((a) => (k === "ended" ? a.state === "ended" || a.state === "cancelled" : a.state === k)).length})</Button>)}
       {manage.length > 0 && <Button size="sm" className="ms-auto" onClick={() => setEdit("new")}><Plus className="size-4" />إسناد جديد</Button>}</div>
     {edit && <AsgForm me={me} a={edit === "new" ? null : edit} onDone={(ok) => { setEdit(null); if (ok) q.refetch(); }} />}
-    {!rows.length ? <EmptyState title="لا توجد إسنادات هنا" hint={manage.length ? "أنشئ إسنادًا: اختر المشرف والفرع والمعلمين والمدة والسبب." : me.owner ? "" : "الإسناد يديره مالك المجموعة، أو مدير الفرع بتفويض صريح منه."} />
+    {!rows.length ? <EmptyState title="لا توجد إسنادات هنا" hint={manage.length ? "أنشئ إسنادًا: اختر المشرف والفرع والمعلمين والمدة والسبب." : me.owner ? "" : "الإسناد يديره مدير النظام، أو مدير الفرع بتفويض صريح منه."} />
       : <ul className="grid gap-3 lg:grid-cols-2">{rows.map((a) => <li key={a.id} className="rounded-2xl border bg-card p-4">
         <div className="flex items-start justify-between gap-2"><div><p className="font-bold">{a.supervisor}</p><p className="text-xs text-muted-foreground">{a.school}</p></div><span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${stTone[a.state]}`}>{ASG_STATE[a.state]}</span></div>
         <p className="mt-2 flex items-center gap-1 text-xs"><CalendarClock className="size-3.5" />{riyadhText(a.starts_at)} ← {riyadhText(a.ends_at)}</p>

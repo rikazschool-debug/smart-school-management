@@ -33,7 +33,7 @@ export function GuidanceHub({ sp, go: nav }: { sp: GuidanceSearch; go: (s: Guida
   if (!school) return <EmptyState title="اختر مدرسة أولًا" />;
   if (me.isLoading) return <LoadingState />; if (me.error || !me.data) return <ErrorState message={arabicError(me.error)} onRetry={() => me.refetch()} />;
   const m = me.data; const tabs = TABS.filter((t) => m.counselor || (t.who === "refer" ? m.can_refer : t.who === "stats" ? m.stats : false));
-  if (!tabs.length) return <><PageHeader title="التوجيه الطلابي" /><EmptyState title="لا توجد صلاحية على التوجيه الطلابي" hint="يحتاج الاطلاع إلى دور الموجّه الطلابي أو تفويض صريح من مالك المجموعة." /></>;
+  if (!tabs.length) return <><PageHeader title="التوجيه الطلابي" /><EmptyState title="لا توجد صلاحية على التوجيه الطلابي" hint="يحتاج الاطلاع إلى دور الموجّه الطلابي أو تفويض صريح من مدير النظام." /></>;
   const cur: Tab = sp.tab && tabs.some((t) => t.id === sp.tab) ? sp.tab : tabs[0]!.id;
   const openId = sp.tab === cur ? sp.id : undefined; const refStatus = sp.tab === cur ? sp.status : undefined;
   const go = (t: Tab, o?: { status?: string; id?: string }) => nav({ tab: t, ...(o?.id ? { id: o.id } : {}), ...(o?.status ? { status: o.status } : {}) });

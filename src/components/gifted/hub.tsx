@@ -31,7 +31,7 @@ export function GiftedHub({ sp, go }: { sp: GtSearch; go: (s: GtSearch, replace?
   if (me.isLoading) return <LoadingState />; if (me.error || !me.data) return <ErrorState message={arabicError(me.error)} onRetry={() => me.refetch()} />;
   const m = me.data;
   const tabs = TABS.filter((t) => m.coord || m.viewer || t.id === "nominations");
-  if (!m.coord && !m.viewer && !m.nominate) return <><PageHeader title="رعاية الموهوبين" /><EmptyState title="لا توجد صلاحية على رعاية الموهوبين" hint="يرشّح المعلم طلابه، ويراجع المنسق المخوّل من مالك المجموعة." /></>;
+  if (!m.coord && !m.viewer && !m.nominate) return <><PageHeader title="رعاية الموهوبين" /><EmptyState title="لا توجد صلاحية على رعاية الموهوبين" hint="يرشّح المعلم طلابه، ويراجع المنسق المخوّل من مدير النظام." /></>;
   const cur: GtTab = sp.tab && tabs.some((t) => t.id === sp.tab) ? sp.tab : tabs[0]!.id;
   return <div className="space-y-5">
     <PageHeader title="رعاية الموهوبين" desc={m.coord ? "اكتشاف المواهب وترشيحها ورعايتها وتوثيق تقدمها" : "ترشيح طلابك ومتابعة قرارات الترشيح"} />

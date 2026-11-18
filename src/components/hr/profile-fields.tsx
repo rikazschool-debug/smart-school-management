@@ -13,7 +13,7 @@ export const ID_KEYS = ["id_type", "id_version", "iqama_profession"];
 // Extra employee data (same definitions as the Excel template), grouped like the import.
 /** shown when no direct manager is set: requests then go straight to HR (server: pending_hr). */
 export const DEFAULT_MGR = "الموارد البشرية";
-export const OWNER_MGR = "مالك المجموعة";
+export const OWNER_MGR = "مدير النظام";
 const OWNER_VAL = "@owner";
 /** a group-owner account chosen as the named direct manager (server creates/uses the owner's HR file) */
 const OWNER_ACC = "@owner:";
@@ -42,7 +42,7 @@ export function ProfileFields({ f, set, sensitive, org, self, only }: { f: Recor
                   <option value="">{DEFAULT_MGR} (افتراضي)</option><option value={OWNER_VAL}>{OWNER_MGR} (أي مالك، بدل الموارد البشرية)</option>
                   {(owners.data ?? []).filter((o) => !o.employee_id || o.employee_id !== self).map((o) => <option key={o.user_id} value={o.employee_id ?? `${OWNER_ACC}${o.user_id}`}>حساب المالك: {o.name}</option>)}
                   {(emps.data ?? []).filter((x) => x.id !== self && !ownerEmp.has(x.id)).map((x) => <option key={x.id} value={x.id}>{x.display_name || x.full_name} — {x.employee_no}</option>)}
-                </select><p className="mt-1 text-xs text-muted-foreground">«الموارد البشرية»: تذهب الطلبات (إجازات، استئذان) مباشرة إلى الموارد البشرية. «مالك المجموعة»: تصل للمالك وحده ويبت فيها. «حساب المالك»: يعتمد المالك مسؤولًا مباشرًا ثم تنتقل للموارد البشرية. أو اختر موظفًا بعينه. لا يكون الشخص مسؤولًا عن نفسه.</p></div>}
+                </select><p className="mt-1 text-xs text-muted-foreground">«الموارد البشرية»: تذهب الطلبات (إجازات، استئذان) مباشرة إلى الموارد البشرية. «مدير النظام»: تصل للمالك وحده ويبت فيها. «حساب المالك»: يعتمد المالك مسؤولًا مباشرًا ثم تنتقل للموارد البشرية. أو اختر موظفًا بعينه. لا يكون الشخص مسؤولًا عن نفسه.</p></div>}
               {list.map((x) => { const off = frozen(x.key, f); const opts = HR_OPTIONS[x.key]; return x.kind === "check" ? (
                 <div key={x.key} className="flex items-end pb-2"><label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" id={`hp-${x.key}`} checked={f[x.key] === "yes"} onChange={(e) => set(x.key, e.target.checked ? "yes" : "")} />{bi(x.key, x.label)}</label></div>
               ) : x.kind === "docdate" ? (

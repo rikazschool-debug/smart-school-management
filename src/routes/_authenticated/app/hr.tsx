@@ -217,7 +217,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   const Sum = ({ rows }: { rows: [string, React.ReactNode][] }) => (
     <dl className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">{rows.map(([k, v]) => <div key={k} className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>)}</dl>
   );
-  const mgrLabel = (() => { const v = px["manager_id"] ?? ""; return !v ? "الموارد البشرية (افتراضي)" : v === "@owner" ? "مالك المجموعة" : v.startsWith("@owner:") ? "حساب المالك" : "موظف محدد"; })();
+  const mgrLabel = (() => { const v = px["manager_id"] ?? ""; return !v ? "الموارد البشرية (افتراضي)" : v === "@owner" ? "مدير النظام" : v.startsWith("@owner:") ? "حساب المالك" : "موظف محدد"; })();
   const setP = (k: string, v: string) => setPx((x) => ({ ...x, [k]: v }));
   return (
     <section className="rounded-xl border bg-card p-4" aria-label="إضافة موظف">

@@ -27,7 +27,7 @@ export function OrgYears({ org, owner }: { org: string; owner: boolean }) {
   };
   return <section className="space-y-4 rounded-2xl border bg-card p-4">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="flex items-center gap-2 font-bold"><CalendarRange className="size-5 text-primary" />السنوات والفصول الدراسية للمجموعة</h2>
-      <p className="text-sm text-muted-foreground">{owner ? "تُدخل مرة واحدة وتظهر ثابتة في جميع المدارس؛ لا تعدّلها المدارس." : "يحددها مالك المجموعة وتظهر ثابتة لكل المدارس."}</p></div>
+      <p className="text-sm text-muted-foreground">{owner ? "تُدخل مرة واحدة وتظهر ثابتة في جميع المدارس؛ لا تعدّلها المدارس." : "يحددها مدير النظام وتظهر ثابتة لكل المدارس."}</p></div>
       {owner && !open && <Button onClick={() => edit()}><Plus className="size-4" />عام دراسي جديد</Button>}</div>
     {open && <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
       <div className="grid gap-3 sm:grid-cols-3"><div><Label htmlFor="oy-name">اسم العام</Label><Input id="oy-name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="1448هـ" /></div>

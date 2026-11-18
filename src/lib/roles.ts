@@ -15,7 +15,7 @@ export type Role =
 
 export const ROLE_LABELS: Record<Role, string> = {
   platform_admin: "أدمن المنصة",
-  org_owner: "مالك المجموعة",
+  org_owner: "مدير النظام",
   principal: "مدير المدرسة",
   vice_principal: "الوكيل",
   dept_head: "رئيس القسم",

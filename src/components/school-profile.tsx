@@ -40,7 +40,7 @@ export function SchoolProfile({ schoolId }: { schoolId: string }) {
   const s = q.data;
   return (
     <>
-      <PageHeader title="ملف المدرسة" desc="بيانات المدرسة كما تظهر في إدارة المدارس لدى مالك المجموعة." />
+      <PageHeader title="ملف المدرسة" desc="بيانات المدرسة كما تظهر في إدارة المدارس لدى مدير النظام." />
       {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} /> : s && (
         <div className="max-w-2xl rounded-2xl border bg-card p-6 shadow-sm">
           <div className="mb-6 flex items-center gap-4">

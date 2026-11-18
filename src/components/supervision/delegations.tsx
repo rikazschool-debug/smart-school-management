@@ -21,7 +21,7 @@ export function Delegations({ org, me }: { org: string; me: SvMe }) {
   async function revoke(d: SvDelegation) { const why = await askText("سبب إلغاء التفويض", { required: true, ok: "إلغاء التفويض" }); if (!why) return; const r = await db.rpc("sv_deleg_revoke", { _id: d.id, _reason: why }); if (r.error) { toast.error(arabicError(r.error)); return; } toast.success("أُلغي التفويض"); q.refetch(); }
   const rows = q.data ?? [];
   return <div className="space-y-4">
-    <p className="text-sm text-muted-foreground">التفويض محدد بالعمل والنطاق والمدة، ويمنحه مالك المجموعة فقط. لا يعتمد المفوَّض عملًا كتبه، ولا يحصل على صلاحية عامة.</p>
+    <p className="text-sm text-muted-foreground">التفويض محدد بالعمل والنطاق والمدة، ويمنحه مدير النظام فقط. لا يعتمد المفوَّض عملًا كتبه، ولا يحصل على صلاحية عامة.</p>
     {me.owner && <Button size="sm" onClick={() => setAdding(true)}><Plus className="size-4" />تفويض جديد</Button>}
     {adding && <DelegForm org={org} me={me} onDone={(ok) => { setAdding(false); if (ok) q.refetch(); }} />}
     {!rows.length ? <EmptyState title="لا توجد تفويضات" hint="مثال: تفويض مدير فرع بإدارة الإسناد في فرعه، أو تسمية بديل مستقل يعتمد أعمال المدير." />

@@ -41,7 +41,7 @@ export function buildSheet(it: SheetItem, roleLabel: (r: string) => string = (r)
     if (SECRET.test(k)) return null;
     if (k === "iqama_profession" && (!p["sensitive"] || !hasIqamaProfession(p["id_type"]))) return null;
     if (k === "@schools") return { label: "الفرع", value: asg.map((a) => a.school).join("، ") };
-    if (k === "@manager") return { label: "المسؤول المباشر", value: str(p["manager"]) ? `${str(p["manager"])}${str(p["manager_no"]) ? ` (${str(p["manager_no"])})` : ""}` : p["manager_kind"] === "owner" ? "مالك المجموعة" : "الموارد البشرية (افتراضي)" };
+    if (k === "@manager") return { label: "المسؤول المباشر", value: str(p["manager"]) ? `${str(p["manager"])}${str(p["manager_no"]) ? ` (${str(p["manager_no"])})` : ""}` : p["manager_kind"] === "owner" ? "مدير النظام" : "الموارد البشرية (افتراضي)" };
     if (k === "@status") return { label: "الحالة", value: STATUS[str(e["status"])] ?? str(e["status"]) };
     if (k === "@end_date") return e["status"] === "ended" ? { label: "تاريخ انتهاء الخدمة", value: str(e["end_date"]), ltr: true } : null;
     const f = field(k); if (!f) return null;

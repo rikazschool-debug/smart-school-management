@@ -15,7 +15,7 @@ type Bank = { bank: string; holder: string; iban: string };
 type PayLink = { label: string; url: string };
 const ERR: Record<string, string> = {
   invalid_iban: "رقم الآيبان يجب أن يبدأ بـ SA ويليه 22 رقمًا.", invalid_url: "رابط السداد يجب أن يبدأ بـ https://",
-  bank_required: "اكتب اسم البنك واسم صاحب الحساب.", label_required: "اكتب اسمًا لرابط السداد.", not_allowed: "هذا الإعداد لمالك المجموعة فقط.",
+  bank_required: "اكتب اسم البنك واسم صاحب الحساب.", label_required: "اكتب اسمًا لرابط السداد.", not_allowed: "هذا الإعداد لمدير النظام فقط.",
 };
 const msg = (e: unknown) => { const m = String((e as Error)?.message ?? ""); const k = Object.keys(ERR).find((x) => m.includes(x)); return k ? ERR[k]! : arabicError(e); };
 
