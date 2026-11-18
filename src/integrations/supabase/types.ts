@@ -11339,6 +11339,7 @@ export type Database = {
           id_expiry_cal: string | null
           id_type: string | null
           id_version: string | null
+          iqama_profession: string | null
           licence_expiry: string | null
           licence_expiry_cal: string | null
           licence_type: string | null
@@ -11376,6 +11377,7 @@ export type Database = {
           id_expiry_cal?: string | null
           id_type?: string | null
           id_version?: string | null
+          iqama_profession?: string | null
           licence_expiry?: string | null
           licence_expiry_cal?: string | null
           licence_type?: string | null
@@ -11413,6 +11415,7 @@ export type Database = {
           id_expiry_cal?: string | null
           id_type?: string | null
           id_version?: string | null
+          iqama_profession?: string | null
           licence_expiry?: string | null
           licence_expiry_cal?: string | null
           licence_type?: string | null

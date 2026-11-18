@@ -2,7 +2,7 @@ import type React from "react";
 import { AddressCard } from "@/components/hr/p10";
 import { EmpOpenAssets } from "@/components/hr/assets";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Download, FileText, Search, SlidersHorizontal, Plus, Printer, Upload, UserCheck, X } from "lucide-react";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ import { askText } from "@/components/confirm";
 import { arabicError, useSession } from "@/lib/session";
 import { exportPdf, exportXlsx } from "@/lib/export";
 import { HrImport } from "@/components/hr/import";
-import { HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, NAME_EN_MAX, cleanValue, type HrGroup } from "@/lib/hr-fields";
+import { HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, NAME_EN_MAX, cleanValue, hasIqamaProfession, type HrGroup } from "@/lib/hr-fields";
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
 import { ProfileFields, profileForm, profilePayload, type Prof } from "@/components/hr/profile-fields";
@@ -363,6 +363,7 @@ function EmpFields({ f, set, sensitive, withStatus, loginPhone, px, setPx, only,
         {px && setPx && <div><Label htmlFor="hr-id_type">{bi("id_type", "نوع الهوية")}</Label><select id="hr-id_type" className={selectCls("mt-1 w-full")} value={px["id_type"] ?? ""} onChange={(e) => { setPx("id_type", e.target.value); if (e.target.value === "none") { raw("national_id", ""); setPx("id_version", ""); } }}><option value="">—</option>{Object.entries(ID_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>}
         {F("national_id", "رقم الهوية / الإقامة", "text", { dir: "ltr", inputMode: "numeric", ...(px?.["id_type"] === "none" ? { disabled: "true", placeholder: "لا يوجد" } : {}) })}
         {px && setPx && <div><Label htmlFor="hr-id_version">{bi("id_version", "رقم النسخة")}</Label><Input id="hr-id_version" className="mt-1" dir="ltr" disabled={px["id_type"] === "none"} placeholder={px["id_type"] === "none" ? "لا يوجد" : ""} value={px["id_version"] ?? ""} onChange={(e) => setPx("id_version", e.target.value)} /></div>}
+        {px && setPx && hasIqamaProfession(px["id_type"]) && <div><Label htmlFor="hr-iqama-profession">المهنة في الإقامة</Label><Input id="hr-iqama-profession" className="mt-1" maxLength={300} value={px["iqama_profession"] ?? ""} onChange={(ev) => setPx("iqama_profession", ev.target.value)} /></div>}
       </> : <p className="self-end text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">نوع الهوية ورقمها تحتاج صلاحية «البيانات الحساسة».</p>)}
       {on("job") && <>
         {withNo && F("employee_no", "الرقم الوظيفي", "text", { dir: "ltr", placeholder: "اتركه فارغًا ليُولَّد تلقائيًا" })}
@@ -443,8 +444,6 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
   const prof = useQuery({ queryKey: ["hr-prof", id], queryFn: () => rpc<Prof>("hr_employee_profile_get", { _emp: id }) });
   const [px, setPx] = useState<Record<string, string>>({});
   const [initialAssignment, setInitialAssignment] = useState("");
-  const [asg, setAsg] = useState<Record<string, string> | null>(null);
-  const others = useQuery({ queryKey: ["hr-list", org, "", "", "active"], enabled: !!asg, queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: null, _q: null, _status: "active" }) });
   const refresh = () => { qc.invalidateQueries({ queryKey: ["hr-emp", id] }); qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["staff-directory"] }); };
   const saveEmp = useMutation({
     mutationFn: async (v: Record<string, string>) => {
@@ -468,22 +467,9 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
     },
     onError: (e) => { if ((e as Error).message !== "أُلغي") toast.error(arabicError(e)); },
   });
-  const saveAsg = useMutation({
-    mutationFn: async (v: Record<string, string>) => {
-      const ending = !!v["end_date"] && !d.data!.assignments.find((a) => a.id === v["id"])?.end_date;
-      const reason = ending ? await askText("سبب إنهاء التعيين", { required: true, ok: "حفظ" }) : null;
-      if (ending && !reason) throw new Error("أُلغي");
-      const { id: aid, ...p0 } = v; const p = p0["school_id"] === CENTRAL ? { ...p0, school_id: "", central: "true" } : p0;
-      return rpc("hr_assignment_save", { _employee: id, _id: aid || null, _p: Object.fromEntries(Object.entries(p).filter(([, x]) => x !== "")), _reason: reason });
-    },
-    onSuccess: () => { toast.success("حُفظ التعيين"); setAsg(null); refresh(); },
-    onError: (e) => { if ((e as Error).message !== "أُلغي") toast.error(arabicError(e)); },
-  });
-  const mgrs = useMemo(() => (others.data ?? []).filter((x) => x.id !== id), [others.data, id]);
   if (d.isLoading) return <LoadingState rows={2} />;
   if (d.error) return <ErrorState message={arabicError(d.error)} />;
   const { employee: e, assignments, can_edit, events } = d.data!;
-  const row = (k: string, v: React.ReactNode) => <div className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>;
   const startEdit = async () => {
     try {
       const { data } = await prof.refetch({ throwOnError: true });
@@ -516,34 +502,6 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
       ) : (
         <EmployeeSheetView item={{ employee: e as never, assignments, profile: (prof.data ?? null) as never, account: acc.data ?? null }} />
       )}
-      <div>
-        <div className="mb-2 flex items-center gap-2"><p className="flex-1 font-bold">التعيينات</p>{can_edit && !asg && <Button size="sm" variant="outline" onClick={() => setAsg({ id: "", school_id: "", job_title: e.job_title ?? "", department: "", manager_id: "", start_date: "", end_date: "" })}><Plus className="size-4" />تعيين جديد</Button>}</div>
-        {asg && (
-          <div className="mb-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div><Label htmlFor="as-sch">{bi("school", "الفرع")}</Label><select id="as-sch" className={selectCls("mt-1 w-full")} value={asg["school_id"]} onChange={(ev) => setAsg({ ...asg, school_id: ev.target.value })}><option value="">اختر الفرع</option>{m.schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}{m.owner && <option value={CENTRAL}>الإدارة المركزية (بلا فرع)</option>}{asg["school_id"] && asg["school_id"] !== CENTRAL && !m.schools.some((s) => s.id === asg["school_id"]) && <option value={asg["school_id"]}>{assignments.find((a) => a.school_id === asg["school_id"])?.school ?? "الفرع الحالي"}</option>}</select></div>
-            <div><Label htmlFor="as-dep">{bi("department", "القسم")}</Label><Input id="as-dep" className="mt-1" value={asg["department"]} onChange={(ev) => setAsg({ ...asg, department: ev.target.value })} /><EnHint k="department" v={asg["department"]} /></div>
-            <div><Label htmlFor="as-mgr">{bi("manager", "المدير المباشر")}</Label><select id="as-mgr" className={selectCls("mt-1 w-full")} value={asg["manager_id"]} onChange={(ev) => setAsg({ ...asg, manager_id: ev.target.value })}><option value="">الموارد البشرية (افتراضي)</option>{mgrs.map((x) => <option key={x.id} value={x.id}>{x.full_name}</option>)}</select></div>
-            <div><Label htmlFor="as-s">{bi("asg_from", "من")}</Label><Input id="as-s" type="date" className="mt-1" value={asg["start_date"]} onChange={(ev) => setAsg({ ...asg, start_date: ev.target.value })} /></div>
-            <div><Label htmlFor="as-e">{bi("asg_to", "إلى (اختياري)")}</Label><Input id="as-e" type="date" className="mt-1" value={asg["end_date"]} onChange={(ev) => setAsg({ ...asg, end_date: ev.target.value })} /></div>
-            {(!asg["school_id"] || !asg["start_date"]) && <p className="text-xs text-destructive sm:col-span-2 lg:col-span-3">لتفعيل الحفظ: {!asg["school_id"] ? "اختر الفرع أو الإدارة المركزية" : "حدّد تاريخ البداية «من»"}.</p>}
-            <div className="flex gap-2 sm:col-span-2 lg:col-span-3"><Button disabled={!asg["school_id"] || !asg["start_date"] || saveAsg.isPending} onClick={() => saveAsg.mutate(asg)}>{saveAsg.isPending ? "…" : "حفظ التعيين"}</Button><Button variant="ghost" onClick={() => setAsg(null)}>إلغاء</Button></div>
-          </div>
-        )}
-        {!assignments.length ? <p className="text-sm text-muted-foreground">لا توجد تعيينات.</p> : (
-          <ul className="space-y-2">
-            {assignments.map((a) => (
-              <li key={a.id} className={"flex flex-wrap items-center gap-2 rounded-lg border p-2 text-sm " + (a.active ? "" : "opacity-70")}>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-semibold">{a.school}{a.is_primary && <span className="ms-2 rounded bg-secondary px-1.5 text-xs font-normal">أساسي</span>}{!a.active && <span className="ms-2 rounded bg-muted px-1.5 text-xs font-normal">منتهٍ</span>}</span>
-                  <span className="block text-xs text-muted-foreground">{[a.department, a.manager && `المدير: ${a.manager}`, a.teacher && `سجل المعلم: ${a.teacher}`].filter(Boolean).join(" · ")}</span>
-                  <span className="block text-xs text-muted-foreground"><bdi dir="ltr">{a.start_date}</bdi> ← {a.end_date ? <bdi dir="ltr">{a.end_date}</bdi> : "مستمر"}</span>
-                </span>
-                {can_edit && a.active && !asg && <Button size="sm" variant="ghost" onClick={() => setAsg({ id: a.id, school_id: a.school_id ?? CENTRAL, job_title: a.job_title ?? "", department: a.department ?? "", manager_id: a.manager_id ?? "", start_date: a.start_date, end_date: a.end_date ?? "", ...(a.teacher_id ? { teacher_id: a.teacher_id } : {}) })}>تعديل / إنهاء</Button>}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
       {events && events.length > 0 && (
         <details className="rounded-lg border p-2 text-sm"><summary className="cursor-pointer font-semibold">سجل التغييرات ({events.length})</summary>
           <ul className="mt-2 space-y-1">{events.map((v, i) => <li key={i} className="text-xs"><bdi dir="ltr">{new Date(v.at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh" })}</bdi> — {v.entity === "assignment" ? "تعيين: " : ""}{ACT[v.action] ?? v.action} — {v.by}{v.reason ? ` — السبب: ${v.reason}` : ""}</li>)}</ul>

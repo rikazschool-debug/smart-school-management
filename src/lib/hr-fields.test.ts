@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { HR_FIELDS, TEMPLATE_HEAD, cleanValue, fieldForHeader, parseDate } from "@/lib/hr-fields";
+import { HR_FIELDS, ID_TYPES, TEMPLATE_HEAD, cleanValue, fieldForHeader, hasIqamaProfession, parseDate } from "@/lib/hr-fields";
+import { profilePayload } from "@/components/hr/profile-fields";
 
 const F = (k: string) => HR_FIELDS.find((f) => f.key === k)!;
 describe("employee data rules", () => {
+  it("accepts and submits an Iqama profession only for resident IDs", () => {
+    const profession = "مهندس";
+    expect(Object.keys(ID_TYPES).filter(hasIqamaProfession)).toEqual(["resident"]);
+    expect(profilePayload({ id_type: "resident", iqama_profession: profession }, true).p["iqama_profession"]).toBe(profession);
+    expect(profilePayload({ id_type: "national", iqama_profession: profession }, true).p).not.toHaveProperty("iqama_profession");
+    expect(profilePayload({ id_type: "resident", iqama_profession: profession }, false).p).not.toHaveProperty("iqama_profession");
+  });
   it("template has the 34 columns in order", () => {
     expect(TEMPLATE_HEAD.length).toBe(34);
     expect(TEMPLATE_HEAD[0]).toBe("#");

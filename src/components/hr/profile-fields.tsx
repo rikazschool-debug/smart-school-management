@@ -6,9 +6,9 @@ import { rpc, type HrEmp } from "@/components/hr/shared";
 import { bi } from "@/lib/hr-bilingual";
 import { EnHint } from "@/components/hr/en-hint";
 import { DocDatePicker } from "@/components/hr/doc-date-picker";
-import { CAL_LABEL, HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, MID_KEYS, cleanValue, isNonMidPay, passportDateErr, type Cal, type HrGroup } from "@/lib/hr-fields";
+import { CAL_LABEL, HR_FIELDS, HR_GROUPS, HR_OPTIONS, ID_TYPES, MID_KEYS, cleanValue, hasIqamaProfession, isNonMidPay, passportDateErr, type Cal, type HrGroup } from "@/lib/hr-fields";
 /** shown in the basic form next to the ID number (EmpFields), not in this list */
-export const ID_KEYS = ["id_type", "id_version"];
+export const ID_KEYS = ["id_type", "id_version", "iqama_profession"];
 
 // Extra employee data (same definitions as the Excel template), grouped like the import.
 /** shown when no direct manager is set: requests then go straight to HR (server: pending_hr). */
@@ -81,6 +81,7 @@ export function profilePayload(f: Record<string, string>, sensitive: boolean, pr
   f = { ...f };
   if ("has_licence" in f && f["has_licence"] !== "yes") { f["licence_type"] = ""; f["licence_expiry"] = ""; f["licence_expiry_cal"] = ""; }
   if (f["id_type"] === "none") f["id_version"] = "";
+  if (!hasIqamaProfession(f["id_type"])) delete f["iqama_profession"];
   if (isNonMidPay(f["pay_method"])) for (const k of MID_KEYS) if (k in f) f[k] = "";
   for (const x of PROFILE_FIELDS) {
     if (x.sensitive && !sensitive) continue;
@@ -116,7 +117,7 @@ export function ProfileView({ pr }: { pr: Prof | undefined }) {
   return (
     <div className="space-y-2">
       {HR_GROUPS.map((g) => {
-        const list = PROFILE_FIELDS.filter((x) => x.group === g.key && (!x.sensitive || pr.sensitive || x.key === "passport_no" || x.key === "iban"));
+        const list = PROFILE_FIELDS.filter((x) => x.group === g.key && (!x.sensitive || pr.sensitive || x.key === "passport_no" || x.key === "iban") && (x.key !== "iqama_profession" || hasIqamaProfession(pr["id_type"])));
         const extra = g.key === "job" ? [["المسؤول المباشر", pr.manager ? `${pr.manager}${pr.manager_no ? ` (${pr.manager_no})` : ""}` : pr.manager_kind === "owner" ? OWNER_MGR : `${DEFAULT_MGR} (افتراضي)`] as const] : [];
         if (!list.length && !extra.length) return null;
         return (

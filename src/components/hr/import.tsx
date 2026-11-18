@@ -36,7 +36,7 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   const [busy, setBusy] = useState(false), [res, setRes] = useState<Row[] | null>(null);
   const schools = m.schools.filter((s) => s.create || m.caps.create);
   const sens = m.caps.sensitive;
-  const fields = HR_FIELDS.filter((f) => !f.sensitive || sens);
+  const fields = HR_FIELDS.filter((f) => f.key !== "iqama_profession" && (!f.sensitive || sens));
   const cats = (useHrCats(org).data ?? []).filter((c) => c.is_active);
   const qc = useQueryClient();
   const createLogin = useServerFn(createHrEmployeeLogin);

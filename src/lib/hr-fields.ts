@@ -72,6 +72,7 @@ export const HR_FIELDS: HrField[] = [
   // Rikaz-only (old templates / form)
   { key: "id_type", label: "نوع الهوية", group: "docs", kind: "idtype", where: "prof", sensitive: true, syn: ["id type"] },
   { key: "id_version", label: "رقم النسخة", group: "docs", kind: "text", where: "prof", sensitive: true, syn: ["رقم نسخة الهوية", "id version", "id version number"] },
+  { key: "iqama_profession", label: "المهنة في الإقامة", group: "docs", kind: "text", where: "prof", sensitive: true, syn: [] },
   { key: "display_name", label: "الاسم المعروض", group: "personal", kind: "text", where: "base", syn: ["اسم العرض", "display name"] },
   { key: "category", label: "التصنيف الوظيفي", group: "job", kind: "category", where: "meta", syn: ["التصنيف", "category"] },
   { key: "hire_date", label: "تاريخ المباشرة", group: "job", kind: "date", where: "base", syn: ["تاريخ التعيين", "hire date"] },
@@ -151,6 +152,7 @@ export function cleanValue(f: HrField, raw: unknown): { v: string; cal?: Cal | n
   }
 }
 export const ID_TYPES: Record<string, string> = { national: "هوية وطنية", resident: "هوية مقيم", gcc: "هوية خليجية", border: "رقم حدود", none: "لا يوجد" };
+export const hasIqamaProfession = (idType: unknown) => idType === "resident";
 /** passport expiry before issue (same calendar) → message shown under the field and refused by the server */
 export function passportDateErr(f: Record<string, string | undefined>): string {
   const a = cleanValue(HR_FIELDS.find((x) => x.key === "passport_issue")!, f["passport_issue"]), b = cleanValue(HR_FIELDS.find((x) => x.key === "passport_expiry")!, f["passport_expiry"]);

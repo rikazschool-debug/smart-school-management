@@ -739,3 +739,4 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 - Staff assignment refresh re-reads the existing authorized staff-directory and HR profile endpoints after either edit. No permission or classification rule changes.
 - Staff type is used by the existing filter and counts; it is no longer a column in the directory, printout, or export. No access rules changed.
 - HR assignment presentation omits job category and assignment-specific title; the existing save payload and authorization are unchanged. The employee file calls the school field «الفرع».
+- The HR employee file no longer shows the assignments block. Iqama profession is guarded by the existing profile edit and sensitive permissions, and returned only for resident IDs to sensitive readers (including authorized employees reading their own files).

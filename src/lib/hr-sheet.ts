@@ -2,7 +2,7 @@ import { brandHeaderHtml } from "@/lib/export-brand";
 // One layout for the employee file: on-screen view, single print and bulk print all use buildSheet,
 // so section order and masking are identical everywhere. Data comes only from the server
 // (hr_employee_get / hr_employee_profile_get / hr_employee_account or hr_employee_print), already masked.
-import { CAL_LABEL, HR_FIELDS, HR_GROUPS, ID_TYPES, type Cal } from "@/lib/hr-fields";
+import { CAL_LABEL, HR_FIELDS, HR_GROUPS, ID_TYPES, hasIqamaProfession, type Cal } from "@/lib/hr-fields";
 
 type Val = string | number | boolean | null | undefined;
 export type SheetEmp = Record<string, Val> & { sensitive?: boolean };
@@ -20,7 +20,7 @@ const STATUS: Record<string, string> = { active: "على رأس العمل", sus
 /** field order inside each section (keys from HR_FIELDS; a few computed rows use «@») */
 const ORDER: Record<string, string[]> = {
   personal: ["full_name", "display_name", "name_en", "gender", "birth_date", "nationality", "marital_status", "religion", "address"],
-  docs: ["id_type", "national_id", "id_version", "id_expiry", "passport_no", "passport_issue", "passport_expiry", "passport_place", "sponsor_name", "sponsor_no", "has_licence", "licence_type", "licence_expiry"],
+  docs: ["id_type", "national_id", "id_version", "iqama_profession", "id_expiry", "passport_no", "passport_issue", "passport_expiry", "passport_place", "sponsor_name", "sponsor_no", "has_licence", "licence_type", "licence_expiry"],
   job: ["employee_no", "job_title", "@schools", "department", "team", "@manager", "hire_date", "assignment_note", "@status", "@end_date"],
   qual: ["education", "specialization"],
   contact: ["phone", "email"],
@@ -39,6 +39,7 @@ export function buildSheet(it: SheetItem, roleLabel: (r: string) => string = (r)
   const field = (k: string) => HR_FIELDS.find((f) => f.key === k);
   const one = (k: string): SheetRow | null => {
     if (SECRET.test(k)) return null;
+    if (k === "iqama_profession" && (!p["sensitive"] || !hasIqamaProfession(p["id_type"]))) return null;
     if (k === "@schools") return { label: "الفرع", value: asg.map((a) => a.school).join("، ") };
     if (k === "@manager") return { label: "المسؤول المباشر", value: str(p["manager"]) ? `${str(p["manager"])}${str(p["manager_no"]) ? ` (${str(p["manager_no"])})` : ""}` : p["manager_kind"] === "owner" ? "مالك المجموعة" : "الموارد البشرية (افتراضي)" };
     if (k === "@status") return { label: "الحالة", value: STATUS[str(e["status"])] ?? str(e["status"]) };
