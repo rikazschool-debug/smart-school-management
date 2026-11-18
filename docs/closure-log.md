@@ -1181,6 +1181,12 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - 138 focused local tests and TypeScript passed before upload. Full Linux checks, both builds, fixed-main verification and controlled deployment are mandatory next gates; final results belong to the release receipt and review. No live OTP/messages/calls or historical queue processing are part of acceptance. Plan: docs/releases/20261118-cors-and-six-migrations.md.
 
 ## prompt-474/475 (Nov 18 2026)
+### prompt-477 — HR staff linking (test DB only)
+- Directory and teacher record identity use the scoped HR reader; assignment description comes from `hr_employee_profile.assignment_note`, falling back to the existing assignment/job title.
+- AddEmployee defaults to the active permitted branch (or sole permitted branch), shows its configured stages, and refreshes staff caches after save. Staff with no teaching course inherit branch stages in the read model; no parallel stored stage field or account changes.
+- Verification: 4 unit tests + 6 authenticated/anonymous RPC checks passed. Browser synthetic owner: saved HR ID/assignment/stage visible; new employee saved without a login from the default branch and read back in `/app/teachers`; desktop and 390px rendering checked, no page errors; latest preview build OK.
+- New authenticated-definer linter warning reviewed: intended guarded RPC requiring directory AND identity permission; 1287 prior findings remain outside this task. Test fixtures retained; no production, protected-group changes, messages or publish.
+
 - Menu: school-admin order, «التكليفات», single open group, flat activities items, attendance/pickup/station under one «الحضور والمواظبة» entry (pages and permissions unchanged).
 - Students: stage/grade filters (nested inner filter; verified 13 vs 0 rows on test school). Guardians: children-count filter (tags filter already existed). Search box widened.
 - Staff: staff_extra(_school) RPC (owner/people_staff.view/can_edit_staff) → employee no., HR assignment title, school, stages; directory + teacher records columns/filters; account column status only. Not verified in browser (no signed-in session available).

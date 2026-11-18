@@ -31,6 +31,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { createHrEmployeeLogin } from "@/lib/accounts.functions";
 import { HrBulkActions, EmpChildren } from "@/components/hr/bulk-actions";
 import { CENTRAL, GENDER, HR_DIRECTOR, STATUS, roleLabel, rpc, useHrCats, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
+import { employeeSchoolDefault } from "@/lib/staff-context";
+import { db } from "@/components/crud-page";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
   validateSearch: (s: Record<string, unknown>): { emp?: string; add?: string; imp?: string } => ({
@@ -138,8 +140,9 @@ const EMPTY = { employee_no: "", full_name: "", display_name: "", category_id: "
 
 function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClose: () => void; onDone: (id: string) => void }) {
   const qc = useQueryClient();
+  const { active } = useSession();
   const cand = useQuery({ queryKey: ["hr-cand", org], queryFn: () => rpc<Cand>("hr_candidates", { _org: org }) });
-  const [f, setF] = useState({ ...EMPTY });
+  const [f, setF] = useState({ ...EMPTY, school_id: employeeSchoolDefault(m.schools, active?.schoolId ?? null) });
   const cats = useHrCats(org);
   const set = (k: keyof typeof EMPTY, v: string) => setF((x) => ({ ...x, [k]: v }));
   const [px, setPx] = useState<Record<string, string>>(() => profileForm({ sensitive: m.caps.sensitive }));
@@ -152,8 +155,13 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
   const [conflicts, setConflicts] = useState<{ kind: string; employee_id?: string }[]>([]);
   const createLogin = useServerFn(createHrEmployeeLogin);
   const central = f.school_id === CENTRAL;
+  const stages = useQuery({ enabled: !!f.school_id && !central, queryKey: ["employee-school-stages", f.school_id], queryFn: async () => {
+    const { data, error } = await db.from("stages").select("name").eq("school_id", f.school_id).eq("available", true).order("sort_order");
+    if (error) throw error;
+    return ((data ?? []) as { name: string }[]).map((stage) => stage.name).join("، ");
+  } });
   const roles = useQuery({ enabled: !!f.school_id, queryKey: ["hr-login-roles", org, f.school_id], queryFn: () => central ? rpc<string[]>("hr_login_central_roles", { _org: org }) : rpc<string[]>("hr_login_roles", { _org: org, _school: f.school_id }) });
-  const done = (id: string) => { qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["hr-cand"] }); onDone(id); };
+  const done = (id: string) => { for (const key of ["hr-list", "hr-cand", "staff-directory", "staff-extra", "staff-hr-identity", "teacher-id-status"]) void qc.invalidateQueries({ queryKey: [key] }); onDone(id); };
   const save = useMutation({
     mutationFn: async () => { const ex = extra(); const id = await rpc<string>("hr_employee_save", { _org: org, _id: null, _p: fixPhone(Object.fromEntries(Object.entries(f).filter(([, v]) => v !== ""))), _reason: null }); await saveExtra(id, ex); return id; },
     onSuccess: (id) => { toast.success("أُضيف ملف الموظف"); done(id); },
@@ -239,6 +247,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
                     <option value="">اختر الفرع</option>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                     {m.owner && mode === "new" && <option value={CENTRAL}>الإدارة المركزية (بلا مدرسة)</option>}
                   </select>{central && <p className="mt-1 text-xs text-muted-foreground">للإدارة المركزية دور «مدير إدارة الموارد البشرية» فقط.</p>}</div>
+                <div><Label>المرحلة الدراسية</Label><p className="mt-2 text-sm">{central ? "—" : stages.isFetching ? "…" : stages.error ? arabicError(stages.error) : stages.data || "غير محددة في إعداد المدرسة"}</p></div>
                 <div><Label htmlFor="hr-cat">{bi("category", "التصنيف الوظيفي")}</Label>
                   <select id="hr-cat" className={selectCls("mt-1 w-full")} value={f.category_id} onChange={(e) => set("category_id", e.target.value)}>
                     <option value="">بلا تصنيف</option>{(cats.data ?? []).filter((c) => c.is_active).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -282,7 +291,7 @@ function AddEmployee({ org, m, onClose, onDone }: { org: string; m: HrMe; onClos
               <div><p className="mb-1 text-sm font-semibold">ملخص البيانات الشخصية</p>
                 <Sum rows={[["الاسم باللغة العربية", f.full_name], ["الاسم باللغة الإنجليزية", px["name_en"]], ["الاسم المعروض", f.display_name], ["الجنس", GENDER[f.gender as keyof typeof GENDER]], ...(sens ? [["الجنسية", f.nationality], ["تاريخ الميلاد", f.birth_date]] as [string, string][] : []), ["الحالة الاجتماعية", px["marital_status"]], ["الديانة", px["religion"]]]} /></div>
               <div><p className="mb-1 text-sm font-semibold">ملخص البيانات الوظيفية</p>
-                <Sum rows={[["الفرع", <span className="font-semibold">{schoolName}</span>], ["التصنيف الوظيفي", (cats.data ?? []).find((c) => c.id === f.category_id)?.name], ["المسمى الوظيفي", f.job_title], ["الرقم الوظيفي", f.employee_no || "يُولَّد تلقائيًا"], ["تاريخ الالتحاق", f.hire_date], ["المسؤول المباشر", mgrLabel],
+                <Sum rows={[["الفرع", <span className="font-semibold">{schoolName}</span>], ["المرحلة الدراسية", central ? "—" : stages.data || "غير محددة في إعداد المدرسة"], ["التصنيف الوظيفي", (cats.data ?? []).find((c) => c.id === f.category_id)?.name], ["المسمى الوظيفي", f.job_title], ["الرقم الوظيفي", f.employee_no || "يُولَّد تلقائيًا"], ["تاريخ الالتحاق", f.hire_date], ["المسؤول المباشر", mgrLabel],
                   ["نوع الحساب", mode === "new" ? (noId ? "بلا حساب (لا توجد هوية)" : "إنشاء حساب جديد") : f.user_id ? `ربط بحساب: ${accName ?? ""}` : "بلا حساب دخول"], ...(mode === "new" && !noId ? [["دور المستخدم", base ? roleLabel(base) : ""], ["الجوال المعتمد", <bdi dir="ltr">{localPhone(f.phone)}</bdi>]] as [string, React.ReactNode][] : [])]} /></div>
               <div className="rounded-lg border p-3 text-sm">
                 <p className="mb-1 font-semibold">التحقق من اكتمال الحقول الإلزامية</p>

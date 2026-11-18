@@ -30494,6 +30494,13 @@ export type Database = {
           teacher_id: string
         }[]
       }
+      staff_hr_identity: {
+        Args: { _school: string }
+        Returns: {
+          employee_id: string
+          national_id: string
+        }[]
+      }
       staff_logins_list: {
         Args: { _org: string }
         Returns: {

@@ -52,12 +52,18 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
   });
   const st = (r: Row) => ids.data?.get(r["id"]);
   // HR-sourced extras (employee no., assignment title, stages) — staff_extra re-checks access
-  type Extra = { teacher_id: string | null; employee_no: string | null; assignment_title: string | null; school_name: string | null; stages: string | null };
+  type Extra = { employee_id: string | null; teacher_id: string | null; employee_no: string | null; assignment_title: string | null; school_name: string | null; stages: string | null };
   const extra = useQuery({ queryKey: ["staff-extra", schoolId, "t"], queryFn: async () => {
     const { data, error } = await db.rpc("staff_extra" as never, { _school: schoolId } as never); if (error) throw error;
-    return new Map(((data ?? []) as Extra[]).filter((x) => x.teacher_id).map((x) => [x.teacher_id!, x]));
+    return new Map(((data ?? []) as Extra[]).flatMap((x) => x.teacher_id ? [[x.teacher_id, x] as const] : []));
   } });
   const ex = (r: Row) => extra.data?.get(r["id"]);
+  const hrIds = useQuery({ enabled: idView, queryKey: ["staff-hr-identity", schoolId], queryFn: async () => {
+    const { data, error } = await db.rpc("staff_hr_identity", { _school: schoolId });
+    if (error) throw error;
+    return new Map<string, string | null>(((data ?? []) as { employee_id: string; national_id: string | null }[]).map((x) => [x.employee_id, x.national_id]));
+  } });
+  const hrId = (r: Row) => { const employee = ex(r)?.employee_id; return employee ? hrIds.data?.get(employee) : st(r)?.hr_national_id; };
   const exVals = (k: "assignment_title" | "stages") => [...new Set([...(extra.data?.values() ?? [])].flatMap((x) => (x[k] ?? "").split("، ")).filter(Boolean))].sort().map((v) => ({ value: v, label: v }));
   const exIds = (k: "assignment_title" | "stages") => async (_s: string, v: string) => {
     const m = extra.data ?? new Map<string, Extra>();
@@ -105,7 +111,7 @@ function Teachers({ schoolId, role }: { schoolId: string; role: Parameters<typeo
         columns={[
           { label: "الاسم", text: (r) => r["display_name"] || r["full_name"], render: (r) => <>{r["display_name"] || r["full_name"]}{r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block text-xs text-muted-foreground">{r["full_name"]}</span>}</> },
           { label: "الرقم الوظيفي", text: (r) => ex(r)?.employee_no ?? "", render: (r) => <span dir="ltr">{ex(r)?.employee_no ?? "—"}</span> },
-          ...(idView ? [{ label: "الهوية / الإقامة", text: (r: Row) => st(r)?.national_id ?? st(r)?.hr_national_id ?? "", render: (r: Row) => { const s = st(r); return s?.national_id ? <span dir="ltr">{s.national_id}</span> : s?.hr_national_id ? <span title="من ملف الموارد البشرية"><span dir="ltr">{s.hr_national_id}</span> <span className="text-xs text-muted-foreground">(الموارد)</span></span> : <>—</>; } }] : []),
+          ...(idView ? [{ label: "الهوية / الإقامة", text: (r: Row) => hrId(r) ?? st(r)?.national_id ?? "", render: (r: Row) => { const value = hrId(r) ?? st(r)?.national_id; return value ? <span dir="ltr" title={hrId(r) ? "من ملف الموارد البشرية" : undefined}>{value}</span> : <>—</>; } }] : []),
           { label: "مسمى الإسناد", text: (r) => ex(r)?.assignment_title ?? "", render: (r) => ex(r)?.assignment_title ?? <span className="text-xs text-muted-foreground">غير مسند في الموارد</span> },
           { label: "المدرسة", text: (r) => ex(r)?.school_name ?? "", render: (r) => ex(r)?.school_name ?? "—" },
           { label: "المرحلة", text: (r) => ex(r)?.stages ?? "", render: (r) => ex(r)?.stages || "—" },

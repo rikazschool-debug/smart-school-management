@@ -1,0 +1,42 @@
+import "./lib/user-pool.ts";
+import { createClient } from "@supabase/supabase-js";
+import { mkdirSync, writeFileSync } from "node:fs";
+
+const url = process.env.SUPABASE_URL;
+const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+if (!url || !secret || !key || !url.includes("czoaudsfbinpkwqsmhrd")) throw new Error("Test DB configuration required");
+const admin = createClient(url, secret, { auth: { persistSession: false } });
+const password = crypto.randomUUID();
+const email = `shl-${Date.now()}@rikaz.test`;
+const must = <T>(r: { data: T; error: { message: string } | null }): T => { if (r.error) throw new Error(r.error.message); return r.data; };
+const user = must(await admin.auth.admin.createUser({ email, password, email_confirm: true })).user;
+if (!user) throw new Error("Missing synthetic user");
+const client = createClient(url, key, { auth: { persistSession: false }, global: { fetch: (input, init = {}) => {
+  const headers = new Headers(init.headers); if (headers.get("Authorization") === `Bearer ${key}`) headers.delete("Authorization"); headers.set("apikey", key); return fetch(input, { ...init, headers });
+} } });
+must(await client.auth.signInWithPassword({ email, password }));
+const org = must(await client.rpc("create_organization", { _org_name: "اختبار ربط الكادر 477", _school_name: "مدرسة ربط الكادر" }));
+const school = must(await admin.from("schools").select("id").eq("org_id", org).single());
+if (!school) throw new Error("Missing school");
+must(await client.from("stages").insert({ school_id: school.id, name: "المرحلة الابتدائية", sort_order: 1, available: true }));
+const employee = must(await client.rpc("hr_employee_save", { _org: org, _id: null, _p: { full_name: "موظف اختبار الربط", school_id: school.id, national_id: "1000000477", job_title: "مساعد إداري" } }));
+must(await client.rpc("hr_employee_profile_save", { _org: org, _emp: employee, _p: { assignment_note: "مسؤول شؤون الكادر" }, _mode: "set" }));
+let count = 0;
+function check(name: string, ok: boolean) { if (!ok) throw new Error(name); console.log("PASS", name); count++; }
+const extra = must(await client.rpc("staff_extra", { _school: school.id })) as Record<string, unknown>[];
+const row = extra.find((r) => r.employee_id === employee);
+check("HR assignment description", row?.assignment_title === "مسؤول شؤون الكادر");
+check("school linked automatically by employee creation", row?.school_name === "مدرسة ربط الكادر");
+check("admin stage derived without academic course", row?.stages === "المرحلة الابتدائية");
+const identities = must(await client.rpc("staff_hr_identity", { _school: school.id })) as Record<string, unknown>[];
+check("HR ID without login link", identities.some((r) => r.employee_id === employee && r.national_id === "1000000477"));
+must(await admin.from("hr_employee_profile").update({ assignment_note: "" }).eq("employee_id", employee));
+const fallback = must(await client.rpc("staff_extra", { _school: school.id })) as Record<string, unknown>[];
+check("job title fallback", fallback.find((r) => r.employee_id === employee)?.assignment_title === "مساعد إداري");
+must(await client.rpc("hr_employee_profile_save", { _org: org, _emp: employee, _p: { assignment_note: "مسؤول شؤون الكادر" }, _mode: "set" }));
+const anon = createClient(url, key, { auth: { persistSession: false } });
+check("anonymous identity read refused", !!(await anon.rpc("staff_hr_identity", { _school: school.id })).error);
+mkdirSync("/tmp/browser/staff477", { recursive: true });
+writeFileSync("/tmp/browser/staff477/fixture.json", JSON.stringify({ email, password, org, school: school.id, user: user.id, employee }));
+console.log(`${count} checks passed; synthetic fixture retained for browser verification`);
