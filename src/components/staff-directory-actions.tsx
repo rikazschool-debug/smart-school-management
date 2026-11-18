@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { arabicError } from "@/lib/session";
+import { refreshStaffAssignment } from "@/lib/staff-assignment";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -32,8 +33,13 @@ export function StaffDirectoryAction({ mode, schoolId, ids, tags, initial, onClo
       if (error) throw error;
       return data;
     },
-    onSuccess: (count) => {
-      for (const key of ["staff-directory", "staff-directory-tools", "staff-extra", "hr-emp", "hr-list", "pp-tags", "pp-tag-ids", "pp-card"]) void qc.invalidateQueries({ queryKey: [key] });
+    onSuccess: async (count) => {
+      if (assignment) {
+        await refreshStaffAssignment(qc, ids);
+        for (const id of ids) void qc.invalidateQueries({ queryKey: ["hr-emp", id] });
+      } else {
+        for (const key of ["staff-directory-tools", "pp-tags", "pp-tag-ids", "pp-card"]) void qc.invalidateQueries({ queryKey: [key] });
+      }
       toast.success(`حُفظ التغيير لـ ${count} من الكادر`);
       onClose();
     },
@@ -43,7 +49,7 @@ export function StaffDirectoryAction({ mode, schoolId, ids, tags, initial, onClo
     <DialogContent dir="rtl">
       <DialogHeader className="sm:text-start">
         <DialogTitle>{assignment ? "تعديل الإسناد" : "إدارة الوسوم"}</DialogTitle>
-        <DialogDescription>{ids.length} من الكادر المحدد{assignment ? " · يُستبدل الإسناد الحالي. اتركه فارغًا لمسحه." : ""}</DialogDescription>
+        <DialogDescription>{ids.length} من الكادر المحدد{assignment ? " · يُحفظ في البيانات الوظيفية للموظف. اتركه فارغًا لمسحه." : ""}</DialogDescription>
       </DialogHeader>
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (valid && !m.isPending) m.mutate(); }}>
         {assignment ? <>

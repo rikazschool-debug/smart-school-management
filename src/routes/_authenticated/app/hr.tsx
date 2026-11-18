@@ -32,6 +32,7 @@ import { createHrEmployeeLogin } from "@/lib/accounts.functions";
 import { HrBulkActions, EmpChildren } from "@/components/hr/bulk-actions";
 import { CENTRAL, GENDER, HR_DIRECTOR, STATUS, roleLabel, rpc, useHrMe, type HrAssign, type HrEmp, type HrMe } from "@/components/hr/shared";
 import { employeeSchoolDefault } from "@/lib/staff-context";
+import { assignmentChange, refreshStaffAssignment } from "@/lib/staff-assignment";
 import { db } from "@/components/crud-page";
 
 export const Route = createFileRoute("/_authenticated/app/hr")({
@@ -111,7 +112,7 @@ function Workspace({ org, m }: { org: string; m: HrMe }) {
         {m.org_wide && m.caps.edit && <HrCategories org={org} />}
         <HrIdReadiness org={org} school={school} onOpen={(id) => nav({ search: { emp: id } })} />
       </div>}
-      {emp && <EmployeePanel id={emp} org={org} m={m} onClose={() => nav({ search: {} })} onPrint={() => setPrintIds([emp])} />}
+      {emp && <EmployeePanel key={emp} id={emp} org={org} m={m} onClose={() => nav({ search: {} })} onPrint={() => setPrintIds([emp])} />}
       {printIds && <EmployeePrintDialog org={org} ids={printIds} onClose={() => setPrintIds(null)} />}
       {(canPrint || m.caps.edit) && rows.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -441,6 +442,7 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
   const [edit, setEdit] = useState<Record<string, string> | null>(null);
   const prof = useQuery({ queryKey: ["hr-prof", id], queryFn: () => rpc<Prof>("hr_employee_profile_get", { _emp: id }) });
   const [px, setPx] = useState<Record<string, string>>({});
+  const [initialAssignment, setInitialAssignment] = useState("");
   const [asg, setAsg] = useState<Record<string, string> | null>(null);
   const others = useQuery({ queryKey: ["hr-list", org, "", "", "active"], enabled: !!asg, queryFn: () => rpc<HrEmp[]>("hr_employee_list", { _org: org, _school: null, _q: null, _status: "active" }) });
   const refresh = () => { qc.invalidateQueries({ queryKey: ["hr-emp", id] }); qc.invalidateQueries({ queryKey: ["hr-list"] }); qc.invalidateQueries({ queryKey: ["staff-directory"] }); };
@@ -452,10 +454,18 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
       const p: Record<string, unknown> = { ...v };
       if (!e.sensitive) { delete p["national_id"]; delete p["nationality"]; delete p["birth_date"]; }
       const ex = profilePayload(px, !!prof.data?.sensitive, prof.data); if (ex.err) throw new Error(ex.err);
+      // Only submit an intentional assignment edit, not the stale value from an unrelated draft.
+      const { assignment_note, ...profile } = ex.p;
       await rpc("hr_employee_save", { _org: org, _id: id, _p: fixPhone(p), _reason: reason });
-      return rpc("hr_employee_profile_save", { _org: org, _emp: id, _p: ex.p, _mode: "set", _reason: reason });
+      return rpc("hr_employee_profile_save", { _org: org, _emp: id, _p: { ...profile, ...assignmentChange(assignment_note ?? initialAssignment, initialAssignment) }, _mode: "set", _reason: reason });
     },
-    onSuccess: () => { toast.success("حُفظت التعديلات"); setEdit(null); refresh(); qc.invalidateQueries({ queryKey: ["hr-prof", id] }); },
+    onSuccess: async () => {
+      await refreshStaffAssignment(qc, [id]);
+      void qc.invalidateQueries({ queryKey: ["hr-emp", id] });
+      void qc.invalidateQueries({ queryKey: ["hr-list"] });
+      setEdit(null);
+      toast.success("حُفظت التعديلات");
+    },
     onError: (e) => { if ((e as Error).message !== "أُلغي") toast.error(arabicError(e)); },
   });
   const saveAsg = useMutation({
@@ -474,14 +484,22 @@ function EmployeePanel({ id, org, m, onClose, onPrint }: { id: string; org: stri
   if (d.error) return <ErrorState message={arabicError(d.error)} />;
   const { employee: e, assignments, can_edit, events } = d.data!;
   const row = (k: string, v: React.ReactNode) => <div className="rounded-lg bg-secondary/40 p-2"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium">{v || "—"}</dd></div>;
-  const startEdit = () => { setPx(profileForm(prof.data)); setEdit({ full_name: e.full_name, display_name: e.display_name ?? "", job_title: e.job_title ?? "", hire_date: e.hire_date ?? "", phone: e.phone ?? "", email: e.email ?? "", gender: e.gender ?? "", status: e.status, end_date: e.end_date ?? "", ...(e.sensitive ? { national_id: e.national_id ?? "", nationality: e.nationality ?? "", birth_date: e.birth_date ?? "" } : {}) }); };
+  const startEdit = async () => {
+    try {
+      const { data } = await prof.refetch({ throwOnError: true });
+      const fields = profileForm(data);
+      setInitialAssignment(fields["assignment_note"] ?? "");
+      setPx(fields);
+      setEdit({ full_name: e.full_name, display_name: e.display_name ?? "", job_title: e.job_title ?? "", hire_date: e.hire_date ?? "", phone: e.phone ?? "", email: e.email ?? "", gender: e.gender ?? "", status: e.status, end_date: e.end_date ?? "", ...(e.sensitive ? { national_id: e.national_id ?? "", nationality: e.nationality ?? "", birth_date: e.birth_date ?? "" } : {}) });
+    } catch (error) { toast.error(arabicError(error)); }
+  };
   return (
     <section className="space-y-4 rounded-xl border-2 border-primary/30 bg-card p-4" aria-label={`ملف ${e.full_name}`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="min-w-0 flex-1"><span className="block text-lg font-bold">{e.display_name || e.full_name}</span>{e.display_name && e.display_name !== e.full_name && <span className="block text-xs text-muted-foreground">الاسم الرسمي: {e.full_name}</span>}<span className="text-xs text-muted-foreground"><bdi dir="ltr">{e.employee_no}</bdi> · {STATUS[e.status]}</span></span>
         <PersonCardButton kind="employee" id={e.id} org={org} />
         {m.caps.print && d.data!.view === "hr" && !edit && <Button size="sm" variant="outline" onClick={onPrint}><Printer className="size-4" />طباعة بيانات الموظف</Button>}
-        {can_edit && !edit && e.status !== "archived" && <Button size="sm" variant="outline" onClick={startEdit}>تعديل الملف</Button>}
+        {can_edit && !edit && e.status !== "archived" && <Button size="sm" variant="outline" disabled={prof.isFetching} onClick={() => void startEdit()}>تعديل الملف</Button>}
         <Button variant="ghost" size="sm" onClick={onClose} aria-label="إغلاق الملف"><X className="size-4" /></Button>
       </div>
       {d.data!.view === "hr" && <SelfAccessCard e={e} org={org} canEdit={can_edit} onDone={refresh} />}
