@@ -1,3 +1,4 @@
+import { ensureGuardianLoginEmail } from "@/lib/guardian-activation.server";
 // Sign-in by national ID / iqama. Public endpoints (no session yet): every check runs in service-only SQL (_idl_*),
 // errors returned to the browser are generic, and the phone number is only shown masked. Success returns a one-time
 // magic-link token hash for an EXISTING account — no account is ever created here.
@@ -117,9 +118,14 @@ export async function verifyIdCode(data: { challenge: string; code: string; port
     { _challenge: data.challenge, _code: data.code } as never,
   );
   if (error) return { error: idLoginMessage("server") };
-  const res = r as { error?: string; user_id?: string };
+  const res = r as { error?: string; user_id?: string; needs_login_email?: boolean; login_nid?: string; login_kind?: "guardian" | "teacher" };
   if (res.error || !res.user_id) return { error: idLoginMessage(res.error ?? "server") };
   if (!(await portalOk(res.user_id, data.portal))) return { error: WRONG_PORTAL[data.portal] };
+  if (res.needs_login_email) {
+    // only accounts activated by the ID flow reach here; already-active guardians and staff never do
+    const e = await ensureGuardianLoginEmail(sb as never, res.user_id, res.login_nid ?? "", res.login_kind ?? "guardian");
+    if (e !== "ok") return { error: idLoginMessage(e === "conflict" ? "conflict_account" : "server") };
+  }
   return tokenFor(res.user_id);
 }
 

@@ -14225,41 +14225,53 @@ export type Database = {
       }
       id_login_challenges: {
         Row: {
+          activated_at: string | null
+          activation: boolean
           attempts: number
           channel: string
           code_hash: string
           created_at: string
           expires_at: string
+          guardian_id: string | null
           id: string
           nid_hash: string
           phone: string
           send_status: string
+          teacher_id: string | null
           used_at: string | null
           user_id: string
         }
         Insert: {
+          activated_at?: string | null
+          activation?: boolean
           attempts?: number
           channel?: string
           code_hash: string
           created_at?: string
           expires_at: string
+          guardian_id?: string | null
           id?: string
           nid_hash: string
           phone: string
           send_status?: string
+          teacher_id?: string | null
           used_at?: string | null
           user_id: string
         }
         Update: {
+          activated_at?: string | null
+          activation?: boolean
           attempts?: number
           channel?: string
           code_hash?: string
           created_at?: string
           expires_at?: string
+          guardian_id?: string | null
           id?: string
           nid_hash?: string
           phone?: string
           send_status?: string
+          teacher_id?: string | null
           used_at?: string | null
           user_id?: string
         }
@@ -25169,6 +25181,24 @@ export type Database = {
         Returns: {
           phone: string
           problem: string
+          user_id: string
+        }[]
+      }
+      _idl_resolve_staged_guardian: {
+        Args: { _nid: string }
+        Returns: {
+          guardian_id: string
+          phone: string
+          problem: string
+          user_id: string
+        }[]
+      }
+      _idl_resolve_staged_teacher: {
+        Args: { _nid: string }
+        Returns: {
+          phone: string
+          problem: string
+          teacher_id: string
           user_id: string
         }[]
       }
