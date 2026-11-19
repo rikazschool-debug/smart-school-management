@@ -8,3 +8,4 @@
 - Supervision evidence uses supervision-files.functions.ts with session-scoped file-meta RPC authorization before privileged storage access, content/size validation and digest sealing; downloads never expose signed storage URLs and recheck authorization before returning bytes.
 - Permission tree order mirrors the side menu via perm-order.ts (menuOrderedCatalog; section.origin keeps the server area for platform locks); place every new catalog section there. Tests: src/test/perm-order.test.ts, scripts/perm8-e2e.ts.
 - Assignment edits in the staff directory and HR profile refresh their authorized reads through staff-assignment.ts, so both surfaces use the canonical profile value without copying private data between caches.
+- Scope the school workspace theme to the active role via workspace-appearance.ts, never use it to determine access; keep owner and platform appearances isolated from school theme tokens.

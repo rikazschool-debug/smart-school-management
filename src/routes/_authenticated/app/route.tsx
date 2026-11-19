@@ -44,6 +44,7 @@ import { MQ_LABEL, mqSections, useMqCaps } from "@/components/support/calls-caps
 import { ArrowRight, Inbox, Send } from "lucide-react";
 import { NAV_DESC, PageMetaProvider, pickNavKey, type PageMeta } from "@/lib/page-meta";
 import { PageHeader } from "@/components/states";
+import { usesSchoolAppearance } from "@/lib/workspace-appearance";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "لوحة ركاز — إدارة المدرسة" }, { name: "description", content: "إدارة شؤون المدرسة وأقسامها في منصة ركاز." }, { property: "og:title", content: "لوحة ركاز — إدارة المدرسة" }, { property: "og:description", content: "إدارة شؤون المدرسة وأقسامها في منصة ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
@@ -214,6 +215,8 @@ function Shell() {
 
   const ct = commTabs(active.role);
   const owner = active.role === "org_owner";
+  const schoolAppearance = usesSchoolAppearance(active.role);
+  const familyAppearance = schoolAppearance && (active.role === "student" || active.role === "guardian");
   const section = owner ? (inSupport && platformHelp ? lastSection.current : ownerSection(path, lastSection.current)) : null;
   lastSection.current = section;
   const cleanPath = path.replace(/\/+$/, "") || "/";
@@ -249,7 +252,7 @@ function Shell() {
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
   // one «الحضور والمواظبة» entry: exit/permission and gate/scan pages become its sub-items (same pages and permissions, no duplicate menu entries)
   const attSubs = nav.includes("attendance") ? (["attendance", "pickup", "station"] as NavKey[]).filter((k) => nav.includes(k)) : [];
-  const groups = navigationGroups(nav.filter((k) => k !== "profile" && k !== "my_hr" && !(attSubs.length > 1 && (k === "pickup" || k === "station"))));
+  const groups = navigationGroups(nav.filter((k) => (familyAppearance || k !== "profile") && k !== "my_hr" && !(attSubs.length > 1 && (k === "pickup" || k === "station"))));
   // red per-section counters: unread notifications grouped by the visible menu entry their link opens
   const navEntries = nav.map((k) => ({ key: k, to: NAV[k].to, tab: NAV[k].tab }));
   const secIds = countsBySection(unread.data ?? [], navEntries);
@@ -266,21 +269,22 @@ function Shell() {
   };
   const activeGroup = groups.find((g) => g.keys.some(navActive))?.label ?? null;
   const curKey = pickNavKey(cleanPath, navEntries, supTab ?? null);
-  const navLabel = (k: NavKey) => k === "schedule" ? scheduleLabel(active.role) : k === "teachers" ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : NAV[k].label;
+  const navLabel = (k: NavKey) => k === "home" && schoolAppearance ? "الرئيسية" : k === "schedule" ? scheduleLabel(active.role) : k === "teachers" ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : NAV[k].label;
   const curGroup = curKey ? groups.find((g) => g.keys.includes(curKey))?.label ?? (owner && section ? OWNER_SECTION_LABELS[section] : null) : null;
-  const meta: PageMeta = { group: curGroup, label: curKey ? navLabel(curKey) : null, desc: curKey ? NAV_DESC[curKey] ?? null : null, exact: !!curKey && cleanPath === NAV[curKey].to, register };
+  const meta: PageMeta = { group: curGroup, label: curKey ? navLabel(curKey) : null, desc: curKey ? NAV_DESC[curKey] ?? null : null, exact: !!curKey && cleanPath === NAV[curKey].to, register, ...(schoolAppearance ? { appearance: "school" as const, visible: nav } : {}) };
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (
     <nav aria-label="القائمة الرئيسية" className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 py-5">
         {groupView && myAvatar.data ? <img src={myAvatar.data} alt={active.orgName} className="size-10 shrink-0 rounded-xl border bg-card object-contain" /> : <SchoolLogo schoolId={groupView ? null : active.schoolId} className="size-10 shrink-0 rounded-xl border" fallback={<RikazLogo className="size-10" />} />}
         <div className="min-w-0">
-          <p className="font-display text-xl leading-none text-foreground">ركاز <span className="text-sm font-normal text-muted-foreground">| مدارس تُدار بذكاء</span></p>
+          <p className="font-display text-xl leading-none text-foreground">ركاز {!schoolAppearance && <span className="text-sm font-normal text-muted-foreground">| مدارس تُدار بذكاء</span>}</p>
           <ExportBrandSync name={(groupView ? active.orgName : active.schoolName) ?? ""} schoolId={groupView ? null : active.schoolId} groupLogo={groupView ? myAvatar.data ?? null : null} /><p data-school-name className="mt-1 truncate text-xs text-muted-foreground">{groupView ? active.orgName : active.schoolName}</p>
         </div>
       </div>
       {owner && section && <p className="mx-3 mb-3 rounded-lg bg-secondary px-3 py-2 text-sm font-bold text-primary">{OWNER_SECTION_LABELS[section]}</p>}
-      <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-4">
+      <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-4" data-workspace-nav>
+        {schoolAppearance && <p className="px-3 pb-1 text-xs font-bold text-muted-foreground">{ops.title ?? ROLE_LABELS[active.role]}</p>}
         {groups.map((g) => {
           const content = <div className="space-y-0.5">
               {g.keys.map((k) => {
@@ -296,8 +300,8 @@ function Shell() {
                     onClick={() => setOpen(false)}
                     className="group relative flex min-h-10 items-center gap-3 rounded-md px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-accent data-[status=active]:font-semibold data-[status=active]:text-sidebar-primary"
                   >
-                    <span aria-hidden className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
-                    <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="min-w-0 whitespace-normal py-2 leading-5">{k === "schedule" && active ? scheduleLabel(active.role) : k === "teachers" && active ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : n.label}</span>
+                    <span aria-hidden data-workspace-nav-marker className="absolute inset-y-2 right-0 w-1 rounded-l-full bg-sidebar-primary opacity-0 group-data-[status=active]:opacity-100" />
+                    <n.icon className="size-[18px] shrink-0 opacity-80 group-data-[status=active]:opacity-100" /> <span className="min-w-0 whitespace-normal py-2 leading-5">{navLabel(k)}</span>
                     <SectionBadge n={secCount(k)} label={n.label} />
                   </Link>;
                 const submenu = <>
@@ -363,12 +367,12 @@ function Shell() {
               })}
             </div>;
           // a group holding one entry of the same name, «الرئيسية» and alerts show their links directly (no second fold)
-          const flat = !g.label || g.label === "التنبيهات والدعم" || g.label === "الرئيسية";
+          const flat = familyAppearance || !g.label || g.label === "التنبيهات والدعم" || g.label === "الرئيسية";
           return !flat ? <NavigationSection key={g.label} label={g.label} active={g.keys.some(navActive)} open={(openGroup ?? activeGroup) === g.label} onOpenChange={(v) => setOpenGroup(v ? g.label : "")} routeKey={path + supTab} badge={<SectionBadge n={g.keys.reduce((a, k) => a + secCount(k), 0)} label={g.label} />}>{content}</NavigationSection> : <div key={g.label}>{content}</div>;
         })}
       </div>
       <div className="border-t border-sidebar-border p-3">
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+        <div className={`flex items-center gap-3 rounded-lg px-2 py-2${schoolAppearance ? " bg-secondary text-secondary-foreground" : ""}`}>
           {myAvatar.data ? <img src={myAvatar.data} alt="" className="size-9 shrink-0 rounded-full border bg-card object-cover" /> : <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">{initial}</span>}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{ops.title === "عملي" ? "متعدد الأدوار" : ops.title ?? ROLE_LABELS[active.role]}</p>
@@ -381,15 +385,16 @@ function Shell() {
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {!noSidebar && <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-l border-sidebar-border bg-sidebar lg:block">{sidebar}</aside>}
+    <div className={`flex min-h-screen bg-background${schoolAppearance ? " school-workspace" : ""}`}>
+      {!noSidebar && <aside className={`sticky top-0 hidden h-screen shrink-0 border-sidebar-border bg-sidebar lg:block ${schoolAppearance ? "w-60 border-e" : "w-64 border-l"}`}>{sidebar}</aside>}
       {open && !noSidebar && (
         <div className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)}>
           <aside className="h-full w-72 max-w-[85vw] bg-sidebar shadow-xl" onClick={(e) => e.stopPropagation()}>{sidebar}</aside>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur sm:px-6">
+        <header className={`sticky top-0 z-30 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur sm:px-6 ${schoolAppearance ? "grid min-h-14 grid-cols-[minmax(0,1fr)_auto] py-2 sm:flex" : "flex h-16"}`}>
+          <div className={schoolAppearance ? "flex min-w-0 items-center gap-1 sm:flex-1" : "contents"}>
           {noSidebar ? (
             <RikazLogo className="size-10" />
           ) : (
@@ -398,16 +403,18 @@ function Shell() {
             </Button>
           )}
           {path.replace(/\/+$/, "") !== "/app" && (
-            <Button variant="outline" size="sm" className="shrink-0 gap-1 rounded-full" aria-label="رجوع" title="رجوع للصفحة السابقة"
+            <Button variant={schoolAppearance ? "ghost" : "outline"} size={schoolAppearance ? "icon" : "sm"} className="shrink-0 gap-1 rounded-full" aria-label="رجوع" title="رجوع للصفحة السابقة"
               onClick={() => (canGoBack ? router.history.back() : navigate({ to: "/app" }))}>
-              <ArrowRight className="size-4" /><span className="hidden sm:inline">رجوع</span>
+              <ArrowRight className="size-4" />{!schoolAppearance && <span className="hidden sm:inline">رجوع</span>}
             </Button>
           )}
-          <Button variant="outline" size="sm" className="shrink-0 gap-1 rounded-full" aria-label="الشاشة الرئيسية" title="الشاشة الرئيسية لحسابك"
+          <Button variant={schoolAppearance ? "ghost" : "outline"} size={schoolAppearance ? "icon" : "sm"} className="shrink-0 gap-1 rounded-full" aria-label="الشاشة الرئيسية" title="الشاشة الرئيسية لحسابك"
             onClick={() => (owner && ownerInSchool && active.schoolId ? navigate({ to: "/app/school-home", search: { s: active.schoolId } }) : navigate({ to: "/app" }))}>
-            <Home className="size-4" /><span className="hidden sm:inline">الشاشة الرئيسية</span>
+            <Home className="size-4" />{!schoolAppearance && <span className="hidden sm:inline">الشاشة الرئيسية</span>}
           </Button>
-          <div className="relative flex min-w-0 flex-1 items-center sm:flex-none">
+          {schoolAppearance && curKey && <p className="hidden min-w-0 shrink truncate text-sm font-extrabold lg:block" aria-current="page">{navLabel(curKey)}</p>}
+          </div>
+          <div className={`relative flex min-w-0 items-center ${schoolAppearance ? "col-span-2 row-start-2 sm:order-1 sm:max-w-[45%]" : "flex-1 sm:flex-none"}`}>
             <Building2 aria-hidden className="pointer-events-none absolute right-3 size-4 text-primary" />
             <label className="sr-only" htmlFor="ctx">تبديل الدور أو المدرسة</label>
             {groupView ? <span className="flex min-h-9 items-center rounded-full border bg-card pr-9 pl-4 text-sm font-medium shadow-sm">{ROLE_LABELS[active.role]} · {active.orgName}</span> : <select
@@ -424,7 +431,7 @@ function Shell() {
               ))}
             </select>}
           </div>
-          <div className="ms-auto flex shrink-0 items-center gap-1">
+          <div className={`ms-auto flex shrink-0 items-center gap-1${schoolAppearance ? " col-start-2 row-start-1 sm:order-2" : ""}`}>
             <NotificationBell />
             <NotificationToasts list={unread.data} />
             <SectionReadSync ids={hereKey ? secIds[hereKey] ?? [] : []} />
@@ -441,7 +448,7 @@ function Shell() {
             </DropdownMenu>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 md:py-8">
+        <main className={`mx-auto w-full flex-1 px-4 py-6 sm:px-6 md:py-8 ${schoolAppearance ? "min-w-0 max-w-7xl lg:px-8" : "max-w-6xl"}`}>
           <PageMetaProvider value={meta}>
             {headers === 0 && meta.exact && curKey !== "home" && curKey !== "school_home" && meta.label && <AutoHeader />}
             <Outlet />

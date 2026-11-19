@@ -2,7 +2,7 @@ import { createContext, useContext, useLayoutEffect, useEffect } from "react";
 import type { NavKey } from "@/lib/roles";
 
 /** Menu-derived heading for the current page: the sidebar label is the source of truth for the page title. */
-export type PageMeta = { group: string | null; label: string | null; desc: string | null; exact: boolean; register: () => () => void };
+export type PageMeta = { group: string | null; label: string | null; desc: string | null; exact: boolean; register: () => () => void; appearance?: "school"; visible?: readonly NavKey[] };
 const Ctx = createContext<PageMeta | null>(null);
 export const PageMetaProvider = Ctx.Provider;
 export function usePageMeta() { return useContext(Ctx); }

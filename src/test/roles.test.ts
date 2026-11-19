@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { NAV_BY_ROLE, attTabs, canCreateGroup, canCreateTask, canEditSchedule, canManageAcademic, canManageUsers, canOrganizeMeeting, canScanAttendance, commTabs, invitableRoles, type Role, scheduleTabs, scheduleLabel, seesStaffDirectory, teachersLabel } from "@/lib/roles";
+import { usesSchoolAppearance } from "@/lib/workspace-appearance";
 const ALL = Object.keys(NAV_BY_ROLE) as Role[];
+it("keeps the existing appearance for the organization and platform owners only", () => {
+  expect(ALL.filter((role) => !usesSchoolAppearance(role)).sort()).toEqual(["org_owner", "platform_admin"]);
+});
 it("homework authoring includes the verified owner override but not observer roles", async () => {
  const {canAuthorHomework}=await import("@/lib/roles");
  expect(ALL.filter(canAuthorHomework).sort()).toEqual(["org_owner","platform_admin","teacher"]);

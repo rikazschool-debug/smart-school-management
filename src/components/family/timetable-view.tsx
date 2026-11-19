@@ -8,13 +8,15 @@ type Slot = { day: number; period: string; sort: number; start: string | null; e
 const TONES = ["bg-chart-1/15 border-chart-1/40", "bg-chart-2/15 border-chart-2/40", "bg-chart-3/15 border-chart-3/40", "bg-chart-4/15 border-chart-4/40", "bg-chart-5/15 border-chart-5/40", "bg-accent border-accent-foreground/20", "bg-secondary border-secondary-foreground/20"];
 const hm = (t: string | null) => (t ? t.slice(0, 5) : "");
 /** Riyadh weekday (0=Sun) and HH:MM, read after mount so SSR and hydration agree. */
-function useRiyadhNow() {
+export function useRiyadhNow() {
   const [n, setN] = useState<{ day: number; time: string } | null>(null);
   useEffect(() => {
     const tick = () => {
       const p = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Riyadh", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
-      const wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(p.find((x) => x.type === "weekday")!.value);
-      setN({ day: wd, time: `${p.find((x) => x.type === "hour")!.value.replace("24", "00")}:${p.find((x) => x.type === "minute")!.value}` });
+      const wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(p.find((x) => x.type === "weekday")?.value ?? "");
+      const hour = p.find((x) => x.type === "hour")?.value;
+      const minute = p.find((x) => x.type === "minute")?.value;
+      if (wd >= 0 && hour && minute) setN({ day: wd, time: `${hour.replace("24", "00")}:${minute}` });
     };
     tick(); const id = setInterval(tick, 60_000); return () => clearInterval(id);
   }, []);

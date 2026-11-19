@@ -41,6 +41,7 @@ export function Home() {
   const opsOnly = ops.opsOnly;
 
   if (!active) return null;
+  if (active.role === "student" && active.schoolId) return <StudentHome schoolId={active.schoolId} />;
   return (
     <>
       <PageHeader eyebrow={today()} title="لوحة التحكم المركزية" desc={`${ops.title ?? ROLE_LABELS[active.role]} · ${active.schoolName}${active.orgName ? ` — ${active.orgName}` : ""}`} />
@@ -61,8 +62,6 @@ export function Home() {
         <TeacherHome schoolId={active.schoolId} />
       ) : active.role === "guardian" ? (
         <GuardianHome />
-      ) : active.role === "student" ? (
-        <StudentHome schoolId={active.schoolId} />
       ) : (
         <EmptyState title="لا توجد مؤشرات إضافية لهذا الدور بعد" hint="سجلات هذا الدور الخاصة (الزيارات، الانصراف…) ستُبنى في حزم لاحقة؛ أعمالك المعلّقة تظهر أعلاه." />
       )}
@@ -367,12 +366,14 @@ function StudentHome({ schoolId }: { schoolId: string }) {
     queryKey: ["me-student", schoolId],
     queryFn: async () => {
       const { data: auth } = await db.auth.getUser();
-      const { data, error } = await db.from("students").select("id").eq("school_id", schoolId).eq("user_id", auth.user!.id).maybeSingle();
+      if (!auth.user) return null;
+      const { data, error } = await db.from("students").select("id").eq("school_id", schoolId).eq("user_id", auth.user.id).maybeSingle();
       if (error) throw error;
       return data as Row | null;
     },
   });
   if (me.isLoading) return <LoadingState />;
+  if (me.error) return <ErrorState message={arabicError(me.error)} onRetry={() => me.refetch()} />;
   if (!me.data) return <EmptyState title="لم يُربط ملفك بعد" hint="تواصل مع إدارة المدرسة." />;
-  return <ChildOverview studentId={me.data["id"]} />;
+  return <ChildOverview key={me.data["id"]} studentId={me.data["id"]} studentHome={<WorkToday schoolId={schoolId} />} />;
 }

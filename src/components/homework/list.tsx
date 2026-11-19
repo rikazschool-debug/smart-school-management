@@ -135,7 +135,7 @@ function StudentList({ schoolId, kind }: { schoolId: string; kind: "homework" | 
   if (me.isLoading) return <LoadingState />;
   if (me.error) return <ErrorState message={arabicError(me.error)} onRetry={() => me.refetch()} />;
   if (!me.data) return <EmptyState title="حسابك غير مرتبط بسجل طالب في هذه المدرسة" />;
-  return (<><PageHeader title={kind === "test" ? "اختباراتي" : "مذكرة واجباتي"} /><StudentHomework studentId={me.data["id"]} kind={kind} /></>);
+  return (<><PageHeader title={kind === "test" ? "اختباراتي" : "مذكرة واجباتي"} desc={kind === "test" ? "مواعيد اختباراتك ونتائجها المنشورة." : "واجباتك القادمة وتسليماتك السابقة."} /><StudentHomework studentId={me.data["id"]} kind={kind} /></>);
 }
 
 function GuardianList({ schoolId, kind }: { schoolId: string; kind: "homework" | "test" }) {
@@ -156,7 +156,7 @@ function GuardianList({ schoolId, kind }: { schoolId: string; kind: "homework" |
   if (!kids.data?.length) return <EmptyState title="لا يوجد أبناء موثقون للمتابعة" hint="تظهر الواجبات بعد توثيق علاقة ولي الأمر من المدرسة." />;
   return (
     <>
-      <PageHeader title={kind === "test" ? "اختبارات الأبناء" : "مذكرة واجبات الأبناء"} />
+      <PageHeader title={kind === "test" ? "اختبارات الأبناء" : "مذكرة واجبات الأبناء"} desc={kind === "test" ? "مواعيد اختبارات أبنائك ونتائجهم المنشورة." : "الواجبات القادمة وتسليمات الأبناء السابقة."} />
       <ExportBar course={null} kinds={["family"]} note="يشمل أبناءك الموثّقين فقط، والدرجات التي حفظها المعلم فقط." />
       <div className="mb-4 flex flex-wrap gap-2">
         {kids.data.map((k) => (

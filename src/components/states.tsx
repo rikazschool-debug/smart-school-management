@@ -48,11 +48,12 @@ export function PageHeader({ title, desc, action, eyebrow, auto = false }: { tit
   const shownTitle = m?.exact && m.label ? m.label : title;
   const top = m?.group && m.group !== shownTitle ? m.group : eyebrow && eyebrow !== shownTitle ? eyebrow : null;
   const text = desc || (m?.exact ? m.desc ?? undefined : undefined);
+  const schoolAppearance = m?.appearance === "school";
   return (
-    <div dir="rtl" className="mb-6 flex flex-col gap-4 border-b border-border/70 pb-5 text-start sm:flex-row sm:items-end sm:justify-between">
+    <div dir="rtl" className={`mb-6 gap-4 border-b border-border/70 pb-5 text-start sm:items-end sm:justify-between ${schoolAppearance ? "grid grid-cols-[minmax(0,1fr)] sm:flex" : "flex flex-col sm:flex-row"}`}>
       <div className="min-w-0">
-        {top && <p className="mb-1 text-xs font-light tracking-wide text-muted-foreground sm:text-sm">{top}</p>}
-        <h1 className="font-display text-2xl font-bold leading-tight text-foreground sm:text-3xl">{shownTitle}</h1>
+        {top && <p data-workspace-kicker className="mb-1 text-xs font-light tracking-wide text-muted-foreground sm:text-sm">{top}</p>}
+        <h1 className={`font-display text-2xl font-bold leading-tight text-foreground sm:text-3xl${schoolAppearance ? " wrap-break-word" : ""}`}>{shownTitle}</h1>
         {text && <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{text}</p>}
       </div>
       {action && <div className="flex shrink-0 flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">{action}</div>}

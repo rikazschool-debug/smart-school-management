@@ -8,13 +8,13 @@ export const CHART = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var
 /** Big clickable KPI: every card on the central dashboard opens its section. */
 export function Kpi({ label, value, icon: Icon, to, hint, tone = 0 }: { label: string; value: number | string | undefined; icon: LucideIcon; to?: string | undefined; hint?: string | undefined; tone?: number }) {
   const body = (
-    <div className="group relative flex h-full flex-col gap-3 overflow-hidden rounded-2xl border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
-      <span aria-hidden className="absolute inset-x-0 top-0 h-1" style={{ background: CHART[tone % 5] }} />
-      <div className="flex items-center justify-between gap-2">
+    <div data-workspace-kpi className="group relative flex h-full flex-col gap-3 overflow-hidden rounded-2xl border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+      <span aria-hidden data-workspace-kpi-stripe className="absolute inset-x-0 top-0 h-1" style={{ background: CHART[tone % 5] }} />
+      <div data-workspace-kpi-icon className="flex items-center justify-between gap-2">
         <span className="grid size-10 shrink-0 place-items-center rounded-xl" style={{ background: `color-mix(in oklab, ${CHART[tone % 5]} 16%, transparent)`, color: CHART[tone % 5] }}><Icon className="size-5" /></span>
-        {to && <ArrowLeft className="size-4 text-muted-foreground transition-transform group-hover:-translate-x-1" />}
+        {to && <ArrowLeft data-workspace-kpi-arrow className="size-4 text-muted-foreground transition-transform group-hover:-translate-x-1" />}
       </div>
-      <div className="min-w-0">
+      <div data-workspace-kpi-value className="min-w-0">
         <p className="font-display text-3xl font-bold leading-none tabular-nums">{value ?? "…"}</p>
         <p className="mt-1.5 truncate text-sm font-medium">{label}</p>
         {hint && <p className="truncate text-xs text-muted-foreground">{hint}</p>}
@@ -25,12 +25,12 @@ export function Kpi({ label, value, icon: Icon, to, hint, tone = 0 }: { label: s
 }
 
 export function KpiGrid({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">{children}</div>;
+  return <div data-workspace-kpis className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">{children}</div>;
 }
 
 export function Panel({ title, to, cta = "فتح القسم", children, className = "" }: { title: string; to?: string | undefined; cta?: string; children: ReactNode; className?: string }) {
   return (
-    <section className={`flex min-w-0 flex-col rounded-2xl border bg-card p-4 shadow-sm ${className}`}>
+    <section data-workspace-panel className={`flex min-w-0 flex-col rounded-2xl border bg-card p-4 shadow-sm ${className}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="truncate font-bold">{title}</h3>
         {to && <Link to={to} className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-primary hover:bg-secondary">{cta}<ArrowLeft className="size-3.5" /></Link>}

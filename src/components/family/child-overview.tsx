@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3, HeartHandshake, HeartPulse, Sparkles, BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
@@ -14,6 +14,7 @@ import { FamilyGifted } from "@/components/gifted/family";
 import type { ChildTab } from "./search";
 import { TimetableView } from "./timetable-view";
 import { AttendanceCalendar, AttendanceReport } from "./attendance";
+import { StudentDay } from "./student-day";
 
 /** One child's (or the student's own) overview. Everything comes from family_child, which checks the link on the server. */
 export type ChildData = {
@@ -44,14 +45,16 @@ export function useChild(studentId: string) {
 
 type Tab = ChildTab;
 
-export function ChildOverview({ studentId, initialTab }: { studentId: string; initialTab?: ChildTab | undefined }) {
+export function ChildOverview({ studentId, initialTab, studentHome }: { studentId: string; initialTab?: ChildTab | undefined; studentHome?: ReactNode }) {
   const q = useChild(studentId);
   const [want, setTab] = useState<Tab>(initialTab ?? "attendance");
+  const tabListId = useId();
   if (q.isLoading) return <LoadingState />;
   if (q.error) return (q.error as { code?: string }).code === "42501" || /not_allowed/.test(String((q.error as Error).message))
     ? <EmptyState title="لا يمكنك فتح هذا الملف" hint="يظهر فقط الأبناء المرتبطون بحسابك بعلاقة موثقة من المدرسة." />
     : <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
-  const d = q.data!;
+  const d = q.data;
+  if (!d) return <EmptyState title="لا يوجد ملف متاح للعرض" />;
   const guardian = d.viewer === "guardian";
   const tabs: { k: Tab; label: string; icon: typeof BookOpen }[] = [
     { k: "attendance", label: "الحضور", icon: CalendarCheck },
@@ -65,7 +68,11 @@ export function ChildOverview({ studentId, initialTab }: { studentId: string; in
   const tab: Tab = tabs.some((t) => t.k === want) ? want : "attendance";
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border bg-gradient-to-l from-primary/10 via-card to-card p-5" aria-label="الابن المختار">
+      {studentHome && !guardian && <StudentDay data={d} work={studentHome} onAttendance={() => {
+        setTab("attendance");
+        document.getElementById(tabListId)?.querySelector<HTMLElement>("[role=tab]")?.focus();
+      }} />}
+      <div className="rounded-2xl border bg-gradient-to-l from-primary/10 via-card to-card p-5" aria-label={guardian ? "الابن المختار" : "بيانات الطالب"}>
         <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
           <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">{d.student.name.trim().charAt(0)}</div>
           <div className="min-w-0">
@@ -80,7 +87,7 @@ export function ChildOverview({ studentId, initialTab }: { studentId: string; in
           </div>
         </div>
       </div>
-      <div role="tablist" aria-label="أقسام الابن" className="sticky top-0 z-10 -mx-1 overflow-x-auto rounded-2xl border bg-card/95 p-1.5 backdrop-blur">
+      <div id={tabListId} role="tablist" aria-label={guardian ? "أقسام الابن" : "أقسام الطالب"} className="sticky top-0 z-10 -mx-1 scroll-mt-28 overflow-x-auto rounded-2xl border bg-card/95 p-1.5 backdrop-blur">
         <div className="flex min-w-max gap-1">
         {tabs.map((t) => (
           <button key={t.k} role="tab" aria-selected={tab === t.k} onClick={() => setTab(t.k)}
