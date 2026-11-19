@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { absenceLink, sortAbsences, type StaffAbsence } from "@/components/dashboard/follow-up";
+import { absenceLink, sortAbsences, sortAttention, type StaffAbsence } from "@/components/dashboard/follow-up";
 import { workSummary } from "@/components/dashboard/work-panel";
 import { satWeekStart } from "@/components/dashboard/week-calendar";
 
@@ -15,6 +15,13 @@ describe("dashboard follow-up", () => {
   });
   it("sends administrative absences to the HR fingerprint report", () => {
     expect(absenceLink(a({ category: "admin" })).to).toBe("/app/hr/attendance");
+  });
+});
+
+describe("other alerts priority", () => {
+  it("puts urgent items before follow-up items, bigger counts first", () => {
+    const out = sortAttention([{ text: "c", to: "/", cta: "", level: 3, count: 9 }, { text: "b", to: "/", cta: "", level: 2, count: 1 }, { text: "a", to: "/", cta: "", level: 1, count: 1 }, { text: "b2", to: "/", cta: "", level: 2, count: 5 }]);
+    expect(out.map((x) => x.text)).toEqual(["a", "b2", "b", "c"]);
   });
 });
 
