@@ -3,7 +3,7 @@ import { PresenceBadge, usePresenceConv, usePresenceMyConvs, type Presence } fro
 import { ask, askText } from "@/components/confirm";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, BellOff, Bell, Archive, ArchiveRestore, Flag, Paperclip, Pencil, Reply, Trash2, Users, X, RotateCcw, Loader2, Pin } from "lucide-react";
+import { Check, CheckCheck, ArrowRight, BellOff, Bell, Archive, ArchiveRestore, Flag, Paperclip, Pencil, Reply, Trash2, Users, X, RotateCcw, Loader2, Pin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -127,12 +127,13 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
     onChanged();
   }
 
-  function receipt(m: Row) {
+  // WhatsApp-style ticks: one grey = delivered, two blue = read (groups: read by every other member); exact counts stay in the tooltip
+  function receipt(m: Row): Receipt | null {
     if (!m["mine"]) return null;
     const readers = others.filter((p) => p["last_read_seq"] >= m["seq"]).length;
-    if (!others.length) return "محفوظة";
-    if (isGroup) return readers ? `قرأها ${readers} من ${others.length}` : "متاحة للأعضاء";
-    return readers ? "قُرئت" : "وصلت للمستلم (لم تُقرأ)";
+    if (!others.length) return { read: false, label: "محفوظة" };
+    if (isGroup) return { read: readers === others.length, label: readers ? `قرأها ${readers} من ${others.length}` : "وصلت للأعضاء" };
+    return readers ? { read: true, label: "مقروءة" } : { read: false, label: "وصلت" };
   }
 
   return (
@@ -220,9 +221,11 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   );
 }
 
+type Receipt = { read: boolean; label: string };
+
 function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup, canReply, isMod, onReply, onChanged, mentionNames }: {
   mentionNames?: string[];
-  domId: string; m: Row; mine: boolean; name: string; parent: Row | undefined; files: Row[]; receipt: string | null; canAct: boolean; isGroup: boolean; canReply: boolean; isMod: boolean; onReply: () => void; onChanged: () => void;
+  domId: string; m: Row; mine: boolean; name: string; parent: Row | undefined; files: Row[]; receipt: Receipt | null; canAct: boolean; isGroup: boolean; canReply: boolean; isMod: boolean; onReply: () => void; onChanged: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(m["body"]);
@@ -251,7 +254,7 @@ function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup
       <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
         <span>{timeLabel(m["created_at"])}</span>
         {m["edited_at"] && !deleted && <span>• معدّلة</span>}
-        {receipt && <span>• {receipt}</span>}
+        {receipt && <span role="img" aria-label={receipt.label} title={receipt.label} className={receipt.read ? "text-read-receipt" : "text-muted-foreground"}>{receipt.read ? <CheckCheck className="size-4" strokeWidth={2.5} /> : <Check className="size-4" strokeWidth={2.5} />}</span>}
         {!deleted && canAct && (
           <span className="ms-auto flex gap-0.5 opacity-80 group-hover:opacity-100 [&>button]:grid [&>button]:size-8 [&>button]:place-items-center [&>button]:rounded-md [&>button:hover]:bg-muted [&>button:focus-visible]:outline-none [&>button:focus-visible]:ring-2 [&>button:focus-visible]:ring-ring">
             {canReply && <button aria-label="رد" title="رد" onClick={onReply}><Reply className="size-3.5" /></button>}

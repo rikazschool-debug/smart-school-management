@@ -20,3 +20,4 @@
 - Every section gets its section_rooms row on insert (sections_auto_room) → one class group; owner/principal see all rooms, enrolled students/guardians see their section's room even without subjects (can_view_section_room).
 - Multi-section teacher assignment (src/components/multi-section-assign.tsx) files one pending teacher_assignments row per section (course reused or created by managers only); approval still goes through decide_assignment.
 - Customer service messaging: perm section cs_comm.message (in cs_agent template, org scope) → people_pick purpose cs_contact (staff+guardians, no students, allowed branches) and cs_start_conversation (org-level direct, dedupe csdirect:<org>:<agent>:<other>); conv_send_block re-checks _cs_reach on every send. Test: scripts/cs-comm-e2e.ts.
+- Own-message receipts render as ticks (one grey = delivered, two blue = read; groups blue only when every other member read); the text label lives in aria-label/title.

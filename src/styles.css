@@ -19,6 +19,7 @@
  */
 
 @theme inline {
+  --color-read-receipt: var(--read-receipt);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -106,6 +107,7 @@
   --sidebar-border: oklch(0.92 0.008 85);
   --sidebar-ring: oklch(0.45 0.09 190);
   --destructive-foreground: oklch(0.98 0.01 85);
+  --read-receipt: oklch(0.62 0.15 235);
   --success: oklch(0.55 0.12 155);
   --success-foreground: oklch(0.98 0.01 85);
   --warning: oklch(0.8 0.14 75);
