@@ -8,7 +8,7 @@ import { arabicError } from "@/lib/session";
 
 /** Why the list is needed — the server applies that purpose's permission (see people_pick in SQL). */
 export type PickPurpose = "perm" | "group" | "direct" | "task" | "admin_form_handler" | "duty" | "meeting" | "decision" | "support_assign" | "support_info" | "pc_holder" | "pc_holder_mt_bus" | "pc_holder_mt_school" | "pc_transfer" | "visit_host" | "evt_staff" | "xbranch" | "cs_contact" | "facility_resp";
-export type Person = { user_id: string; full_name: string; roles: string[]; school_id: string; school_name: string; dept_id: string | null; dept_name: string | null; total?: number };
+export type Person = { user_id: string; full_name: string; roles: string[]; school_id: string; school_name: string; dept_id?: string | null; dept_name?: string | null; employee_no?: string | null; job_title?: string | null; total?: number };
 
 export const PERSON_ROLE: Record<string, string> = {
   org_owner: "مالك المؤسسة", principal: "مدير المدرسة", vice_principal: "وكيل", dept_head: "رئيس قسم", supervisor: "مشرف تربوي",
@@ -42,35 +42,44 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
   value: string[]; onChange: (v: string[]) => void; single?: boolean; exclude?: string[]; label?: string; showBranch?: boolean; compact?: boolean;
 }) {
   const scope = { purpose, school, org, post };
+  const task = purpose === "task";
   const [q, setQ] = useState("");
   const [dq, setDq] = useState("");
   const [role, setRole] = useState("");
   const [dept, setDept] = useState("");
   const [branch, setBranch] = useState("");
+  const [stage, setStage] = useState("");
+  const [title, setTitle] = useState("");
   useEffect(() => { const t = setTimeout(() => setDq(q.trim()), 250); return () => clearTimeout(t); }, [q]);
-  useEffect(() => { setRole(""); setDept(""); setBranch(""); }, [purpose, school, org, post]);
+  useEffect(() => { setRole(""); setDept(""); setBranch(""); setStage(""); setTitle(""); }, [purpose, school, org, post]);
   const ready = !!school || !!org;
 
   const facets = useQuery({
     enabled: ready,
     queryKey: ["people-pick-facets", scope],
     queryFn: async () => {
-      const { data, error } = await db.rpc("people_pick_facets" as never, args(scope) as never);
+      const { data, error } = task
+        ? await db.rpc("people_pick_task", { _school: school, _facets: true })
+        : await db.rpc("people_pick_facets" as never, args(scope) as never);
       if (error) throw error;
       return data as unknown as { kind: string; id: string; label: string }[];
     },
   });
   const roles = (facets.data ?? []).filter((f) => f.kind === "role");
   const depts = (facets.data ?? []).filter((f) => f.kind === "dept");
+  const stages = (facets.data ?? []).filter((f) => f.kind === "stage");
+  const jobTitles = (facets.data ?? []).filter((f) => f.kind === "title");
   const branches = (facets.data ?? []).filter((f) => f.kind === "branch");
   const multiBranch = showBranch ?? branches.length > 1;
 
   const list = useQuery({
     enabled: ready,
-    placeholderData: keepPreviousData,
-    queryKey: ["people-pick", scope, dq, role, dept, branch],
+    placeholderData: (previous: Person[] | undefined) => task ? undefined : keepPreviousData(previous),
+    queryKey: ["people-pick", scope, dq, role, dept, branch, stage, title, task ? exclude : null],
     queryFn: async () => {
-      const { data, error } = await db.rpc("people_pick" as never, { ...args(scope), _q: dq || null, _role: role || null, _dept: dept || null, _branch: branch || null, _limit: 50 } as never);
+      const { data, error } = task
+        ? await db.rpc("people_pick_task", { _school: school, _q: dq || null, _role: role || null, _dept: dept || null, _stage: stage || null, _title: title || null, _exclude: exclude })
+        : await db.rpc("people_pick" as never, { ...args(scope), _q: dq || null, _role: role || null, _dept: dept || null, _branch: branch || null, _limit: 50 } as never);
       if (error) throw error;
       return data as unknown as Person[];
     },
@@ -96,15 +105,23 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
   return (
     <div className="space-y-2" role="group" aria-label={label}>
       <div className="flex flex-wrap gap-2">
-        <Input className="h-9 w-full sm:w-52" placeholder="اكتب أول أحرف الاسم" aria-label={`بحث في ${label}`} value={q} onChange={(e) => setQ(e.target.value)} />
+        <Input className="h-9 w-full sm:w-52" placeholder={task ? "الاسم أو الرقم الوظيفي" : "اكتب أول أحرف الاسم"} aria-label={`بحث في ${label}`} value={q} onChange={(e) => setQ(e.target.value)} />
         <select aria-label="الفئة" className={sm} value={role} onChange={(e) => setRole(e.target.value)}>
           <option value="">كل الفئات</option>{roles.map((r) => <option key={r.id} value={r.id}>{PERSON_ROLE[r.id] ?? r.id}</option>)}
         </select>
-        {depts.length > 0 && (
-          <select aria-label="القسم" className={sm} value={dept} onChange={(e) => setDept(e.target.value)}>
-            <option value="">كل الأقسام</option>{depts.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
+        {(task || depts.length > 0) && (
+          <select aria-label={task ? "القسم التعليمي" : "القسم"} className={sm + " max-w-full"} value={dept} onChange={(e) => setDept(e.target.value)}>
+            <option value="">{task ? "كل الأقسام التعليمية" : "كل الأقسام"}</option>{depts.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
           </select>
         )}
+        {task && <>
+          <select aria-label="المسمى الوظيفي" className={sm + " max-w-full"} value={title} onChange={(e) => setTitle(e.target.value)}>
+            <option value="">كل المسميات الوظيفية</option>{jobTitles.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+          <select aria-label="المرحلة التعليمية" className={sm + " max-w-full"} value={stage} onChange={(e) => setStage(e.target.value)}>
+            <option value="">كل المراحل التعليمية</option>{stages.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+        </>}
         {multiBranch && (
           <select aria-label="الفرع" className={sm} value={branch} onChange={(e) => setBranch(e.target.value)}>
             <option value="">كل الفروع</option>{branches.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}
@@ -125,21 +142,21 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
         </div>
       )}
       <ul className={`${compact ? "max-h-40" : "max-h-56"} divide-y overflow-y-auto rounded-lg border`}>
-        {list.error ? <li className="p-3 text-center text-xs text-destructive">{arabicError(list.error)}</li>
-          : list.isLoading ? <li className="p-3 text-center text-xs text-muted-foreground">جارٍ التحميل…</li>
+        {list.error || (task && facets.error) ? <li className="p-3 text-center text-xs text-destructive">{arabicError(list.error ?? facets.error)}</li>
+          : list.isLoading || (task && dq !== q.trim()) ? <li className="p-3 text-center text-xs text-muted-foreground">جارٍ التحميل…</li>
           : !rows.length ? <li className="p-3 text-center text-xs text-muted-foreground">لا يوجد أشخاص مطابقون ضمن صلاحيتك</li>
           : rows.map((p) => (
             <li key={p.user_id}>
               <label className="flex min-h-10 cursor-pointer items-center gap-2 px-2 text-sm hover:bg-muted">
                 <input type={single ? "radio" : "checkbox"} name={single ? `pp-${label}` : undefined} checked={value.includes(p.user_id)} onChange={() => toggle(p.user_id)} />
-                <span className="min-w-0 flex-1 truncate">{p.full_name}</span>
-                <span className="text-xs text-muted-foreground">{titles.data?.get(p.user_id) ?? rolesLabel(p.roles)}{p.dept_name ? ` · ${p.dept_name}` : ""}{multiBranch ? ` · ${p.school_name}` : ""}</span>
+                <span className="min-w-0 flex-1 truncate">{p.full_name}{task && p.employee_no && <> · <bdi className="text-xs text-muted-foreground">{p.employee_no}</bdi></>}</span>
+                <span className={task ? "max-w-[45%] break-words text-xs text-muted-foreground" : "text-xs text-muted-foreground"}>{p.job_title ?? titles.data?.get(p.user_id) ?? rolesLabel(p.roles)}{p.dept_name ? ` · ${p.dept_name}` : ""}{multiBranch ? ` · ${p.school_name}` : ""}</span>
               </label>
             </li>
           ))}
       </ul>
       <p className="text-xs text-muted-foreground">
-        {total > rows.length + exclude.length && total > 50 ? `يظهر أول 50 من ${total} — اكتب أحرفًا أكثر لتضييق النتائج. ` : ""}
+        {total > 50 && (task || total > rows.length + exclude.length) ? `يظهر أول 50 من ${total} — ${task ? "ضيّق البحث أو الفلاتر" : "اكتب أحرفًا أكثر لتضييق النتائج"}. ` : ""}
         {!single ? `المختار: ${value.length}` : ""}
       </p>
     </div>

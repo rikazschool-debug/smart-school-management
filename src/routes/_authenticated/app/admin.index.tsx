@@ -20,7 +20,7 @@ import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { FIELD_TYPES, FORM_STATUS, PRIORITY, REQ_STATUS, STAFF_ROLES, TASK_STATUS, isLead, Pill, useStaff, type Field } from "@/components/admin/shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin/")({
-  head: () => ({ meta: [{ title: "الإدارة المدرسية | ركاز" }, { name: "description", content: "التكليفات والنماذج والمناوبات والاجتماعات في المدرسة" }] }),
+  head: () => ({ meta: [{ title: "الإدارة المدرسية | ركاز" }, { name: "description", content: "التكليفات والنماذج والمناوبات والاجتماعات في المدرسة" }, { property: "og:title", content: "الإدارة المدرسية | ركاز" }, { property: "og:description", content: "التكليفات والنماذج والمناوبات والاجتماعات في المدرسة" }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Page,
 });
 
@@ -168,7 +168,7 @@ function Tasks({ ctx }: { ctx: Ctx }) {
   const total = Number(list.data?.[0]?.total ?? 0);
   const sel = selectCls("", true);
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir="rtl">
       <div className="flex flex-wrap items-end gap-2">
         <Input aria-label="بحث في التكليفات" placeholder="بحث بالعنوان أو الوصف" value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} className="h-9 w-56" />
         <select aria-label="النطاق" className={sel} value={scope} onChange={(e) => { setScope(e.target.value); setPage(0); }}>
@@ -182,11 +182,11 @@ function Tasks({ ctx }: { ctx: Ctx }) {
           <option value="">كل الأولويات</option>{Object.entries(PRIORITY).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         <div className="ms-auto flex gap-2">
-          <ExportButtons title="التكليفات" school={ctx.schoolName} headers={["العنوان", "المسؤول", "المكلِّف", "الحالة", "الأولوية", "الاستحقاق", "التقدم"]}
+          <ExportButtons title="التكليفات" school={ctx.schoolName} headers={["العنوان", "المسؤول", "المكلِّف", "الحالة", "الأولوية", "تاريخ بداية التكليف", "التقدم"]}
             filters={[scope === "all" ? "كل ما أستطيع رؤيته" : scope === "mine" ? "المسندة إليّ" : "التي أنشأتها", status ? `الحالة: ${TASK_STATUS[status] ?? (status === "open" ? "المفتوحة" : status)}` : "كل الحالات", ...(priority ? [`الأولوية: ${PRIORITY[priority]}`] : []), ...(q.trim() ? [`بحث: ${q.trim()}`] : []), "قائمة ملخصة بلا مرفقات؛ إثبات الإنجاز والملحق بعد الإنجاز يُعرضان منفصلين في صفحة التكليف"]}
             rows={async () => {
               const data = await fetchAll((o) => db.rpc("adm_task_list", { _school: ctx.schoolId, _scope: scope, _q: q.trim() || null, _status: status || null, _priority: priority || null, _assignee: null, _dept: null, _from: null, _to: null, _limit: 100, _offset: o }));
-              return data.map((t) => [t.title, t.assignee_name, t.assigner_name, TASK_STATUS[t.status], PRIORITY[t.priority], t.due_date, `${t.progress}%`]);
+              return data.map((t) => [t.title, t.assignee_name, t.assigner_name, TASK_STATUS[t.status], PRIORITY[t.priority], t.start_date, `${t.progress}%`]);
             }} />
           {create && <Button size="sm" onClick={() => setCreating((v) => !v)}>{creating ? "إغلاق" : "تكليف جديد"}</Button>}
         </div>
@@ -205,7 +205,7 @@ function Tasks({ ctx }: { ctx: Ctx }) {
                   {t.blocked && <Pill tone="bad">عائق</Pill>}
                   {t.priority === "high" && <Pill tone="bad">أولوية عالية</Pill>}
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">المسؤول: {t.assignee_name} · المكلِّف: {t.assigner_name}{t.department ? ` · ${t.department}` : ""} · الاستحقاق {t.due_date} · التقدم {t.progress}%</p>
+                <p className="mt-1 text-sm text-muted-foreground">المسؤول: {t.assignee_name} · المكلِّف: {t.assigner_name}{t.department ? ` · ${t.department}` : ""} · تاريخ بداية التكليف <bdi>{t.start_date}</bdi> · التقدم {t.progress}%</p>
               </Link>
             </li>
           ))}
@@ -231,12 +231,12 @@ function Pager({ page, total, setPage }: { page: number; total: number; setPage:
 function NewTask({ ctx, onDone }: { ctx: Ctx; onDone: () => void }) {
   const qc = useQueryClient();
   const [clientId] = useState(() => crypto.randomUUID());
-  const [d, setD] = useState({ title: "", description: "", assignee: "", due_date: "", priority: "normal", proof_required: "", needs_confirmation: false, participants: [] as string[] });
+  const [d, setD] = useState({ title: "", description: "", assignee: "", start_date: "", priority: "normal", proof_required: "", needs_confirmation: false, participants: [] as string[] });
   const [busy, setBusy] = useState(false);
   async function save() {
-    if (!d.title.trim() || !d.assignee || !d.due_date) return void toast.error("أكمل العنوان والمسؤول وتاريخ الاستحقاق");
+    if (!d.title.trim() || !d.assignee || !d.start_date) return void toast.error("أكمل العنوان والمسؤول وتاريخ بداية التكليف");
     setBusy(true);
-    const { error } = await db.rpc("adm_create_task", { _school: ctx.schoolId, _d: d, _client: clientId });
+    const { error } = await db.rpc("adm_create_task", { _school: ctx.schoolId, _d: { ...d, due_date: d.start_date }, _client: clientId });
     setBusy(false);
     if (error) return void toast.error(arabicError(error));
     toast.success("أُرسل التكليف وأُشعر المسؤول");
@@ -252,7 +252,7 @@ function NewTask({ ctx, onDone }: { ctx: Ctx; onDone: () => void }) {
       <div className="md:col-span-2"><Label>المسؤول الأساسي</Label>
         <PeoplePicker purpose="task" school={ctx.schoolId} label="المسؤول الأساسي" single compact value={d.assignee ? [d.assignee] : []} onChange={(v) => setD({ ...d, assignee: v[0] ?? "", participants: d.participants.filter((x) => x !== v[0]) })} />
       </div>
-      <div><Label htmlFor="t-due">تاريخ الاستحقاق</Label><Input id="t-due" type="date" value={d.due_date} onChange={(e) => setD({ ...d, due_date: e.target.value })} /></div>
+      <div><Label htmlFor="t-start">تاريخ بداية التكليف</Label><Input id="t-start" type="date" value={d.start_date} onChange={(e) => setD({ ...d, start_date: e.target.value })} /></div>
       <div><Label htmlFor="t-pr">الأولوية</Label>
         <select id="t-pr" className={sel} value={d.priority} onChange={(e) => setD({ ...d, priority: e.target.value })}>{Object.entries(PRIORITY).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
       </div>

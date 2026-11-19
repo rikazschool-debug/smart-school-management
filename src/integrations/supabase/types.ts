@@ -30086,6 +30086,19 @@ export type Database = {
           label: string
         }[]
       }
+      people_pick_task: {
+        Args: {
+          _dept?: string
+          _exclude?: string[]
+          _facets?: boolean
+          _q?: string
+          _role?: string
+          _school: string
+          _stage?: string
+          _title?: string
+        }
+        Returns: Json
+      }
       perm_allows: {
         Args: { _action: string; _school: string; _section: string }
         Returns: boolean

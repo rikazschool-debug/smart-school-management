@@ -18,7 +18,7 @@ import { arabicError, useSession } from "@/lib/session";
 import { AdminFiles, PRIORITY, TASK_STATUS, Pill, Timeline, fmt, isLead } from "@/components/admin/shared";
 
 export const Route = createFileRoute("/_authenticated/app/admin/tasks/$id")({
-  head: () => ({ meta: [{ title: "تفاصيل التكليف | ركاز" }, { name: "description", content: "متابعة تكليف إداري" }] }),
+  head: () => ({ meta: [{ title: "تفاصيل التكليف | ركاز" }, { name: "description", content: "متابعة تكليف إداري" }, { property: "og:title", content: "تفاصيل التكليف | ركاز" }, { property: "og:description", content: "متابعة تكليف إداري" }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <RequireSchool nav="admin" extra={(p) => workspacePages(p).includes("admin")}>{(ctx) => <Task role={ctx.role} school={ctx.schoolId} />}</RequireSchool>,
 });
 
@@ -72,9 +72,9 @@ function Task({ role, school }: { role: string; school: string }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
       <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
-      <PageHeader title={t.title} desc={`الاستحقاق ${t.due_date} · أولوية ${PRIORITY[t.priority]}`} action={<div><Pill tone={t.status === "done" ? "ok" : "warn"}>{TASK_STATUS[t.status]}</Pill></div>} />
+      <PageHeader title={t.title} desc={`تاريخ بداية التكليف ${t.start_date} · أولوية ${PRIORITY[t.priority]}`} action={<div><Pill tone={t.status === "done" ? "ok" : "warn"}>{TASK_STATUS[t.status]}</Pill></div>} />
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-3 rounded-xl border bg-card p-4 md:col-span-2">
           {t.description && <p className="whitespace-pre-wrap text-sm">{t.description}</p>}

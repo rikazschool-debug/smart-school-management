@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-19 (prompt-495): Both task pickers use the existing task-recipient pool and `admin_tasks.create` scope. The task-only search exposes employee number and job title for eligible people in the selected school, not contact or identity data. Academic stage and department labels honor existing explicit view denials; existing task write and participant rules are unchanged.
+
 2026-11-19 (prompt-494): Organization documents and contractor forms still use the existing scoped `od_*` functions. The new category selectors do not change view, create, edit, archive, or file download permissions.
 
 2026-11-17 (prompt-473): support_submit delegates all own/internal ticket authorization to existing support_create/support_open; contact fields validate in a trigger and commit atomically. support_list_details uses the existing scoped support_list and rechecks support_can_read. No new table grants, role defaults or memberships changed. SECURITY DEFINER execution for authenticated is intentional for these RPC-only tables, not unguarded access.
