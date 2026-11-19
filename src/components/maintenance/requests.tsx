@@ -350,7 +350,7 @@ export function BusesTab({ orgId, orgName, me }: { orgId: string; orgName: strin
     const note = await askText(s === "available" ? "نتيجة الفحص قبل إعادة الباص للخدمة" : "سبب تغيير حالة الباص", { required: true, ok: "تأكيد" });
     if (note && await run(db.rpc("mt_bus_set_status", { _bus: b.id, _status: s, _note: note }), "حُدّثت حالة الباص")) inv();
   }
-  if (edit) return <BusForm bus={edit} schools={fleetSchools} onDone={() => { setEdit(null); inv(); }} />;
+  if (edit) return <BusForm bus={edit} schools={fleetSchools} onDone={() => { setEdit(null); inv(); void q.refetch(); }} />;
   return (
     <div className="space-y-4">
       <TabIntro icon={Bus} title="الباصات" desc="البيانات الأساسية اللازمة لطلبات الصيانة فقط، وحالة كل باص التشغيلية والصيانة القادمة."
@@ -399,6 +399,7 @@ function BusForm({ bus, schools, onDone }: { bus: Row; schools: { id: string; na
   const [d, setD] = useState<Row>({ ...bus, school: bus.school_id ?? schools[0]?.id });
   const set = (k: string, v: unknown) => setD((x: Row) => ({ ...x, [k]: v }));
   async function save() {
+    if (bus.odometer != null && d.odometer !== "" && d.odometer != null && Number(d.odometer) < Number(bus.odometer)) { toast.error(`قراءة العداد لا تقل عن آخر قراءة (${bus.odometer})`); return; }
     const data = { code: d.code, plate: d.plate, model: d.model, capacity: d.capacity ?? "", odometer: d.odometer ?? "", next_service_date: d.next_service_date ?? "", next_service_km: d.next_service_km ?? "", inspection_date: d.inspection_date ?? "", license_expiry: d.license_expiry ?? "", notes: d.notes, active: d.active ?? true };
     if (await run(db.rpc("mt_bus_save", { _id: bus.id ?? null, _school: d.school, _data: data }), "حُفظ الباص")) onDone();
   }
@@ -410,7 +411,7 @@ function BusForm({ bus, schools, onDone }: { bus: Row; schools: { id: string; na
         <Field label="اللوحة"><Input value={d.plate ?? ""} onChange={(e) => set("plate", e.target.value)} /></Field>
         <Field label="الطراز"><Input value={d.model ?? ""} onChange={(e) => set("model", e.target.value)} /></Field>
         <Field label="السعة"><Input type="number" min={0} value={d.capacity ?? ""} onChange={(e) => set("capacity", e.target.value)} /></Field>
-        <Field label="قراءة العداد"><Input type="number" min={0} value={d.odometer ?? ""} onChange={(e) => set("odometer", e.target.value)} /></Field>
+        <Field label={bus.odometer != null ? `قراءة العداد (آخر قراءة ${bus.odometer} — لا تقل عنها)` : "قراءة العداد"}><Input type="number" min={bus.odometer ?? 0} value={d.odometer ?? ""} onChange={(e) => set("odometer", e.target.value)} /></Field>
         <Field label="تاريخ الصيانة القادمة"><Input type="date" value={d.next_service_date ?? ""} onChange={(e) => set("next_service_date", e.target.value)} /></Field>
         <Field label="عداد الصيانة القادمة (كم)"><Input type="number" min={0} value={d.next_service_km ?? ""} onChange={(e) => set("next_service_km", e.target.value)} /></Field>
         <Field label="تاريخ الفحص الدوري القادم"><Input type="date" value={d.inspection_date ?? ""} onChange={(e) => set("inspection_date", e.target.value)} /></Field>
