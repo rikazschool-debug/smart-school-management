@@ -42,7 +42,10 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
   value: string[]; onChange: (v: string[]) => void; single?: boolean; exclude?: string[]; label?: string; showBranch?: boolean; compact?: boolean;
 }) {
   const scope = { purpose, school, org, post };
-  const task = purpose === "task";
+  // visit hosts share the task chooser: name/employee-number search, job title and academic stage (no functional departments)
+  const host = purpose === "visit_host";
+  const task = purpose === "task" || host;
+  const pickFn = (host ? "people_pick_visit_host" : "people_pick_task") as "people_pick_task";
   const [q, setQ] = useState("");
   const [dq, setDq] = useState("");
   const [role, setRole] = useState("");
@@ -59,7 +62,7 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
     queryKey: ["people-pick-facets", scope],
     queryFn: async () => {
       const { data, error } = task
-        ? await db.rpc("people_pick_task", { _school: school, _facets: true })
+        ? await db.rpc(pickFn, { _school: school, _facets: true })
         : await db.rpc("people_pick_facets" as never, args(scope) as never);
       if (error) throw error;
       return data as unknown as { kind: string; id: string; label: string }[];
@@ -78,7 +81,7 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
     queryKey: ["people-pick", scope, dq, role, dept, branch, stage, title, task ? exclude : null],
     queryFn: async () => {
       const { data, error } = task
-        ? await db.rpc("people_pick_task", { _school: school, _q: dq || null, _role: role || null, _dept: dept || null, _stage: stage || null, _title: title || null, _exclude: exclude })
+        ? await db.rpc(pickFn, { _school: school, _q: dq || null, _role: role || null, _dept: dept || null, _stage: stage || null, _title: title || null, _exclude: exclude })
         : await db.rpc("people_pick" as never, { ...args(scope), _q: dq || null, _role: role || null, _dept: dept || null, _branch: branch || null, _limit: 50 } as never);
       if (error) throw error;
       return data as unknown as Person[];
@@ -109,7 +112,7 @@ export function PeoplePicker({ purpose, school, org, post, value, onChange, sing
         <select aria-label="الفئة" className={sm} value={role} onChange={(e) => setRole(e.target.value)}>
           <option value="">كل الفئات</option>{roles.map((r) => <option key={r.id} value={r.id}>{PERSON_ROLE[r.id] ?? r.id}</option>)}
         </select>
-        {(task || depts.length > 0) && (
+        {!host && (task || depts.length > 0) && (
           <select aria-label={task ? "القسم التعليمي" : "القسم"} className={sm + " max-w-full"} value={dept} onChange={(e) => setDept(e.target.value)}>
             <option value="">{task ? "كل الأقسام التعليمية" : "كل الأقسام"}</option>{depts.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
           </select>

@@ -1,1 +1,2 @@
 - Guardian visits (gv_*): RPC-only over perm section guardian_visits; unique index = one active visit per slot; changes bump rev + gv_events. Tests: gv-e2e.
+- Visit host chooser uses people_pick_visit_host (same branch staff pool as people_pick visit_host) with stage/job-title filters; job title falls back to the role label when no HR title.

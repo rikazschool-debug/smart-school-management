@@ -45,3 +45,14 @@ it("adds a second participant to the same task without including its lead", asyn
   expect(group.queryByRole("checkbox", { name: /مسؤول أول/ })).toBeNull();
   expect(onChange).toHaveBeenCalledWith(["third", "second"]);
 });
+it("visit host picker filters by academic stage and job title, without functional departments", async () => {
+  rpc.mockImplementation(async (_method, args) => ({ data: args._facets ? facets : [], error: null }));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const ui = render(<QueryClientProvider client={client}><PeoplePicker purpose="visit_host" label="المسؤول" school="branch" single compact value={[]} onChange={vi.fn()} /></QueryClientProvider>);
+  const group = within(ui.getByRole("group", { name: "المسؤول" }));
+  await group.findByRole("option", { name: "الابتدائية" });
+  expect(group.queryByRole("combobox", { name: "القسم التعليمي" })).toBeNull();
+  fireEvent.change(group.getByRole("combobox", { name: "المرحلة التعليمية" }), { target: { value: "primary" } });
+  fireEvent.change(group.getByRole("combobox", { name: "المسمى الوظيفي" }), { target: { value: "معلم علوم" } });
+  await waitFor(() => expect(rpc).toHaveBeenCalledWith("people_pick_visit_host", expect.objectContaining({ _school: "branch", _stage: "primary", _title: "معلم علوم", _dept: null })));
+});
