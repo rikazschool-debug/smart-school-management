@@ -16,6 +16,7 @@ import { uploadObject } from "@/components/classroom-posts";
 import { ask } from "@/components/confirm";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { archiveDay, archiveDetails, filterArchive, recordCategory, recordType, type ArchiveRecord, type Con, type Doc } from "./archive-model";
+import { ATTACHMENT_ACCEPT, DOCUMENT_TYPES, SERVICE_TYPES, withSavedOption } from "./form-options";
 
 export type OrgDocsTab = "docs" | "contractors" | "archive";
 type Tab = OrgDocsTab;
@@ -25,8 +26,6 @@ const STATUS: Record<string, [string, string]> = {
   valid: ["سارية", "bg-primary/10 text-primary"], expiring: ["تنتهي خلال 30 يومًا", "bg-accent text-accent-foreground"],
   expired: ["منتهية", "bg-destructive/10 text-destructive"], none: ["بلا تاريخ انتهاء", "bg-muted text-muted-foreground"],
 };
-const DOC_KINDS = ["سجل تجاري", "ترخيص تعليمي", "شهادة الدفاع المدني", "رخصة بلدية", "عقد إيجار", "شهادة الزكاة والضريبة", "تأمين", "أخرى"];
-const SERVICES = ["المقصف", "الزي المدرسي", "النظافة", "الحراسة", "النقل", "الصيانة", "أخرى"];
 
 function Badge({ s }: { s: string }) { const [l, c] = STATUS[s] ?? STATUS["none"]!; return <span className={`rounded-full px-2 py-0.5 text-xs ${c}`}>{l}</span>; }
 
@@ -58,7 +57,7 @@ export function OrgDocsPage({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => voi
   const canView = c.owner || c.group.view || c.schools.some((s) => s.view);
   if (!canView) return <ForbiddenState />;
   return (
-    <div>
+    <div dir="rtl">
       <PageHeader eyebrow="إدارة المدارس" title="الوثائق والعقود" desc="وثائق المنشأة وعقود المتعهدين. ما تراه وما تستطيع تنزيله أو تعديله محدد بصلاحياتك لكل مدرسة." />
       <div role="tablist" aria-label="أقسام الوثائق" className="mb-5 grid gap-2 rounded-2xl border bg-muted/40 p-1.5 sm:inline-grid sm:grid-cols-3">
         {([["docs", "وثائق المنشأة", "السجلات والتراخيص والشهادات", FileText], ["contractors", "المتعهدون", "عقود الخدمات والشراكات المجتمعية", Handshake], ["archive", "الأرشيف", "الوثائق والمتعهدون المحذوفون", Archive]] as const).map(([k, l, d, I]) => {
@@ -162,7 +161,7 @@ function Docs({ org, caps }: { org: string; caps: Caps }) {
     <div>
       <div className="mb-3 flex justify-end">{canCreate && <Button size="sm" onClick={() => setEdit({})}><Plus className="size-4" />إضافة وثيقة</Button>}</div>
       <Filters {...{ caps, q, setQ, school, setSchool, status, setStatus }} />
-      {edit && <DocForm org={org} caps={caps} init={edit} close={() => setEdit(null)} />}
+      {edit && <DocForm key={edit.id ?? "new"} org={org} caps={caps} init={edit} close={() => setEdit(null)} />}
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} /> : !list.data?.length ? <EmptyState title="لا توجد وثائق" hint="أضف وثائق المنشأة مثل السجل التجاري والتراخيص." /> : (
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm"><thead className="bg-muted/50 text-start"><tr>{["النوع", "الاسم", "الرقم", "جهة الإصدار", "النطاق", "الإصدار", "الانتهاء", "الحالة", ""].map((h) => <th key={h} className="p-2 text-start font-semibold">{h}</th>)}</tr></thead>
@@ -184,10 +183,10 @@ function Docs({ org, caps }: { org: string; caps: Caps }) {
 
 function DocForm({ org, caps, init, close }: { org: string; caps: Caps; init: Partial<Doc>; close: () => void }) {
   const qc = useQueryClient();
-  const [f, setF] = useState({ kind: init.kind ?? "", name: init.name ?? "", doc_no: init.doc_no ?? "", issuer: init.issuer ?? "", issued_on: init.issued_on ?? "", expires_on: init.expires_on ?? "", school_id: init.school_id ?? "" });
-  const [file, setFile] = useState<File | null>(null);
   const action = init.id ? "edit" : "create";
   const scopes = [...(caps.owner || caps.group[action] ? [["", "المجموعة كاملة"]] : []), ...caps.schools.filter((s) => caps.owner || s[action]).map((s) => [s.id, s.name])];
+  const [f, setF] = useState({ kind: init.kind ?? "", name: init.name ?? "", doc_no: init.doc_no ?? "", issuer: init.issuer ?? "", issued_on: init.issued_on ?? "", expires_on: init.expires_on ?? "", school_id: init.id ? (init.school_id ?? "") : (scopes[0]?.[0] ?? "") });
+  const [file, setFile] = useState<File | null>(null);
   const save = useMutation({
     mutationFn: async () => {
       const fid = file ? await uploadDraft(org, f.school_id || null, file) : null;
@@ -198,20 +197,20 @@ function DocForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
   });
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
   return (
-    <div className="mb-4 rounded-lg border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between"><h3 className="font-bold">{init.id ? "تعديل وثيقة" : "وثيقة جديدة"}</h3><Button size="sm" variant="ghost" onClick={close} aria-label="إغلاق"><X className="size-4" /></Button></div>
+    <form className="mb-4 rounded-lg border bg-card p-4" onSubmit={(e) => { e.preventDefault(); if (!save.isPending) save.mutate(); }}>
+      <div className="mb-3 flex items-center justify-between"><h3 className="font-bold">{init.id ? "تعديل وثيقة" : "وثيقة جديدة"}</h3><Button type="button" size="sm" variant="ghost" onClick={close} aria-label="إغلاق"><X className="size-4" /></Button></div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><Label>نوع الوثيقة</Label><Input list="od-kinds" value={f.kind} onChange={set("kind")} /><datalist id="od-kinds">{DOC_KINDS.map((k) => <option key={k} value={k} />)}</datalist></div>
-        <div><Label>اسم الوثيقة</Label><Input value={f.name} onChange={set("name")} /></div>
-        <div><Label>الرقم (إن وجد)</Label><Input value={f.doc_no} onChange={set("doc_no")} /></div>
-        <div><Label>جهة الإصدار</Label><Input value={f.issuer} onChange={set("issuer")} /></div>
-        <div><Label>تاريخ الإصدار</Label><Input type="date" value={f.issued_on} onChange={set("issued_on")} /></div>
-        <div><Label>تاريخ الانتهاء</Label><Input type="date" value={f.expires_on} onChange={set("expires_on")} /></div>
-        <div><Label>النطاق</Label><select className={selectCls()} value={f.school_id} onChange={set("school_id")}>{scopes.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
-        <div><Label>ملف PDF</Label><Input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />{init.file_name && !file && <p className="mt-1 text-xs text-muted-foreground"><FileText className="inline size-3" /> {init.file_name}</p>}</div>
+        <div className="space-y-1"><Label htmlFor="od-kind">نوع الوثيقة</Label><select id="od-kind" className={selectCls("w-full")} value={f.kind} onChange={set("kind")} required><option value="" disabled>اختر نوع الوثيقة</option>{withSavedOption(DOCUMENT_TYPES, init.kind).map((k) => <option key={k} value={k}>{k}</option>)}</select></div>
+        <div className="space-y-1"><Label htmlFor="od-name">اسم الوثيقة</Label><Input id="od-name" value={f.name} onChange={set("name")} required minLength={2} /></div>
+        <div className="space-y-1"><Label htmlFor="od-no">رقم الوثيقة (اختياري)</Label><Input id="od-no" value={f.doc_no} onChange={set("doc_no")} /></div>
+        <div className="space-y-1"><Label htmlFor="od-issuer">جهة الإصدار (اختيارية)</Label><Input id="od-issuer" value={f.issuer} onChange={set("issuer")} /></div>
+        <div className="space-y-1"><Label htmlFor="od-issued">تاريخ الإصدار</Label><Input id="od-issued" type="date" value={f.issued_on} onChange={set("issued_on")} /></div>
+        <div className="space-y-1"><Label htmlFor="od-expires">تاريخ الانتهاء</Label><Input id="od-expires" type="date" value={f.expires_on} onChange={set("expires_on")} /></div>
+        <div className="space-y-1"><Label htmlFor="od-scope">النطاق</Label><select id="od-scope" className={selectCls()} value={f.school_id} onChange={set("school_id")}>{scopes.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+        <div className="space-y-1"><Label htmlFor="od-file">المرفق (PDF أو صورة)</Label><Input id="od-file" type="file" accept={ATTACHMENT_ACCEPT} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />{init.file_name && !file && <p className="mt-1 text-xs text-muted-foreground"><FileText className="inline size-3" /> {init.file_name}</p>}</div>
       </div>
-      <div className="mt-3 flex justify-end"><Button disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? "جارٍ الحفظ…" : "حفظ"}</Button></div>
-    </div>
+      <div className="mt-3 flex justify-end"><Button type="submit" disabled={save.isPending}>{save.isPending ? "جارٍ الحفظ…" : "حفظ"}</Button></div>
+    </form>
   );
 }
 
@@ -224,7 +223,7 @@ function Contractors({ org, caps }: { org: string; caps: Caps }) {
   return (
     <div>
       <div className="mb-3 flex justify-end">{(caps.owner || caps.schools.some((s) => s.create)) && !edit && <Button size="sm" onClick={() => setEdit({})}><Plus className="size-4" />إضافة متعهد</Button>}</div>
-      {edit && <ConForm org={org} caps={caps} init={edit} close={() => setEdit(null)} />}
+      {edit && <ConForm key={edit.id ?? "new"} org={org} caps={caps} init={edit} close={() => setEdit(null)} />}
       <Filters {...{ caps, q, setQ, school, setSchool, status, setStatus }} />
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} /> : !list.data?.length ? <EmptyState title="لا يوجد متعهدون" hint="أضف متعهدي المقصف والزي وغيرهم مع عقودهم." /> : (
         <div className="grid gap-3 md:grid-cols-2">{list.data.map((c) => (
@@ -272,7 +271,7 @@ function ConForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
   const [tried, setTried] = useState(false);
   const problems = [
     ...(f.name.trim().length < 2 ? ["اكتب اسم المتعهد"] : []),
-    ...(f.service.trim().length < 2 ? ["اكتب نوع الخدمة"] : []),
+    ...(f.service.trim().length < 2 ? ["اختر نوع الخدمة"] : []),
     ...(!schools.length ? ["اختر مدرسة واحدة على الأقل"] : []),
     ...(f.starts_on && f.ends_on && f.ends_on < f.starts_on ? ["نهاية السريان قبل بدايته"] : []),
   ];
@@ -296,7 +295,7 @@ function ConForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
       </div>
       <Section title="بيانات المتعهد">
         <div className="space-y-1"><Label htmlFor="oc-n">اسم المتعهد</Label><Input id="oc-n" value={f.name} onChange={set("name")} placeholder="مؤسسة الريان للتغذية" /></div>
-        <div className="space-y-1"><Label htmlFor="oc-s">نوع الخدمة</Label><Input id="oc-s" list="od-services" value={f.service} onChange={set("service")} placeholder="اختر أو اكتب" /><datalist id="od-services">{SERVICES.map((k) => <option key={k} value={k} />)}</datalist></div>
+        <div className="space-y-1"><Label htmlFor="oc-s">نوع الخدمة</Label><select id="oc-s" className={selectCls("w-full")} value={f.service} onChange={set("service")}><option value="" disabled>اختر نوع الخدمة</option>{withSavedOption(SERVICE_TYPES, init.service).map((k) => <option key={k} value={k}>{k}</option>)}</select></div>
       </Section>
       <Section title="التواصل">
         <div className="space-y-1 sm:col-span-2"><Label htmlFor="oc-c">اسم المسؤول</Label><Input id="oc-c" value={f.contact_name} onChange={set("contact_name")} /></div>
@@ -304,8 +303,8 @@ function ConForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
         <div className="space-y-1"><Label htmlFor="oc-e">البريد</Label><Input id="oc-e" type="email" value={f.email} onChange={set("email")} dir="ltr" placeholder="name@example.com" /></div>
       </Section>
       <Section title="العقد">
-        <div className="space-y-1"><Label htmlFor="oc-sd">بداية السريان</Label><Input id="oc-sd" type="date" value={f.starts_on} onChange={set("starts_on")} /></div>
-        <div className="space-y-1"><Label htmlFor="oc-ed">نهاية السريان</Label><Input id="oc-ed" type="date" value={f.ends_on} onChange={set("ends_on")} /></div>
+        <div className="space-y-1"><Label htmlFor="oc-sd">بداية السريان (اختيارية)</Label><Input id="oc-sd" type="date" value={f.starts_on} onChange={set("starts_on")} /></div>
+        <div className="space-y-1"><Label htmlFor="oc-ed">نهاية السريان (اختيارية)</Label><Input id="oc-ed" type="date" value={f.ends_on} onChange={set("ends_on")} /></div>
         <div className="space-y-1 sm:col-span-2">
           <span className="text-sm font-medium">العقد والمرفقات</span>
           <label htmlFor="oc-f" className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed bg-muted/30 p-3 text-sm hover:bg-muted/60">
@@ -313,7 +312,7 @@ function ConForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
             <span className="flex-1">{files.length ? files.map((x) => x.name).join("، ") : "اضغط لاختيار ملفات PDF أو صور"}</span>
             <span className="text-xs text-muted-foreground">حتى 20 ميجابايت</span>
           </label>
-          <input id="oc-f" type="file" multiple className="sr-only" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setFiles([...(e.target.files ?? [])])} />
+          <input id="oc-f" type="file" multiple className="sr-only" accept={ATTACHMENT_ACCEPT} onChange={(e) => setFiles([...(e.target.files ?? [])])} />
           {!!init.files?.length && <p className="text-xs text-muted-foreground"><FileText className="inline size-3" /> محفوظ: {init.files.map((x) => x.name).join("، ")}</p>}
         </div>
       </Section>
@@ -322,7 +321,7 @@ function ConForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
           <button key={s.id} type="button" aria-pressed={on} onClick={() => setSchools(on ? schools.filter((x) => x !== s.id) : [...schools, s.id])}
             className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{s.name}</button>); })}</div>
       </fieldset>
-      <div className="space-y-1"><Label htmlFor="oc-no">ملاحظات</Label><Textarea id="oc-no" rows={2} value={f.notes} onChange={set("notes")} /></div>
+      <div className="space-y-1"><Label htmlFor="oc-no">ملاحظات (اختيارية)</Label><Textarea id="oc-no" rows={2} value={f.notes} onChange={set("notes")} /></div>
       <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${partner ? "border-primary bg-primary/5" : ""}`}>
         <input type="checkbox" className="mt-1 size-4 accent-primary" checked={partner} onChange={(e) => setPartner(e.target.checked)} />
         <span className="flex-1"><span className="flex items-center gap-1.5 font-semibold">شراكات مجتمعية {partner && <ShieldCheck className="size-4 text-primary" aria-hidden />}</span>

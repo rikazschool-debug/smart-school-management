@@ -1,0 +1,1 @@
+- Prepend an out-of-list saved category only in that record's editor, so the form can standardize new entries without silently renaming legacy ones.

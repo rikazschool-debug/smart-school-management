@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-19 (prompt-494): Organization documents and contractor forms still use the existing scoped `od_*` functions. The new category selectors do not change view, create, edit, archive, or file download permissions.
+
 2026-11-17 (prompt-473): support_submit delegates all own/internal ticket authorization to existing support_create/support_open; contact fields validate in a trigger and commit atomically. support_list_details uses the existing scoped support_list and rechecks support_can_read. No new table grants, role defaults or memberships changed. SECURITY DEFINER execution for authenticated is intentional for these RPC-only tables, not unguarded access.
 
 2026-11-17 (prompt-443): Followup sessions default internal and require explicit teacher_visible before teacher/participant reads. Teacher visit record RPC strips internal_notes and record events; privileged users retain originals. Plan owner selectors use sv3_pool/current caller, with server checks; existing historic responsible values may remain unchanged. New indicators aggregate caller-permitted recommendations only. Legacy DOC refused by trigger. Exact authenticated old file request replay after assignment end refused; cached downloaded bytes are outside the clarified expiry requirement. No role/membership edits.
