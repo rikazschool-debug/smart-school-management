@@ -172,7 +172,12 @@ export function AdmsBridge({ org }: { org: string }) {
         </div>
         <div>
           <dt className="inline text-muted-foreground">معالجة الحضور من الجسر: </dt>
-          <dd className="inline">{o.processing_enabled ? "مفعّلة" : "متوقفة"}</dd>
+          <dd className="inline">{o.processing_enabled ? "مفعّلة" : "متوقفة"}{" "}
+            <button type="button" className="ms-1 text-xs font-bold text-primary underline" onClick={async () => {
+              const on = !o.processing_enabled;
+              if (!(await ask(on ? "تفعيل معالجة الحضور؟ تتحول بصمات الجسر المطابقة إلى حضور وغياب الكادر." : "إيقاف معالجة الحضور؟ تبقى البصمات محفوظة في الجسر ولا تُعالَج."))) return;
+              try { await rpc("adms_processing_set", { _org: org, _on: on }); toast.success(on ? "فُعّلت المعالجة" : "أُوقفت المعالجة"); inv(); } catch (e) { toast.error(arabicError(e)); }
+            }}>{o.processing_enabled ? "إيقاف" : "تفعيل"}</button></dd>
         </div>
       </dl>
       {Object.keys(o.states).length > 0 && (
