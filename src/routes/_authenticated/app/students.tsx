@@ -79,16 +79,12 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       <PageHeader title="الطلاب والتسكين" desc="ملف الطالب، ربط ولي الأمر، والتسكين في الشعبة. لا يلزم أن يكون للطالب حساب دخول." />
       <CrudTable person={{ kind: "student" }} title="الطلاب" table="students" schoolId={ctx.schoolId} canWrite={w} order="full_name"
         select="*, enrollments(status, sections(name, grades(name))), student_guardians(id)"
-        searchKeys={["full_name", "display_name", "national_id", "csmart_no"]}
+        searchKeys={["full_name", "display_name", "national_id"]} searchPlaceholder="اسم الطالب أو رقم هويته" multiTags
         filters={[
-          { key: "status", label: "الحالة", options: STUDENT_PRESENCE, valueGroups: STUDENT_PRESENCE_VALUES },
-          { key: "gender", label: "الجنس", options: [{ value: "male", label: "ذكر" }, { value: "female", label: "أنثى" }] },
-          { key: "contract_year", label: "العام الدراسي (العقد)", options: ctVals.data?.year ?? [{ value: "__none", label: "لا يوجد" }] },
-          { key: "contract_status", label: "حالة العقد", options: ctVals.data?.status ?? [{ value: "__none", label: "لا يوجد" }] },
-          { key: "contract_type", label: "نوع العقد", options: ctVals.data?.type ?? [{ value: "__none", label: "لا يوجد" }] },
-          { key: "stage", label: "المرحلة", remote: { table: "stages", label: "name", order: "sort_order" }, path: "enrollments.sections.grades.stage_id", inner: "enrollments,sections,grades", extra: { "enrollments.status": "active" } },
-          { key: "grade", label: "الصف", remote: { table: "grades", label: "name", order: "sort_order" }, path: "enrollments.sections.grade_id", inner: "enrollments,sections", extra: { "enrollments.status": "active" } },
-          { key: "section", label: "الشعبة", remote: { table: "sections", label: "name" }, path: "enrollments.section_id", inner: "enrollments", extra: { "enrollments.status": "active" } },
+          { key: "stage", label: "المرحلة", multi: true, remote: { table: "stages", label: "name", order: "sort_order" }, path: "enrollments.sections.grades.stage_id", inner: "enrollments,sections,grades", extra: { "enrollments.status": "active" } },
+          { key: "grade", label: "الصف", multi: true, cascade: { parent: "stage", column: "stage_id" }, remote: { table: "grades", label: "name", order: "sort_order" }, path: "enrollments.sections.grade_id", inner: "enrollments,sections", extra: { "enrollments.status": "active" } },
+          { key: "section", label: "الشعبة", multi: true, cascade: { parent: "grade", column: "grade_id" }, remote: { table: "sections", label: "name" }, path: "enrollments.section_id", inner: "enrollments", extra: { "enrollments.status": "active" } },
+          { key: "contract_type", label: "نوع العقد", multi: true, options: ctVals.data?.type ?? [{ value: "__none", label: "لا يوجد" }] },
         ]}
         canCreate={false}
         toolbar={w || ctCan.data ? <>{w && <PeopleImport kind="students" schoolId={ctx.schoolId} />}{ctCan.data && <ContractMatch schoolId={ctx.schoolId} />}</> : undefined}

@@ -3,7 +3,8 @@ import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { FileDown, FileSpreadsheet, Filter, Printer, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronDown, FileDown, FileSpreadsheet, Filter, Printer, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,7 +53,11 @@ export type FilterDef = {
   valueGroups?: Record<string, string[]>;
   /** resolves the matching row ids for a value (RLS client); used when the condition is not a column, e.g. a count */
   ids?: (schoolId: string, value: string) => Promise<string[]>;
+  /** several values at once (stored joined by MULTI_SEP); `cascade` limits remote options to the chosen parent filter values */
+  multi?: boolean; cascade?: { parent: string; column: string };
 };
+export const MULTI_SEP = "\n";
+const pgQuote = (v: string) => `"${v.replace(/["\\]/g, "\\$&")}"`;
 
 const PAGE = 25;
 const clean = (s: string) => s.replace(/[,()*%\\]/g, " ").trim();
@@ -188,12 +193,13 @@ export function RecordForm({
 
 export function CrudTable({
   title, table, schoolId, select = "*", fields, columns, searchKeys, filter, filters, canWrite,
-  canDelete = canWrite, canCreate = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, onCreated, onUpdated, person, formExtra,
+  canDelete = canWrite, canCreate = canWrite, order = "created_at", defaults, extraActions, toolbar, exportable = true, searchPlaceholder, multiTags = false, onCreated, onUpdated, person, formExtra,
 }: {
   title: string; table: string; schoolId: string; select?: string; fields: Field[]; columns: Column[];
   searchKeys: string[]; filter?: Record<string, unknown>; filters?: FilterDef[]; canWrite: boolean; /** hide the generic «إضافة» when a screen owns its own add flow */ canCreate?: boolean;
   canDelete?: boolean; order?: string; defaults?: Row; extraActions?: (r: Row) => ReactNode;
   /** extra buttons next to «إضافة» (e.g. import) */ toolbar?: ReactNode; exportable?: boolean;
+  /** search box hint; tag filter as multi-select placed after the other filters */ searchPlaceholder?: string; multiTags?: boolean;
   /** called with the new row after a successful create */ onCreated?: ((r: Row) => void) | undefined;
   /** called with the row id after a successful edit */ onUpdated?: ((id: string) => void) | undefined;
   /** people lists: name opens the side card; selection, tag filter and bulk actions (all re-checked on the server) */ person?: { kind: PersonKind } | undefined;
@@ -225,7 +231,13 @@ export function CrudTable({
     return acc ?? [];
   } });
   const tagIds = useQuery({ enabled: !!person && !!tagF, queryKey: ["pp-tag-ids", schoolId, person?.kind, tagF], queryFn: async () => {
-    const { data, error } = await db.rpc("pp_tag_ids", { _school: schoolId, _kind: person!.kind, _tag: tagF }); if (error) throw error; return data as string[];
+    // several chosen tags match a record carrying any of them
+    const out = new Set<string>();
+    for (const t of tagF.split(MULTI_SEP).filter(Boolean)) {
+      const { data, error } = await db.rpc("pp_tag_ids", { _school: schoolId, _kind: person!.kind, _tag: t }); if (error) throw error;
+      for (const id of (data as string[]) ?? []) out.add(id);
+    }
+    return [...out];
   } });
   const rowTags = useQuery({ enabled: !!person && !!caps?.view && kindTags.length > 0, queryKey: ["pp-row-tags", schoolId, person?.kind, kindTags.map((t) => t.id).join()], queryFn: async () => {
     const m = new Map<string, Tag[]>();
@@ -257,7 +269,14 @@ export function CrudTable({
     let qq = db.from(table).select(sel, { count: "exact", head }).eq("school_id", schoolId);
     for (const [k, v] of Object.entries(filter ?? {})) qq = qq.eq(k, v);
     if (idDefs.length) qq = qq.in("id", idSets.data?.length ? idSets.data : ["00000000-0000-0000-0000-000000000000"]);
-    for (const f of active) { if (f.ids) continue; const col = f.path ?? f.key; const grouped = f.valueGroups?.[fv[f.key] ?? ""]; qq = grouped ? qq.in(col, grouped) : fv[f.key] === "__none" ? qq.or(`${col}.is.null,${col}.eq.لا يوجد`) : qq.eq(col, fv[f.key]); for (const [k, v] of Object.entries(f.extra ?? {})) qq = qq.eq(k, v); }
+    for (const f of active) { if (f.ids) continue; const col = f.path ?? f.key; const grouped = f.valueGroups?.[fv[f.key] ?? ""];
+      if (f.multi) {
+        const vals = fv[f.key]!.split(MULTI_SEP).filter(Boolean); const rest = vals.filter((v) => v !== "__none");
+        qq = vals.includes("__none") ? qq.or([`${col}.is.null`, `${col}.eq.لا يوجد`, ...(rest.length ? [`${col}.in.(${rest.map(pgQuote).join(",")})`] : [])].join(",")) : qq.in(col, rest);
+        for (const [k, v] of Object.entries(f.extra ?? {})) qq = qq.eq(k, v);
+        continue;
+      }
+      qq = grouped ? qq.in(col, grouped) : fv[f.key] === "__none" ? qq.or(`${col}.is.null,${col}.eq.لا يوجد`) : qq.eq(col, fv[f.key]); for (const [k, v] of Object.entries(f.extra ?? {})) qq = qq.eq(k, v); }
     if (search && searchKeys.length) qq = qq.or(searchKeys.map((k) => `${k}.ilike.*${search}*`).join(","));
     if (tagF) qq = qq.in("id", tagIds.data?.length ? tagIds.data : ["00000000-0000-0000-0000-000000000000"]);
     if (onlyIds) qq = qq.in("id", onlyIds);
@@ -297,7 +316,7 @@ export function CrudTable({
   });
 
   const labelOf = useFilterLabels(filters ?? [], schoolId);
-  const filterText = () => [...(search ? [`بحث: ${search}`] : []), ...active.map((f) => `${f.label}: ${labelOf(f.key, fv[f.key]!)}`)];
+  const filterText = () => [...(search ? [`بحث: ${search}`] : []), ...active.map((f) => `${f.label}: ${f.multi ? fv[f.key]!.split(MULTI_SEP).map((v) => labelOf(f.key, v)).join("، ") : labelOf(f.key, fv[f.key]!)}`), ...(multiTags && tagF ? [`الوسوم: ${tagF.split(MULTI_SEP).map((t) => kindTags.find((x) => x.id === t)?.name ?? t).join("، ")}`] : [])];
   const plain = (c: Column, r: Row) => { const t = c.text?.(r); if (t !== undefined) return t ?? ""; return nodeText(c.render(r)); };
   async function doExport(kind: "xlsx" | "pdf" | "print", onlyIds?: string[]) {
     setExporting(true);
@@ -342,8 +361,11 @@ export function CrudTable({
   const cell = (c: Column, i: number, r: Row) => i === 0 ? nameCell(r) : c.render(r);
   const count = q.data?.count ?? 0;
   const pages = Math.max(1, Math.ceil(count / PAGE));
-  const filtering = !!search || active.length > 0;
-  const selects = (filters ?? []).map((f) => <FilterSelect key={f.key} f={f} schoolId={schoolId} value={fv[f.key] ?? ""} onChange={(v) => setFilter(f.key, v)} />);
+  const filtering = !!search || active.length > 0 || !!tagF;
+  const selects = [...(filters ?? []).map((f) => f.multi
+    ? <MultiFilter key={f.key} f={f} schoolId={schoolId} value={fv[f.key] ?? ""} parent={f.cascade ? fv[f.cascade.parent] ?? "" : ""} onChange={(v) => setFilter(f.key, v)} />
+    : <FilterSelect key={f.key} f={f} schoolId={schoolId} value={fv[f.key] ?? ""} onChange={(v) => setFilter(f.key, v)} />),
+    ...(multiTags && person && caps?.view ? [<MultiPick key="__tags" label="الوسوم" options={kindTags.map((t) => ({ value: t.id, label: t.name + (t.active ? "" : " (معطل)") }))} value={tagF} onChange={(v) => { setTagF(v); setPage(0); }} empty="لا توجد وسوم بعد — أضفها من صفحة المدارس (قاموس الوسوم)" />] : [])];
 
   return (
     <section className="space-y-3">
@@ -363,30 +385,30 @@ export function CrudTable({
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
         <div className="relative min-w-0 basis-full lg:min-w-[22rem] lg:flex-1 lg:basis-auto">
           <Search className="absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-10 pe-9" placeholder={`ابحث في ${title}…`} aria-label={`بحث في ${title}`} value={input} onChange={(e) => setInput(e.target.value)} />
+          <Input className="h-10 pe-9" placeholder={searchPlaceholder ?? `ابحث في ${title}…`} aria-label={`بحث في ${title}`} value={input} onChange={(e) => setInput(e.target.value)} />
         </div>
-        {person && caps?.view && (
+        {person && caps?.view && !multiTags && (
           <select aria-label="الوسم" disabled={kindTags.length === 0} title={kindTags.length === 0 ? "لا توجد وسوم بعد — أضفها من صفحة المدارس (قاموس الوسوم)" : undefined}
             className={selectCls("w-full md:w-auto")} value={tagF} onChange={(e) => { setTagF(e.target.value); setPage(0); }}>
             <option value="">{kindTags.length === 0 ? "الوسوم: لا توجد بعد" : "الوسم: الكل"}</option>
             {kindTags.map((t) => <option key={t.id} value={t.id}>{t.name}{t.active ? "" : " (معطل)"}</option>)}
           </select>
         )}
-        {!!filters?.length && (<>
+        {selects.length > 0 && (<>
           <div className="hidden flex-wrap gap-2 md:flex">{selects}</div>
           <Sheet>
             <SheetTrigger asChild><Button variant="outline" size="sm" className="md:hidden"><Filter className="size-4" /> الفلاتر{active.length ? ` (${active.length})` : ""}</Button></SheetTrigger>
             <SheetContent side="bottom" dir="rtl" className="space-y-3">
               <SheetHeader><SheetTitle>فلاتر {title}</SheetTitle></SheetHeader>
               <div className="grid gap-2">{selects}</div>
-              {active.length > 0 && <Button variant="ghost" onClick={clearAll}>مسح الفلاتر</Button>}
+              {(active.length > 0 || !!tagF) && <Button variant="ghost" onClick={clearAll}>مسح الفلاتر</Button>}
             </SheetContent>
           </Sheet>
         </>)}
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" aria-live="polite">
         <span>{q.isFetching && !q.isLoading ? "جارٍ التحديث…" : `${count} نتيجة`}</span>
-        {tagF && <span className="rounded-full bg-muted px-2 py-0.5 text-foreground">الوسم: {kindTags.find((t) => t.id === tagF)?.name}</span>}
+        {tagF && !multiTags && <span className="rounded-full bg-muted px-2 py-0.5 text-foreground">الوسم: {kindTags.find((t) => t.id === tagF)?.name}</span>}
         {filterText().map((t) => <span key={t} className="rounded-full bg-muted px-2 py-0.5 text-foreground">{t}</span>)}
         {filtering && <button className="inline-flex items-center gap-1 text-primary hover:underline" onClick={clearAll}><X className="size-3" /> مسح الفلاتر</button>}
       </div>
@@ -533,7 +555,53 @@ function useFilterLabels(filters: FilterDef[], schoolId: string) {
   return (key: string, value: string) => {
     const f = filters.find((x) => x.key === key);
     if (!f) return value;
-    const opts = f.options ?? (qc.getQueryData(["opts", f.remote?.table, schoolId, f.remote?.filter]) as { value: string; label: string }[] | undefined) ?? [];
+    const cached = qc.getQueriesData<{ value: string; label: string }[]>({ queryKey: ["opts", f.remote?.table, schoolId] }).flatMap(([, d]) => d ?? []);
+    const opts = f.options ?? cached;
     return opts.find((o) => o.value === value)?.label ?? value;
   };
+}
+
+/** Multi-select filter; with `cascade`, options are limited to rows under the chosen parent values and stale picks are dropped. */
+function MultiFilter({ f, schoolId, value, parent, onChange }: { f: FilterDef; schoolId: string; value: string; parent: string; onChange: (v: string) => void }) {
+  const pc = f.cascade?.column;
+  const q = useQuery({ queryKey: ["opts", f.remote?.table, schoolId, "multi", pc, f.remote?.order], enabled: !!f.remote, queryFn: async () => {
+    const { data, error } = await db.from(f.remote!.table).select(`id, ${f.remote!.label}${pc ? `, ${pc}` : ""}`).eq("school_id", schoolId).order(f.remote!.order ?? f.remote!.label);
+    if (error) throw error;
+    return (data as Row[]).map((r) => ({ value: r["id"] as string, label: String(r[f.remote!.label]), parent: pc ? (r[pc] as string) : undefined }));
+  } });
+  const parents = parent.split(MULTI_SEP).filter(Boolean);
+  const opts = f.options ?? (q.data ?? []).filter((o) => !parents.length || (o.parent && parents.includes(o.parent)));
+  const loaded = !!f.options || !!q.data;
+  useEffect(() => {
+    if (!loaded || !value) return;
+    const keep = value.split(MULTI_SEP).filter((v) => opts.some((o) => o.value === v));
+    if (keep.join(MULTI_SEP) !== value) onChange(keep.join(MULTI_SEP));
+  }, [loaded, parent]); // eslint-disable-line react-hooks/exhaustive-deps
+  return <MultiPick label={f.label} options={opts} value={value} onChange={onChange} />;
+}
+
+function MultiPick({ label, options, value, onChange, empty }: { label: string; options: { value: string; label: string }[]; value: string; onChange: (v: string) => void; empty?: string }) {
+  const chosen = new Set(value.split(MULTI_SEP).filter(Boolean));
+  const set = (next: Set<string>) => onChange([...next].join(MULTI_SEP));
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="h-10 w-full justify-between md:w-auto" aria-label={chosen.size ? `${label} (${chosen.size})` : label}>
+          <span>{label}{chosen.size > 0 && <span className="ms-1 rounded-full bg-primary px-1.5 text-xs text-primary-foreground tabular-nums">{chosen.size}</span>}</span><ChevronDown className="size-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent dir="rtl" align="start" aria-label={label} className="w-64 max-w-[calc(100vw-2rem)] space-y-2 p-3">
+        <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{label}</span><Button size="sm" variant="ghost" disabled={!chosen.size} onClick={() => set(new Set())}>مسح التحديد</Button></div>
+        <div className="max-h-64 space-y-1 overflow-y-auto">
+          {options.map((o) => (
+            <label key={o.value} className="flex cursor-pointer items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
+              <input type="checkbox" className="mt-1 shrink-0" checked={chosen.has(o.value)} onChange={(e) => { const n = new Set(chosen); if (e.target.checked) n.add(o.value); else n.delete(o.value); set(n); }} />
+              <bdi className="min-w-0 break-words">{o.label}</bdi>
+            </label>
+          ))}
+          {!options.length && <p className="text-sm text-muted-foreground">{empty ?? "لا توجد خيارات"}</p>}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
