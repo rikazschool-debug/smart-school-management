@@ -2,3 +2,4 @@
 - RecordForm may derive transient selectors from joined initial values; transient fields never enter the persisted payload, preserving existing column contracts.
 - Academic subject creation uses transient stage/grade fields and a filtered name selector in RecordForm; they never persist links or create course assignments, preserving existing subject records and the RLS write path.
 - Stage/grade preset pickers read the existing base and organization catalogs and fill the existing create form; grades resolve an available school stage ID, preserving catalog validation and owner-only writes.
+- Staff-directory counts and multi-selects derive only from authorized branch rows through the directory model, keeping display classification independent of roles and accounts.

@@ -1211,3 +1211,5 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - prompt-491: manual contract edit removed (ct_set revoked; only contract matching changes contract fields); quick duty location is free text (adm_duty_quick.location); quick tab first.
 
 - prompt-492: «إسناد سريع» tab removed from the duties page (stored adm_duty_quick rows kept, no UI).
+
+- prompt-493: ترتيب أعمدة سجل الكادر من اليمين إلى اليسار، وإضافة مؤشر «أخرى» للخدمات المساندة والفئات غير المطابقة، وخمسة فلاتر متعددة الاختيار بدل محددات العرض القديمة. لا تغييرات في البيانات أو الحسابات أو الصلاحيات، ولا نشر.
