@@ -252,7 +252,7 @@ function Shell() {
   if (evStaff && nav.includes("evaluation")) nav = nav.filter((k) => k !== "visits");
   // one «الحضور والمواظبة» entry: exit/permission and gate/scan pages become its sub-items (same pages and permissions, no duplicate menu entries)
   const attSubs = nav.includes("attendance") ? (["attendance", "pickup", "station"] as NavKey[]).filter((k) => nav.includes(k)) : [];
-  const groups = navigationGroups(nav.filter((k) => (familyAppearance || k !== "profile") && k !== "my_hr" && !(attSubs.length > 1 && (k === "pickup" || k === "station"))));
+  const groups = navigationGroups(nav.filter((k) => (familyAppearance || k !== "profile") && k !== "my_hr" && k !== "school_home" && !(attSubs.length > 1 && (k === "pickup" || k === "station"))));
   // red per-section counters: unread notifications grouped by the visible menu entry their link opens
   const navEntries = nav.map((k) => ({ key: k, to: NAV[k].to, tab: NAV[k].tab }));
   const secIds = countsBySection(unread.data ?? [], navEntries);
