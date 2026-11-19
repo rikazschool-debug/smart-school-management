@@ -16,6 +16,7 @@ import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ZzHdrCheckRouteImport } from './routes/zz-hdr-check'
 import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/app/route'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
@@ -156,6 +157,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZzHdrCheckRoute = ZzHdrCheckRouteImport.update({
+  id: '/zz-hdr-check',
+  path: '/zz-hdr-check',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppRouteRoute = AuthenticatedAppRouteRouteImport.update({
@@ -778,6 +784,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/zz-hdr-check': typeof ZzHdrCheckRoute
   '/app': typeof AuthenticatedAppRouteRouteWithChildren
   '/invite/$token': typeof InviteTokenRoute
   '/join/$token': typeof JoinTokenRoute
@@ -893,6 +900,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/zz-hdr-check': typeof ZzHdrCheckRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$token': typeof JoinTokenRoute
   '/app/academic': typeof AuthenticatedAppAcademicRoute
@@ -1009,6 +1017,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/zz-hdr-check': typeof ZzHdrCheckRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteRouteWithChildren
   '/invite/$token': typeof InviteTokenRoute
   '/join/$token': typeof JoinTokenRoute
@@ -1126,6 +1135,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/register'
     | '/reset-password'
+    | '/zz-hdr-check'
     | '/app'
     | '/invite/$token'
     | '/join/$token'
@@ -1241,6 +1251,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/register'
     | '/reset-password'
+    | '/zz-hdr-check'
     | '/invite/$token'
     | '/join/$token'
     | '/app/academic'
@@ -1356,6 +1367,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/register'
     | '/reset-password'
+    | '/zz-hdr-check'
     | '/_authenticated/app'
     | '/invite/$token'
     | '/join/$token'
@@ -1473,6 +1485,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ZzHdrCheckRoute: typeof ZzHdrCheckRoute
   InviteTokenRoute: typeof InviteTokenRoute
   JoinTokenRoute: typeof JoinTokenRoute
   JoinTrackCodeRoute: typeof JoinTrackCodeRoute
@@ -1538,6 +1551,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zz-hdr-check': {
+      id: '/zz-hdr-check'
+      path: '/zz-hdr-check'
+      fullPath: '/zz-hdr-check'
+      preLoaderRoute: typeof ZzHdrCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app': {
@@ -2512,6 +2532,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ZzHdrCheckRoute: ZzHdrCheckRoute,
   InviteTokenRoute: InviteTokenRoute,
   JoinTokenRoute: JoinTokenRoute,
   JoinTrackCodeRoute: JoinTrackCodeRoute,
