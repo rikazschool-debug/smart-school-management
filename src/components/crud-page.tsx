@@ -397,7 +397,7 @@ export function CrudTable({
         {selects.length > 0 && (<>
           <div className="hidden flex-wrap gap-2 md:flex">{selects}</div>
           <Sheet>
-            <SheetTrigger asChild><Button variant="outline" size="sm" className="md:hidden"><Filter className="size-4" /> الفلاتر{active.length ? ` (${active.length})` : ""}</Button></SheetTrigger>
+            <SheetTrigger asChild><Button variant="outline" size="sm" className="md:hidden"><Filter className="size-4" /> الفلاتر{active.length + (multiTags && tagF ? 1 : 0) ? ` (${active.length + (multiTags && tagF ? 1 : 0)})` : ""}</Button></SheetTrigger>
             <SheetContent side="bottom" dir="rtl" className="space-y-3">
               <SheetHeader><SheetTitle>فلاتر {title}</SheetTitle></SheetHeader>
               <div className="grid gap-2">{selects}</div>
