@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CalendarCheck, CalendarDays, ClipboardList, GraduationCap, Layers, MessagesSquare, PartyPopper, UsersRound, Wallet, type LucideIcon } from "lucide-react";
 import { Bars, Donut, Kpi, KpiGrid, Meter, Panel, lastDays } from "@/components/dashboard/kit";
-import { FollowUpCenter, type Attention } from "@/components/dashboard/follow-up";
+import { FollowUpCenter } from "@/components/dashboard/follow-up";
 import { WeekCalendar } from "@/components/dashboard/week-calendar";
 import { WorkPanel } from "@/components/dashboard/work-panel";
 import { db, type Row } from "@/components/crud-page";
@@ -130,21 +130,6 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   });
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const d = q.data, c = charts.data;
-  const now = Date.now();
-  const hw = c?.hw ?? [];
-  const hwDue = hw.filter((h) => h["kind"] !== "test" && h["status"] === "published" && h["due_at"] && new Date(h["due_at"]).getTime() > now && new Date(h["due_at"]).getTime() < now + 2 * 86400000).length;
-  const testsSoon = hw.filter((h) => h["kind"] === "test" && h["status"] === "published" && h["due_at"] && new Date(h["due_at"]).getTime() > now && new Date(h["due_at"]).getTime() < now + 7 * 86400000).length;
-  const drafts = hw.filter((h) => h["status"] === "draft").length;
-  const alerts: Attention[] = d ? [
-    d.pending > 0 && has("courses") && { text: `${d.pending} تكليف معلم بانتظار الاعتماد`, to: "/app/courses", cta: "مراجعة", level: 1, count: d.pending },
-    d.unplaced > 0 && has("students") && { text: `${d.unplaced} طالب منتظم بلا تسكين في شعبة`, to: "/app/students", cta: "تسكين", level: 2, count: d.unplaced },
-  ].filter(Boolean) as Attention[] : [];
-  const others: Attention[] = [
-    hwDue > 0 && has("homework") && { text: "واجبات ينتهي تسليمها خلال يومين", to: "/app/homework", cta: "الواجبات", level: 2, count: hwDue },
-    testsSoon > 0 && has("tests") && { text: "اختبارات منشورة خلال الأسبوع", to: "/app/tests", cta: "الاختبارات", level: 2, count: testsSoon },
-    drafts > 0 && (has("homework") || has("tests")) && { text: "واجبات واختبارات مسودة لم تُنشر", to: has("homework") ? "/app/homework" : "/app/tests", cta: "مراجعة", level: 3, count: drafts },
-    d && d.courses > 0 && d.classrooms < d.courses && has("courses") && { text: "مقررات بلا فصل رقمي (يُنشأ عند اعتماد التكليف)", to: "/app/courses", cta: "المقررات", level: 3, count: d.courses - d.classrooms },
-  ].filter(Boolean) as Attention[];
   const quick = nav.map((k) => QUICK[k]).filter(Boolean) as NonNullable<(typeof QUICK)[NavKey]>[];
   const rate = c && c.today.present + c.today.late + c.today.absent ? Math.round(((c.today.present + c.today.late) / (c.today.present + c.today.late + c.today.absent)) * 100) : null;
   const manager = canManage(ctx.role);
@@ -158,10 +143,8 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         <Kpi tone={4} label="حضور اليوم" value={rate == null ? "—" : `${rate}%`} icon={CalendarCheck} to={go("attendance", "/app/attendance")} hint={c ? `${c.today.present + c.today.late} حاضر · ${c.today.absent} غائب` : undefined} />
         <Kpi tone={0} label="واجبات هذا الأسبوع" value={c?.dueSoon} icon={ClipboardList} to={go("homework", "/app/homework")} />
       </KpiGrid>
-      <FollowUpCenter school={s} alerts={alerts} others={others} staffEnabled={manager} studentsEnabled={has("attendance") || has("students")} genders={c?.genderKeys ?? []} hrAttendance={ctx.role === "org_owner"} />
-      <WeekCalendar org={ctx.orgId} school={s} />
       <div className="grid gap-4 lg:grid-cols-3">
-        <WorkPanel rows={c?.hw} homework={has("homework")} tests={has("tests")} />
+        <FollowUpCenter school={s} className="lg:col-span-2" staffEnabled={manager} studentsEnabled={has("attendance") || has("students")} genders={c?.genderKeys ?? []} hrAttendance={ctx.role === "org_owner"} />
         <Panel title="انتقال سريع">
           <div className="grid gap-2">
             {quick.slice(0, 6).map((x) => (
@@ -173,7 +156,11 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             ))}
           </div>
         </Panel>
-        <Panel title="تسكين الشعب (الطلاب / السعة)" to={go("students", "/app/students")}>
+      </div>
+      <WeekCalendar org={ctx.orgId} school={s} />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <WorkPanel rows={c?.hw} homework={has("homework")} tests={has("tests")} />
+        <Panel title="تسكين الشعب (الطلاب / السعة)" to={go("students", "/app/students")} className="lg:col-span-2">
           {!c ? <LoadingState rows={3} /> : <Meter rows={c.sections.slice(0, 8)} />}
         </Panel>
       </div>

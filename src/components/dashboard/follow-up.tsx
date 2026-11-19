@@ -24,7 +24,6 @@ export const absenceLink = (a: StaffAbsence) =>
   a.category === "teacher" && a.teacher_id ? { to: "/app/schedule" as const, search: { tab: "subs" as const, teacher: a.teacher_id, date: a.date } } : { to: "/app/hr/attendance" as const, search: {} };
 
 const ST_LABEL: Record<string, string> = { absent: "غائب", late: "متأخر", in_school_absent: "دخل المدرسة ولم يحضر الفصل" };
-const DOT: Record<number, string> = { 1: "bg-destructive", 2: "bg-warning", 3: "bg-primary/50" };
 const fmtDay = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("ar-SA-u-ca-gregory", { weekday: "long", day: "numeric", month: "long" });
 
 function Count({ n, tone }: { n: number; tone: "red" | "amber" | "plain" }) {
@@ -44,9 +43,9 @@ function Item({ to, children }: { to: string; children: ReactNode }) {
 }
 const Go = ({ t }: { t: string }) => <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary">{t}<ArrowLeft className="size-3.5" /></span>;
 
-/** Follow-up centre: alerts (teacher → admin staff absences → other priorities), today's students, other priority sections. */
-export function FollowUpCenter({ school, alerts, others, staffEnabled, studentsEnabled, genders, hrAttendance }: {
-  school: string; alerts: Attention[]; others: Attention[]; staffEnabled: boolean; studentsEnabled: boolean; genders: string[]; hrAttendance: boolean;
+/** «يحتاج إلى متابعة»: teacher absences → admin staff absences → today's students, in one panel. */
+export function FollowUpCenter({ school, staffEnabled, studentsEnabled, genders, hrAttendance, className = "" }: {
+  school: string; className?: string; staffEnabled: boolean; studentsEnabled: boolean; genders: string[]; hrAttendance: boolean;
 }) {
   const [gender, setGender] = useState<"" | "male" | "female">("");
   const [all, setAll] = useState(false);
@@ -61,13 +60,11 @@ export function FollowUpCenter({ school, alerts, others, staffEnabled, studentsE
   });
   const absences = sortAbsences(staff.data ?? []);
   const teachers = absences.filter((a) => a.category === "teacher"), admins = absences.filter((a) => a.category === "admin");
-  const rest = sortAttention(alerts), more = sortAttention(others);
   const stuAll = (students.data ?? []).filter((r) => !gender || r["students"]?.gender === gender);
   const stuAbsent = stuAll.filter((r) => r["status"] !== "late"), stuLate = stuAll.filter((r) => r["status"] === "late");
   const stuShown = [...stuAbsent, ...stuLate];
   const both = genders.includes("male") && genders.includes("female");
   const btn = (on: boolean) => `rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${on ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/70"}`;
-  const alertTotal = absences.length + rest.length;
 
   const absRow = (a: StaffAbsence) => {
     const l = absenceLink(a);
@@ -89,65 +86,45 @@ export function FollowUpCenter({ school, alerts, others, staffEnabled, studentsE
       </li>
     );
   };
-  const attRow = (a: Attention) => (
-    <Item key={a.text} to={a.to}>
-      <span aria-hidden className={`size-2 shrink-0 rounded-full ${DOT[a.level ?? 3]}`} />
-      <span className="min-w-0 flex-1 text-sm">{a.text}</span>
-      <Go t={a.cta} />
-    </Item>
-  );
 
-  return (
-    <div className="grid gap-4 lg:grid-cols-3" data-testid="follow-up-center">
-      <Panel title={`يحتاج إلى متابعة${alertTotal ? ` (${alertTotal})` : ""}`}>
-        {staffEnabled && staff.isLoading ? <LoadingState rows={2} /> : !alertTotal ? <NoData text="لا توجد تنبيهات تحتاج تدخلًا الآن ✓" /> : (
-          <div className="max-h-96 overflow-y-auto">
-            {teachers.length > 0 && <Group title="غياب المعلمين" n={teachers.length} tone="red">{teachers.map(absRow)}</Group>}
-            {admins.length > 0 && <Group title="غياب الكادر الإداري" n={admins.length} tone="amber">{admins.map(absRow)}</Group>}
-            {rest.length > 0 && <Group title="أمور أخرى ذات أولوية" n={rest.length} tone="plain">{rest.map(attRow)}</Group>}
+  const stuBlock = students.isLoading ? <LoadingState rows={2} /> : students.error ? <NoData text="تعذّر تحميل غياب الطلاب" /> : (
+    <>
+      <div className="mb-1 flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-xl bg-destructive/10 px-2.5 py-1 text-xs font-bold text-destructive">غائب <Count n={stuAbsent.length} tone="red" /></span>
+        <span className="inline-flex items-center gap-1.5 rounded-xl bg-warning/15 px-2.5 py-1 text-xs font-bold">متأخر <Count n={stuLate.length} tone="amber" /></span>
+        {both && (
+          <div className="ms-auto flex gap-1" aria-label="تصفية حسب الجنس">
+            {([["", "الكل"], ["male", "طلاب"], ["female", "طالبات"]] as const).map(([v, l]) => <button key={v} type="button" aria-pressed={gender === v} className={btn(gender === v)} onClick={() => setGender(v)}>{l}</button>)}
           </div>
         )}
-      </Panel>
-
-      {studentsEnabled && (
-        <Panel title="الطلاب اليوم" to="/app/attendance" cta="سجل الحضور">
-          {students.isLoading ? <LoadingState rows={2} /> : students.error ? <NoData text="تعذّر تحميل غياب الطلاب" /> : (
-            <>
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-xl bg-destructive/10 px-3 py-1.5 text-sm font-bold text-destructive">غائب <Count n={stuAbsent.length} tone="red" /></span>
-                <span className="inline-flex items-center gap-1.5 rounded-xl bg-warning/15 px-3 py-1.5 text-sm font-bold">متأخر <Count n={stuLate.length} tone="amber" /></span>
-                {both && (
-                  <div className="ms-auto flex gap-1" aria-label="تصفية حسب الجنس">
-                    {([["", "الكل"], ["male", "طلاب"], ["female", "طالبات"]] as const).map(([v, l]) => <button key={v} type="button" aria-pressed={gender === v} className={btn(gender === v)} onClick={() => setGender(v)}>{l}</button>)}
-                  </div>
-                )}
-              </div>
-              {!stuShown.length ? <NoData text="لا يوجد غياب أو تأخر مسجل لطلاب اليوم ✓" /> : (
-                <ul className="max-h-80 divide-y overflow-y-auto">
-                  {(all ? stuShown : stuShown.slice(0, 8)).map((r) => (
-                    <Item key={r["student_id"]} to="/app/attendance">
-                      <span className="min-w-0 flex-1 truncate text-sm font-medium">{r["students"]?.full_name ?? "طالب"}</span>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${r["status"] === "late" ? "bg-warning/20 text-warning-foreground" : "bg-destructive/15 text-destructive"}`}>{ST_LABEL[r["status"]] ?? r["status"]}{r["status"] === "late" && r["late_minutes"] ? ` ${r["late_minutes"]} د` : ""}</span>
-                    </Item>
-                  ))}
-                  {stuShown.length > 8 && <li className="pt-2"><button type="button" className="text-xs font-semibold text-primary" onClick={() => setAll((v) => !v)}>{all ? "عرض أقل" : `عرض التفاصيل (${stuShown.length})`}</button></li>}
-                </ul>
-              )}
-            </>
-          )}
-        </Panel>
+      </div>
+      {!stuShown.length ? <p className="py-2 text-xs text-muted-foreground">لا يوجد غياب أو تأخر مسجل لطلاب اليوم ✓</p> : (
+        <ul className="divide-y">
+          {(all ? stuShown : stuShown.slice(0, 8)).map((r) => (
+            <Item key={r["student_id"]} to="/app/attendance">
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">{r["students"]?.full_name ?? "طالب"}</span>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${r["status"] === "late" ? "bg-warning/20 text-warning-foreground" : "bg-destructive/15 text-destructive"}`}>{ST_LABEL[r["status"]] ?? r["status"]}{r["status"] === "late" && r["late_minutes"] ? ` ${r["late_minutes"]} د` : ""}</span>
+            </Item>
+          ))}
+          {stuShown.length > 8 && <li className="pt-2"><button type="button" className="text-xs font-semibold text-primary" onClick={() => setAll((v) => !v)}>{all ? "عرض أقل" : `عرض التفاصيل (${stuShown.length})`}</button></li>}
+        </ul>
       )}
-
-      <Panel title={`أقسام ذات أولوية${more.length ? ` (${more.length})` : ""}`}>
-        {!more.length ? <NoData text="لا توجد أقسام تحتاج متابعة الآن ✓" /> : <ul className="divide-y">{more.map((a) => (
-          <Item key={a.text} to={a.to}>
-            <span aria-hidden className={`size-2 shrink-0 rounded-full ${DOT[a.level ?? 3]}`} />
-            <span className="min-w-0 flex-1 text-sm">{a.text}</span>
-            {a.count != null && <Count n={a.count} tone={a.level === 1 ? "red" : a.level === 2 ? "amber" : "plain"} />}
-            <Go t={a.cta} />
-          </Item>
-        ))}</ul>}
-      </Panel>
-    </div>
+      <Link to="/app/attendance" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary">سجل الحضور والغياب<ArrowLeft className="size-3.5" /></Link>
+    </>
+  );
+  const total = absences.length + stuShown.length;
+  return (
+    <Panel title={`يحتاج إلى متابعة${total ? ` (${total})` : ""}`} className={className}>
+      <div className="max-h-[32rem] overflow-y-auto" data-testid="follow-up-center">
+        {staffEnabled && (staff.isLoading ? <LoadingState rows={2} /> : (
+          <>
+            <Group title="غياب المعلمين" n={teachers.length} tone="red">{teachers.length ? teachers.map(absRow) : <li className="py-2 text-xs text-muted-foreground">لا يوجد غياب معلمين اليوم ✓</li>}</Group>
+            <Group title="غياب الكادر الإداري" n={admins.length} tone="amber">{admins.length ? admins.map(absRow) : <li className="py-2 text-xs text-muted-foreground">لا يوجد غياب إداري اليوم ✓</li>}</Group>
+          </>
+        ))}
+        {studentsEnabled && <div className="mb-2"><p className="mb-1 text-xs font-bold text-muted-foreground">الطلاب اليوم</p>{stuBlock}</div>}
+        {!staffEnabled && !studentsEnabled && <NoData text="لا توجد بنود متابعة لهذا الدور" />}
+      </div>
+    </Panel>
   );
 }
