@@ -747,3 +747,5 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 - Documents and contractors: archiving requires the existing edit permission at the record scope (all linked branches for a contractor). Archive metadata, print and export use the existing view scope; opening private attachments uses the separate download scope. Archived records cannot be edited.
 
 - المناوبات: مالك المجموعة يملك العرض والإعداد وإدارة الجداول في كل فروعه دائمًا.
+
+- إعادة حفظ سجل ولي أمر أو معلم لا تجهّز حسابًا ثانيًا إذا كان للسجل والفرع حساب ينتظر الدخول الأول. يفحص الخادم ذلك بعد تحقق صلاحية الإنشاء الحالية، ويرفض الإنشاء عند التعارض أو تعذّر الفحص؛ لا تغيير لصلاحيات التعديل أو التفعيل.

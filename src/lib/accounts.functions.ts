@@ -43,6 +43,20 @@ async function provisionCore(ctx: Ctx, kind: Kind, ids: string[]): Promise<ProvO
       if (!allowed.has(school)) allowed.set(school, await mayProvision(ctx, kind, school));
       if (!allowed.get(school)) throw new Error(kind === "teacher" ? "إنشاء حسابات الكادر لمدير النظام" : "لا تملك صلاحية تعديل بيانات الطلاب وأولياء الأمور");
       if (r["user_id"]) { out.push({ id, state: "linked" }); continue; }
+      if (kind === "guardian" || kind === "teacher") {
+        // A staged login belongs to the school record, even when its mobile has changed.
+        const { data: staged, error: stageError } = await supabaseAdmin
+          .from("account_setup")
+          .select("user_id")
+          .eq("kind", kind)
+          .eq("subject_id", id)
+          .eq("school_id", school)
+          .is("completed_at", null)
+          .limit(2);
+        if (stageError || !staged) throw new Error("تعذّر التحقق من الحساب المجهّز");
+        if (staged.length > 1) throw new Error("تعارض في الحسابات المجهّزة؛ راجع مدير النظام");
+        if (staged.length === 1) { out.push({ id, state: "pending_phone" }); continue; }
+      }
       let email: string | null = null, phone: string | null = null;
       let uid: string | null = null, pending = true, createdNew = false;
       if (kind === "guardian") {
