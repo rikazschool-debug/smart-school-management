@@ -27232,6 +27232,8 @@ export type Database = {
         Args: { _school: string; _student: string }
         Returns: Json
       }
+      circular_audience_options: { Args: { _schools: string[] }; Returns: Json }
+      circular_draft_preview: { Args: { _id: string }; Returns: Json }
       circular_stats: {
         Args: { _id: string }
         Returns: {
@@ -30417,6 +30419,10 @@ export type Database = {
         }[]
       }
       publish_circular: { Args: { _id: string }; Returns: number }
+      publish_circular_checked: {
+        Args: { _fp: string; _id: string }
+        Returns: number
+      }
       publish_homework: { Args: { _id: string }; Returns: string }
       publish_results: {
         Args: { _hw: string; _subs: string[] }

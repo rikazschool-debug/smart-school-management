@@ -120,6 +120,7 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
   useEffect(() => {
     if (mine && !mine?.["opened_at"] && c["status"] !== "draft") db.rpc("open_circular", { _id: c["id"] }).then(onChanged);
   }, [c["id"]]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [pub, setPub] = useState<{ fp: string; rows: Row[] } | null>(null);
   const [rev, setRev] = useState<{ title: string; body: string; ack: boolean } | null>(null);
   return (
     <article className="space-y-3 rounded-2xl border bg-card p-4">
@@ -148,12 +149,13 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
           <div className="flex flex-wrap gap-2">
             {c["status"] === "draft" && <Button size="sm" variant="outline" onClick={onEdit}>تعديل المسودة</Button>}
             {c["status"] === "draft" && <Button size="sm" onClick={async () => {
-              if (busy || !(await ask("نشر التعميم للجمهور المحدد؟ يُحفظ الجمهور عند النشر.", { ok: "نشر" }))) return;
+              if (busy) return;
               setBusy(true);
-              const { data, error } = await db.rpc("publish_circular", { _id: c["id"] });
+              const pv = await db.rpc("circular_draft_preview", { _id: c["id"] });
               setBusy(false);
-              if (error) toast.error(arabicError(error)); else { toast.success(`نُشر إلى ${data} مستلم`); onChanged(); }
-            }} disabled={busy}>{busy ? "جارٍ النشر…" : "نشر"}</Button>}
+              if (pv.error) return void toast.error(arabicError(pv.error));
+              setPub(pv.data as { fp: string; rows: Row[] });
+            }} disabled={busy}>{busy ? "جارٍ التحضير…" : "معاينة المستلمين والنشر"}</Button>}
             {c["status"] === "published" && <Button size="sm" variant="outline" onClick={() => setRev({ title: c["title"], body: c["body"], ack: c["requires_ack"] })}>إصدار معدّل</Button>}
             {c["status"] === "published" && c["requires_ack"] && <Button size="sm" variant="outline" onClick={async () => {
               const { data, error } = await db.rpc("remind_circular_ack", { _id: c["id"] });
@@ -162,6 +164,21 @@ function CircularView({ c, me, manager: schoolManager, onBack, onChanged, onEdit
             {c["status"] === "archived" && <Button size="sm" variant="outline" onClick={async () => { const { error } = await db.rpc("reopen_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else { toast.success("أُعيد فتح التعميم؛ الموعد والإقرارات كما هي ولم تُرسل تنبيهات"); onChanged(); } }}>إعادة الفتح</Button>}
             {c["status"] === "published" && <Button size="sm" variant="ghost" onClick={async () => { if (!(await ask("الأرشفة توقف الإقرار والتذكير وتحفظ السجل. متابعة؟", { ok: "أرشفة" }))) return; const { error } = await db.rpc("archive_circular", { _id: c["id"] }); if (error) toast.error(arabicError(error)); else onChanged(); }}>أرشفة</Button>}
           </div>
+          {pub && c["status"] === "draft" && (
+            <div className="space-y-2 rounded-lg border p-3">
+              <p className="font-semibold">معاينة المستلمين قبل النشر</p>
+              <PreviewList rows={pub.rows} categories={audienceCategories((c["audience"] ?? {}) as Row)} />
+              <div className="flex gap-2">
+                <Button size="sm" disabled={busy || !pub.rows.some((r) => r["included"])} onClick={async () => {
+                  setBusy(true);
+                  const { data, error } = await db.rpc("publish_circular_checked", { _id: c["id"], _fp: pub.fp });
+                  setBusy(false);
+                  if (error) { toast.error(arabicError(error)); setPub(null); } else { toast.success(`نُشر إلى ${data} مستلم`); setPub(null); onChanged(); }
+                }}>{busy ? "جارٍ النشر…" : "تأكيد النشر لهؤلاء"}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setPub(null)}>إلغاء</Button>
+              </div>
+            </div>
+          )}
           {rev && (
             <form className="space-y-2 rounded-lg border p-3" onSubmit={async (e) => {
               e.preventDefault();
@@ -262,6 +279,11 @@ function CircularEditor({ ctx, initial, onDone, orgWide = false }: { ctx: AppCon
   const [depts, setDepts] = useState<string[]>(a["departments"] ?? []);
   const [groups, setGroups] = useState<string[]>(a["groups"] ?? []);
   const [users, setUsers] = useState<string[]>(a["users"] ?? []);
+  const [titles, setTitles] = useState<string[]>(a["titles"] ?? []);
+  const [family, setFamily] = useState<string[]>(a["family"] ?? []);
+  const [stages, setStages] = useState<string[]>(a["stages"] ?? []);
+  const [grades, setGrades] = useState<string[]>(a["grades"] ?? []);
+  const [sections, setSections] = useState<string[]>(a["sections"] ?? []);
   const [id, setId] = useState<string | null>(initial["id"] ?? null);
   const [preview, setPreview] = useState<Row[] | null>(null);
   const isOwner = ctx.role === "org_owner";
@@ -278,7 +300,9 @@ function CircularEditor({ ctx, initial, onDone, orgWide = false }: { ctx: AppCon
   const groupsBySchool = deptSchools.map((sid) => [sid, (groupOpts.data ?? []).filter((g) => g["school_id"] === sid)] as const).filter(([, l]) => l.length);
   const staleGroups = groups.filter((g) => groupOpts.data && !groupOpts.data.some((x) => x["id"] === g));
   const files = useFiles(id ?? "none");
-  const audience = { roles, departments: depts, groups, users };
+  const opts = useQuery({ queryKey: ["circ-aud-opts", deptSchools], enabled: deptSchools.length > 0, queryFn: async () => { const { data, error } = await db.rpc("circular_audience_options", { _schools: deptSchools }); if (error) throw error; return data as { titles: Row[]; stages: Row[]; grades: Row[]; sections: Row[] }; } });
+  const audience = { roles, titles, family, stages: family.length ? stages : [], grades: family.length ? grades : [], sections: family.length ? sections : [], departments: depts, groups, users };
+  const categories = audienceCategories(audience);
   const toggle = (arr: string[], set: (x: string[]) => void, x: string) => set(arr.includes(x) ? arr.filter((y) => y !== x) : [...arr, x]);
   async function save() {
     const { data, error } = await db.rpc("save_circular", { _id: id, _school: home, _title: v.title, _body: v.body, _publisher: null, _priority: v.priority, _requires_ack: v.requires_ack, _ack_due: v.ack_due || null, _aud: audience, _scope: scope, _schools: scope === "branches" ? targets : null });
@@ -306,10 +330,19 @@ function CircularEditor({ ctx, initial, onDone, orgWide = false }: { ctx: AppCon
       </fieldset>
       <fieldset className="space-y-2 rounded-lg border p-3">
         <legend className="px-1 font-semibold">الجمهور (يُتحقق منه في الخادم ويُحفظ عند النشر)</legend>
-        <p className="text-xs text-muted-foreground">كيف يُجمع الجمهور: يُختار الفرع أولًا، ثم داخل كل فرع يُضم كل من يطابق أيًّا من الاختيارات (دور أو قسم أو مجموعة أو فرد). من يملك أكثر من عضوية يُحسب مرة واحدة، والعضويات غير المفعّلة تُستبعد.{scope !== "school" ? " الأقسام والمجموعات والأفراد من كل الفروع المختارة." : ""}</p>
-        <div className="flex flex-wrap gap-3">{["teacher", "dept_head", "supervisor", "vice_principal", "student_affairs", "counselor", "nurse", "security", "guardian", "student"].map((r) => (
-          <label key={r} className="flex items-center gap-1"><input type="checkbox" checked={roles.includes(r)} onChange={() => toggle(roles, setRoles, r)} />{ROLE_AR[r]}</label>
-        ))}</div>
+        <p className="text-xs text-muted-foreground">كيف يُجمع الجمهور: يُختار الفرع أولًا، ثم داخل كل فرع يُضم كل من يطابق أيًّا من الاختيارات (مسمى وظيفي أو طلاب/أولياء أمور أو قسم أو مجموعة أو فرد). من يملك أكثر من عضوية يُحسب مرة واحدة، والعضويات غير المفعّلة تُستبعد.{scope !== "school" ? " الأقسام والمجموعات والأفراد من كل الفروع المختارة." : ""}</p>
+        <div className="space-y-1"><span className="font-semibold">الموظفون حسب المسمى الوظيفي في {scope === "school" ? "الفرع" : "الفروع المحددة"}</span>
+          {opts.isLoading ? <p className="text-xs text-muted-foreground">جارٍ تحميل المسميات…</p> : !(opts.data?.titles ?? []).length ? <p className="text-xs text-muted-foreground">لا توجد مسميات مسجلة.</p> :
+          <div className="flex flex-wrap gap-3">{(opts.data?.titles ?? []).map((t) => <label key={t["title"]} className="flex items-center gap-1"><input type="checkbox" checked={titles.includes(t["title"])} onChange={() => { toggle(titles, setTitles, t["title"]); setPreview(null); }} />{t["title"]} <span className="text-xs text-muted-foreground">({t["count"]})</span></label>)}</div>}
+          {roles.length > 0 && <p className="text-xs text-muted-foreground">أدوار محفوظة سابقًا في المسودة: {roles.map((r) => ROLE_AR[r] ?? r).join("، ")} <button type="button" className="underline" onClick={() => setRoles([])}>إزالة</button></p>}</div>
+        <div className="space-y-2 rounded border p-2"><span className="font-semibold">الطلاب وأولياء الأمور (لا يُضافون إلا باختيارهم)</span>
+          <div className="flex flex-wrap gap-3">{([["student", "الطلاب"], ["guardian", "أولياء الأمور"]] as const).map(([k, l]) => <label key={k} className="flex items-center gap-1"><input type="checkbox" checked={family.includes(k)} onChange={() => { toggle(family, setFamily, k); setPreview(null); }} />{l}</label>)}</div>
+          {family.length > 0 && <div className="space-y-2 text-xs"><p className="text-muted-foreground">دون اختيار مرحلة أو صف أو شعبة يُستهدف كل طلاب الفروع المحددة{family.includes("guardian") ? " وأولياء أمورهم الموثقين" : ""}.</p>
+            {deptSchools.map((sid) => { const st = (opts.data?.stages ?? []).filter((x) => x["school_id"] === sid); if (!st.length) return null; return <div key={sid} className="rounded border p-2"><p className="mb-1 font-semibold">{schoolName(sid)}</p>
+              {st.map((x) => { const gs = (opts.data?.grades ?? []).filter((g) => g["stage_id"] === x["id"]); return <div key={x["id"]} className="mb-1"><label className="flex items-center gap-1 font-medium"><input type="checkbox" checked={stages.includes(x["id"])} onChange={() => { toggle(stages, setStages, x["id"]); setPreview(null); }} />{x["name"]}</label>
+                <div className="ms-5 flex flex-wrap gap-3">{gs.map((g) => <span key={g["id"]} className="flex flex-wrap items-center gap-2"><label className="flex items-center gap-1"><input type="checkbox" checked={grades.includes(g["id"])} onChange={() => { toggle(grades, setGrades, g["id"]); setPreview(null); }} />{g["name"]}</label>
+                  {(opts.data?.sections ?? []).filter((se) => se["grade_id"] === g["id"]).map((se) => <label key={se["id"]} className="flex items-center gap-1 text-muted-foreground"><input type="checkbox" checked={sections.includes(se["id"])} onChange={() => { toggle(sections, setSections, se["id"]); setPreview(null); }} />شعبة {se["name"]}</label>)}</span>)}</div></div>; })}</div>; })}</div>}
+        </div>
         <div className="space-y-1"><span className="text-muted-foreground">الأقسام والأشخاص المرتبطون بها:</span>
           <DeptPicker org={ctx.orgId ?? null} schools={deptSchools} value={depts} onChange={setDepts} /></div>
         {groupsBySchool.length > 0 && <div className="space-y-1"><span className="text-muted-foreground">المجموعات (الطلاب لا يستلمون التعاميم الإدارية):</span>
@@ -321,7 +354,7 @@ function CircularEditor({ ctx, initial, onDone, orgWide = false }: { ctx: AppCon
           if (error) return void toast.error(arabicError(error));
           setPreview(data as Row[]);
         }}>معاينة المستلمين</Button>
-        {preview && <PreviewList rows={preview} />}
+        {preview && <PreviewList rows={preview} categories={categories} />}
       </fieldset>
       {id && (
         <div className="space-y-1">
@@ -349,7 +382,18 @@ function CircularEditor({ ctx, initial, onDone, orgWide = false }: { ctx: AppCon
   );
 }
 
-function PreviewList({ rows }: { rows: Row[] }) {
+export function audienceCategories(a: Row): string[] {
+  const c: string[] = [];
+  if (a["titles"]?.length || a["roles"]?.length) c.push("الموظفون حسب المسمى");
+  if (a["family"]?.includes("student")) c.push("الطلاب");
+  if (a["family"]?.includes("guardian")) c.push("أولياء الأمور");
+  if (a["departments"]?.length) c.push("الأقسام");
+  if (a["groups"]?.length) c.push("المجموعات");
+  if (a["users"]?.length) c.push("أفراد محددون");
+  return c;
+}
+
+function PreviewList({ rows, categories = [] }: { rows: Row[]; categories?: string[] }) {
   const inc = rows.filter((r) => r["included"]);
   const exc = rows.filter((r) => !r["included"]);
   const counts = new Map<string, number>();
@@ -357,6 +401,7 @@ function PreviewList({ rows }: { rows: Row[] }) {
   const byBranch = [...counts];
   return (
     <div className="space-y-1 text-xs">
+      {categories.length > 1 && <p role="alert" className="rounded-md border border-warning/50 bg-warning/10 p-2">التعميم موجّه إلى أكثر من فئة: {categories.join("، ")}. جُمع المستلمون من كل الاختيارات ويصل لكل شخص مرة واحدة.</p>}
       <p className="font-semibold">سيصل إلى {inc.length} مستلم{byBranch.length > 1 ? ` — ${byBranch.map(([n, c]) => `${n}: ${c}`).join("، ")}` : ""}</p>
       <ul className="max-h-48 overflow-auto rounded border p-2">{inc.map((r) => <li key={r["user_id"]}>{r["full_name"]} — {r["school_name"]} — {String(r["role"] ?? "").split(",").map((x) => ROLE_AR[x] ?? x).join("، ")}{r["reason"] ? ` (${r["reason"]})` : ""}</li>)}</ul>
       {exc.length > 0 && <details><summary className="cursor-pointer text-muted-foreground">مستبعدون ({exc.length})</summary><ul className="ps-4">{exc.map((r) => <li key={r["user_id"]}>{r["full_name"]} — {r["school_name"]}: {r["reason"]}</li>)}</ul></details>}
