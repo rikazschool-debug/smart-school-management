@@ -39,3 +39,15 @@ describe("weekly calendar", () => {
     expect(satWeekStart("2026-11-14")).toBe("2026-11-14");
   });
 });
+
+import { followUpItems } from "@/components/dashboard/follow-up";
+describe("followUpItems", () => {
+  it("hides items with no real event and orders by urgency", () => {
+    const r = followUpItems([
+      { text: "a", to: "/", cta: "", level: 3, count: 2 },
+      { text: "b", to: "/", cta: "", level: 1, count: 0 },
+      { text: "c", to: "/", cta: "", level: 1, count: 1 },
+    ]);
+    expect(r.map((x) => x.text)).toEqual(["c", "a"]);
+  });
+});

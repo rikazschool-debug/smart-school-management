@@ -19,6 +19,9 @@ export const sortAbsences = (rows: StaffAbsence[]) =>
 /** Other alerts ordered by urgency, then by size. */
 export const sortAttention = (rows: Attention[]) => [...rows].sort((a, b) => (a.level ?? 3) - (b.level ?? 3) || (b.count ?? 0) - (a.count ?? 0));
 
+/** Only items with a real event (count > 0), most urgent first. */
+export const followUpItems = (rows: Attention[]) => sortAttention(rows.filter((r) => (r.count ?? 0) > 0));
+
 /** Where a staff absence alert opens: a teacher → «الجدول المدرسي ← البدلاء» with that teacher and day picked; admin staff → HR attendance. */
 export const absenceLink = (a: StaffAbsence) =>
   a.category === "teacher" && a.teacher_id ? { to: "/app/schedule" as const, search: { tab: "subs" as const, teacher: a.teacher_id, date: a.date } } : { to: "/app/hr/attendance" as const, search: {} };
@@ -44,8 +47,9 @@ function Item({ to, children }: { to: string; children: ReactNode }) {
 const Go = ({ t }: { t: string }) => <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary">{t}<ArrowLeft className="size-3.5" /></span>;
 
 /** «يحتاج إلى متابعة»: teacher absences → admin staff absences → today's students, in one panel. */
-export function FollowUpCenter({ school, staffEnabled, studentsEnabled, genders, hrAttendance, className = "" }: {
-  school: string; className?: string; staffEnabled: boolean; studentsEnabled: boolean; genders: string[]; hrAttendance: boolean;
+export function FollowUpCenter({ school, org, staffEnabled, studentsEnabled, genders, hrAttendance, items = [], adminEnabled = false, eventsEnabled = false, className = "" }: {
+  school: string; org?: string | null; className?: string; staffEnabled: boolean; studentsEnabled: boolean; genders: string[]; hrAttendance: boolean;
+  items?: Attention[]; adminEnabled?: boolean; eventsEnabled?: boolean;
 }) {
   const [gender, setGender] = useState<"" | "male" | "female">("");
   const [all, setAll] = useState(false);
@@ -58,6 +62,22 @@ export function FollowUpCenter({ school, staffEnabled, studentsEnabled, genders,
       if (error) throw error; return data as DbRow[];
     },
   });
+  const adm = useQuery({ queryKey: ["adm-summary", school], enabled: adminEnabled, retry: false, queryFn: () => rpc<{ tasks_overdue?: number; tasks_needs_action?: number; tasks_today?: number; requests_new?: number }>("adm_summary", { _school: school }) });
+  const evts = useQuery({ queryKey: ["dash-follow-evt", org, school], enabled: eventsEnabled && !!org, retry: false, queryFn: () => rpc<{ status: string; first_at: string | null; apps: { new: number; review: number; info_needed: number } }[]>("evt_list", { _org: org, _school: school, _kind: null, _status: null, _q: null }) });
+  const a = adm.data ?? {};
+  const soon = Date.now() + 3 * 86400000;
+  const evRows = evts.data ?? [];
+  const evSoon = evRows.filter((r) => r.status === "published" && r.first_at && new Date(r.first_at).getTime() >= Date.now() - 86400000 && new Date(r.first_at).getTime() <= soon).length;
+  const evApps = evRows.reduce((n, r) => n + (r.apps?.new ?? 0) + (r.apps?.review ?? 0) + (r.apps?.info_needed ?? 0), 0);
+  const other = followUpItems([
+    ...items,
+    { text: "تكليف إداري متأخر", to: "/app/admin", cta: "التكليفات", level: 1, count: a.tasks_overdue ?? 0 },
+    { text: "تكليف يحتاج إجراءً منك", to: "/app/admin", cta: "التكليفات", level: 2, count: a.tasks_needs_action ?? 0 },
+    { text: "تكليف مستحق اليوم", to: "/app/admin", cta: "التكليفات", level: 2, count: a.tasks_today ?? 0 },
+    { text: "طلب إداري جديد وارد", to: "/app/admin", cta: "الطلبات", level: 2, count: a.requests_new ?? 0 },
+    { text: "فعالية أو رحلة خلال ٣ أيام", to: "/app/events", cta: "الفعاليات", level: 3, count: evSoon },
+    { text: "طلب تسجيل في فعالية بانتظار القرار", to: "/app/events", cta: "الفعاليات", level: 2, count: evApps },
+  ]);
   const absences = sortAbsences(staff.data ?? []);
   const teachers = absences.filter((a) => a.category === "teacher"), admins = absences.filter((a) => a.category === "admin");
   const stuAll = (students.data ?? []).filter((r) => !gender || r["students"]?.gender === gender);
@@ -112,18 +132,30 @@ export function FollowUpCenter({ school, staffEnabled, studentsEnabled, genders,
       <Link to="/app/attendance" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary">سجل الحضور والغياب<ArrowLeft className="size-3.5" /></Link>
     </>
   );
-  const total = absences.length + stuShown.length;
+  const total = absences.length + stuShown.length + other.reduce((n, r) => n + (r.count ?? 0), 0);
+  const loading = (staffEnabled && staff.isLoading) || (studentsEnabled && students.isLoading);
   return (
     <Panel title={`يحتاج إلى متابعة${total ? ` (${total})` : ""}`} className={className}>
       <div className="max-h-[32rem] overflow-y-auto" data-testid="follow-up-center">
-        {staffEnabled && (staff.isLoading ? <LoadingState rows={2} /> : (
+        {loading ? <LoadingState rows={2} /> : (
           <>
-            <Group title="غياب المعلمين" n={teachers.length} tone="red">{teachers.length ? teachers.map(absRow) : <li className="py-2 text-xs text-muted-foreground">لا يوجد غياب معلمين اليوم ✓</li>}</Group>
-            <Group title="غياب الكادر الإداري" n={admins.length} tone="amber">{admins.length ? admins.map(absRow) : <li className="py-2 text-xs text-muted-foreground">لا يوجد غياب إداري اليوم ✓</li>}</Group>
+            {teachers.length > 0 && <Group title="غياب المعلمين" n={teachers.length} tone="red">{teachers.map(absRow)}</Group>}
+            {admins.length > 0 && <Group title="غياب الكادر الإداري" n={admins.length} tone="amber">{admins.map(absRow)}</Group>}
+            {studentsEnabled && stuShown.length > 0 && <div className="mb-2"><p className="mb-1 text-xs font-bold text-muted-foreground">الطلاب اليوم</p>{stuBlock}</div>}
+            {other.length > 0 && (
+              <Group title="مهام ومتابعات" n={other.length} tone="plain">
+                {other.map((r) => (
+                  <Item key={r.text} to={r.to}>
+                    <Count n={r.count ?? 0} tone={r.level === 1 ? "red" : r.level === 2 ? "amber" : "plain"} />
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{r.text}</span>
+                    <Go t={r.cta} />
+                  </Item>
+                ))}
+              </Group>
+            )}
+            {!total && <p className="py-6 text-center text-sm text-muted-foreground">لا يوجد ما يحتاج إلى متابعة الآن ✓</p>}
           </>
-        ))}
-        {studentsEnabled && <div className="mb-2"><p className="mb-1 text-xs font-bold text-muted-foreground">الطلاب اليوم</p>{stuBlock}</div>}
-        {!staffEnabled && !studentsEnabled && <NoData text="لا توجد بنود متابعة لهذا الدور" />}
+        )}
       </div>
     </Panel>
   );

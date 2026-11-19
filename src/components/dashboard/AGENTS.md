@@ -1,2 +1,2 @@
 - School dashboard staff absences come only from dash_staff_absence (HR fingerprint days, caller needs can_manage_school or HR attendance view, names/status only); teacher alerts open «البدلاء» via schedule search teacher/date and recording stays on record_absence.
-- Home «يحتاج إلى متابعة» (FollowUpCenter): one panel — teacher absences → admin absences → today's students — beside quick links; every row links to its real section, empty groups say so.
+- Home «يحتاج إلى متابعة» (FollowUpCenter): one panel beside quick links; shows only groups with a real event (absences, students, unplaced, pending assignments, adm_summary tasks/requests, upcoming events) via followUpItems; one «nothing to follow» line when empty.

@@ -144,7 +144,11 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         <Kpi tone={0} label="واجبات هذا الأسبوع" value={c?.dueSoon} icon={ClipboardList} to={go("homework", "/app/homework")} />
       </KpiGrid>
       <div className="grid gap-4 lg:grid-cols-3">
-        <FollowUpCenter school={s} className="lg:col-span-2" staffEnabled={manager} studentsEnabled={has("attendance") || has("students")} genders={c?.genderKeys ?? []} hrAttendance={ctx.role === "org_owner"} />
+        <FollowUpCenter school={s} className="lg:col-span-2" staffEnabled={manager} studentsEnabled={has("attendance") || has("students")} genders={c?.genderKeys ?? []} hrAttendance={ctx.role === "org_owner"} org={ctx.orgId} adminEnabled={has("admin")} eventsEnabled={has("events")}
+          items={d ? [
+            ...(has("students") ? [{ text: "طالب منتظم بلا تسكين في شعبة", to: "/app/students", cta: "تسكين", level: 2 as const, count: d.unplaced }] : []),
+            ...(has("courses") ? [{ text: "تكليف معلم بانتظار الاعتماد", to: "/app/courses", cta: "مراجعة", level: 2 as const, count: d.pending }] : []),
+          ] : []} />
         <Panel title="انتقال سريع">
           <div className="grid gap-2">
             {quick.slice(0, 6).map((x) => (
