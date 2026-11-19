@@ -101,6 +101,8 @@ const NONE: Row[] = [];
 const applyFilter = (slots: Row[], f: string) =>
   !f ? slots : f.startsWith("s:") ? slots.filter((s) => s["section_id"] === f.slice(2)) : f.startsWith("r:") ? slots.filter((s) => s["room_id"] === f.slice(2)) : slots.filter((s) => s["teacher_id"] === f.slice(2));
 
+const TT_KINDS: Record<string, string> = { basic: "الجدول الأساسي", prep: "الجدول التمهيدي", summer: "الجدول الصيفي", winter: "الجدول الشتوي", ramadan: "جدول رمضان" };
+
 /* ============ Manager: drafts, editor, generation, validation, publish, versions ============ */
 function Manager({ ctx }: { ctx: Ctx }) {
   const S = ctx.schoolId;
@@ -119,7 +121,7 @@ function Manager({ ctx }: { ctx: Ctx }) {
     },
   });
   const [sel_, setSel] = useState<string>("");
-  const [nf, setNf] = useState({ name: "الجدول الأساسي", year: "", term: "" });
+  const [nf, setNf] = useState({ name: "الجدول الأساسي", year: "", term: "", kind: "basic" });
   const [filter, setFilter] = useState("");
   const [eff, setEff] = useState(todayISO());
   const [adding, setAdding] = useState<{ day: number; period: Row } | null>(null);
@@ -145,8 +147,14 @@ function Manager({ ctx }: { ctx: Ctx }) {
   const isDraft = tt?.["status"] === "draft";
   const shown = applyFilter(slots.data ?? [], filter);
   const cells = byCell(shown);
-  const latestPublished = tts.data?.filter((t) => t["status"] === "published").sort((a, b) => (b["version"] ?? 0) - (a["version"] ?? 0))[0];
-  const ttLabel = (t: Row) => t["status"] === "draft" ? (t["based_on"] ? "مسودة تعديل" : "مسودة") : `منشور — إصدار ${t["version"]} — يسري من ${t["effective_from"]}`;
+  const ttLabel = (t: Row) => `${TT_KINDS[t["kind"] as string] ?? ""} — ` + (t["status"] === "draft" ? (t["based_on"] ? "مسودة تعديل" : "مسودة") : `منشور — إصدار ${t["version"]}${t["is_active"] ? " — الجدول المعتمد حالياً" : ""}`);
+  const activeTt = tts.data?.find((t) => t["is_active"]);
+  const activate = async (t: Row) => {
+    if (!(await ask(activeTt ? `اعتماد «${t["name"]}» بدل «${activeTt["name"]}»؟ سيصبح وحده الجدول الظاهر في الحصص والبدلاء والمناوبات، ولا يُحذف أي جدول.` : `اعتماد «${t["name"]}» جدولًا تشغيليًا للمدرسة؟`))) return;
+    const { error } = await db.rpc("tt_activate" as never, { _id: t["id"] } as never);
+    if (error) return void toast.error(arabicError(error));
+    toast.success("اعتُمد الجدول"); refresh();
+  };
   const filterLabel = !filter ? "كل الحصص" : filter.startsWith("s:") ? `شعبة ${slotLabel(shown[0] ?? {}).section}` : filter.startsWith("t:") ? `المعلم ${slotLabel(shown[0] ?? {}).teacher}` : `القاعة ${slotLabel(shown[0] ?? {}).room}`;
   const problemBySlot = new Map((problems ?? []).filter((p) => p["slot_id"]).map((p) => [p["slot_id"], p["message"]]));
 
@@ -156,11 +164,14 @@ function Manager({ ctx }: { ctx: Ctx }) {
         <div className="space-y-1"><Label htmlFor="tt-pick">الجدول / الإصدار</Label>
           <select id="tt-pick" className={selectCls("w-80")} value={sel_} onChange={(e) => setSel(e.target.value)}>
             {!tts.data?.length && <option value="">لا توجد جداول بعد</option>}
-            {tts.data?.map((t) => <option key={t["id"]} value={t["id"]}>{t["name"]} — {ttLabel(t)}{latestPublished?.["id"] === t["id"] ? " (الأحدث)" : ""}</option>)}
+            {tts.data?.map((t) => <option key={t["id"]} value={t["id"]}>{t["name"]} — {ttLabel(t)}</option>)}
           </select></div>
-        <Button variant="outline" size="sm" onClick={() => setVersions((v) => !v)}>الإصدارات</Button>
+        <Button variant="outline" size="sm" onClick={() => setVersions((v) => !v)}>الجداول والإصدارات</Button>
         {tt && <span className={`rounded-full px-3 py-1 text-xs font-bold ${isDraft ? "bg-accent text-accent-foreground" : "bg-primary/10 text-primary"}`}>{isDraft ? "✎ مسودة — غير منشورة" : `✓ منشور — إصدار ${tt["version"]}`}</span>}
+        {tt?.["is_active"] && <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">★ الجدول المعتمد حالياً{tt["activated_at"] ? ` — منذ ${String(tt["activated_at"]).slice(0, 10)}` : ""}</span>}
+        {tt && !isDraft && !tt["is_active"] && can("publish") && <Button size="sm" onClick={() => activate(tt)}>اعتماد الجدول</Button>}
       </div>
+      {tts.data && tts.data.length > 0 && !activeTt && <div className="mb-4 rounded-2xl border border-destructive/40 bg-destructive/5 p-3 text-sm font-medium">لا يوجد جدول معتمد لهذه المدرسة؛ لن تظهر الحصص للمعلمين والطلاب ولا في البدلاء والمناوبات حتى تعتمد جدولًا منشورًا.</div>}
       {versions && (
         <section className="mb-4 grid gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border bg-card p-4 lg:col-span-2">
@@ -168,7 +179,7 @@ function Manager({ ctx }: { ctx: Ctx }) {
             <ul className="space-y-1 text-sm">
               {tts.data?.map((t) => (
                 <li key={t["id"]}><button onClick={() => setSel(t["id"])} className={`flex w-full flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-start ${t["id"] === sel_ ? "border-primary bg-primary/5" : ""}`}>
-                  <span className="font-medium">{t["name"]}</span><span className="text-muted-foreground">{ttLabel(t)}{latestPublished?.["id"] === t["id"] && " (الأحدث)"}</span></button></li>
+                  <span className="font-medium">{t["name"]}</span><span className="text-muted-foreground">{ttLabel(t)}</span></button></li>
               ))}
               {!tts.data?.length && <li className="text-muted-foreground">لا توجد جداول بعد.</li>}
             </ul>
@@ -176,11 +187,12 @@ function Manager({ ctx }: { ctx: Ctx }) {
           {can("create") && <form className="space-y-2 rounded-2xl border bg-card p-4" onSubmit={async (e) => {
             e.preventDefault();
             if (!nf.year) return void toast.error("اختر السنة الدراسية");
-            const { data, error } = await db.from("timetables").insert({ school_id: S, year_id: nf.year, term_id: nf.term || null, name: nf.name }).select().single();
+            const { data, error } = await db.from("timetables").insert({ school_id: S, year_id: nf.year, term_id: nf.term || null, name: nf.name, kind: nf.kind } as never).select().single();
             if (error) return void toast.error(arabicError(error));
-            toast.success("أُنشئت المسودة"); refresh(); setSel(data.id); setVersions(false);
+            toast.success("أُنشئت المسودة"); refresh(); setSel((data as Row)["id"]); setVersions(false);
           }}>
             <h2 className="font-bold">إنشاء مسودة</h2>
+            <select className={sel} aria-label="نوع الجدول" value={nf.kind} onChange={(e) => setNf({ ...nf, kind: e.target.value, name: TT_KINDS[e.target.value] ?? nf.name })}>{Object.entries(TT_KINDS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
             <Input aria-label="اسم الجدول" value={nf.name} onChange={(e) => setNf({ ...nf, name: e.target.value })} />
             <select className={sel} aria-label="السنة" value={nf.year} onChange={(e) => setNf({ ...nf, year: e.target.value })}><option value="">— السنة الدراسية —</option>{years.data?.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}</select>
             <select className={sel} aria-label="الفصل الدراسي" value={nf.term} onChange={(e) => setNf({ ...nf, term: e.target.value })}><option value="">— كل السنة —</option>{terms.data?.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}</select>

@@ -22264,6 +22264,41 @@ export type Database = {
           },
         ]
       }
+      timetable_activations: {
+        Row: {
+          activated_at: string
+          activated_by: string | null
+          id: string
+          previous_id: string | null
+          school_id: string
+          timetable_id: string
+        }
+        Insert: {
+          activated_at?: string
+          activated_by?: string | null
+          id?: string
+          previous_id?: string | null
+          school_id: string
+          timetable_id: string
+        }
+        Update: {
+          activated_at?: string
+          activated_by?: string | null
+          id?: string
+          previous_id?: string | null
+          school_id?: string
+          timetable_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_activations_timetable_id_fkey"
+            columns: ["timetable_id"]
+            isOneToOne: false
+            referencedRelation: "timetables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       timetable_slots: {
         Row: {
           course_id: string
@@ -22361,11 +22396,16 @@ export type Database = {
       }
       timetables: {
         Row: {
+          activated_at: string | null
+          activated_by: string | null
           based_on: string | null
           created_at: string
           created_by: string
           effective_from: string | null
           id: string
+          is_active: boolean
+          kind: string
+          lineage: string | null
           name: string
           published_at: string | null
           published_by: string | null
@@ -22377,11 +22417,16 @@ export type Database = {
           year_id: string
         }
         Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
           based_on?: string | null
           created_at?: string
           created_by?: string
           effective_from?: string | null
           id?: string
+          is_active?: boolean
+          kind?: string
+          lineage?: string | null
           name: string
           published_at?: string | null
           published_by?: string | null
@@ -22393,11 +22438,16 @@ export type Database = {
           year_id: string
         }
         Update: {
+          activated_at?: string | null
+          activated_by?: string | null
           based_on?: string | null
           created_at?: string
           created_by?: string
           effective_from?: string | null
           id?: string
+          is_active?: boolean
+          kind?: string
+          lineage?: string | null
           name?: string
           published_at?: string | null
           published_by?: string | null
@@ -31582,6 +31632,7 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: undefined
       }
+      tt_activate: { Args: { _id: string }; Returns: string }
       tt_gen_apply: { Args: { _run: string; _slots: Json }; Returns: number }
       tt_gen_finish: {
         Args: { _run: string; _status: string; _summary: Json }

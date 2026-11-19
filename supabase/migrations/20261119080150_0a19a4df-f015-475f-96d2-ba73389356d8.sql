@@ -1,0 +1,1 @@
+create index if not exists timetable_activations_tt on public.timetable_activations(timetable_id);
