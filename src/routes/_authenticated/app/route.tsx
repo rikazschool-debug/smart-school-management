@@ -422,11 +422,11 @@ function Shell() {
               title="تبديل الدور أو المدرسة"
               className={selectCls("w-full min-w-0 rounded-full bg-card pr-9 font-medium shadow-sm sm:w-auto sm:max-w-md", true)}
               value={active.key}
-              onChange={(e) => { setActive(e.target.value); qc.invalidateQueries(); navigate({ to: "/app" }); }}
+              onChange={(e) => { const next = contexts.find((c) => c.key === e.target.value); setActive(e.target.value); qc.invalidateQueries(); if (next?.role === "org_owner" && next.schoolId) navigate({ to: "/app/school-home", search: { s: next.schoolId } }); else navigate({ to: "/app" }); }}
             >
               {contexts.map((c) => (
                 <option key={c.key} value={c.key}>
-                  {opsOnly && c.schoolId === active.schoolId && c.role === active.role ? (ops.title === "عملي" ? "متعدد الأدوار" : ops.title) : ROLE_LABELS[c.role]} · {c.schoolName}{c.orgName ? ` (${c.orgName})` : ""}
+                  {opsOnly && c.schoolId === active.schoolId && c.role === active.role ? (ops.title === "عملي" ? "متعدد الأدوار" : ops.title) : ROLE_LABELS[c.role]} · {c.schoolName}
                 </option>
               ))}
             </select>}

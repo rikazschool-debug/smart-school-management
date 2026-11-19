@@ -80,7 +80,6 @@ function Meeting({ school, ctx }: { school: string | null; ctx: AppContext }) {
   const started = Date.parse(m.starts_at) - 15 * 60e3 <= Date.now();
   return (
     <div className="space-y-6">
-      <Link to="/app/admin/meetings" className="text-sm text-primary">← الاجتماعات والقرارات</Link>
       <PageHeader title={m.title} desc={`${riyadhDate(m.starts_at)} ${riyadhTime(m.starts_at)}–${riyadhTime(new Date(Date.parse(m.starts_at) + m.duration_min * 60e3).toISOString())} (الرياض) · ${m.duration_min} دقيقة${m.location ? ` · ${m.location}` : ""}`}
         action={<div className="flex flex-wrap gap-2"><Pill tone={m.status === "cancelled" ? "muted" : m.status === "held" ? "ok" : "warn"}>{m.live_status === "live" ? "مباشر الآن" : m.live_status === "ended" ? "انتهى" : MEETING_STATUS[m.status]}</Pill><Pill>{m.mode === "virtual" ? "افتراضي — صوت وشاشة" : "حضوري"}</Pill>{m.scope === "org" && <Pill>بين الفروع</Pill>}{m.privacy === "restricted" && <Pill tone="bad">مقيد</Pill>}</div>} />
       {m.mode === "virtual" && m.status === "scheduled" && m.live_status !== "ended" && (organizer || (mine && !mine.banned)) && (

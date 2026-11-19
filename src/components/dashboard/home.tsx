@@ -44,7 +44,7 @@ export function Home() {
   if (active.role === "student" && active.schoolId) return <StudentHome schoolId={active.schoolId} />;
   return (
     <>
-      <PageHeader eyebrow={today()} title="لوحة التحكم المركزية" desc={`${ops.title ?? ROLE_LABELS[active.role]} · ${active.schoolName}${active.orgName ? ` — ${active.orgName}` : ""}`} />
+      <PageHeader eyebrow={today()} title="لوحة التحكم المركزية" desc={`${ops.title ?? ROLE_LABELS[active.role]} · ${active.schoolName}`} />
       {!active.schoolId && ops.central ? (
         <CentralHrHome orgId={active.orgId ?? ""} />
       ) : active.role === "platform_admin" && !active.schoolId ? (

@@ -44,7 +44,6 @@ function Page() {
   if (active.role !== "org_owner" || !active.orgId) return <ForbiddenState />;
   return (
     <>
-      <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>
       <PageHeader title="إعداد المستخدمين والصلاحيات" desc="الدور الوظيفي يحدد الأقسام والإجراءات والنطاق، وهو منفصل عن القسم الأكاديمي والفرع. المنع الخاص يغلب أي منح." />
       <p className="mb-4 text-sm"><Link to="/app/members" className="text-primary underline">الدعوات والعضويات</Link> — الأدوار الأساسية الحالية تبقى كما هي حتى يُحفظ تعديل صريح.</p>
       <Tabs org={active.orgId} school={active.schoolId} />

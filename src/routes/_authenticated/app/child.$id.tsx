@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
 import { ForbiddenState } from "@/components/states";
 import { ChildOverview } from "@/components/family/child-overview";
 import { useSession } from "@/lib/session";
@@ -19,7 +18,6 @@ function Page() {
   if (active.role !== "guardian") return <ForbiddenState />;
   return (
     <>
-      <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />كل الأبناء</Link>
       <ChildOverview key={id} studentId={id} initialTab={tab} />
     </>
   );

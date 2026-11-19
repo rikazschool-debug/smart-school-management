@@ -1,5 +1,5 @@
 import { PeoplePicker } from "@/components/people-picker";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -39,7 +39,6 @@ function Duties({ ctx }: { ctx: Ctx }) {
   const tab = picked && tabs.some(([k]) => k === picked) ? picked : lead ? "week" : "mine";
   return (
     <div>
-      <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
       <PageHeader eyebrow={ctx.schoolName} title="المناوبات والإشراف اليومي" desc={lead ? "اقتراح التوزيع والتعديل والنشر والتغطية والبدلاء." : "مناوباتك المنشورة، والإقرار وتوثيق التنفيذ."} />
       <div role="tablist" className="mb-4 flex flex-wrap gap-2 border-b pb-2">
         {tabs.map(([k, l]) => (

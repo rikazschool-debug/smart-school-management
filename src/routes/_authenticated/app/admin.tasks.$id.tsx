@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -73,7 +73,6 @@ function Task({ role, school }: { role: string; school: string }) {
 
   return (
     <div className="space-y-6" dir="rtl">
-      <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
       <PageHeader title={t.title} desc={`تاريخ بداية التكليف ${t.start_date} · أولوية ${PRIORITY[t.priority]}`} action={<div><Pill tone={t.status === "done" ? "ok" : "warn"}>{TASK_STATUS[t.status]}</Pill></div>} />
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-3 rounded-xl border bg-card p-4 md:col-span-2">

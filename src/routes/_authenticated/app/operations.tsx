@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Bus, Construction, Wrench } from "lucide-react";
+import { Bus, Construction, Wrench } from "lucide-react";
 import { ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked, useOrgSections } from "@/components/owner-portal";
 import { useSession } from "@/lib/session";
@@ -16,7 +16,6 @@ function Page() {
   if (active.role !== "org_owner") return <ForbiddenState />;
   return (
     <>
-      <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>
       <PageHeader title="النقل المدرسي والصيانة" desc="الصيانة والطلبات متاحة الآن. تشغيل النقل (المسارات والتوزيع والتتبع) مؤجل." />
       {s.isLoading ? <LoadingState /> : s.data?.operations?.["enabled"] === false ? <SectionLocked /> : (
         <div className="grid gap-4 md:grid-cols-3">

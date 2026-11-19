@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { MeetingRoom } from "@/components/admin/meeting-room";
 import { ForbiddenState, PageHeader } from "@/components/states";
 import { useSession } from "@/lib/session";
@@ -17,7 +17,6 @@ function Room() {
   if (!active || !NAV_BY_ROLE[active.role].includes("virtual")) return <ForbiddenState />;
   return (
     <div className="space-y-3">
-      <Link to="/app/virtual-classes" className="text-sm text-primary">← الحصص الافتراضية</Link>
       <PageHeader title="الحصة الافتراضية" desc="المعلم يدير الصوت ومشاركة الشاشة؛ ارفع يدك لطلب الكلام." />
       <MeetingRoom meetingId={id} onExit={() => nav({ to: "/app/virtual-classes" })} />
     </div>

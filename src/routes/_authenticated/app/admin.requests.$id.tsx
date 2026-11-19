@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -98,7 +98,6 @@ function Req({ role, school }: { role: string; school: string }) {
 
   return (
     <div className="space-y-6">
-      <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
       <PageHeader title={r.form_name} desc={`إصدار ${r.form_version} · مقدم الطلب ${r.names[r.submitted_by] ?? "مستخدم غير متاح"} · المسؤول ${r.names[r.handler_user] ?? "غير محدد"}`}
         action={<div><Pill tone={r.status === "completed" ? "ok" : r.status === "rejected" ? "bad" : "warn"}>{REQ_STATUS[r.status]}</Pill></div>} />
       {r.handler_note && <p className="rounded-lg bg-accent p-3 text-sm">ملاحظة المسؤول: {r.handler_note}</p>}

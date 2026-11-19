@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Archive, BarChart3, ArrowRight, ClipboardList, FileSpreadsheet, LayoutDashboard, ReceiptText, Settings, Wallet, Inbox } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Archive, BarChart3, ClipboardList, FileSpreadsheet, LayoutDashboard, ReceiptText, Settings, Wallet, Inbox } from "lucide-react";
 import { TabIntro } from "@/components/procurement/ui";
 import { ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";
@@ -60,7 +60,6 @@ function Page() {
   const isOwner = active.role === "org_owner";
   const header = (
     <>
-      {isOwner && <Link to="/app/finance" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />المالية والمحاسبة</Link>}
       <PageHeader eyebrow="المالية" title="المشتريات والعهد المالية" desc="عهد نقدية واحتياجات وفواتير بضريبة القيمة المضافة، بمسار اعتماد مستقل لكل خطوة." />
     </>
   );

@@ -1,6 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ArrowRight } from "lucide-react";
 import { ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked, useOrgSections } from "@/components/owner-portal";
 import { useSession, type AppContext } from "@/lib/session";
@@ -29,7 +28,6 @@ function Page() {
   if (!picked || !target) {
     return (
       <>
-        <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>
         <PageHeader title="إدارة المدارس" desc={`فروع ${active.orgName} — اختر مدرسة لعرض تفاصيلها`} />
         {active.orgId && <BranchesOverview orgId={active.orgId} />}
       </>
@@ -37,7 +35,6 @@ function Page() {
   }
   return (
     <>
-      <Link to="/app/school-home" search={{}} className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />كل الفروع</Link>
       <PageHeader title={target.schoolName} desc="تفاصيل المدرسة" />
       {active.schoolId === picked ? <StaffHome ctx={active as AppContext & { schoolId: string }} /> : <LoadingState />}
     </>

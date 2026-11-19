@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BadgeCheck, BookOpen, ClipboardList, MessagesSquare, School, UserRound, Users } from "lucide-react";
+import { BadgeCheck, BookOpen, ClipboardList, MessagesSquare, School, UserRound, Users } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ClassroomPosts } from "@/components/classroom-posts";
@@ -52,7 +52,6 @@ function Page() {
   const go = (t: RoomTab) => nav({ to: "/app/classrooms/section/$id", params: { id }, search: { tab: t }, replace: true });
   return (
     <>
-      <Link to="/app/classrooms" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />كل الفصول</Link>
       <header className="mb-5 overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="flex flex-col gap-4 bg-gradient-to-l from-primary/15 to-transparent p-5 sm:flex-row sm:items-center">
           <div className="grid size-16 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow"><School className="size-8" /></div>

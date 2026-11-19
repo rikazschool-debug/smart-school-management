@@ -1,6 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
 import { EmptyState, ErrorState, LoadingState, PageHeader, Section } from "@/components/states";
 import { arabicError, useSession } from "@/lib/session";
 import { rpc } from "@/components/hr/shared";
@@ -26,7 +25,6 @@ function Page() {
   const rest = rows.filter((x) => x.status !== "pending_manager");
   return (
     <>
-      <Link to="/app/my-employment" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />خدماتي الوظيفية</Link>
       <PageHeader title="طلبات فريقي" desc="أنت المدير المباشر لهؤلاء في تعيين حالي. موافقتك تحيل الطلب إلى الموارد البشرية للاعتماد النهائي." />
       {org && <div className="mb-5"><TeamAttendance org={org} /></div>}
       {org && <div className="mb-5"><PermQueue org={org} team /></div>}

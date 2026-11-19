@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { MeetingRoom } from "@/components/admin/meeting-room";
 import { ForbiddenState, PageHeader } from "@/components/states";
 import { useSession } from "@/lib/session";
@@ -17,7 +17,6 @@ function Room() {
   if (!active || (active.role !== "guardian" && !NAV_BY_ROLE[active.role].includes("meetings"))) return <ForbiddenState />;
   return (
     <div className="space-y-3">
-      <Link to="/app/admin/meetings/$id" params={{ id }} className="text-sm text-primary">← تفاصيل الاجتماع</Link>
       <PageHeader title="الاجتماع الافتراضي" desc="صوت جماعي ومشاركة شاشة. الدخول للمدعوين فقط." />
       <MeetingRoom meetingId={id} onExit={() => nav({ to: "/app/admin/meetings/$id", params: { id } })} />
     </div>

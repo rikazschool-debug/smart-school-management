@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, CheckCircle2, Clock, Download, HeartPulse, Home, Pill, Search, Stethoscope } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Download, HeartPulse, Home, Pill, Search, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 import { rpc } from "@/components/hr/shared";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
@@ -127,7 +127,6 @@ export function HealthStudentPage() {
   const { id } = useParams({ from: "/_authenticated/app/health/$id" });
   return (
     <div>
-      <Link to="/app/health" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />كل الطلاب</Link>
       <HealthFile key={id} studentId={id} />
     </div>
   );

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ReceiptText } from "lucide-react";
+import { ReceiptText } from "lucide-react";
 import { ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked, useOrgSections } from "@/components/owner-portal";
 import { useSession } from "@/lib/session";
@@ -17,7 +17,6 @@ function Page() {
   if (active.role !== "org_owner") return <ForbiddenState />;
   return (
     <>
-      <Link to="/app" className="mb-3 inline-flex items-center gap-1 text-sm text-primary"><ArrowRight className="size-4" />الرئيسية</Link>
       <PageHeader title="المالية والمحاسبة" desc="المتاح: المشتريات والعهد المالية. بقية المحاسبة غير مشمولة." />
       {s.isLoading ? <LoadingState /> : s.data?.finance?.["enabled"] === false ? <SectionLocked /> : (<div className="space-y-8">
         <Link to="/app/procurement" className="flex items-start gap-4 rounded-2xl border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-muted/30">

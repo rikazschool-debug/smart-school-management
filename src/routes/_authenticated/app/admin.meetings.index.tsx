@@ -35,7 +35,6 @@ function Meetings({ ctx }: { ctx: Ctx }) {
   const [tab, setTab] = useState("meetings");
   return (
     <div>
-      <Link to="/app/admin" className="text-sm text-primary">← الإدارة المدرسية</Link>
       <PageHeader eyebrow={ctx.schoolName || ctx.orgName} title="الاجتماعات والقرارات" desc="الدعوات والحضور والمحاضر المثبتة والقرارات المرتبطة بالتكليفات." />
       <div role="tablist" className="mb-4 flex flex-wrap gap-2 border-b pb-2">
         {[["meetings", "الاجتماعات"], ["decisions", "القرارات"]].map(([k, l]) => (
