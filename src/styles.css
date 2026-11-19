@@ -178,7 +178,7 @@ body { font-family: "Cairo", system-ui, sans-serif; }
   --border: oklch(0.9 0.016 186);
   --input: oklch(0.83 0.025 186);
   --ring: var(--primary);
-  --sidebar: oklch(0.987 0.007 185);
+  --sidebar: oklch(0.96753567 0.00982201 87.47093480);
   --sidebar-foreground: var(--muted-foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);

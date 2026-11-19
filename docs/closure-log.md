@@ -1231,3 +1231,6 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - متحقق محليًا ببيانات محاكاة: رئيسية الطالب ومسار الحضور والاختبارات على الكمبيوتر والجوال، رئيسية ولي الأمر والمدير، واستثناء دورَي المالك. نجح اختبار استثناء المالكين. في الاختبارات الأوسع ظهر إخفاقان سابقان في ترتيب الخريطة المدرسية وتسمية الكادر للوكيل. الاتصال بجلسة فعلية غير متحقق.
 
 - prompt-507: خلفية الصفحات المدرسية في الوضع الفاتح ‎#F7F4ED‎. تحقق اللون في معاينة المتصفح ببيانات محاكاة على الكمبيوتر والجوال، مع بقاء القائمة الجانبية والوضع الداكن وواجهتَي المالك دون تغيير. لا نشر.
+
+## prompt-508 — side menu background #F7F4ED
+- School workspace light-mode `--sidebar` set to #F7F4ED (same as page background). Dark mode and owner/platform interfaces unchanged. Status: منفّذ ومختَبَر (computed color checked in browser).
