@@ -27755,6 +27755,10 @@ export type Database = {
         Returns: string
       }
       cv_teachers: { Args: { _school: string }; Returns: Json }
+      dash_staff_absence: {
+        Args: { _date?: string; _school: string }
+        Returns: Json
+      }
       decide_account_request: {
         Args: { _approve: boolean; _id: string; _note?: string }
         Returns: string

@@ -17,6 +17,7 @@ import { arabicError, useSchool } from "@/lib/session";
 import { HW_STATUS, LATE_LABEL, SUB_STATUS, TYPE_LABEL, fromLocalInput, safeHref, schoolTime, statusTone, toLocalInput } from "@/lib/homework";
 import { ExamPaper } from "@/components/homework/exam-paper";
 import { examAnswersText } from "@/components/homework/exam-model";
+import { formatAcademicYear } from "@/lib/academic-year";
 
 export const Route = createFileRoute("/_authenticated/app/homework/$id")({
   head: () => ({ meta: [{ title: "تفاصيل الواجب والاختبار — ركاز" }, { name: "description", content: "التعليمات والأسئلة والتسليم والتصحيح والنتائج." }, { property: "og:title", content: "تفاصيل الواجب والاختبار — ركاز" }, { property: "og:description", content: "أسئلة الاختبار والتسليم والنتائج ضمن الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -172,7 +173,7 @@ function CopyTemplate({ h, courses, onDone }: { h: Row; courses: Row[]; onDone: 
       <Label htmlFor="cp-course">المقرر الوجهة (مقرراتك السارية)</Label>
       <select id="cp-course" className={selectCls("w-full", true)} value={target} onChange={(e) => setTarget(e.target.value)}>
         <option value="">اختر</option>
-        {courses.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]} ({c["academic_years"]?.["name"]})</option>)}
+        {courses.map((c) => <option key={c["id"]} value={c["id"]}>{c["subjects"]?.["name"]} — {c["sections"]?.["name"]} ({formatAcademicYear(c["academic_years"]?.["name"])})</option>)}
       </select>
       <div className="grid gap-2 sm:grid-cols-2">
         <div><Label htmlFor="cp-from">وقت الإتاحة الجديد</Label><Input id="cp-from" type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} /></div>

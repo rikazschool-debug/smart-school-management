@@ -11,6 +11,7 @@ import { arabicError } from "@/lib/session";
 import { pp, type PersonKind, type PpCaps, type Tag } from "./shared";
 import { supabase } from "@/integrations/supabase/client";
 import { bulkActions, placeSelected } from "./bulk-policy";
+import { formatAcademicYear } from "@/lib/academic-year";
 
 type Result = { id: string; status: "ok" | "refused" | "failed"; reason: string | null };
 type Out = { repeat: boolean; ok: number; refused: number; failed: number; results: Result[] };
@@ -142,7 +143,7 @@ export function BulkBar({ kind, schoolId, caps, tags, count, mode, total, pageCo
           </select>
           {action === "place" && <select aria-label="شعبة التسكين الجماعي" disabled={busy || sections.isLoading} className={selectCls()} value={section} onChange={(e) => setSection(e.target.value)}>
             <option value="">{sections.error ? "تعذّر تحميل الشعب" : "اختر الشعبة"}</option>
-            {sections.data?.map((s) => <option key={s.id} value={s.id}>{s.academic_years?.name} · {s.grades?.name} / {s.name}</option>)}
+            {sections.data?.map((s) => <option key={s.id} value={s.id}>{formatAcademicYear(s.academic_years?.name)} · {s.grades?.name} / {s.name}</option>)}
           </select>}
           {action.startsWith("tag") && (
             <select aria-label="الوسم" className={selectCls()} value={tag} onChange={(e) => setTag(e.target.value)}>

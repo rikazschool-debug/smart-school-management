@@ -24,7 +24,11 @@ import { GeneratePanel } from "@/components/schedule/generate-panel";
 import { DAY_NAMES, slotLabel, todayISO, useCurrentTimetable, useDaySetup, useSlots, weekDates } from "@/lib/schedule";
 
 export const Route = createFileRoute("/_authenticated/app/schedule")({
-  validateSearch: (s: Record<string, unknown>): { tab?: ScheduleTab | undefined } => ({ tab: s["tab"] === "subs" || s["tab"] === "settings" || s["tab"] === "timetable" ? s["tab"] : undefined }),
+  validateSearch: (s: Record<string, unknown>): { tab?: ScheduleTab | undefined; teacher?: string | undefined; date?: string | undefined } => ({
+    tab: s["tab"] === "subs" || s["tab"] === "settings" || s["tab"] === "timetable" ? s["tab"] : undefined,
+    teacher: typeof s["teacher"] === "string" && s["teacher"] ? s["teacher"] : undefined,
+    date: typeof s["date"] === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s["date"]) ? s["date"] : undefined,
+  }),
   head: () => ({ meta: [{ title: "الجدول المدرسي | ركاز" }, { name: "description", content: "بناء الجدول المدرسي وتوليده ونشره، والبدلاء، وإعدادات اليوم الدراسي والأنصبة" }] }),
   component: Page,
 });
@@ -41,7 +45,7 @@ function ManagerTabs({ ctx }: { ctx: Ctx }) {
   const permissions = useSchoolPerms(ctx.schoolId);
   const settings = anyPermission(permissions, ["schedule_day.view", "schedule_day.edit", "schedule_rooms.view", "schedule_rooms.edit", "schedule_loads.view", "schedule_loads.edit", "schedule_availability.view", "schedule_availability.edit", "schedule_requirements.view", "schedule_requirements.edit", "schedule_sub_policy.view", "schedule_sub_policy.edit"]);
   const tabs: ScheduleTab[] = ["timetable", ...(scheduleTabs(ctx.role).includes("subs") ? ["subs" as const] : []), ...(settings ? ["settings" as const] : [])];
-  const { tab: wanted = "timetable" } = Route.useSearch();
+  const { tab: wanted = "timetable", teacher: pickTeacher, date: pickDate } = Route.useSearch();
   const tab = tabs.includes(wanted) ? wanted : "timetable";
   const nav = useNavigate({ from: "/app/schedule" });
   const editor = anyPermission(permissions, ["schedule_drafts.view", "schedule_drafts.create", "schedule_drafts.edit", "schedule_drafts.generate", "schedule_drafts.publish", "schedule_drafts.revise"]);
@@ -54,7 +58,7 @@ function ManagerTabs({ ctx }: { ctx: Ctx }) {
             className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{TAB_LABEL[t]}</button>
         ))}
       </div>
-      {tab === "subs" ? <SubstitutionsTab ctx={ctx} /> : tab === "settings" ? <SettingsTab ctx={ctx} /> : editor ? <Manager ctx={ctx} /> : <Viewer ctx={ctx} embedded />}
+      {tab === "subs" ? <SubstitutionsTab ctx={ctx} initialTeacher={pickTeacher} initialDate={pickDate} /> : tab === "settings" ? <SettingsTab ctx={ctx} /> : editor ? <Manager ctx={ctx} /> : <Viewer ctx={ctx} embedded />}
     </>
   );
 }

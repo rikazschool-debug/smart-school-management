@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { anyPermission, workspacePages } from "@/lib/workspace-perms";
 import { arabicError, type AppContext } from "@/lib/session";
+import { formatAcademicYear } from "@/lib/academic-year";
 
 export const Route = createFileRoute("/_authenticated/app/courses")({ head: () => ({ meta: [{ title: "المقررات والتكليفات — ركاز" }, { name: "description", content: "المقررات وتكليفات المعلمين حسب التفويض والنطاق." }, { property: "og:title", content: "المقررات والتكليفات — ركاز" }, { property: "og:description", content: "عرض المقررات وإدارة تكليفات المعلمين حسب الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
@@ -125,7 +126,7 @@ function Courses({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         defaults={{ weekly_periods: 4 }}
         columns={[
           { label: "المقرر", render: (r) => courseName(r) },
-          { label: "السنة", render: (r) => r["academic_years"]?.name },
+          { label: "السنة", render: (r) => formatAcademicYear(r["academic_years"]?.name) },
           { label: "المعلم", render: (r) => {
             const a = (r["teacher_assignments"] as Row[] | undefined)?.find((x) => x["status"] === "approved" || x["status"] === "pending");
             return a ? `${a["teachers"]?.full_name} (${STATUS_LABEL[a["status"]]})` : "غير مكلف";

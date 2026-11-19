@@ -1,7 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CalendarCheck, CalendarDays, ClipboardList, GraduationCap, Layers, MessagesSquare, PartyPopper, UsersRound, Wallet, type LucideIcon } from "lucide-react";
-import { Bars, Donut, Kpi, KpiGrid, Meter, NoData, Panel, Trend, lastDays } from "@/components/dashboard/kit";
+import { Bars, Donut, Kpi, KpiGrid, Meter, Panel, lastDays } from "@/components/dashboard/kit";
+import { FollowUpPanel, type Attention } from "@/components/dashboard/follow-up";
+import { WeekCalendar } from "@/components/dashboard/week-calendar";
+import { WorkPanel } from "@/components/dashboard/work-panel";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { ChildOverview } from "@/components/family/child-overview";
@@ -72,7 +75,6 @@ export function Home() {
 }
 
 const HW_STATUS: Record<string, string> = { draft: "مسودة", scheduled: "مجدول", published: "منشور", closed: "مغلق", cancelled: "ملغى" };
-const ATT_KEYS = [{ key: "present", name: "حاضر" }, { key: "late", name: "متأخر" }, { key: "absent", name: "غائب" }];
 
 function tally<T>(rows: T[], key: (r: T) => string | null | undefined) {
   const m = new Map<string, number>();
@@ -100,16 +102,16 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       return { students, teachers, sections, courses, pending, classrooms, unplaced: Math.max(0, students - enrolled) };
     },
   });
-  const days = lastDays(7);
+  const todayIso = lastDays(1)[0]!.iso;
   const charts = useQuery({
-    queryKey: ["dash-charts", s],
+    queryKey: ["dash-charts", s, todayIso],
     queryFn: async () => {
       const safe = async <T,>(p: PromiseLike<{ data: T | null; error: unknown }>) => { const r = await p; return r.error ? ([] as unknown as T) : ((r.data ?? []) as T); };
       const [secs, enr, studs, att, hw, tch] = await Promise.all([
         safe<Row[]>(db.from("sections").select("id,name,capacity,grades(name)").eq("school_id", s).limit(200)),
         safe<Row[]>(db.from("enrollments").select("section_id").eq("school_id", s).eq("status", "active").limit(5000)),
         safe<Row[]>(db.from("students").select("gender").eq("school_id", s).eq("status", "active").limit(5000)),
-        safe<Row[]>(db.from("attendance_days").select("date,status").eq("school_id", s).gte("date", days[0]!.iso).limit(10000)),
+        safe<Row[]>(db.from("attendance_days").select("date,status").eq("school_id", s).eq("date", todayIso).limit(10000)),
         safe<Row[]>(db.from("homework").select("status,kind,due_at").eq("school_id", s).limit(3000)),
         safe<Row[]>(db.from("teachers").select("specialization").eq("school_id", s).eq("status", "active").limit(1000)),
       ]);
@@ -117,29 +119,26 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       const sections = secs.map((x) => ({ name: `${x["grades"]?.name ? x["grades"].name + " / " : ""}${x["name"]}`, value: per.get(x["id"]) ?? 0, max: x["capacity"] ?? 0 })).sort((a, b) => b.value - a.value);
       const g = tally(studs, (r) => r["gender"]);
       const gender = [{ name: "ذكور", value: g.get("male") ?? 0 }, { name: "إناث", value: g.get("female") ?? 0 }, { name: "غير محدد", value: (g.get("—") ?? 0) }].filter((x) => x.value);
-      const attendance = days.map((d) => {
-        const r = att.filter((a) => a["date"] === d.iso);
-        return { name: d.name, present: r.filter((a) => a["status"] === "present").length, late: r.filter((a) => a["status"] === "late").length, absent: r.filter((a) => a["status"] === "absent" || a["status"] === "in_school_absent").length };
-      });
-      const today = attendance[attendance.length - 1]!;
-      const hws = tally(hw, (r) => r["status"]);
-      const homework = [...hws].map(([k, v]) => ({ name: HW_STATUS[k] ?? k, value: v }));
+      const r = att.filter((a) => a["date"] === todayIso);
+      const today = { present: r.filter((a) => a["status"] === "present").length, late: r.filter((a) => a["status"] === "late").length, absent: r.filter((a) => a["status"] === "absent" || a["status"] === "in_school_absent").length };
       const now = Date.now();
       const dueSoon = hw.filter((h) => h["status"] === "published" && h["due_at"] && new Date(h["due_at"]).getTime() > now && new Date(h["due_at"]).getTime() < now + 7 * 86400000).length;
       const spec = [...tally(tch, (r) => (r["specialization"] || "غير محدد") as string)].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 8);
-      return { sections, gender, attendance, today, homework, dueSoon, spec };
+      const genderKeys = [...g.keys()].filter((k) => k === "male" || k === "female");
+      return { sections, gender, genderKeys, today, dueSoon, spec, hw };
     },
   });
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const d = q.data, c = charts.data;
-  const attention = d ? [
+  const attention: Attention[] = d ? [
     d.unplaced > 0 && has("students") && { text: `${d.unplaced} طالب منتظم بلا تسكين في شعبة`, to: "/app/students", cta: "تسكين" },
     d.pending > 0 && has("courses") && { text: `${d.pending} تكليف معلم بانتظار الاعتماد`, to: "/app/courses", cta: "مراجعة" },
-    d.courses > 0 && d.classrooms < d.courses && { text: `${d.courses - d.classrooms} مقرر بلا فصل رقمي (يُنشأ عند اعتماد التكليف)`, to: "/app/courses", cta: "المقررات" },
-    c && c.today.absent > 0 && has("attendance") && { text: `${c.today.absent} غياب مسجّل اليوم`, to: "/app/attendance", cta: "الحضور" },
-  ].filter(Boolean) as { text: string; to: string; cta: string }[] : [];
+    d.courses > 0 && d.classrooms < d.courses && has("courses") && { text: `${d.courses - d.classrooms} مقرر بلا فصل رقمي (يُنشأ عند اعتماد التكليف)`, to: "/app/courses", cta: "المقررات" },
+    c && c.today.absent > 0 && has("attendance") && { text: `${c.today.absent} غياب طلاب مسجّل اليوم`, to: "/app/attendance", cta: "الحضور" },
+  ].filter(Boolean) as Attention[] : [];
   const quick = nav.map((k) => QUICK[k]).filter(Boolean) as NonNullable<(typeof QUICK)[NavKey]>[];
   const rate = c && c.today.present + c.today.late + c.today.absent ? Math.round(((c.today.present + c.today.late) / (c.today.present + c.today.late + c.today.absent)) * 100) : null;
+  const manager = canManage(ctx.role);
   return (
     <div className="space-y-6">
       <KpiGrid>
@@ -151,38 +150,7 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         <Kpi tone={0} label="واجبات هذا الأسبوع" value={c?.dueSoon} icon={ClipboardList} to={go("homework", "/app/homework")} />
       </KpiGrid>
       <div className="grid gap-4 lg:grid-cols-3">
-        <Panel title="الحضور خلال آخر 7 أيام" to={go("attendance", "/app/attendance")} className="lg:col-span-2">
-          {!c ? <LoadingState rows={3} /> : <Trend data={c.attendance} keys={ATT_KEYS} height={220} />}
-        </Panel>
-        <Panel title="الطلاب حسب الجنس" to={go("students", "/app/students")}>
-          {!c ? <LoadingState rows={3} /> : <Donut data={c.gender} center="طالب" />}
-        </Panel>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Panel title="تسكين الشعب (الطلاب / السعة)" to={go("students", "/app/students")} className="lg:col-span-2">
-          {!c ? <LoadingState rows={3} /> : <Meter rows={c.sections.slice(0, 8)} />}
-        </Panel>
-        <Panel title="الواجبات والاختبارات" to={go("homework", "/app/homework")}>
-          {!c ? <LoadingState rows={3} /> : <Donut data={c.homework} center="عنصر" />}
-        </Panel>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Panel title="المعلمون حسب التخصص" to={go("teachers", "/app/teachers")}>
-          {!c ? <LoadingState rows={3} /> : <Bars data={c.spec} color={1} />}
-        </Panel>
-        <Panel title="يحتاج إلى متابعة">
-          {!d ? <LoadingState rows={2} /> : !attention.length ? <NoData text="لا توجد بنود معلقة الآن ✓" /> : (
-            <ul className="divide-y">
-              {attention.map((a) => (
-                <li key={a.text} className="flex items-center gap-3 py-3">
-                  <span aria-hidden className="size-2 shrink-0 rounded-full bg-warning" />
-                  <span className="min-w-0 flex-1 text-sm">{a.text}</span>
-                  <Link to={a.to} className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-primary hover:bg-secondary">{a.cta}<ArrowLeft className="size-3.5" /></Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
+        <FollowUpPanel school={s} attention={attention} staffEnabled={manager} studentsEnabled={has("attendance") || has("students")} genders={c?.genderKeys ?? []} hrAttendance={ctx.role === "org_owner"} />
         <Panel title="انتقال سريع">
           <div className="grid gap-2">
             {quick.slice(0, 6).map((x) => (
@@ -193,6 +161,21 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
               </Link>
             ))}
           </div>
+        </Panel>
+      </div>
+      <WeekCalendar org={ctx.orgId} school={s} />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <WorkPanel rows={c?.hw} homework={has("homework")} tests={has("tests")} />
+        <Panel title="تسكين الشعب (الطلاب / السعة)" to={go("students", "/app/students")} className="lg:col-span-2">
+          {!c ? <LoadingState rows={3} /> : <Meter rows={c.sections.slice(0, 8)} />}
+        </Panel>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Panel title="الطلاب حسب الجنس" to={go("students", "/app/students")}>
+          {!c ? <LoadingState rows={3} /> : <Donut data={c.gender} center="طالب" />}
+        </Panel>
+        <Panel title="المعلمون حسب التخصص" to={go("teachers", "/app/teachers")} className="lg:col-span-2">
+          {!c ? <LoadingState rows={3} /> : <Bars data={c.spec} color={1} />}
         </Panel>
       </div>
     </div>

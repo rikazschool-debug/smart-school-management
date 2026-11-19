@@ -17,11 +17,12 @@ const sel = selectCls("w-full");
 
 /** «البدلاء» tab: one day's teacher absences, affected periods, substitute suggestion/assignment/cancel.
  *  Substitutions are per date+slot rows (record_absence/assign_substitute/cancel_substitution); they never change the base timetable. */
-export function SubstitutionsTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
+export function SubstitutionsTab({ ctx, initialTeacher, initialDate }: { ctx: AppContext & { schoolId: string }; initialTeacher?: string | undefined; initialDate?: string | undefined }) {
   const S = ctx.schoolId;
   const qc = useQueryClient();
-  const [date, setDate] = useState(todayISO());
-  const [teacher, setTeacher] = useState("");
+  // opened from a dashboard absence alert: that day and teacher are pre-picked; recording still goes through record_absence
+  const [date, setDate] = useState(initialDate ?? todayISO());
+  const [teacher, setTeacher] = useState(initialTeacher ?? "");
   const [note, setNote] = useState("");
   const teachers = useOptions("teachers", "full_name", S);
   const cur = useCurrentTimetable(S, date);

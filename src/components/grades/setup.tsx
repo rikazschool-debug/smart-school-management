@@ -11,6 +11,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { ask, askText } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { PERIOD_STATUS, PLAN_STATUS, contribution } from "./common";
+import { formatAcademicYear } from "@/lib/academic-year";
 
 const sel = selectCls("w-full");
 type Item = { name: string; max_score: string; weight: string; source: string };
@@ -49,7 +50,7 @@ export function PlansTab({ S, admin }: { S: string; admin: boolean }) {
               <div key={p["id"]} className="rounded-xl border bg-card p-4" data-testid="plan-card">
                 <div className="flex items-start justify-between gap-2">
                   <div><div className="font-semibold">{p["name"]} <span className="text-xs text-muted-foreground">إصدار {p["version"]}</span></div>
-                    <div className="text-xs text-muted-foreground">{p["academic_years"]?.["name"]}{p["terms"] ? ` • ${p["terms"]["name"]}` : ""} • {p["scope"] === "subject" ? `مقرر: ${p["subjects"]?.["name"]}` : p["scope"] === "grade" ? `صف: ${p["grades"]?.["name"]}` : "كل المدرسة"} • يسري من {p["effective_from"]}</div></div>
+                    <div className="text-xs text-muted-foreground">{formatAcademicYear(p["academic_years"]?.["name"])}{p["terms"] ? ` • ${p["terms"]["name"]}` : ""} • {p["scope"] === "subject" ? `مقرر: ${p["subjects"]?.["name"]}` : p["scope"] === "grade" ? `صف: ${p["grades"]?.["name"]}` : "كل المدرسة"} • يسري من {p["effective_from"]}</div></div>
                   <span className="rounded-full bg-muted px-2 py-0.5 text-xs">{PLAN_STATUS[p["status"]]}</span>
                 </div>
                 <table className="mt-3 w-full text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="text-start">البند</th><th className="text-start">القصوى</th><th className="text-start">الوزن</th><th className="text-start">الإدخال</th></tr></thead>

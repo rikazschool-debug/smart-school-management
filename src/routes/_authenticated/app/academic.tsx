@@ -17,6 +17,7 @@ import { SubjectNameSelect } from "@/components/subject-preset-picker";
 import { SUBJECT_PRESETS } from "@/lib/subject-presets";
 import { selectCls } from "@/components/ui/native-select";
 import { AcademicPresetPicker, GradeNameSelect } from "@/components/academic-preset-picker";
+import { formatAcademicYear } from "@/lib/academic-year";
 
 const ACAD_TABS = [
   { v: "years", label: "السنوات والفصول", hint: "التقويم الدراسي", icon: CalendarDays },
@@ -99,7 +100,7 @@ const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], qu
                   columns={[
                     { label: "الشعبة", render: (r) => r["name"] },
                     { label: "الصف", render: (r) => r["grades"]?.name },
-                    { label: "السنة", render: (r) => r["academic_years"]?.name },
+                    { label: "السنة", render: (r) => formatAcademicYear(r["academic_years"]?.name) },
                     { label: "المسجلون / السعة", render: (r) => `${r["enrollments"]?.[0]?.count ?? 0} / ${r["capacity"]}` },
                   ]} />}
               </TabsContent>

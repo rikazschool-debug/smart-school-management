@@ -1,0 +1,1 @@
+- School dashboard staff absences come only from dash_staff_absence (HR fingerprint days, caller needs can_manage_school or HR attendance view, names/status only); teacher alerts open «البدلاء» via schedule search teacher/date and recording stays on record_absence.

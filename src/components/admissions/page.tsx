@@ -17,6 +17,7 @@ import { validateAdSearch, type AdSearch } from "@/components/admissions/search"
 import { FamilyRequests } from "@/components/family/requests";
 export { validateAdSearch, type AdSearch };
 import { ACTION, CHANNEL, ENR, OUTCOME, STATUS, hasAdmissions, tone, useAdMe, type AdMe, type Sch } from "@/components/admissions/shared";
+import { academicYearOptions, formatAcademicYear } from "@/lib/academic-year";
 
 
 const fmt = (v: unknown) => (v ? new Date(String(v)).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" }) : "—");
@@ -155,21 +156,52 @@ function AppList({ orgId, orgName, me, sp, go }: { orgId: string; orgName: strin
   );
 }
 
+const omit = (d: Row, keys: string[], add: Row): Row => ({ ...Object.fromEntries(Object.entries(d).filter(([k]) => !keys.includes(k))), ...add });
+
 function NewApp({ orgId, schools, done, cancel }: { orgId: string; schools: Sch[]; done: (id: string) => void; cancel: () => void }) {
   const [key] = useState(() => crypto.randomUUID());
   const [d, setD] = useState<Row>({ school: schools[0]?.id ?? "" });
-  const m = useMutation({ mutationFn: async () => { const { school, ...rest } = d; const { data, error } = await db.rpc("ad_create", { _org: orgId, _school: school, _d: rest, _key: key }); if (error) throw error; return data as string; },
+  const school = d["school"] as string;
+  // stages, grades and the current year come from the branch's academic structure (only available entries)
+  const academic = useQuery({
+    queryKey: ["ad-academic", school], enabled: !!school, staleTime: 60_000,
+    queryFn: async () => {
+      const [st, gr, yr] = await Promise.all([
+        db.from("stages").select("id, name").eq("school_id", school).eq("available", true).order("sort_order"),
+        db.from("grades").select("id, name, stage_id").eq("school_id", school).eq("available", true).order("sort_order"),
+        db.from("academic_years").select("name, is_current, start_date").eq("school_id", school).order("start_date", { ascending: false }),
+      ]);
+      if (st.error) throw st.error; if (gr.error) throw gr.error; if (yr.error) throw yr.error;
+      const cur = (yr.data ?? []).find((y: { is_current: boolean | null }) => y.is_current) ?? (yr.data ?? [])[0];
+      return { stages: (st.data ?? []) as Row[], grades: (gr.data ?? []) as Row[], years: academicYearOptions(cur?.name) };
+    },
+  });
+  const a = academic.data;
+  const years = a?.years ?? [];
+  const stageId = a?.stages.find((x) => x["name"] === d["stage"])?.["id"];
+  const grades = (a?.grades ?? []).filter((g) => !stageId || g["stage_id"] === stageId);
+  const year = (d["year_label"] as string | undefined) ?? years[0] ?? "";
+  const m = useMutation({ mutationFn: async () => { const { school: s, ...rest } = d; const body = { ...rest, ...(year ? { year_label: year } : {}) }; const { data, error } = await db.rpc("ad_create", { _org: orgId, _school: s, _d: body, _key: key }); if (error) throw error; return data as string; },
     onSuccess: (id) => { toast.success("أُضيف الطلب"); done(id); }, onError: (e) => toast.error(arabicError(e)) });
   const F = (k: string, l: string, ph?: string) => <Field label={l}><Input value={d[k] ?? ""} placeholder={ph} onChange={(e) => setD({ ...d, [k]: e.target.value })} /></Field>;
   return (
     <Panel title="طلب قبول جديد (إضافة يدوية)">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="الفرع"><select className={selectCls()} value={d["school"]} onChange={(e) => setD({ ...d, school: e.target.value })}>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>
+        <Field label="الفرع"><select className={selectCls()} value={school} onChange={(e) => setD(omit(d, ["stage", "grade", "year_label"], { school: e.target.value }))}>{schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></Field>
         {F("student_name", "اسم الطالب *")}{F("guardian_name", "اسم ولي الأمر")}{F("guardian_phone", "جوال ولي الأمر *", "05xxxxxxxx")}{F("email", "البريد الإلكتروني")}
-        {F("stage", "المرحلة")}{F("grade", "الصف", "اتركه فارغًا إن لم يُحدد")}{F("year_label", "العام الدراسي", "مثال 1448/1449")}
+        <Field label="المرحلة"><select aria-label="المرحلة" className={selectCls()} disabled={!a} value={d["stage"] ?? ""} onChange={(e) => setD(omit(d, ["grade"], { stage: e.target.value || undefined }))}>
+          <option value="">{academic.isLoading ? "جارٍ التحميل…" : a?.stages.length ? "— اختر المرحلة —" : "لا توجد مراحل مفعّلة في الهيكل الأكاديمي"}</option>
+          {a?.stages.map((x) => <option key={x["id"]} value={x["name"]}>{x["name"]}</option>)}</select></Field>
+        <Field label="الصف"><select aria-label="الصف" className={selectCls()} disabled={!a || !d["stage"]} value={d["grade"] ?? ""} onChange={(e) => setD({ ...d, grade: e.target.value || undefined })}>
+          <option value="">{!d["stage"] ? "اختر المرحلة أولًا" : grades.length ? "— غير محدد —" : "لا توجد صفوف مفعّلة لهذه المرحلة"}</option>
+          {grades.map((g) => <option key={g["id"]} value={g["name"]}>{g["name"]}</option>)}</select></Field>
+        <Field label="العام الدراسي"><select aria-label="العام الدراسي" className={selectCls()} disabled={!years.length} value={year} onChange={(e) => setD({ ...d, year_label: e.target.value })}>
+          {!years.length && <option value="">لا يوجد عام دراسي في الهيكل الأكاديمي</option>}
+          {years.map((y, i) => <option key={y} value={y}>{y}{i === 0 ? " (الحالي)" : ""}</option>)}</select></Field>
+        {academic.error && <p className="text-sm text-destructive sm:col-span-2">{arabicError(academic.error)}</p>}
         <Field label="ملاحظات" className="sm:col-span-2"><Textarea value={d["notes"] ?? ""} onChange={(e) => setD({ ...d, notes: e.target.value })} /></Field>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">لا يُنشأ سجل طالب أو حساب أو حجز مقعد من هذا الطلب.</p>
+      <p className="mt-2 text-xs text-muted-foreground">المراحل والصفوف والعام الدراسي من الهيكل الأكاديمي للفرع المختار. لا يُنشأ سجل طالب أو حساب أو حجز مقعد من هذا الطلب.</p>
       <div className="mt-3 flex gap-2"><Button disabled={m.isPending} onClick={() => m.mutate()}>حفظ الطلب</Button><Button variant="outline" onClick={cancel}>إلغاء</Button></div>
     </Panel>
   );
@@ -193,7 +225,7 @@ function AppDetail({ id, back }: { id: string; back: () => void }) {
   const run = (action: string, p: Row = {}) => act.mutate({ action, p });
   const withReason = async (action: string, msg: string, p: Row = {}) => { const r = await askText(msg, { required: true }); if (r) run(action, { ...p, reason: r }); };
   const info: [string, React.ReactNode][] = [["الطالب", a["student_name"]], ["ولي الأمر", a["guardian_name"] ?? "—"], ["الجوال", <bdi dir="ltr" key="p">{a["guardian_phone"] ?? "—"}</bdi>], ["البريد", a["email"] ?? "—"],
-    ["الفرع", a["school_name"] ?? `بانتظار تحديد الفرع (${a["raw_school"] ?? "—"})`], ["المرحلة", a["stage"] ?? "غير محدد"], ["الصف", a["grade"] ?? "غير محدد"], ["العام الدراسي", a["year_label"] ?? "غير محدد"],
+    ["الفرع", a["school_name"] ?? `بانتظار تحديد الفرع (${a["raw_school"] ?? "—"})`], ["المرحلة", a["stage"] ?? "غير محدد"], ["الصف", a["grade"] ?? "غير محدد"], ["العام الدراسي", a["year_label"] ? formatAcademicYear(a["year_label"]) : "غير محدد"],
     ["المصدر", a["source"] === "manual" ? "إضافة يدوية" : "نموذج الموقع"], ["تاريخ التقديم", fmt(a["submitted_at"])], ["تاريخ الاستقبال", fmt(a["received_at"])], ["المسؤول", a["assignee_name"] ?? "غير مسند"],
     ["موعد المتابعة", day(a["next_follow"])], ["الربط بسجل طالب", a["student_label"] ?? "غير مرتبط"]];
   return (
@@ -287,7 +319,7 @@ function Students({ orgId, orgName, me }: { orgId: string; orgName: string; me: 
   const f: Row = { ...(q ? { q } : {}), ...(school ? { school } : {}), ...(status ? { status } : {}) };
   const l = useQuery({ queryKey: ["ad-students", orgId, f, page], queryFn: async () => { const { data, error } = await db.rpc("ad_students", { _org: orgId, _f: f, _limit: 25, _offset: (page - 1) * 25 }); if (error) throw error; return data as { total: number; rows: Row[] }; } });
   const H = ["الطالب", "الفرع", "العام", "المرحلة", "الصف", "الشعبة", "حالة القيد", "حساب الدخول", "طلب القبول المرتبط"];
-  const cells = (r: Row) => [r["full_name"], r["school_name"], r["year_name"] ?? "—", r["stage_name"] ?? "—", r["grade_name"] ?? "—", r["section_name"] ?? "—", ENR[r["enr_status"] ?? "none"] ?? r["enr_status"], r["has_login"] ? "مفعّل" : "بدون حساب", r["app_ref"] ?? "—"];
+  const cells = (r: Row) => [r["full_name"], r["school_name"], (r["year_name"] ? formatAcademicYear(r["year_name"]) : "—"), r["stage_name"] ?? "—", r["grade_name"] ?? "—", r["section_name"] ?? "—", ENR[r["enr_status"] ?? "none"] ?? r["enr_status"], r["has_login"] ? "مفعّل" : "بدون حساب", r["app_ref"] ?? "—"];
   async function exp(kind: "x" | "p") {
     const { data, error } = await db.rpc("ad_students", { _org: orgId, _f: { ...f, export: true }, _limit: 5000, _offset: 0 });
     if (error) { toast.error(arabicError(error)); return; }

@@ -1234,3 +1234,8 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 
 ## prompt-508 — side menu background #F7F4ED
 - School workspace light-mode `--sidebar` set to #F7F4ED (same as page background). Dark mode and owner/platform interfaces unchanged. Status: منفّذ ومختَبَر (computed color checked in browser).
+
+## prompt-509 — لوحة المدرسة والتنقل والقبول
+- منفّذ ومختَبَر (معاينة ببيانات محاكاة + اختبارات وحدات): المراحل/الصفوف/العام في طلب القبول من الهيكل الأكاديمي؛ إزالة روابط الرجوع الداخلية؛ اسم المدرسة فقط في المبدّل؛ تبديل فرع مدير النظام يفتح لوحة الفرع مباشرة؛ تقويم أسبوعي؛ تبديل الواجبات/الاختبارات؛ «يحتاج إلى متابعة» مع الطلاب وتصفية الجنس وغياب الكادر → البدلاء بالمعلم والتاريخ.
+- منفّذ دون اختبار: dash_staff_absence على بيانات بصمة حقيقية (قاعدة الاختبار بلا ورديات).
+- صلاحية جديدة: مدير المدرسة ومن يدير المدرسة يرى أسماء الكادر الغائب/غير المبصم اليوم فقط (دون ملفات الموارد البشرية).
