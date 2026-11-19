@@ -1,5 +1,6 @@
 import type React from "react";
 import { AlertTriangle, Inbox, Lock } from "lucide-react";
+import { usePageMeta, useRegisterHeader } from "@/lib/page-meta";
 
 /** Skeleton rows instead of a spinner box — keeps the page layout stable while loading. */
 export function LoadingState({ label = "جارٍ التحميل…", rows = 3 }: { label?: string; rows?: number }) {
@@ -39,14 +40,20 @@ export function ForbiddenState() {
     </div>
   );
 }
-/** Page title + short description + one primary action. Stacks on phones, action full-width. */
+/** Unified page heading: main menu tab (small, light) → current tab (large, bold) → short description → divider.
+ * On a menu entry's own page the sidebar label is the title; detail pages keep their own title under the main tab. */
 export function PageHeader({ title, desc, action, eyebrow }: { title: string; desc?: string; action?: React.ReactNode; eyebrow?: string }) {
+  useRegisterHeader();
+  const m = usePageMeta();
+  const shownTitle = m?.exact && m.label ? m.label : title;
+  const top = m?.group && m.group !== shownTitle ? m.group : eyebrow && eyebrow !== shownTitle ? eyebrow : null;
+  const text = desc || (m?.exact ? m.desc ?? undefined : undefined);
   return (
-    <div className="mb-6 flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-end sm:justify-between">
+    <div dir="rtl" className="mb-6 flex flex-col gap-4 border-b border-border/70 pb-5 text-start sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow && <p className="mb-1 text-xs font-semibold text-primary">{eyebrow}</p>}
-        <h1 className="font-display text-2xl leading-tight sm:text-[1.75rem]">{title}</h1>
-        {desc && <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{desc}</p>}
+        {top && <p className="mb-1 text-xs font-light tracking-wide text-muted-foreground sm:text-sm">{top}</p>}
+        <h1 className="font-display text-2xl font-bold leading-tight text-foreground sm:text-3xl">{shownTitle}</h1>
+        {text && <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{text}</p>}
       </div>
       {action && <div className="flex shrink-0 flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">{action}</div>}
     </div>

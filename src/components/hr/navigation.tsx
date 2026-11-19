@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/states";
 import type React from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Banknote, BriefcaseBusiness, CalendarClock, CalendarDays, ChevronLeft, ClipboardCheck, FileChartColumn, FileSignature, Files, GraduationCap, House, Landmark, Mail, PackageCheck, ShieldCheck, UsersRound } from "lucide-react";
@@ -65,25 +66,7 @@ export function HrPageTop({ title, desc, action, nav = true, home }: { title: st
   const isRoot = cur?.to === "/app/hr";
   return (
     <>
-      <header className="relative mb-4 overflow-hidden rounded-2xl border bg-gradient-to-l from-primary/10 via-card to-accent/10 p-4 shadow-sm sm:p-5">
-        <span aria-hidden className="pointer-events-none absolute -start-10 -top-12 size-40 rounded-full bg-primary/5" />
-        <span aria-hidden className="pointer-events-none absolute -bottom-16 end-1/4 size-32 rounded-full bg-accent/10" />
-        <ol aria-label="مسار التنقل" className="relative mb-3 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          {home && <><li><Link to="/app" className="hover:text-primary">الرئيسية</Link></li><li aria-hidden><ChevronLeft className="size-3.5" /></li></>}
-          <li>{isRoot ? <span>الموارد البشرية</span> : <Link to="/app/hr" className="hover:text-primary">الموارد البشرية</Link>}</li>
-          {cur && !isRoot && <><li aria-hidden><ChevronLeft className="size-3.5" /></li><li className="font-semibold text-foreground">{cur.group}</li></>}
-        </ol>
-        <div className="relative grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 sm:flex sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3 sm:items-center">
-            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md"><Icon className="size-6" strokeWidth={1.8} /></span>
-            <div className="min-w-0">
-              <h1 className="font-display text-xl leading-tight sm:text-2xl">{isRoot ? "الموارد البشرية" : title}</h1>
-              {desc && <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{desc}</p>}
-            </div>
-          </div>
-          {action && <div className="col-span-2 flex shrink-0 flex-wrap gap-2">{action}</div>}
-        </div>
-      </header>
+      <PageHeader title={isRoot ? "الموارد البشرية" : title} {...(desc ? { desc } : {})} action={action} eyebrow={home ? "الرئيسية" : "الموارد البشرية"} />
       {nav && <HrNavigation />}
     </>
   );

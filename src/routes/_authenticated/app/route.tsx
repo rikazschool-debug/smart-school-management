@@ -8,7 +8,7 @@ import { navigationGroups } from "@/lib/navigation-groups";
 import { selectCls } from "@/components/ui/native-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOpsStaff } from "@/lib/ops-staff";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ClipboardCheck, Award, Briefcase,
   Bell, MonitorPlay, BookOpen, LifeBuoy, Megaphone, UserCircle, DoorOpen, ScanLine, ClipboardList, MessagesSquare, Building2, CalendarDays, GraduationCap, Home, LogOut, Menu, Network, School, ShieldCheck, UserCog, Users, UsersRound,
@@ -42,6 +42,8 @@ import { useSupportCaps } from "@/components/support/caps";
 import { useWaOrgOk } from "@/components/support/whatsapp";
 import { MQ_LABEL, mqSections, useMqCaps } from "@/components/support/calls-caps";
 import { ArrowRight, Inbox, Send } from "lucide-react";
+import { NAV_DESC, PageMetaProvider, pickNavKey, type PageMeta } from "@/lib/page-meta";
+import { PageHeader } from "@/components/states";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "لوحة ركاز — إدارة المدرسة" }, { name: "description", content: "إدارة شؤون المدرسة وأقسامها في منصة ركاز." }, { property: "og:title", content: "لوحة ركاز — إدارة المدرسة" }, { property: "og:description", content: "إدارة شؤون المدرسة وأقسامها في منصة ركاز." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
@@ -205,6 +207,8 @@ function Shell() {
     sessionStorage.setItem(k, "1");
     toast.success("تم تسجيل الدخول", { description: active.schoolName });
   }, [active, user.id]);
+  const [headers, setHeaders] = useState(0);
+  const register = useCallback(() => { setHeaders((n) => n + 1); return () => setHeaders((n) => n - 1); }, []);
   if (loading || ops.loading) return <div className="p-10"><LoadingState /></div>;
   if (!active) return <Onboarding onSignOut={signOut} />;
 
@@ -261,6 +265,10 @@ function Shell() {
     return cleanPath === n.to || cleanPath.startsWith(n.to + "/");
   };
   const activeGroup = groups.find((g) => g.keys.some(navActive))?.label ?? null;
+  const curKey = pickNavKey(cleanPath, navEntries, supTab ?? null);
+  const navLabel = (k: NavKey) => k === "schedule" ? scheduleLabel(active.role) : k === "teachers" ? teachersLabel(active.role) : k === "support" && ops.cs ? "خدمة العملاء" : NAV[k].label;
+  const curGroup = curKey ? groups.find((g) => g.keys.includes(curKey))?.label ?? (owner && section ? OWNER_SECTION_LABELS[section] : null) : null;
+  const meta: PageMeta = { group: curGroup, label: curKey ? navLabel(curKey) : null, desc: curKey ? NAV_DESC[curKey] ?? null : null, exact: !!curKey && cleanPath === NAV[curKey].to, register };
   const initial = (user.email ?? "?").trim().charAt(0).toUpperCase();
   const sidebar = (
     <nav aria-label="القائمة الرئيسية" className="flex h-full flex-col">
@@ -395,6 +403,10 @@ function Shell() {
               <ArrowRight className="size-4" /><span className="hidden sm:inline">رجوع</span>
             </Button>
           )}
+          <Button variant="outline" size="sm" className="shrink-0 gap-1 rounded-full" aria-label="الشاشة الرئيسية" title="الشاشة الرئيسية لحسابك"
+            onClick={() => (owner && ownerInSchool && active.schoolId ? navigate({ to: "/app/school-home", search: { s: active.schoolId } }) : navigate({ to: "/app" }))}>
+            <Home className="size-4" /><span className="hidden sm:inline">الشاشة الرئيسية</span>
+          </Button>
           <div className="relative flex min-w-0 flex-1 items-center sm:flex-none">
             <Building2 aria-hidden className="pointer-events-none absolute right-3 size-4 text-primary" />
             <label className="sr-only" htmlFor="ctx">تبديل الدور أو المدرسة</label>
@@ -430,7 +442,10 @@ function Shell() {
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 md:py-8">
-          <Outlet />
+          <PageMetaProvider value={meta}>
+            {headers === 0 && meta.exact && curKey !== "home" && curKey !== "school_home" && meta.label && <AutoHeader />}
+            <Outlet />
+          </PageMetaProvider>
           <ConfirmHost />
         </main>
         <Sanad schoolId={active.schoolId ?? null} role={active.role} roleLabel={ROLE_LABELS[active.role] ?? ""} />
@@ -516,4 +531,9 @@ function Onboarding({ onSignOut }: { onSignOut: () => void }) {
       </div>
     </div>
   );
+}
+
+// fallback for pages that draw no heading of their own: the same unified header from the menu entry
+function AutoHeader() {
+  return <PageHeader title="" />;
 }
