@@ -164,7 +164,7 @@ body { font-family: "Cairo", system-ui, sans-serif; }
 /* School workspace: applied by active role, not globally, so owner views keep their original theme. */
 .school-workspace {
   --radius: 0.5rem;
-  --background: oklch(0.974 0.009 187);
+  --background: oklch(0.96753567 0.00982201 87.47093480); /* #F7F4ED */
   --foreground: oklch(0.23 0.031 200);
   --card-foreground: var(--foreground);
   --primary: oklch(0.445 0.084 184);
