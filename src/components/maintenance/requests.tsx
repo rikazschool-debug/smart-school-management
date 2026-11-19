@@ -396,7 +396,7 @@ function DocState({ d, s }: { d?: string | null; s?: string | null }) {
 }
 
 function BusForm({ bus, schools, onDone }: { bus: Row; schools: { id: string; name: string }[]; onDone: () => void }) {
-  const [d, setD] = useState<Row>({ school: bus.school_id ?? schools[0]?.id, ...bus });
+  const [d, setD] = useState<Row>({ ...bus, school: bus.school_id ?? schools[0]?.id });
   const set = (k: string, v: unknown) => setD((x: Row) => ({ ...x, [k]: v }));
   async function save() {
     const data = { code: d.code, plate: d.plate, model: d.model, capacity: d.capacity ?? "", odometer: d.odometer ?? "", next_service_date: d.next_service_date ?? "", next_service_km: d.next_service_km ?? "", inspection_date: d.inspection_date ?? "", license_expiry: d.license_expiry ?? "", notes: d.notes, active: d.active ?? true };
