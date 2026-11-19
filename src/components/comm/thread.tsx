@@ -221,7 +221,11 @@ export function Thread({ conv, onBack, onChanged }: { conv: Row; onBack: () => v
   );
 }
 
-type Receipt = { read: boolean; label: string };
+export type Receipt = { read: boolean; label: string };
+
+export function ReceiptTicks({ r }: { r: Receipt }) {
+  return <span role="img" aria-label={r.label} title={r.label} className={r.read ? "text-read-receipt" : "text-muted-foreground"}>{r.read ? <CheckCheck className="size-4" strokeWidth={2.5} /> : <Check className="size-4" strokeWidth={2.5} />}</span>;
+}
 
 function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup, canReply, isMod, onReply, onChanged, mentionNames }: {
   mentionNames?: string[];
@@ -254,7 +258,7 @@ function Message({ domId, m, mine, name, parent, files, receipt, canAct, isGroup
       <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
         <span>{timeLabel(m["created_at"])}</span>
         {m["edited_at"] && !deleted && <span>• معدّلة</span>}
-        {receipt && <span role="img" aria-label={receipt.label} title={receipt.label} className={receipt.read ? "text-read-receipt" : "text-muted-foreground"}>{receipt.read ? <CheckCheck className="size-4" strokeWidth={2.5} /> : <Check className="size-4" strokeWidth={2.5} />}</span>}
+        {receipt && <ReceiptTicks r={receipt} />}
         {!deleted && canAct && (
           <span className="ms-auto flex gap-0.5 opacity-80 group-hover:opacity-100 [&>button]:grid [&>button]:size-8 [&>button]:place-items-center [&>button]:rounded-md [&>button:hover]:bg-muted [&>button:focus-visible]:outline-none [&>button:focus-visible]:ring-2 [&>button:focus-visible]:ring-ring">
             {canReply && <button aria-label="رد" title="رد" onClick={onReply}><Reply className="size-3.5" /></button>}
