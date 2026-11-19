@@ -28194,6 +28194,32 @@ export type Database = {
         Returns: undefined
       }
       family_request_detail: { Args: { _id: string }; Returns: Json }
+      family_request_find: {
+        Args: { _org: string; _q: string }
+        Returns: {
+          body: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          kind: string
+          org_id: string
+          ref: string
+          rejection_reason: string | null
+          requested_by: string
+          response: string | null
+          school_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "family_requests"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       fin_pay_get: { Args: { _school: string }; Returns: Json }
       fin_pay_save: { Args: { _p: Json; _school: string }; Returns: Json }
       fm_caps: { Args: { _org: string }; Returns: Json }
