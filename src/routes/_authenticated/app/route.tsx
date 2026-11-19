@@ -535,5 +535,5 @@ function Onboarding({ onSignOut }: { onSignOut: () => void }) {
 
 // fallback for pages that draw no heading of their own: the same unified header from the menu entry
 function AutoHeader() {
-  return <PageHeader title="" />;
+  return <PageHeader title="" auto />;
 }

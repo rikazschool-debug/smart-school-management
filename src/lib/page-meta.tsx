@@ -7,9 +7,10 @@ const Ctx = createContext<PageMeta | null>(null);
 export const PageMetaProvider = Ctx.Provider;
 export function usePageMeta() { return useContext(Ctx); }
 const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect;
-export function useRegisterHeader() {
+export function useRegisterHeader(on = true) {
   const m = useContext(Ctx);
-  useIso(() => m?.register(), [m?.register]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the layout's fallback header must not register itself, or it would hide and re-show forever
+  useIso(() => (on ? m?.register() : undefined), [m?.register, on]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 /** Picks the most specific visible menu entry for a path (longest matching link). */

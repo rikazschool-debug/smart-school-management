@@ -42,8 +42,8 @@ export function ForbiddenState() {
 }
 /** Unified page heading: main menu tab (small, light) → current tab (large, bold) → short description → divider.
  * On a menu entry's own page the sidebar label is the title; detail pages keep their own title under the main tab. */
-export function PageHeader({ title, desc, action, eyebrow }: { title: string; desc?: string; action?: React.ReactNode; eyebrow?: string }) {
-  useRegisterHeader();
+export function PageHeader({ title, desc, action, eyebrow, auto = false }: { title: string; desc?: string; action?: React.ReactNode; eyebrow?: string; auto?: boolean }) {
+  useRegisterHeader(!auto);
   const m = usePageMeta();
   const shownTitle = m?.exact && m.label ? m.label : title;
   const top = m?.group && m.group !== shownTitle ? m.group : eyebrow && eyebrow !== shownTitle ? eyebrow : null;
