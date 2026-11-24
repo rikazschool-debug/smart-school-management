@@ -5,7 +5,7 @@
 - [x] 4 Transport accounts page (+ bus roster filters)
 - [x] 5 Financial adjustments page
 - [x] 6 Detailed reports catalog
-- [ ] 7 Main dashboard finance KPIs (branch home done; owner central dashboard awaits user answer)
+- [x] 7 Main dashboard finance KPIs (branch home only; owner central dashboard stays unchanged per user)
 - [ ] 8 Sanad review
 - [ ] 9 Years / previous balances review
 - [ ] 10 Guardian finance page review
