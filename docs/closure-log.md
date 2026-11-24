@@ -1293,3 +1293,5 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Evidence: scripts/sf-carry-e2e.ts 19/19, sf-notify-e2e 14/14, vitest finance 26/26 + statement 3/3, typecheck OK; owner screens opened in browser (dashboard, accounts, carry page, procurement tab). Not verified: guardian and accountant screens signed-in, PDF/Excel files opened, main system dashboard KPIs, detailed reports catalogue.
 
 - 2026-11-24 — صورة الحوالة البنكية الاختيارية في سداد الرسوم (sf_transfer_attach/sf_transfer_files): منفّذ ومختَبَر على قاعدة الاختبار (scripts/sf-transfer-e2e.ts 9/9). الواجهة بحساب موقّع غير متحقق.
+
+- 2026-11-24 — تصميم سند القبض الجديد (أقسام بيانات الطالب/السداد، جدول البنود، الإجماليات، التوقيع) وتثبيت «الموظف المسدِّد» من الخادم؛ السندات الجديدة تحفظ المرحلة/الصف/الشعبة/ولي الأمر. منفّذ ومختَبَر (sf-transfer-e2e 11/11 + معاينة الشكل). الطباعة الفعلية من الشاشة بحساب موقّع غير متحقق.

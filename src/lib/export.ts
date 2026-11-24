@@ -157,3 +157,33 @@ ${headerHtml(meta, rows.length)}<table style="${TABLE};margin-top:10px">${theadH
 <script>document.fonts.ready.then(()=>setTimeout(()=>print(),300))</script></body></html>`);
   w.document.close();
 }
+
+/** One-page A4 document whose inner HTML the caller built from already-escaped values (e.g. a receipt). */
+export async function exportPagePdf(title: string, html: string) {
+  const [{ toJpeg }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
+  await ensureCairo();
+  const W = 794, H = 1123;
+  const host = document.createElement("div");
+  host.style.cssText = `position:fixed;left:-20000px;top:0;width:${W}px;${CSS}`;
+  host.innerHTML = `<div style="width:${W}px;min-height:${H}px;box-sizing:border-box;padding:40px 44px;${CSS}">${html}</div>`;
+  document.body.appendChild(host);
+  try {
+    const el = host.firstElementChild as HTMLElement; const h = Math.max(H, el.offsetHeight);
+    const img = await toJpeg(el, { quality: 0.92, pixelRatio: 2, backgroundColor: "#ffffff", width: W, height: h });
+    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [W, h], hotfixes: ["px_scaling"] });
+    pdf.addImage(img, "JPEG", 0, 0, W, h, undefined, "FAST");
+    pdf.setProperties({ title });
+    pdf.save(`${title.replace(/[\\/:*?"<>|\s]+/g, "-")}.pdf`);
+  } finally { host.remove(); }
+}
+
+/** Browser print of the same one-page document. */
+export function printPage(title: string, html: string) {
+  const w = window.open("", "_blank");
+  if (!w) throw new Error("اسمح بالنوافذ المنبثقة للطباعة");
+  w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${esc(title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<style>@page{size:A4;margin:12mm}body{${CSS};margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>${html}
+<script>document.fonts.ready.then(()=>setTimeout(()=>print(),300))</script></body></html>`);
+  w.document.close();
+}

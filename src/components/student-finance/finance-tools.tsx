@@ -10,7 +10,8 @@ import { arabicError } from "@/lib/session";
 import { formatAcademicYear } from "@/lib/academic-year";
 import { SF_KEY, TRANSPORT_LABEL, TRANSPORT_TYPES, money } from "@/lib/student-finance/labels";
 import { amountInWords } from "@/lib/student-finance/words";
-import { exportLetterPdf, exportPdf, exportXlsx, printReport } from "@/lib/export";
+import { exportPagePdf, exportPdf, exportXlsx, printPage, printReport } from "@/lib/export";
+import { brandHeaderHtml } from "@/lib/export-brand";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StudentFinance } from "./student-finance";
@@ -80,25 +81,58 @@ const KIND_AR: Record<string, string> = { tuition: "الرسوم الدراسي�
 
 /** Receipt lines from the snapshot frozen at issue time — later fee changes never alter it. */
 export function receiptLines(r: Row): [string, string][] {
-  const s = r["snapshot"] as Row; const after = (s["after"] ?? {}) as Row;
+  const s = r["snapshot"] as Row; const after = (s["after"] ?? {}) as Row; const st = (s["student"] ?? {}) as Row;
+  const cls = [st["stage"], st["grade"], st["section"] && `شعبة ${st["section"]}`].filter(Boolean).join(" — ");
   return [
-    ["رقم السند", r["number"]], ["تاريخ السداد", s["paid_at"]], ["تاريخ ووقت التسجيل", new Date(r["issued_at"]).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" })],
-    ["المدرسة", s["school"]], ["الطالب", s["student"]?.name], ["الرقم الطلابي / الهوية", s["student"]?.national_id ?? "—"], ["الدافع", s["payer"] || "—"],
+    ["رقم السند", r["number"]], ["تاريخ السداد", s["paid_at"]], ["تاريخ ووقت التسجيل", issuedAt(r)],
+    ["المدرسة", s["school"]], ["الطالب", st["name"]], ["رقم الهوية", st["national_id"] ?? "—"], ...(st["csmart_no"] ? [["الرقم الطلابي", st["csmart_no"]]] : []),
+    ...(cls ? [["الصف", cls]] : []), ...(st["guardian"] ? [["ولي الأمر", st["guardian"]]] : []),
     ["العام الدراسي", s["year"] ? formatAcademicYear(s["year"]) : "—"],
-    ...((s["allocations"] ?? []) as Row[]).map((a) => [`${KIND_AR[a["kind"]]} — ${TERM_AR(a["term"])}${a["year"] && a["year"] !== s["year"] ? ` (رصيد سابق — عام ${formatAcademicYear(a["year"])})` : ""}`, money(a["amount"])] as [string, string]),
+    ...allocs(s).map((a) => [a.label, money(a.amount)] as [string, string]),
     ["المبلغ", money(s["amount"])], ["المبلغ كتابة", amountInWords(s["amount"])], ["طريقة السداد", METHOD_AR[s["method"]] ?? s["method"]], ["الرقم المرجعي", s["ref"] || "—"],
-    ["الموظف المسؤول", s["actor"] || "—"], ["إجمالي المسدد بعد العملية", money(after["recorded"])], ["المتبقي بعد العملية", money(after["remaining"])],
+    ["الموظف المسدِّد", s["actor"] || s["payer"] || "—"], ["إجمالي المسدد بعد العملية", money(after["recorded"])], ["المتبقي بعد العملية", money(after["remaining"])],
     ["ملاحظات", s["notes"] || "—"], ["حالة السند", r["status"] === "cancelled" ? "ملغى" : "ساري"],
   ].map(([a, b]) => [String(a), String(b ?? "—")]);
 }
-export async function receiptPdf(r: Row) {
-  await exportLetterPdf({ org: String((r["snapshot"] as Row)["school"] ?? ""), title: "سند قبض داخلي", ref: String(r["number"]), issued: String((r["snapshot"] as Row)["paid_at"]),
-    body: receiptLines(r).map(([a, b]) => `${a}: ${b}`).join("\n") + "\n\nسند داخلي من ركاز وليس مستندًا محاسبيًا رسميًا؛ المستند الرسمي يصدر من وافق بعد تفعيل الربط.",
-    void: r["status"] === "cancelled" ? "سند ملغى" : null });
+const issuedAt = (r: Row) => new Date(r["issued_at"]).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" });
+const allocs = (s: Row) => ((s["allocations"] ?? []) as Row[]).map((a) => ({ label: `${KIND_AR[a["kind"]] ?? a["kind"]} — ${TERM_AR(a["term"])}`, prev: a["year"] && a["year"] !== s["year"] ? `رصيد سابق — ${formatAcademicYear(a["year"])}` : "", year: a["year"] ? formatAcademicYear(a["year"]) : "—", amount: a["amount"] }));
+const h = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
+/** Printable receipt: letterhead, title band, student / payment sections, a simple items table and totals. Built only from the frozen snapshot. */
+export function receiptHtml(r: Row) {
+  const s = r["snapshot"] as Row; const after = (s["after"] ?? {}) as Row; const st = (s["student"] ?? {}) as Row;
+  const cancelled = r["status"] === "cancelled"; const G = "#1f5f4f";
+  const box = (title: string, rows: [string, unknown][]) => `<div style="flex:1;border:1px solid #d9e2df;border-radius:10px;overflow:hidden">
+    <div style="background:#eef4f2;color:${G};font-weight:700;font-size:12px;padding:6px 12px">${h(title)}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">${rows.map(([k, v]) => `<tr><td style="padding:5px 12px;color:#667;width:38%;border-top:1px solid #eef1f0">${h(k)}</td><td style="padding:5px 12px;font-weight:700;border-top:1px solid #eef1f0">${h(v || "—")}</td></tr>`).join("")}</table></div>`;
+  const items = allocs(s);
+  const TH = `padding:7px 10px;text-align:right;font-size:11px;background:${G};color:#fff`, TDc = `padding:7px 10px;border-bottom:1px solid #e5ebe9;font-size:12px`;
+  return `${brandHeaderHtml({ fallbackName: String(s["school"] ?? ""), side: `رقم السند: <bdi dir="ltr"><b>${h(r["number"])}</b></bdi><br>تاريخ السداد: <bdi dir="ltr">${h(s["paid_at"])}</bdi>` })}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px">
+    <div><div style="font-size:22px;font-weight:700;color:#1f2a44">سند قبض</div><div style="font-size:11px;color:#667">سند داخلي من ركاز — ليس مستندًا محاسبيًا رسميًا</div></div>
+    <div style="border:2px solid ${cancelled ? "#b42318" : G};color:${cancelled ? "#b42318" : G};border-radius:999px;padding:4px 16px;font-weight:700;font-size:12px">${cancelled ? "ملغى — غير صالح" : "ساري"}</div></div>
+  <div style="display:flex;gap:12px;margin-bottom:14px">
+    ${box("بيانات الطالب", [["اسم الطالب", st["name"]], ["رقم الهوية", st["national_id"]], ["الرقم الطلابي", st["csmart_no"]], ["المرحلة والصف", [st["stage"], st["grade"]].filter(Boolean).join(" — ")], ["الشعبة", st["section"]], ["ولي الأمر", st["guardian"]]])}
+    ${box("بيانات السداد", [["العام الدراسي", s["year"] ? formatAcademicYear(s["year"]) : ""], ["طريقة السداد", METHOD_AR[s["method"]] ?? s["method"]], ["الرقم المرجعي", s["ref"]], ["تاريخ ووقت التسجيل", issuedAt(r)], ["الموظف المسدِّد", s["actor"] || s["payer"]], ["المدرسة", s["school"]]])}
+  </div>
+  <table style="width:100%;border-collapse:collapse;border:1px solid #d9e2df;border-radius:10px;overflow:hidden">
+    <thead><tr><th style="${TH};width:40px">#</th><th style="${TH}">البند</th><th style="${TH}">العام الدراسي</th><th style="${TH};text-align:left">المبلغ</th></tr></thead>
+    <tbody>${items.map((a, i) => `<tr><td style="${TDc}">${i + 1}</td><td style="${TDc}">${h(a.label)}${a.prev ? ` <span style="color:#b42318;font-size:10px">(${h(a.prev)})</span>` : ""}</td><td style="${TDc}">${h(a.year)}</td><td style="${TDc};text-align:left;font-weight:700">${h(money(a.amount))}</td></tr>`).join("")}</tbody>
+    <tfoot><tr><td colspan="3" style="padding:9px 10px;font-weight:700;background:#eef4f2">الإجمالي المسدد</td><td style="padding:9px 10px;font-weight:700;background:#eef4f2;text-align:left;color:${G};font-size:14px">${h(money(s["amount"]))}</td></tr></tfoot>
+  </table>
+  <div style="margin-top:8px;font-size:12px;background:#faf8f3;border:1px dashed #d9d2c0;border-radius:8px;padding:7px 12px">المبلغ كتابة: <b>${h(amountInWords(s["amount"]))}</b></div>
+  <div style="display:flex;gap:12px;margin-top:12px">
+    ${[["إجمالي المسدد بعد العملية", after["recorded"]], ["المتبقي على الطالب", after["remaining"]]].map(([k, v]) => `<div style="flex:1;border:1px solid #d9e2df;border-radius:10px;padding:8px 12px"><div style="font-size:11px;color:#667">${h(k)}</div><div style="font-size:16px;font-weight:700;color:#1f2a44">${h(money(v))}</div></div>`).join("")}
+  </div>
+  ${s["notes"] ? `<div style="margin-top:12px;font-size:12px"><span style="color:#667">ملاحظات: </span>${h(s["notes"])}</div>` : ""}
+  <div style="display:flex;justify-content:space-between;margin-top:36px;font-size:12px">
+    <div style="text-align:center;width:40%"><div style="color:#667">الموظف المسدِّد</div><div style="font-weight:700;margin-top:4px">${h(s["actor"] || s["payer"] || "—")}</div><div style="border-top:1px solid #999;margin-top:28px;padding-top:4px;color:#888;font-size:10px">التوقيع</div></div>
+    <div style="text-align:center;width:40%"><div style="color:#667">الختم</div><div style="border-top:1px solid #999;margin-top:52px;padding-top:4px;color:#888;font-size:10px">ختم المدرسة</div></div>
+  </div>
+  <div style="margin-top:28px;border-top:1px solid #ddd;padding-top:6px;font-size:10px;color:#888;text-align:center">صادر من نظام ركاز — المستند المحاسبي الرسمي يصدر من وافق بعد تفعيل الربط.</div>`;
 }
-export function receiptPrint(r: Row) {
-  printReport({ title: `سند قبض داخلي ${r["number"]}`, school: String((r["snapshot"] as Row)["school"] ?? ""), filters: [], note: "سند داخلي من ركاز وليس مستندًا محاسبيًا رسميًا." }, ["البيان", "القيمة"], receiptLines(r));
-}
+export async function receiptPdf(r: Row) { await exportPagePdf(`سند قبض ${r["number"]}`, receiptHtml(r)); }
+export function receiptPrint(r: Row) { printPage(`سند قبض ${r["number"]}`, receiptHtml(r)); }
 export function ReceiptButtons({ r }: { r: Row }) {
   return <span className="flex gap-1">
     <Button size="sm" variant="ghost" onClick={() => void receiptPdf(r).catch((e) => toast.error(arabicError(e)))}>PDF</Button>

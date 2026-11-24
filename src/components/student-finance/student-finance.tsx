@@ -143,12 +143,11 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
   const open = [...f.obligations, ...(f.previous ?? []).map((p) => p.obligation)].filter((o, i, all) => o.status === "pending" && num(o.balance.remaining) > 0 && all.findIndex((x) => x.id === o.id) === i);
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [v, setV] = useState({ method: "cash", paid_at: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" }), ref: "", payer: "", notes: "" });
-  const [payerTouched, setPayerTouched] = useState(false);
   const [receipt, setReceipt] = useState<Row | null>(null);
   const [transfer, setTransfer] = useState<File[]>([]);
-  // payer defaults to the signed-in employee recording the payment; still editable
+  // payer is always the signed-in employee recording the payment (enforced by the server); shown read-only
   const me = useQuery({ queryKey: ["my-profile-name"], queryFn: async () => { const { data: u } = await db.auth.getUser(); if (!u.user) return ""; const { data } = await db.from("profiles").select("full_name").eq("id", u.user.id).maybeSingle(); return String(data?.["full_name"] ?? ""); } });
-  useEffect(() => { if (!payerTouched && me.data && !v.payer) setV((x) => ({ ...x, payer: me.data! })); }, [me.data, payerTouched, v.payer]);
+  useEffect(() => { if (me.data) setV((x) => ({ ...x, payer: me.data! })); }, [me.data]);
   const rows = open.filter((o) => amounts[o.id]).map((o) => ({ obligation_id: o.id, amount: Number(amounts[o.id]) }));
   const ok = rows.length > 0 && rows.every((r) => validAllocation(r.amount, num(open.find((o) => o.id === r.obligation_id)?.balance.remaining)));
   const total = rows.reduce((s, r) => s + r.amount, 0);
@@ -185,7 +184,7 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
           <div className="space-y-1"><Label htmlFor="cm">طريقة السداد</Label><select id="cm" className={selectCls("w-full")} value={v.method} onChange={(e) => setV({ ...v, method: e.target.value })}>{METHODS.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select></div>
           <div className="space-y-1"><Label htmlFor="cd">تاريخ السداد</Label><Input id="cd" type="date" value={v.paid_at} onChange={(e) => setV({ ...v, paid_at: e.target.value })} /></div>
           <div className="space-y-1"><Label htmlFor="cr">رقم المرجع</Label><Input id="cr" value={v.ref} onChange={(e) => setV({ ...v, ref: e.target.value })} /></div>
-          <div className="space-y-1"><Label htmlFor="cp">اسم الدافع</Label><Input id="cp" value={v.payer} onChange={(e) => { setPayerTouched(true); setV({ ...v, payer: e.target.value }); }} /></div>
+          <div className="space-y-1"><Label htmlFor="cp">الموظف المسدِّد</Label><Input id="cp" value={v.payer} readOnly disabled className="bg-muted" /></div>
           {v.method === "bank" && <div className="col-span-2 flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-2 text-xs"><span className="text-muted-foreground">صورة الحوالة (اختياري)</span>
             {transfer.map((x, i) => <span key={i} className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5">{x.name}<button type="button" aria-label={`إزالة ${x.name}`} className="text-destructive" onClick={() => setTransfer(transfer.filter((_, j) => j !== i))}>×</button></span>)}
             {transfer.length < 3 && <TransferPick label={transfer.length ? "إضافة ملف آخر" : "اختيار صورة أو PDF"} onPick={(fl) => setTransfer([...transfer, ...fl].slice(0, 3))} />}</div>}

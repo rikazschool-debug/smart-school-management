@@ -50,6 +50,11 @@ try {
   check("teacher cannot list or open the image", !!(await teacher.c.rpc("sf_transfer_files", { _student: P })).error && !!(await teacher.c.storage.from("rikaz-files").createSignedUrl(list[0].path, 60)).error);
   for (let i = 0; i < 2; i++) must(await owner.c.rpc("sf_transfer_attach", { _collection: bank, _name: `p${i}.pdf`, _mime: "application/pdf", _size: 4 }), "extra");
   check("at most three attachments per payment", !!(await owner.c.rpc("sf_transfer_attach", { _collection: bank, _name: "4.pdf", _mime: "application/pdf", _size: 4 })).error);
+  const forged = must(await owner.c.rpc("sf_collect", { _student: P, _request_key: crypto.randomUUID(), _p: { method: "cash", paid_at: "2026-11-24", payer: "اسم مكتوب يدويًا", allocations: [{ obligation_id: ob, amount: 50 }] } }), "forged") as string;
+  const col = must(await admin.from("sf_collections").select("payer").eq("id", forged).single(), "col") as any;
+  const rc = must(await admin.from("sf_receipts").select("snapshot").eq("collection_id", forged).single(), "rc") as any;
+  check("payer is always the recording employee, never a typed name", col.payer !== "اسم مكتوب يدويًا" && col.payer === rc.snapshot.actor && !!col.payer, { col, actor: rc.snapshot.actor });
+  check("new receipt freezes the student's stage, grade and section", rc.snapshot.student.stage === "الثانوية" && rc.snapshot.student.grade === "أول" && rc.snapshot.student.section === "أ", rc.snapshot.student);
   console.log(`\n${ok} passed, ${bad} failed — synthetic org ${org}`);
 } finally {
   for (const u of [owner, teacher]) await admin.auth.admin.deleteUser(u.id).catch(() => undefined);
