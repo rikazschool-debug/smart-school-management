@@ -206,3 +206,27 @@ export function Arrears({ schoolId }: { schoolId: string }) {
     </Dialog>
   </section>;
 }
+
+/** Finance KPIs from sf_dashboard (same balances as every other finance screen; no duplicated totals). */
+export function FinanceDashboard({ schoolId }: { schoolId: string }) {
+  const years = useYears(schoolId); const [year, setYear] = useState("");
+  const q = useQuery({ queryKey: [...SF_KEY, "dashboard", schoolId, year], queryFn: async () => { const { data, error } = await db.rpc("sf_dashboard", { _school: schoolId, _year: year || null }); if (error) throw error; return data as Row; }, retry: false });
+  const pend = useQuery({ enabled: !!year, queryKey: [...SF_KEY, "pending-count", schoolId, year], queryFn: async () => { const { data, error } = await db.rpc("sf_pending_creation", { _school: schoolId, _year: year }); if (error) throw error; return (data as Row[]).length; }, retry: false });
+  const d = q.data ?? {}; const net = Number(d["net"] ?? 0), rec = Number(d["recorded"] ?? 0);
+  const k: [string, string][] = [["الرسوم الدراسية", money(d["tuition"])], ["رسوم النقل", money(d["transport"])], ["إجمالي الخصومات", money(d["discount"])], ["منها خصم الإخوة", money(d["sibling"])], ["صافي المستحقات", money(net)], ["إجمالي المسدد", money(rec)], ["إجمالي المتبقي", money(d["remaining"])], ["إجمالي المتأخرات", money(d["overdue"])], ["الأرصدة الدائنة", money(d["credit"])], ["نسبة التحصيل", net > 0 ? `${Math.round((Math.min(rec, net) * 100) / net)}%` : "—"], ["تحصيل اليوم", money(d["today"])], ["مسددون بالكامل", String(d["paid_full"] ?? 0)], ["مسددون جزئيًا", String(d["paid_partial"] ?? 0)], ["غير مسددين", String(d["unpaid"] ?? 0)], ["معفيون", String(d["exempt"] ?? 0)], ["لم تُنشأ مستحقاتهم", year ? String(pend.data ?? "…") : "اختر العام"]];
+  const meta = { title: "المؤشرات المالية", filters: [year ? formatAcademicYear(String((years.data ?? []).find((y) => y["id"] === year)?.["name"] ?? "")) : "كل الأعوام"] };
+  const daily = (d["daily"] as Row[] | undefined) ?? [], monthly = (d["monthly"] as Row[] | undefined) ?? [];
+  const exp = (kind: "pdf" | "xlsx" | "print") => { const H = ["المؤشر", "القيمة"]; const rows = [...k, ...monthly.map((m) => [`تحصيل ${String(m["month"])}`, money(m["amount"])] as [string, string]), ...daily.map((x) => [`تحصيل ${String(x["day"])}`, money(x["amount"])] as [string, string])]; if (kind === "pdf") void exportPdf(meta, H, rows).catch((e) => toast.error(arabicError(e))); else if (kind === "xlsx") exportXlsx(meta, H, rows); else printReport(meta, H, rows); };
+  return <section className="space-y-3">
+    <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">المؤشرات المالية</h2>
+      <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={year} onChange={(e) => setYear(e.target.value)}><option value="">كل الأعوام</option>{(years.data ?? []).map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}</option>)}</select>
+      <Button size="sm" variant="outline" onClick={() => exp("pdf")}>PDF</Button><Button size="sm" variant="outline" onClick={() => exp("xlsx")}>Excel</Button><Button size="sm" variant="outline" onClick={() => exp("print")}>طباعة</Button></div>
+    {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">{k.map(([l, v]) => <div key={l} className="rounded-xl border bg-card p-3"><div className="text-xs text-muted-foreground">{l}</div><div className="mt-1 font-bold">{v}</div></div>)}</div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-xl border bg-card p-3"><h3 className="mb-2 text-sm font-semibold">التحصيل الشهري</h3>{monthly.length ? <ul className="space-y-1 text-sm">{monthly.map((m) => <li key={String(m["month"])} className="flex justify-between"><span>{String(m["month"])}</span><span>{money(m["amount"])}</span></li>)}</ul> : <p className="text-sm text-muted-foreground">لا يوجد تحصيل.</p>}</div>
+        <div className="rounded-xl border bg-card p-3"><h3 className="mb-2 text-sm font-semibold">التحصيل اليومي (30 يومًا)</h3>{daily.length ? <ul className="max-h-48 space-y-1 overflow-y-auto text-sm">{daily.map((x) => <li key={String(x["day"])} className="flex justify-between"><span>{String(x["day"])}</span><span>{money(x["amount"])}</span></li>)}</ul> : <p className="text-sm text-muted-foreground">لا يوجد تحصيل.</p>}</div>
+      </div>
+      <p className="text-xs text-muted-foreground">أرقام تشغيلية من ركاز · المتأخرات بعد تاريخ استحقاق معتمد فقط · خصم الإخوة جزء من إجمالي الخصومات</p></>}
+  </section>;
+}

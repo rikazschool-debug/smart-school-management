@@ -5,7 +5,7 @@
 - [x] Unified payment dialog (student accounts + arrears open the same panel)
 - [x] Due dates in fee setup
 - [x] Dues & arrears page
-- [ ] Finance KPIs dashboard & reports
+- [x] Finance KPIs dashboard (export PDF/Excel/print)
 - [ ] Financial notifications
 - [ ] Sanad + dashboard on sf_* data
 - [ ] Accountant / registrar permissions

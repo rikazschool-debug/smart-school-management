@@ -31684,6 +31684,7 @@ export type Database = {
         Args: { _student: string; _year: string }
         Returns: undefined
       }
+      sf_dashboard: { Args: { _school: string; _year?: string }; Returns: Json }
       sf_discount_apply: {
         Args: { _discount: string; _obligations: string[]; _student: string }
         Returns: undefined
