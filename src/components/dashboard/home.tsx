@@ -8,6 +8,7 @@ import { WorkPanel } from "@/components/dashboard/work-panel";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { ChildOverview } from "@/components/family/child-overview";
+import { FamilyFinance } from "@/components/student-finance/family-finance";
 import { NAV_BY_ROLE, ROLE_LABELS, canManage, type NavKey } from "@/lib/roles";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { OwnerPortal } from "@/components/owner-portal";
@@ -310,6 +311,7 @@ function GuardianHome() {
           <Meter rows={st.per.map((p) => ({ name: open.find((k) => k["student_id"] === p.id)?.["student"] ?? "", value: p.rate ?? 0, max: 100 }))} />
         </Panel>
       )}
+      {open.length > 0 && <FamilyFinance />}
       <section>
         <h2 className="mb-3 text-lg font-bold">أبنائي</h2>
         {!kids.data?.length ? <EmptyState title="لا يوجد أبناء مرتبطون بحسابك" hint="تواصل مع المدرسة لربط أبنائك بحسابك." /> : (
