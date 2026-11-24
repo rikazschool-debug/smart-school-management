@@ -1282,5 +1282,6 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Phase 3 (prompt-521): reprice, pending creation, internal receipts. Live 32/32; vitest pass. Browser: غير متحقق.
 
 ## Financial notifications (Nov 24 2026, test DB)
-- Verified guardians receive in-app notices: payment recorded (internal receipt number, explicitly not official), payment cancelled, and manual overdue reminders from «المستحقات والمتأخرات» (collect permission, overdue only, once per item per day).
-- Evidence: scripts/sf-notify-e2e.ts 8/8 PASS. Not verified: signed-in screen appearance. No WhatsApp/SMS sent.
+- Verified guardians get in-app notices for: fees created, payment + internal receipt (stated not official), payment cancelled, discounts applied/edited/removed (incl. sibling discount start/stop), fee repricing, transport subscribe/change/exempt/cancel, due-date change, due in 3 days, first day late, and manual reminders (collect permission, once per item per day).
+- Org owners get: automatic fee creation failure, cancellations/adjustments made by someone else, daily overdue summary per branch. Daily job rikaz-sf-due runs once a day (08:30 Riyadh).
+- Evidence: scripts/sf-notify-e2e.ts 14/14 PASS. Code-read only (not run): discount/sibling, transport and adjustment notices, auto-creation failure. Not verified: signed-in screen appearance. No WhatsApp/SMS.

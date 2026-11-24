@@ -6,7 +6,7 @@
 - [x] Due dates in fee setup
 - [x] Dues & arrears page
 - [x] Finance KPIs dashboard (export PDF/Excel/print)
-- [x] Financial notifications (payment, cancellation, manual overdue reminder — in-app)
+- [x] Financial notifications (all finance events, daily due/late check, owner alerts — in-app)
 - [ ] Sanad + dashboard on sf_* data
 - [ ] Accountant / registrar permissions
 - [ ] Live end-to-end checks

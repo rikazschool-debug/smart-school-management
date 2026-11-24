@@ -35,12 +35,21 @@ must(await admin.from("enrollments").insert({ school_id: S, student_id: P, secti
 const GU = must(await admin.from("guardians").insert({ school_id: S, full_name: "ولي أمر تجريبي", user_id: parent.id }).select("id").single(), "guardian")!.id;
 must(await admin.from("student_guardians").insert({ school_id: S, student_id: P, guardian_id: GU, relationship: "father", verified: true, can_follow: true }), "link");
 
+const mine = async () => must(await parent.c.from("notifications").select("title,body,kind,dedupe_key").like("body", `%${run}%`).order("created_at"), "notifs") as any[];
 const price = must(await owner.c.rpc("sf_setup_save", { _school: S, _kind: "price", _p: { year_id: Y, kind: "tuition", grade_id: G, term1: 5000, term2: 4000, status: "approved" } }), "price");
-must(await owner.c.rpc("sf_price_due_save", { _price: price, _due1: "2026-09-01", _due2: "2027-02-01" }), "due");
+const today = new Date(Date.now() + 3 * 3600e3); const day = (n: number) => new Date(today.getTime() + n * 864e5).toISOString().slice(0, 10);
+must(await owner.c.rpc("sf_price_due_save", { _price: price, _due1: day(-1), _due2: "2027-02-01" }), "due");
 must(await owner.c.rpc("sf_create_tuition", { _student: P, _year: Y }), "create");
+const titles = async () => (await mine()).map((x) => x.title as string);
+check("one «fees created» notice for both terms", (await titles()).filter((t) => t === "إنشاء المستحقات المالية").length === 1, await titles());
+must(await owner.c.rpc("sf_setup_save", { _school: S, _kind: "price", _p: { id: price, term1: 6000, term2: 4000, status: "approved" } }), "reprice price");
+must(await owner.c.rpc("sf_reprice_apply", { _price: price, _mode: "selected", _students: [P], _reason: "اختبار التعديل" }), "reprice");
+check("guardian told about the fee change", (await mine()).some((x) => x.title === "تعديل الرسوم الدراسية" && x.body.includes("6,000.00")), await titles());
+must(await owner.c.rpc("sf_price_due_save", { _price: price, _due1: day(-1), _due2: day(3) }), "due2");
+must(await owner.c.rpc("sf_due_apply", { _price: price, _reason: "اختبار الموعد" }), "due apply");
+check("guardian told about the due-date change", (await mine()).some((x) => x.title === "تعديل تاريخ الاستحقاق" && x.body.includes(day(3))), await titles());
 const f: any = must(await owner.c.rpc("sf_get", { _student: P, _year: Y }), "get");
 const ob1 = f.obligations.find((o: any) => o.term === 1).id, ob2 = f.obligations.find((o: any) => o.term === 2).id;
-const mine = async () => must(await parent.c.from("notifications").select("title,body,kind,dedupe_key").order("created_at"), "notifs") as any[];
 
 must(await owner.c.rpc("sf_collect", { _student: P, _request_key: crypto.randomUUID(), _p: { method: "cash", paid_at: "2026-11-24", allocations: [{ obligation_id: ob1, amount: 1500 }] } }), "collect");
 let n = await mine();
@@ -56,13 +65,20 @@ const r2: any = must(await owner.c.rpc("sf_remind", { _school: S, _obligations: 
 check("second reminder the same day sends nothing", r2.obligations === 0, r2);
 n = await mine();
 const rem = n.filter((x) => x.title === "تذكير بموعد السداد");
-check("guardian has exactly one reminder with remaining 3,500", rem.length === 1 && rem[0].body.includes("3,500.00"), rem);
+check("guardian has exactly one reminder with remaining 4,500", rem.length === 1 && rem[0].body.includes("4,500.00"), rem);
 
+const tk: any = must(await admin.rpc("sf_due_tick"), "tick"); must(await admin.rpc("sf_due_tick"), "tick again");
+n = await mine();
+check("daily check: one «due soon» and one «late» notice, no repeats", n.filter((x) => x.title === "اقتراب موعد الاستحقاق").length === 1 && n.filter((x) => x.title === "تأخر السداد").length === 1, { tk, t: n.map((x) => x.title) });
+const on = must(await owner.c.from("notifications").select("title").eq("school_id", S).like("dedupe_key", "sf_late_sum:%"), "owner") as any[];
+check("owner gets one daily overdue summary", on.length === 1, on);
 const col = must(await admin.from("sf_collections").select("id").eq("student_id", P).single(), "col")!.id;
 must(await owner.c.rpc("sf_reverse", { _student: P, _collection: col, _reason: "اختبار الإلغاء" }), "reverse");
 n = await mine();
 check("guardian gets a cancellation notification", n.filter((x) => x.title === "إلغاء دفعة").length === 1, n);
 const tn = must(await teacher.c.from("notifications").select("id").like("dedupe_key", "sf_%"), "teacher notifs") as any[];
+const own = must(await owner.c.from("notifications").select("title").eq("school_id", S).like("dedupe_key", "sf_adm:%"), "owner adm") as any[];
+check("owner is not notified about his own cancellation", own.length === 0, own);
 check("unrelated staff get no guardian finance notifications", tn.length === 0, tn);
 
 console.log(`\n${ok} passed, ${bad} failed — synthetic org ${org}`);

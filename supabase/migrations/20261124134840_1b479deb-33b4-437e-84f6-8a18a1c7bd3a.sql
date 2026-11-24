@@ -1,0 +1,1 @@
+grant execute on function public.sf_due_tick() to service_role;

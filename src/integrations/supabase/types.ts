@@ -26712,6 +26712,7 @@ export type Database = {
         Args: { _action: string; _school: string }
         Returns: undefined
       }
+      _sf_lbl: { Args: { _kind: string; _term: number }; Returns: string }
       _sf_money: { Args: { _v: number }; Returns: string }
       _sf_notify_guardians: {
         Args: {
@@ -26724,6 +26725,16 @@ export type Database = {
         Returns: number
       }
       _sf_ok: { Args: { _action: string; _school: string }; Returns: boolean }
+      _sf_owners_notify: {
+        Args: {
+          _body: string
+          _except: string
+          _key: string
+          _school: string
+          _title: string
+        }
+        Returns: undefined
+      }
       _sf_receipt_json: {
         Args: { r: Database["public"]["Tables"]["sf_receipts"]["Row"] }
         Returns: Json
@@ -31714,6 +31725,7 @@ export type Database = {
         Args: { _price: string; _reason: string }
         Returns: number
       }
+      sf_due_tick: { Args: never; Returns: Json }
       sf_get: { Args: { _student: string; _year?: string }; Returns: Json }
       sf_mapping_save: {
         Args: { _mappings: Json; _school: string }

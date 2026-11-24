@@ -112,3 +112,8 @@ create or replace function public.sf_siblings(_student uuid, _year uuid) returns
 -- Trigger sf_receipt_notify (after insert on sf_receipts): «تسجيل دفعة» with amount + internal receipt number, never called official.
 -- Trigger sf_reverse_notify (status → reversed on sf_collections): «إلغاء دفعة».
 -- sf_remind(_school,_obligations[]): guard 'collect'; only pending, past approved due date, remaining > 0; dedupe 'sf_due:<ob>:<day>' (once per day); logs sf_events 'reminder' without outbox.
+-- Phase 5b (applied): trigger sf_event_notify (after insert on sf_events) maps each student-level action to one guardian notice
+--   (obligation_create deduped per student+year+kind; discounts incl. sibling start/stop; reprice; due_apply; transport save/edit/exempt/cancel)
+--   and notifies org owners (except the actor) about auto_create_failed, collection_reverse and adjustments (sf_override actions).
+--   collection_record/reminder are excluded here (receipt trigger / sf_remind already notify). sf_due_tick (cron rikaz-sf-due, daily 05:30 UTC):
+--   «due soon» 3 days before, «late» once per obligation (last 30 days), one owner overdue summary per branch per day.

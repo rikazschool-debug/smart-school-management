@@ -145,4 +145,4 @@
 - scripts/security-fixes-e2e.ts: internal role/staff helpers not callable, duty settings read by staff only, deactivated invitee loses meeting access (11 checks). Demo-account scripts need RIKAZ_DEMO_PASSWORD in the environment.
 
 - scripts/student-finance-e2e.ts: fees/payments/transport on the test DB (14 checks); sf_events is append-only so its synthetic «اختبار المالية» org stays.
-- scripts/sf-notify-e2e.ts: finance notifications to verified guardians (payment with internal receipt, reversal, overdue reminder once/day, collect-only; 8 checks; leaves a synthetic «اختبار المالية» org since sf_events is append-only).
+- scripts/sf-notify-e2e.ts: finance notifications (fees created once, reprice, due change, payment+internal receipt, manual reminder once/day, daily soon/late/owner summary, reversal, actor not self-notified, collect-only; 14 checks; leaves a synthetic «اختبار المالية» org since sf_events is append-only).
