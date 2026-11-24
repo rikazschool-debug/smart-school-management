@@ -1,4 +1,5 @@
 # Financial system request — 24 November 2026
+- [x] Follow-up flow sweep: read all current TypeScript source for the reported React UMD import issue; no missing runtime React imports found, existing build log is OK; exhaustive file inventory and unchanged financial verification blockers in .lovable/reviews/react-import-sweep.md.
 - [x] Read all 31 sections of the attached finance/Wafeq/mobile requirements; inspect the reported hook and current finance sources.
 - [x] Complete a read-only inventory of financial tables, permissions, family links, transport records and selected official Wafeq capabilities; assessment in .lovable/reviews/financial-system-review.md.
 - [ ] Establish a verified test-only backup and restore rehearsal before database changes; no backup has been taken in this review.
