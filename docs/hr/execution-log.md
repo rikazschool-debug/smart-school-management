@@ -216,3 +216,5 @@ Prepared and tested in isolation; not applied or enabled. See docs/integrations/
 ### 2026-11-14 — VPS ADMS raw-delivery completion preparation
 
 Moved the never-applied pending ADMS contract to the VPS-only migration stream; no old migration was edited. Reused the current bridge source and its database. Added independent per-device delivery consent, preserved org/site activation cutoffs, private Unix/HMAC receiver preparation, metadata-only registry worker and authorized paged raw receipt display. Joint isolated test: 57 assertions, including lost ACK, duplicate receipt, cross-org refusal, raw immutability, PIN scope and unchanged mobile punches; existing bridge 54 tests pass. No live device enabled, trial archive preserved, attendance processing remains off and no employees invented. Live installation/acceptance is tracked separately.
+
+- 2026-11-24: قالب Excel للموظفين صار بأقسام «إضافة موظف» 1–6 وترتيبها (صف عناوين الأقسام + صف الأعمدة، 42 عمودًا بإضافة نوع الهوية ورقم النسخة وبيانات الجواز والرخصة والاسم المعروض وتاريخ المباشرة)؛ الاستيراد يطابق بالعنوان فتبقى القوالب القديمة صالحة. اختبار hr-fields.test.ts.

@@ -11,7 +11,7 @@ import { arabicError } from "@/lib/session";
 import { CENTRAL, roleLabel, rpc, useHrCats, type HrEmp, type HrMe } from "@/components/hr/shared";
 import { useHrOwners } from "@/components/hr/profile-fields";
 import { ManagerPick, type MgrOpt } from "@/components/hr/manager-pick";
-import { CAL_LABEL, HR_FIELDS, TEMPLATE_HEAD, cleanValue, fieldForHeader, norm, type Cal, type HrField } from "@/lib/hr-fields";
+import { CAL_LABEL, HR_FIELDS, TEMPLATE_SECTIONS, cleanValue, fieldForHeader, norm, type Cal, type HrField } from "@/lib/hr-fields";
 
 // HR employee import (shared field rules in src/lib/hr-fields.ts):
 // workbook → sheet + header row → editable column map → per-row preview → row-by-row save through
@@ -51,10 +51,14 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   const titles = useQuery({ enabled: withLogin, queryKey: ["hr-title-roles", org], queryFn: () => rpc<{ title: string; norm: string; base: string }[]>("hr_title_role_list", { _org: org }) });
   const tmap = useMemo(() => new Map((titles.data ?? []).map((t) => [t.norm, t.base])), [titles.data]);
 
+  // template = the «إضافة موظف» sections in order: row 1 section names (merged), row 2 column names, row 3 example
   const template = () => {
-    const head = TEMPLATE_HEAD.filter((h) => h === "#" || fields.some((f) => f.label === h));
-    const ws = XLSX.utils.aoa_to_sheet([head, head.map((h, k) => (k === 0 ? 1 : h === "الفرع" ? schools[0]?.name ?? "" : h === "الجنس" ? "ذكر" : ""))]);
-    ws["!cols"] = head.map(() => ({ wch: 20 })); const b = XLSX.utils.book_new(); b.Workbook = { Views: [{ RTL: true }] };
+    const secs = TEMPLATE_SECTIONS.map((s) => ({ ...s, fields: s.fields.filter((f) => fields.some((x) => x.key === f.key)) })).filter((s) => s.fields.length);
+    const top: string[] = [""], head: string[] = ["#"], merges: XLSX.Range[] = [];
+    for (const s of secs) { const c = head.length; top.push(s.label, ...s.fields.slice(1).map(() => "")); head.push(...s.fields.map((f) => f.label)); if (s.fields.length > 1) merges.push({ s: { r: 0, c }, e: { r: 0, c: c + s.fields.length - 1 } }); }
+    const sample = head.map((h, k) => (k === 0 ? 1 : h === "الفرع" ? schools[0]?.name ?? "" : h === "الجنس" ? "ذكر" : ""));
+    const ws = XLSX.utils.aoa_to_sheet([top, head, sample]); ws["!merges"] = merges;
+    ws["!cols"] = head.map((_, k) => ({ wch: k === 0 ? 5 : 20 })); const b = XLSX.utils.book_new(); b.Workbook = { Views: [{ RTL: true }] };
     XLSX.utils.book_append_sheet(b, ws, "البيانات الأساسية"); XLSX.writeFile(b, "قالب-بيانات-الموظفين.xlsx");
   };
 

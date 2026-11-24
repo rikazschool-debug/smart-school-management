@@ -77,7 +77,18 @@ export const HR_FIELDS: HrField[] = [
   { key: "category", label: "التصنيف الوظيفي", group: "job", kind: "category", where: "meta", syn: ["التصنيف", "category"] },
   { key: "hire_date", label: "تاريخ المباشرة", group: "job", kind: "date", where: "base", syn: ["تاريخ التعيين", "hire date"] },
 ];
-export const TEMPLATE_HEAD = ["#", ...HR_FIELDS.filter((f) => f.template).map((f) => f.label)];
+/** Excel template columns = the «إضافة موظف» tabs 1–6 in the same order (computed rows and the Iqama profession excluded).
+ * Import matches columns by header text, so files made from older templates still load. */
+const TEMPLATE_ORDER: Record<HrGroup, string[]> = {
+  personal: ["full_name", "display_name", "name_en", "gender", "birth_date", "nationality", "marital_status", "religion", "address"],
+  docs: ["id_type", "national_id", "id_version", "id_expiry", "passport_no", "passport_issue", "passport_expiry", "passport_place", "sponsor_name", "sponsor_no", "has_licence", "licence_type", "licence_expiry"],
+  job: ["employee_no", "job_title", "school", "department", "team", "manager_name", "manager_no", "hire_date", "assignment_note"],
+  qual: ["education", "specialization"],
+  contact: ["phone", "email"],
+  pay: ["pay_method", "bank_name", "iban", "mid_name", "mid_id", "mid_bank", "mid_iban"],
+};
+export const TEMPLATE_SECTIONS = HR_GROUPS.map((g) => ({ key: g.key, label: g.label, fields: TEMPLATE_ORDER[g.key].map((k) => HR_FIELDS.find((f) => f.key === k)!) }));
+export const TEMPLATE_HEAD = ["#", ...TEMPLATE_SECTIONS.flatMap((s) => s.fields.map((f) => f.label))];
 export const PROF_KEYS = HR_FIELDS.filter((f) => f.where === "prof").map((f) => f.key);
 
 export const norm = (s: unknown) => String(s ?? "").trim().replace(/\s+/g, " ").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[ـ]/g, "").toLowerCase();

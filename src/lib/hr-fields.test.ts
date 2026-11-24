@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HR_FIELDS, ID_TYPES, TEMPLATE_HEAD, cleanValue, fieldForHeader, hasIqamaProfession, parseDate } from "@/lib/hr-fields";
+import { HR_FIELDS, ID_TYPES, TEMPLATE_HEAD, TEMPLATE_SECTIONS, cleanValue, fieldForHeader, hasIqamaProfession, parseDate } from "@/lib/hr-fields";
 import { profilePayload } from "@/components/hr/profile-fields";
 
 const F = (k: string) => HR_FIELDS.find((f) => f.key === k)!;
@@ -11,11 +11,16 @@ describe("employee data rules", () => {
     expect(profilePayload({ id_type: "national", iqama_profession: profession }, true).p).not.toHaveProperty("iqama_profession");
     expect(profilePayload({ id_type: "resident", iqama_profession: profession }, false).p).not.toHaveProperty("iqama_profession");
   });
-  it("template has the 34 columns in order", () => {
-    expect(TEMPLATE_HEAD.length).toBe(34);
+  it("template columns follow the «إضافة موظف» sections in order", () => {
+    expect(TEMPLATE_SECTIONS.map((x) => x.label)).toEqual(["البيانات الشخصية", "الهوية والوثائق", "البيانات الوظيفية", "المؤهلات", "بيانات التواصل", "البيانات البنكية والدفع"]);
     expect(TEMPLATE_HEAD[0]).toBe("#");
-    expect(TEMPLATE_HEAD[1]).toBe("الرقم الوظيفي");
-    expect(TEMPLATE_HEAD[33]).toBe("رقم الكفيل");
+    expect(TEMPLATE_HEAD[1]).toBe("اسم الموظف");
+    expect(TEMPLATE_HEAD.length).toBe(43);
+    expect(TEMPLATE_SECTIONS[1]!.fields.map((f) => f.key)).toContain("passport_issue");
+    expect(TEMPLATE_SECTIONS.flatMap((x) => x.fields).every((f) => f.group === TEMPLATE_SECTIONS.find((x) => x.fields.includes(f))!.key)).toBe(true);
+    expect(TEMPLATE_HEAD).not.toContain("المهنة في الإقامة");
+    // every column header is read back by the import as the same field
+    for (const f of TEMPLATE_SECTIONS.flatMap((x) => x.fields)) expect(fieldForHeader(f.label)).toBe(f.key);
   });
   it("accepts synonyms", () => {
     expect(fieldForHeader("الاسم الكامل")).toBe("full_name");
