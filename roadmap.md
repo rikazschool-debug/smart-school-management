@@ -1,3 +1,12 @@
+# Financial system request — 24 November 2026
+- [x] Read all 31 sections of the attached finance/Wafeq/mobile requirements; inspect the reported hook and current finance sources.
+- [x] Complete a read-only inventory of financial tables, permissions, family links, transport records and selected official Wafeq capabilities; assessment in .lovable/reviews/financial-system-review.md.
+- [ ] Establish a verified test-only backup and restore rehearsal before database changes; no backup has been taken in this review.
+- [ ] Verify Wafeq test organization access and school/account/customer/tax mappings before integration or accounting writes.
+- [ ] Implement and test the ordered fee, discount, sibling, student obligation, transport, payment, statement and reconciliation packages after the safety prerequisites.
+- [ ] Implement and test mobile financial services; write MOBILE_FINANCIAL_API_CONTRACT.md only for implemented endpoints.
+- [ ] Obtain separate approval for production migration and publication; neither is authorized by this review.
+
 # Roadmap (prompt-406: تطوير التوجيه الطلابي — 5 مراحل)
 - [x] prompt-482: طباعة الخريطة كاملة، تحديث دليل الكادر وفلاتر الأقسام، وإخفاء التصنيف من ملف الموظف؛ فحوص الفلاتر ومصادر البيانات ناجحة، والتحقق عبر المتصفح بحساب مسجل غير متاح.
 - [x] prompt-477: هوية الكادر ومسمى الإسناد من الموارد البشرية، مدرسة الإضافة الحالية ومراحلها تلقائيًا؛ 4 اختبارات اختيار و6 فحوص حفظ وقراءة، ومتصفح إضافة موظف بلا حساب ثم استرجاعه في الكادر؛ لا نشر أو تغيير بيانات المالكي.

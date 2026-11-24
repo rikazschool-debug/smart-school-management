@@ -2,6 +2,8 @@
 
 Enforced in the database (RLS + SECURITY DEFINER RPCs). The UI only mirrors it.
 
+2026-11-24 (integrated finance review only): Existing fin_* tables remain RPC-only, finance/family RPCs deny anonymous execution, and fin_pay_save checks organization ownership for branch bank/payment-link settings, not payment collection. Requested owner-only setup/overrides and school-scoped delegated collection are requirements, not newly implemented grants. No policy, role, membership or database changes; see .lovable/reviews/financial-system-review.md.
+
 2026-11-19 (prompt-495): Both task pickers use the existing task-recipient pool and `admin_tasks.create` scope. The task-only search exposes employee number and job title for eligible people in the selected school, not contact or identity data. Academic stage and department labels honor existing explicit view denials; existing task write and participant rules are unchanged.
 
 2026-11-19 (prompt-494): Organization documents and contractor forms still use the existing scoped `od_*` functions. The new category selectors do not change view, create, edit, archive, or file download permissions.
