@@ -22,7 +22,8 @@ export function FamilyFinance() {
   const live = (f: Fin) => f.obligations.filter((o) => o.status !== "void");
   const all = kids.flatMap(live);
   const by = (k: string) => all.filter((o) => o.kind === k);
-  const sib = kids.flatMap((f) => f.discounts).filter((d) => d["active"] !== false && (d["snapshot"] as Row | undefined)?.["kind"] === "sibling").reduce((s, d) => s + num(d["amount"]), 0);
+  const liveIds = new Set(all.map((o) => o.id));
+  const sib = kids.flatMap((f) => f.discounts).filter((d) => liveIds.has(String(d["obligation_id"])) && d["active"] !== false && (d["snapshot"] as Row | undefined)?.["kind"] === "sibling").reduce((s, d) => s + num(d["amount"]), 0);
   const net = sumOf(all, "net"), rec = sumOf(all, "recorded");
   const kpis: [string, string][] = [
     ["الأبناء المسجلون", String(kids.length)], ["الرسوم الدراسية", money(sumOf(by("tuition"), "gross"))], ["رسوم النقل", money(sumOf(by("transport"), "gross"))],
