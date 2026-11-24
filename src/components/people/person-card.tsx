@@ -2,7 +2,7 @@ import { Fragment, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Clock, Pencil, Trash2, Wallet } from "lucide-react";
+import { Bus, Clock, Pencil, Trash2, Wallet } from "lucide-react";
 import { SF_KEY, TRANSPORT_LABEL, money, num } from "@/lib/student-finance/labels";
 import { formatAcademicYear } from "@/lib/academic-year";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -238,21 +238,29 @@ function StudyInfo({ id }: { id: string }) {
   return <>{items.map(([l, v]) => <Fragment key={l}><dt className="text-muted-foreground">{l}</dt><dd className="font-medium">{v}</dd></Fragment>)}</>;
 }
 
-/** Bus subscription per term from sf_get: type (ذهاب/عودة/ذهاب وعودة), bus, and its fee state. */
+/** Bus subscription per term from sf_get, laid out like the tuition summary: type, bus, three amount boxes, progress bar. */
 function BusStatus({ transport, obligations }: { transport: Row[]; obligations: Row[] }) {
   const live = transport.filter((t) => t["active"] || t["exempt"]);
   if (!live.length) return <p className="rounded-xl bg-muted/50 p-2 text-xs text-muted-foreground">النقل المدرسي: غير مشترك في الباص</p>;
-  return <div className="space-y-1 rounded-xl bg-muted/50 p-2 text-xs">
-    <div className="font-bold">النقل المدرسي: مشترك</div>
-    {live.sort((a, b) => num(a["term"]) - num(b["term"])).map((t) => {
+  return <div className="space-y-3 border-t pt-3">
+    <h4 className="flex items-center gap-1 text-sm font-bold"><Bus className="size-4" /> رسوم الباص <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">مشترك</span></h4>
+    {[...live].sort((a, b) => num(a["term"]) - num(b["term"])).map((t) => {
       const o = obligations.find((x) => x["kind"] === "transport" && x["term"] === t["term"] && x["status"] !== "void"); const b = o?.["balance"] ?? {};
-      const rem = num(b["remaining"]), net = num(b["net"]);
-      const st = t["exempt"] || o?.["status"] === "exempt" ? "معفى" : !o ? "لم تُنشأ الرسوم" : rem <= 0 ? "مسدد" : num(b["recorded"]) > 0 ? "مسدد جزئيًا" : "غير مسدد";
-      return <div key={String(t["id"])} className="flex flex-wrap gap-x-3 gap-y-1">
-        <b>{t["term"] === 1 ? "الفصل الأول" : "الفصل الثاني"}</b><span>{TRANSPORT_LABEL[String(t["transport_type"])] ?? "—"}</span>
-        {t["bus"]?.["code"] && <span>باص {t["bus"]["code"]}</span>}
-        {o && !t["exempt"] && <span className="tabular-nums">الرسوم {money(net)} · المسدد {money(num(b["recorded"]))} · المتبقي {money(rem)}</span>}
-        <span className={st === "مسدد" || st === "معفى" ? "font-medium text-primary" : "font-medium text-destructive"}>{st}</span>
+      const net = num(b["net"]), paid = num(b["recorded"]), rem = num(b["remaining"]);
+      const exempt = t["exempt"] || o?.["status"] === "exempt";
+      const st = exempt ? "معفى" : !o ? "لم تُنشأ الرسوم" : rem <= 0 ? "مسدد" : paid > 0 ? "مسدد جزئيًا" : "غير مسدد";
+      const pct = net > 0 ? Math.min(100, Math.round((paid * 100) / net)) : 0;
+      return <div key={String(t["id"])} className="space-y-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"><b>{t["term"] === 1 ? "الفصل الأول" : "الفصل الثاني"}</b><span className="text-muted-foreground">· {TRANSPORT_LABEL[String(t["transport_type"])] ?? "—"}{t["bus"]?.["code"] ? ` · باص ${t["bus"]["code"]}` : ""}</span>
+          <span className={`ms-auto rounded-full px-2 py-0.5 text-[11px] font-medium ${st === "مسدد" || st === "معفى" ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>{st}</span></div>
+        {o && !exempt && <>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            {([["رسوم الباص", net, ""], ["المسدد", paid, "text-primary"], ["المتبقي", rem, rem > 0 ? "text-destructive" : "text-primary"]] as const).map(([l, v, c]) => (
+              <div key={l} className="rounded-xl bg-muted/50 p-2"><div className="text-[11px] text-muted-foreground">{l}</div><div className={`mt-0.5 text-sm font-bold tabular-nums ${c}`}>{money(v)}</div></div>))}
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
+          <p className="text-xs text-muted-foreground">سُدد {pct}% من رسوم الباص لهذا الفصل</p>
+        </>}
       </div>; })}
   </div>;
 }
