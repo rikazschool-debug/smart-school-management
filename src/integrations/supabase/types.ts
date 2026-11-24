@@ -26723,6 +26723,10 @@ export type Database = {
         Args: { _action: string; _scope: string; _section: string }
         Returns: boolean
       }
+      _perm_valid_pre_sf: {
+        Args: { _action: string; _scope: string; _section: string }
+        Returns: boolean
+      }
       _perm_valid_pre332: {
         Args: { _action: string; _scope: string; _section: string }
         Returns: boolean
