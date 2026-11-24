@@ -84,5 +84,47 @@ DO $$ DECLARE m uuid; BEGIN
  PERFORM change_member_role(m,'teacher');PERFORM change_member_role(m,'teacher');
  PERFORM pg_temp.verify((SELECT count(*)=1 FROM teachers WHERE user_id='10000000-0000-4000-8000-000000000003' AND school_id='30000000-0000-4000-8000-000000000001'),'role change creates exactly one same-login teacher');
 END $$;
-SELECT jsonb_build_object('passed',true,'current_inbox',true,'historical_events_held',true,'duplicate_blocked',true,'cross_org_denied',true,'maqsam_setup_without_calls',true,'scheduled_commands',15,'collaboration_context',true,'support_contacts',true,'teacher_record_idempotency',true,'network','none','transaction_rolled_back',true);
+-- The adopted helpers remain service-only; ownership does not grant a public login API.
+SELECT pg_temp.verify((SELECT pg_get_userbyid(proowner)='postgres' FROM pg_proc WHERE oid='public._preserve_login_phone()'::regprocedure),'phone trigger owned by ordinary migration role');
+SELECT pg_temp.verify((SELECT bool_and(NOT has_function_privilege('anon',f,'execute') AND NOT has_function_privilege('authenticated',f,'execute') AND has_function_privilege('service_role',f,'execute')) FROM unnest(ARRAY['public._idl_issue(text,text)','public._idl_verify(uuid,text)','public._idl_resolve_staged_guardian(text)','public._idl_resolve_staged_teacher(text)','public._preserve_login_phone()']) f),'phone-login helpers deny client execution');
+-- Synthetic phone-login acceptance; no provider call.
+SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+SELECT pg_temp.verify(NOT EXISTS(SELECT 1 FROM guardians WHERE national_id='2012345678'),'synthetic identity is isolated');
+INSERT INTO auth.users(id,phone,raw_app_meta_data,raw_user_meta_data)
+VALUES('10000000-0000-4000-8000-000000000004','966500000008','{}','{"full_name":"Synthetic pending guardian"}');
+INSERT INTO guardians(id,school_id,full_name,national_id,phone)
+VALUES('40000000-0000-4000-8000-000000000004','30000000-0000-4000-8000-000000000001','Synthetic pending guardian','2012345678','0500000008');
+SELECT _provision_link('guardian','40000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000001',true);
+SELECT pg_temp.verify(NOT _idl_portal_ok('10000000-0000-4000-8000-000000000004','staff'),'guardian never becomes staff');
+DO $$DECLARE issued jsonb;cid uuid;r jsonb;BEGIN
+ issued:=_idl_issue('2012345678','123456');cid:=(issued->>'challenge')::uuid;
+ PERFORM pg_temp.verify(cid IS NOT NULL AND issued->>'user_id'='10000000-0000-4000-8000-000000000004','pending account uses existing UID');
+ PERFORM _idl_mark_sent(cid,'accepted','whatsapp');
+ PERFORM pg_temp.verify((_idl_verify(cid,'000000')->>'error')='wrong','wrong proof denied');
+ PERFORM pg_temp.verify((SELECT attempts=1 FROM id_login_challenges WHERE id=cid),'wrong proof counted');
+ PERFORM pg_temp.verify((SELECT user_id IS NULL FROM guardians WHERE id='40000000-0000-4000-8000-000000000004'),'wrong proof never activates');
+ r:=_idl_verify(cid,'123456');
+ PERFORM pg_temp.verify(r->>'user_id'='10000000-0000-4000-8000-000000000004'AND(r->>'activated')::boolean,'verified proof activates existing guardian');
+ PERFORM pg_temp.verify((SELECT user_id='10000000-0000-4000-8000-000000000004'FROM guardians WHERE id='40000000-0000-4000-8000-000000000004'),'same guardian linked');
+ PERFORM pg_temp.verify((SELECT completed_at IS NOT NULL FROM account_setup WHERE user_id='10000000-0000-4000-8000-000000000004'),'setup completed after proof');
+ PERFORM pg_temp.verify((SELECT bool_and(role='guardian'AND is_active)FROM memberships WHERE user_id='10000000-0000-4000-8000-000000000004'),'only intended membership activated');
+ PERFORM pg_temp.verify((_idl_verify(cid,'123456')->>'error')='used','proof replay denied');
+ PERFORM pg_temp.verify((_idl_issue('2012345678','999999')->>'error')='cooldown','request cooldown preserved');
+END$$;
+INSERT INTO id_login_challenges(nid_hash,user_id,phone,code_hash,expires_at)
+VALUES(_idl_hash('2012345678'),'10000000-0000-4000-8000-000000000004','966500000008','synthetic-unused',now()+interval'5 minutes');
+UPDATE guardians SET phone='0500000009' WHERE id='40000000-0000-4000-8000-000000000004';
+SELECT pg_temp.verify((SELECT phone='966500000009'AND phone_confirmed_at IS NULL FROM auth.users WHERE id='10000000-0000-4000-8000-000000000004'),'new owner can update Auth phone and require fresh proof');
+SELECT pg_temp.verify(NOT EXISTS(SELECT 1 FROM id_login_challenges WHERE user_id='10000000-0000-4000-8000-000000000004'AND used_at IS NULL),'old phone challenges invalidated');
+SELECT pg_temp.verify((SELECT count(*)=1 FROM auth.users WHERE id='10000000-0000-4000-8000-000000000004'),'no duplicate login');
+INSERT INTO auth.users(id,phone,raw_app_meta_data,raw_user_meta_data)
+VALUES('10000000-0000-4000-8000-000000000005','966500000010','{}','{}');
+DO $$BEGIN
+ BEGIN UPDATE guardians SET phone='0500000010' WHERE id='40000000-0000-4000-8000-000000000004';RAISE EXCEPTION 'occupied phone accepted';
+ EXCEPTION WHEN unique_violation THEN NULL;END;
+END$$;
+SELECT pg_temp.verify((SELECT phone='966500000009'FROM auth.users WHERE id='10000000-0000-4000-8000-000000000004'),'conflict keeps existing account phone');
+SELECT pg_temp.verify((SELECT _idl_phone(phone)='966500000009'FROM guardians WHERE id='40000000-0000-4000-8000-000000000004'),'conflict preserves the normalized business phone');
+
+SELECT jsonb_build_object('passed',true,'current_inbox',true,'historical_events_held',true,'duplicate_blocked',true,'cross_org_denied',true,'maqsam_setup_without_calls',true,'scheduled_commands',15,'collaboration_context',true,'support_contacts',true,'teacher_record_idempotency',true,'pending_phone_first_login',true,'phone_change_preserves_login',true,'otp_limits_preserved',true,'network','none','transaction_rolled_back',true);
 ROLLBACK;
