@@ -29,7 +29,8 @@ export function statementLines(fins: R[], f: { term?: number | undefined; kind?:
       if (c["status"] === "reversed") raw.push({ date: String(c["updated_at"] ?? c["created_at"] ?? ""), student: name, text: "إلغاء سداد", debit: amt, credit: 0 });
     }
   }
-  raw.sort((a, b) => a.date.localeCompare(b.date));
+  // Same day: charges before discounts/payments, so a date-only payment never sorts ahead of that day's fee.
+  raw.sort((a, b) => a.date.slice(0, 10).localeCompare(b.date.slice(0, 10)) || (b.debit > 0 ? 1 : 0) - (a.debit > 0 ? 1 : 0) || a.date.localeCompare(b.date));
   let bal = 0, opening = 0; const lines: StatementLine[] = [];
   for (const l of raw) {
     const d = l.date.slice(0, 10);

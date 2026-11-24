@@ -13,6 +13,7 @@ import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { KIND_LABEL, SF_KEY, TERM_LABEL, TRANSPORT_LABEL, TRANSPORT_TYPES, money, num } from "@/lib/student-finance/labels";
 import { StudentFinance } from "./student-finance";
 import { SEARCH_HINT, useStudentSearch } from "./search";
+import { useRowSelect } from "./row-select";
 
 type Cell = string | number;
 const useRpc = (name: string, schoolId: string, yearId: string) => useQuery({ queryKey: [...SF_KEY, name, schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc(name, { _school: schoolId, _year: yearId || null }); if (error) throw error; return data as Row[]; }, retry: false });
@@ -27,15 +28,15 @@ function Sel({ label, value, onChange, opts }: { label: string; value: string; o
 }
 /** Shared list body: filters bar, exports from the same rows, table, «فتح الحساب» dialog on the unified student finance panel. */
 function ListPage({ title, note, kpis, filters, headers, rows, ids, names, empty, count }: { title: string; note?: string; kpis: ReactNode; filters: ReactNode; headers: string[]; rows: Cell[][]; ids: string[]; names: string[]; empty: string; count: string[] }) {
-  const [open, setOpen] = useState<number | null>(null);
-  const meta = { title, filters: count };
+  const [open, setOpen] = useState<number | null>(null); const rs = useRowSelect(rows.length);
+  const meta = { title, filters: count }; const out = rs.pick(rows);
   return <section className="space-y-3">
     <div><h2 className="text-lg font-bold">{title}</h2>{note && <p className="text-xs text-muted-foreground">{note}</p>}</div>
     {kpis}
     <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">{filters}
-      <span className="ms-auto flex gap-1"><Button size="sm" variant="outline" onClick={() => void exportPdf(meta, headers, rows).catch((e) => toast.error(arabicError(e)))}>PDF</Button><Button size="sm" variant="outline" onClick={() => exportXlsx(meta, headers, rows)}>Excel</Button><Button size="sm" variant="outline" onClick={() => printReport(meta, headers, rows)}>طباعة</Button></span></div>
-    <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr>{headers.map((h) => <th key={h} className="whitespace-nowrap p-2 text-start">{h}</th>)}<th className="p-2" /></tr></thead>
-      <tbody>{rows.map((r, i) => <tr key={i} className="border-t hover:bg-muted/30">{r.map((c, j) => <td key={j} className="p-2">{c}</td>)}<td className="p-2">{ids[i] && <Button size="sm" variant="outline" onClick={() => setOpen(i)}>فتح الحساب</Button>}</td></tr>)}</tbody></table>
+      <span className="ms-auto flex items-center gap-1">{rs.note}<Button size="sm" variant="outline" onClick={() => void exportPdf(meta, headers, out).catch((e) => toast.error(arabicError(e)))}>PDF</Button><Button size="sm" variant="outline" onClick={() => exportXlsx(meta, headers, out)}>Excel</Button><Button size="sm" variant="outline" onClick={() => printReport(meta, headers, out)}>طباعة</Button></span></div>
+    <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr><th className="p-2">{rs.head}</th>{headers.map((h) => <th key={h} className="whitespace-nowrap p-2 text-start">{h}</th>)}<th className="p-2" /></tr></thead>
+      <tbody>{rows.map((r, i) => <tr key={i} className="border-t hover:bg-muted/30"><td className="p-2">{rs.cell(i)}</td>{r.map((c, j) => <td key={j} className="p-2">{c}</td>)}<td className="p-2">{ids[i] && <Button size="sm" variant="outline" onClick={() => setOpen(i)}>فتح الحساب</Button>}</td></tr>)}</tbody></table>
       {!rows.length && <p className="p-6 text-center text-sm text-muted-foreground">{empty}</p>}</div>
     <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
       <DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-6xl overflow-y-auto sm:max-w-6xl"><DialogHeader><DialogTitle>{open !== null ? names[open] : ""}</DialogTitle></DialogHeader>{open !== null && ids[open] && <StudentFinance studentId={ids[open]!} />}</DialogContent>
@@ -109,18 +110,20 @@ export function Adjustments({ schoolId, yearId }: { schoolId: string; yearId: st
   const [s, setS] = useState(""); const [k, setK] = useState(""); const [d, setD] = useState<Row | null>(null);
   const all = q.data ?? [];
   const rows = all.filter((r) => (!s || match(s, r["student_id"], r["name"], r["number"])) && (!k || r["action"] === k));
+  const rsA = useRowSelect(rows.length);
   if (q.isLoading) return <LoadingState />; if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const diff = (r: Row) => (r["old"] == null || r["new"] == null ? null : num(r["new"]) - num(r["old"]));
   const H = ["رقم التسوية", "التاريخ", "الطالب", "العام", "نوع التسوية", "القيمة السابقة", "القيمة الجديدة", "الفرق", "المستخدم", "الحالة"];
   const data = rows.map((r) => { const df = diff(r); return [String(r["number"]), new Date(String(r["created_at"])).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "short", timeStyle: "short" }), String(r["name"] ?? "على مستوى المجموعة"), r["year"] ? formatAcademicYear(String(r["year"])) : "—", ADJ_LABEL[String(r["action"])] ?? String(r["action"]), r["old"] == null ? "—" : money(r["old"]), r["new"] == null ? "—" : money(r["new"]), df == null ? "—" : `${df > 0 ? "+" : ""}${money(df)}`, String(r["actor"] || "—"), String(r["status"])]; });
+  const outA = rsA.pick(data);
   const up = rows.reduce((a, r) => a + Math.max(0, diff(r) ?? 0), 0), down = rows.filter((r) => !["credit_apply", "credit_refund"].includes(String(r["action"]))).reduce((a, r) => a + Math.max(0, -(diff(r) ?? 0)), 0);
   return <section className="space-y-3">
     <div><h2 className="text-lg font-bold">التسويات المالية</h2><p className="text-xs text-muted-foreground">سجل للاطلاع: كل تسوية معتمدة مرتبطة بمستحقها الأصلي ولا تُحذف؛ تنفيذها من حساب الطالب ولمدير النظام فقط. استخدام الرصيد الدائن لا يُحتسب تحصيلًا نقديًا.</p></div>
     <Kpis items={[["عدد التسويات", String(rows.length)], ["بالزيادة", money(up)], ["بالتخفيض", money(down)], ["رصيد دائن مستخدم", money(rows.filter((r) => r["action"] === "credit_apply").reduce((a, r) => a + num(r["new"]), 0))], ["أرصدة مستردة", money(rows.filter((r) => r["action"] === "credit_refund").reduce((a, r) => a + num(r["new"]), 0))], ["عمليات عكس السداد", String(rows.filter((r) => r["action"] === "collection_reverse").length), "bad"], ["الطلاب المتأثرون", String(new Set(rows.map((r) => r["student_id"]).filter(Boolean)).size)]]} />
     <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2"><Input className="w-72" placeholder={`${SEARCH_HINT} أو رقم التسوية`} value={s} onChange={(e) => setS(e.target.value)} /><Sel label="نوع التسوية" value={k} onChange={setK} opts={Object.entries(ADJ_LABEL)} />
-      <span className="ms-auto flex gap-1"><Button size="sm" variant="outline" onClick={() => void exportPdf({ title: "التسويات المالية", filters: [s] }, H, data).catch((e) => toast.error(arabicError(e)))}>PDF</Button><Button size="sm" variant="outline" onClick={() => exportXlsx({ title: "التسويات المالية", filters: [s] }, H, data)}>Excel</Button><Button size="sm" variant="outline" onClick={() => printReport({ title: "التسويات المالية", filters: [s] }, H, data)}>طباعة</Button></span></div>
-    <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr>{H.map((h) => <th key={h} className="whitespace-nowrap p-2 text-start">{h}</th>)}</tr></thead>
-      <tbody>{data.map((r, i) => <tr key={i} className="cursor-pointer border-t hover:bg-muted/30" onClick={() => setD(rows[i] ?? null)}>{r.map((c, j) => <td key={j} className="p-2">{c}</td>)}</tr>)}</tbody></table>
+      <span className="ms-auto flex items-center gap-1">{rsA.note}<Button size="sm" variant="outline" onClick={() => void exportPdf({ title: "التسويات المالية", filters: [s] }, H, outA).catch((e) => toast.error(arabicError(e)))}>PDF</Button><Button size="sm" variant="outline" onClick={() => exportXlsx({ title: "التسويات المالية", filters: [s] }, H, outA)}>Excel</Button><Button size="sm" variant="outline" onClick={() => printReport({ title: "التسويات المالية", filters: [s] }, H, outA)}>طباعة</Button></span></div>
+    <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr><th className="p-2">{rsA.head}</th>{H.map((h) => <th key={h} className="whitespace-nowrap p-2 text-start">{h}</th>)}</tr></thead>
+      <tbody>{data.map((r, i) => <tr key={i} className="cursor-pointer border-t hover:bg-muted/30" onClick={() => setD(rows[i] ?? null)}><td className="p-2">{rsA.cell(i)}</td>{r.map((c, j) => <td key={j} className="p-2">{c}</td>)}</tr>)}</tbody></table>
       {!data.length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد تسويات مسجلة.</p>}</div>
     <Dialog open={!!d} onOpenChange={(o) => !o && setD(null)}><DialogContent dir="rtl" className="max-w-xl"><DialogHeader><DialogTitle>التسوية {String(d?.["number"] ?? "")}</DialogTitle></DialogHeader>
       {d && <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm">{([["الطالب", d["name"] ?? "على مستوى المجموعة"], ["المدرسة", d["school"]], ["العام الدراسي الأصلي", d["year"] ? formatAcademicYear(String(d["year"])) : "—"], ["الفصل", d["term"] ? TERM_LABEL(Number(d["term"])) : "—"], ["نوع الرسوم", KIND_LABEL[String(d["fee_kind"])] ?? "—"], ["نوع التسوية", ADJ_LABEL[String(d["action"])]], ["القيمة قبل", d["old"] == null ? "—" : money(d["old"])], ["القيمة بعد", d["new"] == null ? "—" : money(d["new"])], ["الفرق", diff(d) == null ? "—" : money(diff(d))],

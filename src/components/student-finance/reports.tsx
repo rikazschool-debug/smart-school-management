@@ -14,6 +14,7 @@ import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { KIND_LABEL, METHOD_LABEL, SF_KEY, TERM_LABEL, TRANSPORT_LABEL, money, num } from "@/lib/student-finance/labels";
 import { StudentFinance } from "./student-finance";
 import { SEARCH_HINT, useStudentSearch } from "./search";
+import { useRowSelect } from "./row-select";
 
 type Cell = string | number;
 type Src = "ob" | "col" | "disc" | "tr" | "bus" | "adj" | "rcpt" | "pend";
@@ -158,6 +159,7 @@ function ReportView({ rep, schoolId, yearId, onBack }: { rep: Rep; schoolId: str
     && (!f.method || r.method === f.method) && (!f.actor || r.actor === f.actor) && (!f.from || (r.date ?? "") >= f.from) && (!f.to || (r.date ?? "9") <= f.to));
   const opts = (k: keyof Rec) => [...new Set(recs.map((r) => r[k]).filter(Boolean).map(String))].sort();
   const sel = (k: keyof typeof f, label: string, o: [string, string][]) => o.length > 1 ? <select aria-label={label} className={selectCls("min-w-28", true)} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })}><option value="">{label}: الكل</option>{o.map(([a, b]) => <option key={a} value={a}>{b}</option>)}</select> : null;
+  const rs = useRowSelect(rows.length); const out = rs.pick(rows).map((r) => r.cells);
   const total = rows.reduce((a, r) => a + r.amount, 0);
   const meta = { title: rep.title, filters: Object.values(f).filter(Boolean) };
   return <section className="space-y-3">
@@ -168,11 +170,11 @@ function ReportView({ rep, schoolId, yearId, onBack }: { rep: Rep; schoolId: str
       {sel("stage", "المرحلة", opts("stage").map((x) => [x, x]))}{sel("grade", "الصف", opts("grade").map((x) => [x, x]))}{sel("term", "الفصل", opts("term").map((x) => [x, TERM_LABEL(Number(x))]))}
       {sel("kind", "نوع الرسوم", opts("kind").map((x) => [x, KIND_LABEL[x] ?? x]))}{sel("pay", "حالة السداد", opts("pay").map((x) => [x, x]))}{sel("method", "طريقة السداد", opts("method").map((x) => [x, METHOD_LABEL[x] ?? x]))}{sel("actor", "الموظف", opts("actor").map((x) => [x, x]))}
       {recs.some((r) => r.date) && <><Input type="date" aria-label="من تاريخ" className="w-36" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} /><Input type="date" aria-label="إلى تاريخ" className="w-36" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} /></>}
-      <span className="ms-auto flex gap-1"><Button size="sm" variant="outline" onClick={() => void exportPdf(meta, rep.headers, rows.map((r) => r.cells)).catch((e) => toast.error(arabicError(e)))}>PDF</Button><Button size="sm" variant="outline" onClick={() => exportXlsx(meta, rep.headers, rows.map((r) => r.cells))}>Excel</Button><Button size="sm" variant="outline" onClick={() => printReport(meta, rep.headers, rows.map((r) => r.cells))}>طباعة</Button></span></div>
+      <span className="ms-auto flex items-center gap-1">{rs.note}<Button size="sm" variant="outline" onClick={() => void exportPdf(meta, rep.headers, out).catch((e) => toast.error(arabicError(e)))}>PDF</Button><Button size="sm" variant="outline" onClick={() => exportXlsx(meta, rep.headers, out)}>Excel</Button><Button size="sm" variant="outline" onClick={() => printReport(meta, rep.headers, out)}>طباعة</Button></span></div>
     {d.isLoading ? <LoadingState /> : d.error ? <ErrorState message={arabicError(d.error)} onRetry={() => d.refetch()} /> : <>
       <p className="text-sm">عدد النتائج: <b>{rows.length}</b>{total ? <> · الإجمالي: <b>{money(total)}</b></> : null}</p>
-      <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr>{rep.headers.map((h) => <th key={h} className="whitespace-nowrap p-2 text-start">{h}</th>)}<th className="p-2" /></tr></thead>
-        <tbody>{rows.map((r, i) => <tr key={i} className="border-t hover:bg-muted/30">{r.cells.map((c, j) => <td key={j} className="p-2">{c}</td>)}<td className="p-2">{r.sid && <Button size="sm" variant="outline" onClick={() => setOpen(r)}>ملف الطالب</Button>}</td></tr>)}</tbody></table>
+      <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr><th className="p-2">{rs.head}</th>{rep.headers.map((h) => <th key={h} className="whitespace-nowrap p-2 text-start">{h}</th>)}<th className="p-2" /></tr></thead>
+        <tbody>{rows.map((r, i) => <tr key={i} className="border-t hover:bg-muted/30"><td className="p-2">{rs.cell(i)}</td>{r.cells.map((c, j) => <td key={j} className="p-2">{c}</td>)}<td className="p-2">{r.sid && <Button size="sm" variant="outline" onClick={() => setOpen(r)}>ملف الطالب</Button>}</td></tr>)}</tbody></table>
         {!rows.length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد بيانات لهذا التقرير في النطاق المحدد.</p>}</div></>}
     <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}><DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-6xl overflow-y-auto sm:max-w-6xl"><DialogHeader><DialogTitle>{open?.name}</DialogTitle></DialogHeader>{open?.sid && <StudentFinance studentId={open.sid} />}</DialogContent></Dialog>
   </section>;

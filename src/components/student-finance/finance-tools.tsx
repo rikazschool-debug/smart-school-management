@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StudentFinance } from "./student-finance";
 import { SEARCH_HINT, useStudentSearch } from "./search";
+import { useRowSelect } from "./row-select";
+import { Eye } from "lucide-react";
 
 const STATE: Record<string, string> = { new: "جديد — سيُنشأ", exists: "لديه مستحقات", partial: "مستحقات جزئية — مراجعة منفصلة", no_price: "لا توجد رسوم معتمدة لصفه" };
 
@@ -110,7 +112,7 @@ export function receiptHtml(r: Row) {
   const TH = `padding:7px 10px;text-align:right;font-size:11px;background:${G};color:#fff`, TDc = `padding:7px 10px;border-bottom:1px solid #e5ebe9;font-size:12px`;
   return `${brandHeaderHtml({ fallbackName: String(s["school"] ?? ""), side: `رقم السند: <bdi dir="ltr"><b>${h(r["number"])}</b></bdi><br>تاريخ السداد: <bdi dir="ltr">${h(s["paid_at"])}</bdi>` })}
   <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px">
-    <div><div style="font-size:22px;font-weight:700;color:#1f2a44">سند قبض</div><div style="font-size:11px;color:#667">سند داخلي من ركاز — ليس مستندًا محاسبيًا رسميًا</div></div>
+    <div><div style="font-size:22px;font-weight:700;color:#1f2a44">سند قبض</div></div>
     <div style="border:2px solid ${cancelled ? "#b42318" : G};color:${cancelled ? "#b42318" : G};border-radius:999px;padding:4px 16px;font-weight:700;font-size:12px">${cancelled ? "ملغى — غير صالح" : "ساري"}</div></div>
   <div style="display:flex;gap:12px;margin-bottom:14px">
     ${box("بيانات الطالب", [["اسم الطالب", st["name"]], ["رقم الهوية", st["national_id"]], ["الرقم الطلابي", st["csmart_no"]], ["المرحلة والصف", [st["stage"], st["grade"]].filter(Boolean).join(" — ")], ["الشعبة", st["section"]], ["ولي الأمر", st["guardian"]]])}
@@ -129,8 +131,7 @@ export function receiptHtml(r: Row) {
   <div style="display:flex;justify-content:space-between;margin-top:36px;font-size:12px">
     <div style="text-align:center;width:40%"><div style="color:#667">الموظف المسدِّد</div><div style="font-weight:700;margin-top:4px">${h(s["actor"] || s["payer"] || "—")}</div><div style="border-top:1px solid #999;margin-top:28px;padding-top:4px;color:#888;font-size:10px">التوقيع</div></div>
     <div style="text-align:center;width:40%"><div style="color:#667">الختم</div><div style="border-top:1px solid #999;margin-top:52px;padding-top:4px;color:#888;font-size:10px">ختم المدرسة</div></div>
-  </div>
-  <div style="margin-top:28px;border-top:1px solid #ddd;padding-top:6px;font-size:10px;color:#888;text-align:center">صادر من نظام ركاز — المستند المحاسبي الرسمي يصدر من وافق بعد تفعيل الربط.</div>`;
+  </div>`;
 }
 export async function receiptPdf(r: Row) { await exportPagePdf(`سند قبض ${r["number"]}`, receiptHtml(r)); }
 export function receiptPrint(r: Row) { printPage(`سند قبض ${r["number"]}`, receiptHtml(r)); }
@@ -145,10 +146,18 @@ export function ReceiptButtons({ r }: { r: Row }) {
 export function ReceiptsList({ schoolId, yearName }: { schoolId: string; yearName: string }) {
   const [q, setQ] = useState(""); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [method, setMethod] = useState(""); const [allYears, setAllYears] = useState(false);
   const inYear = (r: Row) => { const s = r["snapshot"] as Row; return allYears || s["year"] === yearName || ((s["allocations"] ?? []) as Row[]).some((a) => a["year"] === yearName); };
+  const [view, setView] = useState<Row | null>(null);
   const list = useQuery({ queryKey: [...SF_KEY, "receipts", schoolId, q, from, to, method], queryFn: async () => { const { data, error } = await db.rpc("sf_receipts", { _school: schoolId, _q: q || null, _from: from || null, _to: to || null, _method: method || null }); if (error) throw error; return data as Row[]; }, retry: false });
+  const shown = (list.data ?? []).filter(inYear); const rs = useRowSelect(shown.length);
+  const RH = ["رقم السند", "التاريخ", "الطالب", "رقم القيد", "المدرسة", "المرحلة", "الصف", "المبلغ", "الطريقة", "المرجع", "الحالة"];
+  const cells = (r: Row) => { const s = r["snapshot"] as Row; const st = (s["student"] ?? {}) as Row; return [String(r["number"]), String(s["paid_at"] ?? ""), String(st["name"] ?? ""), String(st["csmart_no"] ?? "—"), String(s["school"] ?? ""), String(st["stage"] ?? ""), [st["grade"], st["section"]].filter(Boolean).join(" / "), money(s["amount"]), METHOD_AR[s["method"]] ?? "", String(s["ref"] || "—"), r["status"] === "cancelled" ? "ملغى" : "ساري"]; };
+  const exp = (k: "pdf" | "xlsx" | "print") => { const m = { title: "سندات القبض الداخلية", filters: [q, from, to].filter(Boolean) }; const rows = rs.pick(shown).map(cells); if (k === "pdf") void exportPdf(m, RH, rows).catch((e) => toast.error(arabicError(e))); else if (k === "xlsx") exportXlsx(m, RH, rows); else printReport(m, RH, rows); };
   return (
     <section className="space-y-3">
-      <h2 className="text-lg font-bold">سندات القبض الداخلية</h2>
+      <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">سندات القبض الداخلية</h2>{rs.note}
+        <span className="ms-auto flex gap-1"><Button size="sm" variant="outline" onClick={() => exp("pdf")}>PDF</Button><Button size="sm" variant="outline" onClick={() => exp("xlsx")}>Excel</Button><Button size="sm" variant="outline" onClick={() => exp("print")}>طباعة</Button></span></div>
+      <Dialog open={!!view} onOpenChange={(o) => !o && setView(null)}><DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-4xl overflow-y-auto sm:max-w-4xl"><DialogHeader><DialogTitle>سند قبض {String(view?.["number"] ?? "")}</DialogTitle></DialogHeader>
+        {view && <><div className="rounded-xl border bg-background p-6" dangerouslySetInnerHTML={{ __html: receiptHtml(view) }} /><div className="flex justify-end"><ReceiptButtons r={view} /></div></>}</DialogContent></Dialog>
       <div className="flex flex-wrap gap-2">
         <Input className="max-w-xs" placeholder="رقم السند أو الرقم المرجعي أو اسم الطالب" value={q} onChange={(e) => setQ(e.target.value)} />
         <Input type="date" aria-label="من تاريخ" className="w-40" value={from} onChange={(e) => setFrom(e.target.value)} />
@@ -157,9 +166,10 @@ export function ReceiptsList({ schoolId, yearName }: { schoolId: string; yearNam
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={allYears} onChange={(e) => setAllYears(e.target.checked)} /> كل الأعوام الدراسية</label>
       </div>
       {list.error ? <p className="text-sm text-muted-foreground">{arabicError(list.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card">
-        <table className="w-full text-sm"><thead className="bg-muted/50 text-xs"><tr>{["رقم السند", "التاريخ", "الطالب", "المبلغ", "الطريقة", "المرجع", "الحالة", ""].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
-          <tbody>{(list.data ?? []).filter(inYear).map((r) => { const s = r["snapshot"] as Row; return <tr key={r["id"]} className="border-t"><td className="p-2 font-mono" dir="ltr">{r["number"]}</td><td className="p-2">{s["paid_at"]}</td><td className="p-2">{s["student"]?.name}</td><td className="p-2">{money(s["amount"])}</td><td className="p-2">{METHOD_AR[s["method"]]}</td><td className="p-2" dir="ltr">{s["ref"] || "—"}</td><td className="p-2">{r["status"] === "cancelled" ? <span className="rounded bg-destructive/10 px-1 text-destructive">ملغى</span> : "ساري"}</td><td className="p-2"><ReceiptButtons r={r} /></td></tr>; })}</tbody></table>
-        {!list.isLoading && !(list.data ?? []).filter(inYear).length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد سندات قبض لهذا العام.</p>}
+        <table className="w-full text-sm"><thead className="bg-muted/50 text-xs"><tr><th className="p-2">{rs.head}</th>{RH.map((h) => <th key={h} className="whitespace-nowrap p-2 text-start">{h}</th>)}<th className="p-2" /></tr></thead>
+          <tbody>{shown.map((r, i) => { const s = r["snapshot"] as Row; const st = (s["student"] ?? {}) as Row; return <tr key={r["id"]} className="border-t hover:bg-muted/30"><td className="p-2">{rs.cell(i)}</td><td className="p-2 font-mono" dir="ltr">{r["number"]}</td><td className="p-2">{s["paid_at"]}</td><td className="p-2">{st["name"]}</td><td className="p-2" dir="ltr">{st["csmart_no"] || "—"}</td><td className="p-2">{s["school"] || "—"}</td><td className="p-2">{st["stage"] || "—"}</td><td className="p-2">{[st["grade"], st["section"]].filter(Boolean).join(" / ") || "—"}</td><td className="p-2 font-semibold">{money(s["amount"])}</td><td className="p-2">{METHOD_AR[s["method"]]}</td><td className="p-2" dir="ltr">{s["ref"] || "—"}</td><td className="p-2">{r["status"] === "cancelled" ? <span className="rounded bg-destructive/10 px-1 text-destructive">ملغى</span> : "ساري"}</td>
+            <td className="p-2"><span className="flex items-center gap-1"><Button size="icon" variant="ghost" aria-label="عرض السند" title="عرض السند" onClick={() => setView(r)}><Eye className="size-4" /></Button><ReceiptButtons r={r} /></span></td></tr>; })}</tbody></table>
+        {!list.isLoading && !shown.length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد سندات قبض لهذا العام.</p>}
       </div>}
       <p className="text-xs text-muted-foreground">سندات داخلية من ركاز وليست مستندات محاسبية رسمية؛ الطباعة والتحميل لا ينشئان سندًا جديدًا.</p>
     </section>
