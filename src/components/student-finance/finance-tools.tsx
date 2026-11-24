@@ -8,6 +8,9 @@ import { ask } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { formatAcademicYear } from "@/lib/academic-year";
 import { SF_KEY, money } from "@/lib/student-finance/labels";
+import { amountInWords } from "@/lib/student-finance/words";
+import { exportLetterPdf, printReport } from "@/lib/export";
+import { Input } from "@/components/ui/input";
 
 const STATE: Record<string, string> = { new: "جديد — سيُنشأ", exists: "لديه مستحقات", partial: "مستحقات جزئية — مراجعة منفصلة", no_price: "لا توجد رسوم معتمدة لصفه" };
 
@@ -72,6 +75,82 @@ export function BusOccupancy({ schoolId }: { schoolId: string }) {
           <tbody>{(q.data ?? []).map((b) => <tr key={b["bus_id"]} className="border-t"><td className="p-2">{b["code"]} <span className="text-xs text-muted-foreground">{b["plate"]}</span></td><td className="p-2">{b["capacity"]}</td><td className="p-2">{b["students"]}</td><td className="p-2">{b["round_trip"]}</td><td className="p-2">{b["outbound"]}</td><td className="p-2">{b["return"]}</td><td className="p-2">{b["free_out"]}</td><td className="p-2">{b["free_ret"]}</td><td className="p-2 font-semibold">{b["occupancy"]}%</td></tr>)}</tbody></table>
         {!q.isLoading && !(q.data ?? []).length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد باصات مسجلة لهذا الفرع.</p>}
       </div>}
+    </section>
+  );
+}
+
+const METHOD_AR: Record<string, string> = { cash: "نقدًا", bank: "تحويل بنكي", mada: "مدى", credit_card: "بطاقة ائتمانية", electronic: "دفع إلكتروني", other: "أخرى" };
+const TERM_AR = (t: number) => (t === 1 ? "الفصل الأول" : "الفصل الثاني");
+const KIND_AR: Record<string, string> = { tuition: "الرسوم الدراسية", transport: "النقل المدرسي" };
+
+/** Receipt lines from the snapshot frozen at issue time — later fee changes never alter it. */
+export function receiptLines(r: Row): [string, string][] {
+  const s = r["snapshot"] as Row; const after = (s["after"] ?? {}) as Row;
+  return [
+    ["رقم السند", r["number"]], ["تاريخ السداد", s["paid_at"]], ["وقت الإصدار", new Date(r["issued_at"]).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" })],
+    ["المدرسة", s["school"]], ["الطالب", s["student"]?.name], ["الرقم الطلابي / الهوية", s["student"]?.national_id ?? "—"], ["الدافع", s["payer"] || "—"],
+    ["العام الدراسي", s["year"] ? formatAcademicYear(s["year"]) : "—"],
+    ...((s["allocations"] ?? []) as Row[]).map((a) => [`${KIND_AR[a["kind"]]} — ${TERM_AR(a["term"])}`, money(a["amount"])] as [string, string]),
+    ["المبلغ", money(s["amount"])], ["المبلغ كتابة", amountInWords(s["amount"])], ["طريقة السداد", METHOD_AR[s["method"]] ?? s["method"]], ["الرقم المرجعي", s["ref"] || "—"],
+    ["الموظف المسؤول", s["actor"] || "—"], ["إجمالي المسدد بعد العملية", money(after["recorded"])], ["المتبقي بعد العملية", money(after["remaining"])],
+    ["ملاحظات", s["notes"] || "—"], ["حالة السند", r["status"] === "cancelled" ? "ملغى" : "ساري"],
+  ].map(([a, b]) => [String(a), String(b ?? "—")]);
+}
+export async function receiptPdf(r: Row) {
+  await exportLetterPdf({ org: String((r["snapshot"] as Row)["school"] ?? ""), title: "سند قبض داخلي", ref: String(r["number"]), issued: String((r["snapshot"] as Row)["paid_at"]),
+    body: receiptLines(r).map(([a, b]) => `${a}: ${b}`).join("\n") + "\n\nسند داخلي من ركاز وليس مستندًا محاسبيًا رسميًا؛ المستند الرسمي يصدر من وافق بعد تفعيل الربط.",
+    void: r["status"] === "cancelled" ? "سند ملغى" : null });
+}
+export function receiptPrint(r: Row) {
+  printReport({ title: `سند قبض داخلي ${r["number"]}`, school: String((r["snapshot"] as Row)["school"] ?? ""), filters: [], note: "سند داخلي من ركاز وليس مستندًا محاسبيًا رسميًا." }, ["البيان", "القيمة"], receiptLines(r));
+}
+export function ReceiptButtons({ r }: { r: Row }) {
+  return <span className="flex gap-1">
+    <Button size="sm" variant="ghost" onClick={() => void receiptPdf(r).catch((e) => toast.error(arabicError(e)))}>PDF</Button>
+    <Button size="sm" variant="ghost" onClick={() => receiptPrint(r)}>طباعة</Button>
+  </span>;
+}
+
+/** Receipts register with search by number/reference/name and date/method filters. */
+export function ReceiptsList({ schoolId }: { schoolId: string }) {
+  const [q, setQ] = useState(""); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [method, setMethod] = useState("");
+  const list = useQuery({ queryKey: [...SF_KEY, "receipts", schoolId, q, from, to, method], queryFn: async () => { const { data, error } = await db.rpc("sf_receipts", { _school: schoolId, _q: q || null, _from: from || null, _to: to || null, _method: method || null }); if (error) throw error; return data as Row[]; }, retry: false });
+  return (
+    <section className="space-y-3">
+      <h2 className="text-lg font-bold">سندات القبض الداخلية</h2>
+      <div className="flex flex-wrap gap-2">
+        <Input className="max-w-xs" placeholder="رقم السند أو الرقم المرجعي أو اسم الطالب" value={q} onChange={(e) => setQ(e.target.value)} />
+        <Input type="date" aria-label="من تاريخ" className="w-40" value={from} onChange={(e) => setFrom(e.target.value)} />
+        <Input type="date" aria-label="إلى تاريخ" className="w-40" value={to} onChange={(e) => setTo(e.target.value)} />
+        <select aria-label="طريقة السداد" className={selectCls("min-w-32", true)} value={method} onChange={(e) => setMethod(e.target.value)}><option value="">كل الطرق</option>{Object.entries(METHOD_AR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+      </div>
+      {list.error ? <p className="text-sm text-muted-foreground">{arabicError(list.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card">
+        <table className="w-full text-sm"><thead className="bg-muted/50 text-xs"><tr>{["رقم السند", "التاريخ", "الطالب", "المبلغ", "الطريقة", "المرجع", "الحالة", ""].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
+          <tbody>{(list.data ?? []).map((r) => { const s = r["snapshot"] as Row; return <tr key={r["id"]} className="border-t"><td className="p-2 font-mono" dir="ltr">{r["number"]}</td><td className="p-2">{s["paid_at"]}</td><td className="p-2">{s["student"]?.name}</td><td className="p-2">{money(s["amount"])}</td><td className="p-2">{METHOD_AR[s["method"]]}</td><td className="p-2" dir="ltr">{s["ref"] || "—"}</td><td className="p-2">{r["status"] === "cancelled" ? <span className="rounded bg-destructive/10 px-1 text-destructive">ملغى</span> : "ساري"}</td><td className="p-2"><ReceiptButtons r={r} /></td></tr>; })}</tbody></table>
+        {!list.isLoading && !(list.data ?? []).length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد سندات قبض.</p>}
+      </div>}
+      <p className="text-xs text-muted-foreground">سندات داخلية من ركاز وليست مستندات محاسبية رسمية؛ الطباعة والتحميل لا ينشئان سندًا جديدًا.</p>
+    </section>
+  );
+}
+
+const PENDING_REASON: Record<string, string> = { no_price: "رسوم الصف غير مهيأة أو غير معتمدة", failed: "تعذر الإنشاء التلقائي", not_created: "لم تُنشأ بعد" };
+/** «طلاب لم تُنشأ مستحقاتهم» with individual or group retry through the same creation service. */
+export function PendingCreation({ schoolId }: { schoolId: string }) {
+  const qc = useQueryClient(); const years = useYears(schoolId); const [year, setYear] = useState("");
+  const yearId = year || (years.data?.find((y) => y["is_current"]) ?? years.data?.[0])?.["id"] || "";
+  const q = useQuery({ enabled: !!yearId, queryKey: [...SF_KEY, "pending", schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_pending_creation", { _school: schoolId, _year: yearId }); if (error) throw error; return data as Row[]; }, retry: false });
+  const retry = async (ids: string[]) => { const { data, error } = await db.rpc("sf_bulk_apply", { _school: schoolId, _year: yearId, _grade: null, _students: ids }); if (error) toast.error(arabicError(error)); else { toast.success(`أُنشئت ${(data as Row)["obligations"]} مستحقات`); void qc.invalidateQueries({ queryKey: SF_KEY }); } };
+  const ready = (q.data ?? []).filter((r) => r["reason"] !== "no_price").map((r) => String(r["student_id"]));
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">طلاب لم تُنشأ مستحقاتهم</h2>
+        <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={yearId} onChange={(e) => setYear(e.target.value)}>{(years.data ?? []).map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}</option>)}</select>
+        {ready.length > 0 && <Button size="sm" onClick={() => void retry(ready)}>إعادة المحاولة للجميع ({ready.length})</Button>}</div>
+      {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : (q.data ?? []).length ? <div className="overflow-x-auto rounded-2xl border bg-card">
+        <table className="w-full text-sm"><thead className="bg-muted/50 text-xs"><tr>{["الطالب", "الصف", "الشعبة", "السبب", ""].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
+          <tbody>{(q.data ?? []).map((r) => <tr key={r["student_id"]} className="border-t"><td className="p-2">{r["name"]}</td><td className="p-2">{r["grade"]}</td><td className="p-2">{r["section"]}</td><td className="p-2">{PENDING_REASON[r["reason"]]}{r["error"] ? ` — ${r["error"]}` : ""}</td><td className="p-2">{r["reason"] !== "no_price" && <Button size="sm" variant="ghost" onClick={() => void retry([r["student_id"]])}>إعادة المحاولة</Button>}</td></tr>)}</tbody></table>
+      </div> : !q.isLoading && <p className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">كل الطلاب المسكّنين لديهم مستحقات لهذا العام.</p>}
     </section>
   );
 }

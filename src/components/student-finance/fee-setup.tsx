@@ -99,8 +99,40 @@ function PriceActions({ p, save }: { p: Row; save: ReturnType<typeof useSave> })
   const set = (status: string) => save.mutate({ kind: "price", p: { id: p["id"], term1: p["term1"], term2: p["term2"], notes: p["notes"], status } });
   return <div className="flex gap-1">
     {p["status"] !== "approved" && <Button size="sm" variant="outline" onClick={() => set("approved")}><ShieldCheck className="size-4" /> اعتماد</Button>}
+    {p["status"] === "approved" && <RepriceButton p={p} />}
     {p["status"] !== "inactive" && <Button size="sm" variant="ghost" onClick={async () => { if (await ask("تعطيل السعر يمنع إنشاء مستحقات جديدة به، ولا يغيّر المستحقات السابقة.", { destructive: true })) set("inactive"); }}><Ban className="size-4" /> تعطيل</Button>}
   </div>;
+}
+
+/** Applying an approved price to existing obligations. Default policy = new students only (do nothing here). */
+function RepriceButton({ p }: { p: Row }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false); const [mode, setMode] = useState<"unpaid" | "selected">("unpaid");
+  const [picked, setPicked] = useState<string[]>([]); const [reason, setReason] = useState("");
+  const pool = useQuery({ enabled: open && mode === "selected", queryKey: [...SF_KEY, "reprice-pool", p["id"]], queryFn: async () => { const { data, error } = await db.from("students").select("id,full_name").eq("school_id", p["school_id"]).eq("status", "active").order("full_name").limit(1000); if (error) throw error; return data as Row[]; } });
+  const pv = useQuery({ enabled: open, queryKey: [...SF_KEY, "reprice", p["id"], mode, picked.join(",")], queryFn: async () => { const { data, error } = await db.rpc("sf_reprice_preview", { _price: p["id"], _mode: mode, _students: mode === "selected" ? picked : null }); if (error) throw error; return data as Row; } });
+  const rows = (pv.data?.["rows"] ?? []) as Row[];
+  const apply = async () => {
+    if (!(await ask(`تطبيق السعر الجديد على ${pv.data?.["affected"]} طالب؟ الفرق الإجمالي ${money(pv.data?.["difference"])}. المدفوعات والسندات السابقة لا تتغير.`))) return;
+    const { data, error } = await db.rpc("sf_reprice_apply", { _price: p["id"], _mode: mode, _students: mode === "selected" ? picked : null, _reason: reason });
+    if (error) toast.error(arabicError(error)); else { toast.success(`عُدّل ${(data as Row)["updated"]} مستحق`); setOpen(false); void qc.invalidateQueries({ queryKey: SF_KEY }); }
+  };
+  return <>
+    <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>تطبيق على الحاليين</Button>
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent dir="rtl" className="max-h-[92vh] max-w-4xl overflow-y-auto"><DialogHeader><DialogTitle>تطبيق السعر الجديد على المستحقات الحالية</DialogTitle></DialogHeader>
+      <p className="text-xs text-muted-foreground">الافتراضي: السعر الجديد للطلاب الجدد فقط، ويحتفظ الطلاب الحاليون بأسعارهم. اختر أحد الخيارين أدناه فقط إذا أردت تعديل مستحقات قائمة.</p>
+      <div className="flex gap-2"><Button size="sm" variant={mode === "unpaid" ? "default" : "outline"} onClick={() => setMode("unpaid")}>الطلاب الذين لم يسددوا</Button><Button size="sm" variant={mode === "selected" ? "default" : "outline"} onClick={() => setMode("selected")}>طلاب محددون</Button></div>
+      {mode === "selected" && <div className="max-h-40 overflow-y-auto rounded-xl border p-2 text-sm">{(pool.data ?? []).map((st) => <label key={st["id"]} className="flex items-center gap-2"><input type="checkbox" checked={picked.includes(st["id"])} onChange={(e) => setPicked(e.target.checked ? [...picked, st["id"]] : picked.filter((x) => x !== st["id"]))} />{st["full_name"]}</label>)}</div>}
+      {pv.error ? <p className="text-sm text-muted-foreground">{arabicError(pv.error)}</p> : <>
+        <div className="grid grid-cols-3 gap-2 text-sm">{[["الطلاب المتأثرون", String(pv.data?.["affected"] ?? 0)], ["إجمالي الفروقات", money(pv.data?.["difference"])], ["أرصدة دائنة ناتجة", money(pv.data?.["credit"])]].map(([l, v]) => <div key={l} className="rounded-xl border p-2"><div className="text-xs text-muted-foreground">{l}</div><b>{v}</b></div>)}</div>
+        <div className="overflow-x-auto rounded-xl border"><table className="w-full text-xs"><thead className="bg-muted/50"><tr>{["الطالب", "الفصل", "القديم", "الجديد", "الخصومات", "المسدد", "المتبقي قبل", "المتبقي بعد", "الحالة"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
+          <tbody>{rows.map((r) => <tr key={r["obligation_id"]} className="border-t"><td className="p-2">{r["name"]}</td><td className="p-2">{r["term"] === 1 ? "الأول" : "الثاني"}</td><td className="p-2">{money(r["old_amount"])}</td><td className="p-2">{money(r["new_amount"])}</td><td className="p-2">{money(r["discount"])}</td><td className="p-2">{money(r["recorded"])}</td><td className="p-2">{money(r["remaining_before"])}</td><td className="p-2">{money(r["remaining_after"])}</td><td className="p-2">{r["eligible"] ? "سيُعدّل" : r["reason"]}</td></tr>)}</tbody></table>
+          {!rows.length && <p className="p-4 text-center text-xs text-muted-foreground">لا توجد مستحقات مرتبطة بهذا السعر{mode === "selected" ? " للطلاب المحددين" : ""}.</p>}</div>
+      </>}
+      <Label>سبب التعديل (إلزامي)</Label><Input value={reason} onChange={(e) => setReason(e.target.value)} />
+      <Button disabled={!Number(pv.data?.["affected"] ?? 0) || reason.trim().length < 3} onClick={() => void apply()}>اعتماد التعديل</Button>
+    </DialogContent></Dialog>
+  </>;
 }
 
 function TuitionPrices({ schoolId, year, d }: { schoolId: string; year: string; d: Setup }) {

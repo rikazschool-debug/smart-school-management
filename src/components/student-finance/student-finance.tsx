@@ -10,13 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { selectCls } from "@/components/ui/native-select";
 import { ask, askText } from "@/components/confirm";
 import { LoadingState } from "@/components/states";
+import { ReceiptButtons } from "./finance-tools";
 import { arabicError } from "@/lib/session";
 import { formatAcademicYear } from "@/lib/academic-year";
 import { COLLECTION_STATUS, KIND_LABEL, METHODS, METHOD_LABEL, SF_KEY, TERM_LABEL, TRANSPORT_LABEL, TRANSPORT_TYPES, money, num, paymentState, validAllocation, type Obligation } from "@/lib/student-finance/labels";
 
 type Fin = { student: Row; caps: Record<string, boolean>; years: Row[]; obligations: Obligation[]; transport: Row[]; discounts: Row[]; collections: Row[]; summary: Record<string, Row>; events: Row[]; available_discounts: Row[]; buses: Row[] };
 
-const EVENT_LABEL: Record<string, string> = { obligation_create: "إنشاء مستحق", discount_apply: "تطبيق خصم", transport_save: "تحديث اشتراك النقل", collection_record: "تسجيل سداد", collection_reverse: "إلغاء سداد", discount_edit: "تعديل خصم", discount_remove: "حذف خصم", exception_clear: "إعادة تقييم خصم", transport_edit: "تعديل رسوم النقل", transport_exempt: "إعفاء من رسوم النقل", transport_cancel: "إلغاء اشتراك النقل", sibling_ineligible: "انتهاء استحقاق خصم الإخوة" };
+const EVENT_LABEL: Record<string, string> = { obligation_create: "إنشاء مستحق", discount_apply: "تطبيق خصم", transport_save: "تحديث اشتراك النقل", collection_record: "تسجيل سداد", collection_reverse: "إلغاء سداد", discount_edit: "تعديل خصم", discount_remove: "حذف خصم", exception_clear: "إعادة تقييم خصم", transport_edit: "تعديل رسوم النقل", transport_exempt: "إعفاء من رسوم النقل", transport_cancel: "إلغاء اشتراك النقل", sibling_ineligible: "انتهاء استحقاق خصم الإخوة", reprice: "تعديل سعر المستحق", auto_no_price: "تعذر الإنشاء التلقائي: الرسوم غير مهيأة", auto_create_failed: "تعذر الإنشاء التلقائي" };
 
 /** Finance tab inside the existing student side panel. Every action is re-checked by sf_* RPCs. */
 export function StudentFinance({ studentId }: { studentId: string }) {
@@ -25,6 +26,7 @@ export function StudentFinance({ studentId }: { studentId: string }) {
   const q = useQuery({ queryKey: [...SF_KEY, "student", studentId, year], queryFn: async () => { const { data, error } = await db.rpc("sf_get", { _student: studentId, _year: year || null }); if (error) throw error; return data as Fin; }, retry: false });
   const [dlg, setDlg] = useState<"collect" | "discount" | "transport" | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: SF_KEY });
+  const rq = useQuery({ queryKey: [...SF_KEY, "student-receipts", studentId], queryFn: async () => { const { data, error } = await db.rpc("sf_student_receipts", { _student: studentId }); if (error) throw error; return data as Row[]; }, retry: false });
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <p className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">{(q.error as { code?: string }).code === "42501" ? "لا تتوفر لك صلاحية عرض البيانات المالية لهذا الطالب، أو القسم المالي غير مفعّل." : arabicError(q.error)}</p>;
   const f = q.data!;
@@ -72,10 +74,10 @@ export function StudentFinance({ studentId }: { studentId: string }) {
         </div>)) : <p className="text-xs text-muted-foreground">لا توجد خصومات.</p>}</Section>
 
       <Section title="سجل السداد">{f.collections.length ? f.collections.map((c) => (
-        <div key={c["id"]} className="flex flex-wrap items-center gap-2 text-xs"><b>{money(c["amount"])}</b><span>{METHOD_LABEL[c["method"]]}</span><span>{c["paid_at"]}</span>{c["ref"] && <span dir="ltr">{c["ref"]}</span>}<span className="rounded bg-muted px-1">{COLLECTION_STATUS[c["status"]] ?? c["status"]}</span>
+        <div key={c["id"]} className="flex flex-wrap items-center gap-2 text-xs"><b>{money(c["amount"])}</b><span>{METHOD_LABEL[c["method"]]}</span><span>{c["paid_at"]}</span>{c["ref"] && <span dir="ltr">{c["ref"]}</span>}<span className="rounded bg-muted px-1">{COLLECTION_STATUS[c["status"]] ?? c["status"]}</span>{(() => { const r = rq.data?.find((x) => x["collection_id"] === c["id"]); return r ? <><span className="font-mono" dir="ltr">{r["number"]}</span><ReceiptButtons r={r} /></> : null; })()}
           {f.caps["setup"] && c["status"] !== "reversed" && !c["accounting_confirmed"] && <Button size="sm" variant="ghost" className="ms-auto" onClick={async () => { const r = await askText("سبب إلغاء عملية السداد (تبقى في السجل)", { required: true }); if (r) void run(() => db.rpc("sf_reverse", { _student: studentId, _collection: c["id"], _reason: r }), "أُلغيت العملية"); }}><RotateCcw className="size-4" /> إلغاء</Button>}
         </div>)) : <p className="text-xs text-muted-foreground">لا توجد عمليات سداد.</p>}
-        <p className="text-[11px] text-muted-foreground">العمليات المسجلة هنا ليست سندات قبض رسمية؛ يصدر السند الرسمي بعد تفعيل الربط مع وافق واعتماده.</p></Section>
+        <p className="text-[11px] text-muted-foreground">لكل عملية سند قبض داخلي من ركاز؛ المستند المحاسبي الرسمي يصدر من وافق بعد تفعيل الربط.</p></Section>
 
       {f.events.length > 0 && <Section title="سجل العمليات المالية">{[...f.events].reverse().slice(0, 30).map((e) => <div key={e["id"]} className="flex gap-2 text-xs"><span className="text-muted-foreground">{new Date(e["created_at"]).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" })}</span><span>{EVENT_LABEL[e["action"]] ?? e["action"]}</span>{e["reason"] && <span className="text-muted-foreground">— {e["reason"]}</span>}</div>)}</Section>}
 

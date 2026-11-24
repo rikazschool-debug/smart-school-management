@@ -92,6 +92,29 @@ const occ: any = must(await owner.c.rpc("sf_bus_occupancy", { _school: S, _year:
 check("occupancy: 1 student, 0 free each way, 100%", occ[0]?.students === 1 && occ[0]?.free_out === 0 && occ[0]?.free_ret === 0 && occ[0]?.occupancy === 100, occ);
 const sib: any = must(await owner.c.rpc("sf_siblings", { _student: P, _year: Y }), "siblings");
 check("siblings list shows both verified children", sib.length === 2, sib);
+
+// Phase 3: internal receipts, selective re-pricing, pending-creation list.
+const rc: any = must(await owner.c.rpc("sf_student_receipts", { _student: P }), "receipts");
+check("one receipt per payment (retry made none extra)", rc.length === 1 && /^RC-\d{6}$/.test(rc[0].number), rc);
+check("receipt keeps amount 2000 and remaining after payment", rc[0]?.snapshot.amount === "2000.00" && Number(rc[0]?.snapshot.after.remaining) > 0, rc[0]?.snapshot);
+const trc = await teacher.c.rpc("sf_student_receipts", { _student: P });
+check("teacher cannot read receipts", !!trc.error, trc.data);
+const pv: any = must(await owner.c.rpc("sf_reprice_preview", { _price: price, _mode: "unpaid" }), "reprice preview");
+const p1 = pv.rows.find((r: any) => r.student_id === P && r.term === 1), p2r = pv.rows.find((r: any) => r.student_id === P && r.term === 2);
+check("unpaid mode excludes the paid term", p1 && !p1.eligible && p1.reason === "لديه سداد", p1);
+check("unpaid term 2 already at 4000 is unchanged", p2r && !p2r.eligible, p2r);
+const noReason = await owner.c.rpc("sf_reprice_apply", { _price: price, _mode: "selected", _students: [P], _reason: "" });
+check("reprice needs a reason", !!noReason.error, noReason.data);
+const tre = await teacher.c.rpc("sf_reprice_apply", { _price: price, _mode: "selected", _students: [P], _reason: "تجربة" });
+check("teacher cannot reprice", !!tre.error, tre.data);
+const ap: any = must(await owner.c.rpc("sf_reprice_apply", { _price: price, _mode: "selected", _students: [P], _reason: "تعديل معتمد" }), "reprice apply");
+f = must(await owner.c.rpc("sf_get", { _student: P, _year: Y }), "get5");
+const t1 = f.obligations.find((o: any) => o.kind === "tuition" && o.term === 1);
+check("selected reprice moves term 1 to 6000, payment kept, remaining 4000", ap.updated === 1 && Number(t1.amount) === 6000 && Number(t1.balance.recorded) === 2000 && Number(t1.balance.remaining) === 4000, t1);
+const rc2: any = must(await owner.c.rpc("sf_student_receipts", { _student: P }), "receipts2");
+check("old receipt unchanged after reprice", rc2[0]?.snapshot.after.remaining === rc[0]?.snapshot.after.remaining, rc2[0]?.snapshot.after);
+const pc: any = must(await owner.c.rpc("sf_pending_creation", { _school: S, _year: Y }), "pending");
+check("no students wrongly listed as missing fees", pc.length === 0, pc);
 const anon = createClient(URL, PK, { auth: { persistSession: false }, global: { fetch: shim(PK) as any } });
 const an = await anon.rpc("sf_get", { _student: P, _year: Y });
 check("anonymous visitor cannot read", !!an.error, an.data);

@@ -1,0 +1,1 @@
+create index if not exists sf_price_versions_price on public.sf_price_versions(price_id);

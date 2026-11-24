@@ -18458,6 +18458,32 @@ export type Database = {
           },
         ]
       }
+      sf_counters: {
+        Row: {
+          kind: string
+          n: number
+          org_id: string
+        }
+        Insert: {
+          kind: string
+          n?: number
+          org_id: string
+        }
+        Update: {
+          kind?: string
+          n?: number
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_counters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sf_discounts: {
         Row: {
           active: boolean
@@ -18750,6 +18776,38 @@ export type Database = {
           },
         ]
       }
+      sf_price_versions: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          data: Json
+          id: string
+          price_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          data: Json
+          id?: string
+          price_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          price_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_price_versions_price_id_fkey"
+            columns: ["price_id"]
+            isOneToOne: false
+            referencedRelation: "sf_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sf_prices: {
         Row: {
           created_at: string
@@ -18816,6 +18874,68 @@ export type Database = {
             columns: ["year_id"]
             isOneToOne: false
             referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_receipts: {
+        Row: {
+          collection_id: string
+          id: string
+          issued_at: string
+          number: string
+          org_id: string
+          school_id: string
+          snapshot: Json
+          student_id: string
+        }
+        Insert: {
+          collection_id: string
+          id?: string
+          issued_at?: string
+          number: string
+          org_id: string
+          school_id: string
+          snapshot: Json
+          student_id: string
+        }
+        Update: {
+          collection_id?: string
+          id?: string
+          issued_at?: string
+          number?: string
+          org_id?: string
+          school_id?: string
+          snapshot?: Json
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_receipts_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: true
+            referencedRelation: "sf_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_receipts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_receipts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_receipts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -26578,7 +26698,30 @@ export type Database = {
         Returns: undefined
       }
       _sf_ok: { Args: { _action: string; _school: string }; Returns: boolean }
+      _sf_receipt_json: {
+        Args: { r: Database["public"]["Tables"]["sf_receipts"]["Row"] }
+        Returns: Json
+      }
       _sf_refresh: { Args: { _student: string }; Returns: undefined }
+      _sf_reprice_rows: {
+        Args: { _mode: string; _price: string; _students: string[] }
+        Returns: {
+          credit_after: number
+          discount: number
+          eligible: boolean
+          name: string
+          new_amount: number
+          obligation_id: string
+          old_amount: number
+          reason: string
+          recorded: number
+          remaining_after: number
+          remaining_before: number
+          school: string
+          student_id: string
+          term: number
+        }[]
+      }
       _sf_siblings: {
         Args: { _student: string; _term: number; _year: string }
         Returns: {
@@ -31554,7 +31697,34 @@ export type Database = {
         }
         Returns: undefined
       }
+      sf_pending_creation: {
+        Args: { _school: string; _year: string }
+        Returns: Json
+      }
+      sf_receipts: {
+        Args: {
+          _from?: string
+          _method?: string
+          _q?: string
+          _school: string
+          _to?: string
+        }
+        Returns: Json
+      }
       sf_report: { Args: { _school: string; _year?: string }; Returns: Json }
+      sf_reprice_apply: {
+        Args: {
+          _mode: string
+          _price: string
+          _reason: string
+          _students: string[]
+        }
+        Returns: Json
+      }
+      sf_reprice_preview: {
+        Args: { _mode: string; _price: string; _students?: string[] }
+        Returns: Json
+      }
       sf_reverse: {
         Args: { _collection: string; _reason: string; _student: string }
         Returns: undefined
@@ -31565,6 +31735,7 @@ export type Database = {
         Returns: string
       }
       sf_siblings: { Args: { _student: string; _year: string }; Returns: Json }
+      sf_student_receipts: { Args: { _student: string }; Returns: Json }
       sf_transport_save: {
         Args: { _p: Json; _student: string; _term: number; _year: string }
         Returns: undefined
