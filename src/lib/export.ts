@@ -19,6 +19,14 @@ const metaLines = (m: ExportMeta, n: number) => [
   ...(m.note ? [m.note] : []), ...(m.count === false ? [] : [`عدد السجلات: ${n}`]),
 ];
 
+/** "٥٬٠٠٠٫٠٠ ر.س" / "-1,250.50 ر.س" → 5000 / -1250.5; anything without the riyal sign stays text (IDs, phones). */
+export function moneyValue(v: string): number | null {
+  if (!/ر\.س/.test(v)) return null;
+  const t = v.replace(/ر\.س/g, "").replace(/[\u200e\u200f\u061c\s]/g, "")
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x660)).replace(/٬|,/g, "").replace(/٫/g, ".").replace(/[−–]/g, "-");
+  return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : null;
+}
+
 /** Builds the worksheet with typed cells: numbers stay numbers, everything else is a literal string cell. */
 export function buildSheet(meta: ExportMeta, headers: string[], rows: Cell[][]) {
   const bn = getExportBrand().name || meta.school;
@@ -26,7 +34,8 @@ export function buildSheet(meta: ExportMeta, headers: string[], rows: Cell[][]) 
   const ws: XLSX.WorkSheet = {};
   aoa.forEach((r, ri) => r.forEach((v, ci) => {
     if (v === null || v === undefined || v === "") return;
-    ws[XLSX.utils.encode_cell({ r: ri, c: ci })] = typeof v === "number" ? { t: "n", v } : { t: "s", v: String(v) };
+    const m = typeof v === "string" ? moneyValue(v) : null; // money stays summable in Excel
+    ws[XLSX.utils.encode_cell({ r: ri, c: ci })] = typeof v === "number" ? { t: "n", v } : m !== null ? { t: "n", v: m, z: '#,##0.00 "ر.س"' } : { t: "s", v: String(v) };
   }));
   ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: aoa.length - 1, c: Math.max(0, headers.length - 1) } });
   ws["!cols"] = headers.map((h, i) => ({ wch: Math.min(48, Math.max(h.length, ...rows.map((r) => String(r[i] ?? "").length)) + 2) }));
