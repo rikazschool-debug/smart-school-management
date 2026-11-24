@@ -186,6 +186,19 @@ export function Arrears({ schoolId }: { schoolId: string }) {
   const data = rows.map((r) => { const b = r["balance"] as Row; return [String(r["name"]), [r["grade"], r["section"]].filter(Boolean).join(" / "), TERM_AR(Number(r["term"])), KIND_AR[String(r["kind"])] ?? "", money(b["net"]), money(b["recorded"]), money(b["remaining"]), String(r["due_date"] ?? "—"), r["days_late"] == null ? "—" : String(r["days_late"]), ARREAR_STATE[String(r["state"])] ?? ""]; });
   const meta = { title: "المستحقات والمتأخرات", filters: [s, ARREAR_STATE[st] ?? "", KIND_AR[kind] ?? "", term ? TERM_AR(term) : ""].filter(Boolean) };
   const total = rows.filter((r) => r["state"] === "overdue").reduce((a, r) => a + Number((r["balance"] as Row)["remaining"] ?? 0), 0);
+  const overdueIds = rows.filter((r) => r["state"] === "overdue").map((r) => String(r["obligation_id"])).slice(0, 500);
+  const [busy, setBusy] = useState(false);
+  // In-app reminder to verified guardians of the shown overdue rows; the server re-checks overdue state and sends at most once per item per day.
+  async function remind() {
+    if (!(await ask(`إرسال إشعار تذكير داخل المنصة لأولياء أمور ${overdueIds.length} مستحقًا متأخرًا ظاهرًا في القائمة؟ لا يُرسل أكثر من مرة يوميًا لكل مستحق.`, { ok: "إرسال التذكير" }))) return;
+    setBusy(true);
+    try {
+      const { data, error } = await db.rpc("sf_remind", { _school: schoolId, _obligations: overdueIds }); if (error) throw error;
+      const d = data as Row; const n = Number(d["obligations"] ?? 0);
+      if (n) toast.success(`أُرسل التذكير لـ ${String(d["guardians"])} من أولياء الأمور عن ${n} مستحقًا.`);
+      else toast.info("لم يُرسل تذكير جديد: إما أُرسل اليوم مسبقًا أو لا يوجد ولي أمر موثّق بحساب.");
+    } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
+  }
   return <section className="space-y-3">
     <h2 className="text-lg font-bold">المستحقات والمتأخرات</h2>
     <p className="text-sm">إجمالي المتأخر: <b>{money(total)}</b> · لا يُعد المستحق متأخرًا إلا بعد تجاوز تاريخ استحقاق معتمد.</p>
@@ -197,6 +210,7 @@ export function Arrears({ schoolId }: { schoolId: string }) {
       <Button size="sm" variant="outline" onClick={() => void exportPdf(meta, H, data).catch((e) => toast.error(arabicError(e)))}>PDF</Button>
       <Button size="sm" variant="outline" onClick={() => exportXlsx(meta, H, data)}>Excel</Button>
       <Button size="sm" variant="outline" onClick={() => printReport(meta, H, data)}>طباعة</Button>
+      <Button size="sm" disabled={busy || !overdueIds.length} onClick={() => void remind()}>تذكير أولياء الأمور ({overdueIds.length})</Button>
     </div>
     {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr>{H.map((h) => <th key={h} className="p-2 text-start">{h}</th>)}<th className="p-2" /></tr></thead>
       <tbody>{data.map((r, i) => <tr key={i} className="border-t">{r.map((c, j) => <td key={j} className="p-2">{c}</td>)}<td className="p-2"><Button size="sm" variant="outline" onClick={() => setOpen(rows[i] ?? null)}>سداد / الحساب</Button></td></tr>)}</tbody></table>

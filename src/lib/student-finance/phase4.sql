@@ -107,3 +107,8 @@ create or replace function public.sf_siblings(_student uuid, _year uuid) returns
   order by f.rank nulls last,st.full_name)
  from (select fm.student_id, r.rank from _sf_family(_student) fm left join (select student_id,min(rank) rank from (select * from _sf_siblings(_student,_year,1) union all select * from _sf_siblings(_student,_year,2)) u group by student_id) r on r.student_id=fm.student_id) f
  join students st on st.id=f.student_id join schools sc on sc.id=st.school_id),'[]'); end$function$;
+-- Phase 5 (applied to test DB): in-app financial notifications to verified guardians (can_follow, with a login).
+-- _sf_notify_guardians(student,school,title,body,key) → notifications kind 'finance', link /app, dedupe key per guardian.
+-- Trigger sf_receipt_notify (after insert on sf_receipts): «تسجيل دفعة» with amount + internal receipt number, never called official.
+-- Trigger sf_reverse_notify (status → reversed on sf_collections): «إلغاء دفعة».
+-- sf_remind(_school,_obligations[]): guard 'collect'; only pending, past approved due date, remaining > 0; dedupe 'sf_due:<ob>:<day>' (once per day); logs sf_events 'reminder' without outbox.

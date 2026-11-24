@@ -26712,6 +26712,17 @@ export type Database = {
         Args: { _action: string; _school: string }
         Returns: undefined
       }
+      _sf_money: { Args: { _v: number }; Returns: string }
+      _sf_notify_guardians: {
+        Args: {
+          _body: string
+          _key: string
+          _school: string
+          _student: string
+          _title: string
+        }
+        Returns: number
+      }
       _sf_ok: { Args: { _action: string; _school: string }; Returns: boolean }
       _sf_receipt_json: {
         Args: { r: Database["public"]["Tables"]["sf_receipts"]["Row"] }
@@ -31734,6 +31745,10 @@ export type Database = {
           _school: string
           _to?: string
         }
+        Returns: Json
+      }
+      sf_remind: {
+        Args: { _obligations: string[]; _school: string }
         Returns: Json
       }
       sf_report: { Args: { _school: string; _year?: string }; Returns: Json }
