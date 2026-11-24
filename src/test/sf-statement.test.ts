@@ -28,3 +28,19 @@ describe("statement same-day payments", () => {
     expect(statementLines([fin]).lines.map((l) => l.balance)).toEqual([5000, 4500, 4250]);
   });
 });
+
+describe("statement with a reversal after the carry", () => {
+  it("a payment made before the carry but reversed after it adds the amount back to the carried balance", () => {
+    const fin = { student: { name: "سلمان" }, obligations: [{ id: "n1", kind: "tuition", term: 1, status: "pending", original: 5000, created_at: "2026-11-24T10:00:00Z", balance: { gross: 5000 } }], discounts: [],
+      previous: [{ direction: "debit", carried_amount: 500, carried_at: "2026-11-24T11:00:00Z", year: "1448/1449", obligation: { id: "p1", kind: "transport", term: 1 } }],
+      collections: [{ paid_at: "2026-11-24", created_at: "2026-11-24T09:00:00Z", updated_at: "2026-11-24T12:00:00Z", status: "reversed", allocations: [{ obligation_id: "p1", amount: 1000 }] }] };
+    const s = statementLines([fin]);
+    expect(s.closing).toBe(6500);
+    expect(s.lines.map((l) => l.text)).toContain("إلغاء سداد");
+  });
+  it("a reversal is listed after the payment it cancels on the same day", () => {
+    const fin = { student: { name: "سلمان" }, obligations: [{ id: "o1", kind: "transport", term: 1, status: "pending", original: 1500, created_at: "2026-11-24T08:00:00Z", balance: { gross: 1500 } }], discounts: [],
+      collections: [{ paid_at: "2026-11-24", created_at: "2026-11-24T09:00:00Z", updated_at: "2026-11-24T12:00:00Z", status: "reversed", allocations: [{ obligation_id: "o1", amount: 1000 }] }] };
+    expect(statementLines([fin]).lines.map((l) => l.balance)).toEqual([1500, 500, 1500]);
+  });
+});

@@ -13,5 +13,5 @@
 - [ ] 12 Notifications review
 - [x] 13 PDF/Excel real tests (accounts page downloaded+opened; Excel amounts now numeric)
 - [x] 16 Concurrency: two sessions, payment updates accounts+dashboard without reload
-- [ ] 14-15 Signed-in UI for principal/accountant/registrar/guardian; full cycle in UI
+- [x] 14-15 Signed-in UI for principal/accountant/registrar/guardian; full cycle in UI (scripts/sf-cycle-fixture.ts)
 - [ ] 17-19 Requirements matrix, data safety, final report
