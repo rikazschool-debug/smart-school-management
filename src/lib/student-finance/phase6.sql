@@ -299,3 +299,6 @@ AS $function$declare s uuid; begin
   where t.bus_id=_bus and t.year_id=_year and t.term=_term and t.active),'[]'); end$function$;
 
 -- sf_family (2026-11-24): children who left (withdrawn/graduated) stay listed while any non-void obligation has remaining or credit; applied on the test DB via migration.
+
+-- Live refresh (applied migration): sf_collections/sf_obligations/sf_carries/sf_receipts fire _live_signal_trg('sf');
+-- sf_* rows also signal the student's guardians. Signals carry only the topic; screens refetch the SF_KEY prefix.

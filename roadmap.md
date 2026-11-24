@@ -11,6 +11,7 @@
 - [x] 10 Guardian finance page review (withdrawn children with balances stay visible)
 - [ ] 11 Design / sidebar groups review
 - [ ] 12 Notifications review
-- [ ] 13 PDF/Excel real tests
-- [ ] 14-16 Signed-in UI, full cycle, concurrency tests
+- [x] 13 PDF/Excel real tests (accounts page downloaded+opened; Excel amounts now numeric)
+- [x] 16 Concurrency: two sessions, payment updates accounts+dashboard without reload
+- [ ] 14-15 Signed-in UI for principal/accountant/registrar/guardian; full cycle in UI
 - [ ] 17-19 Requirements matrix, data safety, final report

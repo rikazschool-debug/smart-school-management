@@ -13,6 +13,7 @@ export const LIVE_TOPICS: Record<string, string[]> = {
   "att-day": ["family-att", "la", "la-school"],
   wa: ["wa-msgs", "wa-convs", "wa-card"],
   msg: ["msgs", "convs", "people", "cg-members", "my-section-groups"],
+  sf: ["sf"], // student finance: every balance/dashboard/receipt query shares the SF_KEY prefix
 };
 
 export function keysForTopic(topic: string): string[] {
