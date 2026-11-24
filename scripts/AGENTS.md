@@ -149,3 +149,4 @@
 - scripts/sf-carry-e2e.ts: previous balances carry-forward, previous payments/receipts, credit use/refund, dashboard/arrears/family sync, permissions (19 checks; synthetic «اختبار المالية» org).
 - scripts/sf-transfer-e2e.ts: optional bank-transfer image on student payments (attach only bank, collector only, view-only readers, max 3; 9 checks).
 - scripts/sf-years-e2e.ts: mandatory two-year accounting case (10,000/8,000 → 2,000 carried, 12,000 new, pay/reverse 1,000 old, dashboard/report lines/guardian agree, withdrawn keeps balance; 13 checks).
+- scripts/sf-roles-fixture.ts setup|teardown: finance browser fixture (principal/accountant/registrar/guardian + second branch, sfr-); journey in /tmp/browser/sfr; always run teardown after.
