@@ -43,10 +43,12 @@ export const askSanad = createServerFn({ method: "POST" })
           previous_balances: ((f["previous"] as unknown[]) ?? []).map((p) => ({ origin_year: R(p)["year"], days_late: R(p)["days_late"], ...ob(R(p)["obligation"]) })), discounts: ((f["discounts"] as unknown[]) ?? []).filter((d) => R(d)["active"] !== false).map((d) => ({ name: R(d)["name"], amount: R(d)["amount"], term: R(d)["term"] })), last_receipts: rcs }; }));
       return { data: rows, error: null, count: rows.length };
     };
-    const q = (data.messages[data.messages.length - 1]?.text ?? "").replace(/[؟?!.,،]/g, " ");
+    const userQs = data.messages.filter((m) => m.role === "user").map((m) => m.text.replace(/[؟?!.,،]/g, " ")).reverse();
     const norm = (t: string) => t.replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").trim();
     const STOP = new Set(["كم", "رسوم", "رصيد", "متبقي", "المتبقي", "مسدد", "المسدد", "الطالب", "الطالبه", "ما", "هل", "على", "علي", "في", "من", "عن", "لـ", "حساب", "سداد", "مستحقات", "الرسوم"]);
-    const tokens = norm(q).split(/\s+/).filter((t) => t.length >= 2 && !STOP.has(t));
+    const STOP2 = new Set(["اي", "مرحله", "المرحله", "صف", "الصف", "شعبه", "الشعبه", "فصل", "الفصل", "يدرس", "تدرس", "هو", "هي", "له", "لها", "كذلك", "وما", "وكم"]);
+    const toks = (t: string) => norm(t).split(/\s+/).filter((w) => w.length >= 2 && !STOP.has(w) && !STOP2.has(w));
+    let tokens: string[] = [];
     const nameScore = (n: unknown) => { const v = norm(String(n ?? "")); return tokens.filter((t) => v.includes(t)).length; };
     const mem = await sb.from("memberships").select("role").eq("user_id", context.userId).eq("is_active", true);
     const roles = ((mem.data as { role: string }[] | null) ?? []).map((m) => m.role);
@@ -59,10 +61,16 @@ export const askSanad = createServerFn({ method: "POST" })
       const d = await sb.rpc("sf_dashboard" as never, { _school: data.schoolId, _year: y.data.id } as never); if (d.error) return d;
       const rep = await sb.rpc("sf_report" as never, { _school: data.schoolId, _year: y.data.id } as never);
       const all = (R(rep.data)["students"] as unknown[] | undefined) ?? [];
-      const best = Math.max(0, ...all.map((x) => nameScore(R(x)["name"])));
+      // a follow-up without a name ("في أي مرحلة؟") uses the student named in the previous question
+      let best = 0;
+      for (const uq of userQs.slice(0, 4)) { tokens = toks(uq); best = Math.max(0, ...all.map((x) => nameScore(R(x)["name"]))); if (best > 0) break; }
       // students named in the question come first and complete; otherwise a short sample
       const chosen = best > 0 ? all.filter((x) => nameScore(R(x)["name"]) === best).slice(0, 10) : all.slice(0, 25);
-      const students = chosen.map((x) => { const s = R(x); const os = ((s["obligations"] as unknown[]) ?? []).map(ob); const sum = (k: "net" | "paid" | "remaining") => os.reduce((a, o) => a + Number(o[k] ?? 0), 0); return { name: s["name"], fees: best > 0 ? os : undefined, net: sum("net"), paid: sum("paid"), remaining: sum("remaining"), previous_balance: s["previous"] }; });
+      // stage / grade / section of the named students (RLS-bound read of the active placement)
+      const ids = best > 0 ? chosen.map((x) => String(R(x)["id"] ?? R(x)["student_id"] ?? "")).filter(Boolean) : [];
+      const pl = ids.length ? await sb.from("enrollments").select("student_id, sections(name, grades(name, stages(name)))").in("student_id", ids).eq("status", "active") : { data: [] };
+      const place = new Map(((pl.data as unknown[] | null) ?? []).map((e) => { const x = R(e), sec = R(x["sections"]), g = R(sec["grades"]), stg = R(g["stages"]); return [String(x["student_id"]), { stage: stg["name"] ?? null, grade: g["name"] ?? null, section: sec["name"] ?? null }] as const; }));
+      const students = chosen.map((x) => { const s = R(x); const os = ((s["obligations"] as unknown[]) ?? []).map(ob); const sum = (k: "net" | "paid" | "remaining") => os.reduce((a, o) => a + Number(o[k] ?? 0), 0); return { name: s["name"], placement: place.get(String(s["id"] ?? s["student_id"] ?? "")) ?? (best > 0 ? "غير مسكّن حاليًا" : undefined), fees: best > 0 ? os : undefined, net: sum("net"), paid: sum("paid"), remaining: sum("remaining"), previous_balance: s["previous"] }; });
       const k = R(d.data);
       return { data: { year: y.data.name, kpis: Object.fromEntries(Object.entries(k).filter(([n]) => !["daily", "monthly", "updated_at"].includes(n))), students_matching_question: best > 0, students_total: all.length, students }, error: null };
     };
@@ -91,7 +99,8 @@ export const askSanad = createServerFn({ method: "POST" })
 - أجب بالعربية فقط، بإيجاز ووضوح، واستخدم قوائم نقطية (-) و**الغامق** فقط، دون جداول.
 - أجب فقط عن بيانات المستخدم الواردة في «السجلات المتاحة» أدناه، أو عن كيفية استخدام أقسام منصة ركاز.
 - لا تخترع أرقامًا أو أسماء. إن لم تكن المعلومة في السجلات قل: «لا تتوفر لديّ هذه المعلومة في سجلاتك».
-${staff ? "" : "- المستخدم ولي أمر/طالب: أجب فقط عن بياناته وبيانات أبنائه الواردة في السجلات، وارفض أي سؤال عن طلاب آخرين أو المدرسة عمومًا أو أي موضوع آخر بعبارة: «أستطيع الإجابة فقط عن بياناتك وبيانات أبنائك».\n"}- إذا سُئلت عن رسوم طالب بالاسم فاعرض لكل بند: الأصل والخصم والصافي والمسدد والمتبقي، ثم الإجمالي.
+${staff ? "" : "- المستخدم ولي أمر/طالب: أجب فقط عن بياناته وبيانات أبنائه الواردة في السجلات، وارفض أي سؤال عن طلاب آخرين أو المدرسة عمومًا أو أي موضوع آخر بعبارة: «أستطيع الإجابة فقط عن بياناتك وبيانات أبنائك».\n"}- placement فيه المرحلة (stage) والصف (grade) والشعبة (section) للطالب؛ إذا سُئلت عن مرحلة/صف طالب ذُكر سابقًا في المحادثة فأجب منها.
+- إذا سُئلت عن رسوم طالب بالاسم فاعرض لكل بند: الأصل والخصم والصافي والمسدد والمتبقي، ثم الإجمالي.
 - ارفض بلطف أي سؤال خارج المنصة أو خارج صلاحيات هذا المستخدم (أخبار، برمجة، مواضيع عامة...).
 - الأعداد count هي العدد الكلي، وrows عينة قد تكون مقتطعة.
 - الأرقام المالية تؤخذ كما هي من السجلات المالية لركاز (تشغيلية وليست مستندات وافق الرسمية)؛ الرصيد السابق منفصل عن رسوم العام، ولا تُظهر رسومًا غير مهيأة على أنها صفر.
