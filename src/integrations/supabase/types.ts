@@ -18286,6 +18286,649 @@ export type Database = {
           },
         ]
       }
+      sf_allocations: {
+        Row: {
+          amount: number
+          collection_id: string
+          created_at: string
+          obligation_id: string
+        }
+        Insert: {
+          amount: number
+          collection_id: string
+          created_at?: string
+          obligation_id: string
+        }
+        Update: {
+          amount?: number
+          collection_id?: string
+          created_at?: string
+          obligation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_allocations_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "sf_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_allocations_obligation_id_fkey"
+            columns: ["obligation_id"]
+            isOneToOne: false
+            referencedRelation: "sf_obligations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_applied: {
+        Row: {
+          active: boolean
+          amount: number
+          created_at: string
+          discount_id: string
+          id: string
+          manual_override: boolean
+          obligation_id: string
+          snapshot: Json
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          created_at?: string
+          discount_id: string
+          id?: string
+          manual_override?: boolean
+          obligation_id: string
+          snapshot: Json
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          created_at?: string
+          discount_id?: string
+          id?: string
+          manual_override?: boolean
+          obligation_id?: string
+          snapshot?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_applied_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "sf_discounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_applied_obligation_id_fkey"
+            columns: ["obligation_id"]
+            isOneToOne: false
+            referencedRelation: "sf_obligations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_collections: {
+        Row: {
+          accounting_confirmed: boolean
+          amount: number
+          created_at: string
+          created_by: string
+          id: string
+          method: string
+          notes: string | null
+          org_id: string
+          paid_at: string
+          payer: string | null
+          payload: Json
+          ref: string | null
+          request_key: string
+          school_id: string
+          status: string
+          student_id: string
+          updated_at: string
+          wafeq_id: string | null
+        }
+        Insert: {
+          accounting_confirmed?: boolean
+          amount: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          method: string
+          notes?: string | null
+          org_id: string
+          paid_at: string
+          payer?: string | null
+          payload: Json
+          ref?: string | null
+          request_key: string
+          school_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+          wafeq_id?: string | null
+        }
+        Update: {
+          accounting_confirmed?: boolean
+          amount?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          method?: string
+          notes?: string | null
+          org_id?: string
+          paid_at?: string
+          payer?: string | null
+          payload?: Json
+          ref?: string | null
+          request_key?: string
+          school_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+          wafeq_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_collections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_collections_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_collections_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_discounts: {
+        Row: {
+          active: boolean
+          automatic: boolean
+          cap: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          ends: string
+          fixed_scope: string
+          grade_ids: string[]
+          id: string
+          kind: string
+          name: string
+          notes: string | null
+          org_id: string
+          priority: number
+          school_ids: string[]
+          sibling_min: number | null
+          sibling_mode: string
+          sibling_tiers: Json
+          stackable: boolean
+          stage_ids: string[]
+          starts: string
+          terms: number[]
+          updated_at: string
+          value: number
+          value_type: string
+          year_key: string
+        }
+        Insert: {
+          active?: boolean
+          automatic?: boolean
+          cap?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends: string
+          fixed_scope?: string
+          grade_ids?: string[]
+          id?: string
+          kind: string
+          name: string
+          notes?: string | null
+          org_id: string
+          priority?: number
+          school_ids?: string[]
+          sibling_min?: number | null
+          sibling_mode?: string
+          sibling_tiers?: Json
+          stackable?: boolean
+          stage_ids?: string[]
+          starts: string
+          terms?: number[]
+          updated_at?: string
+          value: number
+          value_type: string
+          year_key: string
+        }
+        Update: {
+          active?: boolean
+          automatic?: boolean
+          cap?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends?: string
+          fixed_scope?: string
+          grade_ids?: string[]
+          id?: string
+          kind?: string
+          name?: string
+          notes?: string | null
+          org_id?: string
+          priority?: number
+          school_ids?: string[]
+          sibling_min?: number | null
+          sibling_mode?: string
+          sibling_tiers?: Json
+          stackable?: boolean
+          stage_ids?: string[]
+          starts?: string
+          terms?: number[]
+          updated_at?: string
+          value?: number
+          value_type?: string
+          year_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_discounts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_events: {
+        Row: {
+          action: string
+          actor: string | null
+          after_data: Json | null
+          before_data: Json | null
+          created_at: string
+          id: string
+          org_id: string
+          reason: string | null
+          school_id: string
+          student_id: string | null
+          subject_id: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: string
+          org_id: string
+          reason?: string | null
+          school_id: string
+          student_id?: string | null
+          subject_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: string
+          org_id?: string
+          reason?: string | null
+          school_id?: string
+          student_id?: string | null
+          subject_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_events_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_events_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_obligations: {
+        Row: {
+          accounting_confirmed: boolean
+          amount: number
+          created_at: string
+          id: string
+          kind: string
+          manual_override: boolean
+          original: number
+          price_id: string | null
+          price_snapshot: Json
+          school_id: string
+          status: string
+          student_id: string
+          term: number
+          updated_at: string
+          wafeq_id: string | null
+          year_id: string
+        }
+        Insert: {
+          accounting_confirmed?: boolean
+          amount: number
+          created_at?: string
+          id?: string
+          kind: string
+          manual_override?: boolean
+          original: number
+          price_id?: string | null
+          price_snapshot: Json
+          school_id: string
+          status?: string
+          student_id: string
+          term: number
+          updated_at?: string
+          wafeq_id?: string | null
+          year_id: string
+        }
+        Update: {
+          accounting_confirmed?: boolean
+          amount?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          manual_override?: boolean
+          original?: number
+          price_id?: string | null
+          price_snapshot?: Json
+          school_id?: string
+          status?: string
+          student_id?: string
+          term?: number
+          updated_at?: string
+          wafeq_id?: string | null
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_obligations_price_id_fkey"
+            columns: ["price_id"]
+            isOneToOne: false
+            referencedRelation: "sf_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_obligations_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_obligations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_obligations_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_outbox: {
+        Row: {
+          attempts: number
+          created_at: string
+          error: string | null
+          event_id: string
+          id: string
+          origin: string
+          payload: Json
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          event_id: string
+          id?: string
+          origin?: string
+          payload: Json
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          event_id?: string
+          id?: string
+          origin?: string
+          payload?: Json
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_outbox_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "sf_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_prices: {
+        Row: {
+          created_at: string
+          created_by: string
+          grade_id: string | null
+          id: string
+          kind: string
+          notes: string | null
+          school_id: string
+          status: string
+          term1: number
+          term2: number
+          transport_type: string
+          updated_at: string
+          year_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          grade_id?: string | null
+          id?: string
+          kind: string
+          notes?: string | null
+          school_id: string
+          status?: string
+          term1: number
+          term2: number
+          transport_type?: string
+          updated_at?: string
+          year_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          grade_id?: string | null
+          id?: string
+          kind?: string
+          notes?: string | null
+          school_id?: string
+          status?: string
+          term1?: number
+          term2?: number
+          transport_type?: string
+          updated_at?: string
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_prices_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_prices_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_prices_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_settings: {
+        Row: {
+          created_at: string
+          mappings: Json
+          mode: string
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          mappings?: Json
+          mode?: string
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          mappings?: Json
+          mode?: string
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_transport: {
+        Row: {
+          active: boolean
+          bus_id: string | null
+          created_at: string
+          exempt: boolean
+          id: string
+          school_id: string
+          starts: string
+          student_id: string
+          term: number
+          transport_type: string | null
+          updated_at: string
+          year_id: string
+        }
+        Insert: {
+          active?: boolean
+          bus_id?: string | null
+          created_at?: string
+          exempt?: boolean
+          id?: string
+          school_id: string
+          starts: string
+          student_id: string
+          term: number
+          transport_type?: string | null
+          updated_at?: string
+          year_id: string
+        }
+        Update: {
+          active?: boolean
+          bus_id?: string | null
+          created_at?: string
+          exempt?: boolean
+          id?: string
+          school_id?: string
+          starts?: string
+          student_id?: string
+          term?: number
+          transport_type?: string | null
+          updated_at?: string
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_transport_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "mt_buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_transport_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_transport_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_transport_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signup_requests: {
         Row: {
           admin_note: string | null
@@ -25881,6 +26524,46 @@ export type Database = {
         Args: { _id: string; _kind: string }
         Returns: undefined
       }
+      _sf_apply: {
+        Args: { _discount: string; _ob: string }
+        Returns: undefined
+      }
+      _sf_balance: { Args: { _ob: string }; Returns: Json }
+      _sf_create_tuition: {
+        Args: { _student: string; _year: string }
+        Returns: undefined
+      }
+      _sf_discount_amount: {
+        Args: { _discount: string; _ob: string }
+        Returns: number
+      }
+      _sf_event: {
+        Args: {
+          _action: string
+          _after: Json
+          _before: Json
+          _reason?: string
+          _school: string
+          _student: string
+          _subject: string
+        }
+        Returns: string
+      }
+      _sf_guard: {
+        Args: { _action: string; _school: string }
+        Returns: undefined
+      }
+      _sf_ok: { Args: { _action: string; _school: string }; Returns: boolean }
+      _sf_refresh: { Args: { _student: string }; Returns: undefined }
+      _sf_siblings: {
+        Args: { _student: string; _term: number; _year: string }
+        Returns: {
+          rank: number
+          student_id: string
+        }[]
+      }
+      _sf_summary: { Args: { _student: string; _year: string }; Returns: Json }
+      _sf_today: { Args: never; Returns: string }
       _staff_overrides: {
         Args: {
           _actor: string
@@ -30779,6 +31462,60 @@ export type Database = {
           _teachers: string[]
           _user: string
         }
+        Returns: undefined
+      }
+      sf_bus_roster: {
+        Args: { _bus: string; _term: number; _year: string }
+        Returns: Json
+      }
+      sf_children: { Args: never; Returns: Json }
+      sf_collect: {
+        Args: { _p: Json; _request_key: string; _student: string }
+        Returns: string
+      }
+      sf_copy_prices: {
+        Args: { _from: string; _school: string; _to: string }
+        Returns: number
+      }
+      sf_create_tuition: {
+        Args: { _student: string; _year: string }
+        Returns: undefined
+      }
+      sf_discount_apply: {
+        Args: { _discount: string; _obligations: string[]; _student: string }
+        Returns: undefined
+      }
+      sf_discount_preview: {
+        Args: { _discount: string; _obligations: string[]; _student: string }
+        Returns: Json
+      }
+      sf_get: { Args: { _student: string; _year?: string }; Returns: Json }
+      sf_mapping_save: {
+        Args: { _mappings: Json; _school: string }
+        Returns: undefined
+      }
+      sf_override: {
+        Args: {
+          _action: string
+          _amount: number
+          _id: string
+          _reason: string
+          _student: string
+        }
+        Returns: undefined
+      }
+      sf_report: { Args: { _school: string; _year?: string }; Returns: Json }
+      sf_reverse: {
+        Args: { _collection: string; _reason: string; _student: string }
+        Returns: undefined
+      }
+      sf_setup: { Args: { _school: string }; Returns: Json }
+      sf_setup_save: {
+        Args: { _kind: string; _p: Json; _school: string }
+        Returns: string
+      }
+      sf_transport_save: {
+        Args: { _p: Json; _student: string; _term: number; _year: string }
         Returns: undefined
       }
       signup_request_submit: { Args: { _p: Json }; Returns: string }

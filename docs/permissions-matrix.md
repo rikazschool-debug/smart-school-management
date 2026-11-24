@@ -764,3 +764,7 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 2026-11-24 VPS hotfix adoption: public._idl_issue/_idl_verify, staged guardian/teacher resolvers and the phone-preservation trigger remain non-executable by anon/authenticated and executable by service_role only (plus the owner). The separately approved transfer of the one trigger function to postgres aligns ownership with the existing migration role; it grants no general server/database/MCP permission. The adoption is VPS-only, validates exact function ACLs, does not activate memberships or rewrite people, and does not overwrite newer shared functions. Isolated integration checks prove guardian≠staff, same-UID activation/phone changes, conflict rollback, and unchanged OTP attempt/cooldown/one-time rules.
 
 2026-11-24 bridge acceptance clock: test fixtures align successful ADMS delivery to whole-second device timestamps. The millisecond activation cutoff remains strict; a record 50ms before it is retained locally and is not queued. No receiver, device authentication, raw-delivery or attendance-processing permission changes.
+
+### Student finance (sf_*) — Nov 24 2026
+- Org owner: price/discount setup, obligations, overrides, reversals, view/collect/discount/transport/export.
+- Others: only via perm section `student_finance` actions view/collect/discount/transport/export (catalog entry not yet added — غير مكتملة). Guardians: read own verified children via sf_get/sf_children. Teachers/anon: denied (verified live).

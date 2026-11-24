@@ -1,4 +1,5 @@
-import { CalendarDays, Layers, LayoutGrid, BookOpen, UserCog } from "lucide-react";
+import { CalendarDays, Layers, LayoutGrid, BookOpen, UserCog, Wallet } from "lucide-react";
+import { FeeSetup } from "@/components/student-finance/fee-setup";
 import { OrgYears } from "@/components/org-years";
 import { createFileRoute } from "@tanstack/react-router";
 import { CrudTable } from "@/components/crud-page";
@@ -25,6 +26,7 @@ const ACAD_TABS = [
   { v: "sections", label: "الشعب", hint: "الفصول والسعة", icon: LayoutGrid },
   { v: "subjects", label: "الأقسام والمقررات", hint: "المواد الدراسية", icon: BookOpen },
   { v: "scopes", label: "نطاق الوكلاء والمشرفين", hint: "توزيع المسؤوليات", icon: UserCog },
+  { v: "fees", label: "الرسوم الدراسية", hint: "الأسعار والنقل والخصومات", icon: Wallet },
 ];
 
 export const Route = createFileRoute("/_authenticated/app/academic")({
@@ -50,7 +52,7 @@ const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], qu
         if (!p) return <LoadingState />;
         const access = (key: string) => vice ? key === "academic_sections" : (owner || (principal && central.includes(key)) || academicAccess(p, key));
         const edit = (key: string) => central.includes(key) ? owner : key === "academic_sections" ? owner || vice : !!p[`${key}.edit`];
-        const tabs = [...new Set(ACADEMIC_PARTS.filter((part) => access(part.key)).map((part) => part.tab))];
+        const tabs = [...new Set([...ACADEMIC_PARTS.filter((part) => access(part.key)).map((part) => part.tab), ...(owner ? ["fees"] : [])])];
         const firstTab = tabs[0];
         if (!firstTab) return <ForbiddenState />;
         const s = ctx.schoolId;
@@ -59,7 +61,7 @@ const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], qu
             <PageHeader title="الإعداد الأكاديمي" desc={`${ctx.schoolName} — السنوات، المراحل، الصفوف، الشعب، الأقسام والمقررات`} />
             {owner && ctx.orgId && <><AcademicCatalogEditor org={ctx.orgId} /><AcademicAllocation school={s} org={ctx.orgId} /></>}
             <Tabs defaultValue={firstTab} key={tabs.join(",")} dir="rtl">
-              <TabsList className="mb-6 flex h-auto w-full justify-start gap-2 overflow-x-auto rounded-2xl border bg-card p-2 shadow-sm [scrollbar-width:none] lg:grid lg:grid-cols-5">
+              <TabsList className="mb-6 flex h-auto w-full justify-start gap-2 overflow-x-auto rounded-2xl border bg-card p-2 shadow-sm [scrollbar-width:none] lg:grid lg:grid-cols-6">
                 {ACAD_TABS.filter((t) => (tabs as string[]).includes(t.v)).map((t) => (
                   <TabsTrigger key={t.v} value={t.v} aria-label={t.label} className="group flex min-w-[11rem] shrink-0 items-center justify-start gap-3 rounded-xl border border-transparent px-3 py-2.5 text-start transition-all hover:bg-muted data-[state=active]:border-primary/20 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md lg:min-w-0">
                     <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary group-data-[state=active]:bg-primary-foreground/15 group-data-[state=active]:text-primary-foreground"><t.icon className="size-4" /></span>
@@ -122,6 +124,7 @@ const stages = useQuery({ queryKey: ["academic-stage-options", ctx.schoolId], qu
                     { label: "القسم", render: (r) => r["departments"]?.name ?? "—" },
                   ]} />}
               </TabsContent>
+              {owner && <TabsContent value="fees"><FeeSetup schoolId={s} /></TabsContent>}
               {access("academic_scopes") && <TabsContent value="scopes"><StaffScopes schoolId={s} canWrite={edit("academic_scopes")} /></TabsContent>}
             </Tabs>
           </>

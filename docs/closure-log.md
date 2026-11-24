@@ -1273,3 +1273,8 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Main advanced from 6e56603a to 58a7c373 while deployment was paused. The three added commits contain review documents plus an unapplied student-finance SQL draft and isolated tests; no shared migration or runtime finance route was added. Keep that SQL draft unapplied and Wafeq disabled.
 - Latest main check 45373199965 failed only the existing real local Unix ACK test. ADMS timestamps have whole-second precision while fixture activation had milliseconds: offsets 950/999ms place the record 50/99ms before activation, so the unchanged bridge correctly holds it and sends zero requests. Reproduced deterministically in network-none Linux at 950ms; aligned fixture passes.
 - Align only the positive Unix fixture clock to whole seconds. Add a regression asserting that a 50ms pre-cutover record remains stored locally and never enters the outbox. Production delivery policy, cutoffs, services and device settings remain unchanged.
+
+## 2026-11-24 — Student fees, transport and discounts (test DB)
+- Applied additive sf_* migration (identical to src/lib/student-finance/schema.sql). No existing table or record changed; no obligations created for existing students.
+- UI: academic «الرسوم الدراسية» tab (owner), student panel «المالية والنقل» tab, finance page student accounts.
+- Evidence: PGlite 26/26, labels 6/6, live scripts/student-finance-e2e.ts 14/14 with synthetic users. Signed-in browser check: غير متحقق (no preview session). Wafeq: disabled.

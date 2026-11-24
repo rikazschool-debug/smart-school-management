@@ -24,6 +24,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { studentReadiness } from "@/lib/people-import";
 import { studentPresence, STUDENT_PRESENCE, STUDENT_PRESENCE_VALUES } from "@/lib/student-presence";
 import { arabicError, type AppContext } from "@/lib/session";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StudentFinance } from "@/components/student-finance/student-finance";
 
 export const Route = createFileRoute("/_authenticated/app/students")({ component: Page, head: () => ({ meta: [{ title: "الطلاب والتسكين — ركاز" }, { name: "description", content: "سجلات الطلاب وتسكينهم في الشعب حسب الصلاحيات." }, { property: "og:title", content: "الطلاب والتسكين — ركاز" }, { property: "og:description", content: "سجلات الطلاب وتسكينهم في الشعب حسب الصلاحيات." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }) });
 
@@ -168,9 +170,13 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       </Dialog>
 
       <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
-        <DialogContent dir="rtl" className="max-w-xl">
+        <DialogContent dir="rtl" className="max-h-[92vh] max-w-3xl overflow-y-auto">
           <DialogHeader><DialogTitle>{viewing?.["full_name"]}</DialogTitle></DialogHeader>
-          {viewing && <StudentLinks studentId={viewing["id"]} schoolId={ctx.schoolId} canWrite={w} email={viewing["email"]} hasAccount={!!viewing["user_id"]} role={ctx.role} />}
+          {viewing && <Tabs defaultValue="family" dir="rtl">
+            <TabsList><TabsTrigger value="family">ولي الأمر والحساب</TabsTrigger><TabsTrigger value="finance">المالية والنقل</TabsTrigger></TabsList>
+            <TabsContent value="family"><StudentLinks studentId={viewing["id"]} schoolId={ctx.schoolId} canWrite={w} email={viewing["email"]} hasAccount={!!viewing["user_id"]} role={ctx.role} /></TabsContent>
+            <TabsContent value="finance"><StudentFinance studentId={viewing["id"]} /></TabsContent>
+          </Tabs>}
         </DialogContent>
       </Dialog>
     </>

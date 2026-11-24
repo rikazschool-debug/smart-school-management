@@ -1,0 +1,76 @@
+import "./lib/user-pool.ts";
+// Student finance on the shared test DB with synthetic users and a new synthetic org (never Al-Malek).
+// Run: NODE_PATH=node_modules bun scripts/student-finance-e2e.ts
+// sf_events is append-only by design, so the synthetic org stays in the test DB (named «اختبار المالية …»).
+import { createClient } from "@supabase/supabase-js";
+import { readFileSync } from "fs";
+const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
+const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
+const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+const run = Date.now(), pw = "Test-pass-" + run;
+let ok = 0, bad = 0;
+const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)); };
+const must = <T,>(r: { data: T; error: any }, what: string) => { if (r.error) throw new Error(`${what}: ${r.error.message}`); return r.data; };
+async function user(tag: string) {
+  const email = `sf-${tag}-${run}@rikaz.test`;
+  await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: tag } });
+  const c = createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
+  const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw s.error;
+  return { c, id: s.data.user!.id };
+}
+const owner = await user("owner"), teacher = await user("teacher");
+const org = must(await owner.c.rpc("create_organization", { _org_name: `اختبار المالية ${run}`, _school_name: "فرع المالية" }), "org") as string;
+const S = must(await admin.from("schools").select("id").eq("org_id", org).single(), "school")!.id as string;
+must(await admin.from("memberships").insert({ user_id: teacher.id, org_id: org, school_id: S, role: "teacher" }), "membership");
+const Y = must(await owner.c.from("academic_years").insert({ school_id: S, name: "1448/1449", start_date: "2026-08-01", end_date: "2027-07-31", is_current: true }).select("id").single(), "year")!.id;
+const ST = must(await owner.c.from("stages").insert({ school_id: S, name: "الثانوية" }).select("id").single(), "stage")!.id;
+const G = must(await owner.c.from("grades").insert({ school_id: S, stage_id: ST, name: "أول" }).select("id").single(), "grade")!.id;
+const T1 = must(await owner.c.from("terms").insert({ school_id: S, year_id: Y, name: "الفصل الدراسي الأول", start_date: "2026-08-01", end_date: "2027-01-15" }).select("id").single(), "term")!.id;
+const SEC = must(await owner.c.from("sections").insert({ school_id: S, grade_id: G, year_id: Y, term_id: T1, name: "أ", capacity: 30 }).select("id").single(), "section")!.id;
+const P = must(await owner.c.from("students").insert({ school_id: S, full_name: `طالب مالية ${run}`, status: "active" }).select("id").single(), "student")!.id;
+must(await admin.from("enrollments").insert({ school_id: S, student_id: P, section_id: SEC, year_id: Y, status: "active" }), "enrollment");
+const B = must(await admin.from("mt_buses").insert({ org_id: org, school_id: S, code: `QA${run % 10000}`, plate: "QA-1", capacity: 1, active: true, op_status: "available", created_by: owner.id }).select("id").single(), "bus")!.id;
+
+const save = (c: any, kind: string, p: any) => c.rpc("sf_setup_save", { _school: S, _kind: kind, _p: p });
+const tp = await save(teacher.c, "price", { year_id: Y, kind: "tuition", grade_id: G, term1: 1, term2: 1 });
+check("teacher cannot set prices", !!tp.error, tp.data);
+const price = must(await save(owner.c, "price", { year_id: Y, kind: "tuition", grade_id: G, term1: 5000, term2: 4000, status: "draft" }), "price");
+const draft = await owner.c.rpc("sf_create_tuition", { _student: P, _year: Y });
+check("draft price does not create obligations", !!draft.error, draft.data);
+must(await save(owner.c, "price", { id: price, term1: 5000, term2: 4000, status: "approved" }), "approve");
+must(await owner.c.rpc("sf_create_tuition", { _student: P, _year: Y }), "create tuition");
+must(await owner.c.rpc("sf_create_tuition", { _student: P, _year: Y }), "repeat create");
+let f: any = must(await owner.c.rpc("sf_get", { _student: P, _year: Y }), "get");
+check("two tuition obligations, no duplicates on repeat", f.obligations.length === 2, f.obligations.length);
+check("annual net 9000", Number(f.summary.annual.net) === 9000, f.summary.annual);
+must(await save(owner.c, "price", { id: price, term1: 6000, term2: 4000, status: "approved" }), "reprice");
+f = must(await owner.c.rpc("sf_get", { _student: P, _year: Y }), "get2");
+check("price change keeps existing obligation at 5000", Number(f.obligations.find((o: any) => o.term === 1).amount) === 5000, f.obligations);
+const ob1 = f.obligations.find((o: any) => o.term === 1).id;
+const key = crypto.randomUUID(), pay = { method: "cash", paid_at: "2026-11-24", allocations: [{ obligation_id: ob1, amount: 2000 }] };
+must(await owner.c.rpc("sf_collect", { _student: P, _request_key: key, _p: pay }), "collect");
+const again = await owner.c.rpc("sf_collect", { _student: P, _request_key: key, _p: pay });
+const over = await owner.c.rpc("sf_collect", { _student: P, _request_key: crypto.randomUUID(), _p: { ...pay, allocations: [{ obligation_id: ob1, amount: 3001 }] } });
+check("retry with same key does not duplicate", !again.error, again.error);
+check("payment above remaining is rejected", !!over.error, over.data);
+f = must(await owner.c.rpc("sf_get", { _student: P, _year: Y }), "get3");
+check("term 1 remaining 3000 after partial payment", Number(f.obligations.find((o: any) => o.term === 1).balance.remaining) === 3000, f.obligations[0].balance);
+const tg = await teacher.c.rpc("sf_get", { _student: P, _year: Y });
+check("teacher without finance permission cannot read", !!tg.error, tg.data);
+const noPrice = await owner.c.rpc("sf_transport_save", { _student: P, _year: Y, _term: 1, _p: { active: true, bus_id: B, transport_type: "round_trip" } });
+check("transport without approved price rejected", !!noPrice.error, noPrice.data);
+must(await save(owner.c, "price", { year_id: Y, kind: "transport", transport_type: "round_trip", term1: 1500, term2: 1500, status: "approved" }), "transport price");
+must(await owner.c.rpc("sf_transport_save", { _student: P, _year: Y, _term: 1, _p: { active: true, bus_id: B, transport_type: "round_trip" } }), "transport");
+const roster: any = must(await owner.c.rpc("sf_bus_roster", { _bus: B, _year: Y, _term: 1 }), "roster");
+check("student added to bus roster", roster.length === 1, roster);
+f = must(await owner.c.rpc("sf_get", { _student: P, _year: Y }), "get4");
+check("transport obligation 1500 for term 1", Number(f.obligations.find((o: any) => o.kind === "transport").amount) === 1500, f.obligations);
+const anon = createClient(URL, PK, { auth: { persistSession: false }, global: { fetch: shim(PK) as any } });
+const an = await anon.rpc("sf_get", { _student: P, _year: Y });
+check("anonymous visitor cannot read", !!an.error, an.data);
+const direct = await owner.c.from("sf_obligations" as any).select("id");
+check("no direct table read even for owner", !!direct.error || (direct.data ?? []).length === 0, direct.data);
+console.log(`\n${ok} passed, ${bad} failed — synthetic org ${org}`);
+for (const u of [owner, teacher]) await admin.auth.admin.deleteUser(u.id).catch(() => undefined);
+process.exit(bad ? 1 : 0);

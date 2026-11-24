@@ -4,6 +4,8 @@
 - [x] Read all 31 sections of the attached finance/Wafeq/mobile requirements; inspect the reported hook and current finance sources.
 - [x] Complete a read-only inventory of financial tables, permissions, family links, transport records and selected official Wafeq capabilities; assessment in .lovable/reviews/financial-system-review.md.
 - [ ] Establish a verified test-only backup and restore rehearsal before database changes; no backup has been taken in this review.
+- [x] prompt-519 (fees & transport doc): additive sf_* tables applied to test DB; fee/transport/discount setup tab, student finance tab (summary, terms table, transport, discounts with preview, payments, reversal, log), student accounts in finance page; 14 live + 32 unit checks.
+- [ ] Remaining from the doc: accountant/registrar permission entries, receipts/statements PDFs, overdue & reports pages, notifications, siblings list in the student panel, fee-change apply-to-unpaid/selected flow, bulk obligations for existing students.
 - [ ] Verify Wafeq test organization access and school/account/customer/tax mappings before integration or accounting writes.
 - [ ] Implement and test the ordered fee, discount, sibling, student obligation, transport, payment, statement and reconciliation packages after the safety prerequisites.
 - [ ] Implement and test mobile financial services; write MOBILE_FINANCIAL_API_CONTRACT.md only for implemented endpoints.
