@@ -3,8 +3,8 @@
 - [x] Account statements (student, family combined; PDF/Excel/print/share)
 - [x] Bus roster per bus with search/filter/export
 - [ ] Unified payment dialog reachable from finance page
-- [ ] Due dates in fee setup (needs new migration)
-- [ ] Dues & arrears page (depends on due dates)
+- [x] Due dates in fee setup
+- [x] Dues & arrears page
 - [ ] Finance KPIs dashboard & reports
 - [ ] Financial notifications
 - [ ] Sanad + dashboard on sf_* data

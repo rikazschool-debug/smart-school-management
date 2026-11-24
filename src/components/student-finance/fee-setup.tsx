@@ -99,9 +99,28 @@ function PriceActions({ p, save }: { p: Row; save: ReturnType<typeof useSave> })
   const set = (status: string) => save.mutate({ kind: "price", p: { id: p["id"], term1: p["term1"], term2: p["term2"], notes: p["notes"], status } });
   return <div className="flex gap-1">
     {p["status"] !== "approved" && <Button size="sm" variant="outline" onClick={() => set("approved")}><ShieldCheck className="size-4" /> اعتماد</Button>}
+    <DueButton p={p} />
     {p["status"] === "approved" && <RepriceButton p={p} />}
     {p["status"] !== "inactive" && <Button size="sm" variant="ghost" onClick={async () => { if (await ask("تعطيل السعر يمنع إنشاء مستحقات جديدة به، ولا يغيّر المستحقات السابقة.", { destructive: true })) set("inactive"); }}><Ban className="size-4" /> تعطيل</Button>}
   </div>;
+}
+
+/** Due dates per term. New obligations copy them; existing unpaid ones change only via sf_due_apply with a reason. */
+function DueButton({ p }: { p: Row }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false); const [d1, setD1] = useState(String(p["due1"] ?? "")); const [d2, setD2] = useState(String(p["due2"] ?? "")); const [reason, setReason] = useState("");
+  const save = async () => { const { error } = await db.rpc("sf_price_due_save", { _price: p["id"], _due1: d1 || null, _due2: d2 || null }); if (error) toast.error(arabicError(error)); else { toast.success("حُفظت تواريخ الاستحقاق للمستحقات الجديدة"); void qc.invalidateQueries({ queryKey: SF_KEY }); } };
+  const apply = async () => { if (!(await ask("تطبيق التواريخ على المستحقات غير المسددة الحالية لهذا السعر؟"))) return; const { data, error } = await db.rpc("sf_due_apply", { _price: p["id"], _reason: reason }); if (error) toast.error(arabicError(error)); else { toast.success(`حُدّث ${String(data)} مستحق`); setOpen(false); void qc.invalidateQueries({ queryKey: SF_KEY }); } };
+  return <>
+    <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>الاستحقاق{p["due1"] || p["due2"] ? "" : " (غير محدد)"}</Button>
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent dir="rtl"><DialogHeader><DialogTitle>تواريخ الاستحقاق</DialogTitle></DialogHeader>
+      <div className="grid grid-cols-2 gap-2"><div className="space-y-1"><Label htmlFor="d1">الفصل الأول</Label><Input id="d1" type="date" value={d1} onChange={(e) => setD1(e.target.value)} /></div><div className="space-y-1"><Label htmlFor="d2">الفصل الثاني</Label><Input id="d2" type="date" value={d2} onChange={(e) => setD2(e.target.value)} /></div></div>
+      <Button onClick={() => void save()}>حفظ (للمستحقات الجديدة)</Button>
+      <p className="text-xs text-muted-foreground">المستحقات الموجودة تحتفظ بتاريخها. لتغييرها اكتب السبب ثم طبّق (بعد الحفظ).</p>
+      <Label>السبب</Label><Input value={reason} onChange={(e) => setReason(e.target.value)} />
+      <Button variant="outline" disabled={reason.trim().length < 3} onClick={() => void apply()}>تطبيق على المستحقات غير المسددة</Button>
+    </DialogContent></Dialog>
+  </>;
 }
 
 /** Applying an approved price to existing obligations. Default policy = new students only (do nothing here). */

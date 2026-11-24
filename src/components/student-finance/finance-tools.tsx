@@ -173,3 +173,31 @@ function BusRoster({ bus, yearId, term, onClose }: { bus: Row; yearId: string; t
     {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <ul className="divide-y text-sm">{data.map((r, i) => <li key={i} className="flex justify-between p-2"><span>{r[0]}</span><span className="text-muted-foreground">{r[1]} {r[2] !== "—" ? `· ${r[2]}` : ""}</span></li>)}{!q.isLoading && !data.length && <li className="p-3 text-center text-muted-foreground">لا يوجد طلاب مشتركون.</li>}</ul>}
   </section>;
 }
+
+const ARREAR_STATE: Record<string, string> = { overdue: "متأخر", upcoming: "مستحق لاحقًا", no_due: "بلا تاريخ استحقاق" };
+/** «المستحقات والمتأخرات»: overdue only after an approved due date has passed (server computes days late). */
+export function Arrears({ schoolId }: { schoolId: string }) {
+  const q = useQuery({ queryKey: [...SF_KEY, "arrears", schoolId], queryFn: async () => { const { data, error } = await db.rpc("sf_arrears", { _school: schoolId }); if (error) throw error; return data as Row[]; }, retry: false });
+  const [s, setS] = useState(""); const [st, setSt] = useState(""); const [kind, setKind] = useState(""); const [term, setTerm] = useState(0);
+  const rows = (q.data ?? []).filter((r) => (!s || String(r["name"]).includes(s)) && (!st || r["state"] === st) && (!kind || r["kind"] === kind) && (!term || r["term"] === term));
+  const H = ["الطالب", "الصف", "الفصل", "النوع", "صافي المستحق", "المسدد", "المتبقي", "تاريخ الاستحقاق", "أيام التأخير", "الحالة"];
+  const data = rows.map((r) => { const b = r["balance"] as Row; return [String(r["name"]), [r["grade"], r["section"]].filter(Boolean).join(" / "), TERM_AR(Number(r["term"])), KIND_AR[String(r["kind"])] ?? "", money(b["net"]), money(b["recorded"]), money(b["remaining"]), String(r["due_date"] ?? "—"), r["days_late"] == null ? "—" : String(r["days_late"]), ARREAR_STATE[String(r["state"])] ?? ""]; });
+  const meta = { title: "المستحقات والمتأخرات", filters: [s, ARREAR_STATE[st] ?? "", KIND_AR[kind] ?? "", term ? TERM_AR(term) : ""].filter(Boolean) };
+  const total = rows.filter((r) => r["state"] === "overdue").reduce((a, r) => a + Number((r["balance"] as Row)["remaining"] ?? 0), 0);
+  return <section className="space-y-3">
+    <h2 className="text-lg font-bold">المستحقات والمتأخرات</h2>
+    <p className="text-sm">إجمالي المتأخر: <b>{money(total)}</b> · لا يُعد المستحق متأخرًا إلا بعد تجاوز تاريخ استحقاق معتمد.</p>
+    <div className="flex flex-wrap gap-2">
+      <Input className="w-40" placeholder="بحث بالاسم" value={s} onChange={(e) => setS(e.target.value)} />
+      <select aria-label="الحالة" className={selectCls("min-w-32", true)} value={st} onChange={(e) => setSt(e.target.value)}><option value="">كل الحالات</option>{Object.entries(ARREAR_STATE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+      <select aria-label="النوع" className={selectCls("min-w-32", true)} value={kind} onChange={(e) => setKind(e.target.value)}><option value="">كل الرسوم</option><option value="tuition">الرسوم الدراسية</option><option value="transport">النقل المدرسي</option></select>
+      <select aria-label="الفصل" className={selectCls("min-w-32", true)} value={term} onChange={(e) => setTerm(Number(e.target.value))}><option value={0}>الفصلان</option><option value={1}>الفصل الأول</option><option value={2}>الفصل الثاني</option></select>
+      <Button size="sm" variant="outline" onClick={() => void exportPdf(meta, H, data).catch((e) => toast.error(arabicError(e)))}>PDF</Button>
+      <Button size="sm" variant="outline" onClick={() => exportXlsx(meta, H, data)}>Excel</Button>
+      <Button size="sm" variant="outline" onClick={() => printReport(meta, H, data)}>طباعة</Button>
+    </div>
+    {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr>{H.map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
+      <tbody>{data.map((r, i) => <tr key={i} className="border-t">{r.map((c, j) => <td key={j} className="p-2">{c}</td>)}</tr>)}</tbody></table>
+      {!q.isLoading && !data.length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد مستحقات متبقية.</p>}</div>}
+  </section>;
+}

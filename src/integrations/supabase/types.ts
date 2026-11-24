@@ -18651,6 +18651,7 @@ export type Database = {
           accounting_confirmed: boolean
           amount: number
           created_at: string
+          due_date: string | null
           id: string
           kind: string
           manual_override: boolean
@@ -18669,6 +18670,7 @@ export type Database = {
           accounting_confirmed?: boolean
           amount: number
           created_at?: string
+          due_date?: string | null
           id?: string
           kind: string
           manual_override?: boolean
@@ -18687,6 +18689,7 @@ export type Database = {
           accounting_confirmed?: boolean
           amount?: number
           created_at?: string
+          due_date?: string | null
           id?: string
           kind?: string
           manual_override?: boolean
@@ -18812,6 +18815,8 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          due1: string | null
+          due2: string | null
           grade_id: string | null
           id: string
           kind: string
@@ -18827,6 +18832,8 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string
+          due1?: string | null
+          due2?: string | null
           grade_id?: string | null
           id?: string
           kind: string
@@ -18842,6 +18849,8 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string
+          due1?: string | null
+          due2?: string | null
           grade_id?: string | null
           id?: string
           kind?: string
@@ -31635,6 +31644,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      sf_arrears: { Args: { _school: string; _year?: string }; Returns: Json }
       sf_bulk_apply: {
         Args: {
           _grade?: string
@@ -31682,6 +31692,10 @@ export type Database = {
         Args: { _discount: string; _obligations: string[]; _student: string }
         Returns: Json
       }
+      sf_due_apply: {
+        Args: { _price: string; _reason: string }
+        Returns: number
+      }
       sf_get: { Args: { _student: string; _year?: string }; Returns: Json }
       sf_mapping_save: {
         Args: { _mappings: Json; _school: string }
@@ -31700,6 +31714,10 @@ export type Database = {
       sf_pending_creation: {
         Args: { _school: string; _year: string }
         Returns: Json
+      }
+      sf_price_due_save: {
+        Args: { _due1: string; _due2: string; _price: string }
+        Returns: undefined
       }
       sf_receipts: {
         Args: {
