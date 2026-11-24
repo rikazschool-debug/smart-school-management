@@ -1,11 +1,11 @@
 # Finance final completion (prompt: الاستكمال النهائي)
-- [ ] 1 Security: separate read/write in sf_* (guardian read-only), tests
-- [ ] 2 Accountant/registrar permissions via existing student_finance perm tree
-- [ ] 3 Applied discounts page
-- [ ] 4 Transport accounts page (+ bus roster filters)
-- [ ] 5 Financial adjustments page
-- [ ] 6 Detailed reports catalog
-- [ ] 7 Main dashboard finance KPIs
+- [x] 1 Security: separate read/write in sf_* (guardian read-only), tests
+- [x] 2 Accountant/registrar permissions via existing student_finance perm tree
+- [x] 3 Applied discounts page
+- [x] 4 Transport accounts page (+ bus roster filters)
+- [x] 5 Financial adjustments page
+- [x] 6 Detailed reports catalog
+- [ ] 7 Main dashboard finance KPIs (branch home done; owner central dashboard awaits user answer)
 - [ ] 8 Sanad review
 - [ ] 9 Years / previous balances review
 - [ ] 10 Guardian finance page review

@@ -101,5 +101,7 @@ try {
   const rv = await owner.c.rpc("perm_apply", { _org: org, _user: acc.id, _changes: { overrides: [{ section: "student_finance", action: "collect", effect: "deny", scope: "branch" }] }, _reason: "سحب التحصيل" });
   check("owner withdraws accountant collect → payment refused", !rv.error && !!(await payBy(acc.c, 5)).error, rv.error?.message);
   console.log(`\n${ok} passed, ${bad} failed — synthetic org ${org}`);
+  // KEEP=1: keep the owner login for a browser check (session in /tmp/browser/sf/owner.json); delete it afterwards with the printed id.
+  if (process.env["KEEP"] === "1") { const { mkdirSync, writeFileSync } = await import("fs"); mkdirSync("/tmp/browser/sf", { recursive: true }); writeFileSync("/tmp/browser/sf/owner.json", JSON.stringify({ id: owner.id, school: S, year: Y, session: (await owner.c.auth.getSession()).data.session })); users.splice(users.indexOf(owner.id), 1); console.log("kept owner", owner.id); }
 } finally { for (const u of users) await admin.auth.admin.deleteUser(u).catch(() => undefined); }
 process.exit(bad ? 1 : 0);
