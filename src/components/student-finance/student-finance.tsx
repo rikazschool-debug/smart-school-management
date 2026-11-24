@@ -93,9 +93,9 @@ export function StudentFinance({ studentId }: { studentId: string }) {
 function Siblings({ studentId, yearId }: { studentId: string; yearId: string }) {
   const q = useQuery({ queryKey: [...SF_KEY, "siblings", studentId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_siblings", { _student: studentId, _year: yearId }); if (error) throw error; return data as Row[]; }, retry: false });
   const others = (q.data ?? []).filter((x) => x["id"] !== studentId);
-  return <Section title="الإخوة في المجموعة">{q.isLoading ? <p className="text-xs text-muted-foreground">جارٍ التحميل…</p> : others.length ? others.map((x) => (
-    <div key={x["id"]} className="flex flex-wrap gap-2 text-xs"><b>{x["name"]}</b><span>{x["school"]}</span><span>{[x["stage"], x["grade"]].filter(Boolean).join(" — ") || "غير مسكّن هذا العام"}</span><span>الترتيب {x["rank"]}</span><span>{num(x["sibling_discount"]) > 0 ? `خصم إخوة ${money(x["sibling_discount"])}` : "لا يوجد خصم إخوة مطبق"}</span></div>
-  )) : <p className="text-xs text-muted-foreground">لا يوجد إخوة مسجلون بعلاقة أسرية موثقة.</p>}</Section>;
+  return <Section title="الإخوة في المجموعة">{q.isLoading ? <p className="text-xs text-muted-foreground">جارٍ التحميل…</p> : others.length ? <>{!(q.data ?? []).find((x) => x["id"] === studentId)?.["rank"] && <p className="text-xs font-semibold text-destructive">هذا الطالب غير مسكّن في فصل لهذا العام، لذلك لا تُنشأ له رسوم ولا يُطبق عليه خصم الإخوة حتى يُسكَّن.</p>}{others.map((x) => (
+    <div key={x["id"]} className="flex flex-wrap gap-2 text-xs"><b>{x["name"]}</b><span>{x["school"]}</span><span>{[x["stage"], x["grade"]].filter(Boolean).join(" — ") || "غير مسكّن هذا العام"}</span><span>{x["rank"] ? `الترتيب ${x["rank"]}` : "لا يُحتسب في خصم الإخوة حتى يُسكَّن في فصل"}</span><span>{num(x["sibling_discount"]) > 0 ? `خصم إخوة ${money(x["sibling_discount"])}` : "لا يوجد خصم إخوة مطبق"}</span></div>
+  ))}</> : <p className="text-xs text-muted-foreground">لا يوجد إخوة مسجلون بعلاقة أسرية موثقة.</p>}</Section>;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

@@ -26702,6 +26702,12 @@ export type Database = {
         }
         Returns: string
       }
+      _sf_family: {
+        Args: { _student: string }
+        Returns: {
+          student_id: string
+        }[]
+      }
       _sf_guard: {
         Args: { _action: string; _school: string }
         Returns: undefined
