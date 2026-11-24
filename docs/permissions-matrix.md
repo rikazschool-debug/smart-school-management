@@ -756,3 +756,5 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 - prompt-507: تغيير لون خلفية الصفحات المدرسية في الوضع الفاتح فقط؛ الأدوار والصلاحيات بلا تغيير.
 
 - لوحة المدرسة — غياب الكادر (prompt-509): dash_staff_absence لمن يدير المدرسة (can_manage_school: المالك، المدير، الوكيل) أو لديه عرض حضور الموارد البشرية للفرع؛ يعرض الاسم والفئة والحالة فقط. تسجيل الغياب وتعيين البديل يبقى عبر record_absence/assign_substitute.
+
+2026-11-24 release review: menu labels and navigation order do not grant database access. `seesStaffDirectory` stays limited to organization owner/principal, with explicit vice-principal and teacher denial assertions. The updated label test covers every existing role without widening any server permission.

@@ -1250,3 +1250,9 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - adm_can_read_meeting: invitees need an active, non-suspended membership in the meeting branch (or org).
 - Demo password removed from source; scripts read RIKAZ_DEMO_PASSWORD. Existing demo accounts still have the old password until rotated.
 - Evidence: scripts/security-fixes-e2e.ts 7/7, meetings-live-e2e 33/33. admin2-e2e, comm-e2e, class-room-group-e2e stop at fixture setup (academic structure owner guard) — pre-existing, not verified.
+
+## 2026-11-24 — release check expectation alignment
+- The main candidate a286d135 and Lovable point to the same commit. Main check 45334817115 passed schema replay but stopped at two stale UI expectations: school map ordering and vice-principal staff-label wording.
+- Updated those expectations to the intentional navigation and label behavior. Existing role-based directory checks remain unchanged; an additional assertion separates label wording from principal/owner-only directory access.
+- The actual live image is release-547e255c-phoneid1, with 586 ledger rows. The cloud test database has 609 rows; 28 shared migrations are pending on VPS and five historical VPS-only versions remain independent. Existing first-login and phone-change hotfixes must be preserved and audited before deployment.
+- TypeScript passed locally. Full Linux checks and a restored-production-data rehearsal are required before merge/deployment; local Windows runtime results are not substituted for these gates. No production database, service configuration, outbound message or device state was changed by this review.
