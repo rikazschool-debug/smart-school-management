@@ -33,6 +33,10 @@ try {
   const g2 = await t.c.rpc("_cg_generic_label2" as never, { _conv: S, _user: stu.id } as never);
   check("_cg_generic_label2 not callable", !!g2.error, g2.data);
 
+  for (const [fn, args] of [["_perm_base", { _school: S, _uid: inv.id, _section: "hr", _action: "view" }], ["_perm_base_v11", { _school: S, _uid: inv.id, _section: "hr", _action: "view" }], ["_mt_can_read", { _id: S, _uid: inv.id }], ["_task_target_ok", { _school: S, _user: inv.id }]] as const) {
+    const r = await t.c.rpc(fn as never, args as never);
+    check(`${fn} not callable by signed-in users`, !!r.error, r.data);
+  }
   const ds = await admin.from("adm_duty_settings").upsert({ school_id: S }).select(); if (ds.error) console.log("duty settings seed", ds.error.message);
   const seen = await t.c.from("adm_duty_settings").select("school_id").eq("school_id", S);
   check("active staff still reads duty settings", !seen.error && (seen.data ?? []).length === (ds.data ?? []).length && (ds.data ?? []).length > 0, seen);
