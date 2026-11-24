@@ -195,6 +195,12 @@ describe("staff directory", () => {
   it("only the principal (and owner) get the unified teaching+administrative directory", () => {
     expect(ALL.filter((r) => seesStaffDirectory(r)).sort()).toEqual(["org_owner", "principal"]);
     expect(teachersLabel("principal")).toBe("الكادر التعليمي والإداري");
-    expect(teachersLabel("vice_principal")).toBe("الكادر التعليمي");
+  });
+  it("uses the unified menu label without granting the unified HR directory", () => {
+    for (const role of ALL) {
+      expect(teachersLabel(role)).toBe(role === "teacher" ? "الكادر التعليمي" : "الكادر التعليمي والإداري");
+    }
+    expect(seesStaffDirectory("vice_principal")).toBe(false);
+    expect(seesStaffDirectory("teacher")).toBe(false);
   });
 });

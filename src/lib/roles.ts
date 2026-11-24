@@ -218,7 +218,7 @@ export const NAV_LABELS: Partial<Record<NavKey, string>> = {
   procurement: "المشتريات والعهد", school_home: "لوحة المدرسة", maintenance: "إدارة صيانة المباني", bus_maintenance: "إدارة تشغيل وصيانة الباصات", admissions: "القبول والتسجيل",
 };
 
-/** Staff menu/page name: principal-level gets the unified HR directory («والإداري»); other roles keep the teaching staff list. */
+/** Shared menu label; it does not grant directory access. Teachers keep the teaching-only label. */
 export function teachersLabel(role: Role | "platform_admin"): string {
   return role === "teacher" ? "الكادر التعليمي" : "الكادر التعليمي والإداري";
 }
