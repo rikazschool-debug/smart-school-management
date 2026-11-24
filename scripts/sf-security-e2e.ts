@@ -77,6 +77,13 @@ try {
   const tl = await acc.c.rpc("sf_transport_accounts", { _school: S, _year: Y }), dl = await acc.c.rpc("sf_discount_list", { _school: S, _year: Y });
   check("accountant opens transport accounts and applied discounts lists", !tl.error && !dl.error, [tl.error?.message, dl.error?.message]);
   check("guardian and teacher cannot open discounts / transport / adjustments lists", (await Promise.all([parent.c, teacher.c].flatMap((c) => ["sf_adjustments", "sf_transport_accounts", "sf_discount_list"].map((n) => c.rpc(n, { _school: S, _year: Y }))))).every((r) => !!r.error));
+  const ol = await acc.c.rpc("sf_obligation_lines", { _school: S, _year: Y }), cl = await acc.c.rpc("sf_collection_lines", { _school: S, _year: Y });
+  const og = await owner.c.rpc("sf_get", { _student: P, _year: Y });
+  const remLines = ((ol.data ?? []) as any[]).filter((o) => o.student_id === P && o.status !== "void").reduce((a, o) => a + Number(o.balance.remaining), 0);
+  const remGet = ((og.data as any)?.obligations ?? []).filter((o: any) => o.status !== "void").reduce((a: number, o: any) => a + Number(o.balance.remaining), 0);
+  check("reports obligation lines match the student account remaining (one source)", !ol.error && !og.error && remLines === remGet && remLines > 0, [ol.error?.message, remLines, remGet]);
+  check("reports collection lines: reversed payments carry status reversed (excluded from totals)", !cl.error && ((cl.data ?? []) as any[]).some((c) => c.status === "reversed"), cl.error?.message ?? cl.data);
+  check("guardian cannot open report lines", !!(await parent.c.rpc("sf_obligation_lines", { _school: S, _year: Y })).error && !!(await parent.c.rpc("sf_collection_lines", { _school: S, _year: Y })).error);
   // reads
   const g = await parent.c.rpc("sf_get", { _student: P, _year: Y });
   check("guardian reads own child; every action cap is false", !g.error && Object.values((g.data as any)?.caps ?? {}).every((v) => !v), g.error?.message ?? (g.data as any)?.caps);

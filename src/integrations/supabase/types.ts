@@ -31993,6 +31993,10 @@ export type Database = {
         Args: { _p: Json; _request_key: string; _student: string }
         Returns: string
       }
+      sf_collection_lines: {
+        Args: { _school: string; _year: string }
+        Returns: Json
+      }
       sf_copy_prices: {
         Args: { _from: string; _school: string; _to: string }
         Returns: number
@@ -32046,6 +32050,10 @@ export type Database = {
       sf_mapping_save: {
         Args: { _mappings: Json; _school: string }
         Returns: undefined
+      }
+      sf_obligation_lines: {
+        Args: { _school: string; _year: string }
+        Returns: Json
       }
       sf_org_years: { Args: { _org: string }; Returns: Json }
       sf_override: {

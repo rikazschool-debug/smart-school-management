@@ -3,7 +3,7 @@ import { db, type Row } from "@/components/crud-page";
 
 /** Student-accounts sub-pages (sidebar groups and page switch share this list). */
 export const SF_GROUPS = [
-  { label: "النظرة العامة", items: [["dashboard", "لوحة المؤشرات المالية"], ["accounts", "الحسابات المالية للطلاب"]] },
+  { label: "النظرة العامة", items: [["dashboard", "لوحة المؤشرات المالية"], ["accounts", "الحسابات المالية للطلاب"], ["reports", "التقارير المالية"]] },
   { label: "التحصيل والمستندات", items: [["collect", "التحصيل والسداد"], ["receipts", "سندات القبض"], ["statements", "كشوف الحسابات"]] },
   { label: "المستحقات والأرصدة", items: [["arrears", "المستحقات والمتأخرات"], ["previous", "الأرصدة السابقة والمرحلة"], ["adjustments", "التسويات المالية"]] },
   { label: "الخصومات والنقل", items: [["discounts", "الخصومات المطبقة"], ["transport", "حسابات النقل المدرسي"], ["buses", "إشغال الباصات وكشوف الطلاب"]] },

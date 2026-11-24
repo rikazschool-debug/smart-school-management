@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppliedDiscounts, TransportAccounts, Adjustments } from "@/components/student-finance/pages";
+import { ReportsCatalog } from "@/components/student-finance/reports";
 import { useQuery } from "@tanstack/react-query";
 import { SchoolExportBrand } from "@/components/student-finance/school-brand";
 import { db, type Row } from "@/components/crud-page";
@@ -50,6 +51,7 @@ function Page() {
   else if (view === "accounts" || view === "collect" || view === "statements") body = <StudentAccounts key={view} schoolId={sid} yearId={yearId} mode={view} />;
   else if (view === "receipts") body = <ReceiptsList schoolId={sid} yearName={yearName} />;
   else if (view === "arrears") body = <Arrears schoolId={sid} yearId={yearId} />;
+  else if (view === "reports") body = <ReportsCatalog schoolId={sid} yearId={yearId} />;
   else if (view === "discounts") body = <AppliedDiscounts schoolId={sid} yearId={yearId} />;
   else if (view === "transport") body = <TransportAccounts schoolId={sid} yearId={yearId} />;
   else if (view === "adjustments") body = <Adjustments schoolId={sid} yearId={yearId} />;
