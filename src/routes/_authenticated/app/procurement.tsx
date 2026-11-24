@@ -55,7 +55,7 @@ function Page() {
   const meQ = usePcMe(active?.orgId ?? null);
   const [editing, setEditing] = useState<Row | null>(null);
   if (!active?.orgId) return <ForbiddenState />;
-  if (meQ.isLoading) return <LoadingState />;
+  if (meQ.isLoading || (!meQ.data && !meQ.error)) return <LoadingState />;
   if (meQ.error) return <ErrorState message={arabicError(meQ.error)} />;
   const me = meQ.data!;
   const isOwner = active.role === "org_owner";
