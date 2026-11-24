@@ -18,7 +18,8 @@ import { SEARCH_HINT, useStudentSearch } from "./search";
 type Cell = string | number;
 type Src = "ob" | "col" | "disc" | "tr" | "bus" | "adj" | "rcpt" | "pend";
 /** One report line; the standard fields drive the shared filters, cells are what is shown/exported. */
-type Rec = { sid?: string; name?: string; grade?: string; stage?: string; term?: number; kind?: string; date?: string; method?: string; actor?: string; pay?: string; amount: number; cells: Cell[] };
+type O<T> = T | undefined;
+type Rec = { sid?: O<string>; name?: O<string>; grade?: O<string>; stage?: O<string>; term?: O<number>; kind?: O<string>; date?: O<string>; method?: O<string>; actor?: O<string>; pay?: O<string>; amount: number; cells: Cell[] };
 type Rep = { key: string; group: string; title: string; src: Src; headers: string[]; build: (d: Row[]) => Rec[]; total?: string };
 
 const RPC: Record<Src, string> = { ob: "sf_obligation_lines", col: "sf_collection_lines", disc: "sf_discount_list", tr: "sf_transport_accounts", bus: "sf_bus_occupancy", adj: "sf_adjustments", rcpt: "sf_receipts", pend: "sf_pending_creation" };
