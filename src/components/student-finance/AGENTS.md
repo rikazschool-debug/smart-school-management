@@ -11,3 +11,4 @@
 - Granted staff (perm student_finance.view) open /app/finance for their active branch only; SF_OWNER_VIEWS (carry/pay links/fee creation) stay owner-only. sf_report guards view.
 - Live refresh: sf_collections/obligations/carries/receipts signal topic `sf` (school staff + the student's guardians); live-signals.ts refetches every SF_KEY query. Excel exports turn «ر.س» amounts into numeric cells (moneyValue in export.ts).
 - Finance tables use useRowSelect (row-select.tsx): exports take the ticked rows when any, else all shown; the printable statement uses statementHtml in the receipt style.
+- Receipts are year-scoped server-side (sf_receipts _year: fees of that year or carried items after the carry, one row per receipt, with fee_years/collection_year); «كل الأعوام» passes null.

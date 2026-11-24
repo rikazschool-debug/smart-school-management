@@ -143,15 +143,14 @@ export function ReceiptButtons({ r }: { r: Row }) {
 }
 
 /** Receipts register with search by number/reference/name and date/method filters. */
-export function ReceiptsList({ schoolId, yearName }: { schoolId: string; yearName: string }) {
+export function ReceiptsList({ schoolId, yearId, yearName }: { schoolId: string; yearId: string; yearName: string }) {
   const [q, setQ] = useState(""); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [method, setMethod] = useState(""); const [allYears, setAllYears] = useState(false);
-  const inYear = (r: Row) => { const s = r["snapshot"] as Row; return allYears || s["year"] === yearName || ((s["allocations"] ?? []) as Row[]).some((a) => a["year"] === yearName); };
   const [view, setView] = useState<Row | null>(null);
-  const list = useQuery({ queryKey: [...SF_KEY, "receipts", schoolId, q, from, to, method], queryFn: async () => { const { data, error } = await db.rpc("sf_receipts", { _school: schoolId, _q: q || null, _from: from || null, _to: to || null, _method: method || null }); if (error) throw error; return data as Row[]; }, retry: false });
-  const shown = (list.data ?? []).filter(inYear); const rs = useRowSelect(shown.length);
-  const RH = ["رقم السند", "التاريخ", "الطالب", "رقم القيد", "المدرسة", "المرحلة", "الصف", "المبلغ", "الطريقة", "المرجع", "الحالة"];
-  const cells = (r: Row) => { const s = r["snapshot"] as Row; const st = (s["student"] ?? {}) as Row; return [String(r["number"]), String(s["paid_at"] ?? ""), String(st["name"] ?? ""), String(st["csmart_no"] ?? "—"), String(s["school"] ?? ""), String(st["stage"] ?? ""), [st["grade"], st["section"]].filter(Boolean).join(" / "), money(s["amount"]), METHOD_AR[s["method"]] ?? "", String(s["ref"] || "—"), r["status"] === "cancelled" ? "ملغى" : "ساري"]; };
-  const exp = (k: "pdf" | "xlsx" | "print") => { const m = { title: "سندات القبض الداخلية", filters: [q, from, to].filter(Boolean) }; const rows = rs.pick(shown).map(cells); if (k === "pdf") void exportPdf(m, RH, rows).catch((e) => toast.error(arabicError(e))); else if (k === "xlsx") exportXlsx(m, RH, rows); else printReport(m, RH, rows); };
+  const list = useQuery({ queryKey: [...SF_KEY, "receipts", schoolId, q, from, to, method, allYears ? "" : yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_receipts", { _school: schoolId, _q: q || null, _from: from || null, _to: to || null, _method: method || null, _year: allYears || !yearId ? null : yearId }); if (error) throw error; return data as Row[]; }, retry: false });
+  const shown = list.data ?? []; const rs = useRowSelect(shown.length);
+  const RH = ["رقم السند", "التاريخ", "الطالب", "رقم القيد", "المدرسة", "المرحلة", "الصف", "عام المستحق", "عام التحصيل", "المبلغ", "الطريقة", "المرجع", "الحالة"];
+  const cells = (r: Row) => { const s = r["snapshot"] as Row; const st = (s["student"] ?? {}) as Row; return [String(r["number"]), String(s["paid_at"] ?? ""), String(st["name"] ?? ""), String(st["csmart_no"] ?? "—"), String(s["school"] ?? ""), String(st["stage"] ?? ""), [st["grade"], st["section"]].filter(Boolean).join(" / "), ((r["fee_years"] ?? []) as string[]).map((y) => formatAcademicYear(y)).join("، ") || "—", r["collection_year"] ? formatAcademicYear(String(r["collection_year"])) : "—", money(s["amount"]), METHOD_AR[s["method"]] ?? "", String(s["ref"] || "—"), r["status"] === "cancelled" ? "ملغى" : "ساري"]; };
+  const exp = (k: "pdf" | "xlsx" | "print") => { const m = { title: "سندات القبض الداخلية", filters: [allYears ? "كل الأعوام" : formatAcademicYear(yearName), q, from, to].filter(Boolean) }; const rows = rs.pick(shown).map(cells); if (k === "pdf") void exportPdf(m, RH, rows).catch((e) => toast.error(arabicError(e))); else if (k === "xlsx") exportXlsx(m, RH, rows); else printReport(m, RH, rows); };
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">سندات القبض الداخلية</h2>{rs.note}

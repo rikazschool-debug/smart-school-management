@@ -149,7 +149,7 @@ export function ReportsCatalog({ schoolId, yearId }: { schoolId: string; yearId:
 
 function ReportView({ rep, schoolId, yearId, onBack }: { rep: Rep; schoolId: string; yearId: string; onBack: () => void }) {
   const [term, setTerm] = useState(1);
-  const args: Record<string, unknown> = rep.src === "rcpt" ? { _school: schoolId, _q: null, _from: null, _to: null, _method: null } : rep.src === "bus" ? { _school: schoolId, _year: yearId, _term: term } : { _school: schoolId, _year: yearId || null };
+  const args: Record<string, unknown> = rep.src === "rcpt" ? { _school: schoolId, _q: null, _from: null, _to: null, _method: null, _year: yearId || null } : rep.src === "bus" ? { _school: schoolId, _year: yearId, _term: term } : { _school: schoolId, _year: yearId || null };
   const d = useQuery({ queryKey: [...SF_KEY, "rep", rep.src, schoolId, yearId, rep.src === "bus" ? term : 0], queryFn: async () => { const { data, error } = await db.rpc(RPC[rep.src], args); if (error) throw error; return data as Row[]; }, retry: false });
   const match = useStudentSearch(schoolId);
   const [f, setF] = useState({ s: "", stage: "", grade: "", term: "", kind: "", pay: "", method: "", actor: "", from: "", to: "" });

@@ -123,3 +123,6 @@ declare r jsonb; yk text; begin
   'updated_at',now()) into r;
  return r; end$function$;
 -- 4) sf_adjustments: a credit used for another year's fee is listed in both the source and the target year (see migration 2026-11-24 report test).
+
+-- 5) sf_receipts(...,_year): year-scoped receipts (fees of that year, or carried items after the carry), one row per receipt, + fee_years/collection_year.
+-- 6) sf_adjustments: credit moves also listed in the year their source credit was carried into (after the carry).

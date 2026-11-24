@@ -55,7 +55,7 @@ function Page() {
   else if (!yearId) body = <p className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">لا يوجد عام دراسي معرّف لهذا الفرع في الهيكل الأكاديمي.</p>;
   else if (view === "dashboard") body = <FinanceDashboard schoolId={sid} yearId={yearId} yearName={yearName} />;
   else if (view === "accounts" || view === "collect" || view === "statements") body = <StudentAccounts key={view} schoolId={sid} yearId={yearId} mode={view} />;
-  else if (view === "receipts") body = <ReceiptsList schoolId={sid} yearName={yearName} />;
+  else if (view === "receipts") body = <ReceiptsList schoolId={sid} yearId={yearId} yearName={yearName} />;
   else if (view === "arrears") body = <Arrears schoolId={sid} yearId={yearId} />;
   else if (view === "reports") body = <ReportsCatalog schoolId={sid} yearId={yearId} />;
   else if (view === "discounts") body = <AppliedDiscounts schoolId={sid} yearId={yearId} />;

@@ -32074,16 +32074,28 @@ export type Database = {
         Args: { _due1: string; _due2: string; _price: string }
         Returns: undefined
       }
-      sf_receipts: {
-        Args: {
-          _from?: string
-          _method?: string
-          _q?: string
-          _school: string
-          _to?: string
-        }
-        Returns: Json
-      }
+      sf_receipts:
+        | {
+            Args: {
+              _from?: string
+              _method?: string
+              _q?: string
+              _school: string
+              _to?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _from: string
+              _method: string
+              _q: string
+              _school: string
+              _to: string
+              _year: string
+            }
+            Returns: Json
+          }
       sf_remind: {
         Args: { _obligations: string[]; _school: string }
         Returns: Json
