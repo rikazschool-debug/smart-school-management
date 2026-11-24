@@ -297,3 +297,5 @@ AS $function$declare s uuid; begin
   from sf_transport t join students st on st.id=t.student_id
   left join lateral (select ob.id, ob.status from sf_obligations ob where ob.student_id=t.student_id and ob.year_id=_year and ob.term=_term and ob.kind='transport' and ob.status<>'void' order by ob.created_at desc limit 1) o on true
   where t.bus_id=_bus and t.year_id=_year and t.term=_term and t.active),'[]'); end$function$;
+
+-- sf_family (2026-11-24): children who left (withdrawn/graduated) stay listed while any non-void obligation has remaining or credit; applied on the test DB via migration.

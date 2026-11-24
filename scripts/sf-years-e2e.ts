@@ -79,6 +79,9 @@ check("reversal restores: year 1 remaining 2,000 · previous 2,000 · required 1
 must(await admin.from("students").update({ status: "withdrawn" }).eq("id", P), "withdraw");
 b = await get(Y2);
 check("withdrawn student keeps the previous balance", prev(b) === 2000);
+const fam2: any = must(await parent.c.rpc("sf_family", { _year: null }), "family2");
+const k2 = fam2.children.find((k: any) => k.student?.id === P);
+check("guardian still sees the withdrawn child with the same 2,000 previous balance (read-only)", !!k2 && prev(k2) === 2000 && !k2.caps?.collect, k2 ? { prev: prev(k2), caps: k2.caps } : fam2.children.length);
 console.log(`\n${ok} passed, ${bad} failed — synthetic org ${org}`);
 } finally { for (const u of [owner, parent]) await admin.auth.admin.deleteUser(u.id).catch(() => undefined); }
 process.exit(bad ? 1 : 0);
