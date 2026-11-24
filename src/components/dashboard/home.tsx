@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/s
 import { ChildOverview } from "@/components/family/child-overview";
 import { FamilyFinance, familyDue, useFamilyFinance } from "@/components/student-finance/family-finance";
 import { money } from "@/lib/student-finance/labels";
+import { HomeFinance } from "@/components/student-finance/home-finance";
 import { NAV_BY_ROLE, ROLE_LABELS, canManage, type NavKey } from "@/lib/roles";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { OwnerPortal } from "@/components/owner-portal";
@@ -145,6 +146,7 @@ export function StaffHome({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         <Kpi tone={4} label="حضور اليوم" value={rate == null ? "—" : `${rate}%`} icon={CalendarCheck} to={go("attendance", "/app/attendance")} hint={c ? `${c.today.present + c.today.late} حاضر · ${c.today.absent} غائب` : undefined} />
         <Kpi tone={0} label="واجبات هذا الأسبوع" value={c?.dueSoon} icon={ClipboardList} to={go("homework", "/app/homework")} />
       </KpiGrid>
+      <HomeFinance schoolId={s} />
       <div className="grid gap-4 lg:grid-cols-3">
         <FollowUpCenter school={s} className="lg:col-span-2" staffEnabled={manager} studentsEnabled={has("attendance") || has("students")} genders={c?.genderKeys ?? []} hrAttendance={ctx.role === "org_owner"} org={ctx.orgId} adminEnabled={has("admin")} eventsEnabled={has("events")}
           items={d ? [
