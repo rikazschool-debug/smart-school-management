@@ -214,3 +214,10 @@ describe("owner finance sections are separate", () => {
     expect(ownerSectionNav("student_accounts", N.org_owner)).not.toContain("procurement");
   });
 });
+
+describe("finance landing", () => {
+  it("has no side menu, like the owner home", async () => {
+    const { ownerSection } = await import("@/lib/roles");
+    expect(ownerSection("/app/accounting", "finance")).toBeNull();
+  });
+});

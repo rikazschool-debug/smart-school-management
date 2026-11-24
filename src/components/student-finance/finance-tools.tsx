@@ -243,11 +243,12 @@ export function FinanceDashboard({ schoolId, yearId, yearName }: { schoolId: str
         <div className={"text-xs font-medium " + (i === 0 ? "text-primary-foreground/80" : "text-muted-foreground")}>{l}</div>
         <div className="mt-1.5 font-display text-2xl font-bold tabular-nums">{v}</div>
         <div className={"mt-1 text-xs " + (i === 0 ? "text-primary-foreground/80" : "text-muted-foreground")}>{sub}</div></div>)}</div>
+      {tab === "overview" && <div className="grid gap-3 lg:grid-cols-2"><Bars title="مقارنة المستحقات بالتحصيل" rows={compare} /><Bars title="التحصيل الشهري" rows={monthly.map((m) => [String(m["month"]), Number(m["amount"] ?? 0)])} /></div>}
       <div role="tablist" aria-label="أقسام المؤشرات" className="flex flex-wrap gap-1 rounded-xl border bg-card p-1">{TABS.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={"min-h-9 rounded-lg px-3 text-sm font-semibold transition-colors " + (tab === k ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>{l}</button>)}</div>
       {groups.filter((g) => tab === "overview" ? false : g.title === tab).map((g) => <div key={g.title} className="space-y-2"><h3 className="text-sm font-semibold text-muted-foreground">{g.title}</h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">{g.items.map(([l, v, to]) => { const inner = <><div className="text-xs text-muted-foreground">{l}</div><div className="mt-1 font-bold tabular-nums">{v}</div></>;
           return to ? <Link key={l} to="/app/finance" search={(p: Record<string, unknown>) => ({ ...p, v: to }) as never} className={`rounded-xl border border-s-4 ${g.tone} bg-card p-3 transition-colors hover:bg-muted/40`}>{inner}</Link> : <div key={l} className={`rounded-xl border border-s-4 ${g.tone} bg-card p-3`}>{inner}</div>; })}</div></div>)}
-      {(tab === "overview" || tab === "charts") && <>      <div className="grid gap-3 lg:grid-cols-2">
+      {tab === "charts" && <>      <div className="grid gap-3 lg:grid-cols-2">
         <Bars title="التحصيل الشهري" rows={monthly.map((m) => [String(m["month"]), Number(m["amount"] ?? 0)])} />
         <Bars title="التحصيل اليومي (آخر 30 يومًا)" rows={daily.map((x) => [String(x["day"]).slice(5), Number(x["amount"] ?? 0)])} />
         <Bars title="مقارنة المستحقات بالتحصيل" rows={compare} />
