@@ -5,6 +5,7 @@ import { LoadingState } from "@/components/states";
 import { selectCls } from "@/components/ui/native-select";
 import { Input } from "@/components/ui/input";
 import { ReceiptButtons } from "./finance-tools";
+import { StatementButton } from "./statement";
 import { arabicError } from "@/lib/session";
 import { KIND_LABEL, METHOD_LABEL, SF_KEY, TERM_LABEL, TRANSPORT_LABEL, money, num, paymentState, type Obligation } from "@/lib/student-finance/labels";
 
@@ -33,7 +34,7 @@ export function FamilyFinance() {
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <h2 className="text-lg font-bold">الحسابات المالية</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-bold">الحسابات المالية</h2>{kids.length > 1 && <StatementButton fins={kids} title="كشف حساب مجمع لجميع الأبناء" />}</div>
         {!kids.length ? <p className="text-sm text-muted-foreground">لا توجد بيانات مالية للأبناء المرتبطين بحسابك.</p> : <>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">{kpis.map(([l, v]) => <div key={l} className="rounded-xl border bg-card p-3"><div className="text-xs text-muted-foreground">{l}</div><div className="mt-1 font-bold">{v}</div></div>)}</div>
           <p className="text-xs text-muted-foreground">آخر تحديث: {latest ? new Date(latest).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" }) : "—"} · خصم الإخوة محسوب ضمن الخصومات مرة واحدة · المبالغ للاطلاع فقط</p>
@@ -57,13 +58,14 @@ export function FamilyFinance() {
 function ChildTable({ f }: { f: Fin }) {
   const os = f.obligations.filter((o) => o.status !== "void");
   const cell = (k: string, t: number) => os.find((o) => o.kind === k && o.term === t);
-  const tr = f.transport.find((t) => t["status"] !== "cancelled");
+  const tr = f.transport.find((t) => t["active"] !== false);
   const row = (label: string, pick: (t: number) => number | null) => { const a = pick(1), b = pick(2); return <tr key={label} className="border-t"><td className="p-2">{label}</td><td className="p-2">{a == null ? "—" : money(a)}</td><td className="p-2">{b == null ? "—" : money(b)}</td><td className="p-2 font-semibold">{a == null && b == null ? "—" : money((a ?? 0) + (b ?? 0))}</td></tr>; };
   const line = (k: string, key: keyof Obligation["balance"]) => (t: number) => { const o = cell(k, t); return o ? num(o.balance[key]) : null; };
   const tot = (key: keyof Obligation["balance"]) => (t: number) => { const xs = os.filter((o) => o.term === t); return xs.length ? sumOf(xs, key) : null; };
   const credit = sumOf(os, "credit");
   return <div className="space-y-2 border-t p-3">
-    <p className="text-xs text-muted-foreground">النقل المدرسي: {tr ? `مشترك — ${TRANSPORT_LABEL[String(tr["type"])] ?? "—"}` : "غير مشترك"} · حالة السداد: {os.length ? [1, 2].map((t) => `${TERM_LABEL(t)}: ${paymentState(cell("tuition", t))}`).join(" · ") : "الرسوم غير مهيأة"}</p>
+    <StatementButton fins={[f]} title={`كشف حساب ${String(f.student["name"])}`} />
+    <p className="text-xs text-muted-foreground">النقل المدرسي: {tr ? `مشترك — ${TRANSPORT_LABEL[String(tr["transport_type"])] ?? "—"}` : "غير مشترك"} · حالة السداد: {os.length ? [1, 2].map((t) => `${TERM_LABEL(t)}: ${paymentState(cell("tuition", t))}`).join(" · ") : "الرسوم غير مهيأة"}</p>
     {!os.length ? <p className="text-sm text-muted-foreground">لم تُهيأ رسوم هذا الطالب بعد.</p> : <div className="overflow-x-auto"><table className="w-full text-xs"><thead className="bg-muted/50"><tr><th className="p-2 text-start">البيان</th><th className="p-2 text-start">الفصل الأول</th><th className="p-2 text-start">الفصل الثاني</th><th className="p-2 text-start">الإجمالي</th></tr></thead><tbody>
       {(["tuition", "transport"] as const).flatMap((k) => { const n = k === "tuition" ? "الرسوم الدراسية" : "النقل"; return [row(k === "tuition" ? "الرسوم الدراسية" : "رسوم النقل المدرسي", line(k, "gross")), row(`خصومات ${n}`, line(k, "discount")), row(`صافي ${n}`, line(k, "net")), row(`المسدد من ${n}`, line(k, "recorded")), row(`المتبقي من ${n}`, line(k, "remaining"))]; })}
       {row("إجمالي صافي المستحقات", tot("net"))}{row("إجمالي المسدد", tot("recorded"))}{row("إجمالي المتبقي", tot("remaining"))}

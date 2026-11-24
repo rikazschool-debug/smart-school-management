@@ -11,6 +11,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { ask, askText } from "@/components/confirm";
 import { LoadingState } from "@/components/states";
 import { ReceiptButtons } from "./finance-tools";
+import { StatementButton } from "./statement";
 import { arabicError } from "@/lib/session";
 import { formatAcademicYear } from "@/lib/academic-year";
 import { COLLECTION_STATUS, KIND_LABEL, METHODS, METHOD_LABEL, SF_KEY, TERM_LABEL, TRANSPORT_LABEL, TRANSPORT_TYPES, money, num, paymentState, validAllocation, type Obligation } from "@/lib/student-finance/labels";
@@ -39,6 +40,7 @@ export function StudentFinance({ studentId }: { studentId: string }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={year} onChange={(e) => setYear(e.target.value)}><option value="">كل الأعوام</option>{f.years.map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}</option>)}</select>
+        <StatementButton fins={[f]} title={`كشف حساب ${String(f.student["name"])}`} />
         <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">تشغيلي — الربط المحاسبي مع وافق غير مفعّل</span>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

@@ -7,9 +7,9 @@ import { selectCls } from "@/components/ui/native-select";
 import { ask } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { formatAcademicYear } from "@/lib/academic-year";
-import { SF_KEY, money } from "@/lib/student-finance/labels";
+import { SF_KEY, TRANSPORT_LABEL, TRANSPORT_TYPES, money } from "@/lib/student-finance/labels";
 import { amountInWords } from "@/lib/student-finance/words";
-import { exportLetterPdf, printReport } from "@/lib/export";
+import { exportLetterPdf, exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { Input } from "@/components/ui/input";
 
 const STATE: Record<string, string> = { new: "جديد — سيُنشأ", exists: "لديه مستحقات", partial: "مستحقات جزئية — مراجعة منفصلة", no_price: "لا توجد رسوم معتمدة لصفه" };
@@ -60,7 +60,7 @@ export function BulkSetup({ schoolId }: { schoolId: string }) {
 /** Bus seats per direction from the actual subscriptions (sf_bus_occupancy). */
 export function BusOccupancy({ schoolId }: { schoolId: string }) {
   const years = useYears(schoolId);
-  const [year, setYear] = useState(""); const [term, setTerm] = useState(1);
+  const [year, setYear] = useState(""); const [term, setTerm] = useState(1); const [bus, setBus] = useState<Row | null>(null);
   const yearId = year || (years.data?.find((y) => y["is_current"]) ?? years.data?.[0])?.["id"] || "";
   const q = useQuery({ enabled: !!yearId, queryKey: [...SF_KEY, "buses", schoolId, yearId, term], queryFn: async () => { const { data, error } = await db.rpc("sf_bus_occupancy", { _school: schoolId, _year: yearId, _term: term }); if (error) throw error; return data as Row[]; }, retry: false });
   return (
@@ -72,9 +72,10 @@ export function BusOccupancy({ schoolId }: { schoolId: string }) {
       </div>
       {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card">
         <table className="w-full text-sm"><thead className="bg-muted/50 text-xs"><tr>{["الباص", "السعة", "الطلاب", "ذهاب وعودة", "ذهاب فقط", "عودة فقط", "متاح للذهاب", "متاح للعودة", "الإشغال"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
-          <tbody>{(q.data ?? []).map((b) => <tr key={b["bus_id"]} className="border-t"><td className="p-2">{b["code"]} <span className="text-xs text-muted-foreground">{b["plate"]}</span></td><td className="p-2">{b["capacity"]}</td><td className="p-2">{b["students"]}</td><td className="p-2">{b["round_trip"]}</td><td className="p-2">{b["outbound"]}</td><td className="p-2">{b["return"]}</td><td className="p-2">{b["free_out"]}</td><td className="p-2">{b["free_ret"]}</td><td className="p-2 font-semibold">{b["occupancy"]}%</td></tr>)}</tbody></table>
+          <tbody>{(q.data ?? []).map((b) => <tr key={b["bus_id"]} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => setBus(b)}><td className="p-2">{b["code"]} <span className="text-xs text-muted-foreground">{b["plate"]}</span></td><td className="p-2">{b["capacity"]}</td><td className="p-2">{b["students"]}</td><td className="p-2">{b["round_trip"]}</td><td className="p-2">{b["outbound"]}</td><td className="p-2">{b["return"]}</td><td className="p-2">{b["free_out"]}</td><td className="p-2">{b["free_ret"]}</td><td className="p-2 font-semibold">{b["occupancy"]}%</td></tr>)}</tbody></table>
         {!q.isLoading && !(q.data ?? []).length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد باصات مسجلة لهذا الفرع.</p>}
       </div>}
+      {bus && <BusRoster bus={bus} yearId={yearId} term={term} onClose={() => setBus(null)} />}
     </section>
   );
 }
@@ -153,4 +154,22 @@ export function PendingCreation({ schoolId }: { schoolId: string }) {
       </div> : !q.isLoading && <p className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">كل الطلاب المسكّنين لديهم مستحقات لهذا العام.</p>}
     </section>
   );
+}
+
+function BusRoster({ bus, yearId, term, onClose }: { bus: Row; yearId: string; term: number; onClose: () => void }) {
+  const q = useQuery({ queryKey: [...SF_KEY, "bus-roster", bus["bus_id"], yearId, term], queryFn: async () => { const { data, error } = await db.rpc("sf_bus_roster", { _bus: bus["bus_id"], _year: yearId, _term: term }); if (error) throw error; return data as Row[]; }, retry: false });
+  const [s, setS] = useState(""); const [t, setT] = useState("");
+  const rows = (q.data ?? []).filter((r) => (!s || String(r["name"]).includes(s)) && (!t || r["transport_type"] === t));
+  const H = ["الطالب", "نوع الاشتراك", "الرسوم"]; const data = rows.map((r) => [String(r["name"]), TRANSPORT_LABEL[String(r["transport_type"])] ?? "—", r["exempt"] ? "معفى" : "—"]);
+  const meta = { title: `كشف طلاب الباص ${String(bus["code"])}`, filters: [TERM_AR(term), t ? TRANSPORT_LABEL[t] ?? "" : "", s].filter(Boolean) };
+  return <section className="space-y-2 rounded-2xl border bg-card p-3">
+    <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">كشف طلاب الباص {String(bus["code"])}</h3>
+      <Input className="w-40" placeholder="بحث بالاسم" value={s} onChange={(e) => setS(e.target.value)} />
+      <select aria-label="نوع الاشتراك" className={selectCls("min-w-32", true)} value={t} onChange={(e) => setT(e.target.value)}><option value="">كل الأنواع</option>{TRANSPORT_TYPES.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select>
+      <Button size="sm" variant="outline" onClick={() => void exportPdf(meta, H, data).catch((e) => toast.error(arabicError(e)))}>PDF</Button>
+      <Button size="sm" variant="outline" onClick={() => exportXlsx(meta, H, data)}>Excel</Button>
+      <Button size="sm" variant="outline" onClick={() => printReport(meta, H, data)}>طباعة</Button>
+      <Button size="sm" variant="ghost" onClick={onClose}>إغلاق</Button></div>
+    {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <ul className="divide-y text-sm">{data.map((r, i) => <li key={i} className="flex justify-between p-2"><span>{r[0]}</span><span className="text-muted-foreground">{r[1]} {r[2] !== "—" ? `· ${r[2]}` : ""}</span></li>)}{!q.isLoading && !data.length && <li className="p-3 text-center text-muted-foreground">لا يوجد طلاب مشتركون.</li>}</ul>}
+  </section>;
 }
