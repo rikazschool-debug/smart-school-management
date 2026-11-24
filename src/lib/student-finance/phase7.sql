@@ -122,3 +122,4 @@ declare r jsonb; yk text; begin
   'monthly',coalesce((select jsonb_agg(jsonb_build_object('month',m,'amount',s) order by m desc) from (select to_char(paid_at,'YYYY-MM') m,sum(amt) s from col group by 1) x),'[]'),
   'updated_at',now()) into r;
  return r; end$function$;
+-- 4) sf_adjustments: a credit used for another year's fee is listed in both the source and the target year (see migration 2026-11-24 report test).
