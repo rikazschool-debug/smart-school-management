@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Bus, CreditCard, Percent, Receipt, RotateCcw } from "lucide-react";
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { selectCls } from "@/components/ui/native-select";
 import { ask, askText } from "@/components/confirm";
 import { LoadingState } from "@/components/states";
-import { ReceiptButtons } from "./finance-tools";
+import { ReceiptButtons, receiptLines } from "./finance-tools";
 import { StatementButton } from "./statement";
 import { arabicError } from "@/lib/session";
 import { formatAcademicYear } from "@/lib/academic-year";
@@ -118,13 +118,32 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
   const open = [...f.obligations, ...(f.previous ?? []).map((p) => p.obligation)].filter((o, i, all) => o.status === "pending" && num(o.balance.remaining) > 0 && all.findIndex((x) => x.id === o.id) === i);
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [v, setV] = useState({ method: "cash", paid_at: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" }), ref: "", payer: "", notes: "" });
+  const [payerTouched, setPayerTouched] = useState(false);
+  const [receipt, setReceipt] = useState<Row | null>(null);
+  // payer defaults to the signed-in employee recording the payment; still editable
+  const me = useQuery({ queryKey: ["my-profile-name"], queryFn: async () => { const { data: u } = await db.auth.getUser(); if (!u.user) return ""; const { data } = await db.from("profiles").select("full_name").eq("id", u.user.id).maybeSingle(); return String(data?.["full_name"] ?? ""); } });
+  useEffect(() => { if (!payerTouched && me.data && !v.payer) setV((x) => ({ ...x, payer: me.data! })); }, [me.data, payerTouched, v.payer]);
   const rows = open.filter((o) => amounts[o.id]).map((o) => ({ obligation_id: o.id, amount: Number(amounts[o.id]) }));
   const ok = rows.length > 0 && rows.every((r) => validAllocation(r.amount, num(open.find((o) => o.id === r.obligation_id)?.balance.remaining)));
   const total = rows.reduce((s, r) => s + r.amount, 0);
   const m = useMutation({
-    mutationFn: async () => { const { error } = await db.rpc("sf_collect", { _student: studentId, _request_key: key, _p: { ...v, allocations: rows } }); if (error) throw error; },
-    onSuccess: () => { toast.success("سُجلت عملية السداد"); onDone(); }, onError: (e) => toast.error(arabicError(e)),
+    mutationFn: async () => {
+      const { data, error } = await db.rpc("sf_collect", { _student: studentId, _request_key: key, _p: { ...v, allocations: rows } }); if (error) throw error;
+      // the receipt number is issued automatically with the payment; read it back to show it at once
+      const r = await db.rpc("sf_student_receipts", { _student: studentId });
+      return ((r.data as Row[] | null) ?? []).find((x) => x["collection_id"] === data) ?? null;
+    },
+    onSuccess: (r) => { toast.success(r ? `سُجلت عملية السداد — سند رقم ${r["number"]}` : "سُجلت عملية السداد"); if (r) setReceipt(r); else onDone(); }, onError: (e) => toast.error(arabicError(e)),
   });
+  if (receipt) return (
+    <Dialog open onOpenChange={(o) => !o && onDone()}>
+      <DialogContent dir="rtl" className="max-w-xl">
+        <DialogHeader><DialogTitle>سند القبض {String(receipt["number"])}</DialogTitle></DialogHeader>
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 rounded-xl border bg-card p-3 text-sm">{receiptLines(receipt).map(([a, b], i) => <Fragment key={i}><dt className="text-muted-foreground">{a}</dt><dd className="font-medium">{b}</dd></Fragment>)}</dl>
+        <div className="flex gap-2"><ReceiptButtons r={receipt} /><Button className="ms-auto" onClick={onDone}>تم</Button></div>
+      </DialogContent>
+    </Dialog>
+  );
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent dir="rtl" className="max-w-2xl">
@@ -138,7 +157,7 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
           <div className="space-y-1"><Label htmlFor="cm">طريقة السداد</Label><select id="cm" className={selectCls("w-full")} value={v.method} onChange={(e) => setV({ ...v, method: e.target.value })}>{METHODS.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select></div>
           <div className="space-y-1"><Label htmlFor="cd">تاريخ السداد</Label><Input id="cd" type="date" value={v.paid_at} onChange={(e) => setV({ ...v, paid_at: e.target.value })} /></div>
           <div className="space-y-1"><Label htmlFor="cr">رقم المرجع</Label><Input id="cr" value={v.ref} onChange={(e) => setV({ ...v, ref: e.target.value })} /></div>
-          <div className="space-y-1"><Label htmlFor="cp">اسم الدافع</Label><Input id="cp" value={v.payer} onChange={(e) => setV({ ...v, payer: e.target.value })} /></div>
+          <div className="space-y-1"><Label htmlFor="cp">اسم الدافع</Label><Input id="cp" value={v.payer} onChange={(e) => { setPayerTouched(true); setV({ ...v, payer: e.target.value }); }} /></div>
           <div className="col-span-2 space-y-1"><Label htmlFor="cn">ملاحظات</Label><Input id="cn" value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} /></div>
         </div>
         <p className="text-sm">الإجمالي: <b>{money(total)}</b>{!ok && rows.length > 0 && <span className="ms-2 text-xs text-destructive">المبلغ يجب أن يكون موجبًا ولا يتجاوز المتبقي</span>}</p>

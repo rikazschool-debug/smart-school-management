@@ -204,3 +204,13 @@ describe("staff directory", () => {
     expect(seesStaffDirectory("teacher")).toBe(false);
   });
 });
+
+describe("owner finance sections are separate", () => {
+  it("procurement and student accounts each show only their own menu", async () => {
+    const { ownerSection, ownerSectionNav, NAV_BY_ROLE: N } = await import("@/lib/roles");
+    expect(ownerSection("/app/procurement")).toBe("finance");
+    expect(ownerSection("/app/finance")).toBe("student_accounts");
+    expect(ownerSectionNav("finance", N.org_owner)).not.toContain("finance");
+    expect(ownerSectionNav("student_accounts", N.org_owner)).not.toContain("procurement");
+  });
+});

@@ -311,7 +311,7 @@ function Shell() {
                   {k === "finance" && (
                     <div className="mr-6 mt-0.5 space-y-1.5 border-r border-sidebar-border pr-2">
                       {SF_GROUPS.map((g) => <div key={g.label} className="space-y-0.5"><p className="px-3 pt-1 text-[11px] font-bold text-sidebar-foreground/60">{g.label}</p>
-                        {g.items.map(([t, label]) => <Link key={t} to="/app/finance" search={((p: Record<string, unknown>) => ({ ...(typeof p["y"] === "string" ? { y: p["y"] } : {}), v: t })) as never} onClick={() => setOpen(false)}
+                        {g.items.map(([t, label]) => <Link key={t} to="/app/finance" search={((p: Record<string, unknown>) => ({ ...(typeof p["y"] === "string" ? { y: p["y"] } : {}), ...(typeof p["b"] === "string" ? { b: p["b"] } : {}), v: t })) as never} onClick={() => setOpen(false)}
                           className={SUB_CLS + (path.startsWith("/app/finance") && (sfView || "dashboard") === t ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>{label}</Link>)}</div>)}
                     </div>
                   )}

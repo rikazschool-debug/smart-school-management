@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Archive, BarChart3, ClipboardList, FileSpreadsheet, LayoutDashboard, ReceiptText, Settings, Wallet, Inbox } from "lucide-react";
 import { TabIntro } from "@/components/procurement/ui";
-import { FinanceTabs } from "@/components/student-finance/finance-shell";
 import { ErrorState, ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked } from "@/components/owner-portal";
 import { useSession, arabicError } from "@/lib/session";
@@ -62,7 +61,6 @@ function Page() {
   const header = (
     <>
       <PageHeader eyebrow="المالية والمحاسبة" title="العهد والمشتريات" desc="عهد نقدية واحتياجات وفواتير بضريبة القيمة المضافة، بمسار اعتماد مستقل لكل خطوة." />
-      {isOwner && <div className="mt-3"><FinanceTabs current="procurement" /></div>}
     </>
   );
   if (!me.enabled) return <>{header}<SectionLocked /></>;

@@ -96,15 +96,16 @@ export type NavKey =
   | "reports";
 
 /** Owner home is split into four sections; each section shows only its own side menu. */
-export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support" | "calls";
-export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "المالية والمحاسبة", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة", calls: "المكالمات الهاتفية" };
+export type OwnerSection = "school_admin" | "evaluation" | "admissions" | "finance" | "student_accounts" | "operations" | "maintenance" | "hr" | "users" | "hub" | "support" | "calls";
+export const OWNER_SECTION_LABELS: Record<OwnerSection, string> = { school_admin: "إدارة المدارس", evaluation: "نظام التقييم الشامل", admissions: "القبول والتسجيل", finance: "العهد والمشتريات", student_accounts: "حسابات الطلاب", operations: "النقل المدرسي وصيانة المركبات", maintenance: "إدارة صيانة المباني", hr: "الموارد البشرية", users: "المستخدمون والصلاحيات", hub: "إدارة الإشعارات", support: "الدعم الفني والمساعدة", calls: "المكالمات الهاتفية" };
 const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   school_admin: ["school_home", "schools", "academic", "teachers", "courses", "students", "guardians", "tags", "classrooms", "homework", "tests", "student_guidance", "gifted_care", "remedial_plans", "supervision", "results", "schedule", "attendance", "pickup", "station", "admin", "duties", "meetings", "communication", "comm_groups", "circulars", "comm_manage", "chat_settings", "admissions", "org_docs", "school_map", "family_visits", "health", "events", "collaboration", "reports"],
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
   admissions: ["admissions", "students", "guardians"],
-  // procurement first: the section opens on «العهد والمشتريات»; «حسابات الطلاب» follows
-  finance: ["procurement", "finance"],
+  // procurement and student accounts are separate owner sections, each with only its own side menu
+  finance: ["procurement"],
+  student_accounts: ["finance"],
   operations: ["operations", "transport", "bus_maintenance"],
   maintenance: ["maintenance"],
   // evaluation admin entry and training live inside HR for the owner
@@ -125,7 +126,8 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
   if (p === "/app") return null;
   if (p.startsWith("/app/collaboration")) return "school_admin"; // collaboration is a sub-section of school administration for owners
   if (OWNER_SHARED.some((s) => p === s || p.startsWith(s + "/"))) return prev;
-  if (p.startsWith("/app/finance") || p.startsWith("/app/procurement")) return "finance";
+  if (p.startsWith("/app/finance")) return "student_accounts";
+  if (p.startsWith("/app/procurement")) return "finance";
   if (p.startsWith("/app/hr")) return "hr";
   if (p === "/app/hub" || p.startsWith("/app/notice/")) return "hub";
   if (p === "/app/support" || p.startsWith("/app/support/")) return "support";

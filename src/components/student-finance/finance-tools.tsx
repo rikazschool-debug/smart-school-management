@@ -82,7 +82,7 @@ const KIND_AR: Record<string, string> = { tuition: "الرسوم الدراسي�
 export function receiptLines(r: Row): [string, string][] {
   const s = r["snapshot"] as Row; const after = (s["after"] ?? {}) as Row;
   return [
-    ["رقم السند", r["number"]], ["تاريخ السداد", s["paid_at"]], ["وقت الإصدار", new Date(r["issued_at"]).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" })],
+    ["رقم السند", r["number"]], ["تاريخ السداد", s["paid_at"]], ["تاريخ ووقت التسجيل", new Date(r["issued_at"]).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" })],
     ["المدرسة", s["school"]], ["الطالب", s["student"]?.name], ["الرقم الطلابي / الهوية", s["student"]?.national_id ?? "—"], ["الدافع", s["payer"] || "—"],
     ["العام الدراسي", s["year"] ? formatAcademicYear(s["year"]) : "—"],
     ...((s["allocations"] ?? []) as Row[]).map((a) => [`${KIND_AR[a["kind"]]} — ${TERM_AR(a["term"])}${a["year"] && a["year"] !== s["year"] ? ` (رصيد سابق — عام ${formatAcademicYear(a["year"])})` : ""}`, money(a["amount"])] as [string, string]),
@@ -228,6 +228,9 @@ export function FinanceDashboard({ schoolId, yearId, yearName }: { schoolId: str
     { title: "حالات الطلاب", tone: "border-s-muted-foreground", items: [["مسددون بالكامل", String(n("paid_full"))], ["مسددون جزئيًا", String(n("paid_partial"))], ["غير مسددين", String(n("unpaid"))], ["معفيون", String(n("exempt"))], ["لم تُنشأ مستحقاتهم", pend.isLoading ? "…" : String(pend.data ?? 0), "pending"], ["لديهم أرصدة سابقة", String(n("previous_students")), "previous"]] },
   ];
   const meta = { title: "المؤشرات المالية", filters: [formatAcademicYear(yearName)] };
+  const [tab, setTab] = useState<string>("overview");
+  const TABS: [string, string][] = [["overview", "نظرة عامة"], ...groups.map((g) => [g.title, g.title] as [string, string]), ["charts", "الرسوم البيانية"]];
+  const hero: [string, string, string][] = [["صافي رسوم العام", money(n("net")), `قبل الخصومات ${money(n("tuition") + n("transport"))}`], ["المحصّل", money(n("recorded") + n("previous_collected")), `نسبة التحصيل ${pct(n("recorded"), n("net"))}`], ["إجمالي المتبقي", money(n("remaining") + n("previous_remaining")), `منها أرصدة سابقة ${money(n("previous_remaining"))}`], ["المتأخرات", money(n("overdue") + n("previous_overdue")), `تحصيل اليوم ${money(n("today"))}`]];
   const daily = ((d["daily"] as Row[] | undefined) ?? []).slice().reverse(), monthly = ((d["monthly"] as Row[] | undefined) ?? []).slice().reverse();
   const exp = (kind: "pdf" | "xlsx" | "print") => { const H = ["المجموعة", "المؤشر", "القيمة"]; const rows = [...groups.flatMap((g) => g.items.map(([l, v]) => [g.title, l, v])), ...monthly.map((m) => ["التحصيل الشهري", String(m["month"]), money(m["amount"])]), ...daily.map((x) => ["التحصيل اليومي", String(x["day"]), money(x["amount"])])]; if (kind === "pdf") void exportPdf(meta, H, rows).catch((e) => toast.error(arabicError(e))); else if (kind === "xlsx") exportXlsx(meta, H, rows); else printReport(meta, H, rows); };
   const compare: [string, number][] = [["صافي رسوم العام", n("net")], ["المسدد", n("recorded")], ["المتبقي", n("remaining")], ["الأرصدة السابقة", n("previous_remaining")]];
@@ -236,10 +239,15 @@ export function FinanceDashboard({ schoolId, yearId, yearName }: { schoolId: str
     <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">المؤشرات المالية — {formatAcademicYear(yearName)}</h2>
       <span className="ms-auto flex gap-2"><Button size="sm" variant="outline" onClick={() => exp("pdf")}>PDF</Button><Button size="sm" variant="outline" onClick={() => exp("xlsx")}>Excel</Button><Button size="sm" variant="outline" onClick={() => exp("print")}>طباعة</Button></span></div>
     {q.isLoading ? <p className="text-sm text-muted-foreground">جارٍ تحميل المؤشرات…</p> : q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <>
-      {groups.map((g) => <div key={g.title} className="space-y-2"><h3 className="text-sm font-semibold text-muted-foreground">{g.title}</h3>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{hero.map(([l, v, sub], i) => <div key={l} className={"rounded-2xl border p-4 shadow-sm " + (i === 0 ? "border-primary bg-primary text-primary-foreground" : i === 3 ? "border-destructive/30 bg-destructive/5" : "bg-card")}>
+        <div className={"text-xs font-medium " + (i === 0 ? "text-primary-foreground/80" : "text-muted-foreground")}>{l}</div>
+        <div className="mt-1.5 font-display text-2xl font-bold tabular-nums">{v}</div>
+        <div className={"mt-1 text-xs " + (i === 0 ? "text-primary-foreground/80" : "text-muted-foreground")}>{sub}</div></div>)}</div>
+      <div role="tablist" aria-label="أقسام المؤشرات" className="flex flex-wrap gap-1 rounded-xl border bg-card p-1">{TABS.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={"min-h-9 rounded-lg px-3 text-sm font-semibold transition-colors " + (tab === k ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>{l}</button>)}</div>
+      {groups.filter((g) => tab === "overview" ? false : g.title === tab).map((g) => <div key={g.title} className="space-y-2"><h3 className="text-sm font-semibold text-muted-foreground">{g.title}</h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">{g.items.map(([l, v, to]) => { const inner = <><div className="text-xs text-muted-foreground">{l}</div><div className="mt-1 font-bold tabular-nums">{v}</div></>;
-          return to ? <Link key={l} to="/app/finance" search={(p: Record<string, unknown>) => ({ ...(typeof p["y"] === "string" ? { y: p["y"] } : {}), v: to }) as never} className={`rounded-xl border border-s-4 ${g.tone} bg-card p-3 transition-colors hover:bg-muted/40`}>{inner}</Link> : <div key={l} className={`rounded-xl border border-s-4 ${g.tone} bg-card p-3`}>{inner}</div>; })}</div></div>)}
-      <div className="grid gap-3 lg:grid-cols-2">
+          return to ? <Link key={l} to="/app/finance" search={(p: Record<string, unknown>) => ({ ...p, v: to }) as never} className={`rounded-xl border border-s-4 ${g.tone} bg-card p-3 transition-colors hover:bg-muted/40`}>{inner}</Link> : <div key={l} className={`rounded-xl border border-s-4 ${g.tone} bg-card p-3`}>{inner}</div>; })}</div></div>)}
+      {(tab === "overview" || tab === "charts") && <>      <div className="grid gap-3 lg:grid-cols-2">
         <Bars title="التحصيل الشهري" rows={monthly.map((m) => [String(m["month"]), Number(m["amount"] ?? 0)])} />
         <Bars title="التحصيل اليومي (آخر 30 يومًا)" rows={daily.map((x) => [String(x["day"]).slice(5), Number(x["amount"] ?? 0)])} />
         <Bars title="مقارنة المستحقات بالتحصيل" rows={compare} />
@@ -248,7 +256,7 @@ export function FinanceDashboard({ schoolId, yearId, yearName }: { schoolId: str
             <div className="flex h-4 overflow-hidden rounded-full bg-muted">{status.map(([l, v, c]) => v ? <div key={l} className={c} style={{ width: `${(v * 100) / status.reduce((a, [, x]) => a + x, 0)}%` }} title={`${l}: ${v}`} /> : null)}</div>
             <ul className="mt-2 grid grid-cols-2 gap-1 text-xs">{status.map(([l, v, c]) => <li key={l} className="flex items-center gap-2"><span className={`size-3 rounded-sm ${c}`} />{l}: <b>{v}</b></li>)}</ul></>}
         </div>
-      </div>
+      </div></>}
       <p className="text-xs text-muted-foreground">أرقام تشغيلية من ركاز · المتأخرات بعد تاريخ استحقاق معتمد فقط · استخدام الرصيد الدائن لا يُحتسب تحصيلًا نقديًا · الأرصدة السابقة لا تُضاف إلى رسوم العام</p></>}
   </section>;
 }

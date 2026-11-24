@@ -115,11 +115,23 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "finance", section: "finance", title: "المالية والمحاسبة", icon: Wallet, to: "/app/procurement", open: "فتح المالية",
-    desc: "العهد والمشتريات، وحسابات الطلاب: الرسوم والنقل والخصومات والتحصيل والأرصدة السابقة وسندات القبض.",
+    key: "procurement", section: "finance", title: "العهد والمشتريات", icon: Wallet, to: "/app/procurement", open: "فتح العهد والمشتريات",
+    desc: "العهد النقدية وطلبات الاحتياج وتسجيل المشتريات والفواتير، بمسار اعتماد مستقل لكل خطوة.",
     features: [
-      { icon: Wallet, label: "العهد والمشتريات", to: "/app/procurement" },
-      { icon: Wallet, label: "حسابات الطلاب", to: "/app/finance" },
+      { icon: Wallet, label: "الملخص", to: "/app/procurement", search: { tab: "summary" } },
+      { icon: Wallet, label: "العهد", to: "/app/procurement", search: { tab: "custodies" } },
+      { icon: Wallet, label: "الفواتير المسجلة", to: "/app/procurement", search: { tab: "invoices" } },
+      { icon: Wallet, label: "التقارير", to: "/app/procurement", search: { tab: "reports" } },
+    ],
+  },
+  {
+    key: "student_accounts", section: "finance", title: "حسابات الطلاب", icon: Wallet, to: "/app/finance", open: "فتح حسابات الطلاب",
+    desc: "الرسوم الدراسية والنقل والخصومات والتحصيل وسندات القبض والأرصدة السابقة، لكل مدرسة وعام دراسي.",
+    features: [
+      { icon: Wallet, label: "لوحة المؤشرات المالية", to: "/app/finance", search: { v: "dashboard" } },
+      { icon: Wallet, label: "التحصيل والسداد", to: "/app/finance", search: { v: "collect" } },
+      { icon: Wallet, label: "سندات القبض", to: "/app/finance", search: { v: "receipts" } },
+      { icon: Wallet, label: "المستحقات والمتأخرات", to: "/app/finance", search: { v: "arrears" } },
     ],
   },
   {
