@@ -216,7 +216,7 @@ export function Arrears({ schoolId }: { schoolId: string }) {
       <tbody>{data.map((r, i) => <tr key={i} className="border-t">{r.map((c, j) => <td key={j} className="p-2">{c}</td>)}<td className="p-2"><Button size="sm" variant="outline" onClick={() => setOpen(rows[i] ?? null)}>سداد / الحساب</Button></td></tr>)}</tbody></table>
       {!q.isLoading && !data.length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد مستحقات متبقية.</p>}</div>}
     <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
-      <DialogContent dir="rtl" className="max-h-[92vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>{String(open?.["name"] ?? "")}</DialogTitle></DialogHeader>{open && <StudentFinance studentId={String(open["student_id"])} />}</DialogContent>
+      <DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-6xl overflow-y-auto sm:max-w-6xl"><DialogHeader><DialogTitle>{String(open?.["name"] ?? "")}</DialogTitle></DialogHeader>{open && <StudentFinance studentId={String(open["student_id"])} />}</DialogContent>
     </Dialog>
   </section>;
 }

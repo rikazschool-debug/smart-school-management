@@ -31699,6 +31699,7 @@ export type Database = {
         Args: { _bus: string; _term: number; _year: string }
         Returns: Json
       }
+      sf_can: { Args: { _action: string; _school: string }; Returns: boolean }
       sf_children: { Args: never; Returns: Json }
       sf_collect: {
         Args: { _p: Json; _request_key: string; _student: string }

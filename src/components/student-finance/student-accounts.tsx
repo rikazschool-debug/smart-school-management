@@ -35,7 +35,7 @@ export function StudentAccounts({ schoolId }: { schoolId: string }) {
         {!shown.length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد مستحقات منشأة لطلاب هذا الفرع بعد.</p>}
       </div>
       <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
-        <DialogContent dir="rtl" className="max-h-[92vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>{open?.["name"]}</DialogTitle></DialogHeader>{open && <StudentFinance studentId={open["id"]} />}</DialogContent>
+        <DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-6xl overflow-y-auto sm:max-w-6xl"><DialogHeader><DialogTitle>{open?.["name"]}</DialogTitle></DialogHeader>{open && <StudentFinance studentId={open["id"]} />}</DialogContent>
       </Dialog>
     </section>
   );

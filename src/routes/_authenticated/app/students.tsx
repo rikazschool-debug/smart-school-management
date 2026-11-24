@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, MapPin, Users } from "lucide-react";
+import { BadgeCheck, CreditCard, MapPin, Users } from "lucide-react";
 import { CrudTable, db, RecordForm, type Row } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
@@ -50,6 +50,8 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
   const [linking, setLinking] = useState<Row | null>(null);
   const [placing, setPlacing] = useState<Row | null>(null);
   const [viewing, setViewing] = useState<Row | null>(null);
+  const [payMode, setPayMode] = useState(false);
+  const canPay = useQuery({ queryKey: ["sf-can-collect", ctx.schoolId], enabled: !!ctx.schoolId, queryFn: async () => { const { data, error } = await db.rpc("sf_can", { _school: ctx.schoolId, _action: "collect" }); if (error) return false; return data === true; } });
   const [guarding, setGuarding] = useState<Row | null>(null);
   // contract filters list every value present in this school (+ «لا يوجد» for empty)
   const ctVals = useQuery({ queryKey: ["ct-vals", ctx.schoolId], queryFn: async () => {
@@ -133,8 +135,9 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           { label: "آخر حالة العقد", exportOnly: true, text: (r) => r["contract_status"] ?? "لا يوجد", render: () => null },
           { label: "آخر نوع العقد", exportOnly: true, text: (r) => r["contract_type"] ?? "لا يوجد", render: () => null },
         ]}
-        extraActions={(r) => w || ctCan.data || placeCan.data ? (
+        extraActions={(r) => w || ctCan.data || placeCan.data || canPay.data ? (
           <>
+            {canPay.data && <Button variant="ghost" size="icon" title="سداد الرسوم" aria-label="سداد الرسوم" onClick={() => { setPayMode(true); setViewing(r); }}><CreditCard className="size-4" /></Button>}
             {placeCan.data && <Button variant="ghost" size="icon" title="تسكين" aria-label="تسكين" onClick={() => setPlacing(r)}><MapPin className="size-4" /></Button>}
             {w && <>
             <Button variant="ghost" size="icon" title="أولياء الأمر المرتبطون" aria-label="أولياء الأمر المرتبطون" onClick={() => setLinking(r)}><Users className="size-4" /></Button>
@@ -169,13 +172,13 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
-        <DialogContent dir="rtl" className="max-h-[92vh] max-w-3xl overflow-y-auto">
+      <Dialog open={!!viewing} onOpenChange={(o) => { if (!o) { setViewing(null); setPayMode(false); } }}>
+        <DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-6xl overflow-y-auto sm:max-w-6xl">
           <DialogHeader><DialogTitle>{viewing?.["full_name"]}</DialogTitle></DialogHeader>
-          {viewing && <Tabs defaultValue="family" dir="rtl">
+          {viewing && <Tabs defaultValue={payMode ? "finance" : "family"} dir="rtl">
             <TabsList><TabsTrigger value="family">ولي الأمر والحساب</TabsTrigger><TabsTrigger value="finance">المالية والنقل</TabsTrigger></TabsList>
             <TabsContent value="family"><StudentLinks studentId={viewing["id"]} schoolId={ctx.schoolId} canWrite={w} email={viewing["email"]} hasAccount={!!viewing["user_id"]} role={ctx.role} /></TabsContent>
-            <TabsContent value="finance"><StudentFinance studentId={viewing["id"]} /></TabsContent>
+            <TabsContent value="finance"><StudentFinance studentId={viewing["id"]} startCollect={payMode} /></TabsContent>
           </Tabs>}
         </DialogContent>
       </Dialog>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Bus, CreditCard, Percent, Receipt, RotateCcw } from "lucide-react";
@@ -21,12 +21,14 @@ type Fin = { student: Row; caps: Record<string, boolean>; years: Row[]; obligati
 const EVENT_LABEL: Record<string, string> = { obligation_create: "إنشاء مستحق", discount_apply: "تطبيق خصم", transport_save: "تحديث اشتراك النقل", collection_record: "تسجيل سداد", collection_reverse: "إلغاء سداد", discount_edit: "تعديل خصم", discount_remove: "حذف خصم", exception_clear: "إعادة تقييم خصم", transport_edit: "تعديل رسوم النقل", transport_exempt: "إعفاء من رسوم النقل", transport_cancel: "إلغاء اشتراك النقل", sibling_ineligible: "انتهاء استحقاق خصم الإخوة", reprice: "تعديل سعر المستحق", auto_no_price: "تعذر الإنشاء التلقائي: الرسوم غير مهيأة", auto_create_failed: "تعذر الإنشاء التلقائي" };
 
 /** Finance tab inside the existing student side panel. Every action is re-checked by sf_* RPCs. */
-export function StudentFinance({ studentId }: { studentId: string }) {
+export function StudentFinance({ studentId, startCollect = false }: { studentId: string; startCollect?: boolean }) {
   const qc = useQueryClient();
   const [year, setYear] = useState<string>("");
   const q = useQuery({ queryKey: [...SF_KEY, "student", studentId, year], queryFn: async () => { const { data, error } = await db.rpc("sf_get", { _student: studentId, _year: year || null }); if (error) throw error; return data as Fin; }, retry: false });
   const [dlg, setDlg] = useState<"collect" | "discount" | "transport" | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: SF_KEY });
+  const [started, setStarted] = useState(false);
+  useEffect(() => { if (startCollect && !started && q.data?.caps["collect"]) { setStarted(true); setDlg("collect"); } }, [startCollect, started, q.data]);
   const rq = useQuery({ queryKey: [...SF_KEY, "student-receipts", studentId], queryFn: async () => { const { data, error } = await db.rpc("sf_student_receipts", { _student: studentId }); if (error) throw error; return data as Row[]; }, retry: false });
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <p className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">{(q.error as { code?: string }).code === "42501" ? "لا تتوفر لك صلاحية عرض البيانات المالية لهذا الطالب، أو القسم المالي غير مفعّل." : arabicError(q.error)}</p>;
@@ -47,14 +49,8 @@ export function StudentFinance({ studentId }: { studentId: string }) {
         {[["إجمالي الرسوم قبل الخصم", a["gross"]], ["إجمالي الخصومات", a["discount"]], ["صافي المستحقات", a["net"]], ["المسجل سداده", a["recorded"]], ["المتبقي", a["remaining"]], ["الرصيد الدائن", a["credit"]], ["نسبة السداد", null]].map(([l, v]) => (
           <div key={String(l)} className="rounded-xl border bg-card p-3"><div className="text-xs text-muted-foreground">{l}</div><div className="mt-1 font-bold">{v === null ? `${num(a["collection_percent"])}%` : money(v)}</div></div>))}
       </div>
-      <div className="overflow-x-auto rounded-xl border">
-        <table className="w-full text-xs"><thead className="bg-muted/50"><tr><th className="p-2 text-start">البيان</th><th className="p-2 text-start">الفصل الأول</th><th className="p-2 text-start">الفصل الثاني</th></tr></thead>
-          <tbody>{(([1, 2].some((t) => { const o = cell("transport", t); return !!o && o.status !== "void"; }) ? ["tuition", "transport"] : ["tuition"]) as ("tuition" | "transport")[]).flatMap((k) => [
-            ["الأصلية", (o?: Obligation) => o ? money(o.balance.gross) : "—"], ["الخصومات", (o?: Obligation) => o ? money(o.balance.discount) : "—"], ["الصافي", (o?: Obligation) => o ? money(o.balance.net) : "—"],
-            ["المسجل سداده", (o?: Obligation) => o ? money(o.balance.recorded) : "—"], ["المتبقي", (o?: Obligation) => o ? money(o.balance.remaining) : "—"],
-            ["الحالة", (o?: Obligation) => k === "transport" && !o ? "غير مشترك في النقل" : paymentState(o)],
-          ].map(([l, fn]) => <tr key={`${k}${l}`} className="border-t"><td className="p-2 font-medium">{KIND_LABEL[k]} — {l as string}</td>{[1, 2].map((t) => <td key={t} className="p-2">{(fn as (o?: Obligation) => string)(cell(k, t))}</td>)}</tr>))}</tbody></table>
-      </div>
+      <FeeTable rows={(["tuition", "transport"] as const).flatMap((k) => [1, 2].map((t) => ({ k, t, o: cell(k, t) })))
+        .filter((r) => r.k === "tuition" || (!!r.o && r.o.status !== "void"))} />
       <div className="flex flex-wrap gap-2">
         {f.caps["setup"] && yearId && <Button size="sm" variant="outline" onClick={() => run(() => db.rpc("sf_create_tuition", { _student: studentId, _year: yearId }), "أُنشئت مستحقات الرسوم الدراسية")}><Receipt className="size-4" /> إنشاء مستحقات الرسوم الدراسية</Button>}
         {f.caps["transport"] && <Button size="sm" variant="outline" onClick={() => setDlg("transport")}><Bus className="size-4" /> إدارة اشتراك النقل</Button>}
@@ -199,4 +195,34 @@ function TransportDialog({ f, studentId, yearId, onClose, onDone }: { f: Fin; st
       </DialogContent>
     </Dialog>
   );
+}
+
+/** Landscape fee table: one row per fee item and term, amounts from the server balance only. */
+function FeeTable({ rows }: { rows: { k: "tuition" | "transport"; t: number; o?: Obligation | undefined }[] }) {
+  const H = ["البند", "الفصل", "الأصلية", "الخصومات", "الصافي", "المسدد", "المتبقي", "الحالة"];
+  const sum = (f: (o: Obligation) => unknown) => rows.reduce((s, r) => s + (r.o ? num(f(r.o)) : 0), 0);
+  return <div className="overflow-x-auto rounded-xl border bg-card">
+    <table className="w-full min-w-[720px] text-sm">
+      <thead className="bg-muted/60 text-xs text-muted-foreground"><tr>{H.map((h, i) => <th key={h} className={`p-3 font-semibold ${i > 1 && i < 7 ? "text-end" : "text-start"}`}>{h}</th>)}</tr></thead>
+      <tbody>{rows.map(({ k, t, o }) => { const rem = o ? num(o.balance.remaining) : 0; return (
+        <tr key={`${k}${t}`} className="border-t transition-colors hover:bg-muted/30">
+          <td className="p-3 font-medium">{KIND_LABEL[k]}</td><td className="p-3 text-muted-foreground">{TERM_LABEL(t)}</td>
+          {o ? <>
+            <td className="p-3 text-end tabular-nums">{money(o.balance.gross)}</td>
+            <td className="p-3 text-end tabular-nums text-primary">{num(o.balance.discount) ? `− ${money(o.balance.discount)}` : "—"}</td>
+            <td className="p-3 text-end font-semibold tabular-nums">{money(o.balance.net)}</td>
+            <td className="p-3 text-end tabular-nums">{money(o.balance.recorded)}</td>
+            <td className={`p-3 text-end font-bold tabular-nums ${rem > 0 ? "text-destructive" : "text-primary"}`}>{money(rem)}</td>
+          </> : <td colSpan={5} className="p-3 text-center text-muted-foreground">لم تُنشأ المستحقات بعد</td>}
+          <td className="p-3"><span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${o && rem <= 0 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{paymentState(o)}</span></td>
+        </tr>); })}</tbody>
+      <tfoot className="border-t-2 bg-muted/40 font-bold"><tr>
+        <td className="p-3" colSpan={2}>الإجمالي</td>
+        <td className="p-3 text-end tabular-nums">{money(sum((o) => o.balance.gross))}</td>
+        <td className="p-3 text-end tabular-nums text-primary">{money(sum((o) => o.balance.discount))}</td>
+        <td className="p-3 text-end tabular-nums">{money(sum((o) => o.balance.net))}</td>
+        <td className="p-3 text-end tabular-nums">{money(sum((o) => o.balance.recorded))}</td>
+        <td className="p-3 text-end tabular-nums text-destructive">{money(sum((o) => o.balance.remaining))}</td><td />
+      </tr></tfoot>
+    </table></div>;
 }
