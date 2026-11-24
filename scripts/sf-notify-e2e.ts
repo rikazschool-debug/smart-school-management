@@ -76,7 +76,7 @@ const col = must(await admin.from("sf_collections").select("id").eq("student_id"
 must(await owner.c.rpc("sf_reverse", { _student: P, _collection: col, _reason: "اختبار الإلغاء" }), "reverse");
 n = await mine();
 check("guardian gets a cancellation notification", n.filter((x) => x.title === "إلغاء دفعة").length === 1, n);
-const tn = must(await teacher.c.from("notifications").select("id").like("dedupe_key", "sf_%"), "teacher notifs") as any[];
+const tn = must(await teacher.c.from("notifications").select("id").eq("school_id", S).like("dedupe_key", "sf_%"), "teacher notifs") as any[];
 const own = must(await owner.c.from("notifications").select("title").eq("school_id", S).like("dedupe_key", "sf_adm:%"), "owner adm") as any[];
 check("owner is not notified about his own cancellation", own.length === 0, own);
 check("unrelated staff get no guardian finance notifications", tn.length === 0, tn);
