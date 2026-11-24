@@ -7,7 +7,7 @@
 - [x] 6 Detailed reports catalog
 - [x] 7 Main dashboard finance KPIs (branch home only; owner central dashboard stays unchanged per user)
 - [x] 8 Sanad review (receipt wording, receipts table, statement redesign, multi-select)
-- [ ] 9 Years / previous balances review
+- [x] 9 Years / previous balances review (sf-years-e2e 13/13)
 - [ ] 10 Guardian finance page review
 - [ ] 11 Design / sidebar groups review
 - [ ] 12 Notifications review

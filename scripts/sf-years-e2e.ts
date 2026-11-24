@@ -1,0 +1,84 @@
+import "./lib/user-pool.ts";
+// Mandatory two-year accounting case (spec phase 9): 10,000 → 8,000 paid → 2,000 carried; 12,000 new; pay 1,000 old; reverse on the shared test DB (synthetic org «اختبار المالية …», never Al-Malek). In-app only.
+// Run: NODE_PATH=node_modules bun scripts/sf-years-e2e.ts
+import { createClient } from "@supabase/supabase-js";
+import { readFileSync } from "fs";
+const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
+const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
+const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+const run = Date.now(), pw = "Test-pass-" + run;
+let ok = 0, bad = 0;
+const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)); };
+const must = <T,>(r: { data: T; error: any }, what: string) => { if (r.error) throw new Error(`${what}: ${r.error.message}`); return r.data; };
+async function user(tag: string) {
+  const email = `sfy-${tag}-${run}@rikaz.test`;
+  await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: tag } });
+  const c = createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
+  const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw s.error;
+  return { c, id: s.data.user!.id };
+}
+const N = (v: unknown) => Number(v ?? 0);
+const owner = await user("owner"), parent = await user("parent");
+try {
+const org = must(await owner.c.rpc("create_organization", { _org_name: `اختبار المالية ${run}`, _school_name: "فرع الأعوام" }), "org") as string;
+const S = must(await admin.from("schools").select("id,name").eq("org_id", org).single(), "school")! as any;
+const yr = async (name: string, start: string, end: string, cur: boolean) => must(await owner.c.from("academic_years").insert({ school_id: S.id, name, start_date: start, end_date: end, is_current: cur }).select("id").single(), "year " + name)!.id as string;
+const Y1 = await yr("1447/1448", "2025-08-01", "2026-07-31", false), Y2 = await yr("1448/1449", "2026-08-01", "2027-07-31", true);
+const STG = must(await owner.c.from("stages").insert({ school_id: S.id, name: "الثانوية" }).select("id").single(), "stage")!.id;
+const G = must(await owner.c.from("grades").insert({ school_id: S.id, stage_id: STG, name: "أول" }).select("id").single(), "grade")!.id;
+const term = async (y: string, a: string, b: string, n = "الفصل الدراسي الأول") => must(await owner.c.from("terms").insert({ school_id: S.id, year_id: y, name: n, start_date: a, end_date: b }).select("id").single(), "term")!.id as string;
+const sec = async (y: string, t: string, n: string) => must(await owner.c.from("sections").insert({ school_id: S.id, grade_id: G, year_id: y, term_id: t, name: n, capacity: 30 }).select("id").single(), "section")!.id as string;
+const SEC1A = await sec(Y1, await term(Y1, "2025-08-01", "2026-01-15"), "قديم1"), SEC1 = await sec(Y1, await term(Y1, "2026-01-16", "2026-07-31", "الفصل الدراسي الثاني"), "قديم");
+const SEC2A = await sec(Y2, await term(Y2, "2026-08-01", "2027-01-15"), "جديد1"), SEC2 = await sec(Y2, await term(Y2, "2027-01-16", "2027-07-31", "الفصل الدراسي الثاني"), "جديد");
+const P = must(await owner.c.from("students").insert({ school_id: S.id, full_name: `طالب أعوام ${run}`, status: "active" }).select("id").single(), "student")!.id as string;
+const GU = must(await admin.from("guardians").insert({ school_id: S.id, full_name: "ولي أمر تجريبي", user_id: parent.id }).select("id").single(), "guardian")!.id;
+must(await admin.from("student_guardians").insert({ school_id: S.id, student_id: P, guardian_id: GU, relationship: "father", verified: true, can_follow: true }), "link");
+const price = async (y: string, t: number) => must(await owner.c.rpc("sf_setup_save", { _school: S.id, _kind: "price", _p: { year_id: y, kind: "tuition", grade_id: G, term1: t, term2: t, status: "approved" } }), "price") as string;
+const PR1 = await price(Y1, 5000); await price(Y2, 6000);
+must(await owner.c.rpc("sf_price_due_save", { _price: PR1, _due1: "2025-10-01", _due2: "2026-02-01" }), "due y1");
+must(await admin.from("enrollments").insert({ school_id: S.id, student_id: P, section_id: SEC1A, year_id: Y1, status: "ended" }), "enr1a");
+const E1 = must(await admin.from("enrollments").insert({ school_id: S.id, student_id: P, section_id: SEC1, year_id: Y1, status: "active" }).select("id").single(), "enr1")!.id;
+must(await owner.c.rpc("sf_create_tuition", { _student: P, _year: Y1 }), "create y1");
+const ob1 = must(await admin.from("sf_obligations").select("id,term,due_date,school_id").eq("student_id", P).eq("year_id", Y1).order("term"), "obs1") as any[];
+const pay = async (allocations: any[]) => must(await owner.c.rpc("sf_collect", { _student: P, _request_key: crypto.randomUUID(), _p: { method: "cash", paid_at: "2026-05-01", allocations } }), "pay") as string;
+await pay([{ obligation_id: ob1[0].id, amount: 5000 }, { obligation_id: ob1[1].id, amount: 3000 }]);
+const get = async (y: string | null) => must(await owner.c.rpc("sf_get", { _student: P, _year: y }), "get") as any;
+let a = await get(Y1);
+check("year 1: net 10,000 · paid 8,000 · remaining 2,000", N(a.summary.annual.net) === 10000 && N(a.summary.annual.recorded) === 8000 && N(a.summary.annual.remaining) === 2000, a.summary.annual);
+must(await admin.from("enrollments").update({ status: "ended" }).eq("id", E1), "end1");
+must(await admin.from("enrollments").insert({ school_id: S.id, student_id: P, section_id: SEC2A, year_id: Y2, status: "ended" }), "enr2a");
+must(await admin.from("enrollments").insert({ school_id: S.id, student_id: P, section_id: SEC2, year_id: Y2, status: "active" }), "enr2");
+must(await owner.c.rpc("sf_create_tuition", { _student: P, _year: Y2 }), "create y2");
+// a new-year discount must not touch the carried balance
+must(await owner.c.rpc("sf_setup_save", { _school: S.id, _kind: "discount", _p: { year_id: Y2, name: "خصم العام الجديد", applies: "tuition", method: "percent", value: 10, automatic: false, status: "approved" } }).then((r) => ({ data: r.data, error: null })), "discount");
+must(await owner.c.rpc("sf_carry_apply", { _org: org, _from: "1447/1448", _to: "1448/1449", _schools: [], _students: [], _dirs: ["debit", "credit"], _request_key: crypto.randomUUID(), _reason: "إقفال العام" }), "carry");
+const prev = (x: any) => x.previous.filter((p: any) => p.direction === "debit").reduce((s: number, p: any) => s + N(p.obligation.balance.remaining), 0);
+const required = (x: any) => N(x.summary.annual.remaining) + prev(x);
+let b = await get(Y2);
+check("year 2: new fees 12,000 · previous 2,000 · required 14,000", N(b.summary.annual.net) === 12000 && prev(b) === 2000 && required(b) === 14000, { s: b.summary.annual, prev: prev(b) });
+const po = b.previous.find((p: any) => p.direction === "debit").obligation;
+check("carried item is the original obligation (same id, school, original due date)", po.id === ob1[1].id && ob1[1].school_id === S.id && String(po.due_date ?? ob1[1].due_date) === ob1[1].due_date && b.previous[0].year === "1447/1448", { po, ob: ob1[1] });
+check("carry created no new obligation (year 2 has only its own 2 terms)", (must(await admin.from("sf_obligations").select("id").eq("student_id", P), "all obs") as any[]).length === 4);
+check("no new-year discount on the previous balance", !b.discounts?.some((d: any) => d.obligation_id === ob1[1].id));
+const col = await pay([{ obligation_id: ob1[1].id, amount: 1000 }]);
+a = await get(Y1); b = await get(Y2); const all = await get(null);
+check("after paying 1,000 old: year 1 remaining 1,000", N(a.summary.annual.remaining) === 1000, a.summary.annual);
+check("after paying 1,000 old: year 2 previous 1,000 · required 13,000 · own fees still 12,000", prev(b) === 1000 && required(b) === 13000 && N(b.summary.annual.net) === 12000 && N(b.summary.annual.remaining) === 12000, { s: b.summary.annual, prev: prev(b) });
+check("total real debt across both years = 13,000 (not 14,000)", N(all.summary.annual.remaining) === 13000, all.summary.annual);
+const d: any = must(await owner.c.rpc("sf_dashboard", { _school: S.id, _year: Y2 }), "dash");
+check("dashboard year 2: previous 1,000 apart, previous collected 1,000, year fees 12,000", N(d.previous_remaining) === 1000 && N(d.previous_collected) === 1000 && N(d.net) === 12000 && N(d.remaining) === 12000, d);
+const ol = must(await owner.c.rpc("sf_obligation_lines", { _school: S.id, _year: Y2 }), "lines") as any[];
+check("report lines for year 2 list the old item once, flagged previous", ol.filter((o) => o.obligation_id === ob1[1].id).length === 1 && ol.find((o) => o.obligation_id === ob1[1].id).previous === true && ol.reduce((s, o) => s + N(o.balance.remaining), 0) === 13000, ol.map((o) => [o.year, o.term, o.balance.remaining]));
+const fam: any = must(await parent.c.rpc("sf_family", { _year: null }), "family");
+const kid = fam.children.find((k: any) => k.student?.id === P) ?? fam.children[0];
+check("guardian: same previous 1,000 and current 12,000", prev(kid) === 1000 && N(kid.summary.annual.remaining) === 12000, kid?.summary);
+must(await owner.c.rpc("sf_reverse", { _student: P, _collection: col, _reason: "اختبار إلغاء السداد" }), "reverse");
+a = await get(Y1); b = await get(Y2);
+check("reversal restores: year 1 remaining 2,000 · previous 2,000 · required 14,000", N(a.summary.annual.remaining) === 2000 && prev(b) === 2000 && required(b) === 14000, { a: a.summary.annual, prev: prev(b) });
+must(await admin.from("students").update({ status: "withdrawn" }).eq("id", P), "withdraw");
+b = await get(Y2);
+check("withdrawn student keeps the previous balance", prev(b) === 2000);
+console.log(`\n${ok} passed, ${bad} failed — synthetic org ${org}`);
+} finally { for (const u of [owner, parent]) await admin.auth.admin.deleteUser(u.id).catch(() => undefined); }
+process.exit(bad ? 1 : 0);
