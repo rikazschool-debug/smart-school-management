@@ -10,6 +10,8 @@ export const SF_GROUPS = [
   { label: "التهيئة والمتابعة", items: [["pending", "طلاب لم تُنشأ مستحقاتهم"], ["bulk", "تهيئة مستحقات الطلاب"], ["pay", "روابط الدفع للفروع"]] },
 ] as const;
 export type SfView = (typeof SF_GROUPS)[number]["items"][number][0];
+/** Owner-only setup pages (carry-forward, payment links, fee creation); hidden from granted staff. */
+export const SF_OWNER_VIEWS: SfView[] = ["previous", "pay", "pending", "bulk"];
 const ITEMS = SF_GROUPS.flatMap((g) => g.items as readonly (readonly [SfView, string])[]);
 export const SF_VIEWS: SfView[] = ITEMS.map((i) => i[0]);
 export const SF_VIEW_LABEL = Object.fromEntries(ITEMS) as Record<SfView, string>;
