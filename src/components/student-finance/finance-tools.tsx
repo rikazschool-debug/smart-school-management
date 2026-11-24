@@ -11,6 +11,8 @@ import { SF_KEY, TRANSPORT_LABEL, TRANSPORT_TYPES, money } from "@/lib/student-f
 import { amountInWords } from "@/lib/student-finance/words";
 import { exportLetterPdf, exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { StudentFinance } from "./student-finance";
 
 const STATE: Record<string, string> = { new: "جديد — سيُنشأ", exists: "لديه مستحقات", partial: "مستحقات جزئية — مراجعة منفصلة", no_price: "لا توجد رسوم معتمدة لصفه" };
 
@@ -178,7 +180,7 @@ const ARREAR_STATE: Record<string, string> = { overdue: "متأخر", upcoming: 
 /** «المستحقات والمتأخرات»: overdue only after an approved due date has passed (server computes days late). */
 export function Arrears({ schoolId }: { schoolId: string }) {
   const q = useQuery({ queryKey: [...SF_KEY, "arrears", schoolId], queryFn: async () => { const { data, error } = await db.rpc("sf_arrears", { _school: schoolId }); if (error) throw error; return data as Row[]; }, retry: false });
-  const [s, setS] = useState(""); const [st, setSt] = useState(""); const [kind, setKind] = useState(""); const [term, setTerm] = useState(0);
+  const [s, setS] = useState(""); const [st, setSt] = useState(""); const [kind, setKind] = useState(""); const [term, setTerm] = useState(0); const [open, setOpen] = useState<Row | null>(null);
   const rows = (q.data ?? []).filter((r) => (!s || String(r["name"]).includes(s)) && (!st || r["state"] === st) && (!kind || r["kind"] === kind) && (!term || r["term"] === term));
   const H = ["الطالب", "الصف", "الفصل", "النوع", "صافي المستحق", "المسدد", "المتبقي", "تاريخ الاستحقاق", "أيام التأخير", "الحالة"];
   const data = rows.map((r) => { const b = r["balance"] as Row; return [String(r["name"]), [r["grade"], r["section"]].filter(Boolean).join(" / "), TERM_AR(Number(r["term"])), KIND_AR[String(r["kind"])] ?? "", money(b["net"]), money(b["recorded"]), money(b["remaining"]), String(r["due_date"] ?? "—"), r["days_late"] == null ? "—" : String(r["days_late"]), ARREAR_STATE[String(r["state"])] ?? ""]; });
@@ -196,8 +198,11 @@ export function Arrears({ schoolId }: { schoolId: string }) {
       <Button size="sm" variant="outline" onClick={() => exportXlsx(meta, H, data)}>Excel</Button>
       <Button size="sm" variant="outline" onClick={() => printReport(meta, H, data)}>طباعة</Button>
     </div>
-    {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr>{H.map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
-      <tbody>{data.map((r, i) => <tr key={i} className="border-t">{r.map((c, j) => <td key={j} className="p-2">{c}</td>)}</tr>)}</tbody></table>
+    {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-xs"><thead className="bg-muted/50"><tr>{H.map((h) => <th key={h} className="p-2 text-start">{h}</th>)}<th className="p-2" /></tr></thead>
+      <tbody>{data.map((r, i) => <tr key={i} className="border-t">{r.map((c, j) => <td key={j} className="p-2">{c}</td>)}<td className="p-2"><Button size="sm" variant="outline" onClick={() => setOpen(rows[i] ?? null)}>سداد / الحساب</Button></td></tr>)}</tbody></table>
       {!q.isLoading && !data.length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد مستحقات متبقية.</p>}</div>}
+    <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
+      <DialogContent dir="rtl" className="max-h-[92vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>{String(open?.["name"] ?? "")}</DialogTitle></DialogHeader>{open && <StudentFinance studentId={String(open["student_id"])} />}</DialogContent>
+    </Dialog>
   </section>;
 }

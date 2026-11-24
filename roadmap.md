@@ -2,7 +2,7 @@
 - [x] Family accounts + receipts
 - [x] Account statements (student, family combined; PDF/Excel/print/share)
 - [x] Bus roster per bus with search/filter/export
-- [ ] Unified payment dialog reachable from finance page
+- [x] Unified payment dialog (student accounts + arrears open the same panel)
 - [x] Due dates in fee setup
 - [x] Dues & arrears page
 - [ ] Finance KPIs dashboard & reports
