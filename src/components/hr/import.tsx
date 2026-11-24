@@ -36,7 +36,8 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
   const [busy, setBusy] = useState(false), [res, setRes] = useState<Row[] | null>(null);
   const schools = m.schools.filter((s) => s.create || m.caps.create);
   const sens = m.caps.sensitive;
-  const fields = HR_FIELDS.filter((f) => f.key !== "iqama_profession" && (!f.sensitive || sens));
+  // same order as the «إضافة موظف» sections (template columns first, then fields read only from older files)
+  const fields = [...TEMPLATE_SECTIONS.flatMap((s) => s.fields), ...HR_FIELDS.filter((f) => !TEMPLATE_SECTIONS.some((s) => s.fields.includes(f)))].filter((f) => f.key !== "iqama_profession" && (!f.sensitive || sens));
   const cats = (useHrCats(org).data ?? []).filter((c) => c.is_active);
   const qc = useQueryClient();
   const createLogin = useServerFn(createHrEmployeeLogin);
@@ -335,14 +336,16 @@ export function HrImport({ org, m, existing, onClose, onDone }: { org: string; m
           {mode === "fill" && <p className="rounded bg-secondary p-2 text-xs">يُستكمل فقط ما هو فارغ حاليًا لموظف مطابق بالرقم الوظيفي أو الهوية دون تعارض. لا تُستبدل قيمة قائمة ولا تُمسح بخانة فارغة، ولا يُضاف موظف جديد في هذا الوضع.</p>}
           <details className="rounded border p-2" open={Object.keys(map).length < 3}>
             <summary className="cursor-pointer text-sm font-semibold">ربط الأعمدة ({Object.keys(map).length} مربوط{unmapped.length ? ` · ${unmapped.length} عمود غير مربوط` : ""})</summary>
-            <div className="mt-2 grid gap-2 sm:grid-cols-3">
-              {fields.map((f) => (
+            {TEMPLATE_SECTIONS.map((sec, n) => { const list = fields.filter((f) => f.group === sec.key); return list.length ? (
+            <fieldset key={sec.key} className="mt-2 rounded border p-2"><legend className="px-1 text-xs font-semibold">{n + 1}. {sec.label}</legend>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {list.map((f) => (
                 <label key={f.key} className="text-xs">{f.label}{f.required && " *"}
                   <select aria-label={`عمود ${f.label}`} className={selectCls("mt-1 w-full")} value={map[f.key] ?? ""} onChange={(e) => setMap((x) => { const y = { ...x }; if (e.target.value === "") delete y[f.key]; else y[f.key] = +e.target.value; return y; })}>
                     <option value="">— غير موجود —</option>{head.map((h, k) => <option key={k} value={k}>{h || `عمود ${k + 1}`}</option>)}
                   </select></label>
               ))}
-            </div>
+            </div></fieldset>) : null; })}
             {unmapped.length > 0 && <p className="mt-2 text-xs text-muted-foreground">أعمدة لن يُحفظ محتواها: {unmapped.map((u) => u.h).join("، ")}</p>}
           </details>
         </>
