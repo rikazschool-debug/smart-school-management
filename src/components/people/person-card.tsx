@@ -3,7 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Clock, Pencil, Trash2, Wallet } from "lucide-react";
-import { SF_KEY, money, num } from "@/lib/student-finance/labels";
+import { SF_KEY, TRANSPORT_LABEL, money, num } from "@/lib/student-finance/labels";
+import { formatAcademicYear } from "@/lib/academic-year";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -63,6 +64,7 @@ function Body({ kind, id, org }: { kind: PersonKind; id: string; org: string | n
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2">
           <dt className="text-muted-foreground">المدرسة</dt><dd className="font-medium">{c.schools.map((s) => s.name).join("، ") || "—"}</dd>
           {c.categories?.map((x, i) => <Fragment key={i}><dt className="text-muted-foreground">{x.school}</dt><dd>{x.category ?? "بلا تصنيف"}{x.title ? ` — ${x.title}` : ""}</dd></Fragment>)}
+          {kind === "student" && <StudyInfo id={id} />}
           <dt className="text-muted-foreground">حساب الدخول</dt>
           <dd><span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${c.has_login && c.account?.some((a) => a.active) !== false ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{!c.has_login ? "غير مرتبط" : c.account?.length ? c.account.map((a) => `${a.active ? "نشط" : "موقوف"}`).join("، ") : "مرتبط"}</span></dd>
         </dl>
@@ -207,7 +209,7 @@ function FinanceSummary({ id }: { id: string }) {
   const q = useQuery({ queryKey: [...SF_KEY, "student-card", id], queryFn: async () => {
     const st = await db.from("students").select("school_id").eq("id", id).maybeSingle(); if (st.error) throw st.error;
     const y = st.data ? await db.from("academic_years").select("id").eq("school_id", st.data["school_id"]).order("is_current", { ascending: false }).order("start_date", { ascending: false }).limit(1).maybeSingle() : null;
-    const { data, error } = await db.rpc("sf_get", { _student: id, _year: y?.data?.["id"] ?? null }); if (error) throw error; return data as { summary: Record<string, Row>; previous?: { obligation: { balance: Row } }[] }; }, retry: false });
+    const { data, error } = await db.rpc("sf_get", { _student: id, _year: y?.data?.["id"] ?? null }); if (error) throw error; return data as { summary: Record<string, Row>; previous?: { obligation: { balance: Row } }[]; transport?: Row[]; obligations?: Row[] }; }, retry: false });
   if (q.isLoading || q.error || !q.data) return null;
   const a = q.data.summary["annual"] ?? {}; const net = num(a["net"]), paid = num(a["recorded"]);
   const prev = (q.data.previous ?? []).reduce((s, p) => s + num(p.obligation.balance["remaining"]), 0); const rem = num(a["remaining"]) + prev;
@@ -220,5 +222,37 @@ function FinanceSummary({ id }: { id: string }) {
     </div>
     <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
     <p className="text-xs text-muted-foreground">{net > 0 ? `سُدد ${pct}% من رسوم العام الحالي` : "لم تُنشأ رسوم العام الحالي لهذا الطالب بعد"}{prev > 0 ? ` · المتبقي يشمل رصيدًا سابقًا ${money(prev)}` : ""}</p>
+    <BusStatus transport={q.data.transport ?? []} obligations={q.data.obligations ?? []} />
   </section>;
+}
+
+/** Current placement (year, stage, grade, section) read through the viewer's own access to enrollments. */
+function StudyInfo({ id }: { id: string }) {
+  const q = useQuery({ queryKey: ["pp-study", id], queryFn: async () => {
+    const r = await db.from("enrollments").select("status, start_date, academic_years(name), sections(name, grades(name, stages(name)))").eq("student_id", id).order("status", { ascending: true }).order("start_date", { ascending: false }).limit(1).maybeSingle();
+    if (r.error) throw r.error; return r.data as Row | null; }, retry: false });
+  if (q.isLoading) return null;
+  const e = q.data; const sec = e?.["sections"]; const gr = sec?.["grades"];
+  const items: [string, string][] = e ? [["العام الدراسي", e["academic_years"]?.["name"] ? formatAcademicYear(String(e["academic_years"]["name"])) : "—"], ["المرحلة", gr?.["stages"]?.["name"] ?? "—"], ["الصف", gr?.["name"] ?? "—"], ["الفصل (الشعبة)", sec?.["name"] ?? "—"]] : [["التسكين", "غير مسكّن"]];
+  if (e && e["status"] !== "active") items.push(["حالة التسكين", "منتهٍ"]);
+  return <>{items.map(([l, v]) => <Fragment key={l}><dt className="text-muted-foreground">{l}</dt><dd className="font-medium">{v}</dd></Fragment>)}</>;
+}
+
+/** Bus subscription per term from sf_get: type (ذهاب/عودة/ذهاب وعودة), bus, and its fee state. */
+function BusStatus({ transport, obligations }: { transport: Row[]; obligations: Row[] }) {
+  const live = transport.filter((t) => t["active"] || t["exempt"]);
+  if (!live.length) return <p className="rounded-xl bg-muted/50 p-2 text-xs text-muted-foreground">النقل المدرسي: غير مشترك في الباص</p>;
+  return <div className="space-y-1 rounded-xl bg-muted/50 p-2 text-xs">
+    <div className="font-bold">النقل المدرسي: مشترك</div>
+    {live.sort((a, b) => num(a["term"]) - num(b["term"])).map((t) => {
+      const o = obligations.find((x) => x["kind"] === "transport" && x["term"] === t["term"] && x["status"] !== "void"); const b = o?.["balance"] ?? {};
+      const rem = num(b["remaining"]), net = num(b["net"]);
+      const st = t["exempt"] || o?.["status"] === "exempt" ? "معفى" : !o ? "لم تُنشأ الرسوم" : rem <= 0 ? "مسدد" : num(b["recorded"]) > 0 ? "مسدد جزئيًا" : "غير مسدد";
+      return <div key={String(t["id"])} className="flex flex-wrap gap-x-3 gap-y-1">
+        <b>{t["term"] === 1 ? "الفصل الأول" : "الفصل الثاني"}</b><span>{TRANSPORT_LABEL[String(t["transport_type"])] ?? "—"}</span>
+        {t["bus"]?.["code"] && <span>باص {t["bus"]["code"]}</span>}
+        {o && !t["exempt"] && <span className="tabular-nums">الرسوم {money(net)} · المسدد {money(num(b["recorded"]))} · المتبقي {money(rem)}</span>}
+        <span className={st === "مسدد" || st === "معفى" ? "font-medium text-primary" : "font-medium text-destructive"}>{st}</span>
+      </div>; })}
+  </div>;
 }
