@@ -203,9 +203,14 @@ function Relations({ kind, id }: { kind: "guardian" | "student"; id: string }) {
 
 /** Quick fee summary from sf_get (server balances only); hidden when the viewer has no finance access. */
 function FinanceSummary({ id }: { id: string }) {
-  const q = useQuery({ queryKey: [...SF_KEY, "student", id, ""], queryFn: async () => { const { data, error } = await db.rpc("sf_get", { _student: id, _year: null }); if (error) throw error; return data as { summary: Record<string, Row> }; }, retry: false });
+  // Current academic year of the student's branch + previous balances carried into it (same sf_get as the finance tab).
+  const q = useQuery({ queryKey: [...SF_KEY, "student-card", id], queryFn: async () => {
+    const st = await db.from("students").select("school_id").eq("id", id).maybeSingle(); if (st.error) throw st.error;
+    const y = st.data ? await db.from("academic_years").select("id").eq("school_id", st.data["school_id"]).order("is_current", { ascending: false }).order("start_date", { ascending: false }).limit(1).maybeSingle() : null;
+    const { data, error } = await db.rpc("sf_get", { _student: id, _year: y?.data?.["id"] ?? null }); if (error) throw error; return data as { summary: Record<string, Row>; previous?: { obligation: { balance: Row } }[] }; }, retry: false });
   if (q.isLoading || q.error || !q.data) return null;
-  const a = q.data.summary["annual"] ?? {}; const net = num(a["net"]), paid = num(a["recorded"]), rem = num(a["remaining"]);
+  const a = q.data.summary["annual"] ?? {}; const net = num(a["net"]), paid = num(a["recorded"]);
+  const prev = (q.data.previous ?? []).reduce((s, p) => s + num(p.obligation.balance["remaining"]), 0); const rem = num(a["remaining"]) + prev;
   const pct = net > 0 ? Math.min(100, Math.round((paid * 100) / net)) : 0;
   return <section className="space-y-3 rounded-2xl border bg-card p-4">
     <h3 className="flex items-center gap-1 text-sm font-bold"><Wallet className="size-4" /> ملخص الرسوم</h3>
@@ -214,6 +219,6 @@ function FinanceSummary({ id }: { id: string }) {
         <div key={l} className="rounded-xl bg-muted/50 p-2"><div className="text-[11px] text-muted-foreground">{l}</div><div className={`mt-0.5 text-sm font-bold tabular-nums ${c}`}>{money(v)}</div></div>))}
     </div>
     <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
-    <p className="text-xs text-muted-foreground">{net > 0 ? `سُدد ${pct}% من الرسوم` : "لم تُنشأ رسوم لهذا الطالب بعد"}</p>
+    <p className="text-xs text-muted-foreground">{net > 0 ? `سُدد ${pct}% من رسوم العام الحالي` : "لم تُنشأ رسوم العام الحالي لهذا الطالب بعد"}{prev > 0 ? ` · المتبقي يشمل رصيدًا سابقًا ${money(prev)}` : ""}</p>
   </section>;
 }

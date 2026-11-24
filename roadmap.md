@@ -7,6 +7,12 @@
 - [x] Dues & arrears page
 - [x] Finance KPIs dashboard (export PDF/Excel/print)
 - [x] Financial notifications (all finance events, daily due/late check, owner alerts — in-app)
-- [ ] Sanad + dashboard on sf_* data
+- [x] Sanad on sf_* data (family + branch finance)
+- [x] Finance section: two tabs, grouped sub-menu, central academic-year selector
+- [x] Previous balances carry-forward, previous payments, credit use/refund (owner)
+- [x] Guardian balance box + child page on the same family source
+- [ ] Main system dashboard finance KPIs on sf_dashboard
+- [ ] Detailed finance reports catalogue (collection by method/staff/grade, discounts, controls)
+- [ ] Applied discounts / transport accounts / adjustments pages
 - [ ] Accountant / registrar permissions
 - [ ] Live end-to-end checks

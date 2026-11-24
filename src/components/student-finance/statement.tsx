@@ -14,15 +14,16 @@ type R = Record<string, unknown>;
 const H = ["التاريخ", "الطالب", "البيان", "مدين", "دائن", "الرصيد"];
 
 /** Read-only statement dialog over already-authorized sf_get results (student, or all children of a guardian). */
-export function StatementButton({ fins, title }: { fins: R[]; title: string }) {
-  const [open, setOpen] = useState(false);
+export function StatementButton({ fins: given, title, load }: { fins?: R[]; title: string; load?: () => Promise<R[]> }) {
+  const [open, setOpen] = useState(false); const [loaded, setLoaded] = useState<R[] | null>(null); const [busy, setBusy] = useState(false);
+  const fins = given ?? loaded ?? [];
   const [term, setTerm] = useState(0); const [kind, setKind] = useState(""); const [from, setFrom] = useState(""); const [to, setTo] = useState("");
   const s = statementLines(fins, { term: term || undefined, kind: kind || undefined, from: from || undefined, to: to || undefined });
   const rows = s.lines.map((l) => [l.date.slice(0, 10), l.student, l.text, l.debit || "", l.credit || "", l.balance]);
   const meta = { title, school: String(((fins[0]?.["student"] as R) ?? {})["school"] ?? ""), filters: [term ? `الفصل ${term}` : "", kind === "tuition" ? "الرسوم الدراسية" : kind === "transport" ? "النقل" : "", from ? `من ${from}` : "", to ? `إلى ${to}` : ""].filter(Boolean), note: `الرصيد الافتتاحي: ${money(s.opening)} · الرصيد الختامي: ${money(s.closing)} · كشف تشغيلي داخلي` };
   const share = async () => { const t = `${title}\nالرصيد الختامي: ${money(s.closing)}`; try { if (navigator.share) await navigator.share({ title, text: t }); else { await navigator.clipboard.writeText(t); toast.success("نُسخ الملخص"); } } catch { /* cancelled */ } };
   return <>
-    <Button size="sm" variant="outline" onClick={() => setOpen(true)}><FileText className="size-4" /> كشف الحساب</Button>
+    <Button size="sm" variant="outline" disabled={busy} onClick={async () => { if (load && !given) { setBusy(true); try { setLoaded(await load()); setOpen(true); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } } else setOpen(true); }}><FileText className="size-4" /> كشف الحساب</Button>
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-w-4xl"><DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
       <div className="flex flex-wrap gap-2">
         <select aria-label="الفصل" className={selectCls("min-w-32", true)} value={term} onChange={(e) => setTerm(Number(e.target.value))}><option value={0}>الفصلان</option><option value={1}>الفصل الأول</option><option value={2}>الفصل الثاني</option></select>

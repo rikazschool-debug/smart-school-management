@@ -18373,6 +18373,141 @@ export type Database = {
           },
         ]
       }
+      sf_carries: {
+        Row: {
+          amount: number
+          created_at: string
+          direction: string
+          due_date: string | null
+          id: string
+          obligation_id: string
+          org_id: string
+          run_id: string
+          source_school_id: string
+          source_year_id: string
+          student_id: string
+          to_key: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          direction: string
+          due_date?: string | null
+          id?: string
+          obligation_id: string
+          org_id: string
+          run_id: string
+          source_school_id: string
+          source_year_id: string
+          student_id: string
+          to_key: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          direction?: string
+          due_date?: string | null
+          id?: string
+          obligation_id?: string
+          org_id?: string
+          run_id?: string
+          source_school_id?: string
+          source_year_id?: string
+          student_id?: string
+          to_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_carries_obligation_id_fkey"
+            columns: ["obligation_id"]
+            isOneToOne: false
+            referencedRelation: "sf_obligations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_carries_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_carries_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "sf_carry_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_carries_source_school_id_fkey"
+            columns: ["source_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_carries_source_year_id_fkey"
+            columns: ["source_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_carries_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_carry_runs: {
+        Row: {
+          actor: string | null
+          counts: Json
+          created_at: string
+          from_key: string
+          id: string
+          org_id: string
+          reason: string
+          request_key: string
+          scope: Json
+          to_key: string
+        }
+        Insert: {
+          actor?: string | null
+          counts?: Json
+          created_at?: string
+          from_key: string
+          id?: string
+          org_id: string
+          reason: string
+          request_key: string
+          scope: Json
+          to_key: string
+        }
+        Update: {
+          actor?: string | null
+          counts?: Json
+          created_at?: string
+          from_key?: string
+          id?: string
+          org_id?: string
+          reason?: string
+          request_key?: string
+          scope?: Json
+          to_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_carry_runs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sf_collections: {
         Row: {
           accounting_confirmed: boolean
@@ -18480,6 +18615,80 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sf_credit_moves: {
+        Row: {
+          actor: string | null
+          amount: number
+          created_at: string
+          id: string
+          kind: string
+          method: string | null
+          org_id: string
+          reason: string
+          request_key: string
+          source_obligation_id: string
+          student_id: string
+          target_obligation_id: string | null
+        }
+        Insert: {
+          actor?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          kind: string
+          method?: string | null
+          org_id: string
+          reason: string
+          request_key: string
+          source_obligation_id: string
+          student_id: string
+          target_obligation_id?: string | null
+        }
+        Update: {
+          actor?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          method?: string | null
+          org_id?: string
+          reason?: string
+          request_key?: string
+          source_obligation_id?: string
+          student_id?: string
+          target_obligation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sf_credit_moves_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_credit_moves_source_obligation_id_fkey"
+            columns: ["source_obligation_id"]
+            isOneToOne: false
+            referencedRelation: "sf_obligations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_credit_moves_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sf_credit_moves_target_obligation_id_fkey"
+            columns: ["target_obligation_id"]
+            isOneToOne: false
+            referencedRelation: "sf_obligations"
             referencedColumns: ["id"]
           },
         ]
@@ -26677,6 +26886,38 @@ export type Database = {
           terms: number[]
         }[]
       }
+      _sf_carry_check: {
+        Args: { _dirs: string[]; _from: string; _org: string; _to: string }
+        Returns: undefined
+      }
+      _sf_carry_rows: {
+        Args: {
+          _dirs: string[]
+          _from: string
+          _org: string
+          _schools: string[]
+          _students: string[]
+          _to: string
+        }
+        Returns: {
+          carried: boolean
+          credit: number
+          direction: string
+          due_date: string
+          kind: string
+          name: string
+          net: number
+          obligation_id: string
+          recorded: number
+          remaining: number
+          school: string
+          school_id: string
+          student_id: string
+          term: number
+          year: string
+          year_id: string
+        }[]
+      }
       _sf_create_tuition: {
         Args: { _student: string; _year: string }
         Returns: undefined
@@ -26684,6 +26925,19 @@ export type Database = {
       _sf_create_tuition2: {
         Args: { _source: string; _student: string; _year: string }
         Returns: number
+      }
+      _sf_credit_move: {
+        Args: {
+          _amount: number
+          _kind: string
+          _method: string
+          _reason: string
+          _request_key: string
+          _source: string
+          _student: string
+          _target: string
+        }
+        Returns: string
       }
       _sf_dirs: { Args: { _type: string }; Returns: string[] }
       _sf_discount_amount: {
@@ -26772,6 +27026,7 @@ export type Database = {
         Returns: number[]
       }
       _sf_today: { Args: never; Returns: string }
+      _sf_year_start: { Args: { _name: string; _org: string }; Returns: string }
       _staff_overrides: {
         Args: {
           _actor: string
@@ -31700,6 +31955,31 @@ export type Database = {
         Returns: Json
       }
       sf_can: { Args: { _action: string; _school: string }; Returns: boolean }
+      sf_carry_apply: {
+        Args: {
+          _dirs: string[]
+          _from: string
+          _org: string
+          _reason: string
+          _request_key: string
+          _schools: string[]
+          _students: string[]
+          _to: string
+        }
+        Returns: Json
+      }
+      sf_carry_preview: {
+        Args: {
+          _dirs: string[]
+          _from: string
+          _org: string
+          _schools: string[]
+          _students: string[]
+          _to: string
+        }
+        Returns: Json
+      }
+      sf_carry_runs_list: { Args: { _org: string }; Returns: Json }
       sf_children: { Args: never; Returns: Json }
       sf_collect: {
         Args: { _p: Json; _request_key: string; _student: string }
@@ -31712,6 +31992,28 @@ export type Database = {
       sf_create_tuition: {
         Args: { _student: string; _year: string }
         Returns: undefined
+      }
+      sf_credit_refund: {
+        Args: {
+          _amount: number
+          _method: string
+          _reason: string
+          _request_key: string
+          _source: string
+          _student: string
+        }
+        Returns: string
+      }
+      sf_credit_use: {
+        Args: {
+          _amount: number
+          _reason: string
+          _request_key: string
+          _source: string
+          _student: string
+          _target: string
+        }
+        Returns: string
       }
       sf_dashboard: { Args: { _school: string; _year?: string }; Returns: Json }
       sf_discount_apply: {
@@ -31727,11 +32029,13 @@ export type Database = {
         Returns: number
       }
       sf_due_tick: { Args: never; Returns: Json }
+      sf_family: { Args: { _year?: string }; Returns: Json }
       sf_get: { Args: { _student: string; _year?: string }; Returns: Json }
       sf_mapping_save: {
         Args: { _mappings: Json; _school: string }
         Returns: undefined
       }
+      sf_org_years: { Args: { _org: string }; Returns: Json }
       sf_override: {
         Args: {
           _action: string

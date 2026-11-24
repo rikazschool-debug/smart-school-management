@@ -146,3 +146,4 @@
 
 - scripts/student-finance-e2e.ts: fees/payments/transport on the test DB (14 checks); sf_events is append-only so its synthetic «اختبار المالية» org stays.
 - scripts/sf-notify-e2e.ts: finance notifications (fees created once, reprice, due change, payment+internal receipt, manual reminder once/day, daily soon/late/owner summary, reversal, actor not self-notified, collect-only; 14 checks; leaves a synthetic «اختبار المالية» org since sf_events is append-only).
+- scripts/sf-carry-e2e.ts: previous balances carry-forward, previous payments/receipts, credit use/refund, dashboard/arrears/family sync, permissions (19 checks; synthetic «اختبار المالية» org).

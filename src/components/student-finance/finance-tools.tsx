@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
@@ -16,16 +17,11 @@ import { StudentFinance } from "./student-finance";
 
 const STATE: Record<string, string> = { new: "جديد — سيُنشأ", exists: "لديه مستحقات", partial: "مستحقات جزئية — مراجعة منفصلة", no_price: "لا توجد رسوم معتمدة لصفه" };
 
-function useYears(schoolId: string) {
-  return useQuery({ queryKey: ["sf-years", schoolId], queryFn: async () => { const { data, error } = await db.from("academic_years").select("id,name,is_current").eq("school_id", schoolId).order("start_date", { ascending: false }); if (error) throw error; return data as Row[]; } });
-}
 
 /** «تهيئة مستحقات الطلاب»: server preview first; creation only after the owner confirms (sf_bulk_apply). */
-export function BulkSetup({ schoolId }: { schoolId: string }) {
+export function BulkSetup({ schoolId, yearId }: { schoolId: string; yearId: string }) {
   const qc = useQueryClient();
-  const years = useYears(schoolId);
-  const [year, setYear] = useState(""); const [grade, setGrade] = useState("");
-  const yearId = year || (years.data?.find((y) => y["is_current"]) ?? years.data?.[0])?.["id"] || "";
+  const [grade, setGrade] = useState("");
   const grades = useQuery({ queryKey: ["sf-grades", schoolId], queryFn: async () => { const { data, error } = await db.from("grades").select("id,name,stages(name)").eq("school_id", schoolId); if (error) throw error; return data as Row[]; } });
   const pv = useQuery({ enabled: !!yearId, queryKey: [...SF_KEY, "bulk", schoolId, yearId, grade], queryFn: async () => { const { data, error } = await db.rpc("sf_bulk_preview", { _school: schoolId, _year: yearId, _grade: grade || null, _students: null }); if (error) throw error; return data as Row; }, retry: false });
   const [busy, setBusy] = useState(false);
@@ -40,7 +36,6 @@ export function BulkSetup({ schoolId }: { schoolId: string }) {
     <section className="space-y-3">
       <h2 className="text-lg font-bold">تهيئة مستحقات الطلاب</h2>
       <div className="flex flex-wrap gap-2">
-        <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={yearId} onChange={(e) => setYear(e.target.value)}>{(years.data ?? []).map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}</option>)}</select>
         <select aria-label="الصف" className={selectCls("min-w-40", true)} value={grade} onChange={(e) => setGrade(e.target.value)}><option value="">كل الصفوف</option>{(grades.data ?? []).map((g) => <option key={g["id"]} value={g["id"]}>{g["stages"]?.name} — {g["name"]}</option>)}</select>
       </div>
       {pv.error ? <p className="text-sm text-muted-foreground">{arabicError(pv.error)}</p> : pv.data && <>
@@ -60,16 +55,13 @@ export function BulkSetup({ schoolId }: { schoolId: string }) {
 }
 
 /** Bus seats per direction from the actual subscriptions (sf_bus_occupancy). */
-export function BusOccupancy({ schoolId }: { schoolId: string }) {
-  const years = useYears(schoolId);
-  const [year, setYear] = useState(""); const [term, setTerm] = useState(1); const [bus, setBus] = useState<Row | null>(null);
-  const yearId = year || (years.data?.find((y) => y["is_current"]) ?? years.data?.[0])?.["id"] || "";
+export function BusOccupancy({ schoolId, yearId }: { schoolId: string; yearId: string }) {
+  const [term, setTerm] = useState(1); const [bus, setBus] = useState<Row | null>(null);
   const q = useQuery({ enabled: !!yearId, queryKey: [...SF_KEY, "buses", schoolId, yearId, term], queryFn: async () => { const { data, error } = await db.rpc("sf_bus_occupancy", { _school: schoolId, _year: yearId, _term: term }); if (error) throw error; return data as Row[]; }, retry: false });
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-bold">إشغال الباصات</h2>
       <div className="flex flex-wrap gap-2">
-        <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={yearId} onChange={(e) => setYear(e.target.value)}>{(years.data ?? []).map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}</option>)}</select>
         <select aria-label="الفصل" className={selectCls("min-w-32", true)} value={term} onChange={(e) => setTerm(Number(e.target.value))}><option value={1}>الفصل الأول</option><option value={2}>الفصل الثاني</option></select>
       </div>
       {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card">
@@ -93,7 +85,7 @@ export function receiptLines(r: Row): [string, string][] {
     ["رقم السند", r["number"]], ["تاريخ السداد", s["paid_at"]], ["وقت الإصدار", new Date(r["issued_at"]).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" })],
     ["المدرسة", s["school"]], ["الطالب", s["student"]?.name], ["الرقم الطلابي / الهوية", s["student"]?.national_id ?? "—"], ["الدافع", s["payer"] || "—"],
     ["العام الدراسي", s["year"] ? formatAcademicYear(s["year"]) : "—"],
-    ...((s["allocations"] ?? []) as Row[]).map((a) => [`${KIND_AR[a["kind"]]} — ${TERM_AR(a["term"])}`, money(a["amount"])] as [string, string]),
+    ...((s["allocations"] ?? []) as Row[]).map((a) => [`${KIND_AR[a["kind"]]} — ${TERM_AR(a["term"])}${a["year"] && a["year"] !== s["year"] ? ` (رصيد سابق — عام ${formatAcademicYear(a["year"])})` : ""}`, money(a["amount"])] as [string, string]),
     ["المبلغ", money(s["amount"])], ["المبلغ كتابة", amountInWords(s["amount"])], ["طريقة السداد", METHOD_AR[s["method"]] ?? s["method"]], ["الرقم المرجعي", s["ref"] || "—"],
     ["الموظف المسؤول", s["actor"] || "—"], ["إجمالي المسدد بعد العملية", money(after["recorded"])], ["المتبقي بعد العملية", money(after["remaining"])],
     ["ملاحظات", s["notes"] || "—"], ["حالة السند", r["status"] === "cancelled" ? "ملغى" : "ساري"],
@@ -115,8 +107,9 @@ export function ReceiptButtons({ r }: { r: Row }) {
 }
 
 /** Receipts register with search by number/reference/name and date/method filters. */
-export function ReceiptsList({ schoolId }: { schoolId: string }) {
-  const [q, setQ] = useState(""); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [method, setMethod] = useState("");
+export function ReceiptsList({ schoolId, yearName }: { schoolId: string; yearName: string }) {
+  const [q, setQ] = useState(""); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [method, setMethod] = useState(""); const [allYears, setAllYears] = useState(false);
+  const inYear = (r: Row) => { const s = r["snapshot"] as Row; return allYears || s["year"] === yearName || ((s["allocations"] ?? []) as Row[]).some((a) => a["year"] === yearName); };
   const list = useQuery({ queryKey: [...SF_KEY, "receipts", schoolId, q, from, to, method], queryFn: async () => { const { data, error } = await db.rpc("sf_receipts", { _school: schoolId, _q: q || null, _from: from || null, _to: to || null, _method: method || null }); if (error) throw error; return data as Row[]; }, retry: false });
   return (
     <section className="space-y-3">
@@ -126,11 +119,12 @@ export function ReceiptsList({ schoolId }: { schoolId: string }) {
         <Input type="date" aria-label="من تاريخ" className="w-40" value={from} onChange={(e) => setFrom(e.target.value)} />
         <Input type="date" aria-label="إلى تاريخ" className="w-40" value={to} onChange={(e) => setTo(e.target.value)} />
         <select aria-label="طريقة السداد" className={selectCls("min-w-32", true)} value={method} onChange={(e) => setMethod(e.target.value)}><option value="">كل الطرق</option>{Object.entries(METHOD_AR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={allYears} onChange={(e) => setAllYears(e.target.checked)} /> كل الأعوام الدراسية</label>
       </div>
       {list.error ? <p className="text-sm text-muted-foreground">{arabicError(list.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card">
         <table className="w-full text-sm"><thead className="bg-muted/50 text-xs"><tr>{["رقم السند", "التاريخ", "الطالب", "المبلغ", "الطريقة", "المرجع", "الحالة", ""].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
-          <tbody>{(list.data ?? []).map((r) => { const s = r["snapshot"] as Row; return <tr key={r["id"]} className="border-t"><td className="p-2 font-mono" dir="ltr">{r["number"]}</td><td className="p-2">{s["paid_at"]}</td><td className="p-2">{s["student"]?.name}</td><td className="p-2">{money(s["amount"])}</td><td className="p-2">{METHOD_AR[s["method"]]}</td><td className="p-2" dir="ltr">{s["ref"] || "—"}</td><td className="p-2">{r["status"] === "cancelled" ? <span className="rounded bg-destructive/10 px-1 text-destructive">ملغى</span> : "ساري"}</td><td className="p-2"><ReceiptButtons r={r} /></td></tr>; })}</tbody></table>
-        {!list.isLoading && !(list.data ?? []).length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد سندات قبض.</p>}
+          <tbody>{(list.data ?? []).filter(inYear).map((r) => { const s = r["snapshot"] as Row; return <tr key={r["id"]} className="border-t"><td className="p-2 font-mono" dir="ltr">{r["number"]}</td><td className="p-2">{s["paid_at"]}</td><td className="p-2">{s["student"]?.name}</td><td className="p-2">{money(s["amount"])}</td><td className="p-2">{METHOD_AR[s["method"]]}</td><td className="p-2" dir="ltr">{s["ref"] || "—"}</td><td className="p-2">{r["status"] === "cancelled" ? <span className="rounded bg-destructive/10 px-1 text-destructive">ملغى</span> : "ساري"}</td><td className="p-2"><ReceiptButtons r={r} /></td></tr>; })}</tbody></table>
+        {!list.isLoading && !(list.data ?? []).filter(inYear).length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد سندات قبض لهذا العام.</p>}
       </div>}
       <p className="text-xs text-muted-foreground">سندات داخلية من ركاز وليست مستندات محاسبية رسمية؛ الطباعة والتحميل لا ينشئان سندًا جديدًا.</p>
     </section>
@@ -139,16 +133,14 @@ export function ReceiptsList({ schoolId }: { schoolId: string }) {
 
 const PENDING_REASON: Record<string, string> = { no_price: "رسوم الصف غير مهيأة أو غير معتمدة", failed: "تعذر الإنشاء التلقائي", not_created: "لم تُنشأ بعد" };
 /** «طلاب لم تُنشأ مستحقاتهم» with individual or group retry through the same creation service. */
-export function PendingCreation({ schoolId }: { schoolId: string }) {
-  const qc = useQueryClient(); const years = useYears(schoolId); const [year, setYear] = useState("");
-  const yearId = year || (years.data?.find((y) => y["is_current"]) ?? years.data?.[0])?.["id"] || "";
+export function PendingCreation({ schoolId, yearId }: { schoolId: string; yearId: string }) {
+  const qc = useQueryClient();
   const q = useQuery({ enabled: !!yearId, queryKey: [...SF_KEY, "pending", schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_pending_creation", { _school: schoolId, _year: yearId }); if (error) throw error; return data as Row[]; }, retry: false });
   const retry = async (ids: string[]) => { const { data, error } = await db.rpc("sf_bulk_apply", { _school: schoolId, _year: yearId, _grade: null, _students: ids }); if (error) toast.error(arabicError(error)); else { toast.success(`أُنشئت ${(data as Row)["obligations"]} مستحقات`); void qc.invalidateQueries({ queryKey: SF_KEY }); } };
   const ready = (q.data ?? []).filter((r) => r["reason"] !== "no_price").map((r) => String(r["student_id"]));
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">طلاب لم تُنشأ مستحقاتهم</h2>
-        <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={yearId} onChange={(e) => setYear(e.target.value)}>{(years.data ?? []).map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}</option>)}</select>
         {ready.length > 0 && <Button size="sm" onClick={() => void retry(ready)}>إعادة المحاولة للجميع ({ready.length})</Button>}</div>
       {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : (q.data ?? []).length ? <div className="overflow-x-auto rounded-2xl border bg-card">
         <table className="w-full text-sm"><thead className="bg-muted/50 text-xs"><tr>{["الطالب", "الصف", "الشعبة", "السبب", ""].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
@@ -178,13 +170,13 @@ function BusRoster({ bus, yearId, term, onClose }: { bus: Row; yearId: string; t
 
 const ARREAR_STATE: Record<string, string> = { overdue: "متأخر", upcoming: "مستحق لاحقًا", no_due: "بلا تاريخ استحقاق" };
 /** «المستحقات والمتأخرات»: overdue only after an approved due date has passed (server computes days late). */
-export function Arrears({ schoolId }: { schoolId: string }) {
-  const q = useQuery({ queryKey: [...SF_KEY, "arrears", schoolId], queryFn: async () => { const { data, error } = await db.rpc("sf_arrears", { _school: schoolId }); if (error) throw error; return data as Row[]; }, retry: false });
-  const [s, setS] = useState(""); const [st, setSt] = useState(""); const [kind, setKind] = useState(""); const [term, setTerm] = useState(0); const [open, setOpen] = useState<Row | null>(null);
-  const rows = (q.data ?? []).filter((r) => (!s || String(r["name"]).includes(s)) && (!st || r["state"] === st) && (!kind || r["kind"] === kind) && (!term || r["term"] === term));
-  const H = ["الطالب", "الصف", "الفصل", "النوع", "صافي المستحق", "المسدد", "المتبقي", "تاريخ الاستحقاق", "أيام التأخير", "الحالة"];
-  const data = rows.map((r) => { const b = r["balance"] as Row; return [String(r["name"]), [r["grade"], r["section"]].filter(Boolean).join(" / "), TERM_AR(Number(r["term"])), KIND_AR[String(r["kind"])] ?? "", money(b["net"]), money(b["recorded"]), money(b["remaining"]), String(r["due_date"] ?? "—"), r["days_late"] == null ? "—" : String(r["days_late"]), ARREAR_STATE[String(r["state"])] ?? ""]; });
-  const meta = { title: "المستحقات والمتأخرات", filters: [s, ARREAR_STATE[st] ?? "", KIND_AR[kind] ?? "", term ? TERM_AR(term) : ""].filter(Boolean) };
+export function Arrears({ schoolId, yearId }: { schoolId: string; yearId: string }) {
+  const q = useQuery({ queryKey: [...SF_KEY, "arrears", schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_arrears", { _school: schoolId, _year: yearId }); if (error) throw error; return data as Row[]; }, retry: false });
+  const [s, setS] = useState(""); const [st, setSt] = useState(""); const [kind, setKind] = useState(""); const [term, setTerm] = useState(0); const [origin, setOrigin] = useState(""); const [open, setOpen] = useState<Row | null>(null);
+  const rows = (q.data ?? []).filter((r) => (!s || String(r["name"]).includes(s)) && (!st || r["state"] === st) && (!kind || r["kind"] === kind) && (!term || r["term"] === term) && (!origin || (origin === "prev") === !!r["previous"]));
+  const H = ["الطالب", "الصف", "العام الأصلي", "الفصل", "النوع", "صافي المستحق", "المسدد", "المتبقي", "تاريخ الاستحقاق", "أيام التأخير", "الحالة"];
+  const data = rows.map((r) => { const b = r["balance"] as Row; return [String(r["name"]), [r["grade"], r["section"]].filter(Boolean).join(" / "), `${formatAcademicYear(String(r["year"] ?? ""))}${r["previous"] ? " · رصيد سابق" : ""}`, TERM_AR(Number(r["term"])), KIND_AR[String(r["kind"])] ?? "", money(b["net"]), money(b["recorded"]), money(b["remaining"]), String(r["due_date"] ?? "—"), r["days_late"] == null ? "—" : String(r["days_late"]), ARREAR_STATE[String(r["state"])] ?? ""]; });
+  const meta = { title: "المستحقات والمتأخرات", filters: [s, ARREAR_STATE[st] ?? "", KIND_AR[kind] ?? "", term ? TERM_AR(term) : "", origin === "prev" ? "الأعوام السابقة" : origin === "cur" ? "العام الحالي" : ""].filter(Boolean) };
   const total = rows.filter((r) => r["state"] === "overdue").reduce((a, r) => a + Number((r["balance"] as Row)["remaining"] ?? 0), 0);
   const overdueIds = rows.filter((r) => r["state"] === "overdue").map((r) => String(r["obligation_id"])).slice(0, 500);
   const [busy, setBusy] = useState(false);
@@ -201,12 +193,13 @@ export function Arrears({ schoolId }: { schoolId: string }) {
   }
   return <section className="space-y-3">
     <h2 className="text-lg font-bold">المستحقات والمتأخرات</h2>
-    <p className="text-sm">إجمالي المتأخر: <b>{money(total)}</b> · لا يُعد المستحق متأخرًا إلا بعد تجاوز تاريخ استحقاق معتمد.</p>
+    <p className="text-sm">إجمالي المتأخر: <b>{money(total)}</b> · لا يُعد المستحق متأخرًا إلا بعد تجاوز تاريخ استحقاق معتمد، وتُحسب أيام تأخير الرصيد السابق من تاريخ استحقاقه الأصلي.</p>
     <div className="flex flex-wrap gap-2">
       <Input className="w-40" placeholder="بحث بالاسم" value={s} onChange={(e) => setS(e.target.value)} />
       <select aria-label="الحالة" className={selectCls("min-w-32", true)} value={st} onChange={(e) => setSt(e.target.value)}><option value="">كل الحالات</option>{Object.entries(ARREAR_STATE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
       <select aria-label="النوع" className={selectCls("min-w-32", true)} value={kind} onChange={(e) => setKind(e.target.value)}><option value="">كل الرسوم</option><option value="tuition">الرسوم الدراسية</option><option value="transport">النقل المدرسي</option></select>
       <select aria-label="الفصل" className={selectCls("min-w-32", true)} value={term} onChange={(e) => setTerm(Number(e.target.value))}><option value={0}>الفصلان</option><option value={1}>الفصل الأول</option><option value={2}>الفصل الثاني</option></select>
+      <select aria-label="عام المستحق" className={selectCls("min-w-36", true)} value={origin} onChange={(e) => setOrigin(e.target.value)}><option value="">العام الحالي والسابق</option><option value="cur">مستحقات العام الحالي</option><option value="prev">أرصدة الأعوام السابقة</option></select>
       <Button size="sm" variant="outline" onClick={() => void exportPdf(meta, H, data).catch((e) => toast.error(arabicError(e)))}>PDF</Button>
       <Button size="sm" variant="outline" onClick={() => exportXlsx(meta, H, data)}>Excel</Button>
       <Button size="sm" variant="outline" onClick={() => printReport(meta, H, data)}>طباعة</Button>
@@ -221,26 +214,49 @@ export function Arrears({ schoolId }: { schoolId: string }) {
   </section>;
 }
 
-/** Finance KPIs from sf_dashboard (same balances as every other finance screen; no duplicated totals). */
-export function FinanceDashboard({ schoolId }: { schoolId: string }) {
-  const years = useYears(schoolId); const [year, setYear] = useState("");
-  const q = useQuery({ queryKey: [...SF_KEY, "dashboard", schoolId, year], queryFn: async () => { const { data, error } = await db.rpc("sf_dashboard", { _school: schoolId, _year: year || null }); if (error) throw error; return data as Row; }, retry: false });
-  const pend = useQuery({ enabled: !!year, queryKey: [...SF_KEY, "pending-count", schoolId, year], queryFn: async () => { const { data, error } = await db.rpc("sf_pending_creation", { _school: schoolId, _year: year }); if (error) throw error; return (data as Row[]).length; }, retry: false });
-  const d = q.data ?? {}; const net = Number(d["net"] ?? 0), rec = Number(d["recorded"] ?? 0);
-  const k: [string, string][] = [["الرسوم الدراسية", money(d["tuition"])], ["رسوم النقل", money(d["transport"])], ["إجمالي الخصومات", money(d["discount"])], ["منها خصم الإخوة", money(d["sibling"])], ["صافي المستحقات", money(net)], ["إجمالي المسدد", money(rec)], ["إجمالي المتبقي", money(d["remaining"])], ["إجمالي المتأخرات", money(d["overdue"])], ["الأرصدة الدائنة", money(d["credit"])], ["نسبة التحصيل", net > 0 ? `${Math.round((Math.min(rec, net) * 100) / net)}%` : "—"], ["تحصيل اليوم", money(d["today"])], ["مسددون بالكامل", String(d["paid_full"] ?? 0)], ["مسددون جزئيًا", String(d["paid_partial"] ?? 0)], ["غير مسددين", String(d["unpaid"] ?? 0)], ["معفيون", String(d["exempt"] ?? 0)], ["لم تُنشأ مستحقاتهم", year ? String(pend.data ?? "…") : "اختر العام"]];
-  const meta = { title: "المؤشرات المالية", filters: [year ? formatAcademicYear(String((years.data ?? []).find((y) => y["id"] === year)?.["name"] ?? "")) : "كل الأعوام"] };
-  const daily = (d["daily"] as Row[] | undefined) ?? [], monthly = (d["monthly"] as Row[] | undefined) ?? [];
-  const exp = (kind: "pdf" | "xlsx" | "print") => { const H = ["المؤشر", "القيمة"]; const rows = [...k, ...monthly.map((m) => [`تحصيل ${String(m["month"])}`, money(m["amount"])] as [string, string]), ...daily.map((x) => [`تحصيل ${String(x["day"])}`, money(x["amount"])] as [string, string])]; if (kind === "pdf") void exportPdf(meta, H, rows).catch((e) => toast.error(arabicError(e))); else if (kind === "xlsx") exportXlsx(meta, H, rows); else printReport(meta, H, rows); };
-  return <section className="space-y-3">
-    <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">المؤشرات المالية</h2>
-      <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={year} onChange={(e) => setYear(e.target.value)}><option value="">كل الأعوام</option>{(years.data ?? []).map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}</option>)}</select>
-      <Button size="sm" variant="outline" onClick={() => exp("pdf")}>PDF</Button><Button size="sm" variant="outline" onClick={() => exp("xlsx")}>Excel</Button><Button size="sm" variant="outline" onClick={() => exp("print")}>طباعة</Button></div>
-    {q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">{k.map(([l, v]) => <div key={l} className="rounded-xl border bg-card p-3"><div className="text-xs text-muted-foreground">{l}</div><div className="mt-1 font-bold">{v}</div></div>)}</div>
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-xl border bg-card p-3"><h3 className="mb-2 text-sm font-semibold">التحصيل الشهري</h3>{monthly.length ? <ul className="space-y-1 text-sm">{monthly.map((m) => <li key={String(m["month"])} className="flex justify-between"><span>{String(m["month"])}</span><span>{money(m["amount"])}</span></li>)}</ul> : <p className="text-sm text-muted-foreground">لا يوجد تحصيل.</p>}</div>
-        <div className="rounded-xl border bg-card p-3"><h3 className="mb-2 text-sm font-semibold">التحصيل اليومي (30 يومًا)</h3>{daily.length ? <ul className="max-h-48 space-y-1 overflow-y-auto text-sm">{daily.map((x) => <li key={String(x["day"])} className="flex justify-between"><span>{String(x["day"])}</span><span>{money(x["amount"])}</span></li>)}</ul> : <p className="text-sm text-muted-foreground">لا يوجد تحصيل.</p>}</div>
+/** Finance KPIs from sf_dashboard for the chosen year (same balances as every other finance screen; previous balances kept apart). */
+export function FinanceDashboard({ schoolId, yearId, yearName }: { schoolId: string; yearId: string; yearName: string }) {
+  const q = useQuery({ queryKey: [...SF_KEY, "dashboard", schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_dashboard", { _school: schoolId, _year: yearId }); if (error) throw error; return data as Row; }, retry: false });
+  const pend = useQuery({ queryKey: [...SF_KEY, "pending-count", schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_pending_creation", { _school: schoolId, _year: yearId }); if (error) throw error; return (data as Row[]).length; }, retry: false });
+  const d = q.data ?? {}; const n = (k: string) => Number(d[k] ?? 0);
+  const pct = (a: number, b: number) => (b > 0 ? `${Math.round((Math.min(a, b) * 100) / b)}%` : "—");
+  const prevBase = n("previous_remaining") + n("previous_collected");
+  const groups: { title: string; tone: string; items: [string, string, string?][] }[] = [
+    { title: "الرسوم والمستحقات", tone: "border-s-primary", items: [["الرسوم الدراسية", money(n("tuition"))], ["رسوم النقل", money(n("transport"))], ["الإجمالي قبل الخصومات", money(n("tuition") + n("transport"))], ["إجمالي الخصومات", money(n("discount"))], ["منها خصم الإخوة", money(n("sibling"))], ["صافي رسوم العام", money(n("net"))], ["الأرصدة السابقة المستحقة", money(n("previous_remaining")), "previous"], ["إجمالي المطلوب تحصيله", money(n("remaining") + n("previous_remaining"))]] },
+    { title: "التحصيل", tone: "border-s-primary", items: [["المسدد من رسوم العام", money(n("recorded"))], ["المحصل من الأرصدة السابقة", money(n("previous_collected"))], ["التحصيل النقدي الفعلي", money(n("cash") + n("previous_collected"))], ["تحصيل اليوم", money(n("today"))], ["تحصيل الشهر", money(n("month"))], ["نسبة تحصيل رسوم العام", pct(n("recorded"), n("net"))], ["نسبة تحصيل الأرصدة السابقة", pct(n("previous_collected"), prevBase)]] },
+    { title: "المتبقي والمتأخرات", tone: "border-s-destructive", items: [["المتبقي من رسوم العام", money(n("remaining")), "arrears"], ["المتبقي من الأعوام السابقة", money(n("previous_remaining")), "previous"], ["إجمالي المتبقي", money(n("remaining") + n("previous_remaining"))], ["إجمالي المتأخرات", money(n("overdue") + n("previous_overdue")), "arrears"], ["الأرصدة الدائنة", money(n("credit") + n("previous_credit"))]] },
+    { title: "حالات الطلاب", tone: "border-s-muted-foreground", items: [["مسددون بالكامل", String(n("paid_full"))], ["مسددون جزئيًا", String(n("paid_partial"))], ["غير مسددين", String(n("unpaid"))], ["معفيون", String(n("exempt"))], ["لم تُنشأ مستحقاتهم", pend.isLoading ? "…" : String(pend.data ?? 0), "pending"], ["لديهم أرصدة سابقة", String(n("previous_students")), "previous"]] },
+  ];
+  const meta = { title: "المؤشرات المالية", filters: [formatAcademicYear(yearName)] };
+  const daily = ((d["daily"] as Row[] | undefined) ?? []).slice().reverse(), monthly = ((d["monthly"] as Row[] | undefined) ?? []).slice().reverse();
+  const exp = (kind: "pdf" | "xlsx" | "print") => { const H = ["المجموعة", "المؤشر", "القيمة"]; const rows = [...groups.flatMap((g) => g.items.map(([l, v]) => [g.title, l, v])), ...monthly.map((m) => ["التحصيل الشهري", String(m["month"]), money(m["amount"])]), ...daily.map((x) => ["التحصيل اليومي", String(x["day"]), money(x["amount"])])]; if (kind === "pdf") void exportPdf(meta, H, rows).catch((e) => toast.error(arabicError(e))); else if (kind === "xlsx") exportXlsx(meta, H, rows); else printReport(meta, H, rows); };
+  const compare: [string, number][] = [["صافي رسوم العام", n("net")], ["المسدد", n("recorded")], ["المتبقي", n("remaining")], ["الأرصدة السابقة", n("previous_remaining")]];
+  const status: [string, number, string][] = [["مسدد بالكامل", n("paid_full"), "bg-primary"], ["مسدد جزئيًا", n("paid_partial"), "bg-accent-foreground/60"], ["غير مسدد", n("unpaid"), "bg-destructive"], ["معفى", n("exempt"), "bg-muted-foreground/50"]];
+  return <section className="space-y-4">
+    <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">المؤشرات المالية — {formatAcademicYear(yearName)}</h2>
+      <span className="ms-auto flex gap-2"><Button size="sm" variant="outline" onClick={() => exp("pdf")}>PDF</Button><Button size="sm" variant="outline" onClick={() => exp("xlsx")}>Excel</Button><Button size="sm" variant="outline" onClick={() => exp("print")}>طباعة</Button></span></div>
+    {q.isLoading ? <p className="text-sm text-muted-foreground">جارٍ تحميل المؤشرات…</p> : q.error ? <p className="text-sm text-muted-foreground">{arabicError(q.error)}</p> : <>
+      {groups.map((g) => <div key={g.title} className="space-y-2"><h3 className="text-sm font-semibold text-muted-foreground">{g.title}</h3>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">{g.items.map(([l, v, to]) => { const inner = <><div className="text-xs text-muted-foreground">{l}</div><div className="mt-1 font-bold tabular-nums">{v}</div></>;
+          return to ? <Link key={l} to="/app/finance" search={(p: Record<string, unknown>) => ({ ...(typeof p["y"] === "string" ? { y: p["y"] } : {}), v: to }) as never} className={`rounded-xl border border-s-4 ${g.tone} bg-card p-3 transition-colors hover:bg-muted/40`}>{inner}</Link> : <div key={l} className={`rounded-xl border border-s-4 ${g.tone} bg-card p-3`}>{inner}</div>; })}</div></div>)}
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Bars title="التحصيل الشهري" rows={monthly.map((m) => [String(m["month"]), Number(m["amount"] ?? 0)])} />
+        <Bars title="التحصيل اليومي (آخر 30 يومًا)" rows={daily.map((x) => [String(x["day"]).slice(5), Number(x["amount"] ?? 0)])} />
+        <Bars title="مقارنة المستحقات بالتحصيل" rows={compare} />
+        <div className="rounded-xl border bg-card p-3"><h3 className="mb-2 text-sm font-semibold">توزيع حالات السداد</h3>
+          {status.every(([, v]) => !v) ? <p className="text-sm text-muted-foreground">لا توجد مستحقات لهذا العام.</p> : <>
+            <div className="flex h-4 overflow-hidden rounded-full bg-muted">{status.map(([l, v, c]) => v ? <div key={l} className={c} style={{ width: `${(v * 100) / status.reduce((a, [, x]) => a + x, 0)}%` }} title={`${l}: ${v}`} /> : null)}</div>
+            <ul className="mt-2 grid grid-cols-2 gap-1 text-xs">{status.map(([l, v, c]) => <li key={l} className="flex items-center gap-2"><span className={`size-3 rounded-sm ${c}`} />{l}: <b>{v}</b></li>)}</ul></>}
+        </div>
       </div>
-      <p className="text-xs text-muted-foreground">أرقام تشغيلية من ركاز · المتأخرات بعد تاريخ استحقاق معتمد فقط · خصم الإخوة جزء من إجمالي الخصومات</p></>}
+      <p className="text-xs text-muted-foreground">أرقام تشغيلية من ركاز · المتأخرات بعد تاريخ استحقاق معتمد فقط · استخدام الرصيد الدائن لا يُحتسب تحصيلًا نقديًا · الأرصدة السابقة لا تُضاف إلى رسوم العام</p></>}
   </section>;
+}
+
+/** Simple horizontal bars from real amounts; shows an empty note when there is no data. */
+function Bars({ title, rows }: { title: string; rows: [string, number][] }) {
+  const max = Math.max(0, ...rows.map(([, v]) => v));
+  return <div className="rounded-xl border bg-card p-3"><h3 className="mb-2 text-sm font-semibold">{title}</h3>
+    {!rows.length || max === 0 ? <p className="text-sm text-muted-foreground">لا توجد بيانات.</p> : <ul className="max-h-56 space-y-1.5 overflow-y-auto text-xs">{rows.map(([l, v]) => <li key={l} className="grid grid-cols-[5.5rem_1fr_7rem] items-center gap-2"><span className="truncate text-muted-foreground">{l}</span><span className="h-2.5 rounded-full bg-muted"><span className="block h-full rounded-full bg-primary" style={{ width: `${(v * 100) / max}%` }} /></span><span className="text-end tabular-nums">{money(v)}</span></li>)}</ul>}
+  </div>;
 }

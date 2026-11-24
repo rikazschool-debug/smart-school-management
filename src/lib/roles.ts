@@ -103,7 +103,8 @@ const OWNER_SECTION_KEYS: Record<OwnerSection, NavKey[]> = {
   // evaluation is its own owner section: only its sub-menu (guardians, visits, monthly, forms) shows inside it
   evaluation: ["evaluation"],
   admissions: ["admissions", "students", "guardians"],
-  finance: ["finance", "procurement"],
+  // procurement first: the section opens on «العهد والمشتريات»; «حسابات الطلاب» follows
+  finance: ["procurement", "finance"],
   operations: ["operations", "transport", "bus_maintenance"],
   maintenance: ["maintenance"],
   // evaluation admin entry and training live inside HR for the owner

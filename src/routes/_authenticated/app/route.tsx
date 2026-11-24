@@ -19,6 +19,7 @@ import { endPresence, usePresenceBeat } from "@/lib/presence";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { Sanad } from "@/components/sanad";
 import { usePcMe } from "@/components/procurement/shared";
+import { SF_GROUPS } from "@/components/student-finance/finance-shell";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { workspacePages } from "@/lib/workspace-perms";
@@ -93,9 +94,9 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   notifications: { to: "/app/notifications", label: "الإشعارات", icon: Bell },
   support: { to: "/app/support", label: "الدعم والمساعدة", icon: LifeBuoy },
   calls: { to: "/app/calls", label: "المكالمات الهاتفية", icon: Phone },
-  procurement: { to: "/app/procurement", label: "المشتريات والعهد", icon: ReceiptText },
+  procurement: { to: "/app/procurement", label: "العهد والمشتريات", icon: ReceiptText },
   school_home: { to: "/app/school-home", label: "لوحة المدرسة", icon: LayoutDashboard },
-  finance: { to: "/app/finance", label: "بوابة المالية", icon: Wallet },
+  finance: { to: "/app/finance", label: "حسابات الطلاب", icon: Wallet },
   hr: { to: "/app/hr", label: "الموارد البشرية", icon: IdCard },
   my_hr: { to: "/app/my-employment", label: "ملفي الوظيفي", icon: IdCard },
   permissions: { to: "/app/permissions", label: "الأدوار والصلاحيات", icon: KeyRound },
@@ -170,6 +171,7 @@ function Shell() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   useEffect(() => { setOpenGroup(null); }, [path]);
   const supTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "") });
+  const sfView = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["v"] ?? "") });
   const evTab = useRouterState({ select: (r) => String((r.location.search as Record<string, unknown>)["tab"] ?? "summary") });
   const ownerInSchool = useOwnerInSchool();
   const myAvatar = useMyAvatar(active?.schoolId ?? null, user.id);
@@ -289,7 +291,7 @@ function Shell() {
           const content = <div className="space-y-0.5">
               {g.keys.map((k) => {
                 const n = NAV[k];
-                const hasSubmenu = ["collaboration", "procurement", "admissions"].includes(k) ||
+                const hasSubmenu = ["collaboration", "procurement", "admissions", "finance"].includes(k) ||
                   (k === "evaluation" && evStaff) || (k === "support" && inSupport && !platformHelp && (active.role === "platform_admin" || !!sCaps.data)) ||
                   (k === "calls" && mqSecs.length > 0) || (k === "classrooms" && path.startsWith("/app/classrooms/section/")) ||
                   (k === "events" && !["guardian", "student"].includes(active.role));
@@ -306,6 +308,13 @@ function Shell() {
                   </Link>;
                 const submenu = <>
                   {k === "collaboration" && <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">{([["community", "المجتمع المهني"], ["library", "المكتبة الرقمية"]] as const).map(([t, label]) => <Link key={t} to="/app/collaboration" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>)}</div>}
+                  {k === "finance" && (
+                    <div className="mr-6 mt-0.5 space-y-1.5 border-r border-sidebar-border pr-2">
+                      {SF_GROUPS.map((g) => <div key={g.label} className="space-y-0.5"><p className="px-3 pt-1 text-[11px] font-bold text-sidebar-foreground/60">{g.label}</p>
+                        {g.items.map(([t, label]) => <Link key={t} to="/app/finance" search={((p: Record<string, unknown>) => ({ ...(typeof p["y"] === "string" ? { y: p["y"] } : {}), v: t })) as never} onClick={() => setOpen(false)}
+                          className={SUB_CLS + (path.startsWith("/app/finance") && (sfView || "dashboard") === t ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>{label}</Link>)}</div>)}
+                    </div>
+                  )}
                   {k === "procurement" && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {PC_SUB.filter(([t]) => (pcNeedsOnly ? t === "needs" : t !== "settings" || owner || pc.data?.caps.settings === "org")).map(([t, label]) => (
@@ -363,7 +372,10 @@ function Shell() {
                     </div>
                   )}
                   </>;
-                return <Fragment key={k}>{hasSubmenu ? <div className="space-y-0.5">{submenu}</div> : link}</Fragment>;
+                // finance section: both entries stay visible; each one unfolds its own sub-menu only while it is open
+                const fin = k === "finance" || (k === "procurement" && owner);
+                const unfold = !fin || path.startsWith(k === "finance" ? "/app/finance" : "/app/procurement");
+                return <Fragment key={k}>{hasSubmenu ? <div className="space-y-0.5">{fin && link}{unfold && submenu}</div> : link}</Fragment>;
               })}
             </div>;
           // a group holding one entry of the same name, «الرئيسية» and alerts show their links directly (no second fold)

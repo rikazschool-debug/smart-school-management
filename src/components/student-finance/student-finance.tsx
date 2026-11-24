@@ -16,47 +16,58 @@ import { arabicError } from "@/lib/session";
 import { formatAcademicYear } from "@/lib/academic-year";
 import { COLLECTION_STATUS, KIND_LABEL, METHODS, METHOD_LABEL, SF_KEY, TERM_LABEL, TRANSPORT_LABEL, TRANSPORT_TYPES, money, num, paymentState, validAllocation, type Obligation } from "@/lib/student-finance/labels";
 
-type Fin = { student: Row; caps: Record<string, boolean>; years: Row[]; obligations: Obligation[]; transport: Row[]; discounts: Row[]; collections: Row[]; summary: Record<string, Row>; events: Row[]; available_discounts: Row[]; buses: Row[] };
+export type Prev = { carry_id: string; direction: "debit" | "credit"; carried_amount: number; carried_at: string; year: string; school: string; days_late: number | null; obligation: Obligation & { due_date?: string | null } };
+type Fin = { student: Row; caps: Record<string, boolean>; years: Row[]; obligations: Obligation[]; previous: Prev[]; credit_moves: Row[]; transport: Row[]; discounts: Row[]; collections: Row[]; summary: Record<string, Row>; events: Row[]; available_discounts: Row[]; buses: Row[] };
 
-const EVENT_LABEL: Record<string, string> = { obligation_create: "إنشاء مستحق", discount_apply: "تطبيق خصم", transport_save: "تحديث اشتراك النقل", collection_record: "تسجيل سداد", collection_reverse: "إلغاء سداد", discount_edit: "تعديل خصم", discount_remove: "حذف خصم", exception_clear: "إعادة تقييم خصم", transport_edit: "تعديل رسوم النقل", transport_exempt: "إعفاء من رسوم النقل", transport_cancel: "إلغاء اشتراك النقل", sibling_ineligible: "انتهاء استحقاق خصم الإخوة", reprice: "تعديل سعر المستحق", auto_no_price: "تعذر الإنشاء التلقائي: الرسوم غير مهيأة", auto_create_failed: "تعذر الإنشاء التلقائي" };
+const EVENT_LABEL: Record<string, string> = { obligation_create: "إنشاء مستحق", discount_apply: "تطبيق خصم", transport_save: "تحديث اشتراك النقل", collection_record: "تسجيل سداد", collection_reverse: "إلغاء سداد", discount_edit: "تعديل خصم", discount_remove: "حذف خصم", exception_clear: "إعادة تقييم خصم", transport_edit: "تعديل رسوم النقل", transport_exempt: "إعفاء من رسوم النقل", transport_cancel: "إلغاء اشتراك النقل", sibling_ineligible: "انتهاء استحقاق خصم الإخوة", reprice: "تعديل سعر المستحق", auto_no_price: "تعذر الإنشاء التلقائي: الرسوم غير مهيأة", auto_create_failed: "تعذر الإنشاء التلقائي", carry_apply: "ترحيل رصيد سابق", credit_apply: "استخدام رصيد دائن", credit_refund: "استرداد رصيد دائن", due_apply: "تعديل تاريخ الاستحقاق" };
 
 /** Finance tab inside the existing student side panel. Every action is re-checked by sf_* RPCs. */
-export function StudentFinance({ studentId, startCollect = false }: { studentId: string; startCollect?: boolean }) {
+export function StudentFinance({ studentId, startCollect = false, initialYear }: { studentId: string; startCollect?: boolean; initialYear?: string }) {
   const qc = useQueryClient();
-  const [year, setYear] = useState<string>("");
-  const q = useQuery({ queryKey: [...SF_KEY, "student", studentId, year], queryFn: async () => { const { data, error } = await db.rpc("sf_get", { _student: studentId, _year: year || null }); if (error) throw error; return data as Fin; }, retry: false });
+  // undefined = not chosen yet → the student's current academic year once known; "" = all years
+  const [year, setYear] = useState<string | undefined>(initialYear);
+  const q = useQuery({ queryKey: [...SF_KEY, "student", studentId, year ?? "?"], queryFn: async () => { const { data, error } = await db.rpc("sf_get", { _student: studentId, _year: year || null }); if (error) throw error; return data as Fin; }, retry: false });
+  useEffect(() => { if (year === undefined && q.data) { const cur = q.data.years.find((y) => y["is_current"]) ?? q.data.years[0]; setYear(cur ? String(cur["id"]) : ""); } }, [year, q.data]);
   const [dlg, setDlg] = useState<"collect" | "discount" | "transport" | null>(null);
+  const [creditFor, setCreditFor] = useState<{ p: Prev; refund: boolean } | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: SF_KEY });
   const [started, setStarted] = useState(false);
-  useEffect(() => { if (startCollect && !started && q.data?.caps["collect"]) { setStarted(true); setDlg("collect"); } }, [startCollect, started, q.data]);
+  useEffect(() => { if (startCollect && !started && year !== undefined && q.data?.caps["collect"]) { setStarted(true); setDlg("collect"); } }, [startCollect, started, q.data, year]);
   const rq = useQuery({ queryKey: [...SF_KEY, "student-receipts", studentId], queryFn: async () => { const { data, error } = await db.rpc("sf_student_receipts", { _student: studentId }); if (error) throw error; return data as Row[]; }, retry: false });
-  if (q.isLoading) return <LoadingState />;
+  if (q.isLoading || (year === undefined && !q.error)) return <LoadingState />;
   if (q.error) return <p className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">{(q.error as { code?: string }).code === "42501" ? "لا تتوفر لك صلاحية عرض البيانات المالية لهذا الطالب، أو القسم المالي غير مفعّل." : arabicError(q.error)}</p>;
   const f = q.data!;
   const yearId = year || (f.years[0]?.["id"] as string) || "";
   const a = f.summary["annual"] ?? {};
+  const prev = f.previous ?? [];
+  const prevRem = prev.reduce((s, p) => s + num(p.obligation.balance.remaining), 0), prevCredit = prev.reduce((s, p) => s + num(p.obligation.balance.credit), 0);
+  const placed = f.student["placed"] !== false;
   const cell = (kind: string, term: number) => f.obligations.find((o) => o.kind === kind && o.term === term && (!year || o.year_id === year));
   const run = async (fn: () => Promise<{ error: unknown }>, ok: string) => { const { error } = await fn(); if (error) toast.error(arabicError(error)); else { toast.success(ok); void refresh(); } };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={year} onChange={(e) => setYear(e.target.value)}><option value="">كل الأعوام</option>{f.years.map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}</option>)}</select>
+        <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={year ?? ""} onChange={(e) => setYear(e.target.value)}>{f.years.map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}{y["is_current"] ? " (الحالي)" : ""}</option>)}<option value="">كل الأعوام (مجمّع)</option></select>
         <StatementButton fins={[f]} title={`كشف حساب ${String(f.student["name"])}`} />
         <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">تشغيلي — الربط المحاسبي مع وافق غير مفعّل</span>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {[["إجمالي الرسوم قبل الخصم", a["gross"]], ["إجمالي الخصومات", a["discount"]], ["صافي المستحقات", a["net"]], ["المسجل سداده", a["recorded"]], ["المتبقي", a["remaining"]], ["الرصيد الدائن", a["credit"]], ["نسبة السداد", null]].map(([l, v]) => (
+        {[["إجمالي الرسوم قبل الخصم", a["gross"]], ["إجمالي الخصومات", a["discount"]], ["صافي رسوم العام", a["net"]], ["المسدد من رسوم العام", a["recorded"]], ["المتبقي من رسوم العام", a["remaining"]], ...(year ? [["المتبقي من الأرصدة السابقة", prevRem], ["إجمالي المطلوب سداده", num(a["remaining"]) + prevRem]] : []), ["الرصيد الدائن المتاح", num(a["credit"]) + prevCredit], ["نسبة السداد", null]].map(([l, v]) => (
           <div key={String(l)} className="rounded-xl border bg-card p-3"><div className="text-xs text-muted-foreground">{l}</div><div className="mt-1 font-bold">{v === null ? `${num(a["collection_percent"])}%` : money(v)}</div></div>))}
       </div>
+      {!placed && !f.obligations.length && <p className="rounded-xl border border-dashed bg-muted/30 p-3 text-sm text-muted-foreground">لم يتم تسكين الطالب أكاديميًا بعد، ولم تُنشأ مستحقاته الدراسية الحالية.</p>}
       <FeeTable rows={(["tuition", "transport"] as const).flatMap((k) => [1, 2].map((t) => ({ k, t, o: cell(k, t) })))
         .filter((r) => r.k === "tuition" || (!!r.o && r.o.status !== "void"))} />
       <div className="flex flex-wrap gap-2">
         {f.caps["setup"] && yearId && <Button size="sm" variant="outline" onClick={() => run(() => db.rpc("sf_create_tuition", { _student: studentId, _year: yearId }), "أُنشئت مستحقات الرسوم الدراسية")}><Receipt className="size-4" /> إنشاء مستحقات الرسوم الدراسية</Button>}
         {f.caps["transport"] && <Button size="sm" variant="outline" onClick={() => setDlg("transport")}><Bus className="size-4" /> إدارة اشتراك النقل</Button>}
         {f.caps["discount"] && <Button size="sm" variant="outline" disabled={!f.obligations.length} onClick={() => setDlg("discount")}><Percent className="size-4" /> تطبيق خصم</Button>}
-        {f.caps["collect"] && <Button size="sm" disabled={!f.obligations.some((o) => num(o.balance.remaining) > 0)} onClick={() => setDlg("collect")}><CreditCard className="size-4" /> سداد الرسوم</Button>}
+        {f.caps["collect"] && <Button size="sm" disabled={!f.obligations.some((o) => num(o.balance.remaining) > 0) && prevRem <= 0} onClick={() => setDlg("collect")}><CreditCard className="size-4" /> سداد الرسوم</Button>}
       </div>
+
+      {year && <PreviousBalances prev={prev} canSetup={!!f.caps["setup"]} onCredit={(p, refund) => setCreditFor({ p, refund })} />}
+      {f.credit_moves?.length > 0 && <Section title="حركات الرصيد الدائن">{f.credit_moves.map((m) => <div key={m["id"]} className="flex flex-wrap gap-2 text-xs"><b>{m["kind"] === "refund" ? "استرداد" : "استخدام لسداد مستحق"}</b><span>{money(m["amount"])}</span><span className="text-muted-foreground">{new Date(m["created_at"]).toLocaleDateString("ar-SA", { timeZone: "Asia/Riyadh" })}</span>{m["reason"] && <span className="text-muted-foreground">— {m["reason"]}</span>}</div>)}</Section>}
 
       <Section title="النقل المدرسي">{f.transport.length ? f.transport.map((t) => <div key={t["id"]} className="flex flex-wrap gap-2 text-xs"><b>{TERM_LABEL(t["term"])}</b>{t["active"] ? <><span>{TRANSPORT_LABEL[t["transport_type"]]}</span><span>الباص {t["bus"]?.code ?? "—"} ({t["bus"]?.plate ?? ""})</span><span>من {t["starts"]}</span></> : <span className="text-muted-foreground">غير مشترك</span>}{t["exempt"] && <span className="rounded bg-muted px-1">معفى</span>}</div>) : <p className="text-xs text-muted-foreground">غير مشترك في النقل المدرسي.</p>}</Section>
 
@@ -79,6 +90,7 @@ export function StudentFinance({ studentId, startCollect = false }: { studentId:
 
       {f.events.length > 0 && <Section title="سجل العمليات المالية">{[...f.events].reverse().slice(0, 30).map((e) => <div key={e["id"]} className="flex gap-2 text-xs"><span className="text-muted-foreground">{new Date(e["created_at"]).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" })}</span><span>{EVENT_LABEL[e["action"]] ?? e["action"]}</span>{e["reason"] && <span className="text-muted-foreground">— {e["reason"]}</span>}</div>)}</Section>}
 
+      {creditFor && <CreditDialog f={f} studentId={studentId} p={creditFor.p} refund={creditFor.refund} onClose={() => setCreditFor(null)} onDone={() => { setCreditFor(null); void refresh(); }} />}
       {dlg === "collect" && <CollectDialog f={f} studentId={studentId} onClose={() => setDlg(null)} onDone={() => { setDlg(null); void refresh(); }} />}
       {dlg === "discount" && <DiscountDialog f={f} studentId={studentId} onClose={() => setDlg(null)} onDone={() => { setDlg(null); void refresh(); }} />}
       {dlg === "transport" && yearId && <TransportDialog f={f} studentId={studentId} yearId={yearId} onClose={() => setDlg(null)} onDone={() => { setDlg(null); void refresh(); }} />}
@@ -102,7 +114,8 @@ const obLabel = (o: Obligation) => `${KIND_LABEL[o.kind]} — ${TERM_LABEL(o.ter
 
 function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: string; onClose: () => void; onDone: () => void }) {
   const key = useMemo(() => crypto.randomUUID(), []);
-  const open = f.obligations.filter((o) => o.status === "pending" && num(o.balance.remaining) > 0);
+  const prevYear = new Map((f.previous ?? []).map((p) => [p.obligation.id, p.year]));
+  const open = [...f.obligations, ...(f.previous ?? []).map((p) => p.obligation)].filter((o, i, all) => o.status === "pending" && num(o.balance.remaining) > 0 && all.findIndex((x) => x.id === o.id) === i);
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [v, setV] = useState({ method: "cash", paid_at: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" }), ref: "", payer: "", notes: "" });
   const rows = open.filter((o) => amounts[o.id]).map((o) => ({ obligation_id: o.id, amount: Number(amounts[o.id]) }));
@@ -114,10 +127,11 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
   });
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent dir="rtl" className="max-w-lg">
+      <DialogContent dir="rtl" className="max-w-2xl">
         <DialogHeader><DialogTitle>سداد رسوم {f.student["name"]}</DialogTitle></DialogHeader>
+        <p className="text-xs text-muted-foreground">حدّد المبلغ لكل مستحق؛ الأرصدة السابقة تُسدَّد على مستحقها الأصلي ولا تُطبق عليها خصومات العام الحالي.</p>
         <div className="space-y-2">{open.map((o) => (
-          <div key={o.id} className="flex items-center gap-2 text-sm"><span className="flex-1">{obLabel(o)} <span className="text-xs text-muted-foreground">(المتبقي {money(o.balance.remaining)})</span></span>
+          <div key={o.id} className="flex items-center gap-2 text-sm"><span className="flex-1">{obLabel(o)}{prevYear.has(o.id) && <span className="ms-1 rounded bg-destructive/10 px-1 text-[11px] text-destructive">رصيد سابق — {formatAcademicYear(prevYear.get(o.id))}</span>} <span className="text-xs text-muted-foreground">(المتبقي {money(o.balance.remaining)})</span></span>
             <Button size="sm" variant="ghost" onClick={() => setAmounts({ ...amounts, [o.id]: String(o.balance.remaining) })}>كامل</Button>
             <Input aria-label={`مبلغ ${obLabel(o)}`} className="w-28" type="number" min={0} step="0.01" value={amounts[o.id] ?? ""} onChange={(e) => setAmounts({ ...amounts, [o.id]: e.target.value })} /></div>))}</div>
         <div className="grid grid-cols-2 gap-2">
@@ -225,4 +239,44 @@ function FeeTable({ rows }: { rows: { k: "tuition" | "transport"; t: number; o?:
         <td className="p-3 text-end tabular-nums text-destructive">{money(sum((o) => o.balance.remaining))}</td><td />
       </tr></tfoot>
     </table></div>;
+}
+
+/** «الأرصدة السابقة»: carried items with the live balance of the original obligation (one source, no new debt). */
+function PreviousBalances({ prev, canSetup, onCredit }: { prev: Prev[]; canSetup: boolean; onCredit: (p: Prev, refund: boolean) => void }) {
+  const H = ["العام الأصلي", "المدرسة", "البند", "صافي المستحق", "المسدد", "المتبقي", "الرصيد الدائن", "التأخير", ""];
+  return <Section title="الأرصدة السابقة">{!prev.length ? <p className="text-xs text-muted-foreground">لا توجد أرصدة سابقة مرحّلة إلى هذا العام.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-xs">
+    <thead className="bg-muted/50"><tr>{H.map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
+    <tbody>{prev.map((p) => { const b = p.obligation.balance; return <tr key={p.carry_id} className="border-t">
+      <td className="p-2">{formatAcademicYear(p.year)}</td><td className="p-2">{p.school}</td><td className="p-2">{obLabel(p.obligation)}</td>
+      <td className="p-2 tabular-nums">{money(b.net)}</td><td className="p-2 tabular-nums">{money(b.recorded)}</td>
+      <td className={`p-2 font-semibold tabular-nums ${num(b.remaining) > 0 ? "text-destructive" : ""}`}>{money(b.remaining)}</td><td className="p-2 tabular-nums">{money(b.credit)}</td>
+      <td className="p-2">{p.days_late ? <span className="text-destructive">متأخر {p.days_late} يومًا</span> : num(b.remaining) > 0 ? "غير متأخر" : num(b.credit) > 0 ? "رصيد دائن" : "مسدد"}</td>
+      <td className="p-2">{canSetup && num(b.credit) > 0 && <span className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => onCredit(p, false)}>استخدام</Button><Button size="sm" variant="ghost" onClick={() => onCredit(p, true)}>استرداد</Button></span>}</td></tr>; })}</tbody>
+  </table><p className="mt-1 text-[11px] text-muted-foreground">الرصيد السابق تمثيل للمستحق الأصلي نفسه؛ سداده يسوي المستحق في عامه الأصلي ولا يُحتسب رسومًا جديدة.</p></div>}</Section>;
+}
+
+/** Owner-only credit use (pay a selected item) or refund; the server checks the available credit and the target remaining. */
+function CreditDialog({ f, studentId, p, refund, onClose, onDone }: { f: Fin; studentId: string; p: Prev; refund: boolean; onClose: () => void; onDone: () => void }) {
+  const key = useMemo(() => crypto.randomUUID(), []);
+  const avail = num(p.obligation.balance.credit);
+  const targets = f.obligations.filter((o) => o.status === "pending" && num(o.balance.remaining) > 0 && o.id !== p.obligation.id);
+  const [target, setTarget] = useState(targets[0]?.id ?? ""); const [amount, setAmount] = useState(""); const [reason, setReason] = useState(""); const [method, setMethod] = useState("bank"); const [busy, setBusy] = useState(false);
+  const max = refund ? avail : Math.min(avail, num(targets.find((o) => o.id === target)?.balance.remaining));
+  const v = Number(amount); const ok = validAllocation(v, max) && reason.trim().length >= 3 && (refund || !!target);
+  const save = async () => {
+    if (!(await ask(`${refund ? "تأكيد استرداد" : "تأكيد استخدام"} رصيد دائن بمبلغ ${money(v)}؟ لا يُحتسب تحصيلًا نقديًا جديدًا.`))) return;
+    setBusy(true);
+    const { error } = refund ? await db.rpc("sf_credit_refund", { _student: studentId, _request_key: key, _source: p.obligation.id, _amount: v, _method: method, _reason: reason })
+      : await db.rpc("sf_credit_use", { _student: studentId, _request_key: key, _source: p.obligation.id, _target: target, _amount: v, _reason: reason });
+    setBusy(false); if (error) toast.error(arabicError(error)); else { toast.success(refund ? "سُجّل الاسترداد" : "استُخدم الرصيد الدائن"); onDone(); }
+  };
+  return <Dialog open onOpenChange={(o) => !o && onClose()}><DialogContent dir="rtl" className="max-w-lg">
+    <DialogHeader><DialogTitle>{refund ? "استرداد رصيد دائن" : "استخدام رصيد دائن"} — {f.student["name"]}</DialogTitle></DialogHeader>
+    <p className="text-sm">الرصيد الدائن المتاح من {obLabel(p.obligation)} ({formatAcademicYear(p.year)}): <b>{money(avail)}</b></p>
+    {!refund && (targets.length ? <select aria-label="المستحق المراد سداده" className={selectCls("w-full")} value={target} onChange={(e) => setTarget(e.target.value)}>{targets.map((o) => <option key={o.id} value={o.id}>{obLabel(o)} — المتبقي {money(o.balance.remaining)}</option>)}</select> : <p className="text-xs text-destructive">لا توجد مستحقات متبقية في هذا العام لاستخدام الرصيد عليها.</p>)}
+    {refund && <select aria-label="طريقة الاسترداد" className={selectCls("w-full")} value={method} onChange={(e) => setMethod(e.target.value)}><option value="bank">تحويل بنكي</option><option value="cash">نقدًا</option><option value="other">أخرى</option></select>}
+    <div className="flex gap-2"><Input aria-label="المبلغ" type="number" min={0} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`حتى ${max}`} /><Button variant="ghost" onClick={() => setAmount(String(max))}>كامل</Button></div>
+    <Input aria-label="السبب" placeholder="سبب العملية (إلزامي)" value={reason} onChange={(e) => setReason(e.target.value)} />
+    <Button disabled={!ok || busy} onClick={() => void save()}>{refund ? "اعتماد الاسترداد" : "اعتماد الاستخدام"}</Button>
+  </DialogContent></Dialog>;
 }

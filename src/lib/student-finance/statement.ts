@@ -14,8 +14,16 @@ export function statementLines(fins: R[], f: { term?: number | undefined; kind?:
     for (const o of obs) raw.push({ date: String(o["created_at"] ?? ""), student: name, text: `${KIND[String(o["kind"])] ?? ""} — ${TERM(o["term"])}${o["status"] === "exempt" ? " (معفى)" : ""}`, debit: num(o["original"]), credit: 0 });
     for (const d of (fin["discounts"] as R[]) ?? []) if (d["active"] !== false && ids.has(d["obligation_id"])) raw.push({ date: String(d["created_at"] ?? ""), student: name, text: `خصم: ${String(d["name"] ?? "")} — ${TERM(d["term"])}`, debit: 0, credit: num(d["amount"]) });
     for (const o of obs) { const g = num(o["original"]) - num((o["balance"] as R)["gross"]); if (g !== 0) raw.push({ date: String(o["updated_at"] ?? ""), student: name, text: `تسوية سعر — ${TERM(o["term"])}`, debit: g < 0 ? -g : 0, credit: g > 0 ? g : 0 }); }
+    // Previous balances carried into this year: one opening line per item at its carried value (never a new fee), later moves only.
+    const prev = ((fin["previous"] as R[]) ?? []).filter((p) => { const o = p["obligation"] as R; return (!f.term || Number(o["term"]) === f.term) && (!f.kind || o["kind"] === f.kind); });
+    const since = new Map(prev.map((p) => [(p["obligation"] as R)["id"], String(p["carried_at"] ?? "")]));
+    for (const p of prev) { const o = p["obligation"] as R; const debit = p["direction"] === "debit"; raw.push({ date: String(p["carried_at"] ?? ""), student: name, text: `${debit ? "رصيد سابق" : "رصيد دائن سابق"} من العام ${String(p["year"] ?? "")} — ${KIND[String(o["kind"])] ?? ""} ${TERM(o["term"])}`, debit: debit ? num(p["carried_amount"]) : 0, credit: debit ? 0 : num(p["carried_amount"]) }); }
+    for (const m of (fin["credit_moves"] as R[]) ?? []) {
+      if (ids.has(m["target_obligation_id"])) raw.push({ date: String(m["created_at"] ?? ""), student: name, text: "سداد من رصيد دائن", debit: 0, credit: num(m["amount"]) });
+      const s0 = since.get(m["source_obligation_id"]); if (s0 !== undefined && String(m["created_at"]) >= s0) raw.push({ date: String(m["created_at"] ?? ""), student: name, text: m["kind"] === "refund" ? "استرداد رصيد دائن" : "استخدام رصيد دائن", debit: num(m["amount"]), credit: 0 });
+    }
     for (const c of (fin["collections"] as R[]) ?? []) {
-      const amt = ((c["allocations"] as R[]) ?? []).filter((a) => ids.has(a["obligation_id"])).reduce((s, a) => s + num(a["amount"]), 0);
+      const amt = ((c["allocations"] as R[]) ?? []).filter((a) => ids.has(a["obligation_id"]) || (since.has(a["obligation_id"]) && String(c["created_at"] ?? "") >= String(since.get(a["obligation_id"])))).reduce((s, a) => s + num(a["amount"]), 0);
       if (!amt) continue;
       raw.push({ date: String(c["paid_at"] ?? c["created_at"] ?? ""), student: name, text: `سداد${c["ref"] ? ` (${String(c["ref"])})` : ""}`, debit: 0, credit: amt });
       if (c["status"] === "reversed") raw.push({ date: String(c["updated_at"] ?? c["created_at"] ?? ""), student: name, text: "إلغاء سداد", debit: amt, credit: 0 });

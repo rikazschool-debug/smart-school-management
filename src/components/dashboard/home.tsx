@@ -8,7 +8,8 @@ import { WorkPanel } from "@/components/dashboard/work-panel";
 import { db, type Row } from "@/components/crud-page";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { ChildOverview } from "@/components/family/child-overview";
-import { FamilyFinance } from "@/components/student-finance/family-finance";
+import { FamilyFinance, familyDue, useFamilyFinance } from "@/components/student-finance/family-finance";
+import { money } from "@/lib/student-finance/labels";
 import { NAV_BY_ROLE, ROLE_LABELS, canManage, type NavKey } from "@/lib/roles";
 import { arabicError, useSession, type AppContext } from "@/lib/session";
 import { OwnerPortal } from "@/components/owner-portal";
@@ -276,9 +277,8 @@ function GuardianHome() {
     enabled: ids.length > 0,
     queryFn: async () => {
       const from = lastDays(30)[0]!.iso;
-      const [att, fin] = await Promise.all([
+      const [att] = await Promise.all([
         db.from("attendance_days").select("student_id,status").in("student_id", ids).gte("date", from).limit(5000),
-        db.from("fin_student_accounts").select("student_id,balance,currency").in("student_id", ids),
       ]);
       const a = (att.data ?? []) as Row[];
       const per = ids.map((id) => {
@@ -286,11 +286,12 @@ function GuardianHome() {
         const pres = r.filter((x) => x["status"] === "present" || x["status"] === "late").length;
         return { id, days: r.length, rate: r.length ? Math.round((pres / r.length) * 100) : null, absent: r.filter((x) => x["status"] === "absent").length };
       });
-      const f = (fin.data ?? []) as Row[];
-      const balance = f.length ? f.reduce((s, x) => s + Number(x["balance"] ?? 0), 0) : null;
-      return { per, balance, currency: f[0]?.["currency"] ?? "ر.س", absent: per.reduce((s, x) => s + x.absent, 0) };
+      return { per, absent: per.reduce((s, x) => s + x.absent, 0) };
     },
   });
+  // Same source and year as the family accounts below, so the box always equals their «إجمالي المطلوب سداده».
+  const fam = useFamilyFinance(null);
+  const due = familyDue(fam.data);
   if (kids.isLoading) return <LoadingState />;
   if (kids.error) return <ErrorState message={arabicError(kids.error)} onRetry={() => kids.refetch()} />;
   const st = stats.data;
@@ -302,7 +303,7 @@ function GuardianHome() {
         <Kpi tone={0} label="أبناء مرتبطون" value={kids.data?.length ?? 0} icon={GraduationCap} hint={`${open.length} موثّق`} />
         <Kpi tone={1} label="نسبة الحضور (30 يومًا)" value={avg == null ? "—" : `${avg}%`} icon={CalendarCheck} to={first ? `/app/child/${first}` : undefined} />
         <Kpi tone={2} label="أيام غياب (30 يومًا)" value={st?.absent ?? (ids.length ? undefined : 0)} icon={CalendarDays} to={first ? `/app/child/${first}` : undefined} />
-        <Kpi tone={3} label="الرصيد المالي" value={st?.balance == null ? "—" : `${st.balance} ${st.currency}`} icon={Wallet} hint={st?.balance == null ? "بانتظار الربط المالي" : "الرصيد المتبقي"} to={first ? `/app/child/${first}` : undefined} />
+        <Kpi tone={3} label="الرصيد المالي" value={fam.isLoading ? undefined : due == null ? "—" : money(due)} icon={Wallet} hint={due == null ? "لا توجد رسوم مهيأة للعام الحالي" : "إجمالي المطلوب سداده (العام الحالي والأرصدة السابقة)"} />
         <Kpi tone={4} label="الفعاليات والرحلات" value="←" icon={PartyPopper} to="/app/events" />
         <Kpi tone={0} label="التواصل مع المدرسة" value="←" icon={MessagesSquare} to="/app/communication" />
       </KpiGrid>

@@ -92,7 +92,7 @@ create or replace function public.sf_carry_apply(_org uuid,_request_key uuid,_fr
   perform _sf_event(x.school,x.student_id,'carry_apply',rid,null,jsonb_build_object('from',_from,'to',_to,'debit',coalesce(x.debit,0),'credit',coalesce(x.credit,0),'count',x.cnt),_reason);
  end loop;
  update sf_carry_runs set counts=jsonb_build_object('items',n,'debit',d,'credit',c,'students',(select count(distinct student_id) from sf_carries where run_id=rid)) where id=rid;
- select to_jsonb(r) into p from sf_carry_runs r where r.id=rid;
+ select to_jsonb(cr) into p from sf_carry_runs cr where cr.id=rid;
  return p; end$$;
 
 create or replace function public.sf_carry_runs_list(_org uuid) returns jsonb language plpgsql stable security definer set search_path=public as $$begin

@@ -115,10 +115,11 @@ const CARDS: Card[] = [
     ],
   },
   {
-    key: "finance", section: "finance", title: "المالية والمحاسبة", icon: Wallet, to: "/app/finance", open: "فتح المالية",
-    desc: "المشتريات والعهد المالية: طلب العهدة وصرفها، والفواتير والضريبة، والطلبات والتسوية والتقارير.",
+    key: "finance", section: "finance", title: "المالية والمحاسبة", icon: Wallet, to: "/app/procurement", open: "فتح المالية",
+    desc: "العهد والمشتريات، وحسابات الطلاب: الرسوم والنقل والخصومات والتحصيل والأرصدة السابقة وسندات القبض.",
     features: [
-      { icon: Wallet, label: "المشتريات والعهد", to: "/app/procurement" },
+      { icon: Wallet, label: "العهد والمشتريات", to: "/app/procurement" },
+      { icon: Wallet, label: "حسابات الطلاب", to: "/app/finance" },
     ],
   },
   {

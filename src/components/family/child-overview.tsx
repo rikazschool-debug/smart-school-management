@@ -1,4 +1,5 @@
 import { useId, useState, type ReactNode } from "react";
+import { ChildFinance } from "@/components/student-finance/family-finance";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3, HeartHandshake, HeartPulse, Sparkles, BookOpen, CalendarCheck, CalendarDays, ClipboardList, Landmark, School, UserRound } from "lucide-react";
@@ -124,7 +125,7 @@ export function ChildOverview({ studentId, initialTab, studentHome }: { studentI
           )}
         </div>
       )}
-      {tab === "finance" && guardian && d.finance && <Finance f={d.finance} />}
+      {tab === "finance" && guardian && <div className="space-y-4"><ChildFinance studentId={d.student.id} />{d.finance?.linked && <><p className="text-sm font-semibold">الرصيد في النظام المحاسبي (وافق)</p><Finance f={d.finance} /></>}</div>}
       {tab === "health" && guardian && <HealthFile studentId={d.student.id} />}
     </div>
   );

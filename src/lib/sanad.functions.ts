@@ -30,6 +30,29 @@ export const askSanad = createServerFn({ method: "POST" })
     const pick = async (label: string, q: PromiseLike<{ data: unknown; error: unknown; count?: number | null }>) => {
       try { const r = await q; if (r.error) return null; return [label, { count: r.count ?? null, rows: r.data }] as const; } catch { return null; }
     };
+    // Finance facts come only from the central sf_* RPCs (they re-check guardian links / finance permissions); failures are simply omitted.
+    const R = (v: unknown) => (v ?? {}) as Record<string, unknown>;
+    const ob = (o: unknown) => { const x = R(o), b = R(x["balance"]); return { kind: x["kind"] === "transport" ? "نقل" : "دراسية", term: x["term"], status: x["status"], due: x["due_date"] ?? null, gross: b["gross"], discount: b["discount"], net: b["net"], paid: b["recorded"], remaining: b["remaining"], credit: b["credit"] }; };
+    const famFinance = async () => {
+      const r = await sb.rpc("sf_family" as never, { _year: null } as never); if (r.error) return r;
+      const kids = (R(r.data)["children"] as unknown[] | undefined) ?? [];
+      const rows = await Promise.all(kids.map(async (k) => { const f = R(k), st = R(f["student"]);
+        const rc = await sb.rpc("sf_student_receipts" as never, { _student: st["id"] } as never);
+        const rcs = ((rc.data as unknown[] | null) ?? []).slice(0, 5).map((x) => { const y = R(x), sn = R(y["snapshot"]); return { number: y["number"], date: sn["paid_at"], amount: sn["amount"], status: y["status"] }; });
+        return { name: st["name"], school: st["school"], year: f["year_key"], placed: st["placed"], fees: ((f["obligations"] as unknown[]) ?? []).filter((o) => R(o)["status"] !== "void").map(ob),
+          previous_balances: ((f["previous"] as unknown[]) ?? []).map((p) => ({ origin_year: R(p)["year"], days_late: R(p)["days_late"], ...ob(R(p)["obligation"]) })), discounts: ((f["discounts"] as unknown[]) ?? []).filter((d) => R(d)["active"] !== false).map((d) => ({ name: R(d)["name"], amount: R(d)["amount"], term: R(d)["term"] })), last_receipts: rcs }; }));
+      return { data: rows, error: null, count: rows.length };
+    };
+    const schoolFinance = async () => {
+      if (!data.schoolId) return { data: null, error: "no school" };
+      const y = await sb.from("academic_years").select("id,name").eq("school_id", data.schoolId).order("is_current", { ascending: false }).order("start_date", { ascending: false }).limit(1).maybeSingle();
+      if (y.error || !y.data) return { data: null, error: "no year" };
+      const d = await sb.rpc("sf_dashboard" as never, { _school: data.schoolId, _year: y.data.id } as never); if (d.error) return d;
+      const rep = await sb.rpc("sf_report" as never, { _school: data.schoolId, _year: y.data.id } as never);
+      const students = ((R(rep.data)["students"] as unknown[] | undefined) ?? []).slice(0, 60).map((x) => { const s = R(x); const os = ((s["obligations"] as unknown[]) ?? []).map(ob); const sum = (k: "net" | "paid" | "remaining") => os.reduce((a, o) => a + Number(o[k] ?? 0), 0); return { name: s["name"], net: sum("net"), paid: sum("paid"), remaining: sum("remaining"), previous_balance: s["previous"] }; });
+      const k = R(d.data);
+      return { data: { year: y.data.name, kpis: Object.fromEntries(Object.entries(k).filter(([n]) => !["daily", "monthly", "updated_at"].includes(n))), students }, error: null };
+    };
     const parts = await Promise.all([
       pick("المعلمون", sc(sb.from("teachers").select("display_name,full_name,specialization,status", { count: "exact" }).limit(60))),
       pick("الطلاب", sc(sb.from("students").select("id,display_name,full_name,status", { count: "exact" }).limit(60))),
@@ -40,7 +63,8 @@ export const askSanad = createServerFn({ method: "POST" })
       pick("درجات الواجبات", sb.from("homework_grades").select("homework_id,student_id,score,status").limit(150)),
       pick("الحضور (آخر الأيام)", sc(sb.from("attendance_days").select("student_id,date,status,late_minutes").order("date", { ascending: false }).limit(150))),
       pick("الفعاليات والرحلات", sc(sb.from("evt_items").select("title,kind,status,reg_opens,reg_closes,location").order("created_at", { ascending: false }).limit(30))),
-      pick("الأرصدة المالية للطلاب", sc(sb.from("fin_student_accounts").select("student_id,balance,currency,synced_at").limit(60))),
+      pick("الحسابات المالية للأبناء (ركاز)", famFinance()),
+      pick("المؤشرات والحسابات المالية للفرع (ركاز)", schoolFinance()),
       pick("حصص الجدول", sc(sb.from("timetable_slots").select("day,period_id,section_id,teacher_id,course_id", { count: "exact" }).limit(120))),
     ]);
     const facts = Object.fromEntries(parts.filter(Boolean) as [string, unknown][]);
@@ -51,6 +75,8 @@ export const askSanad = createServerFn({ method: "POST" })
 - لا تخترع أرقامًا أو أسماء. إن لم تكن المعلومة في السجلات قل: «لا تتوفر لديّ هذه المعلومة في سجلاتك».
 - ارفض بلطف أي سؤال خارج المنصة أو خارج صلاحيات هذا المستخدم (أخبار، برمجة، مواضيع عامة...).
 - الأعداد count هي العدد الكلي، وrows عينة قد تكون مقتطعة.
+- الأرقام المالية تؤخذ كما هي من السجلات المالية لركاز (تشغيلية وليست مستندات وافق الرسمية)؛ الرصيد السابق منفصل عن رسوم العام، ولا تُظهر رسومًا غير مهيأة على أنها صفر.
+- لا تنفذ أي عملية سداد أو تعديل؛ للاطلاع فقط.
 - لا تذكر أرقام الهوية أو الجوال أو المعرفات الداخلية (id).
 السجلات المتاحة (JSON):
 ${JSON.stringify(facts).slice(0, 60000)}`;

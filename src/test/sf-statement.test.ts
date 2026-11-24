@@ -7,3 +7,8 @@ describe("account statement", () => {
   it("closing equals net minus valid payments", () => { expect(statementLines([fin]).closing).toBe(500); });
   it("opening balance carries lines before the period", () => { const s = statementLines([fin], { from: "2026-09-05" }); expect(s.opening).toBe(900); expect(s.closing).toBe(500); });
 });
+describe("statement with a previous balance", () => {
+  const prevFin = { ...fin, previous: [{ direction: "debit", carried_amount: 2000, carried_at: "2026-08-15", year: "1447/1448", obligation: { id: "p1", term: 2, kind: "tuition" } }],
+    collections: [...fin.collections, { paid_at: "2026-05-01", created_at: "2026-05-01", status: "valid", allocations: [{ obligation_id: "p1", amount: 3000 }] }, { paid_at: "2026-09-20", created_at: "2026-09-20", status: "valid", allocations: [{ obligation_id: "p1", amount: 500 }] }] };
+  it("adds the carried 2,000 once and only payments made after the carry", () => { expect(statementLines([prevFin]).closing).toBe(500 + 2000 - 500); });
+});
