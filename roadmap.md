@@ -1,18 +1,16 @@
-# Finance roadmap (remaining phases)
-- [x] Family accounts + receipts
-- [x] Account statements (student, family combined; PDF/Excel/print/share)
-- [x] Bus roster per bus with search/filter/export
-- [x] Unified payment dialog (student accounts + arrears open the same panel)
-- [x] Due dates in fee setup
-- [x] Dues & arrears page
-- [x] Finance KPIs dashboard (export PDF/Excel/print)
-- [x] Financial notifications (all finance events, daily due/late check, owner alerts — in-app)
-- [x] Sanad on sf_* data (family + branch finance)
-- [x] Finance section: two tabs, grouped sub-menu, central academic-year selector
-- [x] Previous balances carry-forward, previous payments, credit use/refund (owner)
-- [x] Guardian balance box + child page on the same family source
-- [ ] Main system dashboard finance KPIs on sf_dashboard
-- [ ] Detailed finance reports catalogue (collection by method/staff/grade, discounts, controls)
-- [ ] Applied discounts / transport accounts / adjustments pages
-- [ ] Accountant / registrar permissions
-- [ ] Live end-to-end checks
+# Finance final completion (prompt: الاستكمال النهائي)
+- [ ] 1 Security: separate read/write in sf_* (guardian read-only), tests
+- [ ] 2 Accountant/registrar permissions via existing student_finance perm tree
+- [ ] 3 Applied discounts page
+- [ ] 4 Transport accounts page (+ bus roster filters)
+- [ ] 5 Financial adjustments page
+- [ ] 6 Detailed reports catalog
+- [ ] 7 Main dashboard finance KPIs
+- [ ] 8 Sanad review
+- [ ] 9 Years / previous balances review
+- [ ] 10 Guardian finance page review
+- [ ] 11 Design / sidebar groups review
+- [ ] 12 Notifications review
+- [ ] 13 PDF/Excel real tests
+- [ ] 14-16 Signed-in UI, full cycle, concurrency tests
+- [ ] 17-19 Requirements matrix, data safety, final report
