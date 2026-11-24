@@ -49,7 +49,7 @@ export function StudentFinance({ studentId }: { studentId: string }) {
       </div>
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full text-xs"><thead className="bg-muted/50"><tr><th className="p-2 text-start">البيان</th><th className="p-2 text-start">الفصل الأول</th><th className="p-2 text-start">الفصل الثاني</th></tr></thead>
-          <tbody>{(["tuition", "transport"] as const).flatMap((k) => [
+          <tbody>{(([1, 2].some((t) => { const o = cell("transport", t); return !!o && o.status !== "void"; }) ? ["tuition", "transport"] : ["tuition"]) as ("tuition" | "transport")[]).flatMap((k) => [
             ["الأصلية", (o?: Obligation) => o ? money(o.balance.gross) : "—"], ["الخصومات", (o?: Obligation) => o ? money(o.balance.discount) : "—"], ["الصافي", (o?: Obligation) => o ? money(o.balance.net) : "—"],
             ["المسجل سداده", (o?: Obligation) => o ? money(o.balance.recorded) : "—"], ["المتبقي", (o?: Obligation) => o ? money(o.balance.remaining) : "—"],
             ["الحالة", (o?: Obligation) => k === "transport" && !o ? "غير مشترك في النقل" : paymentState(o)],
