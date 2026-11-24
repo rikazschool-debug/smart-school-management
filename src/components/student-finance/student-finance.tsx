@@ -19,7 +19,7 @@ import { COLLECTION_STATUS, KIND_LABEL, METHODS, METHOD_LABEL, SF_KEY, TERM_LABE
 export type Prev = { carry_id: string; direction: "debit" | "credit"; carried_amount: number; carried_at: string; year: string; school: string; days_late: number | null; obligation: Obligation & { due_date?: string | null } };
 type Fin = { student: Row; caps: Record<string, boolean>; years: Row[]; obligations: Obligation[]; previous: Prev[]; credit_moves: Row[]; transport: Row[]; discounts: Row[]; collections: Row[]; summary: Record<string, Row>; events: Row[]; available_discounts: Row[]; buses: Row[] };
 
-const EVENT_LABEL: Record<string, string> = { obligation_create: "إنشاء مستحق", discount_apply: "تطبيق خصم", transport_save: "تحديث اشتراك النقل", collection_record: "تسجيل سداد", collection_reverse: "إلغاء سداد", discount_edit: "تعديل خصم", discount_remove: "حذف خصم", exception_clear: "إعادة تقييم خصم", transport_edit: "تعديل رسوم النقل", transport_exempt: "إعفاء من رسوم النقل", transport_cancel: "إلغاء اشتراك النقل", sibling_ineligible: "انتهاء استحقاق خصم الإخوة", reprice: "تعديل سعر المستحق", auto_no_price: "تعذر الإنشاء التلقائي: الرسوم غير مهيأة", auto_create_failed: "تعذر الإنشاء التلقائي", carry_apply: "ترحيل رصيد سابق", credit_apply: "استخدام رصيد دائن", credit_refund: "استرداد رصيد دائن", due_apply: "تعديل تاريخ الاستحقاق" };
+const EVENT_LABEL: Record<string, string> = { transfer_attach: "إرفاق صورة الحوالة", obligation_create: "إنشاء مستحق", discount_apply: "تطبيق خصم", transport_save: "تحديث اشتراك النقل", collection_record: "تسجيل سداد", collection_reverse: "إلغاء سداد", discount_edit: "تعديل خصم", discount_remove: "حذف خصم", exception_clear: "إعادة تقييم خصم", transport_edit: "تعديل رسوم النقل", transport_exempt: "إعفاء من رسوم النقل", transport_cancel: "إلغاء اشتراك النقل", sibling_ineligible: "انتهاء استحقاق خصم الإخوة", reprice: "تعديل سعر المستحق", auto_no_price: "تعذر الإنشاء التلقائي: الرسوم غير مهيأة", auto_create_failed: "تعذر الإنشاء التلقائي", carry_apply: "ترحيل رصيد سابق", credit_apply: "استخدام رصيد دائن", credit_refund: "استرداد رصيد دائن", due_apply: "تعديل تاريخ الاستحقاق" };
 
 /** Finance tab inside the existing student side panel. Every action is re-checked by sf_* RPCs. */
 export function StudentFinance({ studentId, startCollect = false, initialYear }: { studentId: string; startCollect?: boolean; initialYear?: string }) {
@@ -33,6 +33,7 @@ export function StudentFinance({ studentId, startCollect = false, initialYear }:
   const refresh = () => qc.invalidateQueries({ queryKey: SF_KEY });
   const [started, setStarted] = useState(false);
   useEffect(() => { if (startCollect && !started && year !== undefined && q.data?.caps["collect"]) { setStarted(true); setDlg("collect"); } }, [startCollect, started, q.data, year]);
+  const tq = useQuery({ queryKey: [...SF_KEY, "transfer-files", studentId], queryFn: async () => { const { data, error } = await db.rpc("sf_transfer_files", { _student: studentId }); if (error) throw error; return data as TransferFile[]; }, retry: false });
   const rq = useQuery({ queryKey: [...SF_KEY, "student-receipts", studentId], queryFn: async () => { const { data, error } = await db.rpc("sf_student_receipts", { _student: studentId }); if (error) throw error; return data as Row[]; }, retry: false });
   if (q.isLoading || (year === undefined && !q.error)) return <LoadingState />;
   if (q.error) return <p className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">{(q.error as { code?: string }).code === "42501" ? "لا تتوفر لك صلاحية عرض البيانات المالية لهذا الطالب، أو القسم المالي غير مفعّل." : arabicError(q.error)}</p>;
@@ -84,6 +85,8 @@ export function StudentFinance({ studentId, startCollect = false, initialYear }:
 
       <Section title="سجل السداد">{f.collections.length ? f.collections.map((c) => (
         <div key={c["id"]} className="flex flex-wrap items-center gap-2 text-xs"><b>{money(c["amount"])}</b><span>{METHOD_LABEL[c["method"]]}</span><span>{c["paid_at"]}</span>{c["ref"] && <span dir="ltr">{c["ref"]}</span>}<span className="rounded bg-muted px-1">{COLLECTION_STATUS[c["status"]] ?? c["status"]}</span>{(() => { const r = rq.data?.find((x) => x["collection_id"] === c["id"]); return r ? <><span className="font-mono" dir="ltr">{r["number"]}</span><ReceiptButtons r={r} /></> : null; })()}
+          {c["method"] === "bank" && <TransferFiles files={(tq.data ?? []).filter((x) => x.collection_id === c["id"])} />}
+          {c["method"] === "bank" && f.caps["collect"] && c["status"] !== "reversed" && (tq.data ?? []).filter((x) => x.collection_id === c["id"]).length < 3 && <TransferPick label="إرفاق صورة الحوالة" onPick={async (fl) => { const failed = await attachTransfer(c["id"], fl); if (failed) toast.error(failed); else toast.success("أُرفقت صورة الحوالة"); void refresh(); }} />}
           {f.caps["setup"] && c["status"] !== "reversed" && !c["accounting_confirmed"] && <Button size="sm" variant="ghost" className="ms-auto" onClick={async () => { const r = await askText("سبب إلغاء عملية السداد (تبقى في السجل)", { required: true }); if (r) void run(() => db.rpc("sf_reverse", { _student: studentId, _collection: c["id"], _reason: r }), "أُلغيت العملية"); }}><RotateCcw className="size-4" /> إلغاء</Button>}
         </div>)) : <p className="text-xs text-muted-foreground">لا توجد عمليات سداد.</p>}
         <p className="text-[11px] text-muted-foreground">لكل عملية سند قبض داخلي من ركاز؛ المستند المحاسبي الرسمي يصدر من وافق بعد تفعيل الربط.</p></Section>
@@ -110,6 +113,28 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return <section className="space-y-2 rounded-xl border bg-card p-3"><h4 className="text-sm font-semibold">{title}</h4>{children}</section>;
 }
 
+type TransferFile = { id: string; collection_id: string; name: string; mime: string; path: string };
+const BUCKET = "rikaz-files";
+const TRANSFER_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+/** Optional bank-transfer proof: the server creates the file record (sf_transfer_attach) before the upload. Returns an error message or null. */
+async function attachTransfer(collectionId: string, files: File[]): Promise<string | null> {
+  let failed = 0;
+  for (const file of files) {
+    const r = await db.rpc("sf_transfer_attach", { _collection: collectionId, _name: file.name, _mime: file.type, _size: file.size });
+    if (r.error) return arabicError(r.error);
+    const up = await db.storage.from(BUCKET).upload((r.data as { path: string }).path, file, { contentType: file.type });
+    if (up.error) failed++;
+  }
+  return failed ? `تعذر رفع ${failed} من مرفقات الحوالة؛ أعد إرفاقها من سجل السداد` : null;
+}
+function TransferPick({ label, onPick }: { label: string; onPick: (f: File[]) => void }) {
+  return <label className="cursor-pointer rounded border border-dashed px-2 py-0.5 text-[11px] text-primary hover:bg-muted">{label}<input type="file" className="hidden" accept={TRANSFER_TYPES.join(",")} onChange={(e) => { const fl = Array.from(e.target.files ?? []); e.target.value = ""; if (fl.some((x) => !TRANSFER_TYPES.includes(x.type))) { toast.error("يُقبل الصور وملفات PDF فقط"); return; } if (fl.length) onPick(fl); }} /></label>;
+}
+function TransferFiles({ files }: { files: TransferFile[] }) {
+  const open = async (x: TransferFile) => { const { data, error } = await db.storage.from(BUCKET).createSignedUrl(x.path, 60); if (error || !data) { toast.error("لا تملك صلاحية فتح هذا الملف أو لم يعد متاحًا"); return; } window.open(data.signedUrl, "_blank", "noopener"); };
+  return <>{files.map((x, i) => <Button key={x.id} size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={() => void open(x)}>صورة الحوالة{files.length > 1 ? ` ${i + 1}` : ""}</Button>)}</>;
+}
+
 const obLabel = (o: Obligation) => `${KIND_LABEL[o.kind]} — ${TERM_LABEL(o.term)}`;
 
 function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: string; onClose: () => void; onDone: () => void }) {
@@ -120,6 +145,7 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
   const [v, setV] = useState({ method: "cash", paid_at: new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" }), ref: "", payer: "", notes: "" });
   const [payerTouched, setPayerTouched] = useState(false);
   const [receipt, setReceipt] = useState<Row | null>(null);
+  const [transfer, setTransfer] = useState<File[]>([]);
   // payer defaults to the signed-in employee recording the payment; still editable
   const me = useQuery({ queryKey: ["my-profile-name"], queryFn: async () => { const { data: u } = await db.auth.getUser(); if (!u.user) return ""; const { data } = await db.from("profiles").select("full_name").eq("id", u.user.id).maybeSingle(); return String(data?.["full_name"] ?? ""); } });
   useEffect(() => { if (!payerTouched && me.data && !v.payer) setV((x) => ({ ...x, payer: me.data! })); }, [me.data, payerTouched, v.payer]);
@@ -129,6 +155,8 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
   const m = useMutation({
     mutationFn: async () => {
       const { data, error } = await db.rpc("sf_collect", { _student: studentId, _request_key: key, _p: { ...v, allocations: rows } }); if (error) throw error;
+      // the transfer image is optional and attached after the payment exists; a failed upload never undoes the payment
+      if (v.method === "bank" && transfer.length) { const failed = await attachTransfer(String(data), transfer); if (failed) toast.error(failed); }
       // the receipt number is issued automatically with the payment; read it back to show it at once
       const r = await db.rpc("sf_student_receipts", { _student: studentId });
       return ((r.data as Row[] | null) ?? []).find((x) => x["collection_id"] === data) ?? null;
@@ -139,7 +167,7 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
     <Dialog open onOpenChange={(o) => !o && onDone()}>
       <DialogContent dir="rtl" className="max-w-xl">
         <DialogHeader><DialogTitle>سند القبض {String(receipt["number"])}</DialogTitle></DialogHeader>
-        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 rounded-xl border bg-card p-3 text-sm">{receiptLines(receipt).map(([a, b], i) => <Fragment key={i}><dt className="text-muted-foreground">{a}</dt><dd className="font-medium">{b}</dd></Fragment>)}</dl>
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 rounded-xl border bg-card p-3 text-sm">{receiptLines(receipt).map(([a, b], i) => <Fragment key={i}><dt className="text-muted-foreground">{a}</dt><dd className="font-medium">{b}</dd></Fragment>)}{v.method === "bank" && <><dt className="text-muted-foreground">صورة الحوالة</dt><dd className="font-medium">{transfer.length ? transfer.map((x) => x.name).join("، ") : "لم تُرفق"}</dd></>}</dl>
         <div className="flex gap-2"><ReceiptButtons r={receipt} /><Button className="ms-auto" onClick={onDone}>تم</Button></div>
       </DialogContent>
     </Dialog>
@@ -158,6 +186,9 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
           <div className="space-y-1"><Label htmlFor="cd">تاريخ السداد</Label><Input id="cd" type="date" value={v.paid_at} onChange={(e) => setV({ ...v, paid_at: e.target.value })} /></div>
           <div className="space-y-1"><Label htmlFor="cr">رقم المرجع</Label><Input id="cr" value={v.ref} onChange={(e) => setV({ ...v, ref: e.target.value })} /></div>
           <div className="space-y-1"><Label htmlFor="cp">اسم الدافع</Label><Input id="cp" value={v.payer} onChange={(e) => { setPayerTouched(true); setV({ ...v, payer: e.target.value }); }} /></div>
+          {v.method === "bank" && <div className="col-span-2 flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-2 text-xs"><span className="text-muted-foreground">صورة الحوالة (اختياري)</span>
+            {transfer.map((x, i) => <span key={i} className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5">{x.name}<button type="button" aria-label={`إزالة ${x.name}`} className="text-destructive" onClick={() => setTransfer(transfer.filter((_, j) => j !== i))}>×</button></span>)}
+            {transfer.length < 3 && <TransferPick label={transfer.length ? "إضافة ملف آخر" : "اختيار صورة أو PDF"} onPick={(fl) => setTransfer([...transfer, ...fl].slice(0, 3))} />}</div>}
           <div className="col-span-2 space-y-1"><Label htmlFor="cn">ملاحظات</Label><Input id="cn" value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} /></div>
         </div>
         <p className="text-sm">الإجمالي: <b>{money(total)}</b>{!ok && rows.length > 0 && <span className="ms-2 text-xs text-destructive">المبلغ يجب أن يكون موجبًا ولا يتجاوز المتبقي</span>}</p>

@@ -768,3 +768,5 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 ### Student finance (sf_*) — Nov 24 2026
 - Org owner: price/discount setup, obligations, overrides, reversals, view/collect/discount/transport/export.
 - Others: only via perm section `student_finance` actions view/collect/discount/transport/export (catalog entry not yet added — غير مكتملة). Guardians: read own verified children via sf_get/sf_children. Teachers/anon: denied (verified live).
+
+- صورة الحوالة في سداد الرسوم: يرفقها من يملك صلاحية التحصيل (للتحويل البنكي فقط، حتى 3 ملفات)، ويطّلع عليها من يملك عرض المالية؛ ولي الأمر والمعلم لا يرونها.

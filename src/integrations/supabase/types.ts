@@ -32093,6 +32093,16 @@ export type Database = {
       }
       sf_siblings: { Args: { _student: string; _year: string }; Returns: Json }
       sf_student_receipts: { Args: { _student: string }; Returns: Json }
+      sf_transfer_attach: {
+        Args: {
+          _collection: string
+          _mime: string
+          _name: string
+          _size: number
+        }
+        Returns: Json
+      }
+      sf_transfer_files: { Args: { _student: string }; Returns: Json }
       sf_transport_save: {
         Args: { _p: Json; _student: string; _term: number; _year: string }
         Returns: undefined

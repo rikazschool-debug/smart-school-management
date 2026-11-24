@@ -1291,3 +1291,5 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Previous balances: owner-only preview → approved carry (sf_carry_runs/sf_carries) pointing to the original obligation; idempotent retry; no new debt; original due date kept; credit use/refund owner-only (sf_credit_moves), not counted as cash. Receipts name the original year.
 - Guardian «الرصيد المالي» box, child finance tab and Sanad now read the same sf_* source (old fin_student_accounts mirror kept only as the Wafeq panel when linked). Fixed sibling-discount total (dashboard/family used a kind that never exists).
 - Evidence: scripts/sf-carry-e2e.ts 19/19, sf-notify-e2e 14/14, vitest finance 26/26 + statement 3/3, typecheck OK; owner screens opened in browser (dashboard, accounts, carry page, procurement tab). Not verified: guardian and accountant screens signed-in, PDF/Excel files opened, main system dashboard KPIs, detailed reports catalogue.
+
+- 2026-11-24 — صورة الحوالة البنكية الاختيارية في سداد الرسوم (sf_transfer_attach/sf_transfer_files): منفّذ ومختَبَر على قاعدة الاختبار (scripts/sf-transfer-e2e.ts 9/9). الواجهة بحساب موقّع غير متحقق.
