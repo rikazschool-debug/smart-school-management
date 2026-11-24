@@ -57,8 +57,9 @@ const trRec = (r: Row): Rec => { const b = B(r); return { ...base(r), kind: "tra
 const ADJ_H = ["الرقم", "التاريخ", "الطالب", "النوع", "قبل", "بعد", "المستخدم", "السبب"];
 const ADJ: Record<string, string> = { reprice: "تعديل سعر الرسوم", discount_edit: "تعديل خصم", discount_remove: "إلغاء خصم", exception_clear: "إعادة تقييم خصم", transport_edit: "تعديل رسوم النقل", transport_exempt: "إعفاء من رسوم النقل", transport_cancel: "إلغاء مستحقات النقل", collection_reverse: "عكس سداد", credit_apply: "استخدام رصيد دائن", credit_refund: "استرداد رصيد دائن", carry_apply: "ترحيل أرصدة" };
 const adj = (f: (r: Row) => boolean) => (d: Row[]): Rec[] => d.filter(f).map((r) => ({ ...base(r), date: String(r["created_at"]).slice(0, 10), actor: String(r["actor"]), amount: r["action"] === "credit_apply" || r["action"] === "credit_refund" ? num(r["new"]) : 0, cells: [String(r["number"]), String(r["created_at"]).slice(0, 10), String(r["name"] ?? "—"), ADJ[String(r["action"])] ?? String(r["action"]), r["old"] == null ? "—" : money(r["old"]), r["new"] == null ? "—" : money(r["new"]), String(r["actor"] || "—"), String(r["reason"] ?? "—")] }));
-const RC_H = ["رقم السند", "تاريخ السداد", "الطالب", "المبلغ", "الطريقة", "المرجع", "الحالة"];
-const rc = (f: (r: Row) => boolean) => (d: Row[]): Rec[] => d.filter(f).map((r) => { const s = (r["snapshot"] ?? {}) as Row; return { sid: String(r["student_id"] ?? s["student"]?.id ?? ""), name: String(s["student"]?.name ?? ""), date: String(s["paid_at"]), method: String(s["method"]), actor: String(s["actor"] ?? ""), amount: r["status"] === "cancelled" ? 0 : num(s["amount"]), cells: [String(r["number"]), String(s["paid_at"]), String(s["student"]?.name ?? ""), money(s["amount"]), METHOD_LABEL[String(s["method"])] ?? "", String(s["ref"] || "—"), r["status"] === "cancelled" ? "ملغى" : "ساري"] }; });
+const RC_H = ["رقم السند", "تاريخ السداد", "الطالب", "مبلغ السند", "المخصص للعام المختار", "الطريقة", "المرجع", "الحالة"];
+// totals use the part of each receipt belonging to the selected year (server year_amount), so a two-year receipt is never counted twice
+const rc = (f: (r: Row) => boolean) => (d: Row[]): Rec[] => d.filter(f).map((r) => { const s = (r["snapshot"] ?? {}) as Row; return { sid: String(r["student_id"] ?? s["student"]?.id ?? ""), name: String(s["student"]?.name ?? ""), date: String(s["paid_at"]), method: String(s["method"]), actor: String(s["actor"] ?? ""), amount: r["status"] === "cancelled" ? 0 : num(r["year_amount"] ?? s["amount"]), cells: [String(r["number"]), String(s["paid_at"]), String(s["student"]?.name ?? ""), money(s["amount"]), money(r["status"] === "cancelled" ? 0 : r["year_amount"] ?? s["amount"]), METHOD_LABEL[String(s["method"])] ?? "", String(s["ref"] || "—"), r["status"] === "cancelled" ? "ملغى" : "ساري"] }; });
 
 const T = "tuition", TR = "transport";
 export const REPORTS: Rep[] = [
@@ -147,6 +148,9 @@ export function ReportsCatalog({ schoolId, yearId }: { schoolId: string; yearId:
   </section>;
 }
 
+// grade names repeat across stages, so the grade filter is keyed by stage + grade
+const gk = (r: Rec) => [r.stage, r.grade].filter(Boolean).join(" — ");
+
 function ReportView({ rep, schoolId, yearId, onBack }: { rep: Rep; schoolId: string; yearId: string; onBack: () => void }) {
   const [term, setTerm] = useState(1);
   const args: Record<string, unknown> = rep.src === "rcpt" ? { _school: schoolId, _q: null, _from: null, _to: null, _method: null, _year: yearId || null } : rep.src === "bus" ? { _school: schoolId, _year: yearId, _term: term } : { _school: schoolId, _year: yearId || null };
@@ -155,19 +159,19 @@ function ReportView({ rep, schoolId, yearId, onBack }: { rep: Rep; schoolId: str
   const [f, setF] = useState({ s: "", stage: "", grade: "", term: "", kind: "", pay: "", method: "", actor: "", from: "", to: "" });
   const [open, setOpen] = useState<Rec | null>(null);
   const recs = useMemo(() => rep.build(d.data ?? []), [rep, d.data]);
-  const rows = recs.filter((r) => (!f.s || (r.sid ? match(f.s, r.sid, r.name, ...r.cells) : r.cells.join(" ").includes(f.s))) && (!f.stage || r.stage === f.stage) && (!f.grade || r.grade === f.grade) && (!f.term || String(r.term) === f.term) && (!f.kind || r.kind === f.kind) && (!f.pay || r.pay === f.pay)
+  const rows = recs.filter((r) => (!f.s || (r.sid ? match(f.s, r.sid, r.name, ...r.cells) : r.cells.join(" ").includes(f.s))) && (!f.stage || r.stage === f.stage) && (!f.grade || gk(r) === f.grade) && (!f.term || String(r.term) === f.term) && (!f.kind || r.kind === f.kind) && (!f.pay || r.pay === f.pay)
     && (!f.method || r.method === f.method) && (!f.actor || r.actor === f.actor) && (!f.from || (r.date ?? "") >= f.from) && (!f.to || (r.date ?? "9") <= f.to));
   const opts = (k: keyof Rec) => [...new Set(recs.map((r) => r[k]).filter(Boolean).map(String))].sort();
-  const sel = (k: keyof typeof f, label: string, o: [string, string][]) => o.length > 1 ? <select aria-label={label} className={selectCls("min-w-28", true)} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })}><option value="">{label}: الكل</option>{o.map(([a, b]) => <option key={a} value={a}>{b}</option>)}</select> : null;
+  const sel = (k: keyof typeof f, label: string, o: [string, string][]) => o.length > 1 ? <select aria-label={label} className={selectCls("min-w-28", true)} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value, ...(k === "stage" ? { grade: "" } : {}) })}><option value="">{label}: الكل</option>{o.map(([a, b]) => <option key={a} value={a}>{b}</option>)}</select> : null;
   const rs = useRowSelect(rows.length); const out = rs.pick(rows).map((r) => r.cells);
   const total = rows.reduce((a, r) => a + r.amount, 0);
-  const meta = { title: rep.title, filters: Object.values(f).filter(Boolean) };
+  const meta = { title: rep.title, totals: true, filters: Object.values(f).filter(Boolean) };
   return <section className="space-y-3">
     <div className="flex flex-wrap items-center gap-2"><Button size="sm" variant="ghost" onClick={onBack}>→ كل التقارير</Button><h2 className="text-lg font-bold">{rep.title}</h2><span className="text-xs text-muted-foreground">{rep.group}</span></div>
     <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2">
       <Input className="w-64" placeholder={SEARCH_HINT} value={f.s} onChange={(e) => setF({ ...f, s: e.target.value })} />
       {rep.src === "bus" && <select aria-label="الفصل" className={selectCls("min-w-28", true)} value={term} onChange={(e) => setTerm(Number(e.target.value))}><option value={1}>الفصل الأول</option><option value={2}>الفصل الثاني</option></select>}
-      {sel("stage", "المرحلة", opts("stage").map((x) => [x, x]))}{sel("grade", "الصف", opts("grade").map((x) => [x, x]))}{sel("term", "الفصل", opts("term").map((x) => [x, TERM_LABEL(Number(x))]))}
+      {sel("stage", "المرحلة", opts("stage").map((x) => [x, x]))}{sel("grade", "الصف", [...new Set(recs.filter((r) => r.grade && (!f.stage || r.stage === f.stage)).map(gk))].sort().map((x) => [x, x]))}{sel("term", "الفصل", opts("term").map((x) => [x, TERM_LABEL(Number(x))]))}
       {sel("kind", "نوع الرسوم", opts("kind").map((x) => [x, KIND_LABEL[x] ?? x]))}{sel("pay", "حالة السداد", opts("pay").map((x) => [x, x]))}{sel("method", "طريقة السداد", opts("method").map((x) => [x, METHOD_LABEL[x] ?? x]))}{sel("actor", "الموظف", opts("actor").map((x) => [x, x]))}
       {recs.some((r) => r.date) && <><Input type="date" aria-label="من تاريخ" className="w-36" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} /><Input type="date" aria-label="إلى تاريخ" className="w-36" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} /></>}
       <span className="ms-auto flex items-center gap-1">{rs.note}<Button size="sm" variant="outline" onClick={() => void exportPdf(meta, rep.headers, out).catch((e) => toast.error(arabicError(e)))}>PDF</Button><Button size="sm" variant="outline" onClick={() => exportXlsx(meta, rep.headers, out)}>Excel</Button><Button size="sm" variant="outline" onClick={() => printReport(meta, rep.headers, out)}>طباعة</Button></span></div>

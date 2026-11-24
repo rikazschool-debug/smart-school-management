@@ -17,6 +17,8 @@ import { useRowSelect } from "./row-select";
 
 type Cell = string | number;
 const useRpc = (name: string, schoolId: string, yearId: string) => useQuery({ queryKey: [...SF_KEY, name, schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc(name, { _school: schoolId, _year: yearId || null }); if (error) throw error; return data as Row[]; }, retry: false });
+// grade names repeat across stages («أول» الابتدائية / المتوسطة), so grade filters always carry the stage
+const gradeKey = (c: Row | null | undefined) => (c?.["grade"] ? [c["stage"], c["grade"]].filter(Boolean).join(" — ") : "");
 const clsText = (c: Row | null | undefined) => [c?.["stage"], c?.["grade"], c?.["section"]].filter(Boolean).join(" / ");
 const uniq = (xs: unknown[]) => [...new Set(xs.filter(Boolean).map(String))].sort();
 
@@ -29,7 +31,7 @@ function Sel({ label, value, onChange, opts }: { label: string; value: string; o
 /** Shared list body: filters bar, exports from the same rows, table, «فتح الحساب» dialog on the unified student finance panel. */
 function ListPage({ title, note, kpis, filters, headers, rows, ids, names, empty, count }: { title: string; note?: string; kpis: ReactNode; filters: ReactNode; headers: string[]; rows: Cell[][]; ids: string[]; names: string[]; empty: string; count: string[] }) {
   const [open, setOpen] = useState<number | null>(null); const rs = useRowSelect(rows.length);
-  const meta = { title, filters: count }; const out = rs.pick(rows);
+  const meta = { title, filters: count, totals: true }; const out = rs.pick(rows);
   return <section className="space-y-3">
     <div><h2 className="text-lg font-bold">{title}</h2>{note && <p className="text-xs text-muted-foreground">{note}</p>}</div>
     {kpis}
@@ -49,7 +51,7 @@ export function AppliedDiscounts({ schoolId, yearId }: { schoolId: string; yearI
   const q = useRpc("sf_discount_list", schoolId, yearId); const match = useStudentSearch(schoolId);
   const [s, setS] = useState(""); const [f, setF] = useState({ grade: "", term: "", name: "", fee: "", src: "", st: "", sib: "", from: "", to: "" });
   const all = q.data ?? [];
-  const rows = useMemo(() => all.filter((r) => match(s, r["student_id"], r["name"]) && (!f.grade || r["cls"]?.grade === f.grade) && (!f.term || String(r["term"]) === f.term) && (!f.name || r["discount"] === f.name) && (!f.fee || r["fee_kind"] === f.fee)
+  const rows = useMemo(() => all.filter((r) => match(s, r["student_id"], r["name"]) && (!f.grade || gradeKey(r["cls"]) === f.grade) && (!f.term || String(r["term"]) === f.term) && (!f.name || r["discount"] === f.name) && (!f.fee || r["fee_kind"] === f.fee)
     && (!f.src || (f.src === "auto") === !!r["automatic"]) && (!f.st || (f.st === "active") === !!r["active"]) && (!f.sib || (f.sib === "yes") === !!r["sibling"]) && (!f.from || String(r["created_at"]).slice(0, 10) >= f.from) && (!f.to || String(r["created_at"]).slice(0, 10) <= f.to)), [all, s, f, match]);
   if (q.isLoading) return <LoadingState />; if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const act = rows.filter((r) => r["active"]); const sum = (xs: Row[]) => xs.reduce((a, r) => a + num(r["amount"]), 0);
@@ -61,7 +63,7 @@ export function AppliedDiscounts({ schoolId, yearId }: { schoolId: string; yearI
     kpis={<Kpis items={[["إجمالي الخصومات", money(sum(act)), "good"], ["خصومات الرسوم الدراسية", money(sum(act.filter((r) => r["fee_kind"] === "tuition")))], ["خصومات النقل", money(sum(act.filter((r) => r["fee_kind"] === "transport")))], ["خصم الإخوة", money(sum(act.filter((r) => r["sibling"])))],
       ["الطلاب المستفيدون", String(new Set(act.map((r) => r["student_id"])).size)], ["تلقائية", String(act.filter((r) => r["automatic"]).length)], ["يدوية", String(act.filter((r) => !r["automatic"]).length)], ["معدَّلة", String(rows.filter((r) => r["edited"]).length)], ["ملغاة", String(rows.filter((r) => !r["active"]).length), "bad"], ["استثناءات", String(rows.filter((r) => r["manual_override"]).length)]]} />}
     filters={<><Input className="w-72" placeholder={SEARCH_HINT} value={s} onChange={(e) => setS(e.target.value)} />
-      <Sel label="الصف" value={f.grade} onChange={set("grade")} opts={uniq(all.map((r) => r["cls"]?.grade)).map((g) => [g, g])} />
+      <Sel label="الصف" value={f.grade} onChange={set("grade")} opts={uniq(all.map((r) => gradeKey(r["cls"]))).map((g) => [g, g])} />
       <Sel label="الفصل" value={f.term} onChange={set("term")} opts={[["1", "الفصل الأول"], ["2", "الفصل الثاني"]]} />
       <Sel label="اسم الخصم" value={f.name} onChange={set("name")} opts={uniq(all.map((r) => r["discount"])).map((g) => [g, g])} />
       <Sel label="الرسوم" value={f.fee} onChange={set("fee")} opts={[["tuition", "الدراسية"], ["transport", "النقل"]]} />
@@ -78,7 +80,7 @@ export function TransportAccounts({ schoolId, yearId }: { schoolId: string; year
   const [s, setS] = useState(""); const [f, setF] = useState({ grade: "", term: "", bus: "", type: "", sub: "", pay: "", ex: "", late: "", prev: "" });
   const all = q.data ?? [];
   const state = (r: Row) => { const b = r["balance"] as Row | null; if (r["exempt"] || r["obligation_status"] === "exempt") return "معفى"; if (!b) return "لم تُنشأ الرسوم"; if (num(b["remaining"]) <= 0) return "مسدد"; if (num(b["recorded"]) > 0) return "مسدد جزئيًا"; return "غير مسدد"; };
-  const rows = useMemo(() => all.filter((r) => match(s, r["student_id"], r["name"]) && (!f.grade || r["cls"]?.grade === f.grade) && (!f.term || String(r["term"]) === f.term) && (!f.bus || r["bus"] === f.bus) && (!f.type || r["transport_type"] === f.type)
+  const rows = useMemo(() => all.filter((r) => match(s, r["student_id"], r["name"]) && (!f.grade || gradeKey(r["cls"]) === f.grade) && (!f.term || String(r["term"]) === f.term) && (!f.bus || r["bus"] === f.bus) && (!f.type || r["transport_type"] === f.type)
     && (!f.sub || (f.sub === "on") === !!r["active"]) && (!f.pay || state(r) === f.pay) && (!f.ex || !!r["exempt"]) && (!f.late || !!r["overdue"]) && (!f.prev || !!r["previous"])), [all, s, f, match]);
   if (q.isLoading) return <LoadingState />; if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const on = rows.filter((r) => r["active"]); const bal = (k: string) => rows.reduce((a, r) => a + num((r["balance"] as Row | null)?.[k]), 0);
@@ -91,7 +93,7 @@ export function TransportAccounts({ schoolId, yearId }: { schoolId: string; year
       ["إجمالي رسوم النقل", money(bal("gross"))], ["خصومات النقل", money(bal("discount"))], ["صافي الرسوم", money(net)], ["المسدد", money(rec), "good"], ["المتبقي", money(bal("remaining")), "bad"],
       ["متأخرات النقل", money(rows.filter((r) => r["overdue"]).reduce((a, r) => a + num((r["balance"] as Row)["remaining"]), 0)), "bad"], ["لديهم أرصدة نقل سابقة", String(new Set(rows.filter((r) => r["previous"]).map((r) => r["student_id"])).size)], ["المعفيون", String(rows.filter((r) => r["exempt"]).length)], ["نسبة التحصيل", net > 0 ? `${((rec / net) * 100).toFixed(1)}%` : "—"]]} />}
     filters={<><Input className="w-72" placeholder={SEARCH_HINT} value={s} onChange={(e) => setS(e.target.value)} />
-      <Sel label="الصف" value={f.grade} onChange={set("grade")} opts={uniq(all.map((r) => r["cls"]?.grade)).map((g) => [g, g])} />
+      <Sel label="الصف" value={f.grade} onChange={set("grade")} opts={uniq(all.map((r) => gradeKey(r["cls"]))).map((g) => [g, g])} />
       <Sel label="الفصل" value={f.term} onChange={set("term")} opts={[["1", "الفصل الأول"], ["2", "الفصل الثاني"]]} />
       <Sel label="الباص" value={f.bus} onChange={set("bus")} opts={uniq(all.map((r) => r["bus"])).map((g) => [g, g])} />
       <Sel label="نوع الاشتراك" value={f.type} onChange={set("type")} opts={TRANSPORT_TYPES.map((t) => [t.value, t.label])} />

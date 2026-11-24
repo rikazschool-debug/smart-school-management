@@ -1,0 +1,5 @@
+-- Phase 8 (applied to the test DB): sibling eligibility follows the fee placement rule (_sf_terms: active or ended
+-- enrollment of that term), and a new placement refreshes the siblings' discounts in every placed term.
+-- Body identical to the applied migration «Sibling discount fix»; see that migration for the full function text.
+-- _sf_siblings: en.status in('active','ended')
+-- _sf_create_tuition2: refresh siblings from (select distinct x.student_id from unnest(terms) tt cross join lateral _sf_siblings(st.id,_year,tt) x)

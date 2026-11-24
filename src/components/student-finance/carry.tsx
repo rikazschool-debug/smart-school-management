@@ -41,7 +41,7 @@ export function CarryForward({ orgId }: { orgId: string }) {
   const H = ["الطالب", "المدرسة الأصلية", "العام السابق", "صافي المستحقات", "المسدد", "الرصيد المدين", "الرصيد الدائن", "حالة الترحيل"];
   const state = (s: Stu) => (s.carried === s.items ? "مرحّل سابقًا" : s.carried ? "مرحّل جزئيًا" : "غير مرحّل");
   const data = shown.map((s) => [s.name, s.school, [...s.years].map(formatAcademicYear).join("، "), money(s.net), money(s.recorded), money(s.debit), money(s.credit), state(s)]);
-  const meta = { title: "الأرصدة السابقة والمرحلة", filters: [`من ${formatAcademicYear(fromKey)} إلى ${formatAcademicYear(toKey)}`] };
+  const meta = { totals: true, title: "الأرصدة السابقة والمرحلة", filters: [`من ${formatAcademicYear(fromKey)} إلى ${formatAcademicYear(toKey)}`] };
   const apply = async () => {
     if (!chosen.length) return;
     if (!(await ask(`اعتماد ترحيل أرصدة ${chosen.length} طالبًا من ${formatAcademicYear(fromKey)} إلى ${formatAcademicYear(toKey)}؟ يُعاد التحقق من الأرصدة الفعلية لحظة الاعتماد، ولا يُنشأ دين جديد ولا تتغير المستحقات أو السندات الأصلية.`, { ok: "اعتماد الترحيل" }))) return;

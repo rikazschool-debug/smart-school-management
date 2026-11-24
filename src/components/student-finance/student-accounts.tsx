@@ -42,7 +42,7 @@ export function StudentAccounts({ schoolId, yearId, mode = "accounts" }: { schoo
   const picked = sel.size ? shown.filter((r) => sel.has(r.id)) : shown;
   const toggle = (id: string) => setSel((x) => { const n = new Set(x); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const data = picked.map((r) => [r.name, r.grade || (r.placed ? "—" : "غير مسكّن"), money(r.previous), money(r.tuition), money(r.transport), money(r.discount), money(r.net), money(r.recorded), money(r.remaining), money(r.credit + r.prevCredit), STATE[state(r)] ?? ""]);
-  const meta = { title: mode === "collect" ? "التحصيل والسداد" : "الحسابات المالية للطلاب", filters: [search, st === "due" ? "عليهم مبالغ" : STATE[st] ?? "", flag, sel.size ? `${picked.length} طالبًا محددًا` : ""].filter(Boolean) };
+  const meta = { totals: true, title: mode === "collect" ? "التحصيل والسداد" : "الحسابات المالية للطلاب", filters: [search, st === "due" ? "عليهم مبالغ" : STATE[st] ?? "", flag, sel.size ? `${picked.length} طالبًا محددًا` : ""].filter(Boolean) };
   const pageRows = shown.slice(page * PAGE, page * PAGE + PAGE);
   const loadFin = (id: string) => async () => { const { data: d, error } = await db.rpc("sf_get", { _student: id, _year: yearId }); if (error) throw error; return [d as Row]; };
   const loadMany = async () => (await Promise.all(picked.map((r) => loadFin(r.id)()))).flat();

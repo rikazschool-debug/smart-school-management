@@ -15,3 +15,10 @@
 - [x] 16 Concurrency: two sessions, payment updates accounts+dashboard without reload
 - [x] 14-15 Signed-in UI for principal/accountant/registrar/guardian; full cycle in UI (scripts/sf-cycle-fixture.ts)
 - [ ] 17-19 Requirements matrix, data safety, final report
+
+# Finance phase 4 (Sanad + gaps)
+- [x] Sanad tested as owner/accountant/guardian against sf_get
+- [x] Receipts: year part in totals
+- [x] Bus roster print/PDF/Excel verified (+ totals row)
+- [x] Filters with several stages/grades/sections
+- [x] PDFs/print with a logo school

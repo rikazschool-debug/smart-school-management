@@ -9,7 +9,8 @@ import * as XLSX from "xlsx";
 import { brandHeaderHtml, getExportBrand } from "@/lib/export-brand";
 
 /** details: labelled lines for a single-person document (replaces the «الفلاتر» line); count: false hides «عدد السجلات». */
-export type ExportMeta = { title: string; school?: string | undefined; filters: string[]; note?: string | undefined; details?: string[] | undefined; count?: boolean | undefined };
+/** totals: append a «الإجمالي» row summing every column whose cells are all riyal amounts (string[] = headers never summed). */
+export type ExportMeta = { title: string; school?: string | undefined; filters: string[]; note?: string | undefined; details?: string[] | undefined; count?: boolean | undefined; totals?: boolean | string[] | undefined };
 type Cell = string | number | null | undefined;
 
 const stamp = () => new Date().toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh" });
@@ -27,10 +28,30 @@ export function moneyValue(v: string): number | null {
   return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : null;
 }
 
+const TOTAL = "الإجمالي";
+const NEVER_SUM = ["الرصيد", "مبلغ السند", "القيمة السابقة", "القيمة الجديدة", "قبل", "بعد"];
+const riyal = (n: number) => `${n.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س`;
+/** The exported rows plus (when meta.totals) one totals row over the same rows — sums of the shown amounts, nothing recomputed. */
+export function withTotals(meta: ExportMeta, headers: string[], rows: Cell[][]): Cell[][] {
+  if (!meta.totals || !rows.length) return rows;
+  // running balances, receipt face values (a receipt may span years) and before/after values are never added up
+  const skip = [...NEVER_SUM, ...(Array.isArray(meta.totals) ? meta.totals : [])];
+  const t: Cell[] = headers.map(() => ""); let any = false;
+  headers.forEach((h, i) => {
+    if (i === 0 || skip.includes(h)) return;
+    const vals = rows.map((r) => r[i]).filter((v) => v !== null && v !== undefined && v !== "" && v !== "—");
+    const nums = vals.map((v) => (typeof v === "string" ? moneyValue(v) : null));
+    if (!vals.length || nums.some((n) => n === null)) return;
+    t[i] = riyal(Math.round((nums as number[]).reduce((a, n) => a + n, 0) * 100) / 100); any = true;
+  });
+  if (!any) return rows;
+  t[0] = TOTAL; return [...rows, t];
+}
+
 /** Builds the worksheet with typed cells: numbers stay numbers, everything else is a literal string cell. */
 export function buildSheet(meta: ExportMeta, headers: string[], rows: Cell[][]) {
   const bn = getExportBrand().name || meta.school;
-  const aoa: Cell[][] = [...(bn ? [[bn]] : []), [meta.title], ...metaLines(meta, rows.length).map((l) => [l]), [], headers, ...rows];
+  const aoa: Cell[][] = [...(bn ? [[bn]] : []), [meta.title], ...metaLines(meta, rows.length).map((l) => [l]), [], headers, ...withTotals(meta, headers, rows)];
   const ws: XLSX.WorkSheet = {};
   aoa.forEach((r, ri) => r.forEach((v, ci) => {
     if (v === null || v === undefined || v === "") return;
@@ -59,10 +80,11 @@ function headerHtml(meta: ExportMeta, n: number) {
     metaLines(meta, n).map((l) => `<div style="font-size:11px;color:#444">${esc(l)}</div>`).join("");
 }
 const theadHtml = (headers: string[]) => `<thead><tr>${headers.map((h) => `<th style="${TD};background:#eef3f1;font-weight:700">${esc(h)}</th>`).join("")}</tr></thead>`;
-const rowHtml = (r: Cell[]) => `<tr>${r.map((c) => `<td style="${TD}">${esc(c)}</td>`).join("")}</tr>`;
+const rowHtml = (r: Cell[], total = false) => `<tr>${r.map((c) => `<td style="${TD}${total ? ";font-weight:700;background:#eef3f1" : ""}">${esc(c)}</td>`).join("")}</tr>`;
 
 /** Direct PDF download (no popup). Landscape automatically for wide tables (> 6 columns). */
-export async function exportPdf(meta: ExportMeta, headers: string[], rows: Cell[][]) {
+export async function exportPdf(meta: ExportMeta, headers: string[], shownRows: Cell[][]) {
+  const rows = withTotals(meta, headers, shownRows), n = shownRows.length, totalAt = rows.length > n ? n : -1;
   const [{ toPng }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
   await ensureCairo();
   const landscape = headers.length > 6;
@@ -72,7 +94,7 @@ export async function exportPdf(meta: ExportMeta, headers: string[], rows: Cell[
   document.body.appendChild(host);
   try {
     // measure every row once inside a full-width table
-    host.innerHTML = `<div style="padding:${PAD}px">${headerHtml(meta, rows.length)}<table style="${TABLE};margin-top:10px">${theadHtml(headers)}<tbody>${rows.map(rowHtml).join("")}</tbody></table></div>`;
+    host.innerHTML = `<div style="padding:${PAD}px">${headerHtml(meta, n)}<table style="${TABLE};margin-top:10px">${theadHtml(headers)}<tbody>${rows.map((r, i) => rowHtml(r, i === totalAt)).join("")}</tbody></table></div>`;
     const headBlock = (host.querySelector("table") as HTMLElement).offsetTop;
     const theadH = (host.querySelector("thead") as HTMLElement).offsetHeight;
     const heights = [...host.querySelectorAll("tbody tr")].map((tr) => (tr as HTMLElement).offsetHeight);
@@ -87,9 +109,9 @@ export async function exportPdf(meta: ExportMeta, headers: string[], rows: Cell[
     const pdf = new jsPDF({ orientation: landscape ? "landscape" : "portrait", unit: "px", format: [W, H], hotfixes: ["px_scaling"] });
     for (let p = 0; p < pages.length; p++) {
       const idx = pages[p]!;
-      const body = idx.length ? idx.map((i) => rowHtml(rows[i]!)).join("") : `<tr><td colspan="${headers.length}" style="${TD};text-align:center;padding:24px">لا توجد سجلات مطابقة للفلاتر المحددة</td></tr>`;
+      const body = idx.length ? idx.map((i) => rowHtml(rows[i]!, i === totalAt)).join("") : `<tr><td colspan="${headers.length}" style="${TD};text-align:center;padding:24px">لا توجد سجلات مطابقة للفلاتر المحددة</td></tr>`;
       host.innerHTML = `<div style="width:${W}px;height:${H}px;box-sizing:border-box;padding:${PAD}px;position:relative;${CSS}">
-        ${p === 0 ? headerHtml(meta, rows.length) : `<div style="font-size:11px;color:#444">${esc(meta.title)} — تابع</div>`}
+        ${p === 0 ? headerHtml(meta, n) : `<div style="font-size:11px;color:#444">${esc(meta.title)} — تابع</div>`}
         <table style="${TABLE};margin-top:10px">${theadHtml(headers)}<tbody>${body}</tbody></table>
         <div style="position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:10px;color:#555">صفحة ${p + 1} من ${pages.length}</div></div>`;
       const png = await toPng(host.firstElementChild as HTMLElement, { pixelRatio: 2, backgroundColor: "#ffffff", width: W, height: H });
@@ -155,14 +177,15 @@ async function ensureCairo() {
 }
 
 /** Optional: browser print dialog (user may choose «Save as PDF»). */
-export function printReport(meta: ExportMeta, headers: string[], rows: Cell[][]) {
+export function printReport(meta: ExportMeta, headers: string[], shownRows: Cell[][]) {
+  const rows = withTotals(meta, headers, shownRows), n = shownRows.length;
   const w = window.open("", "_blank");
   if (!w) throw new Error("اسمح بالنوافذ المنبثقة للطباعة");
   w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${esc(meta.title)}</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <style>@page{size:A4;margin:14mm 10mm 16mm;@bottom-center{content:"صفحة " counter(page) " من " counter(pages);font:10px Cairo}}
 body{${CSS};margin:0}thead{display:table-header-group}tr{break-inside:avoid}</style></head><body>
-${headerHtml(meta, rows.length)}<table style="${TABLE};margin-top:10px">${theadHtml(headers)}<tbody>${rows.map(rowHtml).join("")}</tbody></table>
+${headerHtml(meta, n)}<table style="${TABLE};margin-top:10px">${theadHtml(headers)}<tbody>${rows.map((r, i) => rowHtml(r, i >= n)).join("")}</tbody></table>
 <script>document.fonts.ready.then(()=>setTimeout(()=>print(),300))</script></body></html>`);
   w.document.close();
 }

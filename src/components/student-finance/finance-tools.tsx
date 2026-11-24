@@ -8,7 +8,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { ask } from "@/components/confirm";
 import { arabicError } from "@/lib/session";
 import { formatAcademicYear } from "@/lib/academic-year";
-import { SF_KEY, TRANSPORT_LABEL, TRANSPORT_TYPES, money } from "@/lib/student-finance/labels";
+import { SF_KEY, TRANSPORT_LABEL, TRANSPORT_TYPES, money, num } from "@/lib/student-finance/labels";
 import { amountInWords } from "@/lib/student-finance/words";
 import { exportPagePdf, exportPdf, exportXlsx, printPage, printReport } from "@/lib/export";
 import { brandHeaderHtml } from "@/lib/export-brand";
@@ -148,9 +148,12 @@ export function ReceiptsList({ schoolId, yearId, yearName }: { schoolId: string;
   const [view, setView] = useState<Row | null>(null);
   const list = useQuery({ queryKey: [...SF_KEY, "receipts", schoolId, q, from, to, method, allYears ? "" : yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_receipts", { _school: schoolId, _q: q || null, _from: from || null, _to: to || null, _method: method || null, _year: allYears || !yearId ? null : yearId }); if (error) throw error; return data as Row[]; }, retry: false });
   const shown = list.data ?? []; const rs = useRowSelect(shown.length);
-  const RH = ["رقم السند", "التاريخ", "الطالب", "رقم القيد", "المدرسة", "المرحلة", "الصف", "عام المستحق", "عام التحصيل", "المبلغ", "الطريقة", "المرجع", "الحالة"];
-  const cells = (r: Row) => { const s = r["snapshot"] as Row; const st = (s["student"] ?? {}) as Row; return [String(r["number"]), String(s["paid_at"] ?? ""), String(st["name"] ?? ""), String(st["csmart_no"] ?? "—"), String(s["school"] ?? ""), String(st["stage"] ?? ""), [st["grade"], st["section"]].filter(Boolean).join(" / "), ((r["fee_years"] ?? []) as string[]).map((y) => formatAcademicYear(y)).join("، ") || "—", r["collection_year"] ? formatAcademicYear(String(r["collection_year"])) : "—", money(s["amount"]), METHOD_AR[s["method"]] ?? "", String(s["ref"] || "—"), r["status"] === "cancelled" ? "ملغى" : "ساري"]; };
-  const exp = (k: "pdf" | "xlsx" | "print") => { const m = { title: "سندات القبض الداخلية", filters: [allYears ? "كل الأعوام" : formatAcademicYear(yearName), q, from, to].filter(Boolean) }; const rows = rs.pick(shown).map(cells); if (k === "pdf") void exportPdf(m, RH, rows).catch((e) => toast.error(arabicError(e))); else if (k === "xlsx") exportXlsx(m, RH, rows); else printReport(m, RH, rows); };
+  const yearScoped = !allYears && !!yearId;
+  // a receipt paying two years shows its full amount, but year totals use only the part belonging to the selected year (server year_amount)
+  const yAmt = (r: Row) => (r["status"] === "cancelled" ? 0 : num(r["year_amount"] ?? (r["snapshot"] as Row)["amount"]));
+  const RH = ["رقم السند", "التاريخ", "الطالب", "رقم القيد", "المدرسة", "المرحلة", "الصف", "عام المستحق", "عام التحصيل", "مبلغ السند", yearScoped ? "المخصص لهذا العام" : "المحتسب (السارية)", "الطريقة", "المرجع", "الحالة"];
+  const cells = (r: Row) => { const s = r["snapshot"] as Row; const st = (s["student"] ?? {}) as Row; return [String(r["number"]), String(s["paid_at"] ?? ""), String(st["name"] ?? ""), String(st["csmart_no"] ?? "—"), String(s["school"] ?? ""), String(st["stage"] ?? ""), [st["grade"], st["section"]].filter(Boolean).join(" / "), ((r["fee_years"] ?? []) as string[]).map((y) => formatAcademicYear(y)).join("، ") || "—", r["collection_year"] ? formatAcademicYear(String(r["collection_year"])) : "—", money(s["amount"]), money(yAmt(r)), METHOD_AR[s["method"]] ?? "", String(s["ref"] || "—"), r["status"] === "cancelled" ? "ملغى" : "ساري"]; };
+  const exp = (k: "pdf" | "xlsx" | "print") => { const m = { title: "سندات القبض الداخلية", totals: true, filters: [allYears ? "كل الأعوام" : formatAcademicYear(yearName), q, from, to].filter(Boolean) }; const rows = rs.pick(shown).map(cells); if (k === "pdf") void exportPdf(m, RH, rows).catch((e) => toast.error(arabicError(e))); else if (k === "xlsx") exportXlsx(m, RH, rows); else printReport(m, RH, rows); };
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">سندات القبض الداخلية</h2>{rs.note}
@@ -166,9 +169,10 @@ export function ReceiptsList({ schoolId, yearId, yearName }: { schoolId: string;
       </div>
       {list.error ? <p className="text-sm text-muted-foreground">{arabicError(list.error)}</p> : <div className="overflow-x-auto rounded-2xl border bg-card">
         <table className="w-full text-sm"><thead className="bg-muted/50 text-xs"><tr><th className="p-2">{rs.head}</th>{RH.map((h) => <th key={h} className="whitespace-nowrap p-2 text-start">{h}</th>)}<th className="p-2" /></tr></thead>
-          <tbody>{shown.map((r, i) => { const s = r["snapshot"] as Row; const st = (s["student"] ?? {}) as Row; return <tr key={r["id"]} className="border-t hover:bg-muted/30"><td className="p-2">{rs.cell(i)}</td><td className="p-2 font-mono" dir="ltr">{r["number"]}</td><td className="p-2">{s["paid_at"]}</td><td className="p-2">{st["name"]}</td><td className="p-2" dir="ltr">{st["csmart_no"] || "—"}</td><td className="p-2">{s["school"] || "—"}</td><td className="p-2">{st["stage"] || "—"}</td><td className="p-2">{[st["grade"], st["section"]].filter(Boolean).join(" / ") || "—"}</td><td className="p-2 font-semibold">{money(s["amount"])}</td><td className="p-2">{METHOD_AR[s["method"]]}</td><td className="p-2" dir="ltr">{s["ref"] || "—"}</td><td className="p-2">{r["status"] === "cancelled" ? <span className="rounded bg-destructive/10 px-1 text-destructive">ملغى</span> : "ساري"}</td>
+          <tbody>{shown.map((r, i) => { const s = r["snapshot"] as Row; const st = (s["student"] ?? {}) as Row; return <tr key={r["id"]} className="border-t hover:bg-muted/30"><td className="p-2">{rs.cell(i)}</td><td className="p-2 font-mono" dir="ltr">{r["number"]}</td><td className="p-2">{s["paid_at"]}</td><td className="p-2">{st["name"]}</td><td className="p-2" dir="ltr">{st["csmart_no"] || "—"}</td><td className="p-2">{s["school"] || "—"}</td><td className="p-2">{st["stage"] || "—"}</td><td className="p-2">{[st["grade"], st["section"]].filter(Boolean).join(" / ") || "—"}</td><td className="p-2 font-semibold">{money(s["amount"])}</td><td className="p-2 font-semibold text-primary">{money(yAmt(r))}</td><td className="p-2">{METHOD_AR[s["method"]]}</td><td className="p-2" dir="ltr">{s["ref"] || "—"}</td><td className="p-2">{r["status"] === "cancelled" ? <span className="rounded bg-destructive/10 px-1 text-destructive">ملغى</span> : "ساري"}</td>
             <td className="p-2"><span className="flex items-center gap-1"><Button size="icon" variant="ghost" aria-label="عرض السند" title="عرض السند" onClick={() => setView(r)}><Eye className="size-4" /></Button><ReceiptButtons r={r} /></span></td></tr>; })}</tbody></table>
         {!list.isLoading && !shown.length && <p className="p-6 text-center text-sm text-muted-foreground">لا توجد سندات قبض لهذا العام.</p>}
+        {shown.length > 0 && <p className="border-t p-2 text-sm">عدد السندات: <b>{shown.length}</b> · {yearScoped ? "إجمالي المحصّل لهذا العام" : "إجمالي السندات السارية"}: <b>{money(shown.reduce((a, r) => a + yAmt(r), 0))}</b></p>}
       </div>}
       <p className="text-xs text-muted-foreground">سندات داخلية من ركاز وليست مستندات محاسبية رسمية؛ الطباعة والتحميل لا ينشئان سندًا جديدًا.</p>
     </section>
@@ -202,7 +206,7 @@ function BusRoster({ bus, yearId, term, onClose }: { bus: Row; yearId: string; t
   const data = rows.map((r) => { const b = (r["balance"] ?? null) as Row | null; const rem = Number(b?.["remaining"] ?? 0);
     const st = r["exempt"] ? "معفى" : !b ? "لم تُنشأ الرسوم" : rem <= 0 ? "مسدد" : Number(b["recorded"] ?? 0) > 0 ? "مسدد جزئيًا" : "غير مسدد";
     return [String(r["name"]), TRANSPORT_LABEL[String(r["transport_type"])] ?? "—", b ? money(b["original"] ?? b["amount"] ?? b["gross"] ?? Number(b["net"] ?? 0) + Number(b["discount"] ?? 0)) : "—", b ? money(b["discount"] ?? 0) : "—", b ? money(b["net"]) : "—", b ? money(b["recorded"]) : "—", b ? money(b["remaining"]) : "—", st]; });
-  const meta = { title: `كشف طلاب الباص ${String(bus["code"])}`, filters: [TERM_AR(term), t ? TRANSPORT_LABEL[t] ?? "" : "", s].filter(Boolean) };
+  const meta = { title: `كشف طلاب الباص ${String(bus["code"])}`, totals: true, filters: [TERM_AR(term), t ? TRANSPORT_LABEL[t] ?? "" : "", s].filter(Boolean) };
   return <section className="space-y-2 rounded-2xl border bg-card p-3">
     <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">كشف طلاب الباص {String(bus["code"])}</h3>
       <Input className="w-40" placeholder="بحث بالاسم" value={s} onChange={(e) => setS(e.target.value)} />
@@ -227,7 +231,7 @@ export function Arrears({ schoolId, yearId }: { schoolId: string; yearId: string
   const rows = (q.data ?? []).filter((r) => match(s, r["student_id"], r["name"]) && (!st || r["state"] === st) && (!kind || r["kind"] === kind) && (!term || r["term"] === term) && (!origin || (origin === "prev") === !!r["previous"]));
   const H = ["الطالب", "الصف", "العام الأصلي", "الفصل", "النوع", "صافي المستحق", "المسدد", "المتبقي", "تاريخ الاستحقاق", "أيام التأخير", "الحالة"];
   const data = rows.map((r) => { const b = r["balance"] as Row; return [String(r["name"]), [r["grade"], r["section"]].filter(Boolean).join(" / "), `${formatAcademicYear(String(r["year"] ?? ""))}${r["previous"] ? " · رصيد سابق" : ""}`, TERM_AR(Number(r["term"])), KIND_AR[String(r["kind"])] ?? "", money(b["net"]), money(b["recorded"]), money(b["remaining"]), String(r["due_date"] ?? "—"), r["days_late"] == null ? "—" : String(r["days_late"]), ARREAR_STATE[String(r["state"])] ?? ""]; });
-  const meta = { title: "المستحقات والمتأخرات", filters: [s, ARREAR_STATE[st] ?? "", KIND_AR[kind] ?? "", term ? TERM_AR(term) : "", origin === "prev" ? "الأعوام السابقة" : origin === "cur" ? "العام الحالي" : ""].filter(Boolean) };
+  const meta = { title: "المستحقات والمتأخرات", totals: true, filters: [s, ARREAR_STATE[st] ?? "", KIND_AR[kind] ?? "", term ? TERM_AR(term) : "", origin === "prev" ? "الأعوام السابقة" : origin === "cur" ? "العام الحالي" : ""].filter(Boolean) };
   const total = rows.filter((r) => r["state"] === "overdue").reduce((a, r) => a + Number((r["balance"] as Row)["remaining"] ?? 0), 0);
   const overdueIds = rows.filter((r) => r["state"] === "overdue").map((r) => String(r["obligation_id"])).slice(0, 500);
   const [busy, setBusy] = useState(false);

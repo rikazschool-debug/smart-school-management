@@ -12,3 +12,4 @@
 - Live refresh: sf_collections/obligations/carries/receipts signal topic `sf` (school staff + the student's guardians); live-signals.ts refetches every SF_KEY query. Excel exports turn «ر.س» amounts into numeric cells (moneyValue in export.ts).
 - Finance tables use useRowSelect (row-select.tsx): exports take the ticked rows when any, else all shown; the printable statement uses statementHtml in the receipt style.
 - Receipts are year-scoped server-side (sf_receipts _year: fees of that year or carried items after the carry, one row per receipt, with fee_years/collection_year); «كل الأعوام» passes null.
+- Receipt totals per year use sf_receipts.year_amount (the part paying that year's fees or balances carried into it), never the receipt face value; list exports pass meta.totals so export.ts appends one totals row (receipt face values, running balances and before/after values are never summed). Grade filters key on stage + grade.
