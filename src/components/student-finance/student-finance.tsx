@@ -60,6 +60,8 @@ export function StudentFinance({ studentId }: { studentId: string }) {
 
       <Section title="النقل المدرسي">{f.transport.length ? f.transport.map((t) => <div key={t["id"]} className="flex flex-wrap gap-2 text-xs"><b>{TERM_LABEL(t["term"])}</b>{t["active"] ? <><span>{TRANSPORT_LABEL[t["transport_type"]]}</span><span>الباص {t["bus"]?.code ?? "—"} ({t["bus"]?.plate ?? ""})</span><span>من {t["starts"]}</span></> : <span className="text-muted-foreground">غير مشترك</span>}{t["exempt"] && <span className="rounded bg-muted px-1">معفى</span>}</div>) : <p className="text-xs text-muted-foreground">غير مشترك في النقل المدرسي.</p>}</Section>
 
+      {yearId && <Siblings studentId={studentId} yearId={yearId} />}
+
       <Section title="الخصومات المطبقة">{f.discounts.length ? f.discounts.map((d) => (
         <div key={d["id"]} className="flex flex-wrap items-center gap-2 text-xs"><b>{d["name"]}</b><span>{KIND_LABEL[d["kind"]]} — {TERM_LABEL(d["term"])}</span><span>{money(d["amount"])}</span>{!d["active"] && <span className="rounded bg-muted px-1">غير فعال{d["manual_override"] ? " (مستثنى يدويًا)" : ""}</span>}
           {f.caps["setup"] && <span className="ms-auto flex gap-1">
@@ -82,6 +84,14 @@ export function StudentFinance({ studentId }: { studentId: string }) {
       {dlg === "transport" && yearId && <TransportDialog f={f} studentId={studentId} yearId={yearId} onClose={() => setDlg(null)} onDone={() => { setDlg(null); void refresh(); }} />}
     </div>
   );
+}
+
+function Siblings({ studentId, yearId }: { studentId: string; yearId: string }) {
+  const q = useQuery({ queryKey: [...SF_KEY, "siblings", studentId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_siblings", { _student: studentId, _year: yearId }); if (error) throw error; return data as Row[]; }, retry: false });
+  const others = (q.data ?? []).filter((x) => x["id"] !== studentId);
+  return <Section title="الإخوة في المجموعة">{q.isLoading ? <p className="text-xs text-muted-foreground">جارٍ التحميل…</p> : others.length ? others.map((x) => (
+    <div key={x["id"]} className="flex flex-wrap gap-2 text-xs"><b>{x["name"]}</b><span>{x["school"]}</span><span>{[x["stage"], x["grade"]].filter(Boolean).join(" — ") || "غير مسكّن هذا العام"}</span><span>الترتيب {x["rank"]}</span><span>{num(x["sibling_discount"]) > 0 ? `خصم إخوة ${money(x["sibling_discount"])}` : "لا يوجد خصم إخوة مطبق"}</span></div>
+  )) : <p className="text-xs text-muted-foreground">لا يوجد إخوة مسجلون بعلاقة أسرية موثقة.</p>}</Section>;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

@@ -26337,6 +26337,7 @@ export type Database = {
       }
       _perm_catalog_base: { Args: never; Returns: Json }
       _perm_catalog_pre334: { Args: never; Returns: Json }
+      _perm_catalog_v_sf: { Args: never; Returns: Json }
       _perm_catalog_v11: { Args: never; Returns: Json }
       _perm_catalog_v12: { Args: never; Returns: Json }
       _perm_catalog_v13: { Args: never; Returns: Json }
@@ -26529,10 +26530,33 @@ export type Database = {
         Returns: undefined
       }
       _sf_balance: { Args: { _ob: string }; Returns: Json }
+      _sf_bulk_rows: {
+        Args: {
+          _grade: string
+          _school: string
+          _students: string[]
+          _year: string
+        }
+        Returns: {
+          existing: number
+          grade: string
+          name: string
+          price: number
+          priced: boolean
+          section: string
+          student_id: string
+          terms: number[]
+        }[]
+      }
       _sf_create_tuition: {
         Args: { _student: string; _year: string }
         Returns: undefined
       }
+      _sf_create_tuition2: {
+        Args: { _source: string; _student: string; _year: string }
+        Returns: number
+      }
+      _sf_dirs: { Args: { _type: string }; Returns: string[] }
       _sf_discount_amount: {
         Args: { _discount: string; _ob: string }
         Returns: number
@@ -26563,6 +26587,10 @@ export type Database = {
         }[]
       }
       _sf_summary: { Args: { _student: string; _year: string }; Returns: Json }
+      _sf_terms: {
+        Args: { _student: string; _year: string }
+        Returns: number[]
+      }
       _sf_today: { Args: never; Returns: string }
       _staff_overrides: {
         Args: {
@@ -31464,6 +31492,28 @@ export type Database = {
         }
         Returns: undefined
       }
+      sf_bulk_apply: {
+        Args: {
+          _grade?: string
+          _school: string
+          _students?: string[]
+          _year: string
+        }
+        Returns: Json
+      }
+      sf_bulk_preview: {
+        Args: {
+          _grade?: string
+          _school: string
+          _students?: string[]
+          _year: string
+        }
+        Returns: Json
+      }
+      sf_bus_occupancy: {
+        Args: { _school: string; _term: number; _year: string }
+        Returns: Json
+      }
       sf_bus_roster: {
         Args: { _bus: string; _term: number; _year: string }
         Returns: Json
@@ -31514,6 +31564,7 @@ export type Database = {
         Args: { _kind: string; _p: Json; _school: string }
         Returns: string
       }
+      sf_siblings: { Args: { _student: string; _year: string }; Returns: Json }
       sf_transport_save: {
         Args: { _p: Json; _student: string; _term: number; _year: string }
         Returns: undefined

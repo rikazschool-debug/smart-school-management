@@ -1278,3 +1278,4 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Applied additive sf_* migration (identical to src/lib/student-finance/schema.sql). No existing table or record changed; no obligations created for existing students.
 - UI: academic «الرسوم الدراسية» tab (owner), student panel «المالية والنقل» tab, finance page student accounts.
 - Evidence: PGlite 26/26, labels 6/6, live scripts/student-finance-e2e.ts 14/14 with synthetic users. Signed-in browser check: غير متحقق (no preview session). Wafeq: disabled.
+- Phase 2 (prompt-520): auto obligations on placement, bulk setup preview/apply, per-direction seats/occupancy, siblings list, perm entry student_finance. Live student-finance-e2e 22/22; vitest 37/37. Signed-in browser check: غير متحقق.

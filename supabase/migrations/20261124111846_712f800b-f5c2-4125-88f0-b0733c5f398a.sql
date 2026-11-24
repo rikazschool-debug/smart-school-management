@@ -1,0 +1,1 @@
+alter function public._sf_dirs(text) set search_path=public;

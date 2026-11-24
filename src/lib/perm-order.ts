@@ -7,7 +7,7 @@ import type { PermCatalog, PermSec } from "@/components/perm-tree";
  */
 export const PERM_GROUPS: { key: string; label: string; sections: string[] }[] = [
   { key: "g_school", label: "إدارة المدرسة", sections: ["people_staff", "people_identity", "admin_work_info", "admin_tasks", "admin_requests", "admin_forms", "duty_rosters", "duty_setup", "org_docs", "school_map"] },
-  { key: "g_students", label: "الطلاب والقبول", sections: ["admissions", "people_family", "contracts"] },
+  { key: "g_students", label: "الطلاب والقبول", sections: ["admissions", "people_family", "contracts", "student_finance"] },
   { key: "g_edu", label: "الشؤون التعليمية", sections: ["academic_setup_info", "academic_years", "academic_terms", "academic_stages", "academic_grades", "academic_sections", "academic_departments", "academic_subjects", "academic_scopes", "course_assignments_info", "course_setup", "course_assignments", "school_schedule", "bt_schedule", "schedule_drafts", "schedule_day", "schedule_rooms", "schedule_requirements", "schedule_loads", "schedule_availability", "schedule_sub_policy", "bt_classroom", "bt_homework", "remedial_plans", "supervision_info"] },
   { key: "g_affairs", label: "شؤون الطلاب", sections: ["attendance", "gate", "health", "student_guidance", "gifted_care", "guardian_visits"] },
   { key: "g_events", label: "الأنشطة والفعاليات", sections: ["evt_trips", "evt_general", "evt_courses", "evt_forms"] },

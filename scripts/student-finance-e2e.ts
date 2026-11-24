@@ -27,9 +27,12 @@ const Y = must(await owner.c.from("academic_years").insert({ school_id: S, name:
 const ST = must(await owner.c.from("stages").insert({ school_id: S, name: "الثانوية" }).select("id").single(), "stage")!.id;
 const G = must(await owner.c.from("grades").insert({ school_id: S, stage_id: ST, name: "أول" }).select("id").single(), "grade")!.id;
 const T1 = must(await owner.c.from("terms").insert({ school_id: S, year_id: Y, name: "الفصل الدراسي الأول", start_date: "2026-08-01", end_date: "2027-01-15" }).select("id").single(), "term")!.id;
+const T2 = must(await owner.c.from("terms").insert({ school_id: S, year_id: Y, name: "الفصل الدراسي الثاني", start_date: "2027-01-16", end_date: "2027-07-31" }).select("id").single(), "term2")!.id;
 const SEC = must(await owner.c.from("sections").insert({ school_id: S, grade_id: G, year_id: Y, term_id: T1, name: "أ", capacity: 30 }).select("id").single(), "section")!.id;
 const P = must(await owner.c.from("students").insert({ school_id: S, full_name: `طالب مالية ${run}`, status: "active" }).select("id").single(), "student")!.id;
-must(await admin.from("enrollments").insert({ school_id: S, student_id: P, section_id: SEC, year_id: Y, status: "active" }), "enrollment");
+const SECB = must(await owner.c.from("sections").insert({ school_id: S, grade_id: G, year_id: Y, term_id: T2, name: "أ2", capacity: 30 }).select("id").single(), "section t2")!.id;
+must(await admin.from("enrollments").insert({ school_id: S, student_id: P, section_id: SEC, year_id: Y, status: "ended" }), "enrollment t1");
+must(await admin.from("enrollments").insert({ school_id: S, student_id: P, section_id: SECB, year_id: Y, status: "active" }), "enrollment t2");
 const B = must(await admin.from("mt_buses").insert({ org_id: org, school_id: S, code: `QA${run % 10000}`, plate: "QA-1", capacity: 1, active: true, op_status: "available", created_by: owner.id }).select("id").single(), "bus")!.id;
 
 const save = (c: any, kind: string, p: any) => c.rpc("sf_setup_save", { _school: S, _kind: kind, _p: p });
@@ -66,6 +69,29 @@ const roster: any = must(await owner.c.rpc("sf_bus_roster", { _bus: B, _year: Y,
 check("student added to bus roster", roster.length === 1, roster);
 f = must(await owner.c.rpc("sf_get", { _student: P, _year: Y }), "get4");
 check("transport obligation 1500 for term 1", Number(f.obligations.find((o: any) => o.kind === "transport").amount) === 1500, f.obligations);
+
+// Phase 2: automatic obligations on placement (enrolled terms only), bulk preview, per-direction seats, siblings.
+const SEC2 = must(await owner.c.from("sections").insert({ school_id: S, grade_id: G, year_id: Y, term_id: T1, name: "ب", capacity: 30 }).select("id").single(), "section2")!.id;
+const P2 = must(await owner.c.from("students").insert({ school_id: S, full_name: `أخ مالية ${run}`, status: "active" }).select("id").single(), "student2")!.id;
+const GU = must(await admin.from("guardians").insert({ school_id: S, full_name: `ولي مالية ${run}`, national_id: `1${String(run % 1000000000).padStart(9, "0")}` }).select("id").single(), "guardian")!.id;
+must(await admin.from("student_guardians").insert([{ school_id: S, student_id: P, guardian_id: GU, verified: true, relationship: "father" }, { school_id: S, student_id: P2, guardian_id: GU, verified: true, relationship: "father" }]), "links");
+must(await admin.from("enrollments").insert({ school_id: S, student_id: P2, section_id: SEC2, year_id: Y, status: "active" }), "enroll2");
+let f2: any = must(await owner.c.rpc("sf_get", { _student: P2, _year: Y }), "get p2");
+const t2 = f2.obligations.filter((o: any) => o.kind === "tuition");
+check("placement creates tuition automatically for the enrolled term only", t2.length === 1 && t2[0].term === 1, t2);
+check("new obligation uses current approved price 6000", Number(t2[0]?.amount) === 6000, t2);
+const bp: any = must(await owner.c.rpc("sf_bulk_preview", { _school: S, _year: Y }), "bulk preview");
+check("bulk preview marks both students as already set up", bp.selected === 2 && bp.existing === 2, bp);
+const ba: any = must(await owner.c.rpc("sf_bulk_apply", { _school: S, _year: Y }), "bulk apply");
+check("bulk apply creates no duplicates", ba.obligations === 0, ba);
+const tb = await teacher.c.rpc("sf_bulk_preview", { _school: S, _year: Y });
+check("teacher cannot preview bulk setup", !!tb.error, tb.data);
+const full = await owner.c.rpc("sf_transport_save", { _student: P2, _year: Y, _term: 1, _p: { active: true, bus_id: B, transport_type: "outbound" } });
+check("outbound seat refused when round-trip fills the bus", !!full.error, full.data);
+const occ: any = must(await owner.c.rpc("sf_bus_occupancy", { _school: S, _year: Y, _term: 1 }), "occupancy");
+check("occupancy: 1 student, 0 free each way, 100%", occ[0]?.students === 1 && occ[0]?.free_out === 0 && occ[0]?.free_ret === 0 && occ[0]?.occupancy === 100, occ);
+const sib: any = must(await owner.c.rpc("sf_siblings", { _student: P, _year: Y }), "siblings");
+check("siblings list shows both verified children", sib.length === 2, sib);
 const anon = createClient(URL, PK, { auth: { persistSession: false }, global: { fetch: shim(PK) as any } });
 const an = await anon.rpc("sf_get", { _student: P, _year: Y });
 check("anonymous visitor cannot read", !!an.error, an.data);

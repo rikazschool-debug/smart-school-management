@@ -5,7 +5,9 @@
 - [x] Complete a read-only inventory of financial tables, permissions, family links, transport records and selected official Wafeq capabilities; assessment in .lovable/reviews/financial-system-review.md.
 - [ ] Establish a verified test-only backup and restore rehearsal before database changes; no backup has been taken in this review.
 - [x] prompt-519 (fees & transport doc): additive sf_* tables applied to test DB; fee/transport/discount setup tab, student finance tab (summary, terms table, transport, discounts with preview, payments, reversal, log), student accounts in finance page; 14 live + 32 unit checks.
-- [ ] Remaining from the doc: accountant/registrar permission entries, receipts/statements PDFs, overdue & reports pages, notifications, siblings list in the student panel, fee-change apply-to-unpaid/selected flow, bulk obligations for existing students.
+- [x] prompt-520 phases 2,3,5,6,7 (part): auto fees on placement (enrolled terms only, owner alert when unpriced), bulk «تهيئة مستحقات الطلاب» preview+apply, per-direction bus seats + occupancy panel, siblings list, student_finance permission entry; live 22/22.
+- [ ] prompt-520 remaining: price-change options (unpaid/selected), payment window per term/kind from finance list, receipts PDF + Arabic amount words, statements PDF/Excel, overdue page, KPI dashboard/reports, finance notifications, family page & Sanad reading sf_*, signed-in role browser tests.
+- [ ] Remaining from the doc (prompt-519): accountant/registrar permission entries, receipts/statements PDFs, overdue & reports pages, notifications, siblings list in the student panel, fee-change apply-to-unpaid/selected flow, bulk obligations for existing students.
 - [ ] Verify Wafeq test organization access and school/account/customer/tax mappings before integration or accounting writes.
 - [ ] Implement and test the ordered fee, discount, sibling, student obligation, transport, payment, statement and reconciliation packages after the safety prerequisites.
 - [ ] Implement and test mobile financial services; write MOBILE_FINANCIAL_API_CONTRACT.md only for implemented endpoints.
