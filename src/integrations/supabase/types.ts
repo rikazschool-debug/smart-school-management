@@ -31931,6 +31931,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      sf_adjustments: {
+        Args: { _school: string; _year: string }
+        Returns: Json
+      }
       sf_arrears: { Args: { _school: string; _year?: string }; Returns: Json }
       sf_bulk_apply: {
         Args: {
@@ -32024,6 +32028,10 @@ export type Database = {
         Args: { _discount: string; _obligations: string[]; _student: string }
         Returns: undefined
       }
+      sf_discount_list: {
+        Args: { _school: string; _year: string }
+        Returns: Json
+      }
       sf_discount_preview: {
         Args: { _discount: string; _obligations: string[]; _student: string }
         Returns: Json
@@ -32108,6 +32116,10 @@ export type Database = {
         Returns: Json
       }
       sf_transfer_files: { Args: { _student: string }; Returns: Json }
+      sf_transport_accounts: {
+        Args: { _school: string; _year: string }
+        Returns: Json
+      }
       sf_transport_save: {
         Args: { _p: Json; _student: string; _term: number; _year: string }
         Returns: undefined

@@ -5,8 +5,8 @@ import { db, type Row } from "@/components/crud-page";
 export const SF_GROUPS = [
   { label: "النظرة العامة", items: [["dashboard", "لوحة المؤشرات المالية"], ["accounts", "الحسابات المالية للطلاب"]] },
   { label: "التحصيل والمستندات", items: [["collect", "التحصيل والسداد"], ["receipts", "سندات القبض"], ["statements", "كشوف الحسابات"]] },
-  { label: "المستحقات والأرصدة", items: [["arrears", "المستحقات والمتأخرات"], ["previous", "الأرصدة السابقة والمرحلة"]] },
-  { label: "النقل المدرسي", items: [["buses", "إشغال الباصات وكشوف الطلاب"]] },
+  { label: "المستحقات والأرصدة", items: [["arrears", "المستحقات والمتأخرات"], ["previous", "الأرصدة السابقة والمرحلة"], ["adjustments", "التسويات المالية"]] },
+  { label: "الخصومات والنقل", items: [["discounts", "الخصومات المطبقة"], ["transport", "حسابات النقل المدرسي"], ["buses", "إشغال الباصات وكشوف الطلاب"]] },
   { label: "التهيئة والمتابعة", items: [["pending", "طلاب لم تُنشأ مستحقاتهم"], ["bulk", "تهيئة مستحقات الطلاب"], ["pay", "روابط الدفع للفروع"]] },
 ] as const;
 export type SfView = (typeof SF_GROUPS)[number]["items"][number][0];

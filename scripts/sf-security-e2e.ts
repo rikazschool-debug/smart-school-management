@@ -72,6 +72,11 @@ try {
     check(`${who}: ${allowed.length ? `only ${allowed.join(", ")} allowed` : "every financial write refused (direct RPC too)"}; sensitive owner-only actions refused`, res.length === 0, res);
   }
   check("owner still runs a sensitive action (reverse)", !(await owner.c.rpc("sf_reverse", { _student: P, _collection: col, _reason: "اختبار المالك" })).error);
+  const adj = await acc.c.rpc("sf_adjustments", { _school: S, _year: Y });
+  check("accountant views adjustments: the owner's reversal is listed with before 100 → after 0", !adj.error && (adj.data as any[]).some((a) => a.action === "collection_reverse" && Number(a.old) === 100 && Number(a.new) === 0 && /^ADJ-/.test(a.number)), adj.error?.message ?? adj.data);
+  const tl = await acc.c.rpc("sf_transport_accounts", { _school: S, _year: Y }), dl = await acc.c.rpc("sf_discount_list", { _school: S, _year: Y });
+  check("accountant opens transport accounts and applied discounts lists", !tl.error && !dl.error, [tl.error?.message, dl.error?.message]);
+  check("guardian and teacher cannot open discounts / transport / adjustments lists", (await Promise.all([parent.c, teacher.c].flatMap((c) => ["sf_adjustments", "sf_transport_accounts", "sf_discount_list"].map((n) => c.rpc(n, { _school: S, _year: Y }))))).every((r) => !!r.error));
   // reads
   const g = await parent.c.rpc("sf_get", { _student: P, _year: Y });
   check("guardian reads own child; every action cap is false", !g.error && Object.values((g.data as any)?.caps ?? {}).every((v) => !v), g.error?.message ?? (g.data as any)?.caps);
