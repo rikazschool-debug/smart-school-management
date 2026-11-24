@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Clock, Pencil, Trash2 } from "lucide-react";
+import { Clock, Pencil, Trash2, Wallet } from "lucide-react";
+import { SF_KEY, money, num } from "@/lib/student-finance/labels";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,7 @@ type Card = {
   caps: { notes_view: boolean; notes_add: boolean; note_schools: { id: string; name: string }[]; tags_assign: boolean };
 };
 const STATUS: Record<string, string> = { active: "نشط", inactive: "موقوف", ended: "منتهي الخدمة", suspended: "موقوف", graduated: "متخرج", transferred: "منقول" };
+const EV_TITLE: Record<string, string> = { student_placement: "تسكين الطالب", account_setup_completed: "إكمال خطوة الدخول الأولى", account_staged: "تجهيز حساب الدخول", account_created: "إنشاء حساب الدخول", guardian_link: "ربط ولي أمر", student_transfer: "نقل الطالب" };
 const when = (s: string) => new Date(s).toLocaleString("ar-SA-u-nu-latn", { dateStyle: "medium", timeStyle: "short" });
 
 /** Side card for one person. Everything shown comes from pp_card, which applies the viewer's scope on the server. */
@@ -54,12 +56,18 @@ function Body({ kind, id, org }: { kind: PersonKind; id: string; org: string | n
         <SheetTitle>{c.display_name || c.full_name}</SheetTitle>
         <SheetDescription>{c.full_name} · {KIND_ONE[kind]}{c.status ? ` · ${STATUS[c.status] ?? c.status}` : ""}</SheetDescription>
       </SheetHeader>
-      <section className="space-y-1 text-sm">
-        <div><span className="text-muted-foreground">المدرسة: </span>{c.schools.map((s) => s.name).join("، ") || "—"}</div>
-        {c.categories?.map((x, i) => <div key={i} className="text-xs"><span className="text-muted-foreground">{x.school}: </span>{x.category ?? "بلا تصنيف"}{x.title ? ` — ${x.title}` : ""}</div>)}
-        <div><span className="text-muted-foreground">حساب الدخول: </span>{!c.has_login ? "غير مرتبط" : c.account?.length ? c.account.map((a) => `${a.school}: ${a.active ? "نشط" : "موقوف"}`).join("، ") : "مرتبط"}</div>
+      {kind === "student" && <FinanceSummary id={id} />}
+
+      <section className="space-y-3 rounded-2xl border bg-card p-4 text-sm">
+        <h3 className="text-sm font-bold">البيانات الأساسية</h3>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2">
+          <dt className="text-muted-foreground">المدرسة</dt><dd className="font-medium">{c.schools.map((s) => s.name).join("، ") || "—"}</dd>
+          {c.categories?.map((x, i) => <Fragment key={i}><dt className="text-muted-foreground">{x.school}</dt><dd>{x.category ?? "بلا تصنيف"}{x.title ? ` — ${x.title}` : ""}</dd></Fragment>)}
+          <dt className="text-muted-foreground">حساب الدخول</dt>
+          <dd><span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${c.has_login && c.account?.some((a) => a.active) !== false ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{!c.has_login ? "غير مرتبط" : c.account?.length ? c.account.map((a) => `${a.active ? "نشط" : "موقوف"}`).join("، ") : "مرتبط"}</span></dd>
+        </dl>
         <p className="text-xs text-muted-foreground">حالة الحساب مستقلة عن حالة السجل؛ إيقاف الدخول لا ينهي الخدمة ولا يسحب التسجيل.</p>
-        <div className="flex flex-wrap gap-2 pt-1 text-xs">
+        <div className="flex flex-wrap gap-2 text-xs">
           {kind === "employee" && <Link className="text-primary hover:underline" to="/app/hr">الملف في الموارد البشرية</Link>}
           {kind === "teacher" && <Link className="text-primary hover:underline" to="/app/teachers">سجل المعلمين</Link>}
           {kind === "student" && <Link className="text-primary hover:underline" to="/app/students">سجل الطلاب</Link>}
@@ -69,7 +77,7 @@ function Body({ kind, id, org }: { kind: PersonKind; id: string; org: string | n
 
       {(kind === "guardian" || kind === "student") && <Relations kind={kind} id={id} />}
 
-      <section className="space-y-2">
+      <section className="space-y-2 rounded-2xl border bg-card p-4">
         <h3 className="text-sm font-bold">الوسوم <span className="text-xs font-normal text-muted-foreground">(داخلية لا تظهر لصاحب الحساب)</span></h3>
         <div className="flex flex-wrap gap-1">
           {c.tags.length ? c.tags.map((t) => <TagChip key={t.id} t={t} onRemove={c.caps.tags_assign ? async () => { if (await ask(`إزالة الوسم «${t.name}»؟`)) void tag(t.id, false); } : undefined} />) : <span className="text-xs text-muted-foreground">لا وسوم</span>}
@@ -87,13 +95,13 @@ function Body({ kind, id, org }: { kind: PersonKind; id: string; org: string | n
 
       {c.caps.notes_view && <Notes c={c} kind={kind} id={id} onChange={refresh} />}
 
-      <section className="space-y-2">
+      <section className="space-y-2 rounded-2xl border bg-card p-4">
         <h3 className="flex items-center gap-1 text-sm font-bold"><Clock className="size-4" /> سجل الأحداث</h3>
         {c.events.length === 0 ? <p className="text-xs text-muted-foreground">لا أحداث متاحة لك.</p> : (
           <ol className="space-y-2 border-s ps-3">
             {c.events.map((e, i) => (
               <li key={i} className="text-sm">
-                <div className="font-medium">{e.link ? <Link className="text-primary hover:underline" to={e.link}>{e.title}</Link> : e.title}</div>
+                <div className="font-medium">{e.link ? <Link className="text-primary hover:underline" to={e.link}>{EV_TITLE[e.title] ?? e.title}</Link> : (EV_TITLE[e.title] ?? e.title)}</div>
                 <div className="text-xs text-muted-foreground">{when(e.at)} · {e.by}{e.status ? ` · ${e.status}` : ""}</div>
               </li>
             ))}
@@ -124,7 +132,7 @@ function Notes({ c, kind, id, onChange }: { c: Card; kind: PersonKind; id: strin
     try { await pp("pp_note_edit", { _note: n.id, _body: null, _remove: true, _reason: r }); onChange(); } catch (e) { toast.error(arabicError(e)); }
   }
   return (
-    <section className="space-y-2">
+    <section className="space-y-2 rounded-2xl border bg-card p-4">
       <h3 className="text-sm font-bold">ملاحظات داخلية <span className="text-xs font-normal text-muted-foreground">(للإدارة فقط)</span></h3>
       {c.caps.notes_add && (
         <div className="space-y-2 rounded-lg border p-2">
@@ -179,7 +187,7 @@ function Relations({ kind, id }: { kind: "guardian" | "student"; id: string }) {
   } });
   const F = ({ k, v, ltr }: { k: string; v: unknown; ltr?: boolean }) => <div><span className="block text-[11px] text-muted-foreground">{k}</span><span className="font-medium" dir={ltr ? "ltr" : undefined}>{(v as string) || "—"}</span></div>;
   return (
-    <section className="space-y-2">
+    <section className="space-y-2 rounded-2xl border bg-card p-4">
       <h3 className="text-sm font-bold">{g ? "الأبناء المرتبطون" : "أولياء الأمور المرتبطون"} {q.data && <span className="text-xs font-normal text-muted-foreground">({q.data.length})</span>}</h3>
       {q.isLoading ? <p className="text-xs text-muted-foreground">جارٍ التحميل…</p> : q.error ? <p className="text-xs text-destructive">{arabicError(q.error)}</p> : !q.data?.length ? <p className="text-xs text-muted-foreground">{g ? "لا يوجد أبناء مرتبطون." : "لا يوجد ولي أمر مرتبط."}</p> : (
         <ul className="space-y-2">{q.data.map((l) => {
@@ -191,4 +199,21 @@ function Relations({ kind, id }: { kind: "guardian" | "student"; id: string }) {
         })}</ul>)}
     </section>
   );
+}
+
+/** Quick fee summary from sf_get (server balances only); hidden when the viewer has no finance access. */
+function FinanceSummary({ id }: { id: string }) {
+  const q = useQuery({ queryKey: [...SF_KEY, "student", id, ""], queryFn: async () => { const { data, error } = await db.rpc("sf_get", { _student: id, _year: null }); if (error) throw error; return data as { summary: Record<string, Row> }; }, retry: false });
+  if (q.isLoading || q.error || !q.data) return null;
+  const a = q.data.summary["annual"] ?? {}; const net = num(a["net"]), paid = num(a["recorded"]), rem = num(a["remaining"]);
+  const pct = net > 0 ? Math.min(100, Math.round((paid * 100) / net)) : 0;
+  return <section className="space-y-3 rounded-2xl border bg-card p-4">
+    <h3 className="flex items-center gap-1 text-sm font-bold"><Wallet className="size-4" /> ملخص الرسوم</h3>
+    <div className="grid grid-cols-3 gap-2 text-center">
+      {([["الرسوم الحالية", net, ""], ["المسدد", paid, "text-primary"], ["المتبقي", rem, rem > 0 ? "text-destructive" : "text-primary"]] as const).map(([l, v, c]) => (
+        <div key={l} className="rounded-xl bg-muted/50 p-2"><div className="text-[11px] text-muted-foreground">{l}</div><div className={`mt-0.5 text-sm font-bold tabular-nums ${c}`}>{money(v)}</div></div>))}
+    </div>
+    <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
+    <p className="text-xs text-muted-foreground">{net > 0 ? `سُدد ${pct}% من الرسوم` : "لم تُنشأ رسوم لهذا الطالب بعد"}</p>
+  </section>;
 }
