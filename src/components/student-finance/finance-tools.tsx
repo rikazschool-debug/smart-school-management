@@ -15,6 +15,7 @@ import { brandHeaderHtml } from "@/lib/export-brand";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StudentFinance } from "./student-finance";
+import { SEARCH_HINT, useStudentSearch } from "./search";
 
 const STATE: Record<string, string> = { new: "جديد — سيُنشأ", exists: "لديه مستحقات", partial: "مستحقات جزئية — مراجعة منفصلة", no_price: "لا توجد رسوم معتمدة لصفه" };
 
@@ -212,8 +213,9 @@ const ARREAR_STATE: Record<string, string> = { overdue: "متأخر", upcoming: 
 /** «المستحقات والمتأخرات»: overdue only after an approved due date has passed (server computes days late). */
 export function Arrears({ schoolId, yearId }: { schoolId: string; yearId: string }) {
   const q = useQuery({ queryKey: [...SF_KEY, "arrears", schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_arrears", { _school: schoolId, _year: yearId }); if (error) throw error; return data as Row[]; }, retry: false });
+  const match = useStudentSearch(schoolId);
   const [s, setS] = useState(""); const [st, setSt] = useState(""); const [kind, setKind] = useState(""); const [term, setTerm] = useState(0); const [origin, setOrigin] = useState(""); const [open, setOpen] = useState<Row | null>(null);
-  const rows = (q.data ?? []).filter((r) => (!s || String(r["name"]).includes(s)) && (!st || r["state"] === st) && (!kind || r["kind"] === kind) && (!term || r["term"] === term) && (!origin || (origin === "prev") === !!r["previous"]));
+  const rows = (q.data ?? []).filter((r) => match(s, r["student_id"], r["name"]) && (!st || r["state"] === st) && (!kind || r["kind"] === kind) && (!term || r["term"] === term) && (!origin || (origin === "prev") === !!r["previous"]));
   const H = ["الطالب", "الصف", "العام الأصلي", "الفصل", "النوع", "صافي المستحق", "المسدد", "المتبقي", "تاريخ الاستحقاق", "أيام التأخير", "الحالة"];
   const data = rows.map((r) => { const b = r["balance"] as Row; return [String(r["name"]), [r["grade"], r["section"]].filter(Boolean).join(" / "), `${formatAcademicYear(String(r["year"] ?? ""))}${r["previous"] ? " · رصيد سابق" : ""}`, TERM_AR(Number(r["term"])), KIND_AR[String(r["kind"])] ?? "", money(b["net"]), money(b["recorded"]), money(b["remaining"]), String(r["due_date"] ?? "—"), r["days_late"] == null ? "—" : String(r["days_late"]), ARREAR_STATE[String(r["state"])] ?? ""]; });
   const meta = { title: "المستحقات والمتأخرات", filters: [s, ARREAR_STATE[st] ?? "", KIND_AR[kind] ?? "", term ? TERM_AR(term) : "", origin === "prev" ? "الأعوام السابقة" : origin === "cur" ? "العام الحالي" : ""].filter(Boolean) };
@@ -235,7 +237,7 @@ export function Arrears({ schoolId, yearId }: { schoolId: string; yearId: string
     <h2 className="text-lg font-bold">المستحقات والمتأخرات</h2>
     <p className="text-sm">إجمالي المتأخر: <b>{money(total)}</b> · لا يُعد المستحق متأخرًا إلا بعد تجاوز تاريخ استحقاق معتمد، وتُحسب أيام تأخير الرصيد السابق من تاريخ استحقاقه الأصلي.</p>
     <div className="flex flex-wrap gap-2">
-      <Input className="w-40" placeholder="بحث بالاسم" value={s} onChange={(e) => setS(e.target.value)} />
+      <Input className="w-40" placeholder={SEARCH_HINT} value={s} onChange={(e) => setS(e.target.value)} />
       <select aria-label="الحالة" className={selectCls("min-w-32", true)} value={st} onChange={(e) => setSt(e.target.value)}><option value="">كل الحالات</option>{Object.entries(ARREAR_STATE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
       <select aria-label="النوع" className={selectCls("min-w-32", true)} value={kind} onChange={(e) => setKind(e.target.value)}><option value="">كل الرسوم</option><option value="tuition">الرسوم الدراسية</option><option value="transport">النقل المدرسي</option></select>
       <select aria-label="الفصل" className={selectCls("min-w-32", true)} value={term} onChange={(e) => setTerm(Number(e.target.value))}><option value={0}>الفصلان</option><option value={1}>الفصل الأول</option><option value={2}>الفصل الثاني</option></select>

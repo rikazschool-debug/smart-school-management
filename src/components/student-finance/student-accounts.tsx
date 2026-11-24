@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { SEARCH_HINT, useStudentSearch } from "./search";
 import { CreditCard, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { db, type Row } from "@/components/crud-page";
@@ -22,6 +23,7 @@ const PAGE = 50;
 /** Student accounts for the chosen year (sf_report balances). Previous balances are a separate column, never added to the year's fees. */
 export function StudentAccounts({ schoolId, yearId, mode = "accounts" }: { schoolId: string; yearId: string; mode?: "accounts" | "collect" | "statements" }) {
   const q = useQuery({ queryKey: [...SF_KEY, "report", schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_report", { _school: schoolId, _year: yearId }); if (error) throw error; return data as { students: Row[] }; } });
+  const match = useStudentSearch(schoolId);
   const [search, setSearch] = useState(""); const [st, setSt] = useState(mode === "collect" ? "due" : ""); const [flag, setFlag] = useState(""); const [page, setPage] = useState(0);
   const [open, setOpen] = useState<{ id: string; name: string; pay: boolean } | null>(null);
   const [sel, setSel] = useState<Set<string>>(new Set());
@@ -32,7 +34,7 @@ export function StudentAccounts({ schoolId, yearId, mode = "accounts" }: { schoo
   }), [q.data]);
   if (q.isLoading) return <LoadingState />;
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
-  const shown = rows.filter((r) => (!search || r.name.includes(search) || r.nid.includes(search))
+  const shown = rows.filter((r) => match(search, r.id, r.name, r.nid)
     && (!st || (st === "due" ? r.remaining + r.previous > 0 : state(r) === st))
     && (!flag || (flag === "previous" ? r.previous > 0 : flag === "credit" ? r.credit + r.prevCredit > 0 : flag === "overdue" ? r.overdue : flag === "exempt" ? r.exempt : flag === "transport" ? r.transportActive : flag === "no_transport" ? !r.transportActive : flag === "none" ? !r.hasObs : true)));
   const total = shown.reduce((a, r) => ({ previous: a.previous + r.previous, net: a.net + r.net, discount: a.discount + r.discount, recorded: a.recorded + r.recorded, remaining: a.remaining + r.remaining, credit: a.credit + r.credit + r.prevCredit }), { previous: 0, net: 0, discount: 0, recorded: 0, remaining: 0, credit: 0 });
@@ -51,7 +53,7 @@ export function StudentAccounts({ schoolId, yearId, mode = "accounts" }: { schoo
         {[["الأرصدة السابقة", money(total.previous)], ["صافي رسوم العام", money(total.net)], ["الخصومات", money(total.discount)], ["المسدد", money(total.recorded)], ["المتبقي من العام", money(total.remaining)], ["الأرصدة الدائنة", money(total.credit)]].map(([l, v]) => <div key={l} className="rounded-xl border bg-card p-3"><div className="text-xs text-muted-foreground">{l}</div><div className="mt-1 font-bold tabular-nums">{v}</div></div>)}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Input placeholder="بحث بالاسم أو رقم الهوية" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} className="max-w-xs" />
+        <Input placeholder={SEARCH_HINT} value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} className="max-w-sm" />
         <select aria-label="حالة السداد" className={selectCls("min-w-36", true)} value={st} onChange={(e) => { setSt(e.target.value); setPage(0); }}><option value="">كل حالات السداد</option><option value="due">عليهم مبالغ (العام أو سابق)</option>{Object.entries(STATE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <select aria-label="تصفية إضافية" className={selectCls("min-w-40", true)} value={flag} onChange={(e) => { setFlag(e.target.value); setPage(0); }}><option value="">بدون تصفية إضافية</option><option value="previous">لديهم رصيد سابق</option><option value="credit">لديهم رصيد دائن</option><option value="overdue">لديهم متأخرات</option><option value="exempt">معفون</option><option value="transport">مشتركون في النقل</option><option value="no_transport">غير مشتركين في النقل</option><option value="none">لم تُنشأ مستحقاتهم للعام</option></select>
         <span className="ms-auto flex gap-2">

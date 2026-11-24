@@ -171,27 +171,49 @@ function CollectDialog({ f, studentId, onClose, onDone }: { f: Fin; studentId: s
       </DialogContent>
     </Dialog>
   );
+  const remainingAll = open.reduce((s, o) => s + num(o.balance.remaining), 0);
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent dir="rtl" className="max-w-2xl">
-        <DialogHeader><DialogTitle>سداد رسوم {f.student["name"]}</DialogTitle></DialogHeader>
-        <p className="text-xs text-muted-foreground">حدّد المبلغ لكل مستحق؛ الأرصدة السابقة تُسدَّد على مستحقها الأصلي ولا تُطبق عليها خصومات العام الحالي.</p>
-        <div className="space-y-2">{open.map((o) => (
-          <div key={o.id} className="flex items-center gap-2 text-sm"><span className="flex-1">{obLabel(o)}{prevYear.has(o.id) && <span className="ms-1 rounded bg-destructive/10 px-1 text-[11px] text-destructive">رصيد سابق — {formatAcademicYear(prevYear.get(o.id))}</span>} <span className="text-xs text-muted-foreground">(المتبقي {money(o.balance.remaining)})</span></span>
-            <Button size="sm" variant="ghost" onClick={() => setAmounts({ ...amounts, [o.id]: String(o.balance.remaining) })}>كامل</Button>
-            <Input aria-label={`مبلغ ${obLabel(o)}`} className="w-28" type="number" min={0} step="0.01" value={amounts[o.id] ?? ""} onChange={(e) => setAmounts({ ...amounts, [o.id]: e.target.value })} /></div>))}</div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1"><Label htmlFor="cm">طريقة السداد</Label><select id="cm" className={selectCls("w-full")} value={v.method} onChange={(e) => setV({ ...v, method: e.target.value })}>{METHODS.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select></div>
-          <div className="space-y-1"><Label htmlFor="cd">تاريخ السداد</Label><Input id="cd" type="date" value={v.paid_at} onChange={(e) => setV({ ...v, paid_at: e.target.value })} /></div>
-          <div className="space-y-1"><Label htmlFor="cr">رقم المرجع</Label><Input id="cr" value={v.ref} onChange={(e) => setV({ ...v, ref: e.target.value })} /></div>
-          <div className="space-y-1"><Label htmlFor="cp">الموظف المسدِّد</Label><Input id="cp" value={v.payer} readOnly disabled className="bg-muted" /></div>
-          {v.method === "bank" && <div className="col-span-2 flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-2 text-xs"><span className="text-muted-foreground">صورة الحوالة (اختياري)</span>
-            {transfer.map((x, i) => <span key={i} className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5">{x.name}<button type="button" aria-label={`إزالة ${x.name}`} className="text-destructive" onClick={() => setTransfer(transfer.filter((_, j) => j !== i))}>×</button></span>)}
-            {transfer.length < 3 && <TransferPick label={transfer.length ? "إضافة ملف آخر" : "اختيار صورة أو PDF"} onPick={(fl) => setTransfer([...transfer, ...fl].slice(0, 3))} />}</div>}
-          <div className="col-span-2 space-y-1"><Label htmlFor="cn">ملاحظات</Label><Input id="cn" value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} /></div>
+      <DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-3xl overflow-y-auto p-0">
+        <DialogHeader className="border-b bg-muted/40 px-6 py-4">
+          <DialogTitle className="flex items-center gap-2 text-lg"><CreditCard className="size-5 text-primary" /> سداد رسوم {f.student["name"]}</DialogTitle>
+          <p className="text-xs text-muted-foreground">إجمالي المتبقي على الطالب: <b className="text-destructive">{money(remainingAll)}</b></p>
+        </DialogHeader>
+        <div className="space-y-5 px-6 py-4">
+          <section className="space-y-2">
+            <div className="flex items-center justify-between"><h4 className="text-sm font-semibold">1. المبالغ المراد سدادها</h4>
+              <Button size="sm" variant="outline" onClick={() => setAmounts(Object.fromEntries(open.map((o) => [o.id, String(o.balance.remaining)])))}>سداد كامل المتبقي</Button></div>
+            <div className="overflow-hidden rounded-xl border">
+              <table className="w-full text-sm"><thead className="bg-muted/50 text-xs text-muted-foreground"><tr><th className="p-2 text-start">البند</th><th className="p-2 text-start">المتبقي</th><th className="p-2 text-start">المبلغ المسدد</th></tr></thead>
+                <tbody>{open.map((o) => (
+                  <tr key={o.id} className="border-t"><td className="p-2">{obLabel(o)}{prevYear.has(o.id) && <span className="ms-1 rounded bg-destructive/10 px-1 text-[11px] text-destructive">رصيد سابق — {formatAcademicYear(prevYear.get(o.id))}</span>}</td>
+                    <td className="p-2 font-medium">{money(o.balance.remaining)}</td>
+                    <td className="p-2"><div className="flex items-center gap-1"><Input aria-label={`مبلغ ${obLabel(o)}`} className="h-9 w-32" type="number" min={0} step="0.01" placeholder="0.00" value={amounts[o.id] ?? ""} onChange={(e) => setAmounts({ ...amounts, [o.id]: e.target.value })} />
+                      <Button size="sm" variant="ghost" onClick={() => setAmounts({ ...amounts, [o.id]: String(o.balance.remaining) })}>كامل</Button></div></td></tr>))}</tbody></table>
+              {!open.length && <p className="p-4 text-center text-sm text-muted-foreground">لا توجد مبالغ متبقية.</p>}
+            </div>
+            <p className="text-[11px] text-muted-foreground">الأرصدة السابقة تُسدَّد على مستحقها الأصلي ولا تُطبق عليها خصومات العام الحالي.</p>
+          </section>
+          <section className="space-y-2">
+            <h4 className="text-sm font-semibold">2. بيانات السداد</h4>
+            <div className="grid gap-3 rounded-xl border p-3 sm:grid-cols-2">
+              <div className="space-y-1"><Label htmlFor="cm">طريقة السداد</Label><select id="cm" className={selectCls("w-full")} value={v.method} onChange={(e) => setV({ ...v, method: e.target.value })}>{METHODS.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select></div>
+              <div className="space-y-1"><Label htmlFor="cd">تاريخ السداد</Label><Input id="cd" type="date" value={v.paid_at} onChange={(e) => setV({ ...v, paid_at: e.target.value })} /></div>
+              <div className="space-y-1"><Label htmlFor="cr">رقم المرجع {v.method === "cash" && <span className="text-muted-foreground">(اختياري)</span>}</Label><Input id="cr" value={v.ref} onChange={(e) => setV({ ...v, ref: e.target.value })} /></div>
+              <div className="space-y-1"><Label htmlFor="cp">الموظف المسدِّد</Label><Input id="cp" value={v.payer} readOnly disabled className="bg-muted" /></div>
+              {v.method === "bank" && <div className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-2 text-xs sm:col-span-2"><span className="text-muted-foreground">صورة الحوالة (اختياري)</span>
+                {transfer.map((x, i) => <span key={i} className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5">{x.name}<button type="button" aria-label={`إزالة ${x.name}`} className="text-destructive" onClick={() => setTransfer(transfer.filter((_, j) => j !== i))}>×</button></span>)}
+                {transfer.length < 3 && <TransferPick label={transfer.length ? "إضافة ملف آخر" : "اختيار صورة أو PDF"} onPick={(fl) => setTransfer([...transfer, ...fl].slice(0, 3))} />}</div>}
+              <div className="space-y-1 sm:col-span-2"><Label htmlFor="cn">ملاحظات</Label><Input id="cn" value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} /></div>
+            </div>
+          </section>
         </div>
-        <p className="text-sm">الإجمالي: <b>{money(total)}</b>{!ok && rows.length > 0 && <span className="ms-2 text-xs text-destructive">المبلغ يجب أن يكون موجبًا ولا يتجاوز المتبقي</span>}</p>
-        <Button disabled={!ok || m.isPending} onClick={async () => { if (await ask(`تأكيد تسجيل سداد ${money(total)}؟`)) m.mutate(); }}>تسجيل السداد</Button>
+        <div className="sticky bottom-0 flex flex-wrap items-center gap-3 border-t bg-background px-6 py-3">
+          <div><div className="text-xs text-muted-foreground">إجمالي السداد</div><div className="text-xl font-bold text-primary">{money(total)}</div>
+            {!ok && rows.length > 0 && <div className="text-xs text-destructive">المبلغ يجب أن يكون موجبًا ولا يتجاوز المتبقي</div>}</div>
+          <Button variant="outline" className="ms-auto" onClick={onClose}>إلغاء</Button>
+          <Button className="min-w-40" disabled={!ok || m.isPending} onClick={async () => { if (await ask(`تأكيد تسجيل سداد ${money(total)}؟`)) m.mutate(); }}>{m.isPending ? "جارٍ التسجيل…" : "تسجيل السداد"}</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

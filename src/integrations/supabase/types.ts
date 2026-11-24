@@ -32086,6 +32086,7 @@ export type Database = {
         Args: { _collection: string; _reason: string; _student: string }
         Returns: undefined
       }
+      sf_search_index: { Args: { _school: string }; Returns: Json }
       sf_setup: { Args: { _school: string }; Returns: Json }
       sf_setup_save: {
         Args: { _kind: string; _p: Json; _school: string }
