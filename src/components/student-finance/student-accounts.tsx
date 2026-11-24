@@ -24,6 +24,7 @@ export function StudentAccounts({ schoolId, yearId, mode = "accounts" }: { schoo
   const q = useQuery({ queryKey: [...SF_KEY, "report", schoolId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_report", { _school: schoolId, _year: yearId }); if (error) throw error; return data as { students: Row[] }; } });
   const [search, setSearch] = useState(""); const [st, setSt] = useState(mode === "collect" ? "due" : ""); const [flag, setFlag] = useState(""); const [page, setPage] = useState(0);
   const [open, setOpen] = useState<{ id: string; name: string; pay: boolean } | null>(null);
+  const [sel, setSel] = useState<Set<string>>(new Set());
   const rows = useMemo<Acc[]>(() => (q.data?.students ?? []).map((s) => {
     const obs = ((s["obligations"] ?? []) as { kind: string; status: string; balance: Balance }[]).filter((o) => o.status !== "void");
     const sum = (k: keyof Balance, kind?: string) => obs.filter((o) => !kind || o.kind === kind).reduce((a, o) => a + num(o.balance[k]), 0);
@@ -36,10 +37,14 @@ export function StudentAccounts({ schoolId, yearId, mode = "accounts" }: { schoo
     && (!flag || (flag === "previous" ? r.previous > 0 : flag === "credit" ? r.credit + r.prevCredit > 0 : flag === "overdue" ? r.overdue : flag === "exempt" ? r.exempt : flag === "transport" ? r.transportActive : flag === "no_transport" ? !r.transportActive : flag === "none" ? !r.hasObs : true)));
   const total = shown.reduce((a, r) => ({ previous: a.previous + r.previous, net: a.net + r.net, discount: a.discount + r.discount, recorded: a.recorded + r.recorded, remaining: a.remaining + r.remaining, credit: a.credit + r.credit + r.prevCredit }), { previous: 0, net: 0, discount: 0, recorded: 0, remaining: 0, credit: 0 });
   const H = ["الطالب", "الصف", "رصيد سابق", "الرسوم الدراسية", "النقل", "الخصومات", "صافي رسوم العام", "المسدد", "المتبقي", "الرصيد الدائن", "الحالة"];
-  const data = shown.map((r) => [r.name, r.grade || (r.placed ? "—" : "غير مسكّن"), money(r.previous), money(r.tuition), money(r.transport), money(r.discount), money(r.net), money(r.recorded), money(r.remaining), money(r.credit + r.prevCredit), STATE[state(r)] ?? ""]);
-  const meta = { title: mode === "collect" ? "التحصيل والسداد" : "الحسابات المالية للطلاب", filters: [search, st === "due" ? "عليهم مبالغ" : STATE[st] ?? "", flag].filter(Boolean) };
+  const picked = sel.size ? shown.filter((r) => sel.has(r.id)) : shown;
+  const toggle = (id: string) => setSel((x) => { const n = new Set(x); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const data = picked.map((r) => [r.name, r.grade || (r.placed ? "—" : "غير مسكّن"), money(r.previous), money(r.tuition), money(r.transport), money(r.discount), money(r.net), money(r.recorded), money(r.remaining), money(r.credit + r.prevCredit), STATE[state(r)] ?? ""]);
+  const meta = { title: mode === "collect" ? "التحصيل والسداد" : "الحسابات المالية للطلاب", filters: [search, st === "due" ? "عليهم مبالغ" : STATE[st] ?? "", flag, sel.size ? `${picked.length} طالبًا محددًا` : ""].filter(Boolean) };
   const pageRows = shown.slice(page * PAGE, page * PAGE + PAGE);
   const loadFin = (id: string) => async () => { const { data: d, error } = await db.rpc("sf_get", { _student: id, _year: yearId }); if (error) throw error; return [d as Row]; };
+  const loadMany = async () => (await Promise.all(picked.map((r) => loadFin(r.id)()))).flat();
+  const pageIds = pageRows.map((r) => r.id); const allPage = pageIds.length > 0 && pageIds.every((id) => sel.has(id));
   return (
     <section className="space-y-3">
       <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
@@ -55,10 +60,16 @@ export function StudentAccounts({ schoolId, yearId, mode = "accounts" }: { schoo
           <Button size="sm" variant="outline" onClick={() => printReport(meta, H, data)}>طباعة</Button>
         </span>
       </div>
+      {sel.size > 0 && <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+        <b>{picked.length} طالبًا محددًا</b><span className="text-xs text-muted-foreground">التصدير والطباعة وكشف الحساب للمحددين فقط</span>
+        <span className="ms-auto flex gap-2">{picked.length > 0 && <StatementButton title={`كشف حساب ${picked.length} طالبًا`} load={loadMany} />}
+          <Button size="sm" variant="ghost" onClick={() => setSel(new Set(shown.map((r) => r.id)))}>تحديد كل النتائج ({shown.length})</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSel(new Set())}>إلغاء التحديد</Button></span></div>}
       <p className="text-xs text-muted-foreground">{shown.length} طالبًا · أرقام تشغيلية من ركاز؛ الاعتماد المحاسبي الرسمي عبر وافق بعد تفعيل الربط.</p>
       <div className="overflow-x-auto rounded-2xl border bg-card">
-        <table className="w-full min-w-[1100px] text-sm"><thead className="bg-muted/50 text-xs"><tr>{[...H.slice(0, 10), "الإجراءات"].map((h, i) => <th key={h} className={`p-2 ${i > 1 && i < 10 ? "text-end" : "text-start"}`}>{h}</th>)}</tr></thead>
-          <tbody>{pageRows.map((r) => <tr key={r.id} className="border-t hover:bg-muted/30">
+        <table className="w-full min-w-[1100px] text-sm"><thead className="bg-muted/50 text-xs"><tr><th className="w-8 p-2"><input type="checkbox" aria-label="تحديد طلاب هذه الصفحة" checked={allPage} onChange={() => setSel((x) => { const n = new Set(x); pageIds.forEach((id) => (allPage ? n.delete(id) : n.add(id))); return n; })} /></th>{[...H.slice(0, 10), "الإجراءات"].map((h, i) => <th key={h} className={`p-2 ${i > 1 && i < 10 ? "text-end" : "text-start"}`}>{h}</th>)}</tr></thead>
+          <tbody>{pageRows.map((r) => <tr key={r.id} className={"border-t hover:bg-muted/30 " + (sel.has(r.id) ? "bg-primary/5" : "")}>
+            <td className="p-2"><input type="checkbox" aria-label={`تحديد ${r.name}`} checked={sel.has(r.id)} onChange={() => toggle(r.id)} /></td>
             <td className="sticky right-0 bg-card p-2"><button className="font-semibold text-primary hover:underline" onClick={() => setOpen({ id: r.id, name: r.name, pay: false })}>{r.name}</button>{r.overdue && <span className="ms-2 rounded bg-destructive/10 px-1 text-[11px] text-destructive">متأخر</span>}</td>
             <td className="p-2 text-xs">{r.grade || (r.placed ? "—" : "غير مسكّن")}</td>
             {[r.previous, r.tuition, r.transport, r.discount, r.net, r.recorded].map((v, i) => <td key={i} className={`p-2 text-end tabular-nums ${i === 0 && v > 0 ? "font-semibold text-destructive" : ""}`}>{money(v)}</td>)}

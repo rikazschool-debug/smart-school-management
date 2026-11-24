@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { SchoolExportBrand } from "@/components/student-finance/school-brand";
 import { db, type Row } from "@/components/crud-page";
 import { ForbiddenState, LoadingState, PageHeader } from "@/components/states";
 import { SectionLocked, useOrgSections } from "@/components/owner-portal";
@@ -55,6 +56,7 @@ function Page() {
   return (
     <div className="space-y-5">
       <PageHeader eyebrow="حسابات الطلاب" title={SF_VIEW_LABEL[view]} desc={`${group ? `${group} · ` : ""}${SF_VIEW_LABEL[view]}`} />
+      <SchoolExportBrand schoolId={sid} name={String((schools.data ?? []).find((x) => x["id"] === sid)?.["name"] ?? "")} />
       {s.isLoading ? <LoadingState /> : s.data?.finance?.["enabled"] === false ? <SectionLocked /> : <>
         {!yearless && <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card px-3 py-2">
           <span className="text-sm font-semibold">المدرسة</span>

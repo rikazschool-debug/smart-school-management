@@ -10,3 +10,4 @@
 - Assignment edits in the staff directory and HR profile refresh their authorized reads through staff-assignment.ts, so both surfaces use the canonical profile value without copying private data between caches.
 - Scope the school workspace theme to the active role via workspace-appearance.ts, never use it to determine access; keep owner and platform appearances isolated from school theme tokens.
 - School years display through formatAcademicYear (src/lib/academic-year.ts); stored academic_years names are never rewritten.
+- Exports from pages that work on a school picked on the page (not the active context) brand via SchoolExportBrand → setExportBrandOverride, so logo/name match that school; the override is cleared on leave.

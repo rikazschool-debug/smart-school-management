@@ -19,7 +19,8 @@ import { endPresence, usePresenceBeat } from "@/lib/presence";
 import { SessionProvider, arabicError, useSession } from "@/lib/session";
 import { Sanad } from "@/components/sanad";
 import { usePcMe } from "@/components/procurement/shared";
-import { SF_GROUPS } from "@/components/student-finance/finance-shell";
+import { SfNav } from "@/components/student-finance/sf-nav";
+import { type SfView } from "@/components/student-finance/finance-shell";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { workspacePages } from "@/lib/workspace-perms";
@@ -308,13 +309,7 @@ function Shell() {
                   </Link>;
                 const submenu = <>
                   {k === "collaboration" && <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">{([["community", "المجتمع المهني"], ["library", "المكتبة الرقمية"]] as const).map(([t, label]) => <Link key={t} to="/app/collaboration" search={{ tab: t }} activeOptions={{ includeSearch: true }} onClick={() => setOpen(false)} className={SUB_CLS}>{label}</Link>)}</div>}
-                  {k === "finance" && (
-                    <div className="mr-6 mt-0.5 space-y-1.5 border-r border-sidebar-border pr-2">
-                      {SF_GROUPS.map((g) => <div key={g.label} className="space-y-0.5"><p className="px-3 pt-1 text-[11px] font-bold text-sidebar-foreground/60">{g.label}</p>
-                        {g.items.map(([t, label]) => <Link key={t} to="/app/finance" search={((p: Record<string, unknown>) => ({ ...(typeof p["y"] === "string" ? { y: p["y"] } : {}), ...(typeof p["b"] === "string" ? { b: p["b"] } : {}), v: t })) as never} onClick={() => setOpen(false)}
-                          className={SUB_CLS + (path.startsWith("/app/finance") && (sfView || "dashboard") === t ? " bg-sidebar-accent font-semibold text-sidebar-primary" : "")}>{label}</Link>)}</div>)}
-                    </div>
-                  )}
+                  {k === "finance" && <div className="mr-4 mt-0.5"><SfNav current={path.startsWith("/app/finance") ? ((sfView || "dashboard") as SfView) : null} onPick={() => setOpen(false)} itemCls={SUB_CLS} /></div>}
                   {k === "procurement" && (
                     <div className="mr-6 mt-0.5 space-y-0.5 border-r border-sidebar-border pr-2">
                       {PC_SUB.filter(([t]) => (pcNeedsOnly ? t === "needs" : t !== "settings" || owner || pc.data?.caps.settings === "org")).map(([t, label]) => (
