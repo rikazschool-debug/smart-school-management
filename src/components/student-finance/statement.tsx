@@ -19,7 +19,8 @@ const h = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&a
 /** Printable statement in the receipt style (letterhead, info boxes, green-header table, summary cards); built only from statementLines. */
 function statementHtml(o: { title: string; school: string; students: string[]; filters: string[]; opening: number; closing: number; lines: StatementLine[] }) {
   const G = "#1f5f4f"; const debit = o.lines.reduce((a, l) => a + l.debit, 0), credit = o.lines.reduce((a, l) => a + l.credit, 0);
-  const now = new Date().toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "short", timeStyle: "short" });
+  // Latin digits, year-first, 24h: renders the same in any direction (no mixed Arabic marks inside an LTR run)
+  const now = new Date().toLocaleString("sv-SE", { timeZone: "Asia/Riyadh", dateStyle: "short", timeStyle: "short" });
   const box = (title: string, rows: [string, unknown][]) => `<div style="flex:1;border:1px solid #d9e2df;border-radius:10px;overflow:hidden"><div style="background:#eef4f2;color:${G};font-weight:700;font-size:12px;padding:6px 12px">${h(title)}</div>
     <table style="width:100%;border-collapse:collapse;font-size:12px">${rows.map(([k, v]) => `<tr><td style="padding:5px 12px;color:#667;width:38%;border-top:1px solid #eef1f0">${h(k)}</td><td style="padding:5px 12px;font-weight:700;border-top:1px solid #eef1f0">${h(v || "—")}</td></tr>`).join("")}</table></div>`;
   const TH = `padding:7px 8px;text-align:right;font-size:11px;background:${G};color:#fff`, TD = `padding:6px 8px;border-bottom:1px solid #e5ebe9;font-size:11px`;

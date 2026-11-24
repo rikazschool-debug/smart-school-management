@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, CreditCard, MapPin, Users } from "lucide-react";
+import { BadgeCheck, CreditCard, MapPin, Users, Wallet } from "lucide-react";
 import { CrudTable, db, RecordForm, type Row } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
@@ -110,7 +110,7 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
             <div className="flex min-w-[13rem] items-center gap-3">
               <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">{String(r["display_name"] || r["full_name"] || "؟").trim().charAt(0)}</span>
               <div className="min-w-0">
-                <button className="block max-w-[16rem] truncate text-start font-semibold text-primary hover:underline" title={r["full_name"]} onClick={() => setViewing(r)}>{r["display_name"] || r["full_name"]}</button>
+                <span className="block max-w-[16rem] truncate text-start font-semibold text-primary" title={r["full_name"]}>{r["display_name"] || r["full_name"]}</span>
                 {r["display_name"] && r["display_name"] !== r["full_name"] && <span className="block max-w-[16rem] truncate text-xs text-muted-foreground" title={r["full_name"]}>{r["full_name"]}</span>}
               </div>
             </div>) },
@@ -135,15 +135,17 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
           { label: "آخر حالة العقد", exportOnly: true, text: (r) => r["contract_status"] ?? "لا يوجد", render: () => null },
           { label: "آخر نوع العقد", exportOnly: true, text: (r) => r["contract_type"] ?? "لا يوجد", render: () => null },
         ]}
-        extraActions={(r) => w || ctCan.data || placeCan.data || canPay.data ? (
+        // the name opens the person card (CrudTable); the guardian/finance window has its own action so two windows never open at once
+        extraActions={(r) => (
           <>
+            <Button variant="ghost" size="icon" title="ولي الأمر والمالية" aria-label="ولي الأمر والمالية" onClick={() => { setPayMode(false); setViewing(r); }}><Wallet className="size-4" /></Button>
             {canPay.data && <Button variant="ghost" size="icon" title="سداد الرسوم" aria-label="سداد الرسوم" onClick={() => { setPayMode(true); setViewing(r); }}><CreditCard className="size-4" /></Button>}
             {placeCan.data && <Button variant="ghost" size="icon" title="تسكين" aria-label="تسكين" onClick={() => setPlacing(r)}><MapPin className="size-4" /></Button>}
             {w && <>
             <Button variant="ghost" size="icon" title="أولياء الأمر المرتبطون" aria-label="أولياء الأمر المرتبطون" onClick={() => setLinking(r)}><Users className="size-4" /></Button>
             </>}
           </>
-        ) : null} />
+        )} />
 
       <Dialog open={!!placing} onOpenChange={(o) => !o && setPlacing(null)}>
         <DialogContent dir="rtl" className="max-w-xl">

@@ -6,7 +6,8 @@ const KIND: Record<string, string> = { tuition: "الرسوم الدراسية",
 const TERM = (t: unknown) => (Number(t) === 1 ? "الفصل الأول" : "الفصل الثاني");
 
 export function statementLines(fins: R[], f: { term?: number | undefined; kind?: string | undefined; from?: string | undefined; to?: string | undefined } = {}) {
-  const raw: Omit<StatementLine, "balance">[] = [];
+  // `at` = exact creation time, used only to order same-day lines (date-only paid_at would otherwise tie).
+  const raw: (Omit<StatementLine, "balance"> & { at?: string })[] = [];
   for (const fin of fins) {
     const name = String((fin["student"] as R)["name"] ?? "");
     const obs = ((fin["obligations"] as R[]) ?? []).filter((o) => o["status"] !== "void" && (!f.term || Number(o["term"]) === f.term) && (!f.kind || o["kind"] === f.kind));
@@ -25,18 +26,18 @@ export function statementLines(fins: R[], f: { term?: number | undefined; kind?:
     for (const c of (fin["collections"] as R[]) ?? []) {
       const amt = ((c["allocations"] as R[]) ?? []).filter((a) => ids.has(a["obligation_id"]) || (since.has(a["obligation_id"]) && String(c["created_at"] ?? "") >= String(since.get(a["obligation_id"])))).reduce((s, a) => s + num(a["amount"]), 0);
       if (!amt) continue;
-      raw.push({ date: String(c["paid_at"] ?? c["created_at"] ?? ""), student: name, text: `سداد${c["ref"] ? ` (${String(c["ref"])})` : ""}`, debit: 0, credit: amt });
+      raw.push({ date: String(c["paid_at"] ?? c["created_at"] ?? ""), at: String(c["created_at"] ?? ""), student: name, text: `سداد${c["ref"] ? ` (${String(c["ref"])})` : ""}`, debit: 0, credit: amt });
       if (c["status"] === "reversed") raw.push({ date: String(c["updated_at"] ?? c["created_at"] ?? ""), student: name, text: "إلغاء سداد", debit: amt, credit: 0 });
     }
   }
   // Same day: charges before discounts/payments, so a date-only payment never sorts ahead of that day's fee.
-  raw.sort((a, b) => a.date.slice(0, 10).localeCompare(b.date.slice(0, 10)) || (b.debit > 0 ? 1 : 0) - (a.debit > 0 ? 1 : 0) || a.date.localeCompare(b.date));
+  raw.sort((a, b) => a.date.slice(0, 10).localeCompare(b.date.slice(0, 10)) || (b.debit > 0 ? 1 : 0) - (a.debit > 0 ? 1 : 0) || (a.at ?? a.date).localeCompare(b.at ?? b.date));
   let bal = 0, opening = 0; const lines: StatementLine[] = [];
   for (const l of raw) {
     const d = l.date.slice(0, 10);
     if (f.from && d < f.from) { opening += l.debit - l.credit; bal = opening; continue; }
     if (f.to && d > f.to) continue;
-    bal += l.debit - l.credit; lines.push({ ...l, balance: Math.round(bal * 100) / 100 });
+    bal += l.debit - l.credit; const { at: _at, ...line } = l; lines.push({ ...line, balance: Math.round(bal * 100) / 100 });
   }
   return { opening: Math.round(opening * 100) / 100, closing: Math.round(bal * 100) / 100, lines };
 }

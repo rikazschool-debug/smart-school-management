@@ -20,3 +20,11 @@ describe("statement same-day order", () => {
     expect(s.lines.map((l) => l.balance)).toEqual([7500, 7000]);
   });
 });
+
+describe("statement same-day payments", () => {
+  it("two payments on one day appear in the order they were recorded", () => {
+    const fin = { student: { name: "سارة" }, obligations: [{ id: "o1", kind: "tuition", term: 1, status: "pending", original: 5000, created_at: "2026-11-24T08:00:00Z", balance: { gross: 5000 } }], discounts: [],
+      collections: [{ paid_at: "2026-11-24", created_at: "2026-11-24T09:58:00Z", status: "valid", allocations: [{ obligation_id: "o1", amount: 250 }] }, { paid_at: "2026-11-24", created_at: "2026-11-24T08:30:00Z", status: "valid", allocations: [{ obligation_id: "o1", amount: 500 }] }] };
+    expect(statementLines([fin]).lines.map((l) => l.balance)).toEqual([5000, 4500, 4250]);
+  });
+});
