@@ -185,6 +185,9 @@ export const autoAccounts = createServerFn({ method: "POST" })
       gids = [...new Set(((links ?? []) as { guardian_id: string }[]).map((l) => l.guardian_id))];
     } else gids = [data.guardianId!];
     const res = gids.length ? await provisionCore(ctx, "guardian", gids) : [];
+    // delivery status only for guardians the caller was allowed to provision (failed/forbidden ids read nothing)
+    const okIds = new Set(res.filter((r) => r.state !== "error").map((r) => r.id));
+    gids = gids.filter((g) => okIds.has(g));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: names } = gids.length ? await supabaseAdmin.from("guardians").select("id, full_name").in("id", gids) : { data: [] };
     const { data: msgs } = gids.length ? await supabaseAdmin.from("acct_outbox" as never).select("guardian_id, status").in("guardian_id", gids) : { data: [] };

@@ -1,7 +1,13 @@
 import type { Role } from "./roles";
 
-// Demo accounts: no login buttons on the auth page (hidden Nov 10 2026); used by tests (demo org data only). Never add platform admins here — DEMO_PASSWORD ships in the browser bundle.
-export const DEMO_PASSWORD = "Demo-Rikaz-2026";
+// Demo accounts: no login buttons on the auth page; used only by scripts/tests (demo org data only). Never add platform admins here.
+// The password is never kept in source: scripts read it from the RIKAZ_DEMO_PASSWORD environment variable at run time.
+function demoPassword(): string {
+  const v = typeof process !== "undefined" ? process.env["RIKAZ_DEMO_PASSWORD"] : undefined;
+  if (!v) throw new Error("RIKAZ_DEMO_PASSWORD is not set");
+  return v;
+}
+export const DEMO_PASSWORD: string = demoPassword();
 
 export const DEMO_ACCOUNTS: { role: Role; email: string; name: string; label?: string; template?: string }[] = [
   { role: "org_owner", email: "demo-owner@rikaz.demo", name: "مدير النظام" },

@@ -3,7 +3,7 @@ import asyncio, re
 from pathlib import Path
 from playwright.async_api import async_playwright
 import sys as _s, os as _o; _s.path.insert(0, _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), 'lib')); from session_login import sign_in
-S=Path("/tmp/browser/ph"); S.mkdir(parents=True, exist_ok=True); B="http://localhost:8080"; PW="Demo-Rikaz-2026"
+S=Path("/tmp/browser/ph"); S.mkdir(parents=True, exist_ok=True); B="http://localhost:8080"; PW=__import__("os").environ["RIKAZ_DEMO_PASSWORD"]
 src=open("/dev-server/src/lib/demo-accounts.ts").read(); ACC=re.findall(r'email: "([^"]+)"', src)
 res=[]
 def chk(n,ok,info=""): res.append(ok); print(("PASS" if ok else "FAIL"),n,"" if ok else str(info)[:300])

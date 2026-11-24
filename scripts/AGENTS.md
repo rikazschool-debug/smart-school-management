@@ -142,3 +142,4 @@
 - Supervision stage-3 acceptance uses six existing synthetic identities and one new isolated org; do not run cleanup while the current request excludes it. Browser/evidence acceptance stops on first failure and never retries network timeouts.
 - scripts/perm8-e2e.ts: guidance/gifted/remedial grants save; school map is its own section (view/create/edit, deny, independence from documents, no self-grant; 20 checks).
 - scripts/perm-preview-time.ts: perm_preview speed on a 4-branch isolated org (must finish under 6s; authenticated statement timeout is 8s).
+- scripts/security-fixes-e2e.ts: internal role/staff helpers not callable, duty settings read by staff only, deactivated invitee loses meeting access (7 checks). Demo-account scripts need RIKAZ_DEMO_PASSWORD in the environment.

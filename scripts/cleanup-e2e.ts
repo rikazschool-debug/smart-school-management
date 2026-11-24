@@ -31,7 +31,7 @@ ok(!(await row(stale.id)), "row removed after object gone");
 const r3 = await a.rpc("run_file_cleanup"); ok(!r3.error && (r3.data as any).requests === 0, "idempotent third run");
 // authenticated users cannot run it
 const anon = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY!, { auth: { persistSession: false } });
-await anon.auth.signInWithPassword({ email: "demo-teacher@rikaz.demo", password: "Demo-Rikaz-2026" });
+await anon.auth.signInWithPassword({ email: "demo-teacher@rikaz.demo", password: process.env["RIKAZ_DEMO_PASSWORD"]! });
 ok(!!(await anon.rpc("run_file_cleanup")).error, "signed-in user cannot run cleanup");
 const jobs = await a.from("file_cleanup_runs").select("id", { count: "exact", head: true }); ok((jobs.count ?? 0) >= 3, "run log recorded");
 // cleanup test data

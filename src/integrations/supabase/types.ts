@@ -23542,6 +23542,7 @@ export type Database = {
       _adm_name: { Args: { _user: string }; Returns: string }
       _adm_principal: { Args: { _school: string }; Returns: boolean }
       _adm_staff: { Args: { _school: string; _user: string }; Returns: boolean }
+      _adm_staff_self: { Args: { _school: string }; Returns: boolean }
       _adm_task_for: {
         Args: { _id: string; _rev: number; _who: string }
         Returns: {

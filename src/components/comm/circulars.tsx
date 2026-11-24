@@ -224,7 +224,7 @@ function Stats({ id, title }: { id: string; title: string }) {
   const acked = need.filter((r) => r["acked_version"] != null && r["acked_version"] >= r["ack_required_version"]).length;
   const ackText = (r: Row) => !r["ack_required_version"] ? "غير مطلوب" : r["acked_at"] ? `${new Date(r["acked_at"]).toLocaleString("ar")} (إ${r["acked_version"]})${r["acked_version"] < r["ack_required_version"] ? " — إصدار أقدم" : ""}` : "لم يقر";
   function exportCsv() {
-    const esc = (x: unknown) => `"${String(x ?? "").replace(/"/g, '""')}"`;
+    const esc = (x: unknown) => { const v = String(x ?? ""); return `"${(/^[=+\-@\t\r]/.test(v) ? `'${v}` : v).replace(/"/g, '""')}"`; };
     const lines = [["الاسم", "الفرع", "الدور", "مؤهل حاليًا", "طريقة الإضافة", "الفتح", "الإقرار"].map(esc).join(",")]
       .concat(filtered.map((r) => [r["full_name"], r["school_name"], r["role"], r["eligible"] ? "نعم" : "لا", r["added_reason"] === "manual" ? "إضافة لاحقة" : "عند النشر", r["opened_at"] ?? "", ackText(r)].map(esc).join(",")));
     const url = URL.createObjectURL(new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" }));

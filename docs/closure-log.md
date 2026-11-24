@@ -1241,3 +1241,12 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - صلاحية جديدة: مدير المدرسة ومن يدير المدرسة يرى أسماء الكادر الغائب/غير المبصم اليوم فقط (دون ملفات الموارد البشرية).
 
 - 2026-11-24: قالب Excel للموظفين بأقسام «إضافة موظف» — hr-fields.test.ts (12 ناجحة) + تجربة إنشاء/قراءة القالب (42/42 عمودًا، صف العناوين 2).
+
+## 2026-11-24 — security findings pass (test DB only)
+- Guardian delivery status read only for guardians the caller was allowed to provision (autoAccounts).
+- Student card print escapes names/school/section; circular recipient CSV neutralizes formula-leading cells.
+- «سند»: role label limited to known role labels; caller history sent as quoted context in one user turn (no forged model turns).
+- _cg_generic_label/_cg_generic_label2/_adm_staff no longer executable by signed-in users; duty settings/posts read via _adm_staff_self (caller only).
+- adm_can_read_meeting: invitees need an active, non-suspended membership in the meeting branch (or org).
+- Demo password removed from source; scripts read RIKAZ_DEMO_PASSWORD. Existing demo accounts still have the old password until rotated.
+- Evidence: scripts/security-fixes-e2e.ts 7/7, meetings-live-e2e 33/33. admin2-e2e, comm-e2e, class-room-group-e2e stop at fixture setup (academic structure owner guard) — pre-existing, not verified.

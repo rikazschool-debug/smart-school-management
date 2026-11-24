@@ -128,6 +128,7 @@ Since the homework/tests simplification, term gradebooks are a read-only adminis
 | Invitees allowed | active staff of own school | same | same | — | active staff of any branch in own org | never invited |
 | Draft minutes | organizer or assigned writer | | | writer if assigned | ✘ | ✘ |
 | Read normal meeting | ✔ | ✔ | own department | invited | ✘ | ✘ |
+| Invitee whose branch membership is deactivated or suspended | ✘ (since 2026-11-24) | ✘ | ✘ | ✘ | ✘ | ✘ |
 | Read restricted meeting / its minutes / files | only if organizer, writer or invited (no automatic access) | same | same | same | ✘ | ✘ |
 | Decision executor | sees the linked task and decision text only; restricted meeting title masked | | | | | |
 | Personal calendar | own items | own | own | own | own meetings | ✘ |
