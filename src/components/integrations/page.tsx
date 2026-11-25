@@ -14,18 +14,17 @@ export function IntegrationsPage({ orgId, tab }: { orgId: string; tab: IntTab })
   const navigate = useNavigate();
   return (
     <div className="space-y-4">
-      <nav className="overflow-x-auto rounded-2xl border bg-card p-1.5 shadow-sm">
-        <div className="flex min-w-max gap-1">
-          {INT_TABS.map((t) => {
-            const on = tab === t.k;
-            return (
-              <button key={t.k} aria-current={on ? "page" : undefined} onClick={() => navigate({ to: "/app/integrations", search: { tab: t.k } })}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors ${on ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-                <t.i className="h-4 w-4 shrink-0" />{t.l}
-              </button>
-            );
-          })}
-        </div>
+      <nav className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
+        {INT_TABS.map((t) => {
+          const on = tab === t.k;
+          return (
+            <button key={t.k} aria-current={on ? "page" : undefined} onClick={() => navigate({ to: "/app/integrations", search: { tab: t.k } })}
+              className={`group flex min-w-0 items-center gap-2.5 rounded-xl border px-3 py-2.5 text-start transition-all ${on ? "border-primary bg-primary text-primary-foreground shadow-md" : "bg-card text-foreground hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"}`}>
+              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${on ? "bg-primary-foreground/15" : "bg-primary/10 text-primary"}`}><t.i className="h-4 w-4" /></span>
+              <span className="min-w-0 truncate text-sm font-semibold">{t.l}</span>
+            </button>
+          );
+        })}
       </nav>
       {tab === "overview" && <OverviewTab orgId={orgId} />}
       {tab === "keys" && <KeysTab orgId={orgId} />}
