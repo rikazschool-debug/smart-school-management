@@ -27,7 +27,7 @@ export function OverviewTab({ orgId }: { orgId: string }) {
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const o = q.data ?? {};
   const k = o["keys"] ?? {}, r = o["requests_24h"] ?? {}, dl = o["deliveries"] ?? {}, w = o["webhooks"] ?? {};
-  const groups: { t: string; d: string; icon: typeof KeyRound; items: { l: string; v: number | string; tone?: Tone; hint?: string }[] }[] = [
+  const groups: { t: string; d: string; icon: typeof KeyRound; items: { l: string; v: number | string; tone?: Tone | undefined; hint?: string }[] }[] = [
     { t: "المفاتيح", d: "حالة مفاتيح الربط الصادرة", icon: KeyRound, items: [
       { l: "فعّالة", v: k["active"] ?? 0, tone: "ok" },
       { l: "موقوفة / ملغاة", v: (k["paused"] ?? 0) + (k["revoked"] ?? 0) },
