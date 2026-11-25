@@ -65,7 +65,7 @@ try {
   const D = dir.data as any;
   const cat: any[] = D?.resources ?? [];
   const prDir = await pr.c.rpc("api_resource_directory", { _org: org });
-  check("1 directory: 54 resources (school + central), coverage with reasons, owner only", cat.length === 54 && cat.filter((r) => r.area === "central").length === 18 && cat.filter((r) => r.area === "school").length === 36
+  check("1 directory: 58 resources (38 school + 20 central), coverage with reasons, owner only", cat.length === 58 && cat.filter((r) => r.area === "central").length === 20 && cat.filter((r) => r.area === "school").length === 38
     && D.coverage.some((c: any) => c.section === "health" && c.status === "excluded" && c.excluded) && !!prDir.error, [cat.length, prDir.error?.message, dir.error?.message]);
   check("2 every platform permission section is registered (covered or excluded with reason)", Array.isArray(D?.unregistered) && D.unregistered.length === 0, D?.unregistered);
 
@@ -182,6 +182,72 @@ try {
   const outKey = (await save({ scope_type: "central", scopes: { building_maintenance: { read: true } } })).data as any;
   const outW = await call(outKey.secret, "POST", ["building_maintenance"], {}, body, "idem-out-0001");
   check("21 read-only (outbound) key cannot write → 403 direction_denied", outW.status === 403 && outW.body.error.code === "direction_denied", outW.body);
+  // bus maintenance through approval
+  const bcat = (await admin.from("mt_categories").select("id").is("org_id", null).is("parent_id", null).eq("kind", "bus").eq("active", true).limit(1).single()).data!.id;
+  const bus = (await admin.from("mt_buses").insert({ org_id: org, school_id: A, code: `BUS-${run % 10000}`, plate: "ا ب ج 1234", odometer: 50000, active: true, created_by: owner.id }).select("id").single());
+  if (bus.error) console.log("bus:", bus.error.message);
+  const liveB = (await save({ env: "live", direction: "both", scope_type: "central", scopes: { bus_maintenance: { read: true, create: true, fields: ["ref", "bus_id", "odometer"], write_fields: ["school_id", "odometer"] } } })).data as any;
+  const bb = { school_id: A, title: "صوت في المكابح", description: "صوت عند الضغط على المكابح", category_id: bcat, bus_id: bus.data?.id, odometer: 50120 };
+  const low = await call(liveB.secret, "POST", ["bus_maintenance"], {}, { ...bb, odometer: 100 }, "idem-bus-0001");
+  const bq = await call(liveB.secret, "POST", ["bus_maintenance"], {}, bb, "idem-bus-0002");
+  const bap = await owner.c.rpc("api_inbox_decide", { _id: bq.body?.data?.id, _approve: true, _reason: null });
+  const bmt = (await admin.from("mt_requests").select("id,kind,bus_id,odometer").eq("org_id", org).eq("kind", "bus")).data ?? [];
+  check("23 bus maintenance: odometer below last reading refused; queued request approved creates one bus request via mt_create", low.status === 422 && bq.status === 202 && (bap.data as any)?.status === "approved" && bmt.length === 1 && bmt[0]!.bus_id === bus.data?.id,
+    [low.body, bq.body, bap.data, bap.error?.message, bmt]);
+
+  // independent HTTP client against the real gateway route
+  const H = "http://localhost:8080/api/public/v1";
+  const hget = (sec: string | null, path: string) => fetch(H + path, { headers: sec ? { Authorization: `Bearer ${sec}` } : {} }).then(async (r) => ({ s: r.status, b: await r.json().catch(() => null), h: r.headers }));
+  const g1 = await hget(k1.secret, "/students?fields=full_name");
+  const g2 = await hget(null, "/students");
+  const g3 = await hget("rk_live_" + "x".repeat(40), "/students");
+  const g4 = await hget(k1.secret, "/hr_employees");
+  const g5 = await fetch(H + "/students/" + sa, { method: "DELETE", headers: { Authorization: `Bearer ${k1.secret}` } }).then((r) => r.status);
+  const g6 = await fetch(H + "/inbox_requests", { method: "POST", headers: { Authorization: `Bearer ${live.secret}`, "Content-Type": "application/json" }, body: "{bad" }).then((r) => r.status);
+  check("24 real HTTP client: own-school list 200 with chosen fields + rate headers; no key 401; unknown key 401; area 403; DELETE 405; bad JSON 400",
+    g1.s === 200 && g1.b?.data?.[0]?.full_name && !("national_id" in (g1.b?.data?.[0] ?? {})) && !!g1.h.get("x-ratelimit-limit") && g2.s === 401 && g3.s === 401 && g4.s === 403 && g5 === 405 && g6 === 400,
+    [g1.s, g1.b, g2.s, g3.s, g4.s, g5, g6]);
+
+  // independent field customisation: two keys on the same resource see different fields
+  const fa = (await save({ scope_type: "schools", school_ids: [A], scopes: { students: { read: true, fields: ["full_name"] } } })).data as any;
+  const fb = (await save({ scope_type: "schools", school_ids: [A], scopes: { students: { read: true, fields: ["national_id"] } } })).data as any;
+  const ra = (await hget(fa.secret, "/students")).b?.data?.find((x: any) => x.id === sa), rb = (await hget(fb.secret, "/students")).b?.data?.find((x: any) => x.id === sa);
+  check("25 field grants are per key: one key sees the name only, the other the ID number only", ra && "full_name" in ra && !("national_id" in ra) && rb && "national_id" in rb && !("full_name" in rb), [ra, rb]);
+
+  // platform section switch stops every key on that section's resources
+  await admin.from("org_sections").upsert({ org_id: org, section: "hr", enabled: false, reason: "اختبار" });
+  const sOff = await call(k4.secret, "GET", ["hr_employees"]);
+  await admin.from("org_sections").delete().eq("org_id", org).eq("section", "hr");
+  const sOn = await call(k4.secret, "GET", ["hr_employees"]);
+  check("26 HR switched off for the group → HR resources 403 section_disabled for every key; back on → 200", sOff.status === 403 && sOff.body.error.code === "section_disabled" && sOn.status === 200, [sOff.body, sOn.status]);
+
+  // expiry / revoke / rotation
+  const ex = (await save({ scope_type: "schools", school_ids: [A], scopes: { students: { read: true } } })).data as any;
+  await admin.from("api_keys").update({ starts_at: new Date(Date.now() - 7200e3).toISOString(), expires_at: new Date(Date.now() - 60e3).toISOString() }).eq("id", ex.key.id);
+  const exr = await call(ex.secret, "GET", ["students"]);
+  const rv = await owner.c.rpc("api_key_status", { _id: fa.key.id, _status: "revoked", _reason: "اختبار الإلغاء" });
+  const rvr = await call(fa.secret, "GET", ["students"]);
+  const rvs = await owner.c.rpc("api_key_save", { _org: org, _id: fa.key.id, _p: { name: "x", system_name: "y", scope_type: "schools", school_ids: [A], scopes: {}, rev: 1 }, _reason: "تعديل بعد الإلغاء" });
+  const ro = await owner.c.rpc("api_key_rotate", { _id: fb.key.id, _grace_min: 0, _reason: "تدوير" });
+  const roOld = await call(fb.secret, "GET", ["students"]), roNew = await call((ro.data as any)?.secret, "GET", ["students"]);
+  check("27 expired key 401; revoked key 401 and cannot be edited; rotation with no grace stops the old secret", exr.status === 401 && !rv.error && rvr.status === 401 && !!rvs.error && roOld.status === 401 && roNew.status === 200, [exr.body, rvr.status, rvs.error?.message, roOld.status, roNew.status]);
+
+  // rate limit
+  const rl = (await save({ scope_type: "schools", school_ids: [A], rate_min: 2, scopes: { students: { read: true } } })).data as any;
+  const rls = [await call(rl.secret, "GET", ["students"]), await call(rl.secret, "GET", ["students"]), await call(rl.secret, "GET", ["students"])].map((x) => x.status);
+  check("28 per-minute limit → third request 429", rls[0] === 200 && rls[1] === 200 && rls[2] === 429, rls);
+
+  // admin functions refuse non-owners (principal of the same group, owner of another group, anonymous)
+  const anon = createClient(URL, PK, { auth: { persistSession: false }, global: { fetch: shim(PK) as any } });
+  const fns: [string, any][] = [["api_keys_list", { _org: org }], ["api_key_save", { _org: org, _id: null, _p: { name: "aa", system_name: "bb", scope_type: "schools", all_schools: true, scopes: {} }, _reason: null }],
+    ["api_resource_directory", { _org: org }], ["api_resource_set", { _org: org, _resource: "students", _enabled: false, _reason: "تجاوز" }], ["api_inbox_list", { _org: org }], ["api_key_scope_options", { _org: org }]];
+  const leaks: string[] = [];
+  for (const [fn, args] of fns) for (const [who, c] of [["principal", pr.c], ["other-owner", owner2.c], ["anon", anon]] as const) { const r = await c.rpc(fn, args); if (!r.error) leaks.push(`${fn}:${who}`); }
+  const dq = await call(live.secret, "POST", ["support_tickets"], {}, { school_id: A, title: "طلب آخر", body: "طلب للتحقق من الرفض" }, "idem-st-0002");
+  for (const [who, c] of [["principal", pr.c], ["other-owner", owner2.c], ["anon", anon]] as const) { const r = await c.rpc("api_inbox_decide", { _id: dq.body?.data?.id, _approve: true, _reason: null }); if (!r.error) leaks.push(`api_inbox_decide:${who}`); }
+  for (const fn of ["_api_call", "_api_exec", "_api_rows_all", "_api_catalog"]) { const r = await pr.c.rpc(fn, {}); if (!r.error || !/permission|not find|42501|PGRST/.test(r.error.message + r.error.code)) leaks.push(`${fn}:principal`); }
+  check("29 all 7 owner functions refuse principal, other group's owner and anonymous; internal gateway functions not callable", leaks.length === 0, leaks);
+
   const k2b = await call(k2.secret, "GET", ["students"]);
   check("22 earlier keys keep exactly their access (no automatic widening to new resources)", k2b.status === 200 && (await call(k2.secret, "GET", ["receipts"])).status === 403, k2b.status);
 } catch (e) { bad++; console.log("ERROR", e); }

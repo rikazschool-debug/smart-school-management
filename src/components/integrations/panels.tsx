@@ -5,6 +5,7 @@ import { Pause, Play, Plus, RotateCw, Send, Zap, Pencil, Check, X } from "lucide
 import { toast } from "sonner";
 import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
+import { buildOpenApi, buildPostman, type SpecRes } from "@/lib/api-spec";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -233,12 +234,22 @@ export function ExplorerTab({ orgId }: { orgId: string }) {
 }
 
 // ---------- docs ----------
+function download(name: string, v: unknown) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(v, null, 2)], { type: "application/json" }));
+  const a = document.createElement("a"); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 export function DocsTab() {
   const cat = useCatalog();
   const base = typeof window === "undefined" ? "/api/public/v1" : `${window.location.origin}/api/public/v1`;
   const Code = ({ c }: { c: string }) => <pre className="overflow-auto rounded-md bg-muted p-3 text-xs" dir="ltr">{c}</pre>;
   return (
     <div className="space-y-4">
+      <Card title="ملفات التوثيق" action={<div className="flex gap-2">
+        <Button size="sm" variant="outline" disabled={!cat.data} onClick={() => download("rikaz-openapi.json", buildOpenApi((cat.data ?? []) as SpecRes[], base))}>تنزيل OpenAPI</Button>
+        <Button size="sm" variant="outline" disabled={!cat.data} onClick={() => download("rikaz-postman.json", buildPostman((cat.data ?? []) as SpecRes[], base))}>تنزيل Postman</Button>
+      </div>}>
+        <p className="text-xs text-muted-foreground">يُولَّدان من دليل الموارد نفسه الذي تطبقه بوابة API، ولا يتضمنان أي مفتاح سري؛ أدخل مفتاحك في متغير api_key.</p>
+      </Card>
       <Card title="الاتصال">
         <Code c={`GET ${base}/me\nAuthorization: Bearer rk_live_...\n\nGET ${base}/students?school_id=...&per_page=50&page=1&sort=updated_at&order=desc&updated_since=2026-01-01T00:00:00Z\nGET ${base}/students/{id}\nPOST ${base}/admissions          (Idempotency-Key مستحسن)\nPATCH ${base}/admissions/{id}    ({"rev": n, ...})\nPOST ${base}/payments            (Idempotency-Key إلزامي، يُسجَّل بعد اعتماد الإدارة)\nPOST ${base}/building_maintenance (يُنشأ بعد اعتماد الإدارة؛ تابع عبر inbox_requests)\nPOST ${base}/inbox_requests/{id}/cancel  (إلغاء طلبك ما دام بانتظار الاعتماد)\nPOST ${base}/payment_requests/{id}/cancel`} />
         <ul className="mt-2 list-disc space-y-1 ps-5 text-sm text-muted-foreground">

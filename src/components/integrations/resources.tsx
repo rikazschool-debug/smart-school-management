@@ -35,7 +35,7 @@ export function ResourcesTab({ orgId }: { orgId: string }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-4">
-        {[["الموارد المتاحة", res.length], ["موارد المدارس", res.filter((r) => r["area"] === "school").length], ["موارد الإدارة المركزية", res.filter((r) => r["area"] === "central").length], ["أقسام مغطاة / مستبعدة", `${nCov} / ${cov.length - nCov}`]].map(([l, v]) => (
+        {[["الموارد المتاحة", res.length], ["موارد المدارس", res.filter((r) => r["area"] === "school").length], ["موارد الإدارة المركزية", res.filter((r) => r["area"] === "central").length], ["أقسام المنصة", `مغطاة ${nCov} · مستبعدة ${cov.length - nCov}`]].map(([l, v]) => (
           <div key={String(l)} className="rounded-xl border bg-card p-3 shadow-sm"><div className="text-xs text-muted-foreground">{l}</div><div className="font-display text-xl font-bold">{v}</div></div>
         ))}
       </div>
@@ -73,7 +73,7 @@ export function ResourcesTab({ orgId }: { orgId: string }) {
                       <td className="px-3 py-2 text-xs">{f.length}{f.some((x) => x.s) ? ` · ${f.filter((x) => x.s).length} ●` : ""}</td>
                       <td className="px-3 py-2 text-xs">{r["sens"] ?? "عام"}</td>
                       <td className="px-3 py-2 text-xs">{r["keys_using"]}</td>
-                      <td className="px-3 py-2"><Badge cls={on ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}>{on ? "متاح" : "موقوف"}</Badge>{!on && r["disabled_reason"] && <div className="mt-1 max-w-[160px] text-[11px] text-muted-foreground">{r["disabled_reason"]}</div>}</td>
+                      <td className="px-3 py-2"><Badge cls={on ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}>{on ? "متاح" : "موقوف"}</Badge>{!on && r["disabled_reason"] && <div className="mt-1 max-w-[160px] text-[11px] text-muted-foreground">{r["disabled_reason"]}</div>}{r["section_on"] === false && <div className="mt-1"><Badge cls="bg-warning/15 text-warning-foreground">القسم غير مفعّل للمجموعة</Badge></div>}</td>
                       <td className="px-3 py-2"><Button size="sm" variant="outline" onClick={() => toggle(r)}>{on ? "إيقاف" : "تفعيل"}</Button></td>
                     </tr>
                     {open === r["key"] && (

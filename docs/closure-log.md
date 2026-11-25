@@ -1331,3 +1331,4 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - 2026-11-25: admissions-e2e check 17 fixed in the test (ad_students intentionally lists only students linked to an ACCEPTED application; the test re-accepts after the follow-up alert check) — 18/18. Added test_sandbox_orgs + _test_sandbox_register/_test_sandbox_retire; leftover synthetic finance orgs retired (not deleted), hidden from platform_orgs. Test DB only.
 
 - 2026-11-25 Integrations v2 (test DB only): 54 API resources (36 school, 18 central), section coverage with exclusion reasons, key types + explicit all-schools, resource tab. Evidence: api2-e2e 22/22, api-e2e 26/26, browser journey 13/13.
+- 2026-11-25 Integrations final review (test DB only): 58 resources, platform-section gating, OpenAPI/Postman export, coverage matrix docs/integrations-coverage.md, report docs/integrations-review.md. Evidence: api2-e2e 29/29, api-e2e 26/26, api-spec 3/3, browser 14/14.

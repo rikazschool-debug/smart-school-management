@@ -176,7 +176,7 @@ function KeyForm({ orgId, draft, onClose, onSaved }: { orgId: string; draft: Dra
   const opts = useQuery({ queryKey: ["api", "opts", orgId], queryFn: () => rpc<Opts>("api_key_scope_options", { _org: orgId }) });
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
   const dir = useDirectory(orgId);
-  const disabled = useMemo(() => new Set(((dir.data?.["resources"] ?? []) as Row[]).filter((r) => r["enabled"] === false).map((r) => r["key"] as string)), [dir.data]);
+  const disabled = useMemo(() => new Set(((dir.data?.["resources"] ?? []) as Row[]).filter((r) => r["enabled"] === false || r["section_on"] === false).map((r) => r["key"] as string)), [dir.data]);
   const central = d.scope_type === "central";
   const inSch = (o: Opt) => d.all_schools || (o.school_id ? d.school_ids.includes(o.school_id) : true);
   const pick = (sel: string[], id?: string) => !sel.length || (!!id && sel.includes(id));

@@ -25313,8 +25313,10 @@ export type Database = {
       }
       _api_catalog: { Args: never; Returns: Json }
       _api_catalog_ext: { Args: never; Returns: Json }
+      _api_catalog_ext2: { Args: never; Returns: Json }
       _api_catalog_v1: { Args: never; Returns: Json }
       _api_coverage: { Args: never; Returns: Json }
+      _api_coverage_v1: { Args: never; Returns: Json }
       _api_date: { Args: { _t: string }; Returns: string }
       _api_emit: {
         Args: { _event: string; _org: string; _rid: string; _school: string }
@@ -25326,6 +25328,17 @@ export type Database = {
       }
       _api_event_res: { Args: { _event: string }; Returns: string }
       _api_exec: {
+        Args: {
+          _body: Json
+          _dry: boolean
+          _method: string
+          _path: string[]
+          _q: Json
+          k: Database["public"]["Tables"]["api_keys"]["Row"]
+        }
+        Returns: Json
+      }
+      _api_exec_v2: {
         Args: {
           _body: Json
           _dry: boolean
@@ -25386,6 +25399,23 @@ export type Database = {
         Returns: Json[]
       }
       _api_rows_v2: {
+        Args: {
+          _all: boolean
+          _grades: string[]
+          _id: string
+          _key: string
+          _org: string
+          _res: string
+          _sch: string[]
+          _secs: string[]
+          _stages: string[]
+          _stu: string[]
+          _terms: string[]
+          _yrs: string[]
+        }
+        Returns: Json[]
+      }
+      _api_rows_v3: {
         Args: {
           _all: boolean
           _grades: string[]
