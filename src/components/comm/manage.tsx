@@ -30,7 +30,7 @@ export function ManageTab({ ctx }: { ctx: AppContext & { schoolId: string } }) {
       </div>
       {view === "groups" && <GroupsList ctx={ctx} />}
       {view === "new" && canNew && <GroupWizard ctx={ctx} onDone={() => setView("groups")} />}
-      {view === "settings" && <CommSettings schoolId={ctx.schoolId} />}
+      {view === "settings" && <CommSettings schoolId={ctx.schoolId} orgId={ctx.role === "org_owner" ? ctx.orgId ?? null : null} />}
       {view === "settings" && ctx.role === "org_owner" && ctx.orgId && <XbranchSettings orgId={ctx.orgId} />}
       {view === "reports" && <Reports ctx={ctx} />}
     </div>
@@ -182,7 +182,7 @@ function GroupWizard({ ctx, onDone }: { ctx: AppContext & { schoolId: string }; 
   );
 }
 
-function CommSettings({ schoolId }: { schoolId: string }) {
+function CommSettings({ schoolId, orgId }: { schoolId: string; orgId: string | null }) {
   const q = useQuery({
     queryKey: ["comm-settings", schoolId],
     queryFn: async () => {
@@ -197,7 +197,10 @@ function CommSettings({ schoolId }: { schoolId: string }) {
   return (
     <form className="space-y-3 rounded-2xl border bg-card p-4 text-sm" onSubmit={async (e) => {
       e.preventDefault();
-      const { error } = await db.from("comm_settings").upsert({ school_id: schoolId, staff_direct_enabled: cur["staff_direct_enabled"], edit_window_minutes: Number(cur["edit_window_minutes"]), dept_head_groups: cur["dept_head_groups"], family_admin_roles: cur["family_admin_roles"], updated_at: new Date().toISOString() });
+      if (!orgId) return;
+      const { data: sch } = await db.from("schools").select("id").eq("org_id", orgId);
+      const ids = ((sch ?? []) as Row[]).map((x) => x["id"] as string); if (!ids.includes(schoolId)) ids.push(schoolId);
+      const { error } = await db.from("comm_settings").upsert(ids.map((school_id) => ({ school_id, staff_direct_enabled: cur["staff_direct_enabled"], edit_window_minutes: Number(cur["edit_window_minutes"]), dept_head_groups: cur["dept_head_groups"], family_admin_roles: cur["family_admin_roles"], updated_at: new Date().toISOString() })));
       if (error) return void toast.error(arabicError(error));
       toast.success("حُفظت إعدادات التواصل"); q.refetch(); setV(null);
     }}>
@@ -209,7 +212,7 @@ function CommSettings({ schoolId }: { schoolId: string }) {
         ))}</div>
       </fieldset>
       <p className="text-xs text-muted-foreground">سياسة الخصوصية: عضوية الإدارة لا تمنح قراءة المحادثات الخاصة. الاطلاع الاستثنائي الوحيد هو على الرسالة المُبلَّغ عنها عند مراجعة بلاغ، ويُسجَّل في سجل التدقيق.</p>
-      <Button size="sm">حفظ</Button>
+      {orgId ? <Button size="sm">حفظ لكل فروع المجموعة</Button> : <p className="text-xs text-muted-foreground">إعدادات المحادثة العامة على مستوى المجموعة ويعدّلها مدير النظام فقط.</p>}
     </form>
   );
 }

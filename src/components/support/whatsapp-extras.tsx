@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { waContactAttrs, waTag } from "@/lib/wa-inbox.functions";
+import { selectCls } from "@/components/ui/native-select";
+import { ask, askText } from "@/components/confirm";
 import { fillOperator } from "@/lib/wa-placeholders";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +26,13 @@ export function ContactCard({ conv }: { conv: string }) {
   const attrsFn = useServerFn(waContactAttrs); const tagFn = useServerFn(waTag);
   const attrs = useQuery({ queryKey: ["wa-attrs", conv], queryFn: () => attrsFn({ data: { conv } }), staleTime: 300_000 });
   const [tag, setTag] = useState("");
+  const defs = useQuery({ queryKey: ["wa-tagdefs", conv], queryFn: () => rpc("wa_tag_defs_for", { _conv: conv }) as Promise<Row[]> });
+  const own = useQuery({ queryKey: ["wa-tagorg", conv], queryFn: () => rpc("wa_tag_org", { _conv: conv }) as Promise<string> });
+  const [newDef, setNewDef] = useState("");
+  const manage = async (fn: string, args: Record<string, unknown>) => {
+    try { await rpc(fn, { _org: own.data, ...args }); setNewDef(""); void defs.refetch(); void qc.invalidateQueries({ queryKey: ["wa-card", conv] }); }
+    catch (e) { toast.error((e as Error).message); }
+  };
   const toggle = async (name: string, on: boolean) => {
     try { const r = await tagFn({ data: { conv, name, on } }); if (on && !r.ok) toast.warning("حُفظ الوسم في ركاز، لكن WATI لم يقبله (لا يقبل WATI إلا وسمًا معرَّفًا مسبقًا عنده)."); setTag(""); }
     catch (e) { toast.error((e as Error).message); }
@@ -62,8 +71,13 @@ export function ContactCard({ conv }: { conv: string }) {
             className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${t.sync === "ok" ? "border-primary/40 bg-primary/10" : "border-dashed"}`}>
             <Tag className="size-3" />{t.name}{t.sync !== "ok" && <Lock className="size-3 text-muted-foreground" />}
             <button aria-label={`حذف الوسم ${t.name}`} onClick={() => void toggle(t.name, false)}><X className="size-3" /></button></span>))}</div>
-        <form className="flex gap-1" onSubmit={(e) => { e.preventDefault(); if (tag.trim()) void toggle(tag.trim(), true); }}>
-          <Input value={tag} onChange={(e) => setTag(e.target.value)} maxLength={40} placeholder="أضف وسمًا…" className="h-8" /><Button size="sm" type="submit" variant="outline"><Plus className="size-4" /></Button></form>
+        <form className="flex gap-1" onSubmit={(e) => { e.preventDefault(); if (tag) void toggle(tag, true); }}>
+          <select aria-label="اختر وسمًا" value={tag} onChange={(e) => setTag(e.target.value)} className={`${selectCls} h-8 flex-1`}>
+            <option value="">اختر وسمًا معتمدًا…</option>
+            {(defs.data ?? []).filter((d: Row) => !(c.tags ?? []).some((t: Row) => t.name === d.name)).map((d: Row) => <option key={d.id} value={d.name}>{d.name}</option>)}
+          </select><Button size="sm" type="submit" variant="outline" disabled={!tag}><Plus className="size-4" /></Button></form>
+        {defs.data?.length === 0 && <p className="text-[10px] text-muted-foreground">لا توجد وسوم معتمدة بعد؛ ينشئها مدير النظام.</p>}
+        <ManageDefs conv={conv} defs={defs.data ?? []} manage={manage} newDef={newDef} setNewDef={setNewDef} />
         <p className="text-[10px] text-muted-foreground">لا يتيح WATI قراءة وسومه عبر الربط؛ الوسوم المعروضة هي المضافة من ركاز. الوسم بقفل = محفوظ في ركاز فقط.</p>
       </Sec>
       <Sec t="ملاحظات داخلية" extra={<RikazOnly />}>
@@ -189,5 +203,21 @@ function QuickManage({ list, onClose }: { list: Row[]; onClose: () => void }) {
         <Button size="sm" variant="outline" onClick={() => setEd({ is_active: true })}><Plus className="size-4" />رد جديد</Button>
       </>)}
     </div>
+  );
+}
+
+/** Group-wide tag catalog editor: rendered only for the org owner (server re-checks in wa_tag_def_save/delete). */
+function ManageDefs({ conv, defs, manage, newDef, setNewDef }: { conv: string; defs: Row[]; manage: (fn: string, a: Record<string, unknown>) => Promise<void>; newDef: string; setNewDef: (v: string) => void }) {
+  const caps = useQuery({ queryKey: ["wa-tagcap", conv], queryFn: () => rpc("wa_tag_can_manage", { _conv: conv }) as Promise<boolean> });
+  if (!caps.data) return null;
+  return (
+    <details className="rounded-md border p-2 text-xs"><summary className="cursor-pointer font-medium">إدارة الوسوم (على مستوى المجموعة)</summary>
+      <ul className="mt-2 space-y-1">{defs.map((d) => (
+        <li key={d.id} className="flex items-center gap-1"><span className="flex-1">{d.name}</span>
+          <button className="text-muted-foreground hover:text-primary" onClick={() => { void (async () => { const nm = (await askText("الاسم الجديد للوسم", { required: true, initial: d.name }))?.trim(); if (nm && nm !== d.name) await manage("wa_tag_def_save", { _id: d.id, _name: nm }); })(); }}>تعديل</button>
+          <button className="text-destructive" onClick={() => void (async () => { if (await ask(`حذف الوسم «${d.name}»؟ سيُزال من كل المحادثات.`, { destructive: true })) await manage("wa_tag_def_delete", { _id: d.id }); })()}>حذف</button></li>))}</ul>
+      <form className="mt-2 flex gap-1" onSubmit={(e) => { e.preventDefault(); if (newDef.trim()) void manage("wa_tag_def_save", { _id: null, _name: newDef.trim() }); }}>
+        <Input value={newDef} onChange={(e) => setNewDef(e.target.value)} maxLength={40} placeholder="وسم جديد…" className="h-8" /><Button size="sm" type="submit" variant="outline">إضافة</Button></form>
+    </details>
   );
 }

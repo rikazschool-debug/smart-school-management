@@ -24223,6 +24223,41 @@ export type Database = {
           },
         ]
       }
+      wa_tag_defs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_tag_defs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wa_team_links: {
         Row: {
           central: boolean
@@ -33218,6 +33253,31 @@ export type Database = {
         Args: { _active: boolean; _body: string; _id: string; _title: string }
         Returns: string
       }
+      wa_tag_can_manage: { Args: { _conv: string }; Returns: boolean }
+      wa_tag_def_delete: {
+        Args: { _id: string; _org: string }
+        Returns: undefined
+      }
+      wa_tag_def_save: {
+        Args: { _id: string; _name: string; _org: string }
+        Returns: string
+      }
+      wa_tag_defs_for: {
+        Args: { _conv: string }
+        Returns: {
+          can_manage: boolean
+          id: string
+          name: string
+        }[]
+      }
+      wa_tag_defs_list: {
+        Args: { _org: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
+      wa_tag_org: { Args: { _conv: string }; Returns: string }
       wa_tag_set: {
         Args: { _conv: string; _name: string; _on: boolean }
         Returns: undefined
