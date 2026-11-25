@@ -77,8 +77,8 @@ try {
   check("1l filter options come from the authorized pool only", !!facets && !facets.some((f) => f.kind === "branch" && f.id === B) && !facets.some((f) => f.kind === "role" && ["student", "guardian"].includes(f.id)), facets);
 
   // ---- 2. tasks: creator scope ----
-  const tPr = uids(await pick(pr, { _purpose: "task", _school: S }));
-  check("2a principal task candidates = all school staff except self", [v1, v2, sup, a1, a2, s3].every((u) => tPr.includes(u.id)) && !tPr.includes(pr.id) && !tPr.includes(tB.id));
+  const tPrR = await pick(pr, { _purpose: "task", _school: S }), tPr = uids(tPrR);
+  check("2a principal task candidates = all school staff except self", [v1, v2, sup, a1, a2, s3].every((u) => tPr.includes(u.id)) && !tPr.includes(pr.id) && !tPr.includes(tB.id), [tPrR.error?.message, names(tPrR)]);
   check("2b vice 1 (dept العلوم) sees only that department's teacher", JSON.stringify(names(await pick(v1, { _purpose: "task", _school: S }))) === JSON.stringify(["أحمد سالم"]));
   check("2c vice 2 (same role, other scope) sees only her named teacher", JSON.stringify(names(await pick(v2, { _purpose: "task", _school: S }))) === JSON.stringify(["سارة علي"]));
   check("2d supervisor sees only the assigned teacher", JSON.stringify(names(await pick(sup, { _purpose: "task", _school: S }))) === JSON.stringify(["أحمد خالد"]));
