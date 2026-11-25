@@ -29,6 +29,12 @@ function code6() {
 }
 
 type Portal = "guardian" | "staff";
+/** conn = hashed client connection (never the raw address); limits repeated tries from one device across many IDs. */
+async function connOk(conn: string | undefined, kind: "request" | "verify" | "student") {
+  if (!conn) return true;
+  const { data, error } = await (await admin()).rpc("_idl_conn_hit" as never, { _conn: conn, _kind: kind } as never);
+  return !error && data === true;
+}
 async function portalOk(uid: string, portal: Portal) {
   const sb = await admin();
   const { data } = await sb.rpc("_idl_portal_ok" as never, { _uid: uid, _portal: portal } as never);
@@ -39,8 +45,9 @@ const WRONG_PORTAL = {
   staff: "هذا الحساب ليس حساب موظف. استخدم بوابة «ولي الأمر» أو «الطالب».",
 };
 
-export async function requestIdCode(data: { nid: string; portal: Portal }) {
+export async function requestIdCode(data: { nid: string; portal: Portal; conn?: string }) {
   if (!/^[12]\d{9}$/.test(data.nid)) return { error: idLoginMessage("invalid") };
+  if (!(await connOk(data.conn, "request"))) return { error: idLoginMessage("conn_wait") };
   const sb = await admin();
   const code = code6();
   const { data: r, error } = await sb.rpc(
@@ -56,7 +63,7 @@ export async function requestIdCode(data: { nid: string; portal: Portal }) {
       "_idl_mark_sent" as never,
       { _challenge: res.challenge, _status: "failed", _channel: "portal" } as never,
     );
-    return { error: WRONG_PORTAL[data.portal] };
+    return { error: idLoginMessage("not_found") };
   }
 
   const baseUrl = process.env["WATI_API_BASE_URL"],
@@ -109,9 +116,10 @@ export async function requestIdCode(data: { nid: string; portal: Portal }) {
   return { challenge: res.challenge, masked: maskPhone(res.phone) };
 }
 
-export async function verifyIdCode(data: { challenge: string; code: string; portal: Portal }) {
+export async function verifyIdCode(data: { challenge: string; code: string; portal: Portal; conn?: string }) {
   if (!UUID.test(data.challenge) || data.code.length !== 6)
     return { error: idLoginMessage("wrong") };
+  if (!(await connOk(data.conn, "verify"))) return { error: idLoginMessage("conn_wait") };
   const sb = await admin();
   const { data: r, error } = await sb.rpc(
     "_idl_verify" as never,
@@ -129,7 +137,8 @@ export async function verifyIdCode(data: { challenge: string; code: string; port
   return tokenFor(res.user_id);
 }
 
-export async function studentSignIn(data: { nid: string; csmart: string }) {
+export async function studentSignIn(data: { nid: string; csmart: string; conn?: string }) {
+  if (!(await connOk(data.conn, "student"))) return { error: idLoginMessage("conn_wait") };
   const sb = await admin();
   const { data: r, error } = await sb.rpc(
     "_idl_student" as never,

@@ -158,3 +158,4 @@
 - Anon (visitors) has no table privileges in public since phase 6; any new public flow must be a checked definer function, and new tables must not grant anon.
 - scripts/perm-template-probe.ts: test DB only; prints what each base role really has in a fresh branch (/tmp/perm-templates.json) — use it to resync system role templates when new sections are added; perm6-e2e check 3 fails on drift.
 - scripts/perm-catalog-e2e.ts: every grantable tree option is accepted by the server and a grant/deny changes perm_effective (9 checks).
+- scripts/year-idl-guard-e2e.ts: year delete guard + ID sign-in per-device limit (6 checks). scripts/ptree-browser-fixture.ts setup|teardown + scripts/ptree-journey.py: permission tree grant/revoke/log in the browser (7 checks); always run teardown after.

@@ -14298,6 +14298,27 @@ export type Database = {
         }
         Relationships: []
       }
+      idl_conn_hits: {
+        Row: {
+          conn_hash: string
+          created_at: string
+          id: number
+          kind: string
+        }
+        Insert: {
+          conn_hash: string
+          created_at?: string
+          id?: number
+          kind: string
+        }
+        Update: {
+          conn_hash?: string
+          created_at?: string
+          id?: number
+          kind?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -26245,6 +26266,10 @@ export type Database = {
       _hw_year_archived: { Args: { _year: string }; Returns: boolean }
       _identity_conflict: {
         Args: { _kind: string; _subject: string; _uid: string }
+        Returns: boolean
+      }
+      _idl_conn_hit: {
+        Args: { _conn: string; _kind: string }
         Returns: boolean
       }
       _idl_hash: { Args: { _s: string }; Returns: string }

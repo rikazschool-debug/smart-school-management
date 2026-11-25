@@ -1,9 +1,9 @@
 type Portal = "guardian" | "staff";
 type Result = { error?: string; token?: string; challenge?: string; masked?: string };
 type Service = {
-  requestIdCode: (data: { nid: string; portal: Portal }) => Promise<Result>;
-  verifyIdCode: (data: { challenge: string; code: string; portal: Portal }) => Promise<Result>;
-  studentSignIn: (data: { nid: string; csmart: string }) => Promise<Result>;
+  requestIdCode: (data: { nid: string; portal: Portal; conn?: string }) => Promise<Result>;
+  verifyIdCode: (data: { challenge: string; code: string; portal: Portal; conn?: string }) => Promise<Result>;
+  studentSignIn: (data: { nid: string; csmart: string; conn?: string }) => Promise<Result>;
 };
 type Path = "request-code" | "verify-code" | "student-login";
 type ServiceSource = Service | (() => Promise<Service>);
@@ -116,6 +116,10 @@ async function handleMobileLoginPost(
   const { nid, csmart, portal, challenge, code } = body;
   const getService = () => (typeof service === "function" ? service() : Promise.resolve(service));
   let result: Result;
+  // per-device limit: only Cloudflare's client address counts (a forged X-Forwarded-For is ignored here)
+  const raw = request.headers.get("cf-connecting-ip");
+  let conn: string | undefined;
+  if (raw) { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("idl:" + raw.trim())); conn = Array.from(new Uint8Array(b)).map((x) => x.toString(16).padStart(2, "0")).join("").slice(0, 40); }
   try {
     if (path === "student-login") {
       if (
@@ -126,12 +130,12 @@ async function handleMobileLoginPost(
         csmart.length > 40
       )
         return invalid();
-      result = await (await getService()).studentSignIn({ nid, csmart: csmart.trim() });
+      result = await (await getService()).studentSignIn({ nid, csmart: csmart.trim(), conn });
     } else {
       if (portal !== "guardian" && portal !== "staff") return invalid();
       if (path === "request-code") {
         if (typeof nid !== "string" || !/^[12]\d{9}$/.test(nid)) return invalid();
-        result = await (await getService()).requestIdCode({ nid, portal });
+        result = await (await getService()).requestIdCode({ nid, portal, conn });
       } else {
         if (
           typeof challenge !== "string" ||
@@ -146,6 +150,7 @@ async function handleMobileLoginPost(
           challenge,
           code,
           portal,
+          conn,
         });
       }
     }

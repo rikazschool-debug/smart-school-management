@@ -191,4 +191,19 @@ describe("shared web/mobile existing-account login service", () => {
     });
     expect(m.generateLink).not.toHaveBeenCalled();
   });
+
+describe("per-device limit (15 minutes, temporary, no ID disclosure)", () => {
+  beforeEach(() => vi.resetAllMocks());
+  it.each([
+    ["request", () => requestIdCode({ nid: "1000000001", portal: "guardian", conn: "c".repeat(40) })],
+    ["verify", () => verifyIdCode({ challenge, code: "123456", portal: "guardian", conn: "c".repeat(40) })],
+    ["student", () => studentSignIn({ nid: "1000000001", csmart: "S1", conn: "c".repeat(40) })],
+  ] as const)("%s refused with the device wait message and no identity lookup", async (kind, call) => {
+    m.rpc.mockResolvedValueOnce(success(false));
+    const r = await call();
+    expect(r).toEqual({ error: idLoginMessage("conn_wait") });
+    expect(m.rpc).toHaveBeenCalledTimes(1);
+    expect(m.rpc).toHaveBeenCalledWith("_idl_conn_hit", { _conn: "c".repeat(40), _kind: kind });
+  });
+});
 });

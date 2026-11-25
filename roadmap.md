@@ -47,6 +47,8 @@
 - [ ] Platform-owner password change — blocked: user does it
 - [ ] Leaked password protection — blocked: Supabase dashboard setting (paid plan)
 - [x] Role templates synced to the real roles (perm6 20/20)
-- [ ] Owner-delegated academic years (workspace-perm) — waiting for user decision
+- [x] Academic years owner-only + delete guard (workspace-perm 45/45)
+- [x] ID sign-in per-device limit
+- [x] Permission tree browser journey 7/7
 - [x] Permission tree options all save and take effect (perm-catalog-e2e 9/9)
 - [ ] Rewrite stale tests (comm, homework, family-access, xbranch) to current rules

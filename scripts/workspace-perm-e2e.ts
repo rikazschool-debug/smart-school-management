@@ -54,17 +54,14 @@ try {
   ];
   const role = must(await owner.c.rpc("perm_role_save", { _org: org, _id: null, _name: "مفوّض أقسام التجربة", _description: "صلاحيات مستقلة", _grants: grants, _reason: "تجربة" }));
   must(await owner.c.rpc("perm_assign", { _org: org, _user: delegate.id, _role: role, _assign: true, _school_ids: [a], _limit: null, _reason: "تجربة" }));
-  const year = must(await delegate.c.from("academic_years").insert({ school_id: a, name: "سنة مفوضة", start_date: "2026-08-01", end_date: "2027-07-31", is_current: true }).select("id").single()).id;
-  check("role grant creates academic year", !!year);
-  check("saved year reads back", must(await delegate.c.from("academic_years").select("name").eq("id", year).single()).name === "سنة مفوضة");
+  // academic years are owner-only (owner decision Nov 25 2026): even an explicit grant does not let staff create/edit them
+  check("granted staff still cannot create an academic year", !!(await delegate.c.from("academic_years").insert({ school_id: a, name: "ممنوع", start_date: "2026-08-01", end_date: "2027-07-31" })).error);
+  const year = must(await owner.c.from("academic_years").insert({ school_id: a, name: "سنة المالك", start_date: "2026-08-01", end_date: "2027-07-31", is_current: true }).select("id").single()).id;
+  check("staff read the owner's year", must(await delegate.c.from("academic_years").select("name").eq("id", year).single()).name === "سنة المالك");
+  const ued = await delegate.c.from("academic_years").update({ name: "ممنوع" }).eq("id", year).select("id");
+  check("granted staff cannot edit the year", !!ued.error || ued.data?.length === 0);
   check("year edit does not grant stage edit", !!(await delegate.c.from("stages").insert({ school_id: a, name: "ممنوع" })).error);
-  check("branch role does not follow user to second branch", !!(await delegate.c.from("academic_years").insert({ school_id: b, name: "ممنوع", start_date: "2026-08-01", end_date: "2027-07-31" })).error);
-  check("another person has no delegated write", !!(await other.c.from("academic_years").insert({ school_id: a, name: "ممنوع", start_date: "2026-08-01", end_date: "2027-07-31" })).error);
-  must(await override("academic_years", "edit", "deny"));
-  const denied = await delegate.c.from("academic_years").update({ name: "ممنوع" }).eq("id", year).select("id");
-  check("explicit deny defeats role edit", !!denied.error || denied.data?.length === 0);
-  must(await override("academic_years", "edit", null));
-  check("lifting deny restores role write", must(await delegate.c.from("academic_years").update({ name: "سنة مفوضة" }).eq("id", year).select("id")).length === 1);
+  check("another person has no write", !!(await other.c.from("academic_years").insert({ school_id: a, name: "ممنوع", start_date: "2026-08-01", end_date: "2027-07-31" })).error);
   const tt = must(await delegate.c.from("timetables").insert({ school_id: a, year_id: year, name: "مسودة مفوضة", status: "draft" }).select("id").single()).id;
   check("create draft independently", !!tt);
   const tedit = await delegate.c.from("timetables").update({ name: "ممنوع" }).eq("id", tt).select("id");

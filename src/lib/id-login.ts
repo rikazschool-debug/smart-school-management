@@ -9,11 +9,12 @@ export function idLoginMessage(key: string): string {
     case "wrong": return "الرمز غير صحيح.";
     case "expired": return "انتهت صلاحية الرمز. اطلب رمزًا جديدًا.";
     case "used": return "هذا الرمز لم يعد صالحًا. اطلب رمزًا جديدًا.";
+    case "conn_wait": return "محاولات كثيرة من هذا الجهاز. انتظر 15 دقيقة ثم حاول مرة أخرى.";
     case "locked": return "تجاوزت عدد المحاولات. حاول بعد 15 دقيقة.";
     case "send_failed": return "تعذر إرسال الرمز الآن. حاول لاحقًا. " + CONTACT;
     case "student_mismatch": return "تعذر الدخول بالبيانات المدخلة. تأكد من رقم الهوية ورقم الطالب.";
     case "not_found": case "no_account": case "no_phone": case "conflict_account": case "conflict_phone":
-      return "تعذر إرسال رمز لهذا الرقم. " + CONTACT;
+      return "تعذر إرسال رمز لهذا الرقم. تأكد من اختيار البوابة الصحيحة. " + CONTACT;
     default: return "حدث خطأ غير متوقع. حاول مرة أخرى.";
   }
 }
