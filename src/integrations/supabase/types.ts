@@ -2325,6 +2325,487 @@ export type Database = {
           },
         ]
       }
+      api_deliveries: {
+        Row: {
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          delivered_at: string | null
+          event: string
+          id: string
+          last_code: number | null
+          last_error: string | null
+          next_at: string
+          org_id: string
+          payload: Json
+          school_id: string | null
+          status: string
+          webhook_id: string
+        }
+        Insert: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          event: string
+          id?: string
+          last_code?: number | null
+          last_error?: string | null
+          next_at?: string
+          org_id: string
+          payload: Json
+          school_id?: string | null
+          status?: string
+          webhook_id: string
+        }
+        Update: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          event?: string
+          id?: string
+          last_code?: number | null
+          last_error?: string | null
+          next_at?: string
+          org_id?: string
+          payload?: Json
+          school_id?: string | null
+          status?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_deliveries_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "api_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_idem: {
+        Row: {
+          created_at: string
+          idem_key: string
+          key_id: string
+          req_hash: string
+          response: Json | null
+        }
+        Insert: {
+          created_at?: string
+          idem_key: string
+          key_id: string
+          req_hash: string
+          response?: Json | null
+        }
+        Update: {
+          created_at?: string
+          idem_key?: string
+          key_id?: string
+          req_hash?: string
+          response?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_idem_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_inbox: {
+        Row: {
+          amount: number | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          key_id: string
+          org_id: string
+          payload: Json
+          reason: string | null
+          resource: string
+          result: Json | null
+          school_id: string | null
+          status: string
+          student_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          key_id: string
+          org_id: string
+          payload: Json
+          reason?: string | null
+          resource: string
+          result?: Json | null
+          school_id?: string | null
+          status?: string
+          student_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          key_id?: string
+          org_id?: string
+          payload?: Json
+          reason?: string | null
+          resource?: string
+          result?: Json | null
+          school_id?: string | null
+          status?: string
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_inbox_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_inbox_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_key_changes: {
+        Row: {
+          action: string
+          actor: string | null
+          after: Json | null
+          at: string
+          before: Json | null
+          id: string
+          key_id: string
+          org_id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          id?: string
+          key_id: string
+          org_id: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after?: Json | null
+          at?: string
+          before?: Json | null
+          id?: string
+          key_id?: string
+          org_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_changes_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_key_changes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          direction: string
+          env: string
+          expires_at: string | null
+          grade_ids: string[] | null
+          id: string
+          ip_allow: unknown[] | null
+          key_hash: string
+          key_hint: string
+          last_used_at: string | null
+          master: string
+          name: string
+          on_conflict: string
+          org_id: string
+          prev_hash: string | null
+          prev_until: string | null
+          rate_day: number
+          rate_min: number
+          request_count: number
+          rev: number
+          school_ids: string[] | null
+          scopes: Json
+          section_ids: string[] | null
+          stage_ids: string[] | null
+          starts_at: string
+          status: string
+          system_name: string
+          term_ids: string[] | null
+          updated_at: string
+          year_ids: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          direction?: string
+          env: string
+          expires_at?: string | null
+          grade_ids?: string[] | null
+          id?: string
+          ip_allow?: unknown[] | null
+          key_hash: string
+          key_hint: string
+          last_used_at?: string | null
+          master?: string
+          name: string
+          on_conflict?: string
+          org_id: string
+          prev_hash?: string | null
+          prev_until?: string | null
+          rate_day?: number
+          rate_min?: number
+          request_count?: number
+          rev?: number
+          school_ids?: string[] | null
+          scopes?: Json
+          section_ids?: string[] | null
+          stage_ids?: string[] | null
+          starts_at?: string
+          status?: string
+          system_name: string
+          term_ids?: string[] | null
+          updated_at?: string
+          year_ids?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          direction?: string
+          env?: string
+          expires_at?: string | null
+          grade_ids?: string[] | null
+          id?: string
+          ip_allow?: unknown[] | null
+          key_hash?: string
+          key_hint?: string
+          last_used_at?: string | null
+          master?: string
+          name?: string
+          on_conflict?: string
+          org_id?: string
+          prev_hash?: string | null
+          prev_until?: string | null
+          rate_day?: number
+          rate_min?: number
+          request_count?: number
+          rev?: number
+          school_ids?: string[] | null
+          scopes?: Json
+          section_ids?: string[] | null
+          stage_ids?: string[] | null
+          starts_at?: string
+          status?: string
+          system_name?: string
+          term_ids?: string[] | null
+          updated_at?: string
+          year_ids?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_requests: {
+        Row: {
+          at: string
+          changes: Json | null
+          code: string | null
+          env: string | null
+          id: string
+          ip: string | null
+          key_id: string | null
+          method: string | null
+          ms: number | null
+          op: string | null
+          org_id: string | null
+          outcome: string
+          params: string[] | null
+          record_id: string | null
+          resource: string | null
+          school_id: string | null
+          status: number
+          via: string
+        }
+        Insert: {
+          at?: string
+          changes?: Json | null
+          code?: string | null
+          env?: string | null
+          id?: string
+          ip?: string | null
+          key_id?: string | null
+          method?: string | null
+          ms?: number | null
+          op?: string | null
+          org_id?: string | null
+          outcome: string
+          params?: string[] | null
+          record_id?: string | null
+          resource?: string | null
+          school_id?: string | null
+          status: number
+          via?: string
+        }
+        Update: {
+          at?: string
+          changes?: Json | null
+          code?: string | null
+          env?: string | null
+          id?: string
+          ip?: string | null
+          key_id?: string | null
+          method?: string | null
+          ms?: number | null
+          op?: string | null
+          org_id?: string | null
+          outcome?: string
+          params?: string[] | null
+          record_id?: string | null
+          resource?: string | null
+          school_id?: string | null
+          status?: number
+          via?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_requests_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_webhooks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          events: string[]
+          fail_streak: number
+          id: string
+          include_data: boolean
+          key_id: string
+          last_error: string | null
+          last_failure_at: string | null
+          last_success_at: string | null
+          name: string
+          org_id: string
+          school_ids: string[] | null
+          secret: string
+          status: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          events?: string[]
+          fail_streak?: number
+          id?: string
+          include_data?: boolean
+          key_id: string
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          name: string
+          org_id: string
+          school_ids?: string[] | null
+          secret: string
+          status?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          events?: string[]
+          fail_streak?: number
+          id?: string
+          include_data?: boolean
+          key_id?: string
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          name?: string
+          org_id?: string
+          school_ids?: string[] | null
+          secret?: string
+          status?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_webhooks_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_webhooks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       att_daily_settings: {
         Row: {
           school_id: string
@@ -24695,6 +25176,86 @@ export type Database = {
           _org: string
         }
         Returns: undefined
+      }
+      _api_alert: {
+        Args: {
+          _body: string
+          _code: string
+          _key: string
+          _org: string
+          _title: string
+        }
+        Returns: undefined
+      }
+      _api_call: {
+        Args: {
+          _body: Json
+          _env: string
+          _hash: string
+          _idem: string
+          _ip: string
+          _method: string
+          _path: string[]
+          _q: Json
+        }
+        Returns: Json
+      }
+      _api_catalog: { Args: never; Returns: Json }
+      _api_date: { Args: { _t: string }; Returns: string }
+      _api_err: {
+        Args: { _code: string; _msg: string; _status: number }
+        Returns: Json
+      }
+      _api_exec: {
+        Args: {
+          _body: Json
+          _dry: boolean
+          _method: string
+          _path: string[]
+          _q: Json
+          k: Database["public"]["Tables"]["api_keys"]["Row"]
+        }
+        Returns: Json
+      }
+      _api_int: { Args: { _t: string }; Returns: number }
+      _api_num: { Args: { _t: string }; Returns: number }
+      _api_pick: { Args: { _f: string[]; _j: Json }; Returns: Json }
+      _api_res: { Args: { _res: string }; Returns: Json }
+      _api_rows: {
+        Args: {
+          _all: boolean
+          _grades: string[]
+          _id: string
+          _key: string
+          _org: string
+          _res: string
+          _sch: string[]
+          _secs: string[]
+          _stages: string[]
+          _stu: string[]
+          _terms: string[]
+          _yrs: string[]
+        }
+        Returns: Json[]
+      }
+      _api_tstz: { Args: { _t: string }; Returns: string }
+      _api_url_ok: { Args: { _u: string }; Returns: boolean }
+      _api_uuid: { Args: { _t: string }; Returns: string }
+      _api_write: {
+        Args: {
+          _all: boolean
+          _body: Json
+          _f: string[]
+          _id: string
+          _op: string
+          _r: Json
+          _res: string
+          _sc: Json
+          _sch: string[]
+          _stu: string[]
+          k: Database["public"]["Tables"]["api_keys"]["Row"]
+        }
+        Returns: Json
       }
       _apply_invitation: {
         Args: {
