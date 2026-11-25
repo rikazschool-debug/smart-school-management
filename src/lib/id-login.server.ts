@@ -45,7 +45,7 @@ const WRONG_PORTAL = {
   staff: "هذا الحساب ليس حساب موظف. استخدم بوابة «ولي الأمر» أو «الطالب».",
 };
 
-export async function requestIdCode(data: { nid: string; portal: Portal; conn?: string }) {
+export async function requestIdCode(data: { nid: string; portal: Portal; conn?: string | undefined }) {
   if (!/^[12]\d{9}$/.test(data.nid)) return { error: idLoginMessage("invalid") };
   if (!(await connOk(data.conn, "request"))) return { error: idLoginMessage("conn_wait") };
   const sb = await admin();
@@ -116,7 +116,7 @@ export async function requestIdCode(data: { nid: string; portal: Portal; conn?: 
   return { challenge: res.challenge, masked: maskPhone(res.phone) };
 }
 
-export async function verifyIdCode(data: { challenge: string; code: string; portal: Portal; conn?: string }) {
+export async function verifyIdCode(data: { challenge: string; code: string; portal: Portal; conn?: string | undefined }) {
   if (!UUID.test(data.challenge) || data.code.length !== 6)
     return { error: idLoginMessage("wrong") };
   if (!(await connOk(data.conn, "verify"))) return { error: idLoginMessage("conn_wait") };
@@ -137,7 +137,7 @@ export async function verifyIdCode(data: { challenge: string; code: string; port
   return tokenFor(res.user_id);
 }
 
-export async function studentSignIn(data: { nid: string; csmart: string; conn?: string }) {
+export async function studentSignIn(data: { nid: string; csmart: string; conn?: string | undefined }) {
   if (!(await connOk(data.conn, "student"))) return { error: idLoginMessage("conn_wait") };
   const sb = await admin();
   const { data: r, error } = await sb.rpc(

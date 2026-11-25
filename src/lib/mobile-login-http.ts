@@ -1,9 +1,9 @@
 type Portal = "guardian" | "staff";
 type Result = { error?: string; token?: string; challenge?: string; masked?: string };
 type Service = {
-  requestIdCode: (data: { nid: string; portal: Portal; conn?: string }) => Promise<Result>;
-  verifyIdCode: (data: { challenge: string; code: string; portal: Portal; conn?: string }) => Promise<Result>;
-  studentSignIn: (data: { nid: string; csmart: string; conn?: string }) => Promise<Result>;
+  requestIdCode: (data: { nid: string; portal: Portal; conn?: string | undefined }) => Promise<Result>;
+  verifyIdCode: (data: { challenge: string; code: string; portal: Portal; conn?: string | undefined }) => Promise<Result>;
+  studentSignIn: (data: { nid: string; csmart: string; conn?: string | undefined }) => Promise<Result>;
 };
 type Path = "request-code" | "verify-code" | "student-login";
 type ServiceSource = Service | (() => Promise<Service>);
