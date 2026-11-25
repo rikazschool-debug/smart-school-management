@@ -70,7 +70,14 @@ export class TestRun {
       if (!o.error) { last = ""; break; }
       last = o.error.details ?? o.error.message;
     }
-    if (last) console.log(`[cleanup ${this.label} ${this.id}] org ${orgId} not fully removed: ${last}`);
-    return !last;
+    if (last) {
+      // Protected history (e.g. append-only finance) blocks deletion: retire the synthetic org instead
+      // (deactivate + drop memberships + hide from platform list). Financial rows are never touched.
+      const reg = await this.admin.rpc("_test_sandbox_register", { _org: orgId, _label: `${this.label} ${this.id}` });
+      const ret = reg.error ? reg : await this.admin.rpc("_test_sandbox_retire", { _org: orgId, _reason: last.slice(0, 200) });
+      console.log(`[cleanup ${this.label} ${this.id}] org ${orgId} kept (protected history) — ${ret.error ? "retire failed: " + ret.error.message : "retired"}`);
+      return false;
+    }
+    return true;
   }
 }

@@ -23798,6 +23798,38 @@ export type Database = {
           },
         ]
       }
+      test_sandbox_orgs: {
+        Row: {
+          label: string
+          org_id: string
+          registered_at: string
+          retire_reason: string | null
+          retired_at: string | null
+        }
+        Insert: {
+          label: string
+          org_id: string
+          registered_at?: string
+          retire_reason?: string | null
+          retired_at?: string | null
+        }
+        Update: {
+          label?: string
+          org_id?: string
+          registered_at?: string
+          retire_reason?: string | null
+          retired_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_sandbox_orgs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       timetable_activations: {
         Row: {
           activated_at: string
@@ -27980,6 +28012,15 @@ export type Database = {
       _teaches_section: {
         Args: { _section: string; _user: string }
         Returns: boolean
+      }
+      _test_org_is_synthetic: { Args: { _org: string }; Returns: boolean }
+      _test_sandbox_register: {
+        Args: { _label: string; _org: string }
+        Returns: Json
+      }
+      _test_sandbox_retire: {
+        Args: { _org: string; _reason: string }
+        Returns: Json
       }
       _tt_courses: {
         Args: { _tt: string }
