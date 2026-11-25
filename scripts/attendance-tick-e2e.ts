@@ -18,7 +18,7 @@ const T0 = dayStr(new Date()), T1 = addDays(T0, 1), T2 = addDays(T0, 2);
 const ALL = [0, 1, 2, 3, 4, 5, 6];
 try {
   const email = `tick-owner-${run}@rikaz.test`;
-  const u = (await admin.auth.admin.createUser({ email, password: "Tick-" + run, email_confirm: true })).data.user!; tr.addUser(u.id);
+  const u = (await admin.auth.admin.createUser({ email, password: "Tick-" + crypto.randomUUID(), email_confirm: true })).data.user!; tr.addUser(u.id);
   const mkOrg = async (name: string) => {
     const { data: o, error: oe } = await admin.from("organizations").insert({ name: `${name}-${run}`, created_by: u.id }).select().single(); if (oe) throw oe; orgs.push(o!.id);
     const { data: s } = await admin.from("schools").insert({ org_id: o!.id, name }).select().single(); tr.addSchool(s!.id);

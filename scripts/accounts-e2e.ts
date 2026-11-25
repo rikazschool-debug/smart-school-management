@@ -10,7 +10,8 @@ const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "accounts-e2e");
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
+const SELF_PW = "Sc-" + crypto.randomUUID();
 let ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)); };
 const client = () => createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
@@ -33,9 +34,11 @@ try {
   await admin.from("perm_overrides").insert({ org_id: org, user_id: sa.id, section: "people_family", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: owner.id });
   await admin.from("perm_overrides").insert({ org_id: org, user_id: pr.id, section: "people_staff", action: "edit", effect: "grant", scope: "branch", reason: "اختبار", created_by: owner.id });
   const ins = async (tb: string, v: any, c = admin) => { const r = await c.from(tb).insert({ school_id: S, ...v }).select(tb === "teachers" ? "id, school_id, user_id, full_name, email, phone, status" : "*").single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
-  const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-30", is_current: true });
-  const stage = await ins("stages", { name: "ابتدائي" }), grade = await ins("grades", { name: "الأول", stage_id: stage.id });
-  const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });
+  // academic setup is owner-only and follows the central catalog (stage/grade names, a term for every section)
+  const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-30", is_current: true }, owner.c);
+  const stage = await ins("stages", { name: "الابتدائية" }, owner.c), grade = await ins("grades", { name: "أول", stage_id: stage.id }, owner.c);
+  const term = await ins("terms", { name: "الفصل الدراسي الأول", year_id: year.id, start_date: "2026-08-20", end_date: "2027-01-15" }, owner.c);
+  const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, term_id: term.id, capacity: 30 }, owner.c);
 
   // ---- student: staged account has no access until the password is changed ----
   const st = await ins("students", { full_name: "طالب الحساب", national_id: nid(1), status: "active" }, sa.c);
@@ -58,15 +61,15 @@ try {
   ];
   const upd = await sc.from("account_setup").update({ need_password: false, completed_at: new Date().toISOString() }).eq("user_id", sid).select();
   check("1c direct calls to unlock/link/lookup are refused and the setup flag cannot be edited", direct.every((r) => !!r.error) && (!!upd.error || !(upd.data ?? []).length), direct.map((r) => r.error?.message));
-  await sc.auth.updateUser({ password: "Self-changed-" + run });
+  await sc.auth.updateUser({ password: SELF_PW });
   const still = (await sc.from("students").select("id")).data ?? [];
   check("1d changing the password directly with the auth API does not unlock access", still.length === 0);
   const done = await admin.rpc("_complete_account_setup", { _uid: sid, _password_changed: true });
-  const sc2 = client(); await sc2.auth.signInWithPassword({ email: semail, password: "Self-changed-" + run });
+  const sc2 = client(); await sc2.auth.signInWithPassword({ email: semail, password: SELF_PW });
   const after = (await sc2.from("students").select("id")).data ?? [];
   check("1e after the server completes the step the student reads their own record", done.data === "done" && after.length === 1 && after[0].id === st.id, [done.error, after]);
   const re = await admin.rpc("_stage_student_password", { _student: st.id, _uid: sid, _actor: sa.id });
-  const sc3 = client(); await sc3.auth.signInWithPassword({ email: semail, password: "Self-changed-" + run });
+  const sc3 = client(); await sc3.auth.signInWithPassword({ email: semail, password: SELF_PW });
   check("1f issuing a new initial password (recovery) locks access again until changed", !re.error && ((await sc3.from("students").select("id")).data ?? []).length === 0, re.error);
   await admin.rpc("_complete_account_setup", { _uid: sid, _password_changed: true });
   const roles = ((await admin.from("memberships").select("role").eq("user_id", sid)).data ?? []).map((x) => x.role);

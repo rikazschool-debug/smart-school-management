@@ -19267,6 +19267,57 @@ export type Database = {
           },
         ]
       }
+      signup_attempts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: number
+          ip_hash: string
+          outcome: string
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: number
+          ip_hash: string
+          outcome: string
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: number
+          ip_hash?: string
+          outcome?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      signup_form_tokens: {
+        Row: {
+          id: string
+          ip_hash: string
+          ip_src: string
+          issued_at: string
+          used_at: string | null
+        }
+        Insert: {
+          id?: string
+          ip_hash: string
+          ip_src: string
+          issued_at?: string
+          used_at?: string | null
+        }
+        Update: {
+          id?: string
+          ip_hash?: string
+          ip_src?: string
+          issued_at?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       signup_requests: {
         Row: {
           admin_note: string | null
@@ -26805,6 +26856,13 @@ export type Database = {
         Args: { _org: string; _school: string }
         Returns: boolean
       }
+      _req_client_ip: {
+        Args: never
+        Returns: {
+          ip: string
+          src: string
+        }[]
+      }
       _revise_homework_v0: {
         Args: { _d: Json; _id: string; _note: string }
         Returns: number
@@ -27031,6 +27089,7 @@ export type Database = {
       }
       _sf_today: { Args: never; Returns: string }
       _sf_year_start: { Args: { _name: string; _org: string }; Returns: string }
+      _signup_ip_hash: { Args: { _ip: string }; Returns: string }
       _staff_overrides: {
         Args: {
           _actor: string
@@ -32145,6 +32204,7 @@ export type Database = {
         Returns: undefined
       }
       signup_request_submit: { Args: { _p: Json }; Returns: string }
+      signup_request_token: { Args: never; Returns: string }
       staff_directory: {
         Args: { _org?: string; _school: string }
         Returns: {

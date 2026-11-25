@@ -14,7 +14,7 @@ if (process.argv[2] === "teardown") {
   await tr.purgeOrg(f.org); for (const u of f.users) await admin.auth.admin.deleteUser(u);
   console.log("teardown ok"); process.exit(0);
 }
-const run = Date.now(), pw = "Test-pass-" + run; const users: Record<string, { id: string; email: string }> = {};
+const run = Date.now(), pw = "Test-" + crypto.randomUUID(); const users: Record<string, { id: string; email: string }> = {};
 for (const t of ["owner", "pr", "vice", "t1", "g"]) {
   const email = `evb-${t}-${run}@rikaz.test`;
   const r = await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: { owner: "مالك التجربة", pr: "مدير التجربة", vice: "وكيل التجربة", t1: "معلم التجربة", g: "ولي أمر التجربة" }[t] } });

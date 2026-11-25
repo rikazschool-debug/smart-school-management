@@ -14,7 +14,7 @@ const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVI
 const mode = process.argv[2] ?? "";
 const CRON = "/tmp/pc-cron.json";
 const tr = new TestRun(admin, "pc-closure-e2e");
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 let ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)); };
 const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);

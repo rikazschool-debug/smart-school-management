@@ -9,7 +9,8 @@ const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "perm7-e2e");
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
+const NEW_PW = "Np-" + crypto.randomUUID(), TMP_PW = "Tp-" + crypto.randomUUID();
 let ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)?.slice(0, 400)); };
 const client = () => createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
@@ -81,19 +82,19 @@ try {
   check("server blocks data before first password change (direct RPC)", !!gated.error || (gated.data as any)?.total === 0, gated.data);
   const meGate = await sc.rpc("mt_me", { _org: org });
   check("no maintenance caps before change", !!meGate.error || !Object.values((meGate.data as any)?.caps?.school ?? {}).some((x: any) => x.length), meGate.data);
-  await admin.auth.admin.updateUserById(cu.data.user!.id, { password: "New-" + run + "a" });
+  await admin.auth.admin.updateUserById(cu.data.user!.id, { password: NEW_PW });
   await admin.rpc("_complete_account_setup", { _uid: cu.data.user!.id, _password_changed: true });
-  const s2c = client(); const s2 = await s2c.auth.signInWithPassword({ email: `${uname}@staff.rikaz.app`, password: "New-" + run + "a" });
+  const s2c = client(); const s2 = await s2c.auth.signInWithPassword({ email: `${uname}@staff.rikaz.app`, password: NEW_PW });
   const refreshTok = s2.data.session!.refresh_token;
   await admin.rpc("_staff_reset", { _actor: owner.id, _org: org, _uid: cu.data.user!.id, _reason: "اختبار" });
-  await admin.auth.admin.updateUserById(cu.data.user!.id, { password: "Tmp-" + run + "a" });
+  await admin.auth.admin.updateUserById(cu.data.user!.id, { password: TMP_PW });
   await admin.auth.admin.signOut(s2.data.session!.access_token, "global");
   const re = await client().auth.refreshSession({ refresh_token: refreshTok });
   check("reset revokes existing sessions (refresh fails)", !!re.error, re.data?.session ? "still valid" : re.error);
-  const oldPw = await client().auth.signInWithPassword({ email: `${uname}@staff.rikaz.app`, password: "New-" + run + "a" });
+  const oldPw = await client().auth.signInWithPassword({ email: `${uname}@staff.rikaz.app`, password: NEW_PW });
   check("old password no longer works", !!oldPw.error);
   const logs = JSON.stringify((await admin.from("access_audit").select("*").eq("target_user", cu.data.user!.id)).data) + JSON.stringify((await admin.from("perm_log").select("*").eq("target_user", cu.data.user!.id)).data);
-  check("no password values in logs", ![init, "New-" + run, "Tmp-" + run].some((p) => logs.includes(p)));
+  check("no password values in logs", ![init, NEW_PW, TMP_PW].some((p) => logs.includes(p)));
   void s1;
 } catch (e) { bad++; console.log("FAIL exception", (e as Error).message); }
 finally { if (org) await tr.purgeOrg(org); console.log(`\n${ok} passed, ${bad} failed`); }

@@ -13,7 +13,7 @@ const must = <T,>(r: { data: T; error: any }) => { if (r.error) throw r.error; r
 const cmd = process.argv[2];
 if (cmd === "setup") {
   mkdirSync(D, { recursive: true });
-  const run = Date.now(), sfx = String(run).slice(-6), pw = "Test-pass-" + run;
+  const run = Date.now(), sfx = String(run).slice(-6), pw = "Test-" + crypto.randomUUID();
   const tr = new TestRun(admin, "idb"); const f: any = { pw, run, sfx, users: {} };
   for (const t of ["owner", "vice", "hrv"]) {
     const email = `idb-${t}-${run}@rikaz.test`;

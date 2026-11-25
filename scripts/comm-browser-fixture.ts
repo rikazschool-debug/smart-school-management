@@ -12,7 +12,7 @@ const shim = (key: string) => (input: any, init: any = {}) => { const h = new He
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const OUT = "/tmp/browser/c7/fixture.json";
 const run = Date.now();
-const pw = "Cbx-pass-" + run;
+const pw = "Cbx-" + crypto.randomUUID();
 
 async function teardown() {
   const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });

@@ -2,18 +2,21 @@
 // Run: NODE_PATH=node_modules bun scripts/hr-bulk-e2e.ts
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
-import { DEMO_PASSWORD } from "../src/lib/demo-accounts";
+import { demoPassword } from "./lib/demo-login";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); };
-async function as(email: string, pw: string) { const c = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }); const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw new Error(email + " " + s.error.message); return c; }
+async function as(email: string) { const pw = await demoPassword(email); const c = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }); const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw new Error(email + " " + s.error.message); return c; }
 let pass = 0, fail = 0;
 const check = (n: string, ok: boolean, d?: unknown) => { ok ? pass++ : fail++; console.log(ok ? "PASS" : "FAIL", n, ok ? "" : JSON.stringify(d)); };
-const owner = await as("demo-owner@rikaz.demo", process.env.DEMO_OWNER_PW ?? "25011741Aamm");
-const teacher = await as("demo-teacher@rikaz.demo", DEMO_PASSWORD);
-const gu = (await admin.from("guardians").select("school_id, national_id, full_name").not("national_id", "is", null).limit(1).single()).data!;
-const org = (await admin.from("schools").select("org_id").eq("id", gu.school_id).single()).data!.org_id;
+const owner = await as("demo-owner@rikaz.demo");
+const teacher = await as("demo-teacher@rikaz.demo");
+// pick a guardian inside the demo owner's own organization (not the first guardian anywhere in the database)
+const ownerId = (await owner.auth.getUser()).data.user!.id;
+const org = (await admin.from("memberships").select("org_id").eq("user_id", ownerId).eq("role", "org_owner").limit(1).single()).data!.org_id;
+const orgSchools = ((await admin.from("schools").select("id").eq("org_id", org)).data ?? []).map((s: any) => s.id);
+const gu = (await admin.from("guardians").select("school_id, national_id, full_name").in("school_id", orgSchools).not("national_id", "is", null).limit(1).single()).data!;
 const schools = ((await admin.from("schools").select("id").eq("org_id", org)).data ?? []).map((s: any) => s.id);
 const S1 = gu.school_id, S2 = schools.find((s: string) => s !== S1);
 const e = (await admin.from("hr_employees").insert({ org_id: org, employee_no: "BLK-" + Date.now(), full_name: "اختبار نقل جماعي", national_id: gu.national_id, status: "active" }).select("id").single()).data!.id;

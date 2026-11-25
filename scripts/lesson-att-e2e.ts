@@ -10,7 +10,7 @@ const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
-const run = Date.now(), pw = "Lae-pass-" + run;
+const run = Date.now(), pw = "Lae-" + crypto.randomUUID();
 const riyadh = () => new Date(Date.now() + 3 * 3600e3);
 const today = riyadh().toISOString().slice(0, 10), dow = riyadh().getUTCDay();
 const addDays = (d: string, n: number) => new Date(Date.parse(d + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);

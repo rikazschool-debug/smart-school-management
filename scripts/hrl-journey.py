@@ -1,7 +1,7 @@
 # HR import with logins (needs: bun scripts/hrx-browser-fixture.ts setup). Synthetic file over 4 schools: owner maps titles
 # to login roles, picks a role for one row, confirms linking an existing account; Salem's phone conflict stays «يحتاج مراجعة».
 # Then: accounts/memberships/manager in DB, ID sign-in code, school scope, re-upload creates nothing.
-import asyncio, json, os, subprocess, time
+import asyncio, json, os, secrets, subprocess, time
 import xlsxwriter, requests
 from playwright.async_api import async_playwright
 B = "http://localhost:8080"; F = json.load(open("/tmp/browser/hrx/fixture.json")); SH = "/tmp/browser/hrl/"; os.makedirs(SH, exist_ok=True)
@@ -18,6 +18,7 @@ const org = '{F['org']}'; const S = {json.dumps(F['schools'])};
     try: return json.loads(r.stdout.strip().splitlines()[-1])
     except Exception: print(r.stdout, r.stderr); return None
 sfx = str(int(time.time()))[-7:]
+NEWPW = "Hr-" + secrets.token_urlsafe(18)
 nid = lambda n: f"1{sfx}{n:02d}"; ph = lambda n: f"05{sfx}{n}"
 SCH = ["مدارس الأفق - بنين", "مدارس الأفق - بنات", "مدارس النخبة", "مدارس الروّاد"]
 FAHD = db("const r=(await a.from('teachers').select('id,phone,user_id').like('phone','%536649779')).data; console.log(JSON.stringify(r))")
@@ -87,11 +88,11 @@ console.log(JSON.stringify({e,m,as,t,bans}))""")
         u2 = E["0202"]["user_id"]
         r = db(f"""const i=(await a.rpc('_idl_issue',{{_nid:'{nid(2)}',_code:'123456'}})).data; const v=(await a.rpc('_idl_verify',{{_challenge:i.challenge,_code:'123456'}})).data; console.log(JSON.stringify({{i,v}}))""")
         check("14 ID sign-in sends the code to the approved mobile and opens the right account", r["i"].get("user_id") == u2 and r["i"].get("phone", "").endswith(ph(2)[1:]) and r["v"].get("user_id") == u2, r)
-        sc = db(f"""await a.auth.admin.updateUserById('{u2}',{{password:'Hrl-pass-{sfx}x'}});
+        sc = db(f"""await a.auth.admin.updateUserById('{u2}',{{password:'{NEWPW}'}});
 const env=Object.fromEntries((await Bun.file('/dev-server/.env').text()).split('\\n').filter(l=>l.includes('=')).map(l=>{{const i=l.indexOf('=');return [l.slice(0,i),l.slice(i+1).replace(/^"|"$/g,'')]}}));
 const PK=env.VITE_SUPABASE_PUBLISHABLE_KEY; const shim=(u,i={{}})=>{{const h=new Headers(i.headers); if(h.get('Authorization')==='Bearer '+PK) h.delete('Authorization'); h.set('apikey',PK); return fetch(u,{{...i,headers:h}})}};
 const c=createClient(env.VITE_SUPABASE_URL,PK,{{auth:{{persistSession:false}},global:{{fetch:shim}}}});
-await c.auth.signInWithPassword({{email:(await a.auth.admin.getUserById('{u2}')).data.user.email,password:'Hrl-pass-{sfx}x'}});
+await c.auth.signInWithPassword({{email:(await a.auth.admin.getUserById('{u2}')).data.user.email,password:'{NEWPW}'}});
 const own=(await c.rpc('has_school_role',{{_school:S[1],_roles:['counselor']}})).data, other=(await c.rpc('has_school_role',{{_school:S[2],_roles:['counselor','teacher','security']}})).data;
 const mine=(await c.from('memberships').select('school_id,role')).data; const stu=(await c.from('students').select('id').eq('school_id',S[2])).data;
 console.log(JSON.stringify({{own,other,mine,stu:(stu||[]).length}}))""")

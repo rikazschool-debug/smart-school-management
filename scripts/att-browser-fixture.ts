@@ -15,7 +15,7 @@ if (mode === "teardown") {
   await tr.purgeOrg(st.org); for (const u of st.users) await admin.auth.admin.deleteUser(u);
   console.log("teardown done"); process.exit(0);
 }
-const run = Date.now(), pw = "Abx-pass-" + run;
+const run = Date.now(), pw = "Abx-" + crypto.randomUUID();
 const users: string[] = [];
 async function user(tag: string) {
   const email = `abx-${tag}-${run}@rikaz.test`;

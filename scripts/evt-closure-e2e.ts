@@ -29,7 +29,7 @@ async function teardown(f: { orgs: string[]; schools: string[]; users: string[] 
 }
 if (process.argv[2] === "teardown") { await teardown(JSON.parse(readFileSync(FX, "utf8"))); process.exit(0); }
 
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 const NAMES: Record<string, string> = { ownerA: "مالك مجموعة الفعاليات", p1: "مدير مدرسة الفعاليات", p2: "مدير المدرسة الثانية", v1: "وكيل مدرسة الفعاليات", t1: "معلم مفوض", g1: "ولي أمر لأخوين", g2: "ولي أمر آخر", ownerB: "مالك مؤسسة أخرى", pB: "مدير مؤسسة أخرى" };
 const users: Record<string, { id: string; email: string }> = {};
 const orgs: string[] = [], S: string[] = [], kids: Record<string, string> = {};

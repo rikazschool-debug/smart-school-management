@@ -1320,3 +1320,7 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Guardian cards separate name/relationship, follow/pickup badges and verification. Account state and existing actions have clearer hierarchy. Student window tabs use icons and a two-column layout on narrow widths.
 - Payment form uses item rows stacking on narrow widths, larger amount/date/method controls, separate remaining/selected amount summary, and a full-width submit control on phones; existing allocations, confirmation, permissions, optional attachment and receipt readback unchanged.
 - Checks: 11/11 finance label/wording tests; targeted ESLint (excluding pre-existing formatting rule) passed; preview build OK; hook imports explicit React hooks and contains no quoted request identifier. Signed-in visual and real-device verification not performed (session unavailable). No production, account, database or publish changes.
+
+## 2026-11-25 — Phase 6: closing remaining security risks (test DB only)
+- Visitor table privileges 411 → 0 (three steps, public pages and registration re-verified in the browser); signup form guarded server-side (token, minimum time, hidden field, per-connection/phone/email/global caps); task picker excludes self; timetable activation notifies once; all demo/synthetic test accounts rotated to random passwords and their sessions ended; no passwords left in scripts.
+- Evidence and full test list: docs/security-review-phase5.md (Phase 6). No production change, no deploy.

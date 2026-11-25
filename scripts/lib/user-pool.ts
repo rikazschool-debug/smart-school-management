@@ -19,6 +19,8 @@ if (!P.__pooled && process.env.POOL_OFF !== "1") {
       for (const u of data.users) if (u.app_metadata?.pool === true && !u.app_metadata?.pool_run) free.push(u.id);
       if (data.users.length < 1000) break;
     }
+    // random order: parallel runs rarely pick the same free account (see the re-check after claiming)
+    for (let i = free.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [free[i], free[j]] = [free[j]!, free[i]!]; }
     return free;
   }
 
@@ -34,7 +36,11 @@ if (!P.__pooled && process.env.POOL_OFF !== "1") {
       });
       if (r.error) continue;
       const check = await this.getUserById(id);
-      if (check.data?.user?.app_metadata?.pool_run === RUN) return r; // claimed by this run
+      if (check.data?.user?.app_metadata?.pool_run !== RUN) continue;
+      // a parallel run may overwrite the same account just after us; wait and confirm we still own it
+      await new Promise((res) => setTimeout(res, 400));
+      const again = await this.getUserById(id);
+      if (again.data?.user?.app_metadata?.pool_run === RUN && (again.data?.user?.email ?? "").toLowerCase() === email.toLowerCase()) return r; // claimed by this run
     }
     return realCreate.call(this, { ...attrs, app_metadata: { ...(attrs.app_metadata ?? {}), pool: true, pool_run: RUN } });
   };
@@ -49,6 +55,9 @@ if (!P.__pooled && process.env.POOL_OFF !== "1") {
     const h = { apikey: key, Authorization: `Bearer ${key}` };
     for (const t of ["memberships", "platform_admins", "account_setup", "staff_logins", "otp_sends", "hr_login_pending"])
       await fetch(`${url}/rest/v1/${t}?user_id=eq.${id}`, { method: "DELETE", headers: h });
+    // unlink people records too, so the next run that reuses this login does not inherit children/classes of an older run
+    for (const t of ["guardians", "students", "teachers"])
+      await fetch(`${url}/rest/v1/${t}?user_id=eq.${id}`, { method: "PATCH", headers: { ...h, "content-type": "application/json" }, body: JSON.stringify({ user_id: null }) });
     const r = await this.updateUserById(id, {
       email: `pool-${id.slice(0, 8)}@rikaz.test`, phone: "", password: crypto.randomUUID(),
       user_metadata: {}, app_metadata: { pool: true, pool_run: null },

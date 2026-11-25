@@ -10,7 +10,7 @@ const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "homework-e2e");
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 let ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)); };
 async function user(tag: string) {
@@ -30,9 +30,11 @@ try {
   const S = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(S);
   const ins = async (t: string, v: any) => { const r = await owner.c.from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data; };
   const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
-  const stage = await ins("stages", { name: "ثانوي" }); const grade = await ins("grades", { name: "أول", stage_id: stage.id });
-  const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });
-  const sec2 = await ins("sections", { name: "ب", grade_id: grade.id, year_id: year.id, capacity: 30 });
+  // academic setup follows the owner-only central catalog (stage/grade names, a term for every section)
+  const stage = await ins("stages", { name: "الثانوية" }); const grade = await ins("grades", { name: "أول", stage_id: stage.id });
+  const term = await ins("terms", { name: "الفصل الدراسي الأول", year_id: year.id, start_date: "2026-08-20", end_date: "2027-01-15" });
+  const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, term_id: term.id, capacity: 30 });
+  const sec2 = await ins("sections", { name: "ب", grade_id: grade.id, year_id: year.id, term_id: term.id, capacity: 30 });
   const dA = await ins("departments", { name: "العلوم" }), dB = await ins("departments", { name: "اللغات" });
   const subj = await ins("subjects", { name: "فيزياء", department_id: dA.id });
   const course = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec.id });

@@ -151,3 +151,8 @@
 - scripts/sf-years-e2e.ts: mandatory two-year accounting case (10,000/8,000 → 2,000 carried, 12,000 new, pay/reverse 1,000 old, dashboard/report lines/guardian agree, withdrawn keeps balance; 13 checks).
 - scripts/sf-roles-fixture.ts setup|teardown: finance browser fixture (principal/accountant/registrar/guardian + second branch, sfr-); journey in /tmp/browser/sfr; always run teardown after.
 - scripts/sf-phase4-fixture.ts setup|teardown: isolated finance data (sfp4-; logo school, 2 stages/3 grades, siblings, carry, shared receipt); scripts/sf-phase4-e2e.ts runs 11 checks on it; always run teardown after.
+- scripts/lib/demo-login.ts: demoPassword(email) gives a @rikaz.demo account a fresh random password on the TEST DB only; use it instead of any stored demo password.
+- scripts/revoke-test-sessions.ts: ends every session of @rikaz.demo/@rikaz.test accounts on the test DB and leaves random passwords (sign-in rate limit: rerun later if some fail).
+- scripts/signup-guard-e2e.ts: public registration protection (token, 3 s minimum, hidden field, reuse, duplicate, per-connection cap, spoofed X-Forwarded-For; 8 checks); deletes only its own rows.
+- Run e2e scripts one at a time: parallel runs share the test-account pool and the same branches' settings, and produced false failures (phase 6).
+- Anon (visitors) has no table privileges in public since phase 6; any new public flow must be a checked definer function, and new tables must not grant anon.

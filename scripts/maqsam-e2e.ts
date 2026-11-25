@@ -12,7 +12,7 @@ const shim = (key: string) => (input: any, init: any = {}) => { const h = new He
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "mqx");
 const MALKI = "a9a4b7e2-ab44-4bcf-a1bf-ebce6489f074", DEMO = "916b6457-526a-48d0-b854-85547fb72305";
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 let ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)?.slice(0, 300)); };
 async function user(tag: string) {

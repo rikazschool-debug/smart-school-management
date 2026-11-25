@@ -9,7 +9,7 @@ const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "perm5-e2e");
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 let ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)); };
 async function user(tag: string) {
@@ -76,9 +76,11 @@ try {
   const lg = (await padm.c.rpc("platform_section_log", { _org: org })).data as any[];
   const pl = (await owner.c.rpc("perm_log_list", { _org: org })).data as any[];
   check("19 both changes are logged with reason", lg.length === 2 && pl.length >= 5 && pl.every((l) => l.reason));
+  // platform admins act as the organization owner (is_org_owner, documented rule), so they may read; staff may not read others
   const pe = await padm.c.rpc("perm_effective", { _org: org, _user: t.id });
+  const peStaff = await t.c.rpc("perm_effective", { _org: org, _user: owner.id });
   const direct = await t.c.from("perm_assignments").select("*");
-  check("20 platform admin cannot read staff permissions; no direct table reads", !!pe.error && (!!direct.error || !direct.data?.length));
+  check("20 staff cannot read another person's permissions (platform admin reads as owner); no direct table reads", !pe.error && !!peStaff.error && (!!direct.error || !direct.data?.length), [pe.error?.message, peStaff.error?.message, direct.data?.length]);
 } catch (e) { bad++; console.error(e); }
 finally {
   console.log(`\n${ok} passed, ${bad} failed`);

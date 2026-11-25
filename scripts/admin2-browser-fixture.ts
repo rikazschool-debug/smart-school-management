@@ -10,7 +10,7 @@ const shim = (key: string) => (input: any, init: any = {}) => { const h = new He
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const OUT = "/tmp/browser/adm2/fixture.json";
 const run = Date.now();
-const pw = "Abd-pass-" + run;
+const pw = "Abd-" + crypto.randomUUID();
 const riyadh = () => new Date(Date.now() + 3 * 3600e3);
 const today = riyadh().toISOString().slice(0, 10), dow = riyadh().getUTCDay();
 const addDays = (d: string, n: number) => new Date(Date.parse(d + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);

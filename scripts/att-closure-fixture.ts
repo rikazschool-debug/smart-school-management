@@ -16,7 +16,7 @@ if (process.argv[2] === "teardown") {
   await tr.purgeOrg(st.org); for (const u of st.users) await admin.auth.admin.deleteUser(u);
   console.log("teardown done"); process.exit(0);
 }
-const run = Date.now(), pw = "Acx-pass-" + run;
+const run = Date.now(), pw = "Acx-" + crypto.randomUUID();
 const users: string[] = [];
 async function user(tag: string) {
   const email = `acx-${tag}-${run}@rikaz.test`;

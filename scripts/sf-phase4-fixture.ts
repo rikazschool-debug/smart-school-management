@@ -12,7 +12,7 @@ const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVI
 const FX = "/tmp/browser/sfp4/fixture.json";
 const must = <T,>(r: { data: T; error: any }, what: string) => { if (r.error) throw new Error(`${what}: ${r.error.message}`); return r.data; };
 const client = () => createClient(URL, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 if (process.argv[2] === "teardown") {
   const fx = JSON.parse(readFileSync(FX, "utf8"));
   for (const u of Object.values(fx.users) as any[]) await admin.auth.admin.deleteUser(u.id).catch(() => undefined);

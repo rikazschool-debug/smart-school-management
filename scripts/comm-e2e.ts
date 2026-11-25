@@ -9,7 +9,7 @@ const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY, SR = 
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, SR, { auth: { persistSession: false } });
 const run = Date.now();
-const pw = "Test-pass-" + run;
+const pw = "Test-" + crypto.randomUUID();
 let ok = 0, bad = 0;
 const check = (name: string, cond: boolean, extra?: unknown) => { cond ? ok++ : bad++; console.log(cond ? "PASS" : "FAIL", name, cond ? "" : JSON.stringify(extra)); };
 const users: string[] = [];
@@ -61,10 +61,12 @@ const S = (await owner.c.from("schools").select("id").eq("org_id", orgId).single
 const ins = async (t: string, v: any) => { const r = await (t === "teachers" ? admin : owner.c).from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data; };
 const join = async (u: { c: any; email: string }, role: string) => { await owner.c.rpc("invite_member", { _email: u.email, _school: S, _role: role }); await u.c.rpc("accept_my_invitations"); };
 const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
-const stage = await ins("stages", { name: "م" });
+// academic setup follows the owner-only central catalog (stage/grade names, a term for every section)
+const stage = await ins("stages", { name: "المتوسطة" });
+const term = await ins("terms", { name: "الفصل الدراسي الأول", year_id: year.id, start_date: "2026-08-20", end_date: "2027-01-15" });
 const grade = await ins("grades", { name: "أول", stage_id: stage.id });
-const secA = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });
-const secB = await ins("sections", { name: "ب", grade_id: grade.id, year_id: year.id, capacity: 30 });
+const secA = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, term_id: term.id, capacity: 30 });
+const secB = await ins("sections", { name: "ب", grade_id: grade.id, year_id: year.id, term_id: term.id, capacity: 30 });
 const math = await ins("departments", { name: "الرياضيات" });
 const sci = await ins("departments", { name: "العلوم" });
 const subM = await ins("subjects", { name: "رياضيات", department_id: math.id });
@@ -344,7 +346,7 @@ check("20 other org cannot read stats", !!ocs.error);
 
 // --- class (section) groups & teacher↔student private chat ---
 const stud2 = await user("stud2"); await join(stud2, "student");
-const secC = await ins("sections", { name: "ج", grade_id: grade.id, year_id: year.id, capacity: 30 });
+const secC = await ins("sections", { name: "ج", grade_id: grade.id, year_id: year.id, term_id: term.id, capacity: 30 });
 const cC = await ins("courses", { year_id: year.id, subject_id: subM.id, section_id: secC.id });
 const aC = await ins("teacher_assignments", { course_id: cC.id, teacher_id: T1.id });
 await owner.c.rpc("decide_assignment", { _id: aC.id, _approve: true });

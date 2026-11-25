@@ -52,7 +52,9 @@ try {
 
   // owner (platform owner inside the group-owner session)
   const P = createClient(URL_, ANON, { auth: { persistSession: false } });
-  const si = await P.auth.signInWithPassword({ email: "owner@platform.rikaz.app", password: process.env.PLATFORM_OWNER_PW ?? "25011741Aamm" });
+  // platform-owner password only from the environment (never in source); the owner-session checks are skipped without it
+  const ownerPw = process.env["PLATFORM_OWNER_PW"];
+  const si = ownerPw ? await P.auth.signInWithPassword({ email: "owner@platform.rikaz.app", password: ownerPw }) : { error: new Error("PLATFORM_OWNER_PW not set") };
   if (!si.error) {
     await P.rpc("set_active_context", { _role: "org_owner", _school: sch!.id });
     const po = await P.rpc("wa_contact_card", { _conv: other });

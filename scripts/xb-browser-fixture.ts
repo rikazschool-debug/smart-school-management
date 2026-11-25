@@ -10,7 +10,7 @@ const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const OUT = "/tmp/browser/xb/fixture.json";
-const run = Date.now(), pw = "Xbj-pass-" + run;
+const run = Date.now(), pw = "Xbj-" + crypto.randomUUID();
 
 async function teardown() {
   const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });

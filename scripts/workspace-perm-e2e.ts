@@ -22,7 +22,7 @@ if (process.argv.includes("--teardown")) {
 const must = <T,>(r: { data: T; error: { message: string } | null }): T => { if (r.error) throw new Error(r.error.message); return r.data; };
 let passed = 0, failed = 0, org = "", keep = false;
 const check = (label: string, value: boolean) => { value ? passed++ : failed++; console.log(value ? "PASS" : "FAIL", label); };
-const run = Date.now(), password = `Workspace-${run}`;
+const run = Date.now(), password = `Workspace-${crypto.randomUUID()}`;
 async function user(label: string) {
   const email = `ws334-${label}-${run}@rikaz.test`;
   const created = must(await admin.auth.admin.createUser({ email, password, email_confirm: true }));

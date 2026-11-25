@@ -2,7 +2,7 @@
 // non-admins are blocked. Run: NODE_PATH=node_modules bun scripts/wa-inbox-e2e.ts  (dev server on :8080; cleans its rows)
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
-import { DEMO_PASSWORD } from "../src/lib/demo-accounts";
+import { demoPassword } from "./lib/demo-login";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -34,7 +34,7 @@ try {
   o = (await admin.from("wa_messages").select("status, status_times").eq("wati_msg_id", OUT)).data as any[];
   check("8 late 'sent' does not overwrite 'read'; one row", o.length === 1 && o[0].status === "read" && !!o[0].status_times.sent, o);
   const pr = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } });
-  await pr.auth.signInWithPassword({ email: "demo-principal@rikaz.demo", password: DEMO_PASSWORD });
+  await pr.auth.signInWithPassword({ email: "demo-principal@rikaz.demo", password: await demoPassword("demo-principal@rikaz.demo") });
   check("9 non-admin cannot list chats", !!(await pr.rpc("wa_conversations_list", { _q: null })).error);
   check("10 non-admin cannot read tables directly", ((await pr.from("wa_messages" as never).select("id")).data ?? []).length === 0);
   check("11 anonymous cannot open messages", !!(await createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }).rpc("wa_messages_list", { _conv: conv.id })).error);

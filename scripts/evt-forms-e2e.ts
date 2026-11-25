@@ -12,7 +12,7 @@ const tr = new TestRun(admin, "evf");
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); };
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 const NAMES: Record<string, string> = { ownerA: "مالك مجموعة النماذج", p1: "مدير مفوض بالتخصيص", p2: "مدير بلا تفويض", t1: "معلم", ownerB: "مالك مؤسسة أخرى" };
 const users: Record<string, { id: string; email: string }> = {};
 const orgs: string[] = [], S: string[] = [];

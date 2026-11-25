@@ -1,5 +1,5 @@
 // TEST database only. Reuse six existing synthetic identities; create a NEW fixture, never change pending institutions.
-// No cleanup, password reset, real messages, retries or new Auth accounts. Stop on the first request failure.
+// No cleanup, real messages, retries or new Auth accounts; fixture logins get a fresh random password each run. Stop on the first request failure.
 import { createClient } from "@supabase/supabase-js";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
@@ -14,7 +14,11 @@ const users: Record<string, { c: ReturnType<typeof createClient>; id: string; em
 for (const who of ["owner", "pr", "sup2", "t1", "t2", "prb"]) {
   const email = `svx-${who}-1794870995767@rikaz.test`;
   const c = createClient(url, key, { auth: { persistSession: false }, global: { fetch: fetchOnce } });
-  const login = must(await c.auth.signInWithPassword({ email, password: "Svx-pass-" + email.split("-").at(-1)?.split("@")[0] }), "synthetic sign in");
+  // fresh random password per run (service role, test DB only): no derivable password is kept for these identities
+  const found = must(await admin.from("profiles").select("id").eq("email", email).maybeSingle(), "fixture identity");
+  const pw = "Sv-" + crypto.randomUUID();
+  must(await admin.auth.admin.updateUserById(found.id, { password: pw }), "fixture password");
+  const login = must(await c.auth.signInWithPassword({ email, password: pw }), "synthetic sign in");
   users[who] = { c, id: login.user.id, email, session: login.session };
 }
 const getUser = (who: string) => { const u = users[who]; if (!u) throw Error("missing fixture identity"); return u; };

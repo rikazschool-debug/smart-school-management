@@ -36,3 +36,15 @@
 - [x] Improve guardian/account presentation and payment form without changing actions or data.
 - [x] Financial checks 11/11, targeted lint and preview build pass.
 - [ ] Signed-in desktop/mobile visual verification — blocked: no available session.
+
+# Phase 6 — closing security risks
+- [x] Remove written-in passwords; random per-run test passwords; demo sign-in helper
+- [x] End sessions + random passwords for demo/synthetic test accounts
+- [x] Registration form server-side protection + test
+- [x] Visitor table privileges revoked (411 → 0), public pages re-checked
+- [x] people-e2e and rls-e2e repaired and passing; regression suites re-run
+- [x] Security report updated
+- [ ] Platform-owner password change — blocked: user does it
+- [ ] Leaked password protection — blocked: Supabase dashboard setting (paid plan)
+- [ ] Role templates drift (perm6) and owner-delegated academic years (workspace-perm) — waiting for user decision
+- [ ] Rewrite stale tests (comm, homework, family-access, xbranch) to current rules

@@ -10,7 +10,7 @@ const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\
 const pk = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const admin = createClient(url, key, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "plp");
-const run = Date.now(), password = `Placement-test-${run}`;
+const run = Date.now(), password = `Placement-${crypto.randomUUID()}`;
 let org = "", failed = 0, passed = 0;
 const check = (label: string, yes: boolean) => { if (yes) passed++; else failed++; console.log(yes ? "PASS" : "FAIL", label); };
 const must = <T,>(r: { data: T; error: { message: string } | null }): T => { if (r.error) throw new Error(r.error.message); return r.data; };

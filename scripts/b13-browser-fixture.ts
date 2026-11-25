@@ -17,7 +17,7 @@ if (process.argv[2] === "teardown") {
   for (const u of f.users) await admin.auth.admin.deleteUser(u).catch(() => undefined);
   console.log("teardown ok"); process.exit(0);
 }
-const run = Date.now(), pw = "Test-pass-" + run, nid = 1600000000 + (run % 90000000);
+const run = Date.now(), pw = "Test-" + crypto.randomUUID(), nid = 1600000000 + (run % 90000000);
 const fx = JSON.parse(readFileSync("/tmp/browser/tt/fixture.json", "utf8"));
 const mk = async (org: string, actor: string, tag: string) => { const email = `b13x-${tag}-${run}@rikaz.test`; const u = (await admin.auth.admin.createUser({ email, password: pw, email_confirm: true })).data.user!; tr.addUser(u.id); await admin.from("hr_login_pending").insert({ user_id: u.id, org_id: org, actor, national_id: String(nid + tag.length) }); return { id: u.id, email }; };
 const fo = await signIn(fx.users.owner.email, fx.pw);

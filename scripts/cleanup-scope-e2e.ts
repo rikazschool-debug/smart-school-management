@@ -9,7 +9,7 @@ const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVI
 let ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)); };
 const stamp = Date.now();
-const mk = async (tag: string) => (await admin.auth.admin.createUser({ email: `scope-${tag}-${stamp}@rikaz.test`, password: "Scope-" + stamp, email_confirm: true })).data.user!.id;
+const mk = async (tag: string) => (await admin.auth.admin.createUser({ email: `scope-${tag}-${stamp}@rikaz.test`, password: "Scope-" + crypto.randomUUID(), email_confirm: true })).data.user!.id;
 const uA = await mk("a"), uB = await mk("b"), uReal = await mk("real");
 const school = (await admin.from("schools").select("id").limit(1).single()).data!.id; // any existing school; only notifications are written
 const note = async (u: string, k: string) => (await admin.from("notifications").insert({ user_id: u, school_id: school, kind: "test", title: "t", dedupe_key: `scope:${stamp}:${k}` }).select("id").single()).data!.id;

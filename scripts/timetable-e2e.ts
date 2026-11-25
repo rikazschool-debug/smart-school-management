@@ -14,7 +14,7 @@ const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "timetable-e2e");
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 const KEEP = process.argv.includes("--keep"); // browser fixture: leave data, write /tmp/browser/tt/fixture.json
 let ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)?.slice(0, 600)); };
@@ -57,8 +57,11 @@ try {
   const BRK = await ins("periods", { sort_order: 4, name: "الفسحة", start_time: "09:15", end_time: "09:45", kind: "break" });
   const lab = await ins("rooms", { name: "معمل العلوم", kind: "معمل", capacity: 30 });
   const room1 = await ins("rooms", { name: "قاعة 1", kind: "general", capacity: 30 });
-  const year = await ins("academic_years", { name: "1448 تجريبي", start_date: addDays(today, -30), end_date: addDays(today, 250), is_current: true });
-  const stage = await ins("stages", { name: "متوسط" }); const grade = await ins("grades", { name: "الأول", stage_id: stage.id });
+  // academic setup is owner-only and follows the central catalog (stage/grade names, a term for every section)
+  const insO = async (tb: string, v: any) => { const r = await owner.c.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
+  const year = await insO("academic_years", { name: "1448 تجريبي", start_date: addDays(today, -30), end_date: addDays(today, 250), is_current: true });
+  const stage = await insO("stages", { name: "المتوسطة" }); const grade = await insO("grades", { name: "أول", stage_id: stage.id });
+  const term = await insO("terms", { name: "الفصل الدراسي الأول", year_id: year.id, start_date: addDays(today, -30), end_date: addDays(today, 120) });
   const T: any[] = [];
   for (let i = 0; i < 10; i++) T.push(await ins("teachers", { full_name: `معلم ${i + 1}`, user_id: i === 9 ? null : tu[i].id, status: "active" }));
   const tNoAsg = await ins("teachers", { full_name: "معلم بلا تكليف", status: "active" });
@@ -69,7 +72,7 @@ try {
   ];
   const secs: any[] = [], courses: any[] = [];
   for (let s = 0; s < 5; s++) {
-    const sec = await ins("sections", { name: "أبجده"[s], grade_id: grade.id, year_id: year.id, capacity: 30 }); secs.push(sec);
+    const sec = await insO("sections", { name: "أبجده"[s], grade_id: grade.id, year_id: year.id, term_id: term.id, capacity: 30 }); secs.push(sec);
     for (const [name, w, ti, extra] of subj) {
       const sb = s === 0 ? await ins("subjects", { name }) : (await admin.from("subjects").select("*").eq("school_id", S).eq("name", name).single()).data;
       const tIdx = ti <= 1 && s >= 3 ? 9 : ti;
@@ -299,9 +302,12 @@ try {
     mine.length === 18 && mine.every((s) => s.teacher_id === T[0].id) && stuSee.length === 32 && stuSee.every((s) => s.section_id === secs[0].id)
     && guSee.length === 64 && new Set(guSee.map((s) => s.section_id)).size === 2 && guSee.every((s) => [secs[0].id, secs[1].id].includes(s.section_id)) && (noLoginTeacherSlots ?? 0) > 0,
     [mine.length, stuSee.length, guSee.length, new Set(guSee.map((s) => s.section_id)).size]);
+  // one active approved timetable per branch (tt_activate): publishing alone does not make it current; activating twice notifies once
+  const curBefore = await tu[0].c.rpc("current_timetable", { _school: S, _date: eff });
+  const vpAct = await vp.c.rpc("tt_activate", { _id: tt.id });
+  const act = await pr2.c.rpc("tt_activate", { _id: tt.id }); await pr.c.rpc("tt_activate", { _id: tt.id });
   const cur = await tu[0].c.rpc("current_timetable", { _school: S, _date: eff });
-  const curBefore = await tu[0].c.rpc("current_timetable", { _school: S, _date: addDays(eff, -1) });
-  check("12c the right version per date: none before the effective date, v1 from it", cur.data === tt.id && curBefore.data !== tt.id, [cur.data, curBefore.data]);
+  check("12c published-only is not current; vice cannot activate; principal activation makes v1 the current timetable", curBefore.data === null && !!vpAct.error && !act.error && cur.data === tt.id, [curBefore.data, vpAct.error?.message, act.error?.message, cur.data]);
   const notes = (await admin.from("notifications").select("user_id").eq("dedupe_key", "tt:" + tt.id)).data ?? [];
   const perUser = new Map<string, number>(); for (const n of notes) perUser.set(n.user_id, (perUser.get(n.user_id) ?? 0) + 1);
   const clsAfter = (await admin.from("classrooms").select("id", { count: "exact", head: true }).eq("school_id", S)).count;

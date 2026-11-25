@@ -29,7 +29,7 @@ async function teardown() {
 if (process.argv[2] === "teardown") { await teardown(); process.exit(0); }
 
 await teardown();
-const run = Date.now(), pw = "B48-pass-" + run, sfx = String(run).slice(-7);
+const run = Date.now(), pw = "B48-" + crypto.randomUUID(), sfx = String(run).slice(-7);
 const nid = (n: number) => `1${sfx}${String(n).padStart(2, "0")}`, ph = (n: number) => `05${sfx}${n}`;
 const riyadh = () => new Date(Date.now() + 3 * 3600e3);
 const today = riyadh().toISOString().slice(0, 10), dow = riyadh().getUTCDay();

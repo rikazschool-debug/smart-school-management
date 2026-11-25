@@ -19,7 +19,7 @@ if (process.argv[2] === "teardown") {
   console.log("teardown done"); process.exit(0);
 }
 mkdirSync("/tmp/browser/admj", { recursive: true });
-const run = Date.now(), pw = "Test-pass-" + run, users: string[] = [], creds: Record<string, string> = {};
+const run = Date.now(), pw = "Test-" + crypto.randomUUID(), users: string[] = [], creds: Record<string, string> = {};
 async function user(tag: string) {
   const email = `abx-adm-${tag}-${run}@rikaz.test`;
   await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: { owner: "مالك تجريبي", off: "مسؤول قبول تجريبي", fol: "موظف متابعة تجريبي", pr: "مدير تجريبي" }[tag] } });

@@ -15,7 +15,7 @@ if (mode === "teardown") {
   await tr.purgeOrg(f.org); await tr.cleanup?.();
   console.log("teardown done"); process.exit(0);
 }
-const run = Date.now(), pw = "Pbx-pass-" + run;
+const run = Date.now(), pw = "Pbx-" + crypto.randomUUID();
 const tr = new TestRun(admin, "pbx");
 const users: string[] = [];
 async function user(tag: string) {

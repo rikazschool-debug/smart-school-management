@@ -21,7 +21,7 @@ if (process.argv.includes("--teardown")) {
   for (const u of Object.values(f.users)) await admin.auth.admin.deleteUser(u as string);
   console.log("teardown ok"); process.exit(0);
 }
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 let pass = 0, fail = 0; const check = (n: string, ok: boolean, extra?: unknown) => { ok ? pass++ : fail++; console.log(ok ? "PASS" : "FAIL", n, ok ? "" : JSON.stringify(extra ?? "")); };
 const users: Record<string, string> = {}; const emails: Record<string, string> = {};
 let org = ""; const S: string[] = [];

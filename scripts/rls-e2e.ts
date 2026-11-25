@@ -6,7 +6,7 @@ const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY, SR = 
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, SR, { auth: { persistSession: false }});
 const run = Date.now();
-const pw = "Test-pass-" + run;
+const pw = "Test-" + crypto.randomUUID();
 let ok = 0, bad = 0;
 const check = (name: string, cond: boolean, extra?: unknown) => { cond ? ok++ : bad++; console.log(cond ? "PASS" : "FAIL", name, cond ? "" : JSON.stringify(extra)); };
 async function user(tag: string) {
@@ -38,9 +38,10 @@ const plus = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDat
 const TODAY = riyToday();
 const SUNDAY = plus(TODAY, (7 - TODAY.getDay()) % 7); // next Sunday on/after today
 const year = await ins("academic_years", { name: "1447", start_date: iso(plus(TODAY, -60)), end_date: iso(plus(TODAY, 220)), is_current: true });
-const stage = await ins("stages", { name: "متوسط" });
-const grade = await ins("grades", { name: "أول متوسط", stage_id: stage.id });
-const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 1 });
+const stage = await ins("stages", { name: "المتوسطة" });
+const grade = await ins("grades", { name: "أول", stage_id: stage.id });
+const term = await ins("terms", { name: "الفصل الدراسي الأول", year_id: year.id, start_date: iso(plus(TODAY, -60)), end_date: iso(plus(TODAY, 80)) });
+const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, term_id: term?.id, capacity: 1 });
 const dept = await ins("departments", { name: "الرياضيات" });
 const subj = await ins("subjects", { name: "رياضيات", department_id: dept.id });
 check("academic setup", !!(year && sec && subj));
@@ -168,7 +169,7 @@ const subj2 = await ins("subjects", { name: "علوم" });
 const course2 = await ins("courses", { year_id: year.id, subject_id: subj2.id, section_id: sec.id });
 const asg2 = await ins("teacher_assignments", { course_id: course2.id, teacher_id: tch2.id });
 await owner.c.rpc("decide_assignment", { _id: asg2.id, _approve: true });
-const sec2 = await ins("sections", { name: "ب", grade_id: grade.id, year_id: year.id, capacity: 30 });
+const sec2 = await ins("sections", { name: "ب", grade_id: grade.id, year_id: year.id, term_id: term?.id, capacity: 30 });
 const course3 = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec2.id });
 const asg3 = await ins("teacher_assignments", { course_id: course3.id, teacher_id: teacher.id });
 await owner.c.rpc("decide_assignment", { _id: asg3.id, _approve: true });
@@ -183,7 +184,7 @@ check("section conflict rejected", !!cS.error && cS.error.message.includes("ال
 const cR = await slot({ day: 0, period_id: p1.id, course_id: course3.id, teacher_id: tch2.id, room_id: room1.id });
 check("teacher not assigned rejected", !!cR.error && cR.error.message.includes("غير مكلف"), cR.error);
 const t3 = await ins("teachers", { full_name: "أ. ماجد" });
-const sec3 = await ins("sections", { name: "ج", grade_id: grade.id, year_id: year.id, capacity: 30 });
+const sec3 = await ins("sections", { name: "ج", grade_id: grade.id, year_id: year.id, term_id: term?.id, capacity: 30 });
 const course4 = await ins("courses", { year_id: year.id, subject_id: subj.id, section_id: sec3.id });
 const asg4 = await ins("teacher_assignments", { course_id: course4.id, teacher_id: t3.id });
 await owner.c.rpc("decide_assignment", { _id: asg4.id, _approve: true });
@@ -228,9 +229,13 @@ const v1slots = await owner.c.from("timetable_slots").select("id").eq("timetable
 check("v1 preserved", v1slots.data?.length === 3, v1slots);
 const { count: rooms3 } = await admin.from("classrooms").select("id", { count: "exact", head: true }).eq("school_id", S);
 check("no new classroom from timetable edits", rooms3 === rooms2, [rooms2, rooms3]);
+// one active approved timetable per branch (tt_activate): publishing alone does not make a version current
+const cur0 = await owner.c.rpc("current_timetable", { _school: S, _date: D });
+check("published but not activated is not current", cur0.data === null, cur0);
+const act1 = await owner.c.rpc("tt_activate", { _id: tt.id });
 const cur1 = await owner.c.rpc("current_timetable", { _school: S, _date: D });
 const cur2 = await owner.c.rpc("current_timetable", { _school: S, _date: D2 });
-check("effective dates pick version", cur1.data === tt.id && cur2.data === r1.data, [cur1, cur2]);
+check("the single activated version is current on every date", !act1.error && cur1.data === tt.id && cur2.data === tt.id, [act1.error, cur1, cur2]);
 // substitution on Nov 1 (v1)
 const ab = await owner.c.rpc("record_absence", { _teacher: teacher.id, _date: D, _note: "ظرف" });
 const ab2 = await owner.c.rpc("record_absence", { _teacher: teacher.id, _date: D });
@@ -258,8 +263,12 @@ await owner.c.rpc("cancel_substitution", { _id: sub1.data, _reason: "عاد ال
 await owner.c.rpc("cancel_substitution", { _id: sub1.data, _reason: "عاد المعلم" });
 const nC = await studU.c.from("notifications").select("id").like("dedupe_key", "sub:%:off");
 check("cancel notified once", nC.data?.length === 1, nC);
+const nT1 = await teacherU.c.from("notifications").select("dedupe_key").like("dedupe_key", "tt:%");
+check("teacher notified once when v1 became active", nT1.data?.length === 1, nT1);
+const act2 = await owner.c.rpc("tt_activate", { _id: r1.data }); await owner.c.rpc("tt_activate", { _id: r1.data });
+const cur3 = await owner.c.rpc("current_timetable", { _school: S, _date: D2 });
 const nT = await teacherU.c.from("notifications").select("dedupe_key").like("dedupe_key", "tt:%");
-check("teacher notified per publish (2)", nT.data?.length === 2, nT);
+check("activating v2 switches the current version and notifies once more (2)", !act2.error && cur3.data === r1.data && nT.data?.length === 2, [act2.error, cur3.data, nT]);
 const otherN = await studU.c.from("notifications").select("user_id");
 check("notifications are own only", otherN.data?.every((n: any) => n.user_id === studU.id), otherN);
 const oT = await outsider.c.from("timetable_slots").select("id");

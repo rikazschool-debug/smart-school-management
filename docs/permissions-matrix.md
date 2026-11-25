@@ -778,3 +778,5 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 2026-11-25 (prompt-544): RTL alignment of student finance and statement dialogs; no permissions, amounts, queries or database changes.
 
 2026-11-25 (prompt-545): Guardian/account and collection form presentation only. Existing guardian verification grants, owner-only account actions, allocation validation and sf_collect remain unchanged. No database or account changes.
+
+2026-11-25 (phase 6): Visitors (not signed in) have no direct table access at all; the registration form works only through signup_request_token + signup_request_submit with server-side limits. Task recipients never include the creator. Activating a timetable notifies its teachers, students and guardians once.

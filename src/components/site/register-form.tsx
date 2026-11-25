@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -31,6 +31,13 @@ export function RegisterForm() {
   const [err, setErr] = useState<Partial<Record<keyof F, string>>>({});
   const [busy, setBusy] = useState(false);
   const [ref, setRef] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [trap, setTrap] = useState("");
+  const loadToken = async () => {
+    const { data } = await supabase.rpc("signup_request_token" as never);
+    setToken(data ? String(data) : null);
+  };
+  useEffect(() => { void loadToken(); }, []);
   const set = (k: keyof F) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }));
 
   async function submit(e: React.FormEvent) {
@@ -38,9 +45,9 @@ export function RegisterForm() {
     const r = schema.safeParse(f);
     if (!r.success) { const m: typeof err = {}; for (const i of r.error.issues) m[i.path[0] as keyof F] ??= i.message; setErr(m); return; }
     setErr({}); setBusy(true);
-    const { data, error } = await supabase.rpc("signup_request_submit" as never, { _p: { ...r.data, stages } } as never);
+    const { data, error } = await supabase.rpc("signup_request_submit" as never, { _p: { ...r.data, stages, form_token: token, website: trap } } as never);
     setBusy(false);
-    if (error) { toast.error(arabicError(error)); return; }
+    if (error) { toast.error(arabicError(error)); void loadToken(); return; }
     setRef(String(data));
   }
 
@@ -63,7 +70,7 @@ export function RegisterForm() {
     </div>
   );
   return (
-    <form onSubmit={submit} className="rounded-3xl border bg-card/90 p-6 shadow-xl backdrop-blur md:p-8" noValidate>
+    <form onSubmit={submit} className="relative rounded-3xl border bg-card/90 p-6 shadow-xl backdrop-blur md:p-8" noValidate>
       <h2 className="font-display text-xl">بيانات المؤسسة</h2>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {field("org_name", "اسم المؤسسة أو المدرسة *")}
@@ -90,6 +97,10 @@ export function RegisterForm() {
       <div className="mt-4 space-y-1.5">
         <Label htmlFor="notes">ملاحظات أو احتياجات خاصة</Label>
         <Textarea id="notes" rows={3} value={f.notes} onChange={set("notes")} />
+      </div>
+      <div aria-hidden="true" className="absolute -start-[9999px] h-px w-px overflow-hidden">
+        <label htmlFor="website">الموقع</label>
+        <input id="website" name="website" tabIndex={-1} autoComplete="off" value={trap} onChange={(e) => setTrap(e.target.value)} />
       </div>
       <Button type="submit" size="lg" className="mt-6 w-full" disabled={busy}>{busy ? "جارٍ الإرسال…" : "إرسال الطلب"}</Button>
       <p className="mt-3 text-center text-xs text-muted-foreground">لا يُنشأ حساب تلقائيًا؛ يراجع فريق ركاز طلبك ويتواصل معك.</p>

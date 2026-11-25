@@ -20,7 +20,7 @@ if (process.argv[2] === "teardown") {
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); };
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 const NAMES: Record<string, string> = { owner: "مالك مجموعة الزيارات", p1: "مدير مدرسة الزيارات", p2: "مدير المدرسة الأخرى", r1: "موظف الاستقبال", h1: "المعلم المستقبِل", g1: "ولي أمر له ابنان", g2: "ولي أمر ثان" };
 const users: Record<string, { id: string; email: string }> = {};
 mkdirSync(DIR, { recursive: true });

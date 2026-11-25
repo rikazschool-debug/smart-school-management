@@ -24,7 +24,7 @@ if (mode === "teardown") {
   console.log("teardown done"); process.exit(0);
 }
 
-const run = Date.now(), pw = "Pcb-pass-" + run;
+const run = Date.now(), pw = "Pcb-" + crypto.randomUUID();
 const users: Record<string, { email: string; id: string; c: any }> = {};
 for (const tag of ["owner", "officer", "approver", "disburser", "officer2", "principal"]) {
   const email = `pcb-${tag}-${run}@rikaz.test`;

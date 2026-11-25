@@ -2,15 +2,15 @@
 // Run: NODE_PATH=node_modules bun scripts/cs-comm-e2e.ts
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
-import { DEMO_PASSWORD } from "../src/lib/demo-accounts";
+import { demoPassword } from "./lib/demo-login";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); };
-async function as(email: string, pw = DEMO_PASSWORD) { const c = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }); const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw new Error(email + " " + s.error.message); return { c, uid: s.data.user!.id }; }
+async function as(email: string) { const pw = await demoPassword(email); const c = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }); const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw new Error(email + " " + s.error.message); return { c, uid: s.data.user!.id }; }
 let pass = 0, fail = 0;
 const check = (n: string, ok: boolean, d?: unknown) => { ok ? pass++ : fail++; console.log(ok ? "PASS" : "FAIL", n, ok ? "" : JSON.stringify(d)); };
-const owner = await as("demo-owner@rikaz.demo", "25011741Aamm"), t = await as("demo-teacher@rikaz.demo"), g = await as("demo-guardian@rikaz.demo");
+const owner = await as("demo-owner@rikaz.demo"), t = await as("demo-teacher@rikaz.demo"), g = await as("demo-guardian@rikaz.demo");
 const S1 = (await admin.from("memberships").select("school_id").eq("user_id", t.uid).eq("role", "teacher").limit(1).single()).data!.school_id;
 const org = (await admin.from("schools").select("org_id").eq("id", S1).single()).data!.org_id;
 

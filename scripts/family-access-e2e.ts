@@ -11,7 +11,7 @@ const tr = new TestRun(admin, "fax");
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); };
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 let pass = 0, fail = 0; const check = (n: string, ok: boolean, extra?: unknown) => { ok ? pass++ : fail++; console.log(ok ? "PASS" : "FAIL", n, ok ? "" : JSON.stringify(extra ?? "")); };
 const users: Record<string, string> = {}, emails: Record<string, string> = {}; let org = "";
 async function as(k: string) { const c = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }); const s = await c.auth.signInWithPassword({ email: emails[k]!, password: pw }); if (s.error) throw s.error; return c; }
@@ -26,11 +26,13 @@ try {
   org = must(await oc.rpc("create_organization", { _org_name: "مجموعة تجربة وصول الأسرة", _school_name: "مدرسة الوصول" })) as string;
   const S = must(await admin.from("schools").select("id").eq("org_id", org).single())!.id; tr.addSchool(S);
   must(await admin.from("memberships").insert({ user_id: users.g1, org_id: org, school_id: S, role: "guardian" }));
-  const y = must(await admin.from("academic_years").insert({ school_id: S, name: "1448", start_date: "2026-08-01", end_date: "2027-06-30" }).select("id").single())!.id;
-  const st = must(await admin.from("stages").insert({ school_id: S, name: "ابتدائي" }).select("id").single())!.id;
-  const gr = must(await admin.from("grades").insert({ school_id: S, stage_id: st, name: "الخامس" }).select("id").single())!.id;
-  const secA = must(await admin.from("sections").insert({ school_id: S, grade_id: gr, year_id: y, name: "أ" }).select("id").single())!.id;
-  const secB = must(await admin.from("sections").insert({ school_id: S, grade_id: gr, year_id: y, name: "ب" }).select("id").single())!.id;
+  // academic setup follows the owner-only central catalog (stage/grade names, a term for every section)
+  const y = must(await oc.from("academic_years").insert({ school_id: S, name: "1448", start_date: "2026-08-01", end_date: "2027-06-30" }).select("id").single())!.id;
+  const st = must(await oc.from("stages").insert({ school_id: S, name: "الابتدائية" }).select("id").single())!.id;
+  const gr = must(await oc.from("grades").insert({ school_id: S, stage_id: st, name: "خامس" }).select("id").single())!.id;
+  const tm = must(await oc.from("terms").insert({ school_id: S, year_id: y, name: "الفصل الدراسي الأول", start_date: "2026-08-01", end_date: "2027-01-15" }).select("id").single())!.id;
+  const secA = must(await oc.from("sections").insert({ school_id: S, grade_id: gr, year_id: y, term_id: tm, name: "أ" }).select("id").single())!.id;
+  const secB = must(await oc.from("sections").insert({ school_id: S, grade_id: gr, year_id: y, term_id: tm, name: "ب" }).select("id").single())!.id;
   const sj = must(await admin.from("subjects").insert({ school_id: S, name: "العلوم" }).select("id").single())!.id;
   const course = async (sec: string) => must(await admin.from("courses").insert({ school_id: S, year_id: y, subject_id: sj, section_id: sec, weekly_periods: 1 }).select("id").single())!.id as string;
   const coA = await course(secA), coB = await course(secB);

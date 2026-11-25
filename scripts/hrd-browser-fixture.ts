@@ -21,7 +21,7 @@ if (process.argv[2] === "teardown") {
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${PK}`) h.delete("Authorization"); h.set("apikey", PK); return fetch(input, { ...init, headers: h }); };
-const run = Date.now(), pw = "Test-pass-" + run; const users: Record<string, { id: string; email: string }> = {};
+const run = Date.now(), pw = "Test-" + crypto.randomUUID(); const users: Record<string, { id: string; email: string }> = {};
 const NAMES: Record<string, string> = { owner: "مالك المستندات", rev: "مراجعة المستندات", t1: "معلمة المستندات", t2: "زميلة المستندات" };
 for (const t of Object.keys(NAMES)) {
   const email = `hdb-${t}-${run}@rikaz.test`;

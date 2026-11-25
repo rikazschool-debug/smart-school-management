@@ -13,7 +13,7 @@ if (process.argv[2] === "teardown") {
   for (const u of f.userIds) tr.addUser(u); for (const s of f.schools) tr.addSchool(s);
   await admin.from("mq_link").delete().eq("org_id", f.org); await tr.purgeOrg(f.org); console.log("teardown ok");
 } else {
-  const run = Date.now(), pw = "Test-pass-" + run, users: Record<string, { email: string; id: string }> = {};
+  const run = Date.now(), pw = "Test-" + crypto.randomUUID(), users: Record<string, { email: string; id: string }> = {};
   for (const t of ["owner", "viewer"]) {
     const email = `mqb-${t}-${run}@rikaz.test`;
     const u = await admin.auth.admin.createUser({ email, password: pw, email_confirm: true });

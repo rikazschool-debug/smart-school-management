@@ -11,7 +11,7 @@ const run = new TestRun(a, "cleanup-monitor");
 const ch = `e2e:${run.id}`;
 let pass = 0, fail = 0;
 const ok = (c: boolean, m: string) => { c ? pass++ : fail++; console.log(c ? "✓" : "✗", m); };
-const email = `mon-${run.id}@rikaz.test`, pw = `Pw-${run.id}`;
+const email = `mon-${run.id}@rikaz.test`, pw = `Pw-${crypto.randomUUID()}`;
 const u = await a.auth.admin.createUser({ email, password: pw, email_confirm: true });
 if (u.error) throw u.error; const uid = u.data.user.id; run.addUser(uid);
 const check = async (now: Date) => {

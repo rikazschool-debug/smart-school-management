@@ -26,7 +26,7 @@ if (process.argv[2] === "teardown") {
   await tr.purgeOrg(f.org); for (const u of all) await admin.auth.admin.deleteUser(u).catch(() => undefined);
   console.log("teardown ok", all.length); process.exit(0);
 }
-const run = Date.now(), pw = "Test-pass-" + run, sfx = String(run).slice(-7);
+const run = Date.now(), pw = "Test-" + crypto.randomUUID(), sfx = String(run).slice(-7);
 async function user(tag: string) {
   const email = `acb-${tag}-${run}@rikaz.test`;
   await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: tag } });

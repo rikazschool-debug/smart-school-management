@@ -10,7 +10,7 @@ const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "scope");
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 let ok = 0, bad = 0;
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)); };
 async function user(tag: string) {
@@ -46,9 +46,12 @@ try {
   const T = [await ins("teachers", { full_name: "معلم 1", user_id: tu[0]!.id, department_id: D1.id, status: "active" }),
     await ins("teachers", { full_name: "معلم 2", user_id: tu[1]!.id, department_id: D2.id, status: "active" }),
     await ins("teachers", { full_name: "معلم 3", user_id: tu[2]!.id, department_id: D2.id, status: "active" })];
-  const year = await ins("academic_years", { name: "1448", start_date: today, end_date: "2027-07-01", is_current: true });
-  const stage = await ins("stages", { name: "متوسط" }), grade = await ins("grades", { name: "أول", stage_id: stage.id });
-  const sct = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });
+  // academic setup is owner-only and follows the central catalog (stage/grade names, a term for every section)
+  const insO = async (tb: string, v: any) => { const r = await owner.c.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
+  const year = await insO("academic_years", { name: "1448", start_date: today, end_date: "2027-07-01", is_current: true });
+  const stage = await insO("stages", { name: "المتوسطة" }), grade = await insO("grades", { name: "أول", stage_id: stage.id });
+  const term = await insO("terms", { name: "الفصل الدراسي الأول", year_id: year.id, start_date: today, end_date: "2027-01-15" });
+  const sct = await insO("sections", { name: "أ", grade_id: grade.id, year_id: year.id, term_id: term.id, capacity: 30 });
   await ins("school_day_settings", { study_days: [0, 1, 2, 3, 4] });
   const P = [await ins("periods", { sort_order: 1, name: "الأولى", start_time: "07:00", end_time: "07:45", kind: "lesson" }),
     await ins("periods", { sort_order: 2, name: "الثانية", start_time: "07:45", end_time: "08:30", kind: "lesson" }),

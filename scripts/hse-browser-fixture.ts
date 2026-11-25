@@ -16,7 +16,7 @@ if (process.argv[2] === "teardown") {
   for (const u of f.users) await admin.auth.admin.deleteUser(u);
   console.log("teardown ok"); process.exit(0);
 }
-const run = Date.now(), pw = "Test-pass-" + run;
+const run = Date.now(), pw = "Test-" + crypto.randomUUID();
 const users: Record<string, { id: string; email: string; c: any }> = {};
 const names: Record<string, string> = { owner: "مالكة المؤسسة", hr: "مسؤولة الموارد البشرية", pr: "مديرة المدرسة", mate: "معلمة زميلة" };
 for (const t of Object.keys(names)) {
