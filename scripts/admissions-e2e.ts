@@ -104,12 +104,15 @@ try {
   const sum = (await owner.c.rpc("ad_summary", { _org: org, _school: null })).data as any;
   const ex = await fol.c.rpc("ad_list", { _org: org, _f: { export: true }, _limit: 5000 });
   check("16 summary counts real rows; export without grant returns nothing", sum?.total === 2 && sum.linked === 1 && !(ex.data as any)?.rows?.length, [sum?.total, (ex.data as any)?.rows?.length]);
-  const pS = await pr.c.rpc("ad_students", { _org: org, _f: {} }); const oS = await owner.c.rpc("ad_students", { _org: org, _f: {} });
-  check("17 current students: principal without grant refused; owner reads from the academic source", !!pS.error && (oS.data as any)?.total === 1, [pS.error?.message, oS.error?.message, (oS.data as any)?.total]);
   await act(owner, "assign", { user: fol.id }); await act(owner, "follow", { next_follow: "2020-01-02" });
   const tick = await admin.rpc("ad_alerts_tick"); const tick2 = await admin.rpc("ad_alerts_tick");
   const fn = (await admin.from("notifications").select("id").like("dedupe_key", `ad-follow:${id}%`)).data?.length;
   check("18 follow-up alert sent once (dedupe)", !tick.error && !tick2.error && fn === 1, [tick.error?.message, fn]);
+  // ad_students lists only students linked to an ACCEPTED application (rule since 20261115075851); the app was reopened in step 10, so accept it again first.
+  const reAcc = await act(owner, "decide", { decision: "accepted", note: "قبول نهائي" });
+  if (reAcc.error) console.log("re-accept", reAcc.error.message);
+  const pS = await pr.c.rpc("ad_students", { _org: org, _f: {} }); const oS = await owner.c.rpc("ad_students", { _org: org, _f: {} });
+  check("17 current students: principal without grant refused; owner reads from the academic source", !!pS.error && (oS.data as any)?.total === 1, [pS.error?.message, oS.error?.message, (oS.data as any)?.total]);
 } catch (e) { bad++; console.log("ERROR", e); }
 finally {
   console.log(`${ok} passed, ${bad} failed`);
