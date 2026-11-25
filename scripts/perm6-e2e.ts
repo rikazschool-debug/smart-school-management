@@ -48,9 +48,12 @@ try {
 
   // 3 templates mirror the base role exactly (preview = current rule)
   let mism: string[] = [];
+  // only what a template can carry: catalog section/action open for branch scope and not locked (e.g. contracts.match is never delegated)
+  const cat = (await owner.c.rpc("perm_catalog", {})).data as any;
+  const grantable = new Set<string>((cat.sections as any[]).filter((x) => !x.locked_reason && !x.base_only && (x.scopes ?? []).includes("branch")).flatMap((x) => (x.actions as string[]).map((a) => `${x.key}.${a}`)));
   for (const [name, u] of [["مدير مدرسة", prin], ["وكيل", vice], ["شؤون الطلاب", sa], ["أمن واستقبال", sec], ["مرشد طلابي", co]] as const) {
     const e = ((await owner.c.rpc("perm_effective", { _org: org, _user: u.id })).data.effective as any[]).filter((x) => x.section !== "procurement" && !x.section.startsWith("bt_")); // base tools are deny-only, never in templates
-    const base = e.filter((x) => x.base_schools.includes("فرع أ")).map((x) => `${x.section}.${x.action}`).sort();
+    const base = e.filter((x) => x.base_schools.includes("فرع أ")).map((x) => `${x.section}.${x.action}`).filter((k) => grantable.has(k)).sort();
     const g = (tpl(name).grants as any[]).map((x) => `${x.section}.${x.action}`).sort();
     if (base.join() !== g.join()) mism.push(`${name}: base=${base} tpl=${g}`);
   }

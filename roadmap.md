@@ -46,5 +46,7 @@
 - [x] Security report updated
 - [ ] Platform-owner password change — blocked: user does it
 - [ ] Leaked password protection — blocked: Supabase dashboard setting (paid plan)
-- [ ] Role templates drift (perm6) and owner-delegated academic years (workspace-perm) — waiting for user decision
+- [x] Role templates synced to the real roles (perm6 20/20)
+- [ ] Owner-delegated academic years (workspace-perm) — waiting for user decision
+- [ ] 34 catalog entries shown in the permission tree but refused on save (calls, WhatsApp inbox, chat settings, customer service, school schedule view, people tags) — waiting for user decision
 - [ ] Rewrite stale tests (comm, homework, family-access, xbranch) to current rules

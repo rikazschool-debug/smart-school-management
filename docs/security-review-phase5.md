@@ -60,7 +60,7 @@ Real exposure that the linter does not count: visitor (anon) table privileges 41
 ## Test results (test DB)
 Passed: rls-e2e 96/96 (setup repaired: catalog names, term per section, single active timetable), people-e2e 30/30, signup-guard 8/8, security-fixes 11/11, sf-security 25/25, sf-carry 19/19, sf-years 14/14, sf-notify 14/14, sf-transfer 11/11, sf-phase4 11/11, perm5 20/20, perm7 20/20, staff 23/23, accounts 23/23, scope 37/37, timetable 31/31, placement-perm 24/24, admin 51/51, admin-rpc-scope 13/13, bounds 8/8, meetings-live 33/33, gv 45/45, cleanup 11/11, health 17/17, cs-comm 15/15, hr-bulk 12/12.
 Failing — stale tests written before later approved rules (not security regressions; need rewriting): comm-e2e 89/95 (old circular publishing), homework-e2e (direct teacher writes now RPC-only), family-access-e2e 15/16 (guardians now join the class group by design), xbranch-e2e 25/26 (directory moved).
-Failing — needs a decision: perm6-e2e 19/20 (role templates are missing sections added later, e.g. events, schedule, tasks — a templated person gets fewer rights than the real role); workspace-perm-e2e 23/24 (owner-delegated academic-year writes are now refused because the academic catalog became owner-only).
+Fixed after owner decision: role templates now equal the real roles (perm6 20/20). Failing — needs a decision: workspace-perm-e2e 23/24 (owner-delegated academic-year writes are now refused because the academic catalog became owner-only).
 
 ## Manual actions for the owner
 1. Change the platform-owner password (test and production) and sign out its other sessions; set it as `PLATFORM_OWNER_PW` only if the owner-card test is needed.

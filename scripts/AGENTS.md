@@ -156,3 +156,4 @@
 - scripts/signup-guard-e2e.ts: public registration protection (token, 3 s minimum, hidden field, reuse, duplicate, per-connection cap, spoofed X-Forwarded-For; 8 checks); deletes only its own rows.
 - Run e2e scripts one at a time: parallel runs share the test-account pool and the same branches' settings, and produced false failures (phase 6).
 - Anon (visitors) has no table privileges in public since phase 6; any new public flow must be a checked definer function, and new tables must not grant anon.
+- scripts/perm-template-probe.ts: test DB only; prints what each base role really has in a fresh branch (/tmp/perm-templates.json) — use it to resync system role templates when new sections are added; perm6-e2e check 3 fails on drift.
