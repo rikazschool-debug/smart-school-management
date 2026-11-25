@@ -781,3 +781,4 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 
 2026-11-25 (phase 6): Visitors (not signed in) have no direct table access at all; the registration form works only through signup_request_token + signup_request_submit with server-side limits. Task recipients never include the creator. Activating a timetable notifies its teachers, students and guardians once.
 2026-11-25: System role templates equal the real role's branch rights (non-delegable items excluded); «مطابقة العقود» can be granted/denied per person or template (branch/org).
+2026-11-25: Calls, WhatsApp inbox, customer service, school schedule view and contracts can be granted/denied per branch or group; chat settings and tags management group-wide only.

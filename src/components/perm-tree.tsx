@@ -11,6 +11,9 @@ export type Grant = { section: string; action: string; scope: string };
 /** Actions never granted just by ticking a section — they must be chosen one by one. */
 const STRONG = new Set(["approve", "disburse", "settings", "review", "execute", "fleet", "publish", "organize", "create", "edit", "cancel", "assign", "export", "operate", "scan"]);
 /** The single "basic" action a section tick grants: view when the section has it, otherwise its lightest action. */
+/** Actions the server honours only at some scopes (people.tags_manage is group-wide only) — offer just those. */
+const ACTION_SCOPES: Record<string, string[]> = { "people.tags_manage": ["org"] };
+const scopesFor = (s: PermSec, a: string) => ACTION_SCOPES[`${s.key}.${a}`] ?? s.scopes;
 export const baseAction = (s: PermSec) => s.locked_reason && !s.base_only ? null : (s.actions.includes("view") ? "view" : s.actions.find((a) => !STRONG.has(a)) ?? null);
 const label = (c: PermCatalog, s: PermSec, a: string) => s.labels?.[a] ?? c.actions[a] ?? a;
 
@@ -133,10 +136,10 @@ export function PermTree({ c, value, onChange, disabledAreas = [], readOnly, den
                               const changed = !!orig && !!g !== was(k); const st = changed ? "تعديل غير محفوظ" : personal?.[k] === "override" ? "منح خاص" : personal?.[k] === "deny" ? "منع خاص" : g ? "موروث" : ""; return (
                               <div key={a} className={"min-w-0 rounded-md p-2 " + (dn ? "bg-destructive/5" : g ? "bg-primary/5" : "bg-muted/40")}>
                               <label className="flex min-w-0 flex-wrap items-start gap-2 text-sm">
-                                <input type="checkbox" className="mt-1 size-4 shrink-0 accent-primary" disabled={readOnly || locked || (!!s.locked_reason && !s.base_only) || noGrant || (!!s.base_only && dn && !g)} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? (s.scopes[0] ?? "branch") : "")} />
+                                <input type="checkbox" className="mt-1 size-4 shrink-0 accent-primary" disabled={readOnly || locked || (!!s.locked_reason && !s.base_only) || noGrant || (!!s.base_only && dn && !g)} checked={!!g} onChange={(e) => set(s, a, e.target.checked ? (scopesFor(s, a)[0] ?? "branch") : "")} />
                                 <span className="min-w-0 flex-1 break-words" title={label(c, s, a)}>{label(c, s, a)}</span>
                                 {g && !s.base_only && <select aria-label={`نطاق ${label(c, s, a)}`} disabled={readOnly || locked} className={selectCls("w-32 shrink-0", true)} value={g.scope} onChange={(e) => set(s, a, e.target.value)}>
-                                  {s.scopes.map((sc) => <option key={sc} value={sc}>{c.scopes[sc]}</option>)}</select>}
+                                  {scopesFor(s, a).map((sc) => <option key={sc} value={sc}>{c.scopes[sc]}</option>)}</select>}
                               </label>
                               {orig && st && <p className={"ms-6 text-[11px] " + (changed ? "font-semibold text-warning" : "text-muted-foreground")}>{st}{g && sources[k] && !changed ? ` — ${sources[k]}` : ""}
                                 {(changed || personal?.[k] === "override") && !readOnly && <Button type="button" variant="link" size="sm" className="h-auto px-2 text-xs" onClick={() => { const o = orig.find((x) => `${x.section}.${x.action}` === k && personal?.[k] !== "override");

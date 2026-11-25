@@ -48,5 +48,5 @@
 - [ ] Leaked password protection — blocked: Supabase dashboard setting (paid plan)
 - [x] Role templates synced to the real roles (perm6 20/20)
 - [ ] Owner-delegated academic years (workspace-perm) — waiting for user decision
-- [ ] 34 catalog entries shown in the permission tree but refused on save (calls, WhatsApp inbox, chat settings, customer service, school schedule view, people tags) — waiting for user decision
+- [x] Permission tree options all save and take effect (perm-catalog-e2e 9/9)
 - [ ] Rewrite stale tests (comm, homework, family-access, xbranch) to current rules
