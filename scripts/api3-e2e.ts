@@ -28,7 +28,7 @@ const call = async (secret: string, method: string, path: string[], q: any = {},
   if (r.error) throw r.error; return r.data as any;
 };
 const ins = async (t: string, row: any) => { const r = await admin.from(t).insert(row).select("id"); if (r.error) throw new Error(t + ": " + r.error.message); return r.data![0]!.id as string; };
-const NEW_SCHOOL = ["admin_forms", "admin_requests", "duty_posts", "duty_rosters", "duty_assignments", "schedule_rooms", "classrooms", "guidance_programs", "gifted_programs", "health_calendar", "health_stats", "guardian_visit_stats", "class_visit_stats"];
+const NEW_SCHOOL = ["admin_forms", "admin_requests", "duty_posts", "duty_rosters", "duty_assignments", "schedule_rooms", "classrooms", "guidance_programs", "gifted_programs", "health_calendar", "health_stats", "guardian_visit_stats", "class_visit_stats", "guardian_rating_stats"];
 const NEW_CENTRAL = ["org_documents", "hr_vacancies"];
 const orgs: string[] = [];
 try {
@@ -69,6 +69,20 @@ try {
   const tch = await ins("teachers", { school_id: A, full_name: "معلم زيارة" });
   await ins("cv_visits", { school_id: A, teacher_id: tch, evaluator_id: owner.id, visit_date: "2026-11-15", status: "submitted", scores: { a: 5 }, summary: "سري" });
   await ins("cv_visits", { school_id: A, teacher_id: tch, evaluator_id: owner.id, visit_date: "2026-11-16", status: "draft" });
+  // guardian ratings: 6 in school A (avg must show), 3 in school B (suppressed), 6 in the other group (never visible)
+  const yr = async (c: any, sch: string) => { const r = await c.from("academic_years").insert({ school_id: sch, name: "1448/1449", start_date: "2026-08-01", end_date: "2027-06-30" }).select("id").single(); if (r.error) throw new Error("academic_years: " + r.error.message); return r.data.id as string; };
+  const yA = await yr(owner.c, A), yB = await yr(owner.c, B), yX = await yr(owner2.c, X);
+  const items = [{ code: "q1", label: "الشرح", type: "item" }, { code: "q2", label: "التواصل", type: "item" }];
+  const evf = await ins("ev_forms", { org_id: org, kind: "guardian", version: 99, title: "تقييم", items, status: "published" });
+  const evfX = await ins("ev_forms", { org_id: org2, kind: "guardian", version: 99, title: "تقييم", items, status: "published" });
+  const snap = { version: 1, items };
+  const rate = async (sch: string, yr: string, form: string, n: number, a: string, b: string) => {
+    const t = await ins("teachers", { school_id: sch, full_name: "معلم مُقيَّم سري" });
+    for (let i = 0; i < n; i++) { const s = await ins("students", { school_id: sch, full_name: "طالب تقييم " + i });
+      await ins("ev_guardian", { school_id: sch, guardian_user: owner.id, student_id: s, teacher_id: t, year_id: yr, form_id: form, form_snapshot: snap, answers: { q1: a, q2: b }, comment: "تعليق خاص بالمعلم" }); }
+    return t;
+  };
+  const tA = await rate(A, yA, evf, 6, "4", "5"); await rate(B, yB, evf, 3, "1", "1"); await rate(X, yX, evfX, 6, "2", "2");
   const doc = await ins("org_docs", { org_id: org, school_id: A, kind: "license", name: "ترخيص التشغيل", doc_no: "LIC-77", issuer: "الوزارة", expires_on: "2027-01-01" });
   const docA = await ins("org_docs", { org_id: org, kind: "lease", name: "عقد مؤرشف", archived_at: new Date().toISOString() });
   const vo = await ins("hr_rc_vacancies", { org_id: org, school_id: A, ref: `V-${run % 10000}`, job_title: "معلم رياضيات", seats: 2, reason: "توسع", status: "open", created_by: owner.id });
@@ -79,18 +93,18 @@ try {
   const cat: any[] = D.resources;
   const cov: any[] = D.coverage;
   const keys = new Set(cat.map((r) => r.key));
-  check("1 directory: 73 resources (51 school + 22 central), all 15 new present, every section registered", cat.length === 73 && cat.filter((r) => r.area === "school").length === 51 && cat.filter((r) => r.area === "central").length === 22
+  check("1 directory: 74 resources (52 school + 22 central), all 16 new present, every section registered", cat.length === 74 && cat.filter((r) => r.area === "school").length === 52 && cat.filter((r) => r.area === "central").length === 22
     && [...NEW_SCHOOL, ...NEW_CENTRAL].every((k) => keys.has(k)) && D.unregistered.length === 0, [cat.length, D.unregistered]);
   const part = cov.filter((c) => c.status === "covered" && c.withheld).map((c) => c.section);
   check("2 the 13 reviewed sections are covered with what stays withheld; payroll/evaluation stay excluded with reason",
-    ["admin_forms", "admin_requests", "duty_setup", "duty_rosters", "bt_classroom", "student_guidance", "gifted_care", "health", "guardian_visits", "ev_visits", "org_docs", "hr_recruit"].every((s) => part.includes(s))
+    ["admin_forms", "admin_requests", "duty_setup", "duty_rosters", "bt_classroom", "student_guidance", "gifted_care", "health", "guardian_visits", "ev_visits", "ev_guardian", "org_docs", "hr_recruit"].every((s) => part.includes(s))
     && cov.find((c) => c.section === "schedule_rooms")?.status === "covered"
     && ["hr_payroll", "ev_monthly", "wa_inbox", "people_identity"].every((s) => { const c = cov.find((x) => x.section === s); return c?.status === "excluded" && !!c.excluded; }), part);
   const cv = (await owner.c.rpc("api_catalog_view")).data as any[];
   check("3 key dialog / explorer / OpenAPI catalog lists the new resources", NEW_SCHOOL.every((k) => cv.some((r) => r.key === k)) && NEW_CENTRAL.every((k) => cv.some((r) => r.key === k)), cv?.length);
 
   const fieldsOf = (k: string) => cat.find((r) => r.key === k).fields.filter((f: any) => !f.s).map((f: any) => f.k);
-  const scopes = Object.fromEntries(NEW_SCHOOL.map((k) => [k, { read: true, fields: fieldsOf(k) }]));
+  const scopes = Object.fromEntries(NEW_SCHOOL.filter((k) => k !== "guardian_rating_stats").map((k) => [k, { read: true, fields: fieldsOf(k) }]));
   const kA = (await save({ scope_type: "schools", school_ids: [A], scopes })).data as any;
   const kAB = (await save({ scope_type: "schools", school_ids: [A, B], scopes: { duty_posts: { read: true, fields: ["name"] }, admin_requests: { read: true, fields: ["status", "submitted_by"] } } })).data as any;
   const g = async (k: any, res: string, q: any = {}) => call(k.secret, "GET", [res], q);
@@ -153,6 +167,17 @@ try {
   check("22 real HTTP client: admin_forms 200 with chosen field; central key on school resource 403", h1.s === 200 && h1.b?.data?.[0]?.name === "طلب إجازة قصيرة" && h2 === 403, [h1, h2]);
   const prR = await pr.c.rpc("api_resource_directory", { _org: org });
   check("23 non-owner (principal) cannot open the resource directory", !!prR.error, prR.error?.message);
+  const grK = (await save({ scope_type: "schools", school_ids: [A, B], scopes: { guardian_rating_stats: { read: true, fields: fieldsOf("guardian_rating_stats") } } })).data as any;
+  const gr = await g(grK, "guardian_rating_stats");
+  const grA = gr.body.data?.find((x: any) => x.school_id === A), grB = gr.body.data?.find((x: any) => x.school_id === B);
+  check("24 guardian ratings: one average per school (A: 6 ratings, avg 4.5); no teacher, comment or answers in the response",
+    gr.status === 200 && gr.body.data.length === 2 && grA?.ratings === 6 && Number(grA?.avg_score) === 4.5 && grA?.year_id === yA
+    && !JSON.stringify(gr.body).includes(tA) && !JSON.stringify(gr.body).includes("تعليق") && !JSON.stringify(gr.body).includes("q1") && !("teacher_id" in grA), gr.body);
+  check("25 school with fewer than 5 ratings: count and average withheld", grB?.suppressed === true && grB?.ratings == null && grB?.avg_score == null, grB);
+  const grT = await g(grK, "guardian_rating_stats", { fields: "teacher_id" });
+  check("26 teacher field cannot be requested; other group's ratings never appear", grT.status >= 400 && !gr.body.data.some((x: any) => x.school_id === X), [grT.status, grT.body]);
+  const grNo = await g(kA, "guardian_rating_stats");
+  check("27 key without an explicit grant on guardian ratings → 403", grNo.status === 403, grNo.body);
   void fd; void rqd; void ad; void docA; void vr;
   console.log(`${ok} passed, ${bad} failed`);
 } finally {

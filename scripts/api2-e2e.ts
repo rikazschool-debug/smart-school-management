@@ -65,7 +65,7 @@ try {
   const D = dir.data as any;
   const cat: any[] = D?.resources ?? [];
   const prDir = await pr.c.rpc("api_resource_directory", { _org: org });
-  check("1 directory: 73 resources (51 school + 22 central), coverage with reasons, owner only", cat.length === 73 && cat.filter((r) => r.area === "central").length === 22 && cat.filter((r) => r.area === "school").length === 51
+  check("1 directory: 74 resources (52 school + 22 central), coverage with reasons, owner only", cat.length === 74 && cat.filter((r) => r.area === "central").length === 22 && cat.filter((r) => r.area === "school").length === 52
     && D.coverage.some((c: any) => c.section === "hr_payroll" && c.status === "excluded" && c.excluded) && !!prDir.error, [cat.length, prDir.error?.message, dir.error?.message]);
   check("2 every platform permission section is registered (covered or excluded with reason)", Array.isArray(D?.unregistered) && D.unregistered.length === 0, D?.unregistered);
 
