@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { KeyRound, Pause, Pencil, Play, Plus, RotateCw, Ban, History } from "lucide-react";
+import { KeyRound, Pause, Pencil, Play, Plus, RotateCw, Ban, History, Info, Settings2, Building2, Database, ShieldCheck, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
@@ -121,16 +121,47 @@ function HistoryDialog({ k, onClose }: { k: Row; onClose: () => void }) {
   );
 }
 
-function Multi({ label, opts, value, onChange, hint }: { label: string; opts: Opt[]; value: string[]; onChange: (v: string[]) => void; hint: string }) {
-  if (!opts.length) return null;
+function Section({ n, icon: Icon, title, hint, children }: { n: number; icon: LucideIcon; title: string; hint?: string; children: ReactNode }) {
   return (
-    <div>
-      <Label className="text-xs">{label} <span className="text-muted-foreground">({value.length ? `${value.length} محدد` : hint})</span></Label>
-      <div className="mt-1 flex max-h-28 flex-wrap gap-1.5 overflow-auto rounded-md border p-2">
-        {opts.map((o) => {
-          const on = value.includes(o.id);
-          return <button type="button" key={o.id} onClick={() => onChange(on ? value.filter((x) => x !== o.id) : [...value, o.id])} className={`rounded-full border px-2 py-0.5 text-xs ${on ? "border-primary bg-primary text-primary-foreground" : "bg-background"}`}>{o.name}</button>;
-        })}
+    <section className="rounded-xl border bg-card p-4 shadow-sm">
+      <header className="mb-3 flex items-start gap-3">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></span>
+        <div className="min-w-0">
+          <h4 className="font-display text-sm font-bold"><span className="text-muted-foreground">{n}. </span>{title}</h4>
+          {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+        </div>
+      </header>
+      {children}
+    </section>
+  );
+}
+
+const chip = (on: boolean) => `rounded-full border px-2.5 py-1 text-xs transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:border-primary/50 hover:bg-primary/5"}`;
+
+/** Multi-select chips; options are grouped per school so repeated names (e.g. the same year in each branch) stay distinguishable. */
+function Multi({ label, opts, value, onChange, hint, schools }: { label: string; opts: Opt[]; value: string[]; onChange: (v: string[]) => void; hint: string; schools: Opt[] }) {
+  if (!opts.length) return null;
+  const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
+  const byS = new Map<string, Opt[]>();
+  for (const o of opts) byS.set(o.school_id ?? "", [...(byS.get(o.school_id ?? "") ?? []), o]);
+  const grouped = byS.size > 1;
+  const sName = (id: string) => schools.find((x) => x.id === id)?.name ?? "";
+  return (
+    <div className="rounded-lg border bg-muted/20 p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <Label className="text-xs font-bold">{label}</Label>
+        <div className="flex items-center gap-2 text-[11px]">
+          <span className={value.length ? "rounded-full bg-primary/10 px-2 py-0.5 text-primary" : "text-muted-foreground"}>{value.length ? `${value.length} محدد` : hint}</span>
+          {value.length > 0 && <button type="button" className="text-muted-foreground underline-offset-2 hover:underline" onClick={() => onChange([])}>مسح</button>}
+        </div>
+      </div>
+      <div className="max-h-36 space-y-2 overflow-auto">
+        {[...byS.entries()].map(([sid, list]) => (
+          <div key={sid}>
+            {grouped && <div className="mb-1 text-[11px] font-medium text-muted-foreground">{sName(sid) || "عام"}</div>}
+            <div className="flex flex-wrap gap-1.5">{list.map((o) => <button type="button" key={o.id} onClick={() => toggle(o.id)} className={chip(value.includes(o.id))}>{o.name}</button>)}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -169,81 +200,115 @@ function KeyForm({ orgId, draft, onClose, onSaved }: { orgId: string; draft: Dra
   const o = opts.data;
   return (
     <Dialog open onOpenChange={(x) => !x && onClose()}>
-      <DialogContent dir="rtl" className="max-h-[92vh] max-w-4xl overflow-y-auto">
-        <DialogHeader><DialogTitle><KeyRound className="ms-1 inline h-4 w-4" />{d.id ? "تعديل مفتاح" : "مفتاح API جديد"}</DialogTitle></DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div><Label>اسم المفتاح</Label><Input value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="مثال: تطبيق الجوال — قراءة" /></div>
-          <div><Label>اسم النظام الخارجي</Label><Input value={d.system_name} onChange={(e) => set("system_name", e.target.value)} placeholder="مثال: نظام نور، الموقع الإلكتروني" /></div>
-          <div className="sm:col-span-2"><Label>الوصف</Label><Textarea value={d.description} onChange={(e) => set("description", e.target.value)} rows={2} /></div>
-          <div><Label>البيئة</Label><select className={selectCls()} value={d.env} disabled={!!d.id} onChange={(e) => set("env", e.target.value as "test" | "live")}><option value="test">اختبار — تحقق كامل دون حفظ</option><option value="live">إنتاج — بيانات حقيقية</option></select></div>
-          <div><Label>اتجاه البيانات</Label><select className={selectCls()} value={d.direction} onChange={(e) => set("direction", e.target.value)}>{Object.entries(DIR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
-          <div><Label>المصدر المعتمد للبيانات</Label><select className={selectCls()} value={d.master} onChange={(e) => set("master", e.target.value)}><option value="rikaz">ركاز هو المرجع</option><option value="external">النظام الخارجي هو المرجع</option></select></div>
-          <div><Label>عند تعارض التعديل</Label><select className={selectCls()} value={d.on_conflict} onChange={(e) => set("on_conflict", e.target.value)}><option value="reject">رفض التعديل القديم (rev)</option><option value="overwrite">اعتماد آخر تعديل</option></select></div>
-        </div>
-
-        <h4 className="mt-4 font-display text-sm font-bold">النطاق — اترك الحقل فارغًا ليشمل الكل</h4>
-        {o ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Multi label="المدارس" opts={o.schools} value={d.school_ids} onChange={(v) => set("school_ids", v)} hint="جميع المدارس" />
-            <Multi label="الأعوام الدراسية" opts={o.years.filter(inSch)} value={d.year_ids} onChange={(v) => set("year_ids", v)} hint="كل الأعوام" />
-            <Multi label="الفصول الدراسية" opts={o.terms.filter(inSch)} value={d.term_ids} onChange={(v) => set("term_ids", v)} hint="كل الفصول" />
-            <Multi label="المراحل" opts={o.stages.filter(inSch)} value={d.stage_ids} onChange={(v) => set("stage_ids", v)} hint="كل المراحل" />
-            <Multi label="الصفوف" opts={o.grades.filter(inSch)} value={d.grade_ids} onChange={(v) => set("grade_ids", v)} hint="كل الصفوف" />
-            <Multi label="الشعب" opts={o.sections.filter(inSch)} value={d.section_ids} onChange={(v) => set("section_ids", v)} hint="كل الشعب" />
-          </div>
-        ) : <LoadingState rows={1} />}
-
-        <h4 className="mt-4 font-display text-sm font-bold">الموارد والحقول المسموحة</h4>
-        <p className="text-xs text-muted-foreground">الحقول المعلّمة بـ ● بيانات شخصية حساسة؛ لا تُتاح إلا باختيارك الصريح.</p>
-        <div className="space-y-3">
-          {groups.map(([g, rs]) => (
-            <div key={g} className="rounded-lg border p-3">
-              <div className="mb-2 text-xs font-bold text-muted-foreground">{g}</div>
-              {rs.map((r) => {
-                const s = sc(r.key);
-                const on = s.read || s.create || s.update;
-                const disabledAll = !!r.all_schools_only && d.school_ids.length > 0;
-                return (
-                  <div key={r.key} className="border-t py-2 first:border-t-0">
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
-                      <span className="min-w-40 font-medium">{r.label}</span>
-                      {(["read", "create", "update"] as const).filter((op) => r.ops[op]).map((op) => (
-                        <label key={op} className="flex items-center gap-1 text-xs"><input type="checkbox" disabled={disabledAll} checked={s[op]} onChange={(e) => setSc(r.key, { ...s, [op]: e.target.checked })} />{op === "read" ? "قراءة" : op === "create" ? (r.create_mode === "approval" ? "إضافة (باعتماد)" : "إضافة") : "تعديل"}</label>
-                      ))}
-                      {disabledAll && <span className="text-xs text-muted-foreground">متاح لمفاتيح جميع المدارس فقط</span>}
-                    </div>
-                    {on && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        {r.fields.map((f) => {
-                          const sel = s.fields.includes(f.k) || f.k === "id";
-                          return <button type="button" key={f.k} disabled={f.k === "id"} onClick={() => setSc(r.key, { ...s, fields: sel ? s.fields.filter((x) => x !== f.k) : [...s.fields, f.k] })} className={`rounded-full border px-2 py-0.5 text-[11px] ${sel ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground"}`}>{f.s ? "● " : ""}{f.l}</button>;
-                        })}
-                      </div>
-                    )}
-                    {(s.create || s.update) && (
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1"><span className="text-[11px] text-muted-foreground">حقول الكتابة الاختيارية:</span>
-                        {r.fields.filter((f) => (s.create && f.c && !f.r) || (s.update && f.u)).map((f) => {
-                          const sel = s.write_fields.includes(f.k);
-                          return <button type="button" key={f.k} onClick={() => setSc(r.key, { ...s, write_fields: sel ? s.write_fields.filter((x) => x !== f.k) : [...s.write_fields, f.k] })} className={`rounded-full border px-2 py-0.5 text-[11px] ${sel ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground"}`}>{f.l}</button>;
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+      <DialogContent dir="rtl" className="flex max-h-[92vh] max-w-4xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="border-b px-6 py-4 text-start">
+          <DialogTitle className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><KeyRound className="h-4 w-4" /></span>{d.id ? "تعديل مفتاح" : "مفتاح API جديد"}</DialogTitle>
+          <p className="text-xs text-muted-foreground">حدّد هوية النظام، ثم نطاق البيانات، ثم الموارد والحقول، وأخيرًا حدود الأمان.</p>
+        </DialogHeader>
+        <div className="flex-1 space-y-4 overflow-y-auto bg-muted/30 px-6 py-5">
+          <Section n={1} icon={Info} title="بيانات المفتاح" hint="اسم واضح يدل على النظام والغرض.">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>اسم المفتاح</Label><Input value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="مثال: تطبيق الجوال — قراءة" /></div>
+              <div><Label>اسم النظام الخارجي</Label><Input value={d.system_name} onChange={(e) => set("system_name", e.target.value)} placeholder="مثال: نظام نور، الموقع الإلكتروني" /></div>
+              <div className="sm:col-span-2"><Label>الوصف</Label><Textarea value={d.description} onChange={(e) => set("description", e.target.value)} rows={2} placeholder="ما الذي يفعله هذا التكامل؟" /></div>
             </div>
-          ))}
-        </div>
+          </Section>
 
-        <h4 className="mt-4 font-display text-sm font-bold">الأمان والحدود</h4>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div><Label>يبدأ من</Label><Input type="date" value={d.starts_at} onChange={(e) => set("starts_at", e.target.value)} /></div>
-          <div><Label>ينتهي في (اختياري)</Label><Input type="date" value={d.expires_at} onChange={(e) => set("expires_at", e.target.value)} /></div>
-          <div><Label>حد الطلبات في الدقيقة</Label><Input type="number" min={1} max={6000} value={d.rate_min} onChange={(e) => set("rate_min", Number(e.target.value))} /></div>
-          <div><Label>حد الطلبات في اليوم</Label><Input type="number" min={1} max={1000000} value={d.rate_day} onChange={(e) => set("rate_day", Number(e.target.value))} /></div>
-          <div className="sm:col-span-2"><Label>عناوين IP المسموحة (اختياري، سطر لكل عنوان أو نطاق CIDR)</Label><Textarea dir="ltr" rows={2} value={d.ip_allow} onChange={(e) => set("ip_allow", e.target.value)} placeholder="203.0.113.10&#10;198.51.100.0/24" /></div>
+          <Section n={2} icon={Settings2} title="طريقة الربط">
+            <div className="mb-3 grid gap-2 sm:grid-cols-2">
+              {(["test", "live"] as const).map((e) => (
+                <button type="button" key={e} disabled={!!d.id} onClick={() => set("env", e)} className={`rounded-lg border p-3 text-start transition-colors disabled:opacity-70 ${d.env === e ? "border-primary bg-primary/5 ring-1 ring-primary" : "bg-background hover:border-primary/40"}`}>
+                  <div className="text-sm font-bold">{e === "test" ? "اختبار" : "إنتاج"}</div>
+                  <div className="text-xs text-muted-foreground">{e === "test" ? "تحقق كامل دون حفظ أي تغيير" : "بيانات حقيقية وتُحفظ عمليات الكتابة"}</div>
+                </button>
+              ))}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="flex flex-col gap-1"><Label className="text-xs">اتجاه البيانات</Label><select className={`${selectCls()} w-full`} value={d.direction} onChange={(e) => set("direction", e.target.value)}>{Object.entries(DIR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+              <div className="flex flex-col gap-1"><Label className="text-xs">المصدر المعتمد للبيانات</Label><select className={`${selectCls()} w-full`} value={d.master} onChange={(e) => set("master", e.target.value)}><option value="rikaz">ركاز هو المرجع</option><option value="external">النظام الخارجي هو المرجع</option></select></div>
+              <div className="flex flex-col gap-1"><Label className="text-xs">عند تعارض التعديل</Label><select className={`${selectCls()} w-full`} value={d.on_conflict} onChange={(e) => set("on_conflict", e.target.value)}><option value="reject">رفض التعديل القديم</option><option value="overwrite">اعتماد آخر تعديل</option></select></div>
+            </div>
+          </Section>
+
+          <Section n={3} icon={Building2} title="نطاق البيانات" hint="اترك أي قائمة دون تحديد لتشمل الكل. اختيار المدارس يضيّق بقية القوائم.">
+            {o ? (
+              <div className="space-y-3">
+                <Multi label="المدارس" opts={o.schools} schools={o.schools} value={d.school_ids} onChange={(v) => set("school_ids", v)} hint="جميع المدارس" />
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Multi label="الأعوام الدراسية" opts={o.years.filter(inSch)} schools={o.schools} value={d.year_ids} onChange={(v) => set("year_ids", v)} hint="كل الأعوام" />
+                  <Multi label="الفصول الدراسية" opts={o.terms.filter(inSch)} schools={o.schools} value={d.term_ids} onChange={(v) => set("term_ids", v)} hint="كل الفصول" />
+                  <Multi label="المراحل" opts={o.stages.filter(inSch)} schools={o.schools} value={d.stage_ids} onChange={(v) => set("stage_ids", v)} hint="كل المراحل" />
+                  <Multi label="الصفوف" opts={o.grades.filter(inSch)} schools={o.schools} value={d.grade_ids} onChange={(v) => set("grade_ids", v)} hint="كل الصفوف" />
+                </div>
+                <Multi label="الشعب" opts={o.sections.filter(inSch)} schools={o.schools} value={d.section_ids} onChange={(v) => set("section_ids", v)} hint="كل الشعب" />
+              </div>
+            ) : <LoadingState rows={1} />}
+          </Section>
+
+          <Section n={4} icon={Database} title="الموارد والحقول المسموحة" hint="فعّل العملية ثم اختر الحقول. الحقول المعلّمة بـ ● بيانات شخصية حساسة لا تُتاح إلا باختيارك الصريح.">
+            <div className="space-y-3">
+              {groups.map(([g, rs]) => (
+                <div key={g} className="overflow-hidden rounded-lg border bg-background">
+                  <div className="border-b bg-muted/50 px-3 py-2 text-xs font-bold">{g}</div>
+                  {rs.map((r) => {
+                    const s = sc(r.key);
+                    const on = s.read || s.create || s.update;
+                    const disabledAll = !!r.all_schools_only && d.school_ids.length > 0;
+                    return (
+                      <div key={r.key} className={`border-t px-3 py-2.5 first:border-t-0 ${on ? "bg-primary/[0.03]" : ""}`}>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-sm font-medium">{r.label}</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(["read", "create", "update"] as const).filter((op) => r.ops[op]).map((op) => (
+                              <button type="button" key={op} disabled={disabledAll} onClick={() => setSc(r.key, { ...s, [op]: !s[op] })} className={`${chip(s[op])} disabled:cursor-not-allowed disabled:opacity-50`}>{op === "read" ? "قراءة" : op === "create" ? (r.create_mode === "approval" ? "إضافة (باعتماد)" : "إضافة") : "تعديل"}</button>
+                            ))}
+                          </div>
+                        </div>
+                        {disabledAll && <p className="mt-1 text-[11px] text-muted-foreground">متاح لمفاتيح جميع المدارس فقط</p>}
+                        {on && (
+                          <div className="mt-2 rounded-md bg-muted/40 p-2">
+                            <div className="mb-1 text-[11px] text-muted-foreground">الحقول المقروءة</div>
+                            <div className="flex flex-wrap gap-1">
+                              {r.fields.map((f) => {
+                                const sel = s.fields.includes(f.k) || f.k === "id";
+                                return <button type="button" key={f.k} disabled={f.k === "id"} onClick={() => setSc(r.key, { ...s, fields: sel ? s.fields.filter((x) => x !== f.k) : [...s.fields, f.k] })} className={`rounded-full border px-2 py-0.5 text-[11px] ${sel ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground"}`}>{f.s ? "● " : ""}{f.l}</button>;
+                              })}
+                            </div>
+                            {(s.create || s.update) && (
+                              <>
+                                <div className="mb-1 mt-2 text-[11px] text-muted-foreground">حقول الكتابة الاختيارية</div>
+                                <div className="flex flex-wrap gap-1">
+                                  {r.fields.filter((f) => (s.create && f.c && !f.r) || (s.update && f.u)).map((f) => {
+                                    const sel = s.write_fields.includes(f.k);
+                                    return <button type="button" key={f.k} onClick={() => setSc(r.key, { ...s, write_fields: sel ? s.write_fields.filter((x) => x !== f.k) : [...s.write_fields, f.k] })} className={`rounded-full border px-2 py-0.5 text-[11px] ${sel ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground"}`}>{f.l}</button>;
+                                  })}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <Section n={5} icon={ShieldCheck} title="الأمان والحدود">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div><Label className="text-xs">يبدأ من</Label><Input type="date" value={d.starts_at} onChange={(e) => set("starts_at", e.target.value)} /></div>
+              <div><Label className="text-xs">ينتهي في (اختياري)</Label><Input type="date" value={d.expires_at} onChange={(e) => set("expires_at", e.target.value)} /></div>
+              <div><Label className="text-xs">طلبات في الدقيقة</Label><Input type="number" min={1} max={6000} value={d.rate_min} onChange={(e) => set("rate_min", Number(e.target.value))} /></div>
+              <div><Label className="text-xs">طلبات في اليوم</Label><Input type="number" min={1} max={1000000} value={d.rate_day} onChange={(e) => set("rate_day", Number(e.target.value))} /></div>
+              <div className="sm:col-span-2 lg:col-span-4"><Label className="text-xs">عناوين IP المسموحة (اختياري، سطر لكل عنوان أو نطاق CIDR)</Label><Textarea dir="ltr" rows={2} value={d.ip_allow} onChange={(e) => set("ip_allow", e.target.value)} placeholder="203.0.113.10&#10;198.51.100.0/24" /></div>
+            </div>
+          </Section>
         </div>
-        <DialogFooter className="mt-3 gap-2"><Button variant="outline" onClick={onClose}>إلغاء</Button><Button disabled={busy} onClick={save}>{d.id ? "حفظ التعديل" : "إنشاء المفتاح"}</Button></DialogFooter>
+        <DialogFooter className="gap-2 border-t bg-background px-6 py-3">
+          <span className="me-auto self-center text-xs text-muted-foreground">{Object.values(d.scopes).filter((x) => x.read || x.create || x.update).length} مورد مفعّل · {d.school_ids.length ? `${d.school_ids.length} مدرسة` : "جميع المدارس"}</span>
+          <Button variant="outline" onClick={onClose}>إلغاء</Button><Button disabled={busy} onClick={save}>{d.id ? "حفظ التعديل" : "إنشاء المفتاح"}</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
