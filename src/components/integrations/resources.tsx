@@ -109,8 +109,11 @@ export function ResourcesTab({ orgId }: { orgId: string }) {
               {cov.map((c) => (
                 <tr key={c["section"]} className="border-t">
                   <td className="px-3 py-2">{c["label"]}</td>
-                  <td className="px-3 py-2"><Badge cls={c["status"] === "covered" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}>{c["status"] === "covered" ? "مغطى" : "مستبعد"}</Badge></td>
-                  <td className="px-3 py-2 text-xs">{c["status"] === "covered" ? ((c["resources"] ?? []) as string[]).map((k) => label[k] ?? k).join("، ") : c["excluded"]}</td>
+                  <td className="px-3 py-2"><Badge cls={c["status"] === "covered" ? (c["withheld"] ? "whitespace-nowrap bg-warning/15 text-warning-foreground" : "bg-success/15 text-success") : "bg-muted text-muted-foreground"}>{c["status"] === "covered" ? (c["withheld"] ? "مغطى جزئيًا" : "مغطى") : "مستبعد"}</Badge></td>
+                  <td className="px-3 py-2 text-xs">
+                    {c["status"] === "covered" ? ((c["resources"] ?? []) as string[]).map((k) => label[k] ?? k).join("، ") : c["excluded"]}
+                    {c["status"] === "covered" && c["withheld"] && <div className="mt-1 text-muted-foreground">محجوب: {c["withheld"]}</div>}
+                  </td>
                 </tr>
               ))}
             </tbody>

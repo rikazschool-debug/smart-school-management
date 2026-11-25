@@ -22,7 +22,7 @@ try {
   const L: string[] = [];
   L.push("# مصفوفة تغطية واجهات API في ركاز", "", `مولّدة آليًا من دليل الموارد الفعلي على قاعدة الاختبار بتاريخ ${new Date().toISOString().slice(0, 10)} (scripts/api-coverage-doc.ts). لا تُحرَّر يدويًا.`, "");
   L.push(`- أقسام الصلاحيات المحصورة: ${secs.length} قسمًا فرعيًا ضمن ${parents.size} قسمًا رئيسيًا، إضافة إلى ${cov.filter((x) => x.section.startsWith("_owner")).length} أقسام خاصة بلوحة المالك.`);
-  L.push(`- الأقسام في الدليل: ${cov.length} — مغطاة ${cov.filter((x) => x.status === "covered").length}، مستبعدة بسبب موثق ${cov.filter((x) => x.status === "excluded").length}، غير مسجلة ${d.unregistered.length}.`);
+  L.push(`- الأقسام في الدليل: ${cov.length} — مغطاة ${cov.filter((x) => x.status === "covered").length} (منها جزئيًا ${cov.filter((x) => x.status === "covered" && x.withheld).length})، مستبعدة بسبب موثق ${cov.filter((x) => x.status === "excluded").length}، غير مسجلة ${d.unregistered.length}.`);
   L.push(`- موارد API: ${res.length} (المدارس ${res.filter((r) => r.area === "school").length}، الإدارة المركزية ${res.filter((r) => r.area === "central").length}).`, "");
   L.push("## الموارد", "", "| المنطقة | القسم الرئيسي | القسم الفرعي | المورد | نقطة الوصول | العمليات | الحقول (● حساس) | قسم المنصة | ملاحظات |", "|---|---|---|---|---|---|---|---|---|");
   for (const r of res) {
@@ -32,7 +32,7 @@ try {
   }
   L.push("", "## تغطية أقسام المنصة", "", "| القسم | الحالة | الموارد / سبب الاستبعاد |", "|---|---|---|");
   const lab = Object.fromEntries(res.map((r) => [r.key, r.label]));
-  for (const x of cov) L.push(`| ${x.label} (\`${x.section}\`) | ${x.status === "covered" ? "مغطى" : "مستبعد"} | ${x.status === "covered" ? x.resources.map((k: string) => lab[k] ?? k).join("، ") : x.excluded} |`);
+  for (const x of cov) L.push(`| ${x.label} (\`${x.section}\`) | ${x.status === "covered" ? (x.withheld ? "مغطى جزئيًا" : "مغطى") : "مستبعد"} | ${x.status === "covered" ? x.resources.map((k: string) => lab[k] ?? k).join("، ") + (x.withheld ? ` — محجوب: ${x.withheld}` : "") : x.excluded} |`);
   if (d.unregistered.length) { L.push("", "## أقسام غير مسجلة", ""); for (const x of d.unregistered) L.push(`- ${x.label} (\`${x.section}\`)`); }
   writeFileSync("/dev-server/docs/integrations-coverage.md", L.join("\n") + "\n");
   console.log("written", res.length, cov.length, d.unregistered.length, secs.length, parents.size);

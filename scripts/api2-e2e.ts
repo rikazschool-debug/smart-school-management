@@ -65,8 +65,8 @@ try {
   const D = dir.data as any;
   const cat: any[] = D?.resources ?? [];
   const prDir = await pr.c.rpc("api_resource_directory", { _org: org });
-  check("1 directory: 58 resources (38 school + 20 central), coverage with reasons, owner only", cat.length === 58 && cat.filter((r) => r.area === "central").length === 20 && cat.filter((r) => r.area === "school").length === 38
-    && D.coverage.some((c: any) => c.section === "health" && c.status === "excluded" && c.excluded) && !!prDir.error, [cat.length, prDir.error?.message, dir.error?.message]);
+  check("1 directory: 73 resources (51 school + 22 central), coverage with reasons, owner only", cat.length === 73 && cat.filter((r) => r.area === "central").length === 22 && cat.filter((r) => r.area === "school").length === 51
+    && D.coverage.some((c: any) => c.section === "hr_payroll" && c.status === "excluded" && c.excluded) && !!prDir.error, [cat.length, prDir.error?.message, dir.error?.message]);
   check("2 every platform permission section is registered (covered or excluded with reason)", Array.isArray(D?.unregistered) && D.unregistered.length === 0, D?.unregistered);
 
   // explicit all-schools rule
@@ -123,7 +123,7 @@ try {
   // every resource readable through one mixed all-schools key (non-sensitive fields only)
   const allScopes: any = {};
   for (const r of cat) allScopes[r.key] = { read: true, fields: r.fields.filter((f: any) => !f.s).map((f: any) => f.k) };
-  const kAll = await save({ scope_type: "mixed", all_schools: true, scopes: allScopes });
+  const kAll = await save({ scope_type: "mixed", all_schools: true, rate_min: 300, scopes: allScopes });
   const kas = (kAll.data as any)?.secret;
   const fails: any[] = [];
   for (const r of cat) {

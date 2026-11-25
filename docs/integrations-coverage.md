@@ -3,8 +3,8 @@
 مولّدة آليًا من دليل الموارد الفعلي على قاعدة الاختبار بتاريخ 2026-11-25 (scripts/api-coverage-doc.ts). لا تُحرَّر يدويًا.
 
 - أقسام الصلاحيات المحصورة: 94 قسمًا فرعيًا ضمن 15 قسمًا رئيسيًا، إضافة إلى 4 أقسام خاصة بلوحة المالك.
-- الأقسام في الدليل: 101 — مغطاة 39، مستبعدة بسبب موثق 62، غير مسجلة 0.
-- موارد API: 58 (المدارس 38، الإدارة المركزية 20).
+- الأقسام في الدليل: 101 — مغطاة 52 (منها جزئيًا 12)، مستبعدة بسبب موثق 49، غير مسجلة 0.
+- موارد API: 73 (المدارس 51، الإدارة المركزية 22).
 
 ## الموارد
 
@@ -12,6 +12,11 @@
 |---|---|---|---|---|---|---|---|---|
 | المدارس | إدارة المدرسة | الموظفون | بيانات الموظفين (`staff`) | `/api/public/v1/staff` | قراءة | `id` `school_id` `full_name` `display_name` `specialization` `status` ●`phone` ●`email` ●`national_id` `updated_at` | — |  |
 | المدارس | إدارة المدرسة | المهام | المهام الإدارية (`admin_tasks`) | `/api/public/v1/admin_tasks` | قراءة | `id` `school_id` `title` `description` `priority` `status` `progress` `start_date` `due_date` `done_at` `updated_at` | school_admin |  |
+| المدارس | إدارة المدرسة | الطلبات والنماذج | نماذج الطلبات المفعّلة (`admin_forms`) | `/api/public/v1/admin_forms` | قراءة | `id` `school_id` `name` `description` `purpose` `audience` `version` `allow_files` `fields` `updated_at` | school_admin | النماذج المفعّلة فقط؛ المسودات والمؤرشفة والمستلم الداخلي لا تظهر |
+| المدارس | إدارة المدرسة | الطلبات والنماذج | الطلبات الإدارية (`admin_requests`) | `/api/public/v1/admin_requests` | قراءة | `id` `school_id` `form_id` `form_name` `form_version` `status` ●`submitted_by` `handler_user` `submitted_at` `closed_at` `updated_at` | school_admin | حالة الطلبات ومواعيدها فقط؛ الإجابات والمرفقات وملاحظات المعالجة لا تظهر، والمسودات لا تظهر |
+| المدارس | إدارة المدرسة | المناوبات | مواقع المناوبة (`duty_posts`) | `/api/public/v1/duty_posts` | قراءة | `id` `school_id` `name` `kind` `days` `start_time` `end_time` `required` `active` `updated_at` | school_admin |  |
+| المدارس | إدارة المدرسة | المناوبات | جداول المناوبة المنشورة (`duty_rosters`) | `/api/public/v1/duty_rosters` | قراءة | `id` `school_id` `week_start` `version` `effective_from` `status` `published_at` `updated_at` | school_admin | الجداول المنشورة والمؤرشفة فقط؛ المسودات وتقرير التوزيع لا تظهر |
+| المدارس | إدارة المدرسة | المناوبات | تكليفات المناوبة (`duty_assignments`) | `/api/public/v1/duty_assignments` | قراءة | `id` `school_id` `roster_id` `post_id` `date` `start_time` `end_time` ●`user_id` `status` `source` `exec_status` `updated_at` | school_admin | تكليفات الجداول المنشورة فقط؛ أسباب الإلغاء وملاحظات التنفيذ لا تظهر |
 | المدارس | إدارة المدرسة | الاجتماعات | الاجتماعات المدرسية (`admin_meetings`) | `/api/public/v1/admin_meetings` | قراءة | `id` `school_id` `title` `purpose` `starts_at` `duration_min` `location` `mode` `status` `agenda` ●`link` `updated_at` | school_admin | الاجتماعات المقيدة واجتماعات الفصول الافتراضية لا تظهر |
 | المدارس | إدارة المدرسة | الاجتماعات | قرارات الاجتماعات (`admin_decisions`) | `/api/public/v1/admin_decisions` | قراءة | `id` `school_id` `meeting_id` `body` `priority` `due_date` `task_id` `created_at` | school_admin |  |
 | المدارس | إدارة المدرسة | الخريطة المدرسية | المباني (`school_buildings`) | `/api/public/v1/school_buildings` | قراءة | `id` `school_id` `name` `floors` `has_basement` `notes` `updated_at` | — |  |
@@ -37,21 +42,30 @@
 | المدارس | الشؤون التعليمية | المقررات والإسناد | إسناد المعلمين (`teacher_assignments`) | `/api/public/v1/teacher_assignments` | قراءة | `id` `school_id` `course_id` `teacher_id` `start_date` `end_date` `status` `updated_at` | — |  |
 | المدارس | الشؤون التعليمية | الجدول المدرسي | الجداول الدراسية المعتمدة (`timetables`) | `/api/public/v1/timetables` | قراءة | `id` `school_id` `year_id` `term_id` `name` `version` `effective_from` `is_active` `published_at` `updated_at` | — |  |
 | المدارس | الشؤون التعليمية | الجدول المدرسي | حصص الجداول المعتمدة (`timetable_slots`) | `/api/public/v1/timetable_slots` | قراءة | `id` `school_id` `timetable_id` `day` `period_id` `course_id` `section_id` `teacher_id` `updated_at` | — |  |
+| المدارس | الشؤون التعليمية | الجدول المدرسي | قاعات الجدول المدرسي (`schedule_rooms`) | `/api/public/v1/schedule_rooms` | قراءة | `id` `school_id` `name` `kind` `capacity` `is_active` `updated_at` | — |  |
 | المدارس | الشؤون التعليمية | الجدول المدرسي | حصص الانتظار (`substitutions`) | `/api/public/v1/substitutions` | قراءة | `id` `school_id` `slot_id` `date` `substitute_teacher_id` `status` `created_at` | — |  |
+| المدارس | الشؤون التعليمية | الفصول الرقمية | الفصول الرقمية (`classrooms`) | `/api/public/v1/classrooms` | قراءة | `id` `school_id` `course_id` `section_room_id` `title` `status` `updated_at` | — | بيانات تعريفية فقط؛ المنشورات والمواد والمحادثات لا تظهر |
 | المدارس | الشؤون التعليمية | الواجبات والاختبارات | الواجبات والاختبارات المنشورة (`homework`) | `/api/public/v1/homework` | قراءة | `id` `school_id` `section_id` `year_id` `term_id` `kind` `title` `available_from` `due_at` `max_score` `status` `updated_at` | — |  |
 | المدارس | شؤون الطلاب | الحضور والمواظبة | الحضور والغياب (`attendance`) | `/api/public/v1/attendance` | قراءة | `id` `school_id` `student_id` `date` `status` `late_minutes` `first_in_at` `source` `updated_at` | — |  |
 | المدارس | شؤون الطلاب | البوابة والاستئذان | حركة البوابة والاستئذان (`gate_movements`) | `/api/public/v1/gate_movements` | قراءة | `id` `school_id` `student_id` `date` `kind` `at` ●`note` | — |  |
+| المدارس | شؤون الطلاب | التوجيه الطلابي | برامج التوجيه الطلابي (`guidance_programs`) | `/api/public/v1/guidance_programs` | قراءة | `id` `school_id` `kind` `domain` `title` `objectives` `start_date` `end_date` `status` `participants` `updated_at` | — | البرامج العامة فقط؛ ملفات الطلاب والجلسات والفئة المستهدفة والنتائج النصية لا تظهر |
+| المدارس | شؤون الطلاب | رعاية الموهوبين | برامج رعاية الموهوبين (`gifted_programs`) | `/api/public/v1/gifted_programs` | قراءة | `id` `school_id` `kind` `title` `domain` `organizer` `audience` `starts_on` `ends_on` `apply_by` `seats` `needs_consent` `source_url` `status` `updated_at` | — | البرامج المفتوحة والمغلقة فقط؛ الترشيحات والمشاركون والخطط والأعمال لا تظهر |
+| المدارس | شؤون الطلاب | الصحة المدرسية | التقويم الصحي التوعوي (`health_calendar`) | `/api/public/v1/health_calendar` | قراءة | `id` `title` `starts_on` `ends_on` `description` `source_url` `updated_at` | — | تقويم مرجعي موحد لا يحتوي بيانات طلاب |
+| المدارس | شؤون الطلاب | الصحة المدرسية | مؤشرات العيادة المدرسية (مجمعة) (`health_stats`) | `/api/public/v1/health_stats` | قراءة | `id` `school_id` `month` `kind` `visits` `suppressed` | — | أعداد شهرية لكل مدرسة فقط؛ لا أسماء ولا تفاصيل صحية، والأعداد الأقل من 5 تحجب |
+| المدارس | شؤون الطلاب | زيارات أولياء الأمور | مؤشرات زيارات أولياء الأمور (مجمعة) (`guardian_visit_stats`) | `/api/public/v1/guardian_visit_stats` | قراءة | `id` `school_id` `month` `reason_cat` `status` `visits` `suppressed` | — | أعداد شهرية فقط؛ لا أسماء ولا مواعيد فردية، والأعداد الأقل من 5 تحجب |
 | المدارس | شؤون الطلاب | البوابة والاستئذان | المفوضون بالاستلام (`authorized_pickups`) | `/api/public/v1/authorized_pickups` | قراءة | `id` `school_id` `student_id` ●`full_name` `relationship` ●`phone` ●`national_id` `active` `created_at` | — |  |
 | المدارس | الأنشطة والفعاليات | الفعاليات والرحلات والدورات | الأنشطة والفعاليات (`events`) | `/api/public/v1/events` | قراءة | `id` `school_id` `kind` `title` `description` `category` `location` `mode` `audience` `reg_opens` `reg_closes` `capacity` `status` `published_at` `updated_at` | — |  |
 | المدارس | الأنشطة والفعاليات | الفعاليات والرحلات والدورات | مواعيد جلسات الفعاليات (`event_sessions`) | `/api/public/v1/event_sessions` | قراءة | `id` `school_id` `item_id` `seq` `title` `starts_at` `ends_at` `location` | — | جلسات الفعاليات المنشورة أو المكتملة فقط |
 | المدارس | الأنشطة والفعاليات | الفعاليات والرحلات والدورات | طلبات المشاركة (`event_applications`) | `/api/public/v1/event_applications` | قراءة | `id` `school_id` `item_id` `ref` `category` `student_id` ●`participant_name` ●`phone` ●`email` `status` `created_at` `updated_at` | — | إجابات النماذج والبيانات الصحية لا تُتاح |
 | المدارس | التواصل والتعاون | التعاميم | التعاميم المنشورة (`circulars`) | `/api/public/v1/circulars` | قراءة | `id` `school_id` `title` `body` `publisher_label` `priority` `requires_ack` `ack_due` `published_at` `updated_at` | — |  |
 | المدارس | التقارير | إحصائيات المدارس | التقارير والإحصائيات (`reports`) | `/api/public/v1/reports` | قراءة | `id` `school_id` `school_name` `students_active` `staff` `sections` `attendance_date` `present` `late` `absent` | — |  |
+| المدارس | التقارير | إحصائيات المدارس | مؤشرات الزيارات الصفية (أعداد) (`class_visit_stats`) | `/api/public/v1/class_visit_stats` | قراءة | `id` `school_id` `month` `visit_type` `status` `visits` | — | عدد الزيارات المرفوعة والمعتمدة فقط؛ المعلم والمقيّم والدرجات والملاحظات لا تظهر |
 | المدارس | الإعدادات | المدارس والفروع | المدارس والفروع (`schools`) | `/api/public/v1/schools` | قراءة | `id` `name` `code` `city` `stage_type` `student_gender` `address` `phone` `is_active` `updated_at` | — |  |
 | الإدارة المركزية | إدارة المدارس | لوحة المجموعة | مؤشرات المجموعة (`org_summary`) | `/api/public/v1/org_summary` | قراءة | `id` `name` `schools` `students_active` `staff` `employees` `open_maintenance` `open_tickets` `pending_admissions` | — |  |
 | الإدارة المركزية | المالية والمحاسبة | حسابات الطلاب | ملخص حسابات الطلاب لكل مدرسة (`fin_summary`) | `/api/public/v1/fin_summary` | قراءة | `id` `school_id` `school_name` ●`obligations` ●`collected` ●`remaining` `students` | finance |  |
 | الإدارة المركزية | المالية والمحاسبة | حسابات الطلاب | الخصومات المعتمدة (`discounts`) | `/api/public/v1/discounts` | قراءة | `id` `year_key` `name` `description` `kind` `value_type` `value` `starts` `ends` `automatic` `active` `updated_at` | finance |  |
 | الإدارة المركزية | المالية والمحاسبة | العهد والمشتريات | طلبات المشتريات والعهد (`procurement_requests`) | `/api/public/v1/procurement_requests` | قراءة | `id` `school_id` `ref` `kind` ●`amount` `purpose` `supplier` `status` `submitted_at` `decided_at` `updated_at` | finance |  |
+| الإدارة المركزية | إدارة المدارس | الوثائق والعقود | وثائق المجموعة وتواريخ انتهائها (`org_documents`) | `/api/public/v1/org_documents` | قراءة | `id` `school_id` `kind` `name` ●`doc_no` `issuer` `issued_on` `expires_on` `days_left` `updated_at` | — | بيانات الوثيقة وتاريخ انتهائها فقط؛ الملفات والوثائق المؤرشفة لا تظهر |
 | الإدارة المركزية | المالية والمحاسبة | العهد والمشتريات | فواتير المصروفات (`procurement_expenses`) | `/api/public/v1/procurement_expenses` | قراءة | `id` `school_id` `ref` `description` `supplier` `invoice_no` `invoice_date` ●`net` ●`vat` ●`total` `status` `decided_at` `updated_at` | finance | المسودات لا تظهر |
 | الإدارة المركزية | المالية والمحاسبة | العهد والمشتريات | العهد المالية (`custodies`) | `/api/public/v1/custodies` | قراءة | `id` `school_id` `ref` `holder_id` `purpose` ●`amount` `settle_due` `status` `updated_at` | finance | المسودات لا تظهر |
 | الإدارة المركزية | النقل المدرسي وصيانة المركبات | الأسطول | الباصات (`buses`) | `/api/public/v1/buses` | قراءة | `id` `school_id` `code` `plate` `model` `capacity` `odometer` `op_status` `next_service_date` `next_service_km` `inspection_date` `license_expiry` `active` `updated_at` | operations |  |
@@ -62,6 +76,7 @@
 | الإدارة المركزية | الموارد البشرية | الموظفون | التكليفات الوظيفية (`hr_assignments`) | `/api/public/v1/hr_assignments` | قراءة | `id` `school_id` `employee_id` `job_title` `department` `start_date` `end_date` `is_primary` `updated_at` | hr |  |
 | الإدارة المركزية | الموارد البشرية | الإجازات | الإجازات (`hr_leaves`) | `/api/public/v1/hr_leaves` | قراءة | `id` `school_id` `employee_id` `type_id` `start_date` `end_date` `days` `status` `requested_at` `updated_at` | hr | الملاحظات وأسباب القرار لا تُتاح |
 | الإدارة المركزية | الموارد البشرية | الإجازات | أنواع الإجازات (`leave_types`) | `/api/public/v1/leave_types` | قراءة | `id` `name` `is_active` `updated_at` | hr |  |
+| الإدارة المركزية | الموارد البشرية | التوظيف | الوظائف الشاغرة (`hr_vacancies`) | `/api/public/v1/hr_vacancies` | قراءة | `id` `school_id` `ref` `job_title` `subject` `stage` `seats` `status` `updated_at` | hr | الوظائف المعتمدة (مفتوحة/مشغولة/مغلقة)؛ المتقدمون وسيرهم والمقابلات لا تظهر |
 | الإدارة المركزية | الموارد البشرية | الحضور والانصراف | حضور الموظفين (`hr_attendance`) | `/api/public/v1/hr_attendance` | قراءة | `id` `school_id` `employee_id` `date` `status` `first_in` `last_out` `late_min` `early_min` `worked_min` | hr | لا يدعم جلب سجل واحد بالمعرّف |
 | الإدارة المركزية | الموارد البشرية | الحضور والانصراف | الإجازات الرسمية (`hr_holidays`) | `/api/public/v1/hr_holidays` | قراءة | `id` `school_id` `date` `name` | hr |  |
 | الإدارة المركزية | الموارد البشرية | الأصول | الأصول والعهد العينية (`hr_assets`) | `/api/public/v1/hr_assets` | قراءة | `id` `school_id` `name` `category` `serial` `status` `updated_at` | hr |  |
@@ -74,51 +89,51 @@
 | القسم | الحالة | الموارد / سبب الاستبعاد |
 |---|---|---|
 | البوابة والاستلام (`gate`) | مغطى | حركة البوابة والاستئذان، المفوضون بالاستلام |
-| الدعم الفني — المكالمات (Maqsam) (`calls`) | مستبعد | سجل المكالمات لا يُتاح |
+| الدعم الفني — المكالمات (Maqsam) (`calls`) | مستبعد | سجل المكالمات يحوي أرقام هواتف وتسجيلات؛ لا تُحفظ مؤشرات مجمعة موثوقة لكل مدرسة |
 | مجموعات المدرسة (`groups`) | مستبعد | المحادثات لا تُتاح عبر API |
-| الصحة المدرسية — الملف الصحي للطلاب (`health`) | مستبعد | بيانات صحية محمية |
+| الصحة المدرسية — الملف الصحي للطلاب (`health`) | مغطى جزئيًا | التقويم الصحي التوعوي، مؤشرات العيادة المدرسية (مجمعة) — محجوب: الملفات الصحية والحالات والأدوية وتفاصيل الزيارات الفردية |
 | الوسوم وبطاقات الأشخاص والملاحظات (`people`) | مستبعد | ملاحظات ووسوم داخلية لا تظهر للأشخاص ولا في التصدير |
-| التواصل — خدمة العملاء (`cs_comm`) | مستبعد | محادثات العملاء لا تُتاح |
+| التواصل — خدمة العملاء (`cs_comm`) | مستبعد | محتوى المحادثات وأرقام التواصل شخصية، والمحادثات على مستوى المجموعة دون ربط موثوق بالمدرسة |
 | الإشعارات (`notices`) | مغطى | الأخبار والإعلانات |
 | تذاكر الدعم الداخلية (`support`) | مغطى | تذاكر الدعم، طلبات واردة بانتظار الاعتماد |
 | النماذج والإعدادات (`ev_forms`) | مستبعد | قوالب داخلية |
 | الإجازات (`hr_leave`) | مغطى | الإجازات، أنواع الإجازات |
-| القرارات والمستحقات والسلف (`hr_money`) | مستبعد | السلف والمستحقات المالية للموظفين سرية |
+| القرارات والمستحقات والسلف (`hr_money`) | مستبعد | سلف ومستحقات فردية سرية؛ القيود المحاسبية تنتقل إلى وافق عبر الربط المالي |
 | الاجتماعات (`meetings`) | مغطى | الاجتماعات المدرسية، قرارات الاجتماعات |
-| الوثائق والعقود (`org_docs`) | مستبعد | وثائق وعقود داخلية سرية |
-| واتساب — المحادثات (`wa_inbox`) | مستبعد | محادثات واتساب لا تُتاح |
+| الوثائق والعقود (`org_docs`) | مغطى جزئيًا | وثائق المجموعة وتواريخ انتهائها — محجوب: ملفات الوثائق والوثائق المؤرشفة |
+| واتساب — المحادثات (`wa_inbox`) | مستبعد | محتوى المحادثات وأرقام التواصل شخصية، والمحادثات على مستوى المجموعة دون ربط موثوق بالمدرسة |
 | تعاميم المدرسة (`circulars`) | مغطى | التعاميم المنشورة |
 | مطابقة العقود — الطلاب (`contracts`) | مستبعد | مطابقة العقود إجراء داخلي بالهوية الوطنية |
-| الزيارات الصفية (`ev_visits`) | مستبعد | زيارات التقييم سرية |
+| الزيارات الصفية (`ev_visits`) | مغطى جزئيًا | مؤشرات الزيارات الصفية (أعداد) — محجوب: المعلم والمقيّم والدرجات والملاحظات والخطط العلاجية |
 | الفعاليات — إعدادات النماذج (`evt_forms`) | مستبعد | قوالب نماذج داخلية |
 | الفعاليات — الرحلات المدرسية (`evt_trips`) | مغطى | الأنشطة والفعاليات، طلبات المشاركة، مواعيد جلسات الفعاليات |
 | العهد العينية (`hr_assets`) | مغطى | الأصول والعهد العينية |
 | صيانة الباصات (`maint_bus`) | مغطى | طلبات صيانة الباصات، الباصات، تصنيفات الصيانة |
 | طلبات القبول (`admissions`) | مغطى | طلبات التسجيل |
 | الحضور والمواظبة (`attendance`) | مغطى | الحضور والغياب |
-| إعداد المناوبات (`duty_setup`) | مستبعد | إعدادات داخلية |
-| التقييم الشهري (`ev_monthly`) | مستبعد | التقييم الشهري سري |
-| الملخص والمؤشرات (`ev_summary`) | مستبعد | نتائج التقييم الوظيفي سرية |
+| إعداد المناوبات (`duty_setup`) | مغطى جزئيًا | مواقع المناوبة — محجوب: إعدادات الاستثناء والتوزيع الآلي |
+| التقييم الشهري (`ev_monthly`) | مستبعد | نتائج تقييم فردية للموظفين؛ لا تظهر إلا بمنح صريح داخل ركاز |
+| الملخص والمؤشرات (`ev_summary`) | مستبعد | نتائج تقييم فردية للموظفين؛ لا تظهر إلا بمنح صريح داخل ركاز |
 | السكن (`hr_housing`) | مستبعد | بيانات السكن شخصية |
 | الخطابات (`hr_letters`) | مستبعد | خطابات شخصية |
-| مسير الرواتب (`hr_payroll`) | مستبعد | الرواتب سرية |
-| التوظيف (`hr_recruit`) | مستبعد | بيانات المتقدمين للتوظيف شخصية |
-| طباعة تقارير الموارد البشرية (`hr_reports`) | مستبعد | تقارير الموارد البشرية تتضمن رواتب |
+| مسير الرواتب (`hr_payroll`) | مستبعد | رواتب فردية؛ القيود المحاسبية تنتقل إلى وافق عبر الربط المالي وليس عبر API |
+| التوظيف (`hr_recruit`) | مغطى جزئيًا | الوظائف الشاغرة — محجوب: المتقدمون وسيرهم والمقابلات وأسباب القرار |
+| طباعة تقارير الموارد البشرية (`hr_reports`) | مستبعد | تقارير تتضمن رواتب فردية؛ المؤشرات العامة متاحة في «ملفات الموظفين» |
 | الخريطة المدرسية (`school_map`) | مغطى | المباني، المرافق والقاعات |
-| نماذج الطلبات (`admin_forms`) | مستبعد | إعدادات نماذج داخلية |
+| نماذج الطلبات (`admin_forms`) | مغطى جزئيًا | نماذج الطلبات المفعّلة — محجوب: مسودات النماذج والمؤرشفة والمستلم الداخلي |
 | التكليفات الإدارية (`admin_tasks`) | مغطى | المهام الإدارية |
 | الواجبات والاختبارات (`bt_homework`) | مغطى | الواجبات والاختبارات المنشورة |
 | الجدول المدرسي (`bt_schedule`) | مغطى | الجداول الدراسية المعتمدة، حصص الجداول المعتمدة |
-| تقييمات أولياء الأمور (`ev_guardian`) | مستبعد | تقييمات أولياء الأمور سرية |
+| تقييمات أولياء الأمور (`ev_guardian`) | مستبعد | تقييمات غير مجهولة لكل معلم وأسئلتها تختلف بين النماذج؛ التجميع يحتاج قرارًا صريحًا من مدير النظام |
 | الفعاليات — الدورات (`evt_courses`) | مغطى | الأنشطة والفعاليات، طلبات المشاركة، مواعيد جلسات الفعاليات |
 | الفعاليات — الفعاليات العامة (`evt_general`) | مغطى | الأنشطة والفعاليات، طلبات المشاركة، مواعيد جلسات الفعاليات |
-| رعاية الموهوبين (`gifted_care`) | مستبعد | ترشيحات الموهوبين مخفية حتى عن الأسرة |
+| رعاية الموهوبين (`gifted_care`) | مغطى جزئيًا | برامج رعاية الموهوبين — محجوب: الترشيحات والمشاركون والخطط والأعمال والملاحظات |
 | المشتريات والعهد المالية (`procurement`) | مغطى | طلبات المشتريات والعهد، فواتير المصروفات، العهد المالية |
 | المستخدمون والصلاحيات (`_owner_users`) | مستبعد | المستخدمون والصلاحيات لا تُتاح؛ لا إنشاء حسابات أو رفع صلاحيات عبر API |
-| الفصول الرقمية (`bt_classroom`) | مستبعد | محتوى الفصول والمنشورات والمحادثات خاص |
+| الفصول الرقمية (`bt_classroom`) | مغطى جزئيًا | الفصول الرقمية — محجوب: المنشورات والمواد والمحادثات والتفاعلات |
 | المقررات (`course_setup`) | مغطى | المقررات |
-| جداول المناوبة (`duty_rosters`) | مستبعد | جداول المناوبة مؤجلة: تحتاج مراجعة لتعارضها مع الغياب والانتظار |
-| العقود والتعويض (`hr_contracts`) | مستبعد | العقود والرواتب سرية |
+| جداول المناوبة (`duty_rosters`) | مغطى جزئيًا | جداول المناوبة المنشورة، تكليفات المناوبة — محجوب: المسودات وتقرير التوزيع وأسباب الإلغاء وملاحظات التنفيذ والمناوبات السريعة |
+| العقود والتعويض (`hr_contracts`) | مستبعد | عقود ورواتب فردية سرية |
 | مستندات الموظفين (`hr_documents`) | مستبعد | وثائق شخصية |
 | ملفات الموظفين (`hr_employees`) | مغطى | ملفات الموظفين، التكليفات الوظيفية |
 | التأمين الطبي (`hr_insurance`) | مستبعد | بيانات التأمين الطبي صحية وشخصية |
@@ -135,13 +150,13 @@
 | الملف الشخصي والإشعارات (`personal_info`) | مستبعد | بيانات شخصية لصاحب الحساب |
 | الفصول الدراسية (`academic_terms`) | مغطى | الفصول الدراسية |
 | السنوات الدراسية (`academic_years`) | مغطى | الأعوام الدراسية |
-| الطلبات الإدارية (`admin_requests`) | مستبعد | نماذج داخلية بحقول متغيرة وبيانات شخصية؛ مؤجلة لمراجعة الحقول |
+| الطلبات الإدارية (`admin_requests`) | مغطى جزئيًا | الطلبات الإدارية — محجوب: إجابات الطلبات والمرفقات وملاحظات المعالجة والمسودات |
 | المحادثات الخاصة (`bt_chat_direct`) | مستبعد | المحادثات لا تُتاح عبر API |
 | مجموعات الشعب والفصول (`bt_chat_groups`) | مستبعد | المحادثات لا تُتاح عبر API |
-| الأداء الوظيفي (`hr_performance`) | مستبعد | تقييم الأداء سري |
-| الخطط العلاجية (`remedial_plans`) | مستبعد | الخطط العلاجية بيانات تعليمية حساسة للطلاب |
-| أنصبة المعلمين (`schedule_loads`) | مستبعد | أنصبة المعلمين إعداد داخلي |
-| القاعات (`schedule_rooms`) | مستبعد | إعدادات داخلية لمولّد الجدول |
+| الأداء الوظيفي (`hr_performance`) | مستبعد | نتائج تقييم فردية للموظفين؛ لا تظهر إلا بمنح صريح داخل ركاز |
+| الخطط العلاجية (`remedial_plans`) | مستبعد | خطط علاجية لطلاب بأعينهم؛ لا توجد مؤشرات مجمعة مستقلة |
+| أنصبة المعلمين (`schedule_loads`) | مستبعد | الأنصبة تُشتق مباشرة من «حصص الجداول المعتمدة» و«إسناد المعلمين»؛ لا مورد مكرر |
+| القاعات (`schedule_rooms`) | مغطى | قاعات الجدول المدرسي |
 | النقل المدرسي (المسارات والتوزيع والتتبع) (`transport_info`) | مغطى | النقل المدرسي، الباصات |
 | لوحة المجموعة (المالك) (`_owner_overview`) | مغطى | مؤشرات المجموعة |
 | الصفوف (`academic_grades`) | مغطى | الصفوف |
@@ -150,18 +165,18 @@
 | المحاسبة العامة ورسوم الطلاب (`accounting_info`) | مستبعد | المحاسبة العامة في وافق وليست في ركاز |
 | admin_work_info (`admin_work_info`) | مستبعد | قسم إرشادي بلا سجلات بيانات |
 | المكتبة الرقمية (`co_library_info`) | مستبعد | قسم إرشادي بلا سجلات بيانات |
-| زيارات أولياء الأمور (`guardian_visits`) | مستبعد | زيارات أولياء الأمور بيانات شخصية ومواعيد داخلية |
+| زيارات أولياء الأمور (`guardian_visits`) | مغطى جزئيًا | مؤشرات زيارات أولياء الأمور (مجمعة) — محجوب: أسماء الطلاب وأولياء الأمور والمواعيد الفردية والتفاصيل والملاحظات الداخلية |
 | هويات الدخول (المعلمون والموظفون) (`people_identity`) | مستبعد | بيانات الهوية والدخول لا تُتاح عبر API |
 | المسودات والتوليد والنشر (`schedule_drafts`) | مستبعد | مسودات غير معتمدة؛ تُتاح الجداول المعتمدة فقط |
 | الجدول المدرسي — عرض المدرسة كاملة (`school_schedule`) | مغطى | الجداول الدراسية المعتمدة، حصص الجداول المعتمدة |
 | رسوم الطلاب والنقل (`student_finance`) | مغطى | الحسابات المالية (المستحقات)، السداد وسندات القبض، طلبات السداد الواردة، سندات القبض، النقل المدرسي، الخصومات المعتمدة، ملخص حسابات الطلاب لكل مدرسة، قوائم الرسوم المعتمدة |
 | خدمات الموظف الذاتية (`bt_my_employment`) | مستبعد | بيانات شخصية لصاحب الحساب |
-| خدمة العملاء (`customer_service`) | مستبعد | محادثات العملاء لا تُتاح |
+| خدمة العملاء (`customer_service`) | مستبعد | محتوى المحادثات وأرقام التواصل شخصية، والمحادثات على مستوى المجموعة دون ربط موثوق بالمدرسة |
 | التدريب والتطوير (`hr_training_info`) | مستبعد | قسم إرشادي بلا سجلات بيانات |
 | الصلاحيات والأدوار (`permissions_info`) | مستبعد | الصلاحيات لا تُتاح ولا تُعدّل عبر API |
-| التوجيه الطلابي (`student_guidance`) | مستبعد | ملفات الإرشاد سرية |
+| التوجيه الطلابي (`student_guidance`) | مغطى جزئيًا | برامج التوجيه الطلابي — محجوب: ملفات الطلاب الإرشادية والجلسات والإجراءات والمتابعات والفئة المستهدفة والنتائج النصية |
 | الإشراف التربوي (`supervision_info`) | مستبعد | الإشراف التربوي تقييمات وظيفية سرية |
-| نظام التقييم الشامل (`_owner_evaluation`) | مستبعد | نظام التقييم الشامل سري |
+| نظام التقييم الشامل (`_owner_evaluation`) | مستبعد | نتائج تقييم فردية للموظفين؛ لا تظهر إلا بمنح صريح داخل ركاز |
 | الشعب (`academic_sections`) | مغطى | الشعب |
 | المواد (`academic_subjects`) | مغطى | المواد الدراسية |
 | المجتمع المهني (`co_community_info`) | مستبعد | قسم إرشادي بلا سجلات بيانات |
@@ -171,6 +186,6 @@
 | academic_setup_info (`academic_setup_info`) | مستبعد | قسم إرشادي بلا سجلات بيانات |
 | سياسة البدلاء (`schedule_sub_policy`) | مستبعد | إعدادات داخلية |
 | الأقسام التعليمية (`academic_departments`) | مغطى | الأقسام العلمية |
-| توفر المعلمين (`schedule_availability`) | مستبعد | قيود توفر المعلمين بيانات وظيفية داخلية |
-| متطلبات المقررات (`schedule_requirements`) | مستبعد | إعدادات داخلية لمولّد الجدول |
+| توفر المعلمين (`schedule_availability`) | مستبعد | قيود توفر فردية للمعلمين؛ لا قيمة تكاملية دون كشف ظروف وظيفية شخصية |
+| متطلبات المقررات (`schedule_requirements`) | مستبعد | إعدادات مولّد الجدول؛ الحصص الأسبوعية متاحة في «المقررات» |
 | course_assignments_info (`course_assignments_info`) | مستبعد | قسم إرشادي بلا سجلات بيانات |

@@ -1332,3 +1332,4 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 
 - 2026-11-25 Integrations v2 (test DB only): 54 API resources (36 school, 18 central), section coverage with exclusion reasons, key types + explicit all-schools, resource tab. Evidence: api2-e2e 22/22, api-e2e 26/26, browser journey 13/13.
 - 2026-11-25 Integrations final review (test DB only): 58 resources, platform-section gating, OpenAPI/Postman export, coverage matrix docs/integrations-coverage.md, report docs/integrations-review.md. Evidence: api2-e2e 29/29, api-e2e 26/26, api-spec 3/3, browser 14/14.
+- 2026-11-25 Integrations closure (test DB only): 73 resources (51 school, 22 central); 15 new read-only resources incl. school-admin forms/requests and duty rosters; 12 previously excluded sections now partially covered with withheld parts documented; all 52 eligible sections covered. Evidence: api3-e2e 23/23, api2-e2e 29/29, api-e2e 26/26, api-spec 3/3, browser api3-journey 6/6.
