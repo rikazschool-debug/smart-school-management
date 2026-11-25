@@ -31,3 +31,8 @@
 # Prompt 544 — Right-to-left windows
 - [x] Align student financial details, statement and dialog headings with their text direction.
 - [ ] Signed-in visual verification — blocked: no available session for user-managed Supabase.
+
+# Prompt 545 — Guardian and payment screen design
+- [x] Improve guardian/account presentation and payment form without changing actions or data.
+- [x] Financial checks 11/11, targeted lint and preview build pass.
+- [ ] Signed-in desktop/mobile visual verification — blocked: no available session.

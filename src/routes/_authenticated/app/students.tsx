@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, CreditCard, MapPin, Users, Wallet } from "lucide-react";
+import { BadgeCheck, CreditCard, MapPin, Users, Wallet, UserRound, ShieldCheck } from "lucide-react";
 import { CrudTable, db, RecordForm, type Row } from "@/components/crud-page";
 import { PageHeader } from "@/components/states";
 import { RequireSchool } from "@/components/require-school";
@@ -176,9 +176,9 @@ function Students({ ctx }: { ctx: AppContext & { schoolId: string } }) {
 
       <Dialog open={!!viewing} onOpenChange={(o) => { if (!o) { setViewing(null); setPayMode(false); } }}>
         <DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-6xl overflow-y-auto sm:max-w-6xl">
-          <DialogHeader><DialogTitle>{viewing?.["full_name"]}</DialogTitle></DialogHeader>
+          <DialogHeader className="border-b pb-4"><DialogTitle className="flex min-w-0 items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><UserRound className="size-5" /></span><span className="min-w-0 break-words">{viewing?.["full_name"]}</span></DialogTitle></DialogHeader>
           {viewing && <Tabs defaultValue={payMode ? "finance" : "family"} dir="rtl">
-            <TabsList><TabsTrigger value="family">ولي الأمر والحساب</TabsTrigger><TabsTrigger value="finance">المالية والنقل</TabsTrigger></TabsList>
+            <TabsList className="grid h-auto w-full grid-cols-2 sm:w-fit"><TabsTrigger className="gap-2 py-2.5" value="family"><Users className="size-4 shrink-0" />ولي الأمر والحساب</TabsTrigger><TabsTrigger className="gap-2 py-2.5" value="finance"><Wallet className="size-4 shrink-0" />المالية والنقل</TabsTrigger></TabsList>
             <TabsContent value="family"><StudentLinks studentId={viewing["id"]} schoolId={ctx.schoolId} canWrite={w} email={viewing["email"]} hasAccount={!!viewing["user_id"]} role={ctx.role} /></TabsContent>
             <TabsContent value="finance"><StudentFinance studentId={viewing["id"]} startCollect={payMode} /></TabsContent>
           </Tabs>}
@@ -201,17 +201,20 @@ function StudentLinks({ studentId, schoolId, canWrite, email, hasAccount, role }
     },
   });
   return (
-    <div className="space-y-3">
-      <h3 className="font-semibold">أولياء الأمور</h3>
+    <div className="space-y-6 pt-3">
+      <section className="space-y-3">
+      <h3 className="flex items-center gap-2 text-sm font-bold"><Users className="size-4 text-primary" />أولياء الأمور</h3>
       {!q.data?.length && <p className="text-sm text-muted-foreground">لا يوجد ولي أمر مرتبط.</p>}
       {q.data?.map((l) => (
-        <div key={l["id"]} className="flex flex-wrap items-center gap-2 rounded-lg border p-3 text-sm">
-          <span className="font-medium">{l["guardians"]?.full_name}</span>
-          <span className="text-muted-foreground">({REL[l["relationship"]] ?? l["relationship"]})</span>
-          <span className="rounded bg-muted px-1.5 text-xs">{l["can_follow"] ? "متابعة" : "بلا متابعة"}</span>
-          <span className="rounded bg-muted px-1.5 text-xs">{l["can_pickup"] ? "مفوض بالاستلام" : "غير مفوض بالاستلام"}</span>
+        <div key={l["id"]} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-lg border bg-card p-4 text-sm">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground"><UserRound className="size-5" /></span>
+            <div className="min-w-0 space-y-2"><div className="font-bold break-words">{l["guardians"]?.full_name}</div><p className="text-xs text-muted-foreground">{REL[l["relationship"]] ?? l["relationship"]}</p>
+              <div className="flex flex-wrap gap-2"><span className="rounded-md bg-muted px-2 py-1 text-xs">{l["can_follow"] ? "متابعة" : "بلا متابعة"}</span><span className="rounded-md bg-muted px-2 py-1 text-xs">{l["can_pickup"] ? "مفوض بالاستلام" : "غير مفوض بالاستلام"}</span></div>
+            </div>
+          </div>
           {l["verified"] ? (
-            <span className="ms-auto flex items-center gap-1 text-primary"><BadgeCheck className="size-4" /> موثّقة</span>
+            <span className="flex shrink-0 items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs text-primary"><BadgeCheck className="size-4" /> موثّقة</span>
           ) : canWrite ? (
             <Button size="sm" className="ms-auto" onClick={async () => {
               const { error } = await supabase.rpc("verify_guardian_link", { _id: l["id"] });
@@ -220,10 +223,13 @@ function StudentLinks({ studentId, schoolId, canWrite, email, hasAccount, role }
           ) : <span className="ms-auto text-xs text-muted-foreground">غير موثّقة</span>}
         </div>
       ))}
+      </section>
+      <section className="space-y-3 border-t pt-5"><h3 className="flex items-center gap-2 text-sm font-bold"><ShieldCheck className="size-4 text-primary" />حساب الطالب</h3>
       <AccountPanel kind="student" id={studentId} canWrite={role === "org_owner"} />
       {canWrite && email && !hasAccount && role === "org_owner" && (
         <AccountButton role={role} kind="student" recordId={studentId} email={email} schoolId={schoolId} label="دعوة ببريد الطالب (بديل)" />
       )}
+      </section>
     </div>
   );
 }

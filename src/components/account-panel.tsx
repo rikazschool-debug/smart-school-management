@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Copy, KeyRound } from "lucide-react";
+import { Copy, KeyRound, ShieldCheck } from "lucide-react";
 import { db } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { ask } from "@/components/confirm";
@@ -27,18 +27,18 @@ export function AccountPanel({ kind, id, canWrite }: { kind: "student" | "teache
   });
   const state = st.data ?? "none";
   return (
-    <div className="space-y-2 rounded-lg border p-3 text-sm">
-      <p><span className="font-semibold">حساب الدخول: </span>{st.isLoading ? "…" : ACCOUNT_STATE[state] ?? state}</p>
+    <div className="space-y-4 rounded-lg border bg-muted/20 p-4 text-sm">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3"><span className="font-semibold">حساب الدخول</span><span className="flex shrink-0 items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"><ShieldCheck className="size-3.5" />{st.isLoading ? "…" : ACCOUNT_STATE[state] ?? state}</span></div>
       <p className="text-xs text-muted-foreground">{kind === "student" ? "يدخل الطالب برقم هويته أو إقامته ورقمه الداخلي في C‑Smart." : "الدخول بالهوية أو الإقامة ثم رمز تحقق يصل إلى الجوال المعتمد."}</p>
       {canWrite && state === "none" && (
-        <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
+        <Button size="sm" className="h-auto min-h-10 max-w-full whitespace-normal text-start" variant="outline" disabled={busy} onClick={async () => {
           setBusy(true);
           try { const [r] = await provision({ data: { kind, ids: [id] } }); if (r?.state === "error") toast.error(r.msg ?? "تعذّر"); else toast.success(ACCOUNT_STATE[r!.state]); qc.invalidateQueries({ queryKey: ["account-status"] }); }
           catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
         }}>إنشاء حساب الدخول</Button>
       )}
       {canWrite && kind === "student" && !creds && (
-        <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
+        <Button size="sm" className="h-auto min-h-10 max-w-full whitespace-normal text-start" variant="outline" disabled={busy} onClick={async () => {
           if (state === "linked" && !(await ask("إصدار كلمة مرور أولية جديدة يوقف دخول الطالب الحالي حتى يغيّرها. متابعة؟", { ok: "إصدار" }))) return;
           setBusy(true);
           try { setCreds(await issue({ data: { studentId: id } })); qc.invalidateQueries({ queryKey: ["account-status"] }); }

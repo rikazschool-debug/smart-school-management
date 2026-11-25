@@ -776,3 +776,5 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 2026-11-25 (prompt-543): Student financial detail layout only; sf_get/sf_siblings/receipt access and all server-returned action capabilities remain unchanged. No database changes.
 
 2026-11-25 (prompt-544): RTL alignment of student finance and statement dialogs; no permissions, amounts, queries or database changes.
+
+2026-11-25 (prompt-545): Guardian/account and collection form presentation only. Existing guardian verification grants, owner-only account actions, allocation validation and sf_collect remain unchanged. No database or account changes.

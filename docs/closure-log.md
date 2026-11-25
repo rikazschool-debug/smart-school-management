@@ -1315,3 +1315,8 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 ## 2026-11-25 — Prompt 544: right-to-left financial windows
 - Student financial content explicitly RTL; statement explicitly start-aligned. Shared dialog heading uses logical start alignment instead of physical left, with logical end close placement and reserved title space; LTR windows retain left alignment.
 - Hook remains unchanged: explicit React hook imports, quoted prompt absent. Signed-in desktop/mobile visual checks remain unavailable due to user-managed Supabase session limitation. No data, permissions, production or publication changes.
+
+## 2026-11-25 — Prompt 545: guardian/account and payment redesign
+- Guardian cards separate name/relationship, follow/pickup badges and verification. Account state and existing actions have clearer hierarchy. Student window tabs use icons and a two-column layout on narrow widths.
+- Payment form uses item rows stacking on narrow widths, larger amount/date/method controls, separate remaining/selected amount summary, and a full-width submit control on phones; existing allocations, confirmation, permissions, optional attachment and receipt readback unchanged.
+- Checks: 11/11 finance label/wording tests; targeted ESLint (excluding pre-existing formatting rule) passed; preview build OK; hook imports explicit React hooks and contains no quoted request identifier. Signed-in visual and real-device verification not performed (session unavailable). No production, account, database or publish changes.
