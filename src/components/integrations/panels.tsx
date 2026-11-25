@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Pause, Play, Plus, RotateCw, Send, Zap, Pencil, Check, X } from "lucide-react";
+import { Pause, Play, Plus, RotateCw, Send, Zap, Pencil, Check, X, KeyRound, Activity, Bell, Fingerprint, Lock, FlaskConical, ShieldCheck, Gauge } from "lucide-react";
+type Tone = "ok" | "warn" | "bad";
 import { toast } from "sonner";
 import { ask, askText } from "@/components/confirm";
 import { selectCls } from "@/components/ui/native-select";
@@ -26,24 +27,67 @@ export function OverviewTab({ orgId }: { orgId: string }) {
   if (q.error) return <ErrorState message={arabicError(q.error)} onRetry={() => q.refetch()} />;
   const o = q.data ?? {};
   const k = o["keys"] ?? {}, r = o["requests_24h"] ?? {}, dl = o["deliveries"] ?? {}, w = o["webhooks"] ?? {};
-  const Stat = ({ l, v, tone = "" }: { l: string; v: number | string; tone?: string }) => <div className="rounded-lg border bg-card p-3"><div className="text-xs text-muted-foreground">{l}</div><div className={`mt-1 font-display text-xl font-bold ${tone}`}>{v}</div></div>;
+  const groups: { t: string; d: string; icon: typeof KeyRound; items: { l: string; v: number | string; tone?: Tone; hint?: string }[] }[] = [
+    { t: "المفاتيح", d: "حالة مفاتيح الربط الصادرة", icon: KeyRound, items: [
+      { l: "فعّالة", v: k["active"] ?? 0, tone: "ok" },
+      { l: "موقوفة / ملغاة", v: (k["paused"] ?? 0) + (k["revoked"] ?? 0) },
+      { l: "تنتهي خلال 14 يومًا", v: k["expiring"] ?? 0, tone: k["expiring"] ? "warn" : undefined },
+      { l: "إنتاج / اختبار", v: `${k["live"] ?? 0} / ${k["test"] ?? 0}` },
+    ] },
+    { t: "الطلبات — آخر 24 ساعة", d: "حركة الاستدعاءات على البوابة", icon: Activity, items: [
+      { l: "إجمالي الطلبات", v: r["total"] ?? 0 },
+      { l: "ناجحة", v: r["ok"] ?? 0, tone: r["ok"] ? "ok" : undefined },
+      { l: "مرفوضة الصلاحية", v: r["denied"] ?? 0, tone: r["denied"] ? "bad" : undefined },
+      { l: "متوسط زمن الاستجابة", v: r["avg_ms"] ?? 0, hint: "مللي ث" },
+    ] },
+    { t: "الإشعارات والاعتمادات", d: "ما ينتظر إجراءً منك", icon: Bell, items: [
+      { l: "سداد بانتظار الاعتماد", v: o["inbox_pending"] ?? 0, tone: o["inbox_pending"] ? "warn" : undefined },
+      { l: "إشعارات بانتظار الإرسال", v: dl["pending"] ?? 0, tone: dl["pending"] ? "warn" : undefined },
+      { l: "إشعارات متوقفة", v: dl["dead"] ?? 0, tone: dl["dead"] ? "bad" : undefined },
+      { l: "Webhooks فعّالة", v: `${w["active"] ?? 0} / ${w["total"] ?? 0}` },
+    ] },
+  ];
+  const rules: { icon: typeof KeyRound; t: string; d: string }[] = [
+    { icon: Fingerprint, t: "المفتاح يظهر مرة واحدة", d: "ركاز يحفظ بصمته (SHA-256) فقط." },
+    { icon: Lock, t: "نطاق محصور", d: "كل مفتاح محصور في مجموعتك ومدارسه وأعوامه وشعبه وحقوله؛ الحقول الحساسة باختيار صريح فقط." },
+    { icon: FlaskConical, t: "مفاتيح الاختبار آمنة", d: "تتحقق من كل شيء ولا تحفظ أي تعديل." },
+    { icon: ShieldCheck, t: "لا حذف عبر API", d: "عمليات السداد الواردة تنتظر اعتمادك قبل تسجيلها." },
+    { icon: Gauge, t: "حدود ومراقبة", d: "حدود بالدقيقة واليوم، تقييد اختياري بعناوين IP، وتنبيه عند التجاوز أو الرفض." },
+    { icon: Send, t: "إرسال Webhooks يدوي", d: "من هذه اللوحة حتى تعتمد أول تكامل؛ لا إرسال تلقائي." },
+  ];
+  const toneCls: Record<Tone, string> = { ok: "text-success", warn: "text-warning-foreground", bad: "text-destructive" };
+  const dot: Record<Tone, string> = { ok: "bg-success", warn: "bg-warning", bad: "bg-destructive" };
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat l="مفاتيح فعّالة" v={k["active"] ?? 0} /><Stat l="مفاتيح موقوفة/ملغاة" v={(k["paused"] ?? 0) + (k["revoked"] ?? 0)} /><Stat l="تنتهي خلال 14 يومًا" v={k["expiring"] ?? 0} tone={k["expiring"] ? "text-warning-foreground" : ""} /><Stat l="إنتاج / اختبار" v={`${k["live"] ?? 0} / ${k["test"] ?? 0}`} />
-        <Stat l="طلبات آخر 24 ساعة" v={r["total"] ?? 0} /><Stat l="ناجحة" v={r["ok"] ?? 0} tone="text-success" /><Stat l="مرفوضة الصلاحية" v={r["denied"] ?? 0} tone={r["denied"] ? "text-destructive" : ""} /><Stat l="متوسط زمن الاستجابة" v={`${r["avg_ms"] ?? 0} مللي ث`} />
-        <Stat l="عمليات سداد بانتظار الاعتماد" v={o["inbox_pending"] ?? 0} tone={o["inbox_pending"] ? "text-warning-foreground" : ""} /><Stat l="إشعارات بانتظار الإرسال" v={dl["pending"] ?? 0} /><Stat l="إشعارات متوقفة" v={dl["dead"] ?? 0} tone={dl["dead"] ? "text-destructive" : ""} /><Stat l="Webhooks فعّالة" v={`${w["active"] ?? 0} / ${w["total"] ?? 0}`} />
+    <div className="space-y-5">
+      <div className="grid gap-4 lg:grid-cols-3">
+        {groups.map((g) => (
+          <section key={g.t} className="overflow-hidden rounded-xl border bg-card shadow-sm">
+            <header className="flex items-center gap-3 border-b bg-muted/40 px-4 py-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><g.icon className="h-4 w-4" /></span>
+              <div className="min-w-0"><h3 className="truncate font-display text-sm font-bold">{g.t}</h3><p className="truncate text-xs text-muted-foreground">{g.d}</p></div>
+            </header>
+            <div className="grid grid-cols-2">
+              {g.items.map((it, i) => (
+                <div key={it.l} className={`p-4 ${i % 2 === 0 ? "border-e" : ""} ${i < 2 ? "border-b" : ""}`}>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">{it.tone && <span className={`h-1.5 w-1.5 rounded-full ${dot[it.tone]}`} />}{it.l}</div>
+                  <div className={`mt-1.5 font-display text-2xl font-bold tabular-nums ${it.tone ? toneCls[it.tone] : ""}`}>{it.v}{it.hint && <span className="ms-1 text-xs font-normal text-muted-foreground">{it.hint}</span>}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
-      <Card title="قواعد الأمان المطبقة">
-        <ul className="list-disc space-y-1 ps-5 text-sm text-muted-foreground">
-          <li>المفتاح يظهر مرة واحدة؛ ركاز يحفظ بصمته (SHA-256) فقط.</li>
-          <li>كل مفتاح محصور في مجموعتك ومدارسه وأعوامه وشعبه وحقوله المختارة؛ الحقول الحساسة لا تُتاح إلا باختيار صريح.</li>
-          <li>مفاتيح الاختبار تتحقق من كل شيء ولا تحفظ أي تعديل.</li>
-          <li>الحذف غير متاح عبر API؛ عمليات السداد الواردة تنتظر اعتمادك قبل تسجيلها.</li>
-          <li>حدود للطلبات في الدقيقة واليوم، وتقييد اختياري بعناوين IP، وتنبيه لمدير النظام عند التجاوز أو الاستخدام المرفوض.</li>
-          <li>إرسال Webhooks يدوي من هذه اللوحة حتى تعتمد أول تكامل؛ لا يوجد إرسال تلقائي.</li>
-        </ul>
-      </Card>
+      <section className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="mb-4 flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /><h3 className="font-display text-base font-bold">قواعد الأمان المطبقة</h3></div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {rules.map((x) => (
+            <div key={x.t} className="flex gap-3 rounded-lg border bg-background/60 p-3">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary"><x.icon className="h-4 w-4" /></span>
+              <div className="min-w-0"><div className="text-sm font-semibold">{x.t}</div><p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{x.d}</p></div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
