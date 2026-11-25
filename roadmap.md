@@ -27,3 +27,7 @@
 - [x] Organize supplementary details, payment records and financial history without changing financial rules.
 - [x] Check hook source and preview build: reported TS2686 not reproduced; 11 finance tests pass.
 - [ ] Signed-in desktop/mobile student-panel verification — blocked: no available session for user-managed Supabase.
+
+# Prompt 544 — Right-to-left windows
+- [x] Align student financial details, statement and dialog headings with their text direction.
+- [ ] Signed-in visual verification — blocked: no available session for user-managed Supabase.

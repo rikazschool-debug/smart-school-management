@@ -1311,3 +1311,7 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - Presentation only: supplementary details in a two-column layout at wider sizes, icon section headings, compact empty states, payment cards separating amounts/status/date/reference from document actions, and dated financial activity timeline. Existing amounts, receipt exports and write capabilities preserved; no DB changes or publication.
 - Validation: student-finance labels/wording tests 11/11; preview build OK. Reported use-mobile TS2686 not reproduced: hooks are explicitly imported and the quoted prompt text is absent. Existing file-wide formatting lint warnings remain.
 - Signed-in student-panel desktop/mobile verification: not verified; session tool cannot mint a session for this user-managed Supabase project.
+
+## 2026-11-25 — Prompt 544: right-to-left financial windows
+- Student financial content explicitly RTL; statement explicitly start-aligned. Shared dialog heading uses logical start alignment instead of physical left, with logical end close placement and reserved title space; LTR windows retain left alignment.
+- Hook remains unchanged: explicit React hook imports, quoted prompt absent. Signed-in desktop/mobile visual checks remain unavailable due to user-managed Supabase session limitation. No data, permissions, production or publication changes.

@@ -62,7 +62,7 @@ export function StatementButton({ fins: given, title, load }: { fins?: R[]; titl
   const cards: [string, number, string][] = [["الرصيد الافتتاحي", s.opening, ""], ["إجمالي المدين", debit, ""], ["إجمالي الدائن", credit, "text-primary"], ["الرصيد الختامي", s.closing, s.closing > 0 ? "text-destructive" : "text-primary"]];
   return <>
     <Button size="sm" variant="outline" disabled={busy} onClick={async () => { if (load && !given) { setBusy(true); try { setLoaded(await load()); setOpen(true); } catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); } } else setOpen(true); }}><FileText className="size-4" /> كشف الحساب</Button>
-    <Dialog open={open} onOpenChange={setOpen}><DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-5xl overflow-y-auto sm:max-w-5xl">
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent dir="rtl" className="max-h-[92vh] w-[96vw] max-w-5xl overflow-y-auto text-start sm:max-w-5xl">
       <DialogHeader><DialogTitle>{title}</DialogTitle><p className="text-xs text-muted-foreground">{school}{multi ? ` · ${students.length} أبناء` : ""}</p></DialogHeader>
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">{cards.map(([l, v, c]) => <div key={l} className="rounded-xl border bg-card p-3"><div className="text-xs text-muted-foreground">{l}</div><div className={`mt-1 text-lg font-bold tabular-nums ${c}`}>{money(v)}</div></div>)}</div>
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 p-2">

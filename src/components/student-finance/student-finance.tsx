@@ -48,7 +48,7 @@ export function StudentFinance({ studentId, startCollect = false, initialYear }:
   const run = async (fn: () => Promise<{ error: unknown }>, ok: string) => { const { error } = await fn(); if (error) toast.error(arabicError(error)); else { toast.success(ok); void refresh(); } };
 
   return (
-    <div className="space-y-4">
+    <div dir="rtl" className="space-y-4 text-start">
       <div className="flex flex-wrap items-center gap-2">
         <select aria-label="العام الدراسي" className={selectCls("min-w-40", true)} value={year ?? ""} onChange={(e) => setYear(e.target.value)}>{f.years.map((y) => <option key={y["id"]} value={y["id"]}>{formatAcademicYear(y["name"])}{y["is_current"] ? " (الحالي)" : ""}</option>)}<option value="">كل الأعوام (مجمّع)</option></select>
         <StatementButton fins={[f]} title={`كشف حساب ${String(f.student["name"])}`} />

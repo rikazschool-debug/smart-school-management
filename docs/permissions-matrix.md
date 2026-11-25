@@ -774,3 +774,5 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 - المالية (عرض): الخصومات المطبقة/حسابات النقل/التسويات/التقارير/مؤشرات لوحة الفرع — من يملك student_finance.view فقط؛ ولي الأمر والمعلم مرفوضون.
 
 2026-11-25 (prompt-543): Student financial detail layout only; sf_get/sf_siblings/receipt access and all server-returned action capabilities remain unchanged. No database changes.
+
+2026-11-25 (prompt-544): RTL alignment of student finance and statement dialogs; no permissions, amounts, queries or database changes.
