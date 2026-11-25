@@ -8,7 +8,18 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { arabicError } from "@/lib/session";
 
 export type CatField = { k: string; l: string; s?: boolean; c?: boolean; r?: boolean; u?: boolean };
-export type CatRes = { key: string; label: string; group: string; ops: { read?: boolean; create?: boolean; update?: boolean }; fields: CatField[]; events?: string[]; filters?: string[]; sortable?: string[]; search?: string; date?: string; all_schools_only?: boolean; own_key_only?: boolean; create_mode?: string };
+export type CatRes = {
+  key: string; label: string; group: string; area?: "school" | "central"; menu?: string; sub?: string; sens?: string; status?: string; note?: string; approval?: string; actions?: string[];
+  ops: { read?: boolean; create?: boolean; update?: boolean; cancel?: boolean }; fields: CatField[]; events?: string[]; filters?: string[]; sortable?: string[]; search?: string; date?: string;
+  all_schools_only?: boolean; own_key_only?: boolean; create_mode?: string;
+};
+export type ScopeType = "schools" | "central" | "mixed";
+export const SCOPE_TYPES: { k: ScopeType; l: string; d: string }[] = [
+  { k: "schools", l: "مفتاح مدارس", d: "بيانات مدرسة أو عدة مدارس محددة" },
+  { k: "central", l: "مفتاح الإدارة المركزية", d: "أقسام المجموعة: المالية، الموارد البشرية، الصيانة، النقل، الدعم" },
+  { k: "mixed", l: "مفتاح مشترك", d: "موارد من المدارس والإدارة المركزية معًا" },
+];
+export const OP_LABEL: Record<string, string> = { read: "قراءة", create: "إضافة", update: "تعديل", cancel: "إلغاء طلب" };
 
 export async function rpc<T = unknown>(fn: string, args: Record<string, unknown>): Promise<T> {
   const { data, error } = await db.rpc(fn, args);
@@ -21,6 +32,10 @@ export async function act<T = unknown>(fn: string, args: Record<string, unknown>
 
 export function useCatalog() {
   return useQuery({ queryKey: ["api", "catalog"], staleTime: Infinity, queryFn: () => rpc<CatRes[]>("api_catalog_view", {}) });
+}
+
+export function useDirectory(orgId: string) {
+  return useQuery({ queryKey: ["api", "directory", orgId], queryFn: () => rpc<Row>("api_resource_directory", { _org: orgId }) });
 }
 
 export const EVENT_LABELS: Record<string, string> = {

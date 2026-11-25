@@ -1,10 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import { KeysTab } from "./keys";
+import { ResourcesTab } from "./resources";
 import { DocsTab, ExplorerTab, InboxTab, LogsTab, OverviewTab, WebhooksTab } from "./panels";
 
-export type IntTab = "overview" | "keys" | "logs" | "webhooks" | "inbox" | "explorer" | "docs";
+export type IntTab = "overview" | "keys" | "resources" | "logs" | "webhooks" | "inbox" | "explorer" | "docs";
 export const INT_TABS: { k: IntTab; l: string }[] = [
-  { k: "overview", l: "نظرة عامة" }, { k: "keys", l: "المفاتيح والأنظمة" }, { k: "logs", l: "سجل الطلبات" }, { k: "webhooks", l: "إشعارات Webhooks" },
+  { k: "overview", l: "نظرة عامة" }, { k: "keys", l: "المفاتيح والأنظمة" }, { k: "resources", l: "إدارة موارد API" }, { k: "logs", l: "سجل الطلبات" }, { k: "webhooks", l: "إشعارات Webhooks" },
   { k: "inbox", l: "العمليات الواردة" }, { k: "explorer", l: "مستكشف API" }, { k: "docs", l: "التوثيق" },
 ];
 
@@ -19,6 +20,7 @@ export function IntegrationsPage({ orgId, tab }: { orgId: string; tab: IntTab })
       </div>
       {tab === "overview" && <OverviewTab orgId={orgId} />}
       {tab === "keys" && <KeysTab orgId={orgId} />}
+      {tab === "resources" && <ResourcesTab orgId={orgId} />}
       {tab === "logs" && <LogsTab orgId={orgId} />}
       {tab === "webhooks" && <WebhooksTab orgId={orgId} />}
       {tab === "inbox" && <InboxTab orgId={orgId} />}

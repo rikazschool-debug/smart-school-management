@@ -14,14 +14,15 @@ if (process.argv[2] === "setup") {
   await c.auth.signInWithPassword({ email, password: pw });
   const { data: org, error } = await c.rpc("create_organization", { _org_name: "مؤسسة تكامل متصفح", _school_name: "فرع المتصفح" }); if (error) throw error;
   const A = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id;
-  await admin.from("students").insert([{ school_id: A, full_name: "طالب متصفح أول" }, { school_id: A, full_name: "طالب متصفح ثان" }]);
+  const B = (await c.rpc("org_school_save", { _org: org, _id: null, _name: "فرع المتصفح الثاني" })).data as string;
+  await admin.from("students").insert([{ school_id: A, full_name: "طالب متصفح أول" }, { school_id: A, full_name: "طالب متصفح ثان" }, { school_id: B, full_name: "طالب الفرع الثاني" }]);
   mkdirSync("/tmp/browser/api", { recursive: true });
-  writeFileSync(F, JSON.stringify({ email, pw, org, school: A, user: u.data.user!.id }));
+  writeFileSync(F, JSON.stringify({ email, pw, org, school: A, school2: B, user: u.data.user!.id }));
   console.log("fixture ready", org);
 } else if (process.argv[2] === "teardown" && existsSync(F)) {
   const f = JSON.parse(readFileSync(F, "utf8"));
-  tr.addUser(f.user); tr.addSchool(f.school);
-  await admin.from("api_keys").delete().eq("org_id", f.org); await admin.from("api_requests").delete().eq("org_id", f.org);
+  tr.addUser(f.user); tr.addSchool(f.school); if (f.school2) tr.addSchool(f.school2);
+  await admin.from("api_inbox").delete().eq("org_id", f.org); await admin.from("api_keys").delete().eq("org_id", f.org); await admin.from("api_requests").delete().eq("org_id", f.org);
   await tr.deleteNotifications(); await tr.purgeOrg(f.org);
   console.log("removed", f.org);
 }

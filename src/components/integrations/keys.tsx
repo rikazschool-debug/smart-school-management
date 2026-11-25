@@ -11,13 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
-import { act, Badge, Card, fmt, KEY_STATUS, rpc, SecretDialog, useCatalog, type CatRes, type Row } from "./shared";
+import { act, Badge, Card, fmt, KEY_STATUS, rpc, SCOPE_TYPES, SecretDialog, useCatalog, useDirectory, type Row, type ScopeType } from "./shared";
+import { ResourceTree, scopeOn, type Scope } from "./resource-tree";
 
-type Opt = { id: string; name: string; school_id?: string };
+type Opt = { id: string; name: string; school_id?: string; year_id?: string; stage_id?: string; grade_id?: string };
 type Opts = { schools: Opt[]; years: Opt[]; terms: Opt[]; stages: Opt[]; grades: Opt[]; sections: Opt[] };
-type Scope = { read: boolean; create: boolean; update: boolean; fields: string[]; write_fields: string[] };
 type Draft = {
-  id: string | null; rev?: number; name: string; system_name: string; description: string; env: "test" | "live"; direction: string; master: string; on_conflict: string;
+  id: string | null; rev?: number; scope_type: ScopeType; all_schools: boolean; name: string; system_name: string; description: string; env: "test" | "live"; direction: string; master: string; on_conflict: string;
   school_ids: string[]; year_ids: string[]; term_ids: string[]; stage_ids: string[]; grade_ids: string[]; section_ids: string[];
   scopes: Record<string, Scope>; starts_at: string; expires_at: string; rate_min: number; rate_day: number; ip_allow: string;
 };
@@ -30,7 +30,7 @@ export function useKeys(orgId: string) {
 
 function fromRow(k: Row | null): Draft {
   return {
-    id: k?.["id"] ?? null, rev: k?.["rev"], name: k?.["name"] ?? "", system_name: k?.["system_name"] ?? "", description: k?.["description"] ?? "", env: k?.["env"] ?? "test",
+    id: k?.["id"] ?? null, rev: k?.["rev"], scope_type: k?.["scope_type"] ?? "schools", all_schools: k ? !!k["all_schools"] : false, name: k?.["name"] ?? "", system_name: k?.["system_name"] ?? "", description: k?.["description"] ?? "", env: k?.["env"] ?? "test",
     direction: k?.["direction"] ?? "out", master: k?.["master"] ?? "rikaz", on_conflict: k?.["on_conflict"] ?? "reject",
     school_ids: k?.["school_ids"] ?? [], year_ids: k?.["year_ids"] ?? [], term_ids: k?.["term_ids"] ?? [], stage_ids: k?.["stage_ids"] ?? [], grade_ids: k?.["grade_ids"] ?? [], section_ids: k?.["section_ids"] ?? [],
     scopes: (k?.["scopes"] ?? {}) as Record<string, Scope>, starts_at: day(k?.["starts_at"]), expires_at: day(k?.["expires_at"]),
@@ -68,14 +68,16 @@ export function KeysTab({ orgId }: { orgId: string }) {
       <div className="grid gap-3 lg:grid-cols-2">
         {list.map((k) => {
           const expired = k["expires_at"] && new Date(k["expires_at"]) <= new Date();
-          const res = Object.entries((k["scopes"] ?? {}) as Record<string, Scope>).filter(([, s]) => s.read || s.create || s.update);
+          const res = Object.entries((k["scopes"] ?? {}) as Record<string, Scope>).filter(([, s]) => scopeOn(s));
+          const st = SCOPE_TYPES.find((x) => x.k === k["scope_type"]);
           return (
             <Card key={k["id"]} title={k["name"]} action={<div className="flex gap-1"><Badge cls={k["env"] === "live" ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}>{k["env"] === "live" ? "إنتاج" : "اختبار"}</Badge><Badge cls={k["status"] === "active" && !expired ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}>{expired && k["status"] === "active" ? "منتهي" : KEY_STATUS[k["status"]]}</Badge></div>}>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                 <dt className="text-muted-foreground">النظام</dt><dd>{k["system_name"]}</dd>
                 <dt className="text-muted-foreground">المفتاح</dt><dd dir="ltr" className="text-end font-mono">rk_{k["env"]}_{k["key_hint"]}</dd>
                 <dt className="text-muted-foreground">الاتجاه</dt><dd>{DIR[k["direction"]]}</dd>
-                <dt className="text-muted-foreground">المدارس</dt><dd>{k["school_ids"]?.length ? `${k["school_ids"].length} مدرسة` : "جميع المدارس"}</dd>
+                <dt className="text-muted-foreground">نوع المفتاح</dt><dd>{st?.l ?? "مفتاح مدارس"}</dd>
+                <dt className="text-muted-foreground">المدارس</dt><dd>{k["scope_type"] === "central" ? "الإدارة المركزية" : k["all_schools"] ? "جميع المدارس" : `${k["school_ids"]?.length ?? 0} مدرسة`}</dd>
                 <dt className="text-muted-foreground">الموارد</dt><dd>{res.length}</dd>
                 <dt className="text-muted-foreground">الحد</dt><dd>{k["rate_min"]}/دقيقة · {k["rate_day"]}/يوم</dd>
                 <dt className="text-muted-foreground">الانتهاء</dt><dd>{k["expires_at"] ? fmt(k["expires_at"]) : "بلا انتهاء"}</dd>
@@ -173,14 +175,31 @@ function KeyForm({ orgId, draft, onClose, onSaved }: { orgId: string; draft: Dra
   const cat = useCatalog();
   const opts = useQuery({ queryKey: ["api", "opts", orgId], queryFn: () => rpc<Opts>("api_key_scope_options", { _org: orgId }) });
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
-  const inSch = (o: Opt) => !d.school_ids.length || (o.school_id ? d.school_ids.includes(o.school_id) : true);
-  const groups = useMemo(() => {
-    const m = new Map<string, CatRes[]>();
-    for (const r of cat.data ?? []) m.set(r.group, [...(m.get(r.group) ?? []), r]);
-    return [...m.entries()];
-  }, [cat.data]);
-  const sc = (k: string): Scope => d.scopes[k] ?? { read: false, create: false, update: false, fields: ["id"], write_fields: [] };
+  const dir = useDirectory(orgId);
+  const disabled = useMemo(() => new Set(((dir.data?.["resources"] ?? []) as Row[]).filter((r) => r["enabled"] === false).map((r) => r["key"] as string)), [dir.data]);
+  const central = d.scope_type === "central";
+  const inSch = (o: Opt) => d.all_schools || (o.school_id ? d.school_ids.includes(o.school_id) : true);
+  const pick = (sel: string[], id?: string) => !sel.length || (!!id && sel.includes(id));
+  /** Changing a parent list drops children that no longer belong to it (school → year → term, school → stage → grade → section). */
+  const setScope = (patch: Partial<Draft>) => setD((x) => {
+    const n = { ...x, ...patch };
+    const o = opts.data; if (!o) return n;
+    const okS = (v: Opt) => n.all_schools || (!!v.school_id && n.school_ids.includes(v.school_id));
+    n.year_ids = n.year_ids.filter((id) => { const v = o.years.find((y) => y.id === id); return !!v && okS(v); });
+    n.term_ids = n.term_ids.filter((id) => { const v = o.terms.find((y) => y.id === id); return !!v && okS(v) && pick(n.year_ids, v.year_id); });
+    n.stage_ids = n.stage_ids.filter((id) => { const v = o.stages.find((y) => y.id === id); return !!v && okS(v); });
+    n.grade_ids = n.grade_ids.filter((id) => { const v = o.grades.find((y) => y.id === id); return !!v && okS(v) && pick(n.stage_ids, v.stage_id); });
+    n.section_ids = n.section_ids.filter((id) => { const v = o.sections.find((y) => y.id === id); return !!v && okS(v) && pick(n.grade_ids, v.grade_id); });
+    return n;
+  });
   const setSc = (k: string, s: Scope) => set("scopes", { ...d.scopes, [k]: s });
+  const setType = (t: ScopeType) => setD((x) => {
+    const keep = Object.fromEntries(Object.entries(x.scopes).filter(([k]) => { const r = cat.data?.find((c) => c.key === k); return t === "mixed" || (r?.area ?? "school") === (t === "central" ? "central" : "school"); }));
+    return { ...x, scope_type: t, scopes: keep };
+  });
+  const active = Object.entries(d.scopes).filter(([, x]) => scopeOn(x));
+  const nFields = active.reduce((a, [, x]) => a + x.fields.filter((f) => f !== "id").length + 1, 0);
+  const resSchools = (o: Opts | undefined) => (o?.schools ?? []).filter((x) => d.all_schools || central || d.school_ids.includes(x.id));
   const save = async () => {
     if (d.name.trim().length < 2 || d.system_name.trim().length < 2) { toast.error("أدخل اسم المفتاح واسم النظام"); return; }
     let reason: string | null = null;
@@ -188,9 +207,11 @@ function KeyForm({ orgId, draft, onClose, onSaved }: { orgId: string; draft: Dra
     const live = d.env === "live" && !d.id;
     if (live && !(await ask("مفتاح الإنتاج يتعامل مع بيانات حقيقية ويحفظ عمليات الكتابة. متابعة؟"))) return;
     setBusy(true);
+    if (!central && !d.all_schools && !d.school_ids.length) { setBusy(false); toast.error("اختر مدرسة واحدة على الأقل أو «جميع المدارس» صراحة"); return; }
+    const scopes = Object.fromEntries(active);
     const p = {
-      ...d, ip_allow: d.ip_allow.split(/\s+/).filter(Boolean), starts_at: d.starts_at || null, expires_at: d.expires_at || null,
-      school_ids: d.school_ids.length ? d.school_ids : null, year_ids: d.year_ids.length ? d.year_ids : null, term_ids: d.term_ids.length ? d.term_ids : null,
+      ...d, scopes, ip_allow: d.ip_allow.split(/\s+/).filter(Boolean), starts_at: d.starts_at || null, expires_at: d.expires_at || null,
+      school_ids: central || d.all_schools ? null : d.school_ids, year_ids: d.year_ids.length ? d.year_ids : null, term_ids: d.term_ids.length ? d.term_ids : null,
       stage_ids: d.stage_ids.length ? d.stage_ids : null, grade_ids: d.grade_ids.length ? d.grade_ids : null, section_ids: d.section_ids.length ? d.section_ids : null,
     };
     const r = await act<{ secret?: string }>("api_key_save", { _org: orgId, _id: d.id, _p: p, _reason: reason }, d.id ? "حُفظ التعديل" : "أُنشئ المفتاح");
@@ -230,69 +251,42 @@ function KeyForm({ orgId, draft, onClose, onSaved }: { orgId: string; draft: Dra
             </div>
           </Section>
 
-          <Section n={3} icon={Building2} title="نطاق البيانات" hint="اترك أي قائمة دون تحديد لتشمل الكل. اختيار المدارس يضيّق بقية القوائم.">
-            {o ? (
+          <Section n={3} icon={Building2} title="نوع المفتاح ونطاق البيانات" hint="اختيار «جميع المدارس» صريح؛ القائمة الفارغة لا تعني الكل. كل قائمة تضيّق التي تليها.">
+            <div className="mb-3 grid gap-2 sm:grid-cols-3">
+              {SCOPE_TYPES.map((t) => (
+                <button type="button" key={t.k} onClick={() => setType(t.k)} className={`rounded-lg border p-3 text-start transition-colors ${d.scope_type === t.k ? "border-primary bg-primary/5 ring-1 ring-primary" : "bg-background hover:border-primary/40"}`}>
+                  <div className="text-sm font-bold">{t.l}</div><div className="text-xs text-muted-foreground">{t.d}</div>
+                </button>
+              ))}
+            </div>
+            {central ? <p className="rounded-lg border bg-muted/20 p-3 text-xs text-muted-foreground">موارد الإدارة المركزية تشمل مدارس المجموعة كلها، ويمكن تضييق كل مورد على مدارس محددة من قائمة الموارد.</p> : o ? (
               <div className="space-y-3">
-                <Multi label="المدارس" opts={o.schools} schools={o.schools} value={d.school_ids} onChange={(v) => set("school_ids", v)} hint="جميع المدارس" />
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Multi label="الأعوام الدراسية" opts={o.years.filter(inSch)} schools={o.schools} value={d.year_ids} onChange={(v) => set("year_ids", v)} hint="كل الأعوام" />
-                  <Multi label="الفصول الدراسية" opts={o.terms.filter(inSch)} schools={o.schools} value={d.term_ids} onChange={(v) => set("term_ids", v)} hint="كل الفصول" />
-                  <Multi label="المراحل" opts={o.stages.filter(inSch)} schools={o.schools} value={d.stage_ids} onChange={(v) => set("stage_ids", v)} hint="كل المراحل" />
-                  <Multi label="الصفوف" opts={o.grades.filter(inSch)} schools={o.schools} value={d.grade_ids} onChange={(v) => set("grade_ids", v)} hint="كل الصفوف" />
+                <div className="rounded-lg border bg-muted/20 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <Label className="text-xs font-bold">المدارس</Label>
+                    <button type="button" className={chip(d.all_schools)} onClick={() => setScope({ all_schools: !d.all_schools, school_ids: [] })}>جميع المدارس{d.all_schools ? " ✓" : ""}</button>
+                  </div>
+                  {d.all_schools ? <p className="text-[11px] text-muted-foreground">يشمل مدارس المجموعة الحالية وأي مدرسة تُضاف لاحقًا.</p>
+                    : <div className="flex flex-wrap gap-1.5">{o.schools.map((x) => <button type="button" key={x.id} onClick={() => setScope({ school_ids: d.school_ids.includes(x.id) ? d.school_ids.filter((y) => y !== x.id) : [...d.school_ids, x.id] })} className={chip(d.school_ids.includes(x.id))}>{x.name}</button>)}</div>}
+                  {!d.all_schools && !d.school_ids.length && <p className="mt-2 text-[11px] text-destructive">اختر مدرسة على الأقل أو «جميع المدارس».</p>}
                 </div>
-                <Multi label="الشعب" opts={o.sections.filter(inSch)} schools={o.schools} value={d.section_ids} onChange={(v) => set("section_ids", v)} hint="كل الشعب" />
+                {(d.all_schools || d.school_ids.length > 0) && (
+                  <>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Multi label="الأعوام الدراسية" opts={o.years.filter(inSch)} schools={o.schools} value={d.year_ids} onChange={(v) => setScope({ year_ids: v })} hint="كل الأعوام" />
+                      <Multi label="الفصول الدراسية" opts={o.terms.filter(inSch).filter((t) => pick(d.year_ids, t.year_id))} schools={o.schools} value={d.term_ids} onChange={(v) => setScope({ term_ids: v })} hint="كل الفصول" />
+                      <Multi label="المراحل" opts={o.stages.filter(inSch)} schools={o.schools} value={d.stage_ids} onChange={(v) => setScope({ stage_ids: v })} hint="كل المراحل" />
+                      <Multi label="الصفوف" opts={o.grades.filter(inSch).filter((g) => pick(d.stage_ids, g.stage_id))} schools={o.schools} value={d.grade_ids} onChange={(v) => setScope({ grade_ids: v })} hint="كل الصفوف" />
+                    </div>
+                    <Multi label="الشعب" opts={o.sections.filter(inSch).filter((x) => pick(d.grade_ids, x.grade_id))} schools={o.schools} value={d.section_ids} onChange={(v) => setScope({ section_ids: v })} hint="كل الشعب" />
+                  </>
+                )}
               </div>
             ) : <LoadingState rows={1} />}
           </Section>
 
-          <Section n={4} icon={Database} title="الموارد والحقول المسموحة" hint="فعّل العملية ثم اختر الحقول. الحقول المعلّمة بـ ● بيانات شخصية حساسة لا تُتاح إلا باختيارك الصريح.">
-            <div className="space-y-3">
-              {groups.map(([g, rs]) => (
-                <div key={g} className="overflow-hidden rounded-lg border bg-background">
-                  <div className="border-b bg-muted/50 px-3 py-2 text-xs font-bold">{g}</div>
-                  {rs.map((r) => {
-                    const s = sc(r.key);
-                    const on = s.read || s.create || s.update;
-                    const disabledAll = !!r.all_schools_only && d.school_ids.length > 0;
-                    return (
-                      <div key={r.key} className={`border-t px-3 py-2.5 first:border-t-0 ${on ? "bg-primary/[0.03]" : ""}`}>
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="text-sm font-medium">{r.label}</span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(["read", "create", "update"] as const).filter((op) => r.ops[op]).map((op) => (
-                              <button type="button" key={op} disabled={disabledAll} onClick={() => setSc(r.key, { ...s, [op]: !s[op] })} className={`${chip(s[op])} disabled:cursor-not-allowed disabled:opacity-50`}>{op === "read" ? "قراءة" : op === "create" ? (r.create_mode === "approval" ? "إضافة (باعتماد)" : "إضافة") : "تعديل"}</button>
-                            ))}
-                          </div>
-                        </div>
-                        {disabledAll && <p className="mt-1 text-[11px] text-muted-foreground">متاح لمفاتيح جميع المدارس فقط</p>}
-                        {on && (
-                          <div className="mt-2 rounded-md bg-muted/40 p-2">
-                            <div className="mb-1 text-[11px] text-muted-foreground">الحقول المقروءة</div>
-                            <div className="flex flex-wrap gap-1">
-                              {r.fields.map((f) => {
-                                const sel = s.fields.includes(f.k) || f.k === "id";
-                                return <button type="button" key={f.k} disabled={f.k === "id"} onClick={() => setSc(r.key, { ...s, fields: sel ? s.fields.filter((x) => x !== f.k) : [...s.fields, f.k] })} className={`rounded-full border px-2 py-0.5 text-[11px] ${sel ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground"}`}>{f.s ? "● " : ""}{f.l}</button>;
-                              })}
-                            </div>
-                            {(s.create || s.update) && (
-                              <>
-                                <div className="mb-1 mt-2 text-[11px] text-muted-foreground">حقول الكتابة الاختيارية</div>
-                                <div className="flex flex-wrap gap-1">
-                                  {r.fields.filter((f) => (s.create && f.c && !f.r) || (s.update && f.u)).map((f) => {
-                                    const sel = s.write_fields.includes(f.k);
-                                    return <button type="button" key={f.k} onClick={() => setSc(r.key, { ...s, write_fields: sel ? s.write_fields.filter((x) => x !== f.k) : [...s.write_fields, f.k] })} className={`rounded-full border px-2 py-0.5 text-[11px] ${sel ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground"}`}>{f.l}</button>;
-                                  })}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+          <Section n={4} icon={Database} title="الموارد والحقول المسموحة" hint="الموارد مرتبة حسب أقسام المنصة. فعّل العملية ثم اختر الحقول؛ الحقول المعلّمة بـ ● حساسة ولا تُتاح إلا باختيارك الصريح.">
+            {cat.data ? <ResourceTree cat={cat.data} scopeType={d.scope_type} scopes={d.scopes} onChange={setSc} disabled={disabled} schools={resSchools(o)} /> : <LoadingState rows={2} />}
           </Section>
 
           <Section n={5} icon={ShieldCheck} title="الأمان والحدود">
@@ -306,7 +300,7 @@ function KeyForm({ orgId, draft, onClose, onSaved }: { orgId: string; draft: Dra
           </Section>
         </div>
         <DialogFooter className="gap-2 border-t bg-background px-6 py-3">
-          <span className="me-auto self-center text-xs text-muted-foreground">{Object.values(d.scopes).filter((x) => x.read || x.create || x.update).length} مورد مفعّل · {d.school_ids.length ? `${d.school_ids.length} مدرسة` : "جميع المدارس"}</span>
+          <span className="me-auto self-center text-xs text-muted-foreground">{SCOPE_TYPES.find((t) => t.k === d.scope_type)?.l} · {active.length} مورد · {nFields} حقل · {central ? "الإدارة المركزية" : d.all_schools ? "جميع المدارس" : `${d.school_ids.length} مدرسة`}</span>
           <Button variant="outline" onClick={onClose}>إلغاء</Button><Button disabled={busy} onClick={save}>{d.id ? "حفظ التعديل" : "إنشاء المفتاح"}</Button>
         </DialogFooter>
       </DialogContent>

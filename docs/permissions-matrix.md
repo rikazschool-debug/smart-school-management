@@ -784,3 +784,5 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 2026-11-25: Calls, WhatsApp inbox, customer service, school schedule view and contracts can be granted/denied per branch or group; chat settings and tags management group-wide only.
 2026-11-25: Academic years — create/edit/close owner only; others select/view; delete refused when linked data exists. ID sign-in limits per device + per ID, temporary only.
 2026-11-25: Integrations & API — keys, scopes, logs, webhooks, inbox and explorer are owner-only (platform admin acting as owner); external systems act only through a key; principals and other roles have no access.
+
+- Integrations v2 (Nov 25 2026): only the org owner manages API keys, resource on/off switches and approves incoming payments/maintenance/support requests; external systems can only read granted fields, submit approval-queued requests and cancel their own pending ones; no delete.

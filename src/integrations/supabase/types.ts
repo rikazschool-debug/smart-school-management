@@ -2542,6 +2542,7 @@ export type Database = {
       }
       api_keys: {
         Row: {
+          all_schools: boolean
           created_at: string
           created_by: string | null
           description: string
@@ -2565,6 +2566,7 @@ export type Database = {
           request_count: number
           rev: number
           school_ids: string[] | null
+          scope_type: string
           scopes: Json
           section_ids: string[] | null
           stage_ids: string[] | null
@@ -2576,6 +2578,7 @@ export type Database = {
           year_ids: string[] | null
         }
         Insert: {
+          all_schools?: boolean
           created_at?: string
           created_by?: string | null
           description?: string
@@ -2599,6 +2602,7 @@ export type Database = {
           request_count?: number
           rev?: number
           school_ids?: string[] | null
+          scope_type?: string
           scopes?: Json
           section_ids?: string[] | null
           stage_ids?: string[] | null
@@ -2610,6 +2614,7 @@ export type Database = {
           year_ids?: string[] | null
         }
         Update: {
+          all_schools?: boolean
           created_at?: string
           created_by?: string | null
           description?: string
@@ -2633,6 +2638,7 @@ export type Database = {
           request_count?: number
           rev?: number
           school_ids?: string[] | null
+          scope_type?: string
           scopes?: Json
           section_ids?: string[] | null
           stage_ids?: string[] | null
@@ -2724,6 +2730,79 @@ export type Database = {
           },
           {
             foreignKeyName: "api_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_resource_events: {
+        Row: {
+          actor: string | null
+          at: string
+          enabled: boolean
+          id: string
+          org_id: string
+          reason: string | null
+          resource: string
+        }
+        Insert: {
+          actor?: string | null
+          at?: string
+          enabled: boolean
+          id?: string
+          org_id: string
+          reason?: string | null
+          resource: string
+        }
+        Update: {
+          actor?: string | null
+          at?: string
+          enabled?: boolean
+          id?: string
+          org_id?: string
+          reason?: string | null
+          resource?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_resource_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_resource_settings: {
+        Row: {
+          enabled: boolean
+          org_id: string
+          reason: string | null
+          resource: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          org_id: string
+          reason?: string | null
+          resource: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          org_id?: string
+          reason?: string | null
+          resource?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_resource_settings_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -25233,6 +25312,9 @@ export type Database = {
         Returns: Json
       }
       _api_catalog: { Args: never; Returns: Json }
+      _api_catalog_ext: { Args: never; Returns: Json }
+      _api_catalog_v1: { Args: never; Returns: Json }
+      _api_coverage: { Args: never; Returns: Json }
       _api_date: { Args: { _t: string }; Returns: string }
       _api_emit: {
         Args: { _event: string; _org: string; _rid: string; _school: string }
@@ -25286,12 +25368,62 @@ export type Database = {
         }
         Returns: Json[]
       }
+      _api_rows_all: {
+        Args: {
+          _all: boolean
+          _grades: string[]
+          _id: string
+          _key: string
+          _org: string
+          _res: string
+          _sch: string[]
+          _secs: string[]
+          _stages: string[]
+          _stu: string[]
+          _terms: string[]
+          _yrs: string[]
+        }
+        Returns: Json[]
+      }
+      _api_rows_v2: {
+        Args: {
+          _all: boolean
+          _grades: string[]
+          _id: string
+          _key: string
+          _org: string
+          _res: string
+          _sch: string[]
+          _secs: string[]
+          _stages: string[]
+          _stu: string[]
+          _terms: string[]
+          _yrs: string[]
+        }
+        Returns: Json[]
+      }
       _api_secret: { Args: { _prefix: string }; Returns: string }
       _api_sha: { Args: { _t: string }; Returns: string }
       _api_tstz: { Args: { _t: string }; Returns: string }
       _api_url_ok: { Args: { _u: string }; Returns: boolean }
       _api_uuid: { Args: { _t: string }; Returns: string }
       _api_write: {
+        Args: {
+          _all: boolean
+          _body: Json
+          _f: string[]
+          _id: string
+          _op: string
+          _r: Json
+          _res: string
+          _sc: Json
+          _sch: string[]
+          _stu: string[]
+          k: Database["public"]["Tables"]["api_keys"]["Row"]
+        }
+        Returns: Json
+      }
+      _api_write_v1: {
         Args: {
           _all: boolean
           _body: Json
@@ -28970,6 +29102,16 @@ export type Database = {
           _limit?: number
           _org: string
           _outcome?: string
+        }
+        Returns: Json
+      }
+      api_resource_directory: { Args: { _org: string }; Returns: Json }
+      api_resource_set: {
+        Args: {
+          _enabled: boolean
+          _org: string
+          _reason: string
+          _resource: string
         }
         Returns: Json
       }

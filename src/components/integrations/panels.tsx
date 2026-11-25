@@ -172,23 +172,25 @@ export function WebhooksTab({ orgId }: { orgId: string }) {
 export function InboxTab({ orgId }: { orgId: string }) {
   const qc = useQueryClient(); const [st, setSt] = useState("pending");
   const q = useQuery({ queryKey: ["api", "inbox", orgId, st], queryFn: () => rpc<Row[]>("api_inbox_list", { _org: orgId, _status: st || null }) });
-  const S: Record<string, string> = { pending: "بانتظار الاعتماد", approved: "معتمد", rejected: "مرفوض", failed: "تعذر التسجيل" };
+  const S: Record<string, string> = { pending: "بانتظار الاعتماد", approved: "معتمد", rejected: "مرفوض", failed: "تعذر التسجيل", cancelled: "ألغاه النظام المرسل" };
+  const isPay = (i: Row) => i["resource"] === "payments";
   const decide = async (i: Row, approve: boolean) => {
     let reason: string | null = null;
-    if (approve) { if (!(await ask(`اعتماد سداد ${i["amount"]} ر.س للطالب ${i["student_name"]} وتسجيله في حسابه؟`))) return; }
+    if (approve) { if (!(await ask(isPay(i) ? `اعتماد سداد ${i["amount"]} ر.س للطالب ${i["student_name"]} وتسجيله في حسابه؟` : `اعتماد «${i["payload"]?.["title"]}» وإنشاؤه في ${i["resource_label"]} باسمك؟`))) return; }
     else { reason = await askText("سبب الرفض (يظهر للنظام المرسل):", { required: true }); if (!reason) return; }
     const r = await act<{ status: string; error?: string }>("api_inbox_decide", { _id: i["id"], _approve: approve, _reason: reason });
-    if (r?.status === "failed") toast.error(`تعذر التسجيل: ${r.error}`); else if (r) toast.success(approve ? "اعتُمد وسُجّل السداد" : "رُفضت العملية");
+    if (r?.status === "failed") toast.error(`تعذر التسجيل: ${r.error}`); else if (r) toast.success(approve ? (isPay(i) ? "اعتُمد وسُجّل السداد" : "اعتُمد وأُنشئ الطلب") : "رُفضت العملية");
     qc.invalidateQueries({ queryKey: ["api"] });
   };
   return (
     <div className="space-y-3">
       <select className={selectCls("w-48")} value={st} onChange={(e) => setSt(e.target.value)}><option value="">الكل</option>{Object.entries(S).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-      {q.isLoading ? <LoadingState rows={2} /> : !(q.data ?? []).length ? <EmptyState title="لا توجد عمليات" hint="عمليات السداد الواردة من الأنظمة الخارجية تظهر هنا لاعتمادها قبل تسجيلها." /> : (
+      {q.isLoading ? <LoadingState rows={2} /> : !(q.data ?? []).length ? <EmptyState title="لا توجد عمليات" hint="عمليات السداد وطلبات الصيانة والدعم الواردة من الأنظمة الخارجية تظهر هنا لاعتمادها قبل تسجيلها." /> : (
         <div className="grid gap-3 lg:grid-cols-2">{(q.data ?? []).map((i) => (
-          <Card key={i["id"]} title={`${i["student_name"] ?? "طالب"} — ${i["amount"]} ر.س`} action={<Badge>{S[i["status"]]}</Badge>}>
+          <Card key={i["id"]} title={isPay(i) ? `${i["student_name"] ?? "طالب"} — ${i["amount"]} ر.س` : `${i["resource_label"]}: ${i["payload"]?.["title"] ?? ""}`} action={<Badge>{S[i["status"]]}</Badge>}>
             <p className="text-xs text-muted-foreground">{i["school_name"]} · من {i["system_name"]} ({i["key_name"]}) · {fmt(i["created_at"])}</p>
-            <p className="mt-1 text-xs">طريقة السداد: {i["payload"]?.["method"]} · التاريخ: {i["payload"]?.["paid_at"]} {i["payload"]?.["ref"] ? `· المرجع ${i["payload"]["ref"]}` : ""}</p>
+            {isPay(i) ? <p className="mt-1 text-xs">طريقة السداد: {i["payload"]?.["method"]} · التاريخ: {i["payload"]?.["paid_at"]} {i["payload"]?.["ref"] ? `· المرجع ${i["payload"]["ref"]}` : ""}</p>
+              : <p className="mt-1 whitespace-pre-wrap text-xs">{i["payload"]?.["description"] ?? i["payload"]?.["body"]}{i["payload"]?.["place"] ? ` · المكان: ${i["payload"]["place"]}` : ""}</p>}
             {i["reason"] && <p className="mt-1 text-xs">السبب: {i["reason"]}</p>}
             {i["result"]?.["error"] && <p className="mt-1 text-xs text-destructive">{i["result"]["error"]}</p>}
             {i["status"] === "pending" && <div className="mt-3 flex gap-2"><Button size="sm" onClick={() => decide(i, true)}><Check className="ms-1 h-3.5 w-3.5" />اعتماد</Button><Button size="sm" variant="outline" onClick={() => decide(i, false)}><X className="ms-1 h-3.5 w-3.5" />رفض</Button></div>}
@@ -238,10 +240,11 @@ export function DocsTab() {
   return (
     <div className="space-y-4">
       <Card title="الاتصال">
-        <Code c={`GET ${base}/me\nAuthorization: Bearer rk_live_...\n\nGET ${base}/students?school_id=...&per_page=50&page=1&sort=updated_at&order=desc&updated_since=2026-01-01T00:00:00Z\nGET ${base}/students/{id}\nPOST ${base}/admissions          (Idempotency-Key مستحسن)\nPATCH ${base}/admissions/{id}    ({"rev": n, ...})\nPOST ${base}/payments            (Idempotency-Key إلزامي، يُسجَّل بعد اعتماد الإدارة)`} />
+        <Code c={`GET ${base}/me\nAuthorization: Bearer rk_live_...\n\nGET ${base}/students?school_id=...&per_page=50&page=1&sort=updated_at&order=desc&updated_since=2026-01-01T00:00:00Z\nGET ${base}/students/{id}\nPOST ${base}/admissions          (Idempotency-Key مستحسن)\nPATCH ${base}/admissions/{id}    ({"rev": n, ...})\nPOST ${base}/payments            (Idempotency-Key إلزامي، يُسجَّل بعد اعتماد الإدارة)\nPOST ${base}/building_maintenance (يُنشأ بعد اعتماد الإدارة؛ تابع عبر inbox_requests)\nPOST ${base}/inbox_requests/{id}/cancel  (إلغاء طلبك ما دام بانتظار الاعتماد)\nPOST ${base}/payment_requests/{id}/cancel`} />
         <ul className="mt-2 list-disc space-y-1 ps-5 text-sm text-muted-foreground">
           <li>الردود JSON: <code dir="ltr">{"{ data, meta: { page, per_page, total } }"}</code> أو <code dir="ltr">{"{ error: { code, message } }"}</code>.</li>
           <li>مفتاح الاختبار <code dir="ltr">rk_test_</code> يعيد نفس النتيجة مع <code dir="ltr">dry_run: true</code> ولا يحفظ.</li>
+          <li>نوع المفتاح يحدد ما يصل إليه: مفتاح المدارس لا يصل لموارد الإدارة المركزية والعكس (403 area_denied)، والمشترك يصل للاثنين.</li>
           <li>الحذف غير مدعوم (405). الحقول غير المصرح بها أو المعاملات غير المعروفة ترفض صراحة.</li>
           <li>حدود الطلبات في ترويستي <code dir="ltr">X-RateLimit-Limit / X-RateLimit-Remaining</code>، والتجاوز يعيد 429.</li>
         </ul>
@@ -253,7 +256,7 @@ export function DocsTab() {
         {cat.isLoading ? <LoadingState rows={2} /> : (
           <div className="space-y-3">{(cat.data ?? []).map((r) => (
             <details key={r.key} className="rounded-md border p-2">
-              <summary className="cursor-pointer text-sm"><b dir="ltr" className="font-mono">{r.key}</b> — {r.label} <span className="text-xs text-muted-foreground">({[r.ops.read && "قراءة", r.ops.create && "إضافة", r.ops.update && "تعديل"].filter(Boolean).join("، ")})</span></summary>
+              <summary className="cursor-pointer text-sm"><b dir="ltr" className="font-mono">{r.key}</b> — {r.label} <span className="text-xs text-muted-foreground">({[r.ops.read && "قراءة", r.ops.create && (r.create_mode === "approval" ? "إضافة باعتماد" : "إضافة"), r.ops.update && "تعديل", r.ops.cancel && "إلغاء طلب"].filter(Boolean).join("، ")}){r.area === "central" ? " · الإدارة المركزية" : ""}</span></summary>
               <div className="mt-2 text-xs">
                 {r.filters?.length ? <p>الفلاتر: <span dir="ltr" className="font-mono">{r.filters.join(", ")}</span></p> : null}
                 {r.sortable?.length ? <p>الفرز: <span dir="ltr" className="font-mono">{r.sortable.join(", ")}</span></p> : null}
