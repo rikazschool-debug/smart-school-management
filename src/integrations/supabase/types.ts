@@ -25202,10 +25202,15 @@ export type Database = {
       }
       _api_catalog: { Args: never; Returns: Json }
       _api_date: { Args: { _t: string }; Returns: string }
+      _api_emit: {
+        Args: { _event: string; _org: string; _rid: string; _school: string }
+        Returns: undefined
+      }
       _api_err: {
         Args: { _code: string; _msg: string; _status: number }
         Returns: Json
       }
+      _api_event_res: { Args: { _event: string }; Returns: string }
       _api_exec: {
         Args: {
           _body: Json
@@ -25217,8 +25222,19 @@ export type Database = {
         }
         Returns: Json
       }
+      _api_hook_view: {
+        Args: { w: Database["public"]["Tables"]["api_webhooks"]["Row"] }
+        Returns: Json
+      }
+      _api_ids: { Args: { _j: Json }; Returns: string[] }
       _api_int: { Args: { _t: string }; Returns: number }
+      _api_key_norm: { Args: { _org: string; _p: Json }; Returns: Json }
+      _api_key_view: {
+        Args: { k: Database["public"]["Tables"]["api_keys"]["Row"] }
+        Returns: Json
+      }
       _api_num: { Args: { _t: string }; Returns: number }
+      _api_owner: { Args: { _org: string }; Returns: undefined }
       _api_pick: { Args: { _f: string[]; _j: Json }; Returns: Json }
       _api_res: { Args: { _res: string }; Returns: Json }
       _api_rows: {
@@ -25238,6 +25254,8 @@ export type Database = {
         }
         Returns: Json[]
       }
+      _api_secret: { Args: { _prefix: string }; Returns: string }
+      _api_sha: { Args: { _t: string }; Returns: string }
       _api_tstz: { Args: { _t: string }; Returns: string }
       _api_url_ok: { Args: { _u: string }; Returns: boolean }
       _api_uuid: { Args: { _t: string }; Returns: string }
@@ -28861,6 +28879,74 @@ export type Database = {
           substitution_id: string
         }[]
       }
+      api_catalog_view: { Args: never; Returns: Json }
+      api_dispatch_claim: {
+        Args: { _limit?: number; _org: string }
+        Returns: Json
+      }
+      api_dispatch_result: {
+        Args: { _code: number; _error: string; _id: string; _ok: boolean }
+        Returns: undefined
+      }
+      api_explore: {
+        Args: {
+          _body?: Json
+          _key: string
+          _method: string
+          _path: string
+          _q?: Json
+        }
+        Returns: Json
+      }
+      api_inbox_decide: {
+        Args: { _approve: boolean; _id: string; _reason?: string }
+        Returns: Json
+      }
+      api_inbox_list: {
+        Args: { _org: string; _status?: string }
+        Returns: Json
+      }
+      api_key_changes: { Args: { _id: string }; Returns: Json }
+      api_key_rotate: {
+        Args: { _grace_min: number; _id: string; _reason: string }
+        Returns: Json
+      }
+      api_key_save: {
+        Args: { _id: string; _org: string; _p: Json; _reason?: string }
+        Returns: Json
+      }
+      api_key_scope_options: { Args: { _org: string }; Returns: Json }
+      api_key_status: {
+        Args: { _id: string; _reason: string; _status: string }
+        Returns: Json
+      }
+      api_keys_list: { Args: { _org: string }; Returns: Json }
+      api_overview: { Args: { _org: string }; Returns: Json }
+      api_requests_list: {
+        Args: {
+          _before?: string
+          _key?: string
+          _limit?: number
+          _org: string
+          _outcome?: string
+        }
+        Returns: Json
+      }
+      api_webhook_deliveries: {
+        Args: { _limit?: number; _org: string; _webhook?: string }
+        Returns: Json
+      }
+      api_webhook_rotate_secret: { Args: { _id: string }; Returns: Json }
+      api_webhook_save: {
+        Args: { _id: string; _org: string; _p: Json }
+        Returns: Json
+      }
+      api_webhook_status: {
+        Args: { _id: string; _status: string }
+        Returns: Json
+      }
+      api_webhook_test: { Args: { _id: string }; Returns: string }
+      api_webhooks_list: { Args: { _org: string }; Returns: Json }
       archive_circular: { Args: { _id: string }; Returns: undefined }
       assign_substitute: {
         Args: {

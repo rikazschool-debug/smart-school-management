@@ -1,0 +1,2 @@
+# Integrations rules
+- Integrations/API (api_*): owner-only RPCs; public gateway src/routes/api/public/v1/$.ts hashes the key and defers every check to service-only _api_call (scope, fields, limits, idempotency, logging); test keys and the explorer always dry-run; no DELETE; API payments wait in api_inbox for owner approval through sf_collect. Webhooks queue via _api_emit triggers (data through the key's own read scope) and are sent only by the owner's manual dispatchWebhooks until automatic sending is approved. Test: scripts/api-e2e.ts.

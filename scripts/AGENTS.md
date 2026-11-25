@@ -159,3 +159,5 @@
 - scripts/perm-template-probe.ts: test DB only; prints what each base role really has in a fresh branch (/tmp/perm-templates.json) — use it to resync system role templates when new sections are added; perm6-e2e check 3 fails on drift.
 - scripts/perm-catalog-e2e.ts: every grantable tree option is accepted by the server and a grant/deny changes perm_effective (9 checks).
 - scripts/year-idl-guard-e2e.ts: year delete guard + ID sign-in per-device limit (6 checks). scripts/ptree-browser-fixture.ts setup|teardown + scripts/ptree-journey.py: permission tree grant/revoke/log in the browser (7 checks); always run teardown after.
+- scripts/api-e2e.ts: integrations & API (owner-only keys, scope/fields, dry-run test keys, idempotency, limits, IP, pause/rotate, payment inbox approval, webhook guard/scoped queue, service-only dispatch, explorer, HTTP route; 26 checks). Needs the dev server for check 26.
+- scripts/api-browser-fixture.ts setup|teardown: isolated apb- owner/org; scripts/api-journey.py: create key → secret once → explorer → log → webhooks note (7 checks); always run teardown after.

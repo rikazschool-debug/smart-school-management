@@ -44,6 +44,7 @@ import { Route as AuthenticatedAppGradesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppGuardiansRouteImport } from './routes/_authenticated/app/guardians'
 import { Route as AuthenticatedAppHrRouteImport } from './routes/_authenticated/app/hr'
 import { Route as AuthenticatedAppHubRouteImport } from './routes/_authenticated/app/hub'
+import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app/integrations'
 import { Route as AuthenticatedAppMaintenanceRouteImport } from './routes/_authenticated/app/maintenance'
 import { Route as AuthenticatedAppMembersRouteImport } from './routes/_authenticated/app/members'
 import { Route as AuthenticatedAppMyEmploymentRouteImport } from './routes/_authenticated/app/my-employment'
@@ -115,6 +116,7 @@ import { Route as ApiPublicAuthStudentLoginRouteImport } from './routes/api/publ
 import { Route as ApiPublicAuthVerifyCodeRouteImport } from './routes/api/public/auth/verify-code'
 import { Route as ApiPublicHrAttendanceRouteImport } from './routes/api/public/hr/attendance'
 import { Route as ApiPublicMaqsamRecordingRouteImport } from './routes/api/public/maqsam/recording'
+import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 import { Route as ApiPublicWatiWebhookRouteImport } from './routes/api/public/wati/webhook'
 import { Route as AuthenticatedAppAdminMeetingsIndexRouteImport } from './routes/_authenticated/app/admin.meetings.index'
 import { Route as AuthenticatedAppAdminMeetingsIdRouteImport } from './routes/_authenticated/app/admin.meetings.$id'
@@ -316,6 +318,12 @@ const AuthenticatedAppHubRoute = AuthenticatedAppHubRouteImport.update({
   path: '/hub',
   getParentRoute: () => AuthenticatedAppRouteRoute,
 } as any)
+const AuthenticatedAppIntegrationsRoute =
+  AuthenticatedAppIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppMaintenanceRoute =
   AuthenticatedAppMaintenanceRouteImport.update({
     id: '/maintenance',
@@ -724,6 +732,11 @@ const ApiPublicMaqsamRecordingRoute =
     path: '/api/public/maqsam/recording',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
+  id: '/api/public/v1/$',
+  path: '/api/public/v1/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWatiWebhookRoute = ApiPublicWatiWebhookRouteImport.update({
   id: '/api/public/wati/webhook',
   path: '/api/public/wati/webhook',
@@ -812,6 +825,7 @@ export interface FileRoutesByFullPath {
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/hr': typeof AuthenticatedAppHrRoute
   '/app/hub': typeof AuthenticatedAppHubRoute
+  '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
@@ -879,6 +893,7 @@ export interface FileRoutesByFullPath {
   '/api/public/auth/verify-code': typeof ApiPublicAuthVerifyCodeRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
   '/api/public/maqsam/recording': typeof ApiPublicMaqsamRecordingRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
@@ -927,6 +942,7 @@ export interface FileRoutesByTo {
   '/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/app/hr': typeof AuthenticatedAppHrRoute
   '/app/hub': typeof AuthenticatedAppHubRoute
+  '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/app/members': typeof AuthenticatedAppMembersRoute
   '/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
@@ -994,6 +1010,7 @@ export interface FileRoutesByTo {
   '/api/public/auth/verify-code': typeof ApiPublicAuthVerifyCodeRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
   '/api/public/maqsam/recording': typeof ApiPublicMaqsamRecordingRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin': typeof AuthenticatedAppAdminIndexRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
@@ -1045,6 +1062,7 @@ export interface FileRoutesById {
   '/_authenticated/app/guardians': typeof AuthenticatedAppGuardiansRoute
   '/_authenticated/app/hr': typeof AuthenticatedAppHrRoute
   '/_authenticated/app/hub': typeof AuthenticatedAppHubRoute
+  '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/maintenance': typeof AuthenticatedAppMaintenanceRoute
   '/_authenticated/app/members': typeof AuthenticatedAppMembersRoute
   '/_authenticated/app/my-employment': typeof AuthenticatedAppMyEmploymentRoute
@@ -1112,6 +1130,7 @@ export interface FileRoutesById {
   '/api/public/auth/verify-code': typeof ApiPublicAuthVerifyCodeRoute
   '/api/public/hr/attendance': typeof ApiPublicHrAttendanceRoute
   '/api/public/maqsam/recording': typeof ApiPublicMaqsamRecordingRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
@@ -1163,6 +1182,7 @@ export interface FileRouteTypes {
     | '/app/guardians'
     | '/app/hr'
     | '/app/hub'
+    | '/app/integrations'
     | '/app/maintenance'
     | '/app/members'
     | '/app/my-employment'
@@ -1230,6 +1250,7 @@ export interface FileRouteTypes {
     | '/api/public/auth/verify-code'
     | '/api/public/hr/attendance'
     | '/api/public/maqsam/recording'
+    | '/api/public/v1/$'
     | '/api/public/wati/webhook'
     | '/app/admin/'
     | '/app/classrooms/'
@@ -1278,6 +1299,7 @@ export interface FileRouteTypes {
     | '/app/guardians'
     | '/app/hr'
     | '/app/hub'
+    | '/app/integrations'
     | '/app/maintenance'
     | '/app/members'
     | '/app/my-employment'
@@ -1345,6 +1367,7 @@ export interface FileRouteTypes {
     | '/api/public/auth/verify-code'
     | '/api/public/hr/attendance'
     | '/api/public/maqsam/recording'
+    | '/api/public/v1/$'
     | '/api/public/wati/webhook'
     | '/app/admin'
     | '/app/classrooms'
@@ -1395,6 +1418,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/guardians'
     | '/_authenticated/app/hr'
     | '/_authenticated/app/hub'
+    | '/_authenticated/app/integrations'
     | '/_authenticated/app/maintenance'
     | '/_authenticated/app/members'
     | '/_authenticated/app/my-employment'
@@ -1462,6 +1486,7 @@ export interface FileRouteTypes {
     | '/api/public/auth/verify-code'
     | '/api/public/hr/attendance'
     | '/api/public/maqsam/recording'
+    | '/api/public/v1/$'
     | '/api/public/wati/webhook'
     | '/_authenticated/app/admin/'
     | '/_authenticated/app/classrooms/'
@@ -1498,6 +1523,7 @@ export interface RootRouteChildren {
   ApiPublicAuthVerifyCodeRoute: typeof ApiPublicAuthVerifyCodeRoute
   ApiPublicHrAttendanceRoute: typeof ApiPublicHrAttendanceRoute
   ApiPublicMaqsamRecordingRoute: typeof ApiPublicMaqsamRecordingRoute
+  ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
   ApiPublicWatiWebhookRoute: typeof ApiPublicWatiWebhookRoute
   ApiIntegrationsAdmsV1EventsRoute: typeof ApiIntegrationsAdmsV1EventsRoute
 }
@@ -1747,6 +1773,13 @@ declare module '@tanstack/react-router' {
       path: '/hub'
       fullPath: '/app/hub'
       preLoaderRoute: typeof AuthenticatedAppHubRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/integrations': {
+      id: '/_authenticated/app/integrations'
+      path: '/integrations'
+      fullPath: '/app/integrations'
+      preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/maintenance': {
@@ -2246,6 +2279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMaqsamRecordingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/$': {
+      id: '/api/public/v1/$'
+      path: '/api/public/v1/$'
+      fullPath: '/api/public/v1/$'
+      preLoaderRoute: typeof ApiPublicV1SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/wati/webhook': {
       id: '/api/public/wati/webhook'
       path: '/api/public/wati/webhook'
@@ -2337,6 +2377,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppGuardiansRoute: typeof AuthenticatedAppGuardiansRoute
   AuthenticatedAppHrRoute: typeof AuthenticatedAppHrRoute
   AuthenticatedAppHubRoute: typeof AuthenticatedAppHubRoute
+  AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppMaintenanceRoute: typeof AuthenticatedAppMaintenanceRoute
   AuthenticatedAppMembersRoute: typeof AuthenticatedAppMembersRoute
   AuthenticatedAppMyEmploymentRoute: typeof AuthenticatedAppMyEmploymentRoute
@@ -2434,6 +2475,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppGuardiansRoute: AuthenticatedAppGuardiansRoute,
   AuthenticatedAppHrRoute: AuthenticatedAppHrRoute,
   AuthenticatedAppHubRoute: AuthenticatedAppHubRoute,
+  AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppMaintenanceRoute: AuthenticatedAppMaintenanceRoute,
   AuthenticatedAppMembersRoute: AuthenticatedAppMembersRoute,
   AuthenticatedAppMyEmploymentRoute: AuthenticatedAppMyEmploymentRoute,
@@ -2546,6 +2588,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAuthVerifyCodeRoute: ApiPublicAuthVerifyCodeRoute,
   ApiPublicHrAttendanceRoute: ApiPublicHrAttendanceRoute,
   ApiPublicMaqsamRecordingRoute: ApiPublicMaqsamRecordingRoute,
+  ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
   ApiPublicWatiWebhookRoute: ApiPublicWatiWebhookRoute,
   ApiIntegrationsAdmsV1EventsRoute: ApiIntegrationsAdmsV1EventsRoute,
 }

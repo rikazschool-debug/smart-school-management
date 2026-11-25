@@ -105,7 +105,7 @@ try {
   const ex = await fol.c.rpc("ad_list", { _org: org, _f: { export: true }, _limit: 5000 });
   check("16 summary counts real rows; export without grant returns nothing", sum?.total === 2 && sum.linked === 1 && !(ex.data as any)?.rows?.length, [sum?.total, (ex.data as any)?.rows?.length]);
   const pS = await pr.c.rpc("ad_students", { _org: org, _f: {} }); const oS = await owner.c.rpc("ad_students", { _org: org, _f: {} });
-  check("17 current students: principal without grant refused; owner reads from the academic source", !!pS.error && (oS.data as any)?.total === 1, [pS.error?.message, oS.error?.message]);
+  check("17 current students: principal without grant refused; owner reads from the academic source", !!pS.error && (oS.data as any)?.total === 1, [pS.error?.message, oS.error?.message, (oS.data as any)?.total]);
   await act(owner, "assign", { user: fol.id }); await act(owner, "follow", { next_follow: "2020-01-02" });
   const tick = await admin.rpc("ad_alerts_tick"); const tick2 = await admin.rpc("ad_alerts_tick");
   const fn = (await admin.from("notifications").select("id").like("dedupe_key", `ad-follow:${id}%`)).data?.length;

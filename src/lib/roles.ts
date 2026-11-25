@@ -126,6 +126,7 @@ export function ownerSection(path: string, prev: OwnerSection | null = null): Ow
   if (p === "/app") return null;
   if (p.startsWith("/app/collaboration")) return "school_admin"; // collaboration is a sub-section of school administration for owners
   if (OWNER_SHARED.some((s) => p === s || p.startsWith(s + "/"))) return prev;
+  if (p === "/app/integrations") return null; // integrations: own tab bar, no section side menu
   if (p === "/app/accounting") return null; // finance landing: section cards only, like the owner home
   if (p.startsWith("/app/finance")) return "student_accounts";
   if (p.startsWith("/app/procurement")) return "finance";

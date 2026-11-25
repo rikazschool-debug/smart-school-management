@@ -783,3 +783,4 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 2026-11-25: System role templates equal the real role's branch rights (non-delegable items excluded); «مطابقة العقود» can be granted/denied per person or template (branch/org).
 2026-11-25: Calls, WhatsApp inbox, customer service, school schedule view and contracts can be granted/denied per branch or group; chat settings and tags management group-wide only.
 2026-11-25: Academic years — create/edit/close owner only; others select/view; delete refused when linked data exists. ID sign-in limits per device + per ID, temporary only.
+2026-11-25: Integrations & API — keys, scopes, logs, webhooks, inbox and explorer are owner-only (platform admin acting as owner); external systems act only through a key; principals and other roles have no access.

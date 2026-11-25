@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, MessagesSquare, UsersRound, Star, ArrowLeft, Building2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy, Phone } from "lucide-react";
+import { BookOpen, MessagesSquare, UsersRound, Star, ArrowLeft, Building2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy, Phone, Plug } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -137,6 +137,16 @@ const CARDS: Card[] = [
       { icon: LifeBuoy, label: "ملخص الدعم", to: "/app/support", search: { tab: "summary" } },
       { icon: LifeBuoy, label: "كل التذاكر", to: "/app/support", search: { tab: "manage" } },
       { icon: Phone, label: "المكالمات الهاتفية", to: "/app/calls", search: { mq: "live" } },
+    ],
+  },
+  {
+    key: "integrations", title: "التكاملات وواجهات API", icon: Plug, to: "/app/integrations", open: "فتح التكاملات",
+    desc: "مفاتيح API محددة النطاق للأنظمة الخارجية، وسجل كامل للطلبات، وإشعارات Webhooks، واعتماد العمليات الواردة.",
+    features: [
+      { icon: KeyRound, label: "المفاتيح والأنظمة", to: "/app/integrations", search: { tab: "keys" } },
+      { icon: Plug, label: "سجل الطلبات", to: "/app/integrations", search: { tab: "logs" } },
+      { icon: Plug, label: "إشعارات Webhooks", to: "/app/integrations", search: { tab: "webhooks" } },
+      { icon: Wallet, label: "العمليات الواردة", to: "/app/integrations", search: { tab: "inbox" } },
     ],
   },
   {
