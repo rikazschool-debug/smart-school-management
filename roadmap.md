@@ -22,3 +22,8 @@
 - [x] Bus roster print/PDF/Excel verified (+ totals row)
 - [x] Filters with several stages/grades/sections
 - [x] PDFs/print with a logo school
+
+# Prompt 543 — Student financial details
+- [x] Organize supplementary details, payment records and financial history without changing financial rules.
+- [x] Check hook source and preview build: reported TS2686 not reproduced; 11 finance tests pass.
+- [ ] Signed-in desktop/mobile student-panel verification — blocked: no available session for user-managed Supabase.

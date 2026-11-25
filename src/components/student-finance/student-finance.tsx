@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bus, CreditCard, Percent, Receipt, RotateCcw } from "lucide-react";
+import { Bus, CreditCard, Percent, Receipt, RotateCcw, History, Users, Wallet, CircleCheck, type LucideIcon } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,8 @@ export function StudentFinance({ studentId, startCollect = false, initialYear }:
   const rq = useQuery({ queryKey: [...SF_KEY, "student-receipts", studentId], queryFn: async () => { const { data, error } = await db.rpc("sf_student_receipts", { _student: studentId }); if (error) throw error; return data as Row[]; }, retry: false });
   if (q.isLoading || (year === undefined && !q.error)) return <LoadingState />;
   if (q.error) return <p className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">{(q.error as { code?: string }).code === "42501" ? "لا تتوفر لك صلاحية عرض البيانات المالية لهذا الطالب، أو القسم المالي غير مفعّل." : arabicError(q.error)}</p>;
-  const f = q.data!;
+  const f = q.data;
+  if (!f) return null;
   const yearId = year || (f.years[0]?.["id"] as string) || "";
   const a = f.summary["annual"] ?? {};
   const prev = f.previous ?? [];
@@ -70,28 +71,45 @@ export function StudentFinance({ studentId, startCollect = false, initialYear }:
       {year && <PreviousBalances prev={prev} canSetup={!!f.caps["setup"]} onCredit={(p, refund) => setCreditFor({ p, refund })} />}
       {f.credit_moves?.length > 0 && <Section title="حركات الرصيد الدائن">{f.credit_moves.map((m) => <div key={m["id"]} className="flex flex-wrap gap-2 text-xs"><b>{m["kind"] === "refund" ? "استرداد" : "استخدام لسداد مستحق"}</b><span>{money(m["amount"])}</span><span className="text-muted-foreground">{new Date(m["created_at"]).toLocaleDateString("ar-SA", { timeZone: "Asia/Riyadh" })}</span>{m["reason"] && <span className="text-muted-foreground">— {m["reason"]}</span>}</div>)}</Section>}
 
-      <Section title="النقل المدرسي">{f.transport.length ? f.transport.map((t) => <div key={t["id"]} className="flex flex-wrap gap-2 text-xs"><b>{TERM_LABEL(t["term"])}</b>{t["active"] ? <><span>{TRANSPORT_LABEL[t["transport_type"]]}</span><span>الباص {t["bus"]?.code ?? "—"} ({t["bus"]?.plate ?? ""})</span><span>من {t["starts"]}</span></> : <span className="text-muted-foreground">غير مشترك</span>}{t["exempt"] && <span className="rounded bg-muted px-1">معفى</span>}</div>) : <p className="text-xs text-muted-foreground">غير مشترك في النقل المدرسي.</p>}</Section>
+      <div className="grid gap-x-6 gap-y-2 md:grid-cols-2">
+      <Section title="النقل المدرسي" count={f.transport.length}>{f.transport.length ? f.transport.map((t) => <div key={t["id"]} className="flex flex-wrap gap-2 text-xs"><b>{TERM_LABEL(t["term"])}</b>{t["active"] ? <><span>{TRANSPORT_LABEL[t["transport_type"]]}</span><span>الباص {t["bus"]?.code ?? "—"} ({t["bus"]?.plate ?? ""})</span><span>من {t["starts"]}</span></> : <span className="text-muted-foreground">غير مشترك</span>}{t["exempt"] && <span className="rounded bg-muted px-1">معفى</span>}</div>) : <EmptyDetail text="غير مشترك في النقل المدرسي." />}</Section>
 
       {yearId && <Siblings studentId={studentId} yearId={yearId} />}
 
-      <Section title="الخصومات المطبقة">{f.discounts.length ? f.discounts.map((d) => (
+      </div>
+
+      <Section title="الخصومات المطبقة" count={f.discounts.length}>{f.discounts.length ? f.discounts.map((d) => (
         <div key={d["id"]} className="flex flex-wrap items-center gap-2 text-xs"><b>{d["name"]}</b><span>{KIND_LABEL[d["kind"]]} — {TERM_LABEL(d["term"])}</span><span>{money(d["amount"])}</span>{!d["active"] && <span className="rounded bg-muted px-1">غير فعال{d["manual_override"] ? " (مستثنى يدويًا)" : ""}</span>}
           {f.caps["setup"] && <span className="ms-auto flex gap-1">
             {d["active"] && <Button size="sm" variant="ghost" onClick={async () => { const amt = await askText("القيمة الجديدة للخصم (ر.س)", { required: true, initial: String(d["amount"]) }); if (amt === null) return; const r = await askText("سبب التعديل", { required: true }); if (r) void run(() => db.rpc("sf_override", { _student: studentId, _action: "discount_edit", _id: d["id"], _amount: Number(amt), _reason: r }), "عُدّل الخصم"); }}>تعديل</Button>}
             {d["active"] && <Button size="sm" variant="ghost" onClick={async () => { const r = await askText("سبب حذف الخصم (يبقى في السجل ولا يُعاد تطبيقه تلقائيًا)", { required: true }); if (r) void run(() => db.rpc("sf_override", { _student: studentId, _action: "discount_remove", _id: d["id"], _amount: null, _reason: r }), "حُذف الخصم"); }}>حذف</Button>}
             {d["manual_override"] && !d["active"] && <Button size="sm" variant="ghost" onClick={async () => { const r = await askText("سبب إعادة تقييم الخصم", { required: true }); if (r) void run(() => db.rpc("sf_override", { _student: studentId, _action: "exception_clear", _id: d["id"], _amount: null, _reason: r }), "أُعيد التقييم"); }}>إعادة التقييم</Button>}
           </span>}
-        </div>)) : <p className="text-xs text-muted-foreground">لا توجد خصومات.</p>}</Section>
+        </div>)) : <EmptyDetail text="لا توجد خصومات." />}</Section>
 
-      <Section title="سجل السداد">{f.collections.length ? f.collections.map((c) => (
-        <div key={c["id"]} className="flex flex-wrap items-center gap-2 text-xs"><b>{money(c["amount"])}</b><span>{METHOD_LABEL[c["method"]]}</span><span>{c["paid_at"]}</span>{c["ref"] && <span dir="ltr">{c["ref"]}</span>}<span className="rounded bg-muted px-1">{COLLECTION_STATUS[c["status"]] ?? c["status"]}</span>{(() => { const r = rq.data?.find((x) => x["collection_id"] === c["id"]); return r ? <><span className="font-mono" dir="ltr">{r["number"]}</span><ReceiptButtons r={r} /></> : null; })()}
+      <Section title="سجل السداد" count={f.collections.length}>{f.collections.length ? f.collections.map((c) => (
+        <div key={c["id"]} className="rounded-lg border bg-card p-4 text-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-2"><div className="flex flex-wrap items-center gap-3"><b className="text-lg tabular-nums">{money(c["amount"])}</b><span className={`rounded-md px-2 py-1 text-xs font-medium ${c["status"] === "reversed" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{COLLECTION_STATUS[c["status"]] ?? c["status"]}</span></div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground"><span>{METHOD_LABEL[c["method"]]}</span><span className="tabular-nums" dir="ltr">{c["paid_at"]}</span>{c["ref"] && <span>المرجع: <bdi>{c["ref"]}</bdi></span>}</div>
+            </div>
+            {(() => { const r = rq.data?.find((x) => x["collection_id"] === c["id"]); return r ? <div className="flex flex-wrap items-center gap-2"><span className="rounded-md bg-muted px-2 py-1 font-mono text-xs" dir="ltr">{r["number"]}</span><ReceiptButtons r={r} /></div> : null; })()}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-2 empty:hidden">
           {c["method"] === "bank" && <TransferFiles files={(tq.data ?? []).filter((x) => x.collection_id === c["id"])} />}
           {c["method"] === "bank" && f.caps["collect"] && c["status"] !== "reversed" && (tq.data ?? []).filter((x) => x.collection_id === c["id"]).length < 3 && <TransferPick label="إرفاق صورة الحوالة" onPick={async (fl) => { const failed = await attachTransfer(c["id"], fl); if (failed) toast.error(failed); else toast.success("أُرفقت صورة الحوالة"); void refresh(); }} />}
           {f.caps["setup"] && c["status"] !== "reversed" && !c["accounting_confirmed"] && <Button size="sm" variant="ghost" className="ms-auto" onClick={async () => { const r = await askText("سبب إلغاء عملية السداد (تبقى في السجل)", { required: true }); if (r) void run(() => db.rpc("sf_reverse", { _student: studentId, _collection: c["id"], _reason: r }), "أُلغيت العملية"); }}><RotateCcw className="size-4" /> إلغاء</Button>}
-        </div>)) : <p className="text-xs text-muted-foreground">لا توجد عمليات سداد.</p>}
+          </div>
+        </div>)) : <EmptyDetail text="لا توجد عمليات سداد." />}
         <p className="text-[11px] text-muted-foreground">لكل عملية سند قبض داخلي من ركاز؛ المستند المحاسبي الرسمي يصدر من وافق بعد تفعيل الربط.</p></Section>
 
-      {f.events.length > 0 && <Section title="سجل العمليات المالية">{[...f.events].reverse().slice(0, 30).map((e) => <div key={e["id"]} className="flex gap-2 text-xs"><span className="text-muted-foreground">{new Date(e["created_at"]).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" })}</span><span>{EVENT_LABEL[e["action"]] ?? e["action"]}</span>{e["reason"] && <span className="text-muted-foreground">— {e["reason"]}</span>}</div>)}</Section>}
+      {f.events.length > 0 && <Section title="سجل العمليات المالية" count={f.events.length}>
+        <ol className="ms-2 border-s border-border">{[...f.events].reverse().slice(0, 30).map((e) => <li key={e["id"]} className="relative ps-5 py-3 first:pt-1 last:pb-1">
+          <span aria-hidden className="absolute -start-1 top-4 size-2 rounded-full bg-primary ring-4 ring-background" />
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1"><span className="text-sm font-medium">{EVENT_LABEL[e["action"]] ?? e["action"]}</span><time className="text-xs tabular-nums text-muted-foreground" dateTime={e["created_at"]}>{new Date(e["created_at"]).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" })}</time></div>
+          {e["reason"] && <p className="mt-1 break-words text-xs text-muted-foreground">{e["reason"]}</p>}
+        </li>)}</ol>
+      </Section>}
 
       {creditFor && <CreditDialog f={f} studentId={studentId} p={creditFor.p} refund={creditFor.refund} onClose={() => setCreditFor(null)} onDone={() => { setCreditFor(null); void refresh(); }} />}
       {dlg === "collect" && <CollectDialog f={f} studentId={studentId} onClose={() => setDlg(null)} onDone={() => { setDlg(null); void refresh(); }} />}
@@ -104,13 +122,23 @@ export function StudentFinance({ studentId, startCollect = false, initialYear }:
 function Siblings({ studentId, yearId }: { studentId: string; yearId: string }) {
   const q = useQuery({ queryKey: [...SF_KEY, "siblings", studentId, yearId], queryFn: async () => { const { data, error } = await db.rpc("sf_siblings", { _student: studentId, _year: yearId }); if (error) throw error; return data as Row[]; }, retry: false });
   const others = (q.data ?? []).filter((x) => x["id"] !== studentId);
-  return <Section title="الإخوة في المجموعة">{q.isLoading ? <p className="text-xs text-muted-foreground">جارٍ التحميل…</p> : others.length ? <>{!(q.data ?? []).find((x) => x["id"] === studentId)?.["rank"] && <p className="text-xs font-semibold text-destructive">هذا الطالب غير مسكّن في فصل لهذا العام، لذلك لا تُنشأ له رسوم ولا يُطبق عليه خصم الإخوة حتى يُسكَّن.</p>}{others.map((x) => (
+  return <Section title="الإخوة في المجموعة" count={others.length}>{q.isLoading ? <p className="text-xs text-muted-foreground">جارٍ التحميل…</p> : others.length ? <>{!(q.data ?? []).find((x) => x["id"] === studentId)?.["rank"] && <p className="text-xs font-semibold text-destructive">هذا الطالب غير مسكّن في فصل لهذا العام، لذلك لا تُنشأ له رسوم ولا يُطبق عليه خصم الإخوة حتى يُسكَّن.</p>}{others.map((x) => (
     <div key={x["id"]} className="flex flex-wrap gap-2 text-xs"><b>{x["name"]}</b><span>{x["school"]}</span><span>{[x["stage"], x["grade"]].filter(Boolean).join(" — ") || "غير مسكّن هذا العام"}</span><span>{x["rank"] ? `الترتيب ${x["rank"]}` : "لا يُحتسب في خصم الإخوة حتى يُسكَّن في فصل"}</span><span>{num(x["sibling_discount"]) > 0 ? `خصم إخوة ${money(x["sibling_discount"])}` : "لا يوجد خصم إخوة مطبق"}</span></div>
-  ))}</> : <p className="text-xs text-muted-foreground">لا يوجد إخوة مسجلون بعلاقة أسرية موثقة.</p>}</Section>;
+  ))}</> : <EmptyDetail text="لا يوجد إخوة مسجلون بعلاقة أسرية موثقة." />}</Section>;
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return <section className="space-y-2 rounded-xl border bg-card p-3"><h4 className="text-sm font-semibold">{title}</h4>{children}</section>;
+const DETAIL_ICONS: Record<string, LucideIcon> = { "الأرصدة السابقة": Wallet, "حركات الرصيد الدائن": Wallet, "النقل المدرسي": Bus, "الإخوة في المجموعة": Users, "الخصومات المطبقة": Percent, "سجل السداد": Receipt, "سجل العمليات المالية": History };
+
+function Section({ title, count, children }: { title: string; count?: number; children: React.ReactNode }) {
+  const Icon = DETAIL_ICONS[title] ?? Wallet;
+  return <section className="min-w-0 space-y-3 border-t py-4">
+    <div className="flex items-center gap-2.5"><Icon aria-hidden className="size-4 shrink-0 text-primary" /><h4 className="text-sm font-bold">{title}</h4>{count !== undefined && count > 0 && <span className="rounded-md bg-muted px-2 py-0.5 text-xs tabular-nums text-muted-foreground">{count}</span>}</div>
+    {children}
+  </section>;
+}
+
+function EmptyDetail({ text }: { text: string }) {
+  return <div className="flex min-h-16 items-center gap-2 rounded-lg bg-muted/30 px-3 py-4 text-xs text-muted-foreground"><CircleCheck aria-hidden className="size-4 shrink-0" /><p>{text}</p></div>;
 }
 
 type TransferFile = { id: string; collection_id: string; name: string; mime: string; path: string };
@@ -315,7 +343,7 @@ function FeeTable({ rows }: { rows: { k: "tuition" | "transport"; t: number; o?:
 /** «الأرصدة السابقة»: carried items with the live balance of the original obligation (one source, no new debt). */
 function PreviousBalances({ prev, canSetup, onCredit }: { prev: Prev[]; canSetup: boolean; onCredit: (p: Prev, refund: boolean) => void }) {
   const H = ["العام الأصلي", "المدرسة", "البند", "صافي المستحق", "المسدد", "المتبقي", "الرصيد الدائن", "التأخير", ""];
-  return <Section title="الأرصدة السابقة">{!prev.length ? <p className="text-xs text-muted-foreground">لا توجد أرصدة سابقة مرحّلة إلى هذا العام.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-xs">
+  return <Section title="الأرصدة السابقة">{!prev.length ? <EmptyDetail text="لا توجد أرصدة سابقة مرحّلة إلى هذا العام." /> : <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-xs">
     <thead className="bg-muted/50"><tr>{H.map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
     <tbody>{prev.map((p) => { const b = p.obligation.balance; return <tr key={p.carry_id} className="border-t">
       <td className="p-2">{formatAcademicYear(p.year)}</td><td className="p-2">{p.school}</td><td className="p-2">{obLabel(p.obligation)}</td>

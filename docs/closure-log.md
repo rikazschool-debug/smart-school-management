@@ -1306,3 +1306,8 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 ## Security review phase 5 (Nov 24 2026, test DB)
 - Full report: docs/security-review-phase5.md. Fixed fm_caps/od_caps/mq_caps cross-group listing, gv_expire_due branch sweep, anon _adms_ok; rotated demo + leftover test-account passwords.
 - Evidence: outsider and other-group-owner sweeps over all 1,076 callable functions and 287 tables (rolled back); sf-security 25/25, sf-carry 19/19, sf-transfer 11/11, people-e2e 29/30 (pre-existing), vitest 783 passed.
+
+## 2026-11-25 — Prompt 543: student financial details
+- Presentation only: supplementary details in a two-column layout at wider sizes, icon section headings, compact empty states, payment cards separating amounts/status/date/reference from document actions, and dated financial activity timeline. Existing amounts, receipt exports and write capabilities preserved; no DB changes or publication.
+- Validation: student-finance labels/wording tests 11/11; preview build OK. Reported use-mobile TS2686 not reproduced: hooks are explicitly imported and the quoted prompt text is absent. Existing file-wide formatting lint warnings remain.
+- Signed-in student-panel desktop/mobile verification: not verified; session tool cannot mint a session for this user-managed Supabase project.

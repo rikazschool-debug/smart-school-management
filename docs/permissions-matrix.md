@@ -772,3 +772,5 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 - صورة الحوالة في سداد الرسوم: يرفقها من يملك صلاحية التحصيل (للتحويل البنكي فقط، حتى 3 ملفات)، ويطّلع عليها من يملك عرض المالية؛ ولي الأمر والمعلم لا يرونها.
 
 - المالية (عرض): الخصومات المطبقة/حسابات النقل/التسويات/التقارير/مؤشرات لوحة الفرع — من يملك student_finance.view فقط؛ ولي الأمر والمعلم مرفوضون.
+
+2026-11-25 (prompt-543): Student financial detail layout only; sf_get/sf_siblings/receipt access and all server-returned action capabilities remain unchanged. No database changes.
