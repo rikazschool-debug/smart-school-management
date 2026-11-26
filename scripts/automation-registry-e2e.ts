@@ -1,8 +1,10 @@
 import "./lib/user-pool.ts";
+import "./lib/au-suite-lock.ts";
 // Automation registry (events/conditions/actions/recipients/triggers) acceptance. Run: NODE_PATH=node_modules bun scripts/automation-registry-e2e.ts
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { auTick } from "./lib/au-tick";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env["VITE_SUPABASE_URL"]!, PK = env["VITE_SUPABASE_PUBLISHABLE_KEY"]!;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -20,7 +22,7 @@ async function user(tag: string) {
 }
 const day = (d: number) => new Date(Date.now() + 3 * 3600e3 + d * 864e5).toISOString().slice(0, 10);
 const auNotes = async (u: string) => (await admin.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", u).like("dedupe_key", "au:%")).count ?? 0;
-const tick = async () => { const r = await admin.rpc("automation_tick"); if (r.error) throw r.error; return r.data as any; };
+const tick = () => auTick(admin);
 const orgs: string[] = [];
 try {
   const gaps = (await admin.rpc("au_registry_gaps")).data as any;

@@ -2,18 +2,28 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useState } from "react";
-import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, ListTree, PencilRuler, FlaskConical, OctagonAlert, CalendarClock, ScrollText, ShieldAlert, type LucideIcon } from "lucide-react";
+import { ask, askText } from "@/components/confirm";
+import { Dashboard } from "./dashboard";
+import { RulesTab } from "./rules";
+import { RunsTab, AuditTab } from "./runs";
+import { Designer } from "./designer/designer";
+import { SimulationTab } from "./simulation";
 import { supabase } from "@/integrations/supabase/client";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { selectCls } from "@/components/ui/native-select";
 
-export type AuTab = "overview" | "events" | "conditions" | "actions" | "schedule" | "monitor" | "settings";
-export const AU_TABS: { k: AuTab; l: string; i: LucideIcon }[] = [
-  { k: "overview", i: LayoutDashboard, l: "نظرة عامة" }, { k: "events", i: Zap, l: "دليل الأحداث" }, { k: "conditions", i: SlidersHorizontal, l: "دليل الشروط والمتغيرات" },
-  { k: "actions", i: Play, l: "دليل الإجراءات" }, { k: "schedule", i: Clock, l: "جدولة التشغيل" },
-  { k: "monitor", i: Activity, l: "مراقبة التنفيذ" }, { k: "settings", i: Settings2, l: "الإعدادات" },
+export type AuTab = "overview" | "rules" | "designer" | "events" | "conditions" | "actions" | "schedule" | "simulate" | "monitor" | "failed" | "existing" | "audit" | "settings";
+type TabDef = { k: AuTab; l: string; i: LucideIcon };
+/** Grouped so 13 working tabs never crowd one row. The templates library (phase 7) is not shown until it exists. */
+export const AU_GROUPS: { l: string; tabs: TabDef[] }[] = [
+  { l: "الإدارة", tabs: [{ k: "overview", i: LayoutDashboard, l: "نظرة عامة" }, { k: "rules", i: ListTree, l: "قواعد الأتمتة" }, { k: "designer", i: PencilRuler, l: "المصمم المرئي" }] },
+  { l: "الأدلة", tabs: [{ k: "events", i: Zap, l: "دليل الأحداث" }, { k: "conditions", i: SlidersHorizontal, l: "الشروط والمتغيرات" }, { k: "actions", i: Play, l: "دليل الإجراءات" }, { k: "schedule", i: Clock, l: "الجدولة" }] },
+  { l: "التشغيل", tabs: [{ k: "simulate", i: FlaskConical, l: "المحاكاة والاختبار" }, { k: "monitor", i: Activity, l: "مراقبة التنفيذ" }, { k: "failed", i: OctagonAlert, l: "العمليات الفاشلة" }, { k: "existing", i: CalendarClock, l: "الوظائف القائمة" }, { k: "audit", i: ScrollText, l: "سجل التدقيق" }] },
+  { l: "الضبط", tabs: [{ k: "settings", i: Settings2, l: "الإعدادات والصلاحيات" }] },
 ];
+export const AU_TABS: TabDef[] = AU_GROUPS.flatMap((g) => g.tabs);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 const EV_ST: Record<string, [string, string]> = { tested: ["مرتبط ومختبَر", "bg-primary/15 text-primary"], wired: ["مرتبط", "bg-primary/10 text-primary"], registered: ["بانتظار الربط", "bg-muted text-muted-foreground"], blocked: ["مغطى بوظيفة قائمة / ممنوع", "bg-destructive/10 text-destructive"] };
@@ -31,30 +41,40 @@ function useRegistry(orgId: string) {
   return useQuery({ queryKey: ["au-registry", orgId], queryFn: async () => { const r = await supabase.rpc("au_registry" as never, { _org: orgId } as never); if (r.error) throw r.error; return r.data as unknown as Any; } });
 }
 
-export function AutomationPage({ orgId, tab }: { orgId: string; tab: AuTab }) {
+export function AutomationPage({ orgId, tab, rule }: { orgId: string; tab: AuTab; rule?: string | undefined }) {
   const navigate = useNavigate();
   const q = useRegistry(orgId);
+  const go = (t: AuTab, r?: string) => navigate({ to: "/app/automation", search: r ? { tab: t, rule: r } : { tab: t } });
   return (
     <div className="space-y-4">
-      <nav className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
-        {AU_TABS.map((t) => { const on = tab === t.k; return (
-          <button key={t.k} aria-current={on ? "page" : undefined} onClick={() => navigate({ to: "/app/automation", search: { tab: t.k } })}
-            className={`flex min-w-0 items-center gap-2.5 rounded-xl border px-3 py-2.5 text-start transition-all ${on ? "border-primary bg-primary text-primary-foreground shadow-md" : "bg-card text-foreground hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"}`}>
-            <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${on ? "bg-primary-foreground/15" : "bg-primary/10 text-primary"}`}><t.i className="h-4 w-4" /></span>
-            <span className="min-w-0 truncate text-sm font-semibold">{t.l}</span>
-          </button>); })}
+      <nav aria-label="أقسام مركز الأتمتة" className="grid gap-2 rounded-2xl border bg-card p-2 shadow-sm md:grid-cols-[repeat(4,auto)] md:justify-start">
+        {AU_GROUPS.map((g) => (
+          <div key={g.l} className="flex flex-wrap items-center gap-1 md:border-e md:pe-2 md:last:border-e-0">
+            <span className="w-full px-1 text-[11px] font-bold text-muted-foreground md:w-auto">{g.l}</span>
+            {g.tabs.map((t) => { const on = tab === t.k; return (
+              <button key={t.k} aria-current={on ? "page" : undefined} onClick={() => go(t.k)}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold transition-colors ${on ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground hover:bg-primary/10"}`}>
+                <t.i className="size-4" />{t.l}</button>); })}
+          </div>
+        ))}
       </nav>
-      {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : q.data && (
+      {tab === "overview" && <><Dashboard orgId={orgId} />{q.data && <Overview r={q.data} />}</>}
+      {tab === "rules" && <RulesTab orgId={orgId} openDesigner={(id) => go("designer", id)} />}
+      {tab === "designer" && <Designer key={rule ?? "new"} orgId={orgId} ruleId={rule} onRule={(id) => go("designer", id)} />}
+      {tab === "simulate" && <SimulationTab orgId={orgId} openDesigner={(id) => go("designer", id)} />}
+      {tab === "monitor" && <><RunsTab orgId={orgId} /><EngineHealth orgId={orgId} /></>}
+      {tab === "failed" && <RunsTab key="failed" orgId={orgId} failed />}
+      {tab === "existing" && <ExistingJobs orgId={orgId} />}
+      {tab === "audit" && <AuditTab orgId={orgId} />}
+      {tab === "settings" && <SettingsTab orgId={orgId} />}
+      {["events", "conditions", "actions", "schedule"].includes(tab) && (q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : q.data && (
         <>
-          {tab === "overview" && <Overview r={q.data} />}
           {tab === "events" && <Events r={q.data} />}
           {tab === "conditions" && <Conditions r={q.data} />}
           {tab === "actions" && <Actions r={q.data} />}
           {tab === "schedule" && <Schedule r={q.data} />}
-          {tab === "monitor" && <Monitor orgId={orgId} />}
-          {tab === "settings" && <SettingsTab orgId={orgId} />}
         </>
-      )}
+      ))}
     </div>
   );
 }
@@ -157,35 +177,33 @@ function rpc<T>(fn: string, args: Record<string, unknown>) { return supabase.rpc
 const fmt = (t?: string | null) => (t ? new Date(t).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh", dateStyle: "short", timeStyle: "short" }) : "—");
 const JOB_ST: Record<string, string> = { queued: "بالانتظار", done: "منفّذة", cancelled: "ملغاة (تغيّر الشرط/النطاق)", dead: "معزولة بعد فشل متكرر" };
 
-function Monitor({ orgId }: { orgId: string }) {
-  const qc = useQueryClient();
+function EngineHealth({ orgId }: { orgId: string }) {
   const m = useQuery({ queryKey: ["au-monitor", orgId], refetchInterval: 30000, queryFn: async () => { const r = await rpc<Any>("au_monitor", { _org: orgId }); if (r.error) throw r.error; return r.data; } });
-  const ex = useQuery({ queryKey: ["au-existing", orgId], queryFn: async () => { const r = await rpc<Any>("au_existing_jobs", { _org: orgId }); if (r.error) throw r.error; return r.data; } });
-  if (m.isLoading || ex.isLoading) return <LoadingState />;
-  if (m.error || ex.error) return <ErrorState message={arabicError(m.error ?? ex.error)} />;
-  const d = m.data ?? {}; const jobs = d.jobs ?? {};
-  const retry = async (id: number) => { const r = await rpc("au_job_retry", { _id: id }); if (r.error) toast.error(arabicError(r.error)); else { toast.success("أُعيدت العملية إلى الطابور"); qc.invalidateQueries({ queryKey: ["au-monitor", orgId] }); } };
+  if (m.isLoading) return <LoadingState />;
+  if (m.error) return <ErrorState message={arabicError(m.error)} />;
+  const d = m.data ?? {};
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        {Object.entries(JOB_ST).map(([k, l]) => <Stat key={k} l={l} v={jobs[k] ?? 0} />)}
-        <Stat l="أحداث بانتظار المعالجة" v={d.outbox_pending ?? 0} hint={d.oldest_queued_s != null ? `أقدم عملية منذ ${d.oldest_queued_s} ث` : undefined} />
-      </div>
       <Card title="عمليات لم تُرسل خلال 24 ساعة وسببها (لا إسقاط صامت)">
         {Object.keys(d.skips_24h ?? {}).length === 0 ? <p className="text-sm text-muted-foreground">لا توجد عمليات متخطاة.</p> : (
           <ul className="divide-y text-sm">{Object.entries(d.skips_24h as Record<string, number>).map(([k, n]) => <li key={k} className="flex justify-between gap-3 py-2"><span>{skipLabel(k)}</span><span className="font-bold">{n}</span></li>)}</ul>)}
-        <p className="mt-2 text-xs text-muted-foreground">مؤجلة بسبب الحد اليومي الآن: {d.deferred_cap ?? 0}. المؤجل يُعاد التحقق من شرطه قبل الإرسال، فلا تصل إشعارات لم تعد صحيحة.</p>
+        <p className="mt-2 text-xs text-muted-foreground">مؤجلة بسبب الحد اليومي الآن: {d.deferred_cap ?? 0} · أحداث بانتظار المعالجة: {d.outbox_pending ?? 0}{d.oldest_queued_s != null ? ` · أقدم عملية منذ ${d.oldest_queued_s} ث` : ""}.</p>
       </Card>
-      <Card title="قواعد المجموعة">
-        {(d.rules ?? []).length === 0 ? <p className="text-sm text-muted-foreground">لا توجد قواعد بعد.</p> : (
-          <table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b">{["القاعدة", "الحدث", "الإصدار", "الأولوية", "الحالة", "آخر تشغيل", "التشغيل التالي"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
-            <tbody>{(d.rules as Any[]).map((x) => <tr key={x.id} className="border-b last:border-0"><td className="p-2 font-semibold">{x.name}</td><td className="p-2 font-mono text-xs" dir="ltr">{x.event}</td><td className="p-2">{x.version ?? "مسودة"}</td><td className="p-2">{x.priority ?? 5}</td><td className="p-2">{x.active ? "مفعّلة" : "متوقفة"}</td><td className="p-2 text-xs">{fmt(x.last_run_at)}</td><td className="p-2 text-xs">{fmt(x.next_run_at)}</td></tr>)}</tbody></table>)}
+      <Card title="آخر دورات المحرك">
+        <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b">{["الوقت", "المدة", "قواعد مفحوصة", "أحداث", "منفّذة", "ملغاة", "مؤجلة", "فشل", "متوسط الانتظار"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
+          <tbody>{(d.runs ?? []).map((x: Any) => <tr key={x.id} className="border-b last:border-0"><td className="p-2 text-xs">{fmt(x.started_at)}</td><td className="p-2">{x.ms} ms</td><td className="p-2">{x.scanned ?? 0}</td><td className="p-2">{x.events ?? 0}</td><td className="p-2">{x.jobs_done ?? 0}</td><td className="p-2">{x.cancelled ?? 0}</td><td className="p-2">{x.deferred ?? 0}</td><td className="p-2">{x.jobs_failed ?? 0}</td><td className="p-2">{x.lat_avg_ms != null ? `${x.lat_avg_ms} ms` : "—"}</td></tr>)}</tbody></table></div>
       </Card>
-      <Card title="العمليات المعزولة">
-        {(d.dead ?? []).length === 0 ? <p className="text-sm text-muted-foreground">لا توجد عمليات معزولة.</p> : (
-          <ul className="divide-y text-sm">{(d.dead as Any[]).map((x) => <li key={x.id} className="flex items-center justify-between gap-3 py-2"><div><div className="font-semibold">عملية #{x.id} — {x.attempts} محاولات</div><div className="text-xs text-muted-foreground" dir="ltr">{x.error}</div></div>
-            <button onClick={() => retry(x.id)} className="rounded-lg border px-3 py-1.5 text-xs font-semibold hover:border-primary/50">إعادة المحاولة</button></li>)}</ul>)}
-      </Card>
+    </div>
+  );
+}
+
+function ExistingJobs({ orgId }: { orgId: string }) {
+  const ex = useQuery({ queryKey: ["au-existing", orgId], queryFn: async () => { const r = await rpc<Any>("au_existing_jobs", { _org: orgId }); if (r.error) throw r.error; return r.data; } });
+  if (ex.isLoading) return <LoadingState />;
+  if (ex.error) return <ErrorState message={arabicError(ex.error)} />;
+  return (
+    <div className="space-y-4">
+      <p className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">هذه الوظائف تعمل كما هي بإعداداتها ومواعيدها الحالية؛ تُعرض للمراقبة فقط ولا يمكن تعديلها من المركز.</p>
       <Card title="الوظائف التلقائية القائمة (مراقبة فقط — مواعيدها كما هي)">
         <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b">{["الوظيفة", "القسم والغرض", "المستلمون والإعدادات", "الجدولة (UTC)", "آخر تشغيل", "تشغيلات/فشل 24 ساعة", "متوسط المدة", "الإدارة من المركز"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
           <tbody>{((ex.data?.jobs ?? []) as Any[]).map((x) => <tr key={x.job} className="border-b align-top last:border-0"><td className="p-2 font-mono text-xs" dir="ltr">{x.job}</td>
@@ -200,10 +218,6 @@ function Monitor({ orgId }: { orgId: string }) {
           <ul className="space-y-1 text-xs">{(g.events as Any[]).map((e) => <li key={e.code}>{e.label} <span className="text-muted-foreground">— {e.existing ?? e.note ?? ""}</span></li>)}</ul></div>)}</div>
         <p className="mt-2 text-xs text-muted-foreground">لا يمكن إنشاء قاعدة على هذه الأحداث حتى لا يُنفَّذ الإجراء نفسه من مسارين. مواعيد الوظائف القائمة لا تتغير دون موافقتك.</p>
       </Card>
-      <Card title="آخر دورات المحرك">
-        <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b">{["الوقت", "المدة", "قواعد مفحوصة", "أحداث", "منفّذة", "ملغاة", "مؤجلة", "فشل", "متوسط الانتظار"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
-          <tbody>{(d.runs ?? []).map((x: Any) => <tr key={x.id} className="border-b last:border-0"><td className="p-2 text-xs">{fmt(x.started_at)}</td><td className="p-2">{x.ms} ms</td><td className="p-2">{x.scanned ?? 0}</td><td className="p-2">{x.events ?? 0}</td><td className="p-2">{x.jobs_done ?? 0}</td><td className="p-2">{x.cancelled ?? 0}</td><td className="p-2">{x.deferred ?? 0}</td><td className="p-2">{x.jobs_failed ?? 0}</td><td className="p-2">{x.lat_avg_ms != null ? `${x.lat_avg_ms} ms` : "—"}</td></tr>)}</tbody></table></div>
-      </Card>
     </div>
   );
 }
@@ -214,7 +228,43 @@ function SettingsTab({ orgId }: { orgId: string }) {
   const m = useQuery({ queryKey: ["au-monitor", orgId], queryFn: async () => { const r = await rpc<Any>("au_monitor", { _org: orgId }); if (r.error) throw r.error; return r.data; } });
   if (m.isLoading) return <LoadingState />;
   if (m.error) return <ErrorState message={arabicError(m.error)} />;
-  return <SettingsForm orgId={orgId} s={m.data?.settings ?? {}} onSaved={() => qc.invalidateQueries({ queryKey: ["au-monitor", orgId] })} />;
+  const st = m.data?.settings ?? {};
+  const kill = async (on: boolean) => {
+    const reason = on ? await askText("سبب الإيقاف الطارئ (يظهر في سجل التدقيق):", { required: true, ok: "إيقاف كل الأتمتة" }) : (await ask("استئناف الأتمتة للمجموعة؟ الأعمال المحفوظة تُستكمل بعد التحقق من شروطها.", { ok: "استئناف" })) ? "" : null;
+    if (reason === null) return;
+    const r = await rpc("au_set_kill", { _org: orgId, _on: on, _reason: on ? reason : null });
+    if (r.error) toast.error(arabicError(r.error)); else { toast.success(on ? "أوقفت كل قواعد الأتمتة للمجموعة" : "استؤنفت الأتمتة"); qc.invalidateQueries({ queryKey: ["au-monitor", orgId] }); qc.invalidateQueries({ queryKey: ["au-dash"] }); }
+  };
+  return (
+    <div className="space-y-4">
+      <section className={`rounded-2xl border p-4 shadow-sm ${st.kill_switch ? "border-destructive/40 bg-destructive/5" : "bg-card"}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div><h3 className="flex items-center gap-2 text-sm font-bold"><ShieldAlert className="size-4" />الإيقاف الطارئ للمجموعة</h3>
+            <p className="text-xs text-muted-foreground">{st.kill_switch ? `مفعّل — لا تُنفَّذ أي قاعدة. السبب: ${st.reason ?? "—"}` : "غير مفعّل. التفعيل يوقف كل القواعد فورًا، وتبقى الأحداث محفوظة لتُستكمل بعد الاستئناف."}</p></div>
+          <button onClick={() => void kill(!st.kill_switch)} className={`rounded-lg px-4 py-2 text-sm font-semibold ${st.kill_switch ? "border hover:border-primary/50" : "bg-destructive text-destructive-foreground"}`}>{st.kill_switch ? "استئناف الأتمتة" : "إيقاف طارئ"}</button>
+        </div>
+      </section>
+      <SettingsForm orgId={orgId} s={st} onSaved={() => qc.invalidateQueries({ queryKey: ["au-monitor", orgId] })} />
+      <Card title="المشغّل المركزي وحدود المحرك">
+        <ul className="grid gap-2 text-sm md:grid-cols-2">
+          <li>المشغّل المركزي «rikaz-automation» كل دقيقة (على بيئة الاختبار)، وموعد الإنتاج لم يُعتمد بعد.</li>
+          <li>حتى {st.per_org_batch ?? 100} عملية لكل مجموعة في الدورة، مع توزيع عادل بين المجموعات.</li>
+          <li>حتى 15 خطوة و20 شرطًا لكل قاعدة، وتداخل حتى 3 مستويات.</li>
+          <li>5 محاولات بمهلة متزايدة ثم عزل، وإعادة المحاولة يدوية من «العمليات الفاشلة».</li>
+          <li>منع التكرار لكل سجل وفترة ومستلم، وحارس للحلقات بعمق 3.</li>
+          <li>التنفيذ داخلي فقط: لا واتساب ولا بريد ولا Webhooks ولا ذكاء اصطناعي.</li>
+        </ul>
+      </Card>
+      <Card title="الصلاحيات">
+        <ul className="list-disc space-y-1 ps-5 text-sm">
+          <li>إدارة المركز (الإنشاء والاعتماد والتفعيل والإيقاف والإعدادات) لمدير النظام فقط، ويتحقق الخادم من ذلك في كل أمر.</li>
+          <li>مالك المنصة يملك إيقافًا عامًا لكل المجموعات.</li>
+          <li>لا تُمنح أي صلاحية جديدة لأي دور؛ بقية المستخدمين يستلمون الإشعارات فقط ضمن صلاحياتهم.</li>
+          <li>كل تعديل أو اعتماد أو تفعيل أو إيقاف يُسجَّل في «سجل التدقيق». توزيع الصلاحيات والتفويض مؤجل للمرحلة السادسة.</li>
+        </ul>
+      </Card>
+    </div>
+  );
 }
 function SettingsForm({ orgId, s, onSaved }: { orgId: string; s: Any; onSaved: () => void }) {
   const [qs, setQs] = useState<string>(s.quiet_start?.slice(0, 5) ?? ""); const [qe, setQe] = useState<string>(s.quiet_end?.slice(0, 5) ?? "");

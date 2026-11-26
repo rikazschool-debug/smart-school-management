@@ -4,6 +4,21 @@
 import { GoTrueAdminApi } from "@supabase/auth-js";
 
 const P = GoTrueAdminApi.prototype as any;
+// Parallel suites can hit the Auth sign-in rate limit; retry with backoff instead of failing the run.
+{
+  const G = (await import("@supabase/auth-js")).GoTrueClient.prototype as any;
+  if (!G.__retry) {
+    G.__retry = true;
+    const real = G.signInWithPassword;
+    G.signInWithPassword = async function (creds: any) {
+      for (let i = 0; ; i++) {
+        const r = await real.call(this, creds);
+        if (!(r.error && (r.error.status === 429 || r.error.code === "over_request_rate_limit")) || i >= 12) return r;
+        await new Promise((res) => setTimeout(res, 1500 * (i + 1) + Math.random() * 1000));
+      }
+    };
+  }
+}
 if (!P.__pooled && process.env.POOL_OFF !== "1") {
   P.__pooled = true;
   const realCreate = P.createUser, realDelete = P.deleteUser;
@@ -24,12 +39,31 @@ if (!P.__pooled && process.env.POOL_OFF !== "1") {
     return free;
   }
 
+  const rest = (api: any) => {
+    const url = (api as any).url.replace(/\/auth\/v1$/, "");
+    const key = String((api as any).headers?.Authorization ?? "").replace(/^Bearer /, "") || (api as any).headers?.apikey;
+    return { url, h: { apikey: key, Authorization: `Bearer ${key}`, "content-type": "application/json" } };
+  };
+  // atomic claim (unique user_id): two parallel runs can never hold the same pooled account
+  async function claim(api: any, id: string) {
+    const { url, h } = rest(api);
+    const stale = new Date(Date.now() - 6 * 3600_000).toISOString();
+    await fetch(`${url}/rest/v1/test_pool_claims?user_id=eq.${id}&at=lt.${stale}`, { method: "DELETE", headers: h });
+    const r = await fetch(`${url}/rest/v1/test_pool_claims?on_conflict=user_id`, { method: "POST", headers: { ...h, Prefer: "resolution=ignore-duplicates,return=representation" }, body: JSON.stringify({ user_id: id, run: RUN }) });
+    if (!r.ok) return false;
+    const rows = (await r.json()) as any[];
+    return rows.length === 1 && rows[0]?.run === RUN;
+  }
+  async function unclaim(api: any, id: string) { const { url, h } = rest(api); await fetch(`${url}/rest/v1/test_pool_claims?user_id=eq.${id}&run=eq.${RUN}`, { method: "DELETE", headers: h }); }
+
   P.createUser = async function (attrs: any) {
     const email = String(attrs?.email ?? "");
     if (!email.endsWith("@rikaz.test")) return realCreate.call(this, attrs); // only synthetic test accounts are pooled
     const ids = await loadFree(this);
     while (ids.length) {
       const id = ids.shift()!;
+      if (!(await claim(this, id))) continue;
+      { const { url, h } = rest(this); await fetch(`${url}/rest/v1/au_rate?user_id=eq.${id}`, { method: "DELETE", headers: h }); } // per-user daily delivery counters from an earlier run (as a real delete would cascade)
       const r = await this.updateUserById(id, {
         email, password: attrs.password, phone: attrs.phone, email_confirm: true, phone_confirm: attrs.phone_confirm,
         user_metadata: attrs.user_metadata ?? {}, app_metadata: { ...(attrs.app_metadata ?? {}), pool: true, pool_run: RUN },
@@ -53,7 +87,7 @@ if (!P.__pooled && process.env.POOL_OFF !== "1") {
     const url = (this as any).url.replace(/\/auth\/v1$/, "");
     const key = String((this as any).headers?.Authorization ?? "").replace(/^Bearer /, "") || (this as any).headers?.apikey;
     const h = { apikey: key, Authorization: `Bearer ${key}` };
-    for (const t of ["memberships", "platform_admins", "account_setup", "staff_logins", "otp_sends", "hr_login_pending"])
+    for (const t of ["memberships", "platform_admins", "account_setup", "staff_logins", "otp_sends", "hr_login_pending", "au_rate"])
       await fetch(`${url}/rest/v1/${t}?user_id=eq.${id}`, { method: "DELETE", headers: h });
     // unlink people records too, so the next run that reuses this login does not inherit children/classes of an older run
     for (const t of ["guardians", "students", "teachers"])
@@ -62,6 +96,7 @@ if (!P.__pooled && process.env.POOL_OFF !== "1") {
       email: `pool-${id.slice(0, 8)}@rikaz.test`, phone: "", password: crypto.randomUUID(),
       user_metadata: {}, app_metadata: { pool: true, pool_run: null },
     });
+    await unclaim(this, id);
     if (r.error) return realDelete.call(this, id, soft);
     return { data: { user: r.data.user }, error: null };
   };

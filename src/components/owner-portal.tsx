@@ -151,10 +151,11 @@ const CARDS: Card[] = [
   },
   {
     key: "automation", title: "مركز الأتمتة الذكية", icon: Zap, to: "/app/automation", open: "فتح مركز الأتمتة",
-    desc: "دليل موحد للأحداث والشروط والإجراءات، وقواعد أتمتة لا تعمل إلا باعتمادك، مع إيقاف طارئ وسجل كامل.",
+    desc: "مصمم مرئي لقواعد الأتمتة مع محاكاة واعتماد ومراقبة، وقواعد لا تعمل إلا باعتمادك، مع إيقاف طارئ وسجل كامل.",
     features: [
-      { icon: Zap, label: "دليل الأحداث", to: "/app/automation", search: { tab: "events" } },
-      { icon: Zap, label: "دليل الإجراءات", to: "/app/automation", search: { tab: "actions" } },
+      { icon: Zap, label: "قواعد الأتمتة", to: "/app/automation", search: { tab: "rules" } },
+      { icon: Zap, label: "المصمم المرئي", to: "/app/automation", search: { tab: "designer" } },
+      { icon: Zap, label: "مراقبة التنفيذ", to: "/app/automation", search: { tab: "monitor" } },
     ],
   },
   {

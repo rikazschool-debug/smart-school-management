@@ -1,9 +1,11 @@
 import "./lib/user-pool.ts";
+import "./lib/au-suite-lock.ts";
 // Automation phase 4: wired events, instant triggers, schedules, workflows, recipients, limits, durability, monitoring, stress.
 // Run: NODE_PATH=node_modules bun scripts/automation-phase4-e2e.ts   (writes /tmp/au-phase4.json with measurements)
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { auTick } from "./lib/au-tick";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env["VITE_SUPABASE_URL"]!, PK = env["VITE_SUPABASE_PUBLISHABLE_KEY"]!;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -21,7 +23,7 @@ async function user(tag: string) {
 }
 const day = (d: number) => new Date(Date.now() + 3 * 3600e3 + d * 864e5).toISOString().slice(0, 10);
 const ins = async (t: string, row: any) => { const r = await admin.from(t).insert(row).select().single(); if (r.error) throw new Error(`${t}: ${r.error.message}`); return r.data as any; };
-const tick = async () => { const r = await admin.rpc("automation_tick"); if (r.error) throw r.error; return r.data as any; };
+const tick = () => auTick(admin);
 const notes = async (u: string, like = "au:%") => ((await admin.from("notifications").select("title,body,dedupe_key").eq("user_id", u).like("dedupe_key", like)).data ?? []) as any[];
 const orgs: string[] = []; const calIds: string[] = [];
 let owner: any, org = "";
@@ -212,7 +214,7 @@ try {
   { const id = await rule("انقطاع", "people.student.created", { steps: [{ type: "notify", recipients: ["vice"], title: "بعد الانقطاع" }], schedule: { type: "event" } }); await go(id);
     await admin.from("au_platform").update({ kill_switch: true }).eq("id", true);
     await ins("students", { school_id: S, full_name: "طالب أثناء التوقف" });
-    const sk = await tick();
+    const sk = await auTick(admin, { expectKill: true });
     check("engine stopped: event kept in outbox, nothing sent", sk.skipped === "platform_kill" && (await notes(vp.id)).filter((n) => n.title === "بعد الانقطاع").length === 0, sk);
     await admin.from("au_platform").update({ kill_switch: false }).eq("id", true); await tick();
     check("after resume: event processed once (no loss)", (await notes(vp.id)).filter((n) => n.title === "بعد الانقطاع").length === 1);
@@ -300,7 +302,7 @@ finally {
   for (const o of orgs) {
     const rules = ((await admin.from("au_rules").select("id").eq("org_id", o)).data ?? []).map((r) => r.id);
     if (rules.length) { await admin.from("au_rules").update({ active: false }).in("id", rules); for (let i = 0; i < rules.length; i += 50) await admin.from("au_jobs").delete().in("rule_id", rules.slice(i, i + 50)); }
-    await admin.from("au_outbox").delete().eq("org_id", o); await admin.from("au_audit").delete().eq("org_id", o); await admin.from("au_settings").delete().eq("org_id", o);
+    await admin.from("au_outbox").delete().eq("org_id", o); await admin.from("au_trace").delete().eq("org_id", o); await admin.from("au_audit").delete().eq("org_id", o); await admin.from("au_settings").delete().eq("org_id", o);
   }
   if (calIds.length) await admin.from("health_calendar").delete().in("id", calIds);
   await admin.from("au_rate").delete().in("user_id", [...tr.users]);
