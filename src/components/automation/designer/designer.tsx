@@ -339,7 +339,9 @@ function DesignerInner({ orgId, ruleId, me, onRule }: { orgId: string; ruleId?: 
                   <button aria-label="إغلاق الخصائص" onClick={() => setSel(null)} className="rounded p-1 text-muted-foreground hover:text-foreground"><X className="size-4" /></button></div>
                 {selNode.data.kind === "trigger"
                   ? <RuleSettings r={r} meta={meta} set={setMeta} schools={(schools.data ?? []).filter((s) => s.is_active)} />
-                  : <StepProps kind={selNode.data.kind} data={selNode.data.d} set={(d) => setData(selNode.id, d)} r={r} ev={ev} />}
+                  : <StepProps kind={selNode.data.kind} data={selNode.data.d} set={(d) => setData(selNode.id, d)} r={r} ev={ev} org={orgId}
+                      schools={(schools.data ?? []).filter((s) => s.is_active && (!meta.schools || meta.schools.includes(s.id)))}
+                      steps={shown.map((n) => String((n.data as Any).d?.["key"] ?? "")).filter(Boolean)} />}
               </>
             ) : <p className="text-sm text-muted-foreground">حدّد عنصرًا لعرض خصائصه. ابدأ بعنصر «البداية» لاختيار النطاق والقسم والحدث والتوقيت.</p>}
           </section>

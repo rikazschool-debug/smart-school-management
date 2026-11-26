@@ -4,6 +4,7 @@ import { SCHED, DOW } from "../lib";
 import { CondEditor, condVars, emptyLeaf } from "./cond";
 import type { Cond, NodeKind } from "./flow";
 import { KIND, START_TYPES } from "./meta";
+import { RecipientGroups, type Group } from "./groups";
 
 const inp = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 const Field = ({ l, hint, children }: { l: string; hint?: string; children: React.ReactNode }) => (
@@ -113,11 +114,21 @@ export function RuleSettings({ r, meta, set, schools }: { r: Any; meta: RuleMeta
 
 const minutesView = (m: number) => (m % 1440 === 0 ? { n: m / 1440, u: 1440 } : m % 60 === 0 ? { n: m / 60, u: 60 } : { n: m, u: 1 });
 
-export function StepProps({ kind, data, set, r, ev }: { kind: NodeKind; data: Record<string, unknown>; set: (d: Record<string, unknown>) => void; r: Any; ev: Any }) {
+export function StepProps({ kind, data, set, r, ev, org = "", schools = [], steps = [] }: { kind: NodeKind; data: Record<string, unknown>; set: (d: Record<string, unknown>) => void; r: Any; ev: Any; org?: string; schools?: { id: string; name: string }[]; steps?: string[] }) {
+  const groups = data["groups"] as Group[] | undefined;
+  const useGroups = Array.isArray(groups);
+  const toggleGroups = (on: boolean) => { const d = { ...data }; if (on) { d["groups"] = [{ by: "role", role: ev?.area === "central" ? "owner" : "principal", mode: "all" }]; delete d["recipients"]; delete d["assignee"]; delete d["to"]; } else delete d["groups"]; set(d); };
+  const modeSwitch = org && (
+    <label className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-xs"><input type="checkbox" checked={useGroups} onChange={(e) => toggleGroups(e.target.checked)} />اختيار متقدم للمستلمين (أدوار، أشخاص، مسميات، أقسام، مدير مباشر، مسؤول السجل، بديل)</label>
+  );
+  const groupEditor = useGroups && <RecipientGroups value={groups} onChange={(v) => set({ ...data, groups: v })} org={org} ev={ev} schools={schools} steps={steps.filter((s) => s !== data["key"])} forTask={kind === "task" || kind === "review"} />;
+  const keyField = (kind === "notify" || kind === "reminder" || kind === "escalate") && (
+    <Field l="اسم الخطوة (اختياري)" hint="لاستخدام مستلمي هذه الخطوة في خطوة لاحقة."><input className={inp} maxLength={40} value={String(data["key"] ?? "")} onChange={(e) => { const d = { ...data }; if (e.target.value.trim()) d["key"] = e.target.value; else delete d["key"]; set(d); }} /></Field>
+  );
   const vars = ev ? condVars(r, ev.code) : [];
   const ops = (r?.operators ?? []) as Any[];
   const rc = eligibleRecipients(r, ev, kind === "task" || kind === "review");
-  const fam = Array.isArray(data["recipients"]) && (data["recipients"] as string[]).includes("guardian");
+  const fam = (Array.isArray(data["recipients"]) && (data["recipients"] as string[]).includes("guardian")) || JSON.stringify(data["groups"] ?? []).includes('"guardian"');
   const tplField = (key: "title" | "body", label: string, rows = 1) => (
     <Field l={label}>
       {rows > 1 ? <textarea className={inp} rows={rows} maxLength={500} value={String(data[key] ?? "")} onChange={(e) => set({ ...data, [key]: e.target.value })} />
@@ -138,25 +149,31 @@ export function StepProps({ kind, data, set, r, ev }: { kind: NodeKind; data: Re
       )}
       {(kind === "notify" || kind === "reminder") && (
         <>
-          <Field l="المستلمون" hint="تظهر الفئات المؤهلة لهذا الحدث فقط، ويُعاد التحقق من كل شخص لحظة التنفيذ.">
+          {modeSwitch}
+          {useGroups ? groupEditor : <Field l="المستلمون" hint="تظهر الفئات المؤهلة لهذا الحدث فقط، ويُعاد التحقق من كل شخص لحظة التنفيذ.">
             <span className="block space-y-1 rounded-md border p-2">{rc.map((x) => { const cur = (data["recipients"] as string[] | undefined) ?? []; const on = cur.includes(x.code); return (
               <label key={x.code} className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={on} onChange={() => set({ ...data, recipients: on ? cur.filter((c) => c !== x.code) : [...cur, x.code] })} />{x.label}</label>); })}
               {rc.length === 0 && <span className="text-xs text-muted-foreground">لا مستلمين مؤهلين — اختر الحدث أولًا.</span>}</span>
-          </Field>
+          </Field>}
+          {keyField}
           {tplField("title", "عنوان الإشعار")}
           {tplField("body", "نص الإشعار (اختياري — الافتراضي وصف السجل)", 3)}
         </>
       )}
       {kind === "escalate" && (
         <>
-          <Field l="التصعيد إلى"><select className={selectCls("w-full")} value={String(data["to"] ?? "")} onChange={(e) => set({ ...data, to: e.target.value })}><option value="">—</option>{ev?.area !== "central" && <option value="principal">مدير المدرسة</option>}<option value="owner">مدير النظام</option></select></Field>
+          {modeSwitch}
+          {useGroups ? groupEditor : <Field l="التصعيد إلى"><select className={selectCls("w-full")} value={String(data["to"] ?? "")} onChange={(e) => set({ ...data, to: e.target.value })}><option value="">—</option>{ev?.area !== "central" && <option value="principal">مدير المدرسة</option>}<option value="owner">مدير النظام</option></select></Field>}
+          {keyField}
           {tplField("title", "عنوان التصعيد")}
           {tplField("body", "نص التصعيد (اختياري)", 3)}
         </>
       )}
       {(kind === "task" || kind === "review") && (
         <>
-          <Field l={kind === "task" ? "المكلَّف" : "المراجع"}><select className={selectCls("w-full")} value={String(data[kind === "task" ? "assignee" : "to"] ?? "")} onChange={(e) => set({ ...data, [kind === "task" ? "assignee" : "to"]: e.target.value })}><option value="">—</option>{rc.map((x) => <option key={x.code} value={x.code}>{x.label}</option>)}</select></Field>
+          {modeSwitch}
+          {useGroups ? groupEditor : <Field l={kind === "task" ? "المكلَّف" : "المراجع"}><select className={selectCls("w-full")} value={String(data[kind === "task" ? "assignee" : "to"] ?? "")} onChange={(e) => set({ ...data, [kind === "task" ? "assignee" : "to"]: e.target.value })}><option value="">—</option>{rc.map((x) => <option key={x.code} value={x.code}>{x.label}</option>)}</select></Field>}
+          {useGroups && <p className="text-xs text-muted-foreground">تُنشأ مهمة لكل شخص مؤهل (حتى 10)، ولا يُكلَّف ولي أمر.</p>}
           {tplField("title", kind === "task" ? "عنوان المهمة" : "عنوان طلب المراجعة")}
           {kind === "review" && <Field l="سبب المراجعة"><textarea className={inp} rows={2} maxLength={300} value={String(data["reason"] ?? "")} onChange={(e) => set({ ...data, reason: e.target.value })} /></Field>}
           <Field l="مدة الإنجاز (أيام)"><input type="number" min={1} max={30} className={inp} value={Number(data["due_in_days"] ?? (kind === "review" ? 3 : 2))} onChange={(e) => set({ ...data, due_in_days: Number(e.target.value) })} /></Field>

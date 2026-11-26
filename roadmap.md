@@ -59,8 +59,8 @@
 - [x] B3 Finance bulk balance: full (not sampled) parity + all finance cases
 - [x] B4 Read/query perms separated from publish/organize/edit
 - [x] B5 Coverage matrix update
-- [ ] C1 Recipient resolver (name/role/title/category/school/dept/manager/record/prev-step, all|specific|linked)
-- [ ] C2 Dynamic responsibilities (reuse relations; add missing assignments in home sections)
-- [ ] C3 Engine + designer picker integration, dedupe, fallback/failure logging, recheck at execution
-- [ ] C4 Acceptance tests, regressions, perf/security, multi-role visual review
-- [ ] C5 docs/automation-platform-phase-c.md + matrix
+- [x] C1 Recipient resolver (name/role/title/category/school/dept/manager/record/prev-step, all|specific|linked)
+- [x] C2 Dynamic responsibilities (reuse relations; add missing assignments in home sections)
+- [x] C3 Engine + designer picker integration, dedupe, fallback/failure logging, recheck at execution
+- [x] C4 Acceptance tests, regressions, perf/security, multi-role visual review
+- [x] C5 docs/automation-platform-phase-c.md + matrix

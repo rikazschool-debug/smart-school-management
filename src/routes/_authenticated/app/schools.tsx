@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Link2, PauseCircle, PencilLine, PlayCircle, Plus, Users } from "lucide-react";
+import { Link2, PauseCircle, PencilLine, PlayCircle, Plus, UserCog, Users } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ask, askText } from "@/components/confirm";
 import { EmptyState, ErrorState, ForbiddenState, LoadingState, PageHeader, Section } from "@/components/states";
@@ -19,6 +19,7 @@ import { arabicError, useSession } from "@/lib/session";
 import { SchoolLogo } from "@/components/school-logo";
 import { PlatformSchools } from "@/components/platform/platform-schools";
 import { supabase } from "@/integrations/supabase/client";
+import { SchoolResponsibilitiesDialog } from "@/components/school-responsibilities";
 
 export const Route = createFileRoute("/_authenticated/app/schools")({
   validateSearch: (s: Record<string, unknown>): { new?: boolean } => (s["new"] === true || s["new"] === "true" ? { new: true } : {}),
@@ -51,6 +52,7 @@ function SchoolsPage() {
   const q = useSchoolsOverview(allowed ? orgId : null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [link, setLink] = useState<Row | null>(null);
+  const [resp, setResp] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     if (search.new) { setDraft({ name: "", code: "", city: "", stage_type: "", student_gender: "" }); navigate({ to: "/app/schools", search: {}, replace: true }); }
@@ -149,6 +151,7 @@ function SchoolsPage() {
                   <Button size="sm" variant="outline" onClick={() => setDraft({ id: s["id"], name: s["name"] ?? "", code: s["code"] ?? "", city: s["city"] ?? "", stage_type: s["stage_type"] ?? "", student_gender: genders.data?.[s["id"]] ?? "" })}><PencilLine className="size-4" />تعديل</Button>
                   <Button size="sm" variant="outline" disabled={!s["is_active"]} onClick={() => setLink(s)}><Link2 className="size-4" />ربط موظف</Button>
                   <Button size="sm" variant="ghost" disabled={!s["is_active"]} onClick={() => openMembers(s["id"])}><Users className="size-4" />موظفو المدرسة</Button>
+                  {active.role === "org_owner" && <Button size="sm" variant="ghost" disabled={!s["is_active"]} onClick={() => setResp({ id: s["id"], name: s["name"] })}><UserCog className="size-4" />المسؤوليات</Button>}
                   <Button size="sm" variant={s["is_active"] ? "ghost" : "default"} onClick={() => toggle(s)}>
                     {s["is_active"] ? <><PauseCircle className="size-4" />إيقاف الفرع</> : <><PlayCircle className="size-4" />تفعيل الفرع</>}
                   </Button>
@@ -207,6 +210,7 @@ function SchoolsPage() {
       {allowed && orgId && <DisplayNamesPreview org={orgId} />}
       {allowed && orgId && <TagsAdmin org={orgId} />}
       <LinkStaffDialog school={link} onClose={() => setLink(null)} onDone={done} />
+      <SchoolResponsibilitiesDialog school={resp} org={orgId} onClose={() => setResp(null)} />
     </>
   );
 }

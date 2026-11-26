@@ -42,6 +42,9 @@ export function condComplete(c: Cond | null | undefined): boolean {
   return !!c.var && !!c.op;
 }
 
+/** Recipient groups (phase C) replace the single code; the engine checks each group's content. */
+const hasGroups = (d: Record<string, unknown>) => Array.isArray(d["groups"]) && (d["groups"] as unknown[]).length > 0;
+
 function nodeIssues(n: GNode): string[] {
   const d = n.data, out: string[] = [];
   const title = String(d["title"] ?? "").trim();
@@ -50,12 +53,12 @@ function nodeIssues(n: GNode): string[] {
     case "filter": case "if": if (!condComplete(d["when"] as Cond)) out.push("أكمل الشرط (المتغير والمقارنة والقيمة)"); break;
     case "notify": case "reminder":
       if (title.length < 2) out.push("اكتب عنوان الإشعار");
-      if (!Array.isArray(d["recipients"]) || (d["recipients"] as unknown[]).length === 0) out.push("اختر مستلمًا واحدًا على الأقل");
+      if (!hasGroups(d) && (!Array.isArray(d["recipients"]) || (d["recipients"] as unknown[]).length === 0)) out.push("اختر مستلمًا واحدًا على الأقل");
       break;
-    case "escalate": if (!d["to"]) out.push("اختر جهة التصعيد"); if (title.length < 2) out.push("اكتب عنوان التصعيد"); break;
-    case "task": if (!d["assignee"]) out.push("اختر المكلَّف"); if (title.length < 2) out.push("اكتب عنوان المهمة"); if (!(days >= 1 && days <= 30)) out.push("مدة الإنجاز من 1 إلى 30 يومًا"); break;
+    case "escalate": if (!d["to"] && !hasGroups(d)) out.push("اختر جهة التصعيد"); if (title.length < 2) out.push("اكتب عنوان التصعيد"); break;
+    case "task": if (!d["assignee"] && !hasGroups(d)) out.push("اختر المكلَّف"); if (title.length < 2) out.push("اكتب عنوان المهمة"); if (!(days >= 1 && days <= 30)) out.push("مدة الإنجاز من 1 إلى 30 يومًا"); break;
     case "review":
-      if (!d["to"]) out.push("اختر المراجع"); if (title.length < 2) out.push("اكتب عنوان الطلب");
+      if (!d["to"] && !hasGroups(d)) out.push("اختر المراجع"); if (title.length < 2) out.push("اكتب عنوان الطلب");
       if (String(d["reason"] ?? "").trim().length < 3) out.push("اكتب سبب المراجعة"); if (!(days >= 1 && days <= 30)) out.push("مدة المراجعة من 1 إلى 30 يومًا"); break;
     case "wait": { const m = Number(d["minutes"] ?? 0); if (!(m >= 5 && m <= 43200)) out.push("مدة الانتظار من 5 دقائق إلى 30 يومًا"); break; }
   }

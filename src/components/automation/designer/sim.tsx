@@ -1,3 +1,4 @@
+import { groupLabel } from "./groups";
 import { CheckCircle2, XCircle, Clock, Users, AlertTriangle } from "lucide-react";
 import { fmt, type Any } from "../lib";
 import { serverMsg } from "./meta";
@@ -40,7 +41,7 @@ export function SimResult({ s, r }: { s: Any; r: Any }) {
               <div className="flex items-center gap-1 font-semibold"><CheckCircle2 className="size-3.5 text-primary" />{it.label}<span className="ms-auto text-xs font-normal text-muted-foreground">{it.school ?? "الإدارة المركزية"}</span></div>
               <div className="mt-1 flex flex-wrap gap-1">{(it.recipients as Any[]).map((x, j) => (
                 <span key={j} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] ${x.eligible ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                  <Users className="size-3" />{STEP[x.step] ?? x.step}: {RC(r, x.code)} — {x.eligible} مؤهل{x.excluded ? ` · ${x.excluded} مستبعد` : ""}{x.would_defer ? ` · ${x.would_defer} سيؤجَّل (الحد)` : ""}{x.conflicts ? ` · ${x.conflicts} تعارض` : ""}
+                  <Users className="size-3" />{STEP[x.step] ?? x.step}: {x.group ? `مجموعة ${x.group} (${groupLabel(x.via)})${x.names?.length ? " — " + (x.names as string[]).join("، ") : ""}` : RC(r, x.code)} — {x.eligible} مؤهل{x.none ? " · لا يوجد مستلم (تعذر التنفيذ)" : ""}{x.excluded ? ` · ${x.excluded} مستبعد` : ""}{x.would_defer ? ` · ${x.would_defer} سيؤجَّل (الحد)` : ""}{x.conflicts ? ` · ${x.conflicts} تعارض` : ""}
                 </span>))}</div>
             </li>))}</ul>)}
       </div>

@@ -4107,6 +4107,33 @@ export type Database = {
           },
         ]
       }
+      au_step_people: {
+        Row: {
+          at: string
+          code: string
+          outbox_id: number
+          rule_id: string
+          step: string
+          user_id: string
+        }
+        Insert: {
+          at?: string
+          code: string
+          outbox_id: number
+          rule_id: string
+          step: string
+          user_id: string
+        }
+        Update: {
+          at?: string
+          code?: string
+          outbox_id?: number
+          rule_id?: string
+          step?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       au_trace: {
         Row: {
           at: string
@@ -16952,6 +16979,7 @@ export type Database = {
           op_status: string
           org_id: string
           plate: string | null
+          responsible_user: string | null
           school_id: string
           updated_at: string
         }
@@ -16972,6 +17000,7 @@ export type Database = {
           op_status?: string
           org_id: string
           plate?: string | null
+          responsible_user?: string | null
           school_id: string
           updated_at?: string
         }
@@ -16992,6 +17021,7 @@ export type Database = {
           op_status?: string
           org_id?: string
           plate?: string | null
+          responsible_user?: string | null
           school_id?: string
           updated_at?: string
         }
@@ -17531,6 +17561,7 @@ export type Database = {
           kind: string
           name: string
           org_id: string
+          responsible_user: string | null
           school_id: string | null
           updated_at: string
           updated_by: string | null
@@ -17549,6 +17580,7 @@ export type Database = {
           kind: string
           name: string
           org_id: string
+          responsible_user?: string | null
           school_id?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -17567,6 +17599,7 @@ export type Database = {
           kind?: string
           name?: string
           org_id?: string
+          responsible_user?: string | null
           school_id?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -19641,6 +19674,38 @@ export type Database = {
             foreignKeyName: "school_day_settings_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: true
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_responsibilities: {
+        Row: {
+          kind: string
+          school_id: string
+          set_at: string
+          set_by: string | null
+          user_id: string
+        }
+        Insert: {
+          kind: string
+          school_id: string
+          set_at?: string
+          set_by?: string | null
+          user_id: string
+        }
+        Update: {
+          kind?: string
+          school_id?: string
+          set_at?: string
+          set_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_responsibilities_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
             referencedRelation: "schools"
             referencedColumns: ["id"]
           },
@@ -26589,6 +26654,23 @@ export type Database = {
         Returns: number
       }
       _au_check_def: { Args: { _event: string; d: Json }; Returns: Json }
+      _au_check_group: {
+        Args: {
+          _ev: Database["public"]["Tables"]["au_events"]["Row"]
+          _fb: boolean
+          _g: Json
+          _nofam: boolean
+        }
+        Returns: undefined
+      }
+      _au_check_groups: {
+        Args: {
+          _ev: Database["public"]["Tables"]["au_events"]["Row"]
+          _gs: Json
+          _nofam: boolean
+        }
+        Returns: undefined
+      }
       _au_check_params: { Args: { _event: string; _p: Json }; Returns: Json }
       _au_check_schools: {
         Args: { _org: string; _s: string[] }
@@ -26690,6 +26772,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _au_emp_of: { Args: { _ctx: Json; _org: string }; Returns: string }
       _au_ev_vis: {
         Args: { _event: string; _org: string; _uid: string }
         Returns: boolean
@@ -26713,10 +26796,31 @@ export type Database = {
         Returns: string
       }
       _au_full: { Args: { _org: string }; Returns: boolean }
+      _au_groups: {
+        Args: {
+          _ctx: Json
+          _entity: string
+          _ev: Database["public"]["Tables"]["au_events"]["Row"]
+          _gs: Json
+          _ob: number
+          _org: string
+          _rule: string
+          _school: string
+        }
+        Returns: {
+          code: string
+          grp: number
+          ok: boolean
+          reason: string
+          user_id: string
+          via: string
+        }[]
+      }
       _au_hi: { Args: never; Returns: string }
       _au_lim: { Args: never; Returns: number }
       _au_lo: { Args: never; Returns: string }
       _au_manager: { Args: { _employee: string }; Returns: string }
+      _au_mgr_emp: { Args: { _emp: string }; Returns: string }
       _au_need: {
         Args: { _act: string; _org: string; _sec: string }
         Returns: undefined
@@ -26737,6 +26841,19 @@ export type Database = {
         Returns: undefined
       }
       _au_next_run: { Args: { f: string; s: Json }; Returns: string }
+      _au_notify_groups: {
+        Args: {
+          ctx: Json
+          ev: Database["public"]["Tables"]["au_events"]["Row"]
+          j: Database["public"]["Tables"]["au_jobs"]["Row"]
+          o: Database["public"]["Tables"]["au_outbox"]["Row"]
+          p: string
+          ru: Database["public"]["Tables"]["au_rules"]["Row"]
+          sett: Database["public"]["Tables"]["au_settings"]["Row"]
+          st: Json
+        }
+        Returns: undefined
+      }
       _au_overdue: {
         Args: {
           _grace: number
@@ -26754,6 +26871,22 @@ export type Database = {
         }[]
       }
       _au_owner: { Args: { _org: string }; Returns: undefined }
+      _au_people: {
+        Args: {
+          _ctx: Json
+          _entity: string
+          _ev: Database["public"]["Tables"]["au_events"]["Row"]
+          _g: Json
+          _ob: number
+          _org: string
+          _rule: string
+          _school: string
+        }
+        Returns: {
+          code: string
+          user_id: string
+        }[]
+      }
       _au_perm: {
         Args: { _act: string; _org: string; _sec: string; _uid: string }
         Returns: boolean
@@ -26804,6 +26937,10 @@ export type Database = {
           _uid: string
         }
         Returns: boolean
+      }
+      _au_rec_codes: {
+        Args: { _ev: Database["public"]["Tables"]["au_events"]["Row"] }
+        Returns: string[]
       }
       _au_render: {
         Args: { _ctx: Json; _event: string; _tpl: string }
@@ -26903,6 +27040,19 @@ export type Database = {
       }
       _au_student_section: { Args: { _student: string }; Returns: string }
       _au_task_ctx: { Args: { _task: string }; Returns: Json }
+      _au_task_groups: {
+        Args: {
+          boss: string
+          ctx: Json
+          ev: Database["public"]["Tables"]["au_events"]["Row"]
+          j: Database["public"]["Tables"]["au_jobs"]["Row"]
+          o: Database["public"]["Tables"]["au_outbox"]["Row"]
+          p: string
+          ru: Database["public"]["Tables"]["au_rules"]["Row"]
+          st: Json
+        }
+        Returns: undefined
+      }
       _au_teachers: { Args: { _section: string }; Returns: string[] }
       _au_tr: {
         Args: {
@@ -26913,6 +27063,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _au_uuid: { Args: { _t: string }; Returns: string }
       _au_v_schools: { Args: { _d: Json }; Returns: string[] }
       _au_version_ok: {
         Args: {
@@ -29083,6 +29234,10 @@ export type Database = {
           src: string
         }[]
       }
+      _resp_staff_ok: {
+        Args: { _org: string; _school: string; _user: string }
+        Returns: boolean
+      }
       _revise_homework_v0: {
         Args: { _d: Json; _id: string; _note: string }
         Returns: number
@@ -30783,6 +30938,13 @@ export type Database = {
       }
       au_me: { Args: { _org: string }; Returns: Json }
       au_monitor: { Args: { _org: string }; Returns: Json }
+      au_people_titles: {
+        Args: { _ids: string[]; _org: string }
+        Returns: {
+          title: string
+          user_id: string
+        }[]
+      }
       au_platform_kill: {
         Args: { _on: boolean; _reason: string }
         Returns: undefined
@@ -30805,6 +30967,17 @@ export type Database = {
           _schools?: string[]
           _sort?: string
           _where?: Json
+        }
+        Returns: Json
+      }
+      au_rcpt_options: {
+        Args: {
+          _event?: string
+          _kind: string
+          _limit?: number
+          _offset?: number
+          _org: string
+          _q?: string
         }
         Returns: Json
       }
@@ -33412,6 +33585,10 @@ export type Database = {
         Args: { _data: Json; _id: string; _school: string }
         Returns: string
       }
+      mt_bus_set_responsible: {
+        Args: { _bus: string; _user: string }
+        Returns: undefined
+      }
       mt_bus_set_status: {
         Args: { _bus: string; _note: string; _status: string }
         Returns: undefined
@@ -33551,6 +33728,10 @@ export type Database = {
       od_save_contractor: { Args: { _org: string; _p: Json }; Returns: string }
       od_save_doc: { Args: { _org: string; _p: Json }; Returns: string }
       open_circular: { Args: { _id: string }; Returns: undefined }
+      org_doc_set_responsible: {
+        Args: { _doc: string; _user: string }
+        Returns: undefined
+      }
       org_school_save: {
         Args: {
           _city?: string
@@ -34367,6 +34548,11 @@ export type Database = {
       school_org: { Args: { _school: string }; Returns: string }
       school_profile_save: {
         Args: { _address: string; _phone: string; _school: string }
+        Returns: undefined
+      }
+      school_resp_list: { Args: { _school: string }; Returns: Json }
+      school_resp_set: {
+        Args: { _kind: string; _school: string; _user: string }
         Returns: undefined
       }
       school_set_logo: {
