@@ -27720,6 +27720,8 @@ export type Database = {
       }
       _au_wa_sync: { Args: { _rows: Json }; Returns: number }
       _au_win: { Args: { _x: string }; Returns: boolean }
+      _au_worker_check: { Args: { _token: string }; Returns: boolean }
+      _au_worker_kick: { Args: never; Returns: undefined }
       _audit: {
         Args: {
           _action: string

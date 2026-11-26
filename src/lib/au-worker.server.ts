@@ -1,8 +1,7 @@
-import { safeEqual } from "./wati-otp";
 import { renderPendingFiles } from "./au-files.server";
 import { sendAutomatic } from "./message-delivery.server";
 /**
- * Automation background worker (scheduler-only, bearer secret): renders pending report files, and sends queued WhatsApp
+ * Automation background worker (scheduler-only; bearer credential is held only in the database vault and checked by service-only _au_worker_check, kicked from automation_tick with no extra cron): renders pending report files, and sends queued WhatsApp
  * automation messages only when BOTH the platform switch (au_platform.wa_live, SQL only) and RIKAZ_AU_WA_LIVE=true are on.
  * One provider call per claimed row; 5xx/timeout = unknown and is never retried automatically.
  */
@@ -22,8 +21,9 @@ export async function dispatchAuMessages(limit = 20) {
   return { sent, paused: false };
 }
 export async function handleAutomationWorker(request: Request) {
-  const secret = process.env["RIKAZ_AU_WORKER_SECRET"], provided = request.headers.get("authorization") ?? "";
-  if (!secret || secret.length < 32 || !safeEqual(provided, `Bearer ${secret}`)) return new Response("unauthorized", { status: 401 });
+  const { supabaseAdmin: adm } = await import("@/integrations/supabase/client.server");
+  const ok = await adm.rpc("_au_worker_check" as never, { _token: request.headers.get("authorization") ?? "" } as never);
+  if (ok.error || ok.data !== true) return new Response("unauthorized", { status: 401 });
   if (request.method !== "POST") return new Response("method", { status: 405 });
   try {
     const files = await renderPendingFiles(new URL(request.url).origin, 10);
