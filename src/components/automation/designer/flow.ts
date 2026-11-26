@@ -68,13 +68,15 @@ function nodeIssues(n: GNode): string[] {
     case "mt_request":
       if (String(d["title"] ?? "").trim().length < 3) out.push("اكتب عنوان طلب الصيانة");
       if (String(d["description"] ?? "").trim().length < 5) out.push("اكتب وصف العطل");
-      if (String(d["place"] ?? "").trim().length < 2) out.push("حدد المكان");
+      if (d["kind"] === "bus") { if (!d["bus"]) out.push("اختر الباص"); }
+      else if (String(d["place"] ?? "").trim().length < 2) out.push("حدد المكان");
       if (!d["category"]) out.push("اختر تصنيف الصيانة");
       break;
     case "hr_letter": if (!d["template"]) out.push("اختر قالب الخطاب"); if (String(d["purpose"] ?? "").trim().length < 3) out.push("اكتب الغرض من الخطاب"); break;
     case "report":
       if (String(d["title"] ?? "").trim().length < 3) out.push("اكتب عنوان التقرير");
       if (!d["source"]) out.push("اختر مصدر التقرير");
+      else if (d["source"] === "doc") { if (String(d["body"] ?? "").trim().length < 10) out.push("أكمل نص المستند"); }
       else if (d["source"] !== "rep.attendance_week" && !(Array.isArray(d["fields"]) && (d["fields"] as unknown[]).length)) out.push("اختر حقول التقرير");
       if (!(Array.isArray(d["share"]) && (d["share"] as unknown[]).length)) out.push("اختر من يطّلع على التقرير");
       break;
@@ -109,7 +111,8 @@ export function compile(nodes: GNode[], edges: GEdge[]): { def: Def; issues: Iss
     while (cur) {
       if (seen.has(cur)) { issues.push({ node: cur, level: "error", msg: "المسار يعود إلى عنصر سابق (حلقة لا نهائية)" }); break; }
       seen.add(cur);
-      const n = byId.get(cur)!;
+      const n = byId.get(cur);
+      if (!n) break;
       if (n.kind === "trigger") { issues.push({ node: cur, level: "error", msg: "لا يمكن الرجوع إلى البداية" }); break; }
       if (n.kind === "filter") { issues.push({ node: cur, level: "error", msg: "شرط القاعدة يأتي مباشرة بعد البداية فقط؛ استخدم «إعادة التحقق» داخل المسار" }); cur = next(cur, "out"); continue; }
       for (const m of nodeIssues(n)) issues.push({ node: n.id, level: "error", msg: m });

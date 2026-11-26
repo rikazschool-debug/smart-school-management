@@ -31,7 +31,10 @@ export function SimResult({ s, r }: { s: Any; r: Any }) {
       )}
       {(s.preview ?? []).length > 0 && (
         <div className="space-y-1"><div className="text-xs font-bold text-muted-foreground">معاينة الرسالة على أول سجل مطابق</div>
-          {(s.preview as Any[]).map((p, i) => <div key={i} className="rounded-lg border bg-card p-2 shadow-sm"><div className="font-semibold">{p.step === "escalate" ? "تصعيد: " : ""}{p.title}</div><div className="text-xs text-muted-foreground">{p.body}</div></div>)}</div>
+          {(s.preview as Any[]).map((p, i) => <div key={i} className="rounded-lg border bg-card p-2 shadow-sm"><div className="font-semibold">{p.step === "escalate" ? "تصعيد: " : ""}{p.title}</div><div className="text-xs text-muted-foreground">{p.body}</div>
+            {p.wa_text && <div className="mt-2 border-t pt-2"><span className="text-xs font-semibold">واتساب · {p.wa_template} · محاكاة</span><p className="whitespace-pre-wrap text-sm leading-6">{p.wa_text}</p></div>}
+            {p.wa_missing?.length > 0 && <p className="mt-1 text-xs text-destructive">قيم مفقودة: {(p.wa_missing as string[]).join("، ")}</p>}
+          </div>)}</div>
       )}
       <div>
         <div className="mb-1 text-xs font-bold text-muted-foreground">السجلات المطابقة ومستلموها المتوقعون {s.matched > items.length ? `(أول ${items.length})` : ""}</div>
@@ -39,6 +42,7 @@ export function SimResult({ s, r }: { s: Any; r: Any }) {
           <ul className="max-h-64 space-y-1 overflow-auto">{items.map((it, i) => (
             <li key={i} className="rounded-md border p-2">
               <div className="flex items-center gap-1 font-semibold"><CheckCircle2 className="size-3.5 text-primary" />{it.label}<span className="ms-auto text-xs font-normal text-muted-foreground">{it.school ?? "الإدارة المركزية"}</span></div>
+              {it.grouped && <p className="mt-1 text-xs text-muted-foreground">عدد السجلات: {it.count} · الإجمالي: {it.total}</p>}
               <div className="mt-1 flex flex-wrap gap-1">{(it.recipients as Any[]).map((x, j) => (
                 <span key={j} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] ${x.eligible ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                   <Users className="size-3" />{STEP[x.step] ?? x.step}: {x.group ? `مجموعة ${x.group} (${groupLabel(x.via)})${x.names?.length ? " — " + (x.names as string[]).join("، ") : ""}` : RC(r, x.code)} — {x.eligible} مؤهل{x.none ? " · لا يوجد مستلم (تعذر التنفيذ)" : ""}{x.excluded ? ` · ${x.excluded} مستبعد` : ""}{x.would_defer ? ` · ${x.would_defer} سيؤجَّل (الحد)` : ""}{x.conflicts ? ` · ${x.conflicts} تعارض` : ""}

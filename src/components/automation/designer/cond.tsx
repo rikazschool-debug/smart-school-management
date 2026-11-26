@@ -3,7 +3,7 @@ import { selectCls } from "@/components/ui/native-select";
 import type { Cond } from "./flow";
 import type { Any } from "../lib";
 
-type Var = { key: string; label: string; type: string; options?: string[] | null };
+type Var = { key: string; label: string; type: string; options?: string[] | null; flags?: string[] | null };
 type Op = { code: string; label: string; types: string[]; arity: string };
 const inp = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 

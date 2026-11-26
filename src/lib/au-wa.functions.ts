@@ -15,11 +15,12 @@ export const auWaSync = createServerFn({ method: "POST" })
     if (!base || !token) throw new Error("ربط WATI غير مُعدّ");
     const origin = new URL(base).origin, auth = `Bearer ${token.replace(/^Bearer\s+/i, "")}`;
     const raw: Record<string, unknown>[] = [];
-    for (let pn = 1; pn <= 10; pn++) {
+    for (let pn = 1; pn <= 100; pn++) {
       const r = await fetch(`${origin}/api/ext/v3/messageTemplates?page_size=100&page_number=${pn}`, { headers: { Authorization: auth, "User-Agent": "Rikaz/1.0" }, signal: AbortSignal.timeout(15000) });
-      if (!r.ok) throw new Error(`تعذر جلب القوالب من WATI (${r.status})`);
+      if (!r.ok) { const detail = await r.text(); console.error(`WATI templates [${r.status}]: ${detail}`); throw new Error(`تعذر جلب القوالب من WATI (${r.status})`); }
       const list = (((await r.json()) as { templates?: Record<string, unknown>[] }).templates) ?? [];
       raw.push(...list); if (list.length < 100) break;
+      if (pn === 100) throw new Error("تعذر إكمال جلب جميع القوالب؛ لم تُحفظ قائمة جزئية");
     }
     const rows = raw.map(auTplRow).filter((x) => x !== null);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

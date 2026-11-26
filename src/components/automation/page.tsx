@@ -2,7 +2,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, ListTree, PencilRuler, FlaskConical, OctagonAlert, CalendarClock, ScrollText, ShieldAlert, ClipboardCheck, UserCog, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, ListTree, PencilRuler, FlaskConical, OctagonAlert, CalendarClock, ScrollText, ShieldAlert, ClipboardCheck, UserCog, MessageSquareText, type LucideIcon } from "lucide-react";
+import { ChannelsTab } from "./channels-tab";
 import { ApprovalsTab } from "./approvals";
 import { AccessTab } from "./access";
 import { can, rpc as auRpc, type AuMe } from "./lib";
@@ -17,13 +18,13 @@ import { ErrorState, ForbiddenState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { selectCls } from "@/components/ui/native-select";
 
-export type AuTab = "overview" | "rules" | "designer" | "approvals" | "events" | "conditions" | "actions" | "schedule" | "simulate" | "monitor" | "failed" | "existing" | "audit" | "access" | "settings";
+export type AuTab = "overview" | "rules" | "designer" | "approvals" | "events" | "conditions" | "actions" | "schedule" | "simulate" | "monitor" | "failed" | "existing" | "audit" | "channels" | "access" | "settings";
 type TabDef = { k: AuTab; l: string; i: LucideIcon };
 /** Grouped so 13 working tabs never crowd one row. The templates library (phase 7) is not shown until it exists. */
 export const AU_GROUPS: { l: string; tabs: TabDef[] }[] = [
   { l: "الإدارة", tabs: [{ k: "overview", i: LayoutDashboard, l: "نظرة عامة" }, { k: "rules", i: ListTree, l: "قواعد الأتمتة" }, { k: "designer", i: PencilRuler, l: "المصمم المرئي" }, { k: "approvals", i: ClipboardCheck, l: "المراجعة والاعتماد" }] },
   { l: "الأدلة", tabs: [{ k: "events", i: Zap, l: "دليل الأحداث" }, { k: "conditions", i: SlidersHorizontal, l: "الشروط والمتغيرات" }, { k: "actions", i: Play, l: "دليل الإجراءات" }, { k: "schedule", i: Clock, l: "الجدولة" }] },
-  { l: "التشغيل", tabs: [{ k: "simulate", i: FlaskConical, l: "المحاكاة والاختبار" }, { k: "monitor", i: Activity, l: "مراقبة التنفيذ" }, { k: "failed", i: OctagonAlert, l: "العمليات الفاشلة" }, { k: "existing", i: CalendarClock, l: "الوظائف القائمة" }, { k: "audit", i: ScrollText, l: "سجل التدقيق" }] },
+  { l: "التشغيل", tabs: [{ k: "simulate", i: FlaskConical, l: "المحاكاة والاختبار" }, { k: "monitor", i: Activity, l: "مراقبة التنفيذ" }, { k: "failed", i: OctagonAlert, l: "العمليات الفاشلة" }, { k: "existing", i: CalendarClock, l: "الوظائف القائمة" }, { k: "channels", i: MessageSquareText, l: "القنوات والرسائل" }, { k: "audit", i: ScrollText, l: "سجل التدقيق" }] },
   { l: "الضبط", tabs: [{ k: "access", i: UserCog, l: "الصلاحيات والتفويض" }, { k: "settings", i: Settings2, l: "الإعدادات" }] },
 ];
 export const AU_TABS: TabDef[] = AU_GROUPS.flatMap((g) => g.tabs);
@@ -31,7 +32,7 @@ export const AU_TABS: TabDef[] = AU_GROUPS.flatMap((g) => g.tabs);
 const TAB_PERM: Record<AuTab, string[] | "owner"> = {
   overview: ["au_view.dashboard"], rules: ["au_view.rules"], designer: ["au_manage.designer"], approvals: ["au_control.review", "au_control.approve", "au_control.reject"],
   events: ["au_view.events"], conditions: ["au_view.conditions"], actions: ["au_view.actions"], schedule: ["au_view.schedule"], simulate: ["au_manage.simulate"],
-  monitor: ["au_view.runs"], failed: ["au_view.failed"], existing: ["au_view.jobs"], audit: ["au_view.audit"], access: "owner", settings: "owner",
+  monitor: ["au_view.runs"], failed: ["au_view.failed"], existing: ["au_view.jobs"], channels: ["au_view.runs"], audit: ["au_view.audit"], access: "owner", settings: "owner",
 };
 export const tabAllowed = (me: AuMe | null | undefined, t: AuTab) => { const p = TAB_PERM[t]; return !!me && (me.owner || (p !== "owner" && p.some((k) => can(me, k)))); };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,6 +88,7 @@ export function AutomationPage({ orgId, tab, rule, me }: { orgId: string; tab: A
       {tab === "failed" && <RunsTab key="failed" orgId={orgId} failed />}
       {tab === "existing" && <ExistingJobs orgId={orgId} />}
       {tab === "audit" && <AuditTab orgId={orgId} />}
+      {tab === "channels" && <ChannelsTab orgId={orgId} canSync={me.owner || can(me, "au_manage.designer")} />}
       {tab === "settings" && <SettingsTab orgId={orgId} />}
       {["events", "conditions", "actions", "schedule"].includes(tab) && (q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : q.data && (
         <>

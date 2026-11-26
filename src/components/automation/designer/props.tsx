@@ -8,6 +8,9 @@ import { RecipientGroups, type Group } from "./groups";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { rpc } from "../lib";
+import { ChannelsEditor } from "./channels";
+import { NestedSteps } from "./nested";
+import { SourceParams } from "./source-params";
 
 const inp = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 const Field = ({ l, hint, children }: { l: string; hint?: string; children: React.ReactNode }) => (
@@ -28,16 +31,22 @@ export function eligibleRecipients(r: Any, ev: Any, forTask: boolean): Any[] {
 
 export type RuleMeta = { name: string; description: string; event: string; schools: string[] | null; scope: string; schedule: Any; priority: number; extra?: Record<string, unknown> };
 
-export function RuleSettings({ r, meta, set, schools }: { r: Any; meta: RuleMeta; set: (m: Partial<RuleMeta>) => void; schools: { id: string; name: string }[] }) {
+export function RuleSettings({ r, meta, set, schools, org }: { r: Any; org: string; meta: RuleMeta; set: (m: Partial<RuleMeta>) => void; schools: { id: string; name: string }[] }) {
   const evs = ((r?.events ?? []) as Any[]).filter((e) => ["wired", "tested"].includes(e.status));
   const ev = evs.find((e) => e.code === meta.event);
   const secs = ((r?.sections ?? []) as Any[]).filter((s) => evs.some((e) => e.section === s.key));
   const parents = [...new Set(secs.map((s) => s.parent ?? "—"))];
   const sec = ev?.section ?? "";
   const vars = ev ? condVars(r, ev.code) : [];
-  const types = ((r?.triggers ?? []) as Any[]).filter((t) => t.available && (ev?.source_kind === "trigger" ? t.code === "event" : t.code !== "event"));
+  const wired = useQuery({ queryKey: ["au-source-tables"], staleTime: 300_000, queryFn: async () => new Set(((await supabase.from("au_source_tables").select("event_code")).data ?? []).map((x) => x.event_code as string)) });
+  const types = ((r?.triggers ?? []) as Any[]).filter((t) => t.available && (ev?.source_kind === "trigger" ? t.code === "event" : t.code !== "event") && (t.code !== "on_change" || !!wired.data?.has(String(ev?.code))));
   const st = meta.schedule ?? {};
   const setS = (p: Any) => set({ schedule: { ...st, ...p } });
+  const changeSource = (next: Any) => {
+    if (!next) return;
+    const extra = { ...(meta.extra ?? {}) }; delete extra["params"];
+    set({ event: next.code, extra, schedule: { type: next.source_kind === "trigger" ? "event" : "condition" } });
+  };
   const scopes = ev?.area === "central" ? [["central", "الإدارة المركزية"]] : [["one", "مدرسة محددة"], ["many", "عدة مدارس"], ["all", ev?.area === "shared" ? "مشترك: جميع المدارس والإدارة المركزية" : "جميع مدارس المجموعة"]];
   return (
     <div className="space-y-4">
@@ -49,13 +58,13 @@ export function RuleSettings({ r, meta, set, schools }: { r: Any; meta: RuleMeta
       <section className="space-y-3">
         <h4 className="text-xs font-bold text-muted-foreground">٢–٣. القسم والحدث</h4>
         <Field l="القسم" hint="تظهر الأقسام المرتبطة بالمحرك فقط. الأقسام غير المدعومة وأسبابها في «دليل الأحداث».">
-          <select className={selectCls("w-full")} value={sec} onChange={(e) => { const first = evs.find((x) => x.section === e.target.value); if (first) set({ event: first.code, schedule: { type: first.source_kind === "trigger" ? "event" : "condition" } }); }}>
+          <select className={selectCls("w-full")} value={sec} onChange={(e) => changeSource(evs.find((x) => x.section === e.target.value))}>
             <option value="" disabled>اختر القسم</option>
             {parents.map((p) => <optgroup key={p} label={p}>{secs.filter((s) => (s.parent ?? "—") === p).map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</optgroup>)}
           </select>
         </Field>
         <Field l="الحدث">
-          <select className={selectCls("w-full")} value={meta.event} onChange={(e) => { const x = evs.find((y) => y.code === e.target.value); set({ event: e.target.value, schedule: { type: x?.source_kind === "trigger" ? "event" : "condition" } }); }}>
+          <select className={selectCls("w-full")} value={meta.event} onChange={(e) => changeSource(evs.find((x) => x.code === e.target.value))}>
             <option value="" disabled>اختر الحدث</option>
             {evs.filter((e) => !sec || e.section === sec).map((e) => <option key={e.code} value={e.code}>{e.label}</option>)}
           </select>
@@ -86,6 +95,7 @@ export function RuleSettings({ r, meta, set, schools }: { r: Any; meta: RuleMeta
           )}
         </section>
       )}
+      {ev && <SourceParams r={r} event={meta.event} org={org} schools={meta.scope === "one" || meta.scope === "many" ? meta.schools : null} value={(meta.extra?.["params"] ?? {}) as Record<string, unknown>} set={(params) => set({ extra: { ...(meta.extra ?? {}), params } })} />}
       {ev && (
         <section className="space-y-3">
           <h4 className="text-xs font-bold text-muted-foreground">٧. التوقيت (توقيت الرياض)</h4>
@@ -144,8 +154,8 @@ export function StepProps({ kind, data, set, r, ev, org = "", schools = [], step
       {rows > 1 ? <textarea className={inp} rows={rows} maxLength={500} value={String(data[key] ?? "")} onChange={(e) => set({ ...data, [key]: e.target.value })} />
         : <input className={inp} maxLength={120} value={String(data[key] ?? "")} onChange={(e) => set({ ...data, [key]: e.target.value })} />}
       {kind !== "task" && kind !== "review" || key === "title" ? (
-        fam ? <span className="block text-xs text-muted-foreground">لا تُستخدم المتغيرات في رسائل أولياء الأمور؛ يصلهم وصف السجل فقط.</span> : (
-          <span className="flex flex-wrap gap-1 pt-1">{vars.map((v) => <button type="button" key={v.key} className="rounded-full border px-2 py-0.5 text-[11px] hover:border-primary" onClick={() => set({ ...data, [key]: `${String(data[key] ?? "")}{{${v.key}}}` })}>+ {v.label}</button>)}</span>)
+        (
+          <span className="flex flex-wrap gap-1 pt-1">{fam && <span className="w-full text-[11px] text-muted-foreground">لأولياء الأمور: الحقول المسموح بها للأسر فقط.</span>}{vars.filter((v) => !fam || ((v.flags ?? []) as string[]).includes("family")).map((v) => <button type="button" key={v.key} className="rounded-full border px-2 py-0.5 text-[11px] hover:border-primary" onClick={() => set({ ...data, [key]: `${String(data[key] ?? "")}{{${v.key}}}` })}>+ {v.label}</button>)}</span>)
       ) : null}
     </Field>
   );
@@ -168,6 +178,7 @@ export function StepProps({ kind, data, set, r, ev, org = "", schools = [], step
           {keyField}
           {tplField("title", "عنوان الإشعار")}
           {tplField("body", "نص الإشعار (اختياري — الافتراضي وصف السجل)", 3)}
+          {org && <ChannelsEditor data={data} set={set} org={org} vars={vars} fam={fam} />}
         </>
       )}
       {kind === "escalate" && (
@@ -231,13 +242,22 @@ function OpsStep({ kind, data, set, r, ev, org, schools, steps }: { kind: NodeKi
     <Field l="اسم الخطوة (حروف إنجليزية صغيرة وأرقام)" hint="لاستخدام نتيجتها لاحقًا، مثل حالة الطلب في «انتظار حتى شرط».">
       <input className={inp} maxLength={20} dir="ltr" value={String(data["key"] ?? "")} onChange={(e) => { const d = { ...data }; const v = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""); if (v) d["key"] = v; else delete d["key"]; set(d); }} />
     </Field>);
-  const nested = (k: string, l: string) => Array.isArray(data[k]) && (data[k] as unknown[]).length > 0 && <p className="rounded-md bg-muted/50 p-2 text-xs text-muted-foreground">{l}: {(data[k] as unknown[]).length} خطوة محفوظة في القاعدة.</p>;
-  const cats = useQuery({ queryKey: ["mt-cats-school"], enabled: kind === "mt_request", queryFn: async () => (await supabase.from("mt_categories").select("id,name").eq("kind", "school").is("parent_id", null).eq("active", true).eq("is_other", false).order("name")).data ?? [] });
+  const nested = (k: string, l: string) => <NestedSteps label={l} value={data[k] as Record<string, unknown>[] | undefined} onChange={(v) => { const d = { ...data }; if (v?.length) d[k] = v; else delete d[k]; set(d); }} org={org} ev={ev} schools={schools} steps={steps} />;
+  const mk = String(data["kind"] ?? "school");
+  const cats = useQuery({ queryKey: ["mt-cats-au", org, mk], enabled: kind === "mt_request" && !!org, queryFn: async () => (await rpc<Any[]>("mt_categories_list", { _org: org, _kind: mk })).filter((c) => !c.is_other) });
+  const buses = useQuery({ queryKey: ["mt-buses-au", org], enabled: kind === "mt_request" && mk === "bus" && !!org, queryFn: async () => (await rpc<Any[]>("mt_buses_list", { _org: org })).filter((b) => b.active && schools.some((s) => s.id === b.school_id)) });
   const tpls = useQuery({ queryKey: ["hr-letter-tpls", org], enabled: kind === "hr_letter" && !!org, queryFn: () => rpc<Any[]>("hr_letter_templates", { _org: org }) });
   if (kind === "mt_request") return (
     <div className="space-y-3">
-      {key}{txt("title", "عنوان الطلب")}{txt("description", "وصف العطل", 500, 3)}{txt("place", "المكان")}
+      {key}
+      <Field l="نوع الصيانة"><select className={selectCls("w-full")} value={mk} onChange={(e) => { const d: Record<string, unknown> = { ...data, kind: e.target.value }; delete d["category"]; if (e.target.value === "bus") { delete d["place"]; d["bus"] = ev?.code === "ds.api.buses" ? "record" : ""; } else delete d["bus"]; if (e.target.value === "school") delete d["kind"]; set(d); }}>
+        <option value="school">صيانة المدرسة</option><option value="bus">صيانة الباصات</option></select></Field>
+      {mk === "bus" && <Field l="الباص" hint="يُنشأ الطلب بترقيم صيانة الباصات (MB-) ويُسند لمنفّذ صيانة الباصات في الفرع."><select className={selectCls("w-full")} value={String(data["bus"] ?? "")} onChange={(e) => set({ ...data, bus: e.target.value })}>
+        <option value="">—</option>{ev?.code === "ds.api.buses" && <option value="record">الباص نفسه (سجل الحدث)</option>}
+        {(buses.data ?? []).map((b: Any) => <option key={b.id} value={b.id}>{b.code}{b.plate ? ` — ${b.plate}` : ""}</option>)}</select></Field>}
+      {txt("title", "عنوان الطلب")}{txt("description", "وصف العطل", 500, 3)}{mk === "school" && txt("place", "المكان")}
       <Field l="التصنيف"><select className={selectCls("w-full")} value={String(data["category"] ?? "")} onChange={(e) => set({ ...data, category: e.target.value })}><option value="">—</option>{(cats.data ?? []).map((c: Any) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+      {(cats.error || buses.error) && <p role="alert" className="text-xs text-destructive">تعذر تحميل خيارات الصيانة المسموح بها</p>}
       <Field l="الأولوية"><select className={selectCls("w-full")} value={String(data["priority"] ?? "normal")} onChange={(e) => set({ ...data, priority: e.target.value })}>{PRIOS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></Field>
       <Field l="الإسناد إلى (اختياري)" hint="أول شخص مؤهل وله صلاحية تنفيذ الصيانة؛ وإلا يُطبَّق الإسناد المعتاد للفرع.">
         <RecipientGroups value={(data["assign"] as Group[] | undefined) ?? []} onChange={(v) => { const d = { ...data }; if (v.length) d["assign"] = v; else delete d["assign"]; set(d); }} org={org} ev={ev} schools={schools} steps={steps} forTask />
@@ -257,14 +277,15 @@ function OpsStep({ kind, data, set, r, ev, org, schools, steps }: { kind: NodeKi
   if (kind === "report") {
     const src = String(data["source"] ?? "");
     const sources = ((r?.events ?? []) as Any[]).filter((e) => String(e.code).startsWith("ds.") && ["wired", "tested"].includes(e.status));
-    const fvars = src && src !== "rep.attendance_week" ? condVars(r, src).filter((v) => v.type !== "uuid") : [];
+    const fvars = src && src !== "rep.attendance_week" && src !== "doc" ? condVars(r, src).filter((v) => v.type !== "uuid") : [];
     const cur = (data["fields"] as string[] | undefined) ?? [];
     return (
       <div className="space-y-3">
-        {key}{txt("title", "عنوان التقرير")}
+        {key}{txt("title", src === "doc" ? "عنوان المستند" : "عنوان التقرير")}
         <Field l="المصدر"><select className={selectCls("w-full")} value={src} onChange={(e) => { const d: Record<string, unknown> = { ...data, source: e.target.value }; delete d["fields"]; delete d["filter"]; set(d); }}>
-          <option value="">—</option><option value="rep.attendance_week">الحضور الأسبوعي للمدرسة (آخر 7 أيام)</option>
+          <option value="">—</option><option value="doc">مستند من قالب نصي (PDF محفوظ)</option><option value="rep.attendance_week">الحضور الأسبوعي للمدرسة (آخر 7 أيام)</option>
           {sources.map((e) => <option key={e.code} value={e.code}>{e.label}</option>)}</select></Field>
+        {src === "doc" && <>{txt("body", "نص المستند (يُملأ من بيانات السجل)", 4000, 6)}<p className="text-xs text-muted-foreground">يُحفظ ملف PDF على الخادم ويُشارك مع المحددين فقط. الخطابات الرسمية تمر بطلب خطاب الموارد البشرية والاعتماد البشري.</p></>}
         {fvars.length > 0 && <Field l="الحقول (حتى 12)"><span className="block max-h-40 space-y-1 overflow-auto rounded-md border p-2">{fvars.map((v) => { const on = cur.includes(v.key); return (
           <label key={v.key} className="flex items-center gap-2"><input type="checkbox" checked={on} disabled={!on && cur.length >= 12} onChange={() => set({ ...data, fields: on ? cur.filter((x) => x !== v.key) : [...cur, v.key] })} />{v.label}</label>); })}</span></Field>}
         <Field l="يطّلع عليه" hint="من يملك صلاحية قراءة المصدر فقط؛ غيرهم يُسجَّل سبب استبعاده.">

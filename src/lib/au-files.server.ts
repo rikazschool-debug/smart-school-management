@@ -19,7 +19,9 @@ async function font(origin: string, url: string) {
     if (!r.ok) throw new Error(`font ${r.status}`);
     fonts.set(url, b64(new Uint8Array(await r.arrayBuffer())));
   }
-  return fonts.get(url)!;
+  const cached = fonts.get(url);
+  if (!cached) throw new Error("font unavailable");
+  return cached;
 }
 const stamp = (iso: string) => new Date(iso).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh" });
 export const cellText = (v: unknown) => v === null || v === undefined || v === "" ? "—" : typeof v === "number" ? v.toLocaleString("en-US", { maximumFractionDigits: 2 }) : typeof v === "boolean" ? (v ? "نعم" : "لا") : String(v);

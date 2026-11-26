@@ -3,7 +3,9 @@
 // stored snapshot by the shared export service (src/lib/export.ts), so school branding stays the same everywhere.
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { FileSpreadsheet, FileText, ChevronLeft } from "lucide-react";
+import { FileSpreadsheet, FileText, ChevronLeft, Download } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { exportPdf, exportXlsx } from "@/lib/export";
@@ -40,11 +42,39 @@ export function AutoReportsList({ orgId }: { orgId: string }) {
   );
 }
 
+/** Files stored by the server worker (au_files, RLS = report readers); opened only through a short-lived signed link. */
+function StoredFiles({ id }: { id: string }) {
+  const f = useQuery({ queryKey: ["au-files", id], queryFn: async () => (await supabase.from("au_files").select("id,format,status,path,bytes,rendered_at").eq("report_id", id).order("format")).data ?? [], refetchInterval: (q) => ((q.state.data ?? []) as Any[]).some((x) => x.status !== "ready" && x.status !== "failed") ? 15000 : false });
+  const open = async (path: string) => {
+    const r = await supabase.storage.from("au-files").createSignedUrl(path, 60);
+    if (r.error || !r.data) { toast.error("تعذر فتح الملف"); return; }
+    window.open(r.data.signedUrl, "_blank", "noopener");
+  };
+  const files = (f.data ?? []) as Any[];
+  if (!files.length) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm">
+      <span className="font-semibold">الملفات المحفوظة على الخادم:</span>
+      {files.map((x) => x.status === "ready" ? (
+        <Button key={x.id} size="sm" variant="outline" onClick={() => void open(x.path)}><Download className="size-4" />{x.format === "pdf" ? "PDF" : "Excel"}</Button>
+      ) : <span key={x.id} className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{x.format === "pdf" ? "PDF" : "Excel"}: {x.status === "failed" ? "تعذر الإنشاء" : "قيد الإنشاء"}</span>)}
+    </div>
+  );
+}
+
 export function AutoReportView({ id }: { id: string }) {
   const q = useQuery({ queryKey: ["au-report", id], queryFn: () => rpc<Any>("au_report_get", { _id: id }), retry: false });
   if (q.isLoading) return <LoadingState />;
   if (q.error || !q.data) return <ErrorState message={(q.error as Error | null)?.message ?? "تعذر فتح التقرير"} />;
   const r = q.data;
+  if (r.summary?.doc) return (
+    <div className="space-y-5">
+      <PageHeader title={r.title} desc={[r.school, r.rule ? `القاعدة: ${r.rule}` : "", `أُنشئ: ${fmtDate(r.created_at)}`].filter(Boolean).join(" · ")} />
+      <StoredFiles id={id} />
+      <article className="whitespace-pre-wrap rounded-xl border border-border bg-card p-5 leading-8">{String(r.summary.body ?? "")}</article>
+      <p className="text-xs text-muted-foreground">مستند أنشأته قاعدة أتمتة من قالبها المعتمد؛ ليس خطابًا رسميًا.</p>
+    </div>
+  );
   const cols: { key: string; label: string }[] = r.columns ?? [];
   const headers = cols.map((c) => c.label);
   const rows = (r.rows as Any[]).map((x) => cols.map((c) => cell(x[c.key])));
@@ -62,6 +92,7 @@ export function AutoReportView({ id }: { id: string }) {
           <Button onClick={() => exportPdf(meta, headers, rows)}><FileText className="size-4" />PDF</Button>
         </div>
       } />
+      <StoredFiles id={id} />
       {sum.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {sum.map(([k, v]) => (

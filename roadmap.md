@@ -77,3 +77,12 @@
 - [x] D6 Designer wiring of new actions (minimal)
 - [x] D7 Acceptance scenarios 1–6 (no notification/WhatsApp), regressions, security, concurrency, visual
 - [x] D8 docs/automation-platform-phase-d.md + coverage matrix
+
+# Automation: phase E and C/D gap closure (test only)
+- [x] Shared channel registry, approved WATI template mirror and simulated messages; live external sending gated off
+- [x] Bus maintenance, grouped preview parity, post-transaction source nudges, PDF/XLSX private storage and document templates
+- [x] Designer channels/variables and alternative paths; signed-in financial scenario and file downloads (E 61/61, browser 15/15)
+- [x] Regression/security/concurrency checks, generated coverage matrix, permissions and phase E report (partial closure explicitly documented)
+- [ ] Automatic file-worker scheduling — preserve all existing scheduled jobs; deployment/secret setup requires approval
+- [ ] Remaining E gaps: full change-event coverage (12/39 wired), channel file attachments/output mapping, full server export logo/layout parity; E is not accepted as complete
+- [ ] Real external sending — blocked pending explicit approval; no phase F before report approval

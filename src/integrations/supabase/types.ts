@@ -3695,6 +3695,7 @@ export type Database = {
           sent_at: string | null
           status: string
           step: string | null
+          step_def: Json
           template: string | null
           updated_at: string
           user_id: string
@@ -3720,6 +3721,7 @@ export type Database = {
           sent_at?: string | null
           status: string
           step?: string | null
+          step_def?: Json
           template?: string | null
           updated_at?: string
           user_id: string
@@ -3745,6 +3747,7 @@ export type Database = {
           sent_at?: string | null
           status?: string
           step?: string | null
+          step_def?: Json
           template?: string | null
           updated_at?: string
           user_id?: string
@@ -27387,6 +27390,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _au_msg_guard: { Args: { _id: number }; Returns: string }
       _au_msg_status: {
         Args: { _ref: string; _status: string }
         Returns: undefined

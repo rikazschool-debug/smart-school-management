@@ -51,7 +51,9 @@ try {
   check("all event sources exist", missing.length === 0, missing);
   check("all trigger types proven and available (phase 4)", R.triggers.every((t: any) => t.available), R.triggers);
   check("forbidden actions registered as forbidden", ["finance_write", "delete_record", "grant_permission"].every((k) => R.actions.find((a: any) => a.code === k)?.readiness === "forbidden"));
-  check("external/unfinished actions not ready", ["email", "whatsapp", "webhook", "update_record"].every((k) => R.actions.find((a: any) => a.code === k)?.readiness !== "ready"));
+  check("unfinished external/actions not ready", ["email", "webhook", "update_record"].every((k) => R.actions.find((a: any) => a.code === k)?.readiness !== "ready"));
+  const channels = (await owner.c.rpc("au_channels_info", { _org: org })).data as any;
+  check("WhatsApp channel is simulation-only and real sending stays off", channels?.channels?.find((c: any) => c.code === "whatsapp")?.readiness === "simulation" && channels?.wa_live === false);
   check("server report action ready since phase D", R.actions.find((a: any) => a.code === "report")?.readiness === "ready");
   check("system review request ready and marked as needing a human", R.actions.find((a: any) => a.code === "request_review")?.readiness === "ready" && R.actions.find((a: any) => a.code === "request_review")?.needs_human === true);
   // validation

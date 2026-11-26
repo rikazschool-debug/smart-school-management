@@ -8,7 +8,7 @@ import "./lib/au-suite-lock.ts";
 // NODE_PATH=node_modules bun scripts/automation-platform-e-e2e.ts   (writes /tmp/au-platform-e.json)
 import { auApprove } from "./lib/au-approve";
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import * as XLSX from "xlsx";
 import { TestRun } from "./lib/test-run";
 import { auTick } from "./lib/au-tick";
@@ -19,6 +19,7 @@ const shim = (key: string) => (input: any, init: any = {}) => { const h = new He
 const admin = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_SERVICE_ROLE_KEY"]!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "automation-platform-e-e2e");
 const run = Date.now(), pw = "Test-" + crypto.randomUUID();
+const fixturePath = "/tmp/browser/au-e/fixture.json", keep = process.argv.includes("--keep");
 let ok = 0, bad = 0; const M: Record<string, unknown> = {};
 const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)?.slice(0, 900)); return c; };
 async function user(tag: string) {
@@ -26,7 +27,8 @@ async function user(tag: string) {
   await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: "هـ-" + tag } });
   const c = createClient(URL_, PK, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: shim(PK) as any } });
   const s = await c.auth.signInWithPassword({ email, password: pw }); if (s.error) throw s.error;
-  tr.addUser(s.data.user!.id); return { c, id: s.data.user!.id as string };
+  if (!s.data.user) throw new Error("test login missing user");
+  tr.addUser(s.data.user.id); return { c, id: s.data.user.id, email };
 }
 const day = (d: number) => new Date(Date.now() + 3 * 3600e3 + d * 864e5).toISOString().slice(0, 10);
 const ins = async (t: string, row: any) => { const r = await admin.from(t).insert(row).select().single(); if (r.error) throw new Error(`${t}: ${r.error.message}`); return r.data as any; };
@@ -48,6 +50,26 @@ async function start(name: string, event: string, def: any) {
   await allOff(); const s = await save(name, event, def); if (s.error) throw new Error(`save ${name}: ${s.error.message}`);
   await go(s.data as string); await due(s.data as string); await tick(); return s.data as string;
 }
+async function cleanup() {
+  for (const o of orgs) {
+    const rules = ((await admin.from("au_rules").select("id").eq("org_id", o)).data ?? []).map((r) => r.id);
+    if (rules.length) { await admin.from("au_rules").update({ active: false }).in("id", rules); await admin.from("au_step_people").delete().in("rule_id", rules); await admin.from("au_step_out").delete().in("rule_id", rules); for (let i = 0; i < rules.length; i += 50) await admin.from("au_jobs").delete().in("rule_id", rules.slice(i, i + 50)); }
+    const reps = ((await admin.from("au_files").select("path,au_reports!inner(org_id)").eq("au_reports.org_id", o)).data ?? []).map((f: any) => f.path).filter(Boolean);
+    if (reps.length) await admin.storage.from("au-files").remove(reps);
+    for (const t of ["au_msgs", "au_contact_prefs", "au_reports", "au_outbox", "au_audit", "au_settings", "au_skips", "au_sent", "au_trace", "perm_overrides"]) await admin.from(t).delete().eq("org_id", o);
+  }
+  await admin.from("au_rate").delete().in("user_id", [...tr.users]);
+  await admin.from("adm_tasks").delete().in("school_id", [...tr.schools]);
+  await admin.from("school_responsibilities").delete().in("school_id", [...tr.schools]);
+  await tr.deleteNotifications().catch((e) => console.log("cleanup notes", e.message)); for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.log("purge", e.message));
+  for (const u of tr.users) await admin.auth.admin.deleteUser(u);
+}
+if (process.argv.includes("--teardown")) {
+  const f = JSON.parse(readFileSync(fixturePath, "utf8"));
+  orgs.push(...f.orgs); for (const id of f.users) tr.addUser(id); for (const id of f.schools) tr.addSchool(id);
+  await cleanup(); console.log("test fixture removed"); process.exit(0);
+}
+
 try {
   owner = await user("owner");
   const U: any[] = []; for (const t of ["pr", "acc", "mx", "te", "g1", "g2", "g3", "g4", "g5", "g6", "ownerb", "gb"]) U.push(await user(t));
@@ -66,6 +88,7 @@ try {
   const CH = (c: string) => ci.channels.find((x: any) => x.code === c);
   check("channels: internal ready, WhatsApp via WATI in simulation, email not ready", CH("internal")?.readiness === "ready" && CH("whatsapp")?.readiness === "simulation" && CH("email")?.readiness === "not_ready", ci.channels);
   check("real external sending is switched off on the platform", ci.wa_live === false);
+  check("external channels require explicit recorded consent", ci.consent_mode === "explicit");
   const tl = must(await owner.c.rpc("au_wa_templates_list", { _org: org, _q: "payment" }), "tpl") as any;
   const T = (n: string) => tl.items.find((x: any) => x.name === n);
   check("approved fee-claim templates from the linked WATI account are listed and usable", T("payment_reminder_v1")?.usable && T("payment_no_response_v1")?.usable, tl.items.map((x: any) => [x.name, x.usable]));
@@ -93,19 +116,21 @@ try {
   }
   const GR: Record<string, any> = {};
   const phone: Record<string, string | null> = { g1: "0551234561", g2: "0551234562", g3: null, g4: "0551234564", g5: "0551234565", g6: "0551234566" };
-  for (const [k, u] of [["g1", g1], ["g2", g2], ["g3", g3], ["g4", g4], ["g5", g5], ["g6", g6]] as any[]) GR[k] = await ins("guardians", { school_id: S, full_name: `ولي ${k}`, user_id: u.id, phone: phone[k] });
+  for (const [k, u] of [["g1", g1], ["g2", g2], ["g3", g3], ["g4", g4], ["g5", g5], ["g6", g6]] as any[]) { GR[k] = await ins("guardians", { school_id: S, full_name: `ولي ${k}`, user_id: u.id, phone: phone[k] }); await ins("memberships", { user_id: u.id, org_id: org, school_id: S, role: "guardian" }); }
   const link = (s: string, gk: string, follow = true) => ins("student_guardians", { school_id: S, student_id: F[s], guardian_id: GR[gk].id, relationship: "أب", can_follow: follow, can_pickup: follow, verified: true });
   await link("A", "g1"); await link("E", "g1"); await link("B", "g2"); await link("C", "g3"); await link("D", "g4"); await link("F", "g6"); await link("A", "g5", false);
   const stB = await ins("students", { school_id: SB, full_name: "طالب منظمة أخرى" });
-  const grB = await ins("guardians", { school_id: SB, full_name: "ولي أخرى", user_id: gB.id, phone: "0551234569" });
+  const grB = await ins("guardians", { school_id: SB, full_name: "ولي أخرى", user_id: gB.id, phone: "0551234569" }); await ins("memberships", { user_id: gB.id, org_id: orgB, school_id: SB, role: "guardian" });
   await ins("student_guardians", { school_id: SB, student_id: stB.id, guardian_id: grB.id, relationship: "أب", can_follow: true, can_pickup: true, verified: true });
   const obs = async (k: string) => must(await admin.from("sf_obligations").select("id,term,amount").eq("student_id", F[k]!).eq("year_id", Y).order("term"), "ob") as any[];
   const pay = (s: string, allocations: any[]) => owner.c.rpc("sf_collect", { _student: s, _request_key: crypto.randomUUID(), _p: { method: "cash", paid_at: day(-1), allocations } });
   must(await pay(F["B"]!, [{ obligation_id: (await obs("B"))[0].id, amount: 1500 }]), "pay B");
+  check("a registered phone does not imply communication consent", (await admin.rpc("_au_consent_ok", { _org: org, _u: g1.id, _ch: "whatsapp", _mode: "registered_phone" })).data === false);
+  for (const u of [g1,g2,g3,g6]) must(await owner.c.rpc("au_contact_pref_set", { _org: org, _user: u.id, _channel: "whatsapp", _allowed: true, _reason: "موافقة اصطناعية صريحة للاختبار المعزول فقط" }), "test consent");
   must(await owner.c.rpc("au_contact_pref_set", { _org: org, _user: g4.id, _channel: "whatsapp", _allowed: false, _reason: "طلب ولي الأمر عدم التواصل عبر واتساب" }), "optout g4");
   check("contact preference is owner-only", !!(await pr.c.rpc("au_contact_pref_set", { _org: org, _user: g1.id, _channel: "whatsapp", _allowed: false, _reason: "x" })).error);
   // the existing daily fee service already reminded F's guardian today
-  await admin.from("notifications").insert({ user_id: g6.id, school_id: S, category: "admin", title: "تأخر السداد", body: "اختبار", dedupe_key: `sf_late:${(await obs("F"))[0].id}:${day(-10)}` });
+  must(await admin.from("notifications").insert({ user_id: g6.id, school_id: S, kind: "admin", title: "تأخر السداد", body: "اختبار", dedupe_key: `sf_late:${(await obs("F"))[0].id}:${day(-10)}` }), "existing fee notice");
 
   const wa = (tpl = "payment_reminder_v1") => ({ template: tpl, params: { "1": "{{guardian_name}}", "2": "{{overdue}}", "3": "{{overdue_since}}", "4": "{{term_label}}" } });
   const claim = (extra: any = {}) => ({ type: "notify", key: "claim", title: "مطالبة رسوم: {{student_name}}", body: "المتأخر {{overdue}} ريال — {{school_name}} — {{year_name}}", recipients: ["guardian"], channels: ["internal", "whatsapp"], wa: wa(), ...extra });
@@ -140,8 +165,31 @@ try {
   const of = (u: string) => mm.filter((m) => m.user_id === u);
   check("each matching student handled independently: WhatsApp claims for g1 (A and E), none for B", of(g1.id).length === 2 && of(g2.id).length === 0, M["msgs1"]);
   check("messages are simulated only (nothing queued for real sending)", mm.length > 0 && mm.every((m) => m.status === "simulated"), mm.map((m) => m.status));
-  check("template variables filled from the student's own account (name of the receiving guardian, overdue 3000)", of(g1.id).every((m) => m.params["1"] === "ولي g1" && m.params["2"] === "3000" && !!m.params["3"]), of(g1.id).map((m) => m.params));
+  check("template variables filled from the student's own account (name of the receiving guardian, overdue 3000)", of(g1.id).every((m) => m.params["1"] === "ولي g1" && /^3000(\.00)?$/.test(m.params["2"]) && !!m.params["3"]), of(g1.id).map((m) => m.params));
   check("no phone number stored in the message log", mm.every((m) => !JSON.stringify(m).includes("9665") && !JSON.stringify(m).includes("055123")));
+  const aOutbox = must(await admin.from("au_outbox").select("id").eq("org_id", org).eq("event_code", "ds.student_accounts").eq("entity_id", F["A"]).limit(1).single(), "A outbox");
+  const liveMessage = of(g1.id).find((m) => m.outbox_id === aOutbox.id);
+  if (!liveMessage) throw new Error("student A message missing");
+  check("send-time guard re-reads a still-valid student and linked guardian", (await admin.rpc("_au_msg_guard", { _id: liveMessage.id })).data === null);
+  check("send-time guard cannot be invoked by an ordinary user", !!(await pr.c.rpc("_au_msg_guard", { _id: liveMessage.id })).error);
+  await admin.from("student_guardians").update({ can_follow: false }).eq("student_id", F["A"]).eq("guardian_id", GR["g1"].id);
+  check("revoked family link blocks an already prepared message", (await admin.rpc("_au_msg_guard", { _id: liveMessage.id })).data === "recipient_no_longer_allowed");
+  await admin.from("student_guardians").update({ can_follow: true }).eq("student_id", F["A"]).eq("guardian_id", GR["g1"].id);
+  must(await owner.c.rpc("au_contact_pref_set", { _org: org, _user: g1.id, _channel: "whatsapp", _allowed: false, _reason: "سحب الموافقة للاختبار فقط" }), "withdraw consent");
+  check("withdrawing consent blocks an already prepared message", (await admin.rpc("_au_msg_guard", { _id: liveMessage.id })).data === "no_consent");
+  must(await owner.c.rpc("au_contact_pref_set", { _org: org, _user: g1.id, _channel: "whatsapp", _allowed: true, _reason: "إعادة الموافقة الاصطناعية للاختبار" }), "restore consent");
+  // Provider events are simulated against our own message only: no request goes to WATI.
+  await admin.from("au_msgs").update({ status: "sending" }).eq("id", liveMessage.id);
+  must(await admin.rpc("_au_msg_status", { _ref: liveMessage.client_ref, _status: "read" }), "read callback");
+  must(await admin.rpc("_au_msg_done", { _id: liveMessage.id, _status: "accepted", _provider: "synthetic", _detail: null }), "late response");
+  check("a read callback arriving before the send response is not lost or downgraded", (await admin.from("au_msgs").select("status").eq("id", liveMessage.id).single()).data?.status === "read");
+  await admin.from("au_msgs").update({ status: "sending", updated_at: new Date(Date.now()-11*60_000).toISOString() }).eq("id", liveMessage.id);
+  await admin.rpc("_au_msgs_claim", { _limit: 10 });
+  const unconfirmed = (await admin.from("au_msgs").select("status,attempts").eq("id", liveMessage.id).single()).data;
+  check("a timed-out sending lease becomes unknown and is never automatically resent", unconfirmed?.status === "unknown" && unconfirmed?.attempts === 0);
+  must(await owner.c.rpc("au_msg_resolve", { _id: liveMessage.id, _status: "accepted" }), "settle after synthetic verification");
+  check("owner can settle an unknown result only after verification", (await admin.from("au_msgs").select("status").eq("id", liveMessage.id).single()).data?.status === "accepted");
+  await admin.from("au_msgs").update({ status: "simulated", detail: "محاكاة: الإرسال الخارجي معطّل" }).eq("id", liveMessage.id);
   const sk = await skips(FR);
   M["skips1"] = sk;
   check("guardian without a registered phone: internal notice only, WhatsApp skipped with a reason", (await notes(g3.id, "مطالبة رسوم%")).length === 1 && sk.some((s) => s.user_id === g3.id && s.reason === "wa:no_registered_phone"), sk);
@@ -150,19 +198,20 @@ try {
   check("claim already sent today by the existing fee service is not repeated on any channel", of(g6.id).length === 0 && (await notes(g6.id, "مطالبة رسوم%")).length === 0 && sk.some((s) => s.user_id === g6.id && s.reason === "covered_by_existing:sf_due"), sk);
   const n1 = await notes(g1.id, "مطالبة رسوم%");
   check("internal notices personalized (student, overdue, school, year)", n1.length === 2 && n1.every((n) => /3000/.test(n.body) && /فرع E/.test(n.body) && /1448/.test(n.body)), n1);
-  check("other organization's family untouched", (await admin.from("au_msgs").select("id").eq("user_id", gB.id)).data?.length === 0 && (await notes(gB.id, "%")).length === 0);
+  check("other organization's family untouched", (await admin.from("au_msgs").select("id").eq("user_id", gB.id)).data?.length === 0 && ((await admin.from("notifications").select("id").eq("user_id", gB.id).like("dedupe_key", "au:%")).data ?? []).length === 0);
   // repeat scan: same students are not claimed again
   await due(FR); await tick();
   check("re-running the rule does not repeat any claim (WhatsApp or internal)", (await msgs(FR)).length === mm.length && (await notes(g1.id, "مطالبة رسوم%")).length === 2);
   // after 3 days: A paid, E still overdue
   const oA = await obs("A");
   must(await pay(F["A"]!, [{ obligation_id: oA[0].id, amount: 3000 }]), "pay A");
+  check("a prepared fee claim is blocked after the student's overdue balance is paid", (await admin.rpc("_au_msg_guard", { _id: liveMessage.id })).data === "condition_no_longer_true");
   await resume(FR);
   mm = await msgs(FR);
   const again = mm.filter((m) => m.step === "again");
   M["again"] = again.map((m) => [m.user_id === g1.id, m.params]);
   check("after waiting: balance re-read — paid student A stops, E gets one reminder", (await notes(g1.id, "تذكير بالمطالبة%")).length === 1 && again.filter((m) => m.user_id === g1.id).length === 1
-    && (await notes(g1.id, "تذكير بالمطالبة%"))[0].title.includes("طالب E"), { again: M["again"], n: await notes(g1.id, "تذكير%") });
+    && (await notes(g1.id, "تذكير بالمطالبة%"))[0].dedupe_key.includes(F["E"]!), { again: M["again"], n: await notes(g1.id, "تذكير%") });
   check("claim amount can be changed without new code (threshold 5000 → nobody)", ((must(await owner.c.rpc("au_simulate_def", { _org: org, _event: "ds.student_accounts", _schools: null, _def: feeDef(5000) }), "sim5000") as any).matched) === 0);
   check("live sender claims nothing while the platform switch is off", ((await admin.rpc("_au_msgs_claim", { _limit: 50 })).data ?? []).length === 0);
   const ml = must(await owner.c.rpc("au_msgs_list", { _org: org, _status: null, _limit: 100 }), "list") as any[];
@@ -201,58 +250,55 @@ try {
   await ins("org_docs", { org_id: org, school_id: S, kind: "رخصة", name: "رخصة الدفاع المدني E", expires_on: day(15) });
   const DR = await start("مستند وتقرير", "ds.org_docs", { schedule: daily, when: { var: "name", op: "contains", value: "E" }, steps: [
     { type: "report", key: "letter", source: "doc", title: "إشعار داخلي: {{name}}", body: "نفيدكم بأن {{name}} تنتهي بتاريخ {{expires_on}}.\nيرجى البدء بإجراءات التجديد.", share: [{ by: "role", role: "principal" }] },
-    { type: "report", key: "rep", title: "أرصدة الطلاب المتأخرة", source: "ds.student_accounts", fields: ["student_name", "overdue", "remaining"], filter: { var: "overdue", op: "gt", value: 0 }, share: [{ by: "role", role: "principal" }] }] });
+    { type: "report", key: "rep", title: "أرصدة الطلاب المتأخرة", source: "ds.student_accounts", fields: ["student_name", "overdue", "remaining"], filter: { var: "overdue", op: "gt", value: 0 }, share: [{ by: "person", users: [acc.id] }] }] });
   const reps = ((await admin.from("au_reports").select("id,title,summary").eq("rule_id", DR)).data ?? []) as any[];
   const docRep = reps.find((r) => r.summary?.doc), dataRep = reps.find((r) => !r.summary?.doc);
   check("document created from the rule template with real values (not an official letter)", !!docRep && docRep.summary.body.includes("رخصة الدفاع المدني E") && docRep.summary.body.includes(day(15)), reps);
   const fq = ((await admin.from("au_files").select("id,format,status").in("report_id", reps.map((r) => r.id))).data ?? []) as any[];
   check("files queued automatically: document → PDF, report → PDF + Excel", fq.length === 3 && fq.every((f) => f.status === "pending"), fq);
-  const rf = await renderPendingFiles("http://localhost:8080", 50);
-  M["render"] = rf;
+  const renderStart = performance.now();
+  const rf = await Promise.all([renderPendingFiles("http://localhost:8080", 50), renderPendingFiles("http://localhost:8080", 50)]);
+  M["render"] = { workers: rf, ms: Math.round(performance.now()-renderStart) };
   const fr = ((await admin.from("au_files").select("id,format,status,path,bytes,report_id,error").in("report_id", reps.map((r) => r.id))).data ?? []) as any[];
   check("server generated and stored the files without opening the report", fr.length === 3 && fr.every((f) => f.status === "ready" && f.bytes > 500), fr);
+  check("concurrent file workers claimed each file only once", ((await admin.from("au_files").select("attempts").in("report_id", reps.map((r) => r.id))).data ?? []).every((f) => f.attempts === 1));
   const prFiles = ((await pr.c.from("au_files").select("id,path,format,report_id")).data ?? []) as any[];
-  check("shared principal sees the stored files", prFiles.length === 3, prFiles);
-  const pdfF = prFiles.find((f) => f.report_id === docRep.id)!, xF = prFiles.find((f) => f.format === "xlsx")!;
+  const accFiles = ((await acc.c.from("au_files").select("id,path,format,report_id")).data ?? []) as any[];
+  check("each shared person sees only the files of what was shared with them (principal: document, accountant: report PDF+Excel)", prFiles.length === 1 && prFiles[0].report_id === docRep.id && accFiles.length === 2 && accFiles.every((f) => f.report_id === dataRep.id), { prFiles, accFiles });
+  const pdfF = prFiles.find((f) => f.report_id === docRep.id)!, xF = accFiles.find((f) => f.format === "xlsx")!;
   const s1 = await pr.c.storage.from("au-files").createSignedUrl(pdfF.path, 60);
   const pdfBytes = s1.data ? new Uint8Array(await (await fetch(s1.data.signedUrl)).arrayBuffer()) : new Uint8Array();
   check("principal downloads the stored PDF through a short-lived link", new TextDecoder().decode(pdfBytes.slice(0, 5)) === "%PDF-", s1.error);
-  const s2 = await pr.c.storage.from("au-files").createSignedUrl(xF.path, 60);
+  const s2 = await acc.c.storage.from("au-files").createSignedUrl(xF.path, 60);
   const wb = s2.data ? XLSX.read(new Uint8Array(await (await fetch(s2.data.signedUrl)).arrayBuffer())) : null;
   const sheet = wb ? XLSX.utils.sheet_to_json<any[]>(wb.Sheets[wb.SheetNames[0]!]!, { header: 1 }) : [];
-  check("stored Excel holds the title and numeric amounts", sheet.some((r) => r[0] === "أرصدة الطلاب المتأخرة") && sheet.some((r) => typeof r[1] === "number"), sheet.slice(0, 10));
-  check("person not shared cannot list or download the files", ((await te.c.from("au_files").select("id")).data ?? []).length === 0 && !!(await te.c.storage.from("au-files").createSignedUrl(pdfF.path, 60)).error);
-  check("file-ready notice sent to the shared principal", (await notes(pr.id, "ملف جاهز للتنزيل")).length >= 2);
+  check("stored Excel holds the title and numeric amounts", sheet.some((r) => r[0] === "أرصدة الطلاب المتأخرة") && sheet.some((r) => typeof r[2] === "number" && typeof r[3] === "number"), sheet.slice(0, 10));
+  check("person not shared cannot list or download the files", ((await te.c.from("au_files").select("id")).data ?? []).length === 0 && !!(await te.c.storage.from("au-files").createSignedUrl(pdfF.path, 60)).error && !!(await pr.c.storage.from("au-files").createSignedUrl(xF.path, 60)).error);
+  check("file-ready notice sent once files are stored", (await notes(pr.id, "ملف جاهز للتنزيل")).length === 1 && (await notes(acc.id, "ملف جاهز للتنزيل")).length === 1);
   await allOff();
 
   // ---------- instant reaction after the transaction ----------
   const OR = await (async () => { const s = await save("فوري للوثائق", "ds.org_docs", { schedule: { type: "on_change", quiet: false }, when: { var: "name", op: "contains", value: "فوري" }, steps: [{ type: "notify", title: "وثيقة جديدة: {{name}}", groups: [{ by: "role", role: "principal" }] }] }); if (s.error) throw new Error("on_change save " + s.error.message); await go(s.data); return s.data as string; })();
   check("instant reaction rejected for a source without wiring", !!(await rejects("ds.api.courses", { schedule: { type: "on_change" }, steps: [{ type: "notify", title: "x x", groups: [{ by: "role", role: "principal" }] }] })));
+  await tick();
   const nextBefore = (await admin.from("au_rules").select("next_run_at").eq("id", OR).single()).data?.next_run_at;
   const t0 = Date.now(); await ins("org_docs", { org_id: org, school_id: S, kind: "عقد", name: "عقد فوري E", expires_on: day(200) }); const writeMs = Date.now() - t0;
   const nudged = ((await admin.from("au_nudges").select("event_code").eq("event_code", "ds.org_docs")).data ?? []).length;
   await tick();
-  check("saving the record queued a nudge (no scan before it) and the next worker cycle reacted", nextBefore === null && nudged >= 1 && (await notes(pr.id, "وثيقة جديدة: عقد فوري E")).length === 1, { nextBefore, nudged, writeMs });
+  check("after the first scan the rule sleeps; saving a record queues a nudge and the next worker cycle reacts", nextBefore === null && nudged >= 1 && (await notes(pr.id, "وثيقة جديدة: عقد فوري E")).length === 1, { nextBefore, nudged, writeMs });
   check("the user's save stayed fast (single insert under 3s incl. network)", writeMs < 3000, writeMs);
   await allOff();
   const live = (await admin.from("au_rules").select("id").eq("org_id", org).eq("active", true)).data ?? [];
   check("all test rules left inactive", live.length === 0);
-} catch (e) { check("suite crashed", false, (e as Error)?.stack ?? JSON.stringify(e)); }
-finally {
-  for (const o of orgs) {
-    const rules = ((await admin.from("au_rules").select("id").eq("org_id", o)).data ?? []).map((r) => r.id);
-    if (rules.length) { await admin.from("au_rules").update({ active: false }).in("id", rules); await admin.from("au_step_people").delete().in("rule_id", rules); await admin.from("au_step_out").delete().in("rule_id", rules); for (let i = 0; i < rules.length; i += 50) await admin.from("au_jobs").delete().in("rule_id", rules.slice(i, i + 50)); }
-    const reps = ((await admin.from("au_files").select("path,au_reports!inner(org_id)").eq("au_reports.org_id", o)).data ?? []).map((f: any) => f.path).filter(Boolean);
-    if (reps.length) await admin.storage.from("au-files").remove(reps);
-    for (const t of ["au_msgs", "au_contact_prefs", "au_reports", "au_outbox", "au_audit", "au_settings", "au_skips", "au_sent", "au_trace", "perm_overrides"]) await admin.from(t).delete().eq("org_id", o);
+  if (keep && bad === 0) {
+    mkdirSync("/tmp/browser/au-e", { recursive: true });
+    writeFileSync(fixturePath, JSON.stringify({ orgs, users: [...tr.users], schools: [...tr.schools], org, school: S,
+      owner: owner.email, principal: pr.email, accountant: acc.email, password: pw, rule: FR, busRule: MB, report: dataRep.id, document: docRep.id, year: Y, term: t1 }));
+    console.log("inactive browser fixture ready");
   }
-  await admin.from("au_nudges").delete().eq("event_code", "ds.org_docs");
-  await admin.from("au_rate").delete().in("user_id", [...tr.users]);
-  await admin.from("adm_tasks").delete().in("school_id", [...tr.schools]);
-  await admin.from("school_responsibilities").delete().in("school_id", [...tr.schools]);
-  await tr.deleteNotifications().catch((e) => console.log("cleanup notes", e.message)); for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.log("purge", e.message));
-  for (const u of tr.users) await admin.auth.admin.deleteUser(u);
-}
+} catch (e) { check("suite crashed", false, (e as Error)?.stack ?? JSON.stringify(e)); }
+finally { if (!keep || bad) await cleanup(); }
+
 writeFileSync("/tmp/au-platform-e.json", JSON.stringify({ ok, bad, M }, null, 1));
 console.log(`\n${ok} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);

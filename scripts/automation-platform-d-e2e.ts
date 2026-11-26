@@ -64,7 +64,7 @@ try {
   const acts = must(await admin.from("au_actions").select("code,readiness,enabled,risk,needs_human").in("code", ["create_mt_request", "hr_letter_request", "update_field", "wait_until", "report", "finance_write", "delete_record", "grant_permission", "whatsapp", "email", "webhook"]), "acts") as any[];
   const A = (c: string) => acts.find((a) => a.code === c);
   check("catalogue: maintenance, HR letter, field update, wait-until and report are ready", ["create_mt_request", "hr_letter_request", "update_field", "wait_until", "report"].every((c) => A(c)?.readiness === "ready" && A(c)?.enabled), acts);
-  check("catalogue: money, deletion, permissions stay forbidden; external channels stay off", ["finance_write", "delete_record", "grant_permission"].every((c) => A(c)?.readiness === "forbidden" && !A(c)?.enabled) && ["whatsapp", "email", "webhook"].every((c) => !A(c)?.enabled), acts);
+  check("catalogue: money, deletion, permissions stay forbidden; email/webhook off; WhatsApp is a simulated channel (phase E)", ["finance_write", "delete_record", "grant_permission"].every((c) => A(c)?.readiness === "forbidden" && !A(c)?.enabled) && ["email", "webhook"].every((c) => !A(c)?.enabled) && A("whatsapp")?.enabled === true, acts);
   check("HR letter request needs a human and is high risk", A("hr_letter_request")?.needs_human === true && A("hr_letter_request")?.risk === "high");
 
   const blk = must(await admin.from("au_events").select("code,status,note").eq("status", "blocked"), "blocked") as any[];
@@ -74,7 +74,7 @@ try {
 
   // ---------- validation ----------
   const docDef = (steps: any[]) => ({ schedule: daily, when: { var: "days_left", op: "lte", value: 30 }, steps });
-  check("only school maintenance requests (bus kind rejected)", !!(await rejects("ds.org_docs", docDef([{ type: "mt_request", kind: "bus", title: "طلب", description: "وصف كاف", category: CAT, place: "مكان" }]))));
+  check("bus requests need a bus and a bus category (phase E: bus kind supported)", !!(await rejects("ds.org_docs", docDef([{ type: "mt_request", kind: "bus", title: "طلب", description: "وصف كاف", category: CAT, place: "مكان" }]))));
   check("maintenance request needs a valid category", !!(await rejects("ds.org_docs", docDef([{ type: "mt_request", title: "طلب صيانة", description: "وصف كاف", category: crypto.randomUUID(), place: "مكان" }]))));
   check("HR letter on an event without an employee rejected", !!(await rejects("ds.org_docs", docDef([{ type: "hr_letter", template: crypto.randomUUID(), purpose: "غرض" }]))));
   check("report without people to share with rejected", !!(await rejects("ds.org_docs", docDef([{ type: "report", title: "تقرير", source: "rep.attendance_week" }]))));

@@ -7,6 +7,26 @@ const notify = { title: "تكليف متأخر", recipients: ["assigner"] };
 const overdue = { var: "days_overdue", op: "gt", value: 0 };
 
 describe("designer compile", () => {
+  it("preserves a bus request and its alternative path without requiring a building place", () => {
+    const step = { type: "mt_request", kind: "bus", bus: "record", category: "bus-category", title: "صيانة الباص", description: "فحص الباص الدوري", on_fail: [{ type: "stop" }] };
+    const g = decompile({ steps: [step] });
+    expect(compile(g.nodes, g.edges).issues).toEqual([]);
+    expect(compile(g.nodes, g.edges).def.steps).toEqual([step]);
+  });
+  it("preserves the individual overdue > 2000 claim with both channels and a three-day wait", () => {
+    const def = { when: { var: "overdue", op: "gt", value: 2000 }, steps: [
+      { type: "notify", title: "مطالبة {{student_name}}", recipients: ["guardian"], channels: ["internal", "whatsapp"], wa: { template: "payment_reminder_v1", params: { "1": "{{guardian_name}}" } } },
+      { type: "wait", minutes: 4320 }, { type: "stop" },
+    ] };
+    const g = decompile(def);
+    expect(compile(g.nodes, g.edges).def).toEqual(def);
+  });
+  it("preserves document bodies without requiring report columns", () => {
+    const step = { type: "report", title: "مستند تجديد", source: "doc", body: "يرجى تجديد الوثيقة {{name}}", share: [{ by: "role", role: "principal" }] };
+    const g = decompile({ steps: [step] });
+    expect(compile(g.nodes, g.edges).issues).toEqual([]);
+    expect(compile(g.nodes, g.edges).def.steps).toEqual([step]);
+  });
   it("builds the overdue-task workflow in engine order", () => {
     const nodes = [n("t", "trigger"), n("f", "filter", { when: overdue }), n("a", "notify", notify), n("w", "wait", { minutes: 1440 }),
       n("i", "if", { when: overdue }), n("k", "task", { title: "متابعة", assignee: "principal", due_in_days: 2 }), n("s1", "stop"), n("s2", "stop")];

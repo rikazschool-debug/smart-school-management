@@ -1,0 +1,1 @@
+update public.au_variables set lookup='years' where event_code='ds.student_accounts' and key='year_name';

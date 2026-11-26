@@ -5,7 +5,7 @@ export const KIND: Record<NodeKind, { l: string; d: string; i: LucideIcon; group
   trigger: { l: "البداية", d: "الحدث ونطاق القاعدة وتوقيت تشغيلها", i: Zap, group: "start" },
   filter: { l: "شرط القاعدة", d: "شرط بسيط أو مركب (و / أو / ليس) يحدد السجلات المطابقة", i: Filter, group: "cond" },
   if: { l: "إعادة التحقق (إذا / وإلا)", d: "يعيد فحص الشرط لحظة التنفيذ ويفتح مسارين", i: GitBranch, group: "cond" },
-  notify: { l: "إشعار داخلي", d: "إشعار داخل التطبيق للمستلمين المؤهلين", i: Bell, group: "action" },
+  notify: { l: "إشعار", d: "إشعار داخل التطبيق، ويمكن إضافة واتساب بقالب معتمد (محاكاة حتى الموافقة)", i: Bell, group: "action" },
   reminder: { l: "تذكير", d: "تذكير داخل التطبيق", i: BellRing, group: "action" },
   escalate: { l: "تصعيد", d: "إشعار لمدير المدرسة أو مدير النظام", i: Flag, group: "action" },
   task: { l: "مهمة متابعة", d: "تكليف عبر مسار التكليفات القائم", i: ListChecks, group: "action" },
@@ -21,7 +21,7 @@ export const KIND: Record<NodeKind, { l: string; d: string; i: LucideIcon; group
 };
 export const START_TYPES: { k: string; l: string; types: string[] }[] = [
   { k: "event", l: "فور وقوع الحدث", types: ["event"] },
-  { k: "condition", l: "عند تحقق الشرط", types: ["condition"] },
+  { k: "condition", l: "عند تحقق الشرط", types: ["condition", "on_change"] },
   { k: "schedule", l: "تشغيل مجدول", types: ["every_5m", "every_15m", "every_30m", "hourly", "daily", "weekly", "monthly", "at"] },
   { k: "manual", l: "تشغيل يدوي", types: ["manual"] },
 ];
@@ -50,11 +50,16 @@ const SERVER: [RegExp, string][] = [
   [/unknown operator|operator .* not valid/, "نوع المقارنة لا يناسب المتغير"], [/number expected|percent 0..100|date YYYY-MM-DD|boolean expected|text expected|unknown status value|one value required|list value required/, "قيمة الشرط غير صالحة لنوع المتغير"],
   [/unknown variable/, "متغير غير معروف لهذا الحدث"], [/name 3..120/, "اسم القاعدة من 3 إلى 120 حرفًا"], [/event not ready/, "الحدث غير جاهز للتشغيل"],
   [/step (\w+) not available/, "الخطوة «$1» غير متاحة في المحرك"], [/archived rule/, "القاعدة مؤرشفة — استرجعها أولًا"], [/approve first/, "اعتمد القاعدة أولًا"],
-  [/choose a maintenance category/, "اختر تصنيف صيانة متاحًا"], [/only school maintenance requests/, "طلبات صيانة المدارس فقط حاليًا"],
+  [/choose a maintenance category/, "اختر تصنيف صيانة متاحًا"],
   [/this event has no employee/, "هذا الحدث لا يرتبط بموظف لإنشاء خطاب"], [/choose an active letter template/, "اختر قالب خطاب نشطًا"],
   [/choose who may open the report/, "اختر من يطّلع على التقرير"], [/report fields/, "اختر من 1 إلى 12 حقلًا مسجلًا للتقرير"], [/report source not available/, "مصدر التقرير غير متاح"],
   [/field\/value not allowed/, "هذا الحقل أو القيمة غير مسموح لهذا الحدث"], [/grouped mode/, "التجميع لكل مدرسة متاح لمصادر البيانات فقط"],
   [/check every|maximum wait/, "مدة الفحص أو المهلة القصوى خارج الحدود"], [/wait until: choose a date field/, "اختر حقل تاريخ للانتظار"],
+  [/choose an approved WhatsApp template/, "اختر قالب واتساب معتمدًا من النوع التشغيلي"], [/map every template variable/, "اربط كل متغيرات القالب بحقول من السجل"],
+  [/template variable (\w+) needs a value/, "متغير القالب «$1» يحتاج قيمة"], [/channel (\w+) is not ready/, "هذه القناة غير جاهزة بعد"], [/template set without the WhatsApp channel/, "فعّل قناة واتساب أو احذف القالب"],
+  [/escalation uses internal notifications only/, "التصعيد يكون بإشعار داخلي فقط"], [/WhatsApp is not allowed for restricted events/, "واتساب غير مسموح للأحداث المقيدة"],
+  [/choose a bus maintenance category/, "اختر تصنيف صيانة باصات"], [/choose a bus/, "اختر الباص"], [/document text/, "نص المستند من 10 إلى 4000 حرف"], [/choose who may open the document/, "اختر من يطّلع على المستند"],
+  [/instant reaction is not available/, "التفاعل الفوري غير متاح لهذا المصدر"],
   [/school/i, "الفرع المختار خارج مجموعتك أو غير نشط"],
 ];
 export function serverMsg(m: string): string {

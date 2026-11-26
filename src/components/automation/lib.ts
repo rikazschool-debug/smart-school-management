@@ -56,7 +56,7 @@ export const JOB_ST: Record<string, [string, string]> = {
 };
 export const SCHED: Record<string, string> = {
   event: "فوري عند وقوع الحدث", condition: "عند تحقق الشرط", every_5m: "كل 5 دقائق", every_15m: "كل 15 دقيقة", every_30m: "كل 30 دقيقة",
-  hourly: "كل ساعة", daily: "يوميًا", weekly: "أسبوعيًا", monthly: "شهريًا", at: "موعد مخصص", manual: "يدوي",
+  hourly: "كل ساعة", daily: "يوميًا", weekly: "أسبوعيًا", monthly: "شهريًا", at: "موعد مخصص", manual: "يدوي", on_change: "فور تغيّر السجلات (خلال دقيقة)",
 };
 export const AUDIT_ACT: Record<string, string> = {
   save_draft: "حفظ مسودة", approve: "اعتماد إصدار", activate: "تفعيل", deactivate: "إيقاف", run_now: "تشغيل يدوي", retry: "إعادة محاولة",
