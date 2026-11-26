@@ -3338,6 +3338,75 @@ export type Database = {
         }
         Relationships: []
       }
+      au_channels: {
+        Row: {
+          code: string
+          label: string
+          note: string | null
+          readiness: string
+          service: string | null
+        }
+        Insert: {
+          code: string
+          label: string
+          note?: string | null
+          readiness: string
+          service?: string | null
+        }
+        Update: {
+          code?: string
+          label?: string
+          note?: string | null
+          readiness?: string
+          service?: string | null
+        }
+        Relationships: []
+      }
+      au_contact_prefs: {
+        Row: {
+          allowed: boolean
+          channel: string
+          org_id: string
+          reason: string | null
+          set_at: string
+          set_by: string | null
+          user_id: string
+        }
+        Insert: {
+          allowed: boolean
+          channel: string
+          org_id: string
+          reason?: string | null
+          set_at?: string
+          set_by?: string | null
+          user_id: string
+        }
+        Update: {
+          allowed?: boolean
+          channel?: string
+          org_id?: string
+          reason?: string | null
+          set_at?: string
+          set_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_contact_prefs_channel_fkey"
+            columns: ["channel"]
+            isOneToOne: false
+            referencedRelation: "au_channels"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "au_contact_prefs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       au_delegations: {
         Row: {
           actions: string[] | null
@@ -3460,6 +3529,56 @@ export type Database = {
         }
         Relationships: []
       }
+      au_files: {
+        Row: {
+          attempts: number
+          bytes: number | null
+          claimed_at: string | null
+          created_at: string
+          error: string | null
+          format: string
+          id: string
+          path: string | null
+          rendered_at: string | null
+          report_id: string
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          bytes?: number | null
+          claimed_at?: string | null
+          created_at?: string
+          error?: string | null
+          format: string
+          id?: string
+          path?: string | null
+          rendered_at?: string | null
+          report_id: string
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          bytes?: number | null
+          claimed_at?: string | null
+          created_at?: string
+          error?: string | null
+          format?: string
+          id?: string
+          path?: string | null
+          rendered_at?: string | null
+          report_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_files_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "au_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       au_job_catalog: {
         Row: {
           job: string
@@ -3555,6 +3674,110 @@ export type Database = {
           },
         ]
       }
+      au_msgs: {
+        Row: {
+          attempts: number
+          channel: string
+          claim_key: string
+          client_ref: string
+          created_at: string
+          detail: string | null
+          id: number
+          job_id: number | null
+          org_id: string
+          outbox_id: number | null
+          params: Json
+          preview: string | null
+          provider_ref: string | null
+          recipient_code: string | null
+          rule_id: string | null
+          school_id: string | null
+          sent_at: string | null
+          status: string
+          step: string | null
+          template: string | null
+          updated_at: string
+          user_id: string
+          version: number | null
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          claim_key: string
+          client_ref?: string
+          created_at?: string
+          detail?: string | null
+          id?: number
+          job_id?: number | null
+          org_id: string
+          outbox_id?: number | null
+          params?: Json
+          preview?: string | null
+          provider_ref?: string | null
+          recipient_code?: string | null
+          rule_id?: string | null
+          school_id?: string | null
+          sent_at?: string | null
+          status: string
+          step?: string | null
+          template?: string | null
+          updated_at?: string
+          user_id: string
+          version?: number | null
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          claim_key?: string
+          client_ref?: string
+          created_at?: string
+          detail?: string | null
+          id?: number
+          job_id?: number | null
+          org_id?: string
+          outbox_id?: number | null
+          params?: Json
+          preview?: string | null
+          provider_ref?: string | null
+          recipient_code?: string | null
+          rule_id?: string | null
+          school_id?: string | null
+          sent_at?: string | null
+          status?: string
+          step?: string | null
+          template?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_msgs_channel_fkey"
+            columns: ["channel"]
+            isOneToOne: false
+            referencedRelation: "au_channels"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      au_nudges: {
+        Row: {
+          at: string
+          event_code: string
+          id: number
+        }
+        Insert: {
+          at?: string
+          event_code: string
+          id?: number
+        }
+        Update: {
+          at?: string
+          event_code?: string
+          id?: number
+        }
+        Relationships: []
+      }
       au_operators: {
         Row: {
           arity: string
@@ -3628,6 +3851,7 @@ export type Database = {
           kill_switch: boolean
           reason: string | null
           updated_at: string
+          wa_live: boolean
         }
         Insert: {
           fin_formula_hash?: string | null
@@ -3635,6 +3859,7 @@ export type Database = {
           kill_switch?: boolean
           reason?: string | null
           updated_at?: string
+          wa_live?: boolean
         }
         Update: {
           fin_formula_hash?: string | null
@@ -3642,6 +3867,7 @@ export type Database = {
           kill_switch?: boolean
           reason?: string | null
           updated_at?: string
+          wa_live?: boolean
         }
         Relationships: []
       }
@@ -4030,6 +4256,8 @@ export type Database = {
       au_settings: {
         Row: {
           cap_defer_days: number
+          claim_gap_days: number
+          consent_mode: string
           family_max_day: number
           kill_switch: boolean
           max_per_user_day: number
@@ -4046,6 +4274,8 @@ export type Database = {
         }
         Insert: {
           cap_defer_days?: number
+          claim_gap_days?: number
+          consent_mode?: string
           family_max_day?: number
           kill_switch?: boolean
           max_per_user_day?: number
@@ -4062,6 +4292,8 @@ export type Database = {
         }
         Update: {
           cap_defer_days?: number
+          claim_gap_days?: number
+          consent_mode?: string
           family_max_day?: number
           kill_switch?: boolean
           max_per_user_day?: number
@@ -4116,6 +4348,21 @@ export type Database = {
           rule_id?: string | null
           step?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      au_source_tables: {
+        Row: {
+          event_code: string
+          table_name: string
+        }
+        Insert: {
+          event_code: string
+          table_name: string
+        }
+        Update: {
+          event_code?: string
+          table_name?: string
         }
         Relationships: []
       }
@@ -4377,6 +4624,48 @@ export type Database = {
             referencedColumns: ["code"]
           },
         ]
+      }
+      au_wa_templates: {
+        Row: {
+          body: string | null
+          buttons: Json | null
+          category: string | null
+          header: Json | null
+          language: string | null
+          name: string
+          params: string[]
+          reason: string | null
+          status: string | null
+          synced_at: string
+          usable: boolean
+        }
+        Insert: {
+          body?: string | null
+          buttons?: Json | null
+          category?: string | null
+          header?: Json | null
+          language?: string | null
+          name: string
+          params?: string[]
+          reason?: string | null
+          status?: string | null
+          synced_at?: string
+          usable?: boolean
+        }
+        Update: {
+          body?: string | null
+          buttons?: Json | null
+          category?: string | null
+          header?: Json | null
+          language?: string | null
+          name?: string
+          params?: string[]
+          reason?: string | null
+          status?: string | null
+          synced_at?: string
+          usable?: boolean
+        }
+        Relationships: []
       }
       authorized_pickups: {
         Row: {
@@ -26766,6 +27055,19 @@ export type Database = {
         Returns: undefined
       }
       _att_section: { Args: { _student: string }; Returns: string }
+      _au_act_doc: {
+        Args: {
+          boss: string
+          ctx: Json
+          ev: Database["public"]["Tables"]["au_events"]["Row"]
+          j: Database["public"]["Tables"]["au_jobs"]["Row"]
+          o: Database["public"]["Tables"]["au_outbox"]["Row"]
+          p: string
+          ru: Database["public"]["Tables"]["au_rules"]["Row"]
+          st: Json
+        }
+        Returns: string
+      }
       _au_act_letter: {
         Args: {
           boss: string
@@ -26792,6 +27094,19 @@ export type Database = {
         Returns: string
       }
       _au_act_report: {
+        Args: {
+          boss: string
+          ctx: Json
+          ev: Database["public"]["Tables"]["au_events"]["Row"]
+          j: Database["public"]["Tables"]["au_jobs"]["Row"]
+          o: Database["public"]["Tables"]["au_outbox"]["Row"]
+          p: string
+          ru: Database["public"]["Tables"]["au_rules"]["Row"]
+          st: Json
+        }
+        Returns: string
+      }
+      _au_act_report_core: {
         Args: {
           boss: string
           ctx: Json
@@ -26850,11 +27165,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      _au_check_channels: {
+        Args: {
+          _ev: Database["public"]["Tables"]["au_events"]["Row"]
+          fam: boolean
+          st: Json
+        }
+        Returns: undefined
+      }
       _au_check_cond: {
         Args: { _depth?: number; _event: string; c: Json }
         Returns: number
       }
       _au_check_def: { Args: { _event: string; d: Json }; Returns: Json }
+      _au_check_def_core: { Args: { _event: string; d: Json }; Returns: Json }
       _au_check_group: {
         Args: {
           _ev: Database["public"]["Tables"]["au_events"]["Row"]
@@ -26885,9 +27209,25 @@ export type Database = {
         }
         Returns: number
       }
+      _au_check_steps_core: {
+        Args: {
+          _depth: number
+          _ev: Database["public"]["Tables"]["au_events"]["Row"]
+          _steps: Json
+        }
+        Returns: number
+      }
       _au_check_tpl: {
         Args: { _event: string; _family: boolean; _txt: string }
         Returns: undefined
+      }
+      _au_consent_ok: {
+        Args: { _ch: string; _mode: string; _org: string; _u: string }
+        Returns: boolean
+      }
+      _au_covered: {
+        Args: { _ctx: Json; _ev: string; _gap: number; _u: string }
+        Returns: string
       }
       _au_dcover: {
         Args: {
@@ -26985,6 +27325,21 @@ export type Database = {
         Args: { j: Database["public"]["Tables"]["au_jobs"]["Row"] }
         Returns: string
       }
+      _au_fam_ctx: {
+        Args: { _org: string; _u: string; ctx: Json }
+        Returns: Json
+      }
+      _au_file_done: {
+        Args: {
+          _bytes: number
+          _err: string
+          _id: string
+          _ok: boolean
+          _path: string
+        }
+        Returns: undefined
+      }
+      _au_files_claim: { Args: { _limit?: number }; Returns: Json[] }
       _au_fin_guard: {
         Args: { _org: string; _schools: string[] }
         Returns: undefined
@@ -27023,6 +27378,29 @@ export type Database = {
       _au_lo: { Args: never; Returns: string }
       _au_manager: { Args: { _employee: string }; Returns: string }
       _au_mgr_emp: { Args: { _emp: string }; Returns: string }
+      _au_msg_done: {
+        Args: {
+          _detail: string
+          _id: number
+          _provider: string
+          _status: string
+        }
+        Returns: undefined
+      }
+      _au_msg_status: {
+        Args: { _ref: string; _status: string }
+        Returns: undefined
+      }
+      _au_msgs_claim: {
+        Args: { _limit?: number }
+        Returns: {
+          client_ref: string
+          id: number
+          params: Json
+          phone: string
+          template: string
+        }[]
+      }
       _au_mt_ev: {
         Args: { _action: string; _actor: string; _after: Json; _req: string }
         Returns: undefined
@@ -27047,6 +27425,7 @@ export type Database = {
         Returns: undefined
       }
       _au_next_run: { Args: { f: string; s: Json }; Returns: string }
+      _au_norm_phone: { Args: { _p: string }; Returns: string }
       _au_notify_groups: {
         Args: {
           ctx: Json
@@ -27060,6 +27439,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _au_nudge_apply: { Args: never; Returns: undefined }
       _au_out_put: {
         Args: {
           _data: Json
@@ -27120,6 +27500,7 @@ export type Database = {
           sec_label: string
         }[]
       }
+      _au_phone: { Args: { _org: string; _u: string }; Returns: string }
       _au_pick_ok: { Args: { _uid: string }; Returns: boolean }
       _au_ps_ok: {
         Args: { _ps: string; _school: string; _uid: string }
@@ -27248,6 +27629,22 @@ export type Database = {
           school: string
         }[]
       }
+      _au_srcp_core: {
+        Args: {
+          _entity: string
+          _ev: string
+          _lim: number
+          _org: string
+          _params: Json
+          _schools: string[]
+        }
+        Returns: {
+          ctx: Json
+          entity: string
+          period: string
+          school: string
+        }[]
+      }
       _au_steps: {
         Args: {
           _path: string
@@ -27277,6 +27674,7 @@ export type Database = {
         Returns: undefined
       }
       _au_teachers: { Args: { _section: string }; Returns: string[] }
+      _au_tick_core: { Args: { _budget_ms?: number }; Returns: Json }
       _au_tr: {
         Args: {
           _outcome: string
@@ -27296,6 +27694,27 @@ export type Database = {
         Returns: boolean
       }
       _au_vis: { Args: { _rid: string; _uid: string }; Returns: boolean }
+      _au_wa_enqueue: {
+        Args: {
+          _key: string
+          c: string
+          ctx: Json
+          j: Database["public"]["Tables"]["au_jobs"]["Row"]
+          o: Database["public"]["Tables"]["au_outbox"]["Row"]
+          p: string
+          ru: Database["public"]["Tables"]["au_rules"]["Row"]
+          sett: Database["public"]["Tables"]["au_settings"]["Row"]
+          st: Json
+          u: string
+        }
+        Returns: undefined
+      }
+      _au_wa_fill: { Args: { _body: string; _prm: Json }; Returns: string }
+      _au_wa_preview: {
+        Args: { _event: string; fctx: Json; s: Json }
+        Returns: Json
+      }
+      _au_wa_sync: { Args: { _rows: Json }; Returns: number }
       _au_win: { Args: { _x: string }; Returns: boolean }
       _audit: {
         Args: {
@@ -31097,6 +31516,17 @@ export type Database = {
         }
         Returns: Json
       }
+      au_channels_info: { Args: { _org: string }; Returns: Json }
+      au_contact_pref_set: {
+        Args: {
+          _allowed: boolean
+          _channel: string
+          _org: string
+          _reason: string
+          _user: string
+        }
+        Returns: undefined
+      }
       au_dashboard: {
         Args: {
           _from?: string
@@ -31161,6 +31591,14 @@ export type Database = {
       }
       au_me: { Args: { _org: string }; Returns: Json }
       au_monitor: { Args: { _org: string }; Returns: Json }
+      au_msg_resolve: {
+        Args: { _id: number; _status: string }
+        Returns: undefined
+      }
+      au_msgs_list: {
+        Args: { _limit?: number; _org: string; _status?: string }
+        Returns: Json
+      }
       au_people_titles: {
         Args: { _ids: string[]; _org: string }
         Returns: {
@@ -31294,6 +31732,11 @@ export type Database = {
       au_status: { Args: { _org: string }; Returns: Json }
       au_validate: {
         Args: { _def: Json; _event: string; _org: string }
+        Returns: Json
+      }
+      au_wa_can_sync: { Args: { _org: string }; Returns: boolean }
+      au_wa_templates_list: {
+        Args: { _org: string; _q?: string }
         Returns: Json
       }
       automation_tick: { Args: { _budget_ms?: number }; Returns: Json }

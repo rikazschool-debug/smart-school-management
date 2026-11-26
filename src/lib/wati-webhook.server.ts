@@ -45,6 +45,11 @@ export async function handleWatiWebhook(request: Request) {
     if (!instance || !local.startsWith(`rk-${instance}-`))
       return new Response("ignored", { status: 200 });
   }
+  if (status && local.startsWith("au-")) {
+    // automation messages (au_msgs.client_ref): delivery/read/failed only
+    const u = await a.rpc("_au_msg_status" as never, { _ref: local.slice(3), _status: status.status } as never);
+    return u.error ? new Response("retry", { status: 500 }) : new Response("ok", { status: 200 });
+  }
   if (status) {
     const updated = await a.rpc(
       "_rk_delivery_status" as never,
