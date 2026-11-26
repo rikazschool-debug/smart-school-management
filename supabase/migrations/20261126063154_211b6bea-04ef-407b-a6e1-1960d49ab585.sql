@@ -1,0 +1,1 @@
+update public.au_events set status='tested' where status='wired' and code in ('people.student.placed','people.student.transferred','fin.payment.cancelled','fin.discount.applied','edu.results.published','edu.achievement.low','evt.item.upcoming','evt.trip.upcoming','evt.course.upcoming','evt.registration.opened','gifted.nomination','hr.asset.unreturned','hr.performance.due');

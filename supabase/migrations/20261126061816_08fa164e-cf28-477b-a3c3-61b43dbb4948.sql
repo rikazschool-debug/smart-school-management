@@ -1,0 +1,1 @@
+update public.au_events set recipients = recipients || '{supervisor}'::text[] where code in ('people.student.placed','people.student.transferred') and not 'supervisor' = any(recipients);

@@ -1,0 +1,1 @@
+create index if not exists adm_tasks_auto_rule_idx on public.adm_tasks(auto_rule_id) where auto_rule_id is not null;

@@ -182,7 +182,7 @@ try {
     check("too many steps rejected", await bad(Array.from({ length: 16 }, () => ({ type: "stop" }))));
     check("not-ready action rejected (whatsapp)", await bad([{ type: "whatsapp" }]));
     check("forbidden action rejected (finance_write)", await bad([{ type: "finance_write" }]));
-    check("request_review not offered", await bad([{ type: "request_review" }]));
+    check("unknown step name rejected (review step is \"review\")", await bad([{ type: "request_review" }]));
     check("guardian recipient not allowed", await bad([{ type: "notify", recipients: ["guardian"], title: "x" }]));
     check("central event cannot notify school staff", !!(await owner.c.rpc("au_rule_save", { _org: org, _id: null, _name: "x", _event: "api.key.expiring", _schools: null, _def: { steps: [{ type: "notify", recipients: ["principal"], title: "x" }] } })).error);
   }
@@ -232,7 +232,7 @@ try {
   }
 
   // ---------- existing automation monitored, not duplicated ----------
-  { const ex = (await owner.c.rpc("au_existing_jobs", { _org: org })).data as any[];
+  { const ex = ((await owner.c.rpc("au_existing_jobs", { _org: org })).data as any)?.jobs as any[];
     const due = (ex ?? []).find((j) => j.job === "rikaz-sf-due");
     check("existing jobs visible with schedule + last run", !!due && due.schedule === "30 5 * * *" && !!due.last, due);
     check("existing job mapped to its covered event", (due?.events ?? []).includes("fin.due.soon"), due?.events);
@@ -294,6 +294,8 @@ try {
   }
 } catch (e) { bad++; console.error("ERROR", e); }
 finally {
+  { const e = ((await admin.from("au_jobs").select("last_error").eq("org_id", org).not("last_error", "is", null).limit(300)).data ?? []).map((x: any) => x.last_error); console.log("job errors", JSON.stringify([...new Set(e)]).slice(0, 1500));
+    const sk = ((await admin.from("au_skips").select("reason,step,rule_id").eq("org_id", org).limit(300)).data ?? []); console.log("skips", JSON.stringify(sk.slice(0, 40))); await admin.from("au_skips").delete().eq("org_id", org); await admin.from("au_sent").delete().eq("org_id", org); }
   await admin.from("au_platform").update({ kill_switch: false }).eq("id", true);
   for (const o of orgs) {
     const rules = ((await admin.from("au_rules").select("id").eq("org_id", o)).data ?? []).map((r) => r.id);

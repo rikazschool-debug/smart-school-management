@@ -19,6 +19,10 @@ type Any = any;
 const EV_ST: Record<string, [string, string]> = { tested: ["مرتبط ومختبَر", "bg-primary/15 text-primary"], wired: ["مرتبط", "bg-primary/10 text-primary"], registered: ["بانتظار الربط", "bg-muted text-muted-foreground"], blocked: ["مغطى بوظيفة قائمة / ممنوع", "bg-destructive/10 text-destructive"] };
 const AC_ST: Record<string, [string, string]> = { ready: ["جاهز", "bg-primary/15 text-primary"], registered: ["مسجل — غير مفعّل", "bg-muted text-muted-foreground"], forbidden: ["ممنوع", "bg-destructive/10 text-destructive"] };
 const SEC_ST: Record<string, string> = { wired: "مرتبط", pending: "بانتظار الربط", excluded: "مستثنى" };
+const DELIV: Record<string, string> = { captured_instant: "يُلتقط فورًا عند الحفظ ويُنفَّذ في الدورة التالية (خلال دقيقة)", scheduled_scan: "فحص حسب توقيت القاعدة" };
+const MANAGE: Record<string, [string, string]> = { keep: ["تبقى مستقلة", "bg-muted text-muted-foreground"], candidate: ["مرشحة للإدارة من المركز", "bg-primary/10 text-primary"], later: ["لاحقًا بعد اعتماد القسم", "bg-muted text-muted-foreground"], engine: ["المحرك نفسه", "bg-primary/15 text-primary"] };
+const SKIP: Record<string, string> = { "not_allowed": "المستلم غير مخوّل لحظة التنفيذ", "conflict:other_rule_first": "تعارض: قاعدة أعلى أولوية أرسلت للشخص نفسه", "cap:deferred_next_day": "تجاوز الحد اليومي — أُجّل لليوم التالي", "cap:cancelled_after_0_days": "تجاوز الحد — أُلغي (لا تأجيل)", "loop_guard:automated_source": "منع الحلقات: المصدر أنشأه المحرك", "task:no_authorized_assignee": "لا يوجد مكلَّف مخوّل", "review:no_authorized_assignee": "لا يوجد مراجع مخوّل" };
+const skipLabel = (k: string) => SKIP[k] ?? (k.startsWith("not_allowed") ? `${SKIP["not_allowed"]} (${k.split(":")[1]})` : k.startsWith("cap:cancelled") ? "تجاوز الحد بعد مهلة التأجيل — أُلغي وسُجّل" : k);
 const SENS: Record<string, string> = { normal: "عادي", sensitive: "حساس", restricted: "مقيد" };
 const TYPE: Record<string, string> = { number: "رقم", percent: "نسبة", text: "نص", status: "حالة", date: "تاريخ", bool: "نعم/لا", uuid: "معرّف" };
 const Badge = ({ s }: { s: [string, string] | undefined }) => <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${s?.[1] ?? ""}`}>{s?.[0]}</span>;
@@ -85,6 +89,7 @@ function Overview({ r }: { r: Any }) {
 function Events({ r }: { r: Any }) {
   const [st, setSt] = useState(""); const [area, setArea] = useState("");
   const secs = Object.fromEntries((r.sections as Any[]).map((s) => [s.key, s]));
+  const rc: Record<string, string> = Object.fromEntries((r.recipients as Any[]).map((x) => [x.code, x.label]));
   const rows = (r.events as Any[]).filter((e) => (!st || e.status === st) && (!area || e.area === area));
   return (
     <Card title={`الأحداث (${rows.length})`}>
@@ -93,11 +98,12 @@ function Events({ r }: { r: Any }) {
         <select className={selectCls()} value={area} onChange={(e) => setArea(e.target.value)}><option value="">كل النطاقات</option><option value="school">المدارس</option><option value="central">الإدارة المركزية</option><option value="shared">مشترك</option></select>
       </div>
       <div className="overflow-x-auto"><table className="w-full text-sm">
-        <thead className="text-xs text-muted-foreground"><tr className="border-b text-start">{["الحدث", "القسم", "المصدر", "التوقيت", "الحساسية", "منع التكرار", "الأتمتة القائمة", "الحالة"].map((h) => <th key={h} className="p-2 text-start font-semibold">{h}</th>)}</tr></thead>
+        <thead className="text-xs text-muted-foreground"><tr className="border-b text-start">{["الحدث", "القسم", "المصدر", "التوقيت", "طريقة التنفيذ", "الحساسية", "المستلمون", "منع التكرار", "الأتمتة القائمة", "الحالة"].map((h) => <th key={h} className="p-2 text-start font-semibold">{h}</th>)}</tr></thead>
         <tbody>{rows.map((e) => <tr key={e.code} className="border-b align-top last:border-0">
           <td className="p-2 font-semibold">{e.label}<div className="font-mono text-xs font-normal text-muted-foreground" dir="ltr">{e.code}</div></td>
           <td className="p-2">{secs[e.section]?.label ?? e.section}</td><td className="p-2 font-mono text-xs" dir="ltr">{e.source}</td><td className="p-2">{e.timing}</td>
-          <td className="p-2">{SENS[e.sensitivity]}</td><td className="p-2 text-xs">{e.dedupe}</td><td className="p-2 text-xs">{e.existing ?? "—"}{e.note && <div className="text-muted-foreground">{e.note}</div>}</td>
+          <td className="p-2 text-xs">{DELIV[e.delivery] ?? "—"}</td>
+          <td className="p-2">{SENS[e.sensitivity]}</td><td className="p-2 text-xs">{(e.recipients ?? []).map((c: string) => rc[c] ?? c).join("، ")}{(e.covered ?? []).length > 0 && <div className="text-muted-foreground">مُشعَر أصلًا: {(e.covered as string[]).map((c) => rc[c] ?? c).join("، ")}</div>}</td><td className="p-2 text-xs">{e.dedupe}</td><td className="p-2 text-xs">{e.existing ?? "—"}{e.note && <div className="text-muted-foreground">{e.note}</div>}</td>
           <td className="p-2"><Badge s={EV_ST[e.status]} /></td></tr>)}</tbody>
       </table></div>
     </Card>
@@ -130,8 +136,8 @@ function Actions({ r }: { r: Any }) {
       </Card>
       <Card title="المستلمون">
         <div className="flex flex-wrap gap-2">{(r.recipients as Any[]).map((x) => <span key={x.code} className={`rounded-full border px-3 py-1 text-xs ${x.available ? "border-primary/40 bg-primary/10 text-primary" : "text-muted-foreground"}`}>{x.label}{x.available ? " · متاح" : ""}</span>)}</div>
-        <ul className="mt-3 space-y-1 text-xs text-muted-foreground">{(r.recipients as Any[]).filter((x) => !x.available).map((x) => <li key={x.code}>{x.label}: {x.resolver}</li>)}</ul>
-        <p className="mt-3 text-xs text-muted-foreground">يُعاد التحقق من نشاط المستلم وفرعه ومجموعته وصلاحيته على القسم لحظة كل تنفيذ.</p>
+        <ul className="mt-3 space-y-1 text-xs text-muted-foreground">{(r.recipients as Any[]).filter((x) => ["teacher", "supervisor", "manager", "guardian"].includes(x.code) || !x.available).map((x) => <li key={x.code}><span className="font-semibold text-foreground">{x.label}:</span> {x.resolver}</li>)}</ul>
+        <p className="mt-3 text-xs text-muted-foreground">يُعاد التحقق من نشاط المستلم وفرعه ومجموعته وصلاحيته على القسم لحظة كل تنفيذ. إشعارات أولياء الأمور داخلية فقط، ولا تُرسل في الأحداث التي تُبلغ فيها الأسرة أصلًا أو الأحداث المقيدة.</p>
       </Card>
     </div>
   );
@@ -154,7 +160,7 @@ const JOB_ST: Record<string, string> = { queued: "بالانتظار", done: "م
 function Monitor({ orgId }: { orgId: string }) {
   const qc = useQueryClient();
   const m = useQuery({ queryKey: ["au-monitor", orgId], refetchInterval: 30000, queryFn: async () => { const r = await rpc<Any>("au_monitor", { _org: orgId }); if (r.error) throw r.error; return r.data; } });
-  const ex = useQuery({ queryKey: ["au-existing", orgId], queryFn: async () => { const r = await rpc<Any[]>("au_existing_jobs", { _org: orgId }); if (r.error) throw r.error; return r.data; } });
+  const ex = useQuery({ queryKey: ["au-existing", orgId], queryFn: async () => { const r = await rpc<Any>("au_existing_jobs", { _org: orgId }); if (r.error) throw r.error; return r.data; } });
   if (m.isLoading || ex.isLoading) return <LoadingState />;
   if (m.error || ex.error) return <ErrorState message={arabicError(m.error ?? ex.error)} />;
   const d = m.data ?? {}; const jobs = d.jobs ?? {};
@@ -165,10 +171,15 @@ function Monitor({ orgId }: { orgId: string }) {
         {Object.entries(JOB_ST).map(([k, l]) => <Stat key={k} l={l} v={jobs[k] ?? 0} />)}
         <Stat l="أحداث بانتظار المعالجة" v={d.outbox_pending ?? 0} hint={d.oldest_queued_s != null ? `أقدم عملية منذ ${d.oldest_queued_s} ث` : undefined} />
       </div>
+      <Card title="عمليات لم تُرسل خلال 24 ساعة وسببها (لا إسقاط صامت)">
+        {Object.keys(d.skips_24h ?? {}).length === 0 ? <p className="text-sm text-muted-foreground">لا توجد عمليات متخطاة.</p> : (
+          <ul className="divide-y text-sm">{Object.entries(d.skips_24h as Record<string, number>).map(([k, n]) => <li key={k} className="flex justify-between gap-3 py-2"><span>{skipLabel(k)}</span><span className="font-bold">{n}</span></li>)}</ul>)}
+        <p className="mt-2 text-xs text-muted-foreground">مؤجلة بسبب الحد اليومي الآن: {d.deferred_cap ?? 0}. المؤجل يُعاد التحقق من شرطه قبل الإرسال، فلا تصل إشعارات لم تعد صحيحة.</p>
+      </Card>
       <Card title="قواعد المجموعة">
         {(d.rules ?? []).length === 0 ? <p className="text-sm text-muted-foreground">لا توجد قواعد بعد.</p> : (
-          <table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b">{["القاعدة", "الحدث", "الإصدار", "الحالة", "آخر تشغيل", "التشغيل التالي"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
-            <tbody>{(d.rules as Any[]).map((x) => <tr key={x.id} className="border-b last:border-0"><td className="p-2 font-semibold">{x.name}</td><td className="p-2 font-mono text-xs" dir="ltr">{x.event}</td><td className="p-2">{x.version ?? "مسودة"}</td><td className="p-2">{x.active ? "مفعّلة" : "متوقفة"}</td><td className="p-2 text-xs">{fmt(x.last_run_at)}</td><td className="p-2 text-xs">{fmt(x.next_run_at)}</td></tr>)}</tbody></table>)}
+          <table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b">{["القاعدة", "الحدث", "الإصدار", "الأولوية", "الحالة", "آخر تشغيل", "التشغيل التالي"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
+            <tbody>{(d.rules as Any[]).map((x) => <tr key={x.id} className="border-b last:border-0"><td className="p-2 font-semibold">{x.name}</td><td className="p-2 font-mono text-xs" dir="ltr">{x.event}</td><td className="p-2">{x.version ?? "مسودة"}</td><td className="p-2">{x.priority ?? 5}</td><td className="p-2">{x.active ? "مفعّلة" : "متوقفة"}</td><td className="p-2 text-xs">{fmt(x.last_run_at)}</td><td className="p-2 text-xs">{fmt(x.next_run_at)}</td></tr>)}</tbody></table>)}
       </Card>
       <Card title="العمليات المعزولة">
         {(d.dead ?? []).length === 0 ? <p className="text-sm text-muted-foreground">لا توجد عمليات معزولة.</p> : (
@@ -176,10 +187,18 @@ function Monitor({ orgId }: { orgId: string }) {
             <button onClick={() => retry(x.id)} className="rounded-lg border px-3 py-1.5 text-xs font-semibold hover:border-primary/50">إعادة المحاولة</button></li>)}</ul>)}
       </Card>
       <Card title="الوظائف التلقائية القائمة (مراقبة فقط — مواعيدها كما هي)">
-        <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b">{["الوظيفة", "الجدولة (UTC)", "آخر تشغيل", "المدة", "تشغيلات 24 ساعة", "فشل 24 ساعة", "الأحداث التي تغطيها"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
-          <tbody>{(ex.data ?? []).map((x) => <tr key={x.job} className="border-b align-top last:border-0"><td className="p-2 font-mono text-xs" dir="ltr">{x.job}</td><td className="p-2 font-mono text-xs" dir="ltr">{x.schedule}</td>
-            <td className="p-2 text-xs">{fmt(x.last?.start)} {x.last?.status === "succeeded" ? "✓" : x.last ? "✗" : ""}</td><td className="p-2 text-xs">{x.last?.ms != null ? `${x.last.ms} ms` : "—"}</td><td className="p-2">{x.runs_24h}</td>
-            <td className={`p-2 ${x.failed_24h ? "font-bold text-destructive" : ""}`}>{x.failed_24h}</td><td className="p-2 font-mono text-xs" dir="ltr">{(x.events ?? []).join(" · ") || "—"}</td></tr>)}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b">{["الوظيفة", "القسم والغرض", "المستلمون والإعدادات", "الجدولة (UTC)", "آخر تشغيل", "تشغيلات/فشل 24 ساعة", "متوسط المدة", "الإدارة من المركز"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
+          <tbody>{((ex.data?.jobs ?? []) as Any[]).map((x) => <tr key={x.job} className="border-b align-top last:border-0"><td className="p-2 font-mono text-xs" dir="ltr">{x.job}</td>
+            <td className="p-2 text-xs"><div className="font-semibold">{x.section ?? "—"}</div><div className="text-muted-foreground">{x.purpose}</div></td>
+            <td className="p-2 text-xs"><div>{x.recipients}</div><div className="text-muted-foreground" dir="ltr">{x.settings}</div></td><td className="p-2 font-mono text-xs" dir="ltr">{x.schedule}</td>
+            <td className="p-2 text-xs">{fmt(x.last?.start)} {x.last?.status === "succeeded" ? "✓" : x.last ? "✗" : ""}</td>
+            <td className="p-2 text-xs">{x.runs_24h} / <span className={x.failed_24h ? "font-bold text-destructive" : ""}>{x.failed_24h}</span></td><td className="p-2 text-xs">{x.avg_ms_24h != null ? `${x.avg_ms_24h} ms` : "—"}</td>
+            <td className="p-2 text-xs"><Badge s={MANAGE[x.manage]} /><div className="mt-1 text-muted-foreground">{x.reason}</div></td></tr>)}</tbody></table></div>
+      </Card>
+      <Card title="الأحداث المغلقة لأن وظيفة قائمة تغطيها (حسب القسم)">
+        <div className="grid gap-3 md:grid-cols-2">{((ex.data?.blocked ?? []) as Any[]).map((g) => <div key={g.section} className="rounded-xl border bg-background p-3"><div className="mb-1 text-sm font-semibold">{g.section}</div>
+          <ul className="space-y-1 text-xs">{(g.events as Any[]).map((e) => <li key={e.code}>{e.label} <span className="text-muted-foreground">— {e.existing ?? e.note ?? ""}</span></li>)}</ul></div>)}</div>
+        <p className="mt-2 text-xs text-muted-foreground">لا يمكن إنشاء قاعدة على هذه الأحداث حتى لا يُنفَّذ الإجراء نفسه من مسارين. مواعيد الوظائف القائمة لا تتغير دون موافقتك.</p>
       </Card>
       <Card title="آخر دورات المحرك">
         <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-xs text-muted-foreground"><tr className="border-b">{["الوقت", "المدة", "قواعد مفحوصة", "أحداث", "منفّذة", "ملغاة", "مؤجلة", "فشل", "متوسط الانتظار"].map((h) => <th key={h} className="p-2 text-start">{h}</th>)}</tr></thead>
@@ -200,9 +219,10 @@ function SettingsTab({ orgId }: { orgId: string }) {
 function SettingsForm({ orgId, s, onSaved }: { orgId: string; s: Any; onSaved: () => void }) {
   const [qs, setQs] = useState<string>(s.quiet_start?.slice(0, 5) ?? ""); const [qe, setQe] = useState<string>(s.quiet_end?.slice(0, 5) ?? "");
   const [wd, setWd] = useState<number[]>(s.workdays ?? [0, 1, 2, 3, 4]); const [mx, setMx] = useState<number>(s.max_per_user_day ?? 20); const [busy, setBusy] = useState(false);
+  const [fm, setFm] = useState<number>(s.family_max_day ?? 3); const [dd, setDd] = useState<number>(s.cap_defer_days ?? 3); const [mr, setMr] = useState<boolean>(s.merge_rules ?? true);
   const save = async () => {
     setBusy(true);
-    const r = await rpc("au_settings_save", { _org: orgId, _quiet_start: qs || null, _quiet_end: qe || null, _workdays: wd, _max: mx });
+    const r = await rpc("au_settings_save", { _org: orgId, _quiet_start: qs || null, _quiet_end: qe || null, _workdays: wd, _max: mx, _family_max: fm, _cap_defer_days: dd, _merge_rules: mr });
     setBusy(false); if (r.error) toast.error(arabicError(r.error)); else { toast.success("حُفظت الإعدادات"); onSaved(); }
   };
   const inp = "rounded-lg border bg-background px-3 py-2 text-sm";
@@ -212,7 +232,11 @@ function SettingsForm({ orgId, s, onSaved }: { orgId: string; s: Any; onSaved: (
         <label className="space-y-1 text-sm"><span className="font-semibold">بداية فترة منع الإشعارات</span><input type="time" className={`${inp} w-full`} value={qs} onChange={(e) => setQs(e.target.value)} /></label>
         <label className="space-y-1 text-sm"><span className="font-semibold">نهاية الفترة</span><input type="time" className={`${inp} w-full`} value={qe} onChange={(e) => setQe(e.target.value)} /></label>
         <label className="space-y-1 text-sm"><span className="font-semibold">الحد الأقصى لإشعارات الأتمتة لكل مستخدم يوميًا</span><input type="number" min={1} max={200} className={`${inp} w-full`} value={mx} onChange={(e) => setMx(Number(e.target.value))} /></label>
+        <label className="space-y-1 text-sm"><span className="font-semibold">الحد اليومي لإشعارات الأتمتة لولي الأمر</span><input type="number" min={1} max={10} className={`${inp} w-full`} value={fm} onChange={(e) => setFm(Number(e.target.value))} /></label>
+        <label className="space-y-1 text-sm"><span className="font-semibold">أيام تأجيل ما يتجاوز الحد قبل إلغائه</span><input type="number" min={0} max={7} className={`${inp} w-full`} value={dd} onChange={(e) => setDd(Number(e.target.value))} /></label>
+        <label className="flex items-center gap-2 self-end text-sm"><input type="checkbox" checked={mr} onChange={(e) => setMr(e.target.checked)} /><span className="font-semibold">عند تعارض قاعدتين على السجل والشخص نفسيهما تُرسل الأعلى أولوية فقط</span></label>
       </div>
+      <p className="mt-2 text-xs text-muted-foreground">ما يتجاوز الحد لا يُسقط: يؤجل إلى 7:00 صباح اليوم التالي ويُعاد التحقق من شرطه، ثم يُلغى بسبب موثق بعد مهلة التأجيل. التصعيد لا يخضع للحد.</p>
       <div className="mt-4"><div className="mb-2 text-sm font-semibold">أيام العمل (للقواعد التي تعمل في أيام العمل فقط)</div>
         <div className="flex flex-wrap gap-2">{DOW.map((l, i) => { const on = wd.includes(i); return <button key={l} type="button" onClick={() => setWd(on ? wd.filter((x) => x !== i) : [...wd, i].sort())} className={`rounded-full border px-3 py-1 text-xs ${on ? "border-primary bg-primary text-primary-foreground" : ""}`}>{l}</button>; })}</div>
         <p className="mt-2 text-xs text-muted-foreground">الإجازات تُقرأ من إجازات الحضور الرسمية المسجلة في الموارد البشرية.</p></div>

@@ -2,9 +2,9 @@
 
 مولّدة آليًا من الدليل الفعلي على قاعدة الاختبار بتاريخ 2026-11-26 (scripts/automation-registry-doc.ts). لا تُحرَّر يدويًا.
 
-- الأقسام: 98 (مرتبط 12، بانتظار الربط 18، مستثنى 68) ضمن 16 قسمًا رئيسيًا.
-- الأحداث: 71 — جاهز للتشغيل 16، بانتظار الربط 13، مغطى بوظيفة قائمة/ممنوع 42.
-- المتغيرات: 57. الإجراءات: 18 (جاهز 9، ممنوع 3).
+- الأقسام: 98 (مرتبط 18، بانتظار الربط 12، مستثنى 68) ضمن 16 قسمًا رئيسيًا.
+- الأحداث: 71 — جاهز للتشغيل 29، بانتظار الربط 0، مغطى بوظيفة قائمة/ممنوع 42.
+- المتغيرات: 106. الإجراءات: 18 (جاهز 10، ممنوع 3).
 - فحص الاكتمال: أقسام غير مسجلة 0، أقسام بلا أحداث 0، استثناءات بلا سبب 0.
 
 ## الأقسام
@@ -32,7 +32,7 @@
 | base_tools | المحادثات الخاصة (`bt_chat_direct`) | school | مستثنى | `comm.conversation.new` | كل أحداثه مغطاة بوظائف قائمة؛ لا تكرار |
 | base_tools | مجموعات الشعب والفصول (`bt_chat_groups`) | school | مستثنى | — | محادثات جماعية خاصة |
 | base_tools | الفصول الرقمية (`bt_classroom`) | school | مستثنى | — | منشورات الفصل لها إشعارها القائم notify_post |
-| base_tools | الواجبات والاختبارات (`bt_homework`) | school | بانتظار الربط | `edu.homework.published` `edu.homework.missed` `edu.results.published` `edu.achievement.low` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
+| base_tools | الواجبات والاختبارات (`bt_homework`) | school | مرتبط | `edu.results.published` `edu.homework.published` `edu.homework.missed` `edu.achievement.low` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
 | base_tools | خدمات الموظف الذاتية (`bt_my_employment`) | school | مستثنى | — | خدمات ذاتية |
 | base_tools | الجدول المدرسي (`bt_schedule`) | school | مستثنى | — | عرض فقط |
 | base_tools | الملف الشخصي والإشعارات (`personal_info`) | school | مستثنى | — | إعدادات شخصية |
@@ -50,8 +50,8 @@
 | evaluation | الزيارات الصفية (`ev_visits`) | school | بانتظار الربط | `ev.visit.scheduled` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
 | finance | المحاسبة العامة ورسوم الطلاب (`accounting_info`) | school | مستثنى | — | المحاسبة العامة في وافق؛ لا تعديل أرصدة |
 | finance | المشتريات والعهد المالية (`procurement`) | school | مستثنى | `pc.request.pending` | كل أحداثه مغطاة بوظائف قائمة؛ لا تكرار |
-| finance | رسوم الطلاب والنقل (`student_finance`) | school | مرتبط | `fin.due.soon` `fin.payment.recorded` `fin.payment.cancelled` `fin.discount.applied` `fin.due.overdue` `fin.collection.low` `fin.transport.subscribed` |  |
-| hr | العهد العينية (`hr_assets`) | school | بانتظار الربط | `hr.asset.unreturned` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
+| finance | رسوم الطلاب والنقل (`student_finance`) | school | مرتبط | `fin.payment.cancelled` `fin.discount.applied` `fin.due.soon` `fin.payment.recorded` `fin.due.overdue` `fin.collection.low` `fin.transport.subscribed` |  |
+| hr | العهد العينية (`hr_assets`) | school | مرتبط | `hr.asset.unreturned` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
 | hr | الحضور والانصراف (`hr_attendance`) | school | مرتبط | `hr.attendance.absent` |  |
 | hr | العقود والتعويض (`hr_contracts`) | school | مستثنى | `hr.contract.expiring` | كل أحداثه مغطاة بوظائف قائمة؛ لا تكرار |
 | hr | مستندات الموظفين (`hr_documents`) | school | مستثنى | `hr.document.expiring` | كل أحداثه مغطاة بوظائف قائمة؛ لا تكرار |
@@ -62,7 +62,7 @@
 | hr | الخطابات (`hr_letters`) | school | مستثنى | — | خطابات تصدر بطلب بشري |
 | hr | القرارات والمستحقات والسلف (`hr_money`) | school | مستثنى | — | قرارات مالية للموظفين؛ لا أتمتة |
 | hr | مسير الرواتب (`hr_payroll`) | school | مستثنى | — | الرواتب تمر بمراحل اعتماد بشرية |
-| hr | الأداء الوظيفي (`hr_performance`) | school | بانتظار الربط | `hr.performance.due` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
+| hr | الأداء الوظيفي (`hr_performance`) | school | مرتبط | `hr.performance.due` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
 | hr | التوظيف (`hr_recruit`) | school | مستثنى | — | مسار توظيف بشري |
 | hr | طباعة تقارير الموارد البشرية (`hr_reports`) | school | مستثنى | — | طباعة فقط |
 | hr | التدريب والتطوير (`hr_training_info`) | school | مستثنى | — | غير مبني بعد |
@@ -83,19 +83,19 @@
 | school_admin | تعاميم المدرسة (`circulars`) | school | بانتظار الربط | `comm.circular.published` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
 | school_admin | مطابقة العقود — الطلاب (`contracts`) | school | مستثنى | — | مطابقة يدوية |
 | school_admin | خدمة العملاء (`customer_service`) | school | مستثنى | `cs.reply.late` | كل أحداثه مغطاة بوظائف قائمة؛ لا تكرار |
-| school_admin | الفعاليات — الدورات (`evt_courses`) | school | بانتظار الربط | `evt.course.upcoming` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
+| school_admin | الفعاليات — الدورات (`evt_courses`) | school | مرتبط | `evt.course.upcoming` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
 | school_admin | الفعاليات — إعدادات النماذج (`evt_forms`) | school | مستثنى | — | إعداد نماذج |
-| school_admin | الفعاليات — الفعاليات العامة (`evt_general`) | school | مرتبط | `evt.item.upcoming` `evt.registration.opened` `evt.registration.closed` `evt.capacity.full` |  |
-| school_admin | الفعاليات — الرحلات المدرسية (`evt_trips`) | school | بانتظار الربط | `evt.trip.upcoming` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
+| school_admin | الفعاليات — الفعاليات العامة (`evt_general`) | school | مرتبط | `evt.registration.opened` `evt.item.upcoming` `evt.registration.closed` `evt.capacity.full` |  |
+| school_admin | الفعاليات — الرحلات المدرسية (`evt_trips`) | school | مرتبط | `evt.trip.upcoming` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
 | school_admin | البوابة والاستلام (`gate`) | school | بانتظار الربط | `gate.exit.requested` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
-| school_admin | رعاية الموهوبين (`gifted_care`) | school | بانتظار الربط | `gifted.nomination` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
+| school_admin | رعاية الموهوبين (`gifted_care`) | school | مرتبط | `gifted.nomination` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
 | school_admin | مجموعات المدرسة (`groups`) | school | مستثنى | — | محادثات جماعية خاصة؛ لا أتمتة على محتواها |
 | school_admin | زيارات أولياء الأمور (`guardian_visits`) | school | بانتظار الربط | `gv.visit.requested` | أحداثه مسجلة أو مرشحة؛ الربط في المرحلة الرابعة |
 | school_admin | الصحة المدرسية — الملف الصحي للطلاب (`health`) | school | مرتبط | `health.event.recorded` `health.awareness.upcoming` |  |
 | school_admin | الاجتماعات (`meetings`) | school | مستثنى | `adm.meeting.upcoming` | كل أحداثه مغطاة بوظائف قائمة؛ لا تكرار |
 | school_admin | الوثائق والعقود (`org_docs`) | school | مرتبط | `adm.doc.expiring` |  |
 | school_admin | الوسوم وبطاقات الأشخاص والملاحظات (`people`) | school | مستثنى | — | وسوم وملاحظات شخصية حساسة |
-| school_admin | أولياء الأمور والطلاب (`people_family`) | school | مرتبط | `people.student.placed` `people.student.transferred` `people.student.created` |  |
+| school_admin | أولياء الأمور والطلاب (`people_family`) | school | مرتبط | `people.student.created` `people.student.placed` `people.student.transferred` |  |
 | school_admin | هويات الدخول (المعلمون والموظفون) (`people_identity`) | school | مستثنى | — | هويات الدخول حساسة؛ لا أتمتة |
 | school_admin | الكادر التعليمي والإداري (`people_staff`) | school | مستثنى | — | يغطيه حدث الموظفين في الموارد البشرية |
 | school_admin | الخطط العلاجية (`remedial_plans`) | school | مرتبط | `edu.remedial.late` |  |
@@ -114,6 +114,13 @@
 
 | الحدث | القسم | المصدر | النوع | التوقيت | الحساسية | منع التكرار | الأتمتة القائمة | الحالة |
 |---|---|---|---|---|---|---|---|---|
+| إلغاء عملية سداد (`fin.payment.cancelled`) | student_finance | `sf_events (سجل الأحداث المالية المركزي)` | trigger | فوري | sensitive | collection_id | — | مرتبط ومختبَر — مدير النظام يُشعَر أصلًا عبر _sf_owners_notify والأسرة عبر _sf_notify_guardians — لا تكرار؛ المتاح: المحاسب ومدير المدرسة ومهام وطلبات مراجعة |
+| تسجيل خصم أو تسوية (`fin.discount.applied`) | student_finance | `sf_events (سجل الأحداث المالية المركزي)` | trigger | فوري | sensitive | discount_id | — | مرتبط ومختبَر — مدير النظام يُشعَر أصلًا عبر _sf_owners_notify والأسرة عبر _sf_notify_guardians — لا تكرار؛ المتاح: المحاسب ومدير المدرسة ومهام وطلبات مراجعة |
+| نشر النتائج (`edu.results.published`) | bt_homework | `homework_grades (published_at)` | trigger | فوري | sensitive | homework_id | — | مرتبط ومختبَر — الأسرة تُشعَر أصلًا عبر _hw_notify — غير متاحة هنا |
+| بداية التسجيل في فعالية (`evt.registration.opened`) | evt_general | `evt_items + evt_sessions` | scan | عند الموعد | normal | item | — | مرتبط ومختبَر — الأسر تُبلَّغ عبر مسار الفعاليات القائم — للمنظمين والإدارة فقط |
+| قرب موعد فعالية (`evt.item.upcoming`) | evt_general | `evt_items + evt_sessions` | scan | يومي | normal | item+day | — | مرتبط ومختبَر — الأسر تُبلَّغ عبر مسار الفعاليات القائم — للمنظمين والإدارة فقط |
+| قرب موعد رحلة مدرسية (`evt.trip.upcoming`) | evt_trips | `evt_items + evt_sessions` | scan | يومي | normal | item+day | — | مرتبط ومختبَر — الأسر تُبلَّغ عبر مسار الفعاليات القائم — للمنظمين والإدارة فقط |
+| قرب موعد دورة (`evt.course.upcoming`) | evt_courses | `evt_items + evt_sessions` | scan | يومي | normal | item+day | — | مرتبط ومختبَر — الأسر تُبلَّغ عبر مسار الفعاليات القائم — للمنظمين والإدارة فقط |
 | قرب انتهاء وثيقة مدرسية (`adm.doc.expiring`) | org_docs | `org_docs` | scan | حسب جدولة القاعدة | normal | doc+expires_on | — | مرتبط ومختبَر |
 | قرب موعد تكليف (`adm.task.due_soon`) | admin_tasks | `adm_tasks` | scan | يومي | normal | task_id+due_date | adm_daily_reminders (18:00) | مغطى بوظيفة قائمة / ممنوع — مغطى بالكامل بوظيفة قائمة |
 | اجتماع قادم (`adm.meeting.upcoming`) | meetings | `adm_meetings` | scan | يومي | normal | meeting_id+day | adm_daily_reminders | مغطى بوظيفة قائمة / ممنوع — مغطى بوظيفة قائمة |
@@ -159,32 +166,25 @@
 | قرار تكليف معلم بمقرر (`course.assignment.decided`) | course_assignments | `teacher_assignments` | trigger | فوري | normal | assignment_id | decide_assignment | مغطى بوظيفة قائمة / ممنوع — إشعار قائم يغطي المستلم نفسه؛ يبقى المسار الحالي لمنع التكرار |
 | تكرار فشل طلبات API (`api.requests.failing`) | _owner_integrations | `api_requests` | scan | كل 15 دقيقة | sensitive | key+hour | _api_alert | مغطى بوظيفة قائمة / ممنوع — إشعار قائم يغطي المستلم نفسه؛ يبقى المسار الحالي لمنع التكرار |
 | تجاوز حدود الاستخدام (`api.limit.exceeded`) | _owner_integrations | `api_requests` | trigger | فوري | sensitive | key+window | _api_alert | مغطى بوظيفة قائمة / ممنوع — إشعار قائم يغطي المستلم نفسه؛ يبقى المسار الحالي لمنع التكرار |
-| إلغاء عملية سداد (`fin.payment.cancelled`) | student_finance | `sf_events` | trigger | فوري | sensitive | collection_id | — | مسجل — بانتظار الربط — بانتظار: مصدر حدث معاملات معتمد من المالية |
-| تسجيل خصم أو تسوية (`fin.discount.applied`) | student_finance | `sf_discounts` | trigger | فوري | sensitive | discount_id | — | مسجل — بانتظار الربط — بانتظار: مصدر حدث معاملات معتمد من المالية |
-| تسكين الطالب (`people.student.placed`) | people_family | `enrollments` | trigger | فوري | sensitive | enrollment_id | — | مسجل — بانتظار الربط — بانتظار: مصدر فوري موثوق (trigger) واختبار مستقل |
-| انتقال الطالب (`people.student.transferred`) | people_family | `enrollments` | trigger | فوري | sensitive | enrollment_id | — | مسجل — بانتظار الربط — بانتظار: مصدر فوري موثوق (trigger) واختبار مستقل |
-| نشر النتائج (`edu.results.published`) | bt_homework | `homework_grades` | trigger | فوري | sensitive | homework_id | — | مسجل — بانتظار الربط — بانتظار: مصدر فوري موثوق (trigger) واختبار مستقل |
-| انخفاض مستوى التحصيل (`edu.achievement.low`) | bt_homework | `homework_grades` | scan | أسبوعي | sensitive | student+week | — | مسجل — بانتظار الربط — تجميعي — بانتظار: مصدر فوري موثوق (trigger) واختبار مستقل |
-| قرب موعد فعالية (`evt.item.upcoming`) | evt_general | `evt_items` | scan | يومي | normal | item+day | — | مسجل — بانتظار الربط — بانتظار: مصدر فوري موثوق (trigger) واختبار مستقل |
-| بداية التسجيل في فعالية (`evt.registration.opened`) | evt_general | `evt_items` | scan | عند الموعد | normal | item | — | مسجل — بانتظار الربط — بانتظار: مصدر فوري موثوق (trigger) واختبار مستقل |
-| ترشيح موهوب (`gifted.nomination`) | gifted_care | `gt_nominations` | trigger | فوري | restricted | nomination_id | — | مسجل — بانتظار الربط — لا يظهر للأسرة — بانتظار: سرية الترشيح — يحتاج قرارًا |
-| قرب موعد رحلة مدرسية (`evt.trip.upcoming`) | evt_trips | `evt_items` | scan | يومي | normal | item+day | — | مسجل — بانتظار الربط — بانتظار: مصدر فوري موثوق (trigger) واختبار مستقل |
-| قرب موعد دورة (`evt.course.upcoming`) | evt_courses | `evt_items` | scan | يومي | normal | item+day | — | مسجل — بانتظار الربط — بانتظار: مصدر فوري موثوق (trigger) واختبار مستقل |
-| عهدة عينية لم تُسترد (`hr.asset.unreturned`) | hr_assets | `hr_asset_custodies` | scan | أسبوعي | restricted | custody+week | — | مسجل — بانتظار الربط — بانتظار: قاعدة الموارد البشرية تحدد المستلم المسؤول |
-| موعد تقييم الأداء (`hr.performance.due`) | hr_performance | `hr_* (الأداء)` | scan | شهري | restricted | employee+cycle | — | مسجل — بانتظار الربط — بانتظار: قاعدة الموارد البشرية تحدد المستلم المسؤول |
 | تأخر السداد (`fin.due.overdue`) | student_finance | `sf_obligations + sf_allocations` | scan | حسب جدولة القاعدة | sensitive | school+ISO week | sf_due_tick | مرتبط ومختبَر — تجميعي للإدارة فقط؛ لا تذكير للأسر (يبقى sf_due_tick) |
 | انخفاض نسبة التحصيل (`fin.collection.low`) | student_finance | `sf_obligations + sf_allocations` | scan | حسب جدولة القاعدة | sensitive | school+ISO week | — | مرتبط ومختبَر — تجميعي للإدارة فقط |
 | اشتراك طالب في النقل (`fin.transport.subscribed`) | student_finance | `sf_transport` | trigger | فوري بعد حفظ المعاملة | normal | transport row | — | مرتبط ومختبَر |
 | تسجيل طالب جديد (`people.student.created`) | people_family | `students` | trigger | فوري بعد حفظ المعاملة | sensitive | student | — | مرتبط ومختبَر |
-| غياب أو تأخر موظف (`hr.attendance.absent`) | hr_attendance | `hr_att_days` | scan | حسب جدولة القاعدة (اليوم السابق) | restricted | employee+date | — | مرتبط ومختبَر |
 | تأخر تنفيذ خطة علاجية (`edu.remedial.late`) | remedial_plans | `edu_programs` | scan | حسب جدولة القاعدة | sensitive | program+end_date | — | مرتبط ومختبَر |
-| تكرار الغياب أو التأخر (`att.student.repeated`) | attendance | `attendance_days` | scan | حسب جدولة القاعدة | sensitive | student+ISO week | — | مرتبط ومختبَر — للإدارة والمرشد فقط؛ لا إشعار للأسرة |
 | انتهاء التسجيل (`evt.registration.closed`) | evt_general | `evt_items` | scan | حسب جدولة القاعدة | normal | item | — | مرتبط ومختبَر |
 | اكتمال العدد المسموح (`evt.capacity.full`) | evt_general | `evt_applications` | trigger | فوري بعد حفظ المعاملة | normal | item | — | مرتبط ومختبَر |
 | قرب انتهاء صلاحية مفتاح API (`api.key.expiring`) | _owner_integrations | `api_keys` | scan | حسب جدولة القاعدة | sensitive | key+expires_at | _api_alert جزئيًا | مرتبط ومختبَر |
 | فشل إرسال Webhook (`api.webhook.failed`) | _owner_integrations | `api_deliveries` | scan | حسب جدولة القاعدة | sensitive | org+day | — | مرتبط ومختبَر — الإرسال يبقى يدويًا |
-| طلب إجازة متأخر الاعتماد (`hr.leave.pending_long`) | hr_leave | `hr_leave_requests` | scan | حسب جدولة القاعدة | restricted | request+requested_at | — | مرتبط ومختبَر — لا يكرر إشعار تقديم الطلب القائم |
+| تسكين الطالب (`people.student.placed`) | people_family | `enrollments (student_place)` | trigger | فوري | sensitive | enrollment_id | — | مرتبط ومختبَر |
 | موعد نشاط توعوي صحي (`health.awareness.upcoming`) | health | `health_calendar` | scan | حسب جدولة القاعدة | normal | calendar+school | — | مرتبط ومختبَر — تشغيلي فقط؛ لا بيانات صحية للطلاب |
+| انتقال الطالب (`people.student.transferred`) | people_family | `enrollments (student_place)` | trigger | فوري | sensitive | enrollment_id | — | مرتبط ومختبَر |
+| انخفاض مستوى التحصيل (`edu.achievement.low`) | bt_homework | `homework_grades (المرئية فقط)` | scan | أسبوعي | sensitive | student+week | — | مرتبط ومختبَر |
+| تكرار الغياب أو التأخر (`att.student.repeated`) | attendance | `attendance_days` | scan | حسب جدولة القاعدة | sensitive | student+ISO week | — | مرتبط ومختبَر — للإدارة والمرشد فقط؛ لا إشعار للأسرة |
+| غياب أو تأخر موظف (`hr.attendance.absent`) | hr_attendance | `hr_att_days` | scan | حسب جدولة القاعدة (اليوم السابق) | restricted | employee+date | — | مرتبط ومختبَر |
+| طلب إجازة متأخر الاعتماد (`hr.leave.pending_long`) | hr_leave | `hr_leave_requests` | scan | حسب جدولة القاعدة | restricted | request+requested_at | — | مرتبط ومختبَر — لا يكرر إشعار تقديم الطلب القائم |
+| ترشيح موهوب بانتظار القرار (`gifted.nomination`) | gifted_care | `gt_nominations (الحالة فقط)` | scan | يومي | restricted | nomination+status+week | — | مرتبط ومختبَر — متابعة الحالة فقط: رقم الترشيح وحالته ومدة الانتظار — بلا اسم أو مجالات أو مؤشرات؛ لا يصل للأسرة |
+| عهدة عينية لم تُسترد (`hr.asset.unreturned`) | hr_assets | `hr_asset_custodies` | scan | أسبوعي | restricted | custody+week | — | مرتبط ومختبَر — عهدة مفتوحة لموظف انتهت خدمته أو لم يُقر بها خلال 7 أيام |
+| موعد تقييم الأداء (`hr.performance.due`) | hr_performance | `hr_pf_reviews + hr_pf_cycles` | scan | شهري | restricted | review+cycle+week | — | مرتبط ومختبَر — تقييمات مسندة لم تُرفع وقرب نهاية الدورة — الحالة والموعد فقط، بلا درجات |
 
 ## الإجراءات
 
@@ -204,7 +204,7 @@
 | الانتظار لمدة محددة (`wait`) | au_jobs.next_at (طابور دائم) | low | لا | ready | 5 دقائق حتى 30 يومًا |
 | إعادة التحقق من شرط (`recheck`) | _au_eval على بيانات محدّثة | low | لا | ready | خطوة «إذا» مع فرعين |
 | إنهاء مسار التنفيذ (`stop`) | المحرك | low | لا | ready | ينهي المسار |
-| إنشاء طلب مراجعة أو اعتماد (`request_review`) | adm_request_submit | medium | نعم | registered | غير جاهز: الطلبات الإدارية تتطلب نموذجًا ومقدّم طلب حقيقيًا؛ لا مسار إنشاء آلي دون انتحال مقدّم |
-| إنشاء تقرير من مصدر معتمد (`report`) | RPCs تقارير قائمة | low | لا | registered | غير جاهز: التقارير تُولَّد عند الطلب في الشاشات ولا يوجد مخزن تقارير معتمد |
 | تنفيذ متوازٍ (`parallel`) | المحرك | low | لا | ready | 2–3 فروع |
 | تنفيذ متسلسل (`sequence`) | المحرك | low | لا | ready | ترتيب الخطوات |
+| إنشاء طلب مراجعة أو اعتماد (`request_review`) | adm_tasks + _adm_log + _notify — مسار التأكيد القائم | medium | نعم | ready | باسم النظام مع اسم القاعدة وإصدارها؛ المُسنِد هو من اعتمد القاعدة؛ يتطلب تأكيدًا بشريًا قبل الإغلاق |
+| إنشاء تقرير من مصدر معتمد (`report`) | RPCs تقارير قائمة | low | لا | registered | غير جاهز: لا يوجد مخزن تقارير معتمد على الخادم (التصدير الحالي في المتصفح). العقد المقترح: {report_code, scope, recipients} عبر منشئ التقارير المستقبلي |
