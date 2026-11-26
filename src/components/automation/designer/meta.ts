@@ -1,4 +1,4 @@
-import { Bell, BellRing, Flag, ListChecks, FileSearch, Hourglass, GitBranch, Split, OctagonX, Filter, Zap, type LucideIcon } from "lucide-react";
+import { Bell, BellRing, Flag, ListChecks, FileSearch, Hourglass, GitBranch, Split, OctagonX, Filter, Zap, Wrench, FileText, BarChart3, PenLine, Timer, type LucideIcon } from "lucide-react";
 import type { NodeKind } from "./flow";
 
 export const KIND: Record<NodeKind, { l: string; d: string; i: LucideIcon; group: "start" | "cond" | "action" | "flow" }> = {
@@ -10,6 +10,11 @@ export const KIND: Record<NodeKind, { l: string; d: string; i: LucideIcon; group
   escalate: { l: "تصعيد", d: "إشعار لمدير المدرسة أو مدير النظام", i: Flag, group: "action" },
   task: { l: "مهمة متابعة", d: "تكليف عبر مسار التكليفات القائم", i: ListChecks, group: "action" },
   review: { l: "طلب مراجعة باسم النظام", d: "تكليف يحتاج تأكيدًا بشريًا", i: FileSearch, group: "action" },
+  mt_request: { l: "طلب صيانة", d: "ينشئ طلب صيانة ويُسنده عبر مسار الصيانة القائم", i: Wrench, group: "action" },
+  hr_letter: { l: "طلب خطاب", d: "ينشئ طلب خطاب ينتظر المراجعة البشرية؛ لا يُصدر آليًا", i: FileText, group: "action" },
+  report: { l: "تقرير", d: "ينشئ تقريرًا على الخادم ويشاركه مع أشخاص محددين (PDF وExcel)", i: BarChart3, group: "action" },
+  set: { l: "تحديث حقل", d: "يغيّر حقلًا مسموحًا فقط (مثل رفع الأولوية)", i: PenLine, group: "action" },
+  wait_until: { l: "انتظار حتى شرط", d: "ينتظر تحقق شرط أو قرار اعتماد، مع مهلة قصوى ومسار عند انتهائها", i: Timer, group: "flow" },
   wait: { l: "انتظار", d: "يؤجل بقية المسار ثم يعيد التحقق من السجل", i: Hourglass, group: "flow" },
   parallel: { l: "فروع متوازية", d: "فرعان أو ثلاثة تُنفذ معًا", i: Split, group: "flow" },
   stop: { l: "إنهاء المسار", d: "يوقف المسار هنا", i: OctagonX, group: "flow" },
@@ -45,6 +50,11 @@ const SERVER: [RegExp, string][] = [
   [/unknown operator|operator .* not valid/, "نوع المقارنة لا يناسب المتغير"], [/number expected|percent 0..100|date YYYY-MM-DD|boolean expected|text expected|unknown status value|one value required|list value required/, "قيمة الشرط غير صالحة لنوع المتغير"],
   [/unknown variable/, "متغير غير معروف لهذا الحدث"], [/name 3..120/, "اسم القاعدة من 3 إلى 120 حرفًا"], [/event not ready/, "الحدث غير جاهز للتشغيل"],
   [/step (\w+) not available/, "الخطوة «$1» غير متاحة في المحرك"], [/archived rule/, "القاعدة مؤرشفة — استرجعها أولًا"], [/approve first/, "اعتمد القاعدة أولًا"],
+  [/choose a maintenance category/, "اختر تصنيف صيانة متاحًا"], [/only school maintenance requests/, "طلبات صيانة المدارس فقط حاليًا"],
+  [/this event has no employee/, "هذا الحدث لا يرتبط بموظف لإنشاء خطاب"], [/choose an active letter template/, "اختر قالب خطاب نشطًا"],
+  [/choose who may open the report/, "اختر من يطّلع على التقرير"], [/report fields/, "اختر من 1 إلى 12 حقلًا مسجلًا للتقرير"], [/report source not available/, "مصدر التقرير غير متاح"],
+  [/field\/value not allowed/, "هذا الحقل أو القيمة غير مسموح لهذا الحدث"], [/grouped mode/, "التجميع لكل مدرسة متاح لمصادر البيانات فقط"],
+  [/check every|maximum wait/, "مدة الفحص أو المهلة القصوى خارج الحدود"], [/wait until: choose a date field/, "اختر حقل تاريخ للانتظار"],
   [/school/i, "الفرع المختار خارج مجموعتك أو غير نشط"],
 ];
 export function serverMsg(m: string): string {

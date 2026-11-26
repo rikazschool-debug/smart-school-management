@@ -46,7 +46,11 @@ function summary(kind: NodeKind, d: Record<string, unknown>, r: Any, meta: RuleM
     case "escalate": return `إلى ${d["to"] ? rc(String(d["to"])) : "—"}`;
     case "task": return `${String(d["title"] ?? "")} ← ${d["assignee"] ? rc(String(d["assignee"])) : "—"}`;
     case "review": return `${String(d["title"] ?? "")} ← ${d["to"] ? rc(String(d["to"])) : "—"}`;
-    case "wait": { const m = Number(d["minutes"] ?? 0); return m >= 1440 && m % 1440 === 0 ? `${m / 1440} يوم` : m >= 60 && m % 60 === 0 ? `${m / 60} ساعة` : `${m} دقيقة`; }
+    case "mt_request": case "report": return `${String(d["title"] ?? "بلا عنوان")}${d["key"] ? ` · ${String(d["key"])}` : ""}`;
+    case "hr_letter": return `${String(d["purpose"] ?? "")} · بانتظار المراجعة`;
+    case "set": return d["field"] ? `${String(d["field"])} ← ${String(d["value"] ?? "")}` : "اختر الحقل";
+    case "wait_until": return d["when"] ? `حتى تحقق الشرط · مهلة ${Math.round(Number(d["max_minutes"] ?? 10080) / 60)} ساعة` : "بلا شرط بعد";
+    case "wait": { if (d["until_var"]) return `حتى ${String(d["until_var"])} ${Number(d["offset_days"] ?? 0) ? `(${Number(d["offset_days"])} يوم)` : ""}`; const m = Number(d["minutes"] ?? 0); return m >= 1440 && m % 1440 === 0 ? `${m / 1440} يوم` : m >= 60 && m % 60 === 0 ? `${m / 60} ساعة` : `${m} دقيقة`; }
     case "filter": case "if": return d["when"] ? "شرط محدد" : "بلا شرط بعد";
     case "parallel": return "2–3 فروع";
     default: return "";
@@ -125,7 +129,8 @@ function DesignerInner({ orgId, ruleId, me, onRule }: { orgId: string; ruleId?: 
     const d = x.draft ?? {};
     const ev = (r.events as Any[]).find((e) => e.code === x.event);
     setMetaRaw({ name: x.name ?? "", description: x.description ?? "", event: x.event, schools: x.schools ?? null,
-      scope: x.schools == null ? (ev?.area === "central" ? "central" : "all") : x.schools.length === 1 ? "one" : "many", schedule: d.schedule ?? { type: "condition" }, priority: d.priority ?? 5 });
+      scope: x.schools == null ? (ev?.area === "central" ? "central" : "all") : x.schools.length === 1 ? "one" : "many", schedule: d.schedule ?? { type: "condition" }, priority: d.priority ?? 5,
+      extra: Object.fromEntries(Object.entries({ params: d.params, mode: d.mode === "batch" ? "batch" : undefined, batch: d.mode === "batch" ? d.batch : undefined }).filter(([, v]) => v != null)) });
     const want = stable({ ...(d.when ? { when: d.when } : {}), steps: d.steps ?? [] });
     const lay = x.layout?.v === 1 ? { nodes: x.layout.nodes as GNode[], edges: x.layout.edges as GEdge[] } : null;
     const g = lay && stable(compile(lay.nodes, lay.edges).def) === want ? lay : decompile({ when: d.when ?? null, steps: d.steps ?? [] });
@@ -141,7 +146,7 @@ function DesignerInner({ orgId, ruleId, me, onRule }: { orgId: string; ruleId?: 
   const ev = useMemo(() => ((r?.events ?? []) as Any[]).find((e) => e.code === meta.event), [r, meta.event]);
   const g = useMemo(() => toG(nodes, edges), [nodes, edges]);
   const comp = useMemo(() => compile(g.nodes, g.edges), [g]);
-  const def = useMemo(() => ({ schedule: meta.schedule, priority: meta.priority, ...comp.def }), [meta.schedule, meta.priority, comp.def]);
+  const def = useMemo(() => ({ schedule: meta.schedule, priority: meta.priority, ...(meta.extra ?? {}), ...comp.def }), [meta.schedule, meta.priority, meta.extra, comp.def]);
   const localIssues: Issue[] = useMemo(() => {
     const out = [...comp.issues];
     if (meta.name.trim().length < 3) out.unshift({ node: "trigger", level: "error", msg: "اكتب اسم القاعدة (3 أحرف على الأقل)" });
@@ -192,7 +197,7 @@ function DesignerInner({ orgId, ruleId, me, onRule }: { orgId: string; ruleId?: 
     const from = !pos && sel ? nodes.find((n) => n.id === sel) : undefined;
     const freeH = from ? HANDLES[from.data.kind].find((h) => !edges.some((e) => e.source === from.id && (e.sourceHandle ?? "out") === h)) : undefined;
     const p = pos ?? (from ? { x: from.position.x, y: from.position.y + 150 } : { x: 0, y: (nodes.length) * 150 });
-    const init: Record<string, unknown> = kind === "wait" ? { minutes: 1440 } : kind === "task" ? { due_in_days: 2 } : kind === "review" ? { due_in_days: 3 } : {};
+    const init: Record<string, unknown> = kind === "wait" ? { minutes: 1440 } : kind === "wait_until" ? { every_minutes: 60, max_minutes: 10080 } : kind === "mt_request" ? { priority: "normal" } : kind === "task" ? { due_in_days: 2 } : kind === "review" ? { due_in_days: 3 } : {};
     setNodes((ns) => [...ns.map((n) => ({ ...n, selected: false })), { id, type: "au", position: p, data: { kind, d: init }, selected: true }]);
     if (from && freeH) setEdges((es) => [...es, edgeOf({ id: `e${id}`, source: from.id, handle: freeH, target: id })]);
     setSel(id); setDirty(true);

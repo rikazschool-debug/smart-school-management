@@ -69,11 +69,11 @@
 - [x] C-gap1 Document / bus responsible pickers in their own screens (logged)
 - [x] C-gap2 Security test of the 6 new tools: direct call, delegation bypass, isolation
 - [x] C-gap3 Visual review of recipient editor + responsibilities; multi-recipient/fallback/dedupe/responsible-change-mid-run test
-- [ ] D1 Operational action catalogue (create/update/task/route/compute/report/doc/integration-ready) with service, I/O, perms, risk, approval, dedupe
-- [ ] D2 Advanced flows: step outputs, per-record/aggregate, branch, wait (duration/date/condition/approval), recheck, error path+retry, goal stop, resumable
-- [ ] D3 Central server report service (PDF/Excel), stored securely, shared with authorized recipients
-- [ ] D4 Documents from templates; HR letters as requests awaiting human approval
-- [ ] D5 Review 42 blocked events; allow legitimate custom automation
-- [ ] D6 Designer wiring of new actions (minimal)
-- [ ] D7 Acceptance scenarios 1–6 (no notification/WhatsApp), regressions, security, concurrency, visual
-- [ ] D8 docs/automation-platform-phase-d.md + coverage matrix
+- [x] D1 Operational action catalogue (create/update/task/route/compute/report/doc/integration-ready) with service, I/O, perms, risk, approval, dedupe
+- [x] D2 Advanced flows: step outputs, per-record/aggregate, branch, wait (duration/date/condition/approval), recheck, error path+retry, goal stop, resumable
+- [x] D3 Central server report service (PDF/Excel), stored securely, shared with authorized recipients
+- [x] D4 HR letters as requests awaiting human approval (general PDF documents from templates: open — needs a server file generator decision)
+- [x] D5 Review 42 blocked events; allow legitimate custom automation
+- [x] D6 Designer wiring of new actions (minimal)
+- [x] D7 Acceptance scenarios 1–6 (no notification/WhatsApp), regressions, security, concurrency, visual
+- [x] D8 docs/automation-platform-phase-d.md + coverage matrix

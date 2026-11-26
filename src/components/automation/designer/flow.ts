@@ -4,15 +4,16 @@
 export type Cond = { all: Cond[] } | { any: Cond[] } | { not: Cond } | { var: string; op: string; value?: unknown };
 export type Step = { type: string } & Record<string, unknown>;
 export type Def = { when?: Cond | null; steps: Step[] } & Record<string, unknown>;
-export type NodeKind = "trigger" | "filter" | "notify" | "reminder" | "escalate" | "task" | "review" | "wait" | "if" | "parallel" | "stop";
+export type NodeKind = "trigger" | "filter" | "notify" | "reminder" | "escalate" | "task" | "review" | "mt_request" | "hr_letter" | "report" | "set" | "wait" | "wait_until" | "if" | "parallel" | "stop";
 export type GNode = { id: string; kind: NodeKind; data: Record<string, unknown>; x: number; y: number };
 export type GEdge = { id: string; source: string; handle: string; target: string };
 export type Issue = { node?: string | undefined; level: "error" | "warning"; msg: string };
 
-export const STEP_KINDS: NodeKind[] = ["notify", "reminder", "escalate", "task", "review", "wait", "if", "parallel", "stop"];
+export const STEP_KINDS: NodeKind[] = ["notify", "reminder", "escalate", "task", "review", "mt_request", "hr_letter", "report", "set", "wait", "wait_until", "if", "parallel", "stop"];
 /** Output handles per element; "next" on if/parallel continues after the branches (engine semantics). */
 export const HANDLES: Record<NodeKind, string[]> = {
   trigger: ["out"], filter: ["out"], notify: ["out"], reminder: ["out"], escalate: ["out"], task: ["out"], review: ["out"], wait: ["out"],
+  mt_request: ["out"], hr_letter: ["out"], report: ["out"], set: ["out"], wait_until: ["out"],
   if: ["then", "else", "next"], parallel: ["b0", "b1", "b2", "next"], stop: [],
 };
 export const HANDLE_LABEL: Record<string, string> = { then: "إذا تحقق", else: "إذا لم يتحقق", next: "بعد ذلك", b0: "فرع 1", b1: "فرع 2", b2: "فرع 3", out: "" };
@@ -20,6 +21,7 @@ export const HANDLE_LABEL: Record<string, string> = { then: "إذا تحقق", e
 export const ACTION_CODE: Partial<Record<NodeKind, string>> = {
   notify: "notify_internal", reminder: "reminder", escalate: "escalate", task: "create_followup_task", review: "request_review",
   wait: "wait", if: "recheck", parallel: "parallel", stop: "stop",
+  mt_request: "create_mt_request", hr_letter: "hr_letter_request", report: "report", set: "update_field", wait_until: "wait_until",
 };
 export const MAX_STEPS = 15;
 export const MAX_DEPTH = 3;
@@ -60,7 +62,23 @@ function nodeIssues(n: GNode): string[] {
     case "review":
       if (!d["to"] && !hasGroups(d)) out.push("اختر المراجع"); if (title.length < 2) out.push("اكتب عنوان الطلب");
       if (String(d["reason"] ?? "").trim().length < 3) out.push("اكتب سبب المراجعة"); if (!(days >= 1 && days <= 30)) out.push("مدة المراجعة من 1 إلى 30 يومًا"); break;
-    case "wait": { const m = Number(d["minutes"] ?? 0); if (!(m >= 5 && m <= 43200)) out.push("مدة الانتظار من 5 دقائق إلى 30 يومًا"); break; }
+    case "wait": { if (d["until_var"]) { const o = Number(d["offset_days"] ?? 0); if (!(o >= -90 && o <= 90)) out.push("الإزاحة من -90 إلى 90 يومًا"); break; }
+      const m = Number(d["minutes"] ?? 0); if (!(m >= 5 && m <= 43200)) out.push("مدة الانتظار من 5 دقائق إلى 30 يومًا"); break; }
+    case "wait_until": if (!condComplete(d["when"] as Cond)) out.push("أكمل شرط الانتظار"); break;
+    case "mt_request":
+      if (String(d["title"] ?? "").trim().length < 3) out.push("اكتب عنوان طلب الصيانة");
+      if (String(d["description"] ?? "").trim().length < 5) out.push("اكتب وصف العطل");
+      if (String(d["place"] ?? "").trim().length < 2) out.push("حدد المكان");
+      if (!d["category"]) out.push("اختر تصنيف الصيانة");
+      break;
+    case "hr_letter": if (!d["template"]) out.push("اختر قالب الخطاب"); if (String(d["purpose"] ?? "").trim().length < 3) out.push("اكتب الغرض من الخطاب"); break;
+    case "report":
+      if (String(d["title"] ?? "").trim().length < 3) out.push("اكتب عنوان التقرير");
+      if (!d["source"]) out.push("اختر مصدر التقرير");
+      else if (d["source"] !== "rep.attendance_week" && !(Array.isArray(d["fields"]) && (d["fields"] as unknown[]).length)) out.push("اختر حقول التقرير");
+      if (!(Array.isArray(d["share"]) && (d["share"] as unknown[]).length)) out.push("اختر من يطّلع على التقرير");
+      break;
+    case "set": if (!d["field"] || !d["value"]) out.push("اختر الحقل والقيمة"); break;
   }
   return out;
 }
@@ -200,6 +218,7 @@ export function canonPath(path: string): string {
   for (let tok of toks) {
     if (carry !== null) { const m = /^(\d+)(.*)$/.exec(tok); if (m) tok = `${carry + 1 + Number(m[1])}${m[2]}`; carry = null; }
     if (/^\d+w$/.test(tok)) { carry = Number(tok.slice(0, -1)); continue; }
+    if (/^\d+u$/.test(tok)) { carry = Number(tok.slice(0, -1)) - 1; continue; }
     out.push(tok);
   }
   return out.join(".");

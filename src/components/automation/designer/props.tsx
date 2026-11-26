@@ -5,6 +5,9 @@ import { CondEditor, condVars, emptyLeaf } from "./cond";
 import type { Cond, NodeKind } from "./flow";
 import { KIND, START_TYPES } from "./meta";
 import { RecipientGroups, type Group } from "./groups";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { rpc } from "../lib";
 
 const inp = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 const Field = ({ l, hint, children }: { l: string; hint?: string; children: React.ReactNode }) => (
@@ -23,7 +26,7 @@ export function eligibleRecipients(r: Any, ev: Any, forTask: boolean): Any[] {
   });
 }
 
-export type RuleMeta = { name: string; description: string; event: string; schools: string[] | null; scope: string; schedule: Any; priority: number };
+export type RuleMeta = { name: string; description: string; event: string; schools: string[] | null; scope: string; schedule: Any; priority: number; extra?: Record<string, unknown> };
 
 export function RuleSettings({ r, meta, set, schools }: { r: Any; meta: RuleMeta; set: (m: Partial<RuleMeta>) => void; schools: { id: string; name: string }[] }) {
   const evs = ((r?.events ?? []) as Any[]).filter((e) => ["wired", "tested"].includes(e.status));
@@ -102,6 +105,13 @@ export function RuleSettings({ r, meta, set, schools }: { r: Any; meta: RuleMeta
       {ev && (
         <section className="space-y-3">
           <h4 className="text-xs font-bold text-muted-foreground">٨. ضوابط التنفيذ</h4>
+          {String(ev.code).startsWith("ds.") && (() => { const ex = meta.extra ?? {}; const on = ex["mode"] === "batch"; const nums = vars.filter((v) => v.type === "number"); const b = (ex["batch"] ?? {}) as Any; return (
+            <div className="space-y-2 rounded-md border p-2">
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={on} onChange={(e) => { const n = { ...ex }; if (e.target.checked) n["mode"] = "batch"; else { delete n["mode"]; delete n["batch"]; } set({ extra: n }); }} />تجميع النتائج لكل مدرسة (عنصر واحد بعدد السجلات المطابقة)</label>
+              {on && <Field l="مجموع حقل (اختياري)" hint="يُعاد العد والمجموع لحظة كل خطوة؛ إن صار صفرًا ينتهي المسار. المتغيرات: {{batch_count}} و{{batch_total}} و{{batch_list}}.">
+                <select className={selectCls("w-full")} value={String(b.sum ?? "")} onChange={(e) => set({ extra: { ...ex, batch: e.target.value ? { sum: e.target.value } : {} } })}><option value="">—</option>{nums.map((v) => <option key={v.key} value={v.key}>{v.label}</option>)}</select>
+              </Field>}
+            </div>); })()}
           <Field l="أولوية القاعدة (1 الأعلى – 9)" hint="عند تعارض قاعدتين على السجل والشخص نفسيهما تُرسل الأعلى أولوية فقط.">
             <input type="number" min={1} max={9} className={inp} value={meta.priority} onChange={(e) => set({ priority: Math.max(1, Math.min(9, Number(e.target.value) || 5)) })} />
           </Field>
@@ -180,11 +190,20 @@ export function StepProps({ kind, data, set, r, ev, org = "", schools = [], step
           <p className="text-xs text-muted-foreground">{kind === "review" ? "يُنشأ باسم النظام مع ذكر القاعدة، ويحتاج تأكيدًا بشريًا." : "تُنشأ عبر مسار التكليفات القائم مع سجل وإشعار للمكلَّف."} لا يُكلَّف ولي أمر.</p>
         </>
       )}
-      {kind === "wait" && (() => { const m = Number(data["minutes"] ?? 1440); const v = minutesView(m); return (
+      {kind === "wait" && (() => { const dates = vars.filter((x) => x.type === "date"); const byDate = !!data["until_var"]; return dates.length > 0 ? (
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={byDate} onChange={(e) => { const d = { ...data }; if (e.target.checked) { d["until_var"] = dates[0]!.key; d["offset_days"] = 0; delete d["minutes"]; } else { delete d["until_var"]; delete d["offset_days"]; d["minutes"] = 1440; } set(d); }} />الانتظار حتى تاريخ من السجل</label>) : null; })()}
+      {kind === "wait" && !!data["until_var"] && (
+        <div className="flex gap-2">
+          <Field l="حقل التاريخ"><select className={selectCls("w-full")} value={String(data["until_var"])} onChange={(e) => set({ ...data, until_var: e.target.value })}>{vars.filter((x) => x.type === "date").map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}</select></Field>
+          <Field l="إزاحة (أيام)" hint="سالب = قبل التاريخ"><input type="number" min={-90} max={90} className={inp} value={Number(data["offset_days"] ?? 0)} onChange={(e) => set({ ...data, offset_days: Number(e.target.value) })} /></Field>
+        </div>
+      )}
+      {kind === "wait" && !data["until_var"] && (() => { const m = Number(data["minutes"] ?? 1440); const v = minutesView(m); return (
         <Field l="مدة الانتظار" hint="من 5 دقائق إلى 30 يومًا. بعد الانتظار يُعاد التحقق من السجل؛ إن لم يعد مطابقًا ينتهي المسار.">
           <span className="flex gap-2"><input type="number" min={1} className={`${inp} w-24`} value={v.n} onChange={(e) => set({ ...data, minutes: Number(e.target.value) * v.u })} />
             <select className={selectCls()} value={v.u} onChange={(e) => set({ ...data, minutes: v.n * Number(e.target.value) })}><option value={1}>دقيقة</option><option value={60}>ساعة</option><option value={1440}>يوم</option></select></span>
         </Field>); })()}
+      {(kind === "mt_request" || kind === "hr_letter" || kind === "report" || kind === "wait_until" || kind === "set") && <OpsStep kind={kind} data={data} set={set} r={r} ev={ev} org={org} schools={schools} steps={steps} />}
       {(kind === "notify" || kind === "reminder" || kind === "escalate") && !!data["title"] && (
         <div className="rounded-lg border bg-card p-3 text-sm shadow-sm"><div className="mb-1 text-[11px] text-muted-foreground">معاينة الصياغة</div>
           <div className="font-semibold">{kind === "escalate" ? "تصعيد: " : ""}{preview(String(data["title"]))}</div><div className="text-xs text-muted-foreground">{data["body"] ? preview(String(data["body"])) : "وصف السجل المرتبط"}</div>
@@ -192,4 +211,90 @@ export function StepProps({ kind, data, set, r, ev, org = "", schools = [], step
       )}
     </div>
   );
+}
+
+/** Allowed field changes per event (mirror of au_update_fields; the server stays the authority). */
+const SET_FIELDS: Record<string, { field: string; label: string; values: [string, string][] }[]> = {
+  "adm.task.overdue": [{ field: "priority", label: "أولوية التكليف", values: [["high", "عالية"]] }],
+  "ds.maintenance": [{ field: "priority", label: "أولوية طلب الصيانة", values: [["high", "عالية"], ["urgent", "عاجلة"]] }],
+};
+const PRIOS: [string, string][] = [["low", "منخفضة"], ["normal", "عادية"], ["high", "عالية"], ["urgent", "عاجلة"]];
+
+function OpsStep({ kind, data, set, r, ev, org, schools, steps }: { kind: NodeKind; data: Record<string, unknown>; set: (d: Record<string, unknown>) => void; r: Any; ev: Any; org: string; schools: { id: string; name: string }[]; steps: string[] }) {
+  const vars = ev ? condVars(r, ev.code) : [];
+  const txt = (k: string, l: string, max = 120, rows = 1) => (
+    <Field l={l}>{rows > 1 ? <textarea className={inp} rows={rows} maxLength={max} value={String(data[k] ?? "")} onChange={(e) => set({ ...data, [k]: e.target.value })} />
+      : <input className={inp} maxLength={max} value={String(data[k] ?? "")} onChange={(e) => set({ ...data, [k]: e.target.value })} />}
+      <span className="flex flex-wrap gap-1 pt-1">{vars.filter((v) => v.type !== "uuid").slice(0, 12).map((v) => <button type="button" key={v.key} className="rounded-full border px-2 py-0.5 text-[11px] hover:border-primary" onClick={() => set({ ...data, [k]: `${String(data[k] ?? "")}{{${v.key}}}` })}>+ {v.label}</button>)}</span>
+    </Field>);
+  const key = (
+    <Field l="اسم الخطوة (حروف إنجليزية صغيرة وأرقام)" hint="لاستخدام نتيجتها لاحقًا، مثل حالة الطلب في «انتظار حتى شرط».">
+      <input className={inp} maxLength={20} dir="ltr" value={String(data["key"] ?? "")} onChange={(e) => { const d = { ...data }; const v = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""); if (v) d["key"] = v; else delete d["key"]; set(d); }} />
+    </Field>);
+  const nested = (k: string, l: string) => Array.isArray(data[k]) && (data[k] as unknown[]).length > 0 && <p className="rounded-md bg-muted/50 p-2 text-xs text-muted-foreground">{l}: {(data[k] as unknown[]).length} خطوة محفوظة في القاعدة.</p>;
+  const cats = useQuery({ queryKey: ["mt-cats-school"], enabled: kind === "mt_request", queryFn: async () => (await supabase.from("mt_categories").select("id,name").eq("kind", "school").is("parent_id", null).eq("active", true).eq("is_other", false).order("name")).data ?? [] });
+  const tpls = useQuery({ queryKey: ["hr-letter-tpls", org], enabled: kind === "hr_letter" && !!org, queryFn: () => rpc<Any[]>("hr_letter_templates", { _org: org }) });
+  if (kind === "mt_request") return (
+    <div className="space-y-3">
+      {key}{txt("title", "عنوان الطلب")}{txt("description", "وصف العطل", 500, 3)}{txt("place", "المكان")}
+      <Field l="التصنيف"><select className={selectCls("w-full")} value={String(data["category"] ?? "")} onChange={(e) => set({ ...data, category: e.target.value })}><option value="">—</option>{(cats.data ?? []).map((c: Any) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+      <Field l="الأولوية"><select className={selectCls("w-full")} value={String(data["priority"] ?? "normal")} onChange={(e) => set({ ...data, priority: e.target.value })}>{PRIOS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></Field>
+      <Field l="الإسناد إلى (اختياري)" hint="أول شخص مؤهل وله صلاحية تنفيذ الصيانة؛ وإلا يُطبَّق الإسناد المعتاد للفرع.">
+        <RecipientGroups value={(data["assign"] as Group[] | undefined) ?? []} onChange={(v) => { const d = { ...data }; if (v.length) d["assign"] = v; else delete d["assign"]; set(d); }} org={org} ev={ev} schools={schools} steps={steps} forTask />
+      </Field>
+      {nested("on_fail", "مسار الفشل")}
+      <p className="text-xs text-muted-foreground">مقدّم الطلب هو من اعتمد القاعدة، ويجب أن يملك صلاحية تقديم طلبات الصيانة لحظة التنفيذ.</p>
+    </div>);
+  if (kind === "hr_letter") return (
+    <div className="space-y-3">
+      {key}
+      <Field l="قالب الخطاب"><select className={selectCls("w-full")} value={String(data["template"] ?? "")} onChange={(e) => set({ ...data, template: e.target.value })}><option value="">—</option>{(tpls.data ?? []).map((t: Any) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></Field>
+      {txt("purpose", "الغرض من الخطاب", 300)}
+      <Field l="الجهة الموجّه إليها (اختياري)"><input className={inp} maxLength={200} value={String(data["addressee"] ?? "")} onChange={(e) => set({ ...data, addressee: e.target.value })} /></Field>
+      {nested("on_fail", "مسار الفشل")}
+      <p className="text-xs text-muted-foreground">يُنشأ طلب الخطاب فقط وينتظر المراجعة البشرية؛ لا يُصدر آليًا. القاعدة عالية الخطورة ويعتمدها مدير النظام.</p>
+    </div>);
+  if (kind === "report") {
+    const src = String(data["source"] ?? "");
+    const sources = ((r?.events ?? []) as Any[]).filter((e) => String(e.code).startsWith("ds.") && ["wired", "tested"].includes(e.status));
+    const fvars = src && src !== "rep.attendance_week" ? condVars(r, src).filter((v) => v.type !== "uuid") : [];
+    const cur = (data["fields"] as string[] | undefined) ?? [];
+    return (
+      <div className="space-y-3">
+        {key}{txt("title", "عنوان التقرير")}
+        <Field l="المصدر"><select className={selectCls("w-full")} value={src} onChange={(e) => { const d: Record<string, unknown> = { ...data, source: e.target.value }; delete d["fields"]; delete d["filter"]; set(d); }}>
+          <option value="">—</option><option value="rep.attendance_week">الحضور الأسبوعي للمدرسة (آخر 7 أيام)</option>
+          {sources.map((e) => <option key={e.code} value={e.code}>{e.label}</option>)}</select></Field>
+        {fvars.length > 0 && <Field l="الحقول (حتى 12)"><span className="block max-h-40 space-y-1 overflow-auto rounded-md border p-2">{fvars.map((v) => { const on = cur.includes(v.key); return (
+          <label key={v.key} className="flex items-center gap-2"><input type="checkbox" checked={on} disabled={!on && cur.length >= 12} onChange={() => set({ ...data, fields: on ? cur.filter((x) => x !== v.key) : [...cur, v.key] })} />{v.label}</label>); })}</span></Field>}
+        <Field l="يطّلع عليه" hint="من يملك صلاحية قراءة المصدر فقط؛ غيرهم يُسجَّل سبب استبعاده.">
+          <RecipientGroups value={(data["share"] as Group[] | undefined) ?? []} onChange={(v) => { const d = { ...data }; if (v.length) d["share"] = v; else delete d["share"]; set(d); }} org={org} ev={ev} schools={schools} steps={steps} forTask />
+        </Field>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!data["notify"]} onChange={(e) => { const d = { ...data }; if (e.target.checked) d["notify"] = true; else delete d["notify"]; set(d); }} />إشعار داخلي بأن التقرير جاهز</label>
+        {nested("on_fail", "مسار الفشل")}
+      </div>);
+  }
+  if (kind === "set") {
+    const opts = SET_FIELDS[String(ev?.code ?? "")] ?? [];
+    const f = opts.find((o) => o.field === data["field"]);
+    return opts.length === 0 ? <p className="text-sm text-muted-foreground">لا توجد حقول مسموح بتحديثها لهذا الحدث.</p> : (
+      <div className="space-y-3">
+        <Field l="الحقل"><select className={selectCls("w-full")} value={String(data["field"] ?? "")} onChange={(e) => set({ ...data, field: e.target.value, value: "" })}><option value="">—</option>{opts.map((o) => <option key={o.field} value={o.field}>{o.label}</option>)}</select></Field>
+        {f && <Field l="القيمة الجديدة"><select className={selectCls("w-full")} value={String(data["value"] ?? "")} onChange={(e) => set({ ...data, value: e.target.value })}><option value="">—</option>{f.values.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></Field>}
+        {nested("on_fail", "مسار الفشل")}
+      </div>);
+  }
+  // wait_until: record fields + live outputs of named earlier steps
+  const outs = steps.flatMap((k) => [{ key: `out_${k}_status`, label: `حالة نتيجة «${k}»`, type: "status", options: null }, { key: `out_${k}_count`, label: `عدد نتيجة «${k}»`, type: "number", options: null }]);
+  const wv = [...vars, ...outs];
+  return (
+    <div className="space-y-3">
+      {wv.length > 0 && <CondEditor value={(data["when"] as Cond) ?? { all: [emptyLeaf(wv)] }} onChange={(c) => set({ ...data, when: c })} vars={wv} ops={(r?.operators ?? []) as Any[]} />}
+      <div className="flex gap-2">
+        <Field l="الفحص كل (دقيقة)"><input type="number" min={15} max={1440} className={inp} value={Number(data["every_minutes"] ?? 60)} onChange={(e) => set({ ...data, every_minutes: Number(e.target.value) })} /></Field>
+        <Field l="المهلة القصوى (دقيقة)"><input type="number" min={60} max={43200} className={inp} value={Number(data["max_minutes"] ?? 10080)} onChange={(e) => set({ ...data, max_minutes: Number(e.target.value) })} /></Field>
+      </div>
+      {nested("timeout", "مسار انتهاء المهلة")}
+      <p className="text-xs text-muted-foreground">يُعاد قراءة السجل ونتائج الخطوات في كل فحص. للانتظار حتى قرار اعتماد: اختر حالة نتيجة خطوة «طلب مراجعة» أو «طلب خطاب».</p>
+    </div>);
 }

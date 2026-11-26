@@ -84,6 +84,8 @@ import { Route as JoinTrackCodeRouteImport } from './routes/join.track.$code'
 import { Route as AuthenticatedAppAdminIndexRouteImport } from './routes/_authenticated/app/admin.index'
 import { Route as AuthenticatedAppAdminCalendarRouteImport } from './routes/_authenticated/app/admin.calendar'
 import { Route as AuthenticatedAppAdminDutiesRouteImport } from './routes/_authenticated/app/admin.duties'
+import { Route as AuthenticatedAppAutoReportsIndexRouteImport } from './routes/_authenticated/app/auto-reports.index'
+import { Route as AuthenticatedAppAutoReportsIdRouteImport } from './routes/_authenticated/app/auto-reports.$id'
 import { Route as AuthenticatedAppChildIdRouteImport } from './routes/_authenticated/app/child.$id'
 import { Route as AuthenticatedAppClassroomsIndexRouteImport } from './routes/_authenticated/app/classrooms.index'
 import { Route as AuthenticatedAppClassroomsIdRouteImport } from './routes/_authenticated/app/classrooms.$id'
@@ -547,6 +549,18 @@ const AuthenticatedAppAdminDutiesRoute =
     path: '/admin/duties',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppAutoReportsIndexRoute =
+  AuthenticatedAppAutoReportsIndexRouteImport.update({
+    id: '/auto-reports/',
+    path: '/auto-reports/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppAutoReportsIdRoute =
+  AuthenticatedAppAutoReportsIdRouteImport.update({
+    id: '/auto-reports/$id',
+    path: '/auto-reports/$id',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppChildIdRoute = AuthenticatedAppChildIdRouteImport.update({
   id: '/child/$id',
   path: '/child/$id',
@@ -872,6 +886,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
+  '/app/auto-reports/$id': typeof AuthenticatedAppAutoReportsIdRoute
   '/app/child/$id': typeof AuthenticatedAppChildIdRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/health/$id': typeof AuthenticatedAppHealthIdRoute
@@ -904,6 +919,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin/': typeof AuthenticatedAppAdminIndexRoute
+  '/app/auto-reports/': typeof AuthenticatedAppAutoReportsIndexRoute
   '/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
   '/app/health/': typeof AuthenticatedAppHealthIndexRoute
   '/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
@@ -990,6 +1006,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
+  '/app/auto-reports/$id': typeof AuthenticatedAppAutoReportsIdRoute
   '/app/child/$id': typeof AuthenticatedAppChildIdRoute
   '/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/app/health/$id': typeof AuthenticatedAppHealthIdRoute
@@ -1022,6 +1039,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/app/admin': typeof AuthenticatedAppAdminIndexRoute
+  '/app/auto-reports': typeof AuthenticatedAppAutoReportsIndexRoute
   '/app/classrooms': typeof AuthenticatedAppClassroomsIndexRoute
   '/app/health': typeof AuthenticatedAppHealthIndexRoute
   '/app/homework': typeof AuthenticatedAppHomeworkIndexRoute
@@ -1111,6 +1129,7 @@ export interface FileRoutesById {
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/admin/calendar': typeof AuthenticatedAppAdminCalendarRoute
   '/_authenticated/app/admin/duties': typeof AuthenticatedAppAdminDutiesRoute
+  '/_authenticated/app/auto-reports/$id': typeof AuthenticatedAppAutoReportsIdRoute
   '/_authenticated/app/child/$id': typeof AuthenticatedAppChildIdRoute
   '/_authenticated/app/classrooms/$id': typeof AuthenticatedAppClassroomsIdRoute
   '/_authenticated/app/health/$id': typeof AuthenticatedAppHealthIdRoute
@@ -1143,6 +1162,7 @@ export interface FileRoutesById {
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
   '/api/public/wati/webhook': typeof ApiPublicWatiWebhookRoute
   '/_authenticated/app/admin/': typeof AuthenticatedAppAdminIndexRoute
+  '/_authenticated/app/auto-reports/': typeof AuthenticatedAppAutoReportsIndexRoute
   '/_authenticated/app/classrooms/': typeof AuthenticatedAppClassroomsIndexRoute
   '/_authenticated/app/health/': typeof AuthenticatedAppHealthIndexRoute
   '/_authenticated/app/homework/': typeof AuthenticatedAppHomeworkIndexRoute
@@ -1232,6 +1252,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/admin/calendar'
     | '/app/admin/duties'
+    | '/app/auto-reports/$id'
     | '/app/child/$id'
     | '/app/classrooms/$id'
     | '/app/health/$id'
@@ -1264,6 +1285,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/$'
     | '/api/public/wati/webhook'
     | '/app/admin/'
+    | '/app/auto-reports/'
     | '/app/classrooms/'
     | '/app/health/'
     | '/app/homework/'
@@ -1350,6 +1372,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/admin/calendar'
     | '/app/admin/duties'
+    | '/app/auto-reports/$id'
     | '/app/child/$id'
     | '/app/classrooms/$id'
     | '/app/health/$id'
@@ -1382,6 +1405,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/$'
     | '/api/public/wati/webhook'
     | '/app/admin'
+    | '/app/auto-reports'
     | '/app/classrooms'
     | '/app/health'
     | '/app/homework'
@@ -1470,6 +1494,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/'
     | '/_authenticated/app/admin/calendar'
     | '/_authenticated/app/admin/duties'
+    | '/_authenticated/app/auto-reports/$id'
     | '/_authenticated/app/child/$id'
     | '/_authenticated/app/classrooms/$id'
     | '/_authenticated/app/health/$id'
@@ -1502,6 +1527,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/$'
     | '/api/public/wati/webhook'
     | '/_authenticated/app/admin/'
+    | '/_authenticated/app/auto-reports/'
     | '/_authenticated/app/classrooms/'
     | '/_authenticated/app/health/'
     | '/_authenticated/app/homework/'
@@ -2068,6 +2094,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAdminDutiesRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/app/auto-reports/': {
+      id: '/_authenticated/app/auto-reports/'
+      path: '/auto-reports'
+      fullPath: '/app/auto-reports/'
+      preLoaderRoute: typeof AuthenticatedAppAutoReportsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/auto-reports/$id': {
+      id: '/_authenticated/app/auto-reports/$id'
+      path: '/auto-reports/$id'
+      fullPath: '/app/auto-reports/$id'
+      preLoaderRoute: typeof AuthenticatedAppAutoReportsIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/app/child/$id': {
       id: '/_authenticated/app/child/$id'
       path: '/child/$id'
@@ -2436,6 +2476,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppAdminCalendarRoute: typeof AuthenticatedAppAdminCalendarRoute
   AuthenticatedAppAdminDutiesRoute: typeof AuthenticatedAppAdminDutiesRoute
+  AuthenticatedAppAutoReportsIdRoute: typeof AuthenticatedAppAutoReportsIdRoute
   AuthenticatedAppChildIdRoute: typeof AuthenticatedAppChildIdRoute
   AuthenticatedAppClassroomsIdRoute: typeof AuthenticatedAppClassroomsIdRoute
   AuthenticatedAppHealthIdRoute: typeof AuthenticatedAppHealthIdRoute
@@ -2457,6 +2498,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppHrTrainingRoute: typeof AuthenticatedAppHrTrainingRoute
   AuthenticatedAppNoticeIdRoute: typeof AuthenticatedAppNoticeIdRoute
   AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
+  AuthenticatedAppAutoReportsIndexRoute: typeof AuthenticatedAppAutoReportsIndexRoute
   AuthenticatedAppClassroomsIndexRoute: typeof AuthenticatedAppClassroomsIndexRoute
   AuthenticatedAppHealthIndexRoute: typeof AuthenticatedAppHealthIndexRoute
   AuthenticatedAppHomeworkIndexRoute: typeof AuthenticatedAppHomeworkIndexRoute
@@ -2536,6 +2578,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppAdminCalendarRoute: AuthenticatedAppAdminCalendarRoute,
   AuthenticatedAppAdminDutiesRoute: AuthenticatedAppAdminDutiesRoute,
+  AuthenticatedAppAutoReportsIdRoute: AuthenticatedAppAutoReportsIdRoute,
   AuthenticatedAppChildIdRoute: AuthenticatedAppChildIdRoute,
   AuthenticatedAppClassroomsIdRoute: AuthenticatedAppClassroomsIdRoute,
   AuthenticatedAppHealthIdRoute: AuthenticatedAppHealthIdRoute,
@@ -2557,6 +2600,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppHrTrainingRoute: AuthenticatedAppHrTrainingRoute,
   AuthenticatedAppNoticeIdRoute: AuthenticatedAppNoticeIdRoute,
   AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
+  AuthenticatedAppAutoReportsIndexRoute: AuthenticatedAppAutoReportsIndexRoute,
   AuthenticatedAppClassroomsIndexRoute: AuthenticatedAppClassroomsIndexRoute,
   AuthenticatedAppHealthIndexRoute: AuthenticatedAppHealthIndexRoute,
   AuthenticatedAppHomeworkIndexRoute: AuthenticatedAppHomeworkIndexRoute,

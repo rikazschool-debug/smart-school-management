@@ -55,4 +55,20 @@ describe("trace path to node id", () => {
     expect(canonPath("c0.2")).toBe("0.2");
     expect(canonPath("0.1b0.0")).toBe("0.1b0.0");
   });
+  it("round-trips phase D operational steps without losing nested failure/timeout paths", () => {
+    const steps = [
+      { type: "mt_request", key: "req", title: "فحص", description: "وصف العطل", place: "المبنى", category: "c1", on_fail: [{ type: "notify", title: "تعذر", recipients: ["principal"] }] },
+      { type: "wait_until", when: { var: "out_req_status", op: "in", value: ["completed"] }, every_minutes: 15, max_minutes: 60, timeout: [{ type: "escalate", title: "متأخر", to: "principal" }] },
+      { type: "report", key: "rep", title: "تقرير", source: "rep.attendance_week", share: [{ by: "role", role: "principal" }] },
+    ];
+    const g = decompile({ when: null, steps });
+    expect(g.nodes.map((x) => x.kind)).toEqual(["trigger", "mt_request", "wait_until", "report"]);
+    const r = compile(g.nodes, g.edges);
+    expect(r.issues.filter((x) => x.level === "error")).toEqual([]);
+    expect(r.def.steps).toEqual(steps);
+  });
+  it("maps wait-until rounds back onto the same step", () => {
+    expect(canonPath("0.1u.0")).toBe("0.1");
+    expect(canonPath("0.1u.1")).toBe("0.2");
+  });
 });
