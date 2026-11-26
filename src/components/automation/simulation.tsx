@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { FlaskConical, PencilRuler } from "lucide-react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
@@ -12,10 +12,12 @@ import { SimResult } from "./designer/sim";
 export function SimulationTab({ orgId, openDesigner }: { orgId: string; openDesigner: (id: string) => void }) {
   const reg = useRegistry(orgId);
   const rules = useQuery({ queryKey: ["au-rules", orgId, "sim"], queryFn: () => rpc<Any>("au_rules_list", { _org: orgId, _limit: 100, _offset: 0 }) });
+  const qc = useQueryClient();
   const [id, setId] = useState(""); const [res, setRes] = useState<Any>(null); const [busy, setBusy] = useState(false);
   const run = async () => {
     if (!id) return; setBusy(true); setRes(null);
-    try { const r = await rpc<Any>("au_rule_get", { _id: id }); setRes(await rpc<Any>("au_simulate_def", { _org: orgId, _event: r.event, _schools: r.schools, _def: { ...r.draft } })); }
+    // au_rule_simulate runs the side-effect-free simulation on the saved rule and records it (validated → simulated) for the approval path
+    try { setRes(await rpc<Any>("au_rule_simulate", { _id: id })); qc.invalidateQueries({ queryKey: ["au-rules"] }); }
     catch (e) { toast.error(arabicError(e)); } finally { setBusy(false); }
   };
   if (rules.isLoading || reg.isLoading) return <LoadingState />;

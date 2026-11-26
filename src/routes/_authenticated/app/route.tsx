@@ -24,10 +24,12 @@ import { type SfView } from "@/components/student-finance/finance-shell";
 import { canFleet, hasKind, useMtMe } from "@/components/maintenance/shared";
 import { useSchoolPerms } from "@/lib/school-perms";
 import { workspacePages } from "@/lib/workspace-perms";
+import { Workflow } from "lucide-react";
 import { HeartPulse, FileText, IdCard, Tags, PartyPopper, UserPlus, FileBarChart, Map as MapIcon } from "lucide-react";
 import { hasEvents, useEvtCaps } from "@/components/events/shared";
 import { ROOM_TABS, roomTabsForRole } from "@/components/classroom-room-tabs";
 import { hasAdmissions, useAdMe } from "@/components/admissions/shared";
+import { useAuMe } from "@/components/automation/lib";
 import { usePeopleRead } from "@/lib/people-read";
 import { useMyAvatar } from "@/lib/my-avatar";
 import { setOwnerInSchool, useOwnerInSchool } from "@/lib/owner-scope";
@@ -106,6 +108,7 @@ const NAV: Record<NavKey, { to: string; label: string; icon: typeof Home; tab?: 
   maintenance: { to: "/app/maintenance", label: "إدارة صيانة المباني", icon: Wrench },
   bus_maintenance: { to: "/app/bus-maintenance", label: "إدارة تشغيل وصيانة الباصات", icon: Bus },
   admissions: { to: "/app/admissions", label: "طلبات القبول والتسجيل", icon: UserPlus },
+  automation: { to: "/app/automation", label: "مركز الأتمتة الذكية", icon: Workflow },
   org_docs: { to: "/app/org-docs", label: "الوثائق والعقود", icon: FileText },
   school_map: { to: "/app/school-map", label: "الخريطة المدرسية", icon: MapIcon },
   hr_training: { to: "/app/hr/training", label: "التدريب والتطوير", icon: GraduationCap },
@@ -155,6 +158,8 @@ function Shell() {
   const sp = useSchoolPerms(pcRole ? active?.schoolId : null);
   const mt = useMtMe(active?.orgId ?? null, pcRole);
   const ad = useAdMe(active?.orgId ?? null, pcRole);
+  // automation center: staff see it only with an owner grant + live delegation (au_me); every au_* RPC re-checks
+  const au = useAuMe(active?.orgId ?? null, pcRole);
   const peopleRead = usePeopleRead(pcRole ? active?.schoolId ?? null : null);
   // events: base roles have it in NAV_BY_ROLE; other staff get it from granted evt_* perms or a course delegation (evt_caps re-checks)
   const evt = useEvtCaps(active?.orgId ?? null, pcRole && !["principal", "vice_principal"].includes(active?.role ?? ""));
@@ -234,13 +239,14 @@ function Shell() {
   if (peopleRead.data === true || sp?.["people_family.view"] || sp?.["people_family.edit"]) baseNav.push("students", "guardians");
   const delegatedPages = workspacePages(sp);
   baseNav.push(...delegatedPages);
+  if (pcRole && au.data?.perms?.["au_view.center"]) baseNav.push("automation");
   const btOff: [string, NavKey][] = [["bt_schedule.view", "schedule"], ["bt_classroom.view", "classrooms"], ["bt_homework.view", "homework"]];
   for (const [k, n] of btOff) if (sp && sp[k] === false && !(n === "schedule" && delegatedPages.includes("schedule")) && baseNav.includes(n)) {
     for (let i = baseNav.length - 1; i >= 0; i--) if (baseNav[i] === n || (n === "homework" && baseNav[i] === "tests")) baseNav.splice(i, 1);
   }
   const opsOnly = ops.opsOnly;
   if (ops.central) baseNav.push("hr");
-  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "finance", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events", ...delegatedPages, ...(peopleRead.data === true || sp?.["people_family.view"] || sp?.["people_family.edit"] ? ["students", "guardians"] : []), ...(sp?.["people.view"] ? ["tags"] : []), ...(ops.asst ? ["schedule", "attendance"] : [])].includes(k)));
+  if (opsOnly) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => ["home", "finance", "profile", "support", "notifications", "communication", "procurement", "maintenance", "bus_maintenance", "admissions", "evaluation", "hr", "my_hr", "events", "automation", ...delegatedPages, ...(peopleRead.data === true || sp?.["people_family.view"] || sp?.["people_family.edit"] ? ["students", "guardians"] : []), ...(sp?.["people.view"] ? ["tags"] : []), ...(ops.asst ? ["schedule", "attendance"] : [])].includes(k)));
   if (ops.asst && !sp?.["school_schedule.view"] && !delegatedPages.includes("schedule")) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => k !== "schedule"));
   if (ops.asst && !(sp?.["attendance.view"] || sp?.["attendance.record"])) baseNav.splice(0, baseNav.length, ...baseNav.filter((k) => k !== "attendance"));
   if (mqSecs.length) baseNav.push("calls");

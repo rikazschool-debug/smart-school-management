@@ -3,6 +3,7 @@ import "./lib/au-suite-lock.ts";
 // Automation phase 5: designer-built rule end to end (graph -> engine), drafts/versions/clone/archive, message templates,
 // side-effect-free simulation, approve/activate separation, run trace + visual path data, retry, kill switch, audit, dashboard, permissions, load.
 // Run: NODE_PATH=node_modules bun scripts/automation-phase5-e2e.ts   (writes /tmp/au-phase5.json)
+import { auApprove } from "./lib/au-approve";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
@@ -87,15 +88,15 @@ try {
   check("simulation reports excluded records with the reason", simX.excluded >= 1 && (simX.excluded_items as any[]).some((x) => x.reason === "condition_false"), simX);
 
   // ---------- 4. versions: approve != activate ----------
-  const ap = await call(owner, "au_rule_approve", { _id: rid });
+  const ap = await auApprove(owner.c, rid);
   g = (await call(owner, "au_rule_get", { _id: rid })).data;
-  check("approval creates version 1 and does not activate", ap.data === 1 && g.status === "paused" && g.active === false, g.status);
+  check("approval creates version 1 and does not activate", ap.data === 1 && g.status === "approved" && g.active === false, g.status);
   await call(owner, "au_rule_save_full", { _org: org, _id: rid, _name: "متابعة التكليفات المتأخرة (تجريبية)", _description: "تعديل", _event: "adm.task.overdue", _schools: [S], _def: { ...def, priority: 4 }, _layout: layout });
   g = (await call(owner, "au_rule_get", { _id: rid })).data;
-  check("editing an approved rule marks changes awaiting approval; approved version unchanged", g.status === "changed" && g.approved_version === 1, g.status);
+  check("editing an approved rule marks changes awaiting approval; approved version unchanged", g.status === "draft" && g.approved_version === 1, g.status);
   await call(owner, "au_rule_restore_version", { _id: rid, _version: 1 });
   g = (await call(owner, "au_rule_get", { _id: rid })).data;
-  check("restoring version 1 brings the draft back to the approved content", g.status === "paused" && g.draft.priority === 3, g.status);
+  check("restoring version 1 brings the draft back to the approved content", g.status === "approved" && g.draft.priority === 3, g.status);
 
   // ---------- 5. activate on synthetic data, run, trace ----------
   check("activation is a separate explicit step", !(await call(owner, "au_rule_set_active", { _id: rid, _on: true })).error);

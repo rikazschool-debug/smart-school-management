@@ -20,6 +20,10 @@ describe("permission tree follows the side menu", () => {
     const secs = menuOrderedCatalog(cat(KEYS)).sections.map((s) => s.key);
     expect(secs.indexOf("school_map")).toBe(secs.indexOf("org_docs") + 1);
   });
+  it("automation center permissions sit under settings, next to the automation menu entry", () => {
+    const secs = menuOrderedCatalog(cat([...KEYS, "au_view", "au_manage", "au_control", "au_settings_info"])).sections.filter((x) => x.key.startsWith("au_"));
+    expect(secs.map((x) => [x.key, x.parent])).toEqual([["au_view", "g_settings"], ["au_manage", "g_settings"], ["au_control", "g_settings"], ["au_settings_info", "g_settings"]]);
+  });
   it("supervision sits inside educational affairs", () => {
     const s = menuOrderedCatalog(cat(KEYS)).sections.find((x) => x.key === "supervision_info")!;
     expect(s.parent).toBe("g_edu");

@@ -52,9 +52,9 @@ export function Dashboard({ orgId }: { orgId: string }) {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <KPI l="إجمالي القواعد" v={ru.total ?? 0} icon={Activity} hint={`مؤرشفة ${ru.archived ?? 0}`} />
         <KPI l="مفعّلة" v={ru.active ?? 0} icon={CheckCircle2} tone="text-primary" />
-        <KPI l="معتمدة — موقوفة" v={ru.paused ?? 0} icon={CircleSlash} />
+        <KPI l="معتمدة أو متوقفة" v={(ru.paused ?? 0) + (ru.approved ?? 0)} icon={CircleSlash} />
         <KPI l="مسودات" v={ru.draft ?? 0} icon={Clock} />
-        <KPI l="بانتظار الاعتماد" v={ru.changed ?? 0} icon={Hourglass} hint="معتمدة ولها تعديلات غير معتمدة" />
+        <KPI l="بانتظار المراجعة أو الاعتماد" v={ru.pending ?? 0} icon={Hourglass} hint={`أُعيدت أو رُفضت: ${ru.returned ?? 0}`} />
         <KPI l="نسبة النجاح" v={rate == null ? "—" : `${rate}%`} icon={CheckCircle2} hint="منفّذة ÷ (منفّذة + فاشلة)" />
         <KPI l="عمليات ناجحة" v={j.done ?? 0} icon={CheckCircle2} tone="text-primary" />
         <KPI l="فاشلة" v={j.dead ?? 0} icon={OctagonAlert} tone="text-destructive" hint={j.retrying ? `${j.retrying} بانتظار إعادة المحاولة` : undefined} />

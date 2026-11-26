@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Search, Copy, Archive, ArchiveRestore, History, PencilRuler, Play, Power, PowerOff, BadgeCheck } from "lucide-react";
+import { Plus, Search, Copy, Archive, ArchiveRestore, History, PencilRuler, Play, Power, PowerOff, Send, CheckCircle2, FlaskConical } from "lucide-react";
 import { ask } from "@/components/confirm";
 import { ErrorState, LoadingState, EmptyState } from "@/components/states";
 import { selectCls } from "@/components/ui/native-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { arabicError } from "@/lib/session";
-import { fmt, rpc, useOrgSchools, useRegistry, RULE_ST, SCHED, AUDIT_ACT, type Any } from "./lib";
+import { can, fmt, rpc, useOrgSchools, useRegistry, RISK, RULE_ST, SCHED, AUDIT_ACT, type Any, type AuMe, type Caps } from "./lib";
 import { serverMsg } from "./designer/meta";
 
 const PAGE = 15;
-export function RulesTab({ orgId, openDesigner }: { orgId: string; openDesigner: (id?: string) => void }) {
+export function RulesTab({ orgId, me, openDesigner }: { orgId: string; me: AuMe; openDesigner: (id?: string) => void }) {
   const qc = useQueryClient();
   const reg = useRegistry(orgId); const schools = useOrgSchools(orgId);
   const [q, setQ] = useState(""); const [st, setSt] = useState(""); const [sec, setSec] = useState(""); const [sch, setSch] = useState(""); const [sort, setSort] = useState("updated"); const [page, setPage] = useState(0);
@@ -20,7 +20,7 @@ export function RulesTab({ orgId, openDesigner }: { orgId: string; openDesigner:
     queryKey: ["au-rules", orgId, q, st, sec, sch, sort, page], placeholderData: keepPreviousData,
     queryFn: () => rpc<Any>("au_rules_list", { _org: orgId, _q: q.trim() || null, _status: st || null, _event: null, _section: sec || null, _school: sch || null, _sort: sort, _limit: PAGE, _offset: page * PAGE }),
   });
-  const refresh = () => qc.invalidateQueries({ queryKey: ["au-rules"] });
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["au-rules"] }); qc.invalidateQueries({ queryKey: ["au-approvals"] }); };
   const act = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); refresh(); } catch (e) { toast.error(serverMsg(arabicError(e))); } };
   // the list returns the parent section key; show its Arabic name from the registry, never the key itself
   const parentLabel = (k: unknown) => (k ? String(((reg.data?.sections ?? []) as Any[]).find((s) => s.key === k)?.label ?? "") : "");
@@ -35,7 +35,7 @@ export function RulesTab({ orgId, openDesigner }: { orgId: string; openDesigner:
         <select aria-label="القسم" className={selectCls("max-w-48", true)} value={sec} onChange={(e) => { setSec(e.target.value); setPage(0); }}><option value="">كل الأقسام</option>{secs.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select>
         <select aria-label="المدرسة" className={selectCls("max-w-48", true)} value={sch} onChange={(e) => { setSch(e.target.value); setPage(0); }}><option value="">كل المدارس</option>{(schools.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
         <select aria-label="الترتيب" className={selectCls("", true)} value={sort} onChange={(e) => setSort(e.target.value)}><option value="updated">الأحدث تعديلًا</option><option value="name">الاسم</option><option value="priority">الأولوية</option><option value="last_run">آخر تنفيذ</option></select>
-        <button onClick={() => openDesigner()} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"><Plus className="size-4" />قاعدة جديدة</button>
+        {can(me, "au_manage.create") && can(me, "au_manage.designer") && <button onClick={() => openDesigner()} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"><Plus className="size-4" />قاعدة جديدة</button>}
       </div>
       <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">{Object.entries(RULE_ST).map(([k, v]) => <span key={k}><span className={`me-1 rounded-full px-1.5 py-0.5 font-semibold ${v[1]}`}>{v[0]}</span>{v[2]}</span>)}</div>
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} /> : rows.length === 0 ? (
@@ -44,28 +44,30 @@ export function RulesTab({ orgId, openDesigner }: { orgId: string; openDesigner:
         <div className="overflow-x-auto rounded-2xl border bg-card shadow-sm">
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground"><tr className="border-b">{["القاعدة", "القسم والحدث", "النطاق", "التشغيل", "الحالة", "الأولوية", "آخر / التالي", "ناجحة / فاشلة", "آخر تعديل", ""].map((h) => <th key={h} className="p-2 text-start font-semibold">{h}</th>)}</tr></thead>
-            <tbody>{rows.map((x) => { const s = RULE_ST[x.status]; return (
+            <tbody>{rows.map((x) => { const s = RULE_ST[x.status]; const c = (x.caps ?? {}) as Caps; return (
               <tr key={x.id} className="border-b align-top last:border-0">
-                <td className="p-2"><button className="text-start font-semibold hover:text-primary" onClick={() => openDesigner(x.id)}>{x.name}</button>{x.description && <div className="max-w-64 truncate text-xs text-muted-foreground">{x.description}</div>}<div className="text-[11px] text-muted-foreground">{x.created_by ?? ""}</div></td>
+                <td className="p-2"><button className="text-start font-semibold hover:text-primary" onClick={() => (c.designer ? openDesigner(x.id) : setHist(x.id))}>{x.name}</button>{x.description && <div className="max-w-64 truncate text-xs text-muted-foreground">{x.description}</div>}<div className="text-[11px] text-muted-foreground">{x.created_by ?? ""}</div></td>
                 <td className="p-2 text-xs"><div className="font-semibold">{parentLabel(x.parent) ? `${parentLabel(x.parent)} › ` : ""}{x.section_label}</div><div className="text-muted-foreground">{x.event_label}</div></td>
                 <td className="p-2 text-xs">{x.schools?.length ? (x.schools as Any[]).map((s) => s.name).join("، ") : x.area === "central" ? "الإدارة المركزية" : "جميع المدارس"}</td>
                 <td className="p-2 text-xs">{SCHED[x.schedule] ?? x.schedule}</td>
-                <td className="p-2"><span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${s?.[1]}`} title={s?.[2]}>{s?.[0]}</span>{x.approved_version && <div className="mt-0.5 text-[11px] text-muted-foreground">إصدار معتمد {x.approved_version}</div>}</td>
+                <td className="p-2"><span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${s?.[1]}`} title={s?.[2]}>{s?.[0]}</span>{RISK[x.risk] && <div className="mt-1"><span className={`whitespace-nowrap rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${RISK[x.risk]![1]}`} title={RISK[x.risk]![2]}>خطورة {RISK[x.risk]![0]}</span></div>}{x.review_note && ["needs_changes", "rejected"].includes(x.status) && <div className="mt-0.5 max-w-48 text-[11px] text-destructive">{x.review_note}</div>}{x.approved_version && <div className="mt-0.5 text-[11px] text-muted-foreground">إصدار معتمد {x.approved_version}</div>}</td>
                 <td className="p-2">{x.priority}</td>
                 <td className="p-2 text-xs">{fmt(x.last_run_at)}<div className="text-muted-foreground">{x.next_run_at ? fmt(x.next_run_at) : "—"}</div></td>
                 <td className="p-2 text-xs">{x.ok} / <span className={x.failed ? "font-bold text-destructive" : ""}>{x.failed}</span></td>
                 <td className="p-2 text-xs">{fmt(x.updated_at)}</td>
                 <td className="p-2"><div className="flex flex-wrap gap-1">
-                  <IB l="فتح في المصمم" onClick={() => openDesigner(x.id)}><PencilRuler className="size-4" /></IB>
-                  <IB l="نسخ إلى مسودة جديدة" onClick={() => act(() => rpc("au_rule_clone", { _id: x.id }), "أُنشئت نسخة كمسودة")}><Copy className="size-4" /></IB>
-                  <IB l="الإصدارات والسجل" onClick={() => setHist(x.id)}><History className="size-4" /></IB>
-                  {(x.status === "draft" || x.status === "changed") && <IB l="اعتماد المسودة" onClick={async () => { if (await ask("اعتماد المسودة كإصدار جديد؟ لن تُفعَّل تلقائيًا.", { ok: "اعتماد" })) void act(() => rpc("au_rule_approve", { _id: x.id }), "اعتُمد إصدار جديد"); }}><BadgeCheck className="size-4" /></IB>}
-                  {x.status === "paused" && <IB l="تفعيل" onClick={async () => { if (await ask("التفعيل يجعل القاعدة تعمل على بيانات المجموعة الفعلية. هل تريد التفعيل؟", { ok: "تفعيل", destructive: true })) void act(() => rpc("au_rule_set_active", { _id: x.id, _on: true }), "فُعّلت القاعدة"); }}><Power className="size-4" /></IB>}
-                  {x.status === "active" && <IB l="إيقاف مؤقت" onClick={() => act(() => rpc("au_rule_set_active", { _id: x.id, _on: false }), "أوقفت القاعدة")}><PowerOff className="size-4" /></IB>}
-                  {x.status === "active" && <IB l="تشغيل الآن" onClick={async () => { if (await ask("تشغيل الإصدار المعتمد الآن على السجلات المطابقة؟", { ok: "تشغيل" })) void act(() => rpc("au_rule_run_now", { _id: x.id }), "أُضيف التشغيل إلى الطابور"); }}><Play className="size-4" /></IB>}
-                  {x.status === "archived"
-                    ? <IB l="استرجاع من الأرشيف" onClick={() => act(() => rpc("au_rule_archive", { _id: x.id, _on: false }), "استُرجعت القاعدة (موقوفة)")}><ArchiveRestore className="size-4" /></IB>
-                    : <IB l="أرشفة" onClick={async () => { if (await ask("أرشفة القاعدة توقفها وتخفيها، مع الإبقاء على سجلات تنفيذها كاملة.", { ok: "أرشفة" })) void act(() => rpc("au_rule_archive", { _id: x.id, _on: true }), "أُرشفت القاعدة"); }}><Archive className="size-4" /></IB>}
+                  {c.designer && <IB l="فتح في المصمم" onClick={() => openDesigner(x.id)}><PencilRuler className="size-4" /></IB>}
+                  {c.clone && <IB l="نسخ إلى مسودة جديدة" onClick={() => act(() => rpc("au_rule_clone", { _id: x.id }), "أُنشئت نسخة كمسودة")}><Copy className="size-4" /></IB>}
+                  {(c.versions || c.owner) && <IB l="الإصدارات والسجل" onClick={() => setHist(x.id)}><History className="size-4" /></IB>}
+                  {["draft", "needs_changes", "rejected"].includes(x.status) && (c.edit || c.create) && <IB l="تحقق من القاعدة" onClick={() => act(() => rpc("au_rule_validate", { _id: x.id }), "اجتازت القاعدة التحقق — شغّل المحاكاة")}><CheckCircle2 className="size-4" /></IB>}
+                  {["validated", "simulated"].includes(x.status) && c.simulate && <IB l="محاكاة على البيانات الحالية" onClick={() => act(async () => { const r = await rpc<Any>("au_rule_simulate", { _id: x.id }); if (!r.ok) throw new Error(r.error); }, "تمت المحاكاة دون إرسال أي شيء")}><FlaskConical className="size-4" /></IB>}
+                  {x.status === "simulated" && c.submit && <IB l="إرسال للاعتماد" onClick={async () => { if (await ask(`إرسال القاعدة للاعتماد؟ ${x.risk === "low" ? "خطورتها منخفضة فتذهب مباشرة إلى المعتمد." : "ستمر بالمراجعة أولًا ثم الاعتماد."}`, { ok: "إرسال" })) void act(() => rpc("au_rule_submit", { _id: x.id }), "أُرسلت القاعدة"); }}><Send className="size-4" /></IB>}
+                  {(x.status === "approved" || x.status === "paused") && c.activate && <IB l="تفعيل" onClick={async () => { if (await ask("التفعيل يجعل الإصدار المعتمد يعمل على بيانات المجموعة الفعلية. هل تريد التفعيل؟", { ok: "تفعيل", destructive: true })) void act(() => rpc("au_rule_set_active", { _id: x.id, _on: true }), "فُعّلت القاعدة"); }}><Power className="size-4" /></IB>}
+                  {x.active && c.pause && <IB l="إيقاف مؤقت" onClick={() => act(() => rpc("au_rule_set_active", { _id: x.id, _on: false }), "أوقفت القاعدة")}><PowerOff className="size-4" /></IB>}
+                  {x.active && c.rerun && <IB l="تشغيل الآن" onClick={async () => { if (await ask("تشغيل الإصدار المعتمد الآن على السجلات المطابقة؟", { ok: "تشغيل" })) void act(() => rpc("au_rule_run_now", { _id: x.id }), "أُضيف التشغيل إلى الطابور"); }}><Play className="size-4" /></IB>}
+                  {c.archive && (x.status === "archived"
+                    ? <IB l="استرجاع من الأرشيف" onClick={() => act(() => rpc("au_rule_archive", { _id: x.id, _on: false }), "استُرجعت القاعدة كمسودة")}><ArchiveRestore className="size-4" /></IB>
+                    : <IB l="أرشفة" onClick={async () => { if (await ask("أرشفة القاعدة توقفها وتخفيها، مع الإبقاء على سجلات تنفيذها كاملة.", { ok: "أرشفة" })) void act(() => rpc("au_rule_archive", { _id: x.id, _on: true }), "أُرشفت القاعدة"); }}><Archive className="size-4" /></IB>)}
                 </div></td>
               </tr>); })}</tbody>
           </table>
@@ -103,14 +105,14 @@ function Versions({ id, onClose, onRestored }: { id: string; onClose: () => void
         <DialogHeader><DialogTitle>{q.data?.name ?? "الإصدارات"}</DialogTitle></DialogHeader>
         {q.isLoading ? <LoadingState /> : q.error ? <ErrorState message={arabicError(q.error)} /> : (
           <div className="space-y-4 text-sm">
-            <p className="rounded-lg bg-muted/50 p-2 text-xs">المسودة تُعدَّل بحرية. الإصدار المعتمد نسخة ثابتة لا تتغير. الإصدار المفعّل هو المعتمد عندما تكون القاعدة مفعّلة.</p>
+            <p className="rounded-lg bg-muted/50 p-2 text-xs">المسودة تُعدَّل بحرية. الإصدار المعتمد نسخة ثابتة لا تتغير. استرجاع إصدار سابق يعيده مسودة تمر بالتحقق والمحاكاة والاعتماد من جديد.</p>
             <div><h4 className="mb-1 font-bold">الإصدارات</h4>
               {(q.data.versions as Any[]).length === 0 ? <p className="text-xs text-muted-foreground">لا توجد إصدارات معتمدة بعد.</p> : (
                 <ul className="divide-y rounded-lg border">{(q.data.versions as Any[]).map((v) => (
                   <li key={v.version} className="flex items-center justify-between gap-2 p-2"><div><span className="font-semibold">الإصدار {v.version}</span>
                     {v.is_live ? <span className="ms-2 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">مفعّل</span> : v.is_approved ? <span className="ms-2 rounded-full bg-secondary px-2 py-0.5 text-[11px]">المعتمد الحالي</span> : null}
                     <div className="text-xs text-muted-foreground">اعتمده {v.approved_by ?? "—"} · {fmt(v.approved_at)} · {((v.definition?.steps ?? []) as Any[]).length} خطوة</div></div>
-                    <button onClick={() => void restore(v.version)} className="rounded-lg border px-2 py-1 text-xs hover:border-primary/50">استرجاع إلى المسودة</button></li>))}</ul>)}
+                    {q.data.caps?.restore && <button onClick={() => void restore(v.version)} className="rounded-lg border px-2 py-1 text-xs hover:border-primary/50">استرجاع إلى المسودة</button>}</li>))}</ul>)}
             </div>
             <div><h4 className="mb-1 font-bold">سجل القاعدة</h4>
               <ul className="max-h-60 divide-y overflow-auto rounded-lg border text-xs">{(q.data.audit as Any[]).map((a, i) => <li key={i} className="flex justify-between gap-2 p-2"><span>{AUDIT_ACT[a.action] ?? a.action}{a.details?.version ? ` — الإصدار ${a.details.version}` : ""}</span><span className="text-muted-foreground">{a.by ?? "—"} · {fmt(a.at)}</span></li>)}</ul>

@@ -93,6 +93,7 @@ export type NavKey =
   | "hub_notices"
   | "hub_meetings"
   | "hub_circulars"
+  | "automation"
   | "reports";
 
 /** Owner home is split into four sections; each section shows only its own side menu. */
@@ -208,6 +209,7 @@ export const NAV_BY_ROLE = Object.fromEntries(Object.entries(NAV_BY_ROLE_RAW).ma
 
 /** Menu labels (same as the side menu) for previewing a base role's dashboard. */
 export const NAV_LABELS: Partial<Record<NavKey, string>> = {
+  automation: "مركز الأتمتة الذكية",
   student_guidance: "التوجيه الطلابي", gifted_care: "رعاية الموهوبين", remedial_plans: "الخطط العلاجية", supervision: "الإشراف التربوي", tests: "الاختبارات",
   collaboration: "التعاون",
   reports: "منشئ التقارير",

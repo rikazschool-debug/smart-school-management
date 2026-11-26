@@ -7,11 +7,11 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { toast } from "sonner";
-import { Save, PlayCircle, BadgeCheck, Power, PowerOff, Undo2, Redo2, Copy, LayoutGrid, Maximize2, Minimize2, AlertTriangle, CheckCircle2, X, Loader2 } from "lucide-react";
+import { Save, PlayCircle, BadgeCheck, Power, PowerOff, Undo2, Redo2, Copy, LayoutGrid, Maximize2, Minimize2, AlertTriangle, CheckCircle2, X, Loader2, Send } from "lucide-react";
 import { ask } from "@/components/confirm";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
-import { rpc, useOrgSchools, useRegistry, RULE_ST, SCHED, type Any } from "../lib";
+import { rpc, useOrgSchools, useRegistry, RISK, RULE_ST, SCHED, type Any, type AuMe, type Caps } from "../lib";
 import { autoLayout, compile, decompile, HANDLES, HANDLE_LABEL, ACTION_CODE, type GEdge, type GNode, type NodeKind, type Issue } from "./flow";
 import { KIND, START_TYPES, serverMsg } from "./meta";
 import { RuleSettings, StepProps, eligibleRecipients, type RuleMeta } from "./props";
@@ -89,13 +89,13 @@ export function FlowView({ r, def, status }: { r: Any; def: Any; status: Record<
   );
 }
 
-export function Designer(props: { orgId: string; ruleId?: string | undefined; onRule: (id: string | undefined) => void }) {
+export function Designer(props: { orgId: string; ruleId?: string | undefined; me: AuMe; onRule: (id: string | undefined) => void }) {
   return <ReactFlowProvider><DesignerInner {...props} /></ReactFlowProvider>;
 }
 
 const NEW_META: RuleMeta = { name: "", description: "", event: "", schools: null, scope: "all", schedule: { type: "condition", quiet: true, workdays_only: false }, priority: 5 };
 
-function DesignerInner({ orgId, ruleId, onRule }: { orgId: string; ruleId?: string | undefined; onRule: (id: string | undefined) => void }) {
+function DesignerInner({ orgId, ruleId, me, onRule }: { orgId: string; ruleId?: string | undefined; me: AuMe; onRule: (id: string | undefined) => void }) {
   const qc = useQueryClient();
   const reg = useRegistry(orgId);
   const schools = useOrgSchools(orgId);
@@ -239,11 +239,21 @@ function DesignerInner({ orgId, ruleId, onRule }: { orgId: string; ruleId?: stri
     catch (e) { toast.error(arabicError(e)); } finally { setSimBusy(false); }
   };
   const info = rule.data;
-  const status: string = ruleId ? (dirty ? (info?.approved_version ? "changed" : "draft") : info?.status ?? "draft") : "draft";
-  const approve = async () => {
+  const status: string = ruleId ? (dirty ? "draft" : info?.status ?? "draft") : "draft";
+  const caps = (info?.caps ?? (me.owner ? { owner: true, edit: true, create: true, simulate: true, submit: true, activate: true, pause: true } : {})) as Caps;
+  const refreshRule = () => { qc.invalidateQueries({ queryKey: ["au-rule", ruleId] }); qc.invalidateQueries({ queryKey: ["au-rules"] }); qc.invalidateQueries({ queryKey: ["au-approvals"] }); };
+  // lifecycle on the saved rule: validate → simulate (side-effect free, recorded) → submit; review/approval happen in «المراجعة والاعتماد»
+  const check = async () => {
     if (!ruleId || dirty) { toast.error("احفظ المسودة أولًا"); return; }
-    if (!(await ask("اعتماد هذه المسودة كإصدار جديد؟ الاعتماد لا يفعّل القاعدة؛ التفعيل خطوة مستقلة.", { ok: "اعتماد" }))) return;
-    try { const v = await rpc<number>("au_rule_approve", { _id: ruleId }); toast.success(`اعتُمد الإصدار ${v} — القاعدة ما زالت غير مفعّلة`); qc.invalidateQueries({ queryKey: ["au-rule", ruleId] }); qc.invalidateQueries({ queryKey: ["au-rules"] }); }
+    setSimBusy(true);
+    try { await rpc("au_rule_validate", { _id: ruleId }); const r = await rpc<Any>("au_rule_simulate", { _id: ruleId }); setSim(r); refreshRule(); toast.success("اجتازت القاعدة التحقق والمحاكاة دون إرسال أي شيء");
+      setTimeout(() => document.getElementById("au-sim-result")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80); }
+    catch (e) { toast.error(serverMsg(arabicError(e))); } finally { setSimBusy(false); }
+  };
+  const submit = async () => {
+    if (!ruleId || dirty) return;
+    if (!(await ask(info?.risk === "low" ? "إرسال القاعدة للاعتماد؟ خطورتها منخفضة فتذهب مباشرة إلى المعتمد." : "إرسال القاعدة؟ ستمر بالمراجعة أولًا ثم الاعتماد.", { ok: "إرسال" }))) return;
+    try { await rpc("au_rule_submit", { _id: ruleId }); toast.success("أُرسلت القاعدة — تابعها في «المراجعة والاعتماد»"); refreshRule(); }
     catch (e) { toast.error(serverMsg(arabicError(e))); }
   };
   const activate = async (on: boolean) => {
@@ -271,7 +281,9 @@ function DesignerInner({ orgId, ruleId, onRule }: { orgId: string; ruleId?: stri
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2"><span className="truncate text-sm font-bold">{meta.name || "قاعدة جديدة"}</span>
             {st && <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${st[1]}`} title={st[2]}>{st[0]}</span>}
+            {info?.risk && RISK[info.risk] && <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${RISK[info.risk]![1]}`} title={RISK[info.risk]![2]}>خطورة {RISK[info.risk]![0]}</span>}
             {info?.approved_version && <span className="text-[11px] text-muted-foreground">الإصدار المعتمد {info.approved_version}{info.active ? " (يعمل)" : ""}</span>}</div>
+          {info?.review_note && ["needs_changes", "rejected"].includes(status) && <div className="text-[11px] font-semibold text-destructive">ملاحظة المراجع: {info.review_note}</div>}
           <div className="text-[11px] text-muted-foreground">{saving ? "جارٍ الحفظ…" : dirty ? (ruleId && canSave ? "تعديلات غير محفوظة — حفظ تلقائي خلال ثوانٍ" : "تعديلات غير محفوظة") : savedAt ? `حُفظت ${savedAt.toLocaleTimeString("ar-SA")}` : ruleId ? "محفوظة" : "لم تُحفظ بعد"}</div>
         </div>
         <div className="flex flex-wrap items-center gap-1">
@@ -283,9 +295,10 @@ function DesignerInner({ orgId, ruleId, onRule }: { orgId: string; ruleId?: stri
           <span className="mx-1 h-6 w-px bg-border" />
           <button onClick={() => void simulate()} disabled={simBusy} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold hover:border-primary/50 disabled:opacity-50">{simBusy ? <Loader2 className="size-4 animate-spin" /> : <PlayCircle className="size-4" />}محاكاة</button>
           <button onClick={() => void save()} disabled={!canSave || saving || (!dirty && !!ruleId)} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold hover:border-primary/50 disabled:opacity-50"><Save className="size-4" />حفظ المسودة</button>
-          <button onClick={() => void approve()} disabled={!ruleId || dirty || !(status === "draft" || status === "changed")} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold hover:border-primary/50 disabled:opacity-50"><BadgeCheck className="size-4" />اعتماد</button>
-          {live ? <button onClick={() => void activate(false)} className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 text-sm font-semibold text-destructive"><PowerOff className="size-4" />إيقاف</button>
-            : <button onClick={() => void activate(true)} disabled={!ruleId || dirty || status !== "paused"} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"><Power className="size-4" />تفعيل</button>}
+          {(caps.edit || caps.create) && <button onClick={() => void check()} disabled={!ruleId || dirty || simBusy || !["draft", "validated", "simulated", "needs_changes", "rejected"].includes(status)} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold hover:border-primary/50 disabled:opacity-50"><BadgeCheck className="size-4" />تحقق ومحاكاة</button>}
+          {caps.submit && <button onClick={() => void submit()} disabled={!ruleId || dirty || status !== "simulated"} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold hover:border-primary/50 disabled:opacity-50"><Send className="size-4" />إرسال للاعتماد</button>}
+          {live ? (caps.pause && <button onClick={() => void activate(false)} className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 text-sm font-semibold text-destructive"><PowerOff className="size-4" />إيقاف</button>)
+            : caps.activate && <button onClick={() => void activate(true)} disabled={!ruleId || dirty || !["approved", "paused"].includes(status)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"><Power className="size-4" />تفعيل</button>}
         </div>
       </div>
 

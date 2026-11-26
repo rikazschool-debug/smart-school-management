@@ -3,6 +3,7 @@ import "./lib/au-suite-lock.ts";
 // Automation phase 4 completion: 13 newly wired events, teacher/supervisor/manager/guardian recipients, system review requests,
 // covered-recipient guard, rule priority/conflicts, over-cap deferral, loop guard, double-run lock, existing-jobs catalog.
 // Run: NODE_PATH=node_modules bun scripts/automation-phase4b-e2e.ts   (writes /tmp/au-phase4b.json)
+import { auApprove } from "./lib/au-approve";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
@@ -35,7 +36,7 @@ async function rule(name: string, event: string, def: any, schools: string[] | n
   if (s.error) throw new Error(`save ${event}: ${s.error.message}`); return s.data as string;
 }
 const rejects = async (event: string, def: any) => !!(await owner.c.rpc("au_rule_save", { _org: org, _id: null, _name: "x", _event: event, _schools: null, _def: def })).error;
-async function go(id: string) { const a = await owner.c.rpc("au_rule_approve", { _id: id }); if (a.error) throw a.error; const b = await owner.c.rpc("au_rule_set_active", { _id: id, _on: true }); if (b.error) throw b.error; }
+async function go(id: string) { const a = await auApprove(owner.c, id); if (a.error) throw a.error; const b = await owner.c.rpc("au_rule_set_active", { _id: id, _on: true }); if (b.error) throw b.error; }
 const off = async (id: string) => owner.c.rpc("au_rule_set_active", { _id: id, _on: false });
 const allOff = async () => { const r = ((await admin.from("au_rules").select("id").eq("org_id", org).eq("active", true)).data ?? []); for (const x of r) await off(x.id); };
 const skips = async (rid: string) => ((await admin.from("au_skips").select("reason,user_id").eq("rule_id", rid)).data ?? []) as any[];

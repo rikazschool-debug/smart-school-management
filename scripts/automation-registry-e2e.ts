@@ -1,6 +1,7 @@
 import "./lib/user-pool.ts";
 import "./lib/au-suite-lock.ts";
 // Automation registry (events/conditions/actions/recipients/triggers) acceptance. Run: NODE_PATH=node_modules bun scripts/automation-registry-e2e.ts
+import { auApprove } from "./lib/au-approve";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
@@ -82,7 +83,7 @@ try {
   const rid = (await owner.c.rpc("au_rule_save", { _org: org, _id: null, _name: "عالية الأولوية", _event: "adm.task.overdue", _schools: null, _def: { ...base, when } })).data as string;
   const sim = ((await owner.c.rpc("au_simulate", { _id: rid })).data as any).items;
   check("simulation applies condition", sim.length === 1 && sim[0].task === hi, sim);
-  await owner.c.rpc("au_rule_approve", { _id: rid }); await owner.c.rpc("au_rule_set_active", { _id: rid, _on: true });
+  await auApprove(owner.c, rid); await owner.c.rpc("au_rule_set_active", { _id: rid, _on: true });
   await tick(); await tick();
   const dk = ((await admin.from("notifications").select("dedupe_key").eq("user_id", pr.id).like("dedupe_key", "au:%")).data ?? []).map((n) => n.dedupe_key);
   check("only matching task notified once", dk.length === 1 && dk[0]!.includes(hi), dk);
@@ -92,7 +93,7 @@ try {
   const many: string[] = [];
   for (let i = 0; i < 30; i++) {
     const id = (await owner.c.rpc("au_rule_save", { _org: org, _id: null, _name: "حمل " + i, _event: "adm.task.overdue", _schools: null, _def: { ...base, when: { all: [{ var: "progress", op: "eq", value: 99 }, { any: [{ var: "priority", op: "eq", value: "high" }, { var: "title", op: "contains", value: "x" }] }] } } })).data as string;
-    await owner.c.rpc("au_rule_approve", { _id: id }); await owner.c.rpc("au_rule_set_active", { _id: id, _on: true }); many.push(id);
+    await auApprove(owner.c, id); await owner.c.rpc("au_rule_set_active", { _id: id, _on: true }); many.push(id);
   }
   const rows = Array.from({ length: 300 }, (_, i) => ({ school_id: S, title: "حمل " + i, assignee: t1.id, assigner: pr.id, due_date: day(-2), status: "new", priority: "normal" }));
   await admin.from("adm_tasks").insert(rows);

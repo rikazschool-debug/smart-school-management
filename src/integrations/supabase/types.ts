@@ -3338,6 +3338,74 @@ export type Database = {
         }
         Relationships: []
       }
+      au_delegations: {
+        Row: {
+          actions: string[] | null
+          created_at: string
+          created_by: string
+          ends_at: string | null
+          events: string[] | null
+          id: string
+          include_central: boolean
+          org_id: string
+          reason: string
+          recipients: string[] | null
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          school_ids: string[] | null
+          sections: string[] | null
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          actions?: string[] | null
+          created_at?: string
+          created_by: string
+          ends_at?: string | null
+          events?: string[] | null
+          id?: string
+          include_central?: boolean
+          org_id: string
+          reason: string
+          recipients?: string[] | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          school_ids?: string[] | null
+          sections?: string[] | null
+          starts_at?: string
+          user_id: string
+        }
+        Update: {
+          actions?: string[] | null
+          created_at?: string
+          created_by?: string
+          ends_at?: string | null
+          events?: string[] | null
+          id?: string
+          include_central?: boolean
+          org_id?: string
+          reason?: string
+          recipients?: string[] | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          school_ids?: string[] | null
+          sections?: string[] | null
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_delegations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       au_events: {
         Row: {
           area: string
@@ -3650,6 +3718,7 @@ export type Database = {
       }
       au_rules: {
         Row: {
+          activated_by: string | null
           active: boolean
           approved_version: number | null
           archived_at: string | null
@@ -3660,6 +3729,7 @@ export type Database = {
           description: string | null
           draft: Json
           event_code: string
+          ever_active: boolean
           id: string
           last_run_at: string | null
           layout: Json | null
@@ -3667,10 +3737,20 @@ export type Database = {
           next_run_at: string | null
           org_id: string
           priority: number
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk: string
           school_ids: string[] | null
+          sim_fp: string | null
+          stage: string
+          submit_fp: string | null
+          submitted_at: string | null
+          submitted_by: string | null
           updated_at: string
         }
         Insert: {
+          activated_by?: string | null
           active?: boolean
           approved_version?: number | null
           archived_at?: string | null
@@ -3681,6 +3761,7 @@ export type Database = {
           description?: string | null
           draft: Json
           event_code: string
+          ever_active?: boolean
           id?: string
           last_run_at?: string | null
           layout?: Json | null
@@ -3688,10 +3769,20 @@ export type Database = {
           next_run_at?: string | null
           org_id: string
           priority?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk?: string
           school_ids?: string[] | null
+          sim_fp?: string | null
+          stage?: string
+          submit_fp?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
           updated_at?: string
         }
         Update: {
+          activated_by?: string | null
           active?: boolean
           approved_version?: number | null
           archived_at?: string | null
@@ -3702,6 +3793,7 @@ export type Database = {
           description?: string | null
           draft?: Json
           event_code?: string
+          ever_active?: boolean
           id?: string
           last_run_at?: string | null
           layout?: Json | null
@@ -3709,7 +3801,16 @@ export type Database = {
           next_run_at?: string | null
           org_id?: string
           priority?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk?: string
           school_ids?: string[] | null
+          sim_fp?: string | null
+          stage?: string
+          submit_fp?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -3837,6 +3938,7 @@ export type Database = {
           quiet_end: string | null
           quiet_start: string | null
           reason: string | null
+          separate_approver: boolean
           updated_at: string
           updated_by: string | null
           workdays: number[]
@@ -3852,6 +3954,7 @@ export type Database = {
           quiet_end?: string | null
           quiet_start?: string | null
           reason?: string | null
+          separate_approver?: boolean
           updated_at?: string
           updated_by?: string | null
           workdays?: number[]
@@ -3867,6 +3970,7 @@ export type Database = {
           quiet_end?: string | null
           quiet_start?: string | null
           reason?: string | null
+          separate_approver?: boolean
           updated_at?: string
           updated_by?: string | null
           workdays?: number[]
@@ -26350,6 +26454,32 @@ export type Database = {
         Returns: undefined
       }
       _att_section: { Args: { _student: string }; Returns: string }
+      _au_appr_ok: {
+        Args: {
+          _act: string
+          _def: Json
+          _event: string
+          _org: string
+          _uid: string
+        }
+        Returns: boolean
+      }
+      _au_can: {
+        Args: { _act: string; _org: string; _sec: string; _uid: string }
+        Returns: boolean
+      }
+      _au_can_on: {
+        Args: {
+          _act: string
+          _def: Json
+          _event: string
+          _org: string
+          _schools: string[]
+          _sec: string
+          _uid: string
+        }
+        Returns: boolean
+      }
       _au_check_cond: {
         Args: { _depth?: number; _event: string; c: Json }
         Returns: number
@@ -26371,7 +26501,17 @@ export type Database = {
         Args: { _event: string; _family: boolean; _txt: string }
         Returns: undefined
       }
+      _au_dcover: {
+        Args: {
+          _def: Json
+          _event: string
+          _schools: string[]
+          d: Database["public"]["Tables"]["au_delegations"]["Row"]
+        }
+        Returns: boolean
+      }
       _au_def: { Args: { d: Json }; Returns: Json }
+      _au_def_rcpts: { Args: { _def: Json }; Returns: string[] }
       _au_deliver: {
         Args: {
           c: string
@@ -26387,6 +26527,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _au_dlive: {
+        Args: { d: Database["public"]["Tables"]["au_delegations"]["Row"] }
+        Returns: boolean
+      }
       _au_emit: {
         Args: {
           _depth?: number
@@ -26399,12 +26543,40 @@ export type Database = {
         }
         Returns: undefined
       }
+      _au_ev_vis: {
+        Args: { _event: string; _org: string; _uid: string }
+        Returns: boolean
+      }
       _au_eval: { Args: { c: Json; ctx: Json }; Returns: boolean }
       _au_exec: {
         Args: { j: Database["public"]["Tables"]["au_jobs"]["Row"] }
         Returns: string
       }
+      _au_fp: {
+        Args: { r: Database["public"]["Tables"]["au_rules"]["Row"] }
+        Returns: string
+      }
+      _au_full: { Args: { _org: string }; Returns: boolean }
       _au_manager: { Args: { _employee: string }; Returns: string }
+      _au_need: {
+        Args: { _act: string; _org: string; _sec: string }
+        Returns: undefined
+      }
+      _au_need_any: {
+        Args: { _acts: string[]; _org: string; _sec: string }
+        Returns: undefined
+      }
+      _au_need_on: {
+        Args: {
+          _act: string
+          _def: Json
+          _event: string
+          _org: string
+          _schools: string[]
+          _sec: string
+        }
+        Returns: undefined
+      }
       _au_next_run: { Args: { f: string; s: Json }; Returns: string }
       _au_overdue: {
         Args: {
@@ -26423,6 +26595,21 @@ export type Database = {
         }[]
       }
       _au_owner: { Args: { _org: string }; Returns: undefined }
+      _au_perm: {
+        Args: { _act: string; _org: string; _sec: string; _uid: string }
+        Returns: boolean
+      }
+      _au_perm_list: {
+        Args: never
+        Returns: {
+          act: string
+          ao: number
+          label: string
+          o: number
+          sec: string
+          sec_label: string
+        }[]
+      }
       _au_rcpt: {
         Args: {
           _code: string
@@ -26459,6 +26646,11 @@ export type Database = {
         Args: { _ctx: Json; _event: string; _tpl: string }
         Returns: string
       }
+      _au_risk: {
+        Args: { _def: Json; _event: string; _schools: string[] }
+        Returns: string
+      }
+      _au_rule_caps: { Args: { _rid: string }; Returns: Json }
       _au_rule_status: {
         Args: { r: Database["public"]["Tables"]["au_rules"]["Row"] }
         Returns: string
@@ -26542,6 +26734,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      _au_v_schools: { Args: { _d: Json }; Returns: string[] }
+      _au_version_ok: {
+        Args: {
+          _v: number
+          ru: Database["public"]["Tables"]["au_rules"]["Row"]
+        }
+        Returns: boolean
+      }
+      _au_vis: { Args: { _rid: string; _uid: string }; Returns: boolean }
       _audit: {
         Args: {
           _action: string
@@ -28572,6 +28773,7 @@ export type Database = {
       _perm_catalog_v19: { Args: never; Returns: Json }
       _perm_catalog_v2: { Args: never; Returns: Json }
       _perm_catalog_v20: { Args: never; Returns: Json }
+      _perm_catalog_v21: { Args: never; Returns: Json }
       _perm_catalog_v3: { Args: never; Returns: Json }
       _perm_catalog_v4: { Args: never; Returns: Json }
       _perm_catalog_v6: { Args: never; Returns: Json }
@@ -28605,6 +28807,10 @@ export type Database = {
         Returns: boolean
       }
       _perm_valid_base: {
+        Args: { _action: string; _scope: string; _section: string }
+        Returns: boolean
+      }
+      _perm_valid_pre_au: {
         Args: { _action: string; _scope: string; _section: string }
         Returns: boolean
       }
@@ -30314,6 +30520,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      au_access: { Args: { _org: string }; Returns: Json }
+      au_approvals: { Args: { _org: string }; Returns: Json }
       au_audit_list: {
         Args: {
           _action?: string
@@ -30336,6 +30544,23 @@ export type Database = {
         }
         Returns: Json
       }
+      au_deleg_revoke: { Args: { _id: string; _reason: string }; Returns: Json }
+      au_deleg_save: {
+        Args: {
+          _actions: string[]
+          _central: boolean
+          _ends: string
+          _events: string[]
+          _org: string
+          _reason: string
+          _recipients: string[]
+          _schools: string[]
+          _sections: string[]
+          _starts: string
+          _user: string
+        }
+        Returns: string
+      }
       au_existing_jobs: { Args: { _org: string }; Returns: Json }
       au_job_detail: { Args: { _id: number }; Returns: Json }
       au_job_retry: { Args: { _id: number }; Returns: undefined }
@@ -30352,9 +30577,18 @@ export type Database = {
         }
         Returns: Json
       }
+      au_log_denied: {
+        Args: { _org: string; _what: string }
+        Returns: undefined
+      }
+      au_me: { Args: { _org: string }; Returns: Json }
       au_monitor: { Args: { _org: string }; Returns: Json }
       au_platform_kill: {
         Args: { _on: boolean; _reason: string }
+        Returns: undefined
+      }
+      au_policy_save: {
+        Args: { _org: string; _separate: boolean }
         Returns: undefined
       }
       au_registry: { Args: { _org: string }; Returns: Json }
@@ -30365,6 +30599,10 @@ export type Database = {
         Returns: undefined
       }
       au_rule_clone: { Args: { _id: string }; Returns: string }
+      au_rule_decide: {
+        Args: { _decision: string; _id: string; _note: string }
+        Returns: string
+      }
       au_rule_get: { Args: { _id: string }; Returns: Json }
       au_rule_restore_version: {
         Args: { _id: string; _version: number }
@@ -30399,6 +30637,9 @@ export type Database = {
         Args: { _id: string; _on: boolean }
         Returns: undefined
       }
+      au_rule_simulate: { Args: { _id: string }; Returns: Json }
+      au_rule_submit: { Args: { _id: string }; Returns: string }
+      au_rule_validate: { Args: { _id: string }; Returns: string }
       au_rules_list: {
         Args: {
           _event?: string

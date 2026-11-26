@@ -1,6 +1,7 @@
 import "./lib/user-pool.ts";
 import "./lib/au-suite-lock.ts";
 // Automation engine (au_*) acceptance on isolated data. Run: NODE_PATH=node_modules bun scripts/automation-e2e.ts
+import { auApprove } from "./lib/au-approve";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
@@ -52,15 +53,15 @@ try {
   const rr = (await admin.from("au_rules").select("active,approved_version").eq("id", R).single()).data!;
   check("new rule inactive and unapproved", rr.active === false && rr.approved_version === null, rr);
   check("cannot activate before approval", !!(await owner.c.rpc("au_rule_set_active", { _id: R, _on: true })).error);
-  check("other owner cannot approve", !!(await ownerB.c.rpc("au_rule_approve", { _id: R })).error);
-  check("principal cannot approve", !!(await pr.c.rpc("au_rule_approve", { _id: R })).error);
+  check("other owner cannot approve", !!(await auApprove(ownerB.c, R)).error);
+  check("principal cannot approve", !!(await auApprove(pr.c, R)).error);
   check("direct table read blocked", ((await owner.c.from("au_jobs").select("id")).data ?? []).length === 0);
   // simulation
   const sim = await owner.c.rpc("au_simulate", { _id: R }); const items = (sim.data as any)?.items ?? [];
   check("simulation lists only open overdue task", items.length === 1 && items[0].task === late && items[0].recipients?.[0] === pr.id, sim);
   check("simulation wrote no notification", (await auNotes(pr.id)) === 0);
   // approve but not active → nothing
-  check("owner approves v1", (await owner.c.rpc("au_rule_approve", { _id: R })).data === 1);
+  check("owner approves v1", (await auApprove(owner.c, R)).data === 1);
   await tick(); check("approved but inactive → no notification", (await auNotes(pr.id)) === 0);
   check("principal cannot activate", !!(await pr.c.rpc("au_rule_set_active", { _id: R, _on: true })).error);
   check("owner activates", !(await owner.c.rpc("au_rule_set_active", { _id: R, _on: true })).error);

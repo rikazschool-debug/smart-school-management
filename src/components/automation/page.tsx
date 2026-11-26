@@ -1,8 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useState } from "react";
-import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, ListTree, PencilRuler, FlaskConical, OctagonAlert, CalendarClock, ScrollText, ShieldAlert, type LucideIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, ListTree, PencilRuler, FlaskConical, OctagonAlert, CalendarClock, ScrollText, ShieldAlert, ClipboardCheck, UserCog, type LucideIcon } from "lucide-react";
+import { ApprovalsTab } from "./approvals";
+import { AccessTab } from "./access";
+import { can, rpc as auRpc, type AuMe } from "./lib";
 import { ask, askText } from "@/components/confirm";
 import { Dashboard } from "./dashboard";
 import { RulesTab } from "./rules";
@@ -10,20 +13,27 @@ import { RunsTab, AuditTab } from "./runs";
 import { Designer } from "./designer/designer";
 import { SimulationTab } from "./simulation";
 import { supabase } from "@/integrations/supabase/client";
-import { ErrorState, LoadingState } from "@/components/states";
+import { ErrorState, ForbiddenState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { selectCls } from "@/components/ui/native-select";
 
-export type AuTab = "overview" | "rules" | "designer" | "events" | "conditions" | "actions" | "schedule" | "simulate" | "monitor" | "failed" | "existing" | "audit" | "settings";
+export type AuTab = "overview" | "rules" | "designer" | "approvals" | "events" | "conditions" | "actions" | "schedule" | "simulate" | "monitor" | "failed" | "existing" | "audit" | "access" | "settings";
 type TabDef = { k: AuTab; l: string; i: LucideIcon };
 /** Grouped so 13 working tabs never crowd one row. The templates library (phase 7) is not shown until it exists. */
 export const AU_GROUPS: { l: string; tabs: TabDef[] }[] = [
-  { l: "الإدارة", tabs: [{ k: "overview", i: LayoutDashboard, l: "نظرة عامة" }, { k: "rules", i: ListTree, l: "قواعد الأتمتة" }, { k: "designer", i: PencilRuler, l: "المصمم المرئي" }] },
+  { l: "الإدارة", tabs: [{ k: "overview", i: LayoutDashboard, l: "نظرة عامة" }, { k: "rules", i: ListTree, l: "قواعد الأتمتة" }, { k: "designer", i: PencilRuler, l: "المصمم المرئي" }, { k: "approvals", i: ClipboardCheck, l: "المراجعة والاعتماد" }] },
   { l: "الأدلة", tabs: [{ k: "events", i: Zap, l: "دليل الأحداث" }, { k: "conditions", i: SlidersHorizontal, l: "الشروط والمتغيرات" }, { k: "actions", i: Play, l: "دليل الإجراءات" }, { k: "schedule", i: Clock, l: "الجدولة" }] },
   { l: "التشغيل", tabs: [{ k: "simulate", i: FlaskConical, l: "المحاكاة والاختبار" }, { k: "monitor", i: Activity, l: "مراقبة التنفيذ" }, { k: "failed", i: OctagonAlert, l: "العمليات الفاشلة" }, { k: "existing", i: CalendarClock, l: "الوظائف القائمة" }, { k: "audit", i: ScrollText, l: "سجل التدقيق" }] },
-  { l: "الضبط", tabs: [{ k: "settings", i: Settings2, l: "الإعدادات والصلاحيات" }] },
+  { l: "الضبط", tabs: [{ k: "access", i: UserCog, l: "الصلاحيات والتفويض" }, { k: "settings", i: Settings2, l: "الإعدادات" }] },
 ];
 export const AU_TABS: TabDef[] = AU_GROUPS.flatMap((g) => g.tabs);
+/** Which permission opens each tab (server re-checks every call). "owner" = system manager only, never delegable. */
+const TAB_PERM: Record<AuTab, string[] | "owner"> = {
+  overview: ["au_view.dashboard"], rules: ["au_view.rules"], designer: ["au_manage.designer"], approvals: ["au_control.review", "au_control.approve", "au_control.reject"],
+  events: ["au_view.events"], conditions: ["au_view.conditions"], actions: ["au_view.actions"], schedule: ["au_view.schedule"], simulate: ["au_manage.simulate"],
+  monitor: ["au_view.runs"], failed: ["au_view.failed"], existing: ["au_view.jobs"], audit: ["au_view.audit"], access: "owner", settings: "owner",
+};
+export const tabAllowed = (me: AuMe | null | undefined, t: AuTab) => { const p = TAB_PERM[t]; return !!me && (me.owner || (p !== "owner" && p.some((k) => can(me, k)))); };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 const EV_ST: Record<string, [string, string]> = { tested: ["مرتبط ومختبَر", "bg-primary/15 text-primary"], wired: ["مرتبط", "bg-primary/10 text-primary"], registered: ["بانتظار الربط", "bg-muted text-muted-foreground"], blocked: ["مغطى بوظيفة قائمة / ممنوع", "bg-destructive/10 text-destructive"] };
@@ -37,18 +47,25 @@ const SENS: Record<string, string> = { normal: "عادي", sensitive: "حساس"
 const TYPE: Record<string, string> = { number: "رقم", percent: "نسبة", text: "نص", status: "حالة", date: "تاريخ", bool: "نعم/لا", uuid: "معرّف" };
 const Badge = ({ s }: { s: [string, string] | undefined }) => <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${s?.[1] ?? ""}`}>{s?.[0]}</span>;
 
+function DelegationNote({ me }: { me: AuMe }) {
+  const d = me.delegations[0] as { all_schools: boolean; schools: string[]; ends_at: string | null; live: boolean };
+  return <p className="rounded-xl border border-primary/20 bg-primary/5 p-2.5 text-xs">تعمل بتفويض من مدير النظام{d.all_schools ? " على جميع مدارسك" : d.schools.length ? ` على: ${d.schools.join("، ")}` : ""}{d.ends_at ? ` حتى ${new Date(d.ends_at).toLocaleDateString("ar-SA", { timeZone: "Asia/Riyadh" })}` : ""}. لا تظهر لك إلا القواعد والعمليات داخل هذا النطاق.</p>;
+}
 function useRegistry(orgId: string) {
   return useQuery({ queryKey: ["au-registry", orgId], queryFn: async () => { const r = await supabase.rpc("au_registry" as never, { _org: orgId } as never); if (r.error) throw r.error; return r.data as unknown as Any; } });
 }
 
-export function AutomationPage({ orgId, tab, rule }: { orgId: string; tab: AuTab; rule?: string | undefined }) {
+export function AutomationPage({ orgId, tab, rule, me }: { orgId: string; tab: AuTab; rule?: string | undefined; me: AuMe }) {
   const navigate = useNavigate();
   const q = useRegistry(orgId);
+  const allowed = tabAllowed(me, tab);
+  // a hidden tab opened by URL is refused here too and logged; the server would refuse its calls anyway
+  useEffect(() => { if (!allowed) void auRpc("au_log_denied", { _org: orgId, _what: `tab:${tab}` }).catch(() => undefined); }, [allowed, orgId, tab]);
   const go = (t: AuTab, r?: string) => navigate({ to: "/app/automation", search: r ? { tab: t, rule: r } : { tab: t } });
   return (
     <div className="space-y-4">
       <nav aria-label="أقسام مركز الأتمتة" className="grid gap-2 rounded-2xl border bg-card p-2 shadow-sm md:grid-cols-[repeat(4,auto)] md:justify-start">
-        {AU_GROUPS.map((g) => (
+        {AU_GROUPS.map((g) => ({ ...g, tabs: g.tabs.filter((t) => tabAllowed(me, t.k)) })).filter((g) => g.tabs.length).map((g) => (
           <div key={g.l} className="flex flex-wrap items-center gap-1 md:border-e md:pe-2 md:last:border-e-0">
             <span className="w-full px-1 text-[11px] font-bold text-muted-foreground md:w-auto">{g.l}</span>
             {g.tabs.map((t) => { const on = tab === t.k; return (
@@ -58,9 +75,13 @@ export function AutomationPage({ orgId, tab, rule }: { orgId: string; tab: AuTab
           </div>
         ))}
       </nav>
+      {!me.owner && me.delegations.length > 0 && <DelegationNote me={me} />}
+      {!allowed ? <ForbiddenState /> : <>
       {tab === "overview" && <><Dashboard orgId={orgId} />{q.data && <Overview r={q.data} />}</>}
-      {tab === "rules" && <RulesTab orgId={orgId} openDesigner={(id) => go("designer", id)} />}
-      {tab === "designer" && <Designer key={rule ?? "new"} orgId={orgId} ruleId={rule} onRule={(id) => go("designer", id)} />}
+      {tab === "rules" && <RulesTab orgId={orgId} me={me} openDesigner={(id) => go("designer", id)} />}
+      {tab === "designer" && <Designer key={rule ?? "new"} orgId={orgId} ruleId={rule} me={me} onRule={(id) => go("designer", id)} />}
+      {tab === "approvals" && <ApprovalsTab orgId={orgId} openDesigner={(id) => go("designer", id)} />}
+      {tab === "access" && <AccessTab orgId={orgId} />}
       {tab === "simulate" && <SimulationTab orgId={orgId} openDesigner={(id) => go("designer", id)} />}
       {tab === "monitor" && <><RunsTab orgId={orgId} /><EngineHealth orgId={orgId} /></>}
       {tab === "failed" && <RunsTab key="failed" orgId={orgId} failed />}
@@ -75,6 +96,7 @@ export function AutomationPage({ orgId, tab, rule }: { orgId: string; tab: AuTab
           {tab === "schedule" && <Schedule r={q.data} />}
         </>
       ))}
+      </>}
     </div>
   );
 }
@@ -257,10 +279,10 @@ function SettingsTab({ orgId }: { orgId: string }) {
       </Card>
       <Card title="الصلاحيات">
         <ul className="list-disc space-y-1 ps-5 text-sm">
-          <li>إدارة المركز (الإنشاء والاعتماد والتفعيل والإيقاف والإعدادات) لمدير النظام فقط، ويتحقق الخادم من ذلك في كل أمر.</li>
-          <li>مالك المنصة يملك إيقافًا عامًا لكل المجموعات.</li>
-          <li>لا تُمنح أي صلاحية جديدة لأي دور؛ بقية المستخدمين يستلمون الإشعارات فقط ضمن صلاحياتهم.</li>
-          <li>كل تعديل أو اعتماد أو تفعيل أو إيقاف يُسجَّل في «سجل التدقيق». توزيع الصلاحيات والتفويض مؤجل للمرحلة السادسة.</li>
+          <li>الإعدادات والإيقاف الطارئ لمدير النظام فقط ولا تُفوَّض.</li>
+          <li>بقية الوظائف تُمنح من شجرة الصلاحيات، ولا تعمل إلا مع تفويض نشط محدد النطاق والمدة من تبويب «الصلاحيات والتفويض».</li>
+          <li>الاعتماد والتفعيل لمدير المدرسة أو الوكيل فقط، والقواعد عالية الخطورة لمدير النظام وحده، ولا يعتمد أحد قاعدة أنشأها.</li>
+          <li>مالك المنصة يملك إيقافًا عامًا لكل المجموعات، وكل إجراء يُسجَّل في «سجل التدقيق».</li>
         </ul>
       </Card>
     </div>

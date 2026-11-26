@@ -9,7 +9,7 @@ const NAVIGATION_GROUPS: { label: string; keys: NavKey[] }[] = [
   { label: "الأنشطة والفعاليات", keys: ["events"] },
   { label: "التواصل والتعاون", keys: ["communication", "comm_groups", "meetings", "collaboration", "circulars", "hub_notices", "hub_meetings", "hub_circulars"] },
   { label: "التقارير", keys: ["reports", "results", "grades", "visits", "evaluation"] },
-  { label: "الإعدادات", keys: ["tags", "chat_settings", "comm_manage", "members", "permissions"] },
+  { label: "الإعدادات", keys: ["tags", "chat_settings", "comm_manage", "members", "permissions", "automation"] },
   // Keep additional authorised workspaces; regrouping never drops a role's pages.
   { label: "الموارد والخدمات", keys: ["hr", "hr_training", "finance", "procurement", "operations", "transport", "maintenance", "bus_maintenance"] },
   { label: "إدارة المنصة", keys: ["platform", "platform_subs", "signup_requests", "platform_notices"] },

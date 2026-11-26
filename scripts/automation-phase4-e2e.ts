@@ -2,6 +2,7 @@ import "./lib/user-pool.ts";
 import "./lib/au-suite-lock.ts";
 // Automation phase 4: wired events, instant triggers, schedules, workflows, recipients, limits, durability, monitoring, stress.
 // Run: NODE_PATH=node_modules bun scripts/automation-phase4-e2e.ts   (writes /tmp/au-phase4.json with measurements)
+import { auApprove } from "./lib/au-approve";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
@@ -31,7 +32,7 @@ async function rule(name: string, event: string, def: any, schools: string[] | n
   const s = await owner.c.rpc("au_rule_save", { _org: org, _id: null, _name: name, _event: event, _schools: schools, _def: def });
   if (s.error) throw new Error(`save ${event}: ${s.error.message}`); return s.data as string;
 }
-async function go(id: string) { const a = await owner.c.rpc("au_rule_approve", { _id: id }); if (a.error) throw a.error; const b = await owner.c.rpc("au_rule_set_active", { _id: id, _on: true }); if (b.error) throw b.error; }
+async function go(id: string) { const a = await auApprove(owner.c, id); if (a.error) throw a.error; const b = await owner.c.rpc("au_rule_set_active", { _id: id, _on: true }); if (b.error) throw b.error; }
 const off = async (id: string) => owner.c.rpc("au_rule_set_active", { _id: id, _on: false });
 try {
   owner = await user("owner"); const pr = await user("pr"), vp = await user("vp"), co = await user("co"), nu = await user("nu"), t1 = await user("t1"), ownerB = await user("ownerb");
@@ -289,7 +290,7 @@ try {
     await admin.from("adm_tasks").insert({ school_id: SB, title: "مهمة B", assignee: ownerB.id, assigner: ownerB.id, due_date: day(-2), status: "new" });
     await admin.from("adm_tasks").insert(Array.from({ length: 1500 }, (_, k) => ({ school_id: S, title: "عدالة " + k, assignee: t1.id, assigner: pr.id, due_date: day(-2), status: "new" })));
     const big = await rule("كبيرة", "adm.task.overdue", { steps: [{ type: "notify", recipients: ["assigner"], title: "عدالة-أ" }], schedule: { type: "condition", quiet: false } }); await go(big);
-    await ownerB.c.rpc("au_rule_approve", { _id: ob2.data }); await ownerB.c.rpc("au_rule_set_active", { _id: ob2.data, _on: true });
+    await auApprove(ownerB.c, ob2.data); await ownerB.c.rpc("au_rule_set_active", { _id: ob2.data, _on: true });
     await tick();
     check("fair share: small org served in the same cycle as a 1500-job org", (await notes(ownerB.id)).filter((n) => n.title === "عدالة").length === 1);
     await off(big); await ownerB.c.rpc("au_rule_set_active", { _id: ob2.data, _on: false });

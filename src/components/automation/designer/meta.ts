@@ -22,6 +22,19 @@ export const START_TYPES: { k: string; l: string; types: string[] }[] = [
 ];
 
 const SERVER: [RegExp, string][] = [
+  [/forbidden|permission denied|42501/, "لا تملك صلاحية هذا الإجراء ضمن نطاق تفويضك"],
+  [/simulate the saved rule first/, "احفظ القاعدة ثم تحقق منها وشغّل المحاكاة قبل الإرسال"], [/submit for approval first/, "أرسل القاعدة للاعتماد أولًا"],
+  [/no changes to approve/, "لا تغييرات عن الإصدار المعتمد"], [/rule changed since submission/, "تغيّرت القاعدة بعد إرسالها؛ أعد الإرسال"],
+  [/rule is not awaiting review/, "القاعدة لا تنتظر المراجعة"], [/rule is not awaiting a decision/, "القاعدة لا تنتظر قرارًا"],
+  [/high risk rules are approved by the system manager only/, "القواعد عالية الخطورة يعتمدها مدير النظام فقط"],
+  [/high risk rules are activated by the system manager only/, "القواعد عالية الخطورة يفعّلها مدير النظام فقط"],
+  [/cannot approve your own or reviewed rule/, "لا يمكنك اعتماد قاعدة أنشأتها أو أرسلتها أو راجعتها"], [/cannot decide on your own rule/, "لا يمكنك مراجعة قاعدتك أو البت فيها"],
+  [/separate approver required/, "سياسة المجموعة تشترط معتمدًا غير منشئ القاعدة"], [/submitter delegation ended/, "انتهى تفويض من أرسل القاعدة؛ أعدها للتعديل"],
+  [/approval authority ended/, "انتهت صلاحية من اعتمد هذا الإصدار؛ اعتمده من جديد"], [/reason required/, "اكتب السبب (3 أحرف على الأقل)"],
+  [/cannot delegate to yourself/, "لا يمكنك تفويض نفسك"], [/user already has full authority/, "هذا المستخدم يملك الصلاحية الكاملة أصلًا"],
+  [/not a staff member/, "التفويض للموظفين النشطين في المجموعة فقط"], [/scope exceeds the user's schools/, "النطاق يتجاوز مدارس هذا الموظف"],
+  [/end must be after start/, "تاريخ النهاية يجب أن يكون بعد البداية"], [/action not delegable/, "هذا الإجراء لا يُفوَّض"],
+  [/choose schools or all/, "اختر مدرسة واحدة على الأقل أو «جميع المدارس»"], [/already revoked/, "التفويض مسحوب مسبقًا"],
   [/recipient (\w+) already notified by an existing service/, "المستلم «$1» يُبلَّغ أصلًا من خدمة قائمة لهذا الحدث"],
   [/recipient (\w+) not allowed/, "المستلم «$1» غير مؤهل لهذا الحدث"], [/assignee (\w+) not allowed/, "المكلَّف «$1» غير مؤهل لهذا الحدث"],
   [/guardian not allowed/, "لا يُسمح بولي الأمر في هذا الحدث"], [/central events notify the owner only/, "أحداث الإدارة المركزية تُرسل لمدير النظام فقط"],
