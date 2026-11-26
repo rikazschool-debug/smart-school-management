@@ -1367,3 +1367,8 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 ## Nov 26 2026 — مركز الأتمتة: المرحلة السادسة (اختبار فقط)
 - صلاحيات au_view/au_manage/au_control في الشجرة دون منح تلقائي؛ تفويضات au_delegations محددة النطاق والمدة؛ دورة تحقق ← محاكاة ← إرسال ← مراجعة ← اعتماد ← تفعيل؛ خطورة على الخادم؛ إعادة تحقق عند كل تنفيذ.
 - الأدلة: automation-phase6-e2e 82/82؛ automation 30/30، registry 40/40، phase4 105/105، phase4b 67/67، phase5 50/50، admin 51/51، perm-catalog 9/9، perm6 20/20، perm7 20/20؛ اختبارات الواجهة 25/25؛ جولة متصفح بثلاثة أدوار. التقرير: docs/automation-center-phase6.md.
+
+## 2026-11-26 — مركز الأتمتة: توسعة المنصة التشغيلية — المرحلة A (مراجعة وخطة)
+- الحالة: منفّذ (تحليل فقط) — لا تعديل على المحرك أو المصمم أو قاعدة البيانات أو الوظائف المجدولة؛ لا قواعد مفعّلة؛ لا إرسال.
+- التقارير: docs/automation-platform-expansion.md، docs/automation-data-sources.md، docs/automation-action-registry.md، docs/automation-coverage-matrix.md (مولّدة بقراءة فقط عبر scripts/automation-expansion-matrix.ts).
+- أهم فجوة: السيناريو المالي لكل طالب غير ممكن اليوم (fin.due.overdue مجمّع لكل مدرسة أسبوعيًا). القرارات السبعة بانتظار اعتماد المستخدم قبل المرحلة B.
