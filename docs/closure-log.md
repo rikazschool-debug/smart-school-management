@@ -1376,3 +1376,9 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 ## 2026-11-26 — مركز الأتمتة: المرحلة B (مصادر البيانات والاستعلامات العامة، اختبار فقط)
 - الحالة: منفّذ ومختَبَر — au_sources (74 موردًا مصنّفًا + 6 مصادر ds.* مختبرة)، _au_ds/_au_srcp، au_query، au_lookup، إعدادات المصدر، دفعات بالمؤشر، إعادة قراءة حيّة، not_in، _sf_balances (توأم جماعي لـ _sf_balance الذي بقي كما هو). لا قواعد مفعّلة ولا إرسال ولا Cron جديد ولا إنتاج.
 - الأدلة: automation-platform-b-e2e 67/67؛ automation 30/30، registry 40/40، phase4 105/105، phase4b 67/67، phase5 50/50، phase6 82/82، admin 51/51؛ student-finance 32/32، sf-carry 19/19، sf-years 14/14، sf-notify 14/14، sf-security 25/25، sf-transfer 11/11. حمل: 5000 طالب رسوم ≥2000 = 1.0s، غياب 100 ألف يوم = 2.7s. التقرير: docs/automation-platform-phase-b.md.
+
+## 2026-11-26 — مركز الأتمتة: استكمال المرحلة B (33 مصدرًا من دليل التكاملات، اختبار فقط)
+- الحالة: منفّذ ومختَبَر لـ25 مصدرًا؛ منفّذ دون اختبار ببيانات لـ8 (لا سجلات اختبار). 74 موردًا مصنفة بلا تداخل (33 مربوط، 33 مغطى مع ذكر المغطِّي، 4 تحتاج خدمة، 1 مؤجل للتقارير، 3 مستبعدة) + 8 مصادر داخلية محصورة.
+- التغييرات: _au_ds_api (قارئ موحد فوق _api_rows_all)، _au_api_ctx/_au_api_extra، صلاحيات `قسم:إجراء` عبر _au_ps_ok في _au_ds_ok، au_query (count_distinct، pct، تجميع زمني، سجل واحد)، au_lookup (ترقيم، قوائم مترابطة، رفض مدارس خارجية)، _au_fin_guard، عزل أعطال المسح في automation_tick، أعمدة au_sources: date_field/org_section/covered_by وحالة deferred.
+- الأدلة: automation-platform-b2-e2e 39/39؛ انحدار: platform-b 67/67، registry 40/40، automation 30/30، phase4 105/105، phase4b 67/67، phase5 50/50، phase6 82/82، sf-carry 19/19. حمل 10 آلاف طالب: دفعة 0.8s، استعلام كامل 3.1s. 50 ألفًا لم يُقس (حد معروف موثق).
+- التقرير: docs/automation-platform-phase-b-final.md. لا إنتاج، لا نشر، لا قواعد مفعّلة، لا رسائل، لا تغيير مهام مجدولة.

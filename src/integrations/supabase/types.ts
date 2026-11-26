@@ -4027,13 +4027,16 @@ export type Database = {
           api_key: string | null
           area: string
           batch: number
+          covered_by: string | null
           created_at: string
+          date_field: string | null
           event_code: string | null
           excluded: Json
           key: string
           label: string
           max_rows: number
           menu: string
+          org_section: string | null
           params: Json
           perm_sections: string[]
           reason: string | null
@@ -4048,13 +4051,16 @@ export type Database = {
           api_key?: string | null
           area?: string
           batch?: number
+          covered_by?: string | null
           created_at?: string
+          date_field?: string | null
           event_code?: string | null
           excluded?: Json
           key: string
           label: string
           max_rows?: number
           menu: string
+          org_section?: string | null
           params?: Json
           perm_sections?: string[]
           reason?: string | null
@@ -4069,13 +4075,16 @@ export type Database = {
           api_key?: string | null
           area?: string
           batch?: number
+          covered_by?: string | null
           created_at?: string
+          date_field?: string | null
           event_code?: string | null
           excluded?: Json
           key?: string
           label?: string
           max_rows?: number
           menu?: string
+          org_section?: string | null
           params?: Json
           perm_sections?: string[]
           reason?: string | null
@@ -26540,6 +26549,12 @@ export type Database = {
         Returns: undefined
       }
       _att_section: { Args: { _student: string }; Returns: string }
+      _au_api_ctx: { Args: { _ev: string; td: string; x: Json }; Returns: Json }
+      _au_api_date: { Args: { _t: string }; Returns: string }
+      _au_api_extra: {
+        Args: { _res: string; td: string; x: Json }
+        Returns: Json
+      }
       _au_appr_ok: {
         Args: {
           _act: string
@@ -26634,6 +26649,22 @@ export type Database = {
           school: string
         }[]
       }
+      _au_ds_api: {
+        Args: {
+          _entity: string
+          _ev: string
+          _lim: number
+          _org: string
+          _params: Json
+          _schools: string[]
+        }
+        Returns: {
+          ctx: Json
+          entity: string
+          period: string
+          school: string
+        }[]
+      }
       _au_ds_ok: {
         Args: {
           _any: boolean
@@ -26664,6 +26695,10 @@ export type Database = {
       _au_exec: {
         Args: { j: Database["public"]["Tables"]["au_jobs"]["Row"] }
         Returns: string
+      }
+      _au_fin_guard: {
+        Args: { _org: string; _schools: string[] }
+        Returns: undefined
       }
       _au_fp: {
         Args: { r: Database["public"]["Tables"]["au_rules"]["Row"] }
@@ -26722,6 +26757,10 @@ export type Database = {
           sec: string
           sec_label: string
         }[]
+      }
+      _au_ps_ok: {
+        Args: { _ps: string; _school: string; _uid: string }
+        Returns: boolean
       }
       _au_rcpt: {
         Args: {
@@ -30721,7 +30760,10 @@ export type Database = {
         Args: {
           _event: string
           _key: string
+          _limit?: number
+          _offset?: number
           _org: string
+          _parent?: Json
           _q?: string
           _schools?: string[]
         }
@@ -30741,6 +30783,7 @@ export type Database = {
         Args: {
           _aggs?: Json
           _desc?: boolean
+          _entity?: string
           _event: string
           _group?: string
           _limit?: number

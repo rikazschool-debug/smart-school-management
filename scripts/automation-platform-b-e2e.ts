@@ -48,9 +48,9 @@ try {
   const srcs = reg.sources as any[], ds = (reg.events as any[]).filter((e) => e.code.startsWith("ds."));
   const cls = (s: string) => srcs.filter((x) => x.status === s).length;
   M["sources"] = { total: srcs.length, wired: cls("wired") + cls("tested"), eligible: cls("eligible"), needs_service: cls("needs_service"), excluded: cls("excluded"), covered: cls("covered") };
-  check("registry: 74 API resources classified + 6 linked sources", srcs.filter((x) => x.key.startsWith("api:")).length === 74 && srcs.filter((x) => x.event_code).length === 6, M["sources"]);
-  check("every excluded / covered / needs-service source has a reason", srcs.filter((x) => ["excluded", "covered", "needs_service"].includes(x.status)).every((x) => (x.reason ?? "").length > 5));
-  check("six data sources are visible as scan events with settings", ds.length === 6 && ds.every((e) => e.source_kind === "scan") && srcs.filter((x) => x.event_code).every((x) => Array.isArray(x.params) && x.params.length >= 1), ds.map((e) => e.code));
+  check("registry: 74 API resources classified + 39 linked sources (6 internal + 33 catalogue)", srcs.filter((x) => x.key.startsWith("api:")).length === 74 && srcs.filter((x) => x.event_code).length === 39, M["sources"]);
+  check("every excluded / covered / needs-service / deferred source has a reason", srcs.filter((x) => ["excluded", "covered", "needs_service", "deferred"].includes(x.status)).every((x) => (x.reason ?? "").length > 5));
+  check("39 data sources are visible as scan events with settings", ds.length === 39 && ds.every((e) => e.source_kind === "scan") && srcs.filter((x) => x.event_code).every((x) => Array.isArray(x.params) && x.params.length >= 1), ds.map((e) => e.code));
   const vars = reg.variables as any[];
   const dsv = (ev: string) => vars.filter((v) => v.event_code === ev);
   check("fields are typed with lookups; no ID/phone/IBAN fields registered", ["national_id", "phone", "iban", "salary", "notes", "email"].every((k) => !vars.some((v) => v.event_code.startsWith("ds.") && v.key.includes(k))) && dsv("ds.student_accounts").filter((v) => v.lookup).length >= 5, dsv("ds.student_accounts").length);
