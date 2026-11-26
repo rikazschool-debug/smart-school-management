@@ -1,0 +1,2 @@
+# automation rules
+- Automation data sources (ds.*): au_sources is the registry; each source is one closed reader in _au_ds behind _au_srcp (fields = registered au_variables only, org/school limits always applied); au_query/au_lookup also require the source section view perm per school (_au_ds_ok) on top of delegation; scans advance au_rules.scan_cursor in batches; bulk balances use _sf_balances, which must stay identical to _sf_balance (never edit _sf_balance for automation). Tests: automation-platform-b-e2e, automation-platform-b-perf.
