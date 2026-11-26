@@ -26,6 +26,7 @@ import { Route as AuthenticatedAppAdmissionsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAppAttendanceRouteImport } from './routes/_authenticated/app/attendance'
 import { Route as AuthenticatedAppAttendanceScanRouteImport } from './routes/_authenticated/app/attendance-scan'
 import { Route as AuthenticatedAppAttendanceStationRouteImport } from './routes/_authenticated/app/attendance-station'
+import { Route as AuthenticatedAppAutomationRouteImport } from './routes/_authenticated/app/automation'
 import { Route as AuthenticatedAppBusMaintenanceRouteImport } from './routes/_authenticated/app/bus-maintenance'
 import { Route as AuthenticatedAppCallsRouteImport } from './routes/_authenticated/app/calls'
 import { Route as AuthenticatedAppChatSettingsRouteImport } from './routes/_authenticated/app/chat-settings'
@@ -215,6 +216,12 @@ const AuthenticatedAppAttendanceStationRoute =
   AuthenticatedAppAttendanceStationRouteImport.update({
     id: '/attendance-station',
     path: '/attendance-station',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppAutomationRoute =
+  AuthenticatedAppAutomationRouteImport.update({
+    id: '/automation',
+    path: '/automation',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppBusMaintenanceRoute =
@@ -807,6 +814,7 @@ export interface FileRoutesByFullPath {
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
   '/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
   '/app/attendance-station': typeof AuthenticatedAppAttendanceStationRoute
+  '/app/automation': typeof AuthenticatedAppAutomationRoute
   '/app/bus-maintenance': typeof AuthenticatedAppBusMaintenanceRoute
   '/app/calls': typeof AuthenticatedAppCallsRoute
   '/app/chat-settings': typeof AuthenticatedAppChatSettingsRoute
@@ -924,6 +932,7 @@ export interface FileRoutesByTo {
   '/app/attendance': typeof AuthenticatedAppAttendanceRoute
   '/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
   '/app/attendance-station': typeof AuthenticatedAppAttendanceStationRoute
+  '/app/automation': typeof AuthenticatedAppAutomationRoute
   '/app/bus-maintenance': typeof AuthenticatedAppBusMaintenanceRoute
   '/app/calls': typeof AuthenticatedAppCallsRoute
   '/app/chat-settings': typeof AuthenticatedAppChatSettingsRoute
@@ -1044,6 +1053,7 @@ export interface FileRoutesById {
   '/_authenticated/app/attendance': typeof AuthenticatedAppAttendanceRoute
   '/_authenticated/app/attendance-scan': typeof AuthenticatedAppAttendanceScanRoute
   '/_authenticated/app/attendance-station': typeof AuthenticatedAppAttendanceStationRoute
+  '/_authenticated/app/automation': typeof AuthenticatedAppAutomationRoute
   '/_authenticated/app/bus-maintenance': typeof AuthenticatedAppBusMaintenanceRoute
   '/_authenticated/app/calls': typeof AuthenticatedAppCallsRoute
   '/_authenticated/app/chat-settings': typeof AuthenticatedAppChatSettingsRoute
@@ -1164,6 +1174,7 @@ export interface FileRouteTypes {
     | '/app/attendance'
     | '/app/attendance-scan'
     | '/app/attendance-station'
+    | '/app/automation'
     | '/app/bus-maintenance'
     | '/app/calls'
     | '/app/chat-settings'
@@ -1281,6 +1292,7 @@ export interface FileRouteTypes {
     | '/app/attendance'
     | '/app/attendance-scan'
     | '/app/attendance-station'
+    | '/app/automation'
     | '/app/bus-maintenance'
     | '/app/calls'
     | '/app/chat-settings'
@@ -1400,6 +1412,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/attendance'
     | '/_authenticated/app/attendance-scan'
     | '/_authenticated/app/attendance-station'
+    | '/_authenticated/app/automation'
     | '/_authenticated/app/bus-maintenance'
     | '/_authenticated/app/calls'
     | '/_authenticated/app/chat-settings'
@@ -1647,6 +1660,13 @@ declare module '@tanstack/react-router' {
       path: '/attendance-station'
       fullPath: '/app/attendance-station'
       preLoaderRoute: typeof AuthenticatedAppAttendanceStationRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/app/automation': {
+      id: '/_authenticated/app/automation'
+      path: '/automation'
+      fullPath: '/app/automation'
+      preLoaderRoute: typeof AuthenticatedAppAutomationRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/app/bus-maintenance': {
@@ -2359,6 +2379,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppAttendanceRoute: typeof AuthenticatedAppAttendanceRoute
   AuthenticatedAppAttendanceScanRoute: typeof AuthenticatedAppAttendanceScanRoute
   AuthenticatedAppAttendanceStationRoute: typeof AuthenticatedAppAttendanceStationRoute
+  AuthenticatedAppAutomationRoute: typeof AuthenticatedAppAutomationRoute
   AuthenticatedAppBusMaintenanceRoute: typeof AuthenticatedAppBusMaintenanceRoute
   AuthenticatedAppCallsRoute: typeof AuthenticatedAppCallsRoute
   AuthenticatedAppChatSettingsRoute: typeof AuthenticatedAppChatSettingsRoute
@@ -2457,6 +2478,7 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppAttendanceScanRoute: AuthenticatedAppAttendanceScanRoute,
   AuthenticatedAppAttendanceStationRoute:
     AuthenticatedAppAttendanceStationRoute,
+  AuthenticatedAppAutomationRoute: AuthenticatedAppAutomationRoute,
   AuthenticatedAppBusMaintenanceRoute: AuthenticatedAppBusMaintenanceRoute,
   AuthenticatedAppCallsRoute: AuthenticatedAppCallsRoute,
   AuthenticatedAppChatSettingsRoute: AuthenticatedAppChatSettingsRoute,

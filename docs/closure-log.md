@@ -1341,3 +1341,7 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - جداول au_* ودوال au_rule_save/approve/set_active، au_simulate، au_set_kill، au_platform_kill، au_status، automation_tick؛ ربط بمهمة rikaz-homework-tick القائمة.
 - أول حدث adm.task.overdue → إشعار داخلي لمُسنِد التكليف (لا تكرار مع adm_daily_reminders الذي يذكّر المكلَّف قبل يوم).
 - automation-e2e 30/30، admin-e2e 51/51. لا قاعدة مفعّلة.
+
+## 2026-11-26 — مركز الأتمتة: المرحلة الثالثة (الدليل) — اختبار فقط
+- au_sections/au_events/au_variables/au_operators/au_actions/au_recipients/au_trigger_types، _au_check_cond/_au_eval، au_registry/au_validate/au_registry_gaps، صفحة /app/automation (قراءة فقط).
+- automation-registry-e2e 39/39، automation-e2e 30/30، admin-e2e 51/51، تشغيل cron فعلي ناجح. لا قاعدة مفعّلة.

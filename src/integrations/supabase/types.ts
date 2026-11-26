@@ -3253,20 +3253,47 @@ export type Database = {
       au_actions: {
         Row: {
           code: string
+          dedupe: string | null
           enabled: boolean
           label: string
+          needs_human: boolean
+          note: string | null
+          optional: string[]
+          readiness: string
+          required: string[]
+          retry: string | null
+          risk: string
+          service: string | null
           side_effects: string
         }
         Insert: {
           code: string
+          dedupe?: string | null
           enabled?: boolean
           label: string
+          needs_human?: boolean
+          note?: string | null
+          optional?: string[]
+          readiness?: string
+          required?: string[]
+          retry?: string | null
+          risk?: string
+          service?: string | null
           side_effects: string
         }
         Update: {
           code?: string
+          dedupe?: string | null
           enabled?: boolean
           label?: string
+          needs_human?: boolean
+          note?: string | null
+          optional?: string[]
+          readiness?: string
+          required?: string[]
+          retry?: string | null
+          risk?: string
+          service?: string | null
           side_effects?: string
         }
         Relationships: []
@@ -3303,19 +3330,49 @@ export type Database = {
       }
       au_events: {
         Row: {
+          area: string
           code: string
+          dedupe: string | null
+          existing: string | null
           label: string
+          note: string | null
           recipients: string[]
+          section: string | null
+          sensitivity: string
+          source: string | null
+          source_kind: string
+          status: string
+          timing: string | null
         }
         Insert: {
+          area?: string
           code: string
+          dedupe?: string | null
+          existing?: string | null
           label: string
+          note?: string | null
           recipients: string[]
+          section?: string | null
+          sensitivity?: string
+          source?: string | null
+          source_kind?: string
+          status?: string
+          timing?: string | null
         }
         Update: {
+          area?: string
           code?: string
+          dedupe?: string | null
+          existing?: string | null
           label?: string
+          note?: string | null
           recipients?: string[]
+          section?: string | null
+          sensitivity?: string
+          source?: string | null
+          source_kind?: string
+          status?: string
+          timing?: string | null
         }
         Relationships: []
       }
@@ -3377,6 +3434,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      au_operators: {
+        Row: {
+          arity: string
+          code: string
+          label: string
+          types: string[]
+        }
+        Insert: {
+          arity: string
+          code: string
+          label: string
+          types: string[]
+        }
+        Update: {
+          arity?: string
+          code?: string
+          label?: string
+          types?: string[]
+        }
+        Relationships: []
       }
       au_outbox: {
         Row: {
@@ -3441,6 +3519,27 @@ export type Database = {
         }
         Relationships: []
       }
+      au_recipients: {
+        Row: {
+          available: boolean
+          code: string
+          label: string
+          resolver: string
+        }
+        Insert: {
+          available?: boolean
+          code: string
+          label: string
+          resolver: string
+        }
+        Update: {
+          available?: boolean
+          code?: string
+          label?: string
+          resolver?: string
+        }
+        Relationships: []
+      }
       au_rule_versions: {
         Row: {
           approved_at: string
@@ -3480,6 +3579,7 @@ export type Database = {
         Row: {
           active: boolean
           approved_version: number | null
+          area: string
           created_at: string
           created_by: string
           draft: Json
@@ -3493,6 +3593,7 @@ export type Database = {
         Insert: {
           active?: boolean
           approved_version?: number | null
+          area?: string
           created_at?: string
           created_by: string
           draft: Json
@@ -3506,6 +3607,7 @@ export type Database = {
         Update: {
           active?: boolean
           approved_version?: number | null
+          area?: string
           created_at?: string
           created_by?: string
           draft?: Json
@@ -3563,6 +3665,36 @@ export type Database = {
         }
         Relationships: []
       }
+      au_sections: {
+        Row: {
+          area: string
+          existing: string | null
+          key: string
+          label: string
+          parent: string | null
+          reason: string | null
+          status: string
+        }
+        Insert: {
+          area: string
+          existing?: string | null
+          key: string
+          label: string
+          parent?: string | null
+          reason?: string | null
+          status?: string
+        }
+        Update: {
+          area?: string
+          existing?: string | null
+          key?: string
+          label?: string
+          parent?: string | null
+          reason?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       au_settings: {
         Row: {
           kill_switch: boolean
@@ -3592,6 +3724,62 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      au_trigger_types: {
+        Row: {
+          available: boolean
+          code: string
+          label: string
+          note: string | null
+        }
+        Insert: {
+          available?: boolean
+          code: string
+          label: string
+          note?: string | null
+        }
+        Update: {
+          available?: boolean
+          code?: string
+          label?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
+      au_variables: {
+        Row: {
+          event_code: string
+          key: string
+          label: string
+          options: string[] | null
+          source: string
+          type: string
+        }
+        Insert: {
+          event_code: string
+          key: string
+          label: string
+          options?: string[] | null
+          source: string
+          type: string
+        }
+        Update: {
+          event_code?: string
+          key?: string
+          label?: string
+          options?: string[] | null
+          source?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_variables_event_code_fkey"
+            columns: ["event_code"]
+            isOneToOne: false
+            referencedRelation: "au_events"
+            referencedColumns: ["code"]
           },
         ]
       }
@@ -25926,6 +26114,10 @@ export type Database = {
         Returns: undefined
       }
       _att_section: { Args: { _student: string }; Returns: string }
+      _au_check_cond: {
+        Args: { _depth?: number; _event: string; c: Json }
+        Returns: number
+      }
       _au_check_def: { Args: { _event: string; d: Json }; Returns: Json }
       _au_check_schools: {
         Args: { _org: string; _s: string[] }
@@ -25943,6 +26135,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _au_eval: { Args: { c: Json; ctx: Json }; Returns: boolean }
       _au_overdue: {
         Args: {
           _grace: number
@@ -25960,6 +26153,7 @@ export type Database = {
         }[]
       }
       _au_owner: { Args: { _org: string }; Returns: undefined }
+      _au_task_ctx: { Args: { _task: string }; Returns: Json }
       _audit: {
         Args: {
           _action: string
@@ -29736,6 +29930,8 @@ export type Database = {
         Args: { _on: boolean; _reason: string }
         Returns: undefined
       }
+      au_registry: { Args: { _org: string }; Returns: Json }
+      au_registry_gaps: { Args: never; Returns: Json }
       au_rule_approve: { Args: { _id: string }; Returns: number }
       au_rule_save: {
         Args: {
@@ -29758,6 +29954,10 @@ export type Database = {
       }
       au_simulate: { Args: { _id: string }; Returns: Json }
       au_status: { Args: { _org: string }; Returns: Json }
+      au_validate: {
+        Args: { _def: Json; _event: string; _org: string }
+        Returns: Json
+      }
       automation_tick: { Args: { _budget_ms?: number }; Returns: Json }
       available_substitutes: {
         Args: { _date: string; _slot: string }

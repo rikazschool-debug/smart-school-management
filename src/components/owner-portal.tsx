@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, MessagesSquare, UsersRound, Star, ArrowLeft, Building2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy, Phone, Plug } from "lucide-react";
+import { BookOpen, MessagesSquare, UsersRound, Star, ArrowLeft, Building2, Construction, IdCard, KeyRound, Link2, Lock, PauseCircle, PencilLine, Plus, ShieldCheck, Wallet, Wrench, Bus, UserPlus, Megaphone, CalendarDays, type LucideIcon, LifeBuoy, Phone, Plug, Zap } from "lucide-react";
 import { db, type Row } from "@/components/crud-page";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -147,6 +147,14 @@ const CARDS: Card[] = [
       { icon: Plug, label: "سجل الطلبات", to: "/app/integrations", search: { tab: "logs" } },
       { icon: Plug, label: "إشعارات Webhooks", to: "/app/integrations", search: { tab: "webhooks" } },
       { icon: Wallet, label: "العمليات الواردة", to: "/app/integrations", search: { tab: "inbox" } },
+    ],
+  },
+  {
+    key: "automation", title: "مركز الأتمتة الذكية", icon: Zap, to: "/app/automation", open: "فتح مركز الأتمتة",
+    desc: "دليل موحد للأحداث والشروط والإجراءات، وقواعد أتمتة لا تعمل إلا باعتمادك، مع إيقاف طارئ وسجل كامل.",
+    features: [
+      { icon: Zap, label: "دليل الأحداث", to: "/app/automation", search: { tab: "events" } },
+      { icon: Zap, label: "دليل الإجراءات", to: "/app/automation", search: { tab: "actions" } },
     ],
   },
   {
