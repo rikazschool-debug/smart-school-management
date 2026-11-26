@@ -64,3 +64,16 @@
 - [x] C3 Engine + designer picker integration, dedupe, fallback/failure logging, recheck at execution
 - [x] C4 Acceptance tests, regressions, perf/security, multi-role visual review
 - [x] C5 docs/automation-platform-phase-c.md + matrix
+
+# Automation: phase C gaps + phase D (operational automation)
+- [ ] C-gap1 Document / bus responsible pickers in their own screens (logged)
+- [ ] C-gap2 Security test of the 6 new tools: direct call, delegation bypass, isolation
+- [ ] C-gap3 Visual review of recipient editor + responsibilities; multi-recipient/fallback/dedupe/responsible-change-mid-run test
+- [ ] D1 Operational action catalogue (create/update/task/route/compute/report/doc/integration-ready) with service, I/O, perms, risk, approval, dedupe
+- [ ] D2 Advanced flows: step outputs, per-record/aggregate, branch, wait (duration/date/condition/approval), recheck, error path+retry, goal stop, resumable
+- [ ] D3 Central server report service (PDF/Excel), stored securely, shared with authorized recipients
+- [ ] D4 Documents from templates; HR letters as requests awaiting human approval
+- [ ] D5 Review 42 blocked events; allow legitimate custom automation
+- [ ] D6 Designer wiring of new actions (minimal)
+- [ ] D7 Acceptance scenarios 1–6 (no notification/WhatsApp), regressions, security, concurrency, visual
+- [ ] D8 docs/automation-platform-phase-d.md + coverage matrix
