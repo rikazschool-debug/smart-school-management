@@ -1345,3 +1345,7 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 ## 2026-11-26 — مركز الأتمتة: المرحلة الثالثة (الدليل) — اختبار فقط
 - au_sections/au_events/au_variables/au_operators/au_actions/au_recipients/au_trigger_types، _au_check_cond/_au_eval، au_registry/au_validate/au_registry_gaps، صفحة /app/automation (قراءة فقط).
 - automation-registry-e2e 39/39، automation-e2e 30/30، admin-e2e 51/51، تشغيل cron فعلي ناجح. لا قاعدة مفعّلة.
+
+## 2026-11-26 — مركز الأتمتة: المرحلة الرابعة (الربط) — اختبار فقط
+- 16 حدثًا مرتبطًا ومختبَرًا (3 فورية)، 9 إجراءات جاهزة، 11 نوع تشغيل، مراقبة الوظائف القائمة، إعدادات فترات الهدوء والحدود. عامل مركزي rikaz-automation كل دقيقة على الاختبار.
+- automation-phase4-e2e 105/105، automation-e2e 30/30، automation-registry-e2e 39/39، admin-e2e 51/51. لا قاعدة مفعّلة. التفاصيل: docs/automation-center-phase4.md.

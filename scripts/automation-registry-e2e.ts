@@ -46,9 +46,9 @@ try {
   const missing: string[] = [];
   for (const e of R.events) { const src = String(e.source); if (/[*\s(]/.test(src) || src === "sf_dashboard") continue; const r = await admin.from(src).select("*", { head: true, count: "exact" }).limit(1); if (r.error) missing.push(`${e.code}:${src}`); }
   check("all event sources exist", missing.length === 0, missing);
-  check("only executable triggers marked available", R.triggers.filter((t: any) => t.available).map((t: any) => t.code).sort().join() === "condition,every_15m", R.triggers);
+  check("all trigger types proven and available (phase 4)", R.triggers.every((t: any) => t.available), R.triggers);
   check("forbidden actions registered as forbidden", ["finance_write", "delete_record", "grant_permission"].every((k) => R.actions.find((a: any) => a.code === k)?.readiness === "forbidden"));
-  check("only notify_internal ready", R.actions.filter((a: any) => a.readiness === "ready").map((a: any) => a.code).join() === "notify_internal");
+  check("external/unfinished actions not ready", ["email", "whatsapp", "webhook", "update_record", "request_review", "report"].every((k) => R.actions.find((a: any) => a.code === k)?.readiness !== "ready"));
   // validation
   const base = { recipients: ["assigner"], title: "تكليف متأخر", grace_days: 0 };
   const V = async (when: any, ev = "adm.task.overdue", d: any = base) => (await owner.c.rpc("au_validate", { _org: org, _event: ev, _def: when === undefined ? d : { ...d, when } })).data as any;
@@ -70,7 +70,7 @@ try {
   check("event covered by existing job rejected (no duplicate)", !(await V(undefined, "adm.task.due_soon")).ok);
   check("non-ready action rejected", !(await V(undefined, "adm.task.overdue", { ...base, action: "whatsapp" })).ok);
   check("forbidden action rejected", !(await V(undefined, "adm.task.overdue", { ...base, action: "finance_write" })).ok);
-  check("unavailable recipient rejected", !(await V(undefined, "adm.task.overdue", { ...base, recipients: ["owner"] })).ok);
+  check("unavailable recipient rejected", !(await V(undefined, "adm.task.overdue", { ...base, recipients: ["guardian"] })).ok);
   check("principal cannot validate", !!(await pr.c.rpc("au_validate", { _org: org, _event: "adm.task.overdue", _def: base })).error);
   // conditions applied end-to-end
   const task = async (due: string, priority: string) => (await admin.from("adm_tasks").insert({ school_id: S, title: "ت " + priority, assignee: t1.id, assigner: pr.id, due_date: due, status: "new", priority }).select("id").single()).data!.id as string;

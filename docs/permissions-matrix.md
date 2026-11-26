@@ -788,4 +788,4 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 
 - Integrations v2 (Nov 25 2026): only the org owner manages API keys, resource on/off switches and approves incoming payments/maintenance/support requests; external systems can only read granted fields, submit approval-queued requests and cancel their own pending ones; no delete.
 
-| مركز الأتمتة (au_*) | مدير النظام: عرض الدليل، التحقق من القواعد، مسودة/محاكاة/اعتماد/تفعيل/إيقاف طارئ؛ مالك المنصة: إيقاف عام؛ بقية الأدوار: لا شيء |
+| مركز الأتمتة (au_*) | مدير النظام: الدليل، التحقق، المسودة/المحاكاة/الاعتماد/التفعيل/التشغيل الآن، المراقبة وإعادة العمليات المعزولة، الإعدادات، الإيقاف الطارئ؛ مالك المنصة: إيقاف عام؛ بقية الأدوار: لا شيء (يستلمون الإشعارات فقط ضمن صلاحياتهم) |

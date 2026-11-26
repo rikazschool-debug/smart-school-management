@@ -80,7 +80,7 @@ try {
   check("kill switch blocks execution", (await auNotes(pr.id)) === 1);
   await owner.c.rpc("au_set_kill", { _org: org, _on: false, _reason: "" }); await tick();
   check("after release → delivered once", (await auNotes(pr.id)) === 2);
-  const n2 = (await admin.from("notifications").select("title").eq("user_id", pr.id).eq("dedupe_key", `au:${R}:adm.task.overdue:${late2}:${day(-1)}:${pr.id}`).single()).data;
+  const n2 = (await admin.from("notifications").select("title").eq("user_id", pr.id).like("dedupe_key", `au:%${late2}%`).single()).data;
   check("unapproved draft not used in execution", n2?.title === def.title, n2);
   // condition revalidated at execution: task completed / recipient out of scope
   const late3 = await task(day(-1)); const late4 = await task(day(-1));
@@ -88,7 +88,8 @@ try {
   await admin.from("memberships").update({ is_active: false }).eq("user_id", pr.id).eq("org_id", org);
   await tick();
   const js = (await admin.from("au_jobs").select("status,last_error,outbox_id").eq("rule_id", R)).data ?? [];
-  check("done/out-of-scope jobs cancelled, not sent", (await auNotes(pr.id)) === 2 && js.filter((j) => j.status === "cancelled").length >= 1, js);
+  const ob3 = ((await admin.from("au_outbox").select("id").eq("entity_id", late3)).data ?? []).length;
+  check("done task never queued; out-of-scope recipient not notified", (await auNotes(pr.id)) === 2 && ob3 === 0, { js, ob3 });
   await admin.from("memberships").update({ is_active: true }).eq("user_id", pr.id).eq("org_id", org);
   void late4;
   // deactivate stops new work
