@@ -25,15 +25,20 @@ try {
   const [, ins] = await time(async () => { for (let i = 0; i < N; i += 1000) must(await admin.from("students").insert(Array.from({ length: Math.min(1000, N - i) }, (_, k) => ({ school_id: S, full_name: `طالب حمل ${i + k}`, gender: (i + k) % 2 ? "male" : "female", status: "active" }))), "ins"); });
   out["insert_ms"] = ins;
   const ev = "ds.api.students"; const rd = (lim: number, after?: string) => admin.rpc("_au_srcp", { _ev: ev, _org: org, _schools: null, _lim: lim, _entity: null, _params: after ? { _after: after } : {} });
-  const pages: number[] = []; let after: string | undefined; let total = 0;
-  for (;;) { const [r, ms] = await time(() => rd(1000, after)); const d = must(r as any, "page") as any[]; pages.push(ms); total += d.length; if (d.length < 1000) break; after = d[d.length - 1].entity; }
-  out["batches"] = pages.length; out["rows"] = total; out["batch_ms"] = { first: pages[0], max: Math.max(...pages), avg: Math.round(pages.reduce((a, b) => a + b, 0) / pages.length) };
+  const pages: number[] = []; let after: string | undefined; let total = 0; const seen = new Set<string>();
+  for (;;) { const [r, ms] = await time(() => rd(1000, after)); const d = must(r as any, "page") as any[]; pages.push(ms); total += d.length; d.forEach((x) => seen.add(x.entity)); if (d.length < 1000) break; after = d[d.length - 1].entity; }
+  out["batches"] = pages.length; out["rows"] = total; out["unique_rows"] = seen.size; out["no_truncation"] = total === N && seen.size === N; out["batch_ms"] = { first: pages[0], max: Math.max(...pages), avg: Math.round(pages.reduce((a, b) => a + b, 0) / pages.length) };
   out["scan_total_ms"] = pages.reduce((a, b) => a + b, 0);
   const [q, qms] = await time(() => c.rpc("au_query", { _org: org, _event: ev, _schools: null, _params: null, _where: { var: "gender", op: "eq", value: "male" }, _group: "gender", _aggs: [{ op: "count" }, { op: "count_distinct", field: "gender" }], _sort: null, _desc: false, _limit: 50, _offset: 0, _entity: null }));
   out["query_ms"] = qms; out["query"] = (q as any).error?.message ?? { scanned: (q as any).data.scanned, matched: (q as any).data.matched, server_ms: (q as any).data.ms, truncated: (q as any).data.truncated };
   const one = (must(await rd(1) as any, "one") as any[])[0];
   const [, re] = await time(() => admin.rpc("_au_srcp", { _ev: ev, _org: org, _schools: null, _lim: 1, _entity: one.entity, _params: {} })); out["single_ms"] = re;
   const [par, pms] = await time(() => Promise.all(Array.from({ length: 6 }, () => rd(1000)))); out["parallel6_ms"] = pms; out["parallel6_errors"] = par.filter((r: any) => r.error).length;
+  // concurrency: 3 full keyset scans in parallel while new rows are inserted; each scan must stay complete and duplicate-free
+  const scan = async () => { const ids = new Set<string>(); let a2: string | undefined; let n = 0; for (;;) { const d = must(await rd(1000, a2) as any, "cscan") as any[]; n += d.length; d.forEach((x) => ids.add(x.entity)); if (d.length < 1000) break; a2 = d[d.length - 1].entity; } return { n, u: ids.size }; };
+  const [cs, cms] = await time(() => Promise.all([scan(), scan(), scan(), (async () => { must(await admin.from("students").insert(Array.from({ length: 50 }, (_, k) => ({ school_id: S, full_name: `طالب متزامن ${k}`, gender: "male", status: "active" }))), "cins"); })()]));
+  const scans = cs.slice(0, 3) as { n: number; u: number }[];
+  out["concurrent3_ms"] = cms; out["concurrent3"] = scans; out["concurrent_ok"] = scans.every((x) => x.n === x.u && x.n >= N && x.n <= N + 50);
   const [, other] = await time(() => admin.from("schools").select("id").limit(1)); out["core_read_during_ms"] = other;
 } catch (e) { out["error"] = (e as Error).message; }
 finally {

@@ -13,7 +13,7 @@ export const PERM_GROUPS: { key: string; label: string; sections: string[] }[] =
   { key: "g_events", label: "الأنشطة والفعاليات", sections: ["evt_trips", "evt_general", "evt_courses", "evt_forms"] },
   { key: "g_comm", label: "التواصل والتعاون", sections: ["bt_chat_direct", "bt_chat_groups", "groups", "meetings", "co_community_info", "co_library_info", "circulars", "notices", "hub_meetings", "hub_circulars_info"] },
   { key: "g_reports", label: "التقارير", sections: ["results_info", "ev_summary", "ev_guardian", "ev_visits", "ev_monthly", "ev_forms"] },
-  { key: "g_settings", label: "الإعدادات", sections: ["people", "chat_settings", "branches_info", "members_info", "permissions_info", "au_view", "au_manage", "au_control", "au_settings_info"] },
+  { key: "g_settings", label: "الإعدادات", sections: ["people", "chat_settings", "branches_info", "members_info", "permissions_info", "au_view", "au_manage", "au_control", "au_data", "au_settings_info"] },
   { key: "g_services", label: "الموارد والخدمات", sections: ["hr_employees", "hr_contracts", "hr_documents", "hr_letters", "hr_recruit", "hr_housing", "hr_insurance", "hr_performance", "hr_money", "hr_payroll", "hr_attendance", "hr_assets", "hr_leave", "hr_reports", "hr_training_info", "procurement", "accounting_info", "maint_school", "maint_bus", "transport_info"] },
   { key: "g_account", label: "الحساب", sections: ["bt_my_employment", "personal_info"] },
   { key: "g_support", label: "التنبيهات والدعم", sections: ["support", "customer_service", "cs_comm", "wa_inbox", "calls"] },

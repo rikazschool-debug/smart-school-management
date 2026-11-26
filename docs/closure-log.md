@@ -1382,3 +1382,10 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - التغييرات: _au_ds_api (قارئ موحد فوق _api_rows_all)، _au_api_ctx/_au_api_extra، صلاحيات `قسم:إجراء` عبر _au_ps_ok في _au_ds_ok، au_query (count_distinct، pct، تجميع زمني، سجل واحد)، au_lookup (ترقيم، قوائم مترابطة، رفض مدارس خارجية)، _au_fin_guard، عزل أعطال المسح في automation_tick، أعمدة au_sources: date_field/org_section/covered_by وحالة deferred.
 - الأدلة: automation-platform-b2-e2e 39/39؛ انحدار: platform-b 67/67، registry 40/40، automation 30/30، phase4 105/105، phase4b 67/67، phase5 50/50، phase6 82/82، sf-carry 19/19. حمل 10 آلاف طالب: دفعة 0.8s، استعلام كامل 3.1s. 50 ألفًا لم يُقس (حد معروف موثق).
 - التقرير: docs/automation-platform-phase-b-final.md. لا إنتاج، لا نشر، لا قواعد مفعّلة، لا رسائل، لا تغيير مهام مجدولة.
+
+## مركز الأتمتة — إغلاق نواقص المرحلة B (Nov 26 2026، الاختبار فقط)
+- المصادر الثمانية: سجلات اصطناعية معزولة → automation-platform-b3-e2e 54/54؛ صارت «مختبرة» في السجل.
+- قراءة على دفعات حقيقية: نافذة GUC (_au_lo/_au_hi/_au_ex/_au_lim) داخل _api_rows..v4 (صارت plpgsql مع force_custom_plan)؛ 50,000 طالب: 51 دفعة، 50,000/50,000 فريدة، 3 مسوح متزامنة مع إدراج = 50,050 لكل مسح، 0 أخطاء. المستكشف التفاعلي يتوقف عند 20,000 ويعلن «مقتطع».
+- المطابقة المالية الكاملة: _au_fin_parity (خدمي فقط) → automation-fin-parity-e2e 18/18: 12,518/12,518، 0 اختلاف؛ بصمة دالتي الرصيد في _au_fin_guard. _sf_balance لم يتغير.
+- فصل القراءة عن التشغيل: قسم au_data (اجتماعات/تعاميم/بوابة)، منح صريح فقط، لا يمنح التنظيم/النشر/التشغيل.
+- تغطية التكاملات: أقسام au_* مسجلة «مستبعدة» مع السبب؛ api/api2/api3 ناجحة. انحدار الأتمتة كله ناجح (phase6 82/82 بعد تحديث عدد البنود).

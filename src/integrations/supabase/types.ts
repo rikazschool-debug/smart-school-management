@@ -3623,18 +3623,21 @@ export type Database = {
       }
       au_platform: {
         Row: {
+          fin_formula_hash: string | null
           id: boolean
           kill_switch: boolean
           reason: string | null
           updated_at: string
         }
         Insert: {
+          fin_formula_hash?: string | null
           id?: boolean
           kill_switch?: boolean
           reason?: string | null
           updated_at?: string
         }
         Update: {
+          fin_formula_hash?: string | null
           id?: boolean
           kill_switch?: boolean
           reason?: string | null
@@ -26692,6 +26695,7 @@ export type Database = {
         Returns: boolean
       }
       _au_eval: { Args: { c: Json; ctx: Json }; Returns: boolean }
+      _au_ex: { Args: never; Returns: string }
       _au_exec: {
         Args: { j: Database["public"]["Tables"]["au_jobs"]["Row"] }
         Returns: string
@@ -26700,11 +26704,18 @@ export type Database = {
         Args: { _org: string; _schools: string[] }
         Returns: undefined
       }
+      _au_fin_parity: {
+        Args: { _after?: string; _lim?: number; _org?: string }
+        Returns: Json
+      }
       _au_fp: {
         Args: { r: Database["public"]["Tables"]["au_rules"]["Row"] }
         Returns: string
       }
       _au_full: { Args: { _org: string }; Returns: boolean }
+      _au_hi: { Args: never; Returns: string }
+      _au_lim: { Args: never; Returns: number }
+      _au_lo: { Args: never; Returns: string }
       _au_manager: { Args: { _employee: string }; Returns: string }
       _au_need: {
         Args: { _act: string; _org: string; _sec: string }
@@ -26911,6 +26922,7 @@ export type Database = {
         Returns: boolean
       }
       _au_vis: { Args: { _rid: string; _uid: string }; Returns: boolean }
+      _au_win: { Args: { _x: string }; Returns: boolean }
       _audit: {
         Args: {
           _action: string

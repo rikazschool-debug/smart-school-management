@@ -45,7 +45,7 @@ try {
   // ---------- 1. permission tree integration, no automatic grants ----------
   const cat = (await owner.c.rpc("perm_catalog")).data;
   const secs = (cat.sections as any[]).filter((s) => s.parent === "automation");
-  check("perm tree lists automation view/manage/control (27 actions) + locked settings", secs.length === 4 && secs.filter((s) => s.actions.length).reduce((n, s) => n + s.actions.length, 0) === 27 && secs.some((s) => s.key === "au_settings_info" && s.locked_reason), secs.map((s) => s.key));
+  check("perm tree lists automation view/manage/control (27 actions) + read-only data (3) + locked settings", secs.length === 5 && secs.filter((s) => s.actions.length).reduce((n, s) => n + s.actions.length, 0) === 30 && (secs.find((s) => s.key === "au_data")?.actions.length ?? 0) === 3 && secs.some((s) => s.key === "au_settings_info" && s.locked_reason), secs.map((s) => s.key));
   check("catalog not readable without sign-in", denied(await anon.rpc("perm_catalog")));
   const roleGrants = (await admin.from("perm_role_grants").select("section").in("section", ["au_view", "au_manage", "au_control"])).data ?? [];
   check("no role template carries automation grants by default", roleGrants.length === 0, roleGrants.length);

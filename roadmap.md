@@ -54,11 +54,11 @@
 - [ ] Rewrite stale tests (comm, homework, family-access, xbranch) to current rules
 
 # Automation: phase B gaps + phase C (recipients & responsibilities)
-- [ ] B1 Synthetic fixtures + tests for 8 untested sources
-- [ ] B2 Paged integration reader (>20k, 50k + concurrency), integrations unchanged
-- [ ] B3 Finance bulk balance: full (not sampled) parity + all finance cases
-- [ ] B4 Read/query perms separated from publish/organize/edit
-- [ ] B5 Coverage matrix update
+- [x] B1 Synthetic fixtures + tests for 8 untested sources
+- [x] B2 Paged integration reader (>20k, 50k + concurrency), integrations unchanged
+- [x] B3 Finance bulk balance: full (not sampled) parity + all finance cases
+- [x] B4 Read/query perms separated from publish/organize/edit
+- [x] B5 Coverage matrix update
 - [ ] C1 Recipient resolver (name/role/title/category/school/dept/manager/record/prev-step, all|specific|linked)
 - [ ] C2 Dynamic responsibilities (reuse relations; add missing assignments in home sections)
 - [ ] C3 Engine + designer picker integration, dedupe, fallback/failure logging, recheck at execution
