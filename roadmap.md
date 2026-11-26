@@ -66,9 +66,9 @@
 - [x] C5 docs/automation-platform-phase-c.md + matrix
 
 # Automation: phase C gaps + phase D (operational automation)
-- [ ] C-gap1 Document / bus responsible pickers in their own screens (logged)
-- [ ] C-gap2 Security test of the 6 new tools: direct call, delegation bypass, isolation
-- [ ] C-gap3 Visual review of recipient editor + responsibilities; multi-recipient/fallback/dedupe/responsible-change-mid-run test
+- [x] C-gap1 Document / bus responsible pickers in their own screens (logged)
+- [x] C-gap2 Security test of the 6 new tools: direct call, delegation bypass, isolation
+- [x] C-gap3 Visual review of recipient editor + responsibilities; multi-recipient/fallback/dedupe/responsible-change-mid-run test
 - [ ] D1 Operational action catalogue (create/update/task/route/compute/report/doc/integration-ready) with service, I/O, perms, risk, approval, dedupe
 - [ ] D2 Advanced flows: step outputs, per-record/aggregate, branch, wait (duration/date/condition/approval), recheck, error path+retry, goal stop, resumable
 - [ ] D3 Central server report service (PDF/Excel), stored securely, shared with authorized recipients

@@ -26902,6 +26902,7 @@ export type Database = {
           sec_label: string
         }[]
       }
+      _au_pick_ok: { Args: { _uid: string }; Returns: boolean }
       _au_ps_ok: {
         Args: { _ps: string; _school: string; _uid: string }
         Returns: boolean

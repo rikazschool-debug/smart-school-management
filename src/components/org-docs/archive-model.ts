@@ -1,4 +1,4 @@
-export type Doc = { id: string; school_id: string | null; school: string | null; kind: string; name: string; doc_no: string | null; issuer: string | null; issued_on: string | null; expires_on: string | null; status: string; file_id: string | null; file_name: string | null };
+export type Doc = { id: string; school_id: string | null; school: string | null; kind: string; name: string; doc_no: string | null; issuer: string | null; issued_on: string | null; expires_on: string | null; status: string; file_id: string | null; file_name: string | null; responsible_user?: string | null; responsible?: string | null };
 export type Con = { id: string; name: string; service: string; contact_name: string | null; phone: string | null; email: string | null; school_ids: string[]; schools: string[]; starts_on: string | null; ends_on: string | null; status: string; notes: string | null; community_partner: boolean; files: { id: string; name: string }[] };
 type Archived = { archived_at: string; can_download: boolean };
 export type ArchiveRecord = Archived & ((Doc & { record_type: "docs" }) | (Con & { record_type: "contractors" }));

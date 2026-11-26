@@ -57,3 +57,31 @@ export function SchoolResponsibilitiesDialog({ school, org, onClose }: { school:
     </Dialog>
   );
 }
+
+/** Responsible person for one document or vehicle — owner only (org_doc_set_responsible / mt_bus_set_responsible log each change). */
+export function RecordResponsible({ kind, id, school, org, userId, name, onSaved }: {
+  kind: "doc" | "bus"; id: string; school: string | null; org: string; userId: string | null | undefined; name: string | null | undefined; onSaved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  async function setUser(user: string | null) {
+    const fn = kind === "doc" ? "org_doc_set_responsible" : "mt_bus_set_responsible";
+    const args = kind === "doc" ? { _doc: id, _user: user } : { _bus: id, _user: user };
+    const { error } = await db.rpc(fn as never, args as never);
+    if (error) return void toast.error(arabicError(error));
+    toast.success(user ? "حُفظ المسؤول" : "أُزيل المسؤول"); setOpen(false); onSaved();
+  }
+  return (
+    <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-semibold">{kind === "doc" ? "مسؤول الوثيقة" : "مسؤول المركبة"}</span>
+        <span className={userId ? "" : "text-muted-foreground"}>{userId ? (name ?? "—") : "غير محدد"}</span>
+        <span className="ms-auto flex gap-2">
+          <Button type="button" size="sm" variant="outline" onClick={() => setOpen(!open)}>{userId ? "تغيير" : "تحديد"}</Button>
+          {userId && <Button type="button" size="sm" variant="ghost" onClick={() => void setUser(null)}>إزالة</Button>}
+        </span>
+      </div>
+      <p className="text-xs text-muted-foreground">يُستخدم في قواعد الأتمتة عند اختيار «المسؤول المرتبط بالسجل»، ويُسجَّل كل تغيير.</p>
+      {open && <PeoplePicker purpose="resp" school={school} org={org} single value={userId ? [userId] : []} onChange={(v) => v[0] && void setUser(v[0])} label="اختر الموظف" compact />}
+    </div>
+  );
+}

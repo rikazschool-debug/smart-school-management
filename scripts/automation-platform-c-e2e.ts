@@ -85,13 +85,17 @@ try {
   await admin.from("adm_tasks").update({ status: "done" }).eq("school_id", S);
   await ins("adm_tasks", { school_id: S, title: "تكليف للمحاكاة", assignee: te.id, assigner: vp.id, due_date: day(-3), status: "new" });
   const nBefore = (await admin.from("notifications").select("id", { count: "exact", head: true }).in("user_id", [pr.id, te.id, acc.id])).count;
-  const sim = await owner.c.rpc("au_simulate_def", { _org: org, _event: "adm.task.overdue", _schools: null, _def: nt([{ by: "role", role: "principal" }, { by: "record", code: "school_hr" }, { by: "person", users: [outsider.id] }]) });
+  await admin.from("memberships").update({ is_active: false }).eq("user_id", m2.id).eq("school_id", S);
+  const sim = await owner.c.rpc("au_simulate_def", { _org: org, _event: "adm.task.overdue", _schools: null, _def: nt([{ by: "role", role: "principal" }, { by: "record", code: "school_hr" }, { by: "person", users: [m2.id] }]) });
+  const simX = await owner.c.rpc("au_simulate_def", { _org: org, _event: "adm.task.overdue", _schools: null, _def: nt([{ by: "person", users: [outsider.id] }]) });
+  check("simulation: person from another organization rejected before anything runs", (simX.data as any)?.ok === false && /outside your automation scope/.test((simX.data as any)?.error ?? ""), simX.data);
   const it = (sim.data as any)?.items?.[0]?.recipients ?? []; M["simulation"] = it;
   const prName = (await admin.from("profiles").select("full_name").eq("id", pr.id).single()).data?.full_name ?? "—";
   check("simulation: each step counted once", it.length === 3, it.length);
   check("simulation: principal group eligible with name", it[0]?.eligible === 1 && JSON.stringify(it[0]?.names).includes(prName), sim);
   check("simulation: empty responsibility reported as no recipient", it[1]?.none === true && JSON.stringify(it[1]?.reasons).includes("no_recipient"), it[1]);
-  check("simulation: outsider excluded", it[2]?.excluded === 1 && it[2]?.eligible === 0, it[2]);
+  check("simulation: deactivated staff excluded", it[2]?.excluded === 1 && it[2]?.eligible === 0, it[2]);
+  await admin.from("memberships").update({ is_active: true }).eq("user_id", m2.id).eq("school_id", S);
   const nAfter = (await admin.from("notifications").select("id", { count: "exact", head: true }).in("user_id", [pr.id, te.id, acc.id])).count;
   check("simulation sends nothing", nBefore === nAfter, { nBefore, nAfter });
 
@@ -99,12 +103,14 @@ try {
   { const T = "مجموعات متعددة";
     const rid = await scenario(T, [{ type: "notify", title: T, groups: [
       { by: "person", users: [vp.id, te.id] }, { by: "role", role: "principal" }, { by: "record", code: "school_accountant" },
-      { by: "person", users: [vp.id, outsider.id] }, { by: "role", role: "principal", mode: "specific", users: [pr.id] }] }]);
+      { by: "person", users: [vp.id] }, { by: "role", role: "principal", mode: "specific", users: [pr.id] }] }]);
     const [a, b, c, d] = [await notes(vp.id, T), await notes(te.id, T), await notes(pr.id, T), await notes(acc.id, T)];
     check("each person notified exactly once across overlapping groups", a === 1 && b === 1 && c === 1 && d === 1, { a, b, c, d });
     check("record-linked school accountant reached", d === 1);
     const sk = await skips(rid);
-    check("outsider from another org not notified and logged", (await notes(outsider.id, T)) === 0 && sk.some((x) => x.user_id === outsider.id && String(x.reason).startsWith("not_allowed")), sk);
+    check("outsider from another org never notified", (await notes(outsider.id, T)) === 0, sk);
+    const rx = await save("أجنبي", cond([{ type: "notify", title: "أجنبي", groups: [{ by: "person", users: [outsider.id] }] }]));
+    check("rule naming a person from another organization rejected at save", !!rx.error, rx.data);
   }
   // ---------- fallback and logged failure ----------
   { const T = "بديل";

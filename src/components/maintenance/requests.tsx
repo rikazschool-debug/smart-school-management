@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { RecordResponsible } from "@/components/school-responsibilities";
 import { toast } from "sonner";
 import { AlertTriangle, Bus, CalendarClock, CheckCircle2, MessageSquare, Plus, Wrench } from "lucide-react";
 import { db } from "@/components/crud-page";
@@ -350,7 +351,7 @@ export function BusesTab({ orgId, orgName, me }: { orgId: string; orgName: strin
     const note = await askText(s === "available" ? "نتيجة الفحص قبل إعادة الباص للخدمة" : "سبب تغيير حالة الباص", { required: true, ok: "تأكيد" });
     if (note && await run(db.rpc("mt_bus_set_status", { _bus: b.id, _status: s, _note: note }), "حُدّثت حالة الباص")) inv();
   }
-  if (edit) return <BusForm bus={edit} schools={fleetSchools} onDone={() => { setEdit(null); inv(); void q.refetch(); }} />;
+  if (edit) return <BusForm bus={edit} schools={fleetSchools} orgId={orgId} owner={!!me.owner} onDone={() => { setEdit(null); inv(); void q.refetch(); }} />;
   return (
     <div className="space-y-4">
       <TabIntro icon={Bus} title="الباصات" desc="البيانات الأساسية اللازمة لطلبات الصيانة فقط، وحالة كل باص التشغيلية والصيانة القادمة."
@@ -383,7 +384,7 @@ export function BusesTab({ orgId, orgName, me }: { orgId: string; orgName: strin
           </table>
         </TableCard>
       )}
-      {log && <Panel title="سجل الباص">{logQ.isLoading ? <LoadingState rows={1} /> : <ul className="space-y-1 text-sm">{logQ.data?.map((l, i) => <li key={i}>{dt(l.at)} — {l.actor}: {l.action === "return_to_service" ? "إعادة للخدمة" : l.action === "status" ? `الحالة: ${BUS_STATUS[l.after?.op_status] ?? ""}` : l.action === "create" ? "إضافة" : "تعديل البيانات"}{l.note ? ` (${l.note})` : ""}</li>)}</ul>}</Panel>}
+      {log && <Panel title="سجل الباص">{logQ.isLoading ? <LoadingState rows={1} /> : <ul className="space-y-1 text-sm">{logQ.data?.map((l, i) => <li key={i}>{dt(l.at)} — {l.actor}: {l.action === "return_to_service" ? "إعادة للخدمة" : l.action === "status" ? `الحالة: ${BUS_STATUS[l.after?.op_status] ?? ""}` : l.action === "create" ? "إضافة" : l.action === "responsible" ? "تغيير مسؤول المركبة" : "تعديل البيانات"}{l.note ? ` (${l.note})` : ""}</li>)}</ul>}</Panel>}
     </div>
   );
 }
@@ -395,8 +396,10 @@ function DocState({ d, s }: { d?: string | null; s?: string | null }) {
   return <span className="flex flex-col gap-0.5"><span className="tabular-nums">{dd(d)}</span><span className={"w-fit rounded-full px-2 py-0.5 text-xs " + c}>{DOC[s ?? ""]}</span></span>;
 }
 
-function BusForm({ bus, schools, onDone }: { bus: Row; schools: { id: string; name: string }[]; onDone: () => void }) {
+function BusForm({ bus, schools, orgId, owner, onDone }: { bus: Row; schools: { id: string; name: string }[]; orgId: string; owner: boolean; onDone: () => void }) {
   const [d, setD] = useState<Row>({ ...bus, school: bus.school_id ?? schools[0]?.id });
+  const [resp, setResp] = useState<{ id: string | null; name: string | null }>({ id: bus.responsible_user ?? null, name: bus.responsible ?? null });
+  async function reloadResp() { const { data } = await db.rpc("mt_buses_list", { _org: orgId }); const x = (data as Row[] | null)?.find((b) => b.id === bus.id); setResp({ id: x?.responsible_user ?? null, name: x?.responsible ?? null }); }
   const set = (k: string, v: unknown) => setD((x: Row) => ({ ...x, [k]: v }));
   async function save() {
     if (bus.odometer != null && d.odometer !== "" && d.odometer != null && Number(d.odometer) < Number(bus.odometer)) { toast.error(`قراءة العداد لا تقل عن آخر قراءة (${bus.odometer})`); return; }
@@ -417,6 +420,7 @@ function BusForm({ bus, schools, onDone }: { bus: Row; schools: { id: string; na
         <Field label="تاريخ الفحص الدوري القادم"><Input type="date" value={d.inspection_date ?? ""} onChange={(e) => set("inspection_date", e.target.value)} /></Field>
         <Field label="تاريخ انتهاء الترخيص"><Input type="date" value={d.license_expiry ?? ""} onChange={(e) => set("license_expiry", e.target.value)} /></Field>
         <Field label="ملاحظات" className="sm:col-span-2"><Input value={d.notes ?? ""} onChange={(e) => set("notes", e.target.value)} /></Field>
+        {owner && bus.id && <div className="sm:col-span-2"><RecordResponsible kind="bus" id={bus.id} school={bus.school_id ?? null} org={orgId} userId={resp.id} name={resp.name} onSaved={() => void reloadResp()} /></div>}
       </div>
       <FormActions><Button onClick={() => void save()}>حفظ</Button><Button variant="ghost" onClick={onDone}>إلغاء</Button></FormActions>
     </FormCard>

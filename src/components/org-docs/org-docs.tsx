@@ -16,6 +16,7 @@ import { uploadObject } from "@/components/classroom-posts";
 import { ask } from "@/components/confirm";
 import { exportPdf, exportXlsx, printReport } from "@/lib/export";
 import { archiveDay, archiveDetails, filterArchive, recordCategory, recordType, type ArchiveRecord, type Con, type Doc } from "./archive-model";
+import { RecordResponsible } from "@/components/school-responsibilities";
 import { ATTACHMENT_ACCEPT, DOCUMENT_TYPES, SERVICE_TYPES, withSavedOption } from "./form-options";
 
 export type OrgDocsTab = "docs" | "contractors" | "archive";
@@ -164,11 +165,11 @@ function Docs({ org, caps }: { org: string; caps: Caps }) {
       {edit && <DocForm key={edit.id ?? "new"} org={org} caps={caps} init={edit} close={() => setEdit(null)} />}
       {list.isLoading ? <LoadingState /> : list.error ? <ErrorState message={arabicError(list.error)} /> : !list.data?.length ? <EmptyState title="لا توجد وثائق" hint="أضف وثائق المنشأة مثل السجل التجاري والتراخيص." /> : (
         <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm"><thead className="bg-muted/50 text-start"><tr>{["النوع", "الاسم", "الرقم", "جهة الإصدار", "النطاق", "الإصدار", "الانتهاء", "الحالة", ""].map((h) => <th key={h} className="p-2 text-start font-semibold">{h}</th>)}</tr></thead>
+          <table className="w-full text-sm"><thead className="bg-muted/50 text-start"><tr>{["النوع", "الاسم", "الرقم", "جهة الإصدار", "النطاق", "الإصدار", "الانتهاء", "الحالة", "المسؤول", ""].map((h) => <th key={h} className="p-2 text-start font-semibold">{h}</th>)}</tr></thead>
             <tbody>{list.data.map((d) => (
               <tr key={d.id} className="border-t">
                 <td className="p-2">{d.kind}</td><td className="p-2 font-medium">{d.name}</td><td className="p-2">{d.doc_no ?? "—"}</td><td className="p-2">{d.issuer ?? "—"}</td>
-                <td className="p-2">{d.school ?? "المجموعة"}</td><td className="p-2">{d.issued_on ?? "—"}</td><td className="p-2">{d.expires_on ?? "—"}</td><td className="p-2"><Badge s={d.status} /></td>
+                <td className="p-2">{d.school ?? "المجموعة"}</td><td className="p-2">{d.issued_on ?? "—"}</td><td className="p-2">{d.expires_on ?? "—"}</td><td className="p-2"><Badge s={d.status} /></td><td className="p-2">{d.responsible ?? "—"}</td>
                 <td className="flex gap-1 p-2">
                   {d.file_id && can("download", d.school_id) && <Button size="sm" variant="outline" onClick={() => openOrgFile(d.file_id!)} aria-label="تنزيل الملف"><Download className="size-4" /></Button>}
                   {can("edit", d.school_id) && <Button size="sm" variant="ghost" onClick={() => setEdit(d)} aria-label="تعديل"><Pencil className="size-4" /></Button>}
@@ -187,6 +188,7 @@ function DocForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
   const scopes = [...(caps.owner || caps.group[action] ? [["", "المجموعة كاملة"]] : []), ...caps.schools.filter((s) => caps.owner || s[action]).map((s) => [s.id, s.name])];
   const [f, setF] = useState({ kind: init.kind ?? "", name: init.name ?? "", doc_no: init.doc_no ?? "", issuer: init.issuer ?? "", issued_on: init.issued_on ?? "", expires_on: init.expires_on ?? "", school_id: init.id ? (init.school_id ?? "") : (scopes[0]?.[0] ?? "") });
   const [file, setFile] = useState<File | null>(null);
+  const [resp, setResp] = useState({ id: init.responsible_user ?? null, name: init.responsible ?? null });
   const save = useMutation({
     mutationFn: async () => {
       const fid = file ? await uploadDraft(org, f.school_id || null, file) : null;
@@ -209,6 +211,7 @@ function DocForm({ org, caps, init, close }: { org: string; caps: Caps; init: Pa
         <div className="space-y-1"><Label htmlFor="od-scope">النطاق</Label><select id="od-scope" className={selectCls()} value={f.school_id} onChange={set("school_id")}>{scopes.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
         <div className="space-y-1"><Label htmlFor="od-file">المرفق (PDF أو صورة)</Label><Input id="od-file" type="file" accept={ATTACHMENT_ACCEPT} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />{init.file_name && !file && <p className="mt-1 text-xs text-muted-foreground"><FileText className="inline size-3" /> {init.file_name}</p>}</div>
       </div>
+      {caps.owner && init.id && <div className="mt-3"><RecordResponsible kind="doc" id={init.id} school={init.school_id ?? null} org={org} userId={resp.id} name={resp.name} onSaved={() => { void qc.invalidateQueries({ queryKey: ["od", org] }); void rpc<Doc[]>("od_list", { _org: org, _what: "docs", _q: init.name ?? null }).then((r) => { const x = r.find((d) => d.id === init.id); setResp({ id: x?.responsible_user ?? null, name: x?.responsible ?? null }); }); }} /></div>}
       <div className="mt-3 flex justify-end"><Button type="submit" disabled={save.isPending}>{save.isPending ? "جارٍ الحفظ…" : "حفظ"}</Button></div>
     </form>
   );
