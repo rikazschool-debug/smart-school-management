@@ -3250,6 +3250,351 @@ export type Database = {
           },
         ]
       }
+      au_actions: {
+        Row: {
+          code: string
+          enabled: boolean
+          label: string
+          side_effects: string
+        }
+        Insert: {
+          code: string
+          enabled?: boolean
+          label: string
+          side_effects: string
+        }
+        Update: {
+          code?: string
+          enabled?: boolean
+          label?: string
+          side_effects?: string
+        }
+        Relationships: []
+      }
+      au_audit: {
+        Row: {
+          action: string
+          actor: string | null
+          at: string
+          details: Json | null
+          id: number
+          org_id: string | null
+          rule_id: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          at?: string
+          details?: Json | null
+          id?: number
+          org_id?: string | null
+          rule_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          at?: string
+          details?: Json | null
+          id?: number
+          org_id?: string | null
+          rule_id?: string | null
+        }
+        Relationships: []
+      }
+      au_events: {
+        Row: {
+          code: string
+          label: string
+          recipients: string[]
+        }
+        Insert: {
+          code: string
+          label: string
+          recipients: string[]
+        }
+        Update: {
+          code?: string
+          label?: string
+          recipients?: string[]
+        }
+        Relationships: []
+      }
+      au_jobs: {
+        Row: {
+          action: string
+          attempts: number
+          created_at: string
+          done_at: string | null
+          id: number
+          idem_key: string
+          last_error: string | null
+          next_at: string
+          org_id: string
+          outbox_id: number
+          recipient: string
+          rule_id: string
+          status: string
+          version: number
+        }
+        Insert: {
+          action: string
+          attempts?: number
+          created_at?: string
+          done_at?: string | null
+          id?: number
+          idem_key: string
+          last_error?: string | null
+          next_at?: string
+          org_id: string
+          outbox_id: number
+          recipient: string
+          rule_id: string
+          status?: string
+          version: number
+        }
+        Update: {
+          action?: string
+          attempts?: number
+          created_at?: string
+          done_at?: string | null
+          id?: number
+          idem_key?: string
+          last_error?: string | null
+          next_at?: string
+          org_id?: string
+          outbox_id?: number
+          recipient?: string
+          rule_id?: string
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_jobs_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "au_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      au_outbox: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          depth: number
+          entity_id: string
+          event_code: string
+          id: number
+          org_id: string
+          payload: Json
+          processed_at: string | null
+          school_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          depth?: number
+          entity_id: string
+          event_code: string
+          id?: number
+          org_id: string
+          payload?: Json
+          processed_at?: string | null
+          school_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          depth?: number
+          entity_id?: string
+          event_code?: string
+          id?: number
+          org_id?: string
+          payload?: Json
+          processed_at?: string | null
+          school_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      au_platform: {
+        Row: {
+          id: boolean
+          kill_switch: boolean
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          kill_switch?: boolean
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          kill_switch?: boolean
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      au_rule_versions: {
+        Row: {
+          approved_at: string
+          approved_by: string
+          definition: Json
+          fingerprint: string
+          rule_id: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string
+          approved_by: string
+          definition: Json
+          fingerprint: string
+          rule_id: string
+          version: number
+        }
+        Update: {
+          approved_at?: string
+          approved_by?: string
+          definition?: Json
+          fingerprint?: string
+          rule_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_rule_versions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "au_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      au_rules: {
+        Row: {
+          active: boolean
+          approved_version: number | null
+          created_at: string
+          created_by: string
+          draft: Json
+          event_code: string
+          id: string
+          name: string
+          org_id: string
+          school_ids: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          approved_version?: number | null
+          created_at?: string
+          created_by: string
+          draft: Json
+          event_code: string
+          id?: string
+          name: string
+          org_id: string
+          school_ids?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          approved_version?: number | null
+          created_at?: string
+          created_by?: string
+          draft?: Json
+          event_code?: string
+          id?: string
+          name?: string
+          org_id?: string
+          school_ids?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_rules_event_code_fkey"
+            columns: ["event_code"]
+            isOneToOne: false
+            referencedRelation: "au_events"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "au_rules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      au_runs: {
+        Row: {
+          events: number | null
+          id: number
+          jobs_done: number | null
+          jobs_failed: number | null
+          ms: number | null
+          skipped: string | null
+          started_at: string
+        }
+        Insert: {
+          events?: number | null
+          id?: number
+          jobs_done?: number | null
+          jobs_failed?: number | null
+          ms?: number | null
+          skipped?: string | null
+          started_at?: string
+        }
+        Update: {
+          events?: number | null
+          id?: number
+          jobs_done?: number | null
+          jobs_failed?: number | null
+          ms?: number | null
+          skipped?: string | null
+          started_at?: string
+        }
+        Relationships: []
+      }
+      au_settings: {
+        Row: {
+          kill_switch: boolean
+          org_id: string
+          reason: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          kill_switch?: boolean
+          org_id: string
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          kill_switch?: boolean
+          org_id?: string
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       authorized_pickups: {
         Row: {
           active: boolean
@@ -25581,6 +25926,40 @@ export type Database = {
         Returns: undefined
       }
       _att_section: { Args: { _student: string }; Returns: string }
+      _au_check_def: { Args: { _event: string; d: Json }; Returns: Json }
+      _au_check_schools: {
+        Args: { _org: string; _s: string[] }
+        Returns: undefined
+      }
+      _au_emit: {
+        Args: {
+          _depth?: number
+          _entity: string
+          _event: string
+          _key: string
+          _org: string
+          _payload: Json
+          _school: string
+        }
+        Returns: undefined
+      }
+      _au_overdue: {
+        Args: {
+          _grace: number
+          _limit: number
+          _org: string
+          _schools: string[]
+        }
+        Returns: {
+          assignee: string
+          assigner: string
+          due_date: string
+          school_id: string
+          task_id: string
+          title: string
+        }[]
+      }
+      _au_owner: { Args: { _org: string }; Returns: undefined }
       _audit: {
         Args: {
           _action: string
@@ -29353,6 +29732,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      au_platform_kill: {
+        Args: { _on: boolean; _reason: string }
+        Returns: undefined
+      }
+      au_rule_approve: { Args: { _id: string }; Returns: number }
+      au_rule_save: {
+        Args: {
+          _def: Json
+          _event: string
+          _id: string
+          _name: string
+          _org: string
+          _schools: string[]
+        }
+        Returns: string
+      }
+      au_rule_set_active: {
+        Args: { _id: string; _on: boolean }
+        Returns: undefined
+      }
+      au_set_kill: {
+        Args: { _on: boolean; _org: string; _reason: string }
+        Returns: undefined
+      }
+      au_simulate: { Args: { _id: string }; Returns: Json }
+      au_status: { Args: { _org: string }; Returns: Json }
+      automation_tick: { Args: { _budget_ms?: number }; Returns: Json }
       available_substitutes: {
         Args: { _date: string; _slot: string }
         Returns: {

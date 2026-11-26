@@ -61,3 +61,4 @@
 - Export branding: every PDF/print/Excel export carries the active school (or group) name + logo via src/lib/export-brand.ts (synced by ExportBrandSync in the app layout) — never a per-screen header.
 - Use one PermTree per editor to avoid duplicate controls.
 - Integrations (api_*): src/components/integrations/AGENTS.md.
+- Automation center (au_*): Postgres engine only — closed event/action registry, immutable approved versions, outbox + SKIP LOCKED jobs with idem keys, kill switches, execution-time revalidation; owner-only RPCs; automation_tick runs inside the existing rikaz-homework-tick (no new cron); rules start inactive. Test: scripts/automation-e2e.ts.

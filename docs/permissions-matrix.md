@@ -787,3 +787,5 @@ Guidance / gifted / remedial grants (view/record/manage/export) are now accepted
 2026-11-25: Integrations & API — keys, scopes, logs, webhooks, inbox and explorer are owner-only (platform admin acting as owner); external systems act only through a key; principals and other roles have no access.
 
 - Integrations v2 (Nov 25 2026): only the org owner manages API keys, resource on/off switches and approves incoming payments/maintenance/support requests; external systems can only read granted fields, submit approval-queued requests and cancel their own pending ones; no delete.
+
+| مركز الأتمتة (au_*) | مدير النظام: مسودة/محاكاة/اعتماد/تفعيل/إيقاف طارئ؛ مالك المنصة: إيقاف عام؛ بقية الأدوار: لا شيء |

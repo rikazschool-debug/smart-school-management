@@ -1336,3 +1336,8 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 
 - 2026-11-25 (test DB): guardian_rating_stats API resource (per-school/year average of guardian ratings, ≥5 ratings, no teacher/guardian/student/comment). ev_guardian coverage now partial. 74 resources. api3-e2e 27/27, api2-e2e 29/29, api-e2e 26/26, api-spec 3/3.
 - 2026-11-26 Automation center phase 1 (analysis only, no code/DB change): docs/automation-center-architecture.md — inventory of 13 cron jobs, notification writers, event logs, outboxes, approvals; Postgres-only engine design; first slice proposal (overdue admin task → internal notice to assigner). Awaiting owner approval.
+
+## 2026-11-26 — مركز الأتمتة: المرحلة الثانية (المحرك) — اختبار فقط
+- جداول au_* ودوال au_rule_save/approve/set_active، au_simulate، au_set_kill، au_platform_kill، au_status، automation_tick؛ ربط بمهمة rikaz-homework-tick القائمة.
+- أول حدث adm.task.overdue → إشعار داخلي لمُسنِد التكليف (لا تكرار مع adm_daily_reminders الذي يذكّر المكلَّف قبل يوم).
+- automation-e2e 30/30، admin-e2e 51/51. لا قاعدة مفعّلة.
