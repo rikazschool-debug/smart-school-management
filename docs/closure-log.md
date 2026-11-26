@@ -1372,3 +1372,7 @@ Added «أخرى» to the shared creation/filter/detail/export kind catalog. New
 - الحالة: منفّذ (تحليل فقط) — لا تعديل على المحرك أو المصمم أو قاعدة البيانات أو الوظائف المجدولة؛ لا قواعد مفعّلة؛ لا إرسال.
 - التقارير: docs/automation-platform-expansion.md، docs/automation-data-sources.md، docs/automation-action-registry.md، docs/automation-coverage-matrix.md (مولّدة بقراءة فقط عبر scripts/automation-expansion-matrix.ts).
 - أهم فجوة: السيناريو المالي لكل طالب غير ممكن اليوم (fin.due.overdue مجمّع لكل مدرسة أسبوعيًا). القرارات السبعة بانتظار اعتماد المستخدم قبل المرحلة B.
+
+## 2026-11-26 — مركز الأتمتة: المرحلة B (مصادر البيانات والاستعلامات العامة، اختبار فقط)
+- الحالة: منفّذ ومختَبَر — au_sources (74 موردًا مصنّفًا + 6 مصادر ds.* مختبرة)، _au_ds/_au_srcp، au_query، au_lookup، إعدادات المصدر، دفعات بالمؤشر، إعادة قراءة حيّة، not_in، _sf_balances (توأم جماعي لـ _sf_balance الذي بقي كما هو). لا قواعد مفعّلة ولا إرسال ولا Cron جديد ولا إنتاج.
+- الأدلة: automation-platform-b-e2e 67/67؛ automation 30/30، registry 40/40، phase4 105/105، phase4b 67/67، phase5 50/50، phase6 82/82، admin 51/51؛ student-finance 32/32، sf-carry 19/19، sf-years 14/14، sf-notify 14/14، sf-security 25/25، sf-transfer 11/11. حمل: 5000 طالب رسوم ≥2000 = 1.0s، غياب 100 ألف يوم = 2.7s. التقرير: docs/automation-platform-phase-b.md.

@@ -1,0 +1,2 @@
+UPDATE public.au_sources SET status='tested' WHERE event_code IN ('ds.student_accounts','ds.student_absence','ds.org_docs','ds.maintenance','ds.hr_docs','ds.admin_tasks') AND status='wired';
+UPDATE public.au_events SET status='tested' WHERE code IN ('ds.student_accounts','ds.student_absence','ds.org_docs','ds.maintenance','ds.hr_docs','ds.admin_tasks') AND status='wired';

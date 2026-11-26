@@ -3741,6 +3741,7 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           risk: string
+          scan_cursor: string | null
           school_ids: string[] | null
           sim_fp: string | null
           stage: string
@@ -3773,6 +3774,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           risk?: string
+          scan_cursor?: string | null
           school_ids?: string[] | null
           sim_fp?: string | null
           stage?: string
@@ -3805,6 +3807,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           risk?: string
+          scan_cursor?: string | null
           school_ids?: string[] | null
           sim_fp?: string | null
           stage?: string
@@ -4018,6 +4021,80 @@ export type Database = {
         }
         Relationships: []
       }
+      au_sources: {
+        Row: {
+          aggs: string[]
+          api_key: string | null
+          area: string
+          batch: number
+          created_at: string
+          event_code: string | null
+          excluded: Json
+          key: string
+          label: string
+          max_rows: number
+          menu: string
+          params: Json
+          perm_sections: string[]
+          reason: string | null
+          relations: Json
+          service: string | null
+          status: string
+          sub: string | null
+          updated_at: string
+        }
+        Insert: {
+          aggs?: string[]
+          api_key?: string | null
+          area?: string
+          batch?: number
+          created_at?: string
+          event_code?: string | null
+          excluded?: Json
+          key: string
+          label: string
+          max_rows?: number
+          menu: string
+          params?: Json
+          perm_sections?: string[]
+          reason?: string | null
+          relations?: Json
+          service?: string | null
+          status: string
+          sub?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aggs?: string[]
+          api_key?: string | null
+          area?: string
+          batch?: number
+          created_at?: string
+          event_code?: string | null
+          excluded?: Json
+          key?: string
+          label?: string
+          max_rows?: number
+          menu?: string
+          params?: Json
+          perm_sections?: string[]
+          reason?: string | null
+          relations?: Json
+          service?: string | null
+          status?: string
+          sub?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_sources_event_code_fkey"
+            columns: ["event_code"]
+            isOneToOne: true
+            referencedRelation: "au_events"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       au_trace: {
         Row: {
           at: string
@@ -4072,27 +4149,36 @@ export type Database = {
       au_variables: {
         Row: {
           event_code: string
+          flags: string[]
           key: string
           label: string
+          lookup: string | null
           options: string[] | null
           source: string
           type: string
+          unit: string | null
         }
         Insert: {
           event_code: string
+          flags?: string[]
           key: string
           label: string
+          lookup?: string | null
           options?: string[] | null
           source: string
           type: string
+          unit?: string | null
         }
         Update: {
           event_code?: string
+          flags?: string[]
           key?: string
           label?: string
+          lookup?: string | null
           options?: string[] | null
           source?: string
           type?: string
+          unit?: string | null
         }
         Relationships: [
           {
@@ -26485,6 +26571,7 @@ export type Database = {
         Returns: number
       }
       _au_check_def: { Args: { _event: string; d: Json }; Returns: Json }
+      _au_check_params: { Args: { _event: string; _p: Json }; Returns: Json }
       _au_check_schools: {
         Args: { _org: string; _s: string[] }
         Returns: undefined
@@ -26529,6 +26616,32 @@ export type Database = {
       }
       _au_dlive: {
         Args: { d: Database["public"]["Tables"]["au_delegations"]["Row"] }
+        Returns: boolean
+      }
+      _au_ds: {
+        Args: {
+          _entity: string
+          _ev: string
+          _lim: number
+          _org: string
+          _params: Json
+          _schools: string[]
+        }
+        Returns: {
+          ctx: Json
+          entity: string
+          period: string
+          school: string
+        }[]
+      }
+      _au_ds_ok: {
+        Args: {
+          _any: boolean
+          _event: string
+          _org: string
+          _schools: string[]
+          _uid: string
+        }
         Returns: boolean
       }
       _au_emit: {
@@ -26700,6 +26813,22 @@ export type Database = {
           _ev: string
           _lim: number
           _org: string
+          _schools: string[]
+        }
+        Returns: {
+          ctx: Json
+          entity: string
+          period: string
+          school: string
+        }[]
+      }
+      _au_srcp: {
+        Args: {
+          _entity: string
+          _ev: string
+          _lim: number
+          _org: string
+          _params: Json
           _schools: string[]
         }
         Returns: {
@@ -28970,6 +29099,13 @@ export type Database = {
         Returns: undefined
       }
       _sf_balance: { Args: { _ob: string }; Returns: Json }
+      _sf_balances: {
+        Args: { _ids: string[] }
+        Returns: {
+          bal: Json
+          obligation_id: string
+        }[]
+      }
       _sf_bulk_rows: {
         Args: {
           _grade: string
@@ -30581,6 +30717,16 @@ export type Database = {
         Args: { _org: string; _what: string }
         Returns: undefined
       }
+      au_lookup: {
+        Args: {
+          _event: string
+          _key: string
+          _org: string
+          _q?: string
+          _schools?: string[]
+        }
+        Returns: Json
+      }
       au_me: { Args: { _org: string }; Returns: Json }
       au_monitor: { Args: { _org: string }; Returns: Json }
       au_platform_kill: {
@@ -30590,6 +30736,22 @@ export type Database = {
       au_policy_save: {
         Args: { _org: string; _separate: boolean }
         Returns: undefined
+      }
+      au_query: {
+        Args: {
+          _aggs?: Json
+          _desc?: boolean
+          _event: string
+          _group?: string
+          _limit?: number
+          _offset?: number
+          _org: string
+          _params?: Json
+          _schools?: string[]
+          _sort?: string
+          _where?: Json
+        }
+        Returns: Json
       }
       au_registry: { Args: { _org: string }; Returns: Json }
       au_registry_gaps: { Args: never; Returns: Json }
