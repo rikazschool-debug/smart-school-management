@@ -75,7 +75,8 @@ try {
 
   // owner keeps full edit rights inside the org
   check("owner edits student", !refused(await oc.from("students").update({ full_name: "ابن القراءة المعدل" }).eq("id", kid).select("id")));
-  check("owner edits guardian", !refused(await oc.from("guardians").update({ phone: "966501110099" }).eq("id", gid).select("id")));
+  { // phone of a linked login changes only through the phone-change flow (guard), so edit another field
+    const r = await oc.from("guardians").update({ full_name: "ولي القراءة المعدل" }).eq("id", gid).select("id"); check("owner edits guardian", !refused(r), r.error ?? r.data); }
   check("owner edits link", !refused(await oc.from("student_guardians").update({ can_pickup: false }).eq("id", link).select("id")));
   must(await admin.from("profiles").upsert({ id: users.owner, full_name: "مالك" }));
   check("owner can rename own profile", !refused(await oc.from("profiles").update({ full_name: "مالك القراءة" }).eq("id", users.owner).select("id")));

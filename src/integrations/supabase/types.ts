@@ -30500,6 +30500,12 @@ export type Database = {
         Args: { _fallback: string; _org: string; _u: string }
         Returns: string
       }
+      _sv_ad_view_schools: { Args: never; Returns: string[] }
+      _sv_att_cg_schools: { Args: never; Returns: string[] }
+      _sv_gate_schools: { Args: never; Returns: string[] }
+      _sv_guardian_students: { Args: never; Returns: string[] }
+      _sv_manage_schools: { Args: never; Returns: string[] }
+      _sv_pickup_schools: { Args: never; Returns: string[] }
       _sv_rec_act_stage2: {
         Args: { _action: string; _id: string; _rev: number; _text: string }
         Returns: undefined
@@ -30509,6 +30515,11 @@ export type Database = {
         Args: { _id: string; _p: Json; _rev: number }
         Returns: string
       }
+      _sv_self_students: { Args: never; Returns: string[] }
+      _sv_staff_schools: { Args: never; Returns: string[] }
+      _sv_supervised_students: { Args: never; Returns: string[] }
+      _sv_teacher_guardians: { Args: never; Returns: string[] }
+      _sv_teacher_students: { Args: never; Returns: string[] }
       _sv3_file_seal: {
         Args: { _file: string; _hash: string }
         Returns: undefined
